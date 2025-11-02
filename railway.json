@@ -1,0 +1,1 @@
+{"build":{"builder":"NIXPACKS","buildCommand":"cd scrutinise-web && npm install && npm run build"},"start":"cd scrutinise-web && npm start"} 
