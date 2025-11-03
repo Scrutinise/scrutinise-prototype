@@ -1,0 +1,1 @@
+[phases.setup]echo nixpkgsArchive = "ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7"echo.echo [start]echo cmd = "npm start"echo.echo [environment]echo NODE_VERSION = "20"
