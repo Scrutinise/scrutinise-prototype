@@ -1,6 +1,10 @@
 {
   "name": "scrutinise-web",
   "version": "0.1.0",
+  {"build":{"builder":"NIXPACKS","nixpacks":{"nodeVersion":"20"}},"start":{"cmd":"npm start"}} 
+"engines": {
+  "node": ">=20"
+}
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -24,3 +28,4 @@
     "typescript": "5.9.3"
   }
 }
+
