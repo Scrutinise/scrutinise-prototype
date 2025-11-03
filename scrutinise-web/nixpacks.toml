@@ -1,1 +1,8 @@
-[phases.setup]echo nixpkgsArchive = "ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7"echo.echo [start]echo cmd = "npm start"echo.echo [environment]echo NODE_VERSION = "20"
+[phases.setup]
+nixpkgsArchive = "ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7"
+
+[start]
+cmd = "npm start"
+
+[environment]
+NIXPACKS_NODE_VERSION = "20"
