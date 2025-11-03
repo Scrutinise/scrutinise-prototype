@@ -1,1 +1,1 @@
-{"build":{"builder":"NIXPACKS"},"deploy":{"startCommand":"npm start"}} 
+{"build":{"builder":"NIXPACKS","nixpacksPlan":{"providers":["node"],"setup":[{"type":"apt","packages":["nodejs-20"]}],"start":"npm start"}}} 
