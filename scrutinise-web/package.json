@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "cross-env next start -p $PORT -H 0.0.0.0",
     "lint": "next lint"
-  }
+  },  
   "dependencies": {
     "@clerk/nextjs": "^6.34.1",
     "@tailwindcss/postcss": "^4.1.16",
