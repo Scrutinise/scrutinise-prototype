@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "cross-env PORT=$PORT next start -H 0.0.0.0",
+    "start": "npx ncp .env .next/standalone/.env && node .next/standalone/server.js",
     "lint": "next lint"
   },
   "dependencies": {
