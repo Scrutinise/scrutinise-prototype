@@ -1,1 +1,8 @@
-{"build":{"builder":"NIXPACKS","nixpacks":{"nodeVersion":"20"}},"start":{"cmd":"npm start"}} 
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "start": {
+    "cmd": "PORT=$PORT next start"
+  }
+}
