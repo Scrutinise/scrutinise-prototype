@@ -1,30 +1,58 @@
-import { HomeClient } from './components/HomeClient';
+'use client';
+
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <nav className="flex justify-between items-center p-6 bg-black/80 backdrop-blur">
-        <h1 className="text-2xl font-bold" style={{ color: '#D4AF37' }}>Scrutinise</h1>
-        <HomeClient />
-      </nav>
+    <main className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-yellow-600 mb-4">Scrutinise</h1>
+        <p className="text-xl text-gray-800 mb-8">
+          Master legislation. Shape the nation.
+        </p>
 
-      <div className="flex flex-col items-center justify-center h-screen text-center px-6">
-        <h1 className="text-6xl md:text-8xl font-bold mb-4" style={{ color: '#D4AF37' }}>Scrutinise</h1>
-        <p className="text-xl md:text-2xl mb-8 text-gray-300">Master legislation. Shape the nation.</p>
-        <HomeClient />
-      </div>
+        <h2 className="text-2xl font-bold text-yellow-600 mb-6">
+          The 7 Stages to Better Law
+        </h2>
 
-      <div className="py-20 px-6 max-w-6xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: '#D4AF37' }}>The 7 Stages to Better Law</h2>
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
-          {['Idea', 'Refine', 'Link', 'Amend', 'Evidence', 'Assemble', 'Promote'].map((s, i) => (
-            <div key={i} className="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
-              <div className="text-3xl font-bold" style={{ color: '#D4AF37' }}>{i + 1}</div>
-              <div className="mt-2 text-sm uppercase tracking-wider">{s}</div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <tbody>
+              {[
+                { stage: 1, name: 'Idea', color: 'bg-yellow-100' },
+                { stage: 2, name: 'Refine', color: 'bg-yellow-200' },
+                { stage: 3, name: 'Link', color: 'bg-yellow-300' },
+                { stage: 4, name: 'Amend', color: 'bg-yellow-400' },
+                { stage: 5, name: 'Evidence', color: 'bg-yellow-500' },
+                { stage: 6, name: 'Assemble', color: 'bg-yellow-600' },
+                { stage: 7, name: 'Promote', color: 'bg-yellow-700' },
+              ].map(({ stage, name, color }) => (
+                <tr key={stage} className="border-b">
+                  <td className="p-4 text-right font-bold text-gray-800 w-16">
+                    {stage}
+                  </td>
+                  <td className={`p-4 font-medium text-gray-900 ${color}`}>
+                    {name}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-12 flex gap-4">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
