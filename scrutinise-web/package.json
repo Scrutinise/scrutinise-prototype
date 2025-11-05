@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "start": "next start -H 0.0.0.0 -p $PORT",
+    "start": "./start.sh",
     "build": "next build",
     "lint": "next lint"
   },
