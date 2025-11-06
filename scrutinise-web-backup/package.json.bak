@@ -8,12 +8,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "./start.sh",
+    "start": "cross-env next start -p $PORT -H 0.0.0.0",
     "lint": "next lint"
-  },
+  },  
   "dependencies": {
     "@clerk/nextjs": "^6.34.1",
     "@tailwindcss/postcss": "^4.1.16",
+    "cross-env": "^10.1.0",
     "next": "16.0.1",
     "react": "^18",
     "react-dom": "^18"
