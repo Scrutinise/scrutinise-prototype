@@ -1,8 +1,9 @@
 {
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "DOCKERFILE"
   },
-  "start": {
-    "cmd": "PORT=$PORT next start"
+  "deploy": {
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 300
   }
 }
