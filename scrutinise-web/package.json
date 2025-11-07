@@ -11,7 +11,7 @@
     "start": "PORT=$PORT next start -H 0.0.0.0 --port $PORT",
     "lint": "next lint"
   },
-  "cacheBust": "2025-11-07-13:12"
+  "cacheBust": "2025-11-07-13:12",
   "dependencies": {
     "@clerk/nextjs": "^6.34.1",
     "@tailwindcss/postcss": "^4.1.16",
