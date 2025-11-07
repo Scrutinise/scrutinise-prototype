@@ -1,4 +1,4 @@
-#!/bin/sh
-# Expand $PORT and bind to 0.0.0.0
-PORT="${PORT:-3000}"
-exec next start -H 0.0.0.0 --port "$PORT"
+#!/usr/bin/env node
+const { execSync } = require('child_process');
+const port = process.env.PORT || 3000;
+execSync(`next start -H 0.0.0.0 --port ${port}`, { stdio: 'inherit' });
