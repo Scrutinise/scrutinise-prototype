@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  serverExternalPackages: ['@prisma/client'] // Fixed from experimental
+  output: 'standalone'
+  // Remove experimental.serverComponentsExternalPackages — not needed for now
 }
 
 module.exports = nextConfig
