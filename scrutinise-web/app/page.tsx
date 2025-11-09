@@ -1,30 +1,29 @@
-import { HomeClient } from './components/HomeClient';
+import Hero from './components/Hero';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <nav className="flex justify-between items-center p-6 bg-black/80 backdrop-blur">
-        <h1 className="text-2xl font-bold" style={{ color: '#D4AF37' }}>Scrutinise</h1>
-        <HomeClient />
-      </nav>
-
-      <div className="flex flex-col items-center justify-center h-screen text-center px-6">
-        <h1 className="text-6xl md:text-8xl font-bold mb-4" style={{ color: '#D4AF37' }}>Scrutinise</h1>
-        <p className="text-xl md:text-2xl mb-8 text-gray-300">Master legislation. Shape the nation.</p>
-        <HomeClient />
-      </div>
-
-      <div className="py-20 px-6 max-w-6xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-12" style={{ color: '#D4AF37' }}>The 7 Stages to Better Law</h2>
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
-          {['Idea', 'Refine', 'Link', 'Amend', 'Evidence', 'Assemble', 'Promote'].map((s, i) => (
-            <div key={i} className="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
-              <div className="text-3xl font-bold" style={{ color: '#D4AF37' }}>{i + 1}</div>
-              <div className="mt-2 text-sm uppercase tracking-wider">{s}</div>
-            </div>
-          ))}
+    <main>
+      <Hero />
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-amber-600 mb-8">The 7 Stages to Better Law</h1>
+          <div className="overflow-x-auto">
+            <table className="mx-auto border border-gray-300 text-lg">
+              <tbody>
+                <tr>
+                  <td className="border p-4 bg-amber-50 font-semibold">1<br/>IDEA</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">2<br/>REFINE</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">3<br/>LINK</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">4<br/>AMEND</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">5<br/>EVIDENCE</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">6<br/>ASSEMBLE</td>
+                  <td className="border p-4 bg-amber-50 font-semibold">7<br/>PROMOTE</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
