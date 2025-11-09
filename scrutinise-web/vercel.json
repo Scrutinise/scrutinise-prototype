@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "NEXT_PRIVATE_TARGET": "server"
+    }
+  },
+  "cleanUrls": true
+}
