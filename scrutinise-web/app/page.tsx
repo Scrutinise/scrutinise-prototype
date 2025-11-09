@@ -8,19 +8,18 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl font-bold text-amber-600 mb-8">The 7 Stages to Better Law</h1>
           <div className="overflow-x-auto">
-            <table className="mx-auto border border-gray-300 text-lg">
-              <tbody>
-                <tr>
-                  <td className="border p-4 bg-amber-50 font-semibold">1<br/>IDEA</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">2<br/>REFINE</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">3<br/>LINK</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">4<br/>AMEND</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">5<br/>EVIDENCE</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">6<br/>ASSEMBLE</td>
-                  <td className="border p-4 bg-amber-50 font-semibold">7<br/>PROMOTE</td>
-                </tr>
-              </tbody>
-            </table>
+            <table className="mx-auto border border-gray-300 text-center">
+  <tbody>
+    <tr>
+      {[1,2,3,4,5,6,7].map(i => (
+        <td key={i} className="border p-6 bg-amber-50 text-amber-900 font-bold text-lg">
+          {i}<br />
+          {['IDEA','REFINE','LINK','AMEND','EVIDENCE','ASSEMBLE','PROMOTE'][i-1]}
+        </td>
+      ))}
+    </tr>
+  </tbody>
+</table>
           </div>
         </div>
       </section>
