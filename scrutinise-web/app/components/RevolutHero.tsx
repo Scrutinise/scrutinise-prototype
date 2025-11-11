@@ -1,7 +1,7 @@
 export default function RevolutHero() {
   return (
     <section className="relative h-screen overflow-hidden bg-[#0A0A0A]">
-      <div className="absolute right-0 top-0 h-full w-1/2">
+      <div className="absolute !right-0 top-0 h-full w-1/2">
         <video
           src="/woman-in-library-by-candlelight.mp4"
           autoPlay
@@ -19,7 +19,7 @@ export default function RevolutHero() {
               Scrutiny is Power
             </h1>
             <p className="mt-6 text-xl md:text-2xl font-medium">
-              Master legislation. Shape the nation
+              Master legislation. Shape the nation.
             </p>
             <p className="mt-8 text-lg leading-relaxed">
               Turn any idea into Parliament-ready law in 5 stages...
