@@ -1,6 +1,6 @@
-import { ClerkWrapper } from '../components/ClerkWrapper.client';
-import Navbar from '../components/ui/Navbar';
-import '../globals.css';
+import { ClerkWrapper } from './components/ClerkWrapper.client';
+import Navbar from './components/ui/Navbar';
+import './globals.css';
 
 export const metadata = {
   title: 'Scrutinise - Master legislation. Shape the nation.',
