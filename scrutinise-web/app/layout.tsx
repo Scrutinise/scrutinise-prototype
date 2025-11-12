@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { ClerkWrapper } from '../components/ClerkWrapper.client';
 import Navbar from '../components/ui/Navbar';
 import '../globals.css';
