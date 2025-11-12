@@ -3,7 +3,7 @@ export default function RevolutHero() {
     <section className="relative h-screen overflow-hidden bg-[#0A0A0A]">
       <div className="absolute !right-0 top-0 h-full w-1/2">
         <video
-          src="/woman-in-library-by-candlelight.mp4"
+          src="/BadHero.mp4"
           autoPlay
           loop
           muted

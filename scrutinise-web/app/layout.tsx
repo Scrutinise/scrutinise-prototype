@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans bg-white antialiased">  {/* font-sans = Inter from Tailwind */}
+     <body className="font-sans bg-blue-500 antialiased">  {/* font-sans = Inter from Tailwind */}
         <ClerkWrapper>
           <Navbar />
           {children}
