@@ -1,20 +1,19 @@
-import { ClerkWrapper } from './components/ClerkWrapper.client';
-import './globals.css';
-import Navbar from './components/ui/Navbar';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+import { ClerkWrapper } from '../components/ClerkWrapper.client';
+import Navbar from '../components/ui/Navbar';
+import '../globals.css';
 
 export const metadata = {
-  title: 'Scrutinise',
-  description: 'Master legislation. Shape the nation.',
+  title: 'Scrutinise - Master legislation. Shape the nation.',
+  description: 'Turn any idea into Parliament-ready law in 5 stages.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-     <body className="font-sans bg-blue-500 antialiased">  {/* font-sans = Inter from Tailwind */}
+      <body className="font-sans bg-blue-500 antialiased">
         <ClerkWrapper>
           <Navbar />
           {children}
