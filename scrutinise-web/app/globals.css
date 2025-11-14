@@ -12,8 +12,18 @@ body {
   color: #fff;
 }
 
-/* Fade mask on the left 10% of the video */
+/* Fade mask on the LEFT 10% of the video into the background */
 .video-mask-left {
-  -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12%);
-  mask-image: linear-gradient(to left, transparent 0%, black 12%);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    black 10%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    black 10%,
+    transparent 100%
+  );
 }
