@@ -1,4 +1,4 @@
-import { DemoClient } from './DemoClient';
+import DemoClient from './DemoClient';
 
 export default function DemoPage() {
   return <DemoClient />;
