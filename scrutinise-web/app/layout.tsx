@@ -1,4 +1,6 @@
 import './globals.css';
+import { ClerkWrapper } from './components/ClerkWrapper.client';
+import Navbar from './components/ui/Navbar';
 
 export const metadata = {
   title: 'Scrutinise - Master legislation. Shape the nation.',
@@ -13,7 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <ClerkWrapper>
+          <Navbar />
+          {children}
+        </ClerkWrapper>
       </body>
     </html>
   );
