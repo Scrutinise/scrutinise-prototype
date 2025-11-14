@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans bg-white antialiased">
+      <body className="font-sans bg-blue-500 antialiased text-white font-bold">
         <ClerkWrapper>
           <Navbar />
           {children}
