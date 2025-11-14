@@ -1,29 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
-  background-color: #000;
-  color: #fff;
-}
-
-/* Fade mask on the LEFT 10% of the video into the background */
 .video-mask-left {
   -webkit-mask-image: linear-gradient(
     to right,
     black 0%,
-    black 10%,
+    black 35%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     black 0%,
-    black 10%,
+    black 35%,
     transparent 100%
   );
 }
