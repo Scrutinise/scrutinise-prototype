@@ -7,7 +7,11 @@ export const metadata = {
   description: 'Turn any idea into Parliament-ready law in 5 stages.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className="font-sans bg-white antialiased">
