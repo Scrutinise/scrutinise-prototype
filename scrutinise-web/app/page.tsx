@@ -1,14 +1,12 @@
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { ClerkWrapper } from './components/ClerkWrapper.client';
+import Navbar from './components/ui/Navbar';
 import RevolutHero from './components/RevolutHero';
 
 export default function HomePage() {
   return (
-    <>
+    <ClerkWrapper>
+      <Navbar />
       <RevolutHero />
-      <div className="text-red-600 text-9xl text-center mt-20">
-        PAGE.TSX IS ALIVE
-      </div>
-    </>
+    </ClerkWrapper>
   );
 }
