@@ -1,4 +1,4 @@
-import RevolutHero from '@/components/RevolutHero';
+import RevolutHero from '../components/RevolutHero';
 
 
 export default function Home() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedIn } from '@clerk/nextjs';
+import { SignedIn } from '../clerk/nextjs';
 import Link from 'next/link';
 
 export default function ProtectedDemo() {
