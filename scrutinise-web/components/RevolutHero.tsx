@@ -1,44 +1,72 @@
 export default function RevolutHero() {
   return (
-    <section className="pt-16 pb-24 bg-gradient-to-b from-black via-black to-neutral-950">
-      <div className="max-w-6xl mx-auto px-4 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center md:items-stretch gap-12">
-          {/* TEXT SIDE (left) */}
-          <div className="md:w-1/2 space-y-6 text-center md:text-left">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight">
-              Master legislation. Shape the nation
-            </h1>
+    <section className="hero-section">
+      <div className="hero-inner">
+        {/* TEXT SIDE (left) */}
+        <div className="hero-text">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight">
+            Master legislation. Shape the nation
+          </h1>
 
-            <p className="text-lg sm:text-xl text-gray-300">
-              Turn any idea into Parliament-ready law in 5 stages...
+          <p className="mt-6 text-lg sm:text-xl text-gray-300">
+            Turn any idea into Parliament-ready law in 5 stages...
+          </p>
+
+          {/* CTA buttons */}
+          <div className="hero-cta-row">
+            <button className="hero-cta-primary">Get started</button>
+            <button className="hero-cta-secondary">Vote</button>
+          </div>
+
+          {/* Five Steps block */}
+          <div className="hero-steps">
+            <p className="hero-steps-heading">The Five Steps:</p>
+
+            <p className="hero-step">
+              <strong>Stage 1</strong>
+              <br />
+              Choose: CREATE (a new piece of legislation) or VOTE on legislation
+              created by others.
             </p>
 
-            <div className="flex flex-wrap gap-4 pt-4 justify-center md:justify-start">
-              {/* Solid white button – bigger */}
-              <button className="inline-flex items-center rounded-full bg-white text-black px-10 py-3.5 text-base font-semibold shadow-md hover:bg-gray-100 transition">
-                Get started
-              </button>
+            <p className="hero-step">
+              <strong>Stage 2</strong>
+              <br />
+              Choose your area and outline your goal. Research existing
+              legislation and put your idea in motion.
+            </p>
 
-              {/* Black with white outline – bigger, alternating style */}
-              <button className="inline-flex items-center rounded-full bg-black border border-white px-10 py-3.5 text-base font-semibold text-white hover:bg-white hover:text-black transition">
-                Vote
-              </button>
-            </div>
-          </div>
+            <p className="hero-step">
+              <strong>Stage 3</strong>
+              <br />
+              Build support and refine. Get feedback, votes and amendments.
+            </p>
 
-          {/* VIDEO SIDE (right) */}
-          <div className="md:w-1/2 w-full">
-            <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-black/60 aspect-[4/3]">
-              <video
-                src="/woman-in-library-by-candlelight.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="h-full w-full object-cover video-mask-left"
-              />
-            </div>
+            <p className="hero-step">
+              <strong>Stage 4</strong>
+              <br />
+              Evolve your idea with professional support from lawyers and
+              parliamentary draftsmen.
+            </p>
+
+            <p className="hero-step">
+              <strong>Stage 5</strong>
+              <br />
+              Build support and votes for your final legislation.
+            </p>
           </div>
+        </div>
+
+        {/* VIDEO SIDE (right) */}
+        <div className="hero-video">
+          <video
+            src="/woman-in-library-by-candlelight.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="video-mask-left"
+          />
         </div>
       </div>
     </section>
