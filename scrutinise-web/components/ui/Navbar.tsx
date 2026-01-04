@@ -25,10 +25,14 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT — Auth pills */}
-        <div className="navbar-auth">
-          <span className="nav-pill-auth-primary">Log in</span>
-          <span className="nav-pill-auth-secondary">Sign up</span>
-        </div>
+<div className="navbar-auth">
+  <Link href="/sign-in" className="nav-pill-auth-primary">
+    Log in
+  </Link>
+  <Link href="/sign-up" className="nav-pill-auth-secondary">
+    Sign up
+  </Link>
+</div>
       </nav>
     </header>
   );

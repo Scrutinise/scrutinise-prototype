@@ -25,7 +25,7 @@ export default function RevolutHero() {
             <p className="hero-step">
               <strong>Stage 1</strong>
               <br />
-              Choose: CREATE (a new piece of legislation) or VOTE on legislation
+              CREATE (an idea for a new piece of legislation) or VOTE on legislation
               created by others.
             </p>
 
