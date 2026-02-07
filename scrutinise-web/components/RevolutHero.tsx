@@ -25,34 +25,31 @@ export default function RevolutHero() {
             <p className="hero-step">
               <strong>Stage 1</strong>
               <br />
-              CREATE (an idea for a new piece of legislation) or VOTE on legislation
-              created by others.
+              CREATE and define your idea
             </p>
 
             <p className="hero-step">
               <strong>Stage 2</strong>
               <br />
-              Choose your area and outline your goal. Research existing
-              legislation and put your idea in motion.
+              Research and private scrutiny
             </p>
 
             <p className="hero-step">
               <strong>Stage 3</strong>
               <br />
-              Build support and refine. Get feedback, votes and amendments.
+              Public scrutiny, campaign for votes
             </p>
 
             <p className="hero-step">
               <strong>Stage 4</strong>
               <br />
-              Evolve your idea with professional support from lawyers and
-              parliamentary draftsmen.
+              Legal and professional scrutiny and drafting
             </p>
 
             <p className="hero-step">
               <strong>Stage 5</strong>
               <br />
-              Build support and votes for your final legislation.
+              Government Agenda and Parliamentary scrutiny
             </p>
           </div>
         </div>
