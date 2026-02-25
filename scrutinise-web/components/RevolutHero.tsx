@@ -31,19 +31,19 @@ export default function RevolutHero() {
             <p className="hero-step">
               <strong>Stage 2</strong>
               <br />
-              Research and private scrutiny
+              Build out your idea with a few friends
             </p>
 
             <p className="hero-step">
               <strong>Stage 3</strong>
               <br />
-              Public scrutiny, campaign for votes
+              Add research, develop, private scrutiny, first 25 votes
             </p>
 
             <p className="hero-step">
               <strong>Stage 4</strong>
               <br />
-              Legal and professional scrutiny and drafting
+              Public & professional scrutiny, campaign for votes
             </p>
 
             <p className="hero-step">
