@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function RevolutHero() {
   return (
     <section className="hero-section">
@@ -18,36 +20,44 @@ export default function RevolutHero() {
             <button className="hero-cta-secondary">Vote</button>
           </div>
 
+          {/* Prototype link */}
+          <div className="mt-4 flex items-center gap-3">
+            <Link href="/prototype" className="hero-cta-secondary" style={{ padding: '0.6rem 1.8rem', fontSize: '0.9rem' }}>
+              Explore the Prototype &#8594;
+            </Link>
+            <span className="text-xs text-gray-500">Interactive prototype — no account needed</span>
+          </div>
+
           {/* Five Steps block */}
           <div className="hero-steps">
             <p className="hero-steps-heading">The Five Steps:</p>
 
             <p className="hero-step">
-              <strong>Stage 1</strong>
+              <strong>Create</strong>
               <br />
-              CREATE and define your idea
+              Define your idea with AI guidance
             </p>
 
             <p className="hero-step">
-              <strong>Stage 2</strong>
+              <strong>Draft</strong>
               <br />
               Build out your idea with a few friends
             </p>
 
             <p className="hero-step">
-              <strong>Stage 3</strong>
+              <strong>Develop</strong>
               <br />
               Add research, develop, private scrutiny, first 25 votes
             </p>
 
             <p className="hero-step">
-              <strong>Stage 4</strong>
+              <strong>Campaign</strong>
               <br />
               Public & professional scrutiny, campaign for votes
             </p>
 
             <p className="hero-step">
-              <strong>Stage 5</strong>
+              <strong>Parliament</strong>
               <br />
               Government Agenda and Parliamentary scrutiny
             </p>
