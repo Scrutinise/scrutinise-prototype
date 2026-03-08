@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 
-const links = ['Create', 'Vote', 'Training', 'Research', 'About'];
+const links = [
+  { label: 'Create', href: '/prototype/create/stage1' },
+  { label: 'Browse', href: '/prototype/browse' },
+  { label: 'Training', href: '/training' },
+  { label: 'About', href: '/about' },
+];
 
 export default function Navbar() {
   return (
@@ -16,9 +21,9 @@ export default function Navbar() {
         {/* CENTER — Menu links */}
         <div className="navbar-center flex-1 flex justify-start">
           <div className="navbar-center-links">
-            {links.map((label) => (
-              <Link key={label} href="/" className="navbar-center-link">
-                {label}
+            {links.map((link) => (
+              <Link key={link.label} href={link.href} className="navbar-center-link">
+                {link.label}
               </Link>
             ))}
           </div>

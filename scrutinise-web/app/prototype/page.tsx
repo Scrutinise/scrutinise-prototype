@@ -36,6 +36,20 @@ const journeys = [
     href: '/prototype/admin',
     accent: 'border-red-500 hover:bg-red-950/30',
   },
+  {
+    num: 6,
+    title: 'Explore your dashboard',
+    desc: 'See your ideas, notifications, Credibility Score, and Lex AI fuel at a glance.',
+    href: '/prototype/dashboard',
+    accent: 'border-cyan-500 hover:bg-cyan-950/30',
+  },
+  {
+    num: 7,
+    title: 'Browse training resources',
+    desc: 'Watch videos and read articles on drafting legislation, building support, and navigating Parliament.',
+    href: '/training',
+    accent: 'border-orange-500 hover:bg-orange-950/30',
+  },
 ]
 
 export default function PrototypePage() {
