@@ -24,3 +24,6 @@ build/
 Thumbs.db
 *.log
 .vercel/
+
+# Session logging
+session-log.txt
