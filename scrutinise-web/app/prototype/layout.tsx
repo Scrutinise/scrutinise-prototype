@@ -29,6 +29,9 @@ export default function PrototypeLayout({ children }: { children: React.ReactNod
             <Link href="/prototype/settings" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
               Settings
             </Link>
+            <Link href="/prototype/testing-guide" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+              Testing Guide
+            </Link>
             {/* Notification bell */}
             <Link href="/prototype/notifications" className="relative flex items-center justify-center w-8 h-8 hover:bg-gray-800 rounded-lg transition-colors" title="Notifications">
               <span className="text-base">🔔</span>
