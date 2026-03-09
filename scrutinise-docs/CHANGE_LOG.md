@@ -54,6 +54,13 @@
 | 2026-03-07 | scrutinise-web/app/prototype/profile/[username]/page.tsx | Created — user profile page (WF-30): credibility score display, points breakdown (Strategist/Thinker/Rallymaster/Teambuilder), expert badges, user's ideas grid, recent contributions, Follow toggle button (visual only in prototype) | Phase 2 build |
 | 2026-03-08 | scrutinise-web/components/VoteWidget.tsx | Strength slider updated to step={0.5} (11 stops: 0–5 in 0.5 increments). strengthLabels changed from 6-entry array to 11-entry Record<number, string>. Display updated to toFixed(1). | Spec correction |
 | 2026-03-08 | scrutinise-web/.dropboxignore | Created — excludes .next/ and node_modules/ from Dropbox sync to prevent file locking conflicts with Next.js dev server (EPERM rename errors) | Dev environment fix |
+| 2026-03-09 | scrutinise-web/app/prototype/create/stage1/page.tsx | Rebuilt: 8-field Basic Info form (title, ideaType toggle, govtArea dropdown, summaryDescription, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, connectedIdeas). Stage progress indicator. Conditional "Ready for Stage 2" button. | CC_briefing_next_session.md Priority 1 |
+| 2026-03-09 | start-session.sh | Created: session logging script — appends timestamp and branch to session-log.txt, runs git status | CC_briefing_next_session.md Priority 2 |
+| 2026-03-09 | scrutinise-web/app/prototype/page.tsx | Converted from journey-selector hub to WF-10 proper dashboard: welcome greeting, My Ideas section, quick actions, notifications sidebar, following/watching placeholder, groups section | CC_briefing_next_session.md Priority 3 |
+| 2026-03-09 | scrutinise-web/app/prototype/testing-guide/page.tsx | Created: tester-facing checklist with 8 journeys, step-by-step verification items per journey, full page inventory table with checkboxes | CC_briefing_next_session.md Priority 4 |
+| 2026-03-09 | scrutinise-docs/entity_list_v4.md | Added to repo: replaces entity_list_v3.md. 54 entities. CommentRating redesigned with positiveFlags/negativeFlags JSON + dispute flow. DisputedLogicFlag entity added. Follow entity added. Training entity added. CredibilityScore canonical (InfluenceScore retired). User.mobile required. BroadcastMessage expanded with co-signatory fields. | CCh session 09-03-26 |
+| 2026-03-09 | scrutinise-docs/CC_briefing_next_session.md | Created: CCh-produced briefing document for this CC session | CCh session 09-03-26 |
+| 2026-03-09 | scrutinise-docs/CLAUDE.md | Updated: Section 1 checklist references entity_list_v4; Section 5 repo structure updated to v4 (54 entities); Section 12 Field Preservation Rule added (immutable, CCh-only entity list); Section 11/13 renumbered | CCh session 09-03-26 |
 
 ---
 
