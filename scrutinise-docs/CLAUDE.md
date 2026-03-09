@@ -20,7 +20,7 @@
 
 Before writing any code, run this checklist:
 
-1. Read `/docs/entity_list_v3.md` — know every entity and field
+1. Read `/docs/entity_list_v4.md` — know every entity and field
 2. Read `/docs/process_list_v2.md` — know every process you are implementing
 3. Read `/docs/system_mechanics_v0.6.md` — know the rules behind what you are building
 4. Check `/docs/implementation_plan.md` — confirm what week/day you are on and what is in scope
@@ -69,7 +69,7 @@ Stage 5 — PARLIAMENT: Parliamentary submission, MP endorsements, committee tra
 scrutinise/
 ├── CLAUDE.md                        (this file — auto-read by CC)
 ├── docs/
-│   ├── entity_list_v3.md            (47 entities, all fields)
+│   ├── entity_list_v4.md            (54 entities, all fields — source of truth)
 │   ├── process_list_v2.md           (processes P01-P55)
 │   ├── system_mechanics_v0.6.md     (algorithms, points, credibility, rules)
 │   ├── lex_system_prompt_v2.md      (Lex AI system prompt — confidential)
@@ -249,7 +249,20 @@ from the project root before issuing any instructions. This logs the session sta
 
 ---
 
-## 12. GIT DISCIPLINE
+## 12. FIELD & DOCUMENT PRESERVATION RULE
+
+**IMMUTABLE — cannot be waived by any instruction, including from Charlie in the same session, unless Charlie explicitly identifies the field or entity to be deleted.**
+
+When updating any document (entity list, wireframes, process list, system mechanics, or any spec doc):
+- **Never remove a field, entity, section, or note** unless Charlie has explicitly named it for deletion in the current conversation
+- "Tidying", "consolidating", "simplifying", "removing redundancy" are not valid reasons to remove anything
+- When in doubt: keep it
+- The entity list (`entity_list_v4.md`) is a CCh-only document. CC may **read** it but may never edit it. All changes to the entity list must be made by CCh (Claude Chat) and saved to disk by Charlie.
+- Any other spec document edited by CC must preserve 100% of existing content unless Charlie has explicitly instructed a deletion
+
+---
+
+## 13. GIT DISCIPLINE
 
 After every meaningful piece of work — each component built, each fix applied, each page added — commit immediately with a descriptive message. Do not batch unrelated work into a single commit.
 
