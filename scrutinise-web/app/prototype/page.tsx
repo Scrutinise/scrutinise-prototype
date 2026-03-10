@@ -1,15 +1,19 @@
 'use client'
 
 import Link from 'next/link'
+import { Plus, ArrowRight, Bell, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { MOCK_IDEAS, MOCK_NOTIFICATIONS, MOCK_GROUPS, Stage } from '@/lib/mockData'
 import { useUser } from '@/context/UserContext'
 
-const stageBadgeColors: Record<Stage, string> = {
-  Create: 'bg-gray-700 text-gray-300',
-  Draft: 'bg-blue-900 text-blue-300',
-  Develop: 'bg-amber-900 text-amber-300',
-  Campaign: 'bg-purple-900 text-purple-300',
-  Parliament: 'bg-green-900 text-green-300',
+const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
+  Create:     { backgroundColor: 'var(--stage-create)',     color: 'white' },
+  Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
+  Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
+  Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
+  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 const notificationTypeIcon: Record<string, string> = {
@@ -29,221 +33,203 @@ export default function PrototypeDashboardPage() {
   const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-10">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
 
-      {/* Welcome greeting */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-1">
+      {/* Welcome */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
           Welcome back, {currentUser.name.split(' ')[0]}
         </h1>
-        <p className="text-gray-400 text-sm">Here's what's happening with your ideas.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Here's what's happening with your ideas.
+        </p>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-        <Link
-          href="/prototype/create/stage1"
-          className="flex items-center justify-center gap-2 px-4 py-3 bg-revolutBlue hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition-colors"
-        >
-          New Idea &#8594;
-        </Link>
-        <Link
-          href="/prototype/browse"
-          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm font-semibold transition-colors border border-gray-700"
-        >
-          Browse Ideas &#8594;
-        </Link>
-        <Link
-          href="/prototype/notifications"
-          className="relative flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm font-semibold transition-colors border border-gray-700"
-        >
-          Notifications
-          {unreadCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold leading-none">
-              {unreadCount}
-            </span>
-          )}
-        </Link>
-        <Link
-          href="/prototype/settings"
-          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm font-semibold transition-colors border border-gray-700"
-        >
-          Settings &#8594;
-        </Link>
+      <div className="mb-6 flex flex-wrap gap-2 sm:mb-8 sm:gap-3">
+        <Button size="sm" asChild className="gap-2">
+          <Link href="/prototype/create/stage1">
+            <Plus className="size-4" />
+            New Idea
+          </Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild className="gap-2">
+          <Link href="/prototype/browse">
+            Browse Ideas
+            <ArrowRight className="size-3" />
+          </Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild className="gap-2">
+          <Link href="/prototype/notifications">
+            <Bell className="size-4" />
+            Notifications
+            {unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {unreadCount}
+              </Badge>
+            )}
+          </Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/prototype/settings">
+            Settings
+          </Link>
+        </Button>
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Grid */}
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
 
-        {/* Left column: My Ideas + Following/Watching */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* My Ideas */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">My Ideas</h2>
-              <Link
-                href="/prototype/create/stage1"
-                className="text-xs text-revolutBlue hover:underline"
-              >
-                + New Idea
+        {/* My Ideas — full width */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">My Ideas</CardTitle>
+            <Button variant="ghost" size="sm" asChild className="gap-1 text-xs">
+              <Link href="/prototype/create/stage1">
+                <Plus className="size-3" />
+                New Idea
               </Link>
-            </div>
-
+            </Button>
+          </CardHeader>
+          <CardContent>
             {myIdeas.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 text-sm mb-4">
-                  You haven't created any ideas yet.{' '}
-                  <Link href="/prototype/create/stage1" className="text-revolutBlue hover:underline">
-                    Start with New Idea &#8594;
-                  </Link>
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                You haven't created any ideas yet.{' '}
+                <Link href="/prototype/create/stage1" className="text-primary hover:underline">
+                  Start now →
+                </Link>
+              </p>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {myIdeas.map(idea => {
-                  const total = idea.voteCount.for + idea.voteCount.against + idea.voteCount.undecided
                   return (
                     <div
                       key={idea.id}
-                      className="flex items-start justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl hover:border-gray-500 transition-colors"
+                      className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 sm:p-4"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadgeColors[idea.stage]}`}
+                            className="text-xs px-2 py-0.5 rounded-md font-medium"
+                            style={stageBadgeStyle[idea.stage]}
                           >
                             {idea.stage}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-white truncate mb-1">{idea.title}</p>
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <span>{idea.voteCount.for} FOR / {idea.voteCount.against} AGAINST / {idea.voteCount.undecided} UNDECIDED</span>
+                        <p className="text-sm font-medium truncate mb-1">{idea.title}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="text-green-600 font-medium">{idea.voteCount.for} FOR</span>
+                          <span className="text-red-600 font-medium">{idea.voteCount.against} AGAINST</span>
+                          <span>{idea.voteCount.undecided} UNDECIDED</span>
                           <span>Passion: {idea.passionScore.toFixed(1)}</span>
                         </div>
                       </div>
-                      <Link
-                        href={`/prototype/idea/${idea.id}`}
-                        className="ml-4 flex-shrink-0 text-xs text-revolutBlue hover:underline"
-                      >
-                        View &#8594;
-                      </Link>
+                      <Button variant="outline" size="sm" asChild className="shrink-0 gap-1">
+                        <Link href={`/prototype/idea/${idea.id}`}>
+                          View
+                          <ChevronRight className="size-3" />
+                        </Link>
+                      </Button>
                     </div>
                   )
                 })}
               </div>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Following/Watching */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-              Following / Watching
-            </h2>
-            <div className="text-center py-6 text-gray-600 text-sm">
-              Ideas you're watching will appear here.
-            </div>
-            <div className="text-center">
-              <Link
-                href="/prototype/browse"
-                className="text-xs text-revolutBlue hover:underline"
-              >
-                Browse Ideas &#8594;
-              </Link>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right column: Notifications + Groups */}
-        <div className="space-y-6">
+        {/* Right column */}
+        <div className="flex flex-col gap-4 sm:gap-6">
 
           {/* Recent Notifications */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Notifications
-              </h2>
-              {unreadCount > 0 && (
-                <span className="text-xs px-2 py-0.5 bg-red-900 text-red-300 rounded-full font-medium">
-                  {unreadCount} unread
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {recentNotifications.map(notif => (
-                <div
-                  key={notif.id}
-                  className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs transition-colors ${
-                    !notif.read
-                      ? 'bg-blue-950/30 border-blue-800/50'
-                      : 'bg-gray-800 border-gray-700'
-                  }`}
-                >
-                  <span className="text-sm flex-shrink-0 mt-0.5">
-                    {notificationTypeIcon[notif.type] ?? '🔔'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-200 leading-snug line-clamp-1">{notif.message}</p>
-                    <p className="text-gray-600 mt-0.5">{notif.createdAt}</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Notifications</CardTitle>
+                {unreadCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {unreadCount} unread
+                  </Badge>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" asChild className="text-xs">
+                <Link href="/prototype/notifications">View all</Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                {recentNotifications.map(notif => (
+                  <div
+                    key={notif.id}
+                    className={`flex items-start gap-2.5 rounded-md border p-2.5 text-xs transition-colors ${
+                      !notif.read ? 'border-primary/20 bg-primary/5' : 'border-border'
+                    }`}
+                  >
+                    <span className="text-sm flex-shrink-0 mt-0.5">
+                      {notificationTypeIcon[notif.type] ?? '🔔'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground leading-snug line-clamp-2">{notif.message}</p>
+                      <p className="text-muted-foreground mt-0.5">{notif.createdAt}</p>
+                    </div>
+                    {!notif.read && (
+                      <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                    )}
                   </div>
-                  {!notif.read && (
-                    <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0 mt-1" />
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="mt-4 text-center">
-              <Link
-                href="/prototype/notifications"
-                className="text-xs text-revolutBlue hover:underline"
-              >
-                View all &#8594;
-              </Link>
-            </div>
-          </div>
+          {/* Following/Watching */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Following / Watching
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Ideas you're watching will appear here.
+              </p>
+              <Button variant="outline" size="sm" asChild className="mt-3 gap-1">
+                <Link href="/prototype/browse">
+                  Browse Ideas
+                  <ArrowRight className="size-3" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Groups */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Groups</h2>
-              <Link
-                href="/prototype/groups"
-                className="text-xs text-revolutBlue hover:underline"
-              >
-                Manage Groups &#8594;
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              {MOCK_GROUPS.map(group => (
-                <div
-                  key={group.id}
-                  className="flex items-start justify-between p-3 bg-gray-800 border border-gray-700 rounded-lg"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm font-medium text-white truncate">{group.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="px-1.5 py-0.5 bg-gray-700 text-gray-400 rounded text-[10px]">
-                        {group.type}
-                      </span>
-                      <span>{group.memberCount} members</span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/prototype/groups/${group.id}`}
-                    className="ml-3 flex-shrink-0 text-xs text-revolutBlue hover:underline"
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Groups</CardTitle>
+              <Button variant="ghost" size="sm" asChild className="text-xs">
+                <Link href="/prototype/groups">Manage</Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                {MOCK_GROUPS.map(group => (
+                  <div
+                    key={group.id}
+                    className="flex items-center justify-between rounded-md border border-border p-2.5"
                   >
-                    View &#8594;
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{group.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {group.type} · {group.memberCount} members
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild className="shrink-0 h-7 px-2">
+                      <Link href={`/prototype/groups/${group.id}`}>View</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
         </div>
       </div>
