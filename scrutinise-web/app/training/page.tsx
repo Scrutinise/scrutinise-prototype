@@ -9,18 +9,18 @@ type DifficultyFilter = 'All' | 'Beginner' | 'Intermediate' | 'Advanced'
 type TypeFilter = 'All' | 'VIDEO' | 'ARTICLE'
 
 const stageBadgeColors: Partial<Record<Stage | string, string>> = {
-  All: 'bg-gray-700 text-gray-300',
-  Create: 'bg-gray-700 text-gray-300',
-  Draft: 'bg-blue-900 text-blue-300',
-  Develop: 'bg-amber-900 text-amber-300',
-  Campaign: 'bg-purple-900 text-purple-300',
-  Parliament: 'bg-green-900 text-green-300',
+  All: 'bg-muted text-muted-foreground',
+  Create: 'bg-muted text-muted-foreground',
+  Draft: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  Develop: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  Campaign: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  Parliament: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
 }
 
 const difficultyColors: Record<string, string> = {
-  Beginner: 'bg-green-900 text-green-300',
-  Intermediate: 'bg-amber-900 text-amber-300',
-  Advanced: 'bg-red-900 text-red-300',
+  Beginner: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  Intermediate: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  Advanced: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
 export default function TrainingPage() {
@@ -41,15 +41,15 @@ export default function TrainingPage() {
   const types: TypeFilter[] = ['All', 'VIDEO', 'ARTICLE']
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-10">
-          <Link href="/" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             ← Home
           </Link>
-          <h1 className="text-3xl font-bold text-white mt-4">Training</h1>
-          <p className="text-gray-400 text-base mt-2">
+          <h1 className="text-xl font-semibold tracking-tight mt-4">Training</h1>
+          <p className="text-muted-foreground text-base mt-2">
             Resources to help you develop ideas, draft legislation, and navigate the parliamentary process.
           </p>
         </div>
@@ -58,15 +58,15 @@ export default function TrainingPage() {
         <div className="space-y-3 mb-8">
           {/* Stage filter */}
           <div className="flex flex-wrap gap-1.5 items-center">
-            <span className="text-xs text-gray-600 mr-1">Stage:</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground mr-1">Stage:</span>
             {stages.map(s => (
               <button
                 key={s}
                 onClick={() => setStageFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                   stageFilter === s
-                    ? 'bg-revolutBlue border-revolutBlue text-white'
-                    : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
+                    ? 'bg-primary border-primary text-primary-foreground'
+                    : 'border-border text-foreground hover:bg-accent'
                 }`}
               >
                 {s}
@@ -77,15 +77,15 @@ export default function TrainingPage() {
           <div className="flex flex-wrap gap-4">
             {/* Difficulty */}
             <div className="flex flex-wrap gap-1.5 items-center">
-              <span className="text-xs text-gray-600">Difficulty:</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Difficulty:</span>
               {difficulties.map(d => (
                 <button
                   key={d}
                   onClick={() => setDifficultyFilter(d)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                     difficultyFilter === d
-                      ? 'bg-revolutBlue border-revolutBlue text-white'
-                      : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
+                      ? 'bg-primary border-primary text-primary-foreground'
+                      : 'border-border text-foreground hover:bg-accent'
                   }`}
                 >
                   {d}
@@ -95,15 +95,15 @@ export default function TrainingPage() {
 
             {/* Type */}
             <div className="flex flex-wrap gap-1.5 items-center">
-              <span className="text-xs text-gray-600">Type:</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Type:</span>
               {types.map(t => (
                 <button
                   key={t}
                   onClick={() => setTypeFilter(t)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                     typeFilter === t
-                      ? 'bg-revolutBlue border-revolutBlue text-white'
-                      : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
+                      ? 'bg-primary border-primary text-primary-foreground'
+                      : 'border-border text-foreground hover:bg-accent'
                   }`}
                 >
                   {t === 'VIDEO' ? 'Video' : t === 'ARTICLE' ? 'Article' : t}
@@ -114,25 +114,25 @@ export default function TrainingPage() {
         </div>
 
         {/* Results count */}
-        <p className="text-xs text-gray-600 mb-4">{filtered.length} resource{filtered.length !== 1 ? 's' : ''}</p>
+        <p className="text-xs text-muted-foreground mb-4">{filtered.length} resource{filtered.length !== 1 ? 's' : ''}</p>
 
         {/* Resource cards */}
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No resources match your filters.</p>
+            <p className="text-muted-foreground">No resources match your filters.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {filtered.map(resource => (
-              <div key={resource.id} className="bg-gray-900 border border-gray-700 rounded-xl p-5 hover:border-gray-500 transition-colors">
+              <div key={resource.id} className="bg-card border border-border rounded-lg p-5 hover:border-foreground/30 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${resource.resourceType === 'VIDEO' ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-300'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${resource.resourceType === 'VIDEO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-muted text-muted-foreground'}`}>
                         {resource.resourceType === 'VIDEO' ? '▶ Video' : '📄 Article'}
                       </span>
                       {resource.stageTag !== 'All' && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadgeColors[resource.stageTag] ?? 'bg-gray-700 text-gray-300'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadgeColors[resource.stageTag] ?? 'bg-muted text-muted-foreground'}`}>
                           {resource.stageTag}
                         </span>
                       )}
@@ -140,14 +140,14 @@ export default function TrainingPage() {
                         {resource.difficultyTag}
                       </span>
                     </div>
-                    <h2 className="text-base font-semibold text-white mb-1">{resource.title}</h2>
-                    <p className="text-xs text-gray-500">{resource.author} · {resource.duration} · {resource.topicTag}</p>
+                    <h2 className="text-base font-semibold text-foreground mb-1">{resource.title}</h2>
+                    <p className="text-xs text-muted-foreground">{resource.author} · {resource.duration} · {resource.topicTag}</p>
                   </div>
                   <div className="flex-shrink-0">
                     {resource.resourceType === 'VIDEO' ? (
                       <button
                         onClick={() => setExpandedVideo(expandedVideo === resource.id ? null : resource.id)}
-                        className="px-4 py-2 bg-revolutBlue hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition-colors"
+                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-sm font-semibold transition-colors"
                       >
                         {expandedVideo === resource.id ? '✕ Close' : '▶ Watch'}
                       </button>
@@ -156,7 +156,7 @@ export default function TrainingPage() {
                         href={resource.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-xl text-sm font-medium transition-colors inline-block"
+                        className="px-4 py-2 border border-border text-foreground hover:bg-accent rounded-md text-sm font-medium transition-colors inline-block"
                       >
                         Read →
                       </a>
