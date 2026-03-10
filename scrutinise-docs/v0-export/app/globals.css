@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -39,18 +38,18 @@
   --sidebar-accent-foreground: oklch(0.20 0.02 250);
   --sidebar-border: oklch(0.90 0.005 250);
   --sidebar-ring: oklch(0.45 0.12 250);
-
+  
   /* Stage colors - muted, professional */
   --stage-create: oklch(0.50 0.14 250);
   --stage-draft: oklch(0.52 0.10 280);
   --stage-develop: oklch(0.50 0.12 200);
   --stage-campaign: oklch(0.55 0.12 80);
   --stage-parliament: oklch(0.48 0.10 140);
-
+  
   /* Success */
   --success: oklch(0.55 0.16 145);
   --success-foreground: oklch(0.98 0 0);
-
+  
   /* Dark section - for hero contrast */
   --dark-bg: oklch(0.14 0.015 250);
   --dark-fg: oklch(0.96 0 0);
@@ -67,7 +66,7 @@
 }
 
 @theme inline {
-  --font-sans: 'DM Sans', 'Geist', 'Geist Fallback';
+  --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -113,29 +112,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
-    min-height: 100%;
   }
-}
-
-/* ─────────────────────────────
-   VIDEO MASK
-   ───────────────────────────── */
-
-/* Fade the LEFT ~10% of the video into the background */
-.video-mask-left {
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 10%,
-    black 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 10%,
-    black 100%
-  );
 }
