@@ -36,18 +36,18 @@ export default function Stage2Page() {
   return (
     <div className="flex flex-col h-screen">
       {/* Top bar */}
-      <div className="border-b border-gray-800 px-6 py-3 flex items-center justify-between bg-gray-950 flex-shrink-0">
+      <div className="border-b border-border px-6 py-3 flex items-center justify-between bg-background flex-shrink-0">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-0">
             {STAGES.map((stage, i) => (
               <div key={stage} className="flex items-center">
                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                  i === 1 ? 'bg-blue-900 text-blue-300' : 'text-gray-600'
+                  i === 1 ? 'bg-primary/20 text-primary' : 'text-muted-foreground'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${i === 1 ? 'bg-blue-400' : 'bg-gray-700'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${i === 1 ? 'bg-primary' : 'bg-muted-foreground'}`} />
                   {stage}
                 </div>
-                {i < STAGES.length - 1 && <div className="w-5 h-px bg-gray-800" />}
+                {i < STAGES.length - 1 && <div className="w-5 h-px bg-border" />}
               </div>
             ))}
           </div>
@@ -56,7 +56,7 @@ export default function Stage2Page() {
           <AIFuelGauge remaining={currentUser.aiFuelRemaining} total={currentUser.aiFuelTotal} />
           <button
             onClick={handleSave}
-            className="px-4 py-1.5 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg text-xs font-medium transition-colors"
+            className="px-4 py-1.5 border border-border bg-background text-foreground hover:bg-accent rounded-md text-xs font-medium transition-colors"
           >
             {saved ? 'Saved ✓' : 'Save Draft'}
           </button>
@@ -73,7 +73,7 @@ export default function Stage2Page() {
         </div>
 
         {/* Summary panel (desktop) */}
-        <div className="hidden lg:block w-80 xl:w-96 border-l border-gray-800 p-4 overflow-hidden">
+        <div className="hidden lg:block w-80 xl:w-96 border-l border-border p-4 overflow-hidden">
           <SummaryPanel
             fields={fields}
             onDiscuss={(fieldName) => console.log('Discuss:', fieldName)}
@@ -83,7 +83,7 @@ export default function Stage2Page() {
       </div>
 
       {/* Summary panel (mobile — below chat) */}
-      <div className="lg:hidden border-t border-gray-800 p-4 max-h-48 overflow-y-auto">
+      <div className="lg:hidden border-t border-border p-4 max-h-48 overflow-y-auto">
         <SummaryPanel fields={fields} />
       </div>
     </div>
