@@ -46,20 +46,20 @@ export default function NotificationsPage() {
   return (
     <main className="max-w-2xl mx-auto px-6 py-10">
       <div className="mb-6">
-        <Link href="/prototype/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+        <Link href="/prototype/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           ← Dashboard
         </Link>
         <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Notifications
             {unreadCount > 0 && (
-              <span className="ml-3 text-sm font-semibold text-blue-400">({unreadCount} unread)</span>
+              <span className="ml-3 text-sm font-semibold text-primary">({unreadCount} unread)</span>
             )}
           </h1>
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors border border-gray-700 rounded-lg px-3 py-1.5"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-md px-3 py-1.5"
             >
               Mark all as read
             </button>
@@ -68,15 +68,15 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 border-b border-gray-800 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
         {FILTER_TABS.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveFilter(tab)}
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
               activeFilter === tab
-                ? 'border-revolutBlue text-white'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab}
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
 
       {filteredNotifications.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-sm">No notifications in this category.</p>
+          <p className="text-muted-foreground text-sm">No notifications in this category.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -95,19 +95,19 @@ export default function NotificationsPage() {
               key={notif.id}
               href={`/prototype/idea/${notif.ideaId}`}
               onClick={() => markRead(notif.id)}
-              className={`flex items-start gap-3 p-4 rounded-xl border transition-all block ${
+              className={`flex items-start gap-3 p-4 rounded-lg border transition-all block ${
                 !notif.read
-                  ? 'bg-blue-950/30 border-blue-800 hover:bg-blue-950/50'
-                  : 'bg-gray-900 border-gray-700 hover:border-gray-500 hover:bg-gray-800'
+                  ? 'bg-primary/5 border-primary/30 hover:bg-primary/10'
+                  : 'bg-card border-border hover:border-border/80 hover:bg-accent'
               }`}
             >
               <span className="text-lg flex-shrink-0">{typeIcons[notif.type] ?? '🔔'}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 leading-relaxed">{notif.message}</p>
-                <p className="text-xs text-gray-500 mt-1">{notif.createdAt}</p>
+                <p className="text-sm text-foreground leading-relaxed">{notif.message}</p>
+                <p className="text-xs text-muted-foreground mt-1">{notif.createdAt}</p>
               </div>
               {!notif.read && (
-                <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0 mt-2" />
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
               )}
             </Link>
           ))}
