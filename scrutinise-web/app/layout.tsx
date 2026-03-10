@@ -1,6 +1,5 @@
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
-import Navbar from '../components/ui/Navbar';
 
 export const metadata = {
   title: 'Scrutinise',
@@ -15,19 +14,8 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="bg-black text-white min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-white/10 py-6">
-            <div className="max-w-6xl mx-auto px-4 lg:px-8 flex items-center justify-between text-sm text-gray-400">
-              <span className="font-medium">Scrutinise</span>
-              <div className="flex gap-4">
-                <div className="w-5 h-5 rounded-full bg-gray-600/60" />
-                <div className="w-5 h-5 rounded-full bg-gray-600/60" />
-                <div className="w-5 h-5 rounded-full bg-gray-600/60" />
-              </div>
-            </div>
-          </footer>
+        <body className="min-h-screen">
+          {children}
         </body>
       </html>
     </ClerkProvider>
