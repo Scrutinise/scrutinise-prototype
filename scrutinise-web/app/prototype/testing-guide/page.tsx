@@ -184,28 +184,28 @@ export default function TestingGuidePage() {
 
       {/* Header */}
       <div className="mb-10">
-        <div className="inline-block text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4 px-3 py-1 border border-gray-700 rounded-full">
+        <div className="inline-block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 px-3 py-1 border border-border rounded-full">
           Tester Checklist
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Prototype Testing Guide</h1>
-        <p className="text-gray-400 text-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground mb-2">Prototype Testing Guide</h1>
+        <p className="text-muted-foreground text-sm">
           Use this checklist to verify every journey and page works correctly.
         </p>
 
         {/* Progress summary */}
         <div className="mt-6 flex gap-6">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-3">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Journey Steps</div>
-            <div className="text-xl font-bold text-white">
+          <div className="bg-card border border-border rounded-lg px-5 py-3">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Journey Steps</div>
+            <div className="text-xl font-bold text-foreground">
               {completedSteps}
-              <span className="text-gray-500 font-normal text-sm"> / {totalSteps}</span>
+              <span className="text-muted-foreground font-normal text-sm"> / {totalSteps}</span>
             </div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-3">
-            <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Pages Verified</div>
-            <div className="text-xl font-bold text-white">
+          <div className="bg-card border border-border rounded-lg px-5 py-3">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Pages Verified</div>
+            <div className="text-xl font-bold text-foreground">
               {completedPages}
-              <span className="text-gray-500 font-normal text-sm"> / {totalPages}</span>
+              <span className="text-muted-foreground font-normal text-sm"> / {totalPages}</span>
             </div>
           </div>
         </div>
@@ -216,24 +216,24 @@ export default function TestingGuidePage() {
         {JOURNEYS.map(journey => {
           const completedInJourney = journey.steps.filter(s => checkedSteps[s.id]).length
           return (
-            <div key={journey.number} className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <div key={journey.number} className="bg-card border border-border rounded-lg p-6">
               {/* Journey header */}
               <div className="flex items-start justify-between mb-1">
                 <div>
-                  <h2 className="text-base font-bold text-white">
+                  <h2 className="text-base font-semibold text-foreground">
                     Journey {journey.number}: {journey.name}
                   </h2>
-                  <p className="text-xs text-gray-600 mt-0.5 font-mono">{journey.entryPoint}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">{journey.entryPoint}</p>
                 </div>
-                <span className="text-xs text-gray-500 flex-shrink-0 ml-4 mt-1">
+                <span className="text-xs text-muted-foreground flex-shrink-0 ml-4 mt-1">
                   {completedInJourney}/{journey.steps.length}
                 </span>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-gray-800 rounded-full h-1 mt-3 mb-4">
+              <div className="w-full bg-muted rounded-full h-1 mt-3 mb-4">
                 <div
-                  className="bg-revolutBlue h-1 rounded-full transition-all"
+                  className="bg-primary h-1 rounded-full transition-all"
                   style={{ width: `${journey.steps.length ? (completedInJourney / journey.steps.length) * 100 : 0}%` }}
                 />
               </div>
@@ -253,12 +253,12 @@ export default function TestingGuidePage() {
                         <div
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                             checkedSteps[step.id]
-                              ? 'bg-revolutBlue border-revolutBlue'
-                              : 'border-gray-600 group-hover:border-gray-400'
+                              ? 'bg-primary border-primary'
+                              : 'border-border group-hover:border-muted-foreground'
                           }`}
                         >
                           {checkedSteps[step.id] && (
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -266,10 +266,10 @@ export default function TestingGuidePage() {
                       </div>
                       <span
                         className={`text-sm leading-snug ${
-                          checkedSteps[step.id] ? 'line-through text-gray-600' : 'text-gray-300'
+                          checkedSteps[step.id] ? 'line-through text-muted-foreground' : 'text-foreground'
                         }`}
                       >
-                        <span className="text-gray-600 mr-1">{idx + 1}.</span>
+                        <span className="text-muted-foreground mr-1">{idx + 1}.</span>
                         {step.description}
                       </span>
                     </label>
@@ -282,25 +282,25 @@ export default function TestingGuidePage() {
       </div>
 
       {/* Page Inventory */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="bg-card border border-border rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-white">Page Inventory</h2>
-          <span className="text-xs text-gray-500">{completedPages}/{totalPages} verified</span>
+          <h2 className="text-base font-semibold text-foreground">Page Inventory</h2>
+          <span className="text-xs text-muted-foreground">{completedPages}/{totalPages} verified</span>
         </div>
-        <p className="text-xs text-gray-600 mb-5">
+        <p className="text-xs text-muted-foreground mb-5">
           Tick each page once you have confirmed it loads without errors.
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-gray-600 uppercase tracking-wider border-b border-gray-800">
+              <tr className="text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
                 <th className="text-left pb-2 w-8"></th>
                 <th className="text-left pb-2">URL</th>
                 <th className="text-left pb-2">Page</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-border">
               {PAGE_INVENTORY.map(row => (
                 <tr key={row.id} className="group">
                   <td className="py-2.5 pr-3">
@@ -315,7 +315,7 @@ export default function TestingGuidePage() {
                         className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                           checkedPages[row.id]
                             ? 'bg-green-600 border-green-600'
-                            : 'border-gray-600 group-hover:border-gray-400'
+                            : 'border-border group-hover:border-muted-foreground'
                         }`}
                       >
                         {checkedPages[row.id] && (
@@ -326,10 +326,10 @@ export default function TestingGuidePage() {
                       </div>
                     </label>
                   </td>
-                  <td className={`py-2.5 pr-4 font-mono text-xs ${checkedPages[row.id] ? 'text-gray-600 line-through' : 'text-gray-400'}`}>
+                  <td className={`py-2.5 pr-4 font-mono text-xs ${checkedPages[row.id] ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>
                     {row.url}
                   </td>
-                  <td className={`py-2.5 text-xs ${checkedPages[row.id] ? 'text-gray-600 line-through' : 'text-gray-300'}`}>
+                  <td className={`py-2.5 text-xs ${checkedPages[row.id] ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                     {row.label}
                   </td>
                 </tr>
