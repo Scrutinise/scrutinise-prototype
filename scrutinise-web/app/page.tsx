@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Menu, X } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import PublicNav from "@/components/PublicNav"
 
 const stages = [
   {
@@ -40,62 +40,9 @@ const stats = [
 ]
 
 export default function HomePage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-          <Link href="/" className="text-lg font-semibold tracking-tight sm:text-xl">
-            Scrutinise
-          </Link>
-
-          {/* Desktop nav */}
-          <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/about"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              About
-            </Link>
-            <Button size="sm" asChild>
-              <Link href="/prototype/create/stage1">
-                Get Started
-              </Link>
-            </Button>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center justify-center p-2 md:hidden"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
-        </nav>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="border-t border-border px-4 py-4 md:hidden">
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/about"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Button size="sm" className="w-full" asChild>
-                <Link href="/prototype/create/stage1" onClick={() => setMobileMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
-            </div>
-          </div>
-        )}
-      </header>
+      <PublicNav />
 
       <main>
         {/* Hero Section */}
@@ -105,8 +52,9 @@ export default function HomePage() {
               <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl">
                 Master legislation. Shape the nation
               </h1>
+              {/* Fix 1: subtitle trimmed */}
               <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty sm:mt-6 sm:text-lg">
-                Turn any idea into Parliament-ready law in 5 stages — guided by AI, shaped by citizens, delivered to Parliament.
+                Turn any idea into Parliament-ready law in 5 stages.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <Button size="lg" asChild className="w-full sm:w-auto">
@@ -115,22 +63,15 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 size-4" />
                   </Link>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="w-full sm:w-auto"
-                >
-                  <Link href="/prototype/browse">
-                    Vote
-                  </Link>
+                <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
+                  <Link href="/prototype/browse">Vote</Link>
                 </Button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Parliament Video Band */}
+        {/* Fix 3 order: Parliament video band FIRST */}
         <section className="bg-[#0a0a0f]">
           <div className="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <div className="relative aspect-video overflow-hidden rounded-lg">
@@ -150,22 +91,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Research Band */}
-        <section className="bg-[#0a0a0f]">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
-              We'll handle the research for you
-            </h2>
-            <div className="relative aspect-video overflow-hidden rounded-lg">
-              {/* Charlie to supply video URL — placeholder for now */}
-              <div className="flex size-full items-center justify-center bg-zinc-800">
-                <p className="text-sm text-gray-400">Video coming soon</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Five Stages Section */}
+        {/* Fix 3 order: Five Stages IN BETWEEN the two dark bands */}
         <section className="border-t border-border bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <div className="mb-8 sm:mb-10">
@@ -198,6 +124,27 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Fix 2 & 3 & 4: Second dark band — woman in library video with title */}
+        <section className="bg-[#0a0a0f]">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            {/* Fix 4: title for this section */}
+            <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
+              A community working together to deliver high quality legislation and actions
+            </h2>
+            <div className="relative aspect-video overflow-hidden rounded-lg">
+              {/* Fix 2: woman-in-library local video */}
+              <video
+                src="/woman-in-library-by-candlelight.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="size-full object-cover video-mask-left"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Stats Section */}
         <section className="border-t border-border bg-secondary/50">
           <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
@@ -216,22 +163,20 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Trust Section */}
+        {/* Fix 5: Trust Section — full max-w-5xl width, no max-w-lg constraint */}
         <section className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <div className="max-w-lg">
-              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-                Democracy should be simple
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-                Complex legislation often excludes ordinary citizens from participating in their
-                democracy. Scrutinise breaks down barriers by providing AI guidance, plain language
-                explanations, and a clear path from idea to law.
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-                Every voice matters. Every idea deserves consideration.
-              </p>
-            </div>
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Democracy should be simple
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
+              Complex legislation often excludes ordinary citizens from participating in their
+              democracy. Scrutinise breaks down barriers by providing AI guidance, plain language
+              explanations, and a clear path from idea to law.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
+              Every voice matters. Every idea deserves consideration.
+            </p>
           </div>
         </section>
       </main>
@@ -240,32 +185,18 @@ export default function HomePage() {
       <footer className="border-t border-border">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-muted-foreground">
-              Scrutinise
-            </p>
+            <p className="text-sm text-muted-foreground">Scrutinise</p>
             <nav className="flex flex-wrap justify-center gap-4 sm:gap-6">
-              <Link
-                href="/about"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 About
               </Link>
-              <Link
-                href="/privacy"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <Link href="/privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Privacy
               </Link>
-              <Link
-                href="/terms"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <Link href="/terms" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Terms
               </Link>
-              <Link
-                href="/contact"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <Link href="/contact" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Contact
               </Link>
             </nav>

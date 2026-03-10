@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { MOCK_TRAINING, Stage } from '@/lib/mockData'
+import PublicNav from '@/components/PublicNav'
 
 type StageFilter = Stage | 'All'
 type DifficultyFilter = 'All' | 'Beginner' | 'Intermediate' | 'Advanced'
@@ -42,12 +43,10 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <PublicNav />
       <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-10">
-          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            ← Home
-          </Link>
           <h1 className="text-xl font-semibold tracking-tight mt-4">Training</h1>
           <p className="text-muted-foreground text-base mt-2">
             Resources to help you develop ideas, draft legislation, and navigate the parliamentary process.

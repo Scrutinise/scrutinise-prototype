@@ -1,3 +1,5 @@
+import PublicNav from '@/components/PublicNav'
+
 export default function About() {
   const paragraphs = [
     `The core objective of "Scrutinise" is to improve the quality and implementation of legislation for a better country, improve the skill and experience of MPs so they can implement the changes they became MPs for and to improve the quality of debate amongst the wider public by giving people an opportunity to swap frustrations for actions as they contribute to proper scrutiny and improvement in quality of legislation as it is developed.`,
@@ -12,6 +14,8 @@ export default function About() {
   ];
 
   return (
+    <div className="min-h-screen bg-background text-foreground">
+    <PublicNav />
     <main className="py-16 px-4">
       <article className="max-w-4xl mx-auto">
         <h1 className="text-xl font-semibold tracking-tight text-center mb-12 text-foreground">About Scrutinise</h1>
@@ -24,5 +28,6 @@ export default function About() {
         </div>
       </article>
     </main>
+    </div>
   );
 }
