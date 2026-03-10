@@ -4,12 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { MOCK_IDEAS, Stage } from '@/lib/mockData'
 
-const stageBadgeColors: Record<Stage, string> = {
-  Create: 'bg-gray-700 text-gray-300',
-  Draft: 'bg-blue-900 text-blue-300',
-  Develop: 'bg-amber-900 text-amber-300',
-  Campaign: 'bg-purple-900 text-purple-300',
-  Parliament: 'bg-green-900 text-green-300',
+const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
+  Create:     { backgroundColor: 'var(--stage-create)',     color: 'white' },
+  Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
+  Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
+  Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
+  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 const areas = ['All', ...Array.from(new Set(MOCK_IDEAS.map(i => i.area)))]
@@ -36,10 +36,10 @@ export default function BrowsePage() {
     })
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-10">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-1">Browse Ideas</h1>
-        <p className="text-gray-400 text-sm">{MOCK_IDEAS.length} ideas in the prototype</p>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Browse Ideas</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{MOCK_IDEAS.length} ideas in the prototype</p>
       </div>
 
       {/* Filters */}
@@ -49,26 +49,26 @@ export default function BrowsePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search ideas..."
-          className="flex-1 min-w-48 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-revolutBlue"
+          className="flex-1 min-w-48 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
         />
         <select
           value={areaFilter}
           onChange={e => setAreaFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none"
         >
           {areas.map(a => <option key={a} value={a}>{a === 'All' ? 'All Areas' : a}</option>)}
         </select>
         <select
           value={stageFilter}
           onChange={e => setStageFilter(e.target.value as 'All' | Stage)}
-          className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none"
         >
           {stages.map(s => <option key={s} value={s}>{s === 'All' ? 'All Stages' : s}</option>)}
         </select>
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as 'votes' | 'date' | 'credibility')}
-          className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none"
         >
           <option value="votes">Most Votes</option>
           <option value="date">Newest</option>
@@ -84,20 +84,23 @@ export default function BrowsePage() {
             <Link
               key={idea.id}
               href={`/prototype/idea/${idea.id}`}
-              className="block bg-gray-900 border border-gray-700 rounded-xl p-5 hover:border-gray-500 hover:bg-gray-800 transition-all group"
+              className="block rounded-lg border border-border bg-card p-5 hover:border-primary/40 hover:shadow-sm transition-all group"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${stageBadgeColors[idea.stage]}`}>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-md font-medium"
+                  style={stageBadgeStyle[idea.stage]}
+                >
                   {idea.stage}
                 </span>
-                <span className="text-xs text-gray-500 font-mono">&#10025; {idea.credibilityScore}</span>
+                <span className="text-xs text-muted-foreground font-mono">&#10025; {idea.credibilityScore}</span>
               </div>
-              <h2 className="text-sm font-semibold text-white mb-2 leading-snug group-hover:text-blue-300 transition-colors line-clamp-2">
+              <h2 className="text-sm font-semibold mb-2 leading-snug group-hover:text-primary transition-colors line-clamp-2">
                 {idea.title}
               </h2>
-              <p className="text-xs text-gray-400 leading-relaxed line-clamp-3 mb-3">{idea.summary}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="bg-gray-800 px-2 py-0.5 rounded-full">{idea.area}</span>
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 mb-3">{idea.summary}</p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="bg-secondary px-2 py-0.5 rounded-md">{idea.area}</span>
                 <span>{total.toLocaleString()} votes</span>
               </div>
             </Link>
@@ -106,7 +109,7 @@ export default function BrowsePage() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-20 text-gray-600">
+        <div className="text-center py-20 text-muted-foreground">
           <p>No ideas match your filters.</p>
         </div>
       )}
