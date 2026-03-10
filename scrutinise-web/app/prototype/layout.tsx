@@ -2,6 +2,7 @@ import { UserProvider } from '@/context/UserContext'
 import UserSwitcher from '@/components/UserSwitcher'
 import PrototypeBanner from '@/components/PrototypeBanner'
 import Link from 'next/link'
+import { Bell } from 'lucide-react'
 import { MOCK_NOTIFICATIONS } from '@/lib/mockData'
 
 const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length
@@ -9,40 +10,46 @@ const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length
 export default function PrototypeLayout({ children }: { children: React.ReactNode }) {
   return (
     <UserProvider>
-      <div className="min-h-screen bg-gray-950 text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <PrototypeBanner />
-        {/* Prototype nav bar with notification bell */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-20">
-          <Link href="/prototype" className="text-sm font-semibold text-white hover:text-gray-300 transition-colors">
-            Scrutinise Prototype
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/prototype/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              Dashboard
+        {/* Prototype nav */}
+        <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+            <Link href="/prototype" className="text-sm font-semibold tracking-tight hover:text-muted-foreground transition-colors">
+              Scrutinise
             </Link>
-            <Link href="/prototype/groups" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              Groups
-            </Link>
-            <Link href="/training" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              Training
-            </Link>
-            <Link href="/prototype/settings" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              Settings
-            </Link>
-            <Link href="/prototype/testing-guide" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-              Testing Guide
-            </Link>
-            {/* Notification bell */}
-            <Link href="/prototype/notifications" className="relative flex items-center justify-center w-8 h-8 hover:bg-gray-800 rounded-lg transition-colors" title="Notifications">
-              <span className="text-base">🔔</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white font-bold flex items-center justify-center leading-none">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/prototype" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                Dashboard
+              </Link>
+              <Link href="/prototype/groups" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                Groups
+              </Link>
+              <Link href="/training" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                Training
+              </Link>
+              <Link href="/prototype/settings" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                Settings
+              </Link>
+              <Link href="/prototype/testing-guide" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                Testing Guide
+              </Link>
+              {/* Notification bell */}
+              <Link
+                href="/prototype/notifications"
+                className="relative flex items-center justify-center p-1.5 rounded-md hover:bg-accent transition-colors"
+                aria-label="Notifications"
+              >
+                <Bell className="size-5 text-muted-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-medium text-primary-foreground leading-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
-        </div>
+        </header>
         <div className="pb-20">
           {children}
         </div>
