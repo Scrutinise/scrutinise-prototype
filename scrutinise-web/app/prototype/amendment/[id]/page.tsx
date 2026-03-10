@@ -21,8 +21,8 @@ export default function AmendmentPage({ params }: Props) {
   if (!amendment || !idea) {
     return (
       <main className="max-w-2xl mx-auto px-6 py-10">
-        <p className="text-gray-400">Amendment not found.</p>
-        <Link href="/prototype/dashboard" className="text-revolutBlue hover:underline text-sm">
+        <p className="text-muted-foreground">Amendment not found.</p>
+        <Link href="/prototype/dashboard" className="text-primary hover:underline text-sm">
           &#8592; Back to dashboard
         </Link>
       </main>
@@ -32,16 +32,16 @@ export default function AmendmentPage({ params }: Props) {
   return (
     <main className="max-w-3xl mx-auto px-6 py-10">
       <div className="mb-2">
-        <Link href="/prototype/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+        <Link href="/prototype/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           &#8592; Back to dashboard
         </Link>
       </div>
 
       <div className="mt-6 mb-8">
-        <div className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-2">Amendment Proposed</div>
-        <h1 className="text-2xl font-bold text-white mb-2 leading-snug">{idea.title}</h1>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span>Proposed by <strong className="text-gray-300">{amendment.proposedBy}</strong></span>
+        <div className="text-xs font-medium uppercase tracking-widest text-amber-400 mb-2">Amendment Proposed</div>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground mb-2 leading-snug">{idea.title}</h1>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>Proposed by <strong className="text-foreground">{amendment.proposedBy}</strong></span>
           <span>&middot;</span>
           <span>{amendment.createdAt}</span>
           <span className="px-2 py-0.5 bg-amber-900 text-amber-300 rounded-full font-medium capitalize">
