@@ -71,23 +71,22 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Fix 3 order: Parliament video band FIRST */}
+        {/* First dark band — woman in library — "We'll do the research for you" */}
         <section className="bg-[#0a0a0f]">
-          <div className="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
+              We'll do the research for you
+            </h2>
             <div className="relative aspect-video overflow-hidden rounded-lg">
               <video
+                src="/woman-in-library-by-candlelight.mp4"
                 autoPlay
-                muted
                 loop
+                muted
                 playsInline
-                className="size-full object-cover"
-              >
-                <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
-              </video>
+                className="size-full object-cover video-mask-left"
+              />
             </div>
-            <p className="mt-4 text-center text-sm text-gray-400">
-              Citizens crafting legislation, one idea at a time
-            </p>
           </div>
         </section>
 
@@ -124,24 +123,26 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Fix 2 & 3 & 4: Second dark band — woman in library video with title */}
+        {/* Second dark band — parliament video — "Quality legislation - open sourced" */}
         <section className="bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            {/* Fix 4: title for this section */}
             <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
-              A community working together to deliver high quality legislation and actions
+              Quality legislation - open sourced
             </h2>
             <div className="relative aspect-video overflow-hidden rounded-lg">
-              {/* Fix 2: woman-in-library local video */}
               <video
-                src="/woman-in-library-by-candlelight.mp4"
                 autoPlay
-                loop
                 muted
+                loop
                 playsInline
-                className="size-full object-cover video-mask-left"
-              />
+                className="size-full object-cover"
+              >
+                <source src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4" type="video/mp4" />
+              </video>
             </div>
+            <p className="mt-4 text-center text-sm text-gray-400">
+              Citizens crafting legislation, one idea at a time
+            </p>
           </div>
         </section>
 
