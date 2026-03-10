@@ -49,14 +49,14 @@ export default function ProposeAmendmentPage({ params }: Props) {
   if (submitted) {
     return (
       <main className="max-w-xl mx-auto px-6 py-10">
-        <div className="bg-gray-900 border border-green-800 rounded-xl p-8 text-center">
+        <div className="bg-card border border-border rounded-lg p-8 text-center">
           <p className="text-green-400 text-lg font-semibold mb-2">Amendment submitted for review</p>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-muted-foreground text-sm mb-6">
             The idea owner will be notified and can accept, reject, or circulate your amendment for consultation.
           </p>
           <Link
             href={`/prototype/idea/${idea.id}`}
-            className="inline-block px-5 py-2.5 bg-revolutBlue hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition-colors"
+            className="inline-block px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-sm font-semibold transition-colors"
           >
             Return to idea →
           </Link>
@@ -68,23 +68,23 @@ export default function ProposeAmendmentPage({ params }: Props) {
   return (
     <main className="max-w-2xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <Link href={`/prototype/idea/${idea.id}`} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
+        <Link href={`/prototype/idea/${idea.id}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           ← Back to idea
         </Link>
-        <h1 className="text-2xl font-bold text-white mt-4">Propose Amendment</h1>
-        <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-          Proposing amendment to: <span className="text-white font-medium">{idea.title}</span>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground mt-4">Propose Amendment</h1>
+        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+          Proposing amendment to: <span className="text-foreground font-medium">{idea.title}</span>
         </p>
       </div>
 
       <div className="space-y-6">
         {/* Section selector */}
         <div>
-          <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Section to amend</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Section to amend</label>
           <select
             value={selectedSection}
             onChange={e => setSelectedSection(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-revolutBlue transition-colors"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
           >
             {sectionOptions.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
@@ -94,21 +94,21 @@ export default function ProposeAmendmentPage({ params }: Props) {
 
         {/* Current text (read-only) */}
         <div>
-          <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Current text</label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Current text</label>
           <textarea
             value={currentText}
             readOnly
             rows={4}
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-gray-400 text-sm resize-none cursor-default"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground resize-none cursor-default"
           />
         </div>
 
         {/* Proposed text */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wider">Proposed text</label>
+            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Proposed text</label>
             {proposedText && (
-              <span className={`text-xs ${wordCountDiff > 0 ? 'text-amber-400' : wordCountDiff < 0 ? 'text-blue-400' : 'text-gray-500'}`}>
+              <span className={`text-xs ${wordCountDiff > 0 ? 'text-amber-400' : wordCountDiff < 0 ? 'text-blue-400' : 'text-muted-foreground'}`}>
                 {wordCountDiff > 0 ? `+${wordCountDiff}` : wordCountDiff} words
               </span>
             )}
@@ -118,25 +118,25 @@ export default function ProposeAmendmentPage({ params }: Props) {
             onChange={e => setProposedText(e.target.value)}
             placeholder="Enter your proposed replacement text..."
             rows={4}
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-revolutBlue transition-colors resize-none"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
           />
         </div>
 
         {/* Rationale */}
         <div>
-          <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Rationale <span className="text-gray-600 normal-case">(required)</span></label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Rationale <span className="text-muted-foreground normal-case">(required)</span></label>
           <textarea
             value={rationale}
             onChange={e => setRationale(e.target.value)}
             placeholder="Why does this change improve the idea? Be specific."
             rows={3}
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-revolutBlue transition-colors resize-none"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
           />
         </div>
 
         {/* Research URLs */}
         <div>
-          <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Supporting research URLs <span className="text-gray-700 normal-case">(optional)</span></label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Supporting research URLs <span className="text-muted-foreground normal-case">(optional)</span></label>
           <div className="space-y-2">
             {researchUrls.map((url, i) => (
               <div key={i} className="flex gap-2">
@@ -145,12 +145,12 @@ export default function ProposeAmendmentPage({ params }: Props) {
                   value={url}
                   onChange={e => updateUrl(i, e.target.value)}
                   placeholder="https://..."
-                  className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-revolutBlue transition-colors"
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
                 />
                 {researchUrls.length > 1 && (
                   <button
                     onClick={() => removeUrl(i)}
-                    className="text-gray-600 hover:text-red-400 px-2 transition-colors"
+                    className="text-muted-foreground hover:text-red-400 px-2 transition-colors"
                   >
                     ✕
                   </button>
@@ -160,7 +160,7 @@ export default function ProposeAmendmentPage({ params }: Props) {
           </div>
           <button
             onClick={addUrlRow}
-            className="mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             + Add another URL
           </button>
@@ -168,20 +168,20 @@ export default function ProposeAmendmentPage({ params }: Props) {
 
         {/* Relevant legislation */}
         <div>
-          <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Relevant legislation <span className="text-gray-700 normal-case">(optional)</span></label>
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Relevant legislation <span className="text-muted-foreground normal-case">(optional)</span></label>
           <input
             type="text"
             value={relevantLegislation}
             onChange={e => setRelevantLegislation(e.target.value)}
             placeholder="e.g. Housing Act 1988, section 21"
-            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-revolutBlue transition-colors"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
           />
         </div>
 
         <button
           onClick={() => { if (proposedText.trim() && rationale.trim()) setSubmitted(true) }}
           disabled={!proposedText.trim() || !rationale.trim()}
-          className="w-full py-3 bg-revolutBlue hover:bg-blue-600 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors"
+          className="w-full py-3 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 rounded-md text-sm font-semibold transition-colors"
         >
           Submit Amendment
         </button>
