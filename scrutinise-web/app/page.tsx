@@ -28,7 +28,7 @@ const stages = [
   },
   {
     number: 5,
-    name: "Parliament",
+    name: "Legislate",
     description: "Government agenda and parliamentary scrutiny",
   },
 ]
@@ -52,7 +52,6 @@ export default function HomePage() {
               <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl">
                 Master legislation. Shape the nation
               </h1>
-              {/* Fix 1: subtitle trimmed */}
               <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty sm:mt-6 sm:text-lg">
                 Turn any idea into Parliament-ready law in 5 stages.
               </p>
@@ -71,26 +70,34 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* First dark band — woman in library — "We'll do the research for you" */}
-        <section className="bg-[#0a0a0f]">
+        {/* Text Block 1 — Where serious policy people build legislation */}
+        <section className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
-              We'll do the research for you
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Where serious policy people build legislation
             </h2>
-            <div className="relative aspect-video overflow-hidden rounded-lg">
-              <video
-                src="/woman-in-library-by-candlelight.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="size-full object-cover video-mask-left"
-              />
-            </div>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
+              Scrutinise is a civic technology platform for political entrepreneurs — legislators,
+              experts and engaged citizens — to develop, test and refine their good ideas into
+              better legislation and stronger public systems.
+            </p>
+            <ul className="mt-4 space-y-2 sm:mt-5">
+              {[
+                "We are building an online community around craft, expertise and serious thinking",
+                "A tool that makes it possible and worth your time to help make better laws with lower risk",
+                "Better Laws — Better Government — Build a team — Have an Impact",
+                "A place for powerful implementable ideas not ideological debate",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
-        {/* Fix 3 order: Five Stages IN BETWEEN the two dark bands */}
+        {/* Five Steps */}
         <section className="border-t border-border bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <div className="mb-8 sm:mb-10">
@@ -123,7 +130,32 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Second dark band — parliament video — "Quality legislation - open sourced" */}
+        {/* Text Block 2 — Stop asking for change; start defining it (grey background) */}
+        <section className="border-t border-border bg-secondary/50">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Stop asking for change; start defining it
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
+              A political entrepreneur is someone who identifies a problem that can be solved through
+              changes in legislation or government operations and then builds the coalition, the
+              evidence, and the argument to fix it. They don&apos;t wait for permission. They build the case.
+            </p>
+            <ul className="mt-4 space-y-2 sm:mt-5">
+              {[
+                "This platform uses cutting edge AI and a community of peers to carefully scrutinise and improve those ideas in a structured way to deliver Parliament-ready draft legislation.",
+                "Anyone can start an idea — only the best build support in Parliament — how far will yours go?",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* Dark band — parliament video — "Quality legislation - open sourced" */}
         <section className="bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
@@ -146,6 +178,29 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Text Block 3 — MPs and the road to legislative excellence */}
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              MPs and the road to legislative excellence
+            </h2>
+            <ul className="mt-4 space-y-2 sm:mt-6">
+              {[
+                "Build a policy portfolio that makes you look Ministerial and your party ready for power",
+                "Stop being a candidate — become a legislator in waiting",
+                "Find the holes in your logic before your rivals do",
+                "Your own team of trained researchers at no cost",
+                "Reclaim control from the bureaucracies",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         {/* Stats Section */}
         <section className="border-t border-border bg-secondary/50">
           <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
@@ -164,19 +219,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Fix 5: Trust Section — full max-w-5xl width, no max-w-lg constraint */}
+        {/* Trust Section */}
         <section className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
               Democracy should be simple
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-              Complex legislation often excludes ordinary citizens from participating in their
-              democracy. Scrutinise breaks down barriers by providing AI guidance, plain language
-              explanations, and a clear path from idea to law.
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-              Every voice matters. Every idea deserves consideration.
+              Climbing Everest will always be tough, but oxygen makes it feasible. Scrutinise
+              provides the support and structure to make quality legislation a realistic goal for
+              those willing to put in the hard work.
             </p>
           </div>
         </section>
