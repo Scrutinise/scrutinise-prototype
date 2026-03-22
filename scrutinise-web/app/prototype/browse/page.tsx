@@ -49,6 +49,7 @@ export default function BrowsePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search ideas..."
+          autoFocus
           className="flex-1 min-w-48 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
         />
         <select

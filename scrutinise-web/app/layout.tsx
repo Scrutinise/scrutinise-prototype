@@ -12,7 +12,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInFallbackRedirectUrl="/prototype/dashboard"
+      signUpFallbackRedirectUrl="/prototype/dashboard"
+    >
       <html lang="en">
         <body className="min-h-screen">
           {children}
