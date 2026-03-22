@@ -1,0 +1,139 @@
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { getAuthenticatedUser } from '@/lib/auth'
+import { checkAndAdvanceStage } from '@/lib/stage-gates'
+
+type Params = { params: Promise<{ id: string }> }
+
+// Idea fields that can be updated via PATCH
+const PatchIdeaSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  summaryDescription: z.string().max(280).optional(),
+  summaryDiagnosis: z.string().max(500).optional(),
+  summaryGuidingPolicy: z.string().max(500).optional(),
+  summaryCoherentActions: z.string().max(500).optional(),
+  diagnosis: z.string().optional(),
+  guidingPolicy: z.string().optional(),
+  rootCause: z.string().optional(),
+  whoAffected: z.string().optional(),
+  proposedWording: z.string().optional(),
+  aiChatHistory: z.array(z.object({
+    role: z.enum(['user', 'lex']),
+    content: z.string(),
+    timestamp: z.string().optional(),
+  })).optional(),
+  aiCurrentField: z.string().optional(),
+}).strict()
+
+// GET /api/ideas/[id]
+export async function GET(req: Request, { params }: Params) {
+  const { error, user } = await getAuthenticatedUser()
+  if (error) return error
+
+  const { id } = await params
+
+  const idea = await prisma.idea.findUnique({
+    where: { id },
+    include: {
+      coherentActions: { orderBy: { orderIndex: 'asc' } },
+      research: { orderBy: { createdAt: 'asc' } },
+      collaborators: { include: { user: { select: { id: true, name: true, email: true } } } },
+    },
+  })
+
+  if (!idea) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // Authorise: owner or collaborator
+  const isOwner = idea.creatorId === user.id
+  const isCollaborator = idea.collaborators.some(c => c.userId === user.id)
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role)
+
+  if (!isOwner && !isCollaborator && !isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Privacy log: admin accessing another user's idea
+  if (isAdmin && !isOwner) {
+    const accessReason = req.headers.get('x-access-reason') ?? 'No reason provided'
+    await prisma.activityLog.create({
+      data: {
+        userId: idea.creatorId,
+        ideaId: idea.id,
+        activityType: 'ADMIN_ACCESS',
+        description: `Admin accessed idea: ${idea.title}`,
+        accessType: 'ADMIN_ACCESS',
+        accessReason,
+        accessedByUserId: user.id,
+      },
+    })
+  }
+
+  return NextResponse.json(idea)
+}
+
+// PATCH /api/ideas/[id]
+export async function PATCH(req: Request, { params }: Params) {
+  const { error, user } = await getAuthenticatedUser()
+  if (error) return error
+
+  const { id } = await params
+
+  const idea = await prisma.idea.findUnique({
+    where: { id },
+    include: { collaborators: { select: { userId: true, role: true } } },
+  })
+
+  if (!idea) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const isOwner = idea.creatorId === user.id
+  const isEditor = idea.collaborators.some(c => c.userId === user.id && c.role === 'EDITOR')
+
+  if (!isOwner && !isEditor) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const parsed = PatchIdeaSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  }
+
+  const updated = await prisma.idea.update({
+    where: { id },
+    data: parsed.data,
+    select: {
+      id: true,
+      stage: true,
+      title: true,
+      summaryDescription: true,
+      diagnosis: true,
+      guidingPolicy: true,
+      rootCause: true,
+      whoAffected: true,
+      proposedWording: true,
+      updatedAt: true,
+    },
+  })
+
+  // Stage gate: check if 1→2 auto-advance should fire
+  await checkAndAdvanceStage(id, idea.creatorId)
+
+  // Re-fetch with latest stage after potential advancement
+  const latest = await prisma.idea.findUnique({
+    where: { id },
+    select: { id: true, stage: true, updatedAt: true },
+  })
+
+  return NextResponse.json({ ...updated, stage: latest?.stage })
+}
