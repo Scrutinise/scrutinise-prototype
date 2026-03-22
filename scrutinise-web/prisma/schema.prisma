@@ -4,8 +4,9 @@
 // Sprint 1 schema changes applied per CC_Sprint1_Briefing.md Section 5.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider      = "prisma-client"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
