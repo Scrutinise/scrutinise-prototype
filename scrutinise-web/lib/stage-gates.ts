@@ -1,5 +1,5 @@
 import { prisma } from './prisma'
-import type { Idea } from '../generated/prisma/client'
+import type { Idea } from '@prisma/client'
 
 /**
  * Stage 1→2: AUTOMATIC
