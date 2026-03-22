@@ -1,4 +1,4 @@
-export type Stage = 'Create' | 'Draft' | 'Develop' | 'Campaign' | 'Parliament'
+export type Stage = 'Create' | 'Draft' | 'Develop' | 'Campaign' | 'Legislate'
 
 export type UserRole = 'citizen' | 'mp' | 'expert' | 'moderator' | 'admin'
 
@@ -527,7 +527,7 @@ export const MOCK_TRAINING: MockTraining[] = [
   { id: 'tr-2', title: 'Writing Effective Legislative Drafts', resourceType: 'VIDEO', author: 'Institute for Government', duration: '24:17', stageTag: 'Develop', topicTag: 'Drafting', difficultyTag: 'Intermediate', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   { id: 'tr-3', title: 'Evidence-Based Policy Making', resourceType: 'VIDEO', author: "King's College London", duration: '18:42', stageTag: 'Draft', topicTag: 'Evidence', difficultyTag: 'Intermediate', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   { id: 'tr-4', title: 'Running an Effective Public Campaign', resourceType: 'VIDEO', author: 'Hansard Society', duration: '31:05', stageTag: 'Campaign', topicTag: 'Campaigning', difficultyTag: 'Advanced', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-  { id: 'tr-5', title: 'Understanding Parliamentary Scrutiny', resourceType: 'ARTICLE', author: 'UK Parliament', duration: '8 min read', stageTag: 'Parliament', topicTag: 'Parliament', difficultyTag: 'Beginner', url: 'https://www.parliament.uk/about/how/laws/passage-bill/' }
+  { id: 'tr-5', title: 'Understanding Parliamentary Scrutiny', resourceType: 'ARTICLE', author: 'UK Parliament', duration: '8 min read', stageTag: 'Legislate', topicTag: 'Legislate', difficultyTag: 'Beginner', url: 'https://www.parliament.uk/about/how/laws/passage-bill/' }
 ]
 
 export interface MockGroupMember {

@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { MOCK_IDEAS, MOCK_USERS, Stage } from '@/lib/mockData'
 import { useUser } from '@/context/UserContext'
@@ -14,7 +15,7 @@ const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
   Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
   Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
   Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
-  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
+  Legislate: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 const amendmentStatusColors: Record<string, string> = {
@@ -51,6 +52,8 @@ const sourceTypeBadge: Record<string, string> = {
 
 const TABS = ['Overview', 'Amendments', 'Comments', 'Research', 'Wording', 'History']
 
+const STAGE_ORDER: Stage[] = ['Create', 'Draft', 'Develop', 'Campaign', 'Legislate']
+
 type Props = { params: Promise<{ id: string }> }
 
 export default function IdeaDetailPage({ params }: Props) {
@@ -59,8 +62,11 @@ export default function IdeaDetailPage({ params }: Props) {
   const { currentUser } = useUser()
   const isOwner = currentUser.id === idea.ownerId
   const owner = MOCK_USERS.find(u => u.id === idea.ownerId)
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const initialTab = tabParam === 'amendments' ? 1 : 0
 
-  const [activeTab, setActiveTab] = useState(0)
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [amendmentFilter, setAmendmentFilter] = useState<string>('All')
   const [expandedAmendments, setExpandedAmendments] = useState<Set<string>>(new Set())
   const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set())
@@ -107,6 +113,34 @@ export default function IdeaDetailPage({ params }: Props) {
         <Link href="/prototype/browse" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           ← Browse Ideas
         </Link>
+      </div>
+
+      {/* Five-stage progress stepper */}
+      <div className="flex items-center gap-0 mb-6 overflow-x-auto">
+        {STAGE_ORDER.map((stage, i) => {
+          const currentIndex = STAGE_ORDER.indexOf(idea.stage)
+          const isPast = i < currentIndex
+          const isCurrent = i === currentIndex
+          return (
+            <div key={stage} className="flex items-center">
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                isCurrent
+                  ? 'bg-primary text-primary-foreground'
+                  : isPast
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  isCurrent ? 'bg-primary-foreground' : isPast ? 'bg-primary' : 'bg-muted-foreground'
+                }`} />
+                {stage}
+              </div>
+              {i < STAGE_ORDER.length - 1 && (
+                <div className={`w-5 h-px flex-shrink-0 ${i < currentIndex ? 'bg-primary/40' : 'bg-border'}`} />
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Header */}
@@ -366,7 +400,7 @@ export default function IdeaDetailPage({ params }: Props) {
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
               Parliamentary Endorsements
               <span className="ml-2 normal-case font-normal">
-                ({idea.endorsements.length} of 3 required for Parliament stage)
+                ({idea.endorsements.length} of 3 required for Legislate stage)
               </span>
             </h2>
             {idea.endorsements.length === 0 ? (

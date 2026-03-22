@@ -93,7 +93,7 @@ export default function NotificationsPage() {
           {filteredNotifications.map(notif => (
             <Link
               key={notif.id}
-              href={`/prototype/idea/${notif.ideaId}`}
+              href={notif.type === 'amendment' ? `/prototype/idea/${notif.ideaId}?tab=amendments` : `/prototype/idea/${notif.ideaId}`}
               onClick={() => markRead(notif.id)}
               className={`flex items-start gap-3 p-4 rounded-lg border transition-all block ${
                 !notif.read

@@ -19,7 +19,7 @@ const stages = [
   {
     number: 3,
     name: "Develop",
-    description: "Add research, develop arguments, first 25 votes",
+    description: "Add research, develop arguments, open to referral-link scrutiny",
   },
   {
     number: 4,

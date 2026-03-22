@@ -25,7 +25,7 @@ const JOURNEYS: Journey[] = [
       { id: 'j1-3', description: 'Char count shows on Title (max 200) and Summary Description (max 280)' },
       { id: 'j1-4', description: '"Ready for Stage 2 →" button is disabled until Title and Summary Description are filled' },
       { id: 'j1-5', description: '"Save Draft" button is visible at all times' },
-      { id: 'j1-6', description: 'Stage progress indicator shows: Create highlighted, then Draft → Develop → Campaign → Parliament' },
+      { id: 'j1-6', description: 'Stage progress indicator shows: Create highlighted, then Draft → Develop → Campaign → Legislate' },
       { id: 'j1-7', description: '"AI guidance" notice visible in gray below form' },
       { id: 'j1-8', description: 'Stage 2 loads: Lex chat on left, summary panel on right' },
       { id: 'j1-9', description: 'Scripted Lex conversation auto-starts after 1.2s' },

@@ -12,7 +12,7 @@ const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
   Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
   Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
   Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
-  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
+  Legislate: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 export default function DashboardPage() {

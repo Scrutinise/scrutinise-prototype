@@ -44,7 +44,7 @@ export default function SettingsPage() {
   })
 
   // AI settings
-  const [aiStyle, setAiStyle] = useState('Socratic')
+  const [aiStyle, setAiStyle] = useState('Collaborative')
 
   const toggleNotif = (key: keyof typeof notifToggles) => {
     setNotifToggles(prev => ({ ...prev, [key]: !prev[key] }))
@@ -358,16 +358,56 @@ export default function SettingsPage() {
         <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Lex AI</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Interaction style</label>
-            <select
-              value={aiStyle}
-              onChange={e => setAiStyle(e.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-            >
-              <option value="Socratic">Socratic (default — questions-first)</option>
-              <option value="Direct">Direct — give me the answer</option>
-              <option value="Collaborative">Collaborative — work through it together</option>
-            </select>
+            <label className="block text-xs text-muted-foreground mb-3">Interaction style</label>
+            <div className="space-y-3">
+              {([
+                {
+                  value: 'Collaborative',
+                  label: 'Collaborative',
+                  description: 'Lex will work through each step with you and contribute text suggestions where you are unsure what you want to write. For most users.',
+                  isDefault: true,
+                },
+                {
+                  value: 'Socratic',
+                  label: 'Socratic',
+                  description: 'Lex will ask you questions to inspire you in ways to improve and strengthen your idea but will leave you in total control of the wording. For experts.',
+                  isDefault: false,
+                },
+                {
+                  value: 'Direct',
+                  label: 'Direct',
+                  description: 'Lex will give you the answer, prepare the draft, and prepare the research based on your direction and approvals.',
+                  isDefault: false,
+                },
+              ] as const).map(option => (
+                <label
+                  key={option.value}
+                  className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
+                    aiStyle === option.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-background hover:bg-accent'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="aiStyle"
+                    value={option.value}
+                    checked={aiStyle === option.value}
+                    onChange={() => setAiStyle(option.value)}
+                    className="mt-0.5 accent-primary flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">{option.label}</span>
+                      {option.isDefault && (
+                        <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">default</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">

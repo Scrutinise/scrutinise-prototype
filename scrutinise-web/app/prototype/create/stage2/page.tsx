@@ -7,14 +7,16 @@ import AIFuelGauge from '@/components/AIFuelGauge'
 import { LEX_JOURNEY_1_SCRIPT } from '@/lib/lexScripts'
 import { useUser } from '@/context/UserContext'
 
-const STAGES = ['Create', 'Draft', 'Develop', 'Campaign', 'Parliament']
+const STAGES = ['Create', 'Draft', 'Develop', 'Campaign', 'Legislate']
 
 const initialFields: SummaryField[] = [
-  { name: 'Problem Statement', value: '', status: 'empty' },
+  { name: "What's the Challenge?", value: '', status: 'empty' },
+  { name: "What's Causing It?", value: '', status: 'empty' },
+  { name: 'How Will We Solve It?', value: '', status: 'empty' },
+  { name: 'A Practical Step', value: '', status: 'empty' },
+  { name: "Who's Affected?", value: '', status: 'empty' },
   { name: 'Evidence Base', value: '', status: 'empty' },
-  { name: 'Proposed Solution', value: '', status: 'empty' },
-  { name: 'Who Is Affected', value: '', status: 'empty' },
-  { name: 'Coherent Actions', value: '', status: 'empty' },
+  { name: 'Proposed Wording', value: '', status: 'empty' },
 ]
 
 export default function Stage2Page() {

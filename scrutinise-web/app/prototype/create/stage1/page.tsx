@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-const STAGES = ['Create', 'Draft', 'Develop', 'Campaign', 'Parliament']
+const STAGES = ['Create', 'Draft', 'Develop', 'Campaign', 'Legislate']
 
 const GOVT_AREAS = [
   'Housing',

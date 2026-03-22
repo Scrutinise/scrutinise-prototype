@@ -11,7 +11,7 @@ const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
   Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
   Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
   Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
-  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
+  Legislate: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 type Props = { params: Promise<{ id: string }> }
@@ -128,7 +128,7 @@ export default function ReferralIdeaPage({ params }: Props) {
           <h2 className="text-sm font-semibold text-foreground mb-3">What is Scrutinise?</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Scrutinise is a not-for-profit platform where citizens, experts, and MPs develop policy ideas into Parliament-ready legislation.
-            Every idea goes through five stages — <span className="text-foreground">Create, Draft, Develop, Campaign, Parliament</span> — with Lex AI guidance
+            Every idea goes through five stages — <span className="text-foreground">Create, Draft, Develop, Campaign, Legislate</span> — with Lex AI guidance
             and community scrutiny at each step.
           </p>
         </div>

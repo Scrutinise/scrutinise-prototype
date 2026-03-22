@@ -15,7 +15,7 @@ const stageBadgeColors: Partial<Record<Stage | string, string>> = {
   Draft: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   Develop: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
   Campaign: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  Parliament: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  Legislate: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
 }
 
 const difficultyColors: Record<string, string> = {
@@ -37,7 +37,7 @@ export default function TrainingPage() {
     return stageMatch && diffMatch && typeMatch
   })
 
-  const stages: StageFilter[] = ['All', 'Create', 'Draft', 'Develop', 'Campaign', 'Parliament']
+  const stages: StageFilter[] = ['All', 'Create', 'Draft', 'Develop', 'Campaign', 'Legislate']
   const difficulties: DifficultyFilter[] = ['All', 'Beginner', 'Intermediate', 'Advanced']
   const types: TypeFilter[] = ['All', 'VIDEO', 'ARTICLE']
 

@@ -9,11 +9,11 @@ const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
   Draft:      { backgroundColor: 'var(--stage-draft)',      color: 'white' },
   Develop:    { backgroundColor: 'var(--stage-develop)',    color: 'white' },
   Campaign:   { backgroundColor: 'var(--stage-campaign)',   color: 'white' },
-  Parliament: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
+  Legislate: { backgroundColor: 'var(--stage-parliament)', color: 'white' },
 }
 
 const areas = ['All', ...Array.from(new Set(MOCK_IDEAS.map(i => i.area)))]
-const stages: ('All' | Stage)[] = ['All', 'Create', 'Draft', 'Develop', 'Campaign', 'Parliament']
+const stages: ('All' | Stage)[] = ['All', 'Create', 'Draft', 'Develop', 'Campaign', 'Legislate']
 
 export default function BrowsePage() {
   const [search, setSearch] = useState('')
