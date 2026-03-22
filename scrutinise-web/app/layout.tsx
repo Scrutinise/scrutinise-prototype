@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <ClerkProvider
       signInFallbackRedirectUrl="/prototype/dashboard"
-      signUpFallbackRedirectUrl="/prototype/create/stage1"
+      signUpFallbackRedirectUrl="/onboarding"
     >
       <html lang="en">
         <body className="min-h-screen">

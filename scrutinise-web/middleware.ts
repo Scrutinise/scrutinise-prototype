@@ -5,8 +5,10 @@ import { NextResponse } from 'next/server'
 const isProtectedRoute = createRouteMatcher([
   '/prototype(.*)',
   '/ideas(.*)',
+  '/onboarding(.*)',
   '/api/ideas(.*)',
   '/api/ai(.*)',
+  '/api/user(.*)',
   '/api/webhooks/clerk',
 ])
 
