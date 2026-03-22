@@ -4,7 +4,13 @@
       "Bash(npx tsc:*)",
       "Bash(chmod +x:*)",
       "Bash(cd D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web && npm install class-variance-authority @radix-ui/react-slot 2>&1 | tail -5)",
-      "Bash(cd D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web && npm install @radix-ui/react-separator @radix-ui/react-label 2>&1 | tail -3)"
+      "Bash(cd D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web && npm install @radix-ui/react-separator @radix-ui/react-label 2>&1 | tail -3)",
+      "Bash(bash start-session.sh 2>&1)",
+      "Bash(npm run:*)",
+      "Bash(ls D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web/.env*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(ls \"D:/Dropbox/GitHub/scrutinise-prototype/next.config\"*)"
     ]
   }
 }
