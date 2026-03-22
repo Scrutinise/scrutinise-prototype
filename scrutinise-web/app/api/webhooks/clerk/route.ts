@@ -68,8 +68,12 @@ export async function POST(req: Request) {
   const lastName = last_name ?? ''
   const fullName = [firstName, lastName].filter(Boolean).join(' ')
 
-  // Preferred name comes from Clerk unsafe_metadata (set during sign-up flow)
+  // Custom fields from Clerk unsafe_metadata (configured in Clerk Dashboard)
   const preferredName = (unsafe_metadata?.preferredName as string | undefined) ?? firstName
+  const ageConfirmed = (unsafe_metadata?.ageConfirmed as boolean | undefined) === true
+  const tcAgreed = (unsafe_metadata?.tcAgreed as boolean | undefined) === true
+  const rulesAgreed = (unsafe_metadata?.rulesAgreed as boolean | undefined) === true
+  const now = new Date()
 
   // Generate a unique username if Clerk didn't provide one
   const baseUsername = username
@@ -90,6 +94,10 @@ export async function POST(req: Request) {
           lastName,
           name: fullName,
           preferredName,
+          ageConfirmed,
+          tcAgreedAt: tcAgreed ? now : null,
+          rulesAgreedAt: rulesAgreed ? now : null,
+          tcVersion: tcAgreed ? '1.0' : null,
           username: uniqueUsername,
           role: 'CITIZEN',
           status: 'ACTIVE',
