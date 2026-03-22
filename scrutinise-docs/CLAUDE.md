@@ -1,6 +1,6 @@
 # SCRUTINISE — CLAUDE CODE CONTEXT FILE
 *Read this first, every session, before touching any code.*
-*Last updated: March 2026*
+*Last updated: 22 March 2026 — v3. Updated with UX/voice build notes, Lex welcome message, AI style descriptions, amendment UX, prototype fixes.*
 
 ## CONTENTS
 1. Start of Session Checklist
@@ -18,12 +18,12 @@
 
 ## 1. START OF SESSION CHECKLIST
 
-Before writing any code, run this checklist:
+Before writing any code:
 
-1. Read `/docs/entity_list_v4.md` — know every entity and field
-2. Read `/docs/process_list_v2.md` — know every process you are implementing
-3. Read `/docs/system_mechanics_v0.6.md` — know the rules behind what you are building
-4. Check `/docs/implementation_plan.md` — confirm what week/day you are on and what is in scope
+1. Read `entity_list_v4.md` — know every entity and field
+2. Read `process_list_v2.md` — for the specific feature area you are building
+3. Read `system_mechanics_v0.7.md` — the rules behind what you are building
+4. Read `CC_Sprint1_Briefing.md` — confirm what week/day you are on and what is in scope
 5. Run `git status` — know where the codebase is before changing it
 6. Never assume — if a spec is ambiguous, stop and ask Charlie before building
 
@@ -33,9 +33,7 @@ Before writing any code, run this checklist:
 
 Scrutinise is a not-for-profit civic engagement platform enabling citizens, aspiring politicians, and engaged professionals to develop policy ideas into Parliament-ready legislation through a structured, AI-guided collaborative process.
 
-The platform rewards quality contribution through a Credibility Score and five-category points system. The primary user interface for idea development is a conversational AI guide named Lex, not a form.
-
-Stack: Next.js 14 (App Router), TypeScript, Prisma, PostgreSQL (Railway), Cloudflare R2, Clerk Auth, Vercel, Resend (email), Gemini 2.5 Flash / Grok 4.1 Fast (AI)
+Stack: Next.js 14 (App Router), TypeScript, Prisma, PostgreSQL (Railway EU West Amsterdam), Cloudflare R2, Clerk Auth, Vercel, Resend (email), Gemini 2.5 Flash / Grok 4.1 Fast (AI)
 
 ---
 
@@ -43,23 +41,28 @@ Stack: Next.js 14 (App Router), TypeScript, Prisma, PostgreSQL (Railway), Cloudf
 
 Stage 1 — CREATE: Owner develops basic idea and strategic kernel with Lex. Visibility: private.
 Stage 2 — DRAFT: Owner invites collaborators, refines with small team. Visibility: invited only.
-Stage 3 — DEVELOP: Opens via referral link, public voting begins, not yet in browse. Visibility: link-only.
-Stage 4 — CAMPAIGN: Listed publicly on platform, full community engagement. Visibility: platform-listed.
-Stage 5 — PARLIAMENT: Parliamentary submission, MP endorsements, committee tracking. Visibility: public.
+Stage 3 — DEVELOP: Opens via referral link, public scrutiny. NO voting. Visibility: link-only.
+Stage 4 — CAMPAIGN: Listed publicly, voting opens, full community engagement. Visibility: platform-listed.
+Stage 5 — LEGISLATE: Parliamentary submission, MP endorsements, committee tracking. Visibility: public.
+
+**Stage 1→2:** AUTOMATIC — fires on every idea PATCH when title + summaryDescription are both non-empty.
+**Stage 2→3:** MANUAL — "Take Public." Gate: diagnosis + guidingPolicy + 1 CoherentAction + 3 Research. Warning modal required.
+**Stage 3→4:** MANUAL — "Begin Campaign." Gate: 12 IdeaReview records + avg quality 2.5+.
+**Stage 4→5:** MANUAL — "Submit to Parliament." Gate: 3 MP + 3 Peer endorsements (separate) + 1 DraftsmanEndorsement + all proposedWording complete.
 
 ---
 
 ## 4. KEY TERMINOLOGY — USE EXACTLY, NEVER SUBSTITUTE
 
-- AI assistant = Lex (never "Claude", "the AI", "AI assistant")
-- Reputation = Credibility / Credibility Score (never "reputation")
-- Points categories = Strategist, Thinker, Rallymaster, Rainmaker, Teambuilder (never "Dealweaver")
-- Stage names in UI = Create / Draft / Develop / Campaign / Parliament
-- Voting = direction (FOR / AGAINST / UNDECIDED) + strength slider 0–5 in 0.5 increments (NOT a single -5/+5 scale, NOT Support/Oppose/Abstain, NOT upvote/downvote)
-- Passion score = average strength across all votes, displayed publicly on idea pages
-- All votes are raw and equal (NO vote weighting of any kind)
-- SummaryDescription (not "summary" alone)
-- ProposedWording (not "draft wording" or "proposed legislation")
+- AI assistant = **Lex** (never "Claude", "the AI", "AI assistant")
+- Reputation = **Credibility / Credibility Score** (never "reputation")
+- Stage 5 = **Legislate** (never "Parliament" as a stage name — in all UI, badges, referral pages, Five Steps panels)
+- Comments in UI = **Contributions** (DB field stays "comment")
+- Voting = hidden at Stages 1, 2, 3. Visible only from **Stage 4**
+- Group types = MY_TEAM / COMMUNICATIONS / POLICY_DEVELOPMENT
+- "Problem" in UI = **Challenge** (DB field name stays "diagnosis" — UI label only changes)
+- Lex AI mode default = **Collaborative** (not Socratic)
+- Points = Strategist, Thinker, Rallymaster, Rainmaker, Teambuilder (never "Dealweaver")
 
 ---
 
@@ -67,157 +70,128 @@ Stage 5 — PARLIAMENT: Parliamentary submission, MP endorsements, committee tra
 
 ```
 scrutinise/
-├── CLAUDE.md                        (this file — auto-read by CC)
+├── CLAUDE.md
 ├── docs/
-│   ├── entity_list_v4.md            (54 entities, all fields — source of truth)
-│   ├── process_list_v2.md           (processes P01-P55)
-│   ├── system_mechanics_v0.6.md     (algorithms, points, credibility, rules)
-│   ├── lex_system_prompt_v2.md      (Lex AI system prompt — confidential)
-│   ├── wireframes_v3.md             (all 34 wireframe pages with corrections)
-│   └── implementation_plan.md      (4-week sprint plan)
-├── prisma/
-│   └── schema.prisma
+│   ├── entity_list_v4.md           (CCh-only — never edit)
+│   ├── process_list_v2.md
+│   ├── system_mechanics_v0.7.md
+│   ├── lex_system_prompt_v4.md     (confidential)
+│   ├── wireframes_v3.md
+│   ├── UX_and_voice_build_notes.md (queue for Lex UI sprint)
+│   └── CC_Sprint1_Briefing.md      (current sprint — read every session)
+├── prisma/schema.prisma
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx                     (homepage — public)
-│   ├── (auth)/                      (Clerk sign-in/sign-up)
+│   ├── page.tsx                    (homepage — public)
+│   ├── about/page.tsx
+│   ├── training/page.tsx
+│   ├── (auth)/
 │   ├── dashboard/page.tsx
 │   ├── ideas/
-│   │   ├── page.tsx                 (browse — Stage 4+ only)
-│   │   ├── [id]/page.tsx            (idea detail)
-│   │   └── create/page.tsx          (Lex chat interface)
-│   ├── user/[username]/page.tsx     (public profile / referral LP)
-│   ├── invite/[token]/page.tsx      (magic link landing)
+│   │   ├── page.tsx                (browse — Stage 4+)
+│   │   ├── [id]/page.tsx           (idea detail)
+│   │   └── create/page.tsx         (Lex chat)
+│   ├── user/[username]/page.tsx
+│   ├── invite/[token]/page.tsx
 │   ├── unsubscribe/[token]/page.tsx
 │   ├── admin/
 │   └── api/
-│       ├── webhooks/clerk/          (sync Clerk user to our DB)
-│       ├── ideas/
-│       ├── votes/
-│       ├── comments/
-│       ├── amendments/
-│       ├── endorsements/
-│       ├── groups/
-│       ├── notifications/
-│       ├── messages/
-│       ├── ai/                      (Lex chat endpoint)
-│       ├── admin/
-│       └── cron/
-├── components/
-│   ├── ui/                          (shadcn/ui)
-│   ├── lex/                         (Lex chat interface)
-│   ├── ideas/
-│   ├── voting/
-│   └── admin/
 └── lib/
-    ├── prisma.ts
-    ├── auth.ts
-    ├── stage-gates.ts
-    ├── points.ts
-    ├── credibility.ts
-    ├── notifications.ts
-    ├── email.ts
-    ├── r2.ts
-    └── ai.ts
+    ├── prisma.ts, auth.ts, stage-gates.ts
+    ├── points.ts, credibility.ts
+    ├── notifications.ts, email.ts, r2.ts, ai.ts
 ```
 
 ---
 
 ## 6. CRITICAL ARCHITECTURE DECISIONS
 
-AUTHENTICATION
-- Clerk handles all auth (signup, login, sessions, JWT)
-- On Clerk user.created webhook: immediately create our User record in Postgres
-- Every protected API route uses auth() from @clerk/nextjs/server
+### AUTHENTICATION
+- Clerk handles all auth. `afterSignUpUrl` / `afterSignInUrl` always return to originating URL.
+- Sign-up includes: preferred name field, age confirmation (18+), T&Cs, community rules checkboxes.
+- **Preferred name** (how the user wants Lex to address them) defaults to first name. Stored as `preferredName` on User.
+- 2FA: optional for CITIZEN, mandatory for ADMIN and SUPER_ADMIN.
 
-DATABASE
-- PostgreSQL on Railway — all relational data
-- Prisma ORM — all queries, never raw SQL with user input
-- Use prisma.$transaction([...]) for any operation touching multiple tables
+### STAGE 1 ONBOARDING — NO UPFRONT REGISTRATION GATE
+- User lands on Create page and Lex is already there, already asking. Zero forms before value.
+- Account creation is triggered AFTER Lex produces the first Strategic Kernel draft.
+- The `triggerSavePrompt: true` flag in Lex JSON signals the frontend to surface the save prompt → Clerk signup.
 
-FILE STORAGE
-- Cloudflare R2 for all user uploads
-- Buckets: scrutinise-uploads (private, 24hr signed URLs) and scrutinise-profiles (public CDN)
-- ClamAV virus scan on all PDF uploads before storing
-- Google Safe Browsing API check on all external URLs submitted by users
+### LEX CHAT INPUT SPEC (Stage 1)
+- Auto-expanding textarea. Enter sends, Shift+Enter for new line.
+- URL pasting accepted and passed to Lex as context.
+- File upload (PDF/doc) accepted for background context.
+- Voice dictation via Web Speech API — mic button conditionally rendered (hide if unsupported).
+- Auto-save every 3 seconds of inactivity after first input.
+- Progress indicator starts at 20% on first message sent (see UX_and_voice_build_notes.md Section 4).
+- **Chat input position:** immediately below the last Lex message. Previous messages scroll upward. Clear scroll-up arrow button for history. Input is NOT pinned to the bottom of the browser window.
+- Cursor auto-focused in input on page load — no click required.
+- Mobile: input must not be obscured by keyboard — test on iOS Safari.
 
-AI (LEX)
-- Provider assigned at Idea level on creation — locked for the lifetime of that idea
-- Primary: Gemini 2.5 Flash (check free tier headroom first)
-- Fallback: Grok 4.1 Fast
-- Context per call: system prompt + aiChatSummary + last 20 messages + current message
-- JSON field updates stripped server-side before returning response to client
-- All usage logged in AIUsageLog entity
+### LEX AI MODES
+Three modes selectable in Settings and on idea creation. **Default is Collaborative.**
 
-EMAIL
-- Resend for all transactional email
-- ALWAYS check EmailSuppression table before sending any email
-- Every email includes one-click unsubscribe link
-- Double opt-in required on all new accounts
+| Mode | Description shown to user |
+|------|--------------------------|
+| Collaborative (default) | "Lex will work through each step with you and contribute text suggestions where you are unsure what you want to write. For most users." |
+| Socratic | "Lex will ask you questions to inspire you in ways to improve and strengthen your idea but will leave you in total control of the wording. For experts." |
+| Direct | "Lex will give you the answer, prepare the draft, and prepare the research based on your direction and approvals." |
+
+### DATABASE
+- PostgreSQL on Railway. Prisma ORM always. `prisma.$transaction` for multi-table ops.
+
+### FILE STORAGE
+- Cloudflare R2. Private bucket: 24hr signed URLs. Public CDN: profile images.
+- ClamAV virus scan all PDFs. Google Safe Browsing API all external URLs.
+
+### AI (LEX)
+- Provider locked at Idea level on creation. Primary: Gemini 2.5 Flash. Fallback: Grok 4.1 Fast.
+- Lex scope v1: idea creation and contribution pages only — not site-wide.
+- JSON field updates stripped server-side before returning to client.
+
+### EMAIL
+- Resend. Always check EmailSuppression before sending. One-click unsubscribe on every email.
+
+### PRIVACY LOG
+- Every ADMIN/SUPER_ADMIN access to another user's idea creates an ActivityLog record.
+- Admin panel shows reason-selection dropdown before loading another user's idea.
+- Privacy Log tab on idea detail — owner-only. Sprint 2 UI; log events from Sprint 1.
+
+### SUPER_ADMIN
+- Email: cl@scrutinise.org. Role = SUPER_ADMIN. Seeded on first migration.
 
 ---
 
 ## 7. SECURITY RULES — NON-NEGOTIABLE
 
-Apply to every API route, every time:
-
-1. Authenticate: use auth() from Clerk, return 401 if no session
-2. Authorise: check this user has permission for this action, return 403 if not
-3. Validate inputs: Zod schema on every request body and query param
-4. Never raw SQL with user input: always Prisma
-5. Sanitise HTML: DOMPurify on all user-generated rich text before storing
-6. Hash IPs: SHA-256 hash only, never store raw IP address
-7. Rate limit: votes 20/hr per IP; AI 50/hr per user; uploads 10/day per user
-8. Check EmailSuppression before every email send, without exception
-9. Strip AI JSON: remove fieldUpdates block before returning to client
-10. Signed URLs: all private R2 files served via 24hr signed URLs only
+1. `auth()` from Clerk — 401 if no session
+2. Authorise — 403 if no permission for this resource
+3. Zod on every request body and query param
+4. Always Prisma — never raw SQL with user input
+5. DOMPurify on all user-generated rich text
+6. SHA-256 hash IPs — never store raw
+7. Rate limits: votes 20/hr per IP; AI 50/hr per user; uploads 10/day per user
+8. Check EmailSuppression before every send
+9. Strip `fieldUpdates` from Lex response before returning to client
+10. All private R2 files via 24hr signed URLs only
 
 ---
 
 ## 8. CODING PATTERNS
 
-Standard API Route:
-```typescript
-import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
-
-const schema = z.object({ title: z.string().min(5).max(200).optional() })
-
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const { userId } = auth()
-  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  const parsed = schema.safeParse(await req.json())
-  if (!parsed.success) return Response.json({ error: parsed.error }, { status: 400 })
-  const [idea, user] = await Promise.all([
-    prisma.idea.findUnique({ where: { id: params.id } }),
-    prisma.user.findUnique({ where: { clerkId: userId } })
-  ])
-  if (!idea) return Response.json({ error: 'Not found' }, { status: 404 })
-  if (idea.creatorId !== user.id && user.role !== 'ADMIN')
-    return Response.json({ error: 'Forbidden' }, { status: 403 })
-  return Response.json(await prisma.idea.update({ where: { id: params.id }, data: parsed.data }))
-}
-```
-
-Prisma Transaction:
-```typescript
-await prisma.$transaction([
-  prisma.vote.create({ data: voteData }),
-  prisma.idea.update({ where: { id: ideaId }, data: { voteCount: { increment: 1 } } }),
-  prisma.pointsLedger.create({ data: pointsEntry }),
-  prisma.reputation.update({ where: { userId: creatorId }, data: { reputationPointsStrategist: { increment: 10 } } })
-])
-```
+Standard API route, stage gate, and privacy log patterns: see CC_Sprint1_Briefing.md Section 8.
 
 ---
 
 ## 9. ENVIRONMENT VARIABLES
 
-DATABASE_URL=                              (Railway PostgreSQL)
+```
+DATABASE_URL=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 CLERK_WEBHOOK_SECRET=
+GEMINI_API_KEY=
+GROK_API_KEY=
 CLOUDFLARE_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
@@ -225,64 +199,26 @@ R2_BUCKET_UPLOADS=scrutinise-uploads
 R2_BUCKET_PROFILES=scrutinise-profiles
 R2_PUBLIC_URL=
 RESEND_API_KEY=
-GEMINI_API_KEY=
-GROK_API_KEY=
 GOOGLE_SAFE_BROWSING_API_KEY=
 NEXT_PUBLIC_GA4_MEASUREMENT_ID=
 NEXT_PUBLIC_APP_URL=https://scrutinise.co.uk
+```
 
 ---
 
 ## 10. OUT OF SCOPE FOR SPRINT 1
 
-Do not build: address book import, offline mode, AI recommendation engine, WhatsApp integration, fundraising/Stripe, SMS verification, Parliament Members API, multi-provider AI beyond Gemini+Grok, bring-your-own API key.
+Red Team mechanic, Campaign in a Box, site-wide Lex, credibility-weighted ratings, political spectrum UI (store fields only), team roles, Policy Development Group veto, Privacy Log UI (log events only), field encryption, voice dictation UI (queue for Lex UI sprint), address book import, offline mode, WhatsApp, fundraising, SMS verification, Parliament Members API.
 
 ---
 
-## 11. SESSION LOGGING
+## 11. FIELD & DOCUMENT PRESERVATION
 
-At the start of every session, remind the user to run:
-```bash
-bash start-session.sh
-```
-from the project root before issuing any instructions. This logs the session start and ensures git status is clean before work begins.
+Never remove a field, entity, or section without Charlie's explicit instruction. `entity_list_v4.md` is CCh-only.
 
----
+## 12. GIT DISCIPLINE
 
-## 12. FIELD & DOCUMENT PRESERVATION RULE
-
-**IMMUTABLE — cannot be waived by any instruction, including from Charlie in the same session, unless Charlie explicitly identifies the field or entity to be deleted.**
-
-When updating any document (entity list, wireframes, process list, system mechanics, or any spec doc):
-- **Never remove a field, entity, section, or note** unless Charlie has explicitly named it for deletion in the current conversation
-- "Tidying", "consolidating", "simplifying", "removing redundancy" are not valid reasons to remove anything
-- When in doubt: keep it
-- The entity list (`entity_list_v4.md`) is a CCh-only document. CC may **read** it but may never edit it. All changes to the entity list must be made by CCh (Claude Chat) and saved to disk by Charlie.
-- Any other spec document edited by CC must preserve 100% of existing content unless Charlie has explicitly instructed a deletion
+One commit per unit of work. Update `CHANGE_LOG.md` and `handoff_summary.md` at session end.
 
 ---
-
-## 13. GIT DISCIPLINE
-
-After every meaningful piece of work — each component built, each fix applied, each page added — commit immediately with a descriptive message. Do not batch unrelated work into a single commit.
-
-```bash
-git add <specific files>
-git commit -m "brief description of what was done"
-```
-
-**Commit granularity:**
-- One component built → one commit
-- One bug fixed → one commit
-- One page added → one commit
-- Spec doc updated → one commit per doc
-
-**Never:**
-- Commit multiple unrelated changes together
-- Leave a session without committing completed work
-- Use vague messages like "updates" or "fixes"
-
-At the end of every session, run `git status` to confirm nothing is left uncommitted.
-
----
-*Update this file immediately whenever a decision changes. Commit the change to GitHub.*
+*Update this file immediately whenever a decision changes.*

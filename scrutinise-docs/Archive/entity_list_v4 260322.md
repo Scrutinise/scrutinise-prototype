@@ -1,7 +1,8 @@
 # SCRUTINISE — ENTITY LIST v4
 *Complete entity and field specification. Source of truth for Prisma schema generation.*
-*v4.1: All pre-build review and prototype feedback changes applied. 22 March 2026.*
+*v4: Full restoration from source .docx + intentional v3 design decisions preserved.*
 *CCh-only document — never edited directly by CC. Charlie approves all changes.*
+*Last updated: March 2026*
 
 ---
 
@@ -12,14 +13,13 @@
 
 ## CONTENTS
 
-User · PartyMembership · Idea · WordingHistory · StageTransition · Stage
+User · Idea · WordingHistory · StageTransition · Stage
 Diagnosis · RootCause · GuidingPolicy · Evidence · CoherentAction · ResourcesCommitted
 TargetLegislation · TargetOrganisation · Situation · ParliamentaryProgress
 Research · Attachment
 Vote · Comment · CommentRating · Amendment · AmendmentVote · ConsultationVote · BroadcastMessage
 Endorsement · DraftsmanEndorsement
-IdeaCollaborator · IdeaCollaboratorRole · IdeaReview · TeamMessage
-Group · GroupMember · GroupMessage · GroupInvite · UserInvite · StageTransitionRequest
+IdeaCollaborator · Group · GroupMember · GroupMessage · GroupInvite · UserInvite
 Reputation · PointsLedger · CredibilityScore
 ReferralEvent · MergedIdea
 MessageThread · Message
@@ -27,12 +27,6 @@ ContentReport
 EmailSuppression · UserParliamentaryVerification · UserProfessionalVerification
 Notification · ActivityLog
 AIUsageLog · AIConversation
-LexFeedbackEvent
-PlatformConfig
-LegislativeQualityScore
-OwnerThanks
-FeatureRequest · FeatureRequestVote
-JurisdictionType
 Fundraise · WhatsAppIntegration
 Training
 Follow
@@ -52,7 +46,6 @@ DisputedLogicFlag
 | firstName | String | |
 | lastName | String | |
 | displayName | String | What the user is called (defaults to "Boss" until set) |
-| **preferredName** | String nullable | How the user wants Lex to address them. Defaults to firstName. Set during Clerk sign-up. |
 | username | String UNIQUE | @handle, auto-generated from name, user can change once |
 | email | String UNIQUE | |
 | emailVerified | Boolean | Default false |
@@ -61,9 +54,8 @@ DisputedLogicFlag
 | bio | Text nullable | Rich text, public-facing |
 | role | Enum | CITIZEN, MODERATOR, ADMIN, SUPER_ADMIN |
 | expertType | String nullable | Free text professional credentials |
-| **manualCredibilityOverride** | Decimal nullable | Set by SuperAdmin to establish a minimum credibility floor for Trust Seeds / Verified Experts. Displayed credibility = max(rawScore, manualCredibilityOverride). |
-| politicalParty | String nullable | Legacy single-party field. Retained for backwards compatibility. New code should use PartyMembership entity. |
-| partyMembership | String nullable | Legacy field. Retained. New code uses PartyMembership entity. |
+| politicalParty | String nullable | |
+| partyMembership | String nullable | |
 | membershipNumber | String nullable | |
 | memberSince | DateTime nullable | |
 | address | Text nullable | |
@@ -73,13 +65,7 @@ DisputedLogicFlag
 | professional_verified | Boolean | Default false — for Parliamentary Draftsmen |
 | aiCreditBalance | Decimal | Default 0 |
 | aiUsageTotal | Decimal | Default 0 |
-| aiPreferredStyle | String nullable | User's preferred Lex mode. Values: COLLABORATIVE (default), SOCRATIC, DIRECT. |
-| **politicalSpectrumX** | Decimal nullable | Self-declared Left/Right position, -5.0 to +5.0. Private — used for cross-spectrum bonus calculations only. |
-| **politicalSpectrumY** | Decimal nullable | Self-declared Nation State position, -5.0 to +5.0. Based on Goodhart Somewhere/Anywhere model. Private. |
-| **ageConfirmed** | Boolean | Default false. Self-declaration of 18+ on sign-up. |
-| **tcAgreedAt** | DateTime nullable | Timestamp of T&Cs agreement. |
-| **rulesAgreedAt** | DateTime nullable | Timestamp of community rules agreement. |
-| **tcVersion** | String nullable | Version of T&Cs agreed, e.g. "1.0". Allows detection of T&C updates. |
+| aiPreferredStyle | String nullable | User's preferred Lex interaction style |
 | donationsMadeTotal | Decimal | Default 0 |
 | donationsMadeList | JSON nullable | Array of donation references |
 | friendsWith | JSON nullable | Array of User IDs |
@@ -92,23 +78,7 @@ DisputedLogicFlag
 | lastActiveAt | DateTime nullable | |
 | status | Enum | ACTIVE, SUSPENDED, DELETION_PENDING, DELETED |
 
-Relations: ideas[], votes[], comments[], endorsements[], reputation, credibilityScore, notifications[], messages[], groups[], ideaCollaborators[], partyMemberships[]
-
----
-
-### PartyMembership
-
-*New entity — replaces the legacy politicalParty and partyMembership String fields on User for multi-party support.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| userId | FK | → User |
-| partyName | String | Free text party name |
-| membershipNumber | String nullable | |
-| memberSince | DateTime nullable | |
-| isPrimary | Boolean | Default false. Only one per user should be true. |
-| createdAt | DateTime | |
+Relations: ideas[], votes[], comments[], endorsements[], reputation, credibilityScore, notifications[], messages[], groups[], ideaCollaborators[]
 
 ---
 
@@ -130,8 +100,8 @@ Relations: ideas[], votes[], comments[], endorsements[], reputation, credibility
 | country | String nullable | ISO 3166-1 alpha-2. Default 'GB'. |
 | connectedIdeaIds | JSON nullable | Array of related idea IDs |
 | **STRATEGIC KERNEL** | | |
-| diagnosis | Text nullable | Strategic kernel: what is the challenge (UI label: "What's the Challenge?") |
-| guidingPolicy | Text nullable | Strategic kernel: the approach (UI label: "How Will We Solve It?") |
+| diagnosis | Text nullable | Strategic kernel: what is the real problem |
+| guidingPolicy | Text nullable | Strategic kernel: the approach |
 | rootCause | Text nullable | Strategic kernel: the underlying cause |
 | **CLASSIFICATION** | | |
 | stage | Enum | STAGE_1, STAGE_2, STAGE_3, STAGE_4, STAGE_5, ARCHIVED, WITHDRAWN |
@@ -139,17 +109,13 @@ Relations: ideas[], votes[], comments[], endorsements[], reputation, credibility
 | status | Enum | DRAFT, ACTIVE, ARCHIVED, MERGED, WITHDRAWN |
 | sector | String nullable | |
 | legalType | String nullable | |
-| **JURISDICTION** | | |
-| jurisdictionTypeId | FK nullable | → JurisdictionType (replaces govtLevel enum for fine-grained classification) |
-| jurisdictionName | String nullable | e.g. "Scotland", "Metropolitan Police", "California" |
 | **WORDING** | | |
 | proposedWording | Text nullable | The actual proposed legislation text. Locked for direct edit once first vote received. |
-| wordingLocked | Boolean | Default false. Set true on first vote received (Stage 4+). |
+| wordingLocked | Boolean | Default false. Set true on first vote received. |
 | version | Integer | Increments on every ProposedWording change. Default 1. |
 | **METRICS** | | |
 | voteCount | Integer | Denormalised total. Default 0. |
 | passionScore | Decimal nullable | Average strength/certainty score across all non-withdrawn votes. |
-| **credibilityWeightedRating** | Decimal nullable | Credibility-weighted quality rating. Calculated nightly when platformConfig.credibilityWeightingActive = true. Sprint 2. |
 | voteDistribution | JSON nullable | {for: N, against: N, undecided: N, avgStrengthFor: X, avgStrengthAgainst: X, avgStrengthUndecided: X, strengthBuckets: [...]} |
 | commentCount | Integer | Denormalised. Default 0. |
 | amendmentCount | Integer | Denormalised. Default 0. |
@@ -159,10 +125,6 @@ Relations: ideas[], votes[], comments[], endorsements[], reputation, credibility
 | votesSupport | Integer | Default 0 |
 | votesOppose | Integer | Default 0 |
 | votesAbstain | Integer | Default 0 |
-| **MATURITY INDEX** | | |
-| **maturityIndex** | Decimal | Default 0. 0–100. Campaign ready at 85. Populated Sprint 2. |
-| **maturityIndexDetail** | JSON nullable | Component breakdown: {linguisticStability, complexitySpecificity, redTeamExhaustion, evidenceGrounding} |
-| **maturityLastUpdated** | DateTime nullable | |
 | **STAGE ELIGIBILITY** | | |
 | eligibleForNextStage | Boolean | Set true when threshold crossed |
 | stageEligibleSince | DateTime nullable | |
@@ -171,8 +133,6 @@ Relations: ideas[], votes[], comments[], endorsements[], reputation, credibility
 | parentIdeaId | FK nullable | → Idea (if forked) |
 | linkedIdeaIds | JSON nullable | |
 | linkTypes | JSON nullable | |
-| **TEAM** | | |
-| teamClonedFromIdeaId | FK nullable | → Idea. Set when team was copied from another idea. |
 | **SEARCH** | | |
 | searchVector | Text nullable | Full-text search index |
 | **GROUP ASSOCIATION** | | |
@@ -191,7 +151,7 @@ Relations: ideas[], votes[], comments[], endorsements[], reputation, credibility
 | publishedAt | DateTime nullable | |
 | withdrawnAt | DateTime nullable | |
 
-Relations: votes[], comments[], amendments[], endorsements[], research[], attachments[], collaborators[], stageTransitions[], wordingHistory[], targetLegislation[], targetOrganisations[], coherentActions[], evidence[], mergedIdeas[], situations[], rootCauses[], ideaReviews[]
+Relations: votes[], comments[], amendments[], endorsements[], research[], attachments[], collaborators[], stageTransitions[], wordingHistory[], targetLegislation[], targetOrganisations[], coherentActions[], evidence[], mergedIdeas[], situations[], rootCauses[]
 
 ---
 
@@ -220,10 +180,11 @@ Audit log of every stage change on every idea.
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | fromStage | Enum | |
 | toStage | Enum | |
-| triggeredBy | String | "AUTOMATIC" or "OWNER" |
-| triggeredByUserId | FK | → User |
+| triggeredBy | String | |
+| triggeredByUserId | FK | → User (owner who triggered) |
 | transitionReason | Text nullable | |
 | voteCountAtTransition | Integer nullable | |
 | approvalRatingAtTransition | Decimal nullable | |
@@ -240,36 +201,42 @@ Standalone definition of each platform stage. Lookup/config entity.
 | Field | Type | Notes |
 |-------|------|-------|
 | stageNumber | Integer PK | 1–5 |
-| name | String | Create, Draft, Develop, Campaign, **Legislate** |
+| name | String | e.g. "Create", "Draft", "Develop", "Campaign", "Parliament" |
 | description | Text | |
-| requiredPermissions | JSON | |
-| transitionCriteria | JSON | |
-| availableActions | JSON | |
-
-Note: Stage 5 display name is "Legislate" — never "Parliament".
+| requiredPermissions | JSON | What roles/verifications are needed |
+| transitionCriteria | JSON | Gate criteria for moving to next stage |
+| availableActions | JSON | What actions are available at this stage |
 
 ---
 
 ## SECTION 2 — STRATEGIC KERNEL
 
+The Strategic Kernel is the analytical backbone of every idea. Based on Rumelt's Good Strategy / Bad Strategy framework.
+
+**Phase 1 (Basic Info):** title, summaryDescription, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, govtArea, ideaType, connectedIdeas — collected on the Create screen before Lex engagement.
+
+**Phase 2 (Strategic Kernel):** All sub-entities below. When AI is enabled, Lex populates these fields progressively through Socratic dialogue. When AI is disabled, all fields are displayed as plain text inputs.
+
+---
+
 ### Diagnosis
 
-What is the real challenge? (UI label: "What's the Challenge?")
+What is the real problem? The pivotal constraint — not a list of symptoms.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
 | diagnosisTitle | String nullable | |
-| diagnosisDescription | Text nullable | |
-| text | Text nullable | |
-| obstacleDefined | Text nullable | |
+| diagnosisDescription | Text nullable | Full diagnosis narrative |
+| text | Text nullable | Legacy/short form diagnosis statement |
+| obstacleDefined | Text nullable | What is the specific obstacle |
 | whoAffected | Text nullable | |
 | howAffected | Text nullable | |
-| whyPersisted | Text nullable | |
+| whyPersisted | Text nullable | Why has this problem not been solved already |
 | impactDescription | Text nullable | |
-| impactCost | Text nullable | |
-| diagnosisData | JSON nullable | |
+| impactCost | Text nullable | Estimated cost of problem persisting |
+| diagnosisData | JSON nullable | Supporting data points (multiple) |
 | version | Integer | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
@@ -280,19 +247,21 @@ Relations: rootCauses[]
 
 ### RootCause
 
+The underlying cause behind the diagnosis. Multiple root causes possible per idea.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
 | rootCauseTitle | String nullable | |
 | rootCauseDescription | Text nullable | |
-| text | Text nullable | |
-| rootCauseLinkBack | Text nullable | |
-| rootCauseLinkForward | Text nullable | |
-| rootCauseMechanism | Text nullable | |
-| whyNotSolved | Text nullable | |
-| incentiveDrivers | Text nullable | |
-| structureDrivers | Text nullable | |
+| text | Text nullable | Legacy/short form |
+| rootCauseLinkBack | Text nullable | What historical or structural factor created this cause |
+| rootCauseLinkForward | Text nullable | How this cause produces the problem |
+| rootCauseMechanism | Text nullable | The mechanism by which it operates |
+| whyNotSolved | Text nullable | Why existing attempts haven't resolved it |
+| incentiveDrivers | Text nullable | Incentives that perpetuate the problem |
+| structureDrivers | Text nullable | Structural factors that perpetuate the problem |
 | version | Integer | |
 | createdAt | DateTime | |
 
@@ -300,7 +269,7 @@ Relations: rootCauses[]
 
 ### GuidingPolicy
 
-The approach that deals with the challenge. (UI label: "How Will We Solve It?")
+The approach that deals with the diagnosis. Not a goal — a method.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -308,15 +277,15 @@ The approach that deals with the challenge. (UI label: "How Will We Solve It?")
 | ideaId | FK | → Idea |
 | guidingPolicyTitle | String nullable | |
 | guidingPolicyDescription | Text nullable | |
-| text | Text nullable | |
-| coreTheory | Text nullable | |
-| mechanismIncentives | Text nullable | |
+| text | Text nullable | Legacy/short form |
+| coreTheory | Text nullable | The theory of change |
+| mechanismIncentives | Text nullable | What incentives will address the root cause |
 | mechanismRules | Text nullable | |
 | mechanismTransparency | Text nullable | |
 | mechanismMarketDesign | Text nullable | |
 | mechanismInstitutionalRestructuring | Text nullable | |
-| tradeOffs | Text nullable | |
-| competitiveIdeaAnalysis | Text nullable | |
+| tradeOffs | Text nullable | Acknowledged trade-offs of this approach |
+| competitiveIdeaAnalysis | Text nullable | How this compares to alternative approaches |
 | version | Integer | |
 | createdAt | DateTime | |
 
@@ -326,7 +295,7 @@ Relations: evidence[]
 
 ### Evidence
 
-Supporting evidence for the diagnosis or guiding policy.
+Supporting evidence for the diagnosis or guiding policy. Also tracks comparable policy outcomes.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -334,12 +303,12 @@ Supporting evidence for the diagnosis or guiding policy.
 | ideaId | FK | → Idea |
 | title | String | |
 | description | Text | |
-| comparablePolicy | Text nullable | |
+| comparablePolicy | Text nullable | A comparable policy that has been tried elsewhere |
 | successFailure | Enum nullable | SUCCESS, FAILURE, MIXED |
 | whatWorked | Text nullable | |
 | whatFailed | Text nullable | |
-| resultCauses | Text nullable | |
-| sourceUrl | String nullable | |
+| resultCauses | Text nullable | Why it succeeded or failed |
+| sourceUrl | String nullable | Validated via Google Safe Browsing |
 | sourceType | Enum | ACADEMIC, GOVERNMENT, NEWS, CASE_STUDY, LEGISLATION, OTHER |
 | createdAt | DateTime | |
 
@@ -347,29 +316,29 @@ Supporting evidence for the diagnosis or guiding policy.
 
 ### CoherentAction
 
-A practical step implementing the guiding policy. (UI label: "A Practical Step")
+A specific coordinated step implementing the guiding policy. An idea may have multiple.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | title | String | |
-| summarySnippet | Text nullable | |
-| detailedDescription | Text nullable | |
+| summarySnippet | Text nullable | Short summary for display on cards |
+| detailedDescription | Text nullable | Full description, linking back to diagnosis and policy |
 | actionType | String nullable | e.g. "Legislative", "Regulatory", "Structural" |
-| legislationDraftWording | Text nullable | |
-| organisationalChangeDraftWording | Text nullable | |
-| proposedWording | Text nullable | |
+| legislationDraftWording | Text nullable | Draft wording if action requires legislation |
+| organisationalChangeDraftWording | Text nullable | Draft wording if action requires organisational change |
+| proposedWording | Text nullable | The specific legislative clause for this action |
 | costBenefitAnalysis | Text nullable | |
 | costFinancial | Text nullable | |
 | costSocial | Text nullable | |
 | costOngoing | Text nullable | |
 | benefits | Text nullable | |
-| practicalExecution | Text nullable | |
+| practicalExecution | Text nullable | How this will actually be implemented |
 | implementationPlan | Text nullable | |
-| **implementationSubQuestions** | JSON nullable | Structured: { who, what, where, how, why, when }. Lex populates progressively. |
-| accountability | Text nullable | |
-| successMeasurement | Text nullable | |
+| accountability | Text nullable | Who is responsible and how |
+| successMeasurement | Text nullable | How success will be measured |
 | keyRisks | Text nullable | |
 | potentialHarm | Text nullable | |
 | keyChallenges | Text nullable | |
@@ -377,12 +346,12 @@ A practical step implementing the guiding policy. (UI label: "A Practical Step")
 | oppositionWho | Text nullable | |
 | oppositionWhy | Text nullable | |
 | oppositionAnswers | Text nullable | |
-| orderIndex | Integer | |
+| orderIndex | Integer | Display order |
 | version | Integer | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
-Note: Votes on an idea auto-vote for all CoherentActions. Users can optionally vote for/against specific CoherentActions.
+Note: Votes on an idea auto-vote for all CoherentActions. Users can optionally vote for/against specific CoherentActions within an idea.
 
 Relations: resourcesCommitted[]
 
@@ -390,15 +359,17 @@ Relations: resourcesCommitted[]
 
 ### ResourcesCommitted
 
+Resources, costs, and implementation requirements attached to a specific CoherentAction.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
 | coherentActionId | FK | → CoherentAction |
 | description | Text | |
-| capitalCommitment | Decimal nullable | |
-| annualCost | JSON nullable | |
-| estimatedCost | Decimal nullable | |
+| capitalCommitment | Decimal nullable | One-off capital cost |
+| annualCost | JSON nullable | Year-by-year breakdown, up to 50 years |
+| estimatedCost | Decimal nullable | Summary estimated cost |
 | timeframe | String nullable | Default "10 years" |
 | resourceType | Enum | FINANCIAL, HUMAN, INFRASTRUCTURE, LEGISLATIVE, OTHER |
 | createdAt | DateTime | |
@@ -409,23 +380,26 @@ Relations: resourcesCommitted[]
 
 ### TargetLegislation
 
+Specific legislation the idea aims to change, repeal, or create.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| targetLegislationTitle | String | |
-| targetLegislationYear | String | |
-| targetLegislationUrl | String nullable | |
-| legislationJurisdictionType | String nullable | |
-| jurisdictionName | String nullable | |
-| legalType | String nullable | |
+| idea | Relation | → Idea |
+| targetLegislationTitle | String | e.g. "Housing Act 1988" |
+| targetLegislationYear | String | e.g. "1988" |
+| targetLegislationUrl | String nullable | Link to legislation.gov.uk |
+| legislationJurisdictionType | String nullable | e.g. "Primary", "Secondary" |
+| jurisdictionName | String nullable | e.g. "England and Wales" |
+| legalType | String nullable | e.g. "Act", "Statutory Instrument" |
 | targetOrRelevant | Enum nullable | TARGET, RELEVANT |
 | changeType | Enum | AMEND, REPEAL, NEW_ACT |
-| wordingOfRevision | Text nullable | |
+| wordingOfRevision | Text nullable | Proposed revision wording |
 | draftNumber | String nullable | |
-| draftHistory | JSON nullable | |
-| relevantClauses | Text nullable | |
-| relationshipType | String nullable | |
+| draftHistory | JSON nullable | Array of previous draft versions |
+| relevantClauses | Text nullable | Which specific sections are affected |
+| relationshipType | String nullable | How this legislation relates to the idea |
 | summary | Text nullable | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
@@ -434,21 +408,24 @@ Relations: resourcesCommitted[]
 
 ### TargetOrganisation
 
+For ORGANISATION type ideas — the body to be created, changed, or abolished.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | targetOrganisationalTitle | String | |
-| organisationType | String nullable | |
+| organisationType | String nullable | e.g. "Regulatory Body", "Public Service" |
 | description | Text nullable | |
-| currentBehaviourDescription | Text nullable | |
-| changeRequired | Text nullable | |
-| howToBringAbout | Text nullable | |
-| whoAccountable | Text nullable | |
+| currentBehaviourDescription | Text nullable | What the organisation currently does |
+| changeRequired | Text nullable | What needs to change |
+| howToBringAbout | Text nullable | Mechanism for achieving the change |
+| whoAccountable | Text nullable | Who is responsible for delivering the change |
 | howResultsMeasured | Text nullable | |
 | howChangeIncentivised | Text nullable | |
-| problemsLikely | Text nullable | |
-| mitigatingActions | Text nullable | |
+| problemsLikely | Text nullable | Anticipated obstacles |
+| mitigatingActions | Text nullable | How obstacles will be addressed |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -456,16 +433,20 @@ Relations: resourcesCommitted[]
 
 ### Situation
 
+Context and background information about the current state of affairs.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | title | String | |
 | description | Text | |
-| practicalEffect | Text nullable | |
-| affectedPopulation | Integer nullable | |
+| practicalEffect | Text nullable | The practical effect of this situation |
+| affectedPopulation | Integer nullable | Estimated number of people affected |
 | geographicScope | String nullable | |
 | createdBy | FK | → User |
+| creator | Relation | → User |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -473,22 +454,25 @@ Relations: resourcesCommitted[]
 
 ### ParliamentaryProgress
 
+Tracks the idea's progress through the actual parliamentary process (Stage 5+).
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
-| ideaId | FK UNIQUE | → Idea |
-| billNumber | String nullable | |
+| ideaId | FK UNIQUE | → Idea (one record per idea) |
+| idea | Relation | → Idea |
+| billNumber | String nullable | e.g. "HC-2026-047" |
 | committeeId | String nullable | |
-| committeeName | String nullable | |
+| committeeName | String nullable | e.g. "Housing, Communities & Local Government" |
 | committeeChair | String nullable | |
 | nextReadingDate | DateTime nullable | |
 | nextReadingTime | String nullable | |
-| nextReadingType | String nullable | |
+| nextReadingType | String nullable | e.g. "First Reading", "Evidence Session" |
 | submissionDeadline | DateTime nullable | |
 | submissionEmail | String nullable | |
 | submissionFormat | String nullable | |
 | currentStage | Enum nullable | SUBMITTED, FIRST_READING, EVIDENCE_SESSION, SECOND_READING, COMMITTEE_STAGE, THIRD_READING, LORDS, ROYAL_ASSENT |
-| progressStages | JSON | Array of {title, description, links[], status} |
+| progressStages | JSON | Array of {title, description, links[], status} — owner-maintained |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -498,28 +482,30 @@ Relations: resourcesCommitted[]
 
 ### Research
 
+Supporting research records attached to an idea.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | addedByUserId | FK | → User |
-| linkedIdeas | JSON nullable | |
-| researchType | Enum | **EVIDENCE, CASE_STUDY, CAUSES, PERSPECTIVES, OTHER** (changed from free String) |
+| contributor | Relation | → User |
+| linkedIdeas | JSON nullable | Array of related idea IDs |
+| researchType | String nullable | e.g. "Academic", "Policy", "News" |
 | title | String | |
-| snippet | Text | |
-| relevanceExplanation | Text | |
-| summaryOfContent | Text nullable | |
+| snippet | Text | Short excerpt or key finding |
+| relevanceExplanation | Text | Why this is relevant |
+| summaryOfContent | Text nullable | Summary of the full source |
 | summary | Text nullable | |
-| link | String nullable | |
+| link | String nullable | Direct link to source |
 | sourceUrl | String | Validated via Google Safe Browsing |
 | sourceType | Enum | ACADEMIC, GOVERNMENT, NEWS, CASE_STUDY, LEGISLATION, OTHER |
-| forOrAgainstPolicy | Boolean nullable | |
-| forOrAgainstAction | Boolean nullable | |
+| forOrAgainstPolicy | Boolean nullable | Does this support or contradict the policy direction |
+| forOrAgainstAction | Boolean nullable | Does this support or contradict the proposed action |
 | forPolicy | Boolean nullable | |
 | forAction | Boolean nullable | |
-| constructiveScore | Integer nullable | |
-| **retracted** | Boolean | Default false. Set true if Lex detects citation in retraction database. |
-| **retractionUrl** | String nullable | Link to retraction notice if found. |
+| constructiveScore | Integer nullable | 1–5 self-assessed quality rating |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -527,17 +513,19 @@ Relations: resourcesCommitted[]
 
 ### Attachment
 
+Uploaded files (PDFs, images) attached to an idea or research record.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK nullable | → Idea |
 | researchId | FK nullable | → Research |
 | uploadedByUserId | FK | → User |
-| fileName | String | |
+| fileName | String | Original filename |
 | fileType | Enum | PDF, IMAGE |
 | fileSizeBytes | Integer | |
-| r2ObjectKey | String | |
-| r2Bucket | String | |
+| r2ObjectKey | String | Key in Cloudflare R2 bucket |
+| r2Bucket | String | Which bucket |
 | virusScanStatus | Enum | PENDING, CLEAN, INFECTED |
 | createdAt | DateTime | |
 
@@ -547,26 +535,28 @@ Relations: resourcesCommitted[]
 
 ### Vote
 
-One vote per user per idea. Visible from Stage 4 only.
+One vote per user per idea. Direction (FOR/AGAINST/UNDECIDED) plus strength slider (0–5 in 0.5 increments).
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| userId | FK | → User |
-| voteType | String nullable | Legacy |
+| idea | Relation | → Idea |
+| userId | FK | → User. Email verification required before voting. |
+| user | Relation | → User |
+| voteType | String nullable | Legacy field |
 | direction | Enum | FOR, AGAINST, UNDECIDED |
 | strength | Decimal | 0.0 to 5.0 in 0.5 increments |
 | voteWeight | Decimal nullable | |
 | vote_weight | Decimal nullable | Legacy alias |
 | rating | Integer nullable | |
 | review | Text nullable | |
-| qualityFlags | JSON nullable | ["doesnt_go_far_enough", "goes_too_far", "poorly_worded"] |
+| qualityFlags | JSON nullable | Array: ["doesnt_go_far_enough", "goes_too_far", "poorly_worded"] |
 | ipAddress | String nullable | Raw IP — stored only transiently |
 | ipAddressHash | String nullable | SHA-256 hash of IP only |
 | isAnonymous | Boolean | Default false |
 | anonymousToken | String nullable | |
-| referralCode | String nullable | |
+| referralCode | String nullable | Referral code active when vote was cast |
 | referral_event_id | FK nullable | → ReferralEvent |
 | ported_from_merge_id | FK nullable | → MergedIdea |
 | ported_at | DateTime nullable | |
@@ -581,22 +571,21 @@ Constraint: UNIQUE(ideaId, userId)
 
 ### Comment
 
-Flat contribution system. Owner-only replies. UI label: "Contribution" (not "Comment").
+Flat comment system. Owner-only replies (no user-to-user threading).
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | authorId | FK | → User |
+| author | Relation | → User |
 | userId | FK | → User (alias) |
 | parentId | FK nullable | → Comment. Only set when comment is owner reply. |
-| **commentNumber** | Integer nullable | Sequential number per idea. Displayed as "#12" etc. |
-| **groupedWithCommentId** | FK nullable | → Comment. Self-reference for grouping related contributions. |
-| **groupLabel** | String nullable | User-defined group label, e.g. "Fiscal concerns" |
-| stageNumber | Integer nullable | Stage at which contribution was made |
-| content | Text | Rich text. DOMPurify sanitised. |
-| **contributionType** | Enum nullable | NEW_INFORMATION, RED_TEAM_CHALLENGE, MINOR_ADJUSTMENT, ADDITIONAL_COHERENT_ACTION, AMENDMENT, OTHER |
-| commentType | String nullable | Legacy |
+| parent | Relation | → Comment |
+| stageNumber | Integer nullable | Which stage the comment was made at |
+| content | Text | Rich text. DOMPurify sanitised before storing. |
+| commentType | String nullable | e.g. "general", "amendment_suggestion", "question" |
 | stance | Enum | SUPPORTIVE, CRITICAL, NEUTRAL, QUESTION |
 | constructivenessScore | Integer nullable | |
 | suggestedChanges | Boolean | Default false |
@@ -607,10 +596,10 @@ Flat contribution system. Owner-only replies. UI label: "Contribution" (not "Com
 | attachedLegislationId | FK nullable | → TargetLegislation |
 | attachedResearchId | FK nullable | → Research |
 | isOwnerReply | Boolean | Default false |
-| helpfulCount | Integer | Default 0 |
-| notHelpfulCount | Integer | Default 0 |
-| isHidden | Boolean | Default false |
-| editHistory | JSON nullable | |
+| helpfulCount | Integer | Denormalised. Default 0. |
+| notHelpfulCount | Integer | Denormalised. Default 0. |
+| isHidden | Boolean | Default false. Set by moderator. |
+| editHistory | JSON nullable | Array of previous versions |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -618,52 +607,62 @@ Flat contribution system. Owner-only replies. UI label: "Contribution" (not "Com
 
 ### CommentRating
 
+Two-column popup rating widget on a comment. Left column = "Constructive" (positive contributions). Right column = "Unhelpful" (logical fallacies and quality failures). User can tick multiple boxes on both sides simultaneously. Each negative flag has an "i" tooltip with a brief definition, linking to the FAQ for full explanation.
+
+**Rating weight rule:** No matter how many users apply the same flag, the credibility-weighted rating of the single most credible rater determines how that flag affects Thinker points. This prevents pile-ons. If a rating is disputed and found unfair, the negative points are nullified for the receiver and allocated to the rater.
+
+**Dispute flow:** User → AI first review → Moderator → Senior Moderator → Jury of 6 peers (high-credibility users, balanced political views).
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | commentId | FK | → Comment |
+| comment | Relation | → Comment |
 | userId | FK | → User |
-| positiveFlags | JSON | ["constructive", "insightful", "relevant", "fresh_perspective", "balanced", "helpful_facts", "direct_experience", "good_question"] |
-| negativeFlags | JSON | ["ad_hominem", "straw_man", "red_herring", "false_dilemma", "slippery_slope", "moving_goalposts", "motte_bailey", "tu_quoque", "cherry_picking", "not_relevant"] |
-| note | Text nullable | |
+| user | Relation | → User |
+| positiveFlags | JSON | Array of ticked LEFT column boxes: ["constructive", "insightful", "relevant", "fresh_perspective", "balanced", "helpful_facts", "direct_experience", "good_question"] |
+| negativeFlags | JSON | Array of ticked RIGHT column boxes: ["ad_hominem", "straw_man", "red_herring", "false_dilemma", "slippery_slope", "moving_goalposts", "motte_bailey", "tu_quoque", "cherry_picking", "not_relevant"] |
+| note | Text nullable | Free text box for additional detail |
 | disputeStatus | Enum nullable | NONE, AI_REVIEW, MODERATOR_REVIEW, SENIOR_REVIEW, PEER_JURY, RESOLVED |
-| disputeRaisedByUserId | FK nullable | → User |
-| disputeVerdict | Text nullable | |
+| disputeRaisedByUserId | FK nullable | → User who raised the dispute |
+| disputeVerdict | Text nullable | Final verdict from review process |
 | createdAt | DateTime | |
 
 Constraint: UNIQUE(commentId, userId)
+
+Note: The old boolean fields (constructive, insightful, valuable, relevant, abusive, notConstructive) and constructiveScore are superseded by positiveFlags/negativeFlags arrays. The Thinker points formula applies to the weighted flag count: 3 positive flags = baseline helpful; 5 positive flags = 10x value of 3; 1 positive flag = 1/10th of 3; 2 and 4 interpolated proportionally.
 
 ---
 
 ### Amendment
 
-A proposed change to an idea's wording. Available at Stage 3+.
+A proposed change to an idea's wording, submitted by any user at Stage 3+.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| originalIdeaId | FK | → Idea |
-| amendedIdeaId | FK nullable | → Idea |
+| originalIdeaId | FK | → Idea (the idea being amended) |
+| amendedIdeaId | FK nullable | → Idea (the resulting amended idea, if accepted) |
+| originalIdea | Relation | → Idea |
 | authorId | FK | → User |
+| author | Relation | → User |
 | proposedByUserId | FK | → User |
-| stageNumber | Integer nullable | |
-| sectionChanged | String | Which part of the idea |
-| changesProposed | Text nullable | |
-| currentText | Text | |
-| proposedText | Text | |
-| rationale | Text | Required |
-| researchUrls | JSON nullable | |
+| stageNumber | Integer nullable | Stage at which amendment was proposed |
+| sectionChanged | String | Which part of the idea is being changed |
+| changesProposed | Text nullable | Description of changes proposed |
+| currentText | Text | The text as it currently reads |
+| proposedText | Text | The proposed new text |
+| rationale | Text | Why this change improves the idea (required) |
+| researchUrls | JSON nullable | Array of supporting source URLs |
 | relevantLegislation | Text nullable | |
 | status | Enum | PENDING, REVISION_REQUESTED, CONSULTING, ACCEPTED, REJECTED |
 | amendmentStatus | String nullable | |
 | amendmentHistory | JSON nullable | |
 | mode | Enum nullable | MODE_A, MODE_B |
 | rejectionReason | Text nullable | |
-| revisionGuidance | Text nullable | Guidance sent to proposer when status=REVISION_REQUESTED |
-| **isCounterProposal** | Boolean | Default false. True when this amendment is a counter to another. |
-| **parentAmendmentId** | FK nullable | → Amendment. Set when isCounterProposal = true. |
-| textDiff | Text nullable | |
+| revisionGuidance | Text nullable | |
+| textDiff | Text nullable | Stored diff for display |
 | mergedAt | DateTime nullable | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
@@ -671,6 +670,8 @@ A proposed change to an idea's wording. Available at Stage 3+.
 ---
 
 ### AmendmentVote
+
+User votes on a proposed amendment (separate from voting on the idea itself).
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -686,6 +687,8 @@ Constraint: UNIQUE(amendmentId, userId)
 
 ### ConsultationVote
 
+Advisory vote during Mode A consultation. Does not change the idea vote.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
@@ -700,19 +703,21 @@ Constraint: UNIQUE(amendmentId, userId)
 
 ### BroadcastMessage
 
+Owner message sent to all voters on an idea. Rate-limited to 1 per idea per 7 days.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| sentByUserId | FK | → User |
+| sentByUserId | FK | → User (must be idea owner) |
 | subject | String | Max 200 chars |
 | content | Text | Max 500 words |
-| recipientCount | Integer | |
-| requiresCoSignatory | Boolean | Default false |
-| coSignatoryUserId | FK nullable | → User |
+| recipientCount | Integer | Number of voters at time of send |
+| requiresCoSignatory | Boolean | Default false. If true, a second owner must approve before send. |
+| coSignatoryUserId | FK nullable | → User (second signatory, for large groups) |
 | coSignedAt | DateTime nullable | |
 | status | Enum | DRAFT, PENDING_COSIGN, SENT, RECALLED |
-| recalledAt | DateTime nullable | |
+| recalledAt | DateTime nullable | If recalled after send |
 | recallReason | Text nullable | |
 | sentAt | DateTime nullable | |
 
@@ -722,20 +727,24 @@ Constraint: UNIQUE(amendmentId, userId)
 
 ### Endorsement
 
+Parliamentary endorsement by a verified MP or Peer.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | userId | FK | → User (must be parliamentary_verified = true) |
 | mpUserId | FK | → User (alias) |
+| mpUser | Relation | → User |
 | endorserRole | Enum | MP, PEER |
-| endorserConstituency | String nullable | |
-| endorserPeerage | String nullable | |
-| displayTitle | String nullable | |
+| endorserConstituency | String nullable | For MPs |
+| endorserPeerage | String nullable | For Peers |
+| displayTitle | String nullable | e.g. "MP for Bristol West" |
 | endorsementType | String nullable | |
-| publicStatement | Text nullable | |
+| publicStatement | Text nullable | Optional public endorsement statement |
 | statement | Text nullable | Alias |
-| officeContact | String nullable | |
+| officeContact | String nullable | Contact details for MP/Peer office |
 | status | Enum | ACTIVE, WITHDRAWN |
 | withdrawalReason | Text nullable | |
 | endorsedAt | DateTime | |
@@ -743,19 +752,19 @@ Constraint: UNIQUE(amendmentId, userId)
 
 Constraint: UNIQUE(ideaId, userId)
 
-Note: Stage 4→5 gate requires ≥3 MP endorsements AND ≥3 Peer endorsements — separate counts, not combined.
-
 ---
 
 ### DraftsmanEndorsement
+
+Legal readiness certificate from a verified Parliamentary Draftsman. Required for Stage 4→5 gate.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
 | draftsmanUserId | FK | → User (must be professional_verified = true) |
-| publicStatement | Text | Required |
-| draftsmanCredentials | Text | |
+| publicStatement | Text | Required — legal readiness assessment |
+| draftsmanCredentials | Text | Firm/chambers and credentials, displayed publicly |
 | status | Enum | ACTIVE, WITHDRAWN |
 | certifiedAt | DateTime | |
 | withdrawnAt | DateTime nullable | |
@@ -774,63 +783,11 @@ Users invited to work on an idea at Stage 2+.
 | ideaId | FK | → Idea |
 | userId | FK | → User |
 | role | Enum | EDITOR, VIEWER |
-| roleId | FK nullable | → IdeaCollaboratorRole (Sprint 2 — replaces role Enum with flexible roles) |
 | invitedByUserId | FK | → User |
 | invitedAt | DateTime | |
 | acceptedAt | DateTime nullable | |
 
 Constraint: UNIQUE(ideaId, userId)
-
----
-
-### IdeaCollaboratorRole
-
-*New entity — Sprint 2. Flexible named roles replacing the binary EDITOR/VIEWER enum.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| ideaId | FK | → Idea |
-| roleName | String | e.g. "Co-Owner", "Rallymaster", "Researcher", "Credibility Builder", "Political Support" |
-| permissions | JSON | Object describing what this role can do |
-| createdByUserId | FK | → User |
-| createdAt | DateTime | |
-
-Default roles created on each new idea: Co-Owner, Admin, Rallymaster, Researcher, Credibility Builder, Political Support. All assigned to idea owner until changed.
-
----
-
-### IdeaReview
-
-*New entity — tracks when MPs, Peers, and Trust Seeds view or formally assess an idea.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| ideaId | FK | → Idea |
-| userId | FK | → User |
-| outcome | Enum | VIEWED, ENDORSED, BELOW_STANDARD |
-| timeOnPageSeconds | Integer nullable | |
-| createdAt | DateTime | |
-
-Constraint: UNIQUE(ideaId, userId)
-
-Note: BELOW_STANDARD button shown only to MPs, Peers, and users with manualCredibilityOverride set. Used in Stage 3→4 gate calculation.
-
----
-
-### TeamMessage
-
-*New entity — group messaging scoped to an idea's team (distinct from Group messaging).*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| ideaId | FK | → Idea |
-| authorId | FK | → User |
-| content | Text | |
-| createdAt | DateTime | |
-| updatedAt | DateTime | |
 
 ---
 
@@ -844,15 +801,13 @@ A group for sharing ideas and messaging.
 | ownerId | FK | → User |
 | name | String | |
 | description | Text nullable | |
-| groupType | Enum | **MY_TEAM, COMMUNICATIONS, POLICY_DEVELOPMENT** |
+| groupType | Enum | COLLABORATORS, SUPPORTERS, PUBLIC |
 | visibility | String nullable | |
 | isPublic | Boolean | Default false |
-| inviteCode | String UNIQUE | |
+| inviteCode | String UNIQUE | Public shareable join code |
 | memberCount | Integer | Denormalised |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
-
-Note: groupType values changed: MY_TEAM (was COLLABORATORS), COMMUNICATIONS (was SUPPORTERS), POLICY_DEVELOPMENT (new). PUBLIC removed.
 
 ---
 
@@ -862,7 +817,9 @@ Note: groupType values changed: MY_TEAM (was COLLABORATORS), COMMUNICATIONS (was
 |-------|------|-------|
 | id | UUID PK | |
 | groupId | FK | → Group |
+| group | Relation | → Group |
 | userId | FK | → User |
+| user | Relation | → User |
 | role | Enum | OWNER, ADMIN, MEMBER |
 | joinedAt | DateTime | |
 
@@ -872,11 +829,15 @@ Constraint: UNIQUE(groupId, userId)
 
 ### GroupMessage
 
+Messages sent within a group.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | groupId | FK | → Group |
+| group | Relation | → Group |
 | authorId | FK | → User |
+| author | Relation | → User |
 | content | Text | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
@@ -885,22 +846,29 @@ Constraint: UNIQUE(groupId, userId)
 
 ### GroupInvite
 
+Invite links for joining a group.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | groupId | FK | → Group |
-| inviteCode | String UNIQUE | |
+| group | Relation | → Group |
+| inviteCode | String UNIQUE | Short code for URL |
 | inviteType | Enum | PUBLIC_LINK, PRIVATE_EMAIL, BULK_UPLOAD |
-| email | String nullable | |
+| email | String nullable | Specific email if private |
 | maxUses | Integer | Default 1 |
 | usedCount | Integer | Default 0 |
 | expiresAt | DateTime nullable | |
 | createdByUserId | FK | → User |
+| createdBy | Relation | → User |
+| creator | Relation | → User |
 | createdAt | DateTime | |
 
 ---
 
 ### UserInvite
+
+Invitation to a non-registered user to join the platform (via magic link).
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -909,9 +877,9 @@ Constraint: UNIQUE(groupId, userId)
 | email | String | |
 | firstName | String | |
 | lastName | String | |
-| magicLinkToken | String UNIQUE | |
-| ideaId | FK nullable | → Idea |
-| groupId | FK nullable | → Group |
+| magicLinkToken | String UNIQUE | Cryptographically random |
+| ideaId | FK nullable | → Idea (if invited as collaborator) |
+| groupId | FK nullable | → Group (if invited as group member) |
 | collaboratorRole | Enum nullable | EDITOR, VIEWER |
 | customMessage | Text nullable | |
 | status | Enum | PENDING, ACCEPTED, EXPIRED |
@@ -920,28 +888,11 @@ Constraint: UNIQUE(groupId, userId)
 
 ---
 
-### StageTransitionRequest
-
-*New entity — used when a Policy Development Group has stage-gate veto enabled.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| ideaId | FK | → Idea |
-| requestedByUserId | FK | → User |
-| toStage | Enum | |
-| groupId | FK nullable | → Group (the Policy Development Group with veto) |
-| status | Enum | PENDING, APPROVED, BLOCKED |
-| reviewedByUserId | FK nullable | → User (group admin who reviewed) |
-| reviewedAt | DateTime nullable | |
-| blockReason | Text nullable | |
-| createdAt | DateTime | |
-
----
-
 ## SECTION 8 — REPUTATION & POINTS
 
 ### Reputation
+
+Aggregate points per category per user. Single record per user, updated in real time.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -956,49 +907,51 @@ Constraint: UNIQUE(groupId, userId)
 | reputationPointsRallymaster | Integer | Default 0 |
 | reputationPointsRainmaker | Integer | Default 0 |
 | reputationPointsTeambuilder | Integer | Default 0 — canonical name, never "Dealweaver" |
-| **thanksReceived** | Integer | Default 0. Incremented when an OwnerThanks record is created for this user. |
-| reputationRankScore | Decimal nullable | |
+| reputationRankScore | Decimal nullable | Overall computed rank score |
 | updatedAt | DateTime | |
 
 ---
 
 ### PointsLedger
 
+Immutable transaction log of every points event.
+
 | Field | Type | Notes |
 |-------|------|-------|
-| id | UUID PK | |
-| userId | FK | → User |
+| id | UUID PK | (also: ledger_id) |
+| userId | FK | → User (also: user_id) |
 | category | Enum | STRATEGIST, THINKER, RALLYMASTER, RAINMAKER, TEAMBUILDER |
-| pointsDelta | Integer | |
-| reason | Enum | VOTE_RECEIVED, VOTE_REVERSED, COMMENT_RATED, AMENDMENT_ACCEPTED, REFERRAL_QUALIFIED, MERGE_COMPLETED, RED_TEAM_BONUS, etc. |
+| pointsDelta | Integer | Positive or negative (also: points_delta) |
+| reason | Enum | VOTE_RECEIVED, VOTE_REVERSED, COMMENT_RATED, AMENDMENT_ACCEPTED, REFERRAL_QUALIFIED, MERGE_COMPLETED, etc. |
 | triggerType | String nullable | |
 | triggerEntityId | String nullable | |
 | relatedIdeaId | FK nullable | |
-| relatedUserId | FK nullable | |
-| createdAt | DateTime | |
+| relatedUserId | FK nullable | (also: source_user_id) |
+| createdAt | DateTime | (also: created_at) |
 | reversedAt | DateTime nullable | |
 
 ---
 
 ### CredibilityScore
 
+The single visible credibility number on a user's profile. Computed from all points inputs. CredibilityScore is the canonical name — InfluenceScore was an earlier name for the same concept and is now retired.
+
 | Field | Type | Notes |
 |-------|------|-------|
-| id | UUID PK | |
-| userId | FK UNIQUE | → User |
+| id | UUID PK | (also: score_id) |
+| userId | FK UNIQUE | → User (also: user_id) |
 | rawScore | Integer | Sum of all weighted inputs |
 | normalisedScore | Decimal nullable | Percentile score (null until rawScore >= 350) |
 | phase | Enum | BUILDING (raw < 350), ESTABLISHED (raw >= 350) |
-| thinkerComponent | Decimal nullable | |
-| strategistComponent | Decimal nullable | |
-| rallymasterComponent | Decimal nullable | |
-| rainmakerComponent | Decimal nullable | |
-| teambuilderComponent | Decimal nullable | |
-| accountAgeComponent | Decimal nullable | |
-| peerEndorsementComponent | Decimal nullable | |
-| **lexLogicScore** | Decimal nullable | Lex-assessed logical consistency score. Null until Sprint 2 scoring is built. |
-| totalScore | Decimal nullable | |
-| lastCalculatedAt | DateTime | |
+| thinkerComponent | Decimal nullable | Contribution from Thinker points |
+| strategistComponent | Decimal nullable | Contribution from Strategist points |
+| rallymasterComponent | Decimal nullable | Contribution from Rallymaster points |
+| rainmakerComponent | Decimal nullable | Contribution from Rainmaker points |
+| teambuilderComponent | Decimal nullable | Contribution from Teambuilder points |
+| accountAgeComponent | Decimal nullable | Contribution from account age |
+| peerEndorsementComponent | Decimal nullable | Contribution from peer endorsements received |
+| totalScore | Decimal nullable | Final computed score |
+| lastCalculatedAt | DateTime | Nightly batch + immediate on major events |
 | calculatedAt | DateTime | Alias |
 
 ---
@@ -1007,37 +960,41 @@ Constraint: UNIQUE(groupId, userId)
 
 ### ReferralEvent
 
+Tracks successful referrals (30-day qualification window, 3 meaningful actions required).
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
-| referrerUserId | FK | → User |
-| referredUserId | FK | → User |
-| referralCode | String | |
-| registeredAt | DateTime | |
-| qualifiedAt | DateTime nullable | |
-| actionCount | Integer | Default 0 |
+| referrerUserId | FK | → User (who shared the link) |
+| referredUserId | FK | → User (who registered via the link) |
+| referralCode | String | Code used |
+| registeredAt | DateTime | When referred user registered |
+| qualifiedAt | DateTime nullable | When 30-day + 3-action condition met |
+| actionCount | Integer | Default 0 — actions taken by referred user |
 | pointsAwarded | Boolean | Default false |
 
 ---
 
 ### MergedIdea
 
+Records the outcome of a merge proposal between two ideas.
+
 | Field | Type | Notes |
 |-------|------|-------|
-| id | UUID PK | |
-| survivingIdeaId | FK | → Idea |
-| absorbedIdeaId | FK | → Idea |
-| survivingOwnerId | FK | → User |
-| absorbedOwnerId | FK | → User |
-| proposedByUserId | FK | → User |
+| id | UUID PK | (also: merge_id) |
+| survivingIdeaId | FK | → Idea (also: surviving_idea_id) |
+| absorbedIdeaId | FK | → Idea (also: absorbed_idea_id) |
+| survivingOwnerId | FK | → User (also: surviving_owner_id) |
+| absorbedOwnerId | FK | → User (also: absorbed_owner_id) |
+| proposedByUserId | FK | → User (also: proposed_by_user_id) |
 | mergeType | Enum | MERGER, TAKEOVER |
 | proposalType | String nullable | |
 | status | Enum | PROPOSED, ACCEPTED, REJECTED, LAPSED, COUNTER_PROPOSED |
 | proposalMessage | Text | |
 | negotiationThreadId | FK nullable | → MessageThread |
-| proposedAt | DateTime | |
+| proposedAt | DateTime | (also: proposal_date) |
 | acceptedAt | DateTime nullable | |
-| votesPortedCount | Integer | |
+| votesPortedCount | Integer | Votes ported after 14-day window (also: votes_ported) |
 | rallymasterPointsAwarded | Integer nullable | |
 | strategistPointsAwarded | Integer nullable | |
 | pointsAwarded | Boolean | Default false |
@@ -1048,6 +1005,8 @@ Constraint: UNIQUE(groupId, userId)
 ## SECTION 10 — MESSAGING
 
 ### MessageThread
+
+Container for a conversation. Auto-created for merge proposals.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -1062,13 +1021,15 @@ Constraint: UNIQUE(groupId, userId)
 
 ### Message
 
+Individual message in a thread.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | threadId | FK | → MessageThread |
 | senderId | FK | → User |
-| content | Text | DOMPurify sanitised |
-| readAt | DateTime nullable | |
+| content | Text | Rich text. DOMPurify sanitised. |
+| readAt | DateTime nullable | When recipient read it |
 | createdAt | DateTime | |
 
 ---
@@ -1077,25 +1038,33 @@ Constraint: UNIQUE(groupId, userId)
 
 ### ContentReport
 
+User report of content requiring moderation review.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | reporterUserId | FK | → User |
+| reporter | Relation | → User |
 | reportedContentType | Enum | IDEA, COMMENT, AMENDMENT, USER |
 | contentType | Enum | Alias |
 | reportedCommentId | FK nullable | → Comment |
+| reportedComment | Relation | → Comment |
 | reportedIdeaId | FK nullable | → Idea |
+| reportedIdea | Relation | → Idea |
 | reportedUserId | FK nullable | → User |
-| contentId | String nullable | |
+| reportedUser | Relation | → User |
+| contentId | String nullable | ID of the reported content |
 | reportReason | Enum | SPAM, HARMFUL, OFF_TOPIC, MISINFORMATION, ABUSIVE, OTHER |
 | reason | Enum | Alias |
-| description | Text nullable | |
+| description | Text nullable | Additional context |
 | status | Enum | PENDING, UNDER_REVIEW, DISMISSED, ACTION_TAKEN |
-| reviewedByUserId | FK nullable | → User |
+| reviewedByUserId | FK nullable | → User (moderator/admin) |
+| reviewedBy | Relation | → User |
+| reviewer | Relation | → User |
 | reviewedAt | DateTime nullable | |
 | moderationAction | Enum nullable | NONE, WARNING_SENT, CONTENT_HIDDEN, CONTENT_REMOVED, USER_SUSPENDED, USER_BANNED |
 | action | Enum nullable | Alias |
-| moderatorNotes | Text nullable | |
+| moderatorNotes | Text nullable | Internal notes |
 | createdAt | DateTime | |
 
 ---
@@ -1104,7 +1073,7 @@ Constraint: UNIQUE(groupId, userId)
 
 ### EmailSuppression
 
-Check before EVERY email send.
+Global email suppression list. Check before EVERY email send.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -1117,16 +1086,18 @@ Check before EVERY email send.
 
 ### UserParliamentaryVerification
 
+Claim and verification record for MP/Peer status.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | userId | FK | → User |
 | claimedRole | Enum | MP, PEER |
-| constituency | String nullable | |
-| peerageTitle | String nullable | |
-| parliamentProfileUrl | String | |
+| constituency | String nullable | For MPs |
+| peerageTitle | String nullable | For Peers |
+| parliamentProfileUrl | String | Submitted Parliament.uk URL |
 | status | Enum | PENDING, APPROVED, REJECTED |
-| reviewedByUserId | FK nullable | → User |
+| reviewedByUserId | FK nullable | → User (admin) |
 | reviewedAt | DateTime nullable | |
 | adminNotes | Text nullable | |
 | createdAt | DateTime | |
@@ -1135,6 +1106,8 @@ Check before EVERY email send.
 
 ### UserProfessionalVerification
 
+Claim and verification record for Parliamentary Draftsman status.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
@@ -1142,9 +1115,9 @@ Check before EVERY email send.
 | firmOrChambers | String | |
 | credentials | String | |
 | licenceNumber | String nullable | |
-| supportingDocumentR2Key | String | |
+| supportingDocumentR2Key | String | R2 key for uploaded PDF evidence |
 | status | Enum | PENDING, APPROVED, REJECTED |
-| reviewedByUserId | FK nullable | → User |
+| reviewedByUserId | FK nullable | → User (admin) |
 | reviewedAt | DateTime nullable | |
 | adminNotes | Text nullable | |
 | createdAt | DateTime | |
@@ -1155,18 +1128,22 @@ Check before EVERY email send.
 
 ### Notification
 
+In-app notification for a user.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | userId | FK | → User |
-| notificationType | Enum | VOTE_RECEIVED, STAGE_ELIGIBLE, COMMENT_POSTED, AMENDMENT_PROPOSED, ENDORSEMENT_GIVEN, MERGE_PROPOSED, MESSAGE_RECEIVED, OWNER_THANKS_RECEIVED, MODERATOR_INVITE, SYSTEM, etc. |
+| user | Relation | → User |
+| notificationType | Enum | VOTE_RECEIVED, STAGE_ELIGIBLE, COMMENT_POSTED, AMENDMENT_PROPOSED, ENDORSEMENT_GIVEN, MERGE_PROPOSED, MESSAGE_RECEIVED, SYSTEM, etc. |
 | type | Enum | Alias |
 | relatedIdeaId | FK nullable | |
+| relatedIdea | Relation | → Idea |
 | relatedUserId | FK nullable | |
+| relatedUser | Relation | → User |
 | title | String nullable | |
-| message | String | |
+| message | String | Human-readable notification text |
 | linkUrl | String nullable | |
-| **deepLinkTab** | String nullable | For amendment notifications: "amendments". Routes click to specific tab. |
 | actionUrl | String nullable | Alias |
 | isRead | Boolean | Default false |
 | read | Boolean | Alias |
@@ -1176,20 +1153,18 @@ Check before EVERY email send.
 
 ### ActivityLog
 
-Immutable audit log of all significant platform events. Also used for the Privacy Log feature.
+Immutable audit log of all significant platform events.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
-| userId | FK | → User (the user who performed the action) |
+| userId | FK | → User |
+| user | Relation | → User |
 | activityType | Enum | IDEA_CREATED, IDEA_STAGE_CHANGED, VOTE_CAST, VOTE_WITHDRAWN, COMMENT_POSTED, AMENDMENT_PROPOSED, AMENDMENT_ACCEPTED, ENDORSEMENT_GIVEN, MERGE_PROPOSED, ACCOUNT_CREATED, ADMIN_ACTION, etc. |
-| entityType | String nullable | |
-| entityId | String nullable | |
-| description | String | |
-| metadata | JSON nullable | |
-| **accessType** | Enum nullable | OWNER, COLLABORATOR, LEX_AI, SYSTEM, ADMIN_ACCESS — for Privacy Log |
-| **accessReason** | String nullable | Required when accessType = ADMIN_ACCESS |
-| **accessedByUserId** | FK nullable | → User (the admin who accessed) — for Privacy Log |
+| entityType | String nullable | "Idea", "Comment", "Vote" etc. |
+| entityId | String nullable | ID of the entity |
+| description | String | Human-readable description |
+| metadata | JSON nullable | Additional structured data |
 | createdAt | DateTime | |
 
 ---
@@ -1198,18 +1173,22 @@ Immutable audit log of all significant platform events. Also used for the Privac
 
 ### AIUsageLog
 
+Tracks token consumption and cost per AI API call.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | userId | FK | → User |
+| user | Relation | → User |
 | ideaId | FK nullable | → Idea |
+| idea | Relation | → Idea |
 | provider | Enum | GEMINI_FLASH, GROK_FAST |
-| model | String | |
+| model | String | e.g. "gemini-2.5-flash" |
 | activityType | String nullable | |
-| inputTokens | Integer | |
+| inputTokens | Integer | (also: tokensUsed) |
 | outputTokens | Integer | |
-| costAmount | Decimal | |
-| fieldTarget | String nullable | |
+| costAmount | Decimal | (also: costUSD) |
+| fieldTarget | String nullable | Which field Lex was working on |
 | requestSummary | Text nullable | |
 | createdAt | DateTime | |
 
@@ -1217,17 +1196,21 @@ Immutable audit log of all significant platform events. Also used for the Privac
 
 ### AIConversation
 
+A session of Lex conversation attached to an idea.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
+| idea | Relation | → Idea |
 | userId | FK | → User |
+| user | Relation | → User |
 | conversationType | String nullable | |
 | conversationData | JSON nullable | |
 | sessionStartAt | DateTime | |
 | sessionEndAt | DateTime nullable | |
-| messagesCount | Integer | Default 0 |
-| totalTokens | Integer | Default 0 |
+| messagesCount | Integer | Default 0 (also: messageCount) |
+| totalTokens | Integer | Default 0 (also: tokensUsed) |
 | totalCostUSD | Decimal | Default 0 |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
@@ -1235,160 +1218,35 @@ Immutable audit log of all significant platform events. Also used for the Privac
 
 ---
 
-### LexFeedbackEvent
-
-*New entity — emotional signal routing from Lex conversations to admin dashboard.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| userId | FK | → User |
-| ideaId | FK nullable | → Idea |
-| conversationContext | Text | What was happening in the conversation |
-| userSnippet | Text | The user's emotionally-charged text |
-| lexInterpretation | Text | Lex's assessment of what went right or wrong |
-| sentiment | Enum | POSITIVE, NEGATIVE, FRUSTRATED, DELIGHTED |
-| intensity | Decimal | 0.0 to 1.0 |
-| createdAt | DateTime | |
-
----
-
-## SECTION 15 — PLATFORM CONFIG
-
-### PlatformConfig
-
-*New entity — key/value store for SuperAdmin-controlled feature flags and settings.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| key | String PK | e.g. "credibilityWeightingActive", "peerReviewRequired", "minReviewersForStage4" |
-| value | JSON | The config value |
-| updatedByUserId | FK | → User |
-| updatedAt | DateTime | |
-
-Default seed values:
-- credibilityWeightingActive: false
-- peerReviewRequired: false
-- minReviewersForStage4: 12
-- minRatingForStage4: 2.5
-
----
-
-## SECTION 16 — QUALITY METRICS
-
-### LegislativeQualityScore
-
-*New entity — Sprint 2. Six-pillar Legislative Quality Index. Owner dashboard only.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| ideaId | FK UNIQUE | → Idea |
-| rentonClarity | Decimal nullable | Can a 14-year-old understand who the law applies to? |
-| fiscalNeutrality | Decimal nullable | Does it explain where money comes from? |
-| vestedInterestTest | Decimal nullable | Does it create a moat for a specific industry? |
-| enforceability | Decimal nullable | Clear mechanism without a new Quango? |
-| logicalSoundness | Decimal nullable | Free from nirvana fallacy and motivated reasoning? |
-| simplicity | Decimal nullable | Principles-based rather than regulation-heavy? |
-| compositeScore | Decimal nullable | Weighted average of all pillars |
-| lexNarrative | Text nullable | Lex's plain-English assessment |
-| calculatedAt | DateTime | |
-
----
-
-## SECTION 17 — SOCIAL
-
-### OwnerThanks
-
-*New entity — owner sends personal thank-you badge to a contributor.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| fromUserId | FK | → User (idea owner) |
-| toUserId | FK | → User (contributor) |
-| ideaId | FK | → Idea |
-| commentId | FK nullable | → Comment (if for a specific contribution) |
-| message | Text nullable | Optional personal note |
-| createdAt | DateTime | |
-
----
-
-### FeatureRequest
-
-*New entity — user-submitted feature suggestions on the Training/FAQ page.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| submittedByUserId | FK | → User |
-| title | String | |
-| description | Text | |
-| status | Enum | CONSIDERING, PLANNED, IN_PROGRESS, SHIPPED, DECLINED |
-| voteCount | Integer | Default 0. Denormalised. |
-| adminNotes | Text nullable | |
-| createdAt | DateTime | |
-| updatedAt | DateTime | |
-
----
-
-### FeatureRequestVote
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| featureRequestId | FK | → FeatureRequest |
-| userId | FK | → User |
-| createdAt | DateTime | |
-
-Constraint: UNIQUE(featureRequestId, userId)
-
----
-
-## SECTION 18 — JURISDICTION
-
-### JurisdictionType
-
-*New entity — extensible classification of legislative jurisdiction. Lex can propose new entries; admin must approve.*
-
-| Field | Type | Notes |
-|-------|------|-------|
-| id | UUID PK | |
-| name | String | e.g. "UK National", "Scotland", "Metropolitan Police", "Civil Service Code" |
-| parentId | FK nullable | → JurisdictionType (for nested hierarchies) |
-| category | Enum | NATIONAL, DEVOLVED, STATE, LOCAL, CIVIL_SERVICE, POLICE, QUANGO, INTERNATIONAL, OTHER |
-| status | Enum | ACTIVE, PENDING_REVIEW |
-| suggestedByLex | Boolean | Default false. True when Lex proposes a new type. |
-| createdAt | DateTime | |
-
----
-
-## SECTION 19 — DEFERRED
+## SECTION 15 — DEFERRED
 
 ### Fundraise
 
-Schema ready; implementation deferred to Sprint 2.
+Payment and fundraising tracking. Schema ready; implementation deferred to Sprint 2.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| userId | FK | → User |
+| userId | FK | → User (donor) |
 | amountGBP | Decimal | |
 | status | Enum | PENDING, COMPLETED, REFUNDED |
 | stripePaymentId | String nullable | |
 | createdAt | DateTime | |
 
+See System Mechanics Section 6.4 for full fundraising rules.
+
 ---
 
 ### WhatsAppIntegration
 
-Deferred to Sprint 2.
+WhatsApp group sync. Deferred to Sprint 2.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | groupId | FK UNIQUE | → Group |
+| group | Relation | → Group |
 | whatsappGroupId | String nullable | |
 | whatsappInviteLink | String nullable | |
 | syncEnabled | Boolean | Default true |
@@ -1397,68 +1255,72 @@ Deferred to Sprint 2.
 
 ---
 
-## SECTION 20 — TRAINING
+## SECTION 16 — TRAINING
 
 ### Training
+
+A training resource linked from the platform's training section.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | title | String | |
 | resourceType | Enum | VIDEO, ARTICLE, PODCAST |
-| governmentCategory | String | |
-| areaOfTraining | String | |
+| governmentCategory | String | Which area of government this relates to |
+| areaOfTraining | String | e.g. "Drafting legislation", "Building support", "Strategy" |
 | author | String | |
 | durationMinutes | Integer nullable | |
-| url | String | |
-| rating | Decimal nullable | |
-| stageTag | Enum nullable | CREATE, DRAFT, DEVELOP, CAMPAIGN, **LEGISLATE** |
-| topicTag | String nullable | |
+| url | String | YouTube URL or external link |
+| rating | Decimal nullable | 0–5 average user rating |
+| stageTag | Enum nullable | CREATE, DRAFT, DEVELOP, CAMPAIGN, PARLIAMENT |
+| topicTag | String nullable | Free-text topic tag |
 | difficultyTag | Enum nullable | BEGINNER, INTERMEDIATE, ADVANCED |
-| isPublished | Boolean | Default false |
+| isPublished | Boolean | Default false. Admin publishes. |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
-Note: stageTag enum value updated from PARLIAMENT to LEGISLATE.
-
 ---
 
-## SECTION 21 — FOLLOWS & WATCHES
+## SECTION 17 — FOLLOWS & WATCHES
 
 ### Follow
+
+Handles both "follow a user" and "watch an idea" in a single entity.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
-| followerId | FK | → User |
-| followedUserId | FK nullable | → User |
-| watchedIdeaId | FK nullable | → Idea |
+| followerId | FK | → User (the person following/watching) |
+| followedUserId | FK nullable | → User (if following a user) |
+| watchedIdeaId | FK nullable | → Idea (if watching an idea) |
 | createdAt | DateTime | |
 
 Constraint: UNIQUE(followerId, followedUserId) where followedUserId not null
 Constraint: UNIQUE(followerId, watchedIdeaId) where watchedIdeaId not null
+Note: Exactly one of followedUserId or watchedIdeaId must be non-null per record.
 
 ---
 
-## SECTION 22 — DISPUTED LOGIC FLAGS
+## SECTION 18 — DISPUTED LOGIC FLAGS
 
 ### DisputedLogicFlag
+
+Created when a user disputes Lex's fallacy flag. Reviewed by Logic admin role.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | UUID PK | |
 | ideaId | FK | → Idea |
-| userId | FK | → User |
-| lexFlag | Text | |
-| userDispute | Text | |
+| userId | FK | → User (user who raised the dispute) |
+| lexFlag | Text | The fallacy flag Lex raised, in Lex's own words |
+| userDispute | Text | The user's counter-argument |
 | status | Enum | PENDING, REVIEWED |
-| adminVerdict | Text nullable | |
+| adminVerdict | Text nullable | Logic admin's verdict after review |
 | createdAt | DateTime | |
 
 ---
 
-*entity_list_v4.md — Scrutinise — 22 March 2026*
-*v4.1 — updated from pre-build review and prototype feedback sessions.*
-*Total entities: 68 (v4's 54 + PartyMembership, IdeaCollaboratorRole, IdeaReview, TeamMessage, StageTransitionRequest, LexFeedbackEvent, PlatformConfig, LegislativeQualityScore, OwnerThanks, FeatureRequest, FeatureRequestVote, JurisdictionType, GeneratedOutput pending Sprint 2)*
+*entity_list_v4.md — Scrutinise — March 2026*
+*Total entities: 54 (v3's 52 + Stage + GroupMessage)*
 *Source of truth for Prisma schema generation.*
 *CCh-only: never edited directly by CC without explicit Charlie instruction.*

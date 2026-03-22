@@ -100,6 +100,42 @@
 | 2026-03-10 | scrutinise-web/app/training/page.tsx | Style pass: filter buttons bg-primary active / border-border inactive. Resource cards bg-card border-border. Watch/Read buttons use primary tokens. Text tokens. | v0 design integration session 10-03-26 |
 | 2026-03-10 | scrutinise-web/app/about/page.tsx | Style pass: text-foreground, bg-background. Text tokens. | v0 design integration session 10-03-26 |
 
+| 2026-03-22 | scrutinise-web/lib/mockData.ts | Stage type `'Parliament'` → `'Legislate'`. Training resource stageTag `'Parliament'` → `'Legislate'`. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/lib/lexScripts.ts | Fix 2 — LEX_JOURNEY_1_SCRIPT opening message changed to: "I'm Lex, your researcher and guide. What's the challenge you want to fix?" | Sprint 1 Fix 2 |
+| 2026-03-22 | scrutinise-web/components/LexChat.tsx | Fix 4 — Full rewrite: input inside scrollable container (follows conversation, not pinned to viewport). Scroll-to-bottom arrow. autoFocus on input. | Sprint 1 Fix 4 |
+| 2026-03-22 | scrutinise-web/app/prototype/referral/idea/[id]/page.tsx | Fix 1 — stageBadgeStyle key Parliament → Legislate. "What is Scrutinise?" text updated. | Sprint 1 Fix 1 |
+| 2026-03-22 | scrutinise-web/app/prototype/referral/user/[username]/page.tsx | Fix 1 — same as above. | Sprint 1 Fix 1 |
+| 2026-03-22 | scrutinise-web/app/prototype/idea/[id]/page.tsx | Fix 5 — five-stage progress stepper added. Fix 6 — useSearchParams reads ?tab=amendments to set activeTab. stageBadgeStyle Parliament → Legislate. | Sprint 1 Fix 5 & 6 |
+| 2026-03-22 | scrutinise-web/app/prototype/settings/page.tsx | Fix 7 — Collaborative as default AI mode. Radio buttons with full descriptions replacing select dropdown. | Sprint 1 Fix 7 |
+| 2026-03-22 | scrutinise-web/app/page.tsx | Fix 8 — Step 3 description: "first 25 votes" removed, now "open to referral-link scrutiny". | Sprint 1 Fix 8 |
+| 2026-03-22 | scrutinise-web/app/prototype/create/stage2/page.tsx | Fix 2 — STAGES array Parliament → Legislate. Fix 3 — initialFields updated to 7 correct Lex sidebar fields. | Sprint 1 Fix 2 & 3 |
+| 2026-03-22 | scrutinise-web/app/prototype/notifications/page.tsx | Fix 6 — amendment notifications deep-link to /prototype/idea/[id]?tab=amendments. | Sprint 1 Fix 6 |
+| 2026-03-22 | scrutinise-web/app/prototype/browse/page.tsx | stageBadgeStyle Parliament → Legislate. stages filter array updated. autoFocus on search input. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/prototype/dashboard/page.tsx | stageBadgeStyle Parliament → Legislate. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/prototype/page.tsx | stageBadgeStyle Parliament → Legislate. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/prototype/profile/[username]/page.tsx | stageBadgeStyle Parliament → Legislate. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/prototype/create/stage1/page.tsx | STAGES array Parliament → Legislate. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/prototype/testing-guide/page.tsx | Stage progress test description updated. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/training/page.tsx | stageBadgeColors Parliament → Legislate. stages filter array updated. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/prisma/schema.prisma | Created: full Prisma 7.x schema. All Sprint 1 schema changes applied: new User fields (preferredName, ageConfirmed, tcAgreedAt, rulesAgreedAt, tcVersion, politicalSpectrumX/Y, manualCredibilityOverride, aiPreferredStyle), PartyMembership, PlatformConfig, IdeaReview, Amendment counter-proposal fields, ActivityLog access fields, CredibilityScore.lexLogicScore, Idea maturity fields, CoherentAction.implementationSubQuestions, Research ResearchType enum, Group groupType MY_TEAM/COMMUNICATIONS/POLICY_DEVELOPMENT. | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/prisma.config.ts | Created: Prisma 7.x datasource config (DATABASE_URL from env, dotenv). | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/middleware.ts | Created: Clerk middleware. Protects /prototype/(.*), /api/ideas(.*), /api/ai(.*). Public routes whitelisted. | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/lib/prisma.ts | Created: Prisma client singleton. Imports from ../generated/prisma. | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/lib/auth.ts | Created: getAuthenticatedUser() helper — Clerk auth() → DB user lookup → returns {error, user}. | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/lib/stage-gates.ts | Created: checkAndAdvanceStage (Stage 1→2 auto), checkStage2to3Gate (validates gate conditions), advanceStage2to3 (STAGE_3 + LINK_ONLY + referralLinkActive). | Sprint 1 Days 3–4 |
+| 2026-03-22 | scrutinise-web/lib/email.ts | Created: isEmailSuppressed(), sendCollaboratorInviteEmail() via Resend. EmailSuppression checked before every send. One-click unsubscribe on every email. | Sprint 1 Day 5 |
+| 2026-03-22 | scrutinise-web/app/api/webhooks/clerk/route.ts | Created: POST handler. Svix signature verify. user.created → upsert User + create CredibilityScore. referralCode via crypto.randomUUID(). | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/app/api/ideas/route.ts | Created: POST /api/ideas — create idea at STAGE_1/PRIVATE/DRAFT. | Sprint 1 Days 3–4 |
+| 2026-03-22 | scrutinise-web/app/api/ideas/[id]/route.ts | Created: GET + PATCH /api/ideas/[id]. Privacy log for admin access. checkAndAdvanceStage on PATCH. | Sprint 1 Days 3–4 |
+| 2026-03-22 | scrutinise-web/app/api/ideas/[id]/progress/route.ts | Created: POST /api/ideas/[id]/progress — Stage 2→3 manual transition with gate check. | Sprint 1 Days 3–4 |
+| 2026-03-22 | scrutinise-web/app/api/ai/[ideaId]/route.ts | Created: POST /api/ai/[ideaId] — Lex endpoint. Gemini 2.5 Flash primary, Grok 4.1 Fast fallback. preferredName + lexMode injection. fieldUpdates stripped from response. Rolling aiChatHistory (last 40). AIUsageLog. checkAndAdvanceStage after update. | Sprint 1 Days 3–4 |
+| 2026-03-22 | scrutinise-web/app/api/ideas/[id]/collaborators/route.ts | Created: POST /api/ideas/[id]/collaborators — owner-only invite. UserInvite with magicLinkToken (32 bytes hex), 7-day expiry. Sends invite email via Resend. | Sprint 1 Day 5 |
+| 2026-03-22 | scrutinise-web/app/invite/[token]/page.tsx | Created: Magic link landing page. Token validation (invalid/expired/used). If signed in with matching email → auto-accept (create IdeaCollaborator, mark invite ACCEPTED, redirect to idea). Wrong email → error. Not signed in → invite preview with sign-up/sign-in CTAs and redirect_url param. | Sprint 1 Day 5 |
+| 2026-03-22 | scrutinise-web/app/unsubscribe/[token]/page.tsx | Created: Unsubscribe page. Decodes base64 email from URL. Upserts EmailSuppression record (USER_UNSUBSCRIBED). Confirmation message. | Sprint 1 Day 5 |
+| 2026-03-22 | scrutinise-web/prisma/seed.ts | Created: SuperAdmin seed (cl@scrutinise.org, SUPER_ADMIN, clerkId PENDING_CLERK_LINK). CredibilityScore for SuperAdmin. PlatformConfig defaults (9 keys incl. stage display names, credibilityWeightingActive, minReviewersForStage4). | Sprint 1 Days 1–2 |
+| 2026-03-22 | scrutinise-web/package.json | Added db:seed script (ts-node). Added prisma.seed config. Added ts-node devDependency. | Sprint 1 session |
+| 2026-03-22 | scrutinise-web/app/layout.tsx | Added signInFallbackRedirectUrl and signUpFallbackRedirectUrl (/prototype/dashboard) to ClerkProvider. | Sprint 1 Days 1–2 |
+
 ---
 
 *CHANGE_LOG.md — Scrutinise — March 2026*
