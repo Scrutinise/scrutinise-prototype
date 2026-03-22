@@ -1,0 +1,943 @@
+// Scrutinise — Prisma Schema
+// Stack: Next.js 14 · TypeScript · Prisma 7 · PostgreSQL (Railway EU West Amsterdam)
+// Read entity_list_v4.md before modifying this file.
+// Sprint 1 schema changes applied per CC_Sprint1_Briefing.md Section 5.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CITIZEN
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETION_PENDING
+  DELETED
+}
+
+enum ParliamentaryStatus {
+  MP
+  PEER
+  NONE
+}
+
+enum IdeaStage {
+  STAGE_1
+  STAGE_2
+  STAGE_3
+  STAGE_4
+  STAGE_5
+  ARCHIVED
+  WITHDRAWN
+}
+
+enum IdeaVisibility {
+  PRIVATE
+  LINK_ONLY
+  PLATFORM_LISTED
+}
+
+enum IdeaStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  MERGED
+  WITHDRAWN
+}
+
+enum IdeaType {
+  LEGISLATION
+  ORGANISATION
+}
+
+enum GovtLevel {
+  LOCAL
+  DEVOLVED
+  NATIONAL
+  INTERNATIONAL
+}
+
+enum AIProvider {
+  GEMINI_FLASH
+  GROK_FAST
+  USER_CLAUDE
+  USER_GPT4O
+  USER_GROK
+}
+
+enum VoteDirection {
+  FOR
+  AGAINST
+  UNDECIDED
+}
+
+enum CommentStance {
+  SUPPORTIVE
+  CRITICAL
+  NEUTRAL
+  QUESTION
+}
+
+enum AmendmentStatus {
+  PENDING
+  REVISION_REQUESTED
+  CONSULTING
+  ACCEPTED
+  REJECTED
+}
+
+enum AmendmentMode {
+  MODE_A
+  MODE_B
+}
+
+enum GroupType {
+  MY_TEAM
+  COMMUNICATIONS
+  POLICY_DEVELOPMENT
+}
+
+enum GroupMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum CollaboratorRole {
+  EDITOR
+  VIEWER
+}
+
+enum EndorsementStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
+enum EndorserRole {
+  MP
+  PEER
+}
+
+enum NotificationType {
+  VOTE_RECEIVED
+  STAGE_ELIGIBLE
+  COMMENT_POSTED
+  AMENDMENT_PROPOSED
+  AMENDMENT_ACCEPTED
+  AMENDMENT_REJECTED
+  ENDORSEMENT_GIVEN
+  COLLABORATOR_INVITED
+  COLLABORATOR_ACCEPTED
+  MERGE_PROPOSED
+  MESSAGE_RECEIVED
+  SYSTEM
+}
+
+enum ActivityAccessType {
+  OWNER
+  COLLABORATOR
+  LEX_AI
+  SYSTEM
+  ADMIN_ACCESS
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum ResearchType {
+  EVIDENCE
+  CASE_STUDY
+  CAUSES
+  PERSPECTIVES
+  OTHER
+}
+
+enum SourceType {
+  ACADEMIC
+  GOVERNMENT
+  NEWS
+  CASE_STUDY
+  LEGISLATION
+  OTHER
+}
+
+enum IdeaReviewOutcome {
+  VIEWED
+  ENDORSED
+  BELOW_STANDARD
+}
+
+enum DraftChangeType {
+  DIRECT_EDIT
+  AMENDMENT_ACCEPTED
+  OWNER_EDIT
+}
+
+enum StageTransitionTrigger {
+  AUTOMATIC
+  MANUAL_OWNER
+  ADMIN_OVERRIDE
+}
+
+enum EmailSuppressionReason {
+  USER_UNSUBSCRIBED
+  ACCOUNT_DELETED
+  BOUNCE
+  COMPLAINT
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DisputeStatus {
+  PENDING
+  REVIEWED
+}
+
+enum ContentReportReason {
+  SPAM
+  HARMFUL
+  OFF_TOPIC
+  MISINFORMATION
+  ABUSIVE
+  OTHER
+}
+
+enum ContentReportStatus {
+  PENDING
+  UNDER_REVIEW
+  DISMISSED
+  ACTION_TAKEN
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 1 — CORE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id                        String              @id @default(uuid())
+  clerkId                   String              @unique
+  // Identity
+  firstName                 String
+  lastName                  String
+  name                      String              // Full name — denormalised
+  preferredName             String?             // How would you like Lex to address you? Defaults to firstName
+  displayName               String?             // @handle display, defaults to "Boss" until set
+  username                  String              @unique
+  email                     String              @unique
+  emailVerified             Boolean             @default(false)
+  bio                       String?
+  // Role
+  role                      UserRole            @default(CITIZEN)
+  // Status
+  status                    UserStatus          @default(ACTIVE)
+  // Consent (Sprint 1)
+  ageConfirmed              Boolean             @default(false)
+  tcAgreedAt                DateTime?
+  rulesAgreedAt             DateTime?
+  tcVersion                 String?
+  // Parliamentary / professional
+  parliamentaryStatus       ParliamentaryStatus @default(NONE)
+  parliamentaryVerified     Boolean             @default(false)
+  professionalVerified      Boolean             @default(false)
+  expertType                String?
+  // Political spectrum (store only — UI deferred)
+  politicalSpectrumX        Decimal?
+  politicalSpectrumY        Decimal?
+  // AI
+  aiCreditBalance           Decimal             @default(0)
+  aiUsageTotal              Decimal             @default(0)
+  aiPreferredStyle          String?             // COLLABORATIVE | SOCRATIC | DIRECT — default COLLABORATIVE
+  // Credibility override (admin only)
+  manualCredibilityOverride Decimal?
+  // Referral
+  referralCode              String              @unique
+  referredByUserId          String?
+  referredBy                User?               @relation("Referrals", fields: [referredByUserId], references: [id])
+  referredUsers             User[]              @relation("Referrals")
+  // Meta
+  country                   String?             @default("GB")
+  joinDate                  DateTime            @default(now())
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  lastActiveAt              DateTime?
+
+  // Relations
+  ideas                     Idea[]              @relation("IdeaCreator")
+  votes                     Vote[]
+  comments                  Comment[]
+  commentRatings            CommentRating[]
+  endorsements              Endorsement[]
+  draftsmanEndorsements     DraftsmanEndorsement[]
+  notifications             Notification[]
+  activityLogs              ActivityLog[]
+  adminActivityLogs         ActivityLog[]       @relation("AdminAccessLogs")
+  credibilityScore          CredibilityScore?
+  ideaCollaborators         IdeaCollaborator[]
+  sentInvites               UserInvite[]        @relation("SentInvites")
+  groupMemberships          GroupMember[]
+  ownedGroups               Group[]
+  partyMemberships          PartyMembership[]
+  platformConfigUpdates     PlatformConfig[]
+  ideaReviews               IdeaReview[]
+  parliamentaryVerifications UserParliamentaryVerification[]
+  professionalVerifications  UserProfessionalVerification[]
+  aiUsageLogs               AIUsageLog[]
+  attachments               Attachment[]
+  wordingHistories          WordingHistory[]
+  stageTransitions          StageTransition[]
+  contentReports            ContentReport[]     @relation("ReportedBy")
+  contentReviewedBy         ContentReport[]     @relation("ReviewedBy")
+  disputedLogicFlags        DisputedLogicFlag[]
+  researchContributions     Research[]
+  authoredAmendments        Amendment[]
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([username])
+}
+
+model PartyMembership {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  partyName        String
+  membershipNumber String?
+  memberSince      DateTime?
+  isPrimary        Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PlatformConfig {
+  key             String   @id
+  value           Json
+  updatedByUserId String
+  updatedBy       User     @relation(fields: [updatedByUserId], references: [id])
+  updatedAt       DateTime @updatedAt
+}
+
+model Idea {
+  id                        String          @id @default(uuid())
+  creatorId                 String
+  creator                   User            @relation("IdeaCreator", fields: [creatorId], references: [id])
+  // Basic info
+  title                     String
+  summaryDescription        String
+  summaryDiagnosis          String?
+  summaryGuidingPolicy      String?
+  summaryCoherentActions    String?
+  ideaType                  IdeaType        @default(LEGISLATION)
+  govtArea                  String
+  govtLevel                 GovtLevel       @default(NATIONAL)
+  country                   String?         @default("GB")
+  connectedIdeaIds          Json?
+  // Strategic kernel
+  diagnosis                 String?
+  guidingPolicy             String?
+  rootCause                 String?
+  whoAffected               String?
+  // Classification
+  stage                     IdeaStage       @default(STAGE_1)
+  visibility                IdeaVisibility  @default(PRIVATE)
+  status                    IdeaStatus      @default(DRAFT)
+  sector                    String?
+  // Wording
+  proposedWording           String?
+  wordingLocked             Boolean         @default(false)
+  version                   Int             @default(1)
+  // Metrics (denormalised)
+  voteCount                 Int             @default(0)
+  passionScore              Decimal?
+  voteDistribution          Json?
+  commentCount              Int             @default(0)
+  amendmentCount            Int             @default(0)
+  endorsementCount          Int             @default(0)
+  viewCount                 Int             @default(0)
+  // Stage eligibility
+  eligibleForNextStage      Boolean         @default(false)
+  stageEligibleSince        DateTime?
+  // Maturity (Sprint 1)
+  maturityIndex             Decimal         @default(0)
+  maturityIndexDetail       Json?
+  maturityLastUpdated       DateTime?
+  credibilityWeightedRating Decimal?
+  // AI
+  aiProvider                AIProvider      @default(GEMINI_FLASH)
+  aiChatHistory             Json            @default("[]")
+  aiChatSummary             String?
+  aiCurrentField            String?
+  aiSessionCount            Int             @default(0)
+  // Referral
+  referralLinkActive        Boolean         @default(false)
+  // Timestamps
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+  publishedAt               DateTime?
+  withdrawnAt               DateTime?
+
+  // Relations
+  votes                     Vote[]
+  comments                  Comment[]
+  amendments                Amendment[]
+  endorsements              Endorsement[]
+  draftsmanEndorsements     DraftsmanEndorsement[]
+  research                  Research[]
+  attachments               Attachment[]
+  collaborators             IdeaCollaborator[]
+  stageTransitions          StageTransition[]
+  wordingHistory            WordingHistory[]
+  coherentActions           CoherentAction[]
+  ideaReviews               IdeaReview[]
+  notifications             Notification[]
+  activityLogs              ActivityLog[]
+  aiUsageLogs               AIUsageLog[]
+  disputedLogicFlags        DisputedLogicFlag[]
+  contentReports            ContentReport[]     @relation("ReportedIdea")
+
+  @@index([creatorId])
+  @@index([stage])
+  @@index([visibility])
+  @@index([status])
+}
+
+model WordingHistory {
+  id                String          @id @default(uuid())
+  ideaId            String
+  idea              Idea            @relation(fields: [ideaId], references: [id])
+  version           Int
+  wordingText       String
+  changedByUserId   String
+  changedBy         User            @relation(fields: [changedByUserId], references: [id])
+  changeType        DraftChangeType
+  amendmentId       String?
+  createdAt         DateTime        @default(now())
+
+  @@index([ideaId])
+}
+
+model StageTransition {
+  id                            String    @id @default(uuid())
+  ideaId                        String
+  idea                          Idea      @relation(fields: [ideaId], references: [id])
+  fromStage                     IdeaStage
+  toStage                       IdeaStage
+  triggeredByUserId             String
+  triggeredBy                   User      @relation(fields: [triggeredByUserId], references: [id])
+  transitionReason              String?
+  voteCountAtTransition         Int?
+  createdAt                     DateTime  @default(now())
+
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 2 — STRATEGIC KERNEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CoherentAction {
+  id                                  String   @id @default(uuid())
+  ideaId                              String
+  idea                                Idea     @relation(fields: [ideaId], references: [id])
+  title                               String
+  summarySnippet                      String?
+  detailedDescription                 String?
+  actionType                          String?
+  proposedWording                     String?
+  costBenefitAnalysis                 String?
+  practicalExecution                  String?
+  implementationPlan                  String?
+  accountability                      String?
+  successMeasurement                  String?
+  keyRisks                            String?
+  potentialHarm                       String?
+  sourcesOfOpposition                 String?
+  implementationSubQuestions          Json?    // {who, what, where, how, why, when}
+  orderIndex                          Int      @default(0)
+  version                             Int      @default(1)
+  createdAt                           DateTime @default(now())
+  updatedAt                           DateTime @updatedAt
+
+  @@index([ideaId])
+}
+
+model Research {
+  id                    String       @id @default(uuid())
+  ideaId                String
+  idea                  Idea         @relation(fields: [ideaId], references: [id])
+  addedByUserId         String
+  contributor           User         @relation(fields: [addedByUserId], references: [id])
+  researchType          ResearchType?
+  title                 String
+  snippet               String
+  relevanceExplanation  String
+  summaryOfContent      String?
+  sourceUrl             String
+  sourceType            SourceType
+  forPolicy             Boolean?
+  constructiveScore     Int?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@index([ideaId])
+}
+
+model Attachment {
+  id                String   @id @default(uuid())
+  ideaId            String?
+  idea              Idea?    @relation(fields: [ideaId], references: [id])
+  uploadedByUserId  String
+  uploadedBy        User     @relation(fields: [uploadedByUserId], references: [id])
+  fileName          String
+  fileType          String   // PDF, IMAGE
+  fileSizeBytes     Int
+  r2ObjectKey       String
+  r2Bucket          String
+  virusScanStatus   String   @default("PENDING") // PENDING, CLEAN, INFECTED
+  createdAt         DateTime @default(now())
+
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 3 — IDEA MODIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Vote {
+  id              String        @id @default(uuid())
+  ideaId          String
+  idea            Idea          @relation(fields: [ideaId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  direction       VoteDirection
+  strength        Decimal       @default(0)
+  qualityFlags    Json?
+  ipAddressHash   String?
+  isAnonymous     Boolean       @default(false)
+  referralCode    String?
+  withdrawn       Boolean       @default(false)
+  castAt          DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@index([userId])
+}
+
+model Comment {
+  id                    String        @id @default(uuid())
+  ideaId                String
+  idea                  Idea          @relation(fields: [ideaId], references: [id])
+  authorId              String
+  author                User          @relation(fields: [authorId], references: [id])
+  parentId              String?
+  parent                Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies               Comment[]     @relation("CommentReplies")
+  stageNumber           Int?
+  content               String        // DOMPurify sanitised
+  stance                CommentStance
+  suggestedChanges      Boolean       @default(false)
+  isOwnerReply          Boolean       @default(false)
+  helpfulCount          Int           @default(0)
+  notHelpfulCount       Int           @default(0)
+  isHidden              Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  ratings               CommentRating[]
+  contentReports        ContentReport[]  @relation("ReportedComment")
+
+  @@index([ideaId])
+  @@index([authorId])
+}
+
+model CommentRating {
+  id              String  @id @default(uuid())
+  commentId       String
+  comment         Comment @relation(fields: [commentId], references: [id])
+  userId          String
+  user            User    @relation(fields: [userId], references: [id])
+  positiveFlags   Json    @default("[]")
+  negativeFlags   Json    @default("[]")
+  note            String?
+  disputeStatus   String? // NONE, AI_REVIEW, MODERATOR_REVIEW, etc.
+  createdAt       DateTime @default(now())
+
+  @@unique([commentId, userId])
+}
+
+model Amendment {
+  id                  String          @id @default(uuid())
+  ideaId              String
+  idea                Idea            @relation(fields: [ideaId], references: [id])
+  authorId            String
+  author              User            @relation(fields: [authorId], references: [id])
+  stageNumber         Int?
+  sectionChanged      String
+  changesProposed     String?
+  currentText         String
+  proposedText        String
+  rationale           String
+  researchUrls        Json?
+  status              AmendmentStatus @default(PENDING)
+  mode                AmendmentMode?
+  rejectionReason     String?
+  revisionGuidance    String?
+  textDiff            String?
+  // Counter-proposal (Sprint 1)
+  isCounterProposal   Boolean         @default(false)
+  parentAmendmentId   String?
+  parentAmendment     Amendment?      @relation("CounterProposal", fields: [parentAmendmentId], references: [id])
+  counterProposals    Amendment[]     @relation("CounterProposal")
+  // Timestamps
+  mergedAt            DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([ideaId])
+  @@index([authorId])
+  @@index([parentAmendmentId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 4 — ENDORSEMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Endorsement {
+  id                    String            @id @default(uuid())
+  ideaId                String
+  idea                  Idea              @relation(fields: [ideaId], references: [id])
+  userId                String
+  user                  User              @relation(fields: [userId], references: [id])
+  endorserRole          EndorserRole
+  endorserConstituency  String?
+  endorserPeerage       String?
+  displayTitle          String?
+  publicStatement       String?
+  status                EndorsementStatus @default(ACTIVE)
+  withdrawalReason      String?
+  endorsedAt            DateTime          @default(now())
+  withdrawnAt           DateTime?
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+}
+
+model DraftsmanEndorsement {
+  id                    String   @id @default(uuid())
+  ideaId                String
+  idea                  Idea     @relation(fields: [ideaId], references: [id])
+  draftsmanUserId       String
+  draftsman             User     @relation(fields: [draftsmanUserId], references: [id])
+  publicStatement       String
+  draftsmanCredentials  String
+  status                EndorsementStatus @default(ACTIVE)
+  certifiedAt           DateTime @default(now())
+  withdrawnAt           DateTime?
+
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 5 — COLLABORATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model IdeaCollaborator {
+  id              String           @id @default(uuid())
+  ideaId          String
+  idea            Idea             @relation(fields: [ideaId], references: [id])
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  role            CollaboratorRole @default(EDITOR)
+  invitedByUserId String
+  invitedAt       DateTime         @default(now())
+  acceptedAt      DateTime?
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@index([userId])
+}
+
+model Group {
+  id          String    @id @default(uuid())
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id])
+  name        String
+  description String?
+  groupType   GroupType
+  isPublic    Boolean   @default(false)
+  inviteCode  String    @unique
+  memberCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members     GroupMember[]
+  invites     GroupInvite[]
+
+  @@index([ownerId])
+}
+
+model GroupMember {
+  id        String          @id @default(uuid())
+  groupId   String
+  group     Group           @relation(fields: [groupId], references: [id])
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  role      GroupMemberRole @default(MEMBER)
+  joinedAt  DateTime        @default(now())
+
+  @@unique([groupId, userId])
+}
+
+model GroupInvite {
+  id              String   @id @default(uuid())
+  groupId         String
+  group           Group    @relation(fields: [groupId], references: [id])
+  inviteCode      String   @unique
+  email           String?
+  maxUses         Int      @default(1)
+  usedCount       Int      @default(0)
+  expiresAt       DateTime?
+  createdByUserId String
+  createdAt       DateTime @default(now())
+}
+
+model UserInvite {
+  id                String           @id @default(uuid())
+  invitedByUserId   String
+  invitedBy         User             @relation("SentInvites", fields: [invitedByUserId], references: [id])
+  email             String
+  firstName         String
+  lastName          String
+  magicLinkToken    String           @unique
+  ideaId            String?
+  collaboratorRole  CollaboratorRole?
+  customMessage     String?
+  status            InviteStatus     @default(PENDING)
+  expiresAt         DateTime
+  createdAt         DateTime         @default(now())
+
+  @@index([magicLinkToken])
+  @@index([email])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 6 — REPUTATION & CREDIBILITY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CredibilityScore {
+  id                        String    @id @default(uuid())
+  userId                    String    @unique
+  user                      User      @relation(fields: [userId], references: [id])
+  rawScore                  Int       @default(0)
+  normalisedScore           Decimal?
+  phase                     String    @default("BUILDING") // BUILDING, ESTABLISHED
+  thinkerComponent          Decimal?
+  strategistComponent       Decimal?
+  rallymasterComponent      Decimal?
+  rainmakerComponent        Decimal?
+  teambuilderComponent      Decimal?
+  accountAgeComponent       Decimal?
+  peerEndorsementComponent  Decimal?
+  totalScore                Decimal?
+  lexLogicScore             Decimal?  // Sprint 1
+  lastCalculatedAt          DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 7 — IDEA REVIEW (new in Sprint 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model IdeaReview {
+  id                  String            @id @default(uuid())
+  ideaId              String
+  idea                Idea              @relation(fields: [ideaId], references: [id])
+  userId              String
+  user                User              @relation(fields: [userId], references: [id])
+  outcome             IdeaReviewOutcome
+  timeOnPageSeconds   Int?
+  createdAt           DateTime          @default(now())
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 8 — NOTIFICATIONS & ACTIVITY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  type            NotificationType
+  relatedIdeaId   String?
+  relatedIdea     Idea?            @relation(fields: [relatedIdeaId], references: [id])
+  relatedUserId   String?
+  title           String?
+  message         String
+  linkUrl         String?
+  isRead          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+
+  @@index([userId])
+  @@index([relatedIdeaId])
+}
+
+model ActivityLog {
+  id                String              @id @default(uuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id])
+  ideaId            String?
+  idea              Idea?               @relation(fields: [ideaId], references: [id])
+  activityType      String
+  entityType        String?
+  entityId          String?
+  description       String
+  metadata          Json?
+  // Privacy log fields (Sprint 1)
+  accessType        ActivityAccessType?
+  accessReason      String?
+  accessedByUserId  String?
+  accessedBy        User?               @relation("AdminAccessLogs", fields: [accessedByUserId], references: [id])
+  createdAt         DateTime            @default(now())
+
+  @@index([userId])
+  @@index([ideaId])
+  @@index([accessedByUserId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 9 — GDPR & EMAIL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model EmailSuppression {
+  id            String                 @id @default(uuid())
+  email         String                 @unique
+  reason        EmailSuppressionReason
+  suppressedAt  DateTime               @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 10 — VERIFICATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserParliamentaryVerification {
+  id                    String             @id @default(uuid())
+  userId                String
+  user                  User               @relation(fields: [userId], references: [id])
+  claimedRole           EndorserRole
+  constituency          String?
+  peerageTitle          String?
+  parliamentProfileUrl  String
+  status                VerificationStatus @default(PENDING)
+  reviewedByUserId      String?
+  reviewedAt            DateTime?
+  adminNotes            String?
+  createdAt             DateTime           @default(now())
+
+  @@index([userId])
+}
+
+model UserProfessionalVerification {
+  id                      String             @id @default(uuid())
+  userId                  String
+  user                    User               @relation(fields: [userId], references: [id])
+  firmOrChambers          String
+  credentials             String
+  licenceNumber           String?
+  supportingDocumentR2Key String
+  status                  VerificationStatus @default(PENDING)
+  reviewedByUserId        String?
+  reviewedAt              DateTime?
+  adminNotes              String?
+  createdAt               DateTime           @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 11 — AI TRACKING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AIUsageLog {
+  id              String     @id @default(uuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id])
+  ideaId          String?
+  idea            Idea?      @relation(fields: [ideaId], references: [id])
+  provider        AIProvider
+  model           String
+  inputTokens     Int        @default(0)
+  outputTokens    Int        @default(0)
+  costAmount      Decimal    @default(0)
+  fieldTarget     String?
+  requestSummary  String?
+  createdAt       DateTime   @default(now())
+
+  @@index([userId])
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 12 — MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ContentReport {
+  id                    String              @id @default(uuid())
+  reporterUserId        String
+  reporter              User                @relation("ReportedBy", fields: [reporterUserId], references: [id])
+  reportedContentType   String              // IDEA, COMMENT, AMENDMENT, USER
+  reportedCommentId     String?
+  reportedComment       Comment?            @relation("ReportedComment", fields: [reportedCommentId], references: [id])
+  reportedIdeaId        String?
+  reportedIdea          Idea?               @relation("ReportedIdea", fields: [reportedIdeaId], references: [id])
+  reportedUserId        String?
+  reportedUser          User?               @relation("ReviewedBy", fields: [reportedUserId], references: [id])
+  reason                ContentReportReason
+  description           String?
+  status                ContentReportStatus @default(PENDING)
+  reviewedByUserId      String?
+  reviewedAt            DateTime?
+  moderatorNotes        String?
+  createdAt             DateTime            @default(now())
+
+  @@index([reporterUserId])
+}
+
+model DisputedLogicFlag {
+  id          String        @id @default(uuid())
+  ideaId      String
+  idea        Idea          @relation(fields: [ideaId], references: [id])
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  lexFlag     String
+  userDispute String
+  status      DisputeStatus @default(PENDING)
+  adminVerdict String?
+  createdAt   DateTime      @default(now())
+
+  @@index([ideaId])
+}
