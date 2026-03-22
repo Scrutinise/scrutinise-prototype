@@ -83,7 +83,10 @@ const STAGE_LABELS: Record<string, string> = {
 // POST /api/ai/[ideaId] — send a message to Lex
 export async function POST(req: Request, { params }: Params) {
   const { error, user } = await getAuthenticatedUser()
-  if (error) return error
+  if (error) {
+    console.error('[/api/ai/[ideaId]] Auth failed — user not found in DB or not signed in')
+    return error
+  }
 
   const { ideaId } = await params
 
@@ -97,6 +100,7 @@ export async function POST(req: Request, { params }: Params) {
   })
 
   if (!idea) {
+    console.error(`[/api/ai/[ideaId]] Idea not found: ${ideaId}`)
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -149,32 +153,50 @@ export async function POST(req: Request, { params }: Params) {
   const recentHistory = chatHistory.slice(-20) // last 20 messages
 
   let lexResponse: string
+  let aiProvider: 'GEMINI_FLASH' | 'GROK_FAST' = 'GEMINI_FLASH'
 
   // Primary: Gemini 2.5 Flash
-  try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' })
+  const geminiKey = process.env.GEMINI_API_KEY
+  if (!geminiKey) {
+    console.error('[/api/ai/[ideaId]] GEMINI_API_KEY is not set — skipping to Grok fallback')
+  }
 
-    const chat = model.startChat({
-      systemInstruction: systemPrompt,
-      history: recentHistory.map(m => ({
-        role: m.role === 'lex' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      })),
-    })
+  let geminiSucceeded = false
+  if (geminiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(geminiKey)
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' })
 
-    const result = await chat.sendMessage(message)
-    lexResponse = result.response.text()
-  } catch (geminiError) {
-    console.error('Gemini failed, falling back to Grok:', geminiError)
+      const chat = model.startChat({
+        systemInstruction: systemPrompt,
+        history: recentHistory.map(m => ({
+          role: m.role === 'lex' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        })),
+      })
 
-    // Fallback: Grok 4.1 Fast (xAI API is OpenAI-compatible)
+      const result = await chat.sendMessage(message)
+      lexResponse = result.response.text()
+      geminiSucceeded = true
+    } catch (geminiError) {
+      console.error('[/api/ai/[ideaId]] Gemini failed:', geminiError)
+    }
+  }
+
+  if (!geminiSucceeded) {
+    // Fallback: Grok 3 Fast
+    const grokKey = process.env.GROK_API_KEY
+    if (!grokKey) {
+      console.error('[/api/ai/[ideaId]] GROK_API_KEY is not set — both providers unavailable')
+      return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+    }
+
     try {
       const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
+          'Authorization': `Bearer ${grokKey}`,
         },
         body: JSON.stringify({
           model: 'grok-3-fast-beta',
@@ -188,27 +210,40 @@ export async function POST(req: Request, { params }: Params) {
           ],
         }),
       })
+
+      if (!grokRes.ok) {
+        const errBody = await grokRes.text().catch(() => '(unreadable)')
+        console.error(`[/api/ai/[ideaId]] Grok returned ${grokRes.status}: ${errBody}`)
+        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      }
+
       const grokData = await grokRes.json()
-      lexResponse = grokData.choices?.[0]?.message?.content ?? 'Sorry, Lex is unavailable right now.'
+      const content = grokData.choices?.[0]?.message?.content
+      if (!content) {
+        console.error('[/api/ai/[ideaId]] Grok response missing choices:', JSON.stringify(grokData))
+        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      }
+
+      lexResponse = content
+      aiProvider = 'GROK_FAST'
     } catch (grokError) {
-      console.error('Grok fallback also failed:', grokError)
+      console.error('[/api/ai/[ideaId]] Grok fallback threw:', grokError)
       return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
     }
   }
 
   // Extract and strip fieldUpdates JSON from the response
-  let visibleResponse = lexResponse
+  let visibleResponse = lexResponse!
   let fieldUpdates: Record<string, string | null> | null = null
   let triggerSavePrompt = false
 
-  const jsonMatch = lexResponse.match(/\{[\s\S]*"fieldUpdates"[\s\S]*\}/)
+  const jsonMatch = lexResponse!.match(/\{[\s\S]*"fieldUpdates"[\s\S]*\}/)
   if (jsonMatch) {
     try {
       const parsed = JSON.parse(jsonMatch[0])
       fieldUpdates = parsed.fieldUpdates ?? null
       triggerSavePrompt = parsed.triggerSavePrompt === true
-      // Strip JSON from visible response
-      visibleResponse = lexResponse.replace(jsonMatch[0], '').trim()
+      visibleResponse = lexResponse!.replace(jsonMatch[0], '').trim()
     } catch {
       // JSON parse failed — serve response as-is without field updates
     }
@@ -248,8 +283,8 @@ export async function POST(req: Request, { params }: Params) {
     data: {
       userId: user.id,
       ideaId,
-      provider: 'GEMINI_FLASH',
-      model: 'gemini-2.5-flash',
+      provider: aiProvider,
+      model: aiProvider === 'GEMINI_FLASH' ? 'gemini-2.5-flash' : 'grok-3-fast-beta',
       inputTokens: 0, // TODO: token counting
       outputTokens: 0,
       costAmount: 0,

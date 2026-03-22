@@ -92,29 +92,46 @@ export async function POST(req: Request) {
 
   let lexResponse: string
 
-  try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' })
+  const geminiKey = process.env.GEMINI_API_KEY
+  if (!geminiKey) {
+    console.error('[/api/ai/public] GEMINI_API_KEY is not set — skipping to Grok fallback')
+  }
 
-    const chat = model.startChat({
-      systemInstruction: SYSTEM_PROMPT,
-      history: history.map(m => ({
-        role: m.role === 'lex' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      })),
-    })
+  let geminiSucceeded = false
+  if (geminiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(geminiKey)
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' })
 
-    const result = await chat.sendMessage(message)
-    lexResponse = result.response.text()
-  } catch (geminiError) {
-    console.error('Gemini failed (public), falling back to Grok:', geminiError)
+      const chat = model.startChat({
+        systemInstruction: SYSTEM_PROMPT,
+        history: history.map(m => ({
+          role: m.role === 'lex' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        })),
+      })
+
+      const result = await chat.sendMessage(message)
+      lexResponse = result.response.text()
+      geminiSucceeded = true
+    } catch (geminiError) {
+      console.error('[/api/ai/public] Gemini failed:', geminiError)
+    }
+  }
+
+  if (!geminiSucceeded) {
+    const grokKey = process.env.GROK_API_KEY
+    if (!grokKey) {
+      console.error('[/api/ai/public] GROK_API_KEY is not set — both providers unavailable')
+      return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+    }
 
     try {
       const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
+          'Authorization': `Bearer ${grokKey}`,
         },
         body: JSON.stringify({
           model: 'grok-3-fast-beta',
@@ -128,24 +145,38 @@ export async function POST(req: Request) {
           ],
         }),
       })
+
+      if (!grokRes.ok) {
+        const errBody = await grokRes.text().catch(() => '(unreadable)')
+        console.error(`[/api/ai/public] Grok returned ${grokRes.status}: ${errBody}`)
+        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      }
+
       const grokData = await grokRes.json()
-      lexResponse = grokData.choices?.[0]?.message?.content ?? 'Sorry, Lex is unavailable right now.'
-    } catch {
+      const content = grokData.choices?.[0]?.message?.content
+      if (!content) {
+        console.error('[/api/ai/public] Grok response missing choices:', JSON.stringify(grokData))
+        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      }
+
+      lexResponse = content
+    } catch (grokError) {
+      console.error('[/api/ai/public] Grok fallback threw:', grokError)
       return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
     }
   }
 
   // Strip fieldUpdates from visible response, track completion
-  let visibleResponse = lexResponse
+  let visibleResponse = lexResponse!
   let triggerSavePrompt = false
   const completedFields: Record<string, boolean> = {}
 
-  const jsonMatch = lexResponse.match(/\{[\s\S]*"fieldUpdates"[\s\S]*\}/)
+  const jsonMatch = lexResponse!.match(/\{[\s\S]*"fieldUpdates"[\s\S]*\}/)
   if (jsonMatch) {
     try {
       const parsedJson = JSON.parse(jsonMatch[0])
       triggerSavePrompt = parsedJson.triggerSavePrompt === true
-      visibleResponse = lexResponse.replace(jsonMatch[0], '').trim()
+      visibleResponse = lexResponse!.replace(jsonMatch[0], '').trim()
 
       // Build boolean completion map from fieldUpdates (no content exposed)
       const updates = parsedJson.fieldUpdates ?? {}
