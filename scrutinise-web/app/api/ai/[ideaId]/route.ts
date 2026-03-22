@@ -122,8 +122,8 @@ export async function POST(req: Request, { params }: Params) {
   const lexMode = user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE'
   const preferredName = user.preferredName ?? user.firstName
 
-  // Build completed fields summary
-  const completedFields = [
+  // Build completed fields summary for system prompt
+  const completedFieldsSummary = [
     idea.diagnosis && 'Challenge',
     idea.rootCause && 'Root Cause',
     idea.guidingPolicy && 'Guiding Policy',
@@ -137,7 +137,7 @@ export async function POST(req: Request, { params }: Params) {
     ideaTitle: idea.title,
     currentStage: idea.stage,
     stageLabel: STAGE_LABELS[idea.stage] ?? idea.stage,
-    completedFields,
+    completedFields: completedFieldsSummary,
     userCredibility: 0, // TODO: fetch from CredibilityScore
     chatSummary: idea.aiChatSummary ?? 'No prior conversation',
     preferredName,
@@ -260,9 +260,34 @@ export async function POST(req: Request, { params }: Params) {
   // Stage gate check after field updates
   await checkAndAdvanceStage(ideaId, idea.creatorId)
 
+  // Re-fetch completion state for sidebar — boolean map only, no field content
+  const latest = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: {
+      diagnosis: true,
+      rootCause: true,
+      guidingPolicy: true,
+      whoAffected: true,
+      proposedWording: true,
+      coherentActions: { select: { id: true } },
+      research: { select: { id: true } },
+    },
+  })
+
+  const completedFields = {
+    diagnosis: !!latest?.diagnosis,
+    rootCause: !!latest?.rootCause,
+    guidingPolicy: !!latest?.guidingPolicy,
+    coherentActions: (latest?.coherentActions.length ?? 0) > 0,
+    whoAffected: !!latest?.whoAffected,
+    research: (latest?.research.length ?? 0) > 0,
+    proposedWording: !!latest?.proposedWording,
+  }
+
   return NextResponse.json({
     response: visibleResponse,
     triggerSavePrompt,
+    completedFields,
     // fieldUpdates deliberately NOT returned to client (security requirement)
   })
 }
