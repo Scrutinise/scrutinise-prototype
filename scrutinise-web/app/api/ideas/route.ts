@@ -5,12 +5,12 @@ import { getAuthenticatedUser } from '@/lib/auth'
 
 const CreateIdeaSchema = z.object({
   title: z.string().min(1).max(200),
-  summaryDescription: z.string().min(1).max(280),
+  summaryDescription: z.string().max(280).optional(),   // populated by Lex during Stage 1
   summaryDiagnosis: z.string().max(500).optional(),
   summaryGuidingPolicy: z.string().max(500).optional(),
   summaryCoherentActions: z.string().max(500).optional(),
   ideaType: z.enum(['LEGISLATION', 'ORGANISATION']).default('LEGISLATION'),
-  govtArea: z.string().min(1),
+  govtArea: z.string().optional(),                      // populated by Lex via fieldUpdates
   govtLevel: z.enum(['LOCAL', 'DEVOLVED', 'NATIONAL', 'INTERNATIONAL']).default('NATIONAL'),
   connectedIdeaIds: z.array(z.string().uuid()).optional(),
 })

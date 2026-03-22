@@ -28,6 +28,7 @@ interface FieldCompletion {
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Confirmed wording — do not change without CCh sign-off (lex_system_prompt_v4 Section 13)
 const OPENING_MESSAGE = "I'm Lex, your researcher and guide. What's the challenge you want to fix?"
 
 const SIDEBAR_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
@@ -45,17 +46,20 @@ const EMPTY_FIELDS: FieldCompletion = {
   coherentActions: false, whoAffected: false, research: false, proposedWording: false,
 }
 
+// Progress map per UX notes Section 4 / lex_system_prompt_v4 Section 18
 function calcProgress(userMsgCount: number, fields: FieldCompletion): number {
   const { diagnosis, rootCause, guidingPolicy, coherentActions, whoAffected } = fields
   const allCore = diagnosis && rootCause && guidingPolicy && coherentActions && whoAffected
-  if (allCore)          return 90
-  if (coherentActions)  return 75
-  if (guidingPolicy)    return 60
-  if (diagnosis)        return 45
+  if (allCore)           return 90
+  if (coherentActions)   return 75
+  if (guidingPolicy)     return 60
+  if (diagnosis)         return 45
   if (userMsgCount >= 2) return 30
   if (userMsgCount >= 1) return 20
   return 0
 }
+
+const ACCEPTED_FILE_TYPES = '.pdf,.doc,.docx'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Component
@@ -77,12 +81,15 @@ export default function CreateIdeaPage() {
   const [isListening, setIsListening] = useState(false)
   const [showMicHint, setShowMicHint] = useState(false)
   const [distanceFromBottom, setDistanceFromBottom] = useState(0)
+  const [attachedFile, setAttachedFile] = useState<File | null>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const micHintInteracted = useRef(false)
 
   const progress = calcProgress(userMsgCount, fields)
 
@@ -96,7 +103,10 @@ export default function CreateIdeaPage() {
 
     if (hasVoice && localStorage.getItem('hasSeenMicHint') !== 'true') {
       setShowMicHint(true)
-      const t = setTimeout(() => setShowMicHint(false), 6000)
+      const t = setTimeout(() => {
+        setShowMicHint(false)
+        localStorage.setItem('hasSeenMicHint', 'true')
+      }, 6000)
       return () => clearTimeout(t)
     }
   }, [])
@@ -113,7 +123,7 @@ export default function CreateIdeaPage() {
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, isLoading])
 
-  // ── Track scroll position for up-arrow ────────────────────────────────────
+  // ── Track scroll position for scroll-up arrow ─────────────────────────────
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -125,7 +135,7 @@ export default function CreateIdeaPage() {
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
-  // ── Auto-save (30s debounced PATCH) ───────────────────────────────────────
+  // ── Auto-save (3s debounced PATCH — spec: "3 seconds of inactivity") ───────
   const autoSave = useCallback(async () => {
     if (!ideaId || !isSignedIn) return
     try {
@@ -142,9 +152,17 @@ export default function CreateIdeaPage() {
   useEffect(() => {
     if (!ideaId) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
-    autoSaveTimer.current = setTimeout(autoSave, 30_000)
+    autoSaveTimer.current = setTimeout(autoSave, 3_000)
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
   }, [messages, ideaId, autoSave])
+
+  // ── Dismiss mic hint on first user interaction ─────────────────────────────
+  const dismissMicHint = useCallback(() => {
+    if (micHintInteracted.current) return
+    micHintInteracted.current = true
+    setShowMicHint(false)
+    localStorage.setItem('hasSeenMicHint', 'true')
+  }, [])
 
   // ── Ensure idea record exists (auth only) ─────────────────────────────────
   const ensureIdea = async (): Promise<string | null> => {
@@ -168,16 +186,30 @@ export default function CreateIdeaPage() {
   // ── Send message ──────────────────────────────────────────────────────────
   const handleSend = async () => {
     const text = inputValue.trim()
-    if (!text || isLoading) return
+    if (!text && !attachedFile) return
+    if (isLoading) return
+
+    dismissMicHint()
+
+    // Build message text — prepend file note if attached
+    let messageText = text
+    if (attachedFile) {
+      const fileNote = `[User attached: ${attachedFile.name}]`
+      messageText = text ? `${fileNote}\n\n${text}` : fileNote
+    }
 
     setInputValue('')
-    // Reset textarea height
+    setAttachedFile(null)
     if (inputRef.current) inputRef.current.style.height = 'auto'
 
     const newCount = userMsgCount + 1
     setUserMsgCount(newCount)
 
-    const userMsg: ChatMessage = { role: 'user', content: text, timestamp: new Date().toISOString() }
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: text || `[Attached: ${attachedFile!.name}]`,  // display text (no file note prefix)
+      timestamp: new Date().toISOString(),
+    }
     setMessages(prev => [...prev, userMsg])
     setIsLoading(true)
 
@@ -190,7 +222,7 @@ export default function CreateIdeaPage() {
         res = await fetch(`/api/ai/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ message: messageText }),
         })
       } else {
         // Unauthenticated — public endpoint, history passed in body
@@ -198,7 +230,7 @@ export default function CreateIdeaPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: text,
+            message: messageText,
             history: messages.map(m => ({ role: m.role, content: m.content })),
           }),
         })
@@ -208,7 +240,6 @@ export default function CreateIdeaPage() {
 
       const data = await res.json()
 
-      // Merge field completion into state
       if (data.completedFields) {
         setFields(prev => ({ ...prev, ...data.completedFields }))
       }
@@ -246,6 +277,17 @@ export default function CreateIdeaPage() {
     // Auto-expand
     e.target.style.height = 'auto'
     e.target.style.height = `${e.target.scrollHeight}px`
+    // Dismiss mic hint on first keystroke
+    dismissMicHint()
+  }
+
+  // ── File attachment ────────────────────────────────────────────────────────
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setAttachedFile(file)
+    // Reset so re-selecting the same file fires onChange
+    e.target.value = ''
+    dismissMicHint()
   }
 
   // ── Voice dictation ───────────────────────────────────────────────────────
@@ -258,6 +300,8 @@ export default function CreateIdeaPage() {
       recognitionRef.current?.stop()
       return
     }
+
+    dismissMicHint()
 
     const recognition = new SR()
     recognition.continuous = false
@@ -281,12 +325,6 @@ export default function CreateIdeaPage() {
 
     recognitionRef.current = recognition
     recognition.start()
-
-    // Dismiss mic hint on first use
-    if (showMicHint) {
-      setShowMicHint(false)
-      localStorage.setItem('hasSeenMicHint', 'true')
-    }
   }
 
   const scrollToBottom = () => {
@@ -294,6 +332,7 @@ export default function CreateIdeaPage() {
   }
 
   const completedCount = Object.values(fields).filter(Boolean).length
+  const canSend = (inputValue.trim().length > 0 || attachedFile !== null) && !isLoading
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -332,18 +371,19 @@ export default function CreateIdeaPage() {
                 />
               </div>
               <span className="text-xs text-muted-foreground tabular-nums w-8 text-right">
-                {progress}%
+                {progress > 0 ? `${progress}%` : ''}
               </span>
             </div>
           </div>
 
-          {/* Scrollable chat + input */}
+          {/* Scrollable chat + input — input follows messages, not pinned to viewport */}
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-6 pb-6"
           >
-            {/* Messages */}
             <div className="max-w-2xl mx-auto">
+
+              {/* Messages */}
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -392,14 +432,14 @@ export default function CreateIdeaPage() {
                 </div>
               )}
 
-              {/* Save prompt (triggered by Lex after Strategic Kernel) */}
+              {/* Save prompt — surfaces when Lex signals triggerSavePrompt */}
               {showSavePrompt && !isSignedIn && (
                 <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4 mb-6">
                   <p className="text-sm font-medium text-zinc-900 mb-1">
                     Save your idea
                   </p>
                   <p className="text-sm text-zinc-600 mb-3">
-                    I&apos;ve put together a first shape for your idea. Create a free account to save it and come back to it.
+                    I&apos;ve put together a first shape for your idea — want to save this so you can come back to it?
                   </p>
                   <SignInButton mode="modal">
                     <button className="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-700 transition-colors">
@@ -409,9 +449,10 @@ export default function CreateIdeaPage() {
                 </div>
               )}
 
-              {/* Input area — follows messages, not pinned to viewport */}
+              {/* ── Input area — immediately below last message ──────────── */}
               <div className="pt-2 pb-2">
-                {/* Mic hint tooltip */}
+
+                {/* One-time mic hint tooltip */}
                 {showMicHint && supportsVoice && (
                   <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2 pl-1">
                     <span>🎤</span>
@@ -419,7 +460,31 @@ export default function CreateIdeaPage() {
                   </div>
                 )}
 
-                <div className="flex items-end gap-2 border border-border rounded-xl bg-background p-3 focus-within:ring-2 focus-within:ring-zinc-900/20 transition-shadow">
+                {/* Attached file chip */}
+                {attachedFile && (
+                  <div className="flex items-center gap-2 mb-2 pl-1">
+                    <span className="flex items-center gap-1.5 text-xs bg-zinc-100 text-zinc-700 rounded-md px-2.5 py-1.5 border border-zinc-200">
+                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                      {attachedFile.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedFile(null)}
+                      className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                      aria-label="Remove attachment"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Input box */}
+                <div className="flex items-end gap-1 border border-border rounded-xl bg-background p-3 focus-within:ring-2 focus-within:ring-zinc-900/20 transition-shadow">
                   <textarea
                     ref={inputRef}
                     value={inputValue}
@@ -432,13 +497,34 @@ export default function CreateIdeaPage() {
                     style={{ overflow: 'hidden', maxHeight: '200px' }}
                   />
 
-                  {/* Mic button — conditionally rendered */}
+                  {/* File attachment button — hidden input triggered by visible button */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED_FILE_TYPES}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    aria-label="Attach a document"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Attach a PDF or document for background context"
+                    className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </button>
+
+                  {/* Mic button — conditionally rendered, min 44px touch target */}
                   {supportsVoice && (
                     <button
                       type="button"
                       onClick={startDictation}
                       title={isListening ? 'Stop listening' : 'Speak your answer'}
-                      className={`shrink-0 p-1.5 rounded-lg transition-colors ${
+                      className={`shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${
                         isListening
                           ? 'text-red-500 bg-red-50 animate-pulse'
                           : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
@@ -454,8 +540,8 @@ export default function CreateIdeaPage() {
                   <button
                     type="button"
                     onClick={handleSend}
-                    disabled={isLoading || !inputValue.trim()}
-                    className="shrink-0 p-1.5 rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    disabled={!canSend}
+                    className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Send (Enter)"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,6 +557,7 @@ export default function CreateIdeaPage() {
                   )}
                 </p>
               </div>
+
             </div>
           </div>
 
