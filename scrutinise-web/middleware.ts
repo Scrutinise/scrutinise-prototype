@@ -1,8 +1,10 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
   '/prototype(.*)',
+  '/ideas(.*)',
   '/api/ideas(.*)',
   '/api/ai(.*)',
   '/api/webhooks/clerk',
@@ -15,17 +17,24 @@ const isPublicRoute = createRouteMatcher([
   '/training(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/invite(.*)',
+  '/unsubscribe(.*)',
   '/general(.*)',
   '/demo(.*)',
   '/api/health(.*)',
-  '/prototype/referral(.*)', // referral pages are public
+  '/prototype/referral(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return
 
   if (isProtectedRoute(req)) {
-    await auth.protect()
+    const { userId } = await auth()
+    if (!userId) {
+      const signInUrl = new URL('/sign-in', req.url)
+      signInUrl.searchParams.set('redirect_url', req.url)
+      return NextResponse.redirect(signInUrl)
+    }
   }
 })
 
