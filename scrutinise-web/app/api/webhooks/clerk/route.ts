@@ -68,17 +68,21 @@ export async function POST(req: Request) {
   const lastName = last_name ?? ''
   const fullName = [firstName, lastName].filter(Boolean).join(' ')
 
-  // Custom fields from Clerk unsafe_metadata (configured in Clerk Dashboard)
+  // Username: Clerk may send null — always generate a unique fallback.
+  // Matches the JIT sync pattern in lib/auth.ts exactly.
+  const usernameBase = username
+    ?? (firstName.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'user')
+  const uniqueUsername = usernameBase.slice(0, 20) + '_' + Date.now().toString(36)
+
+  // Consent fields from onboarding page (written via PATCH /api/user/onboarding,
+  // not via Clerk metadata — these will be null/false at webhook time)
   const preferredName = (unsafe_metadata?.preferredName as string | undefined) ?? firstName
   const ageConfirmed = (unsafe_metadata?.ageConfirmed as boolean | undefined) === true
   const tcAgreed = (unsafe_metadata?.tcAgreed as boolean | undefined) === true
   const rulesAgreed = (unsafe_metadata?.rulesAgreed as boolean | undefined) === true
   const now = new Date()
 
-  // Generate a unique username if Clerk didn't provide one
-  const baseUsername = username
-    ?? fullName.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20)
-  const uniqueUsername = `${baseUsername}_${Date.now().toString(36)}`
+  console.log(`[webhook] user.created: clerkId=${clerkId} email=${primaryEmail} username=${username ?? '(null)'} → db username=${uniqueUsername}`)
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -115,10 +119,15 @@ export async function POST(req: Request) {
       return newUser
     })
 
-    console.log(`User created: ${user.id} (${user.email})`)
+    console.log(`[webhook] User created: ${user.id} (${user.email}) username=${user.username}`)
     return NextResponse.json({ userId: user.id })
   } catch (err) {
-    console.error('Clerk webhook — user creation failed:', err)
+    console.error('[webhook] user creation failed —', {
+      clerkId,
+      email: primaryEmail,
+      username: uniqueUsername,
+      error: err instanceof Error ? err.message : String(err),
+    })
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
 }
