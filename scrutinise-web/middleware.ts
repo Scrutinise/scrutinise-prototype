@@ -19,9 +19,11 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/invite(.*)',
   '/unsubscribe(.*)',
+  '/ideas/create',      // unauthenticated Lex experience — auth triggered by save prompt
   '/general(.*)',
   '/demo(.*)',
   '/api/health(.*)',
+  '/api/ai/public',     // unauthenticated Lex API
   '/prototype/referral(.*)',
 ])
 
