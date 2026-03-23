@@ -25,9 +25,16 @@ export async function GET(_req: Request, { params }: Params) {
       },
       orderBy: { endorsedAt: 'asc' },
     }),
-    prisma.draftsmanEndorsement.findMany({
+    // Type cast until `prisma generate` picks up draftsmanName / organisation fields
+    (prisma.draftsmanEndorsement.findMany as any)({
       where: { ideaId, status: 'ACTIVE' },
-      include: {
+      select: {
+        id: true,
+        draftsmanName: true,
+        organisation: true,
+        publicStatement: true,
+        draftsmanCredentials: true,
+        certifiedAt: true,
         draftsman: { select: { id: true, name: true, username: true } },
       },
       orderBy: { certifiedAt: 'asc' },

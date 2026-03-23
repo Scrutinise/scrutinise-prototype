@@ -389,6 +389,7 @@ model Idea {
   commentCount              Int             @default(0)
   amendmentCount            Int             @default(0)
   endorsementCount          Int             @default(0)
+  draftsmanEndorsementCount Int             @default(0)
   viewCount                 Int             @default(0)
   // Stage eligibility
   eligibleForNextStage      Boolean         @default(false)
@@ -671,8 +672,10 @@ model DraftsmanEndorsement {
   id                    String   @id @default(uuid())
   ideaId                String
   idea                  Idea     @relation(fields: [ideaId], references: [id])
-  draftsmanUserId       String
-  draftsman             User     @relation(fields: [draftsmanUserId], references: [id])
+  draftsmanUserId       String?
+  draftsman             User?    @relation(fields: [draftsmanUserId], references: [id])
+  draftsmanName         String?  // Name of external draftsman (may not be a platform user)
+  organisation          String?  // Organisation / chambers / firm
   publicStatement       String
   draftsmanCredentials  String
   status                EndorsementStatus @default(ACTIVE)

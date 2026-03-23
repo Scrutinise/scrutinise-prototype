@@ -8,6 +8,8 @@ const isProtectedRoute = createRouteMatcher([
   '/api/ideas(.*)',
   '/api/ai(.*)',
   '/api/user(.*)',
+  '/admin(.*)',
+  '/api/admin(.*)',
 ])
 
 // Public routes that never require auth

@@ -1,5 +1,5 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v9*
+*Last updated: 23 March 2026 v10*
 
 ---
 
@@ -32,6 +32,17 @@ Sprint 6 complete. The live site at scrutinise.co.uk has:
 - Groups/Team management: GET/POST /api/ideas/[id]/groups + add/remove members
 - TeamTab fully wired: Core Team collaborators + MY_TEAM/COMMUNICATIONS/POLICY_DEVELOPMENT CRUD
 - StageTransitionRequest model added to schema (Policy Dev group flag, veto logic deferred)
+
+- DraftsmanEndorsement form UI: POST /api/ideas/[id]/endorsements/draftsman (owner-only, Stage 4+, one per idea)
+- DraftsmanEndorsementForm in EndorsementPanel: owner-only, Stage 4+, hidden once submitted, shows existing record as card
+- Privacy Log tab (owner-only): green banner if no records; amber banners per admin access event with first+initial, date, reason
+- GET /api/ideas/[id]/privacy-log: owner-only, returns ADMIN_ACCESS ActivityLog records
+- Admin panel at /admin: auth-guarded layout (ADMIN/SUPER_ADMIN only)
+- Content reports queue (3a): GET/PATCH /api/admin/reports and /api/admin/reports/[reportId]
+- User list (3b): GET /api/admin/users (paginated) + PATCH /api/admin/users/[userId]/role
+- PlatformConfig panel (3c, SUPER_ADMIN only): GET/PATCH /api/admin/config
+- Schema: added DraftsmanEndorsement.draftsmanName, organisation; made draftsmanUserId optional; added Idea.draftsmanEndorsementCount
+- Note: `prisma generate` must be run on next deploy/restart to resolve TypeScript types for new schema fields (as any casts used temporarily)
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -161,15 +172,43 @@ Sprint 6 complete. The live site at scrutinise.co.uk has:
 | `app/ideas/[id]/page.tsx` | stage4GateData + currentUserCanEndorse fetched and passed |
 | `middleware.ts` | /api/ideas/(.*)/endorsements added to public routes |
 
+### Not yet built after Sprint 6 (carried to Sprint 7)
+
+- Admin panel ✅ Sprint 7
+- Privacy Log UI ✅ Sprint 7
+- DraftsmanEndorsement form UI ✅ Sprint 7
+- Credibility calculation (deferred)
+- Endorsement verification (MP/Peer badge confirmation — deferred)
+- Fundraising (deferred)
+- StageTransitionRequest veto logic (record created, not enforced — deferred)
+
+---
+
+## SPRINT 7 — COMPLETE ✅
+
+| File | What it does |
+|------|-------------|
+| `prisma/schema.prisma` | Added draftsmanName String?, organisation String? to DraftsmanEndorsement; made draftsmanUserId optional; added draftsmanEndorsementCount to Idea |
+| `app/api/ideas/[id]/endorsements/draftsman/route.ts` | POST /api/ideas/[id]/endorsements/draftsman — owner-only, Stage 4+, one per idea, increments draftsmanEndorsementCount |
+| `app/api/ideas/[id]/endorsements/route.ts` | Updated GET to include draftsmanName/organisation in select |
+| `app/api/ideas/[id]/IdeaDetailClient.tsx` | DraftsmanEndorsementForm in EndorsementPanel (owner, Stage 4+); PrivacyLogTab component; privacy-log tab (owner-only) |
+| `app/api/ideas/[id]/privacy-log/route.ts` | GET owner-only privacy log (ADMIN_ACCESS events, first+initial name masking) |
+| `app/admin/layout.tsx` | Server layout — auth + ADMIN/SUPER_ADMIN role guard |
+| `app/admin/page.tsx` | Admin panel client page — reports, users, config sections |
+| `app/api/admin/reports/route.ts` | GET content reports — PENDING first |
+| `app/api/admin/reports/[reportId]/route.ts` | PATCH report action (DISMISS/HIDE/REMOVE/WARN) + notifies content owner |
+| `app/api/admin/users/route.ts` | GET paginated user list |
+| `app/api/admin/users/[userId]/role/route.ts` | PATCH role — ADMIN sets CITIZEN/MODERATOR; SUPER_ADMIN sets any |
+| `app/api/admin/config/route.ts` | GET (Admin+) + PATCH (SUPER_ADMIN only) platform config |
+| `middleware.ts` | Added /admin(.*) and /api/admin(.*) to protected routes |
+
 ### Not yet built (deferred)
 
-- Admin panel
 - Credibility calculation
-- Privacy Log UI
 - Endorsement verification (MP/Peer badge confirmation)
-- DraftsmanEndorsement form UI (schema + API ready, no UI form yet)
 - Fundraising
-- StageTransitionRequest veto logic (record created, not enforced)
+- StageTransitionRequest veto logic
+- `prisma generate` note: run `npx prisma generate` on next deploy to fully resolve new schema type fields
 
 ---
 
@@ -196,7 +235,7 @@ Carried from Sprint 1:
 
 | File | Status |
 |------|--------|
-| prisma/schema.prisma | ✅ Full schema + Sprint 3 fields |
+| prisma/schema.prisma | ✅ Full schema + Sprint 7 fields (draftsmanName, organisation, draftsmanEndorsementCount) |
 | prisma/seed.ts | ✅ SuperAdmin + PlatformConfig |
 | middleware.ts | ✅ Clerk auth middleware |
 | lib/prisma.ts | ✅ Singleton client with PrismaPg adapter |
@@ -217,7 +256,16 @@ Carried from Sprint 1:
 | app/api/user/onboarding/route.ts | ✅ Consent capture |
 | app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email + 10/day rate limit |
 | app/ideas/[id]/page.tsx | ✅ Real idea detail page |
-| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + Begin Campaign modal + Stage3GateCard + ContributionsTab + ResearchTab + AmendmentsTab + VoteWidget (Stage 4/5) + DevelopmentHistory (owner, Stage 3+) |
+| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + Begin Campaign modal + Stage3GateCard + ContributionsTab + ResearchTab + AmendmentsTab + VoteWidget (Stage 4/5) + DevelopmentHistory (owner, Stage 3+) + DraftsmanEndorsementForm + PrivacyLogTab |
+| app/api/ideas/[id]/endorsements/draftsman/route.ts | ✅ POST draftsman endorsement (owner-only, Stage 4+) |
+| app/api/ideas/[id]/privacy-log/route.ts | ✅ GET privacy log (owner-only, ADMIN_ACCESS events) |
+| app/admin/layout.tsx | ✅ Auth guard (ADMIN/SUPER_ADMIN) |
+| app/admin/page.tsx | ✅ Admin panel (reports + users + config) |
+| app/api/admin/reports/route.ts | ✅ GET content reports |
+| app/api/admin/reports/[reportId]/route.ts | ✅ PATCH report action |
+| app/api/admin/users/route.ts | ✅ GET paginated users |
+| app/api/admin/users/[userId]/role/route.ts | ✅ PATCH user role |
+| app/api/admin/config/route.ts | ✅ GET + PATCH platform config |
 | app/ideas/[id]/ContributionsTab.tsx | ✅ Full form + cards + replies + pagination + Internal badge + Stage 2 support |
 | app/ideas/[id]/ResearchTab.tsx | ✅ Full form + cards |
 | app/ideas/[id]/AmendmentsTab.tsx | ✅ Full tab: propose form, expandable cards, owner action panel (5 actions), counter-proposal form |
@@ -279,15 +327,24 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
-Sprint 6 complete. Sprint 7 priorities:
-1. DraftsmanEndorsement form UI — Stage 4+, for users with professional verification.
-   POST /api/ideas/[id]/endorsements/draftsman (new route needed).
-2. Admin panel basics — user list, idea list, content reports.
-3. Privacy Log UI — owner-only tab showing admin access logs.
-4. Credibility calculation — wire the 5-component score system.
-5. Consider: DraftsmanEndorsement as separate POST endpoint vs extending existing endorsements route.
-Do not build: fundraising, StageTransitionRequest veto logic, address book import.
+Sprint 7 complete. All three priorities delivered:
+  1. DraftsmanEndorsement form UI ✅
+  2. Privacy Log UI ✅
+  3. Admin panel ✅ (reports, users, platform config)
+
+Run git status before touching any code. Confirm on Main.
+
+Deferred (do not build without explicit instruction):
+- Credibility calculation
+- Endorsement verification (MP/Peer badge confirmation)
+- Fundraising
+- StageTransitionRequest veto logic
+
+Note on Prisma generate: new schema fields (draftsmanName,
+organisation, draftsmanEndorsementCount) use `as any` casts
+in two route files. Run `npx prisma generate` once on deploy/
+restart to fully resolve types.
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 23 March 2026 v8*
+*handoff_summary.md — Scrutinise — 23 March 2026 v10*

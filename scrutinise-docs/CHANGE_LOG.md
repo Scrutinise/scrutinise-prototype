@@ -210,6 +210,20 @@
 | 2026-03-23 | scrutinise-web/app/api/ideas/[id]/groups/[groupId]/members/route.ts | New — POST add member to group. Owner only. | Sprint 6 P3 |
 | 2026-03-23 | scrutinise-web/app/api/ideas/[id]/groups/[groupId]/members/[userId]/route.ts | New — DELETE remove member from group. Owner or self. | Sprint 6 P3 |
 
+| 2026-03-23 | scrutinise-web/prisma/schema.prisma | Sprint 7 — Added draftsmanEndorsementCount Int @default(0) to Idea. Added draftsmanName String? and organisation String? to DraftsmanEndorsement. Made DraftsmanEndorsement.draftsmanUserId optional (String?). | Sprint 7 P1 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/endorsements/draftsman/route.ts | New — POST /api/ideas/[id]/endorsements/draftsman. Owner-only. Stage 4+. One per idea (409 on duplicate). Body: { draftsmanName, organisation, qualifications, statement }. Creates DraftsmanEndorsement, increments idea.draftsmanEndorsementCount. | Sprint 7 P1 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/endorsements/route.ts | Sprint 7 — Updated GET to include draftsmanName and organisation in draftsman endorsement select. | Sprint 7 P1 |
+| 2026-03-23 | scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx | Sprint 7 — Updated DraftsmanRecord interface (draftsmanName, organisation, draftsman nullable). Added DraftsmanEndorsementForm to EndorsementPanel (owner-only, Stage 4+, hidden once submitted). Added privacy-log Tab type and tab entry (owner-only). Added PrivacyLogTab component (green banner if no records; amber banners per event showing accessor first+initial, date, reason). | Sprint 7 P1+P2 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/privacy-log/route.ts | New — GET /api/ideas/[id]/privacy-log. Owner-only. Returns ActivityLog records where accessType=ADMIN_ACCESS for this idea, ordered createdAt DESC. Resolves accessedByUserId to first name + last initial only. | Sprint 7 P2 |
+| 2026-03-23 | scrutinise-web/app/admin/layout.tsx | New — Admin layout. Server component. Auth guard: redirects to /sign-in if not authenticated; redirects to /dashboard if not ADMIN or SUPER_ADMIN. | Sprint 7 P3 |
+| 2026-03-23 | scrutinise-web/app/admin/page.tsx | New — Admin panel page. Client component with three sections: (a) Content Reports — lists ContentReport records PENDING first; Dismiss/Hide/Remove/Warn actions via PATCH; (b) Users — paginated user list with inline role dropdown; (c) Platform Config — SUPER_ADMIN only, toggle/number inputs for credibilityWeightingActive, peerReviewRequired, minReviewersForStage4, minRatingForStage4. | Sprint 7 P3 |
+| 2026-03-23 | scrutinise-web/app/api/admin/reports/route.ts | New — GET /api/admin/reports. Admin+. Lists ContentReport records PENDING first, then createdAt DESC. Returns reporter, content owner, reported content snippet, reason, status. | Sprint 7 P3a |
+| 2026-03-23 | scrutinise-web/app/api/admin/reports/[reportId]/route.ts | New — PATCH /api/admin/reports/[reportId]. Admin+. Actions: DISMISS→DISMISSED, HIDE/REMOVE/WARN→ACTION_TAKEN. Creates notification for content owner (except DISMISS). HIDE also archives idea. | Sprint 7 P3a |
+| 2026-03-23 | scrutinise-web/app/api/admin/users/route.ts | New — GET /api/admin/users. Admin+. Paginated (page + limit). Returns name, email, role, status, joinDate, credibilityScore, ideaCount. | Sprint 7 P3b |
+| 2026-03-23 | scrutinise-web/app/api/admin/users/[userId]/role/route.ts | New — PATCH /api/admin/users/[userId]/role. SUPER_ADMIN can set any role; ADMIN can set CITIZEN or MODERATOR only. Logs to ActivityLog. | Sprint 7 P3b |
+| 2026-03-23 | scrutinise-web/app/api/admin/config/route.ts | New — GET /api/admin/config (Admin+) and PATCH (SUPER_ADMIN only). Manages PlatformConfig keys: credibilityWeightingActive, peerReviewRequired, minReviewersForStage4, minRatingForStage4. Changes logged to ActivityLog. | Sprint 7 P3c |
+| 2026-03-23 | scrutinise-web/middleware.ts | Sprint 7 — Added /admin(.*) and /api/admin(.*) to protected routes (Clerk session required). | Sprint 7 P3 |
+
 ---
 
 *CHANGE_LOG.md — Scrutinise — March 2026*

@@ -545,10 +545,12 @@ interface EndorsementRecord {
 
 interface DraftsmanRecord {
   id: string
+  draftsmanName: string | null
+  organisation: string | null
   publicStatement: string
   draftsmanCredentials: string
   certifiedAt: string
-  draftsman: { id: string; name: string; username: string }
+  draftsman: { id: string; name: string; username: string } | null
 }
 
 function EndorsementPanel({
@@ -556,11 +558,13 @@ function EndorsementPanel({
   stage,
   canEndorse,
   currentUserId,
+  isOwner,
 }: {
   ideaId: string
   stage: string
   canEndorse: boolean
   currentUserId: string | null
+  isOwner: boolean
 }) {
   const [endorsements, setEndorsements] = useState<EndorsementRecord[]>([])
   const [draftsman, setDraftsman] = useState<DraftsmanRecord[]>([])
@@ -569,6 +573,11 @@ function EndorsementPanel({
   const [endorseError, setEndorseError] = useState<string | null>(null)
   const [hasEndorsed, setHasEndorsed] = useState(false)
   const [markedBelowStandard, setMarkedBelowStandard] = useState(false)
+  // Draftsman form state
+  const [showDraftsmanForm, setShowDraftsmanForm] = useState(false)
+  const [draftsmanForm, setDraftsmanForm] = useState({ draftsmanName: '', organisation: '', qualifications: '', statement: '' })
+  const [draftsmanSubmitting, setDraftsmanSubmitting] = useState(false)
+  const [draftsmanError, setDraftsmanError] = useState<string | null>(null)
 
   const allowedStages = ['STAGE_4', 'STAGE_5']
   const isAllowed = allowedStages.includes(stage)
@@ -632,6 +641,30 @@ function EndorsementPanel({
       setEndorseError('Network error')
     } finally {
       setEndorsing(false)
+    }
+  }
+
+  async function handleDraftsmanSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setDraftsmanSubmitting(true)
+    setDraftsmanError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/endorsements/draftsman`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draftsmanForm),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDraftsmanError(data.error ?? 'Something went wrong')
+        return
+      }
+      setDraftsman(prev => [...prev, data])
+      setShowDraftsmanForm(false)
+    } catch {
+      setDraftsmanError('Network error')
+    } finally {
+      setDraftsmanSubmitting(false)
     }
   }
 
@@ -728,7 +761,10 @@ function EndorsementPanel({
           <div className="space-y-2">
             {draftsman.map(d => (
               <div key={d.id} className="rounded-md border bg-muted/20 p-3">
-                <p className="text-sm font-medium">{d.draftsman.name}</p>
+                <p className="text-sm font-medium">{d.draftsmanName ?? d.draftsman?.name ?? 'Draftsman'}</p>
+                {d.organisation && (
+                  <p className="text-xs text-muted-foreground">{d.organisation}</p>
+                )}
                 <p className="text-xs text-muted-foreground">{d.draftsmanCredentials}</p>
                 <p className="mt-1 text-xs text-muted-foreground">&ldquo;{d.publicStatement}&rdquo;</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
@@ -737,6 +773,85 @@ function EndorsementPanel({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Draftsman form — owner only, Stage 4+, hidden once submitted */}
+      {isOwner && draftsman.length === 0 && ['STAGE_4', 'STAGE_5'].includes(stage) && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Parliamentary Draftsman
+          </p>
+          {!showDraftsmanForm ? (
+            <button
+              onClick={() => setShowDraftsmanForm(true)}
+              className="w-full rounded-md border border-dashed py-2 text-xs text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors"
+            >
+              + Add Parliamentary Draftsman endorsement
+            </button>
+          ) : (
+            <form onSubmit={handleDraftsmanSubmit} className="space-y-3 rounded-md border p-3">
+              <p className="text-xs font-medium">Parliamentary Draftsman details</p>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Draftsman name *</label>
+                <input
+                  required
+                  value={draftsmanForm.draftsmanName}
+                  onChange={e => setDraftsmanForm(f => ({ ...f, draftsmanName: e.target.value }))}
+                  placeholder="Full name"
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Organisation *</label>
+                <input
+                  required
+                  value={draftsmanForm.organisation}
+                  onChange={e => setDraftsmanForm(f => ({ ...f, organisation: e.target.value }))}
+                  placeholder="Firm, chambers, or body"
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Qualifications *</label>
+                <input
+                  required
+                  value={draftsmanForm.qualifications}
+                  onChange={e => setDraftsmanForm(f => ({ ...f, qualifications: e.target.value }))}
+                  placeholder="Professional qualifications and credentials"
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted-foreground">Public statement *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={draftsmanForm.statement}
+                  onChange={e => setDraftsmanForm(f => ({ ...f, statement: e.target.value }))}
+                  placeholder="The draftsman's endorsement statement"
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              {draftsmanError && (
+                <p className="text-xs text-destructive">{draftsmanError}</p>
+              )}
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={draftsmanSubmitting}>
+                  {draftsmanSubmitting ? 'Submitting…' : 'Submit'}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setShowDraftsmanForm(false); setDraftsmanError(null) }}
+                  disabled={draftsmanSubmitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       )}
     </div>
@@ -1120,13 +1235,81 @@ function DevelopmentHistory({ ideaId }: { ideaId: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Privacy Log tab — owner-only
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PrivacyLogEntry {
+  id: string
+  accessorName: string
+  accessReason: string | null
+  createdAt: string
+}
+
+function PrivacyLogTab({ ideaId }: { ideaId: string }) {
+  const [entries, setEntries] = useState<PrivacyLogEntry[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/ideas/${ideaId}/privacy-log`)
+      .then(r => r.json())
+      .then(data => {
+        setEntries(Array.isArray(data) ? data : [])
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [ideaId])
+
+  if (!loaded) {
+    return <p className="text-sm text-muted-foreground">Loading…</p>
+  }
+
+  if (entries.length === 0) {
+    return (
+      <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+        <p className="text-sm text-green-800">No Scrutinise team members have accessed this idea.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        This log records every time a Scrutinise team member has accessed your idea, as required by our{' '}
+        <a href="/privacy" className="underline hover:text-foreground">privacy policy</a>.
+      </p>
+      {entries.map(entry => (
+        <div
+          key={entry.id}
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
+        >
+          <p className="text-sm text-amber-900">
+            <span className="font-medium">{entry.accessorName}</span> accessed this idea on{' '}
+            <span className="font-medium">
+              {new Date(entry.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
+            {entry.accessReason && (
+              <>. Reason: <span className="font-medium">{entry.accessReason}</span></>
+            )}
+            .
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team'
+type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team' | 'privacy-log'
 
 function isValidTab(t: string | null): t is Tab {
-  return ['overview', 'contributions', 'research', 'amendments', 'team'].includes(t ?? '')
+  return ['overview', 'contributions', 'research', 'amendments', 'team', 'privacy-log'].includes(t ?? '')
 }
 
 export default function IdeaDetailClient({
@@ -1224,6 +1407,7 @@ export default function IdeaDetailClient({
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     { key: 'team', label: 'Team' },
+    ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log' }] : []),
   ]
 
   return (
@@ -1459,6 +1643,7 @@ export default function IdeaDetailClient({
                   stage={idea.stage}
                   canEndorse={currentUserCanEndorse}
                   currentUserId={currentUserId}
+                  isOwner={isOwner}
                 />
               )}
               <OverviewTab idea={idea} />
@@ -1495,6 +1680,9 @@ export default function IdeaDetailClient({
             />
           )}
           {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} />}
+          {activeTab === 'privacy-log' && isOwner && (
+            <PrivacyLogTab ideaId={idea.id} />
+          )}
         </div>
 
         {/* Development History — owner only, Stage 3+ (internal contributions archived from Stage 2) */}
