@@ -44,30 +44,39 @@ export async function POST(req: Request) {
     connectedIdeaIds,
   } = parsed.data
 
-  const idea = await prisma.idea.create({
-    data: {
-      creatorId: user.id,
-      title,
-      summaryDescription,
-      summaryDiagnosis,
-      summaryGuidingPolicy,
-      summaryCoherentActions,
-      ideaType,
-      govtArea,
-      govtLevel,
-      connectedIdeaIds: connectedIdeaIds ?? [],
-      stage: 'STAGE_1',
-      visibility: 'PRIVATE',
-      status: 'DRAFT',
-    },
-    select: {
-      id: true,
-      stage: true,
-      title: true,
-      summaryDescription: true,
-      createdAt: true,
-    },
-  })
+  try {
+    const idea = await prisma.idea.create({
+      data: {
+        creatorId: user.id,
+        title,
+        summaryDescription: summaryDescription ?? '',  // required in schema; populated by Lex
+        summaryDiagnosis,
+        summaryGuidingPolicy,
+        summaryCoherentActions,
+        ideaType,
+        govtArea: govtArea ?? '',                      // required in schema; populated by Lex
+        govtLevel,
+        connectedIdeaIds: connectedIdeaIds ?? [],
+        stage: 'STAGE_1',
+        visibility: 'PRIVATE',
+        status: 'DRAFT',
+      },
+      select: {
+        id: true,
+        stage: true,
+        title: true,
+        summaryDescription: true,
+        createdAt: true,
+      },
+    })
 
-  return NextResponse.json(idea, { status: 201 })
+    return NextResponse.json(idea, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/ideas] prisma.idea.create failed:', {
+      userId: user.id,
+      title,
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return NextResponse.json({ error: 'Failed to create idea' }, { status: 500 })
+  }
 }
