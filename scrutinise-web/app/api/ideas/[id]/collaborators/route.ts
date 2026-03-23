@@ -3,6 +3,7 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { sendCollaboratorInviteEmail } from '@/lib/email'
 
 type Params = { params: Promise<{ id: string }> }
@@ -33,6 +34,15 @@ export async function POST(req: Request, { params }: Params) {
 
   if (idea.creatorId !== user.id) {
     return NextResponse.json({ error: 'Forbidden — only the owner can invite collaborators' }, { status: 403 })
+  }
+
+  // Rate limit: 10 invites per day per user
+  const rateLimitKey = `invite:${user.id}`
+  if (!checkRateLimit(rateLimitKey, 10, 24 * 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded — you can send up to 10 invites per day. Please try again tomorrow.' },
+      { status: 429 },
+    )
   }
 
   let body: unknown

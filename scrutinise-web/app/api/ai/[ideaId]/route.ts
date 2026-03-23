@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 type Params = { params: Promise<{ ideaId: string }> }
@@ -89,6 +90,15 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const { ideaId } = await params
+
+  // Rate limit: 50 requests per hour per authenticated user
+  const rateLimitKey = `ai:${user.id}`
+  if (!checkRateLimit(rateLimitKey, 50, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded — you can send up to 50 messages per hour. Please try again later.' },
+      { status: 429 },
+    )
+  }
 
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
