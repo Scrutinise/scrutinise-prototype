@@ -571,6 +571,7 @@ model Comment {
   stance                CommentStance
   suggestedChanges      Boolean       @default(false)
   isOwnerReply          Boolean       @default(false)
+  isInternal            Boolean       @default(false) // true for contributions created at Stage 2 (collaborator-only)
   helpfulCount          Int           @default(0)
   notHelpfulCount       Int           @default(0)
   isHidden              Boolean       @default(false)

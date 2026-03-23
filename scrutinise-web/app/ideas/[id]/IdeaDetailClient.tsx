@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -369,6 +369,113 @@ function AmendmentsTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Development History — owner-only, shows Stage 2 internal contributions
+// grouped by contributor
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface InternalContribution {
+  id: string
+  commentNumber: number | null
+  content: string
+  stance: string
+  contributionType: string | null
+  createdAt: string
+  author: { id: string; name: string; username: string }
+}
+
+function DevelopmentHistory({ ideaId }: { ideaId: string }) {
+  const [items, setItems] = useState<InternalContribution[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`/api/ideas/${ideaId}/contributions`)
+      .then(r => r.json())
+      .then(data => {
+        const internals = (data.contributions ?? []).filter(
+          (c: InternalContribution & { isInternal: boolean }) => c.isInternal,
+        )
+        setItems(internals)
+      })
+      .catch(() => {/* non-critical */})
+      .finally(() => setLoading(false))
+  }, [ideaId])
+
+  if (loading || items.length === 0) return null
+
+  // Group by contributor
+  const byAuthor = items.reduce<Record<string, { author: InternalContribution['author']; contributions: InternalContribution[] }>>(
+    (acc, item) => {
+      const key = item.author.id
+      if (!acc[key]) acc[key] = { author: item.author, contributions: [] }
+      acc[key].contributions.push(item)
+      return acc
+    },
+    {},
+  )
+
+  const STANCE_STYLES: Record<string, string> = {
+    SUPPORTIVE: 'bg-green-100 text-green-800',
+    CRITICAL: 'bg-red-100 text-red-700',
+    NEUTRAL: 'bg-muted text-muted-foreground',
+    QUESTION: 'bg-blue-100 text-blue-700',
+  }
+  const STANCE_LABELS: Record<string, string> = {
+    SUPPORTIVE: 'Supportive',
+    CRITICAL: 'Critical',
+    NEUTRAL: 'Neutral',
+    QUESTION: 'Question',
+  }
+
+  return (
+    <div className="mt-10 border-t pt-8">
+      <h2 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        Development History
+      </h2>
+      <p className="mb-5 text-xs text-muted-foreground">
+        Internal contributions made during the Draft stage by your collaborators.
+      </p>
+      <div className="space-y-6">
+        {Object.values(byAuthor).map(({ author, contributions }) => (
+          <div key={author.id}>
+            <p className="mb-2 text-sm font-medium">
+              {author.name}{' '}
+              <span className="text-xs font-normal text-muted-foreground">
+                — {contributions.length} contribution{contributions.length !== 1 ? 's' : ''}
+              </span>
+            </p>
+            <div className="space-y-2 border-l-2 border-muted pl-4">
+              {contributions.map(c => (
+                <div key={c.id} className="rounded-md border bg-muted/30 p-3">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    {c.commentNumber != null && (
+                      <span className="font-mono text-xs text-muted-foreground">#{c.commentNumber}</span>
+                    )}
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STANCE_STYLES[c.stance] ?? 'bg-muted text-muted-foreground'}`}>
+                      {STANCE_LABELS[c.stance] ?? c.stance}
+                    </span>
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+                      Internal
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed">{c.content}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(c.createdAt).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -579,6 +686,11 @@ export default function IdeaDetailClient({
           {activeTab === 'amendments' && <AmendmentsTab />}
           {activeTab === 'team' && <TeamTab idea={idea} />}
         </div>
+
+        {/* Development History — owner only, Stage 3+ (internal contributions archived from Stage 2) */}
+        {isOwner && ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) && (
+          <DevelopmentHistory ideaId={idea.id} />
+        )}
       </main>
     </>
   )

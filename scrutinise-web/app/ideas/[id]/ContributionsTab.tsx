@@ -22,6 +22,7 @@ interface Contribution {
   contributionType: string | null
   stance: string
   content: string
+  isInternal: boolean
   helpfulCount: number
   notHelpfulCount: number
   createdAt: string
@@ -199,6 +200,11 @@ function ContributionCard({
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${stanceStyle}`}>
             {stanceLabel}
           </span>
+          {contribution.isInternal && (
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+              Internal
+            </span>
+          )}
         </div>
 
         {/* Content */}
@@ -402,6 +408,7 @@ function ContributionForm({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PUBLIC_STAGES = ['STAGE_3', 'STAGE_4', 'STAGE_5']
+const ALLOWED_STAGES = ['STAGE_2', 'STAGE_3', 'STAGE_4', 'STAGE_5']
 const PAGE_SIZE = 10
 
 export default function ContributionsTab({
@@ -418,9 +425,14 @@ export default function ContributionsTab({
   const [showAll, setShowAll] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
+  const isStage2 = stage === 'STAGE_2'
+  // At Stage 2, only owner/collaborators can contribute (canAdd passed from parent via currentUserId
+  // + the API enforces the collaborator gate)
+  const canContribute = !!currentUserId && ALLOWED_STAGES.includes(stage)
+
   // Fetch contributions when this tab is first rendered
   useEffect(() => {
-    if (loaded || !PUBLIC_STAGES.includes(stage)) return
+    if (loaded || !ALLOWED_STAGES.includes(stage)) return
     setLoading(true)
     fetch(`/api/ideas/${ideaId}/contributions`)
       .then(r => r.json())
@@ -432,26 +444,31 @@ export default function ContributionsTab({
       .finally(() => setLoading(false))
   }, [ideaId, stage, loaded])
 
-  if (!PUBLIC_STAGES.includes(stage)) {
+  if (!ALLOWED_STAGES.includes(stage)) {
     return (
       <p className="text-sm text-muted-foreground">
-        Contributions open at the Develop stage.
+        Contributions open at the Draft stage.
       </p>
     )
   }
 
-  const visibleContributions = showAll ? contributions : contributions.slice(0, PAGE_SIZE)
+  // At Stage 3+, public tab shows only non-internal contributions
+  const visiblePool = PUBLIC_STAGES.includes(stage)
+    ? contributions.filter(c => !c.isInternal)
+    : contributions
+
+  const visibleContributions = showAll ? visiblePool : visiblePool.slice(0, PAGE_SIZE)
 
   return (
     <div className="space-y-4">
       {/* Form toggle */}
-      {currentUserId && !showForm && (
+      {canContribute && !showForm && (
         <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
           Leave a Contribution
         </Button>
       )}
 
-      {!currentUserId && (
+      {!currentUserId && PUBLIC_STAGES.includes(stage) && (
         <p className="text-sm text-muted-foreground">
           <Link href="/sign-in" className="font-medium text-foreground underline underline-offset-2">
             Sign in
@@ -484,7 +501,7 @@ export default function ContributionsTab({
         <p className="text-sm text-destructive">{fetchError}</p>
       )}
 
-      {!loading && loaded && contributions.length === 0 && (
+      {!loading && loaded && visiblePool.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No Contributions yet. Be the first to contribute.
         </p>
@@ -499,12 +516,12 @@ export default function ContributionsTab({
         />
       ))}
 
-      {contributions.length > PAGE_SIZE && !showAll && (
+      {visiblePool.length > PAGE_SIZE && !showAll && (
         <button
           onClick={() => setShowAll(true)}
           className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
-          Show all {contributions.length} contributions
+          Show all {visiblePool.length} contributions
         </button>
       )}
     </div>

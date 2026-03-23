@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -19,27 +20,16 @@ const ContributionSchema = z.object({
   stance: z.enum(['SUPPORTIVE', 'CRITICAL', 'NEUTRAL', 'QUESTION']),
 })
 
-// GET /api/ideas/[id]/contributions
-// Public for LINK_ONLY/PLATFORM_LISTED ideas. Owner sees all; others see non-hidden only.
-export async function GET(_req: Request, { params }: Params) {
-  const { id: ideaId } = await params
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const idea = await prisma.idea.findUnique({
-    where: { id: ideaId },
-    select: { id: true, creatorId: true, stage: true, visibility: true },
-  })
-
-  if (!idea) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  // Require Stage 3+ for contributions to be visible
-  const publicStages = ['STAGE_3', 'STAGE_4', 'STAGE_5']
-  const isPublicStage = publicStages.includes(idea.stage)
-
-  // Determine if current user is owner (for full visibility)
+async function resolveCallerRole(ideaId: string, creatorId: string) {
   const { userId: clerkUserId } = await auth()
   let currentUserId: string | null = null
+  let isOwner = false
+  let isCollaborator = false
+
   if (clerkUserId) {
     const dbUser = await prisma.user.findUnique({
       where: { clerkId: clerkUserId },
@@ -48,17 +38,76 @@ export async function GET(_req: Request, { params }: Params) {
     currentUserId = dbUser?.id ?? null
   }
 
-  const isOwner = currentUserId === idea.creatorId
+  if (currentUserId) {
+    isOwner = currentUserId === creatorId
+    if (!isOwner) {
+      const collab = await prisma.ideaCollaborator.findFirst({
+        where: { ideaId, userId: currentUserId },
+        select: { id: true },
+      })
+      isCollaborator = !!collab
+    }
+  }
 
-  // Non-owners without auth can't see contributions on private/draft ideas
-  if (!isPublicStage && !isOwner) {
+  return { currentUserId, isOwner, isCollaborator }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ideas/[id]/contributions
+//
+// Stage 2: owner + collaborators only — returns internal contributions
+// Stage 3+: public non-internal; owner sees all; internal authors see own internals
+// ─────────────────────────────────────────────────────────────────────────────
+export async function GET(_req: Request, { params }: Params) {
+  const { id: ideaId } = await params
+
+  const idea = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: { id: true, creatorId: true, stage: true },
+  })
+
+  if (!idea) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const publicStages = ['STAGE_3', 'STAGE_4', 'STAGE_5']
+  const isStage2 = idea.stage === 'STAGE_2'
+  const isPublicStage = publicStages.includes(idea.stage)
+
+  if (!isStage2 && !isPublicStage) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const where = {
+  const { currentUserId, isOwner, isCollaborator } = await resolveCallerRole(
     ideaId,
-    parentId: null, // top-level only — replies fetched inline
-    ...(isOwner ? {} : { isHidden: false }),
+    idea.creatorId,
+  )
+
+  // Stage 2 — only owner and collaborators may see internal contributions
+  if (isStage2 && !isOwner && !isCollaborator) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Build the `where` filter based on caller role and stage
+  let where: Prisma.CommentWhereInput
+
+  if (isStage2) {
+    // Owner/collaborators see all internal contributions at Stage 2
+    where = { ideaId, parentId: null, isInternal: true }
+  } else if (isOwner) {
+    // Owner at Stage 3+ sees everything (internal + public, no hidden filter)
+    where = { ideaId, parentId: null }
+  } else if (currentUserId) {
+    // Authenticated non-owner: public non-internal + own internal contributions
+    where = {
+      ideaId,
+      parentId: null,
+      isHidden: false,
+      OR: [{ isInternal: false }, { authorId: currentUserId }],
+    }
+  } else {
+    // Unauthenticated: public non-internal only
+    where = { ideaId, parentId: null, isHidden: false, isInternal: false }
   }
 
   const contributions = await prisma.comment.findMany({
@@ -87,7 +136,12 @@ export async function GET(_req: Request, { params }: Params) {
   return NextResponse.json({ contributions })
 }
 
-// POST /api/ideas/[id]/contributions — requires auth, Stage 3+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ideas/[id]/contributions
+//
+// Stage 2: owner + collaborators only — sets isInternal: true
+// Stage 3+: any authenticated user — sets isInternal: false
+// ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request, { params }: Params) {
   const { error, user } = await getAuthenticatedUser()
   if (error) return error
@@ -103,13 +157,32 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Contributions only allowed at Stage 3+
-  const allowedStages = ['STAGE_3', 'STAGE_4', 'STAGE_5']
-  if (!allowedStages.includes(idea.stage)) {
+  const publicStages = ['STAGE_3', 'STAGE_4', 'STAGE_5']
+  const isStage2 = idea.stage === 'STAGE_2'
+  const isPublicStage = publicStages.includes(idea.stage)
+
+  if (!isStage2 && !isPublicStage) {
     return NextResponse.json(
-      { error: 'Contributions are only open at Stage 3 and above' },
+      { error: 'Contributions are only open at Stage 2 and above' },
       { status: 422 },
     )
+  }
+
+  // At Stage 2, restrict to owner and collaborators
+  if (isStage2) {
+    const isOwner = user.id === idea.creatorId
+    if (!isOwner) {
+      const collab = await prisma.ideaCollaborator.findFirst({
+        where: { ideaId, userId: user.id },
+        select: { id: true },
+      })
+      if (!collab) {
+        return NextResponse.json(
+          { error: 'Only the owner and collaborators can contribute at this stage' },
+          { status: 403 },
+        )
+      }
+    }
   }
 
   let body: unknown
@@ -125,6 +198,7 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const { content, contributionType, stance } = parsed.data
+  const isInternal = isStage2 // Stage 2 contributions are always internal
 
   // Sequential comment number per idea
   const commentNumber = idea.commentCount + 1
@@ -138,6 +212,7 @@ export async function POST(req: Request, { params }: Params) {
         contributionType,
         stance,
         commentNumber,
+        isInternal,
       },
       include: {
         author: { select: { id: true, name: true, username: true } },
