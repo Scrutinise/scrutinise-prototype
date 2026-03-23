@@ -1,17 +1,21 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v7*
+*Last updated: 23 March 2026 v8*
 
 ---
 
 ## CURRENT STATE
 
-Sprint 4 complete. The live site at scrutinise.co.uk has:
+Sprint 5 complete. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
 - Stage 2→3 "Take Public" flow with warning modal and gate validation
+- Stage 3→4 "Begin Campaign" flow with gate checklist (12 reviews + avg quality 2.5) and warning modal
+- IdeaReview(VIEWED) creation server-side on every Stage 3+ page visit by authenticated user
 - Contributions tab: full form + cards (#N, type/stance badges, truncation, replies, pagination)
 - Research tab: full form + cards (type/source badges, relevance toggle, forPolicy/forAction)
 - Vote widget: real data-driven VoteWidget at Stage 4/5 only (hidden at Stages 1–3)
 - Vote API (GET aggregate + POST upsert with quality flags)
+- Amendment flow: POST propose, PATCH owner actions (Accept/Consult/Request Revision/Counter/Reject), POST counter-proposal; full AmendmentsTab UI
+- Amendment notifications deep-link to Amendments tab via ?tab=amendments
 - Public profile pages at `/user/[username]`
 - In-memory rate limiting on AI (50/hr) and invite (10/day) endpoints
 - afterSignInUrl returns to originating URL for protected routes
@@ -91,11 +95,33 @@ Sprint 4 complete. The live site at scrutinise.co.uk has:
 | `app/ideas/[id]/IdeaDetailClient.tsx` | Stubs replaced with real imports; VoteWidget at Stage 4/5 only; onResearchAdded + commentCount callbacks |
 | `middleware.ts` | /api/ideas/(.*)/vote(.*) added to public routes |
 
-### Not yet built (deferred to Sprint 5)
+### Not yet built (deferred to Sprint 6)
 
-- `proxy.ts` migration (Next.js codemod — Charlie to run locally: `cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy`)
-- Amendment flow
-- Stage 3→4 gate UI ("Begin Campaign")
+- Stage 4→5 gate UI ("Submit to Parliament") — 3 MP + 3 Peer + 1 DraftsmanEndorsement + all proposedWording complete
+- Endorsement UI (MP/Peer/Draftsman)
+- Admin panel
+- Credibility calculation
+- Groups/team management
+
+---
+
+## SPRINT 5 — COMPLETE ✅
+
+| File | What it does |
+|------|-------------|
+| `lib/stage-gates.ts` | checkStage3to4Gate, advanceStage3to4, getStage3GateData added |
+| `app/api/ideas/[id]/progress/route.ts` | STAGE_3→STAGE_4 branch added |
+| `app/ideas/[id]/page.tsx` | IdeaReview(VIEWED) upsert on page visit (Stage 3+, auth only); gate data fetch (Stage 3 + owner only) |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Stage3GateCard + BeginCampaignModal + Begin Campaign button; useSearchParams ?tab= deep-link; AmendmentsTab wired |
+| `app/api/ideas/[id]/amendments/route.ts` | GET list (public) + POST propose (auth, Stage 3+), notifications deep-link to Amendments tab |
+| `app/api/ideas/[id]/amendments/[amendmentId]/route.ts` | PATCH owner actions: accept/circulate/request_revision/reject |
+| `app/api/ideas/[id]/amendments/[amendmentId]/counter/route.ts` | POST counter-proposal (owner only) |
+| `app/ideas/[id]/AmendmentsTab.tsx` | Full amendments tab: propose form, expandable cards, owner action panel (5 actions), counter-proposal form |
+| `middleware.ts` | /api/ideas/(.*)/amendments added to public routes |
+
+### Design decision logged for Charlie
+
+**Stage 3→4 quality rating:** `system_mechanics_v0.7` specifies "average quality rating ≥ 2.5" but `IdeaReview` has no numeric field. Built as: VIEWED=3, ENDORSED=5, BELOW_STANDARD=0, averaged across all reviews. Passes if avg ≥ 2.5. An idea with 12 pure VIEWED reviews scores 3.0 (passes). Please confirm or advise if a numeric `qualityRating` field should be added to `IdeaReview`.
 
 ---
 
@@ -124,16 +150,16 @@ Carried from Sprint 1:
 |------|--------|
 | prisma/schema.prisma | ✅ Full schema + Sprint 3 fields |
 | prisma/seed.ts | ✅ SuperAdmin + PlatformConfig |
-| middleware.ts | ✅ Clerk auth middleware (proxy.ts migration pending — Charlie to run) |
+| middleware.ts | ✅ Clerk auth middleware |
 | lib/prisma.ts | ✅ Singleton client with PrismaPg adapter |
 | lib/auth.ts | ✅ getAuthenticatedUser() + JIT user sync |
-| lib/stage-gates.ts | ✅ All three gates |
+| lib/stage-gates.ts | ✅ Stage 1→2 auto, Stage 2→3, Stage 3→4 gate + advance |
 | lib/email.ts | ✅ Resend + suppression check |
 | lib/rateLimit.ts | ✅ In-memory rate limiter |
 | app/api/webhooks/clerk/route.ts | ✅ user.created + username fallback |
 | app/api/ideas/route.ts | ✅ POST (with empty-string defaults) |
 | app/api/ideas/[id]/route.ts | ✅ GET (public/private visibility) + PATCH |
-| app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 |
+| app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 + Stage 3→4 |
 | app/api/ideas/[id]/contributions/route.ts | ✅ GET + POST |
 | app/api/ideas/[id]/contributions/[commentId]/reply/route.ts | ✅ POST owner reply |
 | app/api/ideas/[id]/research/route.ts | ✅ GET + POST (Safe Browsing) |
@@ -143,9 +169,13 @@ Carried from Sprint 1:
 | app/api/user/onboarding/route.ts | ✅ Consent capture |
 | app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email + 10/day rate limit |
 | app/ideas/[id]/page.tsx | ✅ Real idea detail page |
-| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + ContributionsTab + ResearchTab + VoteWidget (Stage 4/5) + DevelopmentHistory (owner, Stage 3+) |
+| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + Begin Campaign modal + Stage3GateCard + ContributionsTab + ResearchTab + AmendmentsTab + VoteWidget (Stage 4/5) + DevelopmentHistory (owner, Stage 3+) |
 | app/ideas/[id]/ContributionsTab.tsx | ✅ Full form + cards + replies + pagination + Internal badge + Stage 2 support |
 | app/ideas/[id]/ResearchTab.tsx | ✅ Full form + cards |
+| app/ideas/[id]/AmendmentsTab.tsx | ✅ Full tab: propose form, expandable cards, owner action panel (5 actions), counter-proposal form |
+| app/api/ideas/[id]/amendments/route.ts | ✅ GET list + POST propose |
+| app/api/ideas/[id]/amendments/[amendmentId]/route.ts | ✅ PATCH owner actions |
+| app/api/ideas/[id]/amendments/[amendmentId]/counter/route.ts | ✅ POST counter-proposal |
 | app/api/ideas/[id]/vote/route.ts | ✅ GET aggregate + POST upsert (Stage 4+) |
 | components/VoteWidget.tsx | ✅ Real API + CSS tokens + auth gate |
 | app/ideas/create/page.tsx | ✅ Full Lex chat UI |
@@ -189,13 +219,14 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
-Sprint 3 complete. Sprint 4 priorities:
-1. Contribution form UI on the Contributions tab (API is live at POST /api/ideas/[id]/contributions)
-2. Research form UI on the Research tab (API is live at POST /api/ideas/[id]/research)
-3. Vote widget — render VoteWidget only at Stage 4+
-4. proxy.ts migration — Charlie to run locally, not a CC task
-Do not build: voting widget before confirming Stage 4, amendment flow, groups/team management.
+Sprint 5 complete. Sprint 6 priorities:
+1. Charlie to confirm Stage 3→4 quality rating interpretation (VIEWED=3/ENDORSED=5/BELOW_STANDARD=0)
+   or advise adding qualityRating field to IdeaReview schema.
+2. Stage 4→5 gate UI ("Submit to Parliament") — gate: 3 MP + 3 Peer + 1 DraftsmanEndorsement + all proposedWording complete.
+3. Endorsement UI (MP/Peer "Below Standard" button, Draftsman endorsement form).
+4. Admin panel basics.
+Do not build: credibility weighting, groups/team management, fundraising.
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 23 March 2026 v5*
+*handoff_summary.md — Scrutinise — 23 March 2026 v8*

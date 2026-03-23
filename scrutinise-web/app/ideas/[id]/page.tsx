@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import IdeaDetailClient from './IdeaDetailClient'
+import { getStage3GateData } from '@/lib/stage-gates'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -69,6 +70,26 @@ export default async function IdeaDetailPage({ params }: Props) {
   const isOwner = currentUserId === idea.creatorId
   const isCollaborator = idea.collaborators.some(c => c.userId === currentUserId)
 
+  // Priority 3: Create IdeaReview(VIEWED) for authenticated visitors at Stage 3+
+  if (currentUserId && ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage)) {
+    await prisma.ideaReview
+      .upsert({
+        where: { ideaId_userId: { ideaId: id, userId: currentUserId } },
+        update: {},
+        create: { ideaId: id, userId: currentUserId, outcome: 'VIEWED' },
+      })
+      .catch(() => {})
+  }
+
+  // Stage 3→4 gate data (owner-only, Stage 3 only)
+  let ideaReviewCount = 0
+  let avgQualityRating = 0
+  if (idea.stage === 'STAGE_3' && isOwner) {
+    const gateData = await getStage3GateData(id)
+    ideaReviewCount = gateData.reviewCount
+    avgQualityRating = gateData.avgQualityRating
+  }
+
   // Serialise for client (Prisma Decimal → string, Date → string)
   const serialised = {
     ...idea,
@@ -116,6 +137,8 @@ export default async function IdeaDetailPage({ params }: Props) {
         isCollaborator={isCollaborator}
         currentUserId={currentUserId}
         currentUserReferralCode={currentUserReferralCode}
+        ideaReviewCount={ideaReviewCount}
+        avgQualityRating={avgQualityRating}
       />
     </div>
   )

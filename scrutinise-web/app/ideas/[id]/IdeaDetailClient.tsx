@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,7 @@ import { CheckCircle2, Circle, AlertCircle, Copy } from 'lucide-react'
 import VoteWidget from '@/components/VoteWidget'
 import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
+import AmendmentsTab from './AmendmentsTab'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -59,6 +60,8 @@ interface Props {
   isCollaborator: boolean
   currentUserId: string | null
   currentUserReferralCode: string | null
+  ideaReviewCount: number
+  avgQualityRating: number
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -256,6 +259,138 @@ function TakePublicModal({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Stage 3→4 gate checklist
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Stage3GateCard({
+  reviewCount,
+  avgQualityRating,
+}: {
+  reviewCount: number
+  avgQualityRating: number
+}) {
+  const checks = [
+    {
+      label: `Reviews: ${reviewCount} / 12 unique visitors`,
+      met: reviewCount >= 12,
+    },
+    {
+      label: `Quality rating: ${avgQualityRating.toFixed(1)} / 2.5 required`,
+      met: avgQualityRating >= 2.5,
+    },
+  ]
+
+  const allMet = checks.every(c => c.met)
+
+  return (
+    <Card className="border-dashed">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-sm">Requirements to Begin Campaign</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-3">
+        <ul className="space-y-2">
+          {checks.map(check => (
+            <li key={check.label} className="flex items-center gap-2 text-sm">
+              {check.met ? (
+                <CheckCircle2 className="size-4 shrink-0 text-green-600" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-muted-foreground/40" />
+              )}
+              <span className={check.met ? 'text-foreground' : 'text-muted-foreground'}>
+                {check.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {allMet && (
+          <p className="mt-3 text-xs text-green-700">
+            All requirements met — you can begin your campaign.
+          </p>
+        )}
+        {!allMet && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Share your referral link to bring in more reviewers.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Begin Campaign modal
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BeginCampaignModal({
+  ideaId,
+  onClose,
+  onSuccess,
+}: {
+  ideaId: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleConfirm() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toStage: 'STAGE_4' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Something went wrong')
+        return
+      }
+      onSuccess()
+    } catch {
+      setError('Network error — please try again')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+          <div>
+            <h2 className="font-semibold">Begin your campaign?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will advance your idea to the <strong>Campaign</strong> stage and list it
+              publicly on the platform. Voting will open and anyone will be able to vote for or
+              against your idea.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This action <strong>cannot be undone</strong>.
+            </p>
+            {error && (
+              <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            )}
+            <div className="mt-4 flex gap-3">
+              <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleConfirm} disabled={loading}>
+                {loading ? 'Beginning campaign…' : 'Yes, begin campaign'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tab components
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -360,13 +495,6 @@ function TeamTab({ idea }: { idea: Idea }) {
   )
 }
 
-function AmendmentsTab() {
-  return (
-    <p className="text-sm text-muted-foreground">
-      Amendments are available from the Campaign stage.
-    </p>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Development History — owner-only, shows Stage 2 internal contributions
@@ -481,17 +609,26 @@ function DevelopmentHistory({ ideaId }: { ideaId: string }) {
 
 type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team'
 
+function isValidTab(t: string | null): t is Tab {
+  return ['overview', 'contributions', 'research', 'amendments', 'team'].includes(t ?? '')
+}
+
 export default function IdeaDetailClient({
   idea: initialIdea,
   isOwner,
   isCollaborator,
   currentUserId,
   currentUserReferralCode,
+  ideaReviewCount,
+  avgQualityRating,
 }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [idea, setIdea] = useState(initialIdea)
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const tabParam = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<Tab>(isValidTab(tabParam) ? tabParam : 'overview')
   const [showTakePublicModal, setShowTakePublicModal] = useState(false)
+  const [showBeginCampaignModal, setShowBeginCampaignModal] = useState(false)
   const [referralLinkCopied, setReferralLinkCopied] = useState(false)
   const [commentCount, setCommentCount] = useState(initialIdea.commentCount)
 
@@ -506,14 +643,22 @@ export default function IdeaDetailClient({
     idea.coherentActions.length >= 1 &&
     idea.research.length >= 3
 
+  const stage3GateMet =
+    idea.stage === 'STAGE_3' && isOwner && ideaReviewCount >= 12 && avgQualityRating >= 2.5
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://scrutinise.co.uk'
   const referralLink = `${appUrl}/ideas/${idea.id}?ref=${currentUserReferralCode ?? idea.creator.referralCode}`
 
   function handleTakePublicSuccess() {
     setShowTakePublicModal(false)
-    // Refresh the page to get updated idea data
     router.refresh()
     setIdea(prev => ({ ...prev, stage: 'STAGE_3', visibility: 'LINK_ONLY', referralLinkActive: true }))
+  }
+
+  function handleBeginCampaignSuccess() {
+    setShowBeginCampaignModal(false)
+    router.refresh()
+    setIdea(prev => ({ ...prev, stage: 'STAGE_4', visibility: 'PLATFORM_LISTED' }))
   }
 
   function copyReferralLink() {
@@ -538,6 +683,14 @@ export default function IdeaDetailClient({
           ideaId={idea.id}
           onClose={() => setShowTakePublicModal(false)}
           onSuccess={handleTakePublicSuccess}
+        />
+      )}
+
+      {showBeginCampaignModal && (
+        <BeginCampaignModal
+          ideaId={idea.id}
+          onClose={() => setShowBeginCampaignModal(false)}
+          onSuccess={handleBeginCampaignSuccess}
         />
       )}
 
@@ -598,6 +751,13 @@ export default function IdeaDetailClient({
           </div>
         )}
 
+        {/* Stage 3 gate card — show to owner only */}
+        {idea.stage === 'STAGE_3' && isOwner && (
+          <div className="mb-6">
+            <Stage3GateCard reviewCount={ideaReviewCount} avgQualityRating={avgQualityRating} />
+          </div>
+        )}
+
         {/* Referral link — show to owner after Stage 3 */}
         {idea.referralLinkActive && isOwner && (
           <div className="mb-6 rounded-lg border bg-muted/40 p-4">
@@ -627,6 +787,23 @@ export default function IdeaDetailClient({
             {!stage2GateMet && (
               <p className="mt-1 text-xs text-muted-foreground">
                 Complete all requirements above to unlock.
+              </p>
+            )}
+          </div>
+        )}
+
+        {isOwner && idea.stage === 'STAGE_3' && (
+          <div className="mb-6">
+            <Button
+              onClick={() => setShowBeginCampaignModal(true)}
+              disabled={!stage3GateMet}
+              variant={stage3GateMet ? 'default' : 'outline'}
+            >
+              Begin Campaign
+            </Button>
+            {!stage3GateMet && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Meet all requirements above to unlock.
               </p>
             )}
           </div>
@@ -683,7 +860,14 @@ export default function IdeaDetailClient({
               }
             />
           )}
-          {activeTab === 'amendments' && <AmendmentsTab />}
+          {activeTab === 'amendments' && (
+            <AmendmentsTab
+              ideaId={idea.id}
+              stage={idea.stage}
+              isOwner={isOwner}
+              currentUserId={currentUserId}
+            />
+          )}
           {activeTab === 'team' && <TeamTab idea={idea} />}
         </div>
 
