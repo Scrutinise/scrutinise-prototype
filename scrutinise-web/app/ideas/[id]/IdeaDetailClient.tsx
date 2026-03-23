@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2, Circle, AlertCircle, Copy, ExternalLink } from 'lucide-react'
+import { CheckCircle2, Circle, AlertCircle, Copy } from 'lucide-react'
+import VoteWidget from '@/components/VoteWidget'
+import ContributionsTab from './ContributionsTab'
+import ResearchTab, { type ResearchItem } from './ResearchTab'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -17,15 +19,6 @@ interface CoherentAction {
   title: string
   summarySnippet: string | null
   orderIndex: number
-}
-
-interface ResearchItem {
-  id: string
-  title: string
-  snippet: string
-  sourceUrl: string
-  researchType: string | null
-  sourceType: string
 }
 
 interface Collaborator {
@@ -337,98 +330,6 @@ function OverviewTab({ idea }: { idea: Idea }) {
   )
 }
 
-function ResearchTab({ idea, isOwner, isCollaborator }: { idea: Idea; isOwner: boolean; isCollaborator: boolean }) {
-  const canAdd = isOwner || isCollaborator
-  const showResearch = idea.stage !== 'STAGE_1' && idea.stage !== 'STAGE_2'
-    || isOwner || isCollaborator
-
-  if (!showResearch) {
-    return <p className="text-sm text-muted-foreground">Research is not yet available at this stage.</p>
-  }
-
-  return (
-    <div className="space-y-4">
-      {canAdd && (
-        <div className="rounded-lg border border-dashed p-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Research submission form coming in the next update.
-          </p>
-        </div>
-      )}
-      {idea.research.length === 0 && (
-        <p className="text-sm text-muted-foreground">No research items added yet.</p>
-      )}
-      {idea.research.map(r => (
-        <Card key={r.id}>
-          <CardContent className="pt-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-sm font-medium">{r.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{r.snippet}</p>
-              </div>
-              <a
-                href={r.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-muted-foreground hover:text-foreground"
-              >
-                <ExternalLink className="size-4" />
-              </a>
-            </div>
-            <div className="mt-2 flex gap-2">
-              {r.researchType && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {r.researchType.replace('_', ' ')}
-                </span>
-              )}
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {r.sourceType.replace('_', ' ')}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-function ContributionsTab({ idea, currentUserId }: { idea: Idea; currentUserId: string | null }) {
-  const canContribute = currentUserId && ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage)
-
-  if (!['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage)) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Contributions open at the Develop stage.
-      </p>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      {canContribute && (
-        <div className="rounded-lg border border-dashed p-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Contribution form coming in the next update.
-          </p>
-        </div>
-      )}
-      {!currentUserId && (
-        <p className="text-sm text-muted-foreground">
-          <Link href="/sign-in" className="underline underline-offset-2">
-            Sign in
-          </Link>{' '}
-          to leave a Contribution.
-        </p>
-      )}
-      {idea.commentCount === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No Contributions yet. Be the first to contribute.
-        </p>
-      )}
-    </div>
-  )
-}
-
 function TeamTab({ idea }: { idea: Idea }) {
   return (
     <div className="space-y-3">
@@ -485,6 +386,7 @@ export default function IdeaDetailClient({
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [showTakePublicModal, setShowTakePublicModal] = useState(false)
   const [referralLinkCopied, setReferralLinkCopied] = useState(false)
+  const [commentCount, setCommentCount] = useState(initialIdea.commentCount)
 
   const stageLabel = STAGES.find(s => s.key === idea.stage)?.label ?? idea.stage
   const badgeClass = STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'
@@ -516,7 +418,7 @@ export default function IdeaDetailClient({
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: 'Overview' },
-    { key: 'contributions', label: `Contributions${idea.commentCount > 0 ? ` (${idea.commentCount})` : ''}` },
+    { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     { key: 'team', label: 'Team' },
@@ -643,13 +545,36 @@ export default function IdeaDetailClient({
           </div>
         </div>
 
+        {/* Vote widget — Stage 4/5 only */}
+        {(idea.stage === 'STAGE_4' || idea.stage === 'STAGE_5') && (
+          <div className="mt-6">
+            <VoteWidget ideaId={idea.id} currentUserId={currentUserId} />
+          </div>
+        )}
+
         <div className="py-6">
           {activeTab === 'overview' && <OverviewTab idea={idea} />}
           {activeTab === 'contributions' && (
-            <ContributionsTab idea={idea} currentUserId={currentUserId} />
+            <ContributionsTab
+              ideaId={idea.id}
+              stage={idea.stage}
+              isOwner={isOwner}
+              currentUserId={currentUserId}
+              onCommentAdded={() => setCommentCount(c => c + 1)}
+            />
           )}
           {activeTab === 'research' && (
-            <ResearchTab idea={idea} isOwner={isOwner} isCollaborator={isCollaborator} />
+            <ResearchTab
+              ideaId={idea.id}
+              stage={idea.stage}
+              isOwner={isOwner}
+              isCollaborator={isCollaborator}
+              currentUserId={currentUserId}
+              initialResearch={idea.research}
+              onResearchAdded={item =>
+                setIdea(prev => ({ ...prev, research: [...prev.research, item] }))
+              }
+            />
           )}
           {activeTab === 'amendments' && <AmendmentsTab />}
           {activeTab === 'team' && <TeamTab idea={idea} />}
