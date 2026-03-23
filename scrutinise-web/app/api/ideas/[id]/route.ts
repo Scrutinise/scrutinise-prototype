@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 
@@ -27,15 +28,15 @@ const PatchIdeaSchema = z.object({
 }).strict()
 
 // GET /api/ideas/[id]
+// Public for LINK_ONLY (Stage 3+) and PLATFORM_LISTED ideas.
+// Private ideas require owner/collaborator/admin auth.
 export async function GET(req: Request, { params }: Params) {
-  const { error, user } = await getAuthenticatedUser()
-  if (error) return error
-
   const { id } = await params
 
   const idea = await prisma.idea.findUnique({
     where: { id },
     include: {
+      creator: { select: { id: true, name: true, username: true, credibilityScore: { select: { totalScore: true, phase: true } } } },
       coherentActions: { orderBy: { orderIndex: 'asc' } },
       research: { orderBy: { createdAt: 'asc' } },
       collaborators: { include: { user: { select: { id: true, name: true, email: true } } } },
@@ -46,10 +47,25 @@ export async function GET(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Authorise: owner or collaborator
-  const isOwner = idea.creatorId === user.id
-  const isCollaborator = idea.collaborators.some(c => c.userId === user.id)
-  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role)
+  // LINK_ONLY and PLATFORM_LISTED ideas are public — no auth required
+  if (idea.visibility === 'LINK_ONLY' || idea.visibility === 'PLATFORM_LISTED') {
+    return NextResponse.json(idea)
+  }
+
+  // PRIVATE ideas — require auth
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+
+  const dbUser = await prisma.user.findUnique({ where: { clerkId: clerkUserId } })
+  if (!dbUser) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+
+  const isOwner = idea.creatorId === dbUser.id
+  const isCollaborator = idea.collaborators.some(c => c.userId === dbUser.id)
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(dbUser.role)
 
   if (!isOwner && !isCollaborator && !isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -66,7 +82,7 @@ export async function GET(req: Request, { params }: Params) {
         description: `Admin accessed idea: ${idea.title}`,
         accessType: 'ADMIN_ACCESS',
         accessReason,
-        accessedByUserId: user.id,
+        accessedByUserId: dbUser.id,
       },
     })
   }

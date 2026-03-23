@@ -4,7 +4,6 @@ import { NextResponse } from 'next/server'
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
   '/prototype(.*)',
-  '/ideas(.*)',
   '/onboarding(.*)',
   '/api/ideas(.*)',
   '/api/ai(.*)',
@@ -18,11 +17,16 @@ const isPublicRoute = createRouteMatcher([
   '/training(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/sign-out(.*)',
   '/invite(.*)',
   '/unsubscribe(.*)',
-  '/ideas/create',      // unauthenticated Lex experience — auth triggered by save prompt
+  '/ideas(.*)',         // idea detail pages public — visibility enforced in API/page
+  '/user(.*)',          // public profile pages
   '/general(.*)',
   '/demo(.*)',
+  '/terms(.*)',
+  '/community-rules(.*)',
+  '/privacy(.*)',
   '/api/health(.*)',
   '/api/ai/public',        // unauthenticated Lex API
   '/api/webhooks/clerk',   // server-to-server — verified via Svix signature, no Clerk session
