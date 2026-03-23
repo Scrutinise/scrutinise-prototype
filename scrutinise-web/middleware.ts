@@ -9,7 +9,6 @@ const isProtectedRoute = createRouteMatcher([
   '/api/ideas(.*)',
   '/api/ai(.*)',
   '/api/user(.*)',
-  '/api/webhooks/clerk',
 ])
 
 // Public routes that never require auth
@@ -25,7 +24,8 @@ const isPublicRoute = createRouteMatcher([
   '/general(.*)',
   '/demo(.*)',
   '/api/health(.*)',
-  '/api/ai/public',     // unauthenticated Lex API
+  '/api/ai/public',        // unauthenticated Lex API
+  '/api/webhooks/clerk',   // server-to-server — verified via Svix signature, no Clerk session
   '/prototype/referral(.*)',
 ])
 
