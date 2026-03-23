@@ -92,6 +92,15 @@ enum CommentStance {
   QUESTION
 }
 
+enum ContributionType {
+  NEW_INFORMATION
+  RED_TEAM_CHALLENGE
+  MINOR_ADJUSTMENT
+  ADDITIONAL_COHERENT_ACTION
+  AMENDMENT
+  OTHER
+}
+
 enum AmendmentStatus {
   PENDING
   REVISION_REQUESTED
@@ -496,6 +505,7 @@ model Research {
   sourceUrl             String
   sourceType            SourceType
   forPolicy             Boolean?
+  forAction             Boolean?
   constructiveScore     Int?
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
@@ -555,6 +565,8 @@ model Comment {
   parent                Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
   replies               Comment[]     @relation("CommentReplies")
   stageNumber           Int?
+  commentNumber         Int?          // Sequential per idea (1, 2, 3…)
+  contributionType      ContributionType?
   content               String        // DOMPurify sanitised
   stance                CommentStance
   suggestedChanges      Boolean       @default(false)
