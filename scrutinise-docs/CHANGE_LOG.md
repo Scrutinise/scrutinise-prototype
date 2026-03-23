@@ -151,6 +151,21 @@
 | 2026-03-22 | scrutinise-web/package.json | Added db:seed script (ts-node). Added prisma.seed config. Added ts-node devDependency. | Sprint 1 session |
 | 2026-03-22 | scrutinise-web/app/layout.tsx | Added signInFallbackRedirectUrl and signUpFallbackRedirectUrl (/prototype/dashboard) to ClerkProvider. | Sprint 1 Days 1–2 |
 
+| 2026-03-23 | scrutinise-web/prisma/schema.prisma | Sprint 3 additions: ContributionType enum (NEW_INFORMATION / RED_TEAM_CHALLENGE / MINOR_ADJUSTMENT / ADDITIONAL_COHERENT_ACTION / AMENDMENT / OTHER). Comment: commentNumber Int?, contributionType ContributionType?. Research: forAction Boolean?. | Sprint 3 |
+| 2026-03-23 | scrutinise-web/middleware.ts | Sprint 3: removed /ideas(.*) from protected routes; added /ideas(.*) and /user(.*) to public routes (visibility enforced in API/page). Added public patterns for /api/ideas/(.*)/contributions(.*), /api/ideas/(.*)/research(.*), /api/users/(.*). | Sprint 3 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/route.ts | GET updated: LINK_ONLY/PLATFORM_LISTED ideas now public (no auth required). PRIVATE ideas require auth + owner/collaborator/admin check. Creator included in response with credibility score. | Sprint 3 |
+| 2026-03-23 | scrutinise-web/app/sign-in/[[...sign-in]]/page.tsx | Updated: reads redirect_url from searchParams, passes as forceRedirectUrl to Clerk <SignIn> component. Returning users now land back on originating page after sign-in. | Sprint 3 Priority 6c |
+| 2026-03-23 | scrutinise-web/app/ideas/[id]/page.tsx | New — real data-driven idea detail page. Server component: fetches idea from DB, optional auth, visibility check (PRIVATE → redirect to sign-in, LINK_ONLY/PLATFORM_LISTED → public). Passes idea + isOwner + currentUserId to client component. | Sprint 3 Priority 1 |
+| 2026-03-23 | scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx | New — client component for idea detail. Five-stage stepper (wired to idea.stage). Title/description/owner/date header. Stage 2 gate checklist card (owner only). Tabs: Overview / Contributions / Research / Amendments / Team. Overview: Challenge, Root Cause, Who Affected, Guiding Policy, Coherent Actions. "Take Public" button + warning modal → POST /api/ideas/[id]/progress. Referral link shown to owner after Stage 3. Vote widget absent (Stage 4+ only). | Sprint 3 Priority 1+2 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/contributions/route.ts | New — GET (public for Stage 3+, ordered by helpfulCount DESC) and POST (auth required, Stage 3+, creates Comment with contributionType/commentNumber, notifies owner). | Sprint 3 Priority 3 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/contributions/[commentId]/reply/route.ts | New — POST owner reply. Owner-only. Creates Comment with parentId/isOwnerReply:true. Notifies contributor. | Sprint 3 Priority 3 |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/research/route.ts | New — GET (public for Stage 3+, owner+editors at Stage 2+) and POST (owner+editors at Stage 2, any auth at Stage 3+, Google Safe Browsing check on sourceUrl). | Sprint 3 Priority 4 |
+| 2026-03-23 | scrutinise-web/app/api/users/[username]/route.ts | New — GET public profile: name, bio, joinDate, credibility score, public ideas (Stage 3+ only), contribution count. | Sprint 3 Priority 5 |
+| 2026-03-23 | scrutinise-web/app/user/[username]/page.tsx | New — public profile page. Profile header with avatar initials, name, username, bio, join year, contribution count, credibility score. Public ideas list (Stage 3+ only) linking to /ideas/[id]. | Sprint 3 Priority 5 |
+| 2026-03-23 | scrutinise-web/lib/rateLimit.ts | New — in-memory Map-based rate limiter. checkRateLimit(key, max, windowMs). | Sprint 3 Priority 6b |
+| 2026-03-23 | scrutinise-web/app/api/ai/[ideaId]/route.ts | Rate limiting applied: 50 requests/hr per authenticated userId → 429. | Sprint 3 Priority 6b |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/collaborators/route.ts | Rate limiting applied: 10 invites/day per userId → 429. | Sprint 3 Priority 6b |
+
 ---
 
 *CHANGE_LOG.md — Scrutinise — March 2026*

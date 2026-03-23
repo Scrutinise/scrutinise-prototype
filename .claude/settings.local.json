@@ -10,7 +10,15 @@
       "Bash(ls D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web/.env*)",
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
-      "Bash(ls \"D:/Dropbox/GitHub/scrutinise-prototype/next.config\"*)"
+      "Bash(ls \"D:/Dropbox/GitHub/scrutinise-prototype/next.config\"*)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(cat app/api/ai/[ideaId]/route.ts)",
+      "Bash(vercel --version)",
+      "Bash(npx vercel:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir -p \"D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web/app/user/[username]\")",
+      "Bash(mkdir -p \"D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web/app/api/users/[username]\")"
     ]
   }
 }

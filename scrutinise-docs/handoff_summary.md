@@ -1,14 +1,18 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v4*
+*Last updated: 23 March 2026 v5*
 
 ---
 
 ## CURRENT STATE
 
-Sprint 2 complete. The live site at scrutinise.org has a working end-to-end flow:
-sign-up → onboarding → /ideas/create → Lex chat (unauthenticated via /api/ai/public, authenticated via /api/ai/[ideaId]).
-
-All Sprint 2 production bugs resolved. Clerk webhook firing and creating User records. JIT user sync in place as fallback. AI endpoints (Gemini primary, Grok fallback) operational with structured logging.
+Sprint 3 complete. The live site at scrutinise.co.uk has:
+- Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
+- Stage 2→3 "Take Public" flow with warning modal and gate validation
+- Contributions API (create, list, owner reply) — tab shows stub pending UI
+- Research API (create, list, Safe Browsing check) — tab shows existing research
+- Public profile pages at `/user/[username]`
+- In-memory rate limiting on AI (50/hr) and invite (10/day) endpoints
+- afterSignInUrl returns to originating URL for protected routes
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -50,67 +54,56 @@ All Sprint 2 production bugs resolved. Clerk webhook firing and creating User re
 | lex_system_prompt | v4.1 (22-03-26) | ✅ Current |
 | wireframes | v3 | ⚠️ Needs UX fixes logged |
 | UX_and_voice_build_notes.md | 13-03-26 | ✅ Incorporated into Sprint 2 build |
-| handoff_summary | v4 (23-03-26) | ✅ This file |
+| handoff_summary | v5 (23-03-26) | ✅ This file |
 
 ---
 
-## SPRINT 2 — COMPLETE ✅
+## SPRINT 3 — COMPLETE ✅
 
 ### Built this sprint
 
 | File | What it does |
 |------|-------------|
-| `app/onboarding/page.tsx` | Post-sign-up onboarding: preferredName input, age/T&Cs/rules checkboxes, PATCH to DB, redirect to /ideas/create |
-| `app/api/user/onboarding/route.ts` | PATCH handler — writes preferredName, ageConfirmed, tcAgreedAt, rulesAgreedAt, tcVersion |
-| `app/ideas/create/page.tsx` | Full Lex chat UI — 75/25 layout, progress bar, 7-field sidebar, voice dictation, file attachment, 3s auto-save, unauthenticated + authenticated paths |
-| `app/api/ai/public/route.ts` | Unauthenticated Lex — IP rate limit 20/hr, Gemini+Grok fallback, history in body |
-| `app/api/ai/[ideaId]/route.ts` | Updated — completedFields boolean map, structured logging, explicit provider tracking |
-| `lib/auth.ts` | JIT user sync — creates User from Clerk API if webhook missed |
-| `app/api/webhooks/clerk/route.ts` | Username null fallback, structured error logging |
-| `app/api/ideas/route.ts` | summaryDescription/govtArea default to '' (required in schema, populated by Lex) |
-| `middleware.ts` | /api/webhooks/clerk → public; /onboarding + /api/user → protected; /ideas/create + /api/ai/public → public |
-| `app/layout.tsx` | signUpFallbackRedirectUrl → /onboarding |
-| `app/sign-in/[[...sign-in]]/page.tsx` | Updated styling to match design system |
-| `app/sign-up/[[...sign-up]]/page.tsx` | Updated styling to match design system |
+| `prisma/schema.prisma` | ContributionType enum, Comment.commentNumber/contributionType, Research.forAction |
+| `app/ideas/[id]/page.tsx` | Server component: fetches idea, optional auth, visibility gate |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Client: five-stage stepper, tabs, gate checklist, Take Public modal, referral link |
+| `app/api/ideas/[id]/route.ts` | Updated GET: public for LINK_ONLY/PLATFORM_LISTED, auth for PRIVATE |
+| `app/api/ideas/[id]/contributions/route.ts` | GET (public Stage 3+) + POST (auth, Stage 3+) |
+| `app/api/ideas/[id]/contributions/[commentId]/reply/route.ts` | POST owner reply |
+| `app/api/ideas/[id]/research/route.ts` | GET (public Stage 3+) + POST (Safe Browsing check) |
+| `app/api/users/[username]/route.ts` | GET public profile |
+| `app/user/[username]/page.tsx` | Public profile page |
+| `lib/rateLimit.ts` | In-memory Map rate limiter |
+| `app/api/ai/[ideaId]/route.ts` | 50/hr per-user rate limit added |
+| `app/api/ideas/[id]/collaborators/route.ts` | 10/day per-user rate limit added |
+| `middleware.ts` | /ideas(.*) and /user(.*) public; contributions/research/users API public |
+| `app/sign-in/[[...sign-in]]/page.tsx` | forceRedirectUrl from redirect_url query param |
 
-### Production bugs resolved this sprint
+### Not yet built (deferred)
 
-1. Webhook 307 redirect — /api/webhooks/clerk was in `isProtectedRoute`; moved to public
-2. Webhook 500 on null username — added firstName fallback matching JIT sync pattern
-3. POST /api/ideas empty 500 — summaryDescription + govtArea are `String` (not nullable) in Prisma but were undefined in chat-first creation; now default to ''
-4. AI connection error — `getAuthenticatedUser` returned 404 when webhook hadn't fired; JIT sync resolves this
-5. Grok silent failure — non-2xx Grok responses were silently converted to 200 with fallback string; now returns 503 with structured log
+- `proxy.ts` migration (Next.js codemod — Charlie to run locally: `cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy`)
+- Contribution form UI in the Contributions tab (API is ready)
+- Research submission form UI in the Research tab (API is ready)
+- Vote widget (Sprint 4 — Stage 4+ only)
+- Amendment flow (Sprint 4)
 
 ---
 
-## SPRINT 3 — OUTSTANDING ITEMS
+## SPRINT 4 — OUTSTANDING ITEMS
 
-### Priority 1 — Middleware codemod (Charlie to run when ready)
+### Priority 1 — Contribution form UI on idea detail page
+The Contributions tab in `IdeaDetailClient.tsx` shows a stub. Wire it to `POST /api/ideas/[id]/contributions` with a form (content textarea, contributionType select, stance select). Display returned contributions using the card spec from CC_Sprint3_Briefing.md Priority 3.
+
+### Priority 2 — Research form UI on idea detail page
+The Research tab shows existing research but no add form. Wire `POST /api/ideas/[id]/research` with the full form (title, snippet, relevanceExplanation, sourceUrl, researchType, sourceType, forOrAgainstPolicy, forOrAgainstAction).
+
+### Priority 3 — Vote widget (Stage 4+)
+Per system_mechanics_v0.7 — render VoteWidget only when `idea.stage === 'STAGE_4' || idea.stage === 'STAGE_5'`. VoteWidget component already exists in components/.
+
+### Priority 4 — proxy.ts migration (Charlie to run locally)
 ```
-npx @next/codemod@latest middleware-to-proxy
+cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy
 ```
-Next.js 16 deprecates `middleware.ts` in favour of `proxy.ts`. This is a warning, not an error — safe to defer. Do NOT rename manually; use the codemod.
-
-### Priority 2 — Rate limiting
-Per CLAUDE.md security rules — not yet implemented on live routes:
-- AI endpoints: 50 requests/hr per authenticated user (public endpoint already has 20/hr IP limit)
-- Upload endpoints: 10/day per user
-- Vote endpoint: 20/hr per IP
-
-### Priority 3 — afterSignInUrl returning to originating URL
-Currently `signInFallbackRedirectUrl="/prototype/dashboard"` — signed-in users are always sent to the dashboard after login regardless of where they came from. Should return to the URL they were on when auth was triggered (the `redirect_url` param is already set by middleware for protected routes, but Clerk needs `afterSignInUrl` wired to read it).
-
-### Priority 4 — Stage 2 Lex interface
-`app/ideas/[id]/draft/page.tsx` — when an idea advances to Stage 2, the owner continues in the same Lex chat interface but authenticated, with the Stage 2 welcome message from lex_system_prompt_v4.1 Section 13.
-
-### Priority 5 — Legal pages
-`/terms` and `/community-rules` are linked from the onboarding checkboxes — pages need to exist. CCh to draft content for solicitor review.
-
-### Priority 6 — API keys confirmation
-Verify in Vercel → Settings → Environment Variables (Production):
-- `GEMINI_API_KEY` — currently returning "Sorry, Lex is unavailable" (Gemini failing, Grok also failing). Key may be missing or wrong for Production environment specifically.
-- `GROK_API_KEY` — same
-- `RESEND_API_KEY` — not yet set (email sending not functional)
 
 ---
 
@@ -126,9 +119,10 @@ Carried from Sprint 1:
 **CredibilityScore:** lexLogicScore
 **Idea:** maturityIndex, maturityIndexDetail, maturityLastUpdated, credibilityWeightedRating
 **CoherentAction:** implementationSubQuestions
-**Research:** researchType → Enum (EVIDENCE, CASE_STUDY, CAUSES, PERSPECTIVES, OTHER)
+**Research:** researchType → Enum ✅ (built), forAction ✅ (Sprint 3)
 **Group:** groupType → MY_TEAM / COMMUNICATIONS / POLICY_DEVELOPMENT
 **User.aiPreferredStyle:** COLLABORATIVE / SOCRATIC / DIRECT, default COLLABORATIVE
+**Comment:** commentNumber ✅ (Sprint 3), contributionType ✅ (Sprint 3)
 
 ---
 
@@ -136,27 +130,38 @@ Carried from Sprint 1:
 
 | File | Status |
 |------|--------|
-| prisma/schema.prisma | ✅ Full schema |
+| prisma/schema.prisma | ✅ Full schema + Sprint 3 fields |
 | prisma/seed.ts | ✅ SuperAdmin + PlatformConfig |
-| middleware.ts | ✅ Clerk auth middleware (proxy.ts migration pending) |
+| middleware.ts | ✅ Clerk auth middleware (proxy.ts migration pending — Charlie to run) |
 | lib/prisma.ts | ✅ Singleton client with PrismaPg adapter |
 | lib/auth.ts | ✅ getAuthenticatedUser() + JIT user sync |
 | lib/stage-gates.ts | ✅ All three gates |
 | lib/email.ts | ✅ Resend + suppression check |
+| lib/rateLimit.ts | ✅ In-memory rate limiter |
 | app/api/webhooks/clerk/route.ts | ✅ user.created + username fallback |
 | app/api/ideas/route.ts | ✅ POST (with empty-string defaults) |
-| app/api/ideas/[id]/route.ts | ✅ GET + PATCH |
+| app/api/ideas/[id]/route.ts | ✅ GET (public/private visibility) + PATCH |
 | app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 |
-| app/api/ai/[ideaId]/route.ts | ✅ Lex authenticated (Gemini + Grok) |
+| app/api/ideas/[id]/contributions/route.ts | ✅ GET + POST |
+| app/api/ideas/[id]/contributions/[commentId]/reply/route.ts | ✅ POST owner reply |
+| app/api/ideas/[id]/research/route.ts | ✅ GET + POST (Safe Browsing) |
+| app/api/users/[username]/route.ts | ✅ GET public profile |
+| app/api/ai/[ideaId]/route.ts | ✅ Lex authenticated + 50/hr rate limit |
 | app/api/ai/public/route.ts | ✅ Lex unauthenticated (IP rate limited) |
 | app/api/user/onboarding/route.ts | ✅ Consent capture |
-| app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email |
-| app/onboarding/page.tsx | ✅ Post-sign-up onboarding |
+| app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email + 10/day rate limit |
+| app/ideas/[id]/page.tsx | ✅ Real idea detail page |
+| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal |
 | app/ideas/create/page.tsx | ✅ Full Lex chat UI |
+| app/user/[username]/page.tsx | ✅ Public profile page |
+| app/onboarding/page.tsx | ✅ Post-sign-up onboarding |
 | app/invite/[token]/page.tsx | ✅ Magic link landing |
 | app/unsubscribe/[token]/page.tsx | ✅ |
-| app/sign-in/[[...sign-in]]/page.tsx | ✅ |
+| app/sign-in/[[...sign-in]]/page.tsx | ✅ forceRedirectUrl from query param |
 | app/sign-up/[[...sign-up]]/page.tsx | ✅ |
+| app/sign-out/page.tsx | ✅ |
+| app/terms/page.tsx | ✅ |
+| app/community-rules/page.tsx | ✅ |
 
 ---
 
@@ -164,9 +169,9 @@ Carried from Sprint 1:
 
 **Confirmed in Vercel Production:** DATABASE_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET
 
-**Needs verification (may be missing from Production):** GEMINI_API_KEY, GROK_API_KEY
+**Needs verification (may be missing from Production):** GEMINI_API_KEY, GROK_API_KEY, GOOGLE_SAFE_BROWSING_API_KEY
 
-**Not yet set:** RESEND_API_KEY, GOOGLE_SAFE_BROWSING_API_KEY, CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_URL, NEXT_PUBLIC_GA4_MEASUREMENT_ID, SENTRY_DSN
+**Not yet set:** RESEND_API_KEY, CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_URL, NEXT_PUBLIC_GA4_MEASUREMENT_ID, SENTRY_DSN
 
 ---
 
@@ -188,14 +193,13 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
-Sprint 2 is complete. Sprint 3 priorities in order:
-1. Confirm GEMINI_API_KEY and GROK_API_KEY are set correctly in Vercel Production
-2. Rate limiting on AI (50/hr per user) and upload (10/day) endpoints
-3. afterSignInUrl → originating URL
-4. Stage 2 Lex interface at app/ideas/[id]/draft/page.tsx
-5. /terms and /community-rules placeholder pages
-Do not run the proxy.ts codemod manually — use npx @next/codemod@latest middleware-to-proxy when ready.
+Sprint 3 complete. Sprint 4 priorities:
+1. Contribution form UI on the Contributions tab (API is live at POST /api/ideas/[id]/contributions)
+2. Research form UI on the Research tab (API is live at POST /api/ideas/[id]/research)
+3. Vote widget — render VoteWidget only at Stage 4+
+4. proxy.ts migration — Charlie to run locally, not a CC task
+Do not build: voting widget before confirming Stage 4, amendment flow, groups/team management.
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 23 March 2026 v4*
+*handoff_summary.md — Scrutinise — 23 March 2026 v5*
