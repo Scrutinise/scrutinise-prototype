@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import IdeaDetailClient from './IdeaDetailClient'
-import { getStage3GateData } from '@/lib/stage-gates'
+import { getStage3GateData, getStage4GateData } from '@/lib/stage-gates'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -55,15 +55,20 @@ export default async function IdeaDetailPage({ params }: Props) {
   // Get current user context for UI decisions
   let currentUserId: string | null = null
   let currentUserReferralCode: string | null = null
+  let currentUserCanEndorse = false
 
   if (clerkUserId) {
     const dbUser = await prisma.user.findUnique({
       where: { clerkId: clerkUserId },
-      select: { id: true, referralCode: true },
+      select: { id: true, referralCode: true, parliamentaryStatus: true, manualCredibilityOverride: true },
     })
     if (dbUser) {
       currentUserId = dbUser.id
       currentUserReferralCode = dbUser.referralCode
+      currentUserCanEndorse =
+        dbUser.parliamentaryStatus === 'MP' ||
+        dbUser.parliamentaryStatus === 'PEER' ||
+        dbUser.manualCredibilityOverride != null
     }
   }
 
@@ -88,6 +93,12 @@ export default async function IdeaDetailPage({ params }: Props) {
     const gateData = await getStage3GateData(id)
     ideaReviewCount = gateData.reviewCount
     avgQualityRating = gateData.avgQualityRating
+  }
+
+  // Stage 4→5 gate data (owner-only, Stage 4 only)
+  let stage4GateData: { mpCount: number; peerCount: number; draftsmanCount: number; wordingComplete: boolean } | null = null
+  if (idea.stage === 'STAGE_4' && isOwner) {
+    stage4GateData = await getStage4GateData(id)
   }
 
   // Serialise for client (Prisma Decimal → string, Date → string)
@@ -137,8 +148,10 @@ export default async function IdeaDetailPage({ params }: Props) {
         isCollaborator={isCollaborator}
         currentUserId={currentUserId}
         currentUserReferralCode={currentUserReferralCode}
+        currentUserCanEndorse={currentUserCanEndorse}
         ideaReviewCount={ideaReviewCount}
         avgQualityRating={avgQualityRating}
+        stage4GateData={stage4GateData}
       />
     </div>
   )

@@ -193,6 +193,11 @@ enum IdeaReviewOutcome {
   BELOW_STANDARD
 }
 
+enum AlertType {
+  VOTE_OPEN
+  STAGE_CHANGE
+}
+
 enum DraftChangeType {
   DIRECT_EDIT
   AMENDMENT_ACCEPTED
@@ -309,6 +314,7 @@ model User {
   partyMemberships          PartyMembership[]
   platformConfigUpdates     PlatformConfig[]
   ideaReviews               IdeaReview[]
+  ideaAlerts                IdeaAlert[]
   parliamentaryVerifications UserParliamentaryVerification[]
   professionalVerifications  UserProfessionalVerification[]
   aiUsageLogs               AIUsageLog[]
@@ -419,6 +425,9 @@ model Idea {
   wordingHistory            WordingHistory[]
   coherentActions           CoherentAction[]
   ideaReviews               IdeaReview[]
+  ideaAlerts                IdeaAlert[]
+  groups                    Group[]
+  stageTransitionRequests   StageTransitionRequest[]
   notifications             Notification[]
   activityLogs              ActivityLog[]
   aiUsageLogs               AIUsageLog[]
@@ -572,8 +581,7 @@ model Comment {
   suggestedChanges      Boolean       @default(false)
   isOwnerReply          Boolean       @default(false)
   isInternal            Boolean       @default(false) // true for contributions created at Stage 2 (collaborator-only)
-  helpfulCount          Int           @default(0)
-  notHelpfulCount       Int           @default(0)
+  qualityRating         Int?          // denormalised average of CommentRating.qualityRating (1–5)
   isHidden              Boolean       @default(false)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -586,16 +594,18 @@ model Comment {
 }
 
 model CommentRating {
-  id              String  @id @default(uuid())
+  id              String   @id @default(uuid())
   commentId       String
-  comment         Comment @relation(fields: [commentId], references: [id])
+  comment         Comment  @relation(fields: [commentId], references: [id])
   userId          String
-  user            User    @relation(fields: [userId], references: [id])
-  positiveFlags   Json    @default("[]")
-  negativeFlags   Json    @default("[]")
+  user            User     @relation(fields: [userId], references: [id])
+  qualityRating   Int?     // 1–5 quality score for this contribution
+  positiveFlags   Json     @default("[]")
+  negativeFlags   Json     @default("[]")
   note            String?
-  disputeStatus   String? // NONE, AI_REVIEW, MODERATOR_REVIEW, etc.
+  disputeStatus   String?  // NONE, AI_REVIEW, MODERATOR_REVIEW, etc.
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([commentId, userId])
 }
@@ -696,6 +706,8 @@ model Group {
   id          String    @id @default(uuid())
   ownerId     String
   owner       User      @relation(fields: [ownerId], references: [id])
+  ideaId      String?   // null for platform-wide groups
+  idea        Idea?     @relation(fields: [ideaId], references: [id])
   name        String
   description String?
   groupType   GroupType
@@ -705,10 +717,28 @@ model Group {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  members     GroupMember[]
-  invites     GroupInvite[]
+  members                  GroupMember[]
+  invites                  GroupInvite[]
+  stageTransitionRequests  StageTransitionRequest[]
 
   @@index([ownerId])
+  @@index([ideaId])
+}
+
+model StageTransitionRequest {
+  id                  String    @id @default(cuid())
+  ideaId              String
+  idea                Idea      @relation(fields: [ideaId], references: [id])
+  groupId             String
+  group               Group     @relation(fields: [groupId], references: [id])
+  requestedByUserId   String
+  fromStage           IdeaStage
+  toStage             IdeaStage
+  status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt           DateTime  @default(now())
+
+  @@index([ideaId])
+  @@index([groupId])
 }
 
 model GroupMember {
@@ -789,11 +819,27 @@ model IdeaReview {
   userId              String
   user                User              @relation(fields: [userId], references: [id])
   outcome             IdeaReviewOutcome
+  qualityRating       Int?              // 1–5 quality score for argument quality
   timeOnPageSeconds   Int?
   createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   @@unique([ideaId, userId])
   @@index([ideaId])
+}
+
+model IdeaAlert {
+  id          String    @id @default(cuid())
+  userId      String
+  ideaId      String
+  alertType   AlertType
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  idea        Idea      @relation(fields: [ideaId], references: [id])
+
+  @@unique([userId, ideaId, alertType])
+  @@index([ideaId])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

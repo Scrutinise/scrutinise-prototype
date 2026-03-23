@@ -129,7 +129,7 @@ export async function GET(_req: Request, { params }: Params) {
         orderBy: { createdAt: 'asc' },
       },
     },
-    orderBy: [{ helpfulCount: 'desc' }, { createdAt: 'asc' }],
+    orderBy: [{ createdAt: 'asc' }],
     take: 50,
   })
 

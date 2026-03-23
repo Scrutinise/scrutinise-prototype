@@ -1,11 +1,11 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v8*
+*Last updated: 23 March 2026 v9*
 
 ---
 
 ## CURRENT STATE
 
-Sprint 5 complete. The live site at scrutinise.co.uk has:
+Sprint 6 complete. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
 - Stage 2→3 "Take Public" flow with warning modal and gate validation
 - Stage 3→4 "Begin Campaign" flow with gate checklist (12 reviews + avg quality 2.5) and warning modal
@@ -19,6 +19,19 @@ Sprint 5 complete. The live site at scrutinise.co.uk has:
 - Public profile pages at `/user/[username]`
 - In-memory rate limiting on AI (50/hr) and invite (10/day) endpoints
 - afterSignInUrl returns to originating URL for protected routes
+- QualityRating component (1–5 slider with thumbs icon) — on contributions + idea detail
+- VoteInterceptModal — shown at Stage 2/3 when vote area clicked; offers VOTE_OPEN notification
+- IdeaAlert system (VOTE_OPEN + STAGE_CHANGE) with POST/DELETE routes
+- POST /api/ideas/[id]/reviews — upsert IdeaReview with qualityRating
+- POST /api/ideas/[id]/contributions/[commentId]/rate — per-user CommentRating + avg denormalisation
+- Stage 4→5 gate (3 MP + 3 Peer endorsements + 1 DraftsmanEndorsement + all proposedWording)
+- Stage4GateCard + SubmitToParliamentModal + Submit to Parliament button
+- advanceStage4to5 notifies all STAGE_CHANGE IdeaAlert holders on advance
+- EndorsementPanel in Overview tab (Stage 4+) with Endorse + Below Standard buttons
+- POST /api/ideas/[id]/endorsements + DELETE .../[endorsementId]
+- Groups/Team management: GET/POST /api/ideas/[id]/groups + add/remove members
+- TeamTab fully wired: Core Team collaborators + MY_TEAM/COMMUNICATIONS/POLICY_DEVELOPMENT CRUD
+- StageTransitionRequest model added to schema (Policy Dev group flag, veto logic deferred)
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -121,7 +134,42 @@ Sprint 5 complete. The live site at scrutinise.co.uk has:
 
 ### Design decision logged for Charlie
 
-**Stage 3→4 quality rating:** `system_mechanics_v0.7` specifies "average quality rating ≥ 2.5" but `IdeaReview` has no numeric field. Built as: VIEWED=3, ENDORSED=5, BELOW_STANDARD=0, averaged across all reviews. Passes if avg ≥ 2.5. An idea with 12 pure VIEWED reviews scores 3.0 (passes). Please confirm or advise if a numeric `qualityRating` field should be added to `IdeaReview`.
+**Stage 3→4 quality rating (RESOLVED Sprint 6):** `qualityRating Int?` added to `IdeaReview` in Sprint 6. The existing VIEWED=3/ENDORSED=5/BELOW_STANDARD=0 fallback logic is preserved for reviews without an explicit qualityRating. Users can now rate via POST /api/ideas/[id]/reviews.
+
+---
+
+## SPRINT 6 — COMPLETE ✅
+
+| File | What it does |
+|------|-------------|
+| `prisma/schema.prisma` | qualityRating on IdeaReview + Comment + CommentRating; AlertType enum + IdeaAlert model; Group.ideaId + StageTransitionRequest; removed helpfulCount/notHelpfulCount from Comment |
+| `lib/stage-gates.ts` | checkStage4to5Gate, getStage4GateData, advanceStage4to5 (notifies STAGE_CHANGE alerts) |
+| `app/api/ideas/[id]/progress/route.ts` | STAGE_4→STAGE_5 branch added |
+| `app/api/ideas/[id]/reviews/route.ts` | POST upsert IdeaReview qualityRating (Stage 3+) |
+| `app/api/ideas/[id]/contributions/[commentId]/rate/route.ts` | POST upsert CommentRating qualityRating + avg denormalisation |
+| `app/api/ideas/[id]/alerts/route.ts` | POST upsert IdeaAlert (VOTE_OPEN/STAGE_CHANGE) |
+| `app/api/ideas/[id]/alerts/[alertType]/route.ts` | DELETE IdeaAlert |
+| `app/api/ideas/[id]/endorsements/route.ts` | GET public + POST endorse/below-standard (Stage 4+) |
+| `app/api/ideas/[id]/endorsements/[endorsementId]/route.ts` | DELETE withdraw endorsement |
+| `app/api/ideas/[id]/groups/route.ts` | GET + POST idea-scoped groups |
+| `app/api/ideas/[id]/groups/[groupId]/members/route.ts` | POST add member |
+| `app/api/ideas/[id]/groups/[groupId]/members/[userId]/route.ts` | DELETE remove member |
+| `components/QualityRating.tsx` | Shared 1–5 rating component (idle/expanded states) |
+| `components/VoteInterceptModal.tsx` | Vote intercept modal at Stage 2/3 |
+| `app/ideas/[id]/ContributionsTab.tsx` | QualityRating per contribution; helpfulCount removed |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Stage4GateCard + SubmitToParliamentModal + EndorsementPanel + TeamTab rewrite + QualityRating + VoteInterceptModal |
+| `app/ideas/[id]/page.tsx` | stage4GateData + currentUserCanEndorse fetched and passed |
+| `middleware.ts` | /api/ideas/(.*)/endorsements added to public routes |
+
+### Not yet built (deferred)
+
+- Admin panel
+- Credibility calculation
+- Privacy Log UI
+- Endorsement verification (MP/Peer badge confirmation)
+- DraftsmanEndorsement form UI (schema + API ready, no UI form yet)
+- Fundraising
+- StageTransitionRequest veto logic (record created, not enforced)
 
 ---
 
@@ -159,7 +207,7 @@ Carried from Sprint 1:
 | app/api/webhooks/clerk/route.ts | ✅ user.created + username fallback |
 | app/api/ideas/route.ts | ✅ POST (with empty-string defaults) |
 | app/api/ideas/[id]/route.ts | ✅ GET (public/private visibility) + PATCH |
-| app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 + Stage 3→4 |
+| app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 + Stage 3→4 + Stage 4→5 |
 | app/api/ideas/[id]/contributions/route.ts | ✅ GET + POST |
 | app/api/ideas/[id]/contributions/[commentId]/reply/route.ts | ✅ POST owner reply |
 | app/api/ideas/[id]/research/route.ts | ✅ GET + POST (Safe Browsing) |
@@ -177,6 +225,18 @@ Carried from Sprint 1:
 | app/api/ideas/[id]/amendments/[amendmentId]/route.ts | ✅ PATCH owner actions |
 | app/api/ideas/[id]/amendments/[amendmentId]/counter/route.ts | ✅ POST counter-proposal |
 | app/api/ideas/[id]/vote/route.ts | ✅ GET aggregate + POST upsert (Stage 4+) |
+| app/api/ideas/[id]/reviews/route.ts | ✅ POST upsert IdeaReview qualityRating |
+| app/api/ideas/[id]/contributions/[commentId]/rate/route.ts | ✅ POST upsert CommentRating qualityRating |
+| app/api/ideas/[id]/alerts/route.ts | ✅ POST upsert IdeaAlert |
+| app/api/ideas/[id]/alerts/[alertType]/route.ts | ✅ DELETE IdeaAlert |
+| app/api/ideas/[id]/endorsements/route.ts | ✅ GET + POST endorse/below-standard |
+| app/api/ideas/[id]/endorsements/[endorsementId]/route.ts | ✅ DELETE withdraw |
+| app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 + Stage 3→4 + Stage 4→5 |
+| app/api/ideas/[id]/groups/route.ts | ✅ GET + POST idea-scoped groups |
+| app/api/ideas/[id]/groups/[groupId]/members/route.ts | ✅ POST add member |
+| app/api/ideas/[id]/groups/[groupId]/members/[userId]/route.ts | ✅ DELETE remove member |
+| components/QualityRating.tsx | ✅ Shared 1–5 rating component |
+| components/VoteInterceptModal.tsx | ✅ Vote intercept modal (Stage 2/3) |
 | components/VoteWidget.tsx | ✅ Real API + CSS tokens + auth gate |
 | app/ideas/create/page.tsx | ✅ Full Lex chat UI |
 | app/user/[username]/page.tsx | ✅ Public profile page |
@@ -219,13 +279,14 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
-Sprint 5 complete. Sprint 6 priorities:
-1. Charlie to confirm Stage 3→4 quality rating interpretation (VIEWED=3/ENDORSED=5/BELOW_STANDARD=0)
-   or advise adding qualityRating field to IdeaReview schema.
-2. Stage 4→5 gate UI ("Submit to Parliament") — gate: 3 MP + 3 Peer + 1 DraftsmanEndorsement + all proposedWording complete.
-3. Endorsement UI (MP/Peer "Below Standard" button, Draftsman endorsement form).
-4. Admin panel basics.
-Do not build: credibility weighting, groups/team management, fundraising.
+Sprint 6 complete. Sprint 7 priorities:
+1. DraftsmanEndorsement form UI — Stage 4+, for users with professional verification.
+   POST /api/ideas/[id]/endorsements/draftsman (new route needed).
+2. Admin panel basics — user list, idea list, content reports.
+3. Privacy Log UI — owner-only tab showing admin access logs.
+4. Credibility calculation — wire the 5-component score system.
+5. Consider: DraftsmanEndorsement as separate POST endpoint vs extending existing endorsements route.
+Do not build: fundraising, StageTransitionRequest veto logic, address book import.
 ```
 
 ---

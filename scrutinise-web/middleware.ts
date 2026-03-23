@@ -34,6 +34,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/ideas/(.*)/research(.*)',      // public read for LINK_ONLY/PLATFORM_LISTED ideas
   '/api/ideas/(.*)/vote(.*)',          // public aggregate vote counts (Stage 4+)
   '/api/ideas/(.*)/amendments',       // public amendment list (Stage 3+)
+  '/api/ideas/(.*)/endorsements',     // public endorsement list (Stage 4+)
   '/api/users/(.*)',                   // public profile API
   '/prototype/referral(.*)',
 ])

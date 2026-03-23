@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle2, Circle, AlertCircle, Copy } from 'lucide-react'
 import VoteWidget from '@/components/VoteWidget'
+import QualityRating from '@/components/QualityRating'
+import VoteInterceptModal from '@/components/VoteInterceptModal'
 import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
 import AmendmentsTab from './AmendmentsTab'
@@ -54,14 +56,23 @@ interface Idea {
   collaborators: Collaborator[]
 }
 
+interface Stage4Gate {
+  mpCount: number
+  peerCount: number
+  draftsmanCount: number
+  wordingComplete: boolean
+}
+
 interface Props {
   idea: Idea
   isOwner: boolean
   isCollaborator: boolean
   currentUserId: string | null
   currentUserReferralCode: string | null
+  currentUserCanEndorse: boolean
   ideaReviewCount: number
   avgQualityRating: number
+  stage4GateData: Stage4Gate | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -391,6 +402,348 @@ function BeginCampaignModal({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Stage 4→5 gate checklist
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Stage4GateCard({ gate }: { gate: Stage4Gate }) {
+  const checks = [
+    {
+      label: `MP endorsements: ${gate.mpCount} / 3 required`,
+      met: gate.mpCount >= 3,
+    },
+    {
+      label: `Peer endorsements: ${gate.peerCount} / 3 required`,
+      met: gate.peerCount >= 3,
+    },
+    {
+      label: 'Parliamentary Draftsman endorsement',
+      met: gate.draftsmanCount >= 1,
+    },
+    {
+      label: 'All proposed wording fields completed',
+      met: gate.wordingComplete,
+    },
+  ]
+
+  const allMet = checks.every(c => c.met)
+
+  return (
+    <Card className="border-dashed">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-sm">Requirements to Submit to Parliament</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-3">
+        <ul className="space-y-2">
+          {checks.map(check => (
+            <li key={check.label} className="flex items-center gap-2 text-sm">
+              {check.met ? (
+                <CheckCircle2 className="size-4 shrink-0 text-green-600" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-muted-foreground/40" />
+              )}
+              <span className={check.met ? 'text-foreground' : 'text-muted-foreground'}>
+                {check.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {allMet && (
+          <p className="mt-3 text-xs text-green-700">
+            All requirements met — you can submit this idea to Parliament.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Submit to Parliament modal
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SubmitToParliamentModal({
+  ideaId,
+  onClose,
+  onSuccess,
+}: {
+  ideaId: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleConfirm() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toStage: 'STAGE_5' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Something went wrong')
+        return
+      }
+      onSuccess()
+    } catch {
+      setError('Network error — please try again')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+          <div>
+            <h2 className="font-semibold">Submit to Parliament?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will advance your idea to the <strong>Legislate</strong> stage and formally
+              submit it for Parliamentary consideration. All endorsers and followers will be
+              notified.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This action <strong>cannot be undone</strong>.
+            </p>
+            {error && (
+              <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            )}
+            <div className="mt-4 flex gap-3">
+              <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleConfirm} disabled={loading}>
+                {loading ? 'Submitting…' : 'Yes, submit to Parliament'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Endorsement panel — Stage 4+ — shown above Overview content
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface EndorsementRecord {
+  id: string
+  endorserRole: string
+  displayTitle: string | null
+  publicStatement: string | null
+  endorsedAt: string
+  user: { id: string; name: string; username: string }
+}
+
+interface DraftsmanRecord {
+  id: string
+  publicStatement: string
+  draftsmanCredentials: string
+  certifiedAt: string
+  draftsman: { id: string; name: string; username: string }
+}
+
+function EndorsementPanel({
+  ideaId,
+  stage,
+  canEndorse,
+  currentUserId,
+}: {
+  ideaId: string
+  stage: string
+  canEndorse: boolean
+  currentUserId: string | null
+}) {
+  const [endorsements, setEndorsements] = useState<EndorsementRecord[]>([])
+  const [draftsman, setDraftsman] = useState<DraftsmanRecord[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [endorsing, setEndorsing] = useState(false)
+  const [endorseError, setEndorseError] = useState<string | null>(null)
+  const [hasEndorsed, setHasEndorsed] = useState(false)
+  const [markedBelowStandard, setMarkedBelowStandard] = useState(false)
+
+  const allowedStages = ['STAGE_4', 'STAGE_5']
+  const isAllowed = allowedStages.includes(stage)
+
+  useEffect(() => {
+    if (!isAllowed || loaded) return
+    fetch(`/api/ideas/${ideaId}/endorsements`)
+      .then(r => r.json())
+      .then(data => {
+        setEndorsements(data.endorsements ?? [])
+        setDraftsman(data.draftsmanEndorsements ?? [])
+        if (currentUserId) {
+          setHasEndorsed((data.endorsements ?? []).some((e: EndorsementRecord) => e.user.id === currentUserId))
+        }
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [ideaId, loaded, currentUserId, isAllowed])
+
+  if (!isAllowed) return null
+
+  async function handleEndorse() {
+    setEndorsing(true)
+    setEndorseError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/endorsements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setEndorseError(data.error ?? 'Something went wrong')
+        return
+      }
+      setEndorsements(prev => [...prev, data])
+      setHasEndorsed(true)
+    } catch {
+      setEndorseError('Network error')
+    } finally {
+      setEndorsing(false)
+    }
+  }
+
+  async function handleBelowStandard() {
+    setEndorsing(true)
+    setEndorseError(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/endorsements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'BELOW_STANDARD' }),
+      })
+      if (res.ok) {
+        setMarkedBelowStandard(true)
+      } else {
+        const data = await res.json()
+        setEndorseError(data.error ?? 'Something went wrong')
+      }
+    } catch {
+      setEndorseError('Network error')
+    } finally {
+      setEndorsing(false)
+    }
+  }
+
+  const mpEndorsements = endorsements.filter(e => e.endorserRole === 'MP')
+  const peerEndorsements = endorsements.filter(e => e.endorserRole === 'PEER')
+
+  return (
+    <div className="mb-6 space-y-4 rounded-lg border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">Endorsements</h3>
+        {canEndorse && currentUserId && !hasEndorsed && !markedBelowStandard && (
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleEndorse} disabled={endorsing}>
+              Endorse
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-200 text-red-700 hover:bg-red-50"
+              onClick={handleBelowStandard}
+              disabled={endorsing}
+            >
+              Below Standard
+            </Button>
+          </div>
+        )}
+        {hasEndorsed && (
+          <span className="text-xs text-green-700 font-medium">You have endorsed this idea</span>
+        )}
+        {markedBelowStandard && (
+          <span className="text-xs text-muted-foreground">Marked below standard</span>
+        )}
+      </div>
+
+      {endorseError && (
+        <p className="text-xs text-destructive">{endorseError}</p>
+      )}
+
+      {endorsements.length === 0 && draftsman.length === 0 && loaded && (
+        <p className="text-xs text-muted-foreground">No endorsements yet.</p>
+      )}
+
+      {mpEndorsements.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            MPs ({mpEndorsements.length})
+          </p>
+          <div className="space-y-2">
+            {mpEndorsements.map(e => (
+              <div key={e.id} className="rounded-md border bg-muted/20 p-3">
+                <p className="text-sm font-medium">
+                  {e.displayTitle ? `${e.displayTitle} ` : ''}{e.user.name}
+                </p>
+                {e.publicStatement && (
+                  <p className="mt-1 text-xs text-muted-foreground">&ldquo;{e.publicStatement}&rdquo;</p>
+                )}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {new Date(e.endorsedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {peerEndorsements.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Peers ({peerEndorsements.length})
+          </p>
+          <div className="space-y-2">
+            {peerEndorsements.map(e => (
+              <div key={e.id} className="rounded-md border bg-muted/20 p-3">
+                <p className="text-sm font-medium">
+                  {e.displayTitle ? `${e.displayTitle} ` : ''}{e.user.name}
+                </p>
+                {e.publicStatement && (
+                  <p className="mt-1 text-xs text-muted-foreground">&ldquo;{e.publicStatement}&rdquo;</p>
+                )}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {new Date(e.endorsedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {draftsman.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Parliamentary Draftsman
+          </p>
+          <div className="space-y-2">
+            {draftsman.map(d => (
+              <div key={d.id} className="rounded-md border bg-muted/20 p-3">
+                <p className="text-sm font-medium">{d.draftsman.name}</p>
+                <p className="text-xs text-muted-foreground">{d.draftsmanCredentials}</p>
+                <p className="mt-1 text-xs text-muted-foreground">&ldquo;{d.publicStatement}&rdquo;</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {new Date(d.certifiedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tab components
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -465,32 +818,195 @@ function OverviewTab({ idea }: { idea: Idea }) {
   )
 }
 
-function TeamTab({ idea }: { idea: Idea }) {
+interface GroupMemberRecord {
+  id: string
+  role: string
+  user: { id: string; name: string; username: string }
+}
+
+interface GroupRecord {
+  id: string
+  groupType: string
+  name: string
+  description: string | null
+  memberCount: number
+  members: GroupMemberRecord[]
+}
+
+const GROUP_TYPE_LABELS: Record<string, string> = {
+  MY_TEAM: 'My Team',
+  COMMUNICATIONS: 'Communications',
+  POLICY_DEVELOPMENT: 'Policy Development',
+}
+
+const GROUP_TYPE_DESC: Record<string, string> = {
+  MY_TEAM: 'Full edit rights on the idea.',
+  COMMUNICATIONS: 'Can broadcast to followers.',
+  POLICY_DEVELOPMENT: 'Can contribute and flag stage transitions.',
+}
+
+function TeamTab({
+  idea,
+  isOwner,
+}: {
+  idea: Idea
+  isOwner: boolean
+}) {
+  const [groups, setGroups] = useState<GroupRecord[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [creating, setCreating] = useState<string | null>(null) // groupType being created
+  const [groupName, setGroupName] = useState('')
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/ideas/${idea.id}/groups`)
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(data => { setGroups(data.groups ?? []); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }, [idea.id])
+
+  async function handleCreateGroup(groupType: string) {
+    if (!groupName.trim()) return
+    setCreateError(null)
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupType, name: groupName }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCreateError(data.error ?? 'Failed'); return }
+      setGroups(prev => [...prev, data])
+      setCreating(null)
+      setGroupName('')
+    } catch {
+      setCreateError('Network error')
+    }
+  }
+
+  async function handleRemoveMember(groupId: string, userId: string) {
+    await fetch(`/api/ideas/${idea.id}/groups/${groupId}/members/${userId}`, { method: 'DELETE' })
+    setGroups(prev => prev.map(g =>
+      g.id === groupId
+        ? { ...g, members: g.members.filter(m => m.user.id !== userId), memberCount: g.memberCount - 1 }
+        : g,
+    ))
+  }
+
+  const groupTypes = ['MY_TEAM', 'COMMUNICATIONS', 'POLICY_DEVELOPMENT']
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3 rounded-lg border p-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-          {idea.creator.name.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="text-sm font-medium">{idea.creator.name}</p>
-          <p className="text-xs text-muted-foreground">Owner</p>
+    <div className="space-y-6">
+      {/* Core collaborators */}
+      <div>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Core Team
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 rounded-lg border p-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+              {idea.creator.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{idea.creator.name}</p>
+              <p className="text-xs text-muted-foreground">Owner</p>
+            </div>
+          </div>
+          {idea.collaborators.map(c => (
+            <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                {c.user.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-medium">{c.user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{c.role.toLowerCase()}</p>
+              </div>
+            </div>
+          ))}
+          {idea.collaborators.length === 0 && (
+            <p className="text-sm text-muted-foreground">No collaborators yet.</p>
+          )}
         </div>
       </div>
-      {idea.collaborators.map(c => (
-        <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-            {c.user.name.charAt(0).toUpperCase()}
+
+      {/* Groups */}
+      {loaded && groupTypes.map(groupType => {
+        const existing = groups.find(g => g.groupType === groupType)
+
+        return (
+          <div key={groupType}>
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {GROUP_TYPE_LABELS[groupType]}
+                </h3>
+                <p className="text-[11px] text-muted-foreground">{GROUP_TYPE_DESC[groupType]}</p>
+              </div>
+              {isOwner && !existing && creating !== groupType && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setCreating(groupType); setGroupName(GROUP_TYPE_LABELS[groupType] ?? '') }}
+                >
+                  Create
+                </Button>
+              )}
+            </div>
+
+            {creating === groupType && (
+              <div className="rounded-lg border p-3 space-y-2 mb-2">
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={e => setGroupName(e.target.value)}
+                  placeholder="Group name"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {createError && <p className="text-xs text-destructive">{createError}</p>}
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => handleCreateGroup(groupType)} disabled={!groupName.trim()}>
+                    Create
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setCreating(null); setCreateError(null) }}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {existing ? (
+              <div className="rounded-lg border p-3 space-y-2">
+                <p className="text-sm font-medium">{existing.name}</p>
+                {existing.members.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No members yet.</p>
+                )}
+                {existing.members.map(m => (
+                  <div key={m.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                        {m.user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm">{m.user.name}</span>
+                    </div>
+                    {isOwner && (
+                      <button
+                        onClick={() => handleRemoveMember(existing.id, m.user.id)}
+                        className="text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              !isOwner && (
+                <p className="text-xs text-muted-foreground">No {GROUP_TYPE_LABELS[groupType]} group created yet.</p>
+              )
+            )}
           </div>
-          <div>
-            <p className="text-sm font-medium">{c.user.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{c.role.toLowerCase()}</p>
-          </div>
-        </div>
-      ))}
-      {idea.collaborators.length === 0 && (
-        <p className="text-sm text-muted-foreground">No collaborators yet.</p>
-      )}
+        )
+      })}
     </div>
   )
 }
@@ -619,8 +1135,10 @@ export default function IdeaDetailClient({
   isCollaborator,
   currentUserId,
   currentUserReferralCode,
+  currentUserCanEndorse,
   ideaReviewCount,
   avgQualityRating,
+  stage4GateData,
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -629,8 +1147,11 @@ export default function IdeaDetailClient({
   const [activeTab, setActiveTab] = useState<Tab>(isValidTab(tabParam) ? tabParam : 'overview')
   const [showTakePublicModal, setShowTakePublicModal] = useState(false)
   const [showBeginCampaignModal, setShowBeginCampaignModal] = useState(false)
+  const [showVoteInterceptModal, setShowVoteInterceptModal] = useState(false)
+  const [showSubmitToParliamentModal, setShowSubmitToParliamentModal] = useState(false)
   const [referralLinkCopied, setReferralLinkCopied] = useState(false)
   const [commentCount, setCommentCount] = useState(initialIdea.commentCount)
+  const [userIdeaRating, setUserIdeaRating] = useState<number | null>(null)
 
   const stageLabel = STAGES.find(s => s.key === idea.stage)?.label ?? idea.stage
   const badgeClass = STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'
@@ -645,6 +1166,15 @@ export default function IdeaDetailClient({
 
   const stage3GateMet =
     idea.stage === 'STAGE_3' && isOwner && ideaReviewCount >= 12 && avgQualityRating >= 2.5
+
+  const stage4GateMet =
+    idea.stage === 'STAGE_4' &&
+    isOwner &&
+    stage4GateData != null &&
+    stage4GateData.mpCount >= 3 &&
+    stage4GateData.peerCount >= 3 &&
+    stage4GateData.draftsmanCount >= 1 &&
+    stage4GateData.wordingComplete
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://scrutinise.co.uk'
   const referralLink = `${appUrl}/ideas/${idea.id}?ref=${currentUserReferralCode ?? idea.creator.referralCode}`
@@ -661,11 +1191,31 @@ export default function IdeaDetailClient({
     setIdea(prev => ({ ...prev, stage: 'STAGE_4', visibility: 'PLATFORM_LISTED' }))
   }
 
+  function handleSubmitToParliamentSuccess() {
+    setShowSubmitToParliamentModal(false)
+    router.refresh()
+    setIdea(prev => ({ ...prev, stage: 'STAGE_5' }))
+  }
+
   function copyReferralLink() {
     navigator.clipboard.writeText(referralLink).then(() => {
       setReferralLinkCopied(true)
       setTimeout(() => setReferralLinkCopied(false), 2000)
     })
+  }
+
+  const voteStages = ['STAGE_2', 'STAGE_3']
+  const isPreVoteStage = voteStages.includes(idea.stage)
+
+  async function handleIdeaRate(value: number) {
+    const res = await fetch(`/api/ideas/${idea.id}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qualityRating: value }),
+    })
+    if (res.ok) {
+      setUserIdeaRating(value)
+    }
   }
 
   const tabs: { key: Tab; label: string }[] = [
@@ -691,6 +1241,21 @@ export default function IdeaDetailClient({
           ideaId={idea.id}
           onClose={() => setShowBeginCampaignModal(false)}
           onSuccess={handleBeginCampaignSuccess}
+        />
+      )}
+
+      {showVoteInterceptModal && (
+        <VoteInterceptModal
+          ideaId={idea.id}
+          onClose={() => setShowVoteInterceptModal(false)}
+        />
+      )}
+
+      {showSubmitToParliamentModal && (
+        <SubmitToParliamentModal
+          ideaId={idea.id}
+          onClose={() => setShowSubmitToParliamentModal(false)}
+          onSuccess={handleSubmitToParliamentSuccess}
         />
       )}
 
@@ -744,6 +1309,21 @@ export default function IdeaDetailClient({
           </div>
         </div>
 
+        {/* Idea quality rating — Stage 3+, authenticated users only */}
+        {['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) && currentUserId && (
+          <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Rate the quality of this argument:</span>
+            <QualityRating
+              rating={userIdeaRating}
+              avgRating={avgQualityRating > 0 ? avgQualityRating : null}
+              onRate={handleIdeaRate}
+              labelMin="Poorly argued"
+              labelMax="Well argued"
+              promptText="This rating is for the quality of the argument — use the vote if you want to support or oppose the idea or its consequences"
+            />
+          </div>
+        )}
+
         {/* Stage 2 gate card — show to owner only */}
         {idea.stage === 'STAGE_2' && isOwner && (
           <div className="mb-6">
@@ -755,6 +1335,13 @@ export default function IdeaDetailClient({
         {idea.stage === 'STAGE_3' && isOwner && (
           <div className="mb-6">
             <Stage3GateCard reviewCount={ideaReviewCount} avgQualityRating={avgQualityRating} />
+          </div>
+        )}
+
+        {/* Stage 4 gate card — show to owner only */}
+        {idea.stage === 'STAGE_4' && isOwner && stage4GateData && (
+          <div className="mb-6">
+            <Stage4GateCard gate={stage4GateData} />
           </div>
         )}
 
@@ -809,6 +1396,23 @@ export default function IdeaDetailClient({
           </div>
         )}
 
+        {isOwner && idea.stage === 'STAGE_4' && (
+          <div className="mb-6">
+            <Button
+              onClick={() => setShowSubmitToParliamentModal(true)}
+              disabled={!stage4GateMet}
+              variant={stage4GateMet ? 'default' : 'outline'}
+            >
+              Submit to Parliament
+            </Button>
+            {!stage4GateMet && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Meet all requirements above to unlock.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="border-b">
           <div className="-mb-px flex gap-0 overflow-x-auto">
@@ -829,7 +1433,17 @@ export default function IdeaDetailClient({
           </div>
         </div>
 
-        {/* Vote widget — Stage 4/5 only */}
+        {/* Vote widget — Stage 4/5 only. Intercept at Stage 2/3 */}
+        {isPreVoteStage && (
+          <div className="mt-6">
+            <button
+              onClick={() => setShowVoteInterceptModal(true)}
+              className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-colors"
+            >
+              Voting opens when this idea reaches the Campaign stage
+            </button>
+          </div>
+        )}
         {(idea.stage === 'STAGE_4' || idea.stage === 'STAGE_5') && (
           <div className="mt-6">
             <VoteWidget ideaId={idea.id} currentUserId={currentUserId} />
@@ -837,7 +1451,19 @@ export default function IdeaDetailClient({
         )}
 
         <div className="py-6">
-          {activeTab === 'overview' && <OverviewTab idea={idea} />}
+          {activeTab === 'overview' && (
+            <>
+              {['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
+                <EndorsementPanel
+                  ideaId={idea.id}
+                  stage={idea.stage}
+                  canEndorse={currentUserCanEndorse}
+                  currentUserId={currentUserId}
+                />
+              )}
+              <OverviewTab idea={idea} />
+            </>
+          )}
           {activeTab === 'contributions' && (
             <ContributionsTab
               ideaId={idea.id}
@@ -868,7 +1494,7 @@ export default function IdeaDetailClient({
               currentUserId={currentUserId}
             />
           )}
-          {activeTab === 'team' && <TeamTab idea={idea} />}
+          {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} />}
         </div>
 
         {/* Development History — owner only, Stage 3+ (internal contributions archived from Stage 2) */}

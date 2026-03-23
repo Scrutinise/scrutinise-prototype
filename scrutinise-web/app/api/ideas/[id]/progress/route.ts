@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { checkStage2to3Gate, advanceStage2to3, checkStage3to4Gate, advanceStage3to4 } from '@/lib/stage-gates'
+import { checkStage2to3Gate, advanceStage2to3, checkStage3to4Gate, advanceStage3to4, checkStage4to5Gate, advanceStage4to5 } from '@/lib/stage-gates'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -59,6 +59,16 @@ export async function POST(req: Request, { params }: Params) {
     }
     await advanceStage3to4(id, user.id)
     return NextResponse.json({ stage: 'STAGE_4' })
+  }
+
+  // Stage 4 → 5
+  if (idea.stage === 'STAGE_4' && toStage === 'STAGE_5') {
+    const gateError = await checkStage4to5Gate(id)
+    if (gateError) {
+      return NextResponse.json({ error: gateError, blocked: true }, { status: 422 })
+    }
+    await advanceStage4to5(id, user.id)
+    return NextResponse.json({ stage: 'STAGE_5' })
   }
 
   return NextResponse.json(

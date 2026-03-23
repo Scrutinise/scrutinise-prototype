@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import QualityRating from '@/components/QualityRating'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -23,8 +24,7 @@ interface Contribution {
   stance: string
   content: string
   isInternal: boolean
-  helpfulCount: number
-  notHelpfulCount: number
+  qualityRating: number | null
   createdAt: string
   author: {
     id: string
@@ -162,14 +162,31 @@ function ContributionCard({
   contribution,
   ideaId,
   isOwner,
+  currentUserId,
 }: {
   contribution: Contribution
   ideaId: string
   isOwner: boolean
+  currentUserId: string | null
 }) {
   const [expanded, setExpanded] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
   const [localReplies, setLocalReplies] = useState<Reply[]>(contribution.replies)
+  const [avgRating, setAvgRating] = useState<number | null>(contribution.qualityRating)
+  const [userRating, setUserRating] = useState<number | null>(null)
+
+  async function handleRate(value: number) {
+    const res = await fetch(`/api/ideas/${ideaId}/contributions/${contribution.id}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qualityRating: value }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setUserRating(value)
+      setAvgRating(data.avgRating)
+    }
+  }
 
   const isLong = contribution.content.length > 200
   const displayContent = expanded || !isLong
@@ -238,8 +255,15 @@ function ContributionCard({
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {contribution.helpfulCount > 0 && (
-              <span>{contribution.helpfulCount} helpful</span>
+            {currentUserId && (
+              <QualityRating
+                rating={userRating}
+                avgRating={avgRating}
+                onRate={handleRate}
+                labelMin="Unhelpful"
+                labelMax="Helpful"
+                promptText="This rating is for the quality of the contribution — is it helpful to the quality of the idea? Use the vote if you want to support or oppose the idea or its consequences"
+              />
             )}
             {isOwner && !replyOpen && localReplies.length === 0 && (
               <button
@@ -513,6 +537,7 @@ export default function ContributionsTab({
           contribution={c}
           ideaId={ideaId}
           isOwner={isOwner}
+          currentUserId={currentUserId}
         />
       ))}
 
