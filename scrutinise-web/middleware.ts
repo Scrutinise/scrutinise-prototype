@@ -30,6 +30,9 @@ const isPublicRoute = createRouteMatcher([
   '/api/health(.*)',
   '/api/ai/public',        // unauthenticated Lex API
   '/api/webhooks/clerk',   // server-to-server — verified via Svix signature, no Clerk session
+  '/api/ideas/(.*)/contributions(.*)', // public read for LINK_ONLY/PLATFORM_LISTED ideas
+  '/api/ideas/(.*)/research(.*)',      // public read for LINK_ONLY/PLATFORM_LISTED ideas
+  '/api/users/(.*)',                   // public profile API
   '/prototype/referral(.*)',
 ])
 
