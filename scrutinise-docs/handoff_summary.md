@@ -1,15 +1,17 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v5*
+*Last updated: 23 March 2026 v6*
 
 ---
 
 ## CURRENT STATE
 
-Sprint 3 complete. The live site at scrutinise.co.uk has:
+Sprint 4 complete. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
 - Stage 2→3 "Take Public" flow with warning modal and gate validation
-- Contributions API (create, list, owner reply) — tab shows stub pending UI
-- Research API (create, list, Safe Browsing check) — tab shows existing research
+- Contributions tab: full form + cards (#N, type/stance badges, truncation, replies, pagination)
+- Research tab: full form + cards (type/source badges, relevance toggle, forPolicy/forAction)
+- Vote widget: real data-driven VoteWidget at Stage 4/5 only (hidden at Stages 1–3)
+- Vote API (GET aggregate + POST upsert with quality flags)
 - Public profile pages at `/user/[username]`
 - In-memory rate limiting on AI (50/hr) and invite (10/day) endpoints
 - afterSignInUrl returns to originating URL for protected routes
@@ -60,8 +62,6 @@ Sprint 3 complete. The live site at scrutinise.co.uk has:
 
 ## SPRINT 3 — COMPLETE ✅
 
-### Built this sprint
-
 | File | What it does |
 |------|-------------|
 | `prisma/schema.prisma` | ContributionType enum, Comment.commentNumber/contributionType, Research.forAction |
@@ -74,36 +74,27 @@ Sprint 3 complete. The live site at scrutinise.co.uk has:
 | `app/api/users/[username]/route.ts` | GET public profile |
 | `app/user/[username]/page.tsx` | Public profile page |
 | `lib/rateLimit.ts` | In-memory Map rate limiter |
-| `app/api/ai/[ideaId]/route.ts` | 50/hr per-user rate limit added |
-| `app/api/ideas/[id]/collaborators/route.ts` | 10/day per-user rate limit added |
 | `middleware.ts` | /ideas(.*) and /user(.*) public; contributions/research/users API public |
 | `app/sign-in/[[...sign-in]]/page.tsx` | forceRedirectUrl from redirect_url query param |
 
-### Not yet built (deferred)
-
-- `proxy.ts` migration (Next.js codemod — Charlie to run locally: `cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy`)
-- Contribution form UI in the Contributions tab (API is ready)
-- Research submission form UI in the Research tab (API is ready)
-- Vote widget (Sprint 4 — Stage 4+ only)
-- Amendment flow (Sprint 4)
-
 ---
 
-## SPRINT 4 — OUTSTANDING ITEMS
+## SPRINT 4 — COMPLETE ✅
 
-### Priority 1 — Contribution form UI on idea detail page
-The Contributions tab in `IdeaDetailClient.tsx` shows a stub. Wire it to `POST /api/ideas/[id]/contributions` with a form (content textarea, contributionType select, stance select). Display returned contributions using the card spec from CC_Sprint3_Briefing.md Priority 3.
+| File | What it does |
+|------|-------------|
+| `app/api/ideas/[id]/vote/route.ts` | GET aggregate counts + userVote; POST upsert (Stage 4+ only) with strength, qualityFlags, denormalised voteCount |
+| `components/VoteWidget.tsx` | Full rewrite: {ideaId, currentUserId} props, real API, CSS tokens, sign-in prompt, existing vote + Change flow, optimistic updates |
+| `app/ideas/[id]/ContributionsTab.tsx` | Full contributions tab: form, cards (#N/type/stance/truncation/author/replies), pagination |
+| `app/ideas/[id]/ResearchTab.tsx` | Full research tab: form (all fields + radio groups), cards (type/source badges, relevance toggle) |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Stubs replaced with real imports; VoteWidget at Stage 4/5 only; onResearchAdded + commentCount callbacks |
+| `middleware.ts` | /api/ideas/(.*)/vote(.*) added to public routes |
 
-### Priority 2 — Research form UI on idea detail page
-The Research tab shows existing research but no add form. Wire `POST /api/ideas/[id]/research` with the full form (title, snippet, relevanceExplanation, sourceUrl, researchType, sourceType, forOrAgainstPolicy, forOrAgainstAction).
+### Not yet built (deferred to Sprint 5)
 
-### Priority 3 — Vote widget (Stage 4+)
-Per system_mechanics_v0.7 — render VoteWidget only when `idea.stage === 'STAGE_4' || idea.stage === 'STAGE_5'`. VoteWidget component already exists in components/.
-
-### Priority 4 — proxy.ts migration (Charlie to run locally)
-```
-cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy
-```
+- `proxy.ts` migration (Next.js codemod — Charlie to run locally: `cd scrutinise-web && npx @next/codemod@latest middleware-to-proxy`)
+- Amendment flow
+- Stage 3→4 gate UI ("Begin Campaign")
 
 ---
 
@@ -151,7 +142,11 @@ Carried from Sprint 1:
 | app/api/user/onboarding/route.ts | ✅ Consent capture |
 | app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email + 10/day rate limit |
 | app/ideas/[id]/page.tsx | ✅ Real idea detail page |
-| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal |
+| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + ContributionsTab + ResearchTab + VoteWidget (Stage 4/5) |
+| app/ideas/[id]/ContributionsTab.tsx | ✅ Full form + cards + replies + pagination |
+| app/ideas/[id]/ResearchTab.tsx | ✅ Full form + cards |
+| app/api/ideas/[id]/vote/route.ts | ✅ GET aggregate + POST upsert (Stage 4+) |
+| components/VoteWidget.tsx | ✅ Real API + CSS tokens + auth gate |
 | app/ideas/create/page.tsx | ✅ Full Lex chat UI |
 | app/user/[username]/page.tsx | ✅ Public profile page |
 | app/onboarding/page.tsx | ✅ Post-sign-up onboarding |
