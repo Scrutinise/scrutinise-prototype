@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { MOCK_IDEAS, MOCK_USERS, Stage } from '@/lib/mockData'
 import { useUser } from '@/context/UserContext'
-import VoteWidget from '@/components/VoteWidget'
 import DiffView from '@/components/DiffView'
 import CommentRatingForm from '@/components/CommentRatingForm'
 import { Button } from '@/components/ui/button'
@@ -312,7 +311,11 @@ export default function IdeaDetailPage({ params }: Props) {
         <div className="space-y-8">
           <p className="text-foreground leading-relaxed">{idea.summary}</p>
 
-          {!isOwner && <VoteWidget currentVotes={idea.voteCount} />}
+          {!isOwner && (
+            <div className="rounded-xl border p-4 text-sm text-muted-foreground">
+              Voting opens at Stage 4 (Campaign).
+            </div>
+          )}
 
           <div>
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Diagnosis</h2>

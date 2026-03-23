@@ -3,7 +3,6 @@
 import { use } from 'react'
 import Link from 'next/link'
 import { MOCK_IDEAS, MOCK_USERS, Stage } from '@/lib/mockData'
-import VoteWidget from '@/components/VoteWidget'
 import React from 'react'
 
 const stageBadgeStyle: Record<Stage, React.CSSProperties> = {
@@ -66,9 +65,9 @@ export default function ReferralIdeaPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Vote widget */}
-        <div className="mb-8">
-          <VoteWidget currentVotes={idea.voteCount} />
+        {/* Vote widget — live at Stage 4+, prototype placeholder */}
+        <div className="mb-8 rounded-xl border p-4 text-sm text-muted-foreground">
+          Voting opens at Stage 4 (Campaign).
         </div>
 
         {/* Diagnosis */}
