@@ -1,5 +1,5 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v6*
+*Last updated: 23 March 2026 v7*
 
 ---
 
@@ -42,6 +42,7 @@ Sprint 4 complete. The live site at scrutinise.co.uk has:
 | RH sidebar = 7 fields per lex_system_prompt_v4.1 Section 16 | LOCKED |
 | No registration gate before Lex — auth triggered by save prompt | LOCKED |
 | /api/webhooks/clerk = public route (Svix-signed, no Clerk session) | LOCKED |
+| Stage 2 contributions = internal (isInternal:true), owner + collaborators only; Stage 3+ public contributions are non-internal | LOCKED — 23 Mar 2026 |
 
 ---
 
@@ -142,8 +143,8 @@ Carried from Sprint 1:
 | app/api/user/onboarding/route.ts | ✅ Consent capture |
 | app/api/ideas/[id]/collaborators/route.ts | ✅ Invite + email + 10/day rate limit |
 | app/ideas/[id]/page.tsx | ✅ Real idea detail page |
-| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + ContributionsTab + ResearchTab + VoteWidget (Stage 4/5) |
-| app/ideas/[id]/ContributionsTab.tsx | ✅ Full form + cards + replies + pagination |
+| app/ideas/[id]/IdeaDetailClient.tsx | ✅ Tabbed UI + Take Public modal + ContributionsTab + ResearchTab + VoteWidget (Stage 4/5) + DevelopmentHistory (owner, Stage 3+) |
+| app/ideas/[id]/ContributionsTab.tsx | ✅ Full form + cards + replies + pagination + Internal badge + Stage 2 support |
 | app/ideas/[id]/ResearchTab.tsx | ✅ Full form + cards |
 | app/api/ideas/[id]/vote/route.ts | ✅ GET aggregate + POST upsert (Stage 4+) |
 | components/VoteWidget.tsx | ✅ Real API + CSS tokens + auth gate |

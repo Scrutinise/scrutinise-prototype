@@ -175,6 +175,11 @@
 | 2026-03-23 | scrutinise-web/app/ideas/[id]/ResearchTab.tsx | New — full research tab. ResearchCard: title, snippet, external link icon, expandable "Why is this relevant?" relevance explanation, research type badge (colour-coded), source type badge, forPolicy/forAction indicators. ResearchForm: title 200, snippet/relevance 500 each, sourceUrl with URL validation, researchType select (EVIDENCE/CASE_STUDY/CAUSES/PERSPECTIVES/OTHER), sourceType select, forOrAgainstPolicy/forOrAgainstAction radio groups (Yes/No/N/A). canAdd: owner/editors at Stage 2+, any authenticated user at Stage 3+. onResearchAdded callback. | Sprint 4 Priority 2 |
 | 2026-03-23 | scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx | Updated: replaced inline ContributionsTab and ResearchTab stubs with imports of new components. VoteWidget imported and rendered only at STAGE_4/STAGE_5 (not in DOM at Stages 1–3). onResearchAdded callback updates idea.research for gate check. commentCount state tracks new contributions for tab label. | Sprint 4 Priority 1+2+3 |
 
+| 2026-03-23 | scrutinise-web/prisma/schema.prisma | Comment model: added isInternal Boolean @default(false). Marks contributions created at Stage 2 as internal (collaborator-only). Applied via db push (no migration history). | Product decision: Stage 2 internal contributions |
+| 2026-03-23 | scrutinise-web/app/api/ideas/[id]/contributions/route.ts | GET: Stage 2 returns internal-only to owner/collaborators; Stage 3+ returns non-internal to public, all to owner, own internals to their authors. POST: Stage 2 requires owner/collaborator + sets isInternal:true; Stage 3+ open to any auth user. | Product decision: Stage 2 internal contributions |
+| 2026-03-23 | scrutinise-web/app/ideas/[id]/ContributionsTab.tsx | STAGE_2 added to allowed stages; public pool filtered to !isInternal at Stage 3+; Internal badge (violet) on isInternal cards; empty state and pagination use filtered pool. | Product decision: Stage 2 internal contributions |
+| 2026-03-23 | scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx | DevelopmentHistory section added — owner-only, renders at Stage 3+, fetches contributions and displays internal ones grouped by contributor; self-hides when none exist. | Product decision: Stage 2 internal contributions |
+
 ---
 
 *CHANGE_LOG.md — Scrutinise — March 2026*
