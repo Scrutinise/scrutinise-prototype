@@ -82,17 +82,15 @@ export async function POST() {
         ideaId: true,
         direction: true,
         strength: true,
-        castAt: true,
       },
     }),
     prisma.research.findMany({
-      where: { userId: user.id },
+      where: { addedByUserId: user.id },
       select: {
         id: true,
         ideaId: true,
         title: true,
         snippet: true,
-        url: true,
         sourceType: true,
         createdAt: true,
       },
@@ -102,7 +100,7 @@ export async function POST() {
       select: {
         id: true,
         ideaId: true,
-        proposedWording: true,
+        proposedText: true,
         rationale: true,
         status: true,
         createdAt: true,
