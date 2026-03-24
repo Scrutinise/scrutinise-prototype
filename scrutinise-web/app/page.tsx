@@ -33,19 +33,13 @@ const stages = [
   },
 ]
 
-const stats = [
-  { value: "12,847", label: "Ideas Created" },
-  { value: "2,341", label: "Active Citizens" },
-  { value: "47", label: "Bills in Progress" },
-]
-
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <PublicNav />
 
       <main>
-        {/* Hero Section */}
+        {/* Section 1 — Hero */}
         <section className="bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
             <div className="max-w-2xl">
@@ -70,34 +64,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Text Block 1 — Where serious policy people build legislation */}
-        <section className="border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Where serious policy people build legislation
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-              Scrutinise is a civic technology platform for political entrepreneurs — legislators,
-              experts and engaged citizens — to develop, test and refine their good ideas into
-              better legislation and stronger public systems.
-            </p>
-            <ul className="mt-4 space-y-2 sm:mt-5">
-              {[
-                "We are building an online community around craft, expertise and serious thinking",
-                "A tool that makes it possible and worth your time to help make better laws with lower risk",
-                "Better Laws — Better Government — Build a team — Have an Impact",
-                "A place for powerful implementable ideas not ideological debate",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* Five Steps */}
+        {/* Section 2 — Five Steps */}
         <section className="border-t border-border bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <div className="mb-8 sm:mb-10">
@@ -130,21 +97,31 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Text Block 2 — Stop asking for change; start defining it (grey background) */}
-        <section className="border-t border-border bg-secondary/50">
+        {/* Section 3 — Parliament video (full-width, no padding, no text) */}
+        <div className="w-full">
+          <video
+            src="https://pub-74d3bbbcb050497b8a69f8c0045bb893.r2.dev/Grok_Parliament_Ready_video.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full object-cover"
+          />
+        </div>
+
+        {/* Section 4 — MPs and the road to legislative excellence */}
+        <section className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Stop asking for change; start defining it
+              MPs and the road to legislative excellence
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-              A political entrepreneur is someone who identifies a problem that can be solved through
-              changes in legislation or government operations and then builds the coalition, the
-              evidence, and the argument to fix it. They don&apos;t wait for permission. They build the case.
-            </p>
-            <ul className="mt-4 space-y-2 sm:mt-5">
+            <ul className="mt-4 space-y-2 sm:mt-6">
               {[
-                "This platform uses cutting edge AI and a community of peers to carefully scrutinise and improve those ideas in a structured way to deliver Parliament-ready draft legislation.",
-                "Anyone can start an idea — only the best build support in Parliament — how far will yours go?",
+                "Build a policy portfolio that positions you for power",
+                "Your own team of trained researchers at no cost",
+                "Mentor candidates into legislators-in-waiting",
+                "Battle-test and strengthen your policy positions",
+                "Reclaim control from the bureaucracy",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
@@ -155,7 +132,51 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Dark band — parliament video — "Quality legislation - open sourced" */}
+        {/* Section 5 — Three card row */}
+        <section className="border-t border-border bg-gray-50">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
+              If you&apos;re serious about wanting better legislation
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  Scrutinise is a civic technology platform for &lsquo;policy entrepreneurs&rsquo; — legislators, experts and engaged citizens.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  Develop, test and refine your good ideas into better legislation and stronger public systems.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  We are building an online community around craft, expertise and a common interest in better quality laws and government.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 6 — Engine of change */}
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Be the engine of the change you want to see in the world
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
+              A &lsquo;policy entrepreneur&rsquo; is someone who identifies a challenge that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
+              By taking responsibility for bringing about that change, you become the engine of that change. Own the achievement and the consequences — make sure you work out the costs and the risks, for that change has your name on it.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
+              This platform is here to support you with guidance, research, and specialist AI for policy development. Over time, we will build a community to carefully scrutinise and improve those ideas in a structured way, delivering Parliament-ready draft legislation.
+            </p>
+          </div>
+        </section>
+
+        {/* Section 7 — Dark band parliament video — "Quality legislation - open sourced" */}
         <section className="bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
@@ -174,61 +195,6 @@ export default function HomePage() {
             </div>
             <p className="mt-4 text-center text-sm text-gray-400">
               Citizens crafting legislation, one idea at a time
-            </p>
-          </div>
-        </section>
-
-        {/* Text Block 3 — MPs and the road to legislative excellence */}
-        <section className="border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              MPs and the road to legislative excellence
-            </h2>
-            <ul className="mt-4 space-y-2 sm:mt-6">
-              {[
-                "Build a policy portfolio that makes you look Ministerial and your party ready for power",
-                "Stop being a candidate — become a legislator in waiting",
-                "Find the holes in your logic before your rivals do",
-                "Your own team of trained researchers at no cost",
-                "Reclaim control from the bureaucracies",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="border-t border-border bg-secondary/50">
-          <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-            <div className="grid grid-cols-3 gap-4 sm:gap-8">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Section */}
-        <section className="border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Democracy should be simple
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
-              Climbing Everest will always be tough, but oxygen makes it feasible. Scrutinise
-              provides the support and structure to make quality legislation a realistic goal for
-              those willing to put in the hard work.
             </p>
           </div>
         </section>
