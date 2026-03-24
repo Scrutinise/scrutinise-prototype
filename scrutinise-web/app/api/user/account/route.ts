@@ -13,14 +13,13 @@ export async function DELETE() {
   const now = new Date()
   const scheduledFor = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await prisma.user.update({
     where: { id: user.id },
     data: {
       status: 'DELETION_PENDING',
       deletionRequestedAt: now,
       deletionScheduledFor: scheduledFor,
-    } as any,
+    },
   })
 
   // Send confirmation email if RESEND_API_KEY is set
@@ -30,7 +29,7 @@ export async function DELETE() {
       month: 'long',
       year: 'numeric',
     })
-    const unsubUrl = `${APP_URL}/unsubscribe/${(user as any).unsubscribeToken ?? user.referralCode}`
+    const unsubUrl = `${APP_URL}/unsubscribe/${user.unsubscribeToken}`
 
     const text = `
 Hi ${user.firstName},

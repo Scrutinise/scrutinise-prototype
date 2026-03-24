@@ -70,8 +70,7 @@ export async function getAuthenticatedUser() {
   if (dbUser && dbUser.status === 'DELETION_PENDING') {
     dbUser = await prisma.user.update({
       where: { id: dbUser.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { status: 'ACTIVE', deletionRequestedAt: null, deletionScheduledFor: null } as any,
+      data: { status: 'ACTIVE', deletionRequestedAt: null, deletionScheduledFor: null },
     })
   }
 

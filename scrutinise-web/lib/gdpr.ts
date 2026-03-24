@@ -9,19 +9,17 @@ import { prisma } from './prisma'
 export async function anonymiseExpiredAccounts(): Promise<void> {
   const now = new Date()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expired = await (prisma.user.findMany as any)({
+  const expired = await prisma.user.findMany({
     where: {
       status: 'DELETION_PENDING',
       deletionScheduledFor: { lt: now },
     },
     select: { id: true },
-  }) as { id: string }[]
+  })
 
   for (const { id } of expired) {
     const anon = `deleted_${id.slice(0, 8)}`
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma.user.update as any)({
+    await prisma.user.update({
       where: { id },
       data: {
         name: 'Deleted User',

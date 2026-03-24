@@ -19,11 +19,10 @@ export default async function UnsubscribePage({ params }: Props) {
   let email: string
 
   // First: try UUID token lookup (new-style unsubscribeToken)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userByToken = await (prisma.user.findUnique as any)({
+  const userByToken = await prisma.user.findUnique({
     where: { unsubscribeToken: token },
     select: { email: true },
-  }).catch(() => null) as { email: string } | null
+  }).catch(() => null)
 
   if (userByToken) {
     email = userByToken.email
