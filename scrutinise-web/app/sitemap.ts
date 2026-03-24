@@ -33,7 +33,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const users = await prisma.user.findMany({
     where: {
       status: 'ACTIVE',
-      username: { not: null },
       ideas: {
         some: {
           stage: { in: ['STAGE_3', 'STAGE_4', 'STAGE_5'] },
