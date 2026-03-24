@@ -82,7 +82,7 @@ export async function POST() {
         ideaId: true,
         direction: true,
         strength: true,
-        createdAt: true,
+        castAt: true,
       },
     }),
     prisma.research.findMany({
