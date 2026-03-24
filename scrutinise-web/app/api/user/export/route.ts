@@ -80,7 +80,7 @@ export async function POST() {
       select: {
         id: true,
         ideaId: true,
-        voteType: true,
+        direction: true,
         strength: true,
         createdAt: true,
       },
