@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import PublicNav from '@/components/PublicNav'
@@ -8,6 +8,9 @@ import PublicNav from '@/components/PublicNav'
 export default function SettingsPage() {
   const { user, isLoaded } = useUser()
   const [exporting, setExporting] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [exportError, setExportError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -57,6 +60,22 @@ export default function SettingsPage() {
     }
   }
 
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setPhotoUploading(true)
+    setPhotoError(null)
+    try {
+      await user.setProfileImage({ file })
+      await user.reload()
+    } catch {
+      setPhotoError('Photo upload failed. Please try again.')
+    } finally {
+      setPhotoUploading(false)
+      if (photoInputRef.current) photoInputRef.current.value = ''
+    }
+  }
+
   if (!isLoaded) return null
 
   return (
@@ -68,6 +87,48 @@ export default function SettingsPage() {
         {/* Account details */}
         <section className="mb-10">
           <h2 className="mb-4 text-base font-semibold">Account details</h2>
+
+          {/* Profile photo */}
+          <div className="mb-4 flex items-center gap-4">
+            {user?.hasImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt={user.fullName ?? 'Profile photo'}
+                width={80}
+                height={80}
+                className="size-20 rounded-full object-cover"
+              />
+            ) : (
+              <span
+                className="flex size-20 items-center justify-center rounded-full text-xl font-semibold text-white"
+                style={{ backgroundColor: '#1a7a6e' }}
+              >
+                {((user?.firstName?.[0] ?? '') + (user?.lastName?.[0] ?? '')).toUpperCase() || '?'}
+              </span>
+            )}
+            <div>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={photoUploading}
+              >
+                {photoUploading ? 'Uploading…' : 'Change photo'}
+              </Button>
+              {photoError && (
+                <p className="mt-1 text-xs text-red-600">{photoError}</p>
+              )}
+            </div>
+          </div>
+
           <div className="rounded-lg border border-border p-4 space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Name</span>

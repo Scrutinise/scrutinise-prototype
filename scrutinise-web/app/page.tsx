@@ -19,17 +19,17 @@ const stages = [
   {
     number: 3,
     name: "Develop",
-    description: "Add research, develop arguments, open to referral-link scrutiny",
+    description: "Develop arguments through public scrutiny",
   },
   {
     number: 4,
     name: "Campaign",
-    description: "Public scrutiny, campaign for votes and support",
+    description: "Campaign for votes and support",
   },
   {
     number: 5,
     name: "Legislate",
-    description: "Government agenda and parliamentary scrutiny",
+    description: "The Parliamentary Process",
   },
 ]
 
@@ -97,42 +97,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 3 — Parliament video (full-width, no padding, no text) */}
-        <div className="w-full">
-          <video
-            src="https://pub-74d3bbbcb050497b8a69f8c0045bb893.r2.dev/Grok_Parliament_Ready_video.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full object-cover"
-          />
-        </div>
-
-        {/* Section 4 — MPs and the road to legislative excellence */}
-        <section className="border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              MPs and the road to legislative excellence
-            </h2>
-            <ul className="mt-4 space-y-2 sm:mt-6">
-              {[
-                "Build a policy portfolio that positions you for power",
-                "Your own team of trained researchers at no cost",
-                "Mentor candidates into legislators-in-waiting",
-                "Battle-test and strengthen your policy positions",
-                "Reclaim control from the bureaucracy",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* Section 5 — Three card row */}
+        {/* Section 3 — Three card row */}
         <section className="border-t border-border bg-gray-50">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
@@ -158,7 +123,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 6 — Engine of change */}
+        {/* Section 4 — Engine of change (paragraph 1 only) */}
         <section className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
@@ -167,16 +132,50 @@ export default function HomePage() {
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
               A &lsquo;policy entrepreneur&rsquo; is someone who identifies a challenge that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
             </p>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
-              By taking responsibility for bringing about that change, you become the engine of that change. Own the achievement and the consequences — make sure you work out the costs and the risks, for that change has your name on it.
-            </p>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
-              This platform is here to support you with guidance, research, and specialist AI for policy development. Over time, we will build a community to carefully scrutinise and improve those ideas in a structured way, delivering Parliament-ready draft legislation.
-            </p>
           </div>
         </section>
 
-        {/* Section 7 — Dark band parliament video — "Quality legislation - open sourced" */}
+        {/* Section 5 — Parliament video */}
+        <section className="border-t border-border bg-gray-50">
+          <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="mb-6 text-xl font-semibold tracking-tight sm:text-2xl">
+              Calm &amp; Fast in the Chaos
+            </h2>
+            <video
+              src="https://pub-74d3bbbcb050497b8a69f8c0045bb893.r2.dev/Grok_Parliament_Ready_video.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full object-cover"
+            />
+          </div>
+        </section>
+
+        {/* Section 6 — MPs and the road to legislative excellence */}
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              MPs and the road to legislative excellence
+            </h2>
+            <ul className="mt-4 space-y-2 sm:mt-6">
+              {[
+                "Build a policy portfolio that positions you for power",
+                "Your own team of trained researchers at no cost",
+                "Mentor candidates into legislators-in-waiting",
+                "Battle-test and strengthen your policy positions",
+                "Reclaim control from the bureaucracy",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* Section 7 — Dark band video — "Quality legislation - open sourced" */}
         <section className="bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">

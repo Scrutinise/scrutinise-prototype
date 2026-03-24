@@ -2,12 +2,47 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SignedIn, SignedOut } from '@clerk/nextjs'
+import { useUser, useClerk } from '@clerk/nextjs'
+
+function Avatar({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
+  const initials =
+    (user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || '?'
+
+  if (user.hasImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={user.imageUrl}
+        alt={user.fullName ?? 'Profile'}
+        width={32}
+        height={32}
+        className="size-8 rounded-full object-cover"
+      />
+    )
+  }
+
+  return (
+    <span
+      className="flex size-8 items-center justify-center rounded-full text-xs font-semibold text-white"
+      style={{ backgroundColor: '#1a7a6e' }}
+    >
+      {initials.toUpperCase()}
+    </span>
+  )
+}
 
 export default function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isSignedIn, isLoaded, user } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
+
+  function handleSignOut() {
+    signOut({ redirectUrl: '/' })
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -30,22 +65,28 @@ export default function PublicNav() {
           <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             About
           </Link>
-          <SignedOut>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/sign-in">Log in</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/sign-up">Sign up</Link>
-            </Button>
-          </SignedOut>
-          <SignedIn>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/sign-out">Log out</Link>
-            </Button>
-          </SignedIn>
+
+          {isLoaded && !isSignedIn && (
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/sign-in">Log in</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/sign-up">Sign up</Link>
+              </Button>
+            </>
+          )}
+
+          {isLoaded && isSignedIn && user && (
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" title="Your dashboard">
+                <Avatar user={user} />
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Sign out
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -90,7 +131,8 @@ export default function PublicNav() {
             >
               About
             </Link>
-            <SignedOut>
+
+            {isLoaded && !isSignedIn && (
               <div className="flex gap-2 pt-1">
                 <Button variant="outline" size="sm" className="flex-1" asChild>
                   <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
@@ -99,17 +141,26 @@ export default function PublicNav() {
                   <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
                 </Button>
               </div>
-            </SignedOut>
-            <SignedIn>
-              <div className="flex gap-2 pt-1">
-                <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                </Button>
-                <Button size="sm" className="flex-1" asChild>
-                  <Link href="/sign-out" onClick={() => setMobileMenuOpen(false)}>Log out</Link>
+            )}
+
+            {isLoaded && isSignedIn && user && (
+              <div className="flex items-center gap-3 pt-1">
+                <Link href="/dashboard" title="Your dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  <Avatar user={user} />
+                </Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    handleSignOut()
+                  }}
+                >
+                  Sign out
                 </Button>
               </div>
-            </SignedIn>
+            )}
           </div>
         </div>
       )}
