@@ -2,7 +2,7 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: March 2026*
+*Last updated: 24 March 2026*
 
 ---
 
@@ -26,6 +26,13 @@
 *(Permanent audit trail of all changes applied to spec docs)*
 
 | Date Applied | Document | Change Made | Originally Decided |
+|-------------|----------|-------------|-------------------|
+| 2026-03-24 | schema.prisma | Added GeneratedOutputType enum (MP_BRIEFING, ONE_PAGER, PRESS_RELEASE, SOCIAL_KIT), GeneratedOutputStatus enum (PENDING, COMPLETE, FAILED), GeneratedOutput model with @@unique([ideaId, documentType]); added generatedOutputs relation to Idea | Sprint 8 Campaign in a Box |
+| 2026-03-24 | lib/campaign-prompts.ts | New module: four prompt builder functions (buildMpBriefingPrompt, buildOnePagerPrompt, buildPressReleasePrompt, buildSocialKitPrompt) — each injects referral link | Sprint 8 Campaign in a Box |
+| 2026-03-24 | app/api/ideas/[id]/generate/route.ts | POST — owner-only, Stage 4+ gate, Zod body, Gemini 2.5 Flash call, PENDING→COMPLETE/FAILED upsert, force-regenerate support | Sprint 8 Campaign in a Box |
+| 2026-03-24 | app/api/ideas/[id]/campaign-outputs/route.ts | GET — owner-only, returns all GeneratedOutput records with 200-char preview | Sprint 8 Campaign in a Box |
+| 2026-03-24 | app/ideas/[id]/CampaignTab.tsx | New component: four document cards, generate/regenerate buttons, 3-second polling, copy/download actions, owner-locked message for non-owners | Sprint 8 Campaign in a Box |
+| 2026-03-24 | app/ideas/[id]/IdeaDetailClient.tsx | Added Campaign tab (Stage 4/5 only) to Tab type, isValidTab, tabs array, and tab panel render | Sprint 8 Campaign in a Box |
 |-------------|----------|-------------|-------------------|
 | 2026-03-06 | All docs | Initial creation of complete 9-document library from scattered architecture docs, wireframe audits, process lists, system mechanics, AI integration spec, Lex system prompt v2, and implementation plan. Consolidated two months of decisions. | March 2026 reconciliation session |
 | 2026-03-08 | scrutinise-web/lib/mockData.ts | Expanded MockIdea interface with diagnosis, rootCause, guidingPolicy, research, history, endorsements, qualityFlags, targetLegislation, wordingLocked, version, proposedWording. Rewrote CoherentAction interface (title/description/proposedWording). Updated all 3 mock ideas with realistic content. Added MOCK_TRAINING (5 entries), MOCK_GROUPS (2 groups), expanded MOCK_NOTIFICATIONS to 8 entries. Added isOwnerReply and stance to Comment. | 2026-03-08 prototype build session |

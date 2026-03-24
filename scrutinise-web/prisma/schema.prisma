@@ -204,6 +204,19 @@ enum DraftChangeType {
   OWNER_EDIT
 }
 
+enum GeneratedOutputType {
+  MP_BRIEFING
+  ONE_PAGER
+  PRESS_RELEASE
+  SOCIAL_KIT
+}
+
+enum GeneratedOutputStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
 enum StageTransitionTrigger {
   AUTOMATIC
   MANUAL_OWNER
@@ -429,6 +442,7 @@ model Idea {
   ideaAlerts                IdeaAlert[]
   groups                    Group[]
   stageTransitionRequests   StageTransitionRequest[]
+  generatedOutputs          GeneratedOutput[]
   notifications             Notification[]
   activityLogs              ActivityLog[]
   aiUsageLogs               AIUsageLog[]
@@ -843,6 +857,25 @@ model IdeaAlert {
   @@unique([userId, ideaId, alertType])
   @@index([ideaId])
   @@index([userId])
+}
+
+model GeneratedOutput {
+  id            String                @id @default(cuid())
+  ideaId        String
+  idea          Idea                  @relation(fields: [ideaId], references: [id])
+  documentType  GeneratedOutputType
+  status        GeneratedOutputStatus @default(PENDING)
+  content       String?               // generated text (plain)
+  contentHtml   String?               // formatted HTML version
+  version       Int                   @default(1)
+  generatedAt   DateTime?
+  generatedBy   String?               // model identifier used
+  wordCount     Int?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@unique([ideaId, documentType])
+  @@index([ideaId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

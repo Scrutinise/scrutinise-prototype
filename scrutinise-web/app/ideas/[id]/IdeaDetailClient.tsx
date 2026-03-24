@@ -12,6 +12,7 @@ import VoteInterceptModal from '@/components/VoteInterceptModal'
 import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
 import AmendmentsTab from './AmendmentsTab'
+import CampaignTab from './CampaignTab'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1306,10 +1307,10 @@ function PrivacyLogTab({ ideaId }: { ideaId: string }) {
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team' | 'privacy-log'
+type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log'
 
 function isValidTab(t: string | null): t is Tab {
-  return ['overview', 'contributions', 'research', 'amendments', 'team', 'privacy-log'].includes(t ?? '')
+  return ['overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log'].includes(t ?? '')
 }
 
 export default function IdeaDetailClient({
@@ -1407,6 +1408,7 @@ export default function IdeaDetailClient({
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     { key: 'team', label: 'Team' },
+    ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
     ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log' }] : []),
   ]
 
@@ -1680,6 +1682,9 @@ export default function IdeaDetailClient({
             />
           )}
           {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} />}
+          {activeTab === 'campaign' && ['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
+            <CampaignTab ideaId={idea.id} isOwner={isOwner} />
+          )}
           {activeTab === 'privacy-log' && isOwner && (
             <PrivacyLogTab ideaId={idea.id} />
           )}

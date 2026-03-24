@@ -1,11 +1,11 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 23 March 2026 v10*
+*Last updated: 24 March 2026 v11*
 
 ---
 
 ## CURRENT STATE
 
-Sprint 6 complete. The live site at scrutinise.co.uk has:
+Sprint 8 complete. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
 - Stage 2→3 "Take Public" flow with warning modal and gate validation
 - Stage 3→4 "Begin Campaign" flow with gate checklist (12 reviews + avg quality 2.5) and warning modal
@@ -43,6 +43,10 @@ Sprint 6 complete. The live site at scrutinise.co.uk has:
 - PlatformConfig panel (3c, SUPER_ADMIN only): GET/PATCH /api/admin/config
 - Schema: added DraftsmanEndorsement.draftsmanName, organisation; made draftsmanUserId optional; added Idea.draftsmanEndorsementCount
 - Note: `prisma generate` must be run on next deploy/restart to resolve TypeScript types for new schema fields (as any casts used temporarily)
+- GeneratedOutput model + enums (GeneratedOutputType, GeneratedOutputStatus) added in Sprint 8
+- Campaign in a Box: four document types generated via Gemini 2.5 Flash, owner-only at Stage 4+
+- Campaign tab added to IdeaDetailClient (Stage 4/5 only)
+- Referral link injected into all four document prompts
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -86,6 +90,27 @@ Sprint 6 complete. The live site at scrutinise.co.uk has:
 | wireframes | v3 | ⚠️ Needs UX fixes logged |
 | UX_and_voice_build_notes.md | 13-03-26 | ✅ Incorporated into Sprint 2 build |
 | handoff_summary | v5 (23-03-26) | ✅ This file |
+
+---
+
+## SPRINT 8 — COMPLETE ✅
+
+| File | What it does |
+|------|-------------|
+| `prisma/schema.prisma` | GeneratedOutputType enum (MP_BRIEFING, ONE_PAGER, PRESS_RELEASE, SOCIAL_KIT), GeneratedOutputStatus enum (PENDING, COMPLETE, FAILED), GeneratedOutput model with @@unique([ideaId, documentType]); generatedOutputs relation on Idea |
+| `lib/campaign-prompts.ts` | Four prompt builder functions — each takes idea object + referral link, returns complete prompt string for Gemini |
+| `app/api/ideas/[id]/generate/route.ts` | POST — owner-only, Stage 4+ gate, Zod validated body {documentType, force?}, Gemini 2.5 Flash call, upsert PENDING→COMPLETE/FAILED, force-regenerate support |
+| `app/api/ideas/[id]/campaign-outputs/route.ts` | GET — owner-only, returns all GeneratedOutput records with 200-char preview |
+| `app/ideas/[id]/CampaignTab.tsx` | Four document cards (MP Briefing, One Pager, Press Release, Social Kit), generate/regenerate, 3s polling while PENDING, copy to clipboard, download .txt, regenerate confirmation, non-owner locked message |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Campaign tab added to Tab type + isValidTab + tabs array (Stage 4/5) + tab panel |
+
+### Not built in Sprint 8 (deferred per spec)
+
+- PDF download (R2 not wired for this use case)
+- Email distribution of generated documents
+- Sharing generated documents with collaborators
+- Credibility calculation
+- Endorsement verification
 
 ---
 
@@ -280,6 +305,10 @@ Carried from Sprint 1:
 | app/api/ideas/[id]/endorsements/route.ts | ✅ GET + POST endorse/below-standard |
 | app/api/ideas/[id]/endorsements/[endorsementId]/route.ts | ✅ DELETE withdraw |
 | app/api/ideas/[id]/progress/route.ts | ✅ Stage 2→3 + Stage 3→4 + Stage 4→5 |
+| app/api/ideas/[id]/generate/route.ts | ✅ POST generation (owner, Stage 4+, Gemini 2.5 Flash) |
+| app/api/ideas/[id]/campaign-outputs/route.ts | ✅ GET outputs list (owner-only) |
+| app/ideas/[id]/CampaignTab.tsx | ✅ Four document cards + generate/download/copy |
+| lib/campaign-prompts.ts | ✅ Four prompt builders (MP Briefing, One Pager, Press Release, Social Kit) |
 | app/api/ideas/[id]/groups/route.ts | ✅ GET + POST idea-scoped groups |
 | app/api/ideas/[id]/groups/[groupId]/members/route.ts | ✅ POST add member |
 | app/api/ideas/[id]/groups/[groupId]/members/[userId]/route.ts | ✅ DELETE remove member |
@@ -327,24 +356,26 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
-Sprint 7 complete. All three priorities delivered:
-  1. DraftsmanEndorsement form UI ✅
-  2. Privacy Log UI ✅
-  3. Admin panel ✅ (reports, users, platform config)
+Sprint 8 complete. Campaign in a Box delivered:
+  1. GeneratedOutput schema (db push + generate done) ✅
+  2. lib/campaign-prompts.ts (4 document type builders) ✅
+  3. POST /api/ideas/[id]/generate (Gemini 2.5 Flash) ✅
+  4. GET /api/ideas/[id]/campaign-outputs ✅
+  5. CampaignTab.tsx (generate/poll/copy/download) ✅
+  6. Campaign tab wired into IdeaDetailClient (Stage 4/5) ✅
 
 Run git status before touching any code. Confirm on Main.
 
 Deferred (do not build without explicit instruction):
+- PDF download of generated documents (R2 not wired)
+- Email distribution of generated documents
+- Sharing generated documents with collaborators
 - Credibility calculation
 - Endorsement verification (MP/Peer badge confirmation)
 - Fundraising
 - StageTransitionRequest veto logic
-
-Note on Prisma generate: new schema fields (draftsmanName,
-organisation, draftsmanEndorsementCount) use `as any` casts
-in two route files. Run `npx prisma generate` once on deploy/
-restart to fully resolve types.
+- Legislation database (separate post-holiday project)
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 23 March 2026 v10*
+*handoff_summary.md — Scrutinise — 24 March 2026 v11*
