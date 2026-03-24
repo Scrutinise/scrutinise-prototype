@@ -17,22 +17,35 @@ export default async function UnsubscribePage({ params }: Props) {
   const { token } = await params
 
   let email: string
-  try {
-    email = Buffer.from(token, 'base64').toString('utf-8')
-    // Basic sanity check
-    if (!email.includes('@')) throw new Error('Invalid')
-  } catch {
-    return (
-      <Layout>
-        <h1 className="text-lg font-semibold text-zinc-900 mb-2">Invalid link</h1>
-        <p className="text-sm text-zinc-600 mb-4">
-          This unsubscribe link is invalid.
-        </p>
-        <Link href="/" className="text-sm font-medium text-zinc-900 underline underline-offset-2">
-          Back to Scrutinise
-        </Link>
-      </Layout>
-    )
+
+  // First: try UUID token lookup (new-style unsubscribeToken)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userByToken = await (prisma.user.findUnique as any)({
+    where: { unsubscribeToken: token },
+    select: { email: true },
+  }).catch(() => null) as { email: string } | null
+
+  if (userByToken) {
+    email = userByToken.email
+  } else {
+    // Fallback: base64-encoded email (legacy invite emails)
+    try {
+      const decoded = Buffer.from(token, 'base64').toString('utf-8')
+      if (!decoded.includes('@')) throw new Error('Invalid')
+      email = decoded
+    } catch {
+      return (
+        <Layout>
+          <h1 className="text-lg font-semibold text-zinc-900 mb-2">Invalid link</h1>
+          <p className="text-sm text-zinc-600 mb-4">
+            This unsubscribe link is invalid.
+          </p>
+          <Link href="/" className="text-sm font-medium text-zinc-900 underline underline-offset-2">
+            Back to Scrutinise
+          </Link>
+        </Layout>
+      )
+    }
   }
 
   // Upsert into EmailSuppression (idempotent)

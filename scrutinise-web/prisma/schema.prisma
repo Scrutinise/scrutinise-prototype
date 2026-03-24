@@ -302,6 +302,10 @@ model User {
   referredByUserId          String?
   referredBy                User?               @relation("Referrals", fields: [referredByUserId], references: [id])
   referredUsers             User[]              @relation("Referrals")
+  // GDPR / account deletion
+  deletionRequestedAt       DateTime?
+  deletionScheduledFor      DateTime?
+  unsubscribeToken          String              @unique @default(uuid())
   // Meta
   country                   String?             @default("GB")
   joinDate                  DateTime            @default(now())

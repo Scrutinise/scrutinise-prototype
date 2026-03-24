@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /ideas/
+Allow: /user/
+Disallow: /admin/
+Disallow: /onboarding/
+Disallow: /api/
+Disallow: /prototype/
+Disallow: /settings/
+Disallow: /dashboard/
+
+Sitemap: https://scrutinise.co.uk/sitemap.xml

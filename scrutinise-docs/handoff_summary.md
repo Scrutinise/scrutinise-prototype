@@ -1,11 +1,11 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 24 March 2026 v11*
+*Last updated: 24 March 2026 v12*
 
 ---
 
-## CURRENT STATE
+## CURRENT STATE — V1 COMPLETE ✅
 
-Sprint 8 complete. The live site at scrutinise.co.uk has:
+Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
 - Stage 2→3 "Take Public" flow with warning modal and gate validation
 - Stage 3→4 "Begin Campaign" flow with gate checklist (12 reviews + avg quality 2.5) and warning modal
@@ -47,6 +47,28 @@ Sprint 8 complete. The live site at scrutinise.co.uk has:
 - Campaign in a Box: four document types generated via Gemini 2.5 Flash, owner-only at Stage 4+
 - Campaign tab added to IdeaDetailClient (Stage 4/5 only)
 - Referral link injected into all four document prompts
+
+- Nav links updated to real routes (no /prototype/ links remain)
+- Global error boundary (error.tsx) + 404 page (not-found.tsx)
+- Loading skeletons (global + per-route for ideas/[id], user/[username], admin)
+- Dynamic OG metadata on idea detail and user profile pages
+- robots.txt + dynamic sitemap.xml
+- Legal pages: Version 1.0 — Draft label on Terms + Community Rules
+- GDPR: POST /api/user/export (data download), DELETE /api/user/account (30-day grace deletion)
+- GDPR: lib/gdpr.ts anonymiseExpiredAccounts() stub
+- Settings page at /settings (account details, export, delete, notifications placeholder)
+- Deletion cancellation on login (DELETION_PENDING → ACTIVE)
+- Unsubscribe page updated to support UUID token and base64 legacy token
+- Real dashboard at /dashboard (ideas, notifications, stats)
+- All console.log removed from production code
+- New schema fields: User.deletionRequestedAt, User.deletionScheduledFor, User.unsubscribeToken
+- Priorities 8 (Sentry) and 9 (GA4) skipped — env vars not yet set in Vercel
+
+**IMPORTANT — BEFORE NEXT DEPLOY:**
+- Run `npx prisma db push` to apply new User schema fields to Railway DB
+- Run `npx prisma generate` to update TypeScript client types
+- Remove `as any` casts in: lib/auth.ts, lib/gdpr.ts, app/api/user/account/route.ts, app/unsubscribe/[token]/page.tsx
+- Add to Vercel: SENTRY_DSN (Priority 8) and NEXT_PUBLIC_GA4_MEASUREMENT_ID (Priority 9), then redeploy
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -90,6 +112,41 @@ Sprint 8 complete. The live site at scrutinise.co.uk has:
 | wireframes | v3 | ⚠️ Needs UX fixes logged |
 | UX_and_voice_build_notes.md | 13-03-26 | ✅ Incorporated into Sprint 2 build |
 | handoff_summary | v5 (23-03-26) | ✅ This file |
+
+---
+
+## SPRINT 9 — COMPLETE ✅ (V1 LAUNCH SPRINT)
+
+| File | What it does |
+|------|-------------|
+| `components/PublicNav.tsx` | /prototype/* links replaced with /ideas/create, /ideas, /dashboard. "Profile" → "Dashboard" |
+| `app/layout.tsx` | signInFallbackRedirectUrl → /dashboard; full Metadata export (title template, description, OG) |
+| `app/error.tsx` | Global error boundary — "Something went wrong" + Try again button |
+| `app/not-found.tsx` | 404 page with home link |
+| `app/loading.tsx` | Global spinner loading skeleton |
+| `app/ideas/[id]/loading.tsx` | Idea detail loading skeleton |
+| `app/user/[username]/loading.tsx` | Profile loading skeleton |
+| `app/admin/loading.tsx` | Admin loading skeleton |
+| `app/ideas/[id]/page.tsx` | generateMetadata: dynamic OG for Stage 3+ public ideas |
+| `app/user/[username]/page.tsx` | generateMetadata: user name + bio |
+| `app/terms/page.tsx` | Version 1.0 — Draft label |
+| `app/community-rules/page.tsx` | Version 1.0 — Draft label |
+| `public/robots.txt` | SEO crawl rules |
+| `app/sitemap.ts` | Dynamic sitemap: static pages + Stage 4+ ideas + public profiles |
+| `app/api/user/export/route.ts` | POST data export (rate limited 1/24h) — returns JSON; R2 upload stubbed |
+| `app/api/user/account/route.ts` | DELETE account — DELETION_PENDING + 30-day scheduled; confirmation email |
+| `app/settings/page.tsx` | Account details, data export, delete account, notifications placeholder |
+| `app/dashboard/page.tsx` | Real dashboard: ideas, notifications, quick stats, Create button |
+| `lib/gdpr.ts` | anonymiseExpiredAccounts() stub for scheduled job |
+| `lib/auth.ts` | Deletion cancellation on login + console.log removed |
+| `middleware.ts` | /dashboard + /settings added to protected routes |
+| `app/unsubscribe/[token]/page.tsx` | UUID token support added (legacy base64 preserved) |
+| `app/api/webhooks/clerk/route.ts` | console.log removed |
+| `prisma/schema.prisma` | User: deletionRequestedAt DateTime?, deletionScheduledFor DateTime?, unsubscribeToken String @unique @default(uuid()) |
+
+### Skipped (env vars not set in Vercel)
+- Priority 8: Sentry — add SENTRY_DSN to Vercel, then run `npx @sentry/wizard@latest -i nextjs`
+- Priority 9: GA4 — add NEXT_PUBLIC_GA4_MEASUREMENT_ID to Vercel
 
 ---
 
@@ -356,6 +413,40 @@ Carried from Sprint 1:
 
 ```
 Read CLAUDE.md and this handoff_summary.md first.
+V1 COMPLETE — Sprint 9 delivered all pre-launch priorities.
+
+BEFORE STARTING ANY CODE:
+1. Run: npx prisma db push (apply User GDPR fields to Railway DB)
+2. Run: npx prisma generate (update TypeScript types)
+3. Remove all `as any` casts added in Sprint 9 (see IMPORTANT note in CURRENT STATE)
+4. Check Vercel for SENTRY_DSN and NEXT_PUBLIC_GA4_MEASUREMENT_ID — add both and trigger redeploy to enable Priorities 8 and 9.
+
+Sprint 9 complete. All pre-launch priorities delivered:
+  1. Prototype link audit — all /prototype/* links replaced in nav + layout ✅
+  2. Error boundaries (error.tsx, not-found.tsx) ✅
+  3. Loading skeletons (global + route-level) ✅
+  4. Dynamic SEO metadata + robots.txt + sitemap.ts ✅
+  5. Legal pages verified (Version 1.0 — Draft) ✅
+  6. GDPR data export + account deletion (30-day grace) ✅
+  7. Settings page + real dashboard ✅
+  8. Sentry — SKIPPED (no SENTRY_DSN in Vercel)
+  9. GA4 — SKIPPED (no NEXT_PUBLIC_GA4_MEASUREMENT_ID in Vercel)
+
+Deferred (do not build without explicit instruction):
+- PDF download of generated documents (R2 not wired)
+- Email distribution of generated documents
+- Credibility calculation
+- Endorsement verification (MP/Peer badge confirmation)
+- Fundraising
+- StageTransitionRequest veto logic
+- Legislation database (separate post-holiday project)
+- lib/gdpr.ts anonymiseExpiredAccounts() scheduler (Railway/Vercel cron)
+```
+
+## PREVIOUS SESSION START (SPRINT 8)
+
+```
+Read CLAUDE.md and this handoff_summary.md first.
 Sprint 8 complete. Campaign in a Box delivered:
   1. GeneratedOutput schema (db push + generate done) ✅
   2. lib/campaign-prompts.ts (4 document type builders) ✅
@@ -378,4 +469,4 @@ Deferred (do not build without explicit instruction):
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 24 March 2026 v11*
+*handoff_summary.md — Scrutinise — 24 March 2026 v12*

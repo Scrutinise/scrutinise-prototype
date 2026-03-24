@@ -4,9 +4,44 @@ import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import IdeaDetailClient from './IdeaDetailClient'
 import { getStage3GateData, getStage4GateData } from '@/lib/stage-gates'
+import type { Metadata } from 'next'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+const PRIVATE_METADATA: Metadata = {
+  title: 'Scrutinise — Policy Development Platform',
+  description: 'A not-for-profit platform helping citizens develop policy ideas into Parliament-ready legislation.',
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const idea = await prisma.idea.findUnique({
+    where: { id },
+    select: { title: true, summaryDescription: true, stage: true, visibility: true },
+  })
+  if (!idea) return PRIVATE_METADATA
+  const isPublic = ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) &&
+    ['LINK_ONLY', 'PLATFORM_LISTED'].includes(idea.visibility)
+  if (!isPublic) return PRIVATE_METADATA
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://scrutinise.co.uk'
+  const description = idea.summaryDescription ?? 'A policy idea developed on Scrutinise.'
+  return {
+    title: idea.title,
+    description,
+    openGraph: {
+      title: idea.title,
+      description,
+      url: `${appUrl}/ideas/${id}`,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: idea.title,
+      description,
+    },
+  }
 }
 
 export default async function IdeaDetailPage({ params }: Props) {

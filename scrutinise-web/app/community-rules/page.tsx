@@ -61,7 +61,7 @@ export default function CommunityRulesPage() {
         </div>
 
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Community Rules</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: March 2026 (draft)</p>
+        <p className="mt-2 text-sm text-muted-foreground">Version 1.0 — Draft · Last updated: March 2026</p>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
           These rules apply to everyone who uses Scrutinise — citizens, policy professionals, elected representatives, and administrators alike. They exist to protect the integrity of the Platform and the people who use it in good faith.
         </p>

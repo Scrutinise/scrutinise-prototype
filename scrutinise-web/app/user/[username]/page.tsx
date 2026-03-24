@@ -2,9 +2,23 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
+import type { Metadata } from 'next'
 
 interface Props {
   params: Promise<{ username: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: { name: true, bio: true },
+  })
+  if (!user) return {}
+  return {
+    title: user.name ?? username,
+    description: user.bio ?? 'Policy developer on Scrutinise.',
+  }
 }
 
 const STAGE_LABELS: Record<string, string> = {

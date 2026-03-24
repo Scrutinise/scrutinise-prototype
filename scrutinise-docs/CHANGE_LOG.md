@@ -27,6 +27,30 @@
 
 | Date Applied | Document | Change Made | Originally Decided |
 |-------------|----------|-------------|-------------------|
+| 2026-03-24 | schema.prisma | Added User fields: deletionRequestedAt DateTime?, deletionScheduledFor DateTime?, unsubscribeToken String @unique @default(uuid()) | Sprint 9 GDPR |
+| 2026-03-24 | components/PublicNav.tsx | Replaced all /prototype/* nav links with real routes (/ideas/create, /ideas, /dashboard). Updated "Profile" button label to "Dashboard". | Sprint 9 Priority 1 |
+| 2026-03-24 | app/layout.tsx | Updated signInFallbackRedirectUrl from /prototype/dashboard to /dashboard. Added full Metadata export (title template, description, metadataBase, OpenGraph). | Sprint 9 Priority 1 + 3a |
+| 2026-03-24 | app/error.tsx | New: global error boundary — "Something went wrong" + Try again button + home link. No stack traces exposed. | Sprint 9 Priority 2b |
+| 2026-03-24 | app/not-found.tsx | New: 404 page — clean, links to homepage. | Sprint 9 Priority 2b |
+| 2026-03-24 | app/loading.tsx | New: global loading skeleton (spinner + "Loading…"). | Sprint 9 Priority 2c |
+| 2026-03-24 | app/ideas/[id]/loading.tsx | New: route-level loading skeleton for idea detail page. | Sprint 9 Priority 2c |
+| 2026-03-24 | app/user/[username]/loading.tsx | New: route-level loading skeleton for public profile page. | Sprint 9 Priority 2c |
+| 2026-03-24 | app/admin/loading.tsx | New: route-level loading skeleton for admin panel. | Sprint 9 Priority 2c |
+| 2026-03-24 | app/ideas/[id]/page.tsx | Added generateMetadata: Stage 3+ public ideas get dynamic title/description/OG/twitter. Private/early-stage ideas return generic metadata. | Sprint 9 Priority 3a |
+| 2026-03-24 | app/user/[username]/page.tsx | Added generateMetadata: returns user name and bio as page title/description. | Sprint 9 Priority 3a |
+| 2026-03-24 | app/terms/page.tsx | Updated version label to "Version 1.0 — Draft · Last updated: March 2026". | Sprint 9 Priority 4 |
+| 2026-03-24 | app/community-rules/page.tsx | Updated version label to "Version 1.0 — Draft · Last updated: March 2026". | Sprint 9 Priority 4 |
+| 2026-03-24 | public/robots.txt | New: robots.txt allowing /ideas/ /user/ but blocking /admin/ /api/ /prototype/ /settings/ /dashboard/. Sitemap pointer. | Sprint 9 Priority 3b |
+| 2026-03-24 | app/sitemap.ts | New: dynamic sitemap returning static pages + all Stage 4+ PLATFORM_LISTED ideas + public user profiles with Stage 3+ ideas. | Sprint 9 Priority 3c |
+| 2026-03-24 | app/api/user/export/route.ts | New: POST owner-only data export (user, ideas, contributions, votes, research, amendments). Rate limited 1/24h. Returns JSON directly (R2 stub for future). | Sprint 9 Priority 5a |
+| 2026-03-24 | app/api/user/account/route.ts | New: DELETE account deletion request. Sets DELETION_PENDING + 30-day grace period. Sends confirmation email if RESEND_API_KEY set. | Sprint 9 Priority 5b |
+| 2026-03-24 | lib/auth.ts | Added deletion cancellation: if user logs in while DELETION_PENDING, restores to ACTIVE and clears deletion dates. Removed console.log. | Sprint 9 Priority 5b |
+| 2026-03-24 | lib/gdpr.ts | New stub: anonymiseExpiredAccounts() — finds DELETION_PENDING users where deletionScheduledFor < now, anonymises PII, sets status DELETED. | Sprint 9 Priority 5b |
+| 2026-03-24 | app/settings/page.tsx | New client page: Account details, Download your data button, Delete account button + confirmation modal, Notification preferences placeholder. | Sprint 9 Priority 5c |
+| 2026-03-24 | app/unsubscribe/[token]/page.tsx | Updated to support both UUID token (new-style) and base64-encoded email (legacy). UUID token looks up unsubscribeToken field; base64 falls back to existing behaviour. | Sprint 9 Priority 6b |
+| 2026-03-24 | app/dashboard/page.tsx | New server page: user's ideas as cards (all stages, most recent first), notifications (last 10), quick stats (ideas, contributions, credibility score), Create new idea button. | Sprint 9 Priority 7 |
+| 2026-03-24 | middleware.ts | Added /dashboard(.*) and /settings(.*) to protected routes. | Sprint 9 Priority 5c/7 |
+| 2026-03-24 | api/webhooks/clerk/route.ts | Removed console.log. | Sprint 9 Priority 2a |
 | 2026-03-24 | schema.prisma | Added GeneratedOutputType enum (MP_BRIEFING, ONE_PAGER, PRESS_RELEASE, SOCIAL_KIT), GeneratedOutputStatus enum (PENDING, COMPLETE, FAILED), GeneratedOutput model with @@unique([ideaId, documentType]); added generatedOutputs relation to Idea | Sprint 8 Campaign in a Box |
 | 2026-03-24 | lib/campaign-prompts.ts | New module: four prompt builder functions (buildMpBriefingPrompt, buildOnePagerPrompt, buildPressReleasePrompt, buildSocialKitPrompt) — each injects referral link | Sprint 8 Campaign in a Box |
 | 2026-03-24 | app/api/ideas/[id]/generate/route.ts | POST — owner-only, Stage 4+ gate, Zod body, Gemini 2.5 Flash call, PENDING→COMPLETE/FAILED upsert, force-regenerate support | Sprint 8 Campaign in a Box |

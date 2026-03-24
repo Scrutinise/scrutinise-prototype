@@ -82,7 +82,7 @@ export async function POST(req: Request) {
   const rulesAgreed = (unsafe_metadata?.rulesAgreed as boolean | undefined) === true
   const now = new Date()
 
-  console.log(`[webhook] user.created: clerkId=${clerkId} email=${primaryEmail} username=${username ?? '(null)'} → db username=${uniqueUsername}`)
+  // webhook received — user.created event
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -119,7 +119,6 @@ export async function POST(req: Request) {
       return newUser
     })
 
-    console.log(`[webhook] User created: ${user.id} (${user.email}) username=${user.username}`)
     return NextResponse.json({ userId: user.id })
   } catch (err) {
     console.error('[webhook] user creation failed —', {

@@ -20,7 +20,6 @@ export async function getAuthenticatedUser() {
 
   if (!dbUser) {
     // JIT user sync — webhook may not have fired yet; create User from Clerk data
-    console.log(`[auth] User ${clerkUserId} not in DB — attempting JIT sync from Clerk`)
     try {
       const client = await clerkClient()
       const clerkUser = await client.users.getUser(clerkUserId)
@@ -61,11 +60,19 @@ export async function getAuthenticatedUser() {
         return newUser
       })
 
-      console.log(`[auth] JIT sync: created User ${dbUser.id} for clerkId ${clerkUserId}`)
     } catch (err) {
       console.error(`[auth] JIT sync failed for clerkId ${clerkUserId}:`, err)
       return { error: NextResponse.json({ error: 'User not found' }, { status: 404 }), user: null }
     }
+  }
+
+  // Cancellation: if user logs in while DELETION_PENDING, restore account
+  if (dbUser && dbUser.status === 'DELETION_PENDING') {
+    dbUser = await prisma.user.update({
+      where: { id: dbUser.id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { status: 'ACTIVE', deletionRequestedAt: null, deletionScheduledFor: null } as any,
+    })
   }
 
   return { error: null, user: dbUser }
