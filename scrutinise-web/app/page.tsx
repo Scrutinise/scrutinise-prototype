@@ -1,20 +1,21 @@
 "use client"
 
+import React from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import PublicNav from "@/components/PublicNav"
 
-const stages = [
+const stages: { number: number; name: string; description: React.ReactNode }[] = [
   {
     number: 1,
     name: "Create",
-    description: "Define your idea with AI guidance from Lex",
+    description: <>Define your idea with<br />AI guidance from Lex</>,
   },
   {
     number: 2,
     name: "Draft",
-    description: "Build out your idea with a small trusted team",
+    description: <>Build out your idea with<br />a small trusted team</>,
   },
   {
     number: 3,
@@ -24,12 +25,12 @@ const stages = [
   {
     number: 4,
     name: "Campaign",
-    description: "Campaign for votes and support",
+    description: <>Campaign for votes<br />and support</>,
   },
   {
     number: 5,
     name: "Legislate",
-    description: "The Parliamentary Process",
+    description: <>The Parliamentary<br />Process</>,
   },
 ]
 
@@ -101,7 +102,7 @@ export default function HomePage() {
         <section className="border-t border-border bg-gray-50">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
-              If you&apos;re serious about wanting better legislation
+              If you&apos;re serious about wanting a better-run country
             </h2>
             <div className="grid gap-6 sm:grid-cols-3">
               <div className="rounded-lg bg-white p-6 shadow-sm">
@@ -139,7 +140,7 @@ export default function HomePage() {
         <section className="border-t border-border bg-gray-50">
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-xl font-semibold tracking-tight sm:text-2xl">
-              Calm &amp; Fast in the Chaos
+              Stay calm and move quickly through the chaos
             </h2>
             <video
               src="https://pub-74d3bbbcb050497b8a69f8c0045bb893.r2.dev/Grok_Parliament_Ready_video.mp4"
@@ -160,11 +161,10 @@ export default function HomePage() {
             </h2>
             <ul className="mt-4 space-y-2 sm:mt-6">
               {[
-                "Build a policy portfolio that positions you for power",
                 "Your own team of trained researchers at no cost",
+                "Build a policy portfolio that positions you for power",
                 "Mentor candidates into legislators-in-waiting",
                 "Battle-test and strengthen your policy positions",
-                "Reclaim control from the bureaucracy",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
