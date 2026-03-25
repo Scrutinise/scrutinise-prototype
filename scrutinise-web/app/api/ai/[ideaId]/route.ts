@@ -69,7 +69,7 @@ RH SIDEBAR FIELDS (the seven completion markers):
 6. Evidence Base (research)
 7. Proposed Wording (proposedWording)
 
-TRIGGER SAVE PROMPT: When diagnosis, guidingPolicy, and at least one coherentAction are populated for the first time in a session, add "triggerSavePrompt": true to the JSON block.`
+TRIGGER SAVE PROMPT: When diagnosis AND guidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block. Do NOT require coherentAction as a condition.`
 }
 
 // Map stage enum to human-readable label
@@ -329,9 +329,13 @@ export async function POST(req: Request, { params }: Params) {
     proposedWording: !!latest?.proposedWording,
   }
 
+  // Compute triggerSavePrompt server-side so it fires even when the AI omits the flag.
+  // Condition: diagnosis and guidingPolicy are both populated (fields Lex can set directly).
+  const serverTrigger = !!(latest?.diagnosis && latest?.guidingPolicy)
+
   return NextResponse.json({
     response: visibleResponse,
-    triggerSavePrompt,
+    triggerSavePrompt: triggerSavePrompt || serverTrigger,
     completedFields,
     // fieldUpdates deliberately NOT returned to client (security requirement)
   })
