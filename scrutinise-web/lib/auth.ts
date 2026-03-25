@@ -18,6 +18,30 @@ export async function getAuthenticatedUser() {
 
   let dbUser = await prisma.user.findUnique({ where: { clerkId: clerkUserId } })
 
+  // Name sync on login: if the user exists, refresh name from Clerk in the background.
+  // This corrects any mismatch between the stored name and the current Clerk profile.
+  if (dbUser) {
+    const storedFirst = dbUser.firstName
+    const storedLast = dbUser.lastName
+    void (async () => {
+      try {
+        const client = await clerkClient()
+        const clerkUser = await client.users.getUser(clerkUserId)
+        const freshFirst = clerkUser.firstName ?? storedFirst
+        const freshLast = clerkUser.lastName ?? storedLast
+        if (freshFirst !== storedFirst || freshLast !== storedLast) {
+          const freshName = [freshFirst, freshLast].filter(Boolean).join(' ')
+          await prisma.user.update({
+            where: { clerkId: clerkUserId },
+            data: { firstName: freshFirst, lastName: freshLast, name: freshName },
+          })
+        }
+      } catch {
+        // silent — best-effort sync
+      }
+    })()
+  }
+
   if (!dbUser) {
     // JIT user sync — webhook may not have fired yet; create User from Clerk data
     try {

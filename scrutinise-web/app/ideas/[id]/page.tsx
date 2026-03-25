@@ -70,8 +70,13 @@ export default async function IdeaDetailPage({ params }: Props) {
 
   if (!idea) notFound()
 
-  // PRIVATE ideas require auth + ownership/collaboration
-  if (idea.visibility === 'PRIVATE') {
+  // Ideas are publicly accessible only at Stage 3+ with LINK_ONLY or PLATFORM_LISTED visibility.
+  // Stage 1 and Stage 2 ideas are always private regardless of the visibility field.
+  const isPubliclyAccessible =
+    ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) &&
+    ['LINK_ONLY', 'PLATFORM_LISTED'].includes(idea.visibility)
+
+  if (!isPubliclyAccessible) {
     if (!clerkUserId) {
       redirect(`/sign-in?redirect_url=/ideas/${id}`)
     }

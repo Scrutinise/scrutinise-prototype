@@ -7,8 +7,8 @@ import crypto from 'crypto'
 // Clerk sends webhooks using svix — install: npm install svix
 // CLERK_WEBHOOK_SECRET must be set in Vercel env vars
 
-interface ClerkUserCreatedEvent {
-  type: 'user.created'
+interface ClerkUserEvent {
+  type: 'user.created' | 'user.updated'
   data: {
     id: string
     email_addresses: Array<{ email_address: string; verification: { status: string } }>
@@ -39,23 +39,44 @@ export async function POST(req: Request) {
 
   const payload = await req.text()
 
-  let event: ClerkUserCreatedEvent
+  let event: ClerkUserEvent
   try {
     const wh = new Webhook(WEBHOOK_SECRET)
     event = wh.verify(payload, {
       'svix-id': svixId,
       'svix-timestamp': svixTimestamp,
       'svix-signature': svixSignature,
-    }) as ClerkUserCreatedEvent
+    }) as ClerkUserEvent
   } catch {
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 })
   }
 
-  if (event.type !== 'user.created') {
+  if (event.type !== 'user.created' && event.type !== 'user.updated') {
     return NextResponse.json({ received: true })
   }
 
   const { id: clerkId, email_addresses, first_name, last_name, username, unsafe_metadata } = event.data
+
+  const firstName = first_name ?? 'User'
+  const lastName = last_name ?? ''
+  const fullName = [firstName, lastName].filter(Boolean).join(' ')
+
+  // user.updated — sync name fields only
+  if (event.type === 'user.updated') {
+    try {
+      await prisma.user.updateMany({
+        where: { clerkId },
+        data: { firstName, lastName, name: fullName },
+      })
+      return NextResponse.json({ updated: true })
+    } catch (err) {
+      console.error('[webhook] user.updated name sync failed —', {
+        clerkId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+  }
 
   const primaryEmail = email_addresses.find(e => e.verification.status === 'verified')?.email_address
     ?? email_addresses[0]?.email_address
@@ -63,10 +84,6 @@ export async function POST(req: Request) {
   if (!primaryEmail) {
     return NextResponse.json({ error: 'No email found' }, { status: 400 })
   }
-
-  const firstName = first_name ?? 'User'
-  const lastName = last_name ?? ''
-  const fullName = [firstName, lastName].filter(Boolean).join(' ')
 
   // Username: Clerk may send null — always generate a unique fallback.
   // Matches the JIT sync pattern in lib/auth.ts exactly.
