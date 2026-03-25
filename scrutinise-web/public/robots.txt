@@ -9,4 +9,4 @@ Disallow: /prototype/
 Disallow: /settings/
 Disallow: /dashboard/
 
-Sitemap: https://scrutinise.co.uk/sitemap.xml
+Sitemap: https://www.scrutinise.org/sitemap.xml
