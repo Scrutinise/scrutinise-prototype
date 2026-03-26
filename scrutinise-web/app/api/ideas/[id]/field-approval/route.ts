@@ -34,6 +34,7 @@ async function buildCompletedFields(ideaId: string) {
   const latest = await prisma.idea.findUnique({
     where: { id: ideaId },
     select: {
+      title: true,
       diagnosis: true,
       rootCause: true,
       guidingPolicy: true,
@@ -43,17 +44,16 @@ async function buildCompletedFields(ideaId: string) {
       whoAffected: true,
       proposedWording: true,
       coherentActions: { select: { id: true } },
-      research: { select: { id: true } },
     },
   })
 
   return {
-    diagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
+    title: !!latest?.title,
+    summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
     rootCause: !!latest?.rootCause,
-    guidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
-    coherentActions: (latest?.coherentActions.length ?? 0) > 0 || !!latest?.summaryCoherentActions?.trim(),
+    summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
+    summaryCoherentActions: (latest?.coherentActions.length ?? 0) > 0 || !!latest?.summaryCoherentActions?.trim(),
     whoAffected: !!latest?.whoAffected,
-    research: (latest?.research.length ?? 0) > 0,
     proposedWording: !!latest?.proposedWording,
   }
 }

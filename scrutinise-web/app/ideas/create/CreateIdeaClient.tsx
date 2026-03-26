@@ -25,12 +25,12 @@ interface ChatMessage {
 }
 
 interface FieldCompletion {
-  diagnosis: boolean
+  title: boolean
+  summaryDiagnosis: boolean
   rootCause: boolean
-  guidingPolicy: boolean
-  coherentActions: boolean
+  summaryGuidingPolicy: boolean
+  summaryCoherentActions: boolean
   whoAffected: boolean
-  research: boolean
   proposedWording: boolean
 }
 
@@ -45,30 +45,31 @@ interface Props {
 const DEFAULT_OPENING_MESSAGE = "I'm Lex, your researcher and guide. What's the challenge you want to fix?"
 
 const SIDEBAR_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
-  { key: 'diagnosis',       label: "What's the Challenge?" },
-  { key: 'rootCause',       label: "What's Causing It?" },
-  { key: 'guidingPolicy',   label: "How Will We Solve It?" },
-  { key: 'coherentActions', label: "A Practical Step" },
-  { key: 'whoAffected',     label: "Who's Affected?" },
-  { key: 'research',        label: "Evidence Base" },
-  { key: 'proposedWording', label: "Proposed Wording" },
+  { key: 'title',                  label: 'Title' },
+  { key: 'summaryDiagnosis',       label: "What's the Challenge?" },
+  { key: 'rootCause',              label: "What's Causing It?" },
+  { key: 'summaryGuidingPolicy',   label: 'How Will We Solve It?' },
+  { key: 'summaryCoherentActions', label: 'A Practical Step' },
+  { key: 'whoAffected',            label: "Who's Affected?" },
+  { key: 'proposedWording',        label: 'Proposed Wording' },
 ]
 
 const EMPTY_FIELDS: FieldCompletion = {
-  diagnosis: false, rootCause: false, guidingPolicy: false,
-  coherentActions: false, whoAffected: false, research: false, proposedWording: false,
+  title: false, summaryDiagnosis: false, rootCause: false,
+  summaryGuidingPolicy: false, summaryCoherentActions: false,
+  whoAffected: false, proposedWording: false,
 }
 
 // Progress map per UX notes Section 4 / lex_system_prompt_v5 Section 18
 function calcProgress(userMsgCount: number, fields: FieldCompletion): number {
-  const { diagnosis, rootCause, guidingPolicy, coherentActions, whoAffected } = fields
-  const allCore = diagnosis && rootCause && guidingPolicy && coherentActions && whoAffected
-  if (allCore)           return 90
-  if (coherentActions)   return 75
-  if (guidingPolicy)     return 60
-  if (diagnosis)         return 45
-  if (userMsgCount >= 2) return 30
-  if (userMsgCount >= 1) return 20
+  const { summaryDiagnosis, rootCause, summaryGuidingPolicy, summaryCoherentActions, whoAffected } = fields
+  const allCore = summaryDiagnosis && rootCause && summaryGuidingPolicy && summaryCoherentActions && whoAffected
+  if (allCore)                    return 90
+  if (summaryCoherentActions)     return 75
+  if (summaryGuidingPolicy)       return 60
+  if (summaryDiagnosis)           return 45
+  if (userMsgCount >= 2)          return 30
+  if (userMsgCount >= 1)          return 20
   return 0
 }
 
