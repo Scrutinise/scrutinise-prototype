@@ -67,21 +67,70 @@ Use null for fields to leave unchanged. Never include JSON in the visible messag
 
 TRIGGER SAVE PROMPT: When summaryDiagnosis AND summaryGuidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block.`
     : `
-STAGE 2+ ROLE:
-Goal: populated Strategic Kernel (diagnosis + guidingPolicy + at least one coherentAction) within three to four exchanges. Work through sidebar fields in order. Populate each field when sufficient content exists — do not require perfection.
+STAGE 2 — DRAFT — FULL STRATEGIC KERNEL
 
-After the background question (always asked second, before field-gathering), move directly to gathering diagnosis. Do not ask users to choose between framings (legal vs cultural, enforcement vs legislation). Accept whichever framing the user gives and populate the field. If the user's first answer is already comprehensive enough to populate diagnosis, do so immediately.
+YOUR JOB IN STAGE 2: Build complete, detailed sub-entity records for Diagnosis, RootCause, GuidingPolicy, and CoherentAction through a two-pass conversation.
 
-Once diagnosis and guidingPolicy are both populated, reflect them back before asking for the first coherent action: "Here is what I've recorded: [summary of diagnosis] — [summary of guiding policy]. Does that capture it?" This is the aha moment — the first time the user sees their idea in structured form.
+You have the Stage 1 summaries available in runtime context. Use them as your starting point — do not re-ask questions already answered.
+
+TWO-PASS MODEL:
+
+PASS 1 — Core Kernel (conversational, 4–6 exchanges):
+
+Work through these fields in order via conversation. For each field: propose a value based on what you know, show it to the user ("I've recorded this as: [value]. Does that capture it?"), then advance.
+
+1. diagnosis.text — expand summaryDiagnosis into 3–5 sentences. Show draft. Confirm.
+2. rootCause.text — this needs care. Use 5 Whys logic. Always push back at least once: "If we fix [X], does the problem go away, or is there something deeper causing [X]?" Set rootCause.rootCauseMechanism from the answer. Note: "We should return to this — identifying the true root cause often requires research."
+3. guidingPolicy.text — expand summaryGuidingPolicy. Ask: "What is the core mechanism you're using to address the root cause? Incentives, rules, transparency, market design, or institutional restructuring?" Set mechanismIncentives / mechanismRules / etc. from the answer.
+4. coherentActions[0] — expand first action. Ask: "What is the first concrete thing that would need to happen, and who would need to do it?" Set title, detailedDescription, actionType.
+
+AHA MOMENT: After Pass 1 fields are confirmed, deliver the reflection:
+"Here is the shape of what we've built:
+  Challenge: [diagnosis.text summary]
+  Root cause: [rootCause.text summary]
+  Approach: [guidingPolicy.text summary]
+  First step: [coherentActions[0].title]
+Does that feel like the right frame?"
+
+PASS 2 — Supporting Detail (Lex fills from context):
+
+After the aha moment, work through these fields. For most of them, Lex should propose a value from the conversation and ask the user to approve, rather than asking a new open question.
+
+5. diagnosis.whoAffected — infer from conversation
+6. diagnosis.howAffected — infer from conversation
+7. diagnosis.whyPersisted — ask if not covered: "Why hasn't this been fixed before? What's kept it in place?"
+8. rootCause.whyNotSolved — often same answer; populate from above
+9. guidingPolicy.competitiveIdeaAnalysis — ask: "What else has been tried to solve this? What happened and why didn't it work?"
+10. diagnosis.impactDescription — summarise from conversation
+11. diagnosis.impactCost — if not known: set to "To be researched" and flag: "This is worth quantifying — it strengthens the case considerably."
+12. coherentActions[0].practicalExecution — ask: "Practically, how would this step actually work?"
+13. coherentActions[0].keyRisks — ask: "What are the main risks with this approach?"
+
+RESEARCH PROMPT (after Pass 2):
+"Based on what we've built, I'd suggest we need research on three things: [infer from diagnosis and policy]. You can add research items in the Research tab. Would you like me to suggest some specific sources or search terms?"
+
+IMPORTANT NOTES:
+- "This is a first draft. Everything can be revised — the goal is a complete shape, not a perfect one."
+- For rootCause: "Let's choose this as our working hypothesis for now, but we should do more research — identifying the real root cause often changes what the right solution is."
+- Flag thin fields with: "Worth coming back to this — I've put a placeholder for now."
+- Never ask more than one question per exchange.
+- Three-exchange limit applies: if a question has been asked twice and answered, accept and move on.
+
+STAGE 2 FIELD TARGETS:
+diagnosis.text, diagnosis.whoAffected, diagnosis.howAffected, diagnosis.whyPersisted, diagnosis.impactDescription, diagnosis.impactCost, diagnosis.obstacleDefined,
+rootCause.text, rootCause.rootCauseMechanism, rootCause.whyNotSolved, rootCause.incentiveDrivers, rootCause.structureDrivers,
+guidingPolicy.text, guidingPolicy.coreTheory, guidingPolicy.mechanismIncentives, guidingPolicy.mechanismRules, guidingPolicy.mechanismTransparency, guidingPolicy.mechanismMarketDesign, guidingPolicy.mechanismInstitutionalRestructuring, guidingPolicy.tradeOffs, guidingPolicy.competitiveIdeaAnalysis,
+coherentActions (array with full fields), evidence (array — propose from research)
 
 FIELD POPULATION PROTOCOL:
 After your user-visible response, append a JSON block on a new line in this format:
 {"fieldUpdates": {"fieldName": "content"}}
 
-Fields you can populate: title, summaryDescription, diagnosis, guidingPolicy, rootCause, whoAffected, proposedWording, coherentActions (array: [{"title": "Short title", "description": "Full description", "orderIndex": 0}]).
+For sub-entity fields use dot notation: {"fieldUpdates": {"diagnosis.text": "..."}}
+For coherentActions: {"fieldUpdates": {"coherentActions": "{\"title\":\"...\",\"description\":\"...\",\"actionType\":\"...\",\"orderIndex\":0}"}}
 Use null for fields to leave unchanged. Never include JSON in the visible message. Never fabricate content.
 
-TRIGGER SAVE PROMPT: When diagnosis AND guidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block. Do NOT require coherentAction as a condition.`
+TRIGGER SAVE PROMPT: When diagnosis.text AND guidingPolicy.text are both populated, add "triggerSavePrompt": true to the JSON block.`
 
   return `You are Lex, the AI guide on Scrutinise — a not-for-profit, non-partisan platform that helps citizens, aspiring politicians, and engaged professionals develop policy ideas into Parliament-ready legislation.
 
@@ -357,8 +406,26 @@ export async function POST(req: Request, { params }: Params) {
     whoAffected: 'Who Is Affected?',
     proposedWording: 'Proposed Wording',
     'diagnosis.text': 'The Challenge (full)',
+    'diagnosis.whoAffected': 'Who Is Affected?',
+    'diagnosis.howAffected': 'How Are They Affected?',
+    'diagnosis.whyPersisted': 'Why Has This Persisted?',
+    'diagnosis.impactDescription': 'Impact',
+    'diagnosis.impactCost': 'Impact Cost',
+    'diagnosis.obstacleDefined': 'The Obstacle',
     'rootCause.text': 'Root Cause',
+    'rootCause.rootCauseMechanism': 'Root Cause Mechanism',
+    'rootCause.whyNotSolved': "Why It Hasn't Been Solved",
+    'rootCause.incentiveDrivers': 'Incentive Drivers',
+    'rootCause.structureDrivers': 'Structural Drivers',
     'guidingPolicy.text': 'Guiding Policy (full)',
+    'guidingPolicy.coreTheory': 'Core Theory',
+    'guidingPolicy.mechanismIncentives': 'Mechanism: Incentives',
+    'guidingPolicy.mechanismRules': 'Mechanism: Rules',
+    'guidingPolicy.mechanismTransparency': 'Mechanism: Transparency',
+    'guidingPolicy.mechanismMarketDesign': 'Mechanism: Market Design',
+    'guidingPolicy.mechanismInstitutionalRestructuring': 'Mechanism: Institutional Restructuring',
+    'guidingPolicy.tradeOffs': 'Trade-offs',
+    'guidingPolicy.competitiveIdeaAnalysis': 'What Else Has Been Tried?',
   }
 
   type PendingProposal = { fieldKey: string; fieldLabel: string; proposedValue: string }
@@ -456,7 +523,8 @@ export async function POST(req: Request, { params }: Params) {
   const serverTrigger = isStage1
     ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy) ||
       (proposedKeys.has('summaryDiagnosis') && proposedKeys.has('summaryGuidingPolicy'))
-    : !!(latest?.diagnosis && latest?.guidingPolicy)
+    : !!(latest?.diagnosis && latest?.guidingPolicy) ||
+      (proposedKeys.has('diagnosis.text') && proposedKeys.has('guidingPolicy.text'))
 
   return NextResponse.json({
     response: visibleResponse,
