@@ -50,6 +50,19 @@ export default function FieldProposalCard({
     }
   }, [])
 
+  // ── Action handlers (declared before useEffects that reference them) ────
+
+  const handleAccept = useCallback(() => {
+    clearCountdown()
+    setState('saved')
+    setSavedValue(proposedValue)
+    onAccept(proposedValue)
+    // Signal the chat input to refocus after card acceptance
+    window.dispatchEvent(new CustomEvent('lex-field-accepted'))
+  }, [clearCountdown, proposedValue, onAccept])
+
+  // ── Auto-accept countdown ───────────────────────────────────────────────
+
   useEffect(() => {
     if (state !== 'pending' || isPaused) return
 
@@ -69,7 +82,30 @@ export default function FieldProposalCard({
     return clearCountdown
   }, [state, isPaused, proposedValue, onAccept, clearCountdown])
 
-  // ── Keyboard shortcuts (when card is focused) ───────────────────────────
+  // ── Global keyboard shortcut — Enter accepts, Escape edits ─────────────
+  // Only fires when no textarea/input is focused (i.e. no card is mid-edit)
+
+  useEffect(() => {
+    if (state !== 'pending') return
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return
+
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleAccept()
+      } else if (e.key === 'Escape') {
+        clearCountdown()
+        setState('editing')
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [state, handleAccept, clearCountdown])
+
+  // ── Keyboard shortcuts (when card div is focused) ────────────────────────
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (state !== 'pending') return
@@ -114,15 +150,6 @@ export default function FieldProposalCard({
       setIsPaused(false)
     }
   }
-
-  // ── Action handlers ─────────────────────────────────────────────────────
-
-  const handleAccept = useCallback(() => {
-    clearCountdown()
-    setState('saved')
-    setSavedValue(proposedValue)
-    onAccept(proposedValue)
-  }, [clearCountdown, proposedValue, onAccept])
 
   const handleSaveEdit = () => {
     clearCountdown()

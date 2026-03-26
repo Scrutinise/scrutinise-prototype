@@ -131,6 +131,13 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
     inputRef.current?.focus()
   }, [])
 
+  // ── Refocus input after FieldProposalCard acceptance ──────────────────────
+  useEffect(() => {
+    const handler = () => inputRef.current?.focus()
+    window.addEventListener('lex-field-accepted', handler)
+    return () => window.removeEventListener('lex-field-accepted', handler)
+  }, [])
+
   // ── Scroll to bottom after new messages ───────────────────────────────────
   useEffect(() => {
     const el = scrollRef.current
