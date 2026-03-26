@@ -3,7 +3,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://scrutinise.co.uk'
-const FROM = 'Scrutinise <noreply@scrutinise.org>'
+const FROM = 'Scrutinise <hello@scrutinise.org>'
 
 export async function DELETE() {
   const { error, user } = await getAuthenticatedUser()
