@@ -4,28 +4,29 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 
 interface Props {
-  params: { id: string }
-  searchParams: { token?: string }
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ token?: string }>
 }
 
 export default async function TransferAcceptPage({ params, searchParams }: Props) {
+  const { id } = await params
+  const { token } = await searchParams
   const { userId: clerkId } = await auth()
   if (!clerkId) {
-    redirect(`/sign-in?redirect_url=/ideas/${params.id}/transfer/accept?token=${searchParams.token ?? ''}`)
+    redirect(`/sign-in?redirect_url=/ideas/${id}/transfer/accept?token=${token ?? ''}`)
   }
 
-  const token = searchParams.token
   if (!token) {
-    return <ErrorPage ideaId={params.id} message="This transfer link is missing or malformed." />
+    return <ErrorPage ideaId={id} message="This transfer link is missing or malformed." />
   }
 
   const currentUser = await prisma.user.findUnique({ where: { clerkId } })
   if (!currentUser) {
-    return <ErrorPage ideaId={params.id} message="Your account was not found." />
+    return <ErrorPage ideaId={id} message="Your account was not found." />
   }
 
   const idea = await prisma.idea.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       title: true,
@@ -37,19 +38,19 @@ export default async function TransferAcceptPage({ params, searchParams }: Props
   })
 
   if (!idea) {
-    return <ErrorPage ideaId={params.id} message="Idea not found." />
+    return <ErrorPage ideaId={id} message="Idea not found." />
   }
 
   if (idea.ownershipTransferToken !== token) {
-    return <ErrorPage ideaId={params.id} message="Invalid or already-used transfer link." />
+    return <ErrorPage ideaId={id} message="Invalid or already-used transfer link." />
   }
 
   if (idea.ownershipTransferToId !== currentUser.id) {
-    return <ErrorPage ideaId={params.id} message="This transfer offer is not addressed to your account." />
+    return <ErrorPage ideaId={id} message="This transfer offer is not addressed to your account." />
   }
 
   if (!idea.ownershipTransferExpiry || idea.ownershipTransferExpiry < new Date()) {
-    return <ErrorPage ideaId={params.id} message="This transfer offer has expired." />
+    return <ErrorPage ideaId={id} message="This transfer offer has expired." />
   }
 
   const previousOwnerId = idea.creatorId
@@ -86,7 +87,7 @@ export default async function TransferAcceptPage({ params, searchParams }: Props
     })
   })
 
-  redirect(`/ideas/${params.id}?transferSuccess=1`)
+  redirect(`/ideas/${id}?transferSuccess=1`)
 }
 
 function ErrorPage({ ideaId, message }: { ideaId: string; message: string }) {

@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params
   const { userId: clerkId } = await auth()
   if (!clerkId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -13,7 +14,7 @@ export async function POST(
   if (!currentUser) return NextResponse.json({ error: 'User not found' }, { status: 401 })
 
   const idea = await prisma.idea.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       creatorId: true,
