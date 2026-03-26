@@ -1,4 +1,4 @@
-import PublicNav from '@/components/PublicNav'
+import BackLink from '@/components/BackLink'
 
 export const metadata = {
   title: 'Terms of Service — Scrutinise',
@@ -50,7 +50,9 @@ const sections = [
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <PublicNav />
+      <div className="px-4 pt-4 sm:px-6">
+        <BackLink />
+      </div>
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
           <strong>Draft — pending legal review.</strong> These terms are a working draft and have not yet been reviewed by a solicitor. They will be finalised before the Platform opens to the general public.
