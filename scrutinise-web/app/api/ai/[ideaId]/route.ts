@@ -57,7 +57,7 @@ FIELD POPULATION PROTOCOL:
 After your user-visible response, append a JSON block on a new line in this format:
 {"fieldUpdates": {"fieldName": "content"}}
 
-Fields you can populate: title, summaryDescription, diagnosis, guidingPolicy, rootCause, whoAffected, proposedWording.
+Fields you can populate: title, summaryDescription, diagnosis, guidingPolicy, rootCause, whoAffected, proposedWording, coherentActions.
 Use null for fields to leave unchanged. Never include JSON in the visible message. Never fabricate content.
 
 RH SIDEBAR FIELDS (the seven completion markers):
@@ -267,6 +267,10 @@ export async function POST(req: Request, { params }: Params) {
       if (allowedFields.includes(key) && value !== null && value !== undefined) {
         updateData[key] = value
       }
+      // coherentActions from Lex → stored as summaryCoherentActions (text summary on the Idea record)
+      if (key === 'coherentActions' && value !== null && value !== undefined) {
+        updateData['summaryCoherentActions'] = String(value)
+      }
     }
     if (Object.keys(updateData).length > 0) {
       await prisma.idea.update({ where: { id: ideaId }, data: updateData })
@@ -312,6 +316,7 @@ export async function POST(req: Request, { params }: Params) {
       diagnosis: true,
       rootCause: true,
       guidingPolicy: true,
+      summaryCoherentActions: true,
       whoAffected: true,
       proposedWording: true,
       coherentActions: { select: { id: true } },
@@ -323,7 +328,7 @@ export async function POST(req: Request, { params }: Params) {
     diagnosis: !!latest?.diagnosis,
     rootCause: !!latest?.rootCause,
     guidingPolicy: !!latest?.guidingPolicy,
-    coherentActions: (latest?.coherentActions.length ?? 0) > 0,
+    coherentActions: (latest?.coherentActions.length ?? 0) > 0 || !!latest?.summaryCoherentActions?.trim(),
     whoAffected: !!latest?.whoAffected,
     research: (latest?.research.length ?? 0) > 0,
     proposedWording: !!latest?.proposedWording,

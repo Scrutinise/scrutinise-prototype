@@ -73,6 +73,7 @@ export async function checkStage2to3Gate(ideaId: string): Promise<string | null>
     select: {
       diagnosis: true,
       guidingPolicy: true,
+      summaryCoherentActions: true,
       coherentActions: { select: { id: true } },
       research: { select: { id: true } },
     },
@@ -84,7 +85,9 @@ export async function checkStage2to3Gate(ideaId: string): Promise<string | null>
 
   if (!idea.diagnosis?.trim()) errors.push('Challenge / diagnosis must be completed')
   if (!idea.guidingPolicy?.trim()) errors.push('Guiding policy must be completed')
-  if (idea.coherentActions.length < 1) errors.push('At least 1 coherent action required')
+  const hasCoherentAction =
+    idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim()
+  if (!hasCoherentAction) errors.push('At least 1 coherent action required')
   if (idea.research.length < 3) errors.push(`At least 3 research items required (currently ${idea.research.length})`)
 
   return errors.length > 0 ? errors.join('; ') : null

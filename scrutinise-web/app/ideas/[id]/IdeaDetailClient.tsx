@@ -40,6 +40,7 @@ interface Idea {
   visibility: string
   diagnosis: string | null
   guidingPolicy: string | null
+  summaryCoherentActions: string | null
   rootCause: string | null
   whoAffected: string | null
   commentCount: number
@@ -157,7 +158,7 @@ function Stage2GateCard({ idea }: { idea: Idea }) {
   const checks = [
     { label: 'Challenge / diagnosis completed', met: !!idea.diagnosis?.trim() },
     { label: 'Guiding policy completed', met: !!idea.guidingPolicy?.trim() },
-    { label: 'At least 1 Coherent Action added', met: idea.coherentActions.length >= 1 },
+    { label: 'At least 1 Coherent Action added', met: idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim() },
     {
       label: `Research: ${idea.research.length}/3 items added`,
       met: idea.research.length >= 3,
@@ -1345,7 +1346,7 @@ export default function IdeaDetailClient({
     isOwner &&
     !!idea.diagnosis?.trim() &&
     !!idea.guidingPolicy?.trim() &&
-    idea.coherentActions.length >= 1 &&
+    (idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim()) &&
     idea.research.length >= 3
 
   const stage3GateMet =
