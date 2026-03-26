@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import PublicNav from '@/components/PublicNav'
@@ -16,6 +16,37 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteResult, setDeleteResult] = useState<{ scheduledFor: string } | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [experienceLevel, setExperienceLevel] = useState('')
+  const [savingExperience, setSavingExperience] = useState(false)
+  const [experienceSaved, setExperienceSaved] = useState(false)
+
+  // Fetch current experienceLevel on mount
+  useEffect(() => {
+    fetch('/api/user/onboarding')
+      .then(r => r.json())
+      .then(data => { if (data.experienceLevel) setExperienceLevel(data.experienceLevel) })
+      .catch(() => {})
+  }, [])
+
+  async function handleExperienceLevelChange(value: string) {
+    setExperienceLevel(value)
+    setExperienceSaved(false)
+    if (!value) return
+    setSavingExperience(true)
+    try {
+      await fetch('/api/user/onboarding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ experienceLevel: value }),
+      })
+      setExperienceSaved(true)
+      setTimeout(() => setExperienceSaved(false), 2000)
+    } catch {
+      // silent
+    } finally {
+      setSavingExperience(false)
+    }
+  }
 
   async function handleExport() {
     setExporting(true)
@@ -151,6 +182,37 @@ export default function SettingsPage() {
             </a>
             .
           </p>
+
+          {/* Experience level */}
+          <div className="mt-6">
+            <label htmlFor="experienceLevel" className="block text-sm font-medium mb-1.5">
+              Policy experience level
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Helps Lex tailor the conversation to your background.
+            </p>
+            <div className="flex items-center gap-3">
+              <select
+                id="experienceLevel"
+                value={experienceLevel}
+                onChange={e => handleExperienceLevelChange(e.target.value)}
+                disabled={savingExperience}
+                className="flex-1 px-3 py-2 text-sm bg-white border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring disabled:opacity-60"
+              >
+                <option value="">Select an option</option>
+                <option value="NO_BACKGROUND">No background or experience</option>
+                <option value="SECTOR_LIVED">Sector or lived experience</option>
+                <option value="THINK_TANK_JUNIOR">Think Tank, NGO or advocacy (junior)</option>
+                <option value="THINK_TANK_SENIOR">Think Tank, NGO or advocacy (senior)</option>
+                <option value="POLITICAL_JUNIOR">Political professional (junior)</option>
+                <option value="POLITICAL_SENIOR">Political professional (senior)</option>
+                <option value="PARLIAMENTARIAN">Parliamentarian or former parliamentarian</option>
+              </select>
+              {experienceSaved && (
+                <span className="text-xs text-green-600">Saved</span>
+              )}
+            </div>
+          </div>
         </section>
 
         {/* Data and privacy */}

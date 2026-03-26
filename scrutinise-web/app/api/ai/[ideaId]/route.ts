@@ -305,6 +305,7 @@ export async function POST(req: Request, { params }: Params) {
   const { message } = parsed.data
   const lexMode = user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE'
   const preferredName = user.preferredName ?? user.firstName
+  const experienceLevel = user.experienceLevel ?? undefined
   const isStage1 = idea.stage === 'STAGE_1'
 
   // Build completed fields summary for system prompt
@@ -337,7 +338,7 @@ export async function POST(req: Request, { params }: Params) {
     chatSummary: idea.aiChatSummary ?? 'No prior conversation',
     preferredName,
     lexMode,
-    // experienceLevel injected in Commit 5 once schema field exists
+    experienceLevel,
   })
 
   // Reconstruct recent chat history for the API call

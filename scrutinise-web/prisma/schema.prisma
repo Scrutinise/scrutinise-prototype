@@ -263,6 +263,16 @@ enum ContentReportStatus {
   ACTION_TAKEN
 }
 
+enum ExperienceLevelEnum {
+  NO_BACKGROUND
+  SECTOR_LIVED
+  THINK_TANK_JUNIOR
+  THINK_TANK_SENIOR
+  POLITICAL_JUNIOR
+  POLITICAL_SENIOR
+  PARLIAMENTARIAN
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 — CORE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -301,6 +311,7 @@ model User {
   aiCreditBalance           Decimal             @default(0)
   aiUsageTotal              Decimal             @default(0)
   aiPreferredStyle          String?             // COLLABORATIVE | SOCRATIC | DIRECT — default COLLABORATIVE
+  experienceLevel           ExperienceLevelEnum?
   // Credibility override (admin only)
   manualCredibilityOverride Decimal?
   // Referral

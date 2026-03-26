@@ -21,13 +21,23 @@ export default async function OnboardingPage({ searchParams }: Props) {
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { ageConfirmed: true },
+    select: { ageConfirmed: true, experienceLevel: true },
   })
 
-  // User has already completed onboarding — skip ahead
-  if (dbUser?.ageConfirmed) {
+  // Fully onboarded (both ageConfirmed and experienceLevel set) — skip ahead
+  if (dbUser?.ageConfirmed && dbUser.experienceLevel) {
     redirect(params.redirect_url ?? '/dashboard')
   }
 
-  return <OnboardingForm redirectUrl={params.redirect_url} />
+  // Existing user who completed original onboarding but hasn't set experienceLevel
+  const promptOnly = !!(dbUser?.ageConfirmed && !dbUser.experienceLevel)
+  const fromCreate = params.from === 'create'
+
+  return (
+    <OnboardingForm
+      redirectUrl={params.redirect_url}
+      promptOnly={promptOnly}
+      fromCreate={fromCreate}
+    />
+  )
 }

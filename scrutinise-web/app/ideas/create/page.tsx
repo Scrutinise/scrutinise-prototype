@@ -21,12 +21,17 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { id: true, preferredName: true, firstName: true, ageConfirmed: true },
+    select: { id: true, preferredName: true, firstName: true, ageConfirmed: true, experienceLevel: true },
   })
 
   // Onboarding not completed — redirect to onboarding, then return here
   if (dbUser && !dbUser.ageConfirmed) {
     redirect('/onboarding?redirect_url=/ideas/create')
+  }
+
+  // Existing user who completed original onboarding but hasn't set experience level
+  if (dbUser?.ageConfirmed && !dbUser.experienceLevel) {
+    redirect('/onboarding?redirect_url=/ideas/create&from=create')
   }
 
   const params = await searchParams
