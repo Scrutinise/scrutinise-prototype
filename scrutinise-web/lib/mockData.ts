@@ -523,11 +523,11 @@ export interface MockTraining {
 }
 
 export const MOCK_TRAINING: MockTraining[] = [
-  { id: 'tr-1', title: "How Parliament Works: A Beginner's Guide", resourceType: 'VIDEO', author: 'UK Parliament', duration: '12:34', stageTag: 'All', topicTag: 'Parliament', difficultyTag: 'Beginner', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-  { id: 'tr-2', title: 'Writing Effective Legislative Drafts', resourceType: 'VIDEO', author: 'Institute for Government', duration: '24:17', stageTag: 'Develop', topicTag: 'Drafting', difficultyTag: 'Intermediate', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-  { id: 'tr-3', title: 'Evidence-Based Policy Making', resourceType: 'VIDEO', author: "King's College London", duration: '18:42', stageTag: 'Draft', topicTag: 'Evidence', difficultyTag: 'Intermediate', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-  { id: 'tr-4', title: 'Running an Effective Public Campaign', resourceType: 'VIDEO', author: 'Hansard Society', duration: '31:05', stageTag: 'Campaign', topicTag: 'Campaigning', difficultyTag: 'Advanced', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-  { id: 'tr-5', title: 'Understanding Parliamentary Scrutiny', resourceType: 'ARTICLE', author: 'UK Parliament', duration: '8 min read', stageTag: 'Legislate', topicTag: 'Legislate', difficultyTag: 'Beginner', url: 'https://www.parliament.uk/about/how/laws/passage-bill/' }
+  { id: 'tr-1', title: "How Parliament Works: A Beginner's Guide", resourceType: 'ARTICLE', author: 'UK Parliament', duration: '12:34', stageTag: 'All', topicTag: 'Parliament', difficultyTag: 'Beginner', url: 'https://www.youtube.com/watch?v=Wuk3L3tknwg&t=1s' },
+  { id: 'tr-2', title: 'Writing Effective Legislative Drafts', resourceType: 'ARTICLE', author: 'Institute for Government', duration: '24:17', stageTag: 'Develop', topicTag: 'Drafting', difficultyTag: 'Intermediate', url: '/training/legislative-drafting' },
+  { id: 'tr-3', title: 'Evidence-Based Policy Making', resourceType: 'ARTICLE', author: "King's College London", duration: '18:42', stageTag: 'Draft', topicTag: 'Evidence', difficultyTag: 'Intermediate', url: 'https://www.kcl.ac.uk/policy-institute/assets/what-is-the-role-of-evidence-in-the-policy-process.pdf' },
+  { id: 'tr-4', title: "Parliament's Engagement with the Public", resourceType: 'ARTICLE', author: 'Hansard Society', duration: '31:05', stageTag: 'Campaign', topicTag: 'Campaigning', difficultyTag: 'Advanced', url: 'https://hansard.parliament.uk/Lords/2005-02-09/debates/5364d8bc-537e-4712-903e-0add4cd3deba/ParliamentPublicEngagement' },
+  { id: 'tr-5', title: 'Understanding Parliamentary Scrutiny', resourceType: 'ARTICLE', author: 'UK Parliament', duration: '8 min read', stageTag: 'Legislate', topicTag: 'Legislate', difficultyTag: 'Beginner', url: '/training/parliamentary-scrutiny' }
 ]
 
 export interface MockGroupMember {
