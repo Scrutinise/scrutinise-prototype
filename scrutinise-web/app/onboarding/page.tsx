@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectUrl = searchParams.get('redirect_url')
 
   const [preferredName, setPreferredName] = useState('')
   const [ageConfirmed, setAgeConfirmed] = useState(false)
@@ -44,7 +46,7 @@ export default function OnboardingPage() {
         return
       }
 
-      router.push('/ideas/create')
+      router.push(redirectUrl ?? '/dashboard')
     } catch {
       setError('Something went wrong. Please try again.')
       setSubmitting(false)
@@ -154,5 +156,13 @@ export default function OnboardingPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense>
+      <OnboardingForm />
+    </Suspense>
   )
 }
