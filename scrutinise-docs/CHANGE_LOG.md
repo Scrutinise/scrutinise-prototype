@@ -6,6 +6,36 @@
 
 ---
 
+## CODE CHANGES — 26 March 2026 (Sprint L3 — Idea Page UX + Ownership Transfer)
+
+### L3-1: Idea page layout and UX improvements
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Stage2GateCard restructured to two-column: left = requirements list, right = two info chips (Voting / Campaign in a Box) |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Idea sub-tabs changed from underline style to pill/chip row to visually distinguish from main tabs |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Overview sub-tab redesigned to two-column: left 2/3 = Summary heading + summaryDescription + summary fields; right 1/3 = metadata stack with Owner linking to /user/[username] |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | "Approach (summary)" label replaces "Solution (summary)" for summaryGuidingPolicy |
+| — | "Continue with Lex →" already present from L2-4 — verified present, no change needed |
+
+### L3-2: Transfer idea ownership
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `ownershipTransferToken String? @unique`, `ownershipTransferToId String?`, `ownershipTransferExpiry DateTime?` to Idea model |
+| `lib/email.ts` | Added `sendOwnershipTransferEmail()` — sends accept link to new owner candidate |
+| `app/api/ideas/[id]/transfer/initiate/route.ts` | POST: owner-only; validates new owner is existing collaborator; generates UUID token; sets 48hr expiry; sends email |
+| `app/api/ideas/[id]/transfer/accept/route.ts` | POST: validates token + recipient match + expiry; transfers creatorId; adds old owner as EDITOR collaborator; creates SYSTEM notification |
+| `app/api/ideas/[id]/transfer/cancel/route.ts` | POST: owner or recipient can cancel; clears all three transfer fields |
+| `app/ideas/[id]/transfer/accept/page.tsx` | Server component: auth-gated; calls Prisma directly; on success redirects to /ideas/[id]?transferSuccess=1; on error shows message with back link |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | TeamTab: Transfer Ownership section at bottom (owner-only, requires ≥1 collaborator); collaborator dropdown; confirm modal; pending amber banner with cancel |
+
+### L3-3: Prisma db push (production)
+| Action | Result |
+|--------|--------|
+| `npx prisma db push --accept-data-loss` | Database in sync — 3 new Idea fields added; unique constraint on ownershipTransferToken |
+| `npx prisma generate` | Prisma Client v7.5.0 regenerated |
+
+---
+
 ## CODE CHANGES — 26 March 2026 (Content and Copy)
 
 | Change | File(s) | Detail |

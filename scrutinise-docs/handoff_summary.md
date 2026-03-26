@@ -1,5 +1,34 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 26 March 2026 v15*
+*Last updated: 26 March 2026 v16*
+
+---
+
+## CURRENT STATE — SPRINT L3 (IDEA PAGE UX + OWNERSHIP TRANSFER) COMPLETE ✅
+
+Sprint L3 complete. Two commits to Main (L3-1, L3-2). All `tsc --noEmit` clean. `prisma db push` and `prisma generate` run — DB in sync.
+
+### Sprint L3 Summary
+
+**L3-1 — Idea page layout and UX improvements (`IdeaDetailClient.tsx`):**
+- `Stage2GateCard` restructured to two columns: requirements list on left, two info chips on right ("🗳 Voting opens at Campaign stage" / "📦 Campaign in a Box available on idea completion")
+- Idea sub-tab nav changed from underline style to pill/chip row — visually distinct from main tabs
+- Overview sub-tab redesigned to two-column layout: left 2/3 = Summary + content fields; right 1/3 = metadata stack (Stage, Idea Type, Govt Area, Created, Owner with link to /user/[username])
+- "Solution (summary)" label corrected to "Approach (summary)"
+- "Continue with Lex →" confirmed already present from L2
+
+**L3-2 — Ownership transfer:**
+- Schema: 3 new fields on Idea — `ownershipTransferToken String? @unique`, `ownershipTransferToId String?`, `ownershipTransferExpiry DateTime?`
+- `lib/email.ts`: `sendOwnershipTransferEmail()` added
+- `POST /api/ideas/[id]/transfer/initiate` — owner-only; new owner must be existing collaborator; generates UUID token; 48hr expiry; sends email
+- `POST /api/ideas/[id]/transfer/accept` — validates token/recipient/expiry; transfers `creatorId`; upserts old owner as EDITOR collaborator; creates SYSTEM notification for old owner
+- `POST /api/ideas/[id]/transfer/cancel` — owner or recipient can cancel; clears transfer fields
+- `app/ideas/[id]/transfer/accept/page.tsx` — server component; auth-gated; calls Prisma directly (no self-API call); success → redirect to `/ideas/[id]?transferSuccess=1`; error → message with back link
+- `TeamTab` in `IdeaDetailClient.tsx`: Transfer Ownership section at bottom (owner-only, ≥1 collaborator required); dropdown; confirm modal; pending amber banner
+
+**Deploy actions needed:**
+- `prisma db push` already run (26 March 2026) ✅
+- `prisma generate` already run ✅
+- No new env vars required
 
 ---
 
