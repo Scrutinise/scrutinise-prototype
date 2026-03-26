@@ -243,25 +243,39 @@ function Stage2GateCard({ idea }: { idea: Idea }) {
         <CardTitle className="text-sm">Requirements to Take Public</CardTitle>
       </CardHeader>
       <CardContent className="pt-3">
-        <ul className="space-y-2">
-          {checks.map(check => (
-            <li key={check.label} className="flex items-center gap-2 text-sm">
-              {check.met ? (
-                <CheckCircle2 className="size-4 shrink-0 text-green-600" />
-              ) : (
-                <Circle className="size-4 shrink-0 text-muted-foreground/40" />
-              )}
-              <span className={check.met ? 'text-foreground' : 'text-muted-foreground'}>
-                {check.label}
-              </span>
-            </li>
-          ))}
-        </ul>
-        {allMet && (
-          <p className="mt-3 text-xs text-green-700">
-            All requirements met — you can take this idea public.
-          </p>
-        )}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          {/* Left: requirements list */}
+          <div className="flex-1">
+            <ul className="space-y-2">
+              {checks.map(check => (
+                <li key={check.label} className="flex items-center gap-2 text-sm">
+                  {check.met ? (
+                    <CheckCircle2 className="size-4 shrink-0 text-green-600" />
+                  ) : (
+                    <Circle className="size-4 shrink-0 text-muted-foreground/40" />
+                  )}
+                  <span className={check.met ? 'text-foreground' : 'text-muted-foreground'}>
+                    {check.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {allMet && (
+              <p className="mt-3 text-xs text-green-700">
+                All requirements met — you can take this idea public.
+              </p>
+            )}
+          </div>
+          {/* Right: status info chips */}
+          <div className="flex flex-col gap-2 sm:min-w-[210px] sm:border-l sm:pl-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-xs text-zinc-600">
+              🗳 Voting opens at Campaign stage
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-xs text-zinc-600">
+              📦 Campaign in a Box available on idea completion
+            </span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
@@ -1083,18 +1097,18 @@ function IdeaTab({
 
   return (
     <div>
-      {/* Sub-tab nav */}
-      <div className="border-b mb-6">
-        <div className="-mb-px flex gap-0 overflow-x-auto">
+      {/* Sub-tab nav — pill style */}
+      <div className="mb-6 border-b border-zinc-200/60 bg-zinc-50/50 px-4 py-[10px]">
+        <div className="flex flex-wrap gap-[6px]">
           {subTabs.map(t => (
             <button
               key={t.key}
               onClick={() => setSubTab(t.key)}
               className={[
-                'whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors',
+                'whitespace-nowrap rounded-full border px-3 py-1 text-xs transition-colors',
                 subTab === t.key
-                  ? 'border-zinc-900 text-zinc-900'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-900',
+                  ? 'border-zinc-900 bg-white font-medium text-zinc-900'
+                  : 'border-zinc-200 bg-white text-zinc-500 hover:text-zinc-900',
               ].join(' ')}
             >
               {t.label}
@@ -1103,60 +1117,67 @@ function IdeaTab({
         </div>
       </div>
 
-      {/* Sub-tab: Overview */}
+      {/* Sub-tab: Overview — two-column layout */}
       {subTab === 'overview' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-6 md:flex-row">
+          {/* Left column: summary content (2/3) */}
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Summary</p>
+            {idea.summaryDescription ? (
+              <p className="text-sm leading-relaxed text-zinc-800">{idea.summaryDescription}</p>
+            ) : (
+              <p className="text-sm italic text-zinc-400">Not yet completed</p>
+            )}
+            {(idea.summaryDiagnosis || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
+              <div className="mt-5 space-y-4">
+                {idea.summaryDiagnosis && (
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Challenge (summary)</p>
+                    <p className="text-sm text-zinc-700">{idea.summaryDiagnosis}</p>
+                  </div>
+                )}
+                {idea.summaryGuidingPolicy && (
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Approach (summary)</p>
+                    <p className="text-sm text-zinc-700">{idea.summaryGuidingPolicy}</p>
+                  </div>
+                )}
+                {idea.summaryCoherentActions && (
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">First step (summary)</p>
+                    <p className="text-sm text-zinc-700">{idea.summaryCoherentActions}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Right column: metadata (1/3) */}
+          <div className="shrink-0 space-y-4 md:basis-1/3 md:border-l md:pl-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Stage</p>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Stage</p>
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'}`}>
                 {STAGE_LABELS_MAP[idea.stage] ?? idea.stage}
               </span>
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Idea Type</p>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Idea Type</p>
               <p className="text-sm">{IDEA_TYPE_LABELS[idea.ideaType] ?? idea.ideaType}</p>
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Government Area</p>
-              <p className="text-sm">{idea.govtArea || <span className="text-zinc-400 italic">Not set</span>}</p>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Government Area</p>
+              <p className="text-sm">{idea.govtArea || <span className="italic text-zinc-400">Not set</span>}</p>
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Created</p>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Created</p>
               <p className="text-sm">{new Date(idea.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
             </div>
-            <div className="col-span-2">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Owner</p>
-              <p className="text-sm">{idea.creator.name}</p>
+            <div>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Owner</p>
+              <Link href={`/user/${idea.creator.username}`} className="text-sm text-zinc-800 underline-offset-2 hover:underline">
+                {idea.creator.name}
+              </Link>
             </div>
           </div>
-          {idea.summaryDescription && (
-            <div className="mt-4 p-4 rounded-lg bg-zinc-50 border">
-              <p className="text-sm leading-relaxed">{idea.summaryDescription}</p>
-            </div>
-          )}
-          {(idea.summaryDiagnosis || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
-            <div className="mt-4 space-y-3">
-              {idea.summaryDiagnosis && (
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Challenge (summary)</p>
-                  <p className="text-sm text-zinc-700">{idea.summaryDiagnosis}</p>
-                </div>
-              )}
-              {idea.summaryGuidingPolicy && (
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Solution (summary)</p>
-                  <p className="text-sm text-zinc-700">{idea.summaryGuidingPolicy}</p>
-                </div>
-              )}
-              {idea.summaryCoherentActions && (
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">First step (summary)</p>
-                  <p className="text-sm text-zinc-700">{idea.summaryCoherentActions}</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
 
