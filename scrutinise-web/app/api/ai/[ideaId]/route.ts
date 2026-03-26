@@ -341,40 +341,53 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
 
-  // Apply field updates to the Idea record
-  if (fieldUpdates && Object.keys(fieldUpdates).length > 0) {
-    const updateData: Record<string, unknown> = {}
+  // Build pendingProposals — DO NOT write to DB here.
+  // Fields are written only on explicit user approval via /field-approval.
+  const FIELD_LABELS: Record<string, string> = {
+    title: 'Title',
+    summaryDescription: 'Summary',
+    summaryDiagnosis: "What's the Challenge?",
+    summaryGuidingPolicy: 'How Will We Solve It?',
+    summaryCoherentActions: 'A Practical Step',
+    govtArea: 'Government Area',
+    ideaType: 'Idea Type',
+    diagnosis: "What's the Challenge?",
+    guidingPolicy: 'How Will We Solve It?',
+    rootCause: 'Root Cause',
+    whoAffected: 'Who Is Affected?',
+    proposedWording: 'Proposed Wording',
+    'diagnosis.text': 'The Challenge (full)',
+    'rootCause.text': 'Root Cause',
+    'guidingPolicy.text': 'Guiding Policy (full)',
+  }
 
-    if (isStage1) {
-      // Stage 1 — Basic Info fields only
-      const stage1Fields = ['title', 'summaryDescription', 'summaryDiagnosis', 'summaryGuidingPolicy', 'summaryCoherentActions', 'govtArea']
-      for (const [key, value] of Object.entries(fieldUpdates)) {
-        if (stage1Fields.includes(key) && value !== null && value !== undefined) {
-          updateData[key] = value
-          // Mirror summary fields to legacy fields for sidebar compatibility
-          if (key === 'summaryDiagnosis') updateData['diagnosis'] = value
-          if (key === 'summaryGuidingPolicy') updateData['guidingPolicy'] = value
-        }
-        if (key === 'ideaType' && (value === 'LEGISLATION' || value === 'ORGANISATION')) {
-          updateData['ideaType'] = value
+  type PendingProposal = { fieldKey: string; fieldLabel: string; proposedValue: string }
+  const pendingProposals: PendingProposal[] = []
+
+  if (fieldUpdates) {
+    for (const [key, value] of Object.entries(fieldUpdates)) {
+      if (value === null || value === undefined || value === '') continue
+
+      let fieldLabel = FIELD_LABELS[key]
+      if (!fieldLabel) {
+        if (key.startsWith('coherentActions')) {
+          // Try to extract title from value if it's JSON
+          try {
+            const parsed = JSON.parse(String(value))
+            fieldLabel = `Coherent Action: ${parsed.title ?? 'Action'}`
+          } catch {
+            fieldLabel = 'Coherent Action'
+          }
+        } else {
+          fieldLabel = key
         }
       }
-    } else {
-      // Stage 2+ — legacy strategic kernel fields + coherentActions
-      const allowedFields = ['title', 'summaryDescription', 'diagnosis', 'guidingPolicy', 'rootCause', 'whoAffected', 'proposedWording']
-      for (const [key, value] of Object.entries(fieldUpdates)) {
-        if (allowedFields.includes(key) && value !== null && value !== undefined) {
-          updateData[key] = value
-        }
-        // coherentActions from Lex → stored as summaryCoherentActions (text summary on the Idea record)
-        if (key === 'coherentActions' && value !== null && value !== undefined) {
-          updateData['summaryCoherentActions'] = String(value)
-        }
-      }
-    }
 
-    if (Object.keys(updateData).length > 0) {
-      await prisma.idea.update({ where: { id: ideaId }, data: updateData })
+      pendingProposals.push({
+        fieldKey: key,
+        fieldLabel,
+        proposedValue: String(value),
+      })
     }
   }
 
@@ -438,16 +451,17 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   // Compute triggerSavePrompt server-side so it fires even when the AI omits the flag.
-  // Stage 1: summaryDiagnosis AND summaryGuidingPolicy both populated.
-  // Stage 2+: diagnosis and guidingPolicy.
+  // Also fires if both key fields are in the pending proposals (not yet saved).
+  const proposedKeys = new Set(pendingProposals.map(p => p.fieldKey))
   const serverTrigger = isStage1
-    ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy)
+    ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy) ||
+      (proposedKeys.has('summaryDiagnosis') && proposedKeys.has('summaryGuidingPolicy'))
     : !!(latest?.diagnosis && latest?.guidingPolicy)
 
   return NextResponse.json({
     response: visibleResponse,
     triggerSavePrompt: triggerSavePrompt || serverTrigger,
     completedFields,
-    // fieldUpdates deliberately NOT returned to client (security requirement)
+    pendingProposals,
   })
 }

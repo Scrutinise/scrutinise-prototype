@@ -3,15 +3,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useUser, SignInButton } from '@clerk/nextjs'
 import Link from 'next/link'
+import FieldProposalCard from '@/components/FieldProposalCard'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface PendingProposal {
+  fieldKey: string
+  fieldLabel: string
+  proposedValue: string
+  status: 'pending' | 'saved' | 'discussed'
+  savedValue?: string
+}
+
 interface ChatMessage {
   role: 'user' | 'lex'
   content: string
   timestamp: string
+  proposals?: PendingProposal[]
 }
 
 interface FieldCompletion {
@@ -253,10 +263,16 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
         setShowSavePrompt(true)
       }
 
+      // Attach pendingProposals (if any) to the Lex message
+      const proposals: PendingProposal[] | undefined = data.pendingProposals?.length
+        ? data.pendingProposals.map((p: Omit<PendingProposal, 'status'>) => ({ ...p, status: 'pending' as const }))
+        : undefined
+
       setMessages(prev => [...prev, {
         role: 'lex',
         content: data.response,
         timestamp: new Date().toISOString(),
+        proposals,
       }])
     } catch {
       setMessages(prev => [...prev, {
@@ -338,7 +354,84 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
   }
 
   const completedCount = Object.values(fields).filter(Boolean).length
-  const canSend = (inputValue.trim().length > 0 || attachedFile !== null) && !isLoading
+
+  // Check if any proposals across all messages are still pending
+  const hasPendingProposals = messages.some(
+    m => m.proposals?.some(p => p.status === 'pending')
+  )
+
+  const canSend = (inputValue.trim().length > 0 || attachedFile !== null) && !isLoading && !hasPendingProposals
+
+  // ── Proposal handlers ─────────────────────────────────────────────────────
+
+  const handleProposalAccept = useCallback(async (msgIndex: number, proposalIndex: number, value: string) => {
+    if (!ideaId || !isSignedIn) {
+      // Unauthenticated — just mark as saved locally
+      setMessages(prev => prev.map((msg, mi) => {
+        if (mi !== msgIndex) return msg
+        const proposals = msg.proposals?.map((p, pi) =>
+          pi === proposalIndex ? { ...p, status: 'saved' as const, savedValue: value } : p
+        )
+        return { ...msg, proposals }
+      }))
+      return
+    }
+
+    const proposal = messages[msgIndex]?.proposals?.[proposalIndex]
+    if (!proposal) return
+
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/field-approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldKey: proposal.fieldKey, value }),
+      })
+      if (!res.ok) throw new Error('Field approval failed')
+      const data = await res.json()
+
+      // Update proposal status
+      setMessages(prev => prev.map((msg, mi) => {
+        if (mi !== msgIndex) return msg
+        const proposals = msg.proposals?.map((p, pi) =>
+          pi === proposalIndex ? { ...p, status: 'saved' as const, savedValue: value } : p
+        )
+        return { ...msg, proposals }
+      }))
+
+      // Update sidebar completion
+      if (data.completedFields) {
+        setFields(prev => ({ ...prev, ...data.completedFields }))
+      }
+    } catch {
+      // Silent — card stays in pending state
+    }
+  }, [ideaId, isSignedIn, messages])
+
+  const handleProposalEdit = useCallback(async (msgIndex: number, proposalIndex: number, editedValue: string) => {
+    // Same as accept but with the edited value
+    await handleProposalAccept(msgIndex, proposalIndex, editedValue)
+  }, [handleProposalAccept])
+
+  const handleProposalDiscuss = useCallback((msgIndex: number, proposalIndex: number) => {
+    setMessages(prev => prev.map((msg, mi) => {
+      if (mi !== msgIndex) return msg
+      const proposals = msg.proposals?.map((p, pi) =>
+        pi === proposalIndex ? { ...p, status: 'discussed' as const } : p
+      )
+      return { ...msg, proposals }
+    }))
+  }, [])
+
+  const handleAcceptAll = useCallback(async (msgIndex: number) => {
+    const msg = messages[msgIndex]
+    if (!msg?.proposals) return
+    for (let pi = 0; pi < msg.proposals.length; pi++) {
+      const p = msg.proposals[pi]
+      if (p.status === 'pending') {
+        await handleProposalAccept(msgIndex, pi, p.proposedValue)
+      }
+    }
+  }, [messages, handleProposalAccept])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -396,16 +489,41 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
                   className={`mb-6 ${msg.role === 'user' ? 'flex justify-end' : ''}`}
                 >
                   {msg.role === 'lex' ? (
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 w-full">
                       {/* Lex avatar */}
                       <div className="shrink-0 w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center mt-0.5">
                         <span className="text-white text-xs font-semibold">L</span>
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-zinc-500 mb-1">Lex</p>
                         <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                           {msg.content}
                         </p>
+                        {/* Field proposal cards */}
+                        {msg.proposals && msg.proposals.length > 0 && (
+                          <div className="mt-3">
+                            {/* Accept all button — shown when 2+ proposals are pending */}
+                            {msg.proposals.filter(p => p.status === 'pending').length >= 2 && (
+                              <button
+                                onClick={() => handleAcceptAll(i)}
+                                className="mb-2 px-4 py-2 text-sm font-medium bg-zinc-100 text-zinc-700 rounded-lg hover:bg-zinc-200 transition-colors border border-zinc-200"
+                              >
+                                Accept all suggestions
+                              </button>
+                            )}
+                            {msg.proposals.map((proposal, pi) => (
+                              <FieldProposalCard
+                                key={`${i}-${pi}`}
+                                fieldKey={proposal.fieldKey}
+                                fieldLabel={proposal.fieldLabel}
+                                proposedValue={proposal.proposedValue}
+                                onAccept={val => handleProposalAccept(i, pi, val)}
+                                onEdit={val => handleProposalEdit(i, pi, val)}
+                                onDiscuss={() => handleProposalDiscuss(i, pi)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -489,16 +607,27 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
                   </div>
                 )}
 
+                {/* Pending proposals hint */}
+                {hasPendingProposals && (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                    Review Lex&apos;s suggestions above to continue.
+                  </p>
+                )}
+
                 {/* Input box */}
-                <div className="flex items-end gap-1 border border-border rounded-xl bg-background p-3 focus-within:ring-2 focus-within:ring-zinc-900/20 transition-shadow">
+                <div className={`flex items-end gap-1 border rounded-xl bg-background p-3 transition-shadow ${
+                  hasPendingProposals
+                    ? 'border-zinc-200 opacity-60'
+                    : 'border-border focus-within:ring-2 focus-within:ring-zinc-900/20'
+                }`}>
                   <textarea
                     ref={inputRef}
                     value={inputValue}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type your answer…"
+                    placeholder={hasPendingProposals ? 'Review suggestions above first…' : 'Type your answer…'}
                     rows={1}
-                    disabled={isLoading}
+                    disabled={isLoading || hasPendingProposals}
                     className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
                     style={{ overflow: 'hidden', maxHeight: '200px' }}
                   />
