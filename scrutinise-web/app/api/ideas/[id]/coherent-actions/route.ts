@@ -2,13 +2,36 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
 
 const CoherentActionSchema = z.object({
   title: z.string().min(1).max(200),
-  description: z.string().min(1),
-  orderIndex: z.number().int().min(0),
+  summarySnippet: z.string().optional(),
+  detailedDescription: z.string().optional(),
+  actionType: z.string().optional(),
+  legislationDraftWording: z.string().optional(),
+  organisationalChangeDraftWording: z.string().optional(),
+  proposedWording: z.string().optional(),
+  costBenefitAnalysis: z.string().optional(),
+  costFinancial: z.string().optional(),
+  costSocial: z.string().optional(),
+  costOngoing: z.string().optional(),
+  benefits: z.string().optional(),
+  practicalExecution: z.string().optional(),
+  implementationPlan: z.string().optional(),
+  implementationSubQuestions: z.record(z.string(), z.unknown()).optional(),
+  accountability: z.string().optional(),
+  successMeasurement: z.string().optional(),
+  keyRisks: z.string().optional(),
+  potentialHarm: z.string().optional(),
+  keyChallenges: z.string().optional(),
+  sourcesOfOpposition: z.string().optional(),
+  oppositionWho: z.string().optional(),
+  oppositionWhy: z.string().optional(),
+  oppositionAnswers: z.string().optional(),
+  orderIndex: z.number().int().min(0).default(0),
 })
 
 // POST /api/ideas/[id]/coherent-actions
@@ -45,16 +68,14 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
-  const { title, description, orderIndex } = parsed.data
+  const { implementationSubQuestions, ...rest } = parsed.data
+  const createData: Prisma.CoherentActionUncheckedCreateInput = {
+    ideaId,
+    ...rest,
+    implementationSubQuestions: implementationSubQuestions as Prisma.InputJsonValue | undefined,
+  }
 
-  const action = await prisma.coherentAction.create({
-    data: {
-      ideaId,
-      title,
-      detailedDescription: description,
-      orderIndex,
-    },
-  })
+  const action = await prisma.coherentAction.create({ data: createData })
 
   return NextResponse.json(action, { status: 201 })
 }

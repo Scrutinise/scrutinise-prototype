@@ -241,6 +241,12 @@ enum DisputeStatus {
   REVIEWED
 }
 
+enum EvidenceOutcome {
+  SUCCESS
+  FAILURE
+  MIXED
+}
+
 enum ContentReportReason {
   SPAM
   HARMFUL
@@ -442,6 +448,10 @@ model Idea {
   stageTransitions          StageTransition[]
   wordingHistory            WordingHistory[]
   coherentActions           CoherentAction[]
+  diagnoses                 Diagnosis[]
+  rootCauses                RootCause[]
+  guidingPolicies           GuidingPolicy[]
+  evidence                  Evidence[]
   ideaReviews               IdeaReview[]
   ideaAlerts                IdeaAlert[]
   groups                    Group[]
@@ -501,16 +511,26 @@ model CoherentAction {
   summarySnippet                      String?
   detailedDescription                 String?
   actionType                          String?
+  legislationDraftWording             String?
+  organisationalChangeDraftWording    String?
   proposedWording                     String?
   costBenefitAnalysis                 String?
+  costFinancial                       String?
+  costSocial                          String?
+  costOngoing                         String?
+  benefits                            String?
   practicalExecution                  String?
   implementationPlan                  String?
+  implementationSubQuestions          Json?    // {who, what, where, how, why, when}
   accountability                      String?
   successMeasurement                  String?
   keyRisks                            String?
   potentialHarm                       String?
+  keyChallenges                       String?
   sourcesOfOpposition                 String?
-  implementationSubQuestions          Json?    // {who, what, where, how, why, when}
+  oppositionWho                       String?
+  oppositionWhy                       String?
+  oppositionAnswers                   String?
   orderIndex                          Int      @default(0)
   version                             Int      @default(1)
   createdAt                           DateTime @default(now())
@@ -554,6 +574,85 @@ model Attachment {
   r2Bucket          String
   virusScanStatus   String   @default("PENDING") // PENDING, CLEAN, INFECTED
   createdAt         DateTime @default(now())
+
+  @@index([ideaId])
+}
+
+model Diagnosis {
+  id                    String   @id @default(uuid())
+  ideaId                String   @unique
+  idea                  Idea     @relation(fields: [ideaId], references: [id])
+  diagnosisTitle        String?
+  diagnosisDescription  String?
+  text                  String?
+  obstacleDefined       String?
+  whoAffected           String?
+  howAffected           String?
+  whyPersisted          String?
+  impactDescription     String?
+  impactCost            String?
+  diagnosisData         Json?
+  version               Int      @default(1)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([ideaId])
+}
+
+model RootCause {
+  id                    String   @id @default(uuid())
+  ideaId                String
+  idea                  Idea     @relation(fields: [ideaId], references: [id])
+  rootCauseTitle        String?
+  rootCauseDescription  String?
+  text                  String?
+  rootCauseLinkBack     String?
+  rootCauseLinkForward  String?
+  rootCauseMechanism    String?
+  whyNotSolved          String?
+  incentiveDrivers      String?
+  structureDrivers      String?
+  version               Int      @default(1)
+  createdAt             DateTime @default(now())
+
+  @@index([ideaId])
+}
+
+model GuidingPolicy {
+  id                                   String   @id @default(uuid())
+  ideaId                               String   @unique
+  idea                                 Idea     @relation(fields: [ideaId], references: [id])
+  guidingPolicyTitle                   String?
+  guidingPolicyDescription             String?
+  text                                 String?
+  coreTheory                           String?
+  mechanismIncentives                  String?
+  mechanismRules                       String?
+  mechanismTransparency                String?
+  mechanismMarketDesign                String?
+  mechanismInstitutionalRestructuring  String?
+  tradeOffs                            String?
+  competitiveIdeaAnalysis              String?
+  version                              Int      @default(1)
+  createdAt                            DateTime @default(now())
+
+  @@index([ideaId])
+}
+
+model Evidence {
+  id                String          @id @default(uuid())
+  ideaId            String
+  idea              Idea            @relation(fields: [ideaId], references: [id])
+  title             String
+  description       String
+  comparablePolicy  String?
+  successFailure    EvidenceOutcome?
+  whatWorked        String?
+  whatFailed        String?
+  resultCauses      String?
+  sourceUrl         String?
+  sourceType        SourceType
+  createdAt         DateTime        @default(now())
 
   @@index([ideaId])
 }
