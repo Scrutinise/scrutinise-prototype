@@ -9,7 +9,11 @@ function getTimeOfDay(utcHour: number): string {
   return 'evening'
 }
 
-export default async function CreateIdeaPage() {
+interface Props {
+  searchParams: Promise<{ ideaId?: string }>
+}
+
+export default async function CreateIdeaPage({ searchParams }: Props) {
   const { userId } = await auth()
   if (!userId) {
     redirect('/sign-in?redirect_url=/ideas/create')
@@ -23,6 +27,25 @@ export default async function CreateIdeaPage() {
   // Onboarding not completed — redirect to onboarding, then return here
   if (dbUser && !dbUser.ageConfirmed) {
     redirect('/onboarding?redirect_url=/ideas/create')
+  }
+
+  const params = await searchParams
+
+  // Resume an existing idea session if ideaId param provided
+  let initialIdeaId: string | undefined
+  let initialMessages: unknown[] | undefined
+
+  if (params.ideaId && dbUser) {
+    const existingIdea = await prisma.idea.findUnique({
+      where: { id: params.ideaId, creatorId: dbUser.id },
+      select: { id: true, aiChatHistory: true },
+    })
+    if (existingIdea) {
+      initialIdeaId = existingIdea.id
+      initialMessages = Array.isArray(existingIdea.aiChatHistory)
+        ? (existingIdea.aiChatHistory as unknown[])
+        : undefined
+    }
   }
 
   let openingMessage: string
@@ -43,5 +66,11 @@ export default async function CreateIdeaPage() {
     }
   }
 
-  return <CreateIdeaClient openingMessage={openingMessage} />
+  return (
+    <CreateIdeaClient
+      openingMessage={openingMessage}
+      initialIdeaId={initialIdeaId}
+      initialMessages={initialMessages}
+    />
+  )
 }

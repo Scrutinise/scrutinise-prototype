@@ -1923,6 +1923,18 @@ export default function IdeaDetailClient({
             </p>
           )}
 
+          {/* Continue with Lex — owner only, Stage 1 or 2 */}
+          {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
+            <div className="mt-3">
+              <Link
+                href={`/ideas/create?ideaId=${idea.id}`}
+                className="inline-flex items-center text-sm font-medium text-foreground underline-offset-2 hover:underline"
+              >
+                Continue with Lex →
+              </Link>
+            </div>
+          )}
+
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span>
               by{' '}

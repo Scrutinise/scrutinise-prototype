@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useUser, SignInButton } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FieldProposalCard from '@/components/FieldProposalCard'
 
@@ -36,6 +37,8 @@ interface FieldCompletion {
 
 interface Props {
   openingMessage?: string
+  initialIdeaId?: string
+  initialMessages?: unknown[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,16 +82,20 @@ const ACCEPTED_FILE_TYPES = '.pdf,.doc,.docx'
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CreateIdeaClient({ openingMessage }: Props) {
+export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages }: Props) {
   const { isSignedIn } = useUser()
+  const router = useRouter()
   const resolvedOpening = openingMessage ?? DEFAULT_OPENING_MESSAGE
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'lex', content: resolvedOpening, timestamp: new Date().toISOString() },
-  ])
+  const resolvedInitialMessages = (initialMessages as ChatMessage[] | undefined)?.length
+    ? (initialMessages as ChatMessage[])
+    : [{ role: 'lex' as const, content: resolvedOpening, timestamp: new Date().toISOString() }]
+
+  const [messages, setMessages] = useState<ChatMessage[]>(resolvedInitialMessages)
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [ideaId, setIdeaId] = useState<string | null>(null)
+  const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
+  const [saveExitMsg, setSaveExitMsg] = useState<string | null>(null)
   const [fields, setFields] = useState<FieldCompletion>(EMPTY_FIELDS)
   const [userMsgCount, setUserMsgCount] = useState(0)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
@@ -453,13 +460,47 @@ export default function CreateIdeaClient({ openingMessage }: Props) {
         <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
           Scrutinise
         </Link>
-        {!isSignedIn && (
-          <SignInButton mode="modal">
-            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Sign in
-            </button>
-          </SignInButton>
-        )}
+        <div className="flex items-center gap-3">
+          {!isSignedIn && (
+            <SignInButton mode="modal">
+              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Sign in
+              </button>
+            </SignInButton>
+          )}
+          {isSignedIn && (
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                {ideaId && (
+                  <Link
+                    href={`/ideas/${ideaId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    View your idea →
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    if (ideaId) {
+                      router.push('/dashboard')
+                    } else {
+                      setSaveExitMsg('Your conversation will be saved once you complete the first stage.')
+                      setTimeout(() => setSaveExitMsg(null), 4000)
+                    }
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                >
+                  Save & Exit
+                </button>
+              </div>
+              {saveExitMsg && (
+                <p className="text-xs text-muted-foreground max-w-xs text-right">{saveExitMsg}</p>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
