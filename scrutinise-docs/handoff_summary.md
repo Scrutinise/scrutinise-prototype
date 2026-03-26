@@ -3,7 +3,28 @@
 
 ---
 
-## CURRENT STATE — V1 COMPLETE ✅
+## CURRENT STATE — POST-UAT BUG FIXES APPLIED ✅
+
+Post-UAT fixes complete (26 March 2026). Six bug fixes committed to Main and pushed.
+
+### Post-UAT fixes delivered
+
+| Bug | Fix |
+|-----|-----|
+| B1 | `/ideas/create` requires auth — unauthenticated users redirected to sign-in. Client extracted to `CreateIdeaClient.tsx`; `page.tsx` is now a server component. |
+| B2 | `/ideas` browse holding page — PublicNav, Sign Up button, back link. |
+| B3 | `/privacy` holding page — PublicNav + footer nav bar. |
+| B4 | `/contact` holding page — email link + footer nav bar. |
+| B5 | Post-onboarding redirect → `/dashboard` (was `/ideas/create`). Respects `?redirect_url` param for users arriving via `/ideas/create` flow. |
+| B6 | Get Started button + Navbar.tsx Create link fixed: `/prototype/create/stage1` → `/ideas/create`. |
+| B8 | Lex v5.0 full system prompt applied to `app/api/ai/[ideaId]/route.ts`: commit-and-advance, three-exchange limit, field completion reference, Stage 1 aha moment, background-question guidance. |
+| B10 | Dynamic opening message (first visit vs return visit, personalised by preferredName + time of day). Computed server-side in `page.tsx`, passed as prop to `CreateIdeaClient`. Auto-focus on input after each Lex response confirmed. |
+
+**Locked decision updated:** Opening message is now dynamic (first visit vs return). The v4.1 locked wording applies to the fallback only (unauthenticated edge case).
+
+---
+
+## SPRINT 9 + V1 LAUNCH — COMPLETE ✅
 
 Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutinise.co.uk has:
 - Real idea detail pages at `/ideas/[id]` (five-stage stepper, full content, tabs)
@@ -93,7 +114,7 @@ Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutin
 | Privacy Log = admin access logged + visible to owner | LOCKED |
 | Lex default AI mode = Collaborative | LOCKED |
 | Preferred name collected at onboarding (not Clerk custom fields) | LOCKED — Sprint 2 decision |
-| Opening message = "I'm Lex, your researcher and guide. What's the challenge you want to fix?" | LOCKED — lex_system_prompt_v4.1 Section 13 |
+| Opening message = dynamic per v5.0 (first visit / return visit / fallback). Fallback: "I'm Lex…" | UPDATED — 26 Mar 2026 post-UAT fix |
 | Chat input position = follows conversation, not pinned to viewport | LOCKED |
 | RH sidebar = 7 fields per lex_system_prompt_v4.1 Section 16 | LOCKED |
 | No registration gate before Lex — auth triggered by save prompt | LOCKED |
@@ -110,7 +131,7 @@ Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutin
 | entity_list_v4.md | v4 | ⚠️ Needs new fields applied by CCh (see below) |
 | process_list_v2.md | v2 | ⚠️ Needs amendment counter-proposal + contributions updates |
 | system_mechanics | v0.7 (22-03-26) | ✅ Current |
-| lex_system_prompt | v4.1 (22-03-26) | ✅ Current |
+| lex_system_prompt | v5.0 (24-03-26) | ✅ Current — inline prompt updated 26 Mar 2026 |
 | wireframes | v3 | ⚠️ Needs UX fixes logged |
 | UX_and_voice_build_notes.md | 13-03-26 | ✅ Incorporated into Sprint 2 build |
 | handoff_summary | v5 (23-03-26) | ✅ This file |
@@ -474,4 +495,4 @@ Deferred (do not build without explicit instruction):
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 26 March 2026 v13*
+*handoff_summary.md — Scrutinise — 26 March 2026 v14*

@@ -2,7 +2,22 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 24 March 2026*
+*Last updated: 26 March 2026*
+
+---
+
+## CODE CHANGES — 26 March 2026 (Post-UAT Bug Fixes)
+
+| Bug | File(s) | Change |
+|-----|---------|--------|
+| B1 | `app/ideas/create/page.tsx`, `app/ideas/create/CreateIdeaClient.tsx` | Auth guard: server component with `auth()` redirect for unauthenticated users; client code extracted to `CreateIdeaClient.tsx` |
+| B2 | `app/ideas/page.tsx` | Browse Ideas holding page — PublicNav, Sign Up button, back to home |
+| B3 | `app/privacy/page.tsx` | Privacy Policy holding page — PublicNav, footer nav |
+| B4 | `app/contact/page.tsx` | Contact Us holding page — hello@scrutinise.org, footer nav |
+| B5 | `app/onboarding/page.tsx` | Post-onboarding redirect → `/dashboard`; respects `redirect_url` query param |
+| B6 | `app/page.tsx`, `components/ui/Navbar.tsx` | `/prototype/create/stage1` → `/ideas/create` |
+| B8 | `app/api/ai/[ideaId]/route.ts` | Full Lex v5.0 system prompt: commit-and-advance, three-exchange limit, field completion reference, Stage 1 aha moment |
+| B10 | `app/ideas/create/page.tsx`, `app/ideas/create/CreateIdeaClient.tsx` | Dynamic opening message (first visit vs return visit), personalised by preferredName and time of day |
 
 ---
 
