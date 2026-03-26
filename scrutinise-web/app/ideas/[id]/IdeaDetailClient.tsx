@@ -1447,6 +1447,51 @@ function TeamTab({
   const [groupName, setGroupName] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
 
+  // Transfer ownership state
+  const [transferToUserId, setTransferToUserId] = useState('')
+  const [showTransferConfirm, setShowTransferConfirm] = useState(false)
+  const [transferring, setTransferring] = useState(false)
+  const [transferError, setTransferError] = useState<string | null>(null)
+  const [transferPending, setTransferPending] = useState(false)
+  const [transferPendingName, setTransferPendingName] = useState('')
+
+  async function handleInitiateTransfer() {
+    if (!transferToUserId) return
+    setTransferring(true)
+    setTransferError(null)
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/transfer/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newOwnerUserId: transferToUserId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setTransferError(data.error ?? 'Something went wrong')
+        return
+      }
+      const selectedCollab = idea.collaborators.find(c => c.user.id === transferToUserId)
+      setTransferPendingName(selectedCollab?.user.name ?? '')
+      setTransferPending(true)
+      setShowTransferConfirm(false)
+    } catch {
+      setTransferError('Network error — please try again')
+    } finally {
+      setTransferring(false)
+    }
+  }
+
+  async function handleCancelTransfer() {
+    try {
+      await fetch(`/api/ideas/${idea.id}/transfer/cancel`, { method: 'POST' })
+      setTransferPending(false)
+      setTransferPendingName('')
+      setTransferToUserId('')
+    } catch {
+      // non-critical
+    }
+  }
+
   useEffect(() => {
     fetch(`/api/ideas/${idea.id}/groups`)
       .then(r => r.ok ? r.json() : Promise.reject(r))
@@ -1596,6 +1641,83 @@ function TeamTab({
           </div>
         )
       })}
+
+      {/* Transfer Ownership — owner only, requires at least 1 collaborator */}
+      {isOwner && idea.collaborators.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Transfer Ownership
+          </h3>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Transfer ownership to a collaborator. The new owner will receive full control of this idea. You will become a collaborator.
+          </p>
+
+          {transferPending ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Transfer pending — waiting for <strong>{transferPendingName}</strong> to accept.{' '}
+              <button
+                onClick={handleCancelTransfer}
+                className="underline underline-offset-2 hover:text-amber-700"
+              >
+                Cancel transfer
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  value={transferToUserId}
+                  onChange={e => setTransferToUserId(e.target.value)}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Select a collaborator…</option>
+                  {idea.collaborators.map(c => (
+                    <option key={c.userId} value={c.user.id}>
+                      {c.user.name}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!transferToUserId}
+                  onClick={() => setShowTransferConfirm(true)}
+                >
+                  Initiate Transfer
+                </Button>
+              </div>
+              {transferError && (
+                <p className="mt-2 text-xs text-destructive">{transferError}</p>
+              )}
+            </>
+          )}
+
+          {/* Confirm modal */}
+          {showTransferConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="w-full max-w-md rounded-xl border bg-background p-6 shadow-xl">
+                <h2 className="font-semibold">Transfer ownership?</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Transfer ownership of <strong>{idea.title}</strong> to{' '}
+                  <strong>{idea.collaborators.find(c => c.user.id === transferToUserId)?.user.name}</strong>?
+                  They will receive an email to accept. Once accepted, this cannot be undone.
+                </p>
+                {transferError && (
+                  <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{transferError}</p>
+                )}
+                <div className="mt-4 flex gap-3">
+                  <Button variant="outline" size="sm" onClick={() => setShowTransferConfirm(false)} disabled={transferring}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleInitiateTransfer} disabled={transferring}>
+                    {transferring ? 'Sending…' : 'Confirm'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -441,6 +441,10 @@ model Idea {
   aiSessionCount            Int             @default(0)
   // Referral
   referralLinkActive        Boolean         @default(false)
+  // Ownership transfer
+  ownershipTransferToken    String?         @unique
+  ownershipTransferToId     String?
+  ownershipTransferExpiry   DateTime?
   // Timestamps
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt

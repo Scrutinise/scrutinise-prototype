@@ -109,3 +109,69 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
 
   await sendEmail({ to: toEmail, subject, html, text })
 }
+
+export async function sendOwnershipTransferEmail({
+  toEmail,
+  toFirstName,
+  fromOwnerName,
+  ideaTitle,
+  ideaId,
+  token,
+}: {
+  toEmail: string
+  toFirstName: string
+  fromOwnerName: string
+  ideaTitle: string
+  ideaId: string
+  token: string
+}): Promise<void> {
+  const acceptUrl = `${APP_URL}/ideas/${ideaId}/transfer/accept?token=${token}`
+  const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
+
+  const subject = `${fromOwnerName} wants to transfer ownership of "${ideaTitle}" to you`
+
+  const text = `
+Hi ${toFirstName},
+
+${fromOwnerName} has offered to transfer full ownership of their Scrutinise idea to you:
+
+"${ideaTitle}"
+
+If you accept, you will become the owner of this idea. ${fromOwnerName} will become a collaborator.
+
+Click the link below to accept. This offer expires in 48 hours.
+
+${acceptUrl}
+
+If you did not expect this, you can ignore this email.
+
+---
+If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Ownership transfer offer</h2>
+  <p>Hi ${toFirstName},</p>
+  <p><strong>${fromOwnerName}</strong> has offered to transfer full ownership of their Scrutinise idea to you:</p>
+  <p style="font-size: 16px; font-weight: 600; padding: 12px; background: #f4f4f5; border-radius: 6px;">"${ideaTitle}"</p>
+  <p>If you accept, you will become the owner. ${fromOwnerName} will become a collaborator.</p>
+  <p>
+    <a href="${acceptUrl}" style="display: inline-block; padding: 12px 24px; background: #18181b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+      Accept ownership →
+    </a>
+  </p>
+  <p style="color: #71717a; font-size: 12px;">This offer expires in 48 hours. If you did not expect this, you can ignore this email.</p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">
+    Scrutinise is a not-for-profit civic technology platform.<br/>
+    <a href="${unsubscribeUrl}" style="color: #71717a;">Unsubscribe</a>
+  </p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: toEmail, subject, html, text })
+}
