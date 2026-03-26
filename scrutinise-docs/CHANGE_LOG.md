@@ -21,6 +21,52 @@
 
 ---
 
+## CODE CHANGES — 26 March 2026 (Sprint L1 — Lex Overhaul)
+
+### L1-1: Schema + sub-entity API routes
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Add Diagnosis, RootCause, GuidingPolicy, Evidence models; EvidenceOutcome enum; missing CoherentAction fields (costFinancial/Social/Ongoing, benefits, keyChallenges, legislationDraftWording, organisationalChangeDraftWording, oppositionWho/Why/Answers); add Idea relations to new models |
+| `app/api/ideas/[id]/diagnosis/route.ts` | POST upsert Diagnosis (one per idea) |
+| `app/api/ideas/[id]/root-causes/route.ts` | GET list + POST create RootCause |
+| `app/api/ideas/[id]/guiding-policy/route.ts` | POST upsert GuidingPolicy (one per idea) |
+| `app/api/ideas/[id]/evidence/route.ts` | POST create Evidence |
+| `app/api/ideas/[id]/coherent-actions/route.ts` | Updated to accept all CoherentAction fields from entity_list_v4.md |
+
+### L1-2: Stage 1 Lex scoped to Basic Info
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Stage 1 prompt: 3–5 exchange flow, targets title/summaryDescription/summaryDiagnosis/summaryGuidingPolicy/summaryCoherentActions/govtArea/ideaType; triggerSavePrompt on summaryDiagnosis+summaryGuidingPolicy; mirrors to legacy fields for sidebar compat |
+| `app/api/ai/public/route.ts` | Updated SYSTEM_PROMPT to use Stage 1 field names |
+
+### L1-3: FieldProposalCard approval UX
+| File | Change |
+|------|--------|
+| `components/FieldProposalCard.tsx` | New: teal-accented proposal card; Accept/Edit/Discuss buttons; 30s auto-accept countdown; keyboard shortcuts; swipe gestures; edit mode; saved/discussed states |
+| `app/api/ideas/[id]/field-approval/route.ts` | New: POST accepts proposal, writes to DB; handles Idea-level, diagnosis.*, guidingPolicy.*, rootCause.*, coherentActions, evidence fields; returns completedFields |
+| `app/api/ai/[ideaId]/route.ts` | Stop writing fieldUpdates to DB; return pendingProposals array; serverTrigger checks proposals |
+| `app/ideas/create/CreateIdeaClient.tsx` | Handle pendingProposals; render FieldProposalCards; disable input while pending; "Accept all" button; POST to field-approval |
+
+### L1-4: Stage 2 Lex two-pass Strategic Kernel
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Stage 2 system prompt: Pass 1 (core kernel) + Pass 2 (supporting detail); aha-moment reflection; research prompt; full sub-entity field targets with dot notation |
+
+### L1-5: Idea tab with sub-tabs + full field display
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/page.tsx` | Fetch diagnoses, rootCauses, guidingPolicies, evidence; serialise; pass to IdeaDetailClient |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Rename Overview → Idea tab; add 4 sub-tabs (Overview, Diagnosis, Policy, Coherent Actions); FieldDisplay component with inline edit; sub-entity interfaces; extended CoherentAction interface |
+
+### L1-6: Campaign in a Box button + Browse Ideas page
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Campaign in a Box button: owner-only, disabled Stages 1–3, active Stages 4–5 navigates to Campaign tab |
+| `app/ideas/page.tsx` | Replace holding page with real server-side listing: Stage 3+ ACTIVE ideas, cursor pagination, "Your Ideas" section for auth users |
+| `components/IdeaCard.tsx` | New: idea card with title, summary, stage badge, govtArea tag, creator link, votes, contributions, relative time |
+
+---
+
 ## PENDING CHANGES
 *(Changes decided but not yet applied to spec docs)*
 

@@ -1,5 +1,56 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 26 March 2026 v13*
+*Last updated: 26 March 2026 v14*
+
+---
+
+## CURRENT STATE — SPRINT L1 (LEX OVERHAUL) COMPLETE ✅
+
+Sprint L1 complete. Six commits to Main. All tsc --noEmit clean. Deploy actions needed: `npx prisma db push` + `npx prisma generate` + any new env vars.
+
+### Sprint L1 Summary
+
+**Architecture change — FieldProposalCard approval flow:**
+- Lex responses no longer write field values to DB immediately.
+- Instead, `pendingProposals` are returned to the client (fieldKey, fieldLabel, proposedValue).
+- User approves/edits each proposal via `FieldProposalCard` component.
+- On approval: POST to `/api/ideas/[id]/field-approval` which writes to DB and returns updated `completedFields`.
+- This applies to both Stage 1 and Stage 2 Lex interactions.
+
+**Two-stage Lex model:**
+- Stage 1 (CREATE): Basic Info only. 3–5 exchanges. Fields: title, summaryDescription, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, govtArea, ideaType. triggerSavePrompt fires when summaryDiagnosis + summaryGuidingPolicy both proposed/saved.
+- Stage 2 (DRAFT): Full Strategic Kernel via two-pass model. Pass 1: diagnosis.text, rootCause.text (5 Whys), guidingPolicy.text, coherentActions[0]. Pass 2: supporting detail (whoAffected, whyPersisted, impactCost, competitiveIdeaAnalysis, practicalExecution, keyRisks). Aha-moment reflection after Pass 1.
+- All sub-entity fields use dot notation in fieldUpdates JSON: `{"diagnosis.text": "..."}`.
+
+**New sub-entity models (Prisma):**
+- `Diagnosis` — @@unique([ideaId]), upsert via POST /api/ideas/[id]/diagnosis
+- `RootCause` — multiple per idea, GET+POST /api/ideas/[id]/root-causes
+- `GuidingPolicy` — @@unique([ideaId]), upsert via POST /api/ideas/[id]/guiding-policy
+- `Evidence` — multiple per idea, POST /api/ideas/[id]/evidence
+- `EvidenceOutcome` enum (SUCCESS, FAILURE, MIXED)
+- New CoherentAction fields: legislationDraftWording, organisationalChangeDraftWording, costFinancial, costSocial, costOngoing, benefits, keyChallenges, oppositionWho, oppositionWhy, oppositionAnswers
+
+**Idea tab restructure:**
+- "Overview" tab renamed to "Idea" tab.
+- Tab order: Idea | Research | Contributions | Amendments | Team | Campaign (Stage 4+) | Privacy Log (owner)
+- Idea tab has 4 sub-tabs: Overview | Diagnosis | Policy | Coherent Actions
+- Each field has inline edit (owner/collaborator) via ✎ icon → field-approval route
+- Empty field placeholder: "Not yet completed — [description]"
+
+**Campaign in a Box button:**
+- Owner-only, visible at all stages.
+- Stages 1–3: disabled/greyed, tooltip.
+- Stages 4–5: active, navigates to Campaign tab.
+
+**Browse Ideas page (/ideas):**
+- Real server-side listing: Stage 3+ ACTIVE ideas.
+- Cursor pagination (20/page).
+- "Your Ideas" section for authenticated users (max 3 ideas).
+- IdeaCard component: title link, summary, stage badge, govtArea, creator, votes, contributions, relative time.
+
+**Legacy sidebar compatibility:**
+- summaryDiagnosis is mirrored to `diagnosis` (Idea-level legacy field) on approval.
+- summaryGuidingPolicy is mirrored to `guidingPolicy` on approval.
+- completedFields checks `summaryDiagnosis OR diagnosis` (and same for guidingPolicy).
 
 ---
 
