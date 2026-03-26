@@ -1,5 +1,5 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 24 March 2026 v12*
+*Last updated: 26 March 2026 v13*
 
 ---
 
@@ -62,13 +62,15 @@ Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutin
 - Real dashboard at /dashboard (ideas, notifications, stats)
 - All console.log removed from production code
 - New schema fields: User.deletionRequestedAt, User.deletionScheduledFor, User.unsubscribeToken
-- Priorities 8 (Sentry) and 9 (GA4) skipped — env vars not yet set in Vercel
+- Priorities 8 (Sentry) and 9 (GA4) delivered — env vars confirmed in Vercel ✅
+- Google Search Console verification file committed ✅
+- Clerk `user.updated` webhook enabled ✅
+- RESEND_API_KEY added to Vercel — email sending now live ✅
 
 **IMPORTANT — BEFORE NEXT DEPLOY:**
 - Run `npx prisma db push` to apply new User schema fields to Railway DB
 - Run `npx prisma generate` to update TypeScript client types
 - Remove `as any` casts in: lib/auth.ts, lib/gdpr.ts, app/api/user/account/route.ts, app/unsubscribe/[token]/page.tsx
-- Add to Vercel: SENTRY_DSN (Priority 8) and NEXT_PUBLIC_GA4_MEASUREMENT_ID (Priority 9), then redeploy
 
 **Branch:** Main (Vercel auto-deploys from Main)
 
@@ -144,9 +146,12 @@ Sprint 9 complete. All pre-launch priorities delivered. The live site at scrutin
 | `app/api/webhooks/clerk/route.ts` | console.log removed |
 | `prisma/schema.prisma` | User: deletionRequestedAt DateTime?, deletionScheduledFor DateTime?, unsubscribeToken String @unique @default(uuid()) |
 
-### Skipped (env vars not set in Vercel)
-- Priority 8: Sentry — add SENTRY_DSN to Vercel, then run `npx @sentry/wizard@latest -i nextjs`
-- Priority 9: GA4 — add NEXT_PUBLIC_GA4_MEASUREMENT_ID to Vercel
+### Post-UAT infrastructure (26 March 2026)
+- Priority 8: Sentry ✅ — @sentry/nextjs installed; sentry.{client,server,edge}.config.ts + withSentryConfig in next.config.js
+- Priority 9: GA4 ✅ — NEXT_PUBLIC_GA4_MEASUREMENT_ID (G-E81CSK3BLK) wired via next/script in layout.tsx
+- Google Search Console verification file committed (google7ed72e522d97f652.html) ✅
+- Clerk user.updated webhook enabled ✅
+- RESEND_API_KEY added to Vercel — email sending now live ✅
 
 ---
 
@@ -387,11 +392,11 @@ Carried from Sprint 1:
 
 ## ENVIRONMENT VARIABLES
 
-**Confirmed in Vercel Production:** DATABASE_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET
+**Confirmed in Vercel Production:** DATABASE_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, RESEND_API_KEY, NEXT_PUBLIC_GA4_MEASUREMENT_ID (G-E81CSK3BLK), SENTRY_DSN
 
 **Needs verification (may be missing from Production):** GEMINI_API_KEY, GROK_API_KEY, GOOGLE_SAFE_BROWSING_API_KEY
 
-**Not yet set:** RESEND_API_KEY, CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_URL, NEXT_PUBLIC_GA4_MEASUREMENT_ID, SENTRY_DSN
+**Not yet set:** CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PUBLIC_URL
 
 ---
 
@@ -419,7 +424,7 @@ BEFORE STARTING ANY CODE:
 1. Run: npx prisma db push (apply User GDPR fields to Railway DB)
 2. Run: npx prisma generate (update TypeScript types)
 3. Remove all `as any` casts added in Sprint 9 (see IMPORTANT note in CURRENT STATE)
-4. Check Vercel for SENTRY_DSN and NEXT_PUBLIC_GA4_MEASUREMENT_ID — add both and trigger redeploy to enable Priorities 8 and 9.
+4. After deploy: verify Search Console ownership in Google Search Console + submit sitemap.
 
 Sprint 9 complete. All pre-launch priorities delivered:
   1. Prototype link audit — all /prototype/* links replaced in nav + layout ✅
@@ -429,8 +434,8 @@ Sprint 9 complete. All pre-launch priorities delivered:
   5. Legal pages verified (Version 1.0 — Draft) ✅
   6. GDPR data export + account deletion (30-day grace) ✅
   7. Settings page + real dashboard ✅
-  8. Sentry — SKIPPED (no SENTRY_DSN in Vercel)
-  9. GA4 — SKIPPED (no NEXT_PUBLIC_GA4_MEASUREMENT_ID in Vercel)
+  8. Sentry ✅ (SENTRY_DSN confirmed in Vercel; @sentry/nextjs wired)
+  9. GA4 ✅ (NEXT_PUBLIC_GA4_MEASUREMENT_ID = G-E81CSK3BLK; wired in layout.tsx)
 
 Deferred (do not build without explicit instruction):
 - PDF download of generated documents (R2 not wired)
@@ -469,4 +474,4 @@ Deferred (do not build without explicit instruction):
 ```
 
 ---
-*handoff_summary.md — Scrutinise — 24 March 2026 v12*
+*handoff_summary.md — Scrutinise — 26 March 2026 v13*
