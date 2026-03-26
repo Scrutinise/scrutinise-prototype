@@ -6,6 +6,18 @@
 
 ---
 
+## CODE CHANGES — 26 March 2026 (Content and Copy)
+
+| Change | File(s) | Detail |
+|--------|---------|--------|
+| About page copy | `app/about/page.tsx` | Replaced 5 paragraphs with 4 new ones — non-partisan mission statement, platform description, track record rationale, closing focus line |
+| Training page items | `lib/mockData.ts` | All 5 MOCK_TRAINING items updated: real URLs, Item 4 renamed to "Parliament's Engagement with the Public", all changed to ARTICLE type (external/internal links) |
+| Legislative drafting sub-page | `app/training/legislative-drafting/page.tsx` | New page: OPC guidance link, Core Principles, IfG Recommendations, Best Practices sections |
+| Parliamentary scrutiny sub-page | `app/training/parliamentary-scrutiny/page.tsx` | New page: Key Aspects, Current Concerns, Key Links sections |
+| Terms / Community Rules nav | `app/terms/page.tsx`, `app/community-rules/page.tsx`, `components/BackLink.tsx` | Removed PublicNav from both pages (used in sign-up flow); replaced with `BackLink` client component using `router.back()` |
+
+---
+
 ## CODE CHANGES — 26 March 2026 (Post-UAT Bug Fixes)
 
 | Bug | File(s) | Change |
