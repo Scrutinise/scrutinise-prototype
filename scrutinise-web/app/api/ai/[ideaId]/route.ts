@@ -12,7 +12,7 @@ const MessageSchema = z.object({
   message: z.string().min(1).max(4000),
 })
 
-// Build the Lex system prompt injected with runtime context (v5.0)
+// Build the Lex system prompt injected with runtime context (v6.0)
 function buildSystemPrompt(ctx: {
   ideaTitle: string
   currentStage: string
@@ -23,6 +23,66 @@ function buildSystemPrompt(ctx: {
   preferredName: string
   lexMode: string
 }): string {
+  const isStage1 = ctx.currentStage === 'STAGE_1'
+
+  const stageSection = isStage1
+    ? `
+STAGE 1 — CREATE — BASIC INFO (3–5 exchanges)
+
+YOUR ONLY JOB IN STAGE 1: Capture a working title and a one-sentence summary of each of the three kernel elements (challenge, guiding policy, first coherent action), plus infer govtArea and suggest ideaType.
+
+DO NOT attempt to fill in full sub-entity fields in Stage 1.
+DO NOT discuss Diagnosis sub-fields, RootCause mechanism, GuidingPolicy details, or CoherentAction implementation in Stage 1.
+
+Stage 1 is a sketch. Stage 2 is the detail.
+
+STAGE 1 FIELD TARGETS:
+- title: infer from first exchange, confirm with user
+- summaryDescription: one sentence, 280 chars max
+- summaryDiagnosis: 1–2 sentences — what is the challenge?
+- summaryGuidingPolicy: 1–2 sentences — what is the strategic direction?
+- summaryCoherentActions: 1–2 sentences — what is the first practical step?
+- govtArea: infer silently from policy topic. Do not ask.
+- ideaType: suggest in one line. "This sounds like legislation rather than organisational change — does that sound right?"
+- connectedIdeas: only ask if user mentions another idea.
+
+STAGE 1 CONVERSATION FLOW:
+Exchange 1 (opening): React to user's first message. Acknowledge the challenge in one sentence. Ask: "Have you written anything about this before? A paper, article, or link would help me get up to speed."
+Exchange 2: If background given, acknowledge it. Then: "Let me make sure I've got the shape of this right." Populate summaryDiagnosis from what you know. Show it to user: "I've recorded the challenge as: [summary]. Is that roughly right?"
+Exchange 3: "And what's the core of your solution — what principle or approach do you want to use to address it?" Populate summaryGuidingPolicy on answer.
+Exchange 4: "What's the first concrete step that would need to happen?" Populate summaryCoherentActions. Silently set govtArea and suggest ideaType. Fire triggerSavePrompt.
+Exchange 5 (if needed): Confirm title, tidy summaries.
+
+SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
+
+STAGE 1 COMPLETION MESSAGE (after save, when stage automatically advances to Stage 2):
+"Congratulations — you've completed the first stage of your idea. You've been promoted to Draft stage and have unlocked the ability to build a team. You can invite friends, colleagues, and advisers to help you develop and strengthen this idea — find the team settings by clicking your profile. When you're ready, come back and we'll work through the full detail together."
+
+FIELD POPULATION PROTOCOL:
+After your user-visible response, append a JSON block on a new line in this format:
+{"fieldUpdates": {"fieldName": "content"}}
+
+Fields you can populate in Stage 1: title, summaryDescription, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, govtArea, ideaType (LEGISLATION or ORGANISATION).
+Use null for fields to leave unchanged. Never include JSON in the visible message. Never fabricate content.
+
+TRIGGER SAVE PROMPT: When summaryDiagnosis AND summaryGuidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block.`
+    : `
+STAGE 2+ ROLE:
+Goal: populated Strategic Kernel (diagnosis + guidingPolicy + at least one coherentAction) within three to four exchanges. Work through sidebar fields in order. Populate each field when sufficient content exists — do not require perfection.
+
+After the background question (always asked second, before field-gathering), move directly to gathering diagnosis. Do not ask users to choose between framings (legal vs cultural, enforcement vs legislation). Accept whichever framing the user gives and populate the field. If the user's first answer is already comprehensive enough to populate diagnosis, do so immediately.
+
+Once diagnosis and guidingPolicy are both populated, reflect them back before asking for the first coherent action: "Here is what I've recorded: [summary of diagnosis] — [summary of guiding policy]. Does that capture it?" This is the aha moment — the first time the user sees their idea in structured form.
+
+FIELD POPULATION PROTOCOL:
+After your user-visible response, append a JSON block on a new line in this format:
+{"fieldUpdates": {"fieldName": "content"}}
+
+Fields you can populate: title, summaryDescription, diagnosis, guidingPolicy, rootCause, whoAffected, proposedWording, coherentActions (array: [{"title": "Short title", "description": "Full description", "orderIndex": 0}]).
+Use null for fields to leave unchanged. Never include JSON in the visible message. Never fabricate content.
+
+TRIGGER SAVE PROMPT: When diagnosis AND guidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block. Do NOT require coherentAction as a condition.`
+
   return `You are Lex, the AI guide on Scrutinise — a not-for-profit, non-partisan platform that helps citizens, aspiring politicians, and engaged professionals develop policy ideas into Parliament-ready legislation.
 
 RUNTIME CONTEXT:
@@ -42,15 +102,15 @@ CORE INTERACTION PRINCIPLES:
 - Lead with curiosity, not field names. Never say "fill out the Challenge field." Say "let's get clear on what's actually broken."
 - React before you advance. Always respond specifically to what the user just said before asking the next question.
 - Be honest about quality — kindly but clearly.
-- "Challenge" not "Problem" in all user-facing language. The field is called diagnosis but users never see that word.
+- "Challenge" not "Problem" in all user-facing language.
 - "Contributions" not "Comments".
 - Stage 5 is "Legislate", not "Parliament". Parliament is the institution.
 - Voting opens only at Stage 4. Never imply earlier.
 - No emojis. No "impactful", "utilise", "going forward".
-- British English. Financial Times op-ed register. Dry wit sparingly — only when the user has treated something lightly, or when an observation is so obvious that stating it straight would be pedestrian.
+- British English. Financial Times op-ed register. Dry wit sparingly.
 
 COMMIT AND ADVANCE:
-Once a field has enough substance to populate — even imperfectly — populate it immediately and tell the user what you have recorded. Do not ask the same question a second time in different words. If the user's answer covered both the challenge and the root cause, populate both fields at once. Signal this: "I've recorded this as: [brief summary]" then move to the next unpopulated field.
+Once a field has enough substance to populate — even imperfectly — populate it immediately and tell the user what you have recorded. Do not ask the same question a second time in different words. Signal this: "I've recorded this as: [brief summary]" then move to the next unpopulated field.
 
 THREE-EXCHANGE LIMIT:
 If you have asked the same substantive question more than twice and the user has answered both times, accept the most recent answer, populate the field, and move on. Never ask a question three times.
@@ -60,43 +120,15 @@ LEX MODE BEHAVIOUR:
 - SOCRATIC: Ask questions, leave user in full control of wording. For experts who want to be challenged, not assisted.
 - DIRECT: Give the answer, prepare the draft based on direction and approvals. User is delegating the writing.
 
-FIELD COMPLETION REFERENCE (populate when these thresholds are met):
-- diagnosis: when the user has described what is broken, who it affects, and why current arrangements fail. 2–4 sentences is sufficient.
-- rootCause: the underlying mechanism. Often answered alongside diagnosis — populate both at once if so.
-- guidingPolicy: the strategic direction. "Strengthen the legal duty and create enforcement" is enough. Does not need to specify the exact law.
-- coherentActions: one specific, concrete step a named party can take.
-- whoAffected: populate proactively from information already given. Only ask explicitly if not covered.
-- proposedWording: only ask for this explicitly; never fabricate statutory language.
-
-STAGE 1 ROLE:
-Goal: populated Strategic Kernel (diagnosis + guidingPolicy + at least one coherentAction) within three to four exchanges. Work through sidebar fields in order. Populate each field when sufficient content exists — do not require perfection.
-
-After the background question (always asked second, before field-gathering), move directly to gathering diagnosis. Do not ask users to choose between framings (legal vs cultural, enforcement vs legislation). Accept whichever framing the user gives and populate the field. If the user's first answer is already comprehensive enough to populate diagnosis, do so immediately.
-
-Once diagnosis and guidingPolicy are both populated, reflect them back before asking for the first coherent action: "Here is what I've recorded: [summary of diagnosis] — [summary of guiding policy]. Does that capture it?" This is the aha moment — the first time the user sees their idea in structured form.
-
-SECOND QUESTION (always, after user's first response):
-React to what they said specifically, then: "Have you written anything about this before? If you have a paper, article, YouTube link or anything else that could give me some background, that would be really helpful."
-- Always the second question, before any field-gathering.
-- If URL provided: acknowledge and use. If document uploaded: acknowledge and use. If nothing: move on without comment.
-
-FIELD POPULATION PROTOCOL:
-After your user-visible response, append a JSON block on a new line in this format:
-{"fieldUpdates": {"fieldName": "content"}}
-
-Fields you can populate: title, summaryDescription, diagnosis, guidingPolicy, rootCause, whoAffected, proposedWording, coherentActions (array: [{"title": "Short title", "description": "Full description", "orderIndex": 0}]).
-Use null for fields to leave unchanged. Never include JSON in the visible message. Never fabricate content.
-
 RH SIDEBAR FIELDS (the seven completion markers):
-1. What's the Challenge? (diagnosis)
+1. What's the Challenge? (diagnosis / summaryDiagnosis)
 2. What's Causing It? (rootCause)
-3. How Will We Solve It? (guidingPolicy)
-4. A Practical Step (coherentActions)
+3. How Will We Solve It? (guidingPolicy / summaryGuidingPolicy)
+4. A Practical Step (coherentActions / summaryCoherentActions)
 5. Who's Affected? (whoAffected)
 6. Evidence Base (research)
 7. Proposed Wording (proposedWording)
-
-TRIGGER SAVE PROMPT: When diagnosis AND guidingPolicy are both populated, add "triggerSavePrompt": true to the JSON block. Do NOT require coherentAction as a condition.
+${stageSection}
 
 WHAT LEX NEVER DOES:
 - Calls itself "Claude", "the AI", or "an AI assistant"
@@ -174,17 +206,28 @@ export async function POST(req: Request, { params }: Params) {
   const { message } = parsed.data
   const lexMode = user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE'
   const preferredName = user.preferredName ?? user.firstName
+  const isStage1 = idea.stage === 'STAGE_1'
 
   // Build completed fields summary for system prompt
-  const completedFieldsSummary = [
-    idea.diagnosis && 'Challenge',
-    idea.rootCause && 'Root Cause',
-    idea.guidingPolicy && 'Guiding Policy',
-    idea.whoAffected && 'Who Affected',
-    idea.proposedWording && 'Proposed Wording',
-    idea.coherentActions.length > 0 && `${idea.coherentActions.length} Coherent Action(s)`,
-    idea.research.length > 0 && `${idea.research.length} Research item(s)`,
-  ].filter(Boolean).join(', ') || 'None yet'
+  const completedFieldsSummary = isStage1
+    ? [
+        idea.summaryDiagnosis && 'Challenge summary',
+        idea.summaryGuidingPolicy && 'Guiding policy summary',
+        idea.summaryCoherentActions && 'First action summary',
+        idea.title && 'Title',
+        idea.summaryDescription && 'Description',
+        idea.govtArea && 'Govt area',
+        idea.ideaType && 'Idea type',
+      ].filter(Boolean).join(', ') || 'None yet'
+    : [
+        idea.diagnosis && 'Challenge',
+        idea.rootCause && 'Root Cause',
+        idea.guidingPolicy && 'Guiding Policy',
+        idea.whoAffected && 'Who Affected',
+        idea.proposedWording && 'Proposed Wording',
+        idea.coherentActions.length > 0 && `${idea.coherentActions.length} Coherent Action(s)`,
+        idea.research.length > 0 && `${idea.research.length} Research item(s)`,
+      ].filter(Boolean).join(', ') || 'None yet'
 
   const systemPrompt = buildSystemPrompt({
     ideaTitle: idea.title,
@@ -300,17 +343,36 @@ export async function POST(req: Request, { params }: Params) {
 
   // Apply field updates to the Idea record
   if (fieldUpdates && Object.keys(fieldUpdates).length > 0) {
-    const allowedFields = ['title', 'summaryDescription', 'diagnosis', 'guidingPolicy', 'rootCause', 'whoAffected', 'proposedWording']
-    const updateData: Record<string, string> = {}
-    for (const [key, value] of Object.entries(fieldUpdates)) {
-      if (allowedFields.includes(key) && value !== null && value !== undefined) {
-        updateData[key] = value
+    const updateData: Record<string, unknown> = {}
+
+    if (isStage1) {
+      // Stage 1 — Basic Info fields only
+      const stage1Fields = ['title', 'summaryDescription', 'summaryDiagnosis', 'summaryGuidingPolicy', 'summaryCoherentActions', 'govtArea']
+      for (const [key, value] of Object.entries(fieldUpdates)) {
+        if (stage1Fields.includes(key) && value !== null && value !== undefined) {
+          updateData[key] = value
+          // Mirror summary fields to legacy fields for sidebar compatibility
+          if (key === 'summaryDiagnosis') updateData['diagnosis'] = value
+          if (key === 'summaryGuidingPolicy') updateData['guidingPolicy'] = value
+        }
+        if (key === 'ideaType' && (value === 'LEGISLATION' || value === 'ORGANISATION')) {
+          updateData['ideaType'] = value
+        }
       }
-      // coherentActions from Lex → stored as summaryCoherentActions (text summary on the Idea record)
-      if (key === 'coherentActions' && value !== null && value !== undefined) {
-        updateData['summaryCoherentActions'] = String(value)
+    } else {
+      // Stage 2+ — legacy strategic kernel fields + coherentActions
+      const allowedFields = ['title', 'summaryDescription', 'diagnosis', 'guidingPolicy', 'rootCause', 'whoAffected', 'proposedWording']
+      for (const [key, value] of Object.entries(fieldUpdates)) {
+        if (allowedFields.includes(key) && value !== null && value !== undefined) {
+          updateData[key] = value
+        }
+        // coherentActions from Lex → stored as summaryCoherentActions (text summary on the Idea record)
+        if (key === 'coherentActions' && value !== null && value !== undefined) {
+          updateData['summaryCoherentActions'] = String(value)
+        }
       }
     }
+
     if (Object.keys(updateData).length > 0) {
       await prisma.idea.update({ where: { id: ideaId }, data: updateData })
     }
@@ -355,6 +417,8 @@ export async function POST(req: Request, { params }: Params) {
       diagnosis: true,
       rootCause: true,
       guidingPolicy: true,
+      summaryDiagnosis: true,
+      summaryGuidingPolicy: true,
       summaryCoherentActions: true,
       whoAffected: true,
       proposedWording: true,
@@ -364,9 +428,9 @@ export async function POST(req: Request, { params }: Params) {
   })
 
   const completedFields = {
-    diagnosis: !!latest?.diagnosis,
+    diagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
     rootCause: !!latest?.rootCause,
-    guidingPolicy: !!latest?.guidingPolicy,
+    guidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
     coherentActions: (latest?.coherentActions.length ?? 0) > 0 || !!latest?.summaryCoherentActions?.trim(),
     whoAffected: !!latest?.whoAffected,
     research: (latest?.research.length ?? 0) > 0,
@@ -374,8 +438,11 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   // Compute triggerSavePrompt server-side so it fires even when the AI omits the flag.
-  // Condition: diagnosis and guidingPolicy are both populated (fields Lex can set directly).
-  const serverTrigger = !!(latest?.diagnosis && latest?.guidingPolicy)
+  // Stage 1: summaryDiagnosis AND summaryGuidingPolicy both populated.
+  // Stage 2+: diagnosis and guidingPolicy.
+  const serverTrigger = isStage1
+    ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy)
+    : !!(latest?.diagnosis && latest?.guidingPolicy)
 
   return NextResponse.json({
     response: visibleResponse,
