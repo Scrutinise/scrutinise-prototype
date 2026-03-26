@@ -1,5 +1,56 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 26 March 2026 v14*
+*Last updated: 26 March 2026 v15*
+
+---
+
+## CURRENT STATE — SPRINT L2 (LEX UX AND EXPERIENCE LEVEL) COMPLETE ✅
+
+Sprint L2 complete. Seven commits to Main. All `tsc --noEmit` clean. Prisma Client regenerated.
+**Deploy actions needed:** `npx prisma db push` (new `ExperienceLevelEnum` + `experienceLevel` field on User) + env vars unchanged.
+
+### Sprint L2 Summary
+
+**ExperienceLevelEnum added to User:**
+- New Prisma enum: `NO_BACKGROUND`, `SECTOR_LIVED`, `THINK_TANK_JUNIOR`, `THINK_TANK_SENIOR`, `POLITICAL_JUNIOR`, `POLITICAL_SENIOR`, `PARLIAMENTARIAN`
+- `experienceLevel ExperienceLevelEnum?` added to User model.
+- Lex runtime context block now includes `User experience level: …` so Stage 1 and Stage 2 prompts can adapt language to the user's background.
+- Settings page (`/settings`) shows experience level dropdown with auto-save.
+- Onboarding form includes experience level as a required field for all new and returning users.
+
+**Onboarding routing fixes:**
+- `afterSignUpUrl="/onboarding"` added to ClerkProvider — Google SSO users now always land on onboarding.
+- `app/onboarding/page.tsx` converted to async server component with server-side redirect: fully-onboarded users (`ageConfirmed && experienceLevel`) are redirected immediately.
+- `promptOnly` mode: existing users who completed original onboarding but have no `experienceLevel` are sent to onboarding showing only the experience level question.
+- `/ideas/create` gates on `ageConfirmed`; users missing `experienceLevel` redirected to onboarding with `?from=create` param.
+
+**Continue with Lex — session resume flow:**
+- `/ideas/create` now accepts `?ideaId=` query param.
+- When present, the server component fetches `aiChatHistory` and `stage` for that idea (owner only) and passes them as `initialIdeaId`, `initialMessages`, `initialStage` to `CreateIdeaClient`.
+- `CreateIdeaClient` restores the conversation and stage state from these props.
+- IdeaDetailClient shows "Continue with Lex →" link (owner-only, STAGE_1 or STAGE_2) linking to `/ideas/create?ideaId=${idea.id}`.
+- Save & Exit button in the chat UI navigates to `/dashboard` if an `ideaId` is set, otherwise shows an inline message.
+- View Idea link (opens new tab) appears once `ideaId` is set.
+
+**Sidebar completedFields alignment:**
+- `SIDEBAR_FIELDS` in `CreateIdeaClient` updated to 7 Stage 1 fields with correct keys: `title`, `summaryDiagnosis`, `rootCause`, `summaryGuidingPolicy`, `summaryCoherentActions`, `whoAffected`, `proposedWording`.
+- `FieldCompletion` interface extended with 12 Stage 2 fields across diagnosis and guidingPolicy groups.
+- Both `field-approval` route and AI route now return `{ completedFields, currentStage, coherentActionsCount }`.
+
+**Stage 2 sidebar progressive disclosure:**
+- `Stage2Sidebar` component in `CreateIdeaClient` replaces the Stage 1 flat list when `currentStage` is STAGE_2+.
+- Three sections: Diagnosis (7 sub-fields), Guiding Policy (5 sub-fields), Coherent Actions (count badge).
+- Sections expand/collapse independently; completed fields shown with tick marks.
+
+**Keyboard shortcuts for FieldProposalCard:**
+- Enter accepts the pending proposal when no input/textarea is focused.
+- Escape switches to edit mode.
+- After acceptance, a `lex-field-accepted` custom event is dispatched and caught by `CreateIdeaClient` to refocus the chat input.
+
+**Lex Stage 1 prompt fixes:**
+- SECOND RESPONSE RULE: Lex does not re-introduce itself after the first exchange.
+- Title proposal precedes background question.
+- HANDLING UNCERTAINTY section added for out-of-scope or unclear inputs.
+- EXPERIENCE LEVEL ADAPTATION: language and framing adjusts to the user's stated background.
 
 ---
 

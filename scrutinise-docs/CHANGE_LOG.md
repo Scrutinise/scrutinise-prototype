@@ -79,6 +79,59 @@
 
 ---
 
+## CODE CHANGES — 26 March 2026 (Sprint L2 — Lex UX and Experience Level)
+
+### L2-0: Onboarding routing fixes
+| File | Change |
+|------|--------|
+| `app/layout.tsx` | Add `afterSignUpUrl="/onboarding"` to ClerkProvider so Google SSO users land on onboarding |
+| `app/onboarding/page.tsx` | Converted to async server component; server-side redirect if `ageConfirmed && experienceLevel` both set; passes `promptOnly` flag for existing users missing only experienceLevel |
+| `app/onboarding/OnboardingForm.tsx` | New client component extracted from old page.tsx; accepts `redirectUrl`, `promptOnly`, `fromCreate` props; `promptOnly` mode shows only the experience level question |
+| `app/ideas/create/page.tsx` | Gate on `ageConfirmed`; redirect existing users with no `experienceLevel` to onboarding; adds `?from=create` param |
+
+### L2-1: Sidebar completedFields fix + Stage 1 field labels
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | `SIDEBAR_FIELDS` updated to 7 Stage 1 fields with correct keys and labels (title, summaryDiagnosis, rootCause, summaryGuidingPolicy, summaryCoherentActions, whoAffected, proposedWording); `FieldCompletion` interface extended with 12 Stage 2 fields; `calcProgress` takes `stage` and `coherentActionsCount` |
+| `app/api/ideas/[id]/field-approval/route.ts` | `buildCompletedFields` updated to return new Stage 1 key names; response now includes `{ completedFields, currentStage, coherentActionsCount }` |
+| `app/api/ai/[ideaId]/route.ts` | `completedFields` map aligned to new Stage 1 key names; response includes `currentStage` and `coherentActionsCount` |
+
+### L2-2: Lex Stage 1 prompt fixes
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | SECOND RESPONSE RULE (no re-intro); title proposal precedes background question; HANDLING UNCERTAINTY section; EXPERIENCE LEVEL ADAPTATION section for both Stage 1 and Stage 2 |
+
+### L2-3: Keyboard shortcuts for FieldProposalCard
+| File | Change |
+|------|--------|
+| `components/FieldProposalCard.tsx` | Global `keydown` listener: Enter accepts when no input/textarea focused; Escape switches to edit mode; `handleAccept` dispatches `lex-field-accepted` custom event; declaration order fixed (useCallback before dependent useEffect) |
+| `app/ideas/create/CreateIdeaClient.tsx` | Global `lex-field-accepted` listener refocuses chat input after acceptance |
+
+### L2-4: Save & Exit, View Idea, Continue with Lex navigation
+| File | Change |
+|------|--------|
+| `app/ideas/create/page.tsx` | Accept `searchParams: Promise<{ ideaId?: string }>`; fetch `aiChatHistory` and `stage` when `?ideaId` present; pass `initialIdeaId`, `initialMessages`, `initialStage` to `CreateIdeaClient` |
+| `app/ideas/create/CreateIdeaClient.tsx` | Save & Exit button (navigates to `/dashboard` if `ideaId` set, shows inline message otherwise); View Idea link (new tab, owner only); `initialStage` prop initialises `currentStage` state |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | "Continue with Lex →" link below idea title; owner-only; visible at STAGE_1 or STAGE_2; links to `/ideas/create?ideaId=${idea.id}` |
+
+### L2-5: ExperienceLevelEnum + onboarding form + Lex context + settings
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Add `ExperienceLevelEnum` (NO_BACKGROUND, SECTOR_LIVED, THINK_TANK_JUNIOR, THINK_TANK_SENIOR, POLITICAL_JUNIOR, POLITICAL_SENIOR, PARLIAMENTARIAN); add `experienceLevel ExperienceLevelEnum?` to User model |
+| `app/onboarding/OnboardingForm.tsx` | Experience level dropdown added between preferredName and T&Cs; required in both full and promptOnly modes |
+| `app/api/user/onboarding/route.ts` | GET handler returns `{ preferredName, experienceLevel }`; PATCH handles full onboarding and profile-update (experience level only) modes |
+| `app/api/ai/[ideaId]/route.ts` | `buildSystemPrompt` context includes `experienceLevel`; runtime context block emits `User experience level: …`; `experienceLevel` fetched from user record |
+| `app/settings/page.tsx` | Experience level dropdown added to Account Details; fetches current value on mount; auto-saves on change with "Saved" confirmation |
+
+### L2-6: Stage 2 sidebar progressive disclosure
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | `Stage2Sidebar` component with three progressive-disclosure sections (Diagnosis, Guiding Policy, Coherent Actions); renders in place of Stage 1 sidebar when `currentStage` is STAGE_2+; `coherentActionsCount` displayed in Coherent Actions section header |
+| `app/api/ideas/[id]/field-approval/route.ts` | `buildCompletedFields` fetches `diagnoses` and `guidingPolicies` sub-entities; returns 7 Stage 2 boolean fields across diagnosis and guidingPolicy groups |
+| `app/api/ai/[ideaId]/route.ts` | `latest` select extended with `diagnoses` and `guidingPolicies`; Stage 2 `completedFields` includes all sub-entity boolean fields |
+
+---
+
 ## PENDING CHANGES
 *(Changes decided but not yet applied to spec docs)*
 
