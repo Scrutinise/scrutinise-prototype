@@ -17,8 +17,13 @@ export default async function CreateIdeaPage() {
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { id: true, preferredName: true, firstName: true },
+    select: { id: true, preferredName: true, firstName: true, ageConfirmed: true },
   })
+
+  // Onboarding not completed — redirect to onboarding, then return here
+  if (dbUser && !dbUser.ageConfirmed) {
+    redirect('/onboarding?redirect_url=/ideas/create')
+  }
 
   let openingMessage: string
 
