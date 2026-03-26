@@ -26,6 +26,7 @@ interface ChatMessage {
 }
 
 interface FieldCompletion {
+  // Stage 1
   title: boolean
   summaryDiagnosis: boolean
   rootCause: boolean
@@ -33,12 +34,27 @@ interface FieldCompletion {
   summaryCoherentActions: boolean
   whoAffected: boolean
   proposedWording: boolean
+  // Stage 2 — Diagnosis section
+  diagnosisText: boolean
+  diagnosisObstacleDefined: boolean
+  diagnosisWhoAffected: boolean
+  diagnosisHowAffected: boolean
+  diagnosisWhyPersisted: boolean
+  diagnosisImpactDescription: boolean
+  diagnosisImpactCost: boolean
+  // Stage 2 — Guiding Policy section
+  guidingPolicyText: boolean
+  guidingPolicyCoreTheory: boolean
+  guidingPolicyMechanism: boolean
+  guidingPolicyTradeOffs: boolean
+  guidingPolicyCompetitiveIdeaAnalysis: boolean
 }
 
 interface Props {
   openingMessage?: string
   initialIdeaId?: string
   initialMessages?: unknown[]
+  initialStage?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,13 +74,164 @@ const SIDEBAR_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
 ]
 
 const EMPTY_FIELDS: FieldCompletion = {
+  // Stage 1
   title: false, summaryDiagnosis: false, rootCause: false,
   summaryGuidingPolicy: false, summaryCoherentActions: false,
   whoAffected: false, proposedWording: false,
+  // Stage 2 — Diagnosis
+  diagnosisText: false, diagnosisObstacleDefined: false,
+  diagnosisWhoAffected: false, diagnosisHowAffected: false,
+  diagnosisWhyPersisted: false, diagnosisImpactDescription: false, diagnosisImpactCost: false,
+  // Stage 2 — Guiding Policy
+  guidingPolicyText: false, guidingPolicyCoreTheory: false,
+  guidingPolicyMechanism: false, guidingPolicyTradeOffs: false,
+  guidingPolicyCompetitiveIdeaAnalysis: false,
+}
+
+// ── Stage 2 sidebar ───────────────────────────────────────────────────────────
+
+type SidebarSection = 'diagnosis' | 'guidingPolicy' | 'coherentActions'
+
+const DIAGNOSIS_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
+  { key: 'diagnosisText',              label: "What's the Challenge?" },
+  { key: 'diagnosisObstacleDefined',   label: 'The Obstacle' },
+  { key: 'diagnosisWhoAffected',       label: "Who's Affected?" },
+  { key: 'diagnosisHowAffected',       label: 'How Are They Affected?' },
+  { key: 'diagnosisWhyPersisted',      label: "Why Has This Persisted?" },
+  { key: 'diagnosisImpactDescription', label: 'Impact' },
+  { key: 'diagnosisImpactCost',        label: 'Impact Cost' },
+]
+
+const GUIDING_POLICY_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
+  { key: 'guidingPolicyText',                    label: 'How Will We Solve It?' },
+  { key: 'guidingPolicyCoreTheory',              label: 'Core Theory' },
+  { key: 'guidingPolicyMechanism',               label: 'The Mechanism' },
+  { key: 'guidingPolicyTradeOffs',               label: 'Trade-offs' },
+  { key: 'guidingPolicyCompetitiveIdeaAnalysis', label: 'What Else Has Been Tried?' },
+]
+
+function CheckIcon() {
+  return (
+    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
+
+function Stage2Sidebar({
+  fields,
+  coherentActionsCount,
+  isLoading,
+}: {
+  fields: FieldCompletion
+  coherentActionsCount: number
+  isLoading: boolean
+}) {
+  const diagnosisFieldsDone = DIAGNOSIS_FIELDS.filter(f => fields[f.key]).length
+  const diagnosisTotal = DIAGNOSIS_FIELDS.length
+  const diagnosisComplete = diagnosisFieldsDone === diagnosisTotal
+
+  const guidingPolicyFieldsDone = GUIDING_POLICY_FIELDS.filter(f => fields[f.key]).length
+  const guidingPolicyTotal = GUIDING_POLICY_FIELDS.length
+  const guidingPolicyComplete = guidingPolicyFieldsDone === guidingPolicyTotal
+
+  // Determine active section
+  let activeSection: SidebarSection = 'diagnosis'
+  if (diagnosisComplete && !guidingPolicyComplete) activeSection = 'guidingPolicy'
+  if (diagnosisComplete && guidingPolicyComplete) activeSection = 'coherentActions'
+
+  function renderFieldRow(key: keyof FieldCompletion, label: string) {
+    const done = fields[key]
+    const active = isLoading && !done
+    return (
+      <div key={String(key)} className="flex items-center gap-2 py-1">
+        <span className={`shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${
+          done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
+        }`}>
+          {done && <CheckIcon />}
+        </span>
+        <span className={`text-xs transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
+          {label}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Diagnosis section */}
+      {diagnosisComplete ? (
+        <div className="flex items-center gap-2 py-1.5">
+          <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+            <CheckIcon />
+          </span>
+          <span className="text-sm font-medium text-zinc-900">
+            Diagnosis ({diagnosisFieldsDone}/{diagnosisTotal})
+          </span>
+        </div>
+      ) : (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Diagnosis</p>
+          {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
+          {/* Root Causes — show count badge */}
+        </div>
+      )}
+
+      {/* Guiding Policy section — only shown if Diagnosis has started or active */}
+      {(diagnosisComplete || activeSection === 'guidingPolicy') && (
+        guidingPolicyComplete ? (
+          <div className="flex items-center gap-2 py-1.5">
+            <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+              <CheckIcon />
+            </span>
+            <span className="text-sm font-medium text-zinc-900">
+              Guiding Policy ({guidingPolicyFieldsDone}/{guidingPolicyTotal})
+            </span>
+          </div>
+        ) : activeSection === 'guidingPolicy' ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Guiding Policy</p>
+            {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-400 py-1">Guiding Policy</p>
+        )
+      )}
+
+      {/* Coherent Actions — shown once Diagnosis is at least started */}
+      {diagnosisComplete && (
+        activeSection === 'coherentActions' ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Coherent Actions</p>
+            <p className="text-xs text-zinc-500">
+              {coherentActionsCount > 0
+                ? `${coherentActionsCount} action${coherentActionsCount === 1 ? '' : 's'} added`
+                : 'No actions yet'}
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-400 py-1">Coherent Actions</p>
+        )
+      )}
+    </div>
+  )
 }
 
 // Progress map per UX notes Section 4 / lex_system_prompt_v5 Section 18
-function calcProgress(userMsgCount: number, fields: FieldCompletion): number {
+function calcProgress(userMsgCount: number, fields: FieldCompletion, stage: string, coherentActionsCount: number): number {
+  if (stage === 'STAGE_2') {
+    const diagnosisComplete = fields.diagnosisText && fields.diagnosisWhoAffected &&
+      fields.diagnosisHowAffected && fields.diagnosisWhyPersisted &&
+      fields.diagnosisImpactDescription && fields.diagnosisImpactCost && fields.diagnosisObstacleDefined
+    const guidingPolicyComplete = fields.guidingPolicyText && fields.guidingPolicyCoreTheory &&
+      fields.guidingPolicyMechanism && fields.guidingPolicyTradeOffs && fields.guidingPolicyCompetitiveIdeaAnalysis
+    if (diagnosisComplete && guidingPolicyComplete && coherentActionsCount > 0) return 95
+    if (coherentActionsCount > 0) return 85
+    if (guidingPolicyComplete) return 70
+    if (diagnosisComplete) return 40
+    if (fields.diagnosisText) return 25
+    return 15
+  }
   const { summaryDiagnosis, rootCause, summaryGuidingPolicy, summaryCoherentActions, whoAffected } = fields
   const allCore = summaryDiagnosis && rootCause && summaryGuidingPolicy && summaryCoherentActions && whoAffected
   if (allCore)                    return 90
@@ -82,7 +249,7 @@ const ACCEPTED_FILE_TYPES = '.pdf,.doc,.docx'
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages }: Props) {
+export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages, initialStage }: Props) {
   const { isSignedIn } = useUser()
   const router = useRouter()
   const resolvedOpening = openingMessage ?? DEFAULT_OPENING_MESSAGE
@@ -95,6 +262,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
+  const [currentStage, setCurrentStage] = useState<string>(initialStage ?? 'STAGE_1')
+  const [coherentActionsCount, setCoherentActionsCount] = useState(0)
   const [saveExitMsg, setSaveExitMsg] = useState<string | null>(null)
   const [fields, setFields] = useState<FieldCompletion>(EMPTY_FIELDS)
   const [userMsgCount, setUserMsgCount] = useState(0)
@@ -113,7 +282,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const micHintInteracted = useRef(false)
 
-  const progress = calcProgress(userMsgCount, fields)
+  const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
   // ── Voice detection ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -273,6 +442,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       if (data.completedFields) {
         setFields(prev => ({ ...prev, ...data.completedFields }))
       }
+      if (data.currentStage) setCurrentStage(data.currentStage)
+      if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
 
       if (data.triggerSavePrompt && !isSignedIn) {
         setShowSavePrompt(true)
@@ -417,6 +588,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       if (data.completedFields) {
         setFields(prev => ({ ...prev, ...data.completedFields }))
       }
+      if (data.currentStage) setCurrentStage(data.currentStage)
+      if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
     } catch {
       // Silent — card stays in pending state
     }
@@ -765,35 +938,36 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             Your idea
           </p>
 
-          {SIDEBAR_FIELDS.map(({ key, label }) => {
-            const done = fields[key]
-            const active = isLoading && !done
-            return (
-              <div key={key} className="flex items-center gap-2.5 py-1.5">
-                <span className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
-                  done
-                    ? 'bg-green-500'
-                    : active
-                      ? 'bg-amber-400'
-                      : 'bg-zinc-200'
-                }`}>
-                  {done && (
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-                <span className={`text-sm transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
-                  {label}
-                </span>
-              </div>
-            )
-          })}
-
-          {completedCount > 0 && (
-            <p className="text-xs text-zinc-400 mt-4">
-              {completedCount} of 7 fields complete
-            </p>
+          {currentStage === 'STAGE_1' ? (
+            <>
+              {SIDEBAR_FIELDS.map(({ key, label }) => {
+                const done = fields[key]
+                const active = isLoading && !done
+                return (
+                  <div key={key} className="flex items-center gap-2.5 py-1.5">
+                    <span className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                      done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
+                    }`}>
+                      {done && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className={`text-sm transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
+                      {label}
+                    </span>
+                  </div>
+                )
+              })}
+              {completedCount > 0 && (
+                <p className="text-xs text-zinc-400 mt-4">
+                  {completedCount} of 7 fields complete
+                </p>
+              )}
+            </>
+          ) : (
+            <Stage2Sidebar fields={fields} coherentActionsCount={coherentActionsCount} isLoading={isLoading} />
           )}
         </aside>
       </div>

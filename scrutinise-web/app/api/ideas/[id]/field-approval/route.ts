@@ -34,6 +34,7 @@ async function buildCompletedFields(ideaId: string) {
   const latest = await prisma.idea.findUnique({
     where: { id: ideaId },
     select: {
+      stage: true,
       title: true,
       diagnosis: true,
       rootCause: true,
@@ -44,17 +45,56 @@ async function buildCompletedFields(ideaId: string) {
       whoAffected: true,
       proposedWording: true,
       coherentActions: { select: { id: true } },
+      diagnoses: {
+        select: {
+          text: true, obstacleDefined: true, whoAffected: true, howAffected: true,
+          whyPersisted: true, impactDescription: true, impactCost: true,
+        },
+      },
+      guidingPolicies: {
+        select: {
+          text: true, coreTheory: true, tradeOffs: true, competitiveIdeaAnalysis: true,
+          mechanismIncentives: true, mechanismRules: true, mechanismTransparency: true,
+          mechanismMarketDesign: true, mechanismInstitutionalRestructuring: true,
+        },
+      },
     },
   })
 
+  const diag = latest?.diagnoses?.[0]
+  const gp = latest?.guidingPolicies?.[0]
+  const cActionsCount = latest?.coherentActions.length ?? 0
+
   return {
-    title: !!latest?.title,
-    summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
-    rootCause: !!latest?.rootCause,
-    summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
-    summaryCoherentActions: (latest?.coherentActions.length ?? 0) > 0 || !!latest?.summaryCoherentActions?.trim(),
-    whoAffected: !!latest?.whoAffected,
-    proposedWording: !!latest?.proposedWording,
+    completedFields: {
+      // Stage 1
+      title: !!latest?.title,
+      summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
+      rootCause: !!latest?.rootCause,
+      summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
+      summaryCoherentActions: cActionsCount > 0 || !!latest?.summaryCoherentActions?.trim(),
+      whoAffected: !!latest?.whoAffected,
+      proposedWording: !!latest?.proposedWording,
+      // Stage 2 — Diagnosis
+      diagnosisText: !!diag?.text,
+      diagnosisObstacleDefined: !!diag?.obstacleDefined,
+      diagnosisWhoAffected: !!diag?.whoAffected,
+      diagnosisHowAffected: !!diag?.howAffected,
+      diagnosisWhyPersisted: !!diag?.whyPersisted,
+      diagnosisImpactDescription: !!diag?.impactDescription,
+      diagnosisImpactCost: !!diag?.impactCost,
+      // Stage 2 — Guiding Policy
+      guidingPolicyText: !!gp?.text,
+      guidingPolicyCoreTheory: !!gp?.coreTheory,
+      guidingPolicyMechanism: !!(
+        gp?.mechanismIncentives || gp?.mechanismRules || gp?.mechanismTransparency ||
+        gp?.mechanismMarketDesign || gp?.mechanismInstitutionalRestructuring
+      ),
+      guidingPolicyTradeOffs: !!gp?.tradeOffs,
+      guidingPolicyCompetitiveIdeaAnalysis: !!gp?.competitiveIdeaAnalysis,
+    },
+    currentStage: latest?.stage,
+    coherentActionsCount: cActionsCount,
   }
 }
 
@@ -201,6 +241,6 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Write failed' }, { status: 500 })
   }
 
-  const completedFields = await buildCompletedFields(ideaId)
-  return NextResponse.json({ completedFields })
+  const result = await buildCompletedFields(ideaId)
+  return NextResponse.json(result)
 }
