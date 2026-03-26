@@ -2001,54 +2001,78 @@ export default function IdeaDetailClient({
           </div>
         )}
 
-        {/* Action button — stage-appropriate */}
-        {isOwner && idea.stage === 'STAGE_2' && (
-          <div className="mb-6">
-            <Button
-              onClick={() => setShowTakePublicModal(true)}
-              disabled={!stage2GateMet}
-              variant={stage2GateMet ? 'default' : 'outline'}
-            >
-              Take Public
-            </Button>
-            {!stage2GateMet && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Complete all requirements above to unlock.
-              </p>
-            )}
-          </div>
-        )}
+        {/* Action button row — stage-appropriate action + Campaign in a Box */}
+        {isOwner && (
+          <div className="mb-6 flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              {idea.stage === 'STAGE_2' && (
+                <>
+                  <Button
+                    onClick={() => setShowTakePublicModal(true)}
+                    disabled={!stage2GateMet}
+                    variant={stage2GateMet ? 'default' : 'outline'}
+                  >
+                    Take Public
+                  </Button>
+                  {!stage2GateMet && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Complete all requirements above to unlock.
+                    </p>
+                  )}
+                </>
+              )}
 
-        {isOwner && idea.stage === 'STAGE_3' && (
-          <div className="mb-6">
-            <Button
-              onClick={() => setShowBeginCampaignModal(true)}
-              disabled={!stage3GateMet}
-              variant={stage3GateMet ? 'default' : 'outline'}
-            >
-              Begin Campaign
-            </Button>
-            {!stage3GateMet && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Meet all requirements above to unlock.
-              </p>
-            )}
-          </div>
-        )}
+              {idea.stage === 'STAGE_3' && (
+                <>
+                  <Button
+                    onClick={() => setShowBeginCampaignModal(true)}
+                    disabled={!stage3GateMet}
+                    variant={stage3GateMet ? 'default' : 'outline'}
+                  >
+                    Begin Campaign
+                  </Button>
+                  {!stage3GateMet && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Meet all requirements above to unlock.
+                    </p>
+                  )}
+                </>
+              )}
 
-        {isOwner && idea.stage === 'STAGE_4' && (
-          <div className="mb-6">
-            <Button
-              onClick={() => setShowSubmitToParliamentModal(true)}
-              disabled={!stage4GateMet}
-              variant={stage4GateMet ? 'default' : 'outline'}
-            >
-              Submit to Parliament
-            </Button>
-            {!stage4GateMet && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Meet all requirements above to unlock.
-              </p>
+              {idea.stage === 'STAGE_4' && (
+                <>
+                  <Button
+                    onClick={() => setShowSubmitToParliamentModal(true)}
+                    disabled={!stage4GateMet}
+                    variant={stage4GateMet ? 'default' : 'outline'}
+                  >
+                    Submit to Parliament
+                  </Button>
+                  {!stage4GateMet && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Meet all requirements above to unlock.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Campaign in a Box — owner only, all stages */}
+            {['STAGE_4', 'STAGE_5'].includes(idea.stage) ? (
+              <Button
+                variant="outline"
+                onClick={() => setActiveTab('campaign')}
+              >
+                Campaign in a Box
+              </Button>
+            ) : (
+              <button
+                disabled
+                title="Available at Campaign stage once your documents are ready."
+                className="inline-flex items-center rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-300 cursor-not-allowed select-none"
+              >
+                Campaign in a Box
+              </button>
             )}
           </div>
         )}
