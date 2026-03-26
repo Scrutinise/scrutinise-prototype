@@ -18,11 +18,73 @@ import CampaignTab from './CampaignTab'
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface DiagnosisRecord {
+  id: string
+  diagnosisTitle: string | null
+  text: string | null
+  obstacleDefined: string | null
+  whoAffected: string | null
+  howAffected: string | null
+  whyPersisted: string | null
+  impactDescription: string | null
+  impactCost: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+interface RootCauseRecord {
+  id: string
+  rootCauseTitle: string | null
+  text: string | null
+  rootCauseMechanism: string | null
+  whyNotSolved: string | null
+  incentiveDrivers: string | null
+  structureDrivers: string | null
+  createdAt: string
+}
+
+interface GuidingPolicyRecord {
+  id: string
+  guidingPolicyTitle: string | null
+  text: string | null
+  coreTheory: string | null
+  mechanismIncentives: string | null
+  mechanismRules: string | null
+  mechanismTransparency: string | null
+  mechanismMarketDesign: string | null
+  mechanismInstitutionalRestructuring: string | null
+  tradeOffs: string | null
+  competitiveIdeaAnalysis: string | null
+  createdAt: string
+}
+
+interface EvidenceRecord {
+  id: string
+  title: string
+  description: string
+  comparablePolicy: string | null
+  successFailure: string | null
+  whatWorked: string | null
+  whatFailed: string | null
+  resultCauses: string | null
+  sourceUrl: string | null
+  sourceType: string
+  createdAt: string
+}
+
 interface CoherentAction {
   id: string
   title: string
   summarySnippet: string | null
+  detailedDescription: string | null
+  actionType: string | null
+  practicalExecution: string | null
+  implementationPlan: string | null
+  keyRisks: string | null
+  costBenefitAnalysis: string | null
   orderIndex: number
+  createdAt: string
+  updatedAt: string
 }
 
 interface Collaborator {
@@ -36,11 +98,15 @@ interface Idea {
   id: string
   title: string
   summaryDescription: string
+  summaryDiagnosis: string | null
+  summaryGuidingPolicy: string | null
+  summaryCoherentActions: string | null
   stage: string
   visibility: string
+  govtArea: string
+  ideaType: string
   diagnosis: string | null
   guidingPolicy: string | null
-  summaryCoherentActions: string | null
   rootCause: string | null
   whoAffected: string | null
   commentCount: number
@@ -56,6 +122,10 @@ interface Idea {
   coherentActions: CoherentAction[]
   research: ResearchItem[]
   collaborators: Collaborator[]
+  diagnoses: DiagnosisRecord[]
+  rootCauses: RootCauseRecord[]
+  guidingPolicies: GuidingPolicyRecord[]
+  evidence: EvidenceRecord[]
 }
 
 interface Stage4Gate {
@@ -864,6 +934,387 @@ function EndorsementPanel({
 // Tab components
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Inline field display with optional edit ───────────────────────────────────
+
+function FieldDisplay({
+  label,
+  value,
+  placeholder,
+  canEdit,
+  fieldKey,
+  ideaId,
+  onSaved,
+  multiline = true,
+}: {
+  label: string
+  value: string | null | undefined
+  placeholder: string
+  canEdit: boolean
+  fieldKey: string
+  ideaId: string
+  onSaved?: (newValue: string) => void
+  multiline?: boolean
+}) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value ?? '')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/field-approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldKey, value: editValue }),
+      })
+      if (res.ok) {
+        setEditing(false)
+        onSaved?.(editValue)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const displayValue = value ?? null
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-1">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400">{label}</p>
+        {canEdit && !editing && (
+          <button
+            onClick={() => { setEditValue(displayValue ?? ''); setEditing(true) }}
+            className="text-zinc-300 hover:text-zinc-500 transition-colors"
+            title={`Edit ${label}`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div>
+          {multiline ? (
+            <textarea
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              rows={4}
+              autoFocus
+              className="w-full text-sm border border-zinc-200 rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900/20"
+            />
+          ) : (
+            <input
+              type="text"
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              autoFocus
+              className="w-full text-sm border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900/20"
+            />
+          )}
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : displayValue ? (
+        <p className="text-sm text-zinc-800 leading-relaxed whitespace-pre-wrap">{displayValue}</p>
+      ) : (
+        <p className="text-sm text-zinc-400 italic">{placeholder}</p>
+      )}
+    </div>
+  )
+}
+
+// ── Idea tab with 4 sub-tabs ──────────────────────────────────────────────────
+
+type IdeaSubTab = 'overview' | 'diagnosis' | 'policy' | 'actions'
+
+function IdeaTab({
+  idea,
+  canEdit,
+}: {
+  idea: Idea
+  canEdit: boolean
+}) {
+  const [subTab, setSubTab] = useState<IdeaSubTab>('overview')
+  const [localDiagnosis, setLocalDiagnosis] = useState<DiagnosisRecord | null>(idea.diagnoses[0] ?? null)
+  const [localRootCauses, setLocalRootCauses] = useState<RootCauseRecord[]>(idea.rootCauses)
+  const [localGuidingPolicy, setLocalGuidingPolicy] = useState<GuidingPolicyRecord | null>(idea.guidingPolicies[0] ?? null)
+  const [localEvidence, setLocalEvidence] = useState<EvidenceRecord[]>(idea.evidence)
+  const [expandedRootCause, setExpandedRootCause] = useState<string | null>(null)
+  const [expandedEvidence, setExpandedEvidence] = useState<string | null>(null)
+  const [expandedAction, setExpandedAction] = useState<string | null>(null)
+
+  const subTabs: { key: IdeaSubTab; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'diagnosis', label: 'Diagnosis' },
+    { key: 'policy', label: 'Policy' },
+    { key: 'actions', label: 'Coherent Actions' },
+  ]
+
+  const STAGE_LABELS_MAP: Record<string, string> = {
+    STAGE_1: 'Create', STAGE_2: 'Draft', STAGE_3: 'Develop', STAGE_4: 'Campaign', STAGE_5: 'Legislate',
+  }
+  const IDEA_TYPE_LABELS: Record<string, string> = {
+    LEGISLATION: 'Legislation',
+    ORGANISATION: 'Organisational Change',
+  }
+
+  function updateDiagnosisField(field: keyof DiagnosisRecord, value: string) {
+    setLocalDiagnosis(prev => prev
+      ? { ...prev, [field]: value }
+      : { id: '', diagnosisTitle: null, text: null, obstacleDefined: null, whoAffected: null, howAffected: null, whyPersisted: null, impactDescription: null, impactCost: null, createdAt: '', updatedAt: '', [field]: value }
+    )
+  }
+
+  function updateGuidingPolicyField(field: keyof GuidingPolicyRecord, value: string) {
+    setLocalGuidingPolicy(prev => prev
+      ? { ...prev, [field]: value }
+      : { id: '', guidingPolicyTitle: null, text: null, coreTheory: null, mechanismIncentives: null, mechanismRules: null, mechanismTransparency: null, mechanismMarketDesign: null, mechanismInstitutionalRestructuring: null, tradeOffs: null, competitiveIdeaAnalysis: null, createdAt: '', [field]: value }
+    )
+  }
+
+  return (
+    <div>
+      {/* Sub-tab nav */}
+      <div className="border-b mb-6">
+        <div className="-mb-px flex gap-0 overflow-x-auto">
+          {subTabs.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setSubTab(t.key)}
+              className={[
+                'whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors',
+                subTab === t.key
+                  ? 'border-zinc-900 text-zinc-900'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-900',
+              ].join(' ')}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sub-tab: Overview */}
+      {subTab === 'overview' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Stage</p>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'}`}>
+                {STAGE_LABELS_MAP[idea.stage] ?? idea.stage}
+              </span>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Idea Type</p>
+              <p className="text-sm">{IDEA_TYPE_LABELS[idea.ideaType] ?? idea.ideaType}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Government Area</p>
+              <p className="text-sm">{idea.govtArea || <span className="text-zinc-400 italic">Not set</span>}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Created</p>
+              <p className="text-sm">{new Date(idea.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Owner</p>
+              <p className="text-sm">{idea.creator.name}</p>
+            </div>
+          </div>
+          {idea.summaryDescription && (
+            <div className="mt-4 p-4 rounded-lg bg-zinc-50 border">
+              <p className="text-sm leading-relaxed">{idea.summaryDescription}</p>
+            </div>
+          )}
+          {(idea.summaryDiagnosis || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
+            <div className="mt-4 space-y-3">
+              {idea.summaryDiagnosis && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Challenge (summary)</p>
+                  <p className="text-sm text-zinc-700">{idea.summaryDiagnosis}</p>
+                </div>
+              )}
+              {idea.summaryGuidingPolicy && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Solution (summary)</p>
+                  <p className="text-sm text-zinc-700">{idea.summaryGuidingPolicy}</p>
+                </div>
+              )}
+              {idea.summaryCoherentActions && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">First step (summary)</p>
+                  <p className="text-sm text-zinc-700">{idea.summaryCoherentActions}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sub-tab: Diagnosis */}
+      {subTab === 'diagnosis' && (
+        <div>
+          <FieldDisplay label="What's the Challenge?" value={localDiagnosis?.text} placeholder="Not yet completed — describe the challenge in 3–5 sentences" canEdit={canEdit} fieldKey="diagnosis.text" ideaId={idea.id} onSaved={v => updateDiagnosisField('text', v)} />
+          <FieldDisplay label="The Obstacle" value={localDiagnosis?.obstacleDefined} placeholder="Not yet completed — define the specific obstacle preventing resolution" canEdit={canEdit} fieldKey="diagnosis.obstacleDefined" ideaId={idea.id} onSaved={v => updateDiagnosisField('obstacleDefined', v)} />
+          <FieldDisplay label="Who Is Affected?" value={localDiagnosis?.whoAffected} placeholder="Not yet completed — name the groups, communities or institutions affected" canEdit={canEdit} fieldKey="diagnosis.whoAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('whoAffected', v)} />
+          <FieldDisplay label="How Are They Affected?" value={localDiagnosis?.howAffected} placeholder="Not yet completed — describe the practical impact on those affected" canEdit={canEdit} fieldKey="diagnosis.howAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('howAffected', v)} />
+          <FieldDisplay label="Why Has This Persisted?" value={localDiagnosis?.whyPersisted} placeholder="Not yet completed — explain why existing arrangements have failed" canEdit={canEdit} fieldKey="diagnosis.whyPersisted" ideaId={idea.id} onSaved={v => updateDiagnosisField('whyPersisted', v)} />
+          <FieldDisplay label="Impact" value={localDiagnosis?.impactDescription} placeholder="Not yet completed — summarise the harm or cost caused" canEdit={canEdit} fieldKey="diagnosis.impactDescription" ideaId={idea.id} onSaved={v => updateDiagnosisField('impactDescription', v)} />
+          <FieldDisplay label="Impact Cost" value={localDiagnosis?.impactCost} placeholder="Not yet completed — quantify the cost if known, or note 'To be researched'" canEdit={canEdit} fieldKey="diagnosis.impactCost" ideaId={idea.id} onSaved={v => updateDiagnosisField('impactCost', v)} />
+
+          {/* Root Cause records */}
+          {localRootCauses.length > 0 && (
+            <div className="mt-6">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Root Causes</p>
+              <div className="space-y-3">
+                {localRootCauses.map(rc => (
+                  <div key={rc.id} className="rounded-lg border overflow-hidden">
+                    <button
+                      onClick={() => setExpandedRootCause(expandedRootCause === rc.id ? null : rc.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
+                    >
+                      <span className="text-sm font-medium">{rc.rootCauseTitle ?? rc.text?.slice(0, 80) ?? 'Root Cause'}</span>
+                      <svg className={`w-4 h-4 text-zinc-400 transition-transform ${expandedRootCause === rc.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedRootCause === rc.id && (
+                      <div className="px-4 pb-4 border-t bg-zinc-50/50">
+                        <FieldDisplay label="Root Cause" value={rc.text} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.text" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, text: v } : r))} />
+                        <FieldDisplay label="The Mechanism" value={rc.rootCauseMechanism} placeholder="Not yet completed — describe the mechanism that causes this" canEdit={canEdit} fieldKey="rootCause.rootCauseMechanism" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, rootCauseMechanism: v } : r))} />
+                        <FieldDisplay label="Why It Hasn't Been Solved" value={rc.whyNotSolved} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.whyNotSolved" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, whyNotSolved: v } : r))} />
+                        <FieldDisplay label="Incentive Drivers" value={rc.incentiveDrivers} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.incentiveDrivers" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, incentiveDrivers: v } : r))} />
+                        <FieldDisplay label="Structural Drivers" value={rc.structureDrivers} placeholder="Not yet completed" canEdit={canEdit} fieldKey="rootCause.structureDrivers" ideaId={idea.id} onSaved={v => setLocalRootCauses(prev => prev.map(r => r.id === rc.id ? { ...r, structureDrivers: v } : r))} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {localRootCauses.length === 0 && (
+            <div className="mt-6">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Root Causes</p>
+              <p className="text-sm text-zinc-400 italic">Not yet completed — root cause analysis comes in Stage 2</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sub-tab: Policy */}
+      {subTab === 'policy' && (
+        <div>
+          <FieldDisplay label="How Will We Solve It?" value={localGuidingPolicy?.text} placeholder="Not yet completed — describe the strategic direction in 3–5 sentences" canEdit={canEdit} fieldKey="guidingPolicy.text" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('text', v)} />
+          <FieldDisplay label="Core Theory" value={localGuidingPolicy?.coreTheory} placeholder="Not yet completed — the causal theory linking the intervention to the outcome" canEdit={canEdit} fieldKey="guidingPolicy.coreTheory" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('coreTheory', v)} />
+          <FieldDisplay label="Mechanism: Incentives" value={localGuidingPolicy?.mechanismIncentives} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismIncentives" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismIncentives', v)} />
+          <FieldDisplay label="Mechanism: Rules" value={localGuidingPolicy?.mechanismRules} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismRules" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismRules', v)} />
+          <FieldDisplay label="Mechanism: Transparency" value={localGuidingPolicy?.mechanismTransparency} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismTransparency" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismTransparency', v)} />
+          <FieldDisplay label="Mechanism: Market Design" value={localGuidingPolicy?.mechanismMarketDesign} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismMarketDesign" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismMarketDesign', v)} />
+          <FieldDisplay label="Mechanism: Institutional Restructuring" value={localGuidingPolicy?.mechanismInstitutionalRestructuring} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismInstitutionalRestructuring" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismInstitutionalRestructuring', v)} />
+          <FieldDisplay label="Trade-offs" value={localGuidingPolicy?.tradeOffs} placeholder="Not yet completed — what must be sacrificed or accepted to make this work?" canEdit={canEdit} fieldKey="guidingPolicy.tradeOffs" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('tradeOffs', v)} />
+          <FieldDisplay label="What Else Has Been Tried?" value={localGuidingPolicy?.competitiveIdeaAnalysis} placeholder="Not yet completed — analysis of competing or prior approaches" canEdit={canEdit} fieldKey="guidingPolicy.competitiveIdeaAnalysis" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('competitiveIdeaAnalysis', v)} />
+
+          {/* Evidence records */}
+          {localEvidence.length > 0 && (
+            <div className="mt-6">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Evidence</p>
+              <div className="space-y-3">
+                {localEvidence.map(ev => (
+                  <div key={ev.id} className="rounded-lg border overflow-hidden">
+                    <button
+                      onClick={() => setExpandedEvidence(expandedEvidence === ev.id ? null : ev.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
+                    >
+                      <div>
+                        <span className="text-sm font-medium">{ev.title}</span>
+                        {ev.successFailure && (
+                          <span className={`ml-2 text-xs rounded-full px-2 py-0.5 ${ev.successFailure === 'SUCCESS' ? 'bg-green-100 text-green-700' : ev.successFailure === 'FAILURE' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {ev.successFailure}
+                          </span>
+                        )}
+                      </div>
+                      <svg className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ${expandedEvidence === ev.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedEvidence === ev.id && (
+                      <div className="px-4 pb-4 border-t bg-zinc-50/50 space-y-3">
+                        <p className="text-sm text-zinc-700 mt-3">{ev.description}</p>
+                        {ev.comparablePolicy && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Comparable Policy</p><p className="text-sm">{ev.comparablePolicy}</p></div>}
+                        {ev.whatWorked && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">What Worked</p><p className="text-sm">{ev.whatWorked}</p></div>}
+                        {ev.whatFailed && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">What Failed</p><p className="text-sm">{ev.whatFailed}</p></div>}
+                        {ev.sourceUrl && <div><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Source</p><a href={ev.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline hover:text-blue-800 break-all">{ev.sourceUrl}</a></div>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sub-tab: Coherent Actions */}
+      {subTab === 'actions' && (
+        <div>
+          {idea.coherentActions.length === 0 && (
+            <p className="text-sm text-zinc-400 italic">Not yet completed — coherent actions are built in Stage 2</p>
+          )}
+          <div className="space-y-3">
+            {idea.coherentActions.map((action) => (
+              <div key={action.id} className="rounded-lg border overflow-hidden">
+                <button
+                  onClick={() => setExpandedAction(expandedAction === action.id ? null : action.id)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium truncate">{action.title}</span>
+                    {action.actionType && (
+                      <span className="shrink-0 text-xs rounded-full px-2 py-0.5 bg-blue-100 text-blue-700">
+                        {action.actionType}
+                      </span>
+                    )}
+                  </div>
+                  <svg className={`w-4 h-4 text-zinc-400 transition-transform shrink-0 ml-2 ${expandedAction === action.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {expandedAction === action.id && (
+                  <div className="px-4 pb-4 border-t bg-zinc-50/50">
+                    {action.detailedDescription && <div className="mt-3 mb-3"><p className="text-sm text-zinc-700 leading-relaxed">{action.detailedDescription}</p></div>}
+                    {action.practicalExecution && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Practical Execution</p><p className="text-sm">{action.practicalExecution}</p></div>}
+                    {action.implementationPlan && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Implementation Plan</p><p className="text-sm">{action.implementationPlan}</p></div>}
+                    {action.keyRisks && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Key Risks</p><p className="text-sm">{action.keyRisks}</p></div>}
+                    {action.costBenefitAnalysis && <div className="mb-3"><p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Cost–Benefit Analysis</p><p className="text-sm">{action.costBenefitAnalysis}</p></div>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {canEdit && (
+            <div className="mt-4">
+              <Link href={`/ideas/${idea.id}?tab=lex`} className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 border border-dashed rounded-lg px-4 py-2 hover:border-zinc-400 transition-colors">
+                + Add Action via Lex
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Legacy overview tab (kept for use in Stage 3+ endorsement context) ────────
+
 function OverviewTab({ idea }: { idea: Idea }) {
   return (
     <div className="space-y-6">
@@ -1308,10 +1759,10 @@ function PrivacyLogTab({ ideaId }: { ideaId: string }) {
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log'
+type Tab = 'idea' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log'
 
 function isValidTab(t: string | null): t is Tab {
-  return ['overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log'].includes(t ?? '')
+  return ['idea', 'overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log'].includes(t ?? '')
 }
 
 export default function IdeaDetailClient({
@@ -1329,7 +1780,9 @@ export default function IdeaDetailClient({
   const searchParams = useSearchParams()
   const [idea, setIdea] = useState(initialIdea)
   const tabParam = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<Tab>(isValidTab(tabParam) ? tabParam : 'overview')
+  // Support legacy 'overview' param → map to 'idea'
+  const resolvedTabParam = tabParam === 'overview' ? 'idea' : tabParam
+  const [activeTab, setActiveTab] = useState<Tab>(isValidTab(resolvedTabParam) ? resolvedTabParam : 'idea')
   const [showTakePublicModal, setShowTakePublicModal] = useState(false)
   const [showBeginCampaignModal, setShowBeginCampaignModal] = useState(false)
   const [showVoteInterceptModal, setShowVoteInterceptModal] = useState(false)
@@ -1404,9 +1857,9 @@ export default function IdeaDetailClient({
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
+    { key: 'idea', label: 'Idea' },
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
+    { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
     { key: 'team', label: 'Team' },
     ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
@@ -1638,18 +2091,20 @@ export default function IdeaDetailClient({
         )}
 
         <div className="py-6">
-          {activeTab === 'overview' && (
+          {activeTab === 'idea' && (
             <>
               {['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
-                <EndorsementPanel
-                  ideaId={idea.id}
-                  stage={idea.stage}
-                  canEndorse={currentUserCanEndorse}
-                  currentUserId={currentUserId}
-                  isOwner={isOwner}
-                />
+                <div className="mb-6">
+                  <EndorsementPanel
+                    ideaId={idea.id}
+                    stage={idea.stage}
+                    canEndorse={currentUserCanEndorse}
+                    currentUserId={currentUserId}
+                    isOwner={isOwner}
+                  />
+                </div>
               )}
-              <OverviewTab idea={idea} />
+              <IdeaTab idea={idea} canEdit={isOwner || isCollaborator} />
             </>
           )}
           {activeTab === 'contributions' && (

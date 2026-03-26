@@ -65,6 +65,10 @@ export default async function IdeaDetailPage({ params }: Props) {
       collaborators: {
         include: { user: { select: { id: true, name: true, username: true } } },
       },
+      diagnoses: true,
+      rootCauses: { orderBy: { createdAt: 'asc' } },
+      guidingPolicies: true,
+      evidence: { orderBy: { createdAt: 'asc' } },
     },
   })
 
@@ -176,6 +180,23 @@ export default async function IdeaDetailPage({ params }: Props) {
       ...c,
       invitedAt: c.invitedAt.toISOString(),
       acceptedAt: c.acceptedAt?.toISOString() ?? null,
+    })),
+    diagnoses: idea.diagnoses.map(d => ({
+      ...d,
+      createdAt: d.createdAt.toISOString(),
+      updatedAt: d.updatedAt.toISOString(),
+    })),
+    rootCauses: idea.rootCauses.map(r => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+    })),
+    guidingPolicies: idea.guidingPolicies.map(g => ({
+      ...g,
+      createdAt: g.createdAt.toISOString(),
+    })),
+    evidence: idea.evidence.map(e => ({
+      ...e,
+      createdAt: e.createdAt.toISOString(),
     })),
   }
 
