@@ -52,7 +52,7 @@ export default function HomePage() {
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <Button size="lg" asChild className="w-full sm:w-auto">
-                  <Link href="/prototype/create/stage1">
+                  <Link href="/ideas/create">
                     Get Started
                     <ArrowRight className="ml-2 size-4" />
                   </Link>
