@@ -273,6 +273,12 @@ enum ExperienceLevelEnum {
   PARLIAMENTARIAN
 }
 
+enum IdeaOrigin {
+  USER               // Normal user-created idea
+  HISTORICAL_EXAMPLE // Enacted legislation case study
+  EDITORIAL_SEED     // Platform-seeded policy debate
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 — CORE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +318,8 @@ model User {
   aiUsageTotal              Decimal             @default(0)
   aiPreferredStyle          String?             // COLLABORATIVE | SOCRATIC | DIRECT — default COLLABORATIVE
   experienceLevel           ExperienceLevelEnum?
+  // Historical / seed accounts
+  isHistoricalAccount       Boolean             @default(false)
   // Credibility override (admin only)
   manualCredibilityOverride Decimal?
   // Referral
@@ -439,6 +447,10 @@ model Idea {
   aiChatSummary             String?
   aiCurrentField            String?
   aiSessionCount            Int             @default(0)
+  // Origin / banner
+  ideaOrigin                IdeaOrigin      @default(USER)
+  bannerColour              String?         // Hex colour for banner; null = no banner shown
+  bannerText                String?         // Override banner text; null = use default for origin
   // Referral
   referralLinkActive        Boolean         @default(false)
   // Ownership transfer
