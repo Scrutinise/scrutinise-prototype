@@ -58,6 +58,14 @@
 | `scripts/seed/seed-historical-examples.ts` | New idempotent seeding script |
 | — | 19 User records created (isHistoricalAccount=true, clerkId=`historical_[slug]`) |
 | — | 20 Idea records created (STAGE_3, LINK_ONLY, HISTORICAL_EXAMPLE, bannerColour=#F97316) |
+
+### L4-kernels: Seed Stage 2 strategic kernels for 20 historical example ideas
+| File | Change |
+|------|--------|
+| `scripts/seed/seed-historical-kernels.ts` | New idempotent seeding script — upserts Diagnosis, GuidingPolicy; creates RootCause + CoherentActions if none exist |
+| — | All 20 ideas: Diagnosis ✓, RootCause ✓, GuidingPolicy ✓ |
+| — | CoherentAction counts: 14 ideas × 1 action, 6 ideas × 2 actions (30 total) |
+| — | Run against production DB — 20/20 ideas processed successfully |
 | — | Shelter England user used for ideas 1 and 9 as specified |
 
 ---

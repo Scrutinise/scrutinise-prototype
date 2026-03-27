@@ -1,5 +1,17 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 27 March 2026 v18*
+*Last updated: 27 March 2026 v19*
+
+---
+
+## CURRENT STATE — SPRINT L4-KERNELS (STAGE 2 STRATEGIC KERNELS SEEDED) COMPLETE ✅
+
+**L4-kernels — Seed Stage 2 strategic kernels for all 20 historical example ideas:**
+- Script: `scripts/seed/seed-historical-kernels.ts` — idempotent; upserts Diagnosis + GuidingPolicy (@@unique per idea); creates RootCause + CoherentActions only if none exist
+- All 20 ideas seeded: Diagnosis ✓, RootCause ✓, GuidingPolicy ✓, CoherentActions ✓
+- CoherentAction counts: 14 ideas × 1 action, 6 ideas × 2 actions (30 total)
+- Run against production DB — all 20 processed cleanly
+
+**Deploy actions needed:** None — no schema changes, no new env vars.
 
 ---
 
