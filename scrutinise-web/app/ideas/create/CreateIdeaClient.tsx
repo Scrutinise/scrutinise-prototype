@@ -23,6 +23,7 @@ interface ChatMessage {
   content: string
   timestamp: string
   proposals?: PendingProposal[]
+  isConnectionError?: boolean
 }
 
 interface FieldCompletion {
@@ -281,6 +282,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const recognitionRef = useRef<any>(null)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const micHintInteracted = useRef(false)
+  const lastSentMessageRef = useRef<string>('')
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
@@ -411,6 +413,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     setMessages(prev => [...prev, userMsg])
     setIsLoading(true)
 
+    // Store the full message text so handleRetry can re-send it
+    lastSentMessageRef.current = messageText
+
     try {
       let res: Response
 
@@ -465,10 +470,75 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         role: 'lex',
         content: "I seem to have lost my connection for a moment. Please try again.",
         timestamp: new Date().toISOString(),
+        isConnectionError: true,
       }])
     } finally {
       setIsLoading(false)
       // Auto-focus input after each Lex response
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }
+
+  // ── Retry last message after a connection error ───────────────────────────
+  const handleRetry = async () => {
+    const messageText = lastSentMessageRef.current
+    if (!messageText || isLoading) return
+
+    // Remove the connection error message and re-send
+    const currentMessages = messages.filter(m => !m.isConnectionError)
+    setMessages(currentMessages)
+    setIsLoading(true)
+
+    try {
+      let res: Response
+
+      if (isSignedIn) {
+        const id = await ensureIdea()
+        if (!id) throw new Error('Could not create idea record')
+        res = await fetch(`/api/ai/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: messageText }),
+        })
+      } else {
+        res = await fetch('/api/ai/public', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: messageText,
+            history: currentMessages.map(m => ({ role: m.role, content: m.content })),
+          }),
+        })
+      }
+
+      if (!res.ok) throw new Error('Lex unavailable')
+
+      const data = await res.json()
+
+      if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
+      if (data.currentStage) setCurrentStage(data.currentStage)
+      if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
+      if (data.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
+
+      const proposals: PendingProposal[] | undefined = data.pendingProposals?.length
+        ? data.pendingProposals.map((p: Omit<PendingProposal, 'status'>) => ({ ...p, status: 'pending' as const }))
+        : undefined
+
+      setMessages(prev => [...prev, {
+        role: 'lex',
+        content: data.response,
+        timestamp: new Date().toISOString(),
+        proposals,
+      }])
+    } catch {
+      setMessages(prev => [...prev, {
+        role: 'lex',
+        content: "I seem to have lost my connection for a moment. Please try again.",
+        timestamp: new Date().toISOString(),
+        isConnectionError: true,
+      }])
+    } finally {
+      setIsLoading(false)
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }
@@ -721,6 +791,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                         <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                           {msg.content}
                         </p>
+                        {msg.isConnectionError && (
+                          <button
+                            onClick={handleRetry}
+                            disabled={isLoading}
+                            className="mt-2 px-3 py-1.5 text-xs font-medium border border-zinc-200 rounded-lg text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isLoading ? 'Retrying…' : 'Try again'}
+                          </button>
+                        )}
                         {/* Field proposal cards */}
                         {msg.proposals && msg.proposals.length > 0 && (
                           <div className="mt-3">

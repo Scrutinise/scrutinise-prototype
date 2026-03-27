@@ -35,11 +35,20 @@ export default function FieldProposalCard({
   const [countdown, setCountdown] = useState(autoAcceptSeconds)
   const [isPaused, setIsPaused] = useState(false)
   const [savedValue, setSavedValue] = useState(proposedValue)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef<number>(0)
   const touchStartY = useRef<number>(0)
+
+  // Show swipe hint on mobile only if not yet dismissed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('hasSeenSwipeHint')
+      if (!seen) setShowSwipeHint(true)
+    }
+  }, [])
 
   // ── Auto-accept countdown ───────────────────────────────────────────────
 
@@ -57,6 +66,11 @@ export default function FieldProposalCard({
     setState('saved')
     setSavedValue(proposedValue)
     onAccept(proposedValue)
+    // Dismiss swipe hint after first acceptance
+    if (typeof window !== 'undefined' && !localStorage.getItem('hasSeenSwipeHint')) {
+      localStorage.setItem('hasSeenSwipeHint', '1')
+      setShowSwipeHint(false)
+    }
     // Signal the chat input to refocus after card acceptance
     window.dispatchEvent(new CustomEvent('lex-field-accepted'))
   }, [clearCountdown, proposedValue, onAccept])
@@ -174,16 +188,22 @@ export default function FieldProposalCard({
 
   if (state === 'saved') {
     return (
-      <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-green-50 border border-green-200 text-sm">
-        <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div
+        className="flex items-center gap-2 py-1.5 px-3 my-1 rounded-lg text-xs"
+        style={{ backgroundColor: '#f0fafa', borderLeft: '2px solid #2da8a8' }}
+      >
+        <span
+          className="shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: '#2da8a8' }}
+        >
+          <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
         </span>
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400 shrink-0">
+        <span className="font-semibold uppercase tracking-wide text-zinc-400 shrink-0">
           {fieldLabel}
         </span>
-        <span className="text-zinc-700 truncate">{savedValue}</span>
+        <span className="text-zinc-600 truncate">{savedValue}</span>
       </div>
     )
   }
@@ -277,6 +297,11 @@ export default function FieldProposalCard({
           </span>
         )}
       </div>
+      {showSwipeHint && (
+        <p className="lg:hidden mt-2 text-xs text-zinc-400 text-center select-none">
+          ← Swipe to edit&nbsp;&nbsp;|&nbsp;&nbsp;Swipe to accept →
+        </p>
+      )}
     </div>
   )
 }

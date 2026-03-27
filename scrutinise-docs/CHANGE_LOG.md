@@ -6,6 +6,17 @@
 
 ---
 
+## CODE CHANGES — 27 March 2026 (UX-mobile-1 — mobile swipe hint, connection retry button, accepted card position)
+
+### UX-mobile-1: Three mobile UX fixes
+| File | Change |
+|------|--------|
+| `components/FieldProposalCard.tsx` | **FIX 1:** Swipe hint already correctly implemented — `showSwipeHint` state, localStorage check, `lg:hidden` class, hint below buttons. No change required. |
+| `components/FieldProposalCard.tsx` | **FIX 3:** Saved card state changed from green styling to teal chip (`#2da8a8` left border + fill, `#2da8a8` check icon). Visually connects accepted field to Lex message (Option B). |
+| `app/ideas/create/CreateIdeaClient.tsx` | **FIX 2:** Added `isConnectionError?: boolean` to `ChatMessage`. Added `lastSentMessageRef` to store last sent message. Connection error catch sets `isConnectionError: true`. Added `handleRetry` function that removes error message and re-sends last message. Retry button rendered inline in error Lex bubble. |
+
+---
+
 ## CODE CHANGES — 27 March 2026 (Sprint L4-editorial — 8 editorial seed ideas with full strategic kernels)
 
 ### L4-editorial: Seed 8 editorial ideas

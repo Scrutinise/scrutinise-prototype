@@ -3,6 +3,18 @@
 
 ---
 
+## CURRENT STATE — UX-MOBILE-1 (THREE MOBILE UX FIXES) COMPLETE ✅
+
+**UX-mobile-1 — Mobile UX fixes:**
+- **FIX 1 (swipe hint):** Already correctly implemented in `FieldProposalCard.tsx`. `showSwipeHint` state initialises `false`, useEffect reads `localStorage.hasSeenSwipeHint` on client, sets true if not seen. `lg:hidden` class hides on ≥lg. Hint dismissed on acceptance. No code change needed.
+- **FIX 2 (connection retry):** `isConnectionError?: boolean` added to `ChatMessage`. `lastSentMessageRef` stores raw messageText before every send. Error catch now flags `isConnectionError: true`. `handleRetry` function removes error message and re-sends via same API path. "Try again" button renders inside error Lex bubble, shows "Retrying…" during loading.
+- **FIX 3 (accepted card position — Option B):** Saved card state restyled from green to teal (`#2da8a8`). Left border + background fill matches Lex's pending card palette. Visually associates accepted field with the Lex message block it renders inside, not the input below.
+- `tsc --noEmit` clean. One commit. Pushed to Main.
+
+**Deploy actions needed:** None — no schema changes, no new env vars.
+
+---
+
 ## CURRENT STATE — SPRINT L4-EDITORIAL (8 EDITORIAL SEED IDEAS) COMPLETE ✅
 
 **L4-editorial — Seed 8 editorial seed ideas with full strategic kernels:**
