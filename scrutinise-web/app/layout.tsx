@@ -2,6 +2,8 @@ import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import Script from 'next/script';
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: {
@@ -47,6 +49,8 @@ export default function RootLayout({
               </Script>
             </>
           )}
+          <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
