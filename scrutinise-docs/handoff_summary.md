@@ -1,5 +1,26 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 27 March 2026 v17*
+*Last updated: 27 March 2026 v18*
+
+---
+
+## CURRENT STATE — SPRINT L3 BUG FIXES (EDIT WITH LEX BUTTON + SIDEBAR VERIFICATION) COMPLETE ✅
+
+Two bug-fix commits to Main (L3-nav-fix, L3-sidebar-fix). Both `tsc --noEmit` clean. No DB changes.
+
+### L3-nav-fix: Edit with Lex button
+- "Continue with Lex →" inline link replaced with proper `<Button variant="outline">` labelled **"Edit with Lex"** in `IdeaDetailClient.tsx`
+- href was already correct; page.tsx already reads `ideaId` searchParam and passes `initialIdeaId`, `initialMessages`, `initialStage` to `CreateIdeaClient`
+- `CreateIdeaClient` already seeds `ideaId` state, `messages` state, and `currentStage` state from those props on mount
+- Button: owner only, STAGE_1 or STAGE_2, placed below idea title
+
+### L3-sidebar-fix: Sidebar field key alignment
+- Verified: all keys aligned across `SIDEBAR_FIELDS` (CreateIdeaClient), both `buildCompletedFields` functions (AI route + field-approval route)
+- `rootCause` reads from `idea.rootCause` (Idea-level text field) — correct for Stage 1 sidebar
+- `whoAffected` reads from `idea.whoAffected` (Idea-level field) — correct for Stage 1 sidebar
+- `handleProposalAccept` already calls `setFields(prev => ({ ...prev, ...data.completedFields }))` after every acceptance
+- No code changes required — all was already correctly implemented
+
+**Deploy actions needed:** None — no schema changes, no new env vars.
 
 ---
 

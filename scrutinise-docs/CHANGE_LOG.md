@@ -6,6 +6,25 @@
 
 ---
 
+## CODE CHANGES — 27 March 2026 (Sprint L3 bug fixes — Edit with Lex button + sidebar field verification)
+
+### L3-nav-fix: Edit with Lex button resumes existing idea session
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Replaced "Continue with Lex →" inline link with a proper `<Button variant="outline">` labelled "Edit with Lex" |
+| — | href was already correct (`/ideas/create?ideaId=${idea.id}`); page.tsx and CreateIdeaClient already seed state from DB on resume — no changes needed there |
+| — | Button visible to owner only at STAGE_1 or STAGE_2; placed below idea title, above gate checklist |
+
+### L3-sidebar-fix: Sidebar field key alignment verified (no code changes required)
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Verified: SIDEBAR_FIELDS keys (`title`, `summaryDiagnosis`, `rootCause`, `summaryGuidingPolicy`, `summaryCoherentActions`, `whoAffected`, `proposedWording`) match exactly |
+| `app/api/ai/[ideaId]/route.ts` | Verified: `buildCompletedFields` returns same keys; `rootCause` reads from `idea.rootCause` (Idea-level field), `whoAffected` reads from `idea.whoAffected` |
+| `app/api/ideas/[id]/field-approval/route.ts` | Verified: `buildCompletedFields` returns same keys; completedFields returned after every acceptance |
+| `app/ideas/create/CreateIdeaClient.tsx` | Verified: `handleProposalAccept` calls `setFields(prev => ({ ...prev, ...data.completedFields }))` after every acceptance |
+
+---
+
 ## CODE CHANGES — 27 March 2026 (Sprint L4 — Historical Examples + IdeaOrigin Banner + SuperAdmin Transfer)
 
 ### L4-1: IdeaOrigin enum, isHistoricalAccount flag, banner fields
