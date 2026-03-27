@@ -109,6 +109,9 @@ interface Idea {
   guidingPolicy: string | null
   rootCause: string | null
   whoAffected: string | null
+  ideaOrigin: string
+  bannerColour: string | null
+  bannerText: string | null
   commentCount: number
   referralLinkActive: boolean
   createdAt: string
@@ -217,6 +220,56 @@ function StageStepper({ currentStage }: { currentStage: string }) {
         )
       })}
     </nav>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IdeaOrigin banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ORIGIN_DEFAULTS: Record<string, { colour: string; text: string }> = {
+  HISTORICAL_EXAMPLE: {
+    colour: '#F97316',
+    text: 'This idea has been created by the Scrutinise team as a historical case study. It represents real legislation that reached the statute book through civil society advocacy. It is presented here to show how that process might have looked on Scrutinise.',
+  },
+  EDITORIAL_SEED: {
+    colour: '#3B82F6',
+    text: 'This idea was created by the Scrutinise team as an example of a live policy debate. It is open for development — contributions, research, and amendments are welcome.',
+  },
+}
+
+function IdeaOriginBanner({ idea }: { idea: Idea }) {
+  if (idea.ideaOrigin === 'USER') return null
+  const defaults = ORIGIN_DEFAULTS[idea.ideaOrigin]
+  if (!defaults) return null
+  const colour = idea.bannerColour ?? defaults.colour
+  const text = idea.bannerText ?? defaults.text
+
+  return (
+    <div
+      style={{
+        backgroundColor: colour + '26', // 15% opacity
+        borderLeft: `3px solid ${colour}`,
+        color: colour,
+      }}
+      className="mb-6 flex items-start gap-3 px-4 py-3"
+      role="note"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="mt-0.5 size-5 shrink-0"
+        aria-hidden="true"
+      >
+        <path
+          fillRule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <p className="text-sm leading-relaxed">{text}</p>
+    </div>
   )
 }
 
@@ -2047,6 +2100,9 @@ export default function IdeaDetailClient({
         <div className="mb-8 overflow-x-auto pb-1">
           <StageStepper currentStage={idea.stage} />
         </div>
+
+        {/* IdeaOrigin banner */}
+        <IdeaOriginBanner idea={idea} />
 
         {/* Header */}
         <div className="mb-6">
