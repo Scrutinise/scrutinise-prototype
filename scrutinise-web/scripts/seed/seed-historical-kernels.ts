@@ -221,7 +221,6 @@ const KERNELS: KernelEntry[] = [
     guidingPolicy: {
       text: 'Mandatory annual publication of mean and median gender pay gaps, including bonus gaps, by all employers with 250 or more employees on a government portal — creating reputational pressure on employers and an evidence base for enforcement action.',
       coreTheory: 'Sunlight is the best disinfectant. Mandatory public disclosure creates reputational incentives that voluntary reporting cannot. Employers with large gaps face investor, recruitment, and public pressure to act. The aggregate dataset enables benchmarking and tracks progress.',
-      mechanismTransparency: 'Annual publication by 5 April each year. Mean and median hourly pay gap, mean and median bonus gap, proportion of men and women receiving bonuses, proportion in each pay quartile. Published on a government portal and on the employer\'s own website.',
       tradeOffs: 'Reporting is not the same as closing the gap. Employers can report a large gap and face limited direct consequences if investor and public pressure is insufficient. The 250-employee threshold excludes the majority of workplaces. Aggregate figures can conceal within-grade discrimination.',
       competitiveIdeaAnalysis: 'Iceland introduced legally binding pay equity certification in 2018, going further than UK disclosure requirements. Australia has required gender pay reporting for large employers since 2012. The UK\'s 2017 regulations were among the first in Europe to require median as well as mean figures.',
     },
