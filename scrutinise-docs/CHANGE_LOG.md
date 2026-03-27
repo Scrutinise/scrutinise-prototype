@@ -2,7 +2,44 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 26 March 2026*
+*Last updated: 27 March 2026*
+
+---
+
+## CODE CHANGES — 27 March 2026 (Sprint L4 — Historical Examples + IdeaOrigin Banner + SuperAdmin Transfer)
+
+### L4-1: IdeaOrigin enum, isHistoricalAccount flag, banner fields
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `IdeaOrigin` enum: `USER`, `HISTORICAL_EXAMPLE`, `EDITORIAL_SEED` |
+| `prisma/schema.prisma` | Added `isHistoricalAccount Boolean @default(false)` to User model |
+| `prisma/schema.prisma` | Added `ideaOrigin IdeaOrigin @default(USER)`, `bannerColour String?`, `bannerText String?` to Idea model |
+| — | `npx prisma db push` and `npx prisma generate` run clean |
+
+### L4-2: IdeaOrigin banner on idea detail page
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Added `ideaOrigin`, `bannerColour`, `bannerText` to `Idea` interface |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Added `IdeaOriginBanner` component with info SVG icon, dynamic hex colour, left border, 15% opacity background |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Banner rendered between stage stepper and idea header; hidden for `USER` origin |
+| — | Default text and colour per origin type; overridable per-idea via `bannerColour`/`bannerText` |
+
+### L4-3: SuperAdmin ownership transfer in admin panel
+| File | Change |
+|------|--------|
+| `app/admin/page.tsx` | Added `SuperAdminTransferSection` component: debounced idea/user search, inline confirmation modal |
+| `app/admin/page.tsx` | "Transfer Ownership" tab added — SUPER_ADMIN only |
+| `app/api/admin/ideas/search/route.ts` | New: GET search by title or ID, max 5 results, ADMIN+ |
+| `app/api/admin/users/search/route.ts` | New: GET search by email/username/name, excludes `isHistoricalAccount`, max 5, ADMIN+ |
+| `app/api/admin/ideas/[ideaId]/transfer-ownership/route.ts` | New: POST SUPER_ADMIN only; patches `creatorId`; creates `ActivityLog` ADMIN_ACTION record |
+
+### L4-4: Seed 20 historical examples
+| File | Change |
+|------|--------|
+| `scripts/seed/seed-historical-examples.ts` | New idempotent seeding script |
+| — | 19 User records created (isHistoricalAccount=true, clerkId=`historical_[slug]`) |
+| — | 20 Idea records created (STAGE_3, LINK_ONLY, HISTORICAL_EXAMPLE, bannerColour=#F97316) |
+| — | Shelter England user used for ideas 1 and 9 as specified |
 
 ---
 

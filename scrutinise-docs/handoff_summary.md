@@ -1,5 +1,67 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 26 March 2026 v16*
+*Last updated: 27 March 2026 v17*
+
+---
+
+## CURRENT STATE — SPRINT L4 (HISTORICAL EXAMPLES + IDEAORIGIN BANNER + SUPERADMIN TRANSFER) COMPLETE ✅
+
+Sprint L4 complete. Four commits to Main (L4-1 through L4-4). All `tsc --noEmit` clean. `prisma db push` and `prisma generate` run — DB in sync. Seeding script run against production.
+
+### Sprint L4 Summary
+
+**L4-1 — Schema changes:**
+- New `IdeaOrigin` enum: `USER` (default), `HISTORICAL_EXAMPLE`, `EDITORIAL_SEED`
+- `isHistoricalAccount Boolean @default(false)` added to User model — marks seed accounts with no real Clerk auth
+- `ideaOrigin`, `bannerColour`, `bannerText` added to Idea model
+- `prisma db push` + `prisma generate` run clean
+
+**L4-2 — IdeaOrigin banner on idea detail page (`IdeaDetailClient.tsx`):**
+- `IdeaOriginBanner` component: inline SVG info icon, dynamic hex colour, left border, 15% opacity background fill
+- Renders between stage stepper and idea header; hidden for `USER` origin
+- `HISTORICAL_EXAMPLE` default: orange `#F97316`; `EDITORIAL_SEED` default: blue `#3B82F6`
+- `bannerColour` and `bannerText` on Idea override defaults
+
+**L4-3 — SuperAdmin ownership transfer:**
+- `SuperAdminTransferSection` in `app/admin/page.tsx`: debounced idea/user search (300ms), inline confirmation, success/error
+- "Transfer Ownership" tab visible to SUPER_ADMIN only
+- `GET /api/admin/ideas/search?q=` — title/ID search, max 5, ADMIN+
+- `GET /api/admin/users/search?q=` — email/username/name, excludes `isHistoricalAccount`, max 5, ADMIN+
+- `POST /api/admin/ideas/[ideaId]/transfer-ownership` — SUPER_ADMIN only; patches `creatorId`; creates `ActivityLog` ADMIN_ACTION
+
+**L4-4 — Seeding script (`scripts/seed/seed-historical-examples.ts`):**
+- 19 User records: `isHistoricalAccount=true`, `clerkId=historical_[slug]`
+- 20 Idea records: `STAGE_3`, `LINK_ONLY`, `HISTORICAL_EXAMPLE`, `bannerColour=#F97316`
+- Shelter England user shared by ideas 1 and 9
+- Script is idempotent; errors per-item are logged without aborting the run
+- **Already run against production** — all 20 ideas live
+
+**Deploy actions needed:**
+- All already done: `prisma db push` ✅, `prisma generate` ✅, seeding script ✅
+- No new env vars required
+
+**Seeded idea IDs (for reference):**
+| Title | ID |
+|-------|----|
+| Homelessness Reduction Act 2017 | cb7498df-8275-4d18-ae85-662887249ecc |
+| Modern Slavery Act 2015 | 8bf7ced7-baab-4f72-8765-56a3c6fa4426 |
+| Hunting Act 2004 | 5306bb29-480e-4d3c-afc5-448e4f02e2bf |
+| Gender Recognition Act 2004 | e72cc67b-8f27-40bb-95c9-6cb2b993887c |
+| Gender Pay Gap Reporting in the Equality Act 2010 | 151ddbf1-e356-4cd2-a80a-1dd541e2b100 |
+| Countryside and Rights of Way Act 2000 | 7700e3c9-9088-4fa7-993e-ddb53deb7a29 |
+| Consumer Rights Act 2015 | 12f20003-6eb0-4edb-a520-e238ae1fb2af |
+| Age of Criminal Responsibility (Scotland) Act 2021 | 97dbdc0f-0eca-4cc4-b1f7-f7162dfa7d27 |
+| Homes (Fitness for Human Habitation) Act 2018 | d42bbf40-d645-44ef-b711-2646af08050a |
+| Domestic Abuse Act 2021 | 3c8441c5-8e53-4c3f-a978-409cdc415a55 |
+| Tobacco and Vapes Act 2025 | 0ef5826f-de29-449d-afb7-c3ae236d7856 |
+| Academies Act 2010 | f7a74bbb-bdb7-48bd-914c-0abf51ae9f4f |
+| Protection of Freedoms Act 2012 | 32426a88-f77f-4cb2-857f-e398d745842a |
+| Higher Education (Freedom of Speech) Act 2023 | 6c634e74-e845-4c3c-945e-415118a7c7d8 |
+| Tobacco Advertising and Promotion Act 2002 | 945fd544-5538-425f-9808-450edbcd2ef3 |
+| Land Reform (Scotland) Act 2003 | 323a51b6-ed30-4eeb-89b1-9f0ced07ccee |
+| Well-being of Future Generations (Wales) Act 2015 | d9a75dfc-9b89-45db-be2e-37c9b4b07d1f |
+| Organ Donation (Wales) Act 2013 | 3709a536-22af-4443-941b-999201b75003 |
+| Domestic Abuse (Scotland) Act 2018 | 99dfa782-9435-4771-a15d-bbca283a606f |
+| Planning and Infrastructure Act 2025 | c75db19f-128c-4216-8770-b0d6748a1d3f |
 
 ---
 
