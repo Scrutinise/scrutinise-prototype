@@ -1,5 +1,28 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 27 March 2026 v19*
+*Last updated: 27 March 2026 v20*
+
+---
+
+## CURRENT STATE — SPRINT L4-EDITORIAL (8 EDITORIAL SEED IDEAS) COMPLETE ✅
+
+**L4-editorial — Seed 8 editorial seed ideas with full strategic kernels:**
+- Script: `scripts/seed/seed-editorial-ideas.ts` — idempotent; upserts User + Ideas; upserts Diagnosis + GuidingPolicy; creates RootCause + CoherentActions only if absent
+- User: `editorial_scrutinise` (clerkId), `isHistoricalAccount: false`, role `CITIZEN`
+- All 8 ideas: `ideaOrigin: EDITORIAL_SEED`, blue banner `#3B82F6`, `STAGE_3`, `LINK_ONLY`, `LEGISLATION`
+- All 8 seeded cleanly: Diagnosis ✓, RootCause ✓, GuidingPolicy ✓, CoherentActions ✓
+- Run against production DB — all 8 processed cleanly
+
+**Idea IDs (production):**
+- `dd7c0fc0-6777-498b-b444-26c8926f6ec8` — FCA Competitiveness Duty
+- `f09c5f19-4a67-481b-acbe-9cbd0c8b87b0` — Pandemic Preparedness Framework
+- `3f972309-e4fd-43ca-9bd8-9b3a112424b6` — Defence Industrial Mobilisation Reserve
+- `791c1e42-ba10-48a6-a8e4-95641c4e5f87` — ARIA Governance Reform
+- `fc3ccff1-7a83-4fac-8ffc-e9f35f37139d` — Pre-Legislative Scrutiny
+- `40e351a7-d735-4b11-b19f-f1f3049d402c` — Open Government Procurement Data
+- `ab6b9655-1239-4113-a537-407122c93018` — Criminal Courts Digitisation
+- `be7d7b70-ba55-4a2a-b5c7-23c14c53b79b` — NHS Diagnostic Waiting Time Guarantee
+
+**Deploy actions needed:** None — no schema changes, no new env vars.
 
 ---
 

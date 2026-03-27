@@ -6,6 +6,17 @@
 
 ---
 
+## CODE CHANGES — 27 March 2026 (Sprint L4-editorial — 8 editorial seed ideas with full strategic kernels)
+
+### L4-editorial: Seed 8 editorial ideas
+| File | Change |
+|------|--------|
+| `scripts/seed/seed-editorial-ideas.ts` | New idempotent seed script for 8 live-policy-debate editorial ideas. Creates `editorial_scrutinise` User (clerkId, `isHistoricalAccount: false`). Upserts Ideas with `ideaOrigin: EDITORIAL_SEED`, blue banner `#3B82F6`, `STAGE_3`, `LINK_ONLY`. Upserts Diagnosis + GuidingPolicy; creates RootCause + CoherentActions if absent. |
+| — | 8 ideas seeded: FCA competitiveness, pandemic preparedness, defence industrial reserve, ARIA governance, pre-legislative scrutiny, procurement open data, criminal courts digitisation, NHS diagnostic guarantee |
+| — | All 8: Diagnosis ✓ (created), RootCause ✓ (created), GuidingPolicy ✓ (created), 1 CoherentAction ✓ (created) |
+
+---
+
 ## CODE CHANGES — 27 March 2026 (Sprint L3 bug fixes — Edit with Lex button + sidebar field verification)
 
 ### L3-nav-fix: Edit with Lex button resumes existing idea session
