@@ -400,10 +400,211 @@ function PlatformConfigSection() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SuperAdmin ownership transfer (3d — SUPER_ADMIN only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface IdeaSearchResult {
+  id: string
+  title: string
+  creator: { id: string; name: string; email: string }
+}
+
+interface UserSearchResult {
+  id: string
+  name: string
+  email: string
+  username: string
+}
+
+function SuperAdminTransferSection() {
+  const [ideaQuery, setIdeaQuery] = useState('')
+  const [ideaResults, setIdeaResults] = useState<IdeaSearchResult[]>([])
+  const [selectedIdea, setSelectedIdea] = useState<IdeaSearchResult | null>(null)
+
+  const [userQuery, setUserQuery] = useState('')
+  const [userResults, setUserResults] = useState<UserSearchResult[]>([])
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null)
+
+  const [confirming, setConfirming] = useState(false)
+  const [transferring, setTransferring] = useState(false)
+  const [transferError, setTransferError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (ideaQuery.length < 2) { setIdeaResults([]); return }
+    const t = setTimeout(() => {
+      fetch(`/api/admin/ideas/search?q=${encodeURIComponent(ideaQuery)}`)
+        .then(r => r.json())
+        .then(data => setIdeaResults(Array.isArray(data) ? data : []))
+        .catch(() => {})
+    }, 300)
+    return () => clearTimeout(t)
+  }, [ideaQuery])
+
+  useEffect(() => {
+    if (userQuery.length < 2) { setUserResults([]); return }
+    const t = setTimeout(() => {
+      fetch(`/api/admin/users/search?q=${encodeURIComponent(userQuery)}`)
+        .then(r => r.json())
+        .then(data => setUserResults(Array.isArray(data) ? data : []))
+        .catch(() => {})
+    }, 300)
+    return () => clearTimeout(t)
+  }, [userQuery])
+
+  async function handleTransfer() {
+    if (!selectedIdea || !selectedUser) return
+    setTransferring(true)
+    setTransferError(null)
+    try {
+      const res = await fetch(`/api/admin/ideas/${selectedIdea.id}/transfer-ownership`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newOwnerUserId: selectedUser.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setTransferError(data.error ?? 'Something went wrong')
+        return
+      }
+      setSuccessMessage(
+        `"${data.ideaTitle}" transferred from ${data.fromOwnerName} to ${data.toOwnerName}.`,
+      )
+      setSelectedIdea(null)
+      setSelectedUser(null)
+      setIdeaQuery('')
+      setUserQuery('')
+      setConfirming(false)
+    } catch {
+      setTransferError('Network error')
+    } finally {
+      setTransferring(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Transfer any idea to a registered user. Use this to assign historical example ideas to real
+        organisation accounts, or to correct ownership errors. This action is logged.
+      </p>
+
+      {successMessage && (
+        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">{successMessage}</p>
+      )}
+      {transferError && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{transferError}</p>
+      )}
+
+      {/* Idea search */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Find idea</label>
+        <input
+          type="text"
+          value={ideaQuery}
+          onChange={e => { setIdeaQuery(e.target.value); setSelectedIdea(null); setConfirming(false) }}
+          placeholder="Search by title or ID…"
+          className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+        />
+        {ideaResults.length > 0 && !selectedIdea && (
+          <ul className="mt-1 rounded-md border bg-background shadow-sm">
+            {ideaResults.map(idea => (
+              <li key={idea.id}>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedIdea(idea); setIdeaResults([]); setIdeaQuery(idea.title) }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted/40"
+                >
+                  <span className="font-medium">{idea.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">Owner: {idea.creator.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {selectedIdea && (
+          <p className="text-xs text-muted-foreground">
+            Selected: <strong>{selectedIdea.title}</strong> — currently owned by <strong>{selectedIdea.creator.name}</strong>
+          </p>
+        )}
+      </div>
+
+      {/* User search */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Transfer to user</label>
+        <input
+          type="text"
+          value={userQuery}
+          onChange={e => { setUserQuery(e.target.value); setSelectedUser(null); setConfirming(false) }}
+          placeholder="Search by email or username…"
+          className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+        />
+        {userResults.length > 0 && !selectedUser && (
+          <ul className="mt-1 rounded-md border bg-background shadow-sm">
+            {userResults.map(user => (
+              <li key={user.id}>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedUser(user); setUserResults([]); setUserQuery(user.email) }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted/40"
+                >
+                  <span className="font-medium">{user.name}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{user.email}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {selectedUser && (
+          <p className="text-xs text-muted-foreground">
+            Selected: <strong>{selectedUser.name}</strong> ({selectedUser.email})
+          </p>
+        )}
+      </div>
+
+      {/* Transfer button / confirmation */}
+      {!confirming ? (
+        <Button
+          disabled={!selectedIdea || !selectedUser}
+          onClick={() => setConfirming(true)}
+        >
+          Transfer ownership
+        </Button>
+      ) : (
+        <div className="rounded-md border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+          <p className="text-sm">
+            Transfer <strong>&ldquo;{selectedIdea?.title}&rdquo;</strong> from{' '}
+            <strong>{selectedIdea?.creator.name}</strong> to{' '}
+            <strong>{selectedUser?.name}</strong>? This cannot be undone.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={transferring}
+              onClick={handleTransfer}
+            >
+              {transferring ? 'Transferring…' : 'Confirm'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={transferring}
+              onClick={() => setConfirming(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main admin page
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AdminSection = 'reports' | 'users' | 'config'
+type AdminSection = 'reports' | 'users' | 'config' | 'transfer'
 
 export default function AdminPage() {
   const [section, setSection] = useState<AdminSection>('reports')
@@ -419,7 +620,12 @@ export default function AdminPage() {
   const sections: { key: AdminSection; label: string }[] = [
     { key: 'reports', label: 'Content Reports' },
     { key: 'users', label: 'Users' },
-    ...(isSuperAdmin ? [{ key: 'config' as AdminSection, label: 'Platform Config' }] : []),
+    ...(isSuperAdmin
+      ? [
+          { key: 'config' as AdminSection, label: 'Platform Config' },
+          { key: 'transfer' as AdminSection, label: 'Transfer Ownership' },
+        ]
+      : []),
   ]
 
   return (
@@ -479,6 +685,17 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <PlatformConfigSection />
+            </CardContent>
+          </Card>
+        )}
+
+        {section === 'transfer' && isSuperAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Transfer Idea Ownership</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SuperAdminTransferSection />
             </CardContent>
           </Card>
         )}
