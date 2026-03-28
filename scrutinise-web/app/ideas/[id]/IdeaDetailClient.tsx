@@ -2339,12 +2339,12 @@ export default function IdeaDetailClient({
             </p>
           )}
 
-          {/* Edit with Lex — owner only, Stage 1 or 2 */}
+          {/* Edit — owner only, Stage 1 or 2 — primary action */}
           {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
             <div className="mt-4">
-              <Button variant="outline" size="sm" asChild>
+              <Button asChild>
                 <Link href={`/ideas/create?ideaId=${idea.id}`}>
-                  Edit with Lex
+                  Edit
                 </Link>
               </Button>
             </div>
