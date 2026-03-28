@@ -5,6 +5,8 @@ import { useUser, SignInButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FieldProposalCard from '@/components/FieldProposalCard'
+import PublicNav from '@/components/PublicNav'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -698,53 +700,52 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-background/95 backdrop-blur z-10 shrink-0">
-        <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
-          Scrutinise
-        </Link>
-        <div className="flex items-center gap-3">
-          {!isSignedIn && (
-            <SignInButton mode="modal">
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Sign in
-              </button>
-            </SignInButton>
-          )}
-          {isSignedIn && (
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
-                {ideaId && (
-                  <Link
-                    href={`/ideas/${ideaId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    View your idea →
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    if (ideaId) {
-                      router.push('/dashboard')
-                    } else {
-                      setSaveExitMsg('Your conversation will be saved once you complete the first stage.')
-                      setTimeout(() => setSaveExitMsg(null), 4000)
-                    }
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                >
-                  Save & Exit
+      {/* ── Top nav ──────────────────────────────────────────────────────── */}
+      <PublicNav />
+
+      {/* ── Lex toolbar — Save & Exit / View your idea ───────────────────── */}
+      <div className="shrink-0 flex items-center justify-between px-6 py-2 border-b border-border bg-background/95 text-xs">
+        <span className="text-muted-foreground font-medium">Developing with Lex</span>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-3">
+            {!isSignedIn && (
+              <SignInButton mode="modal">
+                <button className="text-muted-foreground hover:text-foreground transition-colors">
+                  Sign in
                 </button>
-              </div>
-              {saveExitMsg && (
-                <p className="text-xs text-muted-foreground max-w-xs text-right">{saveExitMsg}</p>
-              )}
-            </div>
+              </SignInButton>
+            )}
+            {ideaId && (
+              <Link
+                href={`/ideas/${ideaId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                View your idea →
+              </Link>
+            )}
+            {isSignedIn && (
+              <button
+                onClick={() => {
+                  if (ideaId) {
+                    router.push('/dashboard')
+                  } else {
+                    setSaveExitMsg('Your conversation will be saved once you complete the first stage.')
+                    setTimeout(() => setSaveExitMsg(null), 4000)
+                  }
+                }}
+                className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+              >
+                Save & Exit
+              </button>
+            )}
+          </div>
+          {saveExitMsg && (
+            <p className="text-muted-foreground max-w-xs text-right">{saveExitMsg}</p>
           )}
         </div>
-      </header>
+      </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
@@ -1050,6 +1051,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           )}
         </aside>
       </div>
+
+      {/* ── Bottom nav ───────────────────────────────────────────────────── */}
+      <SiteFooter />
     </div>
   )
 }
