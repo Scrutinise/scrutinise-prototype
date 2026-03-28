@@ -41,6 +41,20 @@ interface PlatformConfig {
   minRatingForStage4?: number
 }
 
+interface LexInsight {
+  id: string
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED'
+  title: string
+  userQuote: string
+  conversationContext: string
+  lexConclusion: string
+  lexRecommendation: string
+  approvedRule: string | null
+  createdAt: string
+  reviewedAt: string | null
+  reviewedBy: { id: string; name: string } | null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Reports section (3a)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -601,10 +615,204 @@ function SuperAdminTransferSection() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Lex Insights section
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STATUS_LABEL: Record<LexInsight['status'], string> = {
+  DRAFT: 'New',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+}
+
+const STATUS_BADGE: Record<LexInsight['status'], string> = {
+  DRAFT: 'bg-amber-100 text-amber-800',
+  APPROVED: 'bg-green-100 text-green-800',
+  REJECTED: 'bg-muted text-muted-foreground',
+}
+
+function LexInsightCard({
+  insight,
+  onUpdated,
+}: {
+  insight: LexInsight
+  onUpdated: (updated: LexInsight) => void
+}) {
+  const [ruleText, setRuleText] = useState(insight.approvedRule ?? insight.lexRecommendation)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleAction(status: LexInsight['status']) {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/lex-insights/${insight.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          ...(status === 'APPROVED' ? { approvedRule: ruleText } : {}),
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Something went wrong')
+        return
+      }
+      const updated = await res.json()
+      onUpdated({ ...insight, ...updated })
+    } catch {
+      setError('Network error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const isDraft = insight.status === 'DRAFT'
+  const isApproved = insight.status === 'APPROVED'
+  const isRejected = insight.status === 'REJECTED'
+
+  return (
+    <div className={[
+      'rounded-lg border p-4 space-y-3',
+      isDraft ? 'border-amber-200 bg-amber-50/40' : 'bg-muted/10',
+    ].join(' ')}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={['inline-block rounded-full px-2 py-0.5 text-xs font-medium', STATUS_BADGE[insight.status]].join(' ')}>
+            {STATUS_LABEL[insight.status]}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(insight.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
+      <p className="font-medium text-sm">{insight.title}</p>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">What happened</p>
+        <p className="text-xs text-muted-foreground mb-1">{insight.conversationContext}</p>
+        <blockquote className="border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
+          &ldquo;{insight.userQuote}&rdquo;
+        </blockquote>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">What Lex concluded</p>
+        <p className="text-xs">{insight.lexConclusion}</p>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+          Proposed rule {isDraft ? '(edit before approving)' : ''}
+        </p>
+        {isDraft ? (
+          <textarea
+            className="w-full rounded border px-2 py-1.5 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            rows={3}
+            value={ruleText}
+            onChange={e => setRuleText(e.target.value)}
+          />
+        ) : (
+          <p className="text-xs">{insight.lexRecommendation}</p>
+        )}
+      </div>
+
+      {isApproved && insight.approvedRule && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Approved rule (active in Lex)</p>
+          <p className="text-xs rounded bg-green-50 border border-green-100 px-2 py-1.5">{insight.approvedRule}</p>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        {isDraft && (
+          <>
+            <Button size="sm" disabled={saving} onClick={() => handleAction('APPROVED')}>
+              {saving ? '…' : 'Approve'}
+            </Button>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => handleAction('REJECTED')}>
+              {saving ? '…' : 'Reject'}
+            </Button>
+          </>
+        )}
+        {isApproved && (
+          <Button size="sm" variant="outline" disabled={saving} onClick={() => handleAction('REJECTED')}>
+            {saving ? '…' : 'Revoke approval'}
+          </Button>
+        )}
+        {isRejected && (
+          <Button size="sm" variant="outline" disabled={saving} onClick={() => handleAction('APPROVED')}>
+            {saving ? '…' : 'Approve instead'}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LexInsightsSection() {
+  const [insights, setInsights] = useState<LexInsight[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/lex-insights')
+      .then(r => r.json())
+      .then(data => { setInsights(Array.isArray(data) ? data : []); setLoaded(true) })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  function handleUpdated(updated: LexInsight) {
+    setInsights(prev => prev.map(i => i.id === updated.id ? updated : i))
+  }
+
+  if (!loaded) return <p className="text-sm text-muted-foreground">Loading insights…</p>
+
+  const draft = insights.filter(i => i.status === 'DRAFT')
+  const approved = insights.filter(i => i.status === 'APPROVED')
+  const rejected = insights.filter(i => i.status === 'REJECTED')
+
+  if (insights.length === 0) {
+    return <p className="text-sm text-muted-foreground">No insights yet. Lex will flag patterns as it observes them.</p>
+  }
+
+  return (
+    <div className="space-y-8">
+      {draft.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3">New ({draft.length})</h3>
+          <div className="space-y-3">
+            {draft.map(i => <LexInsightCard key={i.id} insight={i} onUpdated={handleUpdated} />)}
+          </div>
+        </div>
+      )}
+      {approved.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Approved ({approved.length})</h3>
+          <div className="space-y-3">
+            {approved.map(i => <LexInsightCard key={i.id} insight={i} onUpdated={handleUpdated} />)}
+          </div>
+        </div>
+      )}
+      {rejected.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Rejected ({rejected.length})</h3>
+          <div className="space-y-3">
+            {rejected.map(i => <LexInsightCard key={i.id} insight={i} onUpdated={handleUpdated} />)}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main admin page
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AdminSection = 'reports' | 'users' | 'config' | 'transfer'
+type AdminSection = 'reports' | 'users' | 'insights' | 'config' | 'transfer'
 
 export default function AdminPage() {
   const [section, setSection] = useState<AdminSection>('reports')
@@ -620,6 +828,7 @@ export default function AdminPage() {
   const sections: { key: AdminSection; label: string }[] = [
     { key: 'reports', label: 'Content Reports' },
     { key: 'users', label: 'Users' },
+    { key: 'insights', label: 'Lex Insights' },
     ...(isSuperAdmin
       ? [
           { key: 'config' as AdminSection, label: 'Platform Config' },
@@ -673,6 +882,20 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <UsersSection isSuperAdmin={isSuperAdmin} />
+            </CardContent>
+          </Card>
+        )}
+
+        {section === 'insights' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Lex Behaviour Insights</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Observations flagged by Lex during user conversations. Review and approve rules to improve Lex&apos;s behaviour.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <LexInsightsSection />
             </CardContent>
           </Card>
         )}

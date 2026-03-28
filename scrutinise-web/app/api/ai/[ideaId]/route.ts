@@ -24,6 +24,7 @@ function buildSystemPrompt(ctx: {
   lexMode: string
   experienceLevel?: string
   aiSessionCount: number
+  approvedRules?: string[]
 }): string {
   const isStage1 = ctx.currentStage === 'STAGE_1'
 
@@ -254,7 +255,22 @@ WHAT LEX NEVER DOES:
 - Uses "impactful", "utilise", "going forward"
 - Says "That's a strong foundation" when only a title and one field have been completed — use "That's a good start" or simply move on without praising minimally completed work
 - Uses hollow affirmations: "Great!", "Excellent!", "Perfect!" — react specifically to what was said, not generically to the act of saying it
-- Thanks the user for answering — they are developing their own idea, not doing Lex a favour`
+- Thanks the user for answering — they are developing their own idea, not doing Lex a favour
+
+INSIGHT LOGGING: When you observe a pattern that suggests a change to
+your own behaviour would improve the conversation — frustration with
+a repeated question, delight at a specific technique, confusion about
+navigation — flag it using the insightFlag JSON key in the same JSON
+block as fieldUpdates. Keep the userQuote anonymised (replace the user's
+name with "the user"). The title should be a short, specific description.
+The lexRecommendation should be a proposed rule in the form:
+"When [situation], [do this instead]."
+Log sparingly — only when you observe something genuinely repeatable,
+not after every exchange. Format:
+{"fieldUpdates": {...}, "insightFlag": {"title": "...", "userQuote": "...", "conversationContext": "...", "lexConclusion": "...", "lexRecommendation": "..."}}
+${ctx.approvedRules && ctx.approvedRules.length > 0 ? `
+## APPROVED BEHAVIOUR RULES (from observed user interactions)
+${ctx.approvedRules.join('\n')}` : ''}`
 }
 
 // Map stage enum to human-readable label
@@ -344,6 +360,17 @@ export async function POST(req: Request, { params }: Params) {
         idea.research.length > 0 && `${idea.research.length} Research item(s)`,
       ].filter(Boolean).join(', ') || 'None yet'
 
+  // Fetch approved LexInsight rules to inject into system prompt (max 50, most recent)
+  const approvedInsights = await prisma.lexInsight.findMany({
+    where: { status: 'APPROVED', approvedRule: { not: null } },
+    orderBy: { updatedAt: 'desc' },
+    take: 50,
+    select: { approvedRule: true },
+  })
+  const approvedRules = approvedInsights
+    .map(r => r.approvedRule)
+    .filter((r): r is string => r !== null)
+
   const systemPrompt = buildSystemPrompt({
     ideaTitle: idea.title,
     currentStage: idea.stage,
@@ -355,6 +382,7 @@ export async function POST(req: Request, { params }: Params) {
     lexMode,
     experienceLevel,
     aiSessionCount: idea.aiSessionCount,
+    approvedRules,
   })
 
   // Reconstruct recent chat history for the API call
@@ -447,21 +475,53 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
 
-  // Extract and strip fieldUpdates JSON from the response
+  // Extract and strip fieldUpdates / insightFlag JSON from the response
   let visibleResponse = lexResponse!
   let fieldUpdates: Record<string, string | null> | null = null
   let triggerSavePrompt = false
+  let insightFlag: {
+    title: string
+    userQuote: string
+    conversationContext: string
+    lexConclusion: string
+    lexRecommendation: string
+  } | null = null
 
-  const jsonMatch = lexResponse!.match(/\{[\s\S]*"fieldUpdates"[\s\S]*\}/)
+  const jsonMatch = lexResponse!.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag")[\s\S]*\}/)
   if (jsonMatch) {
     try {
       const parsed = JSON.parse(jsonMatch[0])
       fieldUpdates = parsed.fieldUpdates ?? null
       triggerSavePrompt = parsed.triggerSavePrompt === true
+      if (parsed.insightFlag && typeof parsed.insightFlag === 'object') {
+        const f = parsed.insightFlag
+        if (f.title && f.userQuote && f.conversationContext && f.lexConclusion && f.lexRecommendation) {
+          insightFlag = {
+            title: String(f.title),
+            userQuote: String(f.userQuote),
+            conversationContext: String(f.conversationContext),
+            lexConclusion: String(f.lexConclusion),
+            lexRecommendation: String(f.lexRecommendation),
+          }
+        }
+      }
       visibleResponse = lexResponse!.replace(jsonMatch[0], '').trim()
     } catch {
       // JSON parse failed — serve response as-is without field updates
     }
+  }
+
+  // Create LexInsight record if Lex flagged an insight
+  if (insightFlag) {
+    prisma.lexInsight.create({
+      data: {
+        title: insightFlag.title,
+        userQuote: insightFlag.userQuote,
+        conversationContext: insightFlag.conversationContext,
+        lexConclusion: insightFlag.lexConclusion,
+        lexRecommendation: insightFlag.lexRecommendation,
+      },
+    }).catch(err => console.error('[/api/ai/[ideaId]] LexInsight create failed:', err))
   }
 
   // Build pendingProposals — DO NOT write to DB here.

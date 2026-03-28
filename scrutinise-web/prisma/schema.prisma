@@ -279,6 +279,12 @@ enum IdeaOrigin {
   EDITORIAL_SEED     // Platform-seeded policy debate
 }
 
+enum LexInsightStatus {
+  DRAFT       // Lex has flagged this — pending admin review
+  APPROVED    // Admin has approved — approvedRule is added to Lex's context
+  REJECTED    // Admin has rejected — stored for reference but not used
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 — CORE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -368,6 +374,7 @@ model User {
   disputedLogicFlags        DisputedLogicFlag[]
   researchContributions     Research[]
   authoredAmendments        Amendment[]
+  lexInsightReviews         LexInsight[]
 
   @@index([clerkId])
   @@index([email])
@@ -1164,4 +1171,24 @@ model DisputedLogicFlag {
   createdAt   DateTime      @default(now())
 
   @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 13 — LEX INSIGHTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LexInsight {
+  id                  String           @id @default(uuid())
+  status              LexInsightStatus @default(DRAFT)
+  title               String
+  userQuote           String
+  conversationContext String
+  lexConclusion       String
+  lexRecommendation   String
+  approvedRule        String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  reviewedByUserId    String?
+  reviewedAt          DateTime?
+  reviewedBy          User?            @relation(fields: [reviewedByUserId], references: [id])
 }
