@@ -1,5 +1,38 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
-*Last updated: 27 March 2026 v20*
+*Last updated: 28 March 2026 v21*
+
+---
+
+## CURRENT STATE — 28 MARCH 2026 SPRINT (TEAM INVITES, NAV BARS, EDIT BUTTON, LEX V5.1) COMPLETE ✅
+
+Four commits to Main. All `tsc --noEmit` clean. Pushed to Main.
+
+### team-invite-1: Team invite flows
+- `GET /api/users/search?q=` — search users by name/username, min 2 chars, excludes self + historical accounts
+- `POST /api/ideas/[id]/collaborators` extended: body with `userId` → add existing user as IdeaCollaborator immediately; body with `email+firstName+lastName` → UserInvite + Resend email (existing flow unchanged)
+- **TeamTab UI:** "Add existing user" (debounced search modal with Invite button) + "Invite by email" form (firstName/lastName/email). Success states shown.
+- `sendInviteMismatchNotificationEmail` added to `lib/email.ts`
+- Clerk `user.created` webhook: detects pending invite to same email; if name differs, sends mismatch email to inviter + creates in-app Notification
+
+### nav-lex-1: Nav bars on Lex editing page
+- `CreateIdeaClient.tsx`: replaced minimal inline header with `PublicNav` (full site nav). Added Lex toolbar strip (Save & Exit, View your idea, Sign in). Added `SiteFooter` at bottom.
+- `components/SiteFooter.tsx` created: minimal footer with Home, Browse, Dashboard, About, Privacy, Contact
+
+### edit-button-1: Edit button
+- "Edit with Lex" → "Edit" (label change)
+- Changed from `variant="outline"` to `variant="default"` (solid dark, white text — same as Take Public)
+- Owner only, Stage 1–2
+
+### Lex v5.1: System prompt (6 changes)
+- 4a: Stage 2 team unlocked message — exact new wording
+- 4b: OFFER HELP PROACTIVELY — follow navigation/research suggestions with "just ask"
+- 4c: RETURN NAVIGATION — dashboard nav hint for aiSessionCount < 3; aiSessionCount now in runtime context (already in schema), incremented on first message of new session
+- 4d: No false praise — no hollow affirmations, no "strong foundation" on thin work, don't thank user for answering
+- 4e: RETURNING SESSION — welcome back opening: idea title + stage + last 1–2 messages summary + next unpopulated field question
+- 4f: TEAM NAME SUGGESTION — suggest "[title] Working Group" or "[keyword] Team" on Stage 2 entry
+- `lex_system_prompt_v5.0.md` → **v5.1** (renamed/updated in place)
+
+**Deploy actions needed:** None — no schema changes (aiSessionCount already existed in schema), no new env vars.
 
 ---
 

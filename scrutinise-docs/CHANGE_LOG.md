@@ -2,7 +2,39 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 27 March 2026*
+*Last updated: 28 March 2026*
+
+---
+
+## CODE CHANGES — 28 March 2026 (team-invite-1, nav-lex-1, edit-button-1, Lex v5.1)
+
+### team-invite-1: Team invite — search existing users and email invite for new users
+| File | Change |
+|------|--------|
+| `app/api/users/search/route.ts` | NEW — GET /api/users/search?q= — search by name/username, auth required, excludes self and historical accounts, returns id/name/firstName/lastName/username |
+| `app/api/ideas/[id]/collaborators/route.ts` | Extended POST to support two flows: userId (Flow A — add existing user directly as IdeaCollaborator) and email+name (Flow B — send invite via UserInvite+Resend) |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | TeamTab: "Add existing user" modal with debounced search results and Invite button; "Invite by email" form with firstName/lastName/email |
+| `lib/email.ts` | Added `sendInviteMismatchNotificationEmail` — notifies inviter when signed-up user has different name from invite |
+| `app/api/webhooks/clerk/route.ts` | On `user.created`: check for pending UserInvite to same email; if name differs, send mismatch notification email + create in-app Notification for inviter |
+
+### nav-lex-1: Add top and bottom nav bars to Lex editing page
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Replaced minimal inline header with `PublicNav`. Added Lex toolbar (Save & Exit, View your idea, Sign in for unauthenticated). Added `SiteFooter` at bottom. |
+| `components/SiteFooter.tsx` | NEW — minimal footer: Home, Browse, Dashboard, About, Privacy, Contact |
+
+### edit-button-1: Rename Edit With Lex to Edit, make primary button
+| File | Change |
+|------|--------|
+| `app/ideas/[id]/IdeaDetailClient.tsx` | "Edit with Lex" button renamed to "Edit". Changed from `variant="outline"` to `variant="default"` (solid dark/white). Owner only, Stage 1–2. |
+
+### Lex v5.1: System prompt updates (6 targeted changes)
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | 4a: Stage 2 team message — exact wording from brief. 4b: OFFER HELP PROACTIVELY added. 4c: RETURN NAVIGATION — dashboard nav reminder for aiSessionCount < 3; aiSessionCount injected and incremented. 4d: No false praise — three bullets in What Lex Never Does. 4e: RETURNING SESSION — welcome back opening for returning users. 4f: TEAM NAME SUGGESTION on Stage 2 entry. |
+| `scrutinise-docs/lex_system_prompt_v5.0.md` | Updated to v5.1 with all 6 changes documented. |
+
+**Deploy actions needed:** None — no schema changes (aiSessionCount already existed), no new env vars.
 
 ---
 
