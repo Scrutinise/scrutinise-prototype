@@ -1487,6 +1487,15 @@ const GROUP_TYPE_DESC: Record<string, string> = {
   POLICY_DEVELOPMENT: 'Can contribute and flag stage transitions.',
 }
 
+// ── Invite search result type ─────────────────────────────────────────────────
+interface UserSearchResult {
+  id: string
+  name: string
+  firstName: string | null
+  lastName: string | null
+  username: string
+}
+
 function TeamTab({
   idea,
   isOwner,
@@ -1499,6 +1508,21 @@ function TeamTab({
   const [creating, setCreating] = useState<string | null>(null) // groupType being created
   const [groupName, setGroupName] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
+
+  // Invite flows state
+  const [inviteMode, setInviteMode] = useState<'none' | 'search' | 'email'>('none')
+  // Flow A — search existing users
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
+  const [searching, setSearching] = useState(false)
+  const [invitingUserId, setInvitingUserId] = useState<string | null>(null)
+  const [inviteSearchError, setInviteSearchError] = useState<string | null>(null)
+  const [inviteSearchSuccess, setInviteSearchSuccess] = useState<string | null>(null)
+  // Flow B — invite by email
+  const [emailForm, setEmailForm] = useState({ firstName: '', lastName: '', email: '' })
+  const [emailSubmitting, setEmailSubmitting] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [emailSuccess, setEmailSuccess] = useState(false)
 
   // Transfer ownership state
   const [transferToUserId, setTransferToUserId] = useState('')
@@ -1580,6 +1604,74 @@ function TeamTab({
     ))
   }
 
+  // Flow A — debounced search
+  useEffect(() => {
+    if (inviteMode !== 'search') return
+    if (searchQuery.length < 2) { setSearchResults([]); return }
+    const t = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`)
+        const data = await res.json()
+        setSearchResults(data.users ?? [])
+      } catch {
+        // non-critical
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [searchQuery, inviteMode])
+
+  async function handleInviteExistingUser(targetUserId: string, targetName: string) {
+    setInvitingUserId(targetUserId)
+    setInviteSearchError(null)
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/collaborators`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: targetUserId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setInviteSearchError(data.error ?? 'Something went wrong')
+        return
+      }
+      setInviteSearchSuccess(`${targetName} has been added to your team.`)
+      setSearchQuery('')
+      setSearchResults([])
+      setInviteMode('none')
+    } catch {
+      setInviteSearchError('Network error — please try again')
+    } finally {
+      setInvitingUserId(null)
+    }
+  }
+
+  async function handleEmailInviteSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setEmailSubmitting(true)
+    setEmailError(null)
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/collaborators`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailForm),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setEmailError(typeof data.error === 'string' ? data.error : 'Something went wrong')
+        return
+      }
+      setEmailSuccess(true)
+      setEmailForm({ firstName: '', lastName: '', email: '' })
+    } catch {
+      setEmailError('Network error — please try again')
+    } finally {
+      setEmailSubmitting(false)
+    }
+  }
+
   const groupTypes = ['MY_TEAM', 'COMMUNICATIONS', 'POLICY_DEVELOPMENT']
 
   return (
@@ -1614,6 +1706,131 @@ function TeamTab({
             <p className="text-sm text-muted-foreground">No collaborators yet.</p>
           )}
         </div>
+
+        {/* Invite controls — owner only */}
+        {isOwner && (
+          <div className="mt-4 space-y-3">
+            {inviteSearchSuccess && (
+              <p className="text-xs text-green-700 font-medium">{inviteSearchSuccess}</p>
+            )}
+
+            {inviteMode === 'none' && (
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => { setInviteMode('search'); setInviteSearchSuccess(null) }}>
+                  Add existing user
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { setInviteMode('email'); setInviteSearchSuccess(null) }}>
+                  Invite by email
+                </Button>
+              </div>
+            )}
+
+            {/* Flow A: search existing users */}
+            {inviteMode === 'search' && (
+              <div className="rounded-lg border p-3 space-y-2">
+                <p className="text-xs font-medium">Search for a user</p>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Name or username (min 2 chars)"
+                  autoFocus
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {searching && <p className="text-xs text-muted-foreground">Searching…</p>}
+                {searchResults.length > 0 && (
+                  <ul className="divide-y divide-border rounded-md border">
+                    {searchResults.map(u => (
+                      <li key={u.id} className="flex items-center justify-between px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                            {(u.name || u.firstName || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{u.name}</p>
+                            <p className="text-xs text-muted-foreground">@{u.username}</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={invitingUserId === u.id}
+                          onClick={() => handleInviteExistingUser(u.id, u.name)}
+                        >
+                          {invitingUserId === u.id ? 'Adding…' : 'Invite'}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No users found.</p>
+                )}
+                {inviteSearchError && <p className="text-xs text-destructive">{inviteSearchError}</p>}
+                <Button size="sm" variant="outline" onClick={() => { setInviteMode('none'); setSearchQuery(''); setSearchResults([]) }}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {/* Flow B: invite by email */}
+            {inviteMode === 'email' && !emailSuccess && (
+              <form onSubmit={handleEmailInviteSubmit} className="rounded-lg border p-3 space-y-2">
+                <p className="text-xs font-medium">Invite someone new</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">First name *</label>
+                    <input
+                      required
+                      value={emailForm.firstName}
+                      onChange={e => setEmailForm(f => ({ ...f, firstName: e.target.value }))}
+                      className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Last name *</label>
+                    <input
+                      required
+                      value={emailForm.lastName}
+                      onChange={e => setEmailForm(f => ({ ...f, lastName: e.target.value }))}
+                      className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Email address *</label>
+                  <input
+                    required
+                    type="email"
+                    value={emailForm.email}
+                    onChange={e => setEmailForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+                <div className="flex gap-2">
+                  <Button type="submit" size="sm" disabled={emailSubmitting}>
+                    {emailSubmitting ? 'Sending…' : 'Send invite'}
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => { setInviteMode('none'); setEmailError(null) }}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {inviteMode === 'email' && emailSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                Invitation sent.{' '}
+                <button
+                  onClick={() => { setEmailSuccess(false); setInviteMode('none') }}
+                  className="underline underline-offset-2 hover:text-green-700"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Groups */}

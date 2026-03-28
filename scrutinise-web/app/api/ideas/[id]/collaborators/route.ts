@@ -8,7 +8,14 @@ import { sendCollaboratorInviteEmail } from '@/lib/email'
 
 type Params = { params: Promise<{ id: string }> }
 
-const InviteSchema = z.object({
+// Flow A: add existing user directly by userId
+const AddExistingSchema = z.object({
+  userId: z.string().min(1),
+  role: z.enum(['EDITOR', 'VIEWER']).default('EDITOR'),
+})
+
+// Flow B: invite new user by email
+const InviteByEmailSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
@@ -16,7 +23,9 @@ const InviteSchema = z.object({
   customMessage: z.string().max(500).optional(),
 })
 
-// POST /api/ideas/[id]/collaborators — invite a collaborator by email
+// POST /api/ideas/[id]/collaborators
+// Body with userId → add existing user as collaborator immediately
+// Body with email/firstName/lastName → send email invite to new user
 export async function POST(req: Request, { params }: Params) {
   const { error, user } = await getAuthenticatedUser()
   if (error) return error
@@ -33,7 +42,10 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   if (idea.creatorId !== user.id) {
-    return NextResponse.json({ error: 'Forbidden — only the owner can invite collaborators' }, { status: 403 })
+    return NextResponse.json(
+      { error: 'Forbidden — only the owner can invite collaborators' },
+      { status: 403 },
+    )
   }
 
   // Rate limit: 10 invites per day per user
@@ -52,27 +64,74 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const parsed = InviteSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  // ── Flow A: userId provided — add existing user directly ────────────────────
+  const existingUserParsed = AddExistingSchema.safeParse(body)
+  if (existingUserParsed.success) {
+    const { userId: targetUserId, role } = existingUserParsed.data
+
+    // Verify target user exists and is not the owner
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, name: true },
+    })
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    if (targetUserId === user.id) {
+      return NextResponse.json({ error: 'You cannot add yourself' }, { status: 400 })
+    }
+
+    // Check not already a collaborator
+    const alreadyCollab = await prisma.ideaCollaborator.findFirst({
+      where: { ideaId, userId: targetUserId },
+    })
+    if (alreadyCollab) {
+      return NextResponse.json({ error: 'User is already a collaborator' }, { status: 409 })
+    }
+
+    const collab = await prisma.ideaCollaborator.create({
+      data: {
+        ideaId,
+        userId: targetUserId,
+        role,
+        invitedByUserId: user.id,
+      },
+      select: {
+        id: true,
+        userId: true,
+        role: true,
+        user: { select: { id: true, name: true, username: true } },
+      },
+    })
+
+    return NextResponse.json({ collaborator: collab }, { status: 201 })
   }
 
-  const { email, firstName, lastName, role, customMessage } = parsed.data
+  // ── Flow B: email provided — invite new user ────────────────────────────────
+  const emailParsed = InviteByEmailSchema.safeParse(body)
+  if (!emailParsed.success) {
+    return NextResponse.json({ error: emailParsed.error.flatten() }, { status: 422 })
+  }
+
+  const { email, firstName, lastName, role, customMessage } = emailParsed.data
 
   // Check if already a collaborator
-  const existing = await prisma.ideaCollaborator.findFirst({
+  const existingCollab = await prisma.ideaCollaborator.findFirst({
     where: { ideaId, user: { email } },
   })
-  if (existing) {
+  if (existingCollab) {
     return NextResponse.json({ error: 'User is already a collaborator' }, { status: 409 })
   }
 
-  // Check if there's already a pending invite
+  // Check for pending invite
   const existingInvite = await prisma.userInvite.findFirst({
     where: { email, ideaId, status: 'PENDING' },
   })
   if (existingInvite) {
-    return NextResponse.json({ error: 'An invitation has already been sent to this email' }, { status: 409 })
+    return NextResponse.json(
+      { error: 'An invitation has already been sent to this email' },
+      { status: 409 },
+    )
   }
 
   const magicLinkToken = crypto.randomBytes(32).toString('hex')

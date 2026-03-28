@@ -175,3 +175,66 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
 
   await sendEmail({ to: toEmail, subject, html, text })
 }
+
+export async function sendInviteMismatchNotificationEmail({
+  toEmail,
+  toFirstName,
+  originalName,
+  signedUpName,
+  signedUpEmail,
+  ideaTitle,
+}: {
+  toEmail: string
+  toFirstName: string
+  originalName: string
+  signedUpName: string
+  signedUpEmail: string
+  ideaTitle: string
+}): Promise<void> {
+  const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
+
+  const subject = `Update: the person you invited to "${ideaTitle}" signed up with different details`
+
+  const text = `
+Hi ${toFirstName},
+
+The person you invited to collaborate on "${ideaTitle}" as ${originalName} has signed up with different details:
+
+Name: ${signedUpName}
+Email: ${signedUpEmail}
+
+They have been added to your team. Reply to this email if you have any concerns.
+
+---
+If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Your invited collaborator signed up</h2>
+  <p>Hi ${toFirstName},</p>
+  <p>The person you invited to collaborate on <strong>"${ideaTitle}"</strong> as <strong>${originalName}</strong> has signed up with different details:</p>
+  <table style="border-collapse: collapse; width: 100%; margin: 12px 0;">
+    <tr>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600; width: 80px;">Name</td>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${signedUpName}</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Email</td>
+      <td style="padding: 6px 12px; font-size: 13px;">${signedUpEmail}</td>
+    </tr>
+  </table>
+  <p>They have been added to your team. Reply to this email if you have any concerns.</p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">
+    Scrutinise is a not-for-profit civic technology platform.<br/>
+    <a href="${unsubscribeUrl}" style="color: #71717a;">Unsubscribe</a>
+  </p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: toEmail, subject, html, text })
+}

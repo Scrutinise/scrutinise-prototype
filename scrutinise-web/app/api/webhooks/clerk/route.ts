@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { Webhook } from 'svix'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+import { sendInviteMismatchNotificationEmail } from '@/lib/email'
 
 // Clerk sends webhooks using svix — install: npm install svix
 // CLERK_WEBHOOK_SECRET must be set in Vercel env vars
@@ -135,6 +136,53 @@ export async function POST(req: Request) {
 
       return newUser
     })
+
+    // Check for pending invite to this email — if name differs, notify inviter
+    const pendingInvite = await prisma.userInvite.findFirst({
+      where: { email: primaryEmail, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (pendingInvite && pendingInvite.ideaId) {
+      const originalFullName = [pendingInvite.firstName, pendingInvite.lastName].filter(Boolean).join(' ')
+      const nameChanged = fullName.toLowerCase() !== originalFullName.toLowerCase()
+
+      if (nameChanged) {
+        // Fetch inviter and idea title in parallel — fire-and-forget block
+        Promise.all([
+          prisma.user.findUnique({
+            where: { id: pendingInvite.invitedByUserId },
+            select: { email: true, firstName: true, name: true },
+          }),
+          prisma.idea.findUnique({
+            where: { id: pendingInvite.ideaId },
+            select: { title: true },
+          }),
+        ]).then(([inviter, idea]) => {
+          if (!inviter || !idea) return
+
+          sendInviteMismatchNotificationEmail({
+            toEmail: inviter.email,
+            toFirstName: inviter.firstName ?? inviter.name,
+            originalName: originalFullName,
+            signedUpName: fullName,
+            signedUpEmail: primaryEmail,
+            ideaTitle: idea.title,
+          }).catch(err => console.error('[webhook] mismatch email failed —', err))
+
+          prisma.notification.create({
+            data: {
+              userId: pendingInvite.invitedByUserId,
+              type: 'COLLABORATOR_ACCEPTED',
+              relatedIdeaId: pendingInvite.ideaId!,
+              title: 'Collaborator signed up with different details',
+              message: `The person you invited as ${originalFullName} signed up as ${fullName} (${primaryEmail}). They have been added to your team.`,
+              linkUrl: `/ideas/${pendingInvite.ideaId}?tab=team`,
+            },
+          }).catch(err => console.error('[webhook] mismatch notification create failed —', err))
+        }).catch(err => console.error('[webhook] mismatch lookup failed —', err))
+      }
+    }
 
     return NextResponse.json({ userId: user.id })
   } catch (err) {
