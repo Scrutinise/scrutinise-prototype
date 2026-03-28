@@ -6,6 +6,35 @@
 
 ---
 
+## CODE CHANGES — 28 March 2026 Sprint L5-A (L5-insight, L5-adapt, L5-research)
+
+### L5-insight: LexInsight system — DB, admin panel, approved rules in prompt
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `LexInsightStatus` enum (DRAFT/APPROVED/REJECTED). Added `LexInsight` model. Added `lexInsightReviews` relation to User. |
+| `app/api/ai/[ideaId]/route.ts` | Fetches up to 50 APPROVED LexInsight rules before building system prompt; injects as `## APPROVED BEHAVIOUR RULES`. Parses `insightFlag` from Lex JSON response; creates LexInsight DB record when present. Added INSIGHT LOGGING instruction to system prompt. |
+| `app/api/admin/lex-insights/route.ts` | NEW — GET /api/admin/lex-insights — returns all insights sorted DRAFT→APPROVED→REJECTED. ADMIN/SUPER_ADMIN only. |
+| `app/api/admin/lex-insights/[id]/route.ts` | NEW — PATCH /api/admin/lex-insights/[id] — update status + approvedRule. ADMIN/SUPER_ADMIN only. |
+| `app/admin/page.tsx` | Added `LexInsight` type, `LexInsightCard` component, `LexInsightsSection` component. Added "Lex Insights" tab (available to all admins, not just SUPER_ADMIN). |
+
+**Deploy actions needed:** `npx prisma db push` then `npx prisma generate`.
+
+### L5-adapt: Lex adapts to experience level and user confidence
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Added full EXPERIENCE LEVEL ADAPTATION section (all 5 levels with specific guidance). Added CONFIDENCE ADAPTATION section (HIGH/MEDIUM/LOW signals with response strategies). Both added as top-level sections in `buildSystemPrompt`. |
+
+**Deploy actions needed:** None.
+
+### L5-research: Lex proactive research and engagement facts
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Added PROACTIVE RESEARCH AND ENGAGEMENT section to `buildSystemPrompt` — when/what/how to surface surprising facts, ironies, and examples. Hard limits: one fact per exchange, never fabricate. |
+
+**Deploy actions needed:** None.
+
+---
+
 ## CODE CHANGES — 28 March 2026 (team-invite-1, nav-lex-1, edit-button-1, Lex v5.1)
 
 ### team-invite-1: Team invite — search existing users and email invite for new users
