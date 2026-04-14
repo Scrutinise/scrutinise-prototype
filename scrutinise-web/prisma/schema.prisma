@@ -247,6 +247,55 @@ enum EvidenceOutcome {
   MIXED
 }
 
+enum TargetOrganisationType {
+  GOVERNMENT_DEPARTMENT
+  ARMS_LENGTH_BODY
+  LOCAL_AUTHORITY
+  DEVOLVED_GOVERNMENT
+  NHS_BODY
+  REGULATOR
+  POLICE_FORCE
+  COURT_OR_TRIBUNAL
+  PRIVATE_SECTOR
+  THIRD_SECTOR
+  EDUCATION_INSTITUTION
+  INTERNATIONAL_BODY
+  OTHER
+}
+
+enum PointsCategory {
+  STRATEGIST
+  THINKER
+  RALLYMASTER
+  RAINMAKER
+  TEAMBUILDER
+}
+
+enum PointsReason {
+  IDEA_STARTED
+  STAGE_2_ADVANCE
+  STAGE_3_ADVANCE
+  STAGE_4_ADVANCE
+  STAGE_5_ADVANCE
+  DIAGNOSIS_COMPLETE
+  GUIDING_POLICY_COMPLETE
+  FIRST_COHERENT_ACTION
+  RESEARCH_ADDED
+  CONTRIBUTION_SUBMITTED
+  CONTRIBUTION_RATED_3
+  CONTRIBUTION_RATED_4
+  CONTRIBUTION_RATED_5
+  CONTRIBUTION_RATED_1_2
+  IDEA_RATED
+  IDEA_VOTED
+  AMENDMENT_ACCEPTED
+  REFERRAL_JOIN
+  REFERRAL_QUALIFIED
+  TEAMBUILDER_CASCADE
+  MERGE_COMPLETED
+  RED_TEAM_BONUS
+}
+
 enum ContentReportReason {
   SPAM
   HARMFUL
@@ -375,6 +424,11 @@ model User {
   researchContributions     Research[]
   authoredAmendments        Amendment[]
   lexInsightReviews         LexInsight[]
+  reputation                Reputation?
+  pointsLedger              PointsLedger[]
+  pointsRelatedTo           PointsLedger[]   @relation("PointsRelatedUser")
+  referralsMade             ReferralEvent[]  @relation("ReferrerUser")
+  referralsReceived         ReferralEvent[]  @relation("ReferredUser")
 
   @@index([clerkId])
   @@index([email])
@@ -486,6 +540,9 @@ model Idea {
   rootCauses                RootCause[]
   guidingPolicies           GuidingPolicy[]
   evidence                  Evidence[]
+  resourcesCommitted        ResourcesCommitted[]
+  targetOrganisations       TargetOrganisation[]
+  pointsLedger              PointsLedger[]
   ideaReviews               IdeaReview[]
   ideaAlerts                IdeaAlert[]
   groups                    Group[]
@@ -549,9 +606,14 @@ model CoherentAction {
   organisationalChangeDraftWording    String?
   proposedWording                     String?
   costBenefitAnalysis                 String?
+  netCostOngoing                      Decimal?
+  netCostOneOff                       Decimal?
   costFinancial                       String?
   costSocial                          String?
   costOngoing                         String?
+  benefitFinancial                    String?
+  benefitSocial                       String?
+  benefitOngoing                      String?
   benefits                            String?
   practicalExecution                  String?
   implementationPlan                  String?
@@ -570,7 +632,29 @@ model CoherentAction {
   createdAt                           DateTime @default(now())
   updatedAt                           DateTime @updatedAt
 
+  resourcesCommitted                  ResourcesCommitted[]
+
   @@index([ideaId])
+}
+
+model ResourcesCommitted {
+  id                             String   @id @default(uuid())
+  ideaId                         String
+  idea                           Idea     @relation(fields: [ideaId], references: [id])
+  coherentActionId               String
+  coherentAction                 CoherentAction @relation(fields: [coherentActionId], references: [id])
+  description                    String
+  resourceType                   String   // FINANCIAL, HUMAN, INFRASTRUCTURE, LEGISLATIVE, OTHER
+  capitalCommitment              Decimal?
+  annualCost                     Json?
+  estimatedCost                  Decimal?
+  timeframe                      String?
+  humanCapitalCommitted          String?
+  humanCapitalAnnualRequirement  String?
+  createdAt                      DateTime @default(now())
+
+  @@index([ideaId])
+  @@index([coherentActionId])
 }
 
 model Research {
@@ -660,6 +744,11 @@ model GuidingPolicy {
   guidingPolicyDescription             String?
   text                                 String?
   coreTheory                           String?
+  // v5 — Rumelt guiding policy fields
+  linkToDiagnosis                      String?
+  whatThisPolicyRulesOut               String?
+  whyThisApproachNotOthers             String?
+  conditionsForSuccess                 String?
   mechanismIncentives                  String?
   mechanismRules                       String?
   mechanismTransparency                String?
@@ -687,6 +776,27 @@ model Evidence {
   sourceUrl         String?
   sourceType        SourceType
   createdAt         DateTime        @default(now())
+
+  @@index([ideaId])
+}
+
+model TargetOrganisation {
+  id                            String                  @id @default(uuid())
+  ideaId                        String
+  idea                          Idea                    @relation(fields: [ideaId], references: [id])
+  targetOrganisationalTitle     String
+  organisationType              TargetOrganisationType?
+  description                   String?
+  currentBehaviourDescription   String?
+  changeRequired                String?
+  howToBringAbout               String?
+  whoAccountable                String?
+  howResultsMeasured            String?
+  howChangeIncentivised         String?
+  problemsLikely                String?
+  mitigatingActions             String?
+  createdAt                     DateTime                @default(now())
+  updatedAt                     DateTime                @updatedAt
 
   @@index([ideaId])
 }
@@ -960,6 +1070,56 @@ model CredibilityScore {
   totalScore                Decimal?
   lexLogicScore             Decimal?  // Sprint 1
   lastCalculatedAt          DateTime  @default(now())
+}
+
+model Reputation {
+  id                           String    @id @default(uuid())
+  userId                       String    @unique
+  user                         User      @relation(fields: [userId], references: [id])
+  reputationPointsStrategist   Int       @default(0)
+  reputationPointsThinker      Int       @default(0)
+  reputationPointsRallymaster  Int       @default(0)
+  reputationPointsRainmaker    Int       @default(0)
+  reputationPointsTeambuilder  Int       @default(0)
+  thanksReceived               Int       @default(0)
+  reputationRankScore          Decimal?
+  updatedAt                    DateTime  @updatedAt
+}
+
+model PointsLedger {
+  id               String        @id @default(uuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  category         PointsCategory
+  pointsDelta      Int
+  actionType       String?
+  reason           PointsReason
+  triggerEntityId  String?
+  relatedIdeaId    String?
+  relatedIdea      Idea?         @relation(fields: [relatedIdeaId], references: [id])
+  relatedUserId    String?
+  relatedUser      User?         @relation("PointsRelatedUser", fields: [relatedUserId], references: [id])
+  createdAt        DateTime      @default(now())
+  reversedAt       DateTime?
+
+  @@index([userId])
+  @@index([relatedIdeaId])
+}
+
+model ReferralEvent {
+  id              String    @id @default(uuid())
+  referrerUserId  String
+  referrer        User      @relation("ReferrerUser", fields: [referrerUserId], references: [id])
+  referredUserId  String
+  referred        User      @relation("ReferredUser", fields: [referredUserId], references: [id])
+  referralCode    String
+  registeredAt    DateTime
+  qualifiedAt     DateTime?
+  actionCount     Int       @default(0)
+  pointsAwarded   Boolean   @default(false)
+
+  @@index([referrerUserId])
+  @@index([referredUserId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
