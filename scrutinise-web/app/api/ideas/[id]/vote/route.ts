@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { awardPoints } from '@/lib/points'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -131,6 +132,8 @@ export async function POST(req: Request, { params }: Params) {
     where: { id: ideaId },
     data: { voteCount: total },
   })
+
+  await awardPoints({ userId: user.id, actionType: 'IDEA_VOTED', relatedIdeaId: ideaId })
 
   return NextResponse.json({
     direction: vote.direction,

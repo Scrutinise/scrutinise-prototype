@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
+import { awardPoints } from '@/lib/points'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -144,6 +145,20 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // Stage gate: check if 1→2 auto-advance should fire
   await checkAndAdvanceStage(id, idea.creatorId)
+
+  // Award points for first-time field completions (owner only)
+  if (isOwner) {
+    const wasBlank = (field: string | null | undefined) => !field?.trim()
+    if (idea.stage === 'STAGE_1' && wasBlank(idea.diagnosis) && wasBlank(idea.guidingPolicy)) {
+      await awardPoints({ userId: user.id, actionType: 'IDEA_STARTED', relatedIdeaId: id })
+    }
+    if (wasBlank(idea.diagnosis) && parsed.data.diagnosis?.trim()) {
+      await awardPoints({ userId: user.id, actionType: 'DIAGNOSIS_COMPLETE', relatedIdeaId: id })
+    }
+    if (wasBlank(idea.guidingPolicy) && parsed.data.guidingPolicy?.trim()) {
+      await awardPoints({ userId: user.id, actionType: 'GUIDING_POLICY_COMPLETE', relatedIdeaId: id })
+    }
+  }
 
   // Re-fetch with latest stage after potential advancement
   const latest = await prisma.idea.findUnique({

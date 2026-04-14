@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { awardPoints } from '@/lib/points'
 
 type Params = { params: Promise<{ id: string; commentId: string }> }
 
@@ -20,7 +21,7 @@ export async function POST(req: Request, { params }: Params) {
 
   const comment = await prisma.comment.findUnique({
     where: { id: commentId },
-    select: { id: true, ideaId: true },
+    select: { id: true, ideaId: true, authorId: true },
   })
 
   if (!comment || comment.ideaId !== ideaId) {
@@ -65,6 +66,21 @@ export async function POST(req: Request, { params }: Params) {
     where: { id: commentId },
     data: { qualityRating: avgRating },
   })
+
+  // Award points to the contribution author based on their new average rating
+  if (avgRating !== null && comment.authorId !== user.id) {
+    if (avgRating >= 5) {
+      await awardPoints({ userId: comment.authorId, actionType: 'CONTRIBUTION_RATED_5', relatedIdeaId: ideaId })
+    } else if (avgRating >= 4) {
+      await awardPoints({ userId: comment.authorId, actionType: 'CONTRIBUTION_RATED_4', relatedIdeaId: ideaId })
+    } else if (avgRating >= 3) {
+      await awardPoints({ userId: comment.authorId, actionType: 'CONTRIBUTION_RATED_3', relatedIdeaId: ideaId })
+    } else if (avgRating <= 2) {
+      await awardPoints({ userId: comment.authorId, actionType: 'CONTRIBUTION_RATED_1_2', relatedIdeaId: ideaId })
+    }
+    // Award rater for reviewing an idea
+    await awardPoints({ userId: user.id, actionType: 'IDEA_RATED', relatedIdeaId: ideaId })
+  }
 
   return NextResponse.json({ qualityRating, avgRating })
 }

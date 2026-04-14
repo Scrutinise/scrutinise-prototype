@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import type { Idea } from '@prisma/client'
+import { awardPoints } from './points'
 
 // Quality score mapping for IdeaReview outcomes (Stage 3→4 gate)
 const REVIEW_OUTCOME_SCORE: Record<string, number> = {
@@ -60,6 +61,7 @@ export async function checkAndAdvanceStage(ideaId: string, ownerId: string): Pro
         },
       }),
     ])
+    await awardPoints({ userId: ownerId, actionType: 'STAGE_2_ADVANCE', relatedIdeaId: ideaId })
   }
 }
 
@@ -161,6 +163,7 @@ export async function advanceStage3to4(ideaId: string, ownerId: string): Promise
       },
     }),
   ])
+  await awardPoints({ userId: ownerId, actionType: 'STAGE_4_ADVANCE', relatedIdeaId: ideaId })
 }
 
 /**
@@ -285,6 +288,7 @@ export async function advanceStage4to5(ideaId: string, ownerId: string): Promise
       }),
     ),
   ])
+  await awardPoints({ userId: ownerId, actionType: 'STAGE_5_ADVANCE', relatedIdeaId: ideaId })
 }
 
 /**
@@ -311,4 +315,5 @@ export async function advanceStage2to3(ideaId: string, ownerId: string): Promise
       },
     }),
   ])
+  await awardPoints({ userId: ownerId, actionType: 'STAGE_3_ADVANCE', relatedIdeaId: ideaId })
 }
