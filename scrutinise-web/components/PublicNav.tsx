@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -36,9 +36,23 @@ function Avatar({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']
 
 export default function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [dbRole, setDbRole] = useState<string | null>(null)
   const { isSignedIn, isLoaded, user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      fetch('/api/user/role')
+        .then(r => r.json())
+        .then(d => setDbRole(d.role ?? null))
+        .catch(() => {})
+    } else if (isLoaded) {
+      setDbRole(null)
+    }
+  }, [isLoaded, isSignedIn])
+
+  const isAdmin = dbRole === 'ADMIN' || dbRole === 'SUPER_ADMIN'
 
   function handleSignOut() {
     signOut({ redirectUrl: '/' })
@@ -65,6 +79,11 @@ export default function PublicNav() {
           <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             About
           </Link>
+          {isAdmin && (
+            <Link href="/admin" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Admin
+            </Link>
+          )}
 
           {isLoaded && !isSignedIn && (
             <>
@@ -131,6 +150,15 @@ export default function PublicNav() {
             >
               About
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
 
             {isLoaded && !isSignedIn && (
               <div className="flex gap-2 pt-1">
