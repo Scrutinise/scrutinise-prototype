@@ -28,6 +28,7 @@ interface NotificationSummary {
   message: string
   linkUrl: string | null
   relatedIdeaId: string | null
+  ideaTitle: string | null
   isRead: boolean
   createdAt: string
 }

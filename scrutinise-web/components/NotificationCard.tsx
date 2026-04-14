@@ -8,18 +8,18 @@ interface NotificationItem {
   message: string
   linkUrl: string | null
   relatedIdeaId: string | null
+  ideaTitle: string | null
   isRead: boolean
   createdAt: Date | string
 }
 
 function normaliseStages(text: string): string {
-  return text.replace(/\b(STAGE_[1-5]|Create|Draft|Develop|Campaign|Legislate)\b/g, (m) => {
-    const stageMap: Record<string, string> = {
-      STAGE_1: 'Stage 1', STAGE_2: 'Stage 2', STAGE_3: 'Stage 3',
-      STAGE_4: 'Stage 4', STAGE_5: 'Stage 5',
-    }
-    return stageMap[m] ?? m
-  })
+  return text
+    .replace(/\b(STAGE_1|Create)\b/g, 'Stage 1')
+    .replace(/\b(STAGE_2|Draft)\b/g, 'Stage 2')
+    .replace(/\b(STAGE_3|Develop)\b/g, 'Stage 3')
+    .replace(/\b(STAGE_4|Campaign)\b/g, 'Stage 4')
+    .replace(/\b(STAGE_5|Legislate)\b/g, 'Stage 5')
 }
 
 export default function NotificationList({ notifications }: { notifications: NotificationItem[] }) {
@@ -34,34 +34,28 @@ export default function NotificationList({ notifications }: { notifications: Not
   return (
     <div className="space-y-2">
       {notifications.map((n) => {
-        const whatNextUrl = n.relatedIdeaId
-          ? `/ideas/${n.relatedIdeaId}?whatnext=true`
-          : null
-
         const content = (
           <div
             className={`rounded-lg border p-3 text-sm transition-colors hover:bg-muted/40 ${
               n.isRead ? 'border-border opacity-60' : 'border-primary/30 bg-primary/5'
             }`}
           >
-            {n.title && (
-              <p className="font-medium leading-snug">{normaliseStages(n.title)}</p>
+            {n.title && <p className="font-medium leading-snug">{normaliseStages(n.title)}</p>}
+            {n.ideaTitle && (
+              <p className="mt-0.5 text-xs text-muted-foreground font-medium">{n.ideaTitle}</p>
             )}
-            <p className={`leading-snug ${n.title ? 'mt-0.5 text-muted-foreground text-xs' : ''}`}>
-              {normaliseStages(n.message)}
-            </p>
-            <div className="mt-1 flex items-center justify-between gap-2">
+            {n.message && n.message !== n.title && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{normaliseStages(n.message)}</p>
+            )}
+            <div className="mt-1.5 flex items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">
-                {new Date(n.createdAt).toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                })}
+                {new Date(n.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </p>
-              {whatNextUrl && (
+              {n.relatedIdeaId && (
                 <Link
-                  href={whatNextUrl}
+                  href={`/ideas/${n.relatedIdeaId}?whatnext=true`}
                   className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                 >
                   What Next?
                 </Link>

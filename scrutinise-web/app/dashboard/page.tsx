@@ -52,6 +52,9 @@ export default async function DashboardPage() {
         relatedIdeaId: true,
         isRead: true,
         createdAt: true,
+        relatedIdea: {
+          select: { title: true },
+        },
       },
     }),
     prisma.comment.count({ where: { authorId: user.id } }),
@@ -73,6 +76,7 @@ export default async function DashboardPage() {
         notifications={notifications.map((n) => ({
           ...n,
           createdAt: n.createdAt.toISOString(),
+          ideaTitle: n.relatedIdea?.title ?? null,
         }))}
         contributionCount={contributionCount}
         credibilityScore={credibilityScore}
