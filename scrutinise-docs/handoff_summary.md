@@ -1,6 +1,34 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 28 March 2026 v22*
+*Last updated: 13 April 2026 v23*
+
+***
+
+## CURRENT STATE — SPRINT V2-A COMPLETE ✅
+
+Eight commits to Main. All `tsc --noEmit` clean. Ready to push.
+
+### V2A commit summary
+
+1. **V2A-connection** — AI reliability: Vercel maxDuration 60s, Grok fallback audit, progressive auto-retry (silent 1s → message 5s → error), Sentry structured logging, classifyError helper.
+2. **V2A-labels** — Stage labels: stageToLabel() in display-utils.ts, Stage X format in dashboard badges and notifications, notification card redesign with date + What Next? link, removed voting box from idea detail.
+3. **V2A-field-labels** — Field labels: lib/field-labels.ts (80+ fields, SIDEBAR_SECTIONS, getFieldLabel, getSectionHeading), Stage2Sidebar rewritten with section navigation.
+4. **V2A-schema** — Schema: TargetOrganisationType/PointsCategory/PointsReason enums; 4 Rumelt fields on GuidingPolicy; 5 benefit/cost fields on CoherentAction; new models ResourcesCommitted, TargetOrganisation, PointsLedger, Reputation, ReferralEvent. `npx prisma db push` ✓ `npx prisma generate` ✓
+5. **V2A-ux** — UX fixes: sign-in redirects to /dashboard; My Dashboard button in Lex toolbar; Edit + What Next? buttons below author/date; gate cards moved below tab content; Lex ORIENTEERING ON RETURN updated.
+6. **V2A-points** — Points system: lib/points.ts with POINTS_SCHEDULE, awardPoints, checkCap, cascadeTeambuilderPoints. Wired to stage gates, contributions POST, contribution rating, vote POST, idea PATCH.
+7. **V2A-whatnext** — What Next panel: components/WhatNextPanel.tsx with 4-segment progress bar, journey overview, template status, tips. Wired into IdeaDetailClient with whatNextOpen state and ?whatnext=true param.
+8. **V2A-docs** — Docs: system_mechanics_v0_8.md (new Section 21), CHANGE_LOG updated, handoff_summary v23, entity_list reference updated to v5.
+
+### Schema additions confirmed
+- 4 new fields on GuidingPolicy (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess)
+- 5 new fields on CoherentAction (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff)
+- 2 new fields on ResourcesCommitted (humanCapitalCommitted, humanCapitalAnnualRequirement) — model created new
+- TargetOrganisationType enum (13 values)
+- PointsCategory enum (5 values)
+- PointsReason enum (22 values)
+- New models: ResourcesCommitted, TargetOrganisation, PointsLedger, Reputation, ReferralEvent
+
+### Next: Sprint V2-B (Legislation DB) — pending R2 bucket creation and 20 test sections from Charlie
 
 ***
 

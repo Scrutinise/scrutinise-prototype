@@ -2,7 +2,84 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 28 March 2026*
+*Last updated: 13 April 2026*
+
+---
+
+## CODE CHANGES — 13 April 2026 Sprint V2-A
+
+### V2A-connection: AI reliability — Vercel timeout, Grok fallback, auto-retry, Sentry logging
+| File | Change |
+|------|--------|
+| `vercel.json` | Added `maxDuration: 60` for the AI route function. |
+| `app/api/ai/[ideaId]/route.ts` | Added `classifyError` helper ('timeout', 'rate_limit', 'network', 'api_error'). Added `logAICall` helper via Sentry. Gemini/Grok try/catch now structured with timing, error type, and fallback flag. All 503 responses return `errorType` field. |
+| `app/ideas/create/CreateIdeaClient.tsx` | Progressive retry: silent 1s auto-retry on first failure; message + 5s auto-retry on second failure (timeout/rate_limit); final error with Try Again button on third failure. `handleSend` accepts `isRetry` param to skip user message append. |
+
+**Deploy actions needed:** None (Vercel env var verification needed).
+
+### V2A-labels: Stage labels — Stage X format, notification redesign, remove voting box
+| File | Change |
+|------|--------|
+| `lib/display-utils.ts` | NEW — `stageToLabel()` maps STAGE_1→'Stage 1' etc. |
+| `app/dashboard/page.tsx` | Uses `stageToLabel()` for idea stage pills. Notification cards redesigned: title/message/date/What Next? link layout. Added `relatedIdeaId` to notification query. `normaliseStages()` replaces STAGE_X in notification text. |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Removed "Voting opens when this idea reaches the Campaign stage" box. |
+
+**Deploy actions needed:** None.
+
+### V2A-field-labels: Field labels — lib/field-labels.ts, sidebar section navigation
+| File | Change |
+|------|--------|
+| `lib/field-labels.ts` | NEW — `FIELD_LABELS` record (80+ fields), `SIDEBAR_SECTIONS` array, `getFieldLabel()`, `getSectionHeading()`. |
+| `app/ideas/create/CreateIdeaClient.tsx` | Stage2Sidebar rewritten to use SIDEBAR_SECTIONS loop, show/hide toggles, getFieldLabel(). Fixed `onClick={handleSend}` → `onClick={() => handleSend()}`. |
+
+**Deploy actions needed:** None.
+
+### V2A-schema: Schema additions
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added enums: `TargetOrganisationType`, `PointsCategory`, `PointsReason`. GuidingPolicy: +4 Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess). CoherentAction: +5 benefit/cost fields (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff). New models: ResourcesCommitted, TargetOrganisation, PointsLedger, Reputation, ReferralEvent. Updated User and Idea relations. |
+
+**Deploy actions needed:** `npx prisma db push` ✓ `npx prisma generate` ✓
+
+### V2A-ux: Navigation and UX fixes
+| File | Change |
+|------|--------|
+| `app/sign-in/[[...sign-in]]/page.tsx` | After sign-in, redirect to /dashboard (not /ideas/create). |
+| `app/ideas/create/CreateIdeaClient.tsx` | Added "My Dashboard" link button to Lex toolbar. |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Edit + What Next? buttons moved below author/date line. Gate cards moved below tab content area. Added `whatNextOpen` state, reads `?whatnext=true` param on mount. |
+| `app/api/ai/[ideaId]/route.ts` | RETURNING SESSION replaced with ORIENTEERING ON RETURN — specific 3-step return welcome (name + last thing + next field + "Shall we continue?"). |
+
+**Deploy actions needed:** None.
+
+### V2A-points: Credibility points system
+| File | Change |
+|------|--------|
+| `lib/points.ts` | NEW — `POINTS_SCHEDULE`, `awardPoints`, `checkCap`, `cascadeTeambuilderPoints`, `awardPointsDirect`. Full cap logic (once_per_idea, idea_count, per_idea). |
+| `lib/stage-gates.ts` | Added `awardPoints` import. Awards STAGE_2_ADVANCE, STAGE_3_ADVANCE, STAGE_4_ADVANCE, STAGE_5_ADVANCE at each advance function. |
+| `app/api/ideas/[id]/route.ts` | Awards IDEA_STARTED (first PATCH), DIAGNOSIS_COMPLETE, GUIDING_POLICY_COMPLETE when fields first populated. |
+| `app/api/ideas/[id]/contributions/route.ts` | Awards CONTRIBUTION_SUBMITTED on POST. |
+| `app/api/ideas/[id]/contributions/[commentId]/rate/route.ts` | Awards CONTRIBUTION_RATED_3/4/5/1_2 to contribution author; IDEA_RATED to rater. |
+| `app/api/ideas/[id]/vote/route.ts` | Awards IDEA_VOTED on POST. |
+
+**Deploy actions needed:** None.
+
+### V2A-whatnext: "What Next?" static panel
+| File | Change |
+|------|--------|
+| `components/WhatNextPanel.tsx` | NEW — Progress bar (4 segments), collapsible journey overview, template status text, collapsible tips section. |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Imports WhatNextPanel. Renders below Edit button. Passes `diagnoses[0]`, `guidingPolicies[0]`, `coherentActions`. |
+
+**Deploy actions needed:** None.
+
+### V2A-docs: Docs update
+| File | Change |
+|------|--------|
+| `scrutinise-docs/system_mechanics_v0_8.md` | NEW — v0.8 with updated Section 3 points schedule and new Section 21 (Referral Mechanics, Points, and Credibility end-to-end). |
+| `scrutinise-docs/CHANGE_LOG.md` | This entry. |
+| `scrutinise-docs/handoff_summary.md` | Sprint V2-A section added. |
+| `CLAUDE.md` | Updated entity_list reference from v4 to v5. |
+
+**Deploy actions needed:** None.
 
 ---
 

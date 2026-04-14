@@ -20,7 +20,7 @@
 
 Before writing any code:
 
-1. Read `entity_list_v4.md` — know every entity and field
+1. Read `entity_list_v5.md` — know every entity and field
 2. Read `process_list_v2.md` — for the specific feature area you are building
 3. Read `system_mechanics_v0.7.md` — the rules behind what you are building
 4. Read `CC_Sprint1_Briefing.md` — confirm what week/day you are on and what is in scope
@@ -72,7 +72,7 @@ Stage 5 — LEGISLATE: Parliamentary submission, MP endorsements, committee trac
 scrutinise/
 ├── CLAUDE.md
 ├── docs/
-│   ├── entity_list_v4.md           (CCh-only — never edit)
+│   ├── entity_list_v5.md           (CCh-only — never edit)
 │   ├── process_list_v2.md
 │   ├── system_mechanics_v0.7.md
 │   ├── lex_system_prompt_v4.md     (confidential)
@@ -214,7 +214,7 @@ Red Team mechanic, Campaign in a Box, site-wide Lex, credibility-weighted rating
 
 ## 11. FIELD & DOCUMENT PRESERVATION
 
-Never remove a field, entity, or section without Charlie's explicit instruction. `entity_list_v4.md` is CCh-only.
+Never remove a field, entity, or section without Charlie's explicit instruction. `entity_list_v5.md` is CCh-only.
 
 ## 12. GIT DISCIPLINE
 
