@@ -135,6 +135,8 @@ export async function awardPoints(params: {
     await cascadeTeambuilderPoints(params.userId, schedule.points)
   }
 
+  await recalculateCredibility(params.userId)
+
   return true
 }
 
@@ -155,6 +157,7 @@ export async function cascadeTeambuilderPoints(earnerUserId: string, pointsEarne
       relatedUserId: earnerUserId,
     })
   }
+  await recalculateCredibility(earner.referredByUserId)
 
   const referrer = await prisma.user.findUnique({
     where: { id: earner.referredByUserId },
@@ -171,4 +174,53 @@ export async function cascadeTeambuilderPoints(earnerUserId: string, pointsEarne
       relatedUserId: earnerUserId,
     })
   }
+  await recalculateCredibility(referrer.referredByUserId)
+}
+
+const CREDIBILITY_WEIGHTS = {
+  THINKER:     0.40,
+  STRATEGIST:  0.30,
+  RALLYMASTER: 0.10,
+  TEAMBUILDER: 0.10,
+  RAINMAKER:   0.10,
+}
+
+export async function recalculateCredibility(userId: string): Promise<void> {
+  const rep = await prisma.reputation.findUnique({ where: { userId } })
+  if (!rep) return
+
+  const rawScore = Math.round(
+    (rep.reputationPointsThinker     * CREDIBILITY_WEIGHTS.THINKER) +
+    (rep.reputationPointsStrategist  * CREDIBILITY_WEIGHTS.STRATEGIST) +
+    (rep.reputationPointsRallymaster * CREDIBILITY_WEIGHTS.RALLYMASTER) +
+    (rep.reputationPointsTeambuilder * CREDIBILITY_WEIGHTS.TEAMBUILDER) +
+    (rep.reputationPointsRainmaker   * CREDIBILITY_WEIGHTS.RAINMAKER)
+  )
+
+  const phase = rawScore >= 350 ? 'ESTABLISHED' : 'BUILDING'
+
+  await prisma.credibilityScore.upsert({
+    where: { userId },
+    create: {
+      userId,
+      rawScore,
+      phase,
+      thinkerComponent:     rep.reputationPointsThinker     * CREDIBILITY_WEIGHTS.THINKER,
+      strategistComponent:  rep.reputationPointsStrategist  * CREDIBILITY_WEIGHTS.STRATEGIST,
+      rallymasterComponent: rep.reputationPointsRallymaster * CREDIBILITY_WEIGHTS.RALLYMASTER,
+      teambuilderComponent: rep.reputationPointsTeambuilder * CREDIBILITY_WEIGHTS.TEAMBUILDER,
+      rainmakerComponent:   rep.reputationPointsRainmaker   * CREDIBILITY_WEIGHTS.RAINMAKER,
+      lastCalculatedAt: new Date(),
+    },
+    update: {
+      rawScore,
+      phase,
+      thinkerComponent:     rep.reputationPointsThinker     * CREDIBILITY_WEIGHTS.THINKER,
+      strategistComponent:  rep.reputationPointsStrategist  * CREDIBILITY_WEIGHTS.STRATEGIST,
+      rallymasterComponent: rep.reputationPointsRallymaster * CREDIBILITY_WEIGHTS.RALLYMASTER,
+      teambuilderComponent: rep.reputationPointsTeambuilder * CREDIBILITY_WEIGHTS.TEAMBUILDER,
+      rainmakerComponent:   rep.reputationPointsRainmaker   * CREDIBILITY_WEIGHTS.RAINMAKER,
+      lastCalculatedAt: new Date(),
+    },
+  })
 }
