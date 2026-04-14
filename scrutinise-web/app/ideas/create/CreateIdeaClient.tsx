@@ -270,6 +270,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [saveExitMsg, setSaveExitMsg] = useState<string | null>(null)
   const [fields, setFields] = useState<FieldCompletion>(EMPTY_FIELDS)
   const [userMsgCount, setUserMsgCount] = useState(0)
+  const [retryCount, setRetryCount] = useState(0)
+  const [retryMessage, setRetryMessage] = useState<string | null>(null)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
   const [supportsVoice, setSupportsVoice] = useState(false)
   const [isListening, setIsListening] = useState(false)
@@ -386,109 +388,37 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   }
 
   // ── Send message ──────────────────────────────────────────────────────────
-  const handleSend = async () => {
+  const handleSend = async (isRetry = false) => {
     const text = inputValue.trim()
-    if (!text && !attachedFile) return
-    if (isLoading) return
+    if (!isRetry && !text && !attachedFile) return
+    if (isLoading && !isRetry) return
 
-    dismissMicHint()
+    const messageText = isRetry
+      ? lastSentMessageRef.current
+      : (() => {
+          dismissMicHint()
+          let mt = text
+          if (attachedFile) {
+            const fileNote = `[User attached: ${attachedFile.name}]`
+            mt = text ? `${fileNote}\n\n${text}` : fileNote
+          }
+          return mt
+        })()
 
-    // Build message text — prepend file note if attached
-    let messageText = text
-    if (attachedFile) {
-      const fileNote = `[User attached: ${attachedFile.name}]`
-      messageText = text ? `${fileNote}\n\n${text}` : fileNote
-    }
-
-    setInputValue('')
-    setAttachedFile(null)
-    if (inputRef.current) inputRef.current.style.height = 'auto'
-
-    const newCount = userMsgCount + 1
-    setUserMsgCount(newCount)
-
-    const userMsg: ChatMessage = {
-      role: 'user',
-      content: text || `[Attached: ${attachedFile!.name}]`,  // display text (no file note prefix)
-      timestamp: new Date().toISOString(),
-    }
-    setMessages(prev => [...prev, userMsg])
-    setIsLoading(true)
-
-    // Store the full message text so handleRetry can re-send it
-    lastSentMessageRef.current = messageText
-
-    try {
-      let res: Response
-
-      if (isSignedIn) {
-        const id = await ensureIdea()
-        if (!id) throw new Error('Could not create idea record')
-        res = await fetch(`/api/ai/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: messageText }),
-        })
-      } else {
-        // Unauthenticated — public endpoint, history passed in body
-        res = await fetch('/api/ai/public', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: messageText,
-            history: messages.map(m => ({ role: m.role, content: m.content })),
-          }),
-        })
-      }
-
-      if (!res.ok) throw new Error('Lex unavailable')
-
-      const data = await res.json()
-
-      // Update sidebar completion indicators from server response
-      if (data.completedFields) {
-        setFields(prev => ({ ...prev, ...data.completedFields }))
-      }
-      if (data.currentStage) setCurrentStage(data.currentStage)
-      if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
-
-      if (data.triggerSavePrompt && !isSignedIn) {
-        setShowSavePrompt(true)
-      }
-
-      // Attach pendingProposals (if any) to the Lex message
-      const proposals: PendingProposal[] | undefined = data.pendingProposals?.length
-        ? data.pendingProposals.map((p: Omit<PendingProposal, 'status'>) => ({ ...p, status: 'pending' as const }))
-        : undefined
-
-      setMessages(prev => [...prev, {
-        role: 'lex',
-        content: data.response,
+    if (!isRetry) {
+      setInputValue('')
+      setAttachedFile(null)
+      if (inputRef.current) inputRef.current.style.height = 'auto'
+      setUserMsgCount(prev => prev + 1)
+      const userMsg: ChatMessage = {
+        role: 'user',
+        content: text || `[Attached: ${attachedFile!.name}]`,
         timestamp: new Date().toISOString(),
-        proposals,
-      }])
-    } catch {
-      setMessages(prev => [...prev, {
-        role: 'lex',
-        content: "I seem to have lost my connection for a moment. Please try again.",
-        timestamp: new Date().toISOString(),
-        isConnectionError: true,
-      }])
-    } finally {
-      setIsLoading(false)
-      // Auto-focus input after each Lex response
-      setTimeout(() => inputRef.current?.focus(), 0)
+      }
+      setMessages(prev => [...prev, userMsg])
+      lastSentMessageRef.current = messageText
     }
-  }
 
-  // ── Retry last message after a connection error ───────────────────────────
-  const handleRetry = async () => {
-    const messageText = lastSentMessageRef.current
-    if (!messageText || isLoading) return
-
-    // Remove the connection error message and re-send
-    const currentMessages = messages.filter(m => !m.isConnectionError)
-    setMessages(currentMessages)
     setIsLoading(true)
 
     try {
@@ -508,14 +438,25 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: messageText,
-            history: currentMessages.map(m => ({ role: m.role, content: m.content })),
+            history: messages
+              .filter(m => !m.isConnectionError)
+              .map(m => ({ role: m.role, content: m.content })),
           }),
         })
       }
 
-      if (!res.ok) throw new Error('Lex unavailable')
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        const err = new Error('Lex unavailable') as Error & { errorType?: string }
+        err.errorType = errorData.errorType ?? 'api_error'
+        throw err
+      }
 
       const data = await res.json()
+
+      // Successful response — reset retry state
+      setRetryCount(0)
+      setRetryMessage(null)
 
       if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
       if (data.currentStage) setCurrentStage(data.currentStage)
@@ -532,17 +473,49 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         timestamp: new Date().toISOString(),
         proposals,
       }])
-    } catch {
+      setIsLoading(false)
+      setTimeout(() => inputRef.current?.focus(), 0)
+    } catch (error: unknown) {
+      const errorType = (error as { errorType?: string })?.errorType ?? 'api_error'
+
+      if (retryCount === 0) {
+        // First failure: silent auto-retry after 1 second
+        setRetryCount(1)
+        setTimeout(() => handleSend(true), 1000)
+        return
+      }
+
+      if (retryCount === 1 && (errorType === 'timeout' || errorType === 'rate_limit')) {
+        // Second failure with recoverable error: show message + auto-retry after 5 seconds
+        setRetryCount(2)
+        const providerLabel = errorType === 'timeout' ? 'Gemini' : 'Lex'
+        setRetryMessage(`${providerLabel} is taking a while to think — we'll keep trying, thank you for your patience.`)
+        setTimeout(() => handleSend(true), 5000)
+        return
+      }
+
+      // Final failure or unrecoverable error
+      setRetryCount(0)
+      setRetryMessage(null)
       setMessages(prev => [...prev, {
         role: 'lex',
-        content: "I seem to have lost my connection for a moment. Please try again.",
+        content: errorType === 'both_failed'
+          ? 'Lex is temporarily unavailable — please try again in a moment.'
+          : 'Lex is taking a while — please try again.',
         timestamp: new Date().toISOString(),
         isConnectionError: true,
       }])
-    } finally {
       setIsLoading(false)
       setTimeout(() => inputRef.current?.focus(), 0)
     }
+  }
+
+  // ── Manual retry after connection error ───────────────────────────────────
+  const handleRetry = () => {
+    if (!lastSentMessageRef.current || isLoading) return
+    setMessages(prev => prev.filter(m => !m.isConnectionError))
+    setRetryCount(0)
+    handleSend(true)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -877,6 +850,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
               {/* ── Input area — immediately below last message ──────────── */}
               <div className="pt-2 pb-2">
+
+                {/* Retry in-progress message */}
+                {retryMessage && (
+                  <p className="mb-2 text-xs text-zinc-500 pl-1">{retryMessage}</p>
+                )}
 
                 {/* One-time mic hint tooltip */}
                 {showMicHint && supportsVoice && (

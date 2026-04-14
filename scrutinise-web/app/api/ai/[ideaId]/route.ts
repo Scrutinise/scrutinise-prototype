@@ -1,10 +1,41 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import * as Sentry from '@sentry/nextjs'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+
+function classifyError(error: unknown): string {
+  const msg = String(error).toLowerCase()
+  if (msg.includes('timeout') || msg.includes('etimedout')) return 'timeout'
+  if (msg.includes('rate') || msg.includes('429')) return 'rate_limit'
+  if (msg.includes('network') || msg.includes('econnrefused')) return 'network'
+  return 'api_error'
+}
+
+async function logAICall(params: {
+  provider: string
+  success: boolean
+  durationMs: number
+  errorType?: string
+  fallbackUsed?: boolean
+  ideaId?: string
+}) {
+  Sentry.captureEvent({
+    message: 'lex_ai_call',
+    level: params.success ? 'info' : 'warning',
+    extra: {
+      provider: params.provider,
+      ideaId: params.ideaId ?? null,
+      success: params.success,
+      durationMs: params.durationMs,
+      errorType: params.errorType ?? null,
+      fallbackUsed: params.fallbackUsed ?? false,
+    },
+  })
+}
 
 type Params = { params: Promise<{ ideaId: string }> }
 
@@ -511,13 +542,15 @@ export async function POST(req: Request, { params }: Params) {
   let lexResponse: string
   let aiProvider: 'GEMINI_FLASH' | 'GROK_FAST' = 'GEMINI_FLASH'
 
-  // Primary: Gemini 2.5 Flash
   const geminiKey = process.env.GEMINI_API_KEY
+  const grokKey = process.env.GROK_API_KEY
+  const startTime = Date.now()
+  let geminiErrorType: string | undefined
+
   if (!geminiKey) {
     console.error('[/api/ai/[ideaId]] GEMINI_API_KEY is not set — skipping to Grok fallback')
   }
 
-  let geminiSucceeded = false
   if (geminiKey) {
     try {
       const genAI = new GoogleGenerativeAI(geminiKey)
@@ -533,20 +566,24 @@ export async function POST(req: Request, { params }: Params) {
 
       const result = await chat.sendMessage(message)
       lexResponse = result.response.text()
-      geminiSucceeded = true
+      await logAICall({ provider: 'gemini', success: true, durationMs: Date.now() - startTime, ideaId })
     } catch (geminiError) {
+      const geminiDuration = Date.now() - startTime
+      geminiErrorType = classifyError(geminiError)
+      await logAICall({ provider: 'gemini', success: false, durationMs: geminiDuration, errorType: geminiErrorType, ideaId })
       console.error('[/api/ai/[ideaId]] Gemini failed:', geminiError)
     }
   }
 
-  if (!geminiSucceeded) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!lexResponse!) {
     // Fallback: Grok 3 Fast
-    const grokKey = process.env.GROK_API_KEY
     if (!grokKey) {
       console.error('[/api/ai/[ideaId]] GROK_API_KEY is not set — both providers unavailable')
-      return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      return NextResponse.json({ error: 'connection_failed', errorType: 'api_error' }, { status: 503 })
     }
 
+    const grokStart = Date.now()
     try {
       const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
@@ -570,21 +607,27 @@ export async function POST(req: Request, { params }: Params) {
       if (!grokRes.ok) {
         const errBody = await grokRes.text().catch(() => '(unreadable)')
         console.error(`[/api/ai/[ideaId]] Grok returned ${grokRes.status}: ${errBody}`)
-        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+        const grokErrorType = classifyError(`${grokRes.status} ${errBody}`)
+        await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: grokErrorType, fallbackUsed: true, ideaId })
+        return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
       }
 
       const grokData = await grokRes.json()
       const content = grokData.choices?.[0]?.message?.content
       if (!content) {
         console.error('[/api/ai/[ideaId]] Grok response missing choices:', JSON.stringify(grokData))
-        return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+        await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: 'api_error', fallbackUsed: true, ideaId })
+        return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
       }
 
       lexResponse = content
       aiProvider = 'GROK_FAST'
+      await logAICall({ provider: 'grok', success: true, durationMs: Date.now() - grokStart, fallbackUsed: true, ideaId })
     } catch (grokError) {
+      const grokErrorType = classifyError(grokError)
+      await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: grokErrorType, fallbackUsed: true, ideaId })
       console.error('[/api/ai/[ideaId]] Grok fallback threw:', grokError)
-      return NextResponse.json({ error: 'AI unavailable' }, { status: 503 })
+      return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
     }
   }
 

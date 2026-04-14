@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "app/api/ai/[ideaId]/route.ts": {
+      "maxDuration": 60
+    }
+  },
   "build": {
     "env": {
       "NEXT_PRIVATE_TARGET": "server"
