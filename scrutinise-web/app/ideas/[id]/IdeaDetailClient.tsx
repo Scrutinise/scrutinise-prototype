@@ -2255,9 +2255,6 @@ export default function IdeaDetailClient({
     })
   }
 
-  const voteStages = ['STAGE_2', 'STAGE_3']
-  const isPreVoteStage = voteStages.includes(idea.stage)
-
   async function handleIdeaRate(value: number) {
     const res = await fetch(`/api/ideas/${idea.id}/reviews`, {
       method: 'POST',
@@ -2524,17 +2521,7 @@ export default function IdeaDetailClient({
           </div>
         </div>
 
-        {/* Vote widget — Stage 4/5 only. Intercept at Stage 2/3 */}
-        {isPreVoteStage && (
-          <div className="mt-6">
-            <button
-              onClick={() => setShowVoteInterceptModal(true)}
-              className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-colors"
-            >
-              Voting opens when this idea reaches the Campaign stage
-            </button>
-          </div>
-        )}
+        {/* Vote widget — Stage 4/5 only */}
         {(idea.stage === 'STAGE_4' || idea.stage === 'STAGE_5') && (
           <div className="mt-6">
             <VoteWidget ideaId={idea.id} currentUserId={currentUserId} />

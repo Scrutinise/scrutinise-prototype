@@ -4,18 +4,11 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import { Button } from '@/components/ui/button'
+import { stageToLabel } from '@/lib/display-utils'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
-}
-
-const STAGE_LABELS: Record<string, string> = {
-  STAGE_1: 'Create',
-  STAGE_2: 'Draft',
-  STAGE_3: 'Develop',
-  STAGE_4: 'Campaign',
-  STAGE_5: 'Legislate',
 }
 
 const STAGE_BADGE: Record<string, string> = {
@@ -66,6 +59,7 @@ export default async function DashboardPage() {
         title: true,
         message: true,
         linkUrl: true,
+        relatedIdeaId: true,
         isRead: true,
         createdAt: true,
       },
@@ -144,7 +138,7 @@ export default async function DashboardPage() {
                     <span
                       className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STAGE_BADGE[idea.stage] ?? 'bg-zinc-100 text-zinc-600'}`}
                     >
-                      {STAGE_LABELS[idea.stage] ?? idea.stage}
+                      {stageToLabel(idea.stage)}
                     </span>
                   </Link>
                 ))}
@@ -162,6 +156,18 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {notifications.map((n) => {
+                  // Replace any STAGE_X names in notification text with "Stage X"
+                  const normaliseStages = (text: string) =>
+                    text.replace(/\b(STAGE_[1-5]|Create|Draft|Develop|Campaign|Legislate)\b/g, (m) => {
+                      const stageMap: Record<string, string> = {
+                        STAGE_1: 'Stage 1', STAGE_2: 'Stage 2', STAGE_3: 'Stage 3',
+                        STAGE_4: 'Stage 4', STAGE_5: 'Stage 5',
+                      }
+                      return stageMap[m] ?? m
+                    })
+                  const whatNextUrl = n.relatedIdeaId
+                    ? `/ideas/${n.relatedIdeaId}?whatnext=true`
+                    : null
                   const content = (
                     <div
                       className={`rounded-lg border p-3 text-sm transition-colors hover:bg-muted/40 ${
@@ -169,17 +175,28 @@ export default async function DashboardPage() {
                       }`}
                     >
                       {n.title && (
-                        <p className="font-medium leading-snug">{n.title}</p>
+                        <p className="font-medium leading-snug">{normaliseStages(n.title)}</p>
                       )}
                       <p className={`leading-snug ${n.title ? 'mt-0.5 text-muted-foreground text-xs' : ''}`}>
-                        {n.message}
+                        {normaliseStages(n.message)}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(n.createdAt).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
-                      </p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(n.createdAt).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </p>
+                        {whatNextUrl && (
+                          <Link
+                            href={whatNextUrl}
+                            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            What Next?
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   )
                   return n.linkUrl ? (
