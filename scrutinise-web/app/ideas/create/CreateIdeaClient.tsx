@@ -7,6 +7,7 @@ import Link from 'next/link'
 import FieldProposalCard from '@/components/FieldProposalCard'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
+import { getFieldLabel, SIDEBAR_SECTIONS } from '@/lib/field-labels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -130,6 +131,9 @@ function Stage2Sidebar({
   coherentActionsCount: number
   isLoading: boolean
 }) {
+  const [showDiagnosis, setShowDiagnosis] = useState(false)
+  const [showGuidingPolicy, setShowGuidingPolicy] = useState(false)
+
   const diagnosisFieldsDone = DIAGNOSIS_FIELDS.filter(f => fields[f.key]).length
   const diagnosisTotal = DIAGNOSIS_FIELDS.length
   const diagnosisComplete = diagnosisFieldsDone === diagnosisTotal
@@ -143,7 +147,7 @@ function Stage2Sidebar({
   if (diagnosisComplete && !guidingPolicyComplete) activeSection = 'guidingPolicy'
   if (diagnosisComplete && guidingPolicyComplete) activeSection = 'coherentActions'
 
-  function renderFieldRow(key: keyof FieldCompletion, label: string) {
+  function renderFieldRow(key: keyof FieldCompletion, fieldKey: string) {
     const done = fields[key]
     const active = isLoading && !done
     return (
@@ -154,7 +158,7 @@ function Stage2Sidebar({
           {done && <CheckIcon />}
         </span>
         <span className={`text-xs transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
-          {label}
+          {getFieldLabel(fieldKey)}
         </span>
       </div>
     )
@@ -162,60 +166,108 @@ function Stage2Sidebar({
 
   return (
     <div className="space-y-3">
-      {/* Diagnosis section */}
-      {diagnosisComplete ? (
-        <div className="flex items-center gap-2 py-1.5">
-          <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-            <CheckIcon />
-          </span>
-          <span className="text-sm font-medium text-zinc-900">
-            Diagnosis ({diagnosisFieldsDone}/{diagnosisTotal})
-          </span>
-        </div>
-      ) : (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Diagnosis</p>
-          {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-          {/* Root Causes — show count badge */}
-        </div>
-      )}
+      {/* Section headings from SIDEBAR_SECTIONS */}
+      {SIDEBAR_SECTIONS.map(section => {
+        if (section.key === 'diagnosis') {
+          if (diagnosisComplete) {
+            return (
+              <div key="diagnosis">
+                <button
+                  onClick={() => setShowDiagnosis(v => !v)}
+                  className="flex w-full items-center gap-2 py-1.5 text-left"
+                >
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                    <CheckIcon />
+                  </span>
+                  <span className="text-sm font-medium text-zinc-900 flex-1">
+                    {section.label.split(' — ')[0]} ({diagnosisFieldsDone}/{diagnosisTotal})
+                  </span>
+                  <span className="text-[10px] text-zinc-400">{showDiagnosis ? 'hide' : 'show'}</span>
+                </button>
+                {showDiagnosis && (
+                  <div className="pl-6">
+                    {DIAGNOSIS_FIELDS.map(({ key }) => renderFieldRow(key, key.replace('diagnosis', 'diagnosis').replace(/([A-Z])/g, m => m.toLowerCase())))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          if (activeSection === 'diagnosis') {
+            return (
+              <div key="diagnosis">
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
+                {DIAGNOSIS_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+              </div>
+            )
+          }
+          return (
+            <p key="diagnosis" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
+          )
+        }
 
-      {/* Guiding Policy section — only shown if Diagnosis has started or active */}
-      {(diagnosisComplete || activeSection === 'guidingPolicy') && (
-        guidingPolicyComplete ? (
-          <div className="flex items-center gap-2 py-1.5">
-            <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-              <CheckIcon />
-            </span>
-            <span className="text-sm font-medium text-zinc-900">
-              Guiding Policy ({guidingPolicyFieldsDone}/{guidingPolicyTotal})
-            </span>
-          </div>
-        ) : activeSection === 'guidingPolicy' ? (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Guiding Policy</p>
-            {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-          </div>
-        ) : (
-          <p className="text-xs text-zinc-400 py-1">Guiding Policy</p>
-        )
-      )}
+        if (section.key === 'guidingPolicy') {
+          if (!diagnosisComplete && activeSection !== 'guidingPolicy') {
+            return (
+              <p key="guidingPolicy" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
+            )
+          }
+          if (guidingPolicyComplete) {
+            return (
+              <div key="guidingPolicy">
+                <button
+                  onClick={() => setShowGuidingPolicy(v => !v)}
+                  className="flex w-full items-center gap-2 py-1.5 text-left"
+                >
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                    <CheckIcon />
+                  </span>
+                  <span className="text-sm font-medium text-zinc-900 flex-1">
+                    {section.label.split(' — ')[0]} ({guidingPolicyFieldsDone}/{guidingPolicyTotal})
+                  </span>
+                  <span className="text-[10px] text-zinc-400">{showGuidingPolicy ? 'hide' : 'show'}</span>
+                </button>
+                {showGuidingPolicy && (
+                  <div className="pl-6">
+                    {GUIDING_POLICY_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          if (activeSection === 'guidingPolicy') {
+            return (
+              <div key="guidingPolicy">
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
+                {GUIDING_POLICY_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+              </div>
+            )
+          }
+          return (
+            <p key="guidingPolicy" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
+          )
+        }
 
-      {/* Coherent Actions — shown once Diagnosis is at least started */}
-      {diagnosisComplete && (
-        activeSection === 'coherentActions' ? (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">Coherent Actions</p>
-            <p className="text-xs text-zinc-500">
-              {coherentActionsCount > 0
-                ? `${coherentActionsCount} action${coherentActionsCount === 1 ? '' : 's'} added`
-                : 'No actions yet'}
-            </p>
-          </div>
-        ) : (
-          <p className="text-xs text-zinc-400 py-1">Coherent Actions</p>
-        )
-      )}
+        if (section.key === 'coherentActions') {
+          if (!diagnosisComplete) return null
+          if (activeSection === 'coherentActions') {
+            return (
+              <div key="coherentActions">
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
+                <p className="text-xs text-zinc-500">
+                  {coherentActionsCount > 0
+                    ? `${coherentActionsCount} action${coherentActionsCount === 1 ? '' : 's'} added`
+                    : 'No actions yet'}
+                </p>
+              </div>
+            )
+          }
+          return (
+            <p key="coherentActions" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
+          )
+        }
+
+        return null
+      })}
     </div>
   )
 }
@@ -954,7 +1006,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   {/* Send button */}
                   <button
                     type="button"
-                    onClick={handleSend}
+                    onClick={() => handleSend()}
                     disabled={!canSend}
                     className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title="Send (Enter)"
