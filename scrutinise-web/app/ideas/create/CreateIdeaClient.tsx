@@ -846,11 +846,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             {ideaId && (
               <Link
                 href={`/ideas/${ideaId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
               >
-                View your idea →
+                Back to idea
               </Link>
             )}
             {isSignedIn && (
@@ -870,7 +868,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                       setTimeout(() => setSaveExitMsg(null), 4000)
                     }
                   }}
-                  className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  className="px-3 py-1 rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors font-medium"
                 >
                   Save & Exit
                 </button>
