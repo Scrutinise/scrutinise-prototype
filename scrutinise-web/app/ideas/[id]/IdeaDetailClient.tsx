@@ -1507,10 +1507,13 @@ interface UserSearchResult {
 function TeamTab({
   idea,
   isOwner,
+  ownerReferralCode,
 }: {
   idea: Idea
   isOwner: boolean
+  ownerReferralCode: string | null
 }) {
+  const [referralLinkCopied, setReferralLinkCopied] = useState(false)
   const [groups, setGroups] = useState<GroupRecord[]>([])
   const [loaded, setLoaded] = useState(false)
   const [creating, setCreating] = useState<string | null>(null) // groupType being created
@@ -1698,6 +1701,22 @@ function TeamTab({
               <p className="text-sm font-medium">{idea.creator.name}</p>
               <p className="text-xs text-muted-foreground">Owner</p>
             </div>
+            {isOwner && ownerReferralCode && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">View-only link</span>
+                <button
+                  onClick={() => {
+                    const link = `https://www.scrutinise.org/ideas/${idea.id}?ref=${ownerReferralCode}`
+                    navigator.clipboard.writeText(link)
+                    setReferralLinkCopied(true)
+                    setTimeout(() => setReferralLinkCopied(false), 2000)
+                  }}
+                  className="text-xs px-2 py-1 rounded border border-border hover:bg-muted transition-colors"
+                >
+                  {referralLinkCopied ? 'Copied!' : 'Copy link'}
+                </button>
+              </div>
+            )}
           </div>
           {idea.collaborators.map(c => (
             <div key={c.id} className="flex items-center gap-3 rounded-lg border p-3">
@@ -2551,7 +2570,7 @@ export default function IdeaDetailClient({
               currentUserId={currentUserId}
             />
           )}
-          {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} />}
+          {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} ownerReferralCode={currentUserReferralCode} />}
           {activeTab === 'campaign' && ['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
             <CampaignTab ideaId={idea.id} isOwner={isOwner} />
           )}
