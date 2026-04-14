@@ -13,6 +13,7 @@ import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
 import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
+import WhatNextPanel from '@/components/WhatNextPanel'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -2377,6 +2378,17 @@ export default function IdeaDetailClient({
               What Next?
             </Button>
           </div>
+
+          <WhatNextPanel
+            idea={{
+              stage: idea.stage,
+              diagnosis: idea.diagnoses[0] ?? null,
+              guidingPolicy: idea.guidingPolicies[0] ?? null,
+              coherentActions: idea.coherentActions,
+            }}
+            isOpen={whatNextOpen}
+            onClose={() => setWhatNextOpen(false)}
+          />
         </div>
 
         {/* Idea quality rating — Stage 3+, authenticated users only */}
