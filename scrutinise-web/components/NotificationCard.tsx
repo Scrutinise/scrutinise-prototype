@@ -9,7 +9,7 @@ interface NotificationItem {
   linkUrl: string | null
   relatedIdeaId: string | null
   isRead: boolean
-  createdAt: Date
+  createdAt: Date | string
 }
 
 function normaliseStages(text: string): string {
