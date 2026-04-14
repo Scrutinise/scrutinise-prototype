@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -72,16 +71,26 @@ Stage 1 is a sketch. Stage 2 is the detail.
 
 SECOND RESPONSE RULE: Your opening message has already introduced you as Lex. In your second response (the one after the user's first message), do NOT say "Hello [name], I'm Lex" or any re-introduction. React directly to what the user said and proceed. You only introduce yourself once.
 
-ORIENTEERING ON RETURN: When a user returns to an idea (aiSessionCount > 0), your FIRST message must contain all three of:
+ORIENTEERING ON RETURN — THIS IS MANDATORY when aiSessionCount > 0:
 
-1. A brief personal welcome using their preferredName (e.g. "Welcome back, [name].")
-2. One sentence on the last thing worked on — draw from chatSummary or the last 1-2 messages in history. If no summary exists, say "last time we started your idea."
-3. The specific next step — name the next unpopulated field using its user-friendly label (not the DB field name). Consult the field targets list.
-4. An invitation to continue: "Shall we continue?"
+You MUST NOT use the Stage 1 opening question ("What is the challenge you want to overcome?")
+when returning to an existing idea. This idea already exists. The user has been here before.
 
-Example: "Welcome back, Charles. Last time we worked through your diagnosis of the challenge and identified housing affordability as the core problem. Next up is identifying the root causes — the underlying mechanisms that keep the problem in place. Shall we continue?"
+Your FIRST message when aiSessionCount > 0 must follow this EXACT structure:
+1. "Welcome back, [preferredName]."
+2. One sentence: what was last worked on (draw from chatSummary or last message in aiChatHistory).
+   If aiChatHistory has entries referencing the overview/title/summary, say "Last time we worked on the overview."
+   If diagnosis fields have content, say "Last time we made progress on the diagnosis."
+3. One sentence: what comes next. Name the next empty field using its user-friendly label.
+4. "Shall we continue?"
 
-Keep this to 2-3 sentences. Do not use "Great to see you again", "Wonderful", or any hollow affirmations. Do not thank the user for returning.
+EXAMPLE (Stage 1, overview complete, diagnosis not started):
+"Welcome back, Charles. Last time we worked on the overview and gave your idea its first shape.
+Next up is the Diagnosis — identifying the challenge you want to address and its root causes.
+Shall we continue?"
+
+NEVER say "let's develop another idea" or "What is the challenge" to a returning user.
+NEVER re-introduce yourself to a returning user.
 
 STAGE 1 FIELD TARGETS:
 - title: infer from first exchange, propose immediately
@@ -433,6 +442,93 @@ const STAGE_LABELS: Record<string, string> = {
   STAGE_5: 'Legislate',
 }
 
+// Streaming Gemini call
+async function* callGeminiStream(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>) {
+  const apiKey = process.env.GEMINI_API_KEY!
+  const model = 'gemini-2.5-flash-preview-04-17'
+
+  const contents = [
+    ...history.map(m => ({
+      role: m.role === 'lex' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    })),
+    { role: 'user', parts: [{ text: userMessage }] },
+  ]
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+      }),
+    }
+  )
+
+  if (!response.ok || !response.body) throw new Error(`Gemini error: ${response.status}`)
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const json = JSON.parse(line.slice(6))
+          const text = json.candidates?.[0]?.content?.parts?.[0]?.text
+          if (text) yield text
+        } catch {}
+      }
+    }
+  }
+}
+
+// Grok fallback (non-streaming)
+async function callGrok(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>): Promise<string> {
+  const grokKey = process.env.GROK_API_KEY
+  if (!grokKey) throw new Error('GROK_API_KEY not set')
+
+  const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${grokKey}`,
+    },
+    body: JSON.stringify({
+      model: 'grok-3-fast-beta',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...history.map(m => ({
+          role: m.role === 'lex' ? 'assistant' : 'user',
+          content: m.content,
+        })),
+        { role: 'user', content: userMessage },
+      ],
+    }),
+  })
+
+  if (!grokRes.ok) {
+    const errBody = await grokRes.text().catch(() => '(unreadable)')
+    throw new Error(`Grok error ${grokRes.status}: ${errBody}`)
+  }
+
+  const grokData = await grokRes.json()
+  const content = grokData.choices?.[0]?.message?.content
+  if (!content) throw new Error('Grok response missing content')
+  return content
+}
+
 // POST /api/ai/[ideaId] — send a message to Lex
 export async function POST(req: Request, { params }: Params) {
   const { error, user } = await getAuthenticatedUser()
@@ -522,6 +618,24 @@ export async function POST(req: Request, { params }: Params) {
     .map(r => r.approvedRule)
     .filter((r): r is string => r !== null)
 
+  // Reconstruct recent chat history for the API call
+  const chatHistory = Array.isArray(idea.aiChatHistory) ? idea.aiChatHistory as Array<{role: string; content: string; timestamp?: string}> : []
+  const recentHistory = chatHistory.slice(-20) // last 20 messages
+
+  // Detect new session (first message in >30 mins)
+  const lastMessageTime = chatHistory.length > 0
+    ? new Date((chatHistory.at(-1) as { timestamp?: string })?.timestamp ?? 0)
+    : null
+  const isNewSession = !lastMessageTime || (Date.now() - lastMessageTime.getTime() > 30 * 60 * 1000)
+
+  if (isNewSession) {
+    await prisma.idea.update({
+      where: { id: ideaId },
+      data: { aiSessionCount: { increment: 1 } },
+    })
+    idea.aiSessionCount = (idea.aiSessionCount ?? 0) + 1
+  }
+
   const systemPrompt = buildSystemPrompt({
     ideaTitle: idea.title,
     currentStage: idea.stage,
@@ -536,335 +650,281 @@ export async function POST(req: Request, { params }: Params) {
     approvedRules,
   })
 
-  // Reconstruct recent chat history for the API call
-  const chatHistory = Array.isArray(idea.aiChatHistory) ? idea.aiChatHistory as Array<{role: string; content: string}> : []
-  const recentHistory = chatHistory.slice(-20) // last 20 messages
-
-  // Increment session count on first message of a new session (when chat history is empty)
-  if (chatHistory.length === 0) {
-    prisma.idea.update({ where: { id: ideaId }, data: { aiSessionCount: { increment: 1 } } })
-      .catch(err => console.error('[/api/ai/[ideaId]] session count increment failed:', err))
-  }
-
-  let lexResponse: string
-  let aiProvider: 'GEMINI_FLASH' | 'GROK_FAST' = 'GEMINI_FLASH'
-
-  const geminiKey = process.env.GEMINI_API_KEY
-  const grokKey = process.env.GROK_API_KEY
   const startTime = Date.now()
-  let geminiErrorType: string | undefined
+  const geminiKey = process.env.GEMINI_API_KEY
 
-  if (!geminiKey) {
-    console.error('[/api/ai/[ideaId]] GEMINI_API_KEY is not set — skipping to Grok fallback')
-  }
+  // Helper: parse field updates and save chat history
+  async function applyFieldUpdatesAndSave(fullText: string): Promise<{
+    displayText: string
+    fieldUpdates: Record<string, string | null> | null
+    triggerSavePrompt: boolean
+    pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }>
+  }> {
+    let displayText = fullText
+    let fieldUpdates: Record<string, string | null> | null = null
+    let triggerSavePrompt = false
+    let insightFlag: {
+      title: string; userQuote: string; conversationContext: string;
+      lexConclusion: string; lexRecommendation: string
+    } | null = null
 
-  if (geminiKey) {
-    try {
-      const genAI = new GoogleGenerativeAI(geminiKey)
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' })
-
-      const chat = model.startChat({
-        systemInstruction: systemPrompt,
-        history: recentHistory.map(m => ({
-          role: m.role === 'lex' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        })),
-      })
-
-      const result = await chat.sendMessage(message)
-      lexResponse = result.response.text()
-      await logAICall({ provider: 'gemini', success: true, durationMs: Date.now() - startTime, ideaId })
-    } catch (geminiError) {
-      const geminiDuration = Date.now() - startTime
-      geminiErrorType = classifyError(geminiError)
-      await logAICall({ provider: 'gemini', success: false, durationMs: geminiDuration, errorType: geminiErrorType, ideaId })
-      console.error('[/api/ai/[ideaId]] Gemini failed:', geminiError)
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!lexResponse!) {
-    // Fallback: Grok 3 Fast
-    if (!grokKey) {
-      console.error('[/api/ai/[ideaId]] GROK_API_KEY is not set — both providers unavailable')
-      return NextResponse.json({ error: 'connection_failed', errorType: 'api_error' }, { status: 503 })
-    }
-
-    const grokStart = Date.now()
-    try {
-      const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${grokKey}`,
-        },
-        body: JSON.stringify({
-          model: 'grok-3-fast-beta',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...recentHistory.map(m => ({
-              role: m.role === 'lex' ? 'assistant' : 'user',
-              content: m.content,
-            })),
-            { role: 'user', content: message },
-          ],
-        }),
-      })
-
-      if (!grokRes.ok) {
-        const errBody = await grokRes.text().catch(() => '(unreadable)')
-        console.error(`[/api/ai/[ideaId]] Grok returned ${grokRes.status}: ${errBody}`)
-        const grokErrorType = classifyError(`${grokRes.status} ${errBody}`)
-        await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: grokErrorType, fallbackUsed: true, ideaId })
-        return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
-      }
-
-      const grokData = await grokRes.json()
-      const content = grokData.choices?.[0]?.message?.content
-      if (!content) {
-        console.error('[/api/ai/[ideaId]] Grok response missing choices:', JSON.stringify(grokData))
-        await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: 'api_error', fallbackUsed: true, ideaId })
-        return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
-      }
-
-      lexResponse = content
-      aiProvider = 'GROK_FAST'
-      await logAICall({ provider: 'grok', success: true, durationMs: Date.now() - grokStart, fallbackUsed: true, ideaId })
-    } catch (grokError) {
-      const grokErrorType = classifyError(grokError)
-      await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: grokErrorType, fallbackUsed: true, ideaId })
-      console.error('[/api/ai/[ideaId]] Grok fallback threw:', grokError)
-      return NextResponse.json({ error: 'connection_failed', errorType: 'both_failed' }, { status: 503 })
-    }
-  }
-
-  // Extract and strip fieldUpdates / insightFlag JSON from the response
-  let visibleResponse = lexResponse!
-  let fieldUpdates: Record<string, string | null> | null = null
-  let triggerSavePrompt = false
-  let insightFlag: {
-    title: string
-    userQuote: string
-    conversationContext: string
-    lexConclusion: string
-    lexRecommendation: string
-  } | null = null
-
-  const jsonMatch = lexResponse!.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag")[\s\S]*\}/)
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0])
-      fieldUpdates = parsed.fieldUpdates ?? null
-      triggerSavePrompt = parsed.triggerSavePrompt === true
-      if (parsed.insightFlag && typeof parsed.insightFlag === 'object') {
-        const f = parsed.insightFlag
-        if (f.title && f.userQuote && f.conversationContext && f.lexConclusion && f.lexRecommendation) {
-          insightFlag = {
-            title: String(f.title),
-            userQuote: String(f.userQuote),
-            conversationContext: String(f.conversationContext),
-            lexConclusion: String(f.lexConclusion),
-            lexRecommendation: String(f.lexRecommendation),
+    const jsonMatch = fullText.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag")[\s\S]*\}/)
+    if (jsonMatch) {
+      try {
+        const parsedJson = JSON.parse(jsonMatch[0])
+        fieldUpdates = parsedJson.fieldUpdates ?? null
+        triggerSavePrompt = parsedJson.triggerSavePrompt === true
+        if (parsedJson.insightFlag && typeof parsedJson.insightFlag === 'object') {
+          const f = parsedJson.insightFlag
+          if (f.title && f.userQuote && f.conversationContext && f.lexConclusion && f.lexRecommendation) {
+            insightFlag = {
+              title: String(f.title),
+              userQuote: String(f.userQuote),
+              conversationContext: String(f.conversationContext),
+              lexConclusion: String(f.lexConclusion),
+              lexRecommendation: String(f.lexRecommendation),
+            }
           }
         }
+        displayText = fullText.replace(jsonMatch[0], '').trim()
+      } catch {
+        // JSON parse failed — serve as-is
       }
-      visibleResponse = lexResponse!.replace(jsonMatch[0], '').trim()
-    } catch {
-      // JSON parse failed — serve response as-is without field updates
     }
-  }
 
-  // Create LexInsight record if Lex flagged an insight
-  if (insightFlag) {
-    prisma.lexInsight.create({
+    if (insightFlag) {
+      prisma.lexInsight.create({
+        data: {
+          title: insightFlag.title,
+          userQuote: insightFlag.userQuote,
+          conversationContext: insightFlag.conversationContext,
+          lexConclusion: insightFlag.lexConclusion,
+          lexRecommendation: insightFlag.lexRecommendation,
+        },
+      }).catch(err => console.error('[/api/ai/[ideaId]] LexInsight create failed:', err))
+    }
+
+    const FIELD_LABELS: Record<string, string> = {
+      title: 'Title',
+      summaryDescription: 'Summary',
+      summaryDiagnosis: "What's the Challenge?",
+      summaryGuidingPolicy: 'How Will We Solve It?',
+      summaryCoherentActions: 'A Practical Step',
+      govtArea: 'Government Area',
+      ideaType: 'Idea Type',
+      diagnosis: "What's the Challenge?",
+      guidingPolicy: 'How Will We Solve It?',
+      rootCause: 'Root Cause',
+      whoAffected: 'Who Is Affected?',
+      proposedWording: 'Proposed Wording',
+      'diagnosis.text': 'The Challenge (full)',
+      'diagnosis.whoAffected': 'Who Is Affected?',
+      'diagnosis.howAffected': 'How Are They Affected?',
+      'diagnosis.whyPersisted': 'Why Has This Persisted?',
+      'diagnosis.impactDescription': 'Impact',
+      'diagnosis.impactCost': 'Impact Cost',
+      'diagnosis.obstacleDefined': 'The Obstacle',
+      'rootCause.text': 'Root Cause',
+      'rootCause.rootCauseMechanism': 'Root Cause Mechanism',
+      'rootCause.whyNotSolved': "Why It Hasn't Been Solved",
+      'rootCause.incentiveDrivers': 'Incentive Drivers',
+      'rootCause.structureDrivers': 'Structural Drivers',
+      'guidingPolicy.text': 'Guiding Policy (full)',
+      'guidingPolicy.coreTheory': 'Core Theory',
+      'guidingPolicy.mechanismIncentives': 'Mechanism: Incentives',
+      'guidingPolicy.mechanismRules': 'Mechanism: Rules',
+      'guidingPolicy.mechanismTransparency': 'Mechanism: Transparency',
+      'guidingPolicy.mechanismMarketDesign': 'Mechanism: Market Design',
+      'guidingPolicy.mechanismInstitutionalRestructuring': 'Mechanism: Institutional Restructuring',
+      'guidingPolicy.tradeOffs': 'Trade-offs',
+      'guidingPolicy.competitiveIdeaAnalysis': 'What Else Has Been Tried?',
+    }
+
+    const pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }> = []
+    if (fieldUpdates) {
+      for (const [key, value] of Object.entries(fieldUpdates)) {
+        if (value === null || value === undefined || value === '') continue
+        let fieldLabel = FIELD_LABELS[key]
+        if (!fieldLabel) {
+          if (key.startsWith('coherentActions')) {
+            try {
+              const parsedAction = JSON.parse(String(value))
+              fieldLabel = `Coherent Action: ${parsedAction.title ?? 'Action'}`
+            } catch {
+              fieldLabel = 'Coherent Action'
+            }
+          } else {
+            fieldLabel = key
+          }
+        }
+        pendingProposals.push({ fieldKey: key, fieldLabel, proposedValue: String(value) })
+      }
+    }
+
+    // Update chat history
+    const updatedHistory = [
+      ...chatHistory,
+      { role: 'user', content: message, timestamp: new Date().toISOString() },
+      { role: 'lex', content: displayText, timestamp: new Date().toISOString() },
+    ].slice(-40)
+
+    await prisma.idea.update({
+      where: { id: ideaId },
+      data: { aiChatHistory: updatedHistory },
+    })
+
+    // Log AI usage
+    await prisma.aIUsageLog.create({
       data: {
-        title: insightFlag.title,
-        userQuote: insightFlag.userQuote,
-        conversationContext: insightFlag.conversationContext,
-        lexConclusion: insightFlag.lexConclusion,
-        lexRecommendation: insightFlag.lexRecommendation,
+        userId: user.id,
+        ideaId,
+        provider: 'GEMINI_FLASH',
+        model: 'gemini-2.5-flash',
+        inputTokens: 0,
+        outputTokens: 0,
+        costAmount: 0,
+        fieldTarget: idea.aiCurrentField ?? undefined,
       },
-    }).catch(err => console.error('[/api/ai/[ideaId]] LexInsight create failed:', err))
+    })
+
+    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals }
   }
 
-  // Build pendingProposals — DO NOT write to DB here.
-  // Fields are written only on explicit user approval via /field-approval.
-  const FIELD_LABELS: Record<string, string> = {
-    title: 'Title',
-    summaryDescription: 'Summary',
-    summaryDiagnosis: "What's the Challenge?",
-    summaryGuidingPolicy: 'How Will We Solve It?',
-    summaryCoherentActions: 'A Practical Step',
-    govtArea: 'Government Area',
-    ideaType: 'Idea Type',
-    diagnosis: "What's the Challenge?",
-    guidingPolicy: 'How Will We Solve It?',
-    rootCause: 'Root Cause',
-    whoAffected: 'Who Is Affected?',
-    proposedWording: 'Proposed Wording',
-    'diagnosis.text': 'The Challenge (full)',
-    'diagnosis.whoAffected': 'Who Is Affected?',
-    'diagnosis.howAffected': 'How Are They Affected?',
-    'diagnosis.whyPersisted': 'Why Has This Persisted?',
-    'diagnosis.impactDescription': 'Impact',
-    'diagnosis.impactCost': 'Impact Cost',
-    'diagnosis.obstacleDefined': 'The Obstacle',
-    'rootCause.text': 'Root Cause',
-    'rootCause.rootCauseMechanism': 'Root Cause Mechanism',
-    'rootCause.whyNotSolved': "Why It Hasn't Been Solved",
-    'rootCause.incentiveDrivers': 'Incentive Drivers',
-    'rootCause.structureDrivers': 'Structural Drivers',
-    'guidingPolicy.text': 'Guiding Policy (full)',
-    'guidingPolicy.coreTheory': 'Core Theory',
-    'guidingPolicy.mechanismIncentives': 'Mechanism: Incentives',
-    'guidingPolicy.mechanismRules': 'Mechanism: Rules',
-    'guidingPolicy.mechanismTransparency': 'Mechanism: Transparency',
-    'guidingPolicy.mechanismMarketDesign': 'Mechanism: Market Design',
-    'guidingPolicy.mechanismInstitutionalRestructuring': 'Mechanism: Institutional Restructuring',
-    'guidingPolicy.tradeOffs': 'Trade-offs',
-    'guidingPolicy.competitiveIdeaAnalysis': 'What Else Has Been Tried?',
-  }
+  const encoder = new TextEncoder()
 
-  type PendingProposal = { fieldKey: string; fieldLabel: string; proposedValue: string }
-  const pendingProposals: PendingProposal[] = []
+  const stream = new ReadableStream({
+    async start(controller) {
+      let fullText = ''
+      let usedGrok = false
 
-  if (fieldUpdates) {
-    for (const [key, value] of Object.entries(fieldUpdates)) {
-      if (value === null || value === undefined || value === '') continue
-
-      let fieldLabel = FIELD_LABELS[key]
-      if (!fieldLabel) {
-        if (key.startsWith('coherentActions')) {
-          // Try to extract title from value if it's JSON
-          try {
-            const parsed = JSON.parse(String(value))
-            fieldLabel = `Coherent Action: ${parsed.title ?? 'Action'}`
-          } catch {
-            fieldLabel = 'Coherent Action'
+      if (geminiKey) {
+        try {
+          await logAICall({ provider: 'gemini', success: true, durationMs: 0, ideaId })
+          for await (const token of callGeminiStream(systemPrompt, message, recentHistory)) {
+            fullText += token
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', text: token })}\n\n`))
           }
-        } else {
-          fieldLabel = key
+          await logAICall({ provider: 'gemini', success: true, durationMs: Date.now() - startTime, ideaId })
+        } catch (geminiError) {
+          const geminiErrorType = classifyError(geminiError)
+          await logAICall({ provider: 'gemini', success: false, durationMs: Date.now() - startTime, errorType: geminiErrorType, ideaId })
+          console.error('[/api/ai/[ideaId]] Gemini streaming failed:', geminiError)
+          fullText = ''
+          usedGrok = true
+        }
+      } else {
+        usedGrok = true
+      }
+
+      if (usedGrok || !fullText) {
+        const grokStart = Date.now()
+        try {
+          const grokResult = await callGrok(systemPrompt, message, recentHistory)
+          fullText = grokResult
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', text: fullText })}\n\n`))
+          await logAICall({ provider: 'grok', success: true, durationMs: Date.now() - grokStart, fallbackUsed: true, ideaId })
+        } catch (grokError) {
+          const grokErrorType = classifyError(grokError)
+          await logAICall({ provider: 'grok', success: false, durationMs: Date.now() - grokStart, errorType: grokErrorType, fallbackUsed: true, ideaId })
+          console.error('[/api/ai/[ideaId]] Grok fallback failed:', grokError)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', errorType: 'both_failed' })}\n\n`))
+          controller.close()
+          return
         }
       }
 
-      pendingProposals.push({
-        fieldKey: key,
-        fieldLabel,
-        proposedValue: String(value),
+      // Parse and persist
+      const { displayText, fieldUpdates, triggerSavePrompt: aiTrigger, pendingProposals } = await applyFieldUpdatesAndSave(fullText)
+
+      // Stage gate check
+      await checkAndAdvanceStage(ideaId, idea.creatorId)
+
+      // Re-fetch for completion state
+      const latest = await prisma.idea.findUnique({
+        where: { id: ideaId },
+        select: {
+          stage: true,
+          title: true,
+          diagnosis: true,
+          rootCause: true,
+          guidingPolicy: true,
+          summaryDiagnosis: true,
+          summaryGuidingPolicy: true,
+          summaryCoherentActions: true,
+          whoAffected: true,
+          proposedWording: true,
+          coherentActions: { select: { id: true } },
+          diagnoses: {
+            select: {
+              text: true, obstacleDefined: true, whoAffected: true, howAffected: true,
+              whyPersisted: true, impactDescription: true, impactCost: true,
+            },
+          },
+          guidingPolicies: {
+            select: {
+              text: true, coreTheory: true, tradeOffs: true, competitiveIdeaAnalysis: true,
+              mechanismIncentives: true, mechanismRules: true, mechanismTransparency: true,
+              mechanismMarketDesign: true, mechanismInstitutionalRestructuring: true,
+            },
+          },
+        },
       })
-    }
-  }
 
-  // Update chat history (rolling last 40, storing as 20 pairs)
-  const updatedHistory = [
-    ...chatHistory,
-    { role: 'user', content: message, timestamp: new Date().toISOString() },
-    { role: 'lex', content: visibleResponse, timestamp: new Date().toISOString() },
-  ].slice(-40)
+      const diag = latest?.diagnoses?.[0]
+      const gp = latest?.guidingPolicies?.[0]
+      const cActionsCount = latest?.coherentActions.length ?? 0
 
-  await prisma.idea.update({
-    where: { id: ideaId },
-    data: {
-      aiChatHistory: updatedHistory,
-      aiSessionCount: { increment: 1 },
+      const completedFields = {
+        title: !!latest?.title,
+        summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
+        rootCause: !!latest?.rootCause,
+        summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
+        summaryCoherentActions: cActionsCount > 0 || !!latest?.summaryCoherentActions?.trim(),
+        whoAffected: !!latest?.whoAffected,
+        proposedWording: !!latest?.proposedWording,
+        diagnosisText: !!diag?.text,
+        diagnosisObstacleDefined: !!diag?.obstacleDefined,
+        diagnosisWhoAffected: !!diag?.whoAffected,
+        diagnosisHowAffected: !!diag?.howAffected,
+        diagnosisWhyPersisted: !!diag?.whyPersisted,
+        diagnosisImpactDescription: !!diag?.impactDescription,
+        diagnosisImpactCost: !!diag?.impactCost,
+        guidingPolicyText: !!gp?.text,
+        guidingPolicyCoreTheory: !!gp?.coreTheory,
+        guidingPolicyMechanism: !!(
+          gp?.mechanismIncentives || gp?.mechanismRules || gp?.mechanismTransparency ||
+          gp?.mechanismMarketDesign || gp?.mechanismInstitutionalRestructuring
+        ),
+        guidingPolicyTradeOffs: !!gp?.tradeOffs,
+        guidingPolicyCompetitiveIdeaAnalysis: !!gp?.competitiveIdeaAnalysis,
+      }
+
+      const proposedKeys = new Set(pendingProposals.map(p => p.fieldKey))
+      const serverTrigger = isStage1
+        ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy) ||
+          (proposedKeys.has('summaryDiagnosis') && proposedKeys.has('summaryGuidingPolicy'))
+        : !!(latest?.diagnosis && latest?.guidingPolicy) ||
+          (proposedKeys.has('diagnosis.text') && proposedKeys.has('guidingPolicy.text'))
+
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+        type: 'done',
+        response: displayText,
+        triggerSavePrompt: aiTrigger || serverTrigger,
+        completedFields,
+        pendingProposals,
+        currentStage: latest?.stage ?? idea.stage,
+        coherentActionsCount: cActionsCount,
+        hasFieldUpdates: !!fieldUpdates,
+      })}\n\n`))
+      controller.close()
     },
   })
 
-  // Log AI usage
-  await prisma.aIUsageLog.create({
-    data: {
-      userId: user.id,
-      ideaId,
-      provider: aiProvider,
-      model: aiProvider === 'GEMINI_FLASH' ? 'gemini-2.5-flash' : 'grok-3-fast-beta',
-      inputTokens: 0, // TODO: token counting
-      outputTokens: 0,
-      costAmount: 0,
-      fieldTarget: idea.aiCurrentField ?? undefined,
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
     },
-  })
-
-  // Stage gate check after field updates
-  await checkAndAdvanceStage(ideaId, idea.creatorId)
-
-  // Re-fetch completion state for sidebar — boolean map only, no field content
-  const latest = await prisma.idea.findUnique({
-    where: { id: ideaId },
-    select: {
-      stage: true,
-      title: true,
-      diagnosis: true,
-      rootCause: true,
-      guidingPolicy: true,
-      summaryDiagnosis: true,
-      summaryGuidingPolicy: true,
-      summaryCoherentActions: true,
-      whoAffected: true,
-      proposedWording: true,
-      coherentActions: { select: { id: true } },
-      diagnoses: {
-        select: {
-          text: true, obstacleDefined: true, whoAffected: true, howAffected: true,
-          whyPersisted: true, impactDescription: true, impactCost: true,
-        },
-      },
-      guidingPolicies: {
-        select: {
-          text: true, coreTheory: true, tradeOffs: true, competitiveIdeaAnalysis: true,
-          mechanismIncentives: true, mechanismRules: true, mechanismTransparency: true,
-          mechanismMarketDesign: true, mechanismInstitutionalRestructuring: true,
-        },
-      },
-    },
-  })
-
-  const diag = latest?.diagnoses?.[0]
-  const gp = latest?.guidingPolicies?.[0]
-  const cActionsCount = latest?.coherentActions.length ?? 0
-
-  const completedFields = {
-    // Stage 1
-    title: !!latest?.title,
-    summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
-    rootCause: !!latest?.rootCause,
-    summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
-    summaryCoherentActions: cActionsCount > 0 || !!latest?.summaryCoherentActions?.trim(),
-    whoAffected: !!latest?.whoAffected,
-    proposedWording: !!latest?.proposedWording,
-    // Stage 2 — Diagnosis
-    diagnosisText: !!diag?.text,
-    diagnosisObstacleDefined: !!diag?.obstacleDefined,
-    diagnosisWhoAffected: !!diag?.whoAffected,
-    diagnosisHowAffected: !!diag?.howAffected,
-    diagnosisWhyPersisted: !!diag?.whyPersisted,
-    diagnosisImpactDescription: !!diag?.impactDescription,
-    diagnosisImpactCost: !!diag?.impactCost,
-    // Stage 2 — Guiding Policy
-    guidingPolicyText: !!gp?.text,
-    guidingPolicyCoreTheory: !!gp?.coreTheory,
-    guidingPolicyMechanism: !!(
-      gp?.mechanismIncentives || gp?.mechanismRules || gp?.mechanismTransparency ||
-      gp?.mechanismMarketDesign || gp?.mechanismInstitutionalRestructuring
-    ),
-    guidingPolicyTradeOffs: !!gp?.tradeOffs,
-    guidingPolicyCompetitiveIdeaAnalysis: !!gp?.competitiveIdeaAnalysis,
-  }
-
-  // Compute triggerSavePrompt server-side so it fires even when the AI omits the flag.
-  // Also fires if both key fields are in the pending proposals (not yet saved).
-  const proposedKeys = new Set(pendingProposals.map(p => p.fieldKey))
-  const serverTrigger = isStage1
-    ? !!(latest?.summaryDiagnosis && latest?.summaryGuidingPolicy) ||
-      (proposedKeys.has('summaryDiagnosis') && proposedKeys.has('summaryGuidingPolicy'))
-    : !!(latest?.diagnosis && latest?.guidingPolicy) ||
-      (proposedKeys.has('diagnosis.text') && proposedKeys.has('guidingPolicy.text'))
-
-  return NextResponse.json({
-    response: visibleResponse,
-    triggerSavePrompt: triggerSavePrompt || serverTrigger,
-    completedFields,
-    pendingProposals,
-    currentStage: latest?.stage ?? idea.stage,
-    coherentActionsCount: cActionsCount,
   })
 }

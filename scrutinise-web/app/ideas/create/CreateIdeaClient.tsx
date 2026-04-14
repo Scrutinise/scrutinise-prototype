@@ -5,6 +5,7 @@ import { useUser, SignInButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FieldProposalCard from '@/components/FieldProposalCard'
+import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
 import { getFieldLabel, SIDEBAR_SECTIONS } from '@/lib/field-labels'
@@ -27,6 +28,7 @@ interface ChatMessage {
   timestamp: string
   proposals?: PendingProposal[]
   isConnectionError?: boolean
+  isStreaming?: boolean
 }
 
 interface FieldCompletion {
@@ -474,6 +476,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     setIsLoading(true)
 
     try {
+      // Add a streaming placeholder message immediately
+      setMessages(prev => [...prev, {
+        role: 'lex',
+        content: '',
+        timestamp: new Date().toISOString(),
+        isStreaming: true,
+      }])
+
       let res: Response
 
       if (isSignedIn) {
@@ -491,7 +501,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           body: JSON.stringify({
             message: messageText,
             history: messages
-              .filter(m => !m.isConnectionError)
+              .filter(m => !m.isConnectionError && !m.isStreaming)
               .map(m => ({ role: m.role, content: m.content })),
           }),
         })
@@ -504,35 +514,126 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         throw err
       }
 
-      const data = await res.json()
+      // Check if streaming response
+      const contentType = res.headers.get('Content-Type') ?? ''
+      if (contentType.includes('text/event-stream') && res.body) {
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let doneData: Record<string, unknown> | null = null
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            try {
+              const event = JSON.parse(line.slice(6)) as { type: string; text?: string; errorType?: string; [key: string]: unknown }
+
+              if (event.type === 'token' && event.text) {
+                setMessages(prev => {
+                  const updated = [...prev]
+                  const lastIdx = updated.length - 1
+                  if (lastIdx >= 0 && updated[lastIdx].isStreaming) {
+                    updated[lastIdx] = { ...updated[lastIdx], content: updated[lastIdx].content + event.text }
+                  }
+                  return updated
+                })
+              } else if (event.type === 'error') {
+                throw Object.assign(new Error('Lex unavailable'), { errorType: event.errorType ?? 'both_failed' })
+              } else if (event.type === 'done') {
+                doneData = event
+              }
+            } catch (parseErr) {
+              if ((parseErr as { errorType?: string }).errorType) throw parseErr
+            }
+          }
+        }
+
+        // Finalise streaming message
+        if (doneData) {
+          const proposals: PendingProposal[] | undefined = (doneData.pendingProposals as Array<Omit<PendingProposal, 'status'>> | undefined)?.length
+            ? (doneData.pendingProposals as Array<Omit<PendingProposal, 'status'>>).map(p => ({ ...p, status: 'pending' as const }))
+            : undefined
+
+          setMessages(prev => {
+            const updated = [...prev]
+            const lastIdx = updated.length - 1
+            if (lastIdx >= 0 && updated[lastIdx].isStreaming) {
+              updated[lastIdx] = {
+                ...updated[lastIdx],
+                content: (doneData!.response as string | undefined) ?? updated[lastIdx].content,
+                isStreaming: false,
+                proposals,
+              }
+            }
+            return updated
+          })
+
+          if (doneData.completedFields) setFields(prev => ({ ...prev, ...(doneData!.completedFields as Partial<FieldCompletion>) }))
+          if (doneData.currentStage) setCurrentStage(doneData.currentStage as string)
+          if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
+          if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
+        } else {
+          // Mark streaming as done even if no doneData
+          setMessages(prev => {
+            const updated = [...prev]
+            const lastIdx = updated.length - 1
+            if (lastIdx >= 0 && updated[lastIdx].isStreaming) {
+              updated[lastIdx] = { ...updated[lastIdx], isStreaming: false }
+            }
+            return updated
+          })
+        }
+      } else {
+        // Non-streaming fallback (public API)
+        const data = await res.json()
+
+        if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
+        if (data.currentStage) setCurrentStage(data.currentStage)
+        if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
+        if (data.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
+
+        const proposals: PendingProposal[] | undefined = data.pendingProposals?.length
+          ? data.pendingProposals.map((p: Omit<PendingProposal, 'status'>) => ({ ...p, status: 'pending' as const }))
+          : undefined
+
+        setMessages(prev => {
+          const updated = [...prev]
+          const lastIdx = updated.length - 1
+          if (lastIdx >= 0 && updated[lastIdx].isStreaming) {
+            updated[lastIdx] = {
+              role: 'lex',
+              content: data.response ?? data.reply ?? '',
+              timestamp: new Date().toISOString(),
+              isStreaming: false,
+              proposals,
+            }
+          }
+          return updated
+        })
+      }
 
       // Successful response — reset retry state
       setRetryCount(0)
       setRetryMessage(null)
-
-      if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
-      if (data.currentStage) setCurrentStage(data.currentStage)
-      if (typeof data.coherentActionsCount === 'number') setCoherentActionsCount(data.coherentActionsCount)
-      if (data.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
-
-      const proposals: PendingProposal[] | undefined = data.pendingProposals?.length
-        ? data.pendingProposals.map((p: Omit<PendingProposal, 'status'>) => ({ ...p, status: 'pending' as const }))
-        : undefined
-
-      setMessages(prev => [...prev, {
-        role: 'lex',
-        content: data.response,
-        timestamp: new Date().toISOString(),
-        proposals,
-      }])
       setIsLoading(false)
       setTimeout(() => inputRef.current?.focus(), 0)
     } catch (error: unknown) {
       const errorType = (error as { errorType?: string })?.errorType ?? 'api_error'
 
+      // Remove streaming placeholder on error
+      setMessages(prev => prev.filter(m => !m.isStreaming))
+
       if (retryCount === 0) {
         // First failure: silent auto-retry after 1 second
         setRetryCount(1)
+        setIsLoading(false)
         setTimeout(() => handleSend(true), 1000)
         return
       }
@@ -542,6 +643,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         setRetryCount(2)
         const providerLabel = errorType === 'timeout' ? 'Gemini' : 'Lex'
         setRetryMessage(`${providerLabel} is taking a while to think — we'll keep trying, thank you for your patience.`)
+        setIsLoading(false)
         setTimeout(() => handleSend(true), 5000)
         return
       }
@@ -561,6 +663,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }
+
 
   // ── Manual retry after connection error ───────────────────────────────────
   const handleRetry = () => {
@@ -873,21 +976,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 </div>
               ))}
 
-              {/* Typing indicator */}
-              {isLoading && (
+              {/* Typing indicator — shown while waiting for first token */}
+              {isLoading && messages[messages.length - 1]?.isStreaming && messages[messages.length - 1]?.content === '' && (
                 <div className="flex gap-3 mb-6">
                   <div className="shrink-0 w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center">
                     <span className="text-white text-xs font-semibold">L</span>
                   </div>
-                  <div className="flex items-center gap-1 pt-1.5">
-                    {[0, 150, 300].map(delay => (
-                      <span
-                        key={delay}
-                        className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
-                      />
-                    ))}
-                  </div>
+                  <LexThinking visible={true} />
                 </div>
               )}
 
