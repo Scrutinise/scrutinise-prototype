@@ -33,21 +33,38 @@ function getCompletionPercent(idea: WhatNextPanelProps['idea']): number {
   return 50
 }
 
-function getStatusText(idea: WhatNextPanelProps['idea']): string {
-  const hasDiagnosis = !!(idea.diagnosis?.diagnosisTitle || idea.diagnosis?.diagnosisDescription)
-  const hasPolicy = !!idea.guidingPolicy?.guidingPolicyTitle
-  const hasAction = idea.coherentActions.length > 0
+function getStatusMessage(idea: WhatNextPanelProps['idea']): string {
+  const { stage, diagnosis, guidingPolicy, coherentActions } = idea
 
-  if (!hasDiagnosis) {
-    return 'Start with your Diagnosis — click Edit to describe the challenge you want to address and work with Lex to identify its root causes.'
+  if (stage === 'STAGE_3') {
+    return "Your idea is now public. We encourage you to send a link to prominent experts and invite them to contribute feedback and possible improvements before you start campaigning."
   }
-  if (!hasPolicy) {
-    return 'Your Diagnosis is complete. The next step is your Guiding Policy — the broad approach that will address the root causes you\'ve identified.'
+
+  if (stage === 'STAGE_4') {
+    return "You are in the campaigning phase. The objective now is to build as much support and Parliamentary endorsements as possible to allow your idea to be picked up in the Parliamentary process."
   }
-  if (!hasAction) {
-    return 'Your Diagnosis and Guiding Policy are in place. Now you need to define your Coherent Actions — the specific changes you want to make.'
+
+  if (stage === 'STAGE_5') {
+    return "Your idea has reached Parliament. Focus on supporting your Parliamentary sponsors and responding to committee questions."
   }
-  return 'Your Strategic Kernel is taking shape. Keep refining and adding research evidence to strengthen your idea before taking it public.'
+
+  const diagnosisComplete = !!(diagnosis?.diagnosisTitle && diagnosis?.diagnosisDescription)
+  const guidingPolicyComplete = !!(guidingPolicy?.guidingPolicyTitle)
+  const hasActions = coherentActions.length > 0
+
+  if (!diagnosisComplete) {
+    return "The next step is to complete your Diagnosis. Click Edit to describe the challenge you want to address and work with Lex to identify its root causes."
+  }
+
+  if (diagnosisComplete && !guidingPolicyComplete) {
+    return "You have completed your Diagnosis. The next step is your Guiding Policy — the broad approach that will address the root causes you've identified. Click Edit to continue."
+  }
+
+  if (diagnosisComplete && guidingPolicyComplete && !hasActions) {
+    return "Your Diagnosis and Guiding Policy are in place. The next step is to define your Coherent Actions — the specific changes you want to make. Click Edit to continue."
+  }
+
+  return "You have filled out the basics of the idea. You can now decide whether to do more work on research and refinement before making your idea public — or click 'Take Public' when you're ready."
 }
 
 export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelProps) {
@@ -98,7 +115,7 @@ export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelPr
 
       {/* Section 3 — Where you are now (always visible) */}
       <div className="mb-4">
-        <p className="text-sm text-zinc-700">{getStatusText(idea)}</p>
+        <p className="text-sm text-zinc-700">{getStatusMessage(idea)}</p>
       </div>
 
       {/* Section 2 — Journey overview (collapsible) */}
@@ -115,7 +132,7 @@ export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelPr
         {journeyOpen && (
           <div className="mt-2 text-xs text-zinc-600 space-y-2">
             <p>You are currently building your idea to the point where it is robust enough for public scrutiny. This requires three main elements:</p>
-            <p><strong>1. The Diagnosis</strong> — getting complete clarity on the challenge and its causes. Until this is clear, it is hard to form an effective policy. You can&apos;t solve a problem if you don&apos;t know what&apos;s causing it, and if you identify the wrong causes you&apos;ll get the wrong solution.</p>
+            <p><strong>1. The Diagnosis</strong> — getting complete clarity on the challenge and its causes. Until this is clear, it is hard to form an effective policy. The key to solving any challenge or problem is figuring out what&apos;s causing it. This is critically important because if we identify the wrong causes we&apos;ll end up with the wrong solution.</p>
             <p><strong>2. The Guiding Policy</strong> — stating in broad terms what approach will overcome the challenge. You need a guiding policy because you need a set of principles and goals to judge your specific actions against. Without these, you won&apos;t know whether your actions will actually solve the problem.</p>
             <p><strong>3. Coherent Actions</strong> — the specific changes you want to make, such as legislation changes or organisational reforms. These should be made as robust as possible with research, evidence, and honest analysis of costs and opposition.</p>
           </div>
@@ -135,7 +152,7 @@ export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelPr
             </svg>
           </button>
           {tipsOpen && (
-            <div className="mt-2 text-xs text-zinc-600">
+            <div className="mt-2 text-xs text-zinc-600 space-y-2">
               {idea.stage === 'STAGE_2' && (
                 <p>You can now invite collaborators to help you. Click the <strong>Team</strong> tab and invite friends, colleagues, or subject experts. Each of them will have access to Lex to help build your evidence base. You can restrict their roles — Editor can contribute text, Viewer can read only.</p>
               )}
@@ -145,6 +162,7 @@ export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelPr
               {['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
                 <p>Your idea is in Campaign mode. Build support by reaching out to MPs and Peers for endorsements. Use the Campaign in a Box tools to create briefing documents and press materials.</p>
               )}
+              <p className="mt-2">Once your idea moves to Stage 3, you will be able to access various templates designed to help you promote your idea for support in different contexts such as social media or to Parliamentarians, and trackable links to enable you to build a marketing team over multiple levels to campaign and build support for your idea.</p>
             </div>
           )}
         </div>

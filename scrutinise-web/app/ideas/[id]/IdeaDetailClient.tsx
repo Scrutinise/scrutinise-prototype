@@ -278,7 +278,7 @@ function IdeaOriginBanner({ idea }: { idea: Idea }) {
 // Stage 2→3 gate checklist
 // ─────────────────────────────────────────────────────────────────────────────
 
-function Stage2GateCard({ idea }: { idea: Idea }) {
+function Stage2GateCard({ idea, onTakePublic }: { idea: Idea; onTakePublic: () => void }) {
   const checks = [
     { label: 'Challenge / diagnosis completed', met: !!idea.diagnosis?.trim() },
     { label: 'Guiding policy completed', met: !!idea.guidingPolicy?.trim() },
@@ -294,7 +294,14 @@ function Stage2GateCard({ idea }: { idea: Idea }) {
   return (
     <Card className="border-dashed">
       <CardHeader className="pb-0">
-        <CardTitle className="text-sm">Requirements to Take Public</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">Requirements to Take Public</CardTitle>
+          {allMet && (
+            <Button size="sm" onClick={onTakePublic}>
+              Take Public →
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="pt-3">
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -314,9 +321,9 @@ function Stage2GateCard({ idea }: { idea: Idea }) {
                 </li>
               ))}
             </ul>
-            {allMet && (
-              <p className="mt-3 text-xs text-green-700">
-                All requirements met — you can take this idea public.
+            {!allMet && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Complete all requirements above to unlock Take Public.
               </p>
             )}
           </div>
@@ -2363,7 +2370,7 @@ export default function IdeaDetailClient({
             )}
           </div>
 
-          {/* Edit + What Next? — below author/date line */}
+          {/* Edit + What Next? + Campaign in a Box — below author/date line */}
           <div className="mt-3 flex items-center gap-2">
             {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
               <Button asChild size="sm">
@@ -2377,6 +2384,15 @@ export default function IdeaDetailClient({
             >
               What Next?
             </Button>
+            {isOwner && ['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('campaign')}
+              >
+                Campaign in a Box
+              </Button>
+            )}
           </div>
 
           <WhatNextPanel
@@ -2422,78 +2438,41 @@ export default function IdeaDetailClient({
           </div>
         )}
 
-        {/* Action button row — stage-appropriate action + Campaign in a Box */}
-        {isOwner && (
-          <div className="mb-6 flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              {idea.stage === 'STAGE_2' && (
-                <>
-                  <Button
-                    onClick={() => setShowTakePublicModal(true)}
-                    disabled={!stage2GateMet}
-                    variant={stage2GateMet ? 'default' : 'outline'}
-                  >
-                    Take Public
-                  </Button>
-                  {!stage2GateMet && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Complete all requirements above to unlock.
-                    </p>
-                  )}
-                </>
-              )}
+        {/* Action button row — stage-appropriate action (Stage 3+) */}
+        {isOwner && ['STAGE_3', 'STAGE_4'].includes(idea.stage) && (
+          <div className="mb-6">
+            {idea.stage === 'STAGE_3' && (
+              <>
+                <Button
+                  onClick={() => setShowBeginCampaignModal(true)}
+                  disabled={!stage3GateMet}
+                  variant={stage3GateMet ? 'default' : 'outline'}
+                >
+                  Begin Campaign
+                </Button>
+                {!stage3GateMet && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Meet all requirements above to unlock.
+                  </p>
+                )}
+              </>
+            )}
 
-              {idea.stage === 'STAGE_3' && (
-                <>
-                  <Button
-                    onClick={() => setShowBeginCampaignModal(true)}
-                    disabled={!stage3GateMet}
-                    variant={stage3GateMet ? 'default' : 'outline'}
-                  >
-                    Begin Campaign
-                  </Button>
-                  {!stage3GateMet && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Meet all requirements above to unlock.
-                    </p>
-                  )}
-                </>
-              )}
-
-              {idea.stage === 'STAGE_4' && (
-                <>
-                  <Button
-                    onClick={() => setShowSubmitToParliamentModal(true)}
-                    disabled={!stage4GateMet}
-                    variant={stage4GateMet ? 'default' : 'outline'}
-                  >
-                    Submit to Parliament
-                  </Button>
-                  {!stage4GateMet && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Meet all requirements above to unlock.
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Campaign in a Box — owner only, all stages */}
-            {['STAGE_4', 'STAGE_5'].includes(idea.stage) ? (
-              <Button
-                variant="outline"
-                onClick={() => setActiveTab('campaign')}
-              >
-                Campaign in a Box
-              </Button>
-            ) : (
-              <button
-                disabled
-                title="Available at Campaign stage once your documents are ready."
-                className="inline-flex items-center rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-300 cursor-not-allowed select-none"
-              >
-                Campaign in a Box
-              </button>
+            {idea.stage === 'STAGE_4' && (
+              <>
+                <Button
+                  onClick={() => setShowSubmitToParliamentModal(true)}
+                  disabled={!stage4GateMet}
+                  variant={stage4GateMet ? 'default' : 'outline'}
+                >
+                  Submit to Parliament
+                </Button>
+                {!stage4GateMet && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Meet all requirements above to unlock.
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -2584,7 +2563,7 @@ export default function IdeaDetailClient({
         {/* Gate cards — below tab content, owner only */}
         {idea.stage === 'STAGE_2' && isOwner && (
           <div className="mt-6">
-            <Stage2GateCard idea={idea} />
+            <Stage2GateCard idea={idea} onTakePublic={() => setShowTakePublicModal(true)} />
           </div>
         )}
         {idea.stage === 'STAGE_3' && isOwner && (
