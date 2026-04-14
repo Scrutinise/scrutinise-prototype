@@ -2203,6 +2203,7 @@ export default function IdeaDetailClient({
   const [referralLinkCopied, setReferralLinkCopied] = useState(false)
   const [commentCount, setCommentCount] = useState(initialIdea.commentCount)
   const [userIdeaRating, setUserIdeaRating] = useState<number | null>(null)
+  const [whatNextOpen, setWhatNextOpen] = useState(searchParams.get('whatnext') === 'true')
 
   const stageLabel = STAGES.find(s => s.key === idea.stage)?.label ?? idea.stage
   const badgeClass = STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'
@@ -2336,17 +2337,6 @@ export default function IdeaDetailClient({
             </p>
           )}
 
-          {/* Edit — owner only, Stage 1 or 2 — primary action */}
-          {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
-            <div className="mt-4">
-              <Button asChild>
-                <Link href={`/ideas/create?ideaId=${idea.id}`}>
-                  Edit
-                </Link>
-              </Button>
-            </div>
-          )}
-
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span>
               by{' '}
@@ -2371,6 +2361,22 @@ export default function IdeaDetailClient({
               </span>
             )}
           </div>
+
+          {/* Edit + What Next? — below author/date line */}
+          <div className="mt-3 flex items-center gap-2">
+            {isOwner && ['STAGE_1', 'STAGE_2'].includes(idea.stage) && (
+              <Button asChild size="sm">
+                <Link href={`/ideas/create?ideaId=${idea.id}`}>Edit</Link>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setWhatNextOpen(o => !o)}
+            >
+              What Next?
+            </Button>
+          </div>
         </div>
 
         {/* Idea quality rating — Stage 3+, authenticated users only */}
@@ -2385,27 +2391,6 @@ export default function IdeaDetailClient({
               labelMax="Well argued"
               promptText="This rating is for the quality of the argument — use the vote if you want to support or oppose the idea or its consequences"
             />
-          </div>
-        )}
-
-        {/* Stage 2 gate card — show to owner only */}
-        {idea.stage === 'STAGE_2' && isOwner && (
-          <div className="mb-6">
-            <Stage2GateCard idea={idea} />
-          </div>
-        )}
-
-        {/* Stage 3 gate card — show to owner only */}
-        {idea.stage === 'STAGE_3' && isOwner && (
-          <div className="mb-6">
-            <Stage3GateCard reviewCount={ideaReviewCount} avgQualityRating={avgQualityRating} />
-          </div>
-        )}
-
-        {/* Stage 4 gate card — show to owner only */}
-        {idea.stage === 'STAGE_4' && isOwner && stage4GateData && (
-          <div className="mb-6">
-            <Stage4GateCard gate={stage4GateData} />
           </div>
         )}
 
@@ -2583,6 +2568,23 @@ export default function IdeaDetailClient({
             <PrivacyLogTab ideaId={idea.id} />
           )}
         </div>
+
+        {/* Gate cards — below tab content, owner only */}
+        {idea.stage === 'STAGE_2' && isOwner && (
+          <div className="mt-6">
+            <Stage2GateCard idea={idea} />
+          </div>
+        )}
+        {idea.stage === 'STAGE_3' && isOwner && (
+          <div className="mt-6">
+            <Stage3GateCard reviewCount={ideaReviewCount} avgQualityRating={avgQualityRating} />
+          </div>
+        )}
+        {idea.stage === 'STAGE_4' && isOwner && stage4GateData && (
+          <div className="mt-6">
+            <Stage4GateCard gate={stage4GateData} />
+          </div>
+        )}
 
         {/* Development History — owner only, Stage 3+ (internal contributions archived from Stage 2) */}
         {isOwner && ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) && (

@@ -751,19 +751,27 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
               </Link>
             )}
             {isSignedIn && (
-              <button
-                onClick={() => {
-                  if (ideaId) {
-                    router.push('/dashboard')
-                  } else {
-                    setSaveExitMsg('Your conversation will be saved once you complete the first stage.')
-                    setTimeout(() => setSaveExitMsg(null), 4000)
-                  }
-                }}
-                className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-              >
-                Save & Exit
-              </button>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                >
+                  My Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    if (ideaId) {
+                      router.push('/dashboard')
+                    } else {
+                      setSaveExitMsg('Your conversation will be saved once you complete the first stage.')
+                      setTimeout(() => setSaveExitMsg(null), 4000)
+                    }
+                  }}
+                  className="px-3 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                >
+                  Save & Exit
+                </button>
+              </>
             )}
           </div>
           {saveExitMsg && (
