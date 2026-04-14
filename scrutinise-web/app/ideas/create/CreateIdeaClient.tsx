@@ -8,7 +8,7 @@ import FieldProposalCard from '@/components/FieldProposalCard'
 import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
-import { getFieldLabel, SIDEBAR_SECTIONS } from '@/lib/field-labels'
+import { SIDEBAR_SECTIONS } from '@/lib/field-labels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -149,7 +149,7 @@ function Stage2Sidebar({
   if (diagnosisComplete && !guidingPolicyComplete) activeSection = 'guidingPolicy'
   if (diagnosisComplete && guidingPolicyComplete) activeSection = 'coherentActions'
 
-  function renderFieldRow(key: keyof FieldCompletion, fieldKey: string) {
+  function renderFieldRow(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
     const active = isLoading && !done
     return (
@@ -160,7 +160,7 @@ function Stage2Sidebar({
           {done && <CheckIcon />}
         </span>
         <span className={`text-xs transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
-          {getFieldLabel(fieldKey)}
+          {label}
         </span>
       </div>
     )
@@ -188,7 +188,7 @@ function Stage2Sidebar({
                 </button>
                 {showDiagnosis && (
                   <div className="pl-6">
-                    {DIAGNOSIS_FIELDS.map(({ key }) => renderFieldRow(key, key.replace('diagnosis', 'diagnosis').replace(/([A-Z])/g, m => m.toLowerCase())))}
+                    {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
                   </div>
                 )}
               </div>
@@ -198,7 +198,7 @@ function Stage2Sidebar({
             return (
               <div key="diagnosis">
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
-                {DIAGNOSIS_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+                {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
               </div>
             )
           }
@@ -230,7 +230,7 @@ function Stage2Sidebar({
                 </button>
                 {showGuidingPolicy && (
                   <div className="pl-6">
-                    {GUIDING_POLICY_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+                    {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
                   </div>
                 )}
               </div>
@@ -240,7 +240,7 @@ function Stage2Sidebar({
             return (
               <div key="guidingPolicy">
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
-                {GUIDING_POLICY_FIELDS.map(({ key }) => renderFieldRow(key, key))}
+                {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
               </div>
             )
           }
