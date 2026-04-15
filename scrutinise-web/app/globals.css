@@ -121,6 +121,29 @@
 }
 
 /* ─────────────────────────────
+   FIELD ACCEPT ANIMATIONS (V2-D)
+   ───────────────────────────── */
+
+@keyframes fieldAccept {
+  0%   { opacity: 0; transform: translateX(12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes proposalPulse {
+  0%   { background-color: rgb(20 184 166 / 0.1); }
+  50%  { background-color: rgb(20 184 166 / 0.3); }
+  100% { background-color: rgb(20 184 166 / 0.1); }
+}
+
+.field-accept-animation {
+  animation: fieldAccept 200ms ease-out forwards;
+}
+
+.proposal-pulse-animation {
+  animation: proposalPulse 300ms ease-in-out;
+}
+
+/* ─────────────────────────────
    VIDEO MASK
    ───────────────────────────── */
 
