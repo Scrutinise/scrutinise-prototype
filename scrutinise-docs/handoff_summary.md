@@ -875,6 +875,8 @@ Deferred (do not build without explicit instruction):
 - StageTransitionRequest veto logic
 - Legislation database (separate post-holiday project)
 - lib/gdpr.ts anonymiseExpiredAccounts() scheduler (Railway/Vercel cron)
+
+GIT PATTERN: Never call git during a sprint. At the end, produce commit-all.sh with all git add + commit + push commands, execute it immediately (Charlie approves once), then delete it.
 ```
 
 ## PREVIOUS SESSION START (SPRINT 8)
