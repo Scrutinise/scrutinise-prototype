@@ -334,6 +334,54 @@ enum LexInsightStatus {
   REJECTED    // Admin has rejected — stored for reference but not used
 }
 
+enum LegislationTier {
+  TIER_1  // Post-2010 Public General Acts — first priority
+  TIER_2  // Pre-2010 Public General Acts, Devolved Acts
+  TIER_3  // Statutory Instruments
+  TIER_4  // Extended corpus (FCA, HMRC, etc.)
+}
+
+enum LegislationType {
+  UKPGA   // UK Public General Act
+  UKSI    // UK Statutory Instrument
+  UKLA    // UK Local Act
+  ASP     // Act of the Scottish Parliament
+  SSI     // Scottish Statutory Instrument
+  ANAW    // Act of the National Assembly for Wales / Senedd
+  WSI     // Welsh Statutory Instrument
+  NIER    // Northern Ireland legislation
+  EUR     // Retained EU legislation
+  OTHER
+}
+
+enum CompilationConfidence {
+  HIGH    // All amendments applied without ambiguity
+  MEDIUM  // Minor interpretation required
+  LOW     // One or more amendments could not be applied — needs review
+}
+
+enum CompilationStatus {
+  PENDING       // Not yet compiled
+  COMPILING     // In progress
+  COMPILED      // Complete
+  FAILED        // Compilation failed — see errorLog
+  NEEDS_REVIEW  // LOW confidence — queued for human review
+}
+
+enum CorrectionStatus {
+  PENDING
+  LEX_REVIEW
+  ADMIN_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
+enum CorrectionDecision {
+  ACCEPT
+  REJECT
+  UNCERTAIN
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 — CORE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -429,6 +477,7 @@ model User {
   pointsRelatedTo           PointsLedger[]   @relation("PointsRelatedUser")
   referralsMade             ReferralEvent[]  @relation("ReferrerUser")
   referralsReceived         ReferralEvent[]  @relation("ReferredUser")
+  legislationCorrections    LegislationCorrection[]
 
   @@index([clerkId])
   @@index([email])
@@ -553,6 +602,7 @@ model Idea {
   aiUsageLogs               AIUsageLog[]
   disputedLogicFlags        DisputedLogicFlag[]
   contentReports            ContentReport[]     @relation("ReportedIdea")
+  legislationLinks          IdeaLegislation[]
 
   @@index([creatorId])
   @@index([stage])
@@ -1351,4 +1401,146 @@ model LexInsight {
   reviewedByUserId    String?
   reviewedAt          DateTime?
   reviewedBy          User?            @relation(fields: [reviewedByUserId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 14 — LEGISLATION DATABASE
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Top-level legislation item (an Act or SI)
+model LegislationItem {
+  id                    String              @id @default(uuid())
+  // Identity
+  legislationType       LegislationType
+  tier                  LegislationTier
+  title                 String
+  year                  Int
+  number                Int                 // Chapter number (Acts) or SI number
+  jurisdiction          String              // 'UK', 'Scotland', 'Wales', 'NI'
+  // Source
+  legislationGovUkId    String              @unique // e.g. "ukpga/2006/46"
+  clmlUrl               String              // URL to bulk CLML XML on legislation.gov.uk
+  r2Key                 String?             // Key in R2 scrutinise-legislation bucket (raw CLML)
+  // Compilation state
+  compilationStatus     CompilationStatus   @default(PENDING)
+  compilationProvider   String?             // 'gemini-2.5-flash' etc — winning model
+  compiledAt            DateTime?
+  sectionCount          Int                 @default(0)
+  compiledSectionCount  Int                 @default(0)
+  // Metadata
+  shortTitle            String?
+  longTitle             String?
+  enactmentDate         DateTime?
+  inForce               Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  sections              LegislationSection[]
+  ideaLinks             IdeaLegislation[]
+
+  @@index([legislationType, year])
+  @@index([tier])
+  @@index([jurisdiction])
+}
+
+// Individual section within an Act
+model LegislationSection {
+  id                    String                  @id @default(uuid())
+  legislationItemId     String
+  legislationItem       LegislationItem         @relation(fields: [legislationItemId], references: [id])
+  // Identity
+  sectionNumber         String                  // "1", "13E", "172" etc
+  sectionTitle          String?
+  // Text content
+  originalText          String?                 // As-enacted CLML text
+  compiledText          String?                 // AI-compiled current text
+  // Compilation quality
+  confidence            CompilationConfidence?
+  confidenceReason      String?
+  compilationVersion    Int                     @default(1)
+  compilationNotes      String?
+  unappliedAmendments   Json?                   // Array of {sourceInstrument, reason}
+  commencementNote      String?                 // If commencement is uncertain
+  // Compilation metadata
+  compiledAt            DateTime?
+  compiledBy            String?                 // Model identifier
+  compilationStatus     CompilationStatus       @default(PENDING)
+  // Flags
+  isRepealed            Boolean                 @default(false)
+  needsReview           Boolean                 @default(false)
+  // Timestamps
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  amendments            LegislationAmendment[]
+  corrections           LegislationCorrection[]
+
+  @@unique([legislationItemId, sectionNumber])
+  @@index([legislationItemId])
+  @@index([compilationStatus])
+  @@index([needsReview])
+}
+
+// Amendment applied to a section
+model LegislationAmendment {
+  id                    String              @id @default(uuid())
+  sectionId             String
+  section               LegislationSection  @relation(fields: [sectionId], references: [id])
+  // Source of amendment
+  sourceInstrument      String              // "Finance Act 2019"
+  sourceInstrumentId    String?             // legislationGovUkId of the amending instrument
+  sourceUrl             String?             // Direct URL to the amending provision
+  effectDate            DateTime?
+  // Amendment details
+  amendmentType         String              // 'substitution' | 'insertion' | 'repeal' | 'modification'
+  instruction           String              // The raw amendment instruction text
+  targetedText          String?             // Original text targeted
+  substitutedText       String?             // Replacement text (if substitution)
+  // Application
+  applied               Boolean             @default(false)
+  applicationNotes      String?
+  orderIndex            Int                 // Chronological order for application
+  createdAt             DateTime            @default(now())
+
+  @@index([sectionId])
+  @@index([effectDate])
+}
+
+// Link between an Idea and relevant legislation
+model IdeaLegislation {
+  id                    String              @id @default(uuid())
+  ideaId                String
+  idea                  Idea                @relation(fields: [ideaId], references: [id])
+  legislationItemId     String
+  legislationItem       LegislationItem     @relation(fields: [legislationItemId], references: [id])
+  linkType              String              // 'target' | 'relevant' | 'precedent'
+  notes                 String?
+  addedByUserId         String?
+  createdAt             DateTime            @default(now())
+
+  @@unique([ideaId, legislationItemId])
+  @@index([ideaId])
+  @@index([legislationItemId])
+}
+
+// User-submitted corrections to compiled text
+model LegislationCorrection {
+  id                    String                  @id @default(uuid())
+  sectionId             String
+  section               LegislationSection      @relation(fields: [sectionId], references: [id])
+  userId                String
+  user                  User                    @relation(fields: [userId], references: [id])
+  description           String
+  proposedText          String?
+  sourceUrl             String?
+  status                CorrectionStatus        @default(PENDING)
+  lexAssessment         String?
+  lexDecision           CorrectionDecision?
+  adminDecision         CorrectionDecision?
+  adminNotes            String?
+  createdAt             DateTime                @default(now())
+  resolvedAt            DateTime?
+
+  @@index([sectionId])
+  @@index([status])
 }
