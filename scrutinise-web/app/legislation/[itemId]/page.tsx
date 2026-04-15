@@ -5,12 +5,13 @@ import { CompilationStatus } from '@prisma/client'
 import LegislationItemClient from './LegislationItemClient'
 
 interface Props {
-  params: { itemId: string }
+  params: Promise<{ itemId: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { itemId } = await params
   const item = await prisma.legislationItem.findUnique({
-    where: { id: params.itemId },
+    where: { id: itemId },
     select: { title: true, year: true },
   })
   if (!item) return { title: 'Legislation | Scrutinise' }
@@ -21,8 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LegislationItemPage({ params }: Props) {
+  const { itemId } = await params
   const item = await prisma.legislationItem.findUnique({
-    where: { id: params.itemId },
+    where: { id: itemId },
     include: {
       sections: {
         where: { compilationStatus: { in: [CompilationStatus.COMPILED, CompilationStatus.NEEDS_REVIEW] } },

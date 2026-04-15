@@ -4,9 +4,10 @@ import { CompilationStatus } from '@prisma/client'
 
 // GET /api/legislation/[itemId] — retrieve a LegislationItem with its compiled sections
 // Public — no auth required
-export async function GET(req: Request, { params }: { params: { itemId: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
+  const { itemId } = await params
   const item = await prisma.legislationItem.findUnique({
-    where: { id: params.itemId },
+    where: { id: itemId },
     include: {
       sections: {
         where: { compilationStatus: { in: [CompilationStatus.COMPILED, CompilationStatus.NEEDS_REVIEW] } },
