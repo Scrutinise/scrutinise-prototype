@@ -649,6 +649,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     // Core idea fields
     if (ideaData.title) vals['title'] = ideaData.title
     if (ideaData.summaryDescription) vals['summaryDescription'] = ideaData.summaryDescription
+    if (ideaData.summaryDiagnosis) vals['summaryDiagnosis'] = ideaData.summaryDiagnosis
+    if (ideaData.summaryGuidingPolicy) vals['summaryGuidingPolicy'] = ideaData.summaryGuidingPolicy
+    if (ideaData.summaryCoherentActions) vals['summaryCoherentActions'] = ideaData.summaryCoherentActions
+    if (ideaData.whoAffected) vals['whoAffected'] = ideaData.whoAffected
+    if (ideaData.proposedWording) vals['proposedWording'] = ideaData.proposedWording
     if (ideaData.diagnosis) vals['diagnosis'] = ideaData.diagnosis
     if (ideaData.guidingPolicy) vals['guidingPolicy'] = ideaData.guidingPolicy
     if (ideaData.rootCause) vals['rootCause'] = ideaData.rootCause
@@ -699,6 +704,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     })
 
     setFieldValues(vals)
+    console.log('[SIDEBAR-DEBUG] fieldValues keys set:', Object.keys(vals).filter(k => vals[k]))
 
     // Auto-open fields that have values — last 2 populated
     const populated = Object.keys(vals).filter(k => vals[k])
