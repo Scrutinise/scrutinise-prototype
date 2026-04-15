@@ -6,6 +6,67 @@
 
 ---
 
+## CODE CHANGES — 15 April 2026 Sprint V2-D
+
+### V2D-fix-params: Async params verified clean (V2C-fix already applied)
+| File | Change |
+|------|--------|
+| `app/api/legislation/[itemId]/route.ts` | Confirmed `params: Promise<{itemId: string}>` and `await params` — applied in V2C-fix. No further changes needed. |
+| `app/legislation/[itemId]/page.tsx` | Same — already correct. No other dynamic routes required fixing. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2D-proposal-card-desktop: Teal proposal card on desktop + swipe gesture threshold
+| File | Change |
+|------|--------|
+| `components/FieldProposalCard.tsx` | Rewrote swipe detection: `absDx > 50 && absDx > absDy * 2.5` ratio (was just `absDx > absDy`). Edit button now calls `onEdit(proposedValue)` to copy text to chat input (card goes to `discussed`), replacing in-card textarea editing. Updated visual to teal border design per brief. Added `proposal-pulse-animation` class on Accept. Removed autoAcceptSeconds countdown complexity. |
+| `app/ideas/create/CreateIdeaClient.tsx` | `handleProposalEdit` now marks proposal as `discussed` and copies proposed text to `inputValue` + focuses input. No longer calls `handleProposalAccept`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2D-mobile-panel: Mobile sidebar panel — swipe-right navigation
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `mobilePanelOpen` state. Added `outerTouchStartX/Y` refs and `handleOuterTouchStart/End` (threshold 80px, ratio 2.0). Main area wrapped with touch handlers. Added teal edge indicator button (fixed right, `lg:hidden`). Added full-screen `fixed inset-0 z-40 lg:hidden` panel overlay with slide-in transition. Added `MobileSidebarContent` component: shows all Diagnosis + GuidingPolicy fields with value preview, Edit (copies to input + closes panel) and Chat (sends revisit message + closes panel) buttons per field. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2D-sidebar-answers: Desktop sidebar — filled answers with open/close toggles
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `sidebarExpanded`, `openFields` (Set<string>), `fieldValues` (Record<string, string>) states. Desktop sidebar: added expand/collapse button (⊞/⊟), sidebar width transitions between `w-72` and `w-1/2`. Stage 1 sidebar fields now show collapsible value div with `field-accept-animation` when toggled. `Stage2Sidebar` updated with same props + `renderFieldRow` updated to show value when `openFields` contains field key. `handleProposalAccept` stores value in `fieldValues` and adds to `openFields`. Streaming `done` handler auto-opens newly completed fields. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2D-whoosh-animation: Whoosh animation on field accept
+| File | Change |
+|------|--------|
+| `app/globals.css` | Added `@keyframes fieldAccept` (slide-in from right, 200ms) and `@keyframes proposalPulse` (teal background pulse, 300ms). Added `.field-accept-animation` and `.proposal-pulse-animation` utility classes. |
+| `components/FieldProposalCard.tsx` | Accept button triggers `proposal-pulse-animation` via `isPulsing` state on the saved-state card. |
+| `app/ideas/create/CreateIdeaClient.tsx` | Field values in sidebar render with `field-accept-animation` class. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2D-lex-flow: Lex field conversation protocol
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Added FIELD CONVERSATION PROTOCOL section to `buildSystemPrompt` (Stage 1 section): 5-step flow (Orientation → Question → Assess → Confirmation → Next field). Added FIELD ACCEPTANCE rule: messages starting with "Accepted: " trigger `fieldUpdates` population and next-field orientation. `applyFieldUpdatesAndSave` now parses `fieldProposal` JSON key (alongside `fieldUpdates`, `insightFlag`) and strips it from `displayText`. Returns `fieldProposal` in done SSE event. |
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `currentProposal` state. Streaming `done` handler extracts `fieldProposal` from event and sets `currentProposal`. Renders `FieldProposalCard` above input when `currentProposal` is non-null. `handleCurrentProposalAccept`: optimistically updates `fieldValues` + `openFields`, clears `currentProposal`, sends silent system message `Accepted: [label]` to Lex via `handleSend(false, systemMessage)`. `handleCurrentProposalEdit` / `handleCurrentProposalDiscuss` clear `currentProposal`. `handleSend` updated to accept optional `systemMessageOverride` — when set, message is sent to API without appearing in chat UI. |
+
+**Deploy actions needed:** None.
+
+---
+
 ## CODE CHANGES — 15 April 2026 Sprint V2-C
 
 ### V2C-admin-nav: Admin nav link visible to ADMIN/SUPER_ADMIN

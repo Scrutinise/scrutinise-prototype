@@ -1,6 +1,37 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 15 April 2026 v24*
+*Last updated: 15 April 2026 v25*
+
+***
+
+## CURRENT STATE — SPRINT V2-D COMPLETE ✅
+
+Six commits to Main. All `tsc --noEmit` clean. Ready to push.
+
+### V2D commit summary
+
+1. **V2D-fix-params** — Async params confirmed correct from V2C-fix. Both `legislation/[itemId]` routes already use `Promise<{itemId}>` + `await params`. No other routes needed fixing.
+2. **V2D-proposal-card-desktop** — `FieldProposalCard` now renders correctly on all screen sizes. Swipe detection ratio raised to `2.5×` horizontal to avoid scroll conflicts. Edit button now copies proposed text to chat input (not in-card textarea). Updated teal visual design with Accept/Edit buttons and swipe hints.
+3. **V2D-mobile-panel** — Swipe-right from chat opens full-screen field panel overlay on mobile (`lg:hidden`). Teal strip edge indicator at right edge. Panel contains all Diagnosis/GuidingPolicy fields with values + Edit/Chat action buttons. Edit copies field value to input; Chat sends revisit message.
+4. **V2D-sidebar-answers** — Desktop sidebar now shows field values. Click any completed field to expand/collapse its value. Expand button (⊞/⊟) widens sidebar to 50%. Values auto-open when accepted. `field-accept-animation` applied on first show.
+5. **V2D-whoosh-animation** — CSS keyframes: `fieldAccept` (slide-in, 200ms) for sidebar entry; `proposalPulse` (teal pulse, 300ms) on proposal card accept. Both applied via utility classes in globals.css.
+6. **V2D-lex-flow** — Field Conversation Protocol active in system prompt: Orientation → Question → Assess → Confirmation → Proposal Card → Accept. Acceptance sends silent "Accepted: [label]" system message. Server parses `fieldProposal` JSON key, strips from display text, passes to frontend via SSE done event. Frontend shows proposal card above input from `currentProposal` state.
+7. **V2D-docs** — CHANGE_LOG updated, handoff v25.
+
+### New files/changes this sprint
+- `components/FieldProposalCard.tsx` — rewritten
+- `app/ideas/create/CreateIdeaClient.tsx` — major additions (mobile panel, sidebar values, currentProposal, system message send)
+- `app/globals.css` — fieldAccept + proposalPulse keyframes added
+- `app/api/ai/[ideaId]/route.ts` — Field Conversation Protocol in system prompt + fieldProposal parsing
+
+### Architecture notes
+- `fieldProposal` JSON key is now a sibling of `fieldUpdates` in Lex's response. Stripped server-side, passed to frontend via done event. Frontend shows teal card; on Accept sends `"Accepted: [label]"` system message which triggers Lex to populate `fieldUpdates` and begin next field.
+- `fieldValues: Record<string, string>` state in CreateIdeaClient accumulates accepted values for sidebar display. Keys normalised from dot-notation (`diagnosis.text` → `diagnosisText`).
+- System messages (Accept confirmations) sent via `handleSend(false, systemMessageOverride)` — skipped in chat UI, sent to API.
+
+### Next: V2-E (to be specified)
+- Lex context injection from legislation DB
+- Correction flow UI
 
 ***
 
