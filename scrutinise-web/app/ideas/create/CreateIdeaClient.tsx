@@ -128,10 +128,18 @@ function Stage2Sidebar({
   fields,
   coherentActionsCount,
   isLoading,
+  sidebarExpanded,
+  openFields,
+  onToggleField,
+  fieldValues,
 }: {
   fields: FieldCompletion
   coherentActionsCount: number
   isLoading: boolean
+  sidebarExpanded: boolean
+  openFields: Set<string>
+  onToggleField: (key: string) => void
+  fieldValues: Record<string, string>
 }) {
   const [showDiagnosis, setShowDiagnosis] = useState(false)
   const [showGuidingPolicy, setShowGuidingPolicy] = useState(false)
@@ -152,16 +160,38 @@ function Stage2Sidebar({
   function renderFieldRow(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
     const active = isLoading && !done
+    const keyStr = String(key)
+    const isOpen = openFields.has(keyStr)
+    const value = fieldValues[keyStr]
+
     return (
-      <div key={String(key)} className="flex items-center gap-2 py-1">
-        <span className={`shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${
-          done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
-        }`}>
-          {done && <CheckIcon />}
-        </span>
-        <span className={`text-xs transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
-          {label}
-        </span>
+      <div key={keyStr} className="mb-1">
+        <div
+          className={`flex items-center gap-2 py-1 ${value ? 'cursor-pointer group' : ''}`}
+          onClick={() => value && onToggleField(keyStr)}
+        >
+          <span className={`shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${
+            done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
+          }`}>
+            {done && <CheckIcon />}
+          </span>
+          <span className={`text-xs transition-colors flex-1 ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
+            {label}
+          </span>
+          {value && (
+            <span className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              {isOpen ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+        {value && isOpen && (
+          <div className="mt-1 ml-5 text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed field-accept-animation">
+            {value.length > 200 && !sidebarExpanded
+              ? value.substring(0, 200) + '…'
+              : value
+            }
+          </div>
+        )}
       </div>
     )
   }
@@ -303,6 +333,63 @@ function calcProgress(userMsgCount: number, fields: FieldCompletion, stage: stri
 const ACCEPTED_FILE_TYPES = '.pdf,.doc,.docx'
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MobileSidebarContent — shown in full-screen overlay on mobile
+// ─────────────────────────────────────────────────────────────────────────────
+
+function MobileSidebarContent({
+  fields,
+  fieldValues,
+  onEditField,
+  onChatField,
+}: {
+  fields: FieldCompletion
+  fieldValues: Record<string, string>
+  onEditField: (fieldKey: string, fieldLabel: string, value: string) => void
+  onChatField: (fieldLabel: string) => void
+}) {
+  const allSidebarFields = [
+    ...DIAGNOSIS_FIELDS,
+    ...GUIDING_POLICY_FIELDS,
+  ]
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      {allSidebarFields.map(({ key, label }) => {
+        const done = fields[key]
+        const value = fieldValues[String(key)]
+        return (
+          <div key={String(key)} className={`rounded-lg p-3 border ${done ? 'border-teal-200 bg-teal-50/50' : 'border-zinc-100'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${done ? 'bg-teal-500' : 'bg-zinc-200'}`} />
+              <span className={`text-xs font-medium ${done ? 'text-zinc-800' : 'text-zinc-400'}`}>{label}</span>
+            </div>
+            {value && (
+              <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2 mb-2">{value}</p>
+            )}
+            {done && value && (
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={() => onEditField(String(key), label, value)}
+                  className="text-[11px] px-2 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                >
+                  ✏ Edit
+                </button>
+                <button
+                  onClick={() => onChatField(label)}
+                  className="text-[11px] px-2 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                >
+                  💬 Chat
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -332,6 +419,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [showMicHint, setShowMicHint] = useState(false)
   const [distanceFromBottom, setDistanceFromBottom] = useState(0)
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
+  // Commit 3 — mobile panel
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false)
+  // Commit 4 — desktop sidebar expand + field value display
+  const [sidebarExpanded, setSidebarExpanded] = useState(false)
+  const [openFields, setOpenFields] = useState<Set<string>>(new Set())
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  // Commit 6 — current fieldProposal card
+  const [currentProposal, setCurrentProposal] = useState<{
+    fieldKey: string
+    fieldLabel: string
+    proposedValue: string
+  } | null>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -341,6 +440,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const micHintInteracted = useRef(false)
   const lastSentMessageRef = useRef<string>('')
+  // Commit 3 — outer touch refs for mobile panel swipe
+  const outerTouchStartX = useRef<number>(0)
+  const outerTouchStartY = useRef<number>(0)
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
@@ -442,13 +544,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   }
 
   // ── Send message ──────────────────────────────────────────────────────────
-  const handleSend = async (isRetry = false) => {
-    const text = inputValue.trim()
-    if (!isRetry && !text && !attachedFile) return
+  // systemMessageOverride: when set, sends a silent system signal to Lex without
+  // displaying it in the chat UI (used for "Accepted: [label]" in field protocol)
+  const handleSend = async (isRetry = false, systemMessageOverride?: string) => {
+    const isSystemMessage = !!systemMessageOverride
+    const text = systemMessageOverride ?? inputValue.trim()
+    if (!isRetry && !isSystemMessage && !text && !attachedFile) return
     if (isLoading && !isRetry) return
 
     const messageText = isRetry
       ? lastSentMessageRef.current
+      : isSystemMessage
+      ? systemMessageOverride!
       : (() => {
           dismissMicHint()
           let mt = text
@@ -459,7 +566,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           return mt
         })()
 
-    if (!isRetry) {
+    if (!isRetry && !isSystemMessage) {
       setInputValue('')
       setAttachedFile(null)
       if (inputRef.current) inputRef.current.style.height = 'auto'
@@ -471,6 +578,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       }
       setMessages(prev => [...prev, userMsg])
       lastSentMessageRef.current = messageText
+    } else if (!isRetry && isSystemMessage) {
+      // System messages don't appear in chat or update lastSentMessageRef
     }
 
     setIsLoading(true)
@@ -579,6 +688,25 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (doneData.currentStage) setCurrentStage(doneData.currentStage as string)
           if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
           if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
+          // Commit 6 — handle fieldProposal for new Lex field protocol
+          if (doneData.fieldProposal) {
+            const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
+            if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
+              setCurrentProposal(fp)
+            }
+          }
+          // Commit 4 — auto-open newly completed fields in sidebar
+          if (doneData.completedFields) {
+            const cf = doneData.completedFields as Partial<FieldCompletion>
+            const newlyDone = Object.entries(cf).filter(([, v]) => v).map(([k]) => k)
+            if (newlyDone.length > 0) {
+              setOpenFields(prev => {
+                const next = new Set(prev)
+                newlyDone.forEach(k => next.add(k))
+                return next
+              })
+            }
+          }
         } else {
           // Mark streaming as done even if no doneData
           setMessages(prev => {
@@ -751,6 +879,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   // ── Proposal handlers ─────────────────────────────────────────────────────
 
   const handleProposalAccept = useCallback(async (msgIndex: number, proposalIndex: number, value: string) => {
+    const proposal = messages[msgIndex]?.proposals?.[proposalIndex]
+    if (!proposal) return
+
+    // Normalise field key for sidebar value display (e.g. 'diagnosis.text' → 'diagnosisText')
+    const normKey = proposal.fieldKey.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
+    setFieldValues(prev => ({ ...prev, [normKey]: value, [proposal.fieldKey]: value }))
+    setOpenFields(prev => { const next = new Set(prev); next.add(normKey); return next })
+
     if (!ideaId || !isSignedIn) {
       // Unauthenticated — just mark as saved locally
       setMessages(prev => prev.map((msg, mi) => {
@@ -762,9 +898,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       }))
       return
     }
-
-    const proposal = messages[msgIndex]?.proposals?.[proposalIndex]
-    if (!proposal) return
 
     try {
       const res = await fetch(`/api/ideas/${ideaId}/field-approval`, {
@@ -795,10 +928,24 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     }
   }, [ideaId, isSignedIn, messages])
 
-  const handleProposalEdit = useCallback(async (msgIndex: number, proposalIndex: number, editedValue: string) => {
-    // Same as accept but with the edited value
-    await handleProposalAccept(msgIndex, proposalIndex, editedValue)
-  }, [handleProposalAccept])
+  const handleProposalEdit = useCallback((msgIndex: number, proposalIndex: number, proposedValue: string) => {
+    // Mark proposal as discussed (hides card), copy proposed text to chat input
+    setMessages(prev => prev.map((msg, mi) => {
+      if (mi !== msgIndex) return msg
+      const proposals = msg.proposals?.map((p, pi) =>
+        pi === proposalIndex ? { ...p, status: 'discussed' as const } : p
+      )
+      return { ...msg, proposals }
+    }))
+    setInputValue(proposedValue)
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+        inputRef.current.style.height = 'auto'
+        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+      }
+    }, 0)
+  }, [])
 
   const handleProposalDiscuss = useCallback((msgIndex: number, proposalIndex: number) => {
     setMessages(prev => prev.map((msg, mi) => {
@@ -820,6 +967,57 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       }
     }
   }, [messages, handleProposalAccept])
+
+  // ── Commit 6: Accept from currentProposal (new Lex field protocol) ────────
+  const handleCurrentProposalAccept = useCallback(async (value: string) => {
+    if (!currentProposal) return
+    const { fieldKey, fieldLabel } = currentProposal
+    // Normalise key for sidebar display
+    const normKey = fieldKey.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
+    // Optimistic sidebar update
+    setFieldValues(prev => ({ ...prev, [normKey]: value, [fieldKey]: value }))
+    setOpenFields(prev => { const next = new Set(prev); next.add(normKey); return next })
+    setCurrentProposal(null)
+    // Send silent system message so Lex knows to populate the field and move on
+    await handleSend(false, `Accepted: ${fieldLabel}`)
+  }, [currentProposal, handleSend])
+
+  const handleCurrentProposalEdit = useCallback((proposedValue: string) => {
+    setCurrentProposal(null)
+    setInputValue(proposedValue)
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus()
+        inputRef.current.style.height = 'auto'
+        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+      }
+    }, 0)
+  }, [])
+
+  const handleCurrentProposalDiscuss = useCallback(() => {
+    setCurrentProposal(null)
+  }, [])
+
+  // ── Commit 3: Mobile panel swipe handlers ─────────────────────────────────
+  const PANEL_SWIPE_THRESHOLD = 80
+  const PANEL_SWIPE_RATIO = 2.0
+
+  const handleOuterTouchStart = useCallback((e: React.TouchEvent) => {
+    outerTouchStartX.current = e.touches[0].clientX
+    outerTouchStartY.current = e.touches[0].clientY
+  }, [])
+
+  const handleOuterTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - outerTouchStartX.current
+    const dy = e.changedTouches[0].clientY - outerTouchStartY.current
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+
+    if (absDx > PANEL_SWIPE_THRESHOLD && absDx > absDy * PANEL_SWIPE_RATIO) {
+      if (dx > 0 && !mobilePanelOpen) setMobilePanelOpen(true)
+      if (dx < 0 && mobilePanelOpen) setMobilePanelOpen(false)
+    }
+  }, [mobilePanelOpen])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -882,10 +1080,62 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div
+        className="flex flex-1 overflow-hidden relative"
+        onTouchStart={handleOuterTouchStart}
+        onTouchEnd={handleOuterTouchEnd}
+      >
+
+        {/* ── Mobile panel edge indicator (shown when panel is closed) ──── */}
+        {!mobilePanelOpen && (
+          <button
+            className="lg:hidden fixed right-0 top-1/2 -translate-y-1/2 w-3 h-16 bg-teal-500 rounded-l-full z-30 opacity-60 hover:opacity-90 transition-opacity"
+            onClick={() => setMobilePanelOpen(true)}
+            aria-label="Open field panel"
+          />
+        )}
+
+        {/* ── Mobile panel overlay (full-screen, lg:hidden) ─────────────── */}
+        <div
+          className={`
+            fixed inset-0 z-40 bg-background transition-transform duration-300 ease-in-out
+            lg:hidden flex flex-col
+            ${mobilePanelOpen ? 'translate-x-0' : 'translate-x-full'}
+          `}
+        >
+          <div className="flex items-center justify-between p-4 border-b shrink-0">
+            <h2 className="font-semibold text-sm">Your Idea</h2>
+            <button
+              onClick={() => setMobilePanelOpen(false)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Back to chat"
+            >
+              ← Back to chat
+            </button>
+          </div>
+          <MobileSidebarContent
+            fields={fields}
+            fieldValues={fieldValues}
+            onEditField={(fieldKey, fieldLabel, value) => {
+              setInputValue(`I want to revisit ${fieldLabel}: ${value}`)
+              setMobilePanelOpen(false)
+              setTimeout(() => {
+                if (inputRef.current) {
+                  inputRef.current.focus()
+                  inputRef.current.style.height = 'auto'
+                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+                }
+              }, 100)
+            }}
+            onChatField={(fieldLabel) => {
+              setMobilePanelOpen(false)
+              handleSend(false, `I'd like to revisit ${fieldLabel}`)
+            }}
+          />
+        </div>
 
         {/* ── Chat panel (75%) ──────────────────────────────────────────── */}
-        <div className="flex flex-col flex-1 min-w-0 relative">
+        <div className={`flex flex-col flex-1 min-w-0 relative ${mobilePanelOpen ? 'invisible lg:visible' : ''}`}>
 
           {/* Progress bar */}
           <div className="shrink-0 px-6 pt-4 pb-2">
@@ -999,6 +1249,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                     </button>
                   </SignInButton>
                 </div>
+              )}
+
+              {/* ── Commit 6: Current fieldProposal card — above input ───────── */}
+              {currentProposal && (
+                <FieldProposalCard
+                  fieldKey={currentProposal.fieldKey}
+                  fieldLabel={currentProposal.fieldLabel}
+                  proposedValue={currentProposal.proposedValue}
+                  onAccept={handleCurrentProposalAccept}
+                  onEdit={handleCurrentProposalEdit}
+                  onDiscuss={handleCurrentProposalDiscuss}
+                />
               )}
 
               {/* ── Input area — immediately below last message ──────────── */}
@@ -1143,43 +1405,89 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           )}
         </div>
 
-        {/* ── Sidebar (25%) ─────────────────────────────────────────────── */}
-        <aside className="hidden lg:flex flex-col w-72 shrink-0 border-l border-border bg-zinc-50/50 p-5 gap-1 overflow-y-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-            Your idea
-          </p>
+        {/* ── Sidebar — desktop only (lg+) ──────────────────────────────── */}
+        <aside className={`hidden lg:flex flex-col shrink-0 border-l border-border bg-zinc-50/50 overflow-y-auto transition-all duration-300 ${sidebarExpanded ? 'w-1/2' : 'w-72'}`}>
+          {/* Sidebar header with expand toggle */}
+          <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+              Your idea
+            </p>
+            <button
+              onClick={() => setSidebarExpanded(e => !e)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              title={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              {sidebarExpanded ? '⊟ Collapse' : '⊞ Expand'}
+            </button>
+          </div>
 
-          {currentStage === 'STAGE_1' ? (
-            <>
-              {SIDEBAR_FIELDS.map(({ key, label }) => {
-                const done = fields[key]
-                const active = isLoading && !done
-                return (
-                  <div key={key} className="flex items-center gap-2.5 py-1.5">
-                    <span className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
-                      done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
-                    }`}>
-                      {done && (
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+          <div className="flex-1 overflow-y-auto px-5 py-4 gap-1">
+            {currentStage === 'STAGE_1' ? (
+              <>
+                {SIDEBAR_FIELDS.map(({ key, label }) => {
+                  const done = fields[key]
+                  const active = isLoading && !done
+                  const keyStr = String(key)
+                  const isOpen = openFields.has(keyStr)
+                  const value = fieldValues[keyStr]
+                  return (
+                    <div key={keyStr} className="mb-1">
+                      <div
+                        className={`flex items-center gap-2.5 py-1.5 ${value ? 'cursor-pointer group' : ''}`}
+                        onClick={() => value && setOpenFields(prev => {
+                          const next = new Set(prev)
+                          next.has(keyStr) ? next.delete(keyStr) : next.add(keyStr)
+                          return next
+                        })}
+                      >
+                        <span className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                          done ? 'bg-green-500' : active ? 'bg-amber-400' : 'bg-zinc-200'
+                        }`}>
+                          {done && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                        <span className={`text-sm transition-colors flex-1 ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
+                          {label}
+                        </span>
+                        {value && (
+                          <span className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {isOpen ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                      {value && isOpen && (
+                        <div className="ml-6 mt-1 text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed field-accept-animation">
+                          {value.length > 200 && !sidebarExpanded ? value.substring(0, 200) + '…' : value}
+                        </div>
                       )}
-                    </span>
-                    <span className={`text-sm transition-colors ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
-                      {label}
-                    </span>
-                  </div>
-                )
-              })}
-              {completedCount > 0 && (
-                <p className="text-xs text-zinc-400 mt-4">
-                  {completedCount} of 7 fields complete
-                </p>
-              )}
-            </>
-          ) : (
-            <Stage2Sidebar fields={fields} coherentActionsCount={coherentActionsCount} isLoading={isLoading} />
-          )}
+                    </div>
+                  )
+                })}
+                {completedCount > 0 && (
+                  <p className="text-xs text-zinc-400 mt-4">
+                    {completedCount} of 7 fields complete
+                  </p>
+                )}
+              </>
+            ) : (
+              <Stage2Sidebar
+                fields={fields}
+                coherentActionsCount={coherentActionsCount}
+                isLoading={isLoading}
+                sidebarExpanded={sidebarExpanded}
+                openFields={openFields}
+                onToggleField={(key) => setOpenFields(prev => {
+                  const next = new Set(prev)
+                  next.has(key) ? next.delete(key) : next.add(key)
+                  return next
+                })}
+                fieldValues={fieldValues}
+              />
+            )}
+          </div>
         </aside>
       </div>
 

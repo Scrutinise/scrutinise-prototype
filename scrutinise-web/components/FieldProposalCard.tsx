@@ -6,17 +6,24 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-type CardState = 'pending' | 'editing' | 'saved' | 'discussed'
+type CardState = 'pending' | 'saved' | 'discussed'
 
 interface Props {
   fieldKey: string
   fieldLabel: string
   proposedValue: string
+  /** Called with the proposedValue when user accepts (swipe right or Accept button) */
   onAccept: (value: string) => void
-  onEdit: (editedValue: string) => void
+  /** Called with the proposedValue when user wants to edit (swipe left or Edit button).
+   *  Parent should copy this value into the chat input and close the card. */
+  onEdit: (proposedValue: string) => void
   onDiscuss: () => void
   autoAcceptSeconds?: number
 }
+
+// Swipe detection constants
+const SWIPE_HORIZONTAL_THRESHOLD = 50   // minimum horizontal pixels
+const SWIPE_DIRECTION_RATIO = 2.5       // horizontal must be 2.5× the vertical
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FieldProposalCard
@@ -31,10 +38,10 @@ export default function FieldProposalCard({
   autoAcceptSeconds = 30,
 }: Props) {
   const [state, setState] = useState<CardState>('pending')
-  const [editValue, setEditValue] = useState(proposedValue)
   const [countdown, setCountdown] = useState(autoAcceptSeconds)
   const [isPaused, setIsPaused] = useState(false)
   const [savedValue, setSavedValue] = useState(proposedValue)
+  const [isPulsing, setIsPulsing] = useState(false)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -50,7 +57,7 @@ export default function FieldProposalCard({
     }
   }, [])
 
-  // ── Auto-accept countdown ───────────────────────────────────────────────
+  // ── Countdown helpers ───────────────────────────────────────────────────
 
   const clearCountdown = useCallback(() => {
     if (countdownRef.current) {
@@ -59,10 +66,11 @@ export default function FieldProposalCard({
     }
   }, [])
 
-  // ── Action handlers (declared before useEffects that reference them) ────
+  // ── Accept handler ───────────────────────────────────────────────────────
 
   const handleAccept = useCallback(() => {
     clearCountdown()
+    setIsPulsing(true)
     setState('saved')
     setSavedValue(proposedValue)
     onAccept(proposedValue)
@@ -75,6 +83,22 @@ export default function FieldProposalCard({
     window.dispatchEvent(new CustomEvent('lex-field-accepted'))
   }, [clearCountdown, proposedValue, onAccept])
 
+  // ── Edit handler — copies text to chat input, dismisses card ────────────
+
+  const handleEdit = useCallback(() => {
+    clearCountdown()
+    setState('discussed')
+    onEdit(proposedValue)
+  }, [clearCountdown, proposedValue, onEdit])
+
+  // ── Discuss handler ───────────────────────────────────────────────────────
+
+  const handleDiscuss = useCallback(() => {
+    clearCountdown()
+    setState('discussed')
+    onDiscuss()
+  }, [clearCountdown, onDiscuss])
+
   // ── Auto-accept countdown ───────────────────────────────────────────────
 
   useEffect(() => {
@@ -84,9 +108,7 @@ export default function FieldProposalCard({
       setCountdown(prev => {
         if (prev <= 1) {
           clearCountdown()
-          setState('saved')
-          setSavedValue(proposedValue)
-          onAccept(proposedValue)
+          handleAccept()
           return 0
         }
         return prev - 1
@@ -94,10 +116,9 @@ export default function FieldProposalCard({
     }, 1000)
 
     return clearCountdown
-  }, [state, isPaused, proposedValue, onAccept, clearCountdown])
+  }, [state, isPaused, handleAccept, clearCountdown])
 
-  // ── Global keyboard shortcut — Enter accepts, Escape edits ─────────────
-  // Only fires when no textarea/input is focused (i.e. no card is mid-edit)
+  // ── Global keyboard shortcut — Enter accepts, Escape edits ──────────────
 
   useEffect(() => {
     if (state !== 'pending') return
@@ -110,16 +131,15 @@ export default function FieldProposalCard({
         e.preventDefault()
         handleAccept()
       } else if (e.key === 'Escape') {
-        clearCountdown()
-        setState('editing')
+        handleEdit()
       }
     }
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [state, handleAccept, clearCountdown])
+  }, [state, handleAccept, handleEdit])
 
-  // ── Keyboard shortcuts (when card div is focused) ────────────────────────
+  // ── Card keyboard shortcuts ──────────────────────────────────────────────
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (state !== 'pending') return
@@ -128,15 +148,14 @@ export default function FieldProposalCard({
       handleAccept()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      clearCountdown()
-      setState('editing')
+      handleEdit()
     } else if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault()
       handleDiscuss()
     }
   }
 
-  // ── Touch / swipe ───────────────────────────────────────────────────────
+  // ── Touch / swipe — improved threshold to avoid scroll conflicts ─────────
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -148,40 +167,22 @@ export default function FieldProposalCard({
     if (state !== 'pending') return
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = e.changedTouches[0].clientY - touchStartY.current
-    const isHorizontal = Math.abs(dx) > Math.abs(dy)
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
 
-    if (isHorizontal && Math.abs(dx) >= 80) {
+    // Only register as a swipe if horizontal movement dominates
+    if (absDx > SWIPE_HORIZONTAL_THRESHOLD && absDx > absDy * SWIPE_DIRECTION_RATIO) {
       if (dx > 0) {
         // Swipe right → Accept
         handleAccept()
       } else {
-        // Swipe left → Edit
-        clearCountdown()
-        setState('editing')
+        // Swipe left → Edit (copy to input)
+        handleEdit()
       }
     } else {
-      // Not a swipe — resume countdown
+      // Not a directional swipe — resume countdown
       setIsPaused(false)
     }
-  }
-
-  const handleSaveEdit = () => {
-    clearCountdown()
-    setState('saved')
-    setSavedValue(editValue)
-    onEdit(editValue)
-  }
-
-  const handleDiscuss = () => {
-    clearCountdown()
-    setState('discussed')
-    onDiscuss()
-  }
-
-  const handleCancelEdit = () => {
-    setState('pending')
-    setEditValue(proposedValue)
-    setCountdown(autoAcceptSeconds)
   }
 
   // ── Saved state ─────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ export default function FieldProposalCard({
   if (state === 'saved') {
     return (
       <div
-        className="flex items-center gap-2 py-1.5 px-3 my-1 rounded-lg text-xs"
+        className={`flex items-center gap-2 py-1.5 px-3 my-1 rounded-lg text-xs ${isPulsing ? 'proposal-pulse-animation' : ''}`}
         style={{ backgroundColor: '#f0fafa', borderLeft: '2px solid #2da8a8' }}
       >
         <span
@@ -214,43 +215,7 @@ export default function FieldProposalCard({
     return null
   }
 
-  // ── Editing state ───────────────────────────────────────────────────────
-
-  if (state === 'editing') {
-    return (
-      <div
-        className="rounded-xl border-l-[3px] bg-[#f0fafa] border-[#2da8a8] p-4 my-3"
-        style={{ borderLeftColor: '#2da8a8', backgroundColor: '#f0fafa' }}
-      >
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">
-          {fieldLabel}
-        </p>
-        <textarea
-          value={editValue}
-          onChange={e => setEditValue(e.target.value)}
-          rows={3}
-          className="w-full text-sm text-zinc-800 bg-white border border-zinc-200 rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#2da8a8]/40"
-          autoFocus
-        />
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={handleSaveEdit}
-            className="px-4 py-2 text-sm font-medium bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
-          >
-            Save edit
-          </button>
-          <button
-            onClick={handleCancelEdit}
-            className="px-4 py-2 text-sm font-medium text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Pending state (default) ─────────────────────────────────────────────
+  // ── Pending state ───────────────────────────────────────────────────────
 
   return (
     <div
@@ -263,42 +228,43 @@ export default function FieldProposalCard({
       onMouseLeave={() => { if (state === 'pending') setIsPaused(false) }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="rounded-xl border-l-[3px] bg-[#f0fafa] p-4 my-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2da8a8]/50 cursor-default select-none"
-      style={{ borderLeftColor: '#2da8a8', backgroundColor: '#f0fafa' }}
+      className="rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-950/30 p-4 my-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 cursor-default select-none"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">
-        {fieldLabel}
+      <p className="text-sm font-medium text-teal-800 dark:text-teal-200 mb-1">
+        Proposed answer:
       </p>
-      <p className="text-sm text-zinc-800 leading-relaxed">
+      <p className="text-sm text-gray-800 dark:text-gray-200 mb-3 leading-relaxed">
         {proposedValue}
       </p>
-      <div className="flex items-center gap-2 mt-3 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={handleEdit}
+          className="text-xs px-3 py-1.5 rounded border border-teal-400 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+        >
+          Edit
+        </button>
+        <span className="text-xs text-muted-foreground hidden sm:inline">or swipe left</span>
         <button
           onClick={handleAccept}
-          className="px-4 py-2 text-sm font-medium bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+          className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors"
         >
-          ✓ Accept
+          Accept
         </button>
-        <button
-          onClick={() => { clearCountdown(); setState('editing') }}
-          className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-        >
-          ✎ Edit
-        </button>
+        <span className="text-xs text-muted-foreground hidden sm:inline">or swipe right</span>
         <button
           onClick={handleDiscuss}
-          className="px-4 py-2 text-sm font-medium text-zinc-500 rounded-lg hover:bg-zinc-100 transition-colors"
+          className="text-xs text-zinc-500 hover:text-zinc-700 ml-auto transition-colors"
         >
-          ↩ Discuss
+          Discuss instead
         </button>
         {!isPaused && countdown < autoAcceptSeconds && (
-          <span className="text-xs text-zinc-400 ml-auto">
+          <span className="text-xs text-zinc-400">
             Auto-saving in {countdown}s
           </span>
         )}
       </div>
       {showSwipeHint && (
-        <p className="lg:hidden mt-2 text-xs text-zinc-400 text-center select-none">
+        <p className="lg:hidden mt-2 text-xs text-teal-600 text-center select-none">
           ← Swipe to edit&nbsp;&nbsp;|&nbsp;&nbsp;Swipe to accept →
         </p>
       )}
