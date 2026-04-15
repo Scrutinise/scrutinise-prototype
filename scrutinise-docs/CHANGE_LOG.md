@@ -2,7 +2,81 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 13 April 2026*
+*Last updated: 15 April 2026*
+
+---
+
+## CODE CHANGES — 15 April 2026 Sprint V2-C
+
+### V2C-admin-nav: Admin nav link visible to ADMIN/SUPER_ADMIN
+| File | Change |
+|------|--------|
+| `app/api/user/role/route.ts` | NEW — `GET /api/user/role` returns `{ role }` from DB for the current Clerk session. |
+| `components/PublicNav.tsx` | Added `useEffect` to fetch `/api/user/role` when signed in. `isAdmin` computed from `dbRole`. Admin link rendered in desktop and mobile nav when `isAdmin` is true. Added Legislation link to both nav variants. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2C-leg-compare: Legislation evaluator at /legislation-compare
+| File | Change |
+|------|--------|
+| `app/api/legislation/fetch/route.ts` | NEW — server-side CORS proxy for legislation.gov.uk CLML XML. Accepts `type`, `year`, `chapter`, `section`, `version` params. Caches 24h. |
+| `app/legislation-compare/page.tsx` | NEW — Server Component wrapper with metadata. |
+| `app/legislation-compare/LegislationCompareClient.tsx` | NEW — Full interactive evaluator. 20 test sections, 6 models, Jaccard similarity scoring, per-section gold/AI comparison, leaderboard. API keys entered client-side only, never sent to server. |
+| `middleware.ts` | Added `/legislation-compare`, `/api/legislation/fetch`, `/legislation`, `/api/legislation/search`, `/api/legislation/(.*)` to public routes. |
+
+**Deploy actions needed:** None. Page is public.
+
+---
+
+### V2C-leg-schema: Legislation DB schema
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added enums: `LegislationTier`, `LegislationType`, `CompilationConfidence`, `CompilationStatus`, `CorrectionStatus`, `CorrectionDecision`. Added models: `LegislationItem`, `LegislationSection`, `LegislationAmendment`, `IdeaLegislation`, `LegislationCorrection`. Added `legislationLinks` relation to `Idea`. Added `legislationCorrections` relation to `User`. Added `@@unique([legislationItemId, sectionNumber])` on `LegislationSection`. |
+
+**Deploy actions needed:** `npx prisma db push` + `npx prisma generate` ✓ done.
+
+---
+
+### V2C-leg-ingest: Legislation ingestion script
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | NEW — Fetches Tier 1 (post-2010 UKPGA) Act list from legislation.gov.uk Atom feed. Parses CLML P1group elements into sections. Upserts `LegislationItem` and `LegislationSection` records. Rate-limited. Run: `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts` |
+
+**Deploy actions needed:** Manual — run after deploy. Start with `slice(0, 5)` to test.
+
+---
+
+### V2C-leg-compile: Legislation compilation script
+| File | Change |
+|------|--------|
+| `scripts/legislation/compile.ts` | NEW — AI batch compiler using Gemini 2.5 Flash. Picks up `PENDING` sections in batches of 50. Applies amendments chronologically. Stores `compiledText`, `confidence`, `unappliedAmendments`. Sections with `LOW` confidence flagged `NEEDS_REVIEW`. Run: `GEMINI_API_KEY=xxx npx ts-node scripts/legislation/compile.ts` |
+
+**Deploy actions needed:** Manual — run after ingestion.
+
+---
+
+### V2C-leg-api: Legislation API routes
+| File | Change |
+|------|--------|
+| `app/api/legislation/search/route.ts` | NEW — `GET /api/legislation/search` — public, filterable by q/type/year/jurisdiction, paginated (20/page). |
+| `app/api/legislation/[itemId]/route.ts` | NEW — `GET /api/legislation/[itemId]` — public, returns full item with compiled sections and amendments. |
+| `app/api/legislation/link/route.ts` | NEW — `POST /api/legislation/link` — auth required, upserts `IdeaLegislation` link with linkType (target/relevant/precedent). |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2C-leg-ui: Legislation search and browse UI
+| File | Change |
+|------|--------|
+| `app/legislation/page.tsx` | NEW — Server Component wrapper with metadata. |
+| `app/legislation/LegislationBrowseClient.tsx` | NEW — Browse/search page with debounced search, type/jurisdiction filters, paginated results list. |
+| `app/legislation/[itemId]/page.tsx` | NEW — Server Component, fetches full item from DB, passes to client. |
+| `app/legislation/[itemId]/LegislationItemClient.tsx` | NEW — Section list with expand/collapse. Provenance banner on every section (TNA source link, amendment count, confidence badge, suggest correction). Correction submission form (auth-gated — redirects to sign-in if not signed in). |
+
+**Deploy actions needed:** None. Initially empty pending ingestion + compilation.
 
 ---
 

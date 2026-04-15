@@ -1,6 +1,41 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 13 April 2026 v23*
+*Last updated: 15 April 2026 v24*
+
+***
+
+## CURRENT STATE — SPRINT V2-C COMPLETE ✅
+
+Eight commits to Main. All `tsc --noEmit` clean. Ready to push.
+
+### V2C commit summary
+
+1. **V2C-admin-nav** — Admin link in `PublicNav` visible only to `ADMIN`/`SUPER_ADMIN` DB roles. New `/api/user/role` endpoint. Legislation link also added to nav.
+2. **V2C-leg-compare** — Public page at `/legislation-compare`. Server-side CORS proxy for legislation.gov.uk at `/api/legislation/fetch`. Full interactive evaluator: 20 test sections, 6 models, Jaccard similarity scoring, leaderboard, per-section gold/AI diff. API keys client-side only.
+3. **V2C-leg-schema** — 6 new enums + 5 new models: `LegislationItem`, `LegislationSection`, `LegislationAmendment`, `IdeaLegislation`, `LegislationCorrection`. Relations added to `Idea` and `User`. `@@unique([legislationItemId, sectionNumber])` on sections. `npx prisma db push` ✓ `npx prisma generate` ✓
+4. **V2C-leg-ingest** — `scripts/legislation/ingest.ts` — Tier 1 Acts from legislation.gov.uk Atom feed, CLML parsing, DB upsert. Rate-limited.
+5. **V2C-leg-compile** — `scripts/legislation/compile.ts` — Gemini 2.5 Flash batch compiler. 50 sections/run. Confidence scoring. `NEEDS_REVIEW` flagging.
+6. **V2C-leg-api** — Three API routes: `GET /api/legislation/search` (public, paginated), `GET /api/legislation/[itemId]` (public, with sections), `POST /api/legislation/link` (auth required, links legislation to idea).
+7. **V2C-leg-ui** — `/legislation` browse page (debounced search, filters, paginated results) and `/legislation/[itemId]` section detail page (provenance banners, amendment history, confidence badges, correction submission form).
+8. **V2C-docs** — CHANGE_LOG updated, handoff v24.
+
+### Schema additions confirmed
+- Enums: `LegislationTier` (4), `LegislationType` (10), `CompilationConfidence` (3), `CompilationStatus` (5), `CorrectionStatus` (5), `CorrectionDecision` (3)
+- Models: `LegislationItem`, `LegislationSection`, `LegislationAmendment`, `IdeaLegislation`, `LegislationCorrection`
+- Relations added: `Idea.legislationLinks`, `User.legislationCorrections`
+
+### Scripts ready to run — not yet executed against production
+- Ingest: `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts` (start with `slice(0,5)`)
+- Compile: `GEMINI_API_KEY=xxx npx ts-node scripts/legislation/compile.ts`
+
+### Note on R2 bucket
+The ingestion script references `r2Key` field on `LegislationItem` for storing raw CLML in Cloudflare R2 bucket `scrutinise-legislation`. This bucket needs to be created in Cloudflare by Charlie before the ingestion script can store files there. DB records are created regardless — `r2Key` can be null in Phase 1.
+
+### Next: run ingestion script against Tier 1 Acts (Charlie to initiate)
+1. Create `scrutinise-legislation` R2 bucket in Cloudflare dashboard (optional Phase 1)
+2. Run ingestion: `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts`
+3. Run compilation: `GEMINI_API_KEY=xxx npx ts-node scripts/legislation/compile.ts`
+4. Check admin panel for any `NEEDS_REVIEW` sections
 
 ***
 
