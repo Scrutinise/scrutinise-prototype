@@ -487,7 +487,7 @@ const STAGE_LABELS: Record<string, string> = {
 // Streaming Gemini call
 async function* callGeminiStream(systemPrompt: string, userMessage: string, history: Array<{role: string; content: string}>) {
   const apiKey = process.env.GEMINI_API_KEY!
-  const model = 'gemini-2.5-flash-preview-04-17'
+  const model = 'gemini-2.5-flash'
 
   const contents = [
     ...history.map(m => ({
@@ -724,6 +724,9 @@ export async function POST(req: Request, { params }: Params) {
     }
     console.log('[V2D-DEBUG] fullText length:', fullText.length)
     console.log('[V2D-DEBUG] jsonStr found:', !!jsonStr)
+    if (!jsonStr) {
+      console.log('[V2D-DEBUG] fullText sample (no JSON found):', fullText.substring(0, 500))
+    }
     if (jsonStr) {
       try {
         const parsedJson = JSON.parse(jsonStr)

@@ -19,7 +19,7 @@ const BodySchema = z.object({
   force: z.boolean().optional().default(false),
 })
 
-const MODEL_ID = 'gemini-2.5-flash-preview-04-17'
+const MODEL_ID = 'gemini-2.5-flash'
 const MAX_OUTPUT_TOKENS = 4000
 
 function selectPrompt(
