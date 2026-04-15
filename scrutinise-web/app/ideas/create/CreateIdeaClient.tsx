@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, Dispatch, SetStateAction } from 'react'
 import { useUser, SignInButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -132,7 +132,11 @@ function Stage2Sidebar({
   openFields,
   onToggleField,
   fieldValues,
-  onEditField,
+  setFieldValues,
+  editingField,
+  setEditingField,
+  ideaId,
+  onChatAboutField,
 }: {
   fields: FieldCompletion
   coherentActionsCount: number
@@ -141,23 +145,33 @@ function Stage2Sidebar({
   openFields: Set<string>
   onToggleField: (key: string) => void
   fieldValues: Record<string, string>
-  onEditField: (label: string, value: string) => void
+  setFieldValues: Dispatch<SetStateAction<Record<string, string>>>
+  editingField: { key: string; label: string; value: string } | null
+  setEditingField: (field: { key: string; label: string; value: string } | null) => void
+  ideaId: string | null
+  onChatAboutField: (label: string) => void
 }) {
-  const [showDiagnosis, setShowDiagnosis] = useState(false)
-  const [showGuidingPolicy, setShowGuidingPolicy] = useState(false)
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set())
 
-  const diagnosisFieldsDone = DIAGNOSIS_FIELDS.filter(f => fields[f.key]).length
-  const diagnosisTotal = DIAGNOSIS_FIELDS.length
-  const diagnosisComplete = diagnosisFieldsDone === diagnosisTotal
+  const toggleSection = (sectionKey: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      next.has(sectionKey) ? next.delete(sectionKey) : next.add(sectionKey)
+      return next
+    })
+  }
 
-  const guidingPolicyFieldsDone = GUIDING_POLICY_FIELDS.filter(f => fields[f.key]).length
-  const guidingPolicyTotal = GUIDING_POLICY_FIELDS.length
-  const guidingPolicyComplete = guidingPolicyFieldsDone === guidingPolicyTotal
+  // Active section driven by fieldValues (DB content), not boolean flags
+  const activeSection = (() => {
+    const diagComplete = !!(fieldValues['diagnosisTitle'] && fieldValues['diagnosisDescription'])
+    if (!diagComplete) return 'diagnosis'
+    const gpComplete = !!(fieldValues['guidingPolicyTitle'] && fieldValues['guidingPolicyDescription'])
+    if (!gpComplete) return 'guidingPolicy'
+    return 'coherentActions'
+  })()
 
-  // Determine active section
-  let activeSection: SidebarSection = 'diagnosis'
-  if (diagnosisComplete && !guidingPolicyComplete) activeSection = 'guidingPolicy'
-  if (diagnosisComplete && guidingPolicyComplete) activeSection = 'coherentActions'
+  const diagHasContent = !!fieldValues['diagnosisTitle']
+  const gpHasContent = !!fieldValues['guidingPolicyTitle']
 
   function renderFieldRow(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
@@ -165,6 +179,7 @@ function Stage2Sidebar({
     const keyStr = String(key)
     const isOpen = openFields.has(keyStr)
     const value = fieldValues[keyStr]
+    const isEditing = editingField?.key === keyStr
 
     return (
       <div key={keyStr} className="mb-1">
@@ -186,130 +201,158 @@ function Stage2Sidebar({
             </span>
           )}
         </div>
-        {value && isOpen && (
+        {isEditing ? (
           <div className="mt-1 ml-5">
-            <div className="text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed mb-2 field-accept-animation">
-              {value.length > 300 && !sidebarExpanded
-                ? value.substring(0, 300) + '…'
-                : value
-              }
+            <textarea
+              defaultValue={value}
+              className="w-full text-xs p-2 rounded border border-border bg-background resize-none"
+              rows={4}
+              ref={el => el?.focus()}
+              onKeyDown={e => { if (e.key === 'Escape') setEditingField(null) }}
+              id={`edit-${keyStr}`}
+            />
+            <div className="flex gap-2 mt-1">
+              <button
+                onClick={async () => {
+                  const el = document.getElementById(`edit-${keyStr}`) as HTMLTextAreaElement
+                  if (!el || !ideaId) return
+                  const newValue = el.value.trim()
+                  if (!newValue) return
+                  await fetch(`/api/ideas/${ideaId}/field-approval`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fieldKey: editingField!.key, value: newValue }),
+                  })
+                  setFieldValues(prev => ({ ...prev, [keyStr]: newValue }))
+                  setEditingField(null)
+                }}
+                className="text-xs px-2 py-1 rounded bg-foreground text-background hover:opacity-90"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingField(null)}
+                className="text-xs px-2 py-1 rounded border border-border text-muted-foreground"
+              >
+                Cancel
+              </button>
             </div>
-            <button
-              onClick={() => onEditField(label, value)}
-              className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-            >
-              ✏ Edit with Lex
-            </button>
           </div>
+        ) : (
+          value && isOpen && (
+            <div className="mt-1 ml-5">
+              <div className="relative text-xs text-foreground bg-muted/40 rounded p-2 pr-14 leading-relaxed mb-1 field-accept-animation">
+                {value.length > 300 && !sidebarExpanded
+                  ? value.substring(0, 300) + '…'
+                  : value
+                }
+                <div className="absolute bottom-1.5 right-1.5 flex gap-1">
+                  <button
+                    onClick={e => { e.stopPropagation(); setEditingField({ key: keyStr, label, value }) }}
+                    className="p-1 rounded hover:bg-muted transition-colors"
+                    title="Edit directly"
+                  >
+                    <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); onChatAboutField(label) }}
+                    className="p-1 rounded hover:bg-muted transition-colors"
+                    title="Discuss with Lex"
+                  >
+                    <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
         )}
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
-      {/* Section headings from SIDEBAR_SECTIONS */}
-      {SIDEBAR_SECTIONS.map(section => {
-        if (section.key === 'diagnosis') {
-          if (diagnosisComplete) {
-            return (
-              <div key="diagnosis">
-                <button
-                  onClick={() => setShowDiagnosis(v => !v)}
-                  className="flex w-full items-center gap-2 py-1.5 text-left"
-                >
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                    <CheckIcon />
-                  </span>
-                  <span className="text-sm font-medium text-zinc-900 flex-1">
-                    {section.label.split(' — ')[0]} ({diagnosisFieldsDone}/{diagnosisTotal})
-                  </span>
-                  <span className="text-[10px] text-zinc-400">{showDiagnosis ? 'hide' : 'show'}</span>
-                </button>
-                {showDiagnosis && (
-                  <div className="pl-6">
-                    {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-                  </div>
-                )}
-              </div>
-            )
-          }
-          if (activeSection === 'diagnosis') {
-            return (
-              <div key="diagnosis">
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
-                {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-              </div>
-            )
-          }
-          return (
-            <p key="diagnosis" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
-          )
-        }
+    <div className="space-y-1">
+      {/* Section: Diagnosis — The Challenge */}
+      <div>
+        <div
+          className={`flex items-center gap-2 py-2 rounded ${activeSection !== 'diagnosis' && diagHasContent ? 'cursor-pointer hover:bg-zinc-100/60' : ''}`}
+          onClick={() => activeSection !== 'diagnosis' && diagHasContent && toggleSection('diagnosis')}
+        >
+          <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+            activeSection === 'diagnosis' ? 'bg-blue-500' :
+            diagHasContent ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            activeSection === 'diagnosis' ? 'text-foreground' :
+            diagHasContent ? 'text-zinc-700' : 'text-muted-foreground/50'
+          }`}>
+            Diagnosis — The Challenge
+          </span>
+          {activeSection !== 'diagnosis' && diagHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('diagnosis') ? '▲' : '▼'}</span>
+          )}
+        </div>
+        {(activeSection === 'diagnosis' || openSections.has('diagnosis')) && (
+          <div className="ml-2 space-y-0.5">
+            {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
+          </div>
+        )}
+      </div>
 
-        if (section.key === 'guidingPolicy') {
-          if (!diagnosisComplete && activeSection !== 'guidingPolicy') {
-            return (
-              <p key="guidingPolicy" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
-            )
-          }
-          if (guidingPolicyComplete) {
-            return (
-              <div key="guidingPolicy">
-                <button
-                  onClick={() => setShowGuidingPolicy(v => !v)}
-                  className="flex w-full items-center gap-2 py-1.5 text-left"
-                >
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                    <CheckIcon />
-                  </span>
-                  <span className="text-sm font-medium text-zinc-900 flex-1">
-                    {section.label.split(' — ')[0]} ({guidingPolicyFieldsDone}/{guidingPolicyTotal})
-                  </span>
-                  <span className="text-[10px] text-zinc-400">{showGuidingPolicy ? 'hide' : 'show'}</span>
-                </button>
-                {showGuidingPolicy && (
-                  <div className="pl-6">
-                    {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-                  </div>
-                )}
-              </div>
-            )
-          }
-          if (activeSection === 'guidingPolicy') {
-            return (
-              <div key="guidingPolicy">
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
-                {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
-              </div>
-            )
-          }
-          return (
-            <p key="guidingPolicy" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
-          )
-        }
+      {/* Section: Guiding Policy — Your Approach */}
+      <div>
+        <div
+          className={`flex items-center gap-2 py-2 rounded ${activeSection !== 'guidingPolicy' && gpHasContent ? 'cursor-pointer hover:bg-zinc-100/60' : ''}`}
+          onClick={() => activeSection !== 'guidingPolicy' && gpHasContent && toggleSection('guidingPolicy')}
+        >
+          <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+            activeSection === 'guidingPolicy' ? 'bg-blue-500' :
+            gpHasContent ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            activeSection === 'guidingPolicy' ? 'text-foreground' :
+            gpHasContent ? 'text-zinc-700' :
+            activeSection === 'diagnosis' ? 'text-muted-foreground/30' : 'text-muted-foreground/50'
+          }`}>
+            Guiding Policy — Your Approach
+          </span>
+          {activeSection !== 'guidingPolicy' && gpHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('guidingPolicy') ? '▲' : '▼'}</span>
+          )}
+        </div>
+        {(activeSection === 'guidingPolicy' || openSections.has('guidingPolicy')) && (
+          <div className="ml-2 space-y-0.5">
+            {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldRow(key, label))}
+          </div>
+        )}
+      </div>
 
-        if (section.key === 'coherentActions') {
-          if (!diagnosisComplete) return null
-          if (activeSection === 'coherentActions') {
-            return (
-              <div key="coherentActions">
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">{section.label.split(' — ')[0]}</p>
-                <p className="text-xs text-zinc-500">
-                  {coherentActionsCount > 0
-                    ? `${coherentActionsCount} action${coherentActionsCount === 1 ? '' : 's'} added`
-                    : 'No actions yet'}
-                </p>
-              </div>
-            )
-          }
-          return (
-            <p key="coherentActions" className="text-xs text-zinc-400 py-1">{section.label.split(' — ')[0]}</p>
-          )
-        }
-
-        return null
-      })}
+      {/* Section: Coherent Actions — What Is to Be Changed */}
+      <div>
+        <div className="flex items-center gap-2 py-2">
+          <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+            activeSection === 'coherentActions' ? 'bg-blue-500' :
+            coherentActionsCount > 0 ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            activeSection === 'coherentActions' ? 'text-foreground' :
+            coherentActionsCount > 0 ? 'text-zinc-700' : 'text-muted-foreground/30'
+          }`}>
+            Coherent Actions — What Is to Be Changed
+          </span>
+        </div>
+        {activeSection === 'coherentActions' && (
+          <div className="ml-4 text-xs text-zinc-500 pb-1">
+            {coherentActionsCount > 0
+              ? `${coherentActionsCount} action${coherentActionsCount === 1 ? '' : 's'} added`
+              : 'No actions yet — Lex will help develop these next'}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -349,52 +392,192 @@ const ACCEPTED_FILE_TYPES = '.pdf,.doc,.docx'
 function MobileSidebarContent({
   fields,
   fieldValues,
-  onEditField,
-  onChatField,
+  setFieldValues,
+  ideaId,
+  onChatAboutField,
 }: {
   fields: FieldCompletion
   fieldValues: Record<string, string>
-  onEditField: (fieldKey: string, fieldLabel: string, value: string) => void
-  onChatField: (fieldLabel: string) => void
+  setFieldValues: Dispatch<SetStateAction<Record<string, string>>>
+  ideaId: string | null
+  onChatAboutField: (label: string) => void
 }) {
-  const allSidebarFields = [
-    ...DIAGNOSIS_FIELDS,
-    ...GUIDING_POLICY_FIELDS,
-  ]
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set())
+  const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
 
-  return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-      {allSidebarFields.map(({ key, label }) => {
-        const done = fields[key]
-        const value = fieldValues[String(key)]
-        return (
-          <div key={String(key)} className={`rounded-lg p-3 border ${done ? 'border-teal-200 bg-teal-50/50' : 'border-zinc-100'}`}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${done ? 'bg-teal-500' : 'bg-zinc-200'}`} />
-              <span className={`text-xs font-medium ${done ? 'text-zinc-800' : 'text-zinc-400'}`}>{label}</span>
+  const toggleSection = (sectionKey: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      next.has(sectionKey) ? next.delete(sectionKey) : next.add(sectionKey)
+      return next
+    })
+  }
+
+  const activeSection = (() => {
+    const diagComplete = !!(fieldValues['diagnosisTitle'] && fieldValues['diagnosisDescription'])
+    if (!diagComplete) return 'diagnosis'
+    const gpComplete = !!(fieldValues['guidingPolicyTitle'] && fieldValues['guidingPolicyDescription'])
+    if (!gpComplete) return 'guidingPolicy'
+    return 'coherentActions'
+  })()
+
+  const diagHasContent = !!fieldValues['diagnosisTitle']
+  const gpHasContent = !!fieldValues['guidingPolicyTitle']
+
+  function renderFieldCard(key: keyof FieldCompletion, label: string) {
+    const done = fields[key]
+    const keyStr = String(key)
+    const value = fieldValues[keyStr]
+    const isEditing = editingField?.key === keyStr
+
+    return (
+      <div key={keyStr} className={`rounded-lg p-3 border ${done ? 'border-teal-200 bg-teal-50/50' : 'border-zinc-100'}`}>
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${done ? 'bg-teal-500' : 'bg-zinc-200'}`} />
+          <span className={`text-xs font-medium ${done ? 'text-zinc-800' : 'text-zinc-400'}`}>{label}</span>
+        </div>
+        {isEditing ? (
+          <>
+            <textarea
+              defaultValue={value}
+              className="w-full text-xs p-2 rounded border border-border bg-background resize-none mt-1"
+              rows={4}
+              ref={el => el?.focus()}
+              onKeyDown={e => { if (e.key === 'Escape') setEditingField(null) }}
+              id={`mobile-edit-${keyStr}`}
+            />
+            <div className="flex gap-2 mt-1">
+              <button
+                onClick={async () => {
+                  const el = document.getElementById(`mobile-edit-${keyStr}`) as HTMLTextAreaElement
+                  if (!el || !ideaId) return
+                  const newValue = el.value.trim()
+                  if (!newValue) return
+                  await fetch(`/api/ideas/${ideaId}/field-approval`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fieldKey: editingField!.key, value: newValue }),
+                  })
+                  setFieldValues(prev => ({ ...prev, [keyStr]: newValue }))
+                  setEditingField(null)
+                }}
+                className="text-xs px-2 py-1 rounded bg-foreground text-background hover:opacity-90"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingField(null)}
+                className="text-xs px-2 py-1 rounded border border-border text-muted-foreground"
+              >
+                Cancel
+              </button>
             </div>
+          </>
+        ) : (
+          <>
             {value && (
-              <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2 mb-2">{value}</p>
+              <p className="text-xs text-zinc-600 leading-relaxed line-clamp-3 mt-1 mb-2">{value}</p>
             )}
             {done && value && (
-              <div className="flex gap-2 mt-1">
+              <div className="flex gap-1.5 mt-1">
                 <button
-                  onClick={() => onEditField(String(key), label, value)}
-                  className="text-[11px] px-2 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                  onClick={() => setEditingField({ key: keyStr, label, value })}
+                  className="p-1.5 rounded border border-zinc-200 text-zinc-500 hover:bg-zinc-100 transition-colors"
+                  title="Edit directly"
                 >
-                  ✏ Edit
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
                 </button>
                 <button
-                  onClick={() => onChatField(label)}
-                  className="text-[11px] px-2 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                  onClick={() => onChatAboutField(label)}
+                  className="p-1.5 rounded border border-zinc-200 text-zinc-500 hover:bg-zinc-100 transition-colors"
+                  title="Discuss with Lex"
                 >
-                  💬 Chat
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
                 </button>
               </div>
             )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+      {/* Section: Diagnosis — The Challenge */}
+      <div>
+        <div
+          className={`flex items-center gap-2 py-1.5 mb-2 ${activeSection !== 'diagnosis' && diagHasContent ? 'cursor-pointer' : ''}`}
+          onClick={() => activeSection !== 'diagnosis' && diagHasContent && toggleSection('diagnosis')}
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            activeSection === 'diagnosis' ? 'bg-blue-500' :
+            diagHasContent ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            activeSection === 'diagnosis' ? 'text-foreground' :
+            diagHasContent ? 'text-zinc-700' : 'text-muted-foreground/40'
+          }`}>
+            Diagnosis — The Challenge
+          </span>
+          {activeSection !== 'diagnosis' && diagHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('diagnosis') ? '▲' : '▼'}</span>
+          )}
+        </div>
+        {(activeSection === 'diagnosis' || openSections.has('diagnosis')) && (
+          <div className="space-y-2">
+            {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldCard(key, label))}
           </div>
-        )
-      })}
+        )}
+      </div>
+
+      {/* Section: Guiding Policy — Your Approach */}
+      <div>
+        <div
+          className={`flex items-center gap-2 py-1.5 mb-2 ${activeSection !== 'guidingPolicy' && gpHasContent ? 'cursor-pointer' : ''}`}
+          onClick={() => activeSection !== 'guidingPolicy' && gpHasContent && toggleSection('guidingPolicy')}
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            activeSection === 'guidingPolicy' ? 'bg-blue-500' :
+            gpHasContent ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            activeSection === 'guidingPolicy' ? 'text-foreground' :
+            gpHasContent ? 'text-zinc-700' :
+            activeSection === 'diagnosis' ? 'text-muted-foreground/30' : 'text-muted-foreground/50'
+          }`}>
+            Guiding Policy — Your Approach
+          </span>
+          {activeSection !== 'guidingPolicy' && gpHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('guidingPolicy') ? '▲' : '▼'}</span>
+          )}
+        </div>
+        {(activeSection === 'guidingPolicy' || openSections.has('guidingPolicy')) && (
+          <div className="space-y-2">
+            {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldCard(key, label))}
+          </div>
+        )}
+      </div>
+
+      {/* Section: Coherent Actions — What Is to Be Changed */}
+      <div>
+        <div className="flex items-center gap-2 py-1.5 mb-2">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            activeSection === 'coherentActions' ? 'bg-blue-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide ${
+            activeSection === 'coherentActions' ? 'text-foreground' : 'text-muted-foreground/30'
+          }`}>
+            Coherent Actions — What Is to Be Changed
+          </span>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -441,6 +624,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     fieldLabel: string
     proposedValue: string
   } | null>(null)
+  // Inline field editing (direct edit without Lex)
+  const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -450,9 +635,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const micHintInteracted = useRef(false)
   const lastSentMessageRef = useRef<string>('')
-  // Commit 3 — outer touch refs for mobile panel swipe
-  const outerTouchStartX = useRef<number>(0)
-  const outerTouchStartY = useRef<number>(0)
+  // Panel swipe-to-close (inside panel only — swipe-to-open removed)
+  const panelTouchStartX = useRef<number>(0)
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
@@ -469,29 +653,43 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (ideaData.guidingPolicy) vals['guidingPolicy'] = ideaData.guidingPolicy
     if (ideaData.rootCause) vals['rootCause'] = ideaData.rootCause
 
-    // Diagnosis entity fields
+    // Diagnosis entity fields — keyed to match FieldCompletion and DIAGNOSIS_FIELDS
     const diag = ideaData.diagnoses?.[0]
     if (diag) {
+      // Store diagnosisTitle/Description for activeSection detection
       if (diag.diagnosisTitle) vals['diagnosisTitle'] = diag.diagnosisTitle
       if (diag.diagnosisDescription) vals['diagnosisDescription'] = diag.diagnosisDescription
-      if (diag.obstacleDefined) vals['obstacleDefined'] = diag.obstacleDefined
-      if (diag.whoAffected) vals['whoAffected'] = diag.whoAffected
-      if (diag.howAffected) vals['howAffected'] = diag.howAffected
-      if (diag.whyPersisted) vals['whyPersisted'] = diag.whyPersisted
-      if (diag.impactDescription) vals['impactDescription'] = diag.impactDescription
-      if (diag.impactCost) vals['impactCost'] = diag.impactCost
+      // Store under FieldCompletion keys so renderFieldRow can find them
+      if (diag.text) vals['diagnosisText'] = diag.text
+      if (diag.obstacleDefined) vals['diagnosisObstacleDefined'] = diag.obstacleDefined
+      if (diag.whoAffected) vals['diagnosisWhoAffected'] = diag.whoAffected
+      if (diag.howAffected) vals['diagnosisHowAffected'] = diag.howAffected
+      if (diag.whyPersisted) vals['diagnosisWhyPersisted'] = diag.whyPersisted
+      if (diag.impactDescription) vals['diagnosisImpactDescription'] = diag.impactDescription
+      if (diag.impactCost) vals['diagnosisImpactCost'] = diag.impactCost
     }
 
-    // GuidingPolicy entity fields
+    // GuidingPolicy entity fields — keyed to match FieldCompletion and GUIDING_POLICY_FIELDS
     const gp = ideaData.guidingPolicies?.[0]
     if (gp) {
+      // Store guidingPolicyTitle/Description for activeSection detection
       if (gp.guidingPolicyTitle) vals['guidingPolicyTitle'] = gp.guidingPolicyTitle
       if (gp.guidingPolicyDescription) vals['guidingPolicyDescription'] = gp.guidingPolicyDescription
-      if (gp.coreTheory) vals['coreTheory'] = gp.coreTheory
-      if (gp.linkToDiagnosis) vals['linkToDiagnosis'] = gp.linkToDiagnosis
-      if (gp.whatThisPolicyRulesOut) vals['whatThisPolicyRulesOut'] = gp.whatThisPolicyRulesOut
-      if (gp.tradeOffs) vals['tradeOffs'] = gp.tradeOffs
-      if (gp.competitiveIdeaAnalysis) vals['competitiveIdeaAnalysis'] = gp.competitiveIdeaAnalysis
+      // Store under FieldCompletion keys
+      if (gp.text) vals['guidingPolicyText'] = gp.text
+      if (gp.coreTheory) vals['guidingPolicyCoreTheory'] = gp.coreTheory
+      if (gp.tradeOffs) vals['guidingPolicyTradeOffs'] = gp.tradeOffs
+      if (gp.competitiveIdeaAnalysis) vals['guidingPolicyCompetitiveIdeaAnalysis'] = gp.competitiveIdeaAnalysis
+      // guidingPolicyMechanism — first non-null mechanism field
+      const mech = gp.mechanismIncentives || gp.mechanismRules || gp.mechanismTransparency ||
+        gp.mechanismMarketDesign || gp.mechanismInstitutionalRestructuring
+      if (mech) vals['guidingPolicyMechanism'] = mech
+    }
+
+    // RootCauses entity fields
+    const rc = ideaData.rootCauses?.[0]
+    if (rc) {
+      if (rc.text) vals['rootCause'] = rc.text
     }
 
     // CoherentActions
@@ -760,6 +958,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (doneData.currentStage) setCurrentStage(doneData.currentStage as string)
           if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
           if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
+          console.log('[V2D-DEBUG] done event fieldProposal:', doneData.fieldProposal)
           // Commit 6 — handle fieldProposal for new Lex field protocol
           if (doneData.fieldProposal) {
             const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
@@ -1077,26 +1276,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     setCurrentProposal(null)
   }, [])
 
-  // ── Commit 3: Mobile panel swipe handlers ─────────────────────────────────
-  const PANEL_SWIPE_THRESHOLD = 80
-  const PANEL_SWIPE_RATIO = 2.0
-
-  const handleOuterTouchStart = useCallback((e: React.TouchEvent) => {
-    outerTouchStartX.current = e.touches[0].clientX
-    outerTouchStartY.current = e.touches[0].clientY
-  }, [])
-
-  const handleOuterTouchEnd = useCallback((e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - outerTouchStartX.current
-    const dy = e.changedTouches[0].clientY - outerTouchStartY.current
-    const absDx = Math.abs(dx)
-    const absDy = Math.abs(dy)
-
-    if (absDx > PANEL_SWIPE_THRESHOLD && absDx > absDy * PANEL_SWIPE_RATIO) {
-      if (dx > 0 && !mobilePanelOpen) setMobilePanelOpen(true)
-      if (dx < 0 && mobilePanelOpen) setMobilePanelOpen(false)
-    }
-  }, [mobilePanelOpen])
+  // ── Panel swipe-to-close (inside panel only) ─────────────────────────────
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -1159,11 +1339,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
-      <div
-        className="flex flex-1 overflow-hidden relative"
-        onTouchStart={handleOuterTouchStart}
-        onTouchEnd={handleOuterTouchEnd}
-      >
+      <div className="flex flex-1 overflow-hidden relative">
 
         {/* ── Mobile panel edge indicator (shown when panel is closed) ──── */}
         {!mobilePanelOpen && (
@@ -1181,6 +1357,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             lg:hidden flex flex-col
             ${mobilePanelOpen ? 'translate-x-0' : 'translate-x-full'}
           `}
+          onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
+          onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current < -60) setMobilePanelOpen(false) }}
         >
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <h2 className="font-semibold text-sm">Your Idea</h2>
@@ -1195,20 +1373,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           <MobileSidebarContent
             fields={fields}
             fieldValues={fieldValues}
-            onEditField={(fieldKey, fieldLabel, value) => {
-              setInputValue(`I want to revisit ${fieldLabel}: ${value}`)
+            setFieldValues={setFieldValues}
+            ideaId={ideaId}
+            onChatAboutField={(label) => {
               setMobilePanelOpen(false)
-              setTimeout(() => {
-                if (inputRef.current) {
-                  inputRef.current.focus()
-                  inputRef.current.style.height = 'auto'
-                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
-                }
-              }, 100)
-            }}
-            onChatField={(fieldLabel) => {
-              setMobilePanelOpen(false)
-              handleSend(false, `I'd like to revisit ${fieldLabel}`)
+              handleSend(false, `I'd like to revisit: ${label}`)
             }}
           />
         </div>
@@ -1537,27 +1706,71 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                           </span>
                         )}
                       </div>
-                      {value && isOpen && (
+                      {editingField?.key === keyStr ? (
                         <div className="ml-6 mt-1">
-                          <div className="text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed mb-2 field-accept-animation">
-                            {value.length > 300 && !sidebarExpanded ? value.substring(0, 300) + '…' : value}
+                          <textarea
+                            defaultValue={value}
+                            className="w-full text-xs p-2 rounded border border-border bg-background resize-none"
+                            rows={4}
+                            ref={el => el?.focus()}
+                            onKeyDown={e => { if (e.key === 'Escape') setEditingField(null) }}
+                            id={`stage1-edit-${keyStr}`}
+                          />
+                          <div className="flex gap-2 mt-1">
+                            <button
+                              onClick={async () => {
+                                const el = document.getElementById(`stage1-edit-${keyStr}`) as HTMLTextAreaElement
+                                if (!el || !ideaId) return
+                                const newValue = el.value.trim()
+                                if (!newValue) return
+                                await fetch(`/api/ideas/${ideaId}/field-approval`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ fieldKey: editingField!.key, value: newValue }),
+                                })
+                                setFieldValues(prev => ({ ...prev, [keyStr]: newValue }))
+                                setEditingField(null)
+                              }}
+                              className="text-xs px-2 py-1 rounded bg-foreground text-background hover:opacity-90"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingField(null)}
+                              className="text-xs px-2 py-1 rounded border border-border text-muted-foreground"
+                            >
+                              Cancel
+                            </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              setInputValue(`I'd like to revisit ${label}: ${value}`)
-                              setTimeout(() => {
-                                if (inputRef.current) {
-                                  inputRef.current.focus()
-                                  inputRef.current.style.height = 'auto'
-                                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
-                                }
-                              }, 0)
-                            }}
-                            className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                          >
-                            ✏ Edit with Lex
-                          </button>
                         </div>
+                      ) : (
+                        value && isOpen && (
+                          <div className="ml-6 mt-1">
+                            <div className="relative text-xs text-foreground bg-muted/40 rounded p-2 pr-14 leading-relaxed mb-1 field-accept-animation">
+                              {value.length > 300 && !sidebarExpanded ? value.substring(0, 300) + '…' : value}
+                              <div className="absolute bottom-1.5 right-1.5 flex gap-1">
+                                <button
+                                  onClick={e => { e.stopPropagation(); setEditingField({ key: keyStr, label, value }) }}
+                                  className="p-1 rounded hover:bg-muted transition-colors"
+                                  title="Edit directly"
+                                >
+                                  <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={e => { e.stopPropagation(); setInputValue(`I'd like to revisit ${label}`); setTimeout(() => inputRef.current?.focus(), 0) }}
+                                  className="p-1 rounded hover:bg-muted transition-colors"
+                                  title="Discuss with Lex"
+                                >
+                                  <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )
                       )}
                     </div>
                   )
@@ -1581,15 +1794,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   return next
                 })}
                 fieldValues={fieldValues}
-                onEditField={(label, value) => {
-                  setInputValue(`I'd like to revisit ${label}: ${value}`)
-                  setTimeout(() => {
-                    if (inputRef.current) {
-                      inputRef.current.focus()
-                      inputRef.current.style.height = 'auto'
-                      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
-                    }
-                  }, 0)
+                setFieldValues={setFieldValues}
+                editingField={editingField}
+                setEditingField={setEditingField}
+                ideaId={ideaId}
+                onChatAboutField={(label) => {
+                  setInputValue(`I'd like to revisit ${label}`)
+                  setTimeout(() => inputRef.current?.focus(), 0)
                 }}
               />
             )}

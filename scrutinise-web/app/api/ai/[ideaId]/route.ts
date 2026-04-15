@@ -722,6 +722,8 @@ export async function POST(req: Request, { params }: Params) {
       const inline = fullText.match(/\{[^{}]*(?:"fieldUpdates"|"fieldProposal"|"insightFlag")[^{}]*(?:\{[^{}]*\}[^{}]*)?\}/)
       jsonStr = inline?.[0] ?? null
     }
+    console.log('[V2D-DEBUG] fullText length:', fullText.length)
+    console.log('[V2D-DEBUG] jsonStr found:', !!jsonStr)
     if (jsonStr) {
       try {
         const parsedJson = JSON.parse(jsonStr)
@@ -755,6 +757,7 @@ export async function POST(req: Request, { params }: Params) {
         // JSON parse failed — serve as-is
       }
     }
+    console.log('[V2D-DEBUG] fieldProposal:', fieldProposal)
 
     if (insightFlag) {
       prisma.lexInsight.create({
