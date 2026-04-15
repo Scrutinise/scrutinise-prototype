@@ -76,6 +76,9 @@ export default function PublicNav() {
           <Link href="/training" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Training
           </Link>
+          <Link href="/legislation-compare" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Legislation
+          </Link>
           <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             About
           </Link>
@@ -142,6 +145,13 @@ export default function PublicNav() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Training
+            </Link>
+            <Link
+              href="/legislation-compare"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Legislation
             </Link>
             <Link
               href="/about"

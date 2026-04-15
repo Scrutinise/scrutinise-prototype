@@ -41,6 +41,11 @@ const isPublicRoute = createRouteMatcher([
   '/api/ideas/(.*)/endorsements',     // public endorsement list (Stage 4+)
   '/api/users/(.*)',                   // public profile API
   '/prototype/referral(.*)',
+  '/legislation-compare(.*)',          // public legislation evaluator tool
+  '/api/legislation/fetch(.*)',        // server-side CORS proxy for legislation.gov.uk
+  '/legislation(.*)',                  // public legislation browse
+  '/api/legislation/search(.*)',       // public legislation search
+  '/api/legislation/(.*)',             // public legislation retrieve (itemId route)
 ])
 
 export default clerkMiddleware(async (auth, req) => {
