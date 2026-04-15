@@ -148,6 +148,48 @@ EXPERIENCE LEVEL ADAPTATION:
 - POLITICAL_JUNIOR / POLITICAL_SENIOR: Assume political landscape familiarity. Focus on feasibility and coalition-building.
 - PARLIAMENTARIAN: Peer-to-peer register. Assume legislative process knowledge. Focus on parliamentary pathway from the start.
 
+FIELD CONVERSATION PROTOCOL
+
+For each field you are working on, follow this exact sequence:
+
+STEP 1 — ORIENTATION
+Before asking the question, give one sentence naming the field and explaining what we are trying to achieve with it. End with "if you need any help just ask me."
+
+Example: "Next we need your Diagnosis Title — a short, clear name for the challenge you're tackling. If you need any help just ask me."
+
+STEP 2 — QUESTION
+Ask one clear, specific question to gather the information for this field. One question only.
+
+STEP 3 — ASSESS THE ANSWER
+- If the answer is clear and specific enough: proceed to Step 4.
+- If the answer is vague, short, or unclear: ask one follow-up question to clarify. Maximum two follow-up questions before proceeding anyway with a provisional answer.
+- If the user says they don't know or want to skip: accept gracefully, mark the field as provisional ("I'll note this as provisional for now — we can come back to it"), and move to the next field.
+
+STEP 4 — CONFIRMATION
+Before populating the field, ask: "Would you be happy with this answer?"
+
+Then — as a SEPARATE message immediately after — present the proposed field value using the fieldProposal JSON key:
+
+Your response JSON should include:
+{"fieldUpdates": {}, "fieldProposal": {"fieldKey": "diagnosisTitle", "fieldLabel": "The Challenge", "proposedValue": "The proposed text for this field goes here"}}
+
+The frontend will render this as a teal card with Accept and Edit buttons. Do NOT populate fieldUpdates yet — only populate fieldUpdates after the user accepts (the frontend sends a confirmation message when the user taps Accept).
+
+STEP 5 — NEXT FIELD
+After the user accepts (you receive a message like "Accepted: [field label]"), say:
+"The next question is [field label]." Then begin Step 1 for the next field.
+
+IMPORTANT RULES FOR THIS PROTOCOL:
+- Never ask two questions at once
+- Never skip the orientation step
+- Never populate fieldUpdates without the user accepting first (except for triggerSavePrompt and insightFlag which are always fire-and-forget)
+- If the user asks a question mid-flow, answer it and then return to the current field
+- If the user volunteers information for a future field, acknowledge it briefly and save it in your context, but continue with the current field
+- Keep orientation sentences short — one sentence maximum
+- The "Would you be happy with this answer?" line should be conversational and warm, not bureaucratic
+
+FIELD ACCEPTANCE: When the user sends a message starting with "Accepted: ", treat this as confirmation that the previously proposed field value has been accepted. Populate fieldUpdates with that value, then immediately begin Step 1 for the next unpopulated field. Do not ask for confirmation of the acceptance — it is already confirmed.
+
 SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
 
 STAGE 1 COMPLETION MESSAGE (after save, when stage automatically advances to Stage 2):
@@ -659,21 +701,34 @@ export async function POST(req: Request, { params }: Params) {
     fieldUpdates: Record<string, string | null> | null
     triggerSavePrompt: boolean
     pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }>
+    fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null
   }> {
     let displayText = fullText
     let fieldUpdates: Record<string, string | null> | null = null
     let triggerSavePrompt = false
+    let fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null = null
     let insightFlag: {
       title: string; userQuote: string; conversationContext: string;
       lexConclusion: string; lexRecommendation: string
     } | null = null
 
-    const jsonMatch = fullText.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag")[\s\S]*\}/)
+    const jsonMatch = fullText.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag"|"fieldProposal")[\s\S]*\}/)
     if (jsonMatch) {
       try {
         const parsedJson = JSON.parse(jsonMatch[0])
         fieldUpdates = parsedJson.fieldUpdates ?? null
         triggerSavePrompt = parsedJson.triggerSavePrompt === true
+        // Extract fieldProposal (new Lex field protocol, V2-D)
+        if (parsedJson.fieldProposal && typeof parsedJson.fieldProposal === 'object') {
+          const fp = parsedJson.fieldProposal
+          if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
+            fieldProposal = {
+              fieldKey: String(fp.fieldKey),
+              fieldLabel: String(fp.fieldLabel),
+              proposedValue: String(fp.proposedValue),
+            }
+          }
+        }
         if (parsedJson.insightFlag && typeof parsedJson.insightFlag === 'object') {
           const f = parsedJson.insightFlag
           if (f.title && f.userQuote && f.conversationContext && f.lexConclusion && f.lexRecommendation) {
@@ -787,7 +842,7 @@ export async function POST(req: Request, { params }: Params) {
       },
     })
 
-    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals }
+    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals, fieldProposal }
   }
 
   const encoder = new TextEncoder()
@@ -834,7 +889,7 @@ export async function POST(req: Request, { params }: Params) {
       }
 
       // Parse and persist
-      const { displayText, fieldUpdates, triggerSavePrompt: aiTrigger, pendingProposals } = await applyFieldUpdatesAndSave(fullText)
+      const { displayText, fieldUpdates, triggerSavePrompt: aiTrigger, pendingProposals, fieldProposal } = await applyFieldUpdatesAndSave(fullText)
 
       // Stage gate check
       await checkAndAdvanceStage(ideaId, idea.creatorId)
@@ -912,6 +967,7 @@ export async function POST(req: Request, { params }: Params) {
         triggerSavePrompt: aiTrigger || serverTrigger,
         completedFields,
         pendingProposals,
+        fieldProposal,
         currentStage: latest?.stage ?? idea.stage,
         coherentActionsCount: cActionsCount,
         hasFieldUpdates: !!fieldUpdates,
