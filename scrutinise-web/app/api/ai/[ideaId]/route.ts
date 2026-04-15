@@ -712,10 +712,19 @@ export async function POST(req: Request, { params }: Params) {
       lexConclusion: string; lexRecommendation: string
     } | null = null
 
-    const jsonMatch = fullText.match(/\{[\s\S]*(?:"fieldUpdates"|"insightFlag"|"fieldProposal")[\s\S]*\}/)
-    if (jsonMatch) {
+    let jsonStr: string | null = null
+    // Try markdown code block first (```json ... ```)
+    const codeBlock = fullText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
+    if (codeBlock) {
+      jsonStr = codeBlock[1]
+    } else {
+      // Try inline JSON containing known keys
+      const inline = fullText.match(/\{[^{}]*(?:"fieldUpdates"|"fieldProposal"|"insightFlag")[^{}]*(?:\{[^{}]*\}[^{}]*)?\}/)
+      jsonStr = inline?.[0] ?? null
+    }
+    if (jsonStr) {
       try {
-        const parsedJson = JSON.parse(jsonMatch[0])
+        const parsedJson = JSON.parse(jsonStr)
         fieldUpdates = parsedJson.fieldUpdates ?? null
         triggerSavePrompt = parsedJson.triggerSavePrompt === true
         // Extract fieldProposal (new Lex field protocol, V2-D)
@@ -741,7 +750,7 @@ export async function POST(req: Request, { params }: Params) {
             }
           }
         }
-        displayText = fullText.replace(jsonMatch[0], '').trim()
+        displayText = fullText.replace(jsonStr, '').trim()
       } catch {
         // JSON parse failed — serve as-is
       }

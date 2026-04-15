@@ -39,6 +39,8 @@ export async function GET(req: Request, { params }: Params) {
     include: {
       creator: { select: { id: true, name: true, username: true, credibilityScore: { select: { totalScore: true, phase: true } } } },
       coherentActions: { orderBy: { orderIndex: 'asc' } },
+      diagnoses: true,
+      guidingPolicies: true,
       research: { orderBy: { createdAt: 'asc' } },
       collaborators: { include: { user: { select: { id: true, name: true, email: true } } } },
     },

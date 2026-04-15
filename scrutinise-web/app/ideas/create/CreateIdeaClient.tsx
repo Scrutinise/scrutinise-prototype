@@ -132,6 +132,7 @@ function Stage2Sidebar({
   openFields,
   onToggleField,
   fieldValues,
+  onEditField,
 }: {
   fields: FieldCompletion
   coherentActionsCount: number
@@ -140,6 +141,7 @@ function Stage2Sidebar({
   openFields: Set<string>
   onToggleField: (key: string) => void
   fieldValues: Record<string, string>
+  onEditField: (label: string, value: string) => void
 }) {
   const [showDiagnosis, setShowDiagnosis] = useState(false)
   const [showGuidingPolicy, setShowGuidingPolicy] = useState(false)
@@ -185,11 +187,19 @@ function Stage2Sidebar({
           )}
         </div>
         {value && isOpen && (
-          <div className="mt-1 ml-5 text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed field-accept-animation">
-            {value.length > 200 && !sidebarExpanded
-              ? value.substring(0, 200) + '…'
-              : value
-            }
+          <div className="mt-1 ml-5">
+            <div className="text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed mb-2 field-accept-animation">
+              {value.length > 300 && !sidebarExpanded
+                ? value.substring(0, 300) + '…'
+                : value
+              }
+            </div>
+            <button
+              onClick={() => onEditField(label, value)}
+              className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+            >
+              ✏ Edit with Lex
+            </button>
           </div>
         )}
       </div>
@@ -445,6 +455,68 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const outerTouchStartY = useRef<number>(0)
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
+
+  // ── Populate fieldValues from idea data ───────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const populateFieldValuesFromIdea = useCallback((ideaData: any) => {
+    if (!ideaData) return
+    const vals: Record<string, string> = {}
+
+    // Core idea fields
+    if (ideaData.title) vals['title'] = ideaData.title
+    if (ideaData.summaryDescription) vals['summaryDescription'] = ideaData.summaryDescription
+    if (ideaData.diagnosis) vals['diagnosis'] = ideaData.diagnosis
+    if (ideaData.guidingPolicy) vals['guidingPolicy'] = ideaData.guidingPolicy
+    if (ideaData.rootCause) vals['rootCause'] = ideaData.rootCause
+
+    // Diagnosis entity fields
+    const diag = ideaData.diagnoses?.[0]
+    if (diag) {
+      if (diag.diagnosisTitle) vals['diagnosisTitle'] = diag.diagnosisTitle
+      if (diag.diagnosisDescription) vals['diagnosisDescription'] = diag.diagnosisDescription
+      if (diag.obstacleDefined) vals['obstacleDefined'] = diag.obstacleDefined
+      if (diag.whoAffected) vals['whoAffected'] = diag.whoAffected
+      if (diag.howAffected) vals['howAffected'] = diag.howAffected
+      if (diag.whyPersisted) vals['whyPersisted'] = diag.whyPersisted
+      if (diag.impactDescription) vals['impactDescription'] = diag.impactDescription
+      if (diag.impactCost) vals['impactCost'] = diag.impactCost
+    }
+
+    // GuidingPolicy entity fields
+    const gp = ideaData.guidingPolicies?.[0]
+    if (gp) {
+      if (gp.guidingPolicyTitle) vals['guidingPolicyTitle'] = gp.guidingPolicyTitle
+      if (gp.guidingPolicyDescription) vals['guidingPolicyDescription'] = gp.guidingPolicyDescription
+      if (gp.coreTheory) vals['coreTheory'] = gp.coreTheory
+      if (gp.linkToDiagnosis) vals['linkToDiagnosis'] = gp.linkToDiagnosis
+      if (gp.whatThisPolicyRulesOut) vals['whatThisPolicyRulesOut'] = gp.whatThisPolicyRulesOut
+      if (gp.tradeOffs) vals['tradeOffs'] = gp.tradeOffs
+      if (gp.competitiveIdeaAnalysis) vals['competitiveIdeaAnalysis'] = gp.competitiveIdeaAnalysis
+    }
+
+    // CoherentActions
+    ideaData.coherentActions?.forEach((ca: { title?: string; summarySnippet?: string }, i: number) => {
+      if (ca.title) vals[`coherentAction_${i}_title`] = ca.title
+      if (ca.summarySnippet) vals[`coherentAction_${i}_summary`] = ca.summarySnippet
+    })
+
+    setFieldValues(vals)
+
+    // Auto-open fields that have values — last 2 populated
+    const populated = Object.keys(vals).filter(k => vals[k])
+    if (populated.length > 0) {
+      setOpenFields(new Set(populated.slice(-2)))
+    }
+  }, [])
+
+  // ── Load field values from DB on mount ────────────────────────────────────
+  useEffect(() => {
+    if (!initialIdeaId) return
+    fetch(`/api/ideas/${initialIdeaId}`)
+      .then(r => r.json())
+      .then(data => populateFieldValuesFromIdea(data))
+      .catch(() => {})
+  }, [initialIdeaId, populateFieldValuesFromIdea])
 
   // ── Voice detection ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -706,6 +778,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 return next
               })
             }
+          }
+          // Re-populate field values from DB when Lex has written field updates
+          if (doneData.hasFieldUpdates && ideaId) {
+            fetch(`/api/ideas/${ideaId}`)
+              .then(r => r.json())
+              .then(updated => populateFieldValuesFromIdea(updated))
+              .catch(() => {})
           }
         } else {
           // Mark streaming as done even if no doneData
@@ -1459,8 +1538,25 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                         )}
                       </div>
                       {value && isOpen && (
-                        <div className="ml-6 mt-1 text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed field-accept-animation">
-                          {value.length > 200 && !sidebarExpanded ? value.substring(0, 200) + '…' : value}
+                        <div className="ml-6 mt-1">
+                          <div className="text-xs text-foreground bg-muted/40 rounded p-2 leading-relaxed mb-2 field-accept-animation">
+                            {value.length > 300 && !sidebarExpanded ? value.substring(0, 300) + '…' : value}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setInputValue(`I'd like to revisit ${label}: ${value}`)
+                              setTimeout(() => {
+                                if (inputRef.current) {
+                                  inputRef.current.focus()
+                                  inputRef.current.style.height = 'auto'
+                                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+                                }
+                              }, 0)
+                            }}
+                            className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                          >
+                            ✏ Edit with Lex
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1485,6 +1581,16 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   return next
                 })}
                 fieldValues={fieldValues}
+                onEditField={(label, value) => {
+                  setInputValue(`I'd like to revisit ${label}: ${value}`)
+                  setTimeout(() => {
+                    if (inputRef.current) {
+                      inputRef.current.focus()
+                      inputRef.current.style.height = 'auto'
+                      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`
+                    }
+                  }, 0)
+                }}
               />
             )}
           </div>
