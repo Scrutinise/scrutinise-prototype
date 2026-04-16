@@ -163,15 +163,15 @@ function Stage2Sidebar({
 
   // Active section driven by fieldValues (DB content), not boolean flags
   const activeSection = (() => {
-    const diagComplete = !!(fieldValues['diagnosisTitle'] && fieldValues['diagnosisDescription'])
+    const diagComplete = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'])
     if (!diagComplete) return 'diagnosis'
-    const gpComplete = !!(fieldValues['guidingPolicyTitle'] && fieldValues['guidingPolicyDescription'])
+    const gpComplete = !!(fieldValues['guidingPolicyTitle'] || fieldValues['summaryGuidingPolicy'])
     if (!gpComplete) return 'guidingPolicy'
     return 'coherentActions'
   })()
 
-  const diagHasContent = !!fieldValues['diagnosisTitle']
-  const gpHasContent = !!fieldValues['guidingPolicyTitle']
+  const diagHasContent = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'])
+  const gpHasContent = !!(fieldValues['guidingPolicyTitle'] || fieldValues['summaryGuidingPolicy'])
 
   function renderFieldRow(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
@@ -416,20 +416,20 @@ function MobileSidebarContent({
   }
 
   const activeSection = (() => {
-    const diagComplete = !!(fieldValues['diagnosisTitle'] && fieldValues['diagnosisDescription'])
+    const diagComplete = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'])
     if (!diagComplete) return 'diagnosis'
-    const gpComplete = !!(fieldValues['guidingPolicyTitle'] && fieldValues['guidingPolicyDescription'])
+    const gpComplete = !!(fieldValues['guidingPolicyTitle'] || fieldValues['summaryGuidingPolicy'])
     if (!gpComplete) return 'guidingPolicy'
     return 'coherentActions'
   })()
 
-  const diagHasContent = !!fieldValues['diagnosisTitle']
-  const gpHasContent = !!fieldValues['guidingPolicyTitle']
+  const diagHasContent = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'])
+  const gpHasContent = !!(fieldValues['guidingPolicyTitle'] || fieldValues['summaryGuidingPolicy'])
 
   function renderFieldCard(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
     const keyStr = String(key)
-    const value = fieldValues[keyStr]
+    const value = fieldValues[keyStr] || fieldValues[keyStr.replace(/^diagnosis/, 'summary').replace(/^guidingPolicy/, 'summary')]
     const isEditing = editingField?.key === keyStr
 
     return (
@@ -1297,7 +1297,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       <PublicNav />
 
       {/* ── Lex toolbar — Save & Exit / View your idea ───────────────────── */}
-      <div className="shrink-0 flex items-center justify-between px-6 py-2 border-b border-border bg-background/95 text-xs">
+      <div
+        className="shrink-0 flex items-center justify-between px-6 py-2 border-b border-border bg-background/95 text-xs"
+        onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
+        onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current > 60) setMobilePanelOpen(true) }}
+      >
         <span className="text-muted-foreground font-medium">Developing with Lex</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-3">
@@ -1365,10 +1369,12 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             lg:hidden flex flex-col
             ${mobilePanelOpen ? 'translate-x-0' : 'translate-x-full'}
           `}
-          onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
-          onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current < -60) setMobilePanelOpen(false) }}
         >
-          <div className="flex items-center justify-between p-4 border-b shrink-0">
+          <div
+            className="flex items-center justify-between p-4 border-b shrink-0"
+            onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
+            onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current < -60) setMobilePanelOpen(false) }}
+          >
             <h2 className="font-semibold text-sm">Your Idea</h2>
             <button
               onClick={() => setMobilePanelOpen(false)}
