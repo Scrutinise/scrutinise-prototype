@@ -407,6 +407,8 @@ function MobileSidebarContent({
   ideaId,
   onChatAboutField,
   onClose,
+  lastAcceptedField,
+  setLastAcceptedField,
 }: {
   fields: FieldCompletion
   fieldValues: Record<string, string>
@@ -414,11 +416,11 @@ function MobileSidebarContent({
   ideaId: string | null
   onChatAboutField: (label: string) => void
   onClose: () => void
+  lastAcceptedField: string | null
+  setLastAcceptedField: (field: string | null) => void
 }) {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
-
-  console.log('[MOBILE-DEBUG] fieldValues keys:', Object.keys(fieldValues).filter(k => fieldValues[k]))
 
   const toggleSection = (sectionKey: string) => {
     setOpenSections(prev => {
@@ -427,6 +429,25 @@ function MobileSidebarContent({
       return next
     })
   }
+
+  // Auto-expand sections that have content so filled fields are always visible
+  useEffect(() => {
+    const diagHas = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'] || fieldValues['diagnosisText'])
+    const gpHas = !!(fieldValues['guidingPolicyTitle'] || fieldValues['summaryGuidingPolicy'] || fieldValues['guidingPolicyText'])
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      if (diagHas) next.add('diagnosis')
+      if (gpHas) next.add('guidingPolicy')
+      return next
+    })
+  }, [fieldValues])
+
+  // Clear whoosh animation after 800ms
+  useEffect(() => {
+    if (!lastAcceptedField) return
+    const t = setTimeout(() => setLastAcceptedField(null), 800)
+    return () => clearTimeout(t)
+  }, [lastAcceptedField, setLastAcceptedField])
 
   const activeSection = (() => {
     const diagComplete = !!(fieldValues['diagnosisTitle'] || fieldValues['summaryDiagnosis'])
@@ -442,11 +463,12 @@ function MobileSidebarContent({
   function renderFieldCard(key: keyof FieldCompletion, label: string) {
     const done = fields[key]
     const keyStr = String(key)
-    const value = fieldValues[keyStr] || fieldValues[keyStr.replace(/^diagnosis/, 'summary').replace(/^guidingPolicy/, 'summary')]
+    const value = fieldValues[keyStr]
     const isEditing = editingField?.key === keyStr
+    const isLastAccepted = lastAcceptedField === keyStr
 
     return (
-      <div key={keyStr} className={`rounded-lg p-3 border ${done ? 'border-teal-200 bg-teal-50/50' : 'border-zinc-100'}`}>
+      <div key={keyStr} className={`rounded-lg p-3 border ${done ? 'border-teal-200 bg-teal-50/50' : 'border-zinc-100'} ${isLastAccepted ? 'field-whoosh' : ''}`}>
         <div className="flex items-center gap-2 mb-1">
           <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${done ? 'bg-teal-500' : 'bg-zinc-200'}`} />
           <span className={`text-xs font-medium ${done ? 'text-zinc-800' : 'text-zinc-400'}`}>{label}</span>
@@ -523,27 +545,6 @@ function MobileSidebarContent({
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-
-      {/* TEMPORARY BACK BUTTON — reliable close regardless of swipe */}
-      <div className="p-3 border-b bg-background -mx-4 -mt-4 mb-2 px-4 pt-4">
-        <button
-          onClick={onClose}
-          className="w-full py-2 px-4 rounded-lg bg-foreground text-background text-sm font-medium"
-        >
-          ← Back to Chat
-        </button>
-      </div>
-
-      {/* TEMPORARY DEBUG — remove after diagnosis */}
-      <div className="bg-yellow-100 border border-yellow-400 p-3 rounded text-xs">
-        <p className="font-bold mb-1">fieldValues debug:</p>
-        {Object.entries(fieldValues).filter(([, v]) => v).map(([k, v]) => (
-          <p key={k}><span className="font-mono text-yellow-800">{k}:</span> {String(v).substring(0, 40)}</p>
-        ))}
-        {Object.keys(fieldValues).filter(k => fieldValues[k]).length === 0 && (
-          <p className="text-red-600">NO VALUES IN fieldValues</p>
-        )}
-      </div>
 
       {/* Section: Diagnosis — The Challenge */}
       <div>
@@ -660,6 +661,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     fieldLabel: string
     proposedValue: string
   } | null>(null)
+  // V2E-A3 — last accepted field key, used to trigger whoosh animation on mobile
+  const [lastAcceptedField, setLastAcceptedField] = useState<string | null>(null)
   // Inline field editing (direct edit without Lex)
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
 
@@ -745,7 +748,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     })
 
     setFieldValues(vals)
-    console.log('[SIDEBAR-DEBUG] fieldValues keys set:', Object.keys(vals).filter(k => vals[k]))
 
     // Auto-open fields that have values — last 2 populated
     const populated = Object.keys(vals).filter(k => vals[k])
@@ -1005,12 +1007,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (doneData.currentStage) setCurrentStage(doneData.currentStage as string)
           if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
           if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
-          console.log('[V2D-DEBUG] done event fieldProposal:', doneData.fieldProposal)
-          // Commit 6 — handle fieldProposal for new Lex field protocol
+          // Handle fieldProposal for Lex field protocol (V2D) — only set if no active proposal (V2E-A4 gate)
           if (doneData.fieldProposal) {
             const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
             if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
-              setCurrentProposal(fp)
+              setCurrentProposal(prev => prev === null ? fp : prev)
             }
           }
           // Commit 4 — auto-open newly completed fields in sidebar
@@ -1308,6 +1309,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     }
     setOpenFields(prev => { const next = new Set(prev); next.add(normKey); return next })
     setCurrentProposal(null)
+    // On mobile: auto-flip to answers panel and trigger field whoosh animation
+    if (window.innerWidth < 1024) {
+      setMobilePanelOpen(true)
+      setLastAcceptedField(normKey)
+    }
     // Send silent system message so Lex knows to populate the field and move on
     await handleSend(false, `Accepted: ${fieldLabel}`)
   }, [currentProposal, handleSend])
@@ -1404,6 +1410,12 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 </button>
               </>
             )}
+            <button
+              onClick={() => setMobilePanelOpen(true)}
+              className="text-teal-600 hover:text-teal-700 transition-colors lg:hidden"
+            >
+              See completed answers →
+            </button>
           </div>
           {saveExitMsg && (
             <p className="text-muted-foreground max-w-xs text-right">{saveExitMsg}</p>
@@ -1439,7 +1451,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             <h2 className="font-semibold text-sm">Your Idea</h2>
             <button
               onClick={() => setMobilePanelOpen(false)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-teal-600 hover:text-teal-700 transition-colors"
               aria-label="Back to chat"
             >
               ← Back to chat
@@ -1455,6 +1467,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
               setMobilePanelOpen(false)
               handleSend(false, `I'd like to revisit: ${label}`)
             }}
+            lastAcceptedField={lastAcceptedField}
+            setLastAcceptedField={setLastAcceptedField}
           />
         </div>
 

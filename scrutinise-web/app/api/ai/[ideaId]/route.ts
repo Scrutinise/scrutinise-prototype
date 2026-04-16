@@ -192,6 +192,9 @@ IMPORTANT RULES FOR THIS PROTOCOL:
 - Keep orientation sentences short — one sentence maximum
 - The "Would you be happy with this answer?" line should be conversational and warm, not bureaucratic
 
+CRITICAL RULE — ONE FIELD AT A TIME:
+You must never include a fieldProposal JSON key in a response unless no field is currently pending acceptance by the user (i.e. fieldUpdates for the current proposal is empty). Wait for the user to send "Accepted: [label]" before proposing the next field. If the user asks to move on without accepting, you may propose the next field, but you must first abandon the current proposal by sending a fieldProposal of null.
+
 FIELD ACCEPTANCE: When the user sends a message starting with "Accepted: ", treat this as confirmation that the previously proposed field value has been accepted. Populate fieldUpdates with that value, then immediately begin Step 1 for the next unpopulated field. Do not ask for confirmation of the acceptance — it is already confirmed.
 
 SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
@@ -730,11 +733,6 @@ export async function POST(req: Request, { params }: Params) {
       const inline = fullText.match(/\{[^{}]*(?:"fieldUpdates"|"fieldProposal"|"insightFlag")[^{}]*(?:\{[^{}]*\}[^{}]*)?\}/)
       jsonStr = inline?.[0] ?? null
     }
-    console.log('[V2D-DEBUG] fullText length:', fullText.length)
-    console.log('[V2D-DEBUG] jsonStr found:', !!jsonStr)
-    if (!jsonStr) {
-      console.log('[V2D-DEBUG] fullText sample (no JSON found):', fullText.substring(0, 500))
-    }
     if (jsonStr) {
       try {
         const parsedJson = JSON.parse(jsonStr)
@@ -768,7 +766,6 @@ export async function POST(req: Request, { params }: Params) {
         // JSON parse failed — serve as-is
       }
     }
-    console.log('[V2D-DEBUG] fieldProposal:', fieldProposal)
 
     // Strip any remaining markdown code fence markers from display text
     displayText = displayText
