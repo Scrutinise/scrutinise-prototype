@@ -143,6 +143,17 @@
   animation: proposalPulse 300ms ease-in-out;
 }
 
+@keyframes fieldWhoosh {
+  0%   { transform: translateX(60px); opacity: 0; background-color: rgba(20,184,166,0.15); }
+  30%  { transform: translateX(0);    opacity: 1; background-color: rgba(20,184,166,0.25); }
+  70%  { background-color: rgba(20,184,166,0.10); }
+  100% { transform: translateX(0);    opacity: 1; background-color: transparent; }
+}
+
+.field-whoosh {
+  animation: fieldWhoosh 800ms ease-out forwards;
+}
+
 /* ─────────────────────────────
    VIDEO MASK
    ───────────────────────────── */
