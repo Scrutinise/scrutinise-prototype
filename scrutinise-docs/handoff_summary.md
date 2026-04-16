@@ -1,6 +1,40 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 15 April 2026 v25*
+*Last updated: 16 April 2026 v26*
+
+***
+
+## CURRENT STATE — SPRINT V2-E COMPLETE ✅
+
+Six commits to Main. All `tsc --noEmit` clean. Prisma db push + generate done. Ready to push.
+
+### V2E commit summary
+
+1. **V2E-A1** — Mobile sidebar field display fixed. Removed V2D debug code. Added `useEffect` in `MobileSidebarContent` to auto-expand sections with content when `fieldValues` changes (fixes sections collapsing after Stage 1 proposal accepted). Removed broken regex fallback in `renderFieldCard`. Removed temporary back button and debug block. Also removed V2D debug console.logs from AI route.
+2. **V2E-A2** — "See completed answers →" button added to Lex toolbar (mobile only, `lg:hidden`). Both the new button and the panel's "← Back to chat" button now use teal styling (`text-teal-600`).
+3. **V2E-A3** — Auto-flip to answers panel on mobile when proposal accepted. `lastAcceptedField` state added. On acceptance with `window.innerWidth < 1024`: opens mobile panel + sets `lastAcceptedField`. `MobileSidebarContent` applies `field-whoosh` class to matching field card (800ms animation: slides in from right, teal peak, fades). `fieldWhoosh` keyframe added to `globals.css`.
+4. **V2E-A4** — Lex gated to one field proposal at a time. CRITICAL RULE added to system prompt. Frontend guard: `setCurrentProposal(prev => prev === null ? fp : prev)` — won't replace an active proposal.
+5. **V2E-B1** — Legislation schema extended: `LegislationSection` gets `tags`, `amendmentCount`, `complexityScore`, `inForce`, `jurisdiction`, `policyArea`. `LegislationItem` gets `subjectArea`, `policyArea`, cross-ref relations. New `LegislationCrossRef` model. `npx prisma db push` ✅ `npx prisma generate` ✅
+6. **V2E-B2** — Raw SQL GIN FTS migration file created (`prisma/migrations/20260416120000_legislation_fts_index/migration.sql`). Compile script now requests `tags` from Gemini and writes `tags`, `amendmentCount`, `complexityScore`. Ingest script now extracts `jurisdiction`, `subjectArea`, `policyArea` from CLML metadata (`dc:coverage`, `ukm:Subject`, `dc:subject`).
+
+### New files/changes this sprint
+- `app/ideas/create/CreateIdeaClient.tsx` — debug cleanup, auto-expand sections, See completed answers button, whoosh animation props, one-field gate
+- `app/api/ai/[ideaId]/route.ts` — debug cleanup, CRITICAL RULE added
+- `app/globals.css` — `fieldWhoosh` keyframe + `.field-whoosh` class
+- `prisma/schema.prisma` — FTS fields + LegislationCrossRef
+- `prisma/migrations/20260416120000_legislation_fts_index/migration.sql` — GIN FTS index (apply via psql when ready)
+- `scripts/legislation/compile.ts` — tags, amendmentCount, complexityScore output
+- `scripts/legislation/ingest.ts` — jurisdiction + subject metadata extraction
+
+### Architecture notes
+- Mobile panel now auto-expands sections with content via `useEffect` in `MobileSidebarContent`; the V2D bug was that accepting a Stage 1 proposal (e.g. `summaryDiagnosis`) moved `activeSection` forward, collapsing the diagnosis section even though `fieldValues` had content
+- `lastAcceptedField` state in parent; passed to `MobileSidebarContent`; cleared after 800ms via `useEffect`
+- FTS migration deferred to ingestion time — `migration.sql` is ready but should be verified for column casing against live DB before running
+
+### Next
+- Run ingestion: `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts`
+- After data is in DB: apply `migration.sql` via psql (verify column casing first with `\d "LegislationSection"`)
+- Run compilation: `GEMINI_API_KEY=xxx npx ts-node scripts/legislation/compile.ts`
 
 ***
 

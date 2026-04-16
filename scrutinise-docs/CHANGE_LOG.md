@@ -2,7 +2,68 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 15 April 2026*
+*Last updated: 16 April 2026*
+
+---
+
+## CODE CHANGES — 16 April 2026 Sprint V2-E
+
+### V2E-A1: Mobile sidebar field display fix
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Removed V2D debug console.logs and yellow debug block. Removed temporary "Back to Chat" button from `MobileSidebarContent`. Added `useEffect` that auto-expands sections with content so filled fields are always visible when mobile panel opens. Fixed `renderFieldCard` to use direct key lookup (no broken regex fallback). |
+| `app/api/ai/[ideaId]/route.ts` | Removed V2D debug console.logs. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2E-A2: "See completed answers →" button in mobile chat toolbar
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `See completed answers →` button to Lex toolbar (`lg:hidden`). Updated "← Back to chat" button in mobile panel header to teal styling. Both buttons use `text-teal-600 hover:text-teal-700`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2E-A3: Auto-flip to answers on acceptance + field whoosh animation
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `lastAcceptedField` state. In `handleCurrentProposalAccept`, on mobile (< 1024px): sets `mobilePanelOpen(true)` and `lastAcceptedField(normKey)`. Added `lastAcceptedField` + `setLastAcceptedField` props to `MobileSidebarContent`. In `renderFieldCard`, applies `field-whoosh` class when key matches `lastAcceptedField`. Added `useEffect` to clear `lastAcceptedField` after 800ms. |
+| `app/globals.css` | Added `fieldWhoosh` keyframe (slide from right, teal peak, fade) and `.field-whoosh` utility class (800ms). |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2E-A4: Gate Lex to one field proposal at a time
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Added CRITICAL RULE — ONE FIELD AT A TIME to the FIELD CONVERSATION PROTOCOL in the system prompt. |
+| `app/ideas/create/CreateIdeaClient.tsx` | In done event handler, `setCurrentProposal` now uses functional update: `prev => prev === null ? fp : prev` — only sets a new proposal if no proposal is currently showing. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2E-B1: Legislation schema — FTS fields, tags, jurisdiction, crossref
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `tags String[]`, `amendmentCount Int`, `complexityScore Int`, `inForce Boolean`, `jurisdiction String`, `policyArea String?` to `LegislationSection`. Added `subjectArea String?`, `policyArea String?`, `crossRefsOut`, `crossRefsIn` to `LegislationItem`. Added `LegislationCrossRef` model. |
+
+**Deploy actions needed:** `npx prisma db push` ✅ `npx prisma generate` ✅
+
+---
+
+### V2E-B2: PostgreSQL GIN FTS index + ingest/compile script updates
+| File | Change |
+|------|--------|
+| `prisma/migrations/20260416120000_legislation_fts_index/migration.sql` | Raw SQL migration: GIN index on `LegislationSection` for FTS (compiledText + sectionTitle + policyArea), GIN index on tags array, btree index on jurisdiction + inForce. Apply via psql when ingestion is ready. Column casing note in file header. |
+| `scripts/legislation/compile.ts` | Extended Gemini prompt to return `tags` array. After compilation, writes `tags`, `amendmentCount` (count of amendment records), `complexityScore` (`ceil(amendmentCount/3)` capped at 5) to `LegislationSection`. |
+| `scripts/legislation/ingest.ts` | Refactored to fetch CLML once per act. Added `extractClmlMetadata()` to parse `dc:coverage`, `ukm:Subject`, `dc:subject` elements. Writes `jurisdiction`, `subjectArea`, `policyArea` to `LegislationItem` on create and update. |
+
+**Deploy actions needed:** Apply `migration.sql` via psql when running ingestion (not before). Casing of column names should be verified with `\d "LegislationSection"` first.
 
 ---
 
