@@ -770,6 +770,12 @@ export async function POST(req: Request, { params }: Params) {
     }
     console.log('[V2D-DEBUG] fieldProposal:', fieldProposal)
 
+    // Strip any remaining markdown code fence markers from display text
+    displayText = displayText
+      .replace(/```json[\s\S]*?```/g, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .trim()
+
     if (insightFlag) {
       prisma.lexInsight.create({
         data: {

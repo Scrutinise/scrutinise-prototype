@@ -405,6 +405,8 @@ function MobileSidebarContent({
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
 
+  console.log('[MOBILE-DEBUG] fieldValues keys:', Object.keys(fieldValues).filter(k => fieldValues[k]))
+
   const toggleSection = (sectionKey: string) => {
     setOpenSections(prev => {
       const next = new Set(prev)
