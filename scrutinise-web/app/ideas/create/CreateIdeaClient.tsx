@@ -406,12 +406,14 @@ function MobileSidebarContent({
   setFieldValues,
   ideaId,
   onChatAboutField,
+  onClose,
 }: {
   fields: FieldCompletion
   fieldValues: Record<string, string>
   setFieldValues: Dispatch<SetStateAction<Record<string, string>>>
   ideaId: string | null
   onChatAboutField: (label: string) => void
+  onClose: () => void
 }) {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
@@ -521,6 +523,27 @@ function MobileSidebarContent({
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+      {/* TEMPORARY BACK BUTTON — reliable close regardless of swipe */}
+      <div className="p-3 border-b bg-background -mx-4 -mt-4 mb-2 px-4 pt-4">
+        <button
+          onClick={onClose}
+          className="w-full py-2 px-4 rounded-lg bg-foreground text-background text-sm font-medium"
+        >
+          ← Back to Chat
+        </button>
+      </div>
+
+      {/* TEMPORARY DEBUG — remove after diagnosis */}
+      <div className="bg-yellow-100 border border-yellow-400 p-3 rounded text-xs">
+        <p className="font-bold mb-1">fieldValues debug:</p>
+        {Object.entries(fieldValues).filter(([, v]) => v).map(([k, v]) => (
+          <p key={k}><span className="font-mono text-yellow-800">{k}:</span> {String(v).substring(0, 40)}</p>
+        ))}
+        {Object.keys(fieldValues).filter(k => fieldValues[k]).length === 0 && (
+          <p className="text-red-600">NO VALUES IN fieldValues</p>
+        )}
+      </div>
 
       {/* Section: Diagnosis — The Challenge */}
       <div>
@@ -1427,6 +1450,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             fieldValues={fieldValues}
             setFieldValues={setFieldValues}
             ideaId={ideaId}
+            onClose={() => setMobilePanelOpen(false)}
             onChatAboutField={(label) => {
               setMobilePanelOpen(false)
               handleSend(false, `I'd like to revisit: ${label}`)
