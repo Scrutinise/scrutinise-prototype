@@ -94,6 +94,17 @@ const EMPTY_FIELDS: FieldCompletion = {
   guidingPolicyCompetitiveIdeaAnalysis: false,
 }
 
+// ── Stage 1 summary → Stage 2 entity display key map ─────────────────────────
+// Used to cross-populate sidebar field values when a proposal is accepted or
+// when populateFieldValuesFromIdea runs on a Stage 1 idea (no entity records yet).
+const SUMMARY_TO_ENTITY_MAP: Record<string, string> = {
+  summaryDiagnosis:      'diagnosisText',
+  summaryGuidingPolicy:  'guidingPolicyText',
+  summaryCoherentActions:'coherentAction_0_title',
+  whoAffected:           'diagnosisWhoAffected',
+  proposedWording:       'guidingPolicyText',
+}
+
 // ── Stage 2 sidebar ───────────────────────────────────────────────────────────
 
 type SidebarSection = 'diagnosis' | 'guidingPolicy' | 'coherentActions'
@@ -637,8 +648,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const micHintInteracted = useRef(false)
   const lastSentMessageRef = useRef<string>('')
-  // Panel swipe-to-close (inside panel only — swipe-to-open removed)
-  const panelTouchStartX = useRef<number>(0)
+  const swipeTouchStartX = useRef<number>(0)
+  const swipeTouchStartY = useRef<number>(0)
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
@@ -703,6 +714,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     ideaData.coherentActions?.forEach((ca: { title?: string; summarySnippet?: string }, i: number) => {
       if (ca.title) vals[`coherentAction_${i}_title`] = ca.title
       if (ca.summarySnippet) vals[`coherentAction_${i}_summary`] = ca.summarySnippet
+    })
+
+    // Cross-map summary keys → entity display keys for Stage 1 ideas (no entity records yet)
+    Object.entries(SUMMARY_TO_ENTITY_MAP).forEach(([summaryKey, entityKey]) => {
+      if (vals[summaryKey] && !vals[entityKey]) vals[entityKey] = vals[summaryKey]
     })
 
     setFieldValues(vals)
@@ -1262,6 +1278,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     const normKey = fieldKey.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
     // Optimistic sidebar update
     setFieldValues(prev => ({ ...prev, [normKey]: value, [fieldKey]: value }))
+    // Cross-map summary keys → entity display keys so sidebar cards show values immediately
+    const entityKey = SUMMARY_TO_ENTITY_MAP[normKey] || SUMMARY_TO_ENTITY_MAP[fieldKey]
+    if (entityKey) {
+      setFieldValues(prev => ({ ...prev, [entityKey]: value }))
+    }
     setOpenFields(prev => { const next = new Set(prev); next.add(normKey); return next })
     setCurrentProposal(null)
     // Send silent system message so Lex knows to populate the field and move on
@@ -1284,7 +1305,24 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     setCurrentProposal(null)
   }, [])
 
-  // ── Panel swipe-to-close (inside panel only) ─────────────────────────────
+  // ── Swipe gesture handlers ────────────────────────────────────────────────
+
+  const handleSwipeTouchStart = useCallback((e: React.TouchEvent) => {
+    swipeTouchStartX.current = e.touches[0].clientX
+    swipeTouchStartY.current = e.touches[0].clientY
+  }, [])
+
+  const handleToolbarSwipeTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
+    const dy = e.changedTouches[0].clientY - swipeTouchStartY.current
+    if (dx > 80 && Math.abs(dx) > Math.abs(dy) * 2) setMobilePanelOpen(true)
+  }, [])
+
+  const handlePanelHeaderSwipeTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
+    const dy = e.changedTouches[0].clientY - swipeTouchStartY.current
+    if (dx < -80 && Math.abs(dx) > Math.abs(dy) * 2) setMobilePanelOpen(false)
+  }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -1299,8 +1337,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       {/* ── Lex toolbar — Save & Exit / View your idea ───────────────────── */}
       <div
         className="shrink-0 flex items-center justify-between px-6 py-2 border-b border-border bg-background/95 text-xs"
-        onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
-        onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current > 60) setMobilePanelOpen(true) }}
+        onTouchStart={handleSwipeTouchStart}
+        onTouchEnd={handleToolbarSwipeTouchEnd}
       >
         <span className="text-muted-foreground font-medium">Developing with Lex</span>
         <div className="flex flex-col items-end gap-1">
@@ -1372,8 +1410,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         >
           <div
             className="flex items-center justify-between p-4 border-b shrink-0"
-            onTouchStart={e => { panelTouchStartX.current = e.touches[0].clientX }}
-            onTouchEnd={e => { if (e.changedTouches[0].clientX - panelTouchStartX.current < -60) setMobilePanelOpen(false) }}
+            onTouchStart={handleSwipeTouchStart}
+            onTouchEnd={handlePanelHeaderSwipeTouchEnd}
           >
             <h2 className="font-semibold text-sm">Your Idea</h2>
             <button
