@@ -491,7 +491,7 @@ function MobileSidebarContent({
             {value && (
               <p className="text-xs text-zinc-600 leading-relaxed line-clamp-3 mt-1 mb-2">{value}</p>
             )}
-            {done && value && (
+            {value && (
               <div className="flex gap-1.5 mt-1">
                 <button
                   onClick={() => setEditingField({ key: keyStr, label, value })}
