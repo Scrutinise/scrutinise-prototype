@@ -22,11 +22,35 @@ async function fetchActList(feedUrl: string): Promise<Array<{
   }).filter(a => a.year > 0 && a.number > 0)
 }
 
-async function fetchSections(clmlUrl: string): Promise<Array<{
+// Extract jurisdiction, subjectArea, and policyArea from CLML XML metadata
+function extractClmlMetadata(xml: string): {
+  jurisdiction: string
+  subjectArea: string | null
+  policyArea: string | null
+} {
+  // <dc:coverage> or <ukm:DocumentMainType> indicate jurisdiction
+  const coverage = xml.match(/<dc:coverage[^>]*>(.*?)<\/dc:coverage>/)?.[1] ?? ''
+  let jurisdiction = 'UK'
+  if (/scotland/i.test(coverage)) jurisdiction = 'Scotland'
+  else if (/wales/i.test(coverage)) jurisdiction = 'Wales'
+  else if (/northern ireland/i.test(coverage)) jurisdiction = 'NI'
+  else if (/england/i.test(coverage)) jurisdiction = 'England'
+
+  // <ukm:Subject> elements carry subject classification
+  const subjectMatch = xml.match(/<ukm:Subject\s+Value="([^"]+)"/)
+  const subjectArea = subjectMatch?.[1] ?? null
+
+  // <dc:subject> may carry policy area
+  const policyMatch = xml.match(/<dc:subject[^>]*>(.*?)<\/dc:subject>/)
+  const policyArea = policyMatch?.[1] ?? null
+
+  return { jurisdiction, subjectArea, policyArea }
+}
+
+// Parse sections from already-fetched CLML XML string
+function fetchSectionsFromXml(xml: string): Array<{
   sectionNumber: string, sectionTitle: string, originalText: string
-}>> {
-  const res = await fetch(clmlUrl)
-  const xml = await res.text()
+}> {
   // Parse CLML P1group elements (top-level sections)
   const sections = []
   const p1groups = [...xml.matchAll(/<P1group>([\s\S]*?)<\/P1group>/g)]
@@ -42,6 +66,13 @@ async function fetchSections(clmlUrl: string): Promise<Array<{
 async function ingestAct(act: { title: string, year: number, number: number, id: string, clmlUrl: string }) {
   console.log(`Ingesting: ${act.title} (${act.year})...`)
 
+  // Fetch CLML XML once — used for both section extraction and metadata
+  const clmlRes = await fetch(act.clmlUrl)
+  const clmlXml = await clmlRes.text()
+
+  // Extract jurisdiction and subject classification from CLML metadata
+  const { jurisdiction, subjectArea, policyArea } = extractClmlMetadata(clmlXml)
+
   // Upsert the LegislationItem
   const item = await prisma.legislationItem.upsert({
     where: { legislationGovUkId: `ukpga/${act.year}/${act.number}` },
@@ -51,16 +82,18 @@ async function ingestAct(act: { title: string, year: number, number: number, id:
       title: act.title,
       year: act.year,
       number: act.number,
-      jurisdiction: 'UK',
+      jurisdiction,
+      subjectArea,
+      policyArea,
       legislationGovUkId: `ukpga/${act.year}/${act.number}`,
       clmlUrl: act.clmlUrl,
       compilationStatus: CompilationStatus.PENDING,
     },
-    update: { clmlUrl: act.clmlUrl },
+    update: { clmlUrl: act.clmlUrl, jurisdiction, subjectArea, policyArea },
   })
 
-  // Fetch and upsert sections using the composite unique key
-  const sections = await fetchSections(act.clmlUrl)
+  // Parse sections from already-fetched CLML XML
+  const sections = fetchSectionsFromXml(clmlXml)
   for (const s of sections) {
     await prisma.legislationSection.upsert({
       where: {

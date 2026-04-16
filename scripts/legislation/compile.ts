@@ -51,7 +51,8 @@ OUTPUT FORMAT (JSON only):
   "confidence": "HIGH | MEDIUM | LOW",
   "confidenceReason": "string (required if not HIGH)",
   "unappliedAmendments": [{"sourceInstrument": "string", "reason": "string"}],
-  "commencementNote": "string | null"
+  "commencementNote": "string | null",
+  "tags": ["string"]
 }`
 
   await prisma.legislationSection.update({
@@ -80,6 +81,15 @@ OUTPUT FORMAT (JSON only):
     const confidence = result.confidence as CompilationConfidence
     const needsReview = confidence === 'LOW'
 
+    // Compute amendmentCount and complexityScore from amendment records
+    const amendmentCount = section.amendments.length
+    const complexityScore = Math.min(5, Math.ceil(amendmentCount / 3))
+
+    // Normalise tags: ensure array of strings, max 10
+    const tags: string[] = Array.isArray(result.tags)
+      ? result.tags.filter((t: unknown) => typeof t === 'string').slice(0, 10)
+      : []
+
     await prisma.legislationSection.update({
       where: { id: sectionId },
       data: {
@@ -93,6 +103,9 @@ OUTPUT FORMAT (JSON only):
         compiledBy: MODEL,
         needsReview,
         compilationVersion: { increment: 1 },
+        tags,
+        amendmentCount,
+        complexityScore,
       },
     })
 
