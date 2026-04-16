@@ -1432,11 +1432,16 @@ model LegislationItem {
   longTitle             String?
   enactmentDate         DateTime?
   inForce               Boolean             @default(true)
+  // Subject classification (V2E-B1)
+  subjectArea           String?
+  policyArea            String?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
   sections              LegislationSection[]
   ideaLinks             IdeaLegislation[]
+  crossRefsOut          LegislationCrossRef[] @relation("CrossRefSource")
+  crossRefsIn           LegislationCrossRef[] @relation("CrossRefTarget")
 
   @@index([legislationType, year])
   @@index([tier])
@@ -1471,6 +1476,14 @@ model LegislationSection {
   // Timestamps
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
+
+  // FTS and tagging fields (V2E-B1)
+  tags            String[]
+  amendmentCount  Int     @default(0)
+  complexityScore Int     @default(0)
+  inForce         Boolean @default(true)
+  jurisdiction    String  @default("UK")
+  policyArea      String?
 
   amendments            LegislationAmendment[]
   corrections           LegislationCorrection[]
@@ -1543,4 +1556,21 @@ model LegislationCorrection {
 
   @@index([sectionId])
   @@index([status])
+}
+
+// Cross-references between legislation items (V2E-B1)
+model LegislationCrossRef {
+  id               String   @id @default(cuid())
+  sourceItemId     String
+  sourceSectionId  String
+  targetItemId     String
+  targetSectionId  String?
+  crossRefType     String   // "amends" | "repeals" | "modifies" | "extends"
+  createdAt        DateTime @default(now())
+
+  sourceItem       LegislationItem @relation("CrossRefSource", fields: [sourceItemId], references: [id])
+  targetItem       LegislationItem @relation("CrossRefTarget", fields: [targetItemId], references: [id])
+
+  @@index([sourceItemId])
+  @@index([targetItemId])
 }
