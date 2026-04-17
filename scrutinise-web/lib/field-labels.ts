@@ -1,3 +1,53 @@
+export interface FieldStep {
+  key: string           // fieldUpdates key (e.g. 'diagnosis.obstacleDefined')
+  label: string         // display label (e.g. '6. The Obstacle')
+  section: string       // section key (e.g. 'diagnosis')
+  sectionLabel: string  // section heading (e.g. 'Diagnosis — The Challenge')
+  isLexGenerated?: boolean  // if true, Lex generates without asking user
+  isLoop?: boolean          // if true (coherent actions), loop resumes after completion
+}
+
+export const FIELD_SEQUENCE: FieldStep[] = [
+  // Initial Information
+  { key: 'title',              label: '1. Title',               section: 'initialInformation', sectionLabel: 'Initial Information' },
+  { key: 'summaryDescription', label: '2. Summary Description', section: 'initialInformation', sectionLabel: 'Initial Information' },
+  { key: 'govtArea',           label: '3. Government Area',     section: 'initialInformation', sectionLabel: 'Initial Information' },
+  { key: 'ideaType',           label: '4. Idea Type',           section: 'initialInformation', sectionLabel: 'Initial Information' },
+
+  // Diagnosis
+  { key: 'diagnosis.text',              label: "5. What's the Challenge?", section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.obstacleDefined',   label: '6. The Obstacle',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.whoAffected',       label: "7. Who's Affected?",        section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.howAffected',       label: '8. How Are They Affected?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.whyPersisted',      label: '9. Why Has This Persisted?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.impactDescription', label: '10. Impact',                section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'diagnosis.impactCost',        label: '11. Impact Cost',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
+  { key: 'summaryDiagnosis',            label: 'Summary: The Challenge',    section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge', isLexGenerated: true },
+
+  // Guiding Policy
+  { key: 'guidingPolicy.text',                 label: '12. How Will We Solve It?',       section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.coreTheory',           label: '13. Core Theory',                 section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.mechanismTypes',       label: '14. Mechanism Types',             section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.tradeOffs',            label: '15. Trade-offs',                  section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.whyThisApproachNotOthers', label: '16. Why Not Other Approaches?', section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.linkToDiagnosis',      label: '17. Link to Diagnosis',           section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.whatThisPolicyRulesOut', label: '18. What This Policy Rules Out', section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'guidingPolicy.conditionsForSuccess', label: '19. Conditions for Success',      section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
+  { key: 'summaryGuidingPolicy',               label: 'Summary: Guiding Policy',         section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach', isLexGenerated: true },
+
+  // Coherent Actions (loop — one action at a time)
+  { key: 'coherentAction.title',           label: '20. A Practical Step',     section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.mechanismType',   label: '20a. Mechanism Type',      section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.summary',         label: '21. Summary',              section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.whoImplements',   label: '22. Who Implements This?', section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.benefitFinancial', label: '23. Financial Benefit',   section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.benefitSocial',   label: '24. Social Benefit',       section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.benefitOngoing',  label: '25. Ongoing Benefit',      section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.netCostOngoing',  label: '26. Ongoing Net Cost',     section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'coherentAction.netCostOneOff',   label: '27. One-off Net Cost',     section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
+  { key: 'summaryCoherentActions',         label: 'Summary: Coherent Actions', section: 'coherentActions', sectionLabel: 'Coherent Actions', isLexGenerated: true },
+]
+
 export const FIELD_LABELS: Record<string, { sectionHeading?: string; userLabel: string }> = {
   // Initial Information
   title:              { sectionHeading: 'Initial Information', userLabel: '1. Title' },
