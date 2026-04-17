@@ -6,6 +6,53 @@
 
 ---
 
+## CODE CHANGES — 17 April 2026 Sprint V2-H
+
+### V2H-A1: FIELD_SEQUENCE in field-labels.ts
+| File | Change |
+|------|--------|
+| `lib/field-labels.ts` | Added `FieldStep` interface and `FIELD_SEQUENCE` array (57 steps: 4 Initial Information, 8 Diagnosis + summary, 9 Guiding Policy + summary, 10 Coherent Action loop + summary). `isLexGenerated` flag for 3 summary steps. `isLoop` flag for 9 CA fields. Canonical ordered sequence — frontend walks it one step at a time. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2H-A2: currentFieldIndex state machine — platform controls field sequence
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `currentFieldIndex`, `caLoopCount`, `addAnotherCAPrompt` states. Added `currentFieldIndexRef` for stale-closure-safe access in handleSend. `populateFieldValuesFromIdea` computes first unfilled field on load (resume from where user left off). Every API call now includes `currentFieldKey`, `currentFieldLabel`, `currentFieldSection`. `handleCurrentProposalAccept` advances `currentFieldIndex`, triggers CA loop "Add another?" prompt at last isLoop step, auto-sends generation trigger for isLexGenerated steps. `handleAddAnotherCA` handles Yes/No response to CA loop. `handleSkipField` advances without writing a value. Skip button added to input area. Old `prev === null ? fp : prev` gate removed — platform controls sequence now. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2H-B1: Dynamic single-field instruction to Lex
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | `MessageSchema` extended with `currentFieldKey`, `currentFieldLabel`, `currentFieldSection` (all nullable optional). `buildSystemPrompt` accepts and uses these fields to generate dynamic `fieldInstruction`. `fieldInstruction` injected after `${stageSection}` in system prompt. Removed old FIELD CONVERSATION PROTOCOL block (FIELD SEQUENCE, SECTION GATE RULE, EVIDENCE NUDGING, MECHANISM TYPE, 5-step protocol, ONE FIELD AT A TIME rule, FIELD ACCEPTANCE rule, Valid fieldUpdates keys list) from Stage 1 section. SCOPE BOUNDARIES added to `fieldInstruction` (no team names, sharing, voting in Lex chat). |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2H-C1: Five mobile UX fixes
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Fix 1 (viewport clip): added `max-w-full overflow-x-hidden` to chat panel and `max-w-full` to input box. Fix 2 (scroll): chat now scrolls to TOP of latest Lex message (`data-role="assistant"` added to Lex bubbles, `scrollIntoView({block: 'start'})` used). Fix 3/5 (Initial Information): always expanded when has content; chevron shows collapse state; collapses via `initialInformation_collapsed` toggle key. Fix 4 (team name scope): SCOPE BOUNDARIES added to system prompt via `fieldInstruction` (covers both field-active and field-complete states). |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2H-D1: RootCause multiple causes with depth and parent-child chain
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `causeDepth Int @default(0)`, `orderIndex Int @default(0)`, `parentId String?` to `RootCause`. Added self-referential `parent`/`children` relations via `"CauseChain"`. Added `@@index([parentId])`. `prisma db push` ✅ (additive only — no data loss). `prisma generate` ✅. |
+
+**Deploy actions needed:** `npx prisma db push` + `npx prisma generate` (already applied locally).
+
+---
+
 ## CODE CHANGES — 17 April 2026 Sprint V2-G
 
 ### V2G-A1: MechanismType enum + schema refactor

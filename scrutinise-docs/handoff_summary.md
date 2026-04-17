@@ -1,6 +1,45 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 17 April 2026 v28*
+*Last updated: 17 April 2026 v29*
+
+***
+
+## CURRENT STATE — SPRINT V2-H COMPLETE ✅
+
+Four commits to Main. All `tsc --noEmit` clean. `prisma db push` + `prisma generate` done (D1 schema changes). Ready to push.
+
+### V2H commit summary
+
+1. **V2H-A1** — `lib/field-labels.ts`: Added `FieldStep` interface and `FIELD_SEQUENCE` array (57 steps, 4 sections). `isLexGenerated` flag for summary steps. `isLoop` flag for 9 Coherent Action fields.
+
+2. **V2H-A2** — `CreateIdeaClient.tsx`: `currentFieldIndex` state machine. Every API call includes `currentFieldKey/Label/Section`. `populateFieldValuesFromIdea` computes resume index on load. `handleCurrentProposalAccept` advances sequence, triggers CA loop prompt, auto-sends isLexGenerated trigger. `handleAddAnotherCA` (yes/no CA loop). `handleSkipField`. Skip button in input area. Old `prev === null ? fp : prev` gate removed.
+
+3. **V2H-B1** — `app/api/ai/[ideaId]/route.ts`: `MessageSchema` accepts `currentFieldKey/Label/Section`. `buildSystemPrompt` generates dynamic `fieldInstruction` (single-field instruction with evidence nudging, scope boundaries). `fieldInstruction` injected at end of system prompt. Removed old FIELD CONVERSATION PROTOCOL block from Stage 1.
+
+4. **V2H-C1** — `CreateIdeaClient.tsx`: Fix 1 viewport clip (`max-w-full overflow-x-hidden`). Fix 2 scroll to top of last Lex message (`data-role="assistant"`). Fix 3/5 Initial Information always expanded when has content (toggle with `initialInformation_collapsed`). Fix 4 team/voting scope boundaries in `fieldInstruction`.
+
+5. **V2H-D1** — `prisma/schema.prisma`: `RootCause` extended with `causeDepth`, `orderIndex`, `parentId`, self-referential `parent`/`children` via `"CauseChain"`. `prisma db push` ✅ `prisma generate` ✅.
+
+### New files/changes this sprint
+- `lib/field-labels.ts` — `FieldStep` interface + `FIELD_SEQUENCE` array added
+- `app/ideas/create/CreateIdeaClient.tsx` — state machine, UX fixes, FIELD_SEQUENCE import
+- `app/api/ai/[ideaId]/route.ts` — `MessageSchema` extended, `buildSystemPrompt` new params + `fieldInstruction`, FIELD CONVERSATION PROTOCOL removed
+- `prisma/schema.prisma` — `RootCause` self-referential tree
+
+### Architecture notes
+- `currentFieldIndexRef` (useRef) keeps `handleSend` stale-closure-safe — always reads latest index.
+- `isLexGenerated` steps auto-trigger: after advancing to a summary step, `handleCurrentProposalAccept` fires `setTimeout(300ms)` → `handleSend(false, "Please generate a summary for: [label]")`. User still reviews and accepts the card.
+- CA loop: completing `coherentAction.netCostOneOff` sets `addAnotherCAPrompt`. Yes → resets index to `coherentAction.title`, increments `caLoopCount`. No → jumps to `summaryCoherentActions` and auto-triggers.
+- `fieldInstruction` has two branches: `currentFieldKey` set → single-field instruction with Evidence Nudging and Scope Boundaries; null → "all fields complete" fallback.
+- `initialInformation_collapsed` is the toggle key in `openSections` for the Initial Information section — inverted logic (collapsed when key IS in set, expanded when NOT).
+
+### Deploy actions needed
+- `npx prisma db push` ✅ (already done locally)
+- `npx prisma generate` ✅ (already done locally)
+- No new env vars required
+
+### entity_list_v5.md updates needed (CCh to apply)
+- `RootCause`: add `causeDepth Int @default(0)`, `orderIndex Int @default(0)`, `parentId String?`, `parent RootCause?` (relation), `children RootCause[]` (relation)
 
 ***
 
