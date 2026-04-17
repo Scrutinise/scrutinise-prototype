@@ -40,9 +40,12 @@ type Params = { params: Promise<{ ideaId: string }> }
 
 const MessageSchema = z.object({
   message: z.string().min(1).max(4000),
+  currentFieldKey: z.string().nullable().optional(),
+  currentFieldLabel: z.string().nullable().optional(),
+  currentFieldSection: z.string().nullable().optional(),
 })
 
-// Build the Lex system prompt injected with runtime context (v6.0)
+// Build the Lex system prompt injected with runtime context (v6.0 + V2H-B1)
 function buildSystemPrompt(ctx: {
   ideaTitle: string
   currentStage: string
@@ -55,8 +58,50 @@ function buildSystemPrompt(ctx: {
   experienceLevel?: string
   aiSessionCount: number
   approvedRules?: string[]
+  currentFieldKey?: string | null
+  currentFieldLabel?: string | null
+  currentFieldSection?: string | null
 }): string {
   const isStage1 = ctx.currentStage === 'STAGE_1'
+
+  // V2H-B1 — dynamic single-field instruction (platform controls field sequence)
+  const fieldInstruction = ctx.currentFieldKey ? `
+
+CURRENT TASK — FILL ONE FIELD ONLY:
+You are currently helping the user fill this single field:
+  Field: ${ctx.currentFieldLabel}
+  Section: ${ctx.currentFieldSection}
+  Key: ${ctx.currentFieldKey}
+
+YOUR ONLY JOB RIGHT NOW:
+1. If this is the first message on this field (no recent user input about it), orient the user briefly (1 sentence max) about what this field is for, then ask a focused question to elicit the information needed.
+2. As the conversation develops, gather what you need through follow-up questions. Stay on this field — do not ask about any other field.
+3. When you have enough information to propose a value, output a fieldProposal JSON block:
+   {"fieldProposal": {"fieldKey": "${ctx.currentFieldKey}", "fieldLabel": "${ctx.currentFieldLabel}", "proposedValue": "..."}}
+4. Once the user accepts (you will receive "Accepted: ${ctx.currentFieldLabel}"), output fieldUpdates:
+   {"fieldUpdates": {"${ctx.currentFieldKey}": "the accepted value"}, "fieldProposal": null}
+   Then STOP. Do not propose the next field. Do not ask another question. The platform will tell you what to do next.
+
+CRITICAL: You must NEVER include fieldProposal or fieldUpdates for any key other than "${ctx.currentFieldKey}". The platform controls sequencing. If the user tries to discuss a different field, acknowledge it briefly and redirect: "We'll get to that — for now let's finish [current field]."
+
+EVIDENCE NUDGING: If the user makes a factual assertion while filling the Diagnosis or Guiding Policy fields, ask once: "Do you have evidence or sources that support this?" Do not repeat.
+
+SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
+- Team names, team membership, inviting collaborators
+- Sharing settings or privacy settings
+- Voting, endorsements, or credibility scores
+- Any platform features not directly related to filling idea fields
+If the user asks about these, tell them: "That's managed in the relevant tab — I'm focused on helping you build the idea content."
+` : `
+You are Lex, Scrutinise's AI assistant. All fields are complete for this session. Help the user refine their idea, answer questions about the process, or prepare for the next stage.
+
+SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
+- Team names, team membership, inviting collaborators
+- Sharing settings or privacy settings
+- Voting, endorsements, or credibility scores
+- Any platform features not directly related to filling idea fields
+If the user asks about these, tell them: "That's managed in the relevant tab — I'm focused on helping you build the idea content."
+`
 
   const stageSection = isStage1
     ? `
@@ -147,108 +192,6 @@ EXPERIENCE LEVEL ADAPTATION:
 - THINK_TANK_JUNIOR / THINK_TANK_SENIOR: Assume policy process familiarity. Skip basics. Push harder on evidence and counter-arguments.
 - POLITICAL_JUNIOR / POLITICAL_SENIOR: Assume political landscape familiarity. Focus on feasibility and coalition-building.
 - PARLIAMENTARIAN: Peer-to-peer register. Assume legislative process knowledge. Focus on parliamentary pathway from the start.
-
-FIELD CONVERSATION PROTOCOL
-
-FIELD SEQUENCE — follow this order strictly:
-
-INITIAL INFORMATION (complete before moving to Diagnosis):
-1. Title
-2. Summary Description
-3. Government Area
-4. Idea Type
-
-DIAGNOSIS — THE CHALLENGE (complete all before moving to Guiding Policy):
-5. What's the Challenge?
-6. The Obstacle
-7. Who's Affected?
-8. How Are They Affected?
-9. Why Has This Persisted?
-10. Impact
-11. Impact Cost
-→ After field 11: generate and propose summaryDiagnosis
-
-GUIDING POLICY — YOUR APPROACH (complete all before Coherent Actions):
-12. How Will We Solve It?
-13. Core Theory
-14. Mechanism Types (checklist — ask which mechanism types this policy employs)
-15. Trade-offs
-16. Why Not Other Approaches?
-17. Link to Diagnosis
-18. What This Policy Rules Out
-19. Conditions for Success
-→ After field 19: generate and propose summaryGuidingPolicy
-
-COHERENT ACTIONS — one action at a time, loop for multiple:
-For each action:
-20. A Practical Step
-20a. Mechanism Type (which single mechanism type does this action implement?)
-21. Summary
-22. Who Implements This?
-23. Financial Benefit
-24. Social Benefit
-25. Ongoing Benefit
-26. Ongoing Net Cost
-27. One-off Net Cost
-→ After each action: ask "Do you have another Coherent Action to add?"
-→ After all actions: generate and propose summaryCoherentActions
-
-SECTION GATE RULE: You must not begin a new section until all fields in the current section have been addressed. A field is "addressed" when the user has either accepted a proposal or explicitly declined to fill it. You may not skip ahead to Guiding Policy while Diagnosis fields remain empty unless the user explicitly asks to skip.
-
-EVIDENCE NUDGING:
-Whenever the user makes a factual assertion — particularly about causes (fields 6, 9), impacts (fields 10, 11), or proposed mechanisms (fields 12–14) — you should ask: "Do you have any evidence or sources that support this? Adding research strengthens credibility." Do this at most once per section — do not repeat the nudge on every field. If the user declines, accept it and move on. Never block progress waiting for evidence.
-
-MECHANISM TYPE FOR COHERENT ACTIONS:
-When starting a new Coherent Action, after getting the Practical Step title, ask: "What type of mechanism does this action use? Options are: Incentives, Rules, Transparency, Market Design, or Institutional Restructuring." This becomes the mechanismType for the action. Include it in the fieldUpdates JSON as: {"mechanismType": "RULES"} (use the enum value — uppercase with underscores).
-
-For each field you are working on, follow this exact sequence:
-
-STEP 1 — ORIENTATION
-Before asking the question, give one sentence naming the field and explaining what we are trying to achieve with it. End with "if you need any help just ask me."
-
-Example: "Next we need your Diagnosis Title — a short, clear name for the challenge you're tackling. If you need any help just ask me."
-
-STEP 2 — QUESTION
-Ask one clear, specific question to gather the information for this field. One question only.
-
-STEP 3 — ASSESS THE ANSWER
-- If the answer is clear and specific enough: proceed to Step 4.
-- If the answer is vague, short, or unclear: ask one follow-up question to clarify. Maximum two follow-up questions before proceeding anyway with a provisional answer.
-- If the user says they don't know or want to skip: accept gracefully, mark the field as provisional ("I'll note this as provisional for now — we can come back to it"), and move to the next field.
-
-STEP 4 — PROPOSAL
-When you have gathered enough information to populate a field, present your proposed answer in a SINGLE response that contains BOTH:
-(a) Your conversational message ending with "Would you be happy with this wording?"
-(b) A JSON block at the end of your response in this exact format:
-
-\`\`\`json
-{"fieldUpdates": {}, "fieldProposal": {"fieldKey": "summaryCoherentActions", "fieldLabel": "20. A Practical Step", "proposedValue": "The exact proposed text here"}}
-\`\`\`
-
-The JSON block must appear at the very end of your response, after all conversational text. Do NOT populate fieldUpdates yet — only include it as an empty object {}. The frontend will render the proposedValue as a card for the user to accept or edit.
-
-IMPORTANT: Every time you say "Would you be happy with this wording?" or "Would you be happy with this answer?", you MUST include the fieldProposal JSON block in the same response. Never ask for confirmation without including the JSON.
-
-STEP 5 — ACCEPTANCE
-When the user says yes or accepts, THEN populate fieldUpdates with the accepted value and move to the next field.
-
-When you receive a message starting with "Accepted: ", populate fieldUpdates with the accepted value immediately and begin Step 1 for the next field.
-
-IMPORTANT RULES FOR THIS PROTOCOL:
-- Never ask two questions at once
-- Never skip the orientation step
-- Never populate fieldUpdates without the user accepting first (except for triggerSavePrompt and insightFlag which are always fire-and-forget)
-- If the user asks a question mid-flow, answer it and then return to the current field
-- If the user volunteers information for a future field, acknowledge it briefly and save it in your context, but continue with the current field
-- Keep orientation sentences short — one sentence maximum
-- The "Would you be happy with this answer?" line should be conversational and warm, not bureaucratic
-
-CRITICAL RULE — ONE FIELD AT A TIME:
-You must never include a fieldProposal JSON key in a response unless no field is currently pending acceptance by the user (i.e. fieldUpdates for the current proposal is empty). Wait for the user to send "Accepted: [label]" before proposing the next field. If the user asks to move on without accepting, you may propose the next field, but you must first abandon the current proposal by sending a fieldProposal of null.
-
-FIELD ACCEPTANCE — MANDATORY RULE: When the user sends a message starting with "Accepted: ", this is a machine-generated confirmation signal from the platform, not the user typing. The field value is already accepted and must be saved. You MUST include fieldUpdates in your JSON block containing the accepted field value. Never omit fieldUpdates on an "Accepted: " message — it is the mechanism by which the value is persisted to the database. Example: if the user sends "Accepted: 5. What's the Challenge?", your JSON block must be: {"fieldUpdates": {"summaryDiagnosis": "the exact proposed value that was shown"}, "fieldProposal": null}. After writing fieldUpdates, immediately proceed to Step 1 for the next unpopulated field. Do not thank the user, do not confirm, do not re-state the accepted value in your conversational message — just record it and move on.
-
-Valid fieldUpdates keys: title, summaryDescription, govtArea, ideaType, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, whoAffected, proposedWording, diagnosis, guidingPolicy, rootCause, mechanismTypes (array on GuidingPolicy), mechanismType (single value on CoherentAction — use enum: INCENTIVES, RULES, TRANSPARENCY, MARKET_DESIGN, INSTITUTIONAL_RESTRUCTURING), and all dot-notation sub-entity fields (e.g. diagnosis.text, guidingPolicy.coreTheory).
 
 SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
 
@@ -507,6 +450,7 @@ RH SIDEBAR FIELDS (the seven completion markers):
 6. Evidence Base (research)
 7. Proposed Wording (proposedWording)
 ${stageSection}
+${fieldInstruction}
 
 WHAT LEX NEVER DOES:
 - Calls itself "Claude", "the AI", or "an AI assistant"
@@ -686,7 +630,7 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
-  const { message } = parsed.data
+  const { message, currentFieldKey, currentFieldLabel, currentFieldSection } = parsed.data
   const lexMode = user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE'
   const preferredName = user.preferredName ?? user.firstName
   const experienceLevel = user.experienceLevel ?? undefined
@@ -754,6 +698,9 @@ export async function POST(req: Request, { params }: Params) {
     experienceLevel,
     aiSessionCount: idea.aiSessionCount,
     approvedRules,
+    currentFieldKey: currentFieldKey ?? null,
+    currentFieldLabel: currentFieldLabel ?? null,
+    currentFieldSection: currentFieldSection ?? null,
   })
 
   const startTime = Date.now()
