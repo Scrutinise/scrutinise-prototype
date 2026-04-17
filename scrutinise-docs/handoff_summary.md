@@ -1,6 +1,39 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 16 April 2026 v27*
+*Last updated: 17 April 2026 v28*
+
+***
+
+## CURRENT STATE — SPRINT V2-G COMPLETE ✅
+
+Four commits to Main. All `tsc --noEmit` clean. `prisma db push --accept-data-loss` + `prisma generate` done. Schema changes, sidebar restructure, Lex system prompt update, mobile sidebar `initialInformation` section.
+
+### V2G commit summary
+
+1. **V2G-A1** — Schema: added `MechanismType` enum (`INCENTIVES | RULES | TRANSPARENCY | MARKET_DESIGN | INSTITUTIONAL_RESTRUCTURING`). `GuidingPolicy`: removed 5 deprecated `mechanism*` String? fields, replaced with `mechanismTypes MechanismType[]`. `CoherentAction`: added `mechanismType MechanismType?`. `prisma db push --accept-data-loss` ✅ (test data only — 3 columns with minor data lost). `prisma generate` ✅. Fixed all TypeScript errors across 6 files (`IdeaDetailClient.tsx`, `CreateIdeaClient.tsx`, `ai/route.ts`, `field-approval/route.ts`, `guiding-policy/route.ts`, `field-labels.ts`).
+2. **V2G-B1** — `lib/field-labels.ts` restructured: `SIDEBAR_SECTIONS` now nested format with 4 sections (`initialInformation`, `diagnosis`, `guidingPolicy`, `coherentActions`), each with `key`, `heading`, `fields[]`. Fields numbered 1–27. `DEPRECATED_FIELDS` export added (maps 5 old mechanism keys to null). `getFieldLabel` updated.
+3. **V2G-C1** — Lex system prompt (`app/api/ai/[ideaId]/route.ts`): FIELD CONVERSATION PROTOCOL updated with explicit numbered field sequence (1–27), SECTION GATE RULE (don't advance section until all fields in current section proposed), EVIDENCE NUDGING instruction, MECHANISM TYPE FOR COHERENT ACTIONS instruction. `fieldUpdates` key list updated. Local `FIELD_LABELS` dict updated (removed 5 mechanism refs, added `guidingPolicy.mechanismTypes`, `mechanismType`). `completedFields` logic updated for `guidingPolicyMechanism`, added `summaryDescription`/`govtArea`/`ideaType`.
+4. **V2G-D1** — `CreateIdeaClient.tsx`: `FieldCompletion` interface extended with `summaryDescription`, `govtArea`, `ideaType`. `EMPTY_FIELDS` updated. `populateFieldValuesFromIdea` now reads `govtArea`, `ideaType`, and `gp.mechanismTypes?.join(', ')`. `MobileSidebarContent` gets new `initialInformation` section at top (title, summaryDescription, govtArea, ideaType) matching the `SIDEBAR_SECTIONS` structure.
+
+### New files/changes this sprint
+- `prisma/schema.prisma` — `MechanismType` enum; `GuidingPolicy.mechanismTypes MechanismType[]`; `CoherentAction.mechanismType MechanismType?`
+- `lib/field-labels.ts` — full rewrite: numbered fields 1–27, nested `SIDEBAR_SECTIONS`, `DEPRECATED_FIELDS`
+- `app/api/ai/[ideaId]/route.ts` — system prompt protocol update, field labels dict, completedFields logic
+- `app/api/ideas/[id]/field-approval/route.ts` — `mechanismType` handler, `guidingPolicy.mechanismTypes` JSON-array handling, updated completedFields
+- `app/api/ideas/[id]/guiding-policy/route.ts` — Zod schema: `mechanismTypes z.array(z.enum([...]))` + 4 Rumelt fields
+- `app/ideas/create/CreateIdeaClient.tsx` — `FieldCompletion` extended, `MobileSidebarContent` initialInformation section
+- `app/ideas/[id]/IdeaDetailClient.tsx` — `GuidingPolicyRecord` updated; 5 mechanism fields replaced with single `mechanismTypes` FieldDisplay
+
+### Architecture notes
+- `mechanismTypes` on `GuidingPolicy` is a Prisma enum array — requires `{ set: [...] }` syntax in all upsert calls.
+- `mechanismType` on `CoherentAction` uses the "most recent CoherentAction" pattern in both `field-approval` and AI route (no sub-entity routing for individual CA fields).
+- `SIDEBAR_SECTIONS` is now nested (4 sections with `fields[]`) — any component consuming it must use `section.fields` not top-level array.
+- `DEPRECATED_FIELDS` export allows any consumer to check whether a fieldKey is deprecated before attempting to write it.
+
+### Deploy actions needed
+- `npx prisma db push --accept-data-loss` ✅ (already done locally — run on Vercel/Railway if not yet applied)
+- `npx prisma generate` ✅ (already done locally)
+- No new env vars required
 
 ***
 

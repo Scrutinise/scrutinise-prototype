@@ -2,7 +2,49 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 16 April 2026*
+*Last updated: 17 April 2026*
+
+---
+
+## CODE CHANGES — 17 April 2026 Sprint V2-G
+
+### V2G-A1: MechanismType enum + schema refactor
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added `MechanismType` enum (INCENTIVES, RULES, TRANSPARENCY, MARKET_DESIGN, INSTITUTIONAL_RESTRUCTURING). Removed 5 deprecated `mechanism*` String? fields from `GuidingPolicy`, replaced with `mechanismTypes MechanismType[]`. Added `mechanismType MechanismType?` to `CoherentAction`. `prisma db push --accept-data-loss` applied (test data only in DB). `prisma generate` run. |
+
+**Deploy actions needed:** None (db push already applied).
+
+---
+
+### V2G-B1: field-labels.ts restructure — numbered fields, Initial Information, DEPRECATED_FIELDS
+| File | Change |
+|------|--------|
+| `lib/field-labels.ts` | Restructured `SIDEBAR_SECTIONS` from flat array to nested `{ key, heading, fields[] }` structure. Added `initialInformation` section (fields 1–4). Added field numbers (1–27) to all labels. Replaced 5 mechanism field entries with single `mechanismTypes` (field 14). Added `mechanismType` (field 20a) to coherent actions section. Removed `summaryDiagnosis`, `summaryGuidingPolicy`, `summaryCoherentActions`, `proposedWording`, `whoAffected` from sections (Lex-generated, not user-filled). Added `DEPRECATED_FIELDS` export (infrastructure only — not wired to UI). |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2G-C1: Lex system prompt — field sequence, section gates, evidence nudging, mechanism type
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Updated FIELD CONVERSATION PROTOCOL: added explicit numbered field sequence (1–27) with section gate rule. Added EVIDENCE NUDGING instruction (once per section for factual assertions). Added MECHANISM TYPE FOR COHERENT ACTIONS instruction (ask after each CA title). Updated fieldUpdates key list to include `mechanismTypes` and `mechanismType`, remove deprecated mechanism fields. Updated field label references to use numbered format. Updated Stage 2 field targets. Added `mechanismType` persistence to most recent CoherentAction in `applyFieldUpdatesAndSave`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2G-D1: Mobile answers panel — Initial Information section
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | Added `summaryDescription`, `govtArea`, `ideaType` to `FieldCompletion` interface and `EMPTY_FIELDS`. Added govtArea and ideaType to `populateFieldValuesFromIdea`. Updated mechanism field handling in `populateFieldValuesFromIdea` to use `mechanismTypes` array. Added `initialInformation` section to `MobileSidebarContent`. |
+| `app/api/ai/[ideaId]/route.ts` | Added `summaryDescription`, `govtArea`, `ideaType` to completedFields select and response. |
+| `app/api/ideas/[id]/field-approval/route.ts` | Updated to remove deprecated mechanism field refs; added `mechanismType` CoherentAction handler; added `guidingPolicy.mechanismTypes` array handler; added `summaryDescription`, `govtArea`, `ideaType` to completedFields. |
+| `app/api/ideas/[id]/guiding-policy/route.ts` | Replaced 5 mechanism String? fields in Zod schema with `mechanismTypes` enum array. Added new Rumelt fields (`linkToDiagnosis`, `whatThisPolicyRulesOut`, `whyThisApproachNotOthers`, `conditionsForSuccess`). |
+| `app/ideas/[id]/IdeaDetailClient.tsx` | Replaced `GuidingPolicyRecord` interface (5 mechanism fields → `mechanismTypes: string[] | null`). Updated `updateGuidingPolicyField` default object. Replaced 5 `FieldDisplay` mechanism components with single `mechanismTypes` display. |
+
+**Deploy actions needed:** None (db push already applied).
 
 ---
 
