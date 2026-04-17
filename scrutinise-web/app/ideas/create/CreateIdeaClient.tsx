@@ -32,8 +32,12 @@ interface ChatMessage {
 }
 
 interface FieldCompletion {
-  // Stage 1
+  // Initial Information
   title: boolean
+  summaryDescription: boolean
+  govtArea: boolean
+  ideaType: boolean
+  // Stage 1
   summaryDiagnosis: boolean
   rootCause: boolean
   summaryGuidingPolicy: boolean
@@ -80,8 +84,10 @@ const SIDEBAR_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
 ]
 
 const EMPTY_FIELDS: FieldCompletion = {
+  // Initial Information
+  title: false, summaryDescription: false, govtArea: false, ideaType: false,
   // Stage 1
-  title: false, summaryDiagnosis: false, rootCause: false,
+  summaryDiagnosis: false, rootCause: false,
   summaryGuidingPolicy: false, summaryCoherentActions: false,
   whoAffected: false, proposedWording: false,
   // Stage 2 — Diagnosis
@@ -543,8 +549,44 @@ function MobileSidebarContent({
     )
   }
 
+  const initialInfoFields: { key: keyof FieldCompletion; label: string }[] = [
+    { key: 'title',              label: '1. Title' },
+    { key: 'summaryDescription', label: '2. Summary Description' },
+    { key: 'govtArea',           label: '3. Government Area' },
+    { key: 'ideaType',           label: '4. Idea Type' },
+  ]
+
+  const initialInfoHasContent = !!(fieldValues['title'] || fieldValues['summaryDescription'])
+
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+      {/* Section: Initial Information */}
+      <div>
+        <div
+          className={`flex items-center gap-2 py-1.5 mb-2 ${activeSection !== 'diagnosis' && initialInfoHasContent ? 'cursor-pointer' : ''}`}
+          onClick={() => activeSection !== 'diagnosis' && initialInfoHasContent && toggleSection('initialInformation')}
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            !diagHasContent ? 'bg-blue-500' :
+            initialInfoHasContent ? 'bg-green-500' : 'bg-zinc-200'
+          }`} />
+          <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+            !diagHasContent ? 'text-foreground' :
+            initialInfoHasContent ? 'text-zinc-700' : 'text-muted-foreground/40'
+          }`}>
+            Initial Information
+          </span>
+          {activeSection !== 'diagnosis' && initialInfoHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('initialInformation') ? '▲' : '▼'}</span>
+          )}
+        </div>
+        {(!diagHasContent || openSections.has('initialInformation')) && (
+          <div className="space-y-2">
+            {initialInfoFields.map(({ key, label }) => renderFieldCard(key as keyof FieldCompletion, label))}
+          </div>
+        )}
+      </div>
 
       {/* Section: Diagnosis — The Challenge */}
       <div>
@@ -685,9 +727,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (!ideaData) return
     const vals: Record<string, string> = {}
 
-    // Core idea fields
+    // Core idea fields (Initial Information)
     if (ideaData.title) vals['title'] = ideaData.title
     if (ideaData.summaryDescription) vals['summaryDescription'] = ideaData.summaryDescription
+    if (ideaData.govtArea) vals['govtArea'] = ideaData.govtArea
+    if (ideaData.ideaType) vals['ideaType'] = ideaData.ideaType
     if (ideaData.summaryDiagnosis) vals['summaryDiagnosis'] = ideaData.summaryDiagnosis
     if (ideaData.summaryGuidingPolicy) vals['summaryGuidingPolicy'] = ideaData.summaryGuidingPolicy
     if (ideaData.summaryCoherentActions) vals['summaryCoherentActions'] = ideaData.summaryCoherentActions
@@ -724,10 +768,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       if (gp.coreTheory) vals['guidingPolicyCoreTheory'] = gp.coreTheory
       if (gp.tradeOffs) vals['guidingPolicyTradeOffs'] = gp.tradeOffs
       if (gp.competitiveIdeaAnalysis) vals['guidingPolicyCompetitiveIdeaAnalysis'] = gp.competitiveIdeaAnalysis
-      // guidingPolicyMechanism — first non-null mechanism field
-      const mech = gp.mechanismIncentives || gp.mechanismRules || gp.mechanismTransparency ||
-        gp.mechanismMarketDesign || gp.mechanismInstitutionalRestructuring
-      if (mech) vals['guidingPolicyMechanism'] = mech
+      // guidingPolicyMechanism — from mechanismTypes array
+      if (gp.mechanismTypes?.length) {
+        vals['guidingPolicyMechanism'] = gp.mechanismTypes.join(', ')
+        vals['mechanismTypes'] = gp.mechanismTypes.join(', ')
+      }
     }
 
     // RootCauses entity fields
