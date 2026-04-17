@@ -36,6 +36,9 @@ async function buildCompletedFields(ideaId: string) {
     select: {
       stage: true,
       title: true,
+      summaryDescription: true,
+      govtArea: true,
+      ideaType: true,
       diagnosis: true,
       rootCause: true,
       guidingPolicy: true,
@@ -54,8 +57,7 @@ async function buildCompletedFields(ideaId: string) {
       guidingPolicies: {
         select: {
           text: true, coreTheory: true, tradeOffs: true, competitiveIdeaAnalysis: true,
-          mechanismIncentives: true, mechanismRules: true, mechanismTransparency: true,
-          mechanismMarketDesign: true, mechanismInstitutionalRestructuring: true,
+          mechanismTypes: true,
         },
       },
     },
@@ -67,8 +69,11 @@ async function buildCompletedFields(ideaId: string) {
 
   return {
     completedFields: {
-      // Stage 1
+      // Initial Information
       title: !!latest?.title,
+      summaryDescription: !!latest?.summaryDescription,
+      govtArea: !!latest?.govtArea,
+      ideaType: !!latest?.ideaType,
       summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
       rootCause: !!latest?.rootCause,
       summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
@@ -86,10 +91,7 @@ async function buildCompletedFields(ideaId: string) {
       // Stage 2 — Guiding Policy
       guidingPolicyText: !!gp?.text,
       guidingPolicyCoreTheory: !!gp?.coreTheory,
-      guidingPolicyMechanism: !!(
-        gp?.mechanismIncentives || gp?.mechanismRules || gp?.mechanismTransparency ||
-        gp?.mechanismMarketDesign || gp?.mechanismInstitutionalRestructuring
-      ),
+      guidingPolicyMechanism: !!(gp?.mechanismTypes && gp.mechanismTypes.length > 0),
       guidingPolicyTradeOffs: !!gp?.tradeOffs,
       guidingPolicyCompetitiveIdeaAnalysis: !!gp?.competitiveIdeaAnalysis,
     },
@@ -169,14 +171,43 @@ export async function POST(req: Request, { params }: Params) {
         update: { [subField]: value },
       })
 
+    } else if (fieldKey === 'mechanismType') {
+      // CoherentAction mechanismType — update most recent CoherentAction
+      const lastCA = await prisma.coherentAction.findFirst({
+        where: { ideaId },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (lastCA) {
+        const enumVal = value as 'INCENTIVES' | 'RULES' | 'TRANSPARENCY' | 'MARKET_DESIGN' | 'INSTITUTIONAL_RESTRUCTURING'
+        await prisma.coherentAction.update({
+          where: { id: lastCA.id },
+          data: { mechanismType: enumVal },
+        })
+      }
+
     } else if (fieldKey.startsWith('guidingPolicy.')) {
       // GuidingPolicy sub-entity field
       const subField = fieldKey.slice('guidingPolicy.'.length)
-      await prisma.guidingPolicy.upsert({
-        where: { ideaId },
-        create: { ideaId, [subField]: value },
-        update: { [subField]: value },
-      })
+      if (subField === 'mechanismTypes') {
+        // Array field — parse JSON array of enum values
+        let mechanismTypesArray: Array<'INCENTIVES' | 'RULES' | 'TRANSPARENCY' | 'MARKET_DESIGN' | 'INSTITUTIONAL_RESTRUCTURING'>
+        try {
+          mechanismTypesArray = JSON.parse(value)
+        } catch {
+          mechanismTypesArray = []
+        }
+        await prisma.guidingPolicy.upsert({
+          where: { ideaId },
+          create: { ideaId, mechanismTypes: { set: mechanismTypesArray } },
+          update: { mechanismTypes: { set: mechanismTypesArray } },
+        })
+      } else {
+        await prisma.guidingPolicy.upsert({
+          where: { ideaId },
+          create: { ideaId, [subField]: value },
+          update: { [subField]: value },
+        })
+      }
 
     } else if (fieldKey.startsWith('rootCause.')) {
       // RootCause — update the most recent one if it exists, otherwise create

@@ -49,11 +49,7 @@ interface GuidingPolicyRecord {
   guidingPolicyTitle: string | null
   text: string | null
   coreTheory: string | null
-  mechanismIncentives: string | null
-  mechanismRules: string | null
-  mechanismTransparency: string | null
-  mechanismMarketDesign: string | null
-  mechanismInstitutionalRestructuring: string | null
+  mechanismTypes: string[] | null
   tradeOffs: string | null
   competitiveIdeaAnalysis: string | null
   createdAt: string
@@ -1152,7 +1148,7 @@ function IdeaTab({
   function updateGuidingPolicyField(field: keyof GuidingPolicyRecord, value: string) {
     setLocalGuidingPolicy(prev => prev
       ? { ...prev, [field]: value }
-      : { id: '', guidingPolicyTitle: null, text: null, coreTheory: null, mechanismIncentives: null, mechanismRules: null, mechanismTransparency: null, mechanismMarketDesign: null, mechanismInstitutionalRestructuring: null, tradeOffs: null, competitiveIdeaAnalysis: null, createdAt: '', [field]: value }
+      : { id: '', guidingPolicyTitle: null, text: null, coreTheory: null, mechanismTypes: null, tradeOffs: null, competitiveIdeaAnalysis: null, createdAt: '', [field]: value }
     )
   }
 
@@ -1297,11 +1293,7 @@ function IdeaTab({
         <div>
           <FieldDisplay label="How Will We Solve It?" value={localGuidingPolicy?.text} placeholder="Not yet completed — describe the strategic direction in 3–5 sentences" canEdit={canEdit} fieldKey="guidingPolicy.text" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('text', v)} />
           <FieldDisplay label="Core Theory" value={localGuidingPolicy?.coreTheory} placeholder="Not yet completed — the causal theory linking the intervention to the outcome" canEdit={canEdit} fieldKey="guidingPolicy.coreTheory" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('coreTheory', v)} />
-          <FieldDisplay label="Mechanism: Incentives" value={localGuidingPolicy?.mechanismIncentives} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismIncentives" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismIncentives', v)} />
-          <FieldDisplay label="Mechanism: Rules" value={localGuidingPolicy?.mechanismRules} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismRules" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismRules', v)} />
-          <FieldDisplay label="Mechanism: Transparency" value={localGuidingPolicy?.mechanismTransparency} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismTransparency" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismTransparency', v)} />
-          <FieldDisplay label="Mechanism: Market Design" value={localGuidingPolicy?.mechanismMarketDesign} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismMarketDesign" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismMarketDesign', v)} />
-          <FieldDisplay label="Mechanism: Institutional Restructuring" value={localGuidingPolicy?.mechanismInstitutionalRestructuring} placeholder="Not yet completed" canEdit={canEdit} fieldKey="guidingPolicy.mechanismInstitutionalRestructuring" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismInstitutionalRestructuring', v)} />
+          <FieldDisplay label="14. Mechanism Types" value={localGuidingPolicy?.mechanismTypes?.join(', ') ?? null} placeholder="Not yet completed — select mechanism types" canEdit={canEdit} fieldKey="guidingPolicy.mechanismTypes" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('mechanismTypes', v as never)} />
           <FieldDisplay label="Trade-offs" value={localGuidingPolicy?.tradeOffs} placeholder="Not yet completed — what must be sacrificed or accepted to make this work?" canEdit={canEdit} fieldKey="guidingPolicy.tradeOffs" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('tradeOffs', v)} />
           <FieldDisplay label="What Else Has Been Tried?" value={localGuidingPolicy?.competitiveIdeaAnalysis} placeholder="Not yet completed — analysis of competing or prior approaches" canEdit={canEdit} fieldKey="guidingPolicy.competitiveIdeaAnalysis" ideaId={idea.id} onSaved={v => updateGuidingPolicyField('competitiveIdeaAnalysis', v)} />
 

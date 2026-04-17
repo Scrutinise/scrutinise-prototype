@@ -9,13 +9,13 @@ const GuidingPolicySchema = z.object({
   guidingPolicyTitle: z.string().optional(),
   text: z.string().optional(),
   coreTheory: z.string().optional(),
-  mechanismIncentives: z.string().optional(),
-  mechanismRules: z.string().optional(),
-  mechanismTransparency: z.string().optional(),
-  mechanismMarketDesign: z.string().optional(),
-  mechanismInstitutionalRestructuring: z.string().optional(),
+  mechanismTypes: z.array(z.enum(['INCENTIVES', 'RULES', 'TRANSPARENCY', 'MARKET_DESIGN', 'INSTITUTIONAL_RESTRUCTURING'])).optional(),
   tradeOffs: z.string().optional(),
   competitiveIdeaAnalysis: z.string().optional(),
+  linkToDiagnosis: z.string().optional(),
+  whatThisPolicyRulesOut: z.string().optional(),
+  whyThisApproachNotOthers: z.string().optional(),
+  conditionsForSuccess: z.string().optional(),
 })
 
 // POST /api/ideas/[id]/guiding-policy — upsert GuidingPolicy record (one per idea)

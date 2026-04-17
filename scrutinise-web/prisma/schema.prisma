@@ -334,6 +334,14 @@ enum LexInsightStatus {
   REJECTED    // Admin has rejected — stored for reference but not used
 }
 
+enum MechanismType {
+  INCENTIVES
+  RULES
+  TRANSPARENCY
+  MARKET_DESIGN
+  INSTITUTIONAL_RESTRUCTURING
+}
+
 enum LegislationTier {
   TIER_1  // Post-2010 Public General Acts — first priority
   TIER_2  // Pre-2010 Public General Acts, Devolved Acts
@@ -677,6 +685,7 @@ model CoherentAction {
   oppositionWho                       String?
   oppositionWhy                       String?
   oppositionAnswers                   String?
+  mechanismType                       MechanismType?
   orderIndex                          Int      @default(0)
   version                             Int      @default(1)
   createdAt                           DateTime @default(now())
@@ -799,11 +808,7 @@ model GuidingPolicy {
   whatThisPolicyRulesOut               String?
   whyThisApproachNotOthers             String?
   conditionsForSuccess                 String?
-  mechanismIncentives                  String?
-  mechanismRules                       String?
-  mechanismTransparency                String?
-  mechanismMarketDesign                String?
-  mechanismInstitutionalRestructuring  String?
+  mechanismTypes                       MechanismType[]
   tradeOffs                            String?
   competitiveIdeaAnalysis              String?
   version                              Int      @default(1)
