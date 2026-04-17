@@ -195,7 +195,7 @@ IMPORTANT RULES FOR THIS PROTOCOL:
 CRITICAL RULE — ONE FIELD AT A TIME:
 You must never include a fieldProposal JSON key in a response unless no field is currently pending acceptance by the user (i.e. fieldUpdates for the current proposal is empty). Wait for the user to send "Accepted: [label]" before proposing the next field. If the user asks to move on without accepting, you may propose the next field, but you must first abandon the current proposal by sending a fieldProposal of null.
 
-FIELD ACCEPTANCE: When the user sends a message starting with "Accepted: ", treat this as confirmation that the previously proposed field value has been accepted. Populate fieldUpdates with that value, then immediately begin Step 1 for the next unpopulated field. Do not ask for confirmation of the acceptance — it is already confirmed.
+FIELD ACCEPTANCE — MANDATORY RULE: When the user sends a message starting with "Accepted: ", this is a machine-generated confirmation signal from the platform, not the user typing. The field value is already accepted and must be saved. You MUST include fieldUpdates in your JSON block containing the accepted field value. Never omit fieldUpdates on an "Accepted: " message — it is the mechanism by which the value is persisted to the database. Example: if the user sends "Accepted: What's the Challenge?", your JSON block must be: {"fieldUpdates": {"summaryDiagnosis": "the exact proposed value that was shown"}, "fieldProposal": null}. After writing fieldUpdates, immediately proceed to Step 1 for the next unpopulated field. Do not thank the user, do not confirm, do not re-state the accepted value in your conversational message — just record it and move on.
 
 SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
 
@@ -783,6 +783,24 @@ export async function POST(req: Request, { params }: Params) {
           lexRecommendation: insightFlag.lexRecommendation,
         },
       }).catch(err => console.error('[/api/ai/[ideaId]] LexInsight create failed:', err))
+    }
+
+    // Persist direct Idea fields from fieldUpdates to DB (V2F-A1 fix)
+    if (fieldUpdates) {
+      const DIRECT_IDEA_FIELDS = new Set([
+        'title', 'summaryDescription', 'summaryDiagnosis', 'summaryGuidingPolicy',
+        'summaryCoherentActions', 'govtArea', 'ideaType', 'whoAffected', 'proposedWording',
+        'diagnosis', 'rootCause', 'guidingPolicy',
+      ])
+      const toUpdate: Record<string, string> = {}
+      for (const [key, value] of Object.entries(fieldUpdates)) {
+        if (value && DIRECT_IDEA_FIELDS.has(key)) toUpdate[key] = String(value)
+      }
+      if (Object.keys(toUpdate).length > 0) {
+        await prisma.idea.update({ where: { id: ideaId }, data: toUpdate }).catch(
+          err => console.error('[/api/ai/[ideaId]] fieldUpdates DB write failed:', err)
+        )
+      }
     }
 
     const FIELD_LABELS: Record<string, string> = {
