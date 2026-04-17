@@ -789,10 +789,17 @@ model RootCause {
   whyNotSolved          String?
   incentiveDrivers      String?
   structureDrivers      String?
+  // V2H-D1: multiple causes with depth and parent-child chain
+  causeDepth            Int      @default(0)  // 0 = immediate cause, 1 = cause of cause, etc.
+  orderIndex            Int      @default(0)  // display order among siblings
+  parentId              String?               // null = top-level cause
+  parent                RootCause?  @relation("CauseChain", fields: [parentId], references: [id])
+  children              RootCause[] @relation("CauseChain")
   version               Int      @default(1)
   createdAt             DateTime @default(now())
 
   @@index([ideaId])
+  @@index([parentId])
 }
 
 model GuidingPolicy {
