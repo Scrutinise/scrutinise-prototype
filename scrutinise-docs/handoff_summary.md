@@ -1,6 +1,26 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 16 April 2026 v26*
+*Last updated: 16 April 2026 v27*
+
+***
+
+## CURRENT STATE — SPRINT V2-F COMPLETE ✅
+
+Three commits to Main. Fixes fieldUpdates DB persistence bug and strengthens Lex system prompt; mobile UI polished with full-width black buttons.
+
+### V2F commit summary
+
+1. **V2F-A1** — Fixed `fieldUpdates` not persisting to DB. Root cause: `applyFieldUpdatesAndSave` in route.ts parsed `fieldUpdates` from Lex's JSON but only stored them in `pendingProposals` — never wrote to DB. `hasFieldUpdates: true` triggered a client re-fetch which returned stale DB state, overwriting the optimistic sidebar display. Fix: added Prisma `idea.update` call in `applyFieldUpdatesAndSave` that writes all direct Idea fields present in `fieldUpdates` (title, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, govtArea, ideaType, whoAffected, etc.).
+2. **V2F-A2** — Strengthened FIELD ACCEPTANCE rule in Lex system prompt. New text makes clear: (a) "Accepted:" is machine-generated, not user text; (b) `fieldUpdates` is mandatory in the response JSON — never omit; (c) includes example JSON showing correct output; (d) proceed immediately to next field without re-confirming.
+3. **V2F-B1** — Mobile UI cleanup: removed "Developing with Lex" label from toolbar; changed toolbar from `justify-between` to `justify-end`. Replaced teal inline "See completed answers →" button with full-width black button below toolbar (`lg:hidden`). Replaced teal "← Back to chat" button in panel h2 header row with full-width black button below the header; "Your Idea" heading kept, teal button removed.
+
+### New files/changes this sprint
+- `app/api/ai/[ideaId]/route.ts` — fieldUpdates DB write in `applyFieldUpdatesAndSave`; strengthened FIELD ACCEPTANCE system prompt rule
+- `app/ideas/create/CreateIdeaClient.tsx` — toolbar label removed, full-width black buttons replacing teal inline buttons
+
+### Architecture notes
+- `applyFieldUpdatesAndSave` now has two Prisma writes: one for direct Idea fields from `fieldUpdates`, one for `aiChatHistory`. Both are awaited. Stage 2 sub-entity fields (dot-notation keys like `diagnosis.text`) are not yet persisted by this mechanism — they still rely on Lex including them in `fieldUpdates` and the client calling `field-approval`. Stage 1 fields now persist correctly.
+- Mobile panel back button is now a full-width black button below the "Your Idea" h2 header, matching the "See completed answers →" button style below the toolbar.
 
 ***
 

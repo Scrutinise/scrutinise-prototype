@@ -6,6 +6,35 @@
 
 ---
 
+## CODE CHANGES — 16 April 2026 Sprint V2-F
+
+### V2F-A1: Fix fieldUpdates not persisting to DB
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Added DB write inside `applyFieldUpdatesAndSave`: when `fieldUpdates` contains keys matching direct Idea fields (`title`, `summaryDiagnosis`, `summaryGuidingPolicy`, `summaryCoherentActions`, `govtArea`, `ideaType`, `whoAffected`, etc.), writes them to DB via `prisma.idea.update`. Root cause: `fieldUpdates` was parsed and returned in `pendingProposals` but never persisted; `hasFieldUpdates: true` triggered a DB re-fetch which returned stale data, overwriting the client's optimistic state. |
+
+**Deploy actions needed:** None (Vercel auto-deploy on push).
+
+---
+
+### V2F-A2: Strengthen FIELD ACCEPTANCE in Lex system prompt
+| File | Change |
+|------|--------|
+| `app/api/ai/[ideaId]/route.ts` | Rewrote the FIELD ACCEPTANCE rule in `buildSystemPrompt` to be explicit that `fieldUpdates` is mandatory on "Accepted:" messages, includes example JSON, and makes clear this is a machine-generated signal not user text. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2F-B1: Mobile UI — remove label, full-width black action buttons
+| File | Change |
+|------|--------|
+| `app/ideas/create/CreateIdeaClient.tsx` | (1) Removed "Developing with Lex" label from toolbar; changed `justify-between` to `justify-end`. (2) Removed teal `See completed answers →` button from inside toolbar button row; added full-width black button (`bg-foreground text-background`) below toolbar (`lg:hidden`). (3) Removed teal `← Back to chat` button from panel h2 header row (kept "Your Idea" heading); added full-width black `← Back to chat` button below the header. |
+
+**Deploy actions needed:** None.
+
+---
+
 ## CODE CHANGES — 16 April 2026 Sprint V2-E
 
 ### V2E-A1: Mobile sidebar field display fix

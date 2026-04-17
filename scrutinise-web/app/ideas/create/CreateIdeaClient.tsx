@@ -1365,11 +1365,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
       {/* ── Lex toolbar — Save & Exit / View your idea ───────────────────── */}
       <div
-        className="shrink-0 flex items-center justify-between px-6 py-2 border-b border-border bg-background/95 text-xs"
+        className="shrink-0 flex items-center justify-end px-6 py-2 border-b border-border bg-background/95 text-xs"
         onTouchStart={handleSwipeTouchStart}
         onTouchEnd={handleToolbarSwipeTouchEnd}
       >
-        <span className="text-muted-foreground font-medium">Developing with Lex</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-3">
             {!isSignedIn && (
@@ -1410,17 +1409,21 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 </button>
               </>
             )}
-            <button
-              onClick={() => setMobilePanelOpen(true)}
-              className="text-teal-600 hover:text-teal-700 transition-colors lg:hidden"
-            >
-              See completed answers →
-            </button>
           </div>
           {saveExitMsg && (
             <p className="text-muted-foreground max-w-xs text-right">{saveExitMsg}</p>
           )}
         </div>
+      </div>
+
+      {/* See completed answers — full-width black button, mobile only */}
+      <div className="lg:hidden px-4 py-2 border-b">
+        <button
+          onClick={() => setMobilePanelOpen(true)}
+          className="w-full py-2.5 rounded-lg bg-foreground text-background text-sm font-medium"
+        >
+          See completed answers →
+        </button>
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
@@ -1444,18 +1447,22 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           `}
         >
           <div
-            className="flex items-center justify-between p-4 border-b shrink-0"
+            className="shrink-0"
             onTouchStart={handleSwipeTouchStart}
             onTouchEnd={handlePanelHeaderSwipeTouchEnd}
           >
-            <h2 className="font-semibold text-sm">Your Idea</h2>
-            <button
-              onClick={() => setMobilePanelOpen(false)}
-              className="text-sm text-teal-600 hover:text-teal-700 transition-colors"
-              aria-label="Back to chat"
-            >
-              ← Back to chat
-            </button>
+            <div className="flex items-center p-4 border-b">
+              <h2 className="font-semibold text-sm">Your Idea</h2>
+            </div>
+            <div className="px-4 pt-3 pb-2">
+              <button
+                onClick={() => setMobilePanelOpen(false)}
+                className="w-full py-2.5 rounded-lg bg-foreground text-background text-sm font-medium"
+                aria-label="Back to chat"
+              >
+                ← Back to chat
+              </button>
+            </div>
           </div>
           <MobileSidebarContent
             fields={fields}
