@@ -150,6 +150,57 @@ EXPERIENCE LEVEL ADAPTATION:
 
 FIELD CONVERSATION PROTOCOL
 
+FIELD SEQUENCE — follow this order strictly:
+
+INITIAL INFORMATION (complete before moving to Diagnosis):
+1. Title
+2. Summary Description
+3. Government Area
+4. Idea Type
+
+DIAGNOSIS — THE CHALLENGE (complete all before moving to Guiding Policy):
+5. What's the Challenge?
+6. The Obstacle
+7. Who's Affected?
+8. How Are They Affected?
+9. Why Has This Persisted?
+10. Impact
+11. Impact Cost
+→ After field 11: generate and propose summaryDiagnosis
+
+GUIDING POLICY — YOUR APPROACH (complete all before Coherent Actions):
+12. How Will We Solve It?
+13. Core Theory
+14. Mechanism Types (checklist — ask which mechanism types this policy employs)
+15. Trade-offs
+16. Why Not Other Approaches?
+17. Link to Diagnosis
+18. What This Policy Rules Out
+19. Conditions for Success
+→ After field 19: generate and propose summaryGuidingPolicy
+
+COHERENT ACTIONS — one action at a time, loop for multiple:
+For each action:
+20. A Practical Step
+20a. Mechanism Type (which single mechanism type does this action implement?)
+21. Summary
+22. Who Implements This?
+23. Financial Benefit
+24. Social Benefit
+25. Ongoing Benefit
+26. Ongoing Net Cost
+27. One-off Net Cost
+→ After each action: ask "Do you have another Coherent Action to add?"
+→ After all actions: generate and propose summaryCoherentActions
+
+SECTION GATE RULE: You must not begin a new section until all fields in the current section have been addressed. A field is "addressed" when the user has either accepted a proposal or explicitly declined to fill it. You may not skip ahead to Guiding Policy while Diagnosis fields remain empty unless the user explicitly asks to skip.
+
+EVIDENCE NUDGING:
+Whenever the user makes a factual assertion — particularly about causes (fields 6, 9), impacts (fields 10, 11), or proposed mechanisms (fields 12–14) — you should ask: "Do you have any evidence or sources that support this? Adding research strengthens credibility." Do this at most once per section — do not repeat the nudge on every field. If the user declines, accept it and move on. Never block progress waiting for evidence.
+
+MECHANISM TYPE FOR COHERENT ACTIONS:
+When starting a new Coherent Action, after getting the Practical Step title, ask: "What type of mechanism does this action use? Options are: Incentives, Rules, Transparency, Market Design, or Institutional Restructuring." This becomes the mechanismType for the action. Include it in the fieldUpdates JSON as: {"mechanismType": "RULES"} (use the enum value — uppercase with underscores).
+
 For each field you are working on, follow this exact sequence:
 
 STEP 1 — ORIENTATION
@@ -171,7 +222,7 @@ When you have gathered enough information to populate a field, present your prop
 (b) A JSON block at the end of your response in this exact format:
 
 \`\`\`json
-{"fieldUpdates": {}, "fieldProposal": {"fieldKey": "summaryCoherentActions", "fieldLabel": "A Practical Step", "proposedValue": "The exact proposed text here"}}
+{"fieldUpdates": {}, "fieldProposal": {"fieldKey": "summaryCoherentActions", "fieldLabel": "20. A Practical Step", "proposedValue": "The exact proposed text here"}}
 \`\`\`
 
 The JSON block must appear at the very end of your response, after all conversational text. Do NOT populate fieldUpdates yet — only include it as an empty object {}. The frontend will render the proposedValue as a card for the user to accept or edit.
@@ -195,7 +246,9 @@ IMPORTANT RULES FOR THIS PROTOCOL:
 CRITICAL RULE — ONE FIELD AT A TIME:
 You must never include a fieldProposal JSON key in a response unless no field is currently pending acceptance by the user (i.e. fieldUpdates for the current proposal is empty). Wait for the user to send "Accepted: [label]" before proposing the next field. If the user asks to move on without accepting, you may propose the next field, but you must first abandon the current proposal by sending a fieldProposal of null.
 
-FIELD ACCEPTANCE — MANDATORY RULE: When the user sends a message starting with "Accepted: ", this is a machine-generated confirmation signal from the platform, not the user typing. The field value is already accepted and must be saved. You MUST include fieldUpdates in your JSON block containing the accepted field value. Never omit fieldUpdates on an "Accepted: " message — it is the mechanism by which the value is persisted to the database. Example: if the user sends "Accepted: What's the Challenge?", your JSON block must be: {"fieldUpdates": {"summaryDiagnosis": "the exact proposed value that was shown"}, "fieldProposal": null}. After writing fieldUpdates, immediately proceed to Step 1 for the next unpopulated field. Do not thank the user, do not confirm, do not re-state the accepted value in your conversational message — just record it and move on.
+FIELD ACCEPTANCE — MANDATORY RULE: When the user sends a message starting with "Accepted: ", this is a machine-generated confirmation signal from the platform, not the user typing. The field value is already accepted and must be saved. You MUST include fieldUpdates in your JSON block containing the accepted field value. Never omit fieldUpdates on an "Accepted: " message — it is the mechanism by which the value is persisted to the database. Example: if the user sends "Accepted: 5. What's the Challenge?", your JSON block must be: {"fieldUpdates": {"summaryDiagnosis": "the exact proposed value that was shown"}, "fieldProposal": null}. After writing fieldUpdates, immediately proceed to Step 1 for the next unpopulated field. Do not thank the user, do not confirm, do not re-state the accepted value in your conversational message — just record it and move on.
+
+Valid fieldUpdates keys: title, summaryDescription, govtArea, ideaType, summaryDiagnosis, summaryGuidingPolicy, summaryCoherentActions, whoAffected, proposedWording, diagnosis, guidingPolicy, rootCause, mechanismTypes (array on GuidingPolicy), mechanismType (single value on CoherentAction — use enum: INCENTIVES, RULES, TRANSPARENCY, MARKET_DESIGN, INSTITUTIONAL_RESTRUCTURING), and all dot-notation sub-entity fields (e.g. diagnosis.text, guidingPolicy.coreTheory).
 
 SAVE TRIGGER: Fire triggerSavePrompt when summaryDiagnosis AND summaryGuidingPolicy are both populated.
 
@@ -229,7 +282,7 @@ Work through these fields in order via conversation. For each field: propose a v
 
 1. diagnosis.text — expand summaryDiagnosis into 3–5 sentences. Show draft. Confirm.
 2. rootCause.text — this needs care. Use 5 Whys logic. Always push back at least once: "If we fix [X], does the problem go away, or is there something deeper causing [X]?" Set rootCause.rootCauseMechanism from the answer. Note: "We should return to this — identifying the true root cause often requires research."
-3. guidingPolicy.text — expand summaryGuidingPolicy. Ask: "What is the core mechanism you're using to address the root cause? Incentives, rules, transparency, market design, or institutional restructuring?" Set mechanismIncentives / mechanismRules / etc. from the answer.
+3. guidingPolicy.text — expand summaryGuidingPolicy. Ask: "What is the core mechanism you're using to address the root cause? Incentives, rules, transparency, market design, or institutional restructuring?" Set mechanismTypes from the answer (array of enum values e.g. ["RULES", "INCENTIVES"]).
 4. coherentActions[0] — expand first action. Ask: "What is the first concrete thing that would need to happen, and who would need to do it?" Set title, detailedDescription, actionType.
 
 AHA MOMENT: After Pass 1 fields are confirmed, deliver the reflection:
@@ -274,8 +327,8 @@ EXPERIENCE LEVEL ADAPTATION:
 STAGE 2 FIELD TARGETS:
 diagnosis.text, diagnosis.whoAffected, diagnosis.howAffected, diagnosis.whyPersisted, diagnosis.impactDescription, diagnosis.impactCost, diagnosis.obstacleDefined,
 rootCause.text, rootCause.rootCauseMechanism, rootCause.whyNotSolved, rootCause.incentiveDrivers, rootCause.structureDrivers,
-guidingPolicy.text, guidingPolicy.coreTheory, guidingPolicy.mechanismIncentives, guidingPolicy.mechanismRules, guidingPolicy.mechanismTransparency, guidingPolicy.mechanismMarketDesign, guidingPolicy.mechanismInstitutionalRestructuring, guidingPolicy.tradeOffs, guidingPolicy.competitiveIdeaAnalysis,
-coherentActions (array with full fields), evidence (array — propose from research)
+guidingPolicy.text, guidingPolicy.coreTheory, guidingPolicy.mechanismTypes (array), guidingPolicy.tradeOffs, guidingPolicy.competitiveIdeaAnalysis, guidingPolicy.linkToDiagnosis, guidingPolicy.whatThisPolicyRulesOut, guidingPolicy.whyThisApproachNotOthers, guidingPolicy.conditionsForSuccess,
+coherentActions (array with full fields including mechanismType per action), evidence (array — propose from research)
 
 JSON OUTPUT FORMAT: Always append your JSON block at the very end of your response text, after all conversational content. Never put JSON in the middle of your response. Wrap the JSON block in \`\`\`json \`\`\` markers.
 
@@ -801,42 +854,58 @@ export async function POST(req: Request, { params }: Params) {
           err => console.error('[/api/ai/[ideaId]] fieldUpdates DB write failed:', err)
         )
       }
+      // Persist mechanismType to most recent CoherentAction (V2G-A1)
+      if (fieldUpdates['mechanismType']) {
+        const lastCA = await prisma.coherentAction.findFirst({
+          where: { ideaId },
+          orderBy: { createdAt: 'desc' },
+        })
+        if (lastCA) {
+          const enumVal = String(fieldUpdates['mechanismType']) as
+            'INCENTIVES' | 'RULES' | 'TRANSPARENCY' | 'MARKET_DESIGN' | 'INSTITUTIONAL_RESTRUCTURING'
+          await prisma.coherentAction.update({
+            where: { id: lastCA.id },
+            data: { mechanismType: enumVal },
+          }).catch(err => console.error('[/api/ai/[ideaId]] mechanismType write failed:', err))
+        }
+      }
     }
 
     const FIELD_LABELS: Record<string, string> = {
-      title: 'Title',
-      summaryDescription: 'Summary',
-      summaryDiagnosis: "What's the Challenge?",
-      summaryGuidingPolicy: 'How Will We Solve It?',
-      summaryCoherentActions: 'A Practical Step',
-      govtArea: 'Government Area',
-      ideaType: 'Idea Type',
-      diagnosis: "What's the Challenge?",
-      guidingPolicy: 'How Will We Solve It?',
+      title: '1. Title',
+      summaryDescription: '2. Summary Description',
+      govtArea: '3. Government Area',
+      ideaType: '4. Idea Type',
+      summaryDiagnosis: "5. What's the Challenge?",
+      summaryGuidingPolicy: '12. How Will We Solve It?',
+      summaryCoherentActions: '20. A Practical Step',
+      diagnosis: "5. What's the Challenge?",
+      guidingPolicy: '12. How Will We Solve It?',
       rootCause: 'Root Cause',
-      whoAffected: 'Who Is Affected?',
+      whoAffected: "7. Who's Affected?",
       proposedWording: 'Proposed Wording',
-      'diagnosis.text': 'The Challenge (full)',
-      'diagnosis.whoAffected': 'Who Is Affected?',
-      'diagnosis.howAffected': 'How Are They Affected?',
-      'diagnosis.whyPersisted': 'Why Has This Persisted?',
-      'diagnosis.impactDescription': 'Impact',
-      'diagnosis.impactCost': 'Impact Cost',
-      'diagnosis.obstacleDefined': 'The Obstacle',
+      mechanismType: '20a. Mechanism Type',
+      'diagnosis.text': "5. What's the Challenge?",
+      'diagnosis.obstacleDefined': '6. The Obstacle',
+      'diagnosis.whoAffected': "7. Who's Affected?",
+      'diagnosis.howAffected': '8. How Are They Affected?',
+      'diagnosis.whyPersisted': '9. Why Has This Persisted?',
+      'diagnosis.impactDescription': '10. Impact',
+      'diagnosis.impactCost': '11. Impact Cost',
       'rootCause.text': 'Root Cause',
       'rootCause.rootCauseMechanism': 'Root Cause Mechanism',
       'rootCause.whyNotSolved': "Why It Hasn't Been Solved",
       'rootCause.incentiveDrivers': 'Incentive Drivers',
       'rootCause.structureDrivers': 'Structural Drivers',
-      'guidingPolicy.text': 'Guiding Policy (full)',
-      'guidingPolicy.coreTheory': 'Core Theory',
-      'guidingPolicy.mechanismIncentives': 'Mechanism: Incentives',
-      'guidingPolicy.mechanismRules': 'Mechanism: Rules',
-      'guidingPolicy.mechanismTransparency': 'Mechanism: Transparency',
-      'guidingPolicy.mechanismMarketDesign': 'Mechanism: Market Design',
-      'guidingPolicy.mechanismInstitutionalRestructuring': 'Mechanism: Institutional Restructuring',
-      'guidingPolicy.tradeOffs': 'Trade-offs',
-      'guidingPolicy.competitiveIdeaAnalysis': 'What Else Has Been Tried?',
+      'guidingPolicy.text': '12. How Will We Solve It?',
+      'guidingPolicy.coreTheory': '13. Core Theory',
+      'guidingPolicy.mechanismTypes': '14. Mechanism Types',
+      'guidingPolicy.tradeOffs': '15. Trade-offs',
+      'guidingPolicy.whyThisApproachNotOthers': '16. Why Not Other Approaches?',
+      'guidingPolicy.linkToDiagnosis': '17. Link to Diagnosis',
+      'guidingPolicy.whatThisPolicyRulesOut': '18. What This Policy Rules Out',
+      'guidingPolicy.conditionsForSuccess': '19. Conditions for Success',
+      'guidingPolicy.competitiveIdeaAnalysis': 'Competing Approaches',
     }
 
     const pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }> = []
@@ -944,6 +1013,9 @@ export async function POST(req: Request, { params }: Params) {
         select: {
           stage: true,
           title: true,
+          summaryDescription: true,
+          govtArea: true,
+          ideaType: true,
           diagnosis: true,
           rootCause: true,
           guidingPolicy: true,
@@ -962,8 +1034,8 @@ export async function POST(req: Request, { params }: Params) {
           guidingPolicies: {
             select: {
               text: true, coreTheory: true, tradeOffs: true, competitiveIdeaAnalysis: true,
-              mechanismIncentives: true, mechanismRules: true, mechanismTransparency: true,
-              mechanismMarketDesign: true, mechanismInstitutionalRestructuring: true,
+              mechanismTypes: true, linkToDiagnosis: true, whatThisPolicyRulesOut: true,
+              whyThisApproachNotOthers: true, conditionsForSuccess: true,
             },
           },
         },
@@ -975,6 +1047,9 @@ export async function POST(req: Request, { params }: Params) {
 
       const completedFields = {
         title: !!latest?.title,
+        summaryDescription: !!latest?.summaryDescription,
+        govtArea: !!latest?.govtArea,
+        ideaType: !!latest?.ideaType,
         summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
         rootCause: !!latest?.rootCause,
         summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
@@ -990,10 +1065,7 @@ export async function POST(req: Request, { params }: Params) {
         diagnosisImpactCost: !!diag?.impactCost,
         guidingPolicyText: !!gp?.text,
         guidingPolicyCoreTheory: !!gp?.coreTheory,
-        guidingPolicyMechanism: !!(
-          gp?.mechanismIncentives || gp?.mechanismRules || gp?.mechanismTransparency ||
-          gp?.mechanismMarketDesign || gp?.mechanismInstitutionalRestructuring
-        ),
+        guidingPolicyMechanism: !!(gp?.mechanismTypes && gp.mechanismTypes.length > 0),
         guidingPolicyTradeOffs: !!gp?.tradeOffs,
         guidingPolicyCompetitiveIdeaAnalysis: !!gp?.competitiveIdeaAnalysis,
       }
