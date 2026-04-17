@@ -8,7 +8,7 @@ import FieldProposalCard from '@/components/FieldProposalCard'
 import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
-import { SIDEBAR_SECTIONS } from '@/lib/field-labels'
+import { SIDEBAR_SECTIONS, FIELD_SEQUENCE } from '@/lib/field-labels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -564,8 +564,8 @@ function MobileSidebarContent({
       {/* Section: Initial Information */}
       <div>
         <div
-          className={`flex items-center gap-2 py-1.5 mb-2 ${activeSection !== 'diagnosis' && initialInfoHasContent ? 'cursor-pointer' : ''}`}
-          onClick={() => activeSection !== 'diagnosis' && initialInfoHasContent && toggleSection('initialInformation')}
+          className={`flex items-center gap-2 py-1.5 mb-2 ${initialInfoHasContent ? 'cursor-pointer' : ''}`}
+          onClick={() => initialInfoHasContent && toggleSection('initialInformation_collapsed')}
         >
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
             !diagHasContent ? 'bg-blue-500' :
@@ -577,11 +577,13 @@ function MobileSidebarContent({
           }`}>
             Initial Information
           </span>
-          {activeSection !== 'diagnosis' && initialInfoHasContent && (
-            <span className="text-[10px] text-zinc-400">{openSections.has('initialInformation') ? '▲' : '▼'}</span>
+          {/* V2H-C1 Fix 3/5: chevron indicates collapsible, always shown when has content */}
+          {initialInfoHasContent && (
+            <span className="text-[10px] text-zinc-400">{openSections.has('initialInformation_collapsed') ? '▼' : '▲'}</span>
           )}
         </div>
-        {(!diagHasContent || openSections.has('initialInformation')) && (
+        {/* V2H-C1 Fix 5: Always show Initial Information when it has content — only hide when user explicitly collapses */}
+        {(initialInfoHasContent ? (!openSections.has('initialInformation_collapsed')) : (!diagHasContent || openSections.has('initialInformation'))) && (
           <div className="space-y-2">
             {initialInfoFields.map(({ key, label }) => renderFieldCard(key as keyof FieldCompletion, label))}
           </div>
@@ -705,6 +707,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   } | null>(null)
   // V2E-A3 — last accepted field key, used to trigger whoosh animation on mobile
   const [lastAcceptedField, setLastAcceptedField] = useState<string | null>(null)
+  // V2H-A2 — field sequence state machine
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(0)
+  const [caLoopCount, setCaLoopCount] = useState(0)
+  const [addAnotherCAPrompt, setAddAnotherCAPrompt] = useState(false)
   // Inline field editing (direct edit without Lex)
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
 
@@ -718,6 +724,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const lastSentMessageRef = useRef<string>('')
   const swipeTouchStartX = useRef<number>(0)
   const swipeTouchStartY = useRef<number>(0)
+  // V2H-A2: ref always points to latest currentFieldIndex (avoids stale closure in handleSend)
+  const currentFieldIndexRef = useRef(currentFieldIndex)
+  useEffect(() => { currentFieldIndexRef.current = currentFieldIndex }, [currentFieldIndex])
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
 
@@ -799,6 +808,20 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (populated.length > 0) {
       setOpenFields(new Set(populated.slice(-2)))
     }
+
+    // V2H-A2 — find first unfilled field to resume from
+    const firstUnfilled = FIELD_SEQUENCE.findIndex(step => {
+      if (step.isLexGenerated) return false // skip auto-generated fields
+      // Normalise dot-notation key to camelCase for fieldValues lookup
+      const normKey = step.key.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
+      // For CA fields, check the first action (index 0)
+      if (step.isLoop) {
+        const caField = step.key.replace('coherentAction.', 'coherentAction_0_')
+        return !vals[step.key] && !vals[normKey] && !vals[caField]
+      }
+      return !vals[step.key] && !vals[normKey]
+    })
+    setCurrentFieldIndex(firstUnfilled >= 0 ? firstUnfilled : FIELD_SEQUENCE.length - 1)
   }, [])
 
   // ── Load field values from DB on mount ────────────────────────────────────
@@ -840,11 +863,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     return () => window.removeEventListener('lex-field-accepted', handler)
   }, [])
 
-  // ── Scroll to bottom after new messages ───────────────────────────────────
+  // ── Scroll to top of latest Lex message (V2H-C1 Fix 2) ───────────────────
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    // Find the last assistant message bubble and scroll to its top
+    const assistantMsgs = el.querySelectorAll('[data-role="assistant"]')
+    const lastMsg = assistantMsgs[assistantMsgs.length - 1] as HTMLElement | undefined
+    if (lastMsg) {
+      lastMsg.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    }
   }, [messages, isLoading])
 
   // ── Track scroll position for scroll-up arrow ─────────────────────────────
@@ -962,10 +992,16 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       if (isSignedIn) {
         const id = await ensureIdea()
         if (!id) throw new Error('Could not create idea record')
+        const currentStep = FIELD_SEQUENCE[currentFieldIndexRef.current]
         res = await fetch(`/api/ai/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: messageText }),
+          body: JSON.stringify({
+            message: messageText,
+            currentFieldKey: currentStep?.key ?? null,
+            currentFieldLabel: currentStep?.label ?? null,
+            currentFieldSection: currentStep?.sectionLabel ?? null,
+          }),
         })
       } else {
         res = await fetch('/api/ai/public', {
@@ -1052,11 +1088,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (doneData.currentStage) setCurrentStage(doneData.currentStage as string)
           if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
           if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
-          // Handle fieldProposal for Lex field protocol (V2D) — only set if no active proposal (V2E-A4 gate)
+          // Handle fieldProposal — platform controls field sequence (V2H-A2)
           if (doneData.fieldProposal) {
             const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
             if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
-              setCurrentProposal(prev => prev === null ? fp : prev)
+              setCurrentProposal(fp)
             }
           }
           // Commit 4 — auto-open newly completed fields in sidebar
@@ -1339,7 +1375,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     }
   }, [messages, handleProposalAccept])
 
-  // ── Commit 6: Accept from currentProposal (new Lex field protocol) ────────
+  // ── V2H-A2: Accept from currentProposal — platform advances field sequence ─
   const handleCurrentProposalAccept = useCallback(async (value: string) => {
     if (!currentProposal) return
     const { fieldKey, fieldLabel } = currentProposal
@@ -1359,8 +1395,30 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setMobilePanelOpen(true)
       setLastAcceptedField(normKey)
     }
-    // Send silent system message so Lex knows to populate the field and move on
+
+    // Send silent system message so Lex persists the accepted value
     await handleSend(false, `Accepted: ${fieldLabel}`)
+
+    // Advance field sequence using ref (avoids stale closure)
+    const idx = currentFieldIndexRef.current
+    const currentStep = FIELD_SEQUENCE[idx]
+    const nextIdx = idx + 1
+    const nextStep = FIELD_SEQUENCE[nextIdx]
+
+    // CA loop: if last isLoop field completed, show "Add another action?" prompt
+    if (currentStep?.isLoop && nextStep && !nextStep.isLoop) {
+      setAddAnotherCAPrompt(true)
+      return
+    }
+
+    setCurrentFieldIndex(nextIdx)
+
+    // If next step is isLexGenerated, auto-send a silent generation request (after state flush)
+    if (nextStep?.isLexGenerated) {
+      setTimeout(() => {
+        handleSend(false, `Please generate a summary for: ${nextStep.label}`)
+      }, 300)
+    }
   }, [currentProposal, handleSend])
 
   const handleCurrentProposalEdit = useCallback((proposedValue: string) => {
@@ -1377,6 +1435,35 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
   const handleCurrentProposalDiscuss = useCallback(() => {
     setCurrentProposal(null)
+  }, [])
+
+  // ── V2H-A2: CA loop — "Add another Coherent Action?" response ─────────────
+  const handleAddAnotherCA = useCallback((yes: boolean) => {
+    setAddAnotherCAPrompt(false)
+    if (yes) {
+      // Loop back to start of CA fields, increment CA counter
+      const caLoopStart = FIELD_SEQUENCE.findIndex(s => s.key === 'coherentAction.title')
+      if (caLoopStart >= 0) {
+        setCaLoopCount(prev => prev + 1)
+        setCurrentFieldIndex(caLoopStart)
+        handleSend(false, 'Yes, I want to add another Coherent Action.')
+      }
+    } else {
+      // Advance to summaryCoherentActions
+      const summaryIdx = FIELD_SEQUENCE.findIndex(s => s.key === 'summaryCoherentActions')
+      if (summaryIdx >= 0) {
+        setCurrentFieldIndex(summaryIdx)
+        // Auto-trigger summary generation
+        setTimeout(() => {
+          handleSend(false, `Please generate a summary for: ${FIELD_SEQUENCE[summaryIdx].label}`)
+        }, 300)
+      }
+    }
+  }, [handleSend])
+
+  // ── V2H-A2: Skip current field ─────────────────────────────────────────────
+  const handleSkipField = useCallback(() => {
+    setCurrentFieldIndex(prev => prev + 1)
   }, [])
 
   // ── Swipe gesture handlers ────────────────────────────────────────────────
@@ -1525,7 +1612,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         </div>
 
         {/* ── Chat panel (75%) ──────────────────────────────────────────── */}
-        <div className={`flex flex-col flex-1 min-w-0 relative ${mobilePanelOpen ? 'invisible lg:visible' : ''}`}>
+        <div className={`flex flex-col flex-1 min-w-0 max-w-full overflow-x-hidden relative ${mobilePanelOpen ? 'invisible lg:visible' : ''}`}>
 
           {/* Progress bar */}
           <div className="shrink-0 px-6 pt-4 pb-2">
@@ -1556,7 +1643,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   className={`mb-6 ${msg.role === 'user' ? 'flex justify-end' : ''}`}
                 >
                   {msg.role === 'lex' ? (
-                    <div className="flex gap-3 w-full">
+                    <div className="flex gap-3 w-full" data-role="assistant">
                       {/* Lex avatar */}
                       <div className="shrink-0 w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center mt-0.5">
                         <span className="text-white text-xs font-semibold">L</span>
@@ -1692,15 +1779,50 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   </div>
                 )}
 
-                {/* Pending proposals hint */}
+                {/* V2H-A2: Add another Coherent Action? prompt */}
+                {addAnotherCAPrompt && (
+                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-3">
+                    <p className="text-sm font-medium text-teal-900 mb-3">
+                      Would you like to add another Coherent Action?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAddAnotherCA(true)}
+                        className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
+                      >
+                        Yes, add another
+                      </button>
+                      <button
+                        onClick={() => handleAddAnotherCA(false)}
+                        className="px-4 py-2 border border-teal-300 text-teal-700 text-sm font-medium rounded-lg hover:bg-teal-100 transition-colors"
+                      >
+                        No, I&apos;m done
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+              {/* V2H-A2: Skip field button — shown when a field is active and no active proposal */}
+                {!addAnotherCAPrompt && !currentProposal && currentFieldIndex < FIELD_SEQUENCE.length && FIELD_SEQUENCE[currentFieldIndex] && !FIELD_SEQUENCE[currentFieldIndex].isLexGenerated && (
+                  <div className="mb-2 flex justify-end">
+                    <button
+                      onClick={handleSkipField}
+                      className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+                    >
+                      Skip this field →
+                    </button>
+                  </div>
+                )}
+
+              {/* Pending proposals hint */}
                 {hasPendingProposals && (
                   <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
                     Review Lex&apos;s suggestions above to continue.
                   </p>
                 )}
 
-                {/* Input box */}
-                <div className={`flex items-end gap-1 border rounded-xl bg-background p-3 transition-shadow ${
+                {/* Input box — max-w-full prevents overflow on narrow viewports (V2H-C1 Fix 1) */}
+                <div className={`flex items-end gap-1 border rounded-xl bg-background p-3 transition-shadow max-w-full ${
                   hasPendingProposals
                     ? 'border-zinc-200 opacity-60'
                     : 'border-border focus-within:ring-2 focus-within:ring-zinc-900/20'
