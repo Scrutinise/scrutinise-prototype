@@ -1,6 +1,26 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 17 April 2026 v29*
+*Last updated: 21 April 2026 v30*
+
+***
+
+## CURRENT STATE — SPRINT V2-I COMPLETE ✅
+
+One commit to Main. `tsc --noEmit` clean. No schema changes.
+
+### V2I commit summary
+
+1. **V2I-A1** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added Llama 4 Maverick (Together AI) to legislation-compare. New entry in `MODELS` array (`provider: 'together'`). New `together` caller in `PROMPTS` (OpenAI-compatible, endpoint `https://api.together.xyz/v1/chat/completions`). `together: ''` added to `apiKeys` state. Together AI API key input added to API keys section (placeholder `key_...`). Per-provider placeholder strings added to all API key inputs.
+
+### New files/changes this sprint
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Together AI integration
+
+### Architecture notes
+- Together AI uses identical request/response format to OpenAI (`choices[0].message.content`). No server-side proxy needed.
+- Model ID is the full Together AI path: `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8`.
+
+### Deploy actions needed
+- None — client-side only change.
 
 ***
 

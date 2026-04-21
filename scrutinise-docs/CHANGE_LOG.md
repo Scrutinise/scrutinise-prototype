@@ -2,7 +2,18 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 17 April 2026*
+*Last updated: 21 April 2026*
+
+---
+
+## CODE CHANGES — 21 April 2026 Sprint V2-I
+
+### V2I-A1: Llama 4 Maverick (Together AI) on legislation-compare
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | Added `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8` to `MODELS` array (provider: `together`). Added `together` caller in `PROMPTS` — OpenAI-compatible format, endpoint `https://api.together.xyz/v1/chat/completions`. Added `together: ''` to `apiKeys` state. Added Together AI API key input to API keys section (placeholder `key_...`). Errors shown as "Error" in results like other models. Client-side only — no server changes. |
+
+**Deploy actions needed:** None.
 
 ---
 
