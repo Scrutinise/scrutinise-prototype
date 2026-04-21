@@ -37,6 +37,7 @@ const MODELS = [
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai' },
   { id: 'grok-3-fast', label: 'Grok 3 Fast', provider: 'xai' },
   { id: 'sonar', label: 'Perplexity Sonar', provider: 'perplexity' },
+  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8', label: 'Llama 4 Maverick', provider: 'together' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -180,6 +181,28 @@ const PROMPTS: Record<string, (systemPrompt: string, userPrompt: string, apiKey:
     if (!res.ok) throw new Error(data.error?.message ?? `HTTP ${res.status}`)
     return data.choices?.[0]?.message?.content ?? ''
   },
+
+  together: async (systemPrompt, userPrompt, apiKey, model) => {
+    const res = await fetch('https://api.together.xyz/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 8192,
+        temperature: 0.2,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error?.message ?? `HTTP ${res.status}`)
+    return data.choices?.[0]?.message?.content ?? ''
+  },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -209,7 +232,7 @@ interface ModelResult {
 
 export default function LegislationCompareClient() {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({
-    gemini: '', anthropic: '', openai: '', xai: '', perplexity: '',
+    gemini: '', anthropic: '', openai: '', xai: '', perplexity: '', together: '',
   })
   const [selectedModels, setSelectedModels] = useState<string[]>(['gemini-2.5-flash'])
   const [sectionCount, setSectionCount] = useState(5)
@@ -366,17 +389,18 @@ export default function LegislationCompareClient() {
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
-                { provider: 'gemini', label: 'Google Gemini API key' },
-                { provider: 'anthropic', label: 'Anthropic API key' },
-                { provider: 'openai', label: 'OpenAI API key' },
-                { provider: 'xai', label: 'xAI (Grok) API key' },
-                { provider: 'perplexity', label: 'Perplexity API key' },
-              ].map(({ provider, label }) => (
+                { provider: 'gemini', label: 'Google Gemini API key', placeholder: 'sk-...' },
+                { provider: 'anthropic', label: 'Anthropic API key', placeholder: 'sk-...' },
+                { provider: 'openai', label: 'OpenAI API key', placeholder: 'sk-...' },
+                { provider: 'xai', label: 'xAI (Grok) API key', placeholder: 'xai-...' },
+                { provider: 'perplexity', label: 'Perplexity API key', placeholder: 'pplx-...' },
+                { provider: 'together', label: 'Together AI API key', placeholder: 'key_...' },
+              ].map(({ provider, label, placeholder }) => (
                 <div key={provider}>
                   <label className="mb-1 block text-xs text-gray-500">{label}</label>
                   <input
                     type="password"
-                    placeholder="sk-..."
+                    placeholder={placeholder}
                     value={apiKeys[provider]}
                     onChange={e => setApiKeys(prev => ({ ...prev, [provider]: e.target.value }))}
                     className="w-full rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:border-teal-600 focus:outline-none"
