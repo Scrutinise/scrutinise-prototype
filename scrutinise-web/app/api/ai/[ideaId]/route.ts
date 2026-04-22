@@ -43,9 +43,15 @@ const MessageSchema = z.object({
   currentFieldKey: z.string().nullable().optional(),
   currentFieldLabel: z.string().nullable().optional(),
   currentFieldSection: z.string().nullable().optional(),
+  legislationContext: z.array(z.object({
+    actTitle: z.string(),
+    sectionNumber: z.string(),
+    sectionTitle: z.string(),
+    compiledText: z.string(),
+  })).optional(),
 })
 
-// Build the Lex system prompt injected with runtime context (v6.0 + V2H-B1)
+// Build the Lex system prompt injected with runtime context (v6.0 + V2H-B1 + V2J-C1)
 function buildSystemPrompt(ctx: {
   ideaTitle: string
   currentStage: string
@@ -61,6 +67,12 @@ function buildSystemPrompt(ctx: {
   currentFieldKey?: string | null
   currentFieldLabel?: string | null
   currentFieldSection?: string | null
+  legislationContext?: Array<{
+    actTitle: string
+    sectionNumber: string
+    sectionTitle: string
+    compiledText: string
+  }>
 }): string {
   const isStage1 = ctx.currentStage === 'STAGE_1'
 
@@ -92,7 +104,21 @@ SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
 - Voting, endorsements, or credibility scores
 - Any platform features not directly related to filling idea fields
 If the user asks about these, tell them: "That's managed in the relevant tab — I'm focused on helping you build the idea content."
-` : `
+${ctx.legislationContext && ctx.legislationContext.length > 0 ? `
+RELEVANT LEGISLATION FOUND:
+The platform has identified the following legislation as potentially relevant to this idea. Reference it naturally where appropriate.
+Do NOT invent or hallucinate legislation not listed here.
+Do NOT claim this is definitive — always note it should be verified.
+${ctx.legislationContext.map(l => `--- ${l.actTitle} — Section ${l.sectionNumber}: ${l.sectionTitle}\n${l.compiledText.slice(0, 800)}`).join('\n')}
+When surfacing this to the user at summary/diagnosis stages, say something like:
+"I've found a section of [Act] that may be relevant — [brief description]. We'll look at this more carefully when we reach the Coherent Actions stage."
+At the Coherent Actions stage, say:
+"To implement this action, you'll likely need to amend [Act] s.[X] — [section title]. Here's what it currently says: [brief quote]. Would you like me to draft proposed amendment wording?"
+` : ''}` : `
+You are Lex, Scrutinise's AI assistant. All fields are complete for this session. Help the user refine their idea, answer questions about the process, or prepare for the next stage.
+
+SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
+- Team names, team membership, inviting collaborators
 You are Lex, Scrutinise's AI assistant. All fields are complete for this session. Help the user refine their idea, answer questions about the process, or prepare for the next stage.
 
 SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
@@ -630,7 +656,7 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
-  const { message, currentFieldKey, currentFieldLabel, currentFieldSection } = parsed.data
+  const { message, currentFieldKey, currentFieldLabel, currentFieldSection, legislationContext } = parsed.data
   const lexMode = user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE'
   const preferredName = user.preferredName ?? user.firstName
   const experienceLevel = user.experienceLevel ?? undefined
@@ -701,6 +727,7 @@ export async function POST(req: Request, { params }: Params) {
     currentFieldKey: currentFieldKey ?? null,
     currentFieldLabel: currentFieldLabel ?? null,
     currentFieldSection: currentFieldSection ?? null,
+    legislationContext: legislationContext ?? undefined,
   })
 
   const startTime = Date.now()
