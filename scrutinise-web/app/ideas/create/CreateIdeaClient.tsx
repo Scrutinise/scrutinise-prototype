@@ -5,6 +5,7 @@ import { useUser, SignInButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FieldProposalCard from '@/components/FieldProposalCard'
+import LegislationPanel from '@/components/LegislationPanel'
 import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
@@ -58,6 +59,19 @@ interface FieldCompletion {
   guidingPolicyMechanism: boolean
   guidingPolicyTradeOffs: boolean
   guidingPolicyCompetitiveIdeaAnalysis: boolean
+}
+
+interface LegislationResult {
+  id: string
+  sectionNumber: string
+  sectionTitle: string | null
+  compiledText: string | null
+  actTitle: string
+  year: number
+  legislationGovUkId: string
+  amendmentCount: number
+  confidence: string | null
+  tags: string[] | null
 }
 
 interface Props {
@@ -713,6 +727,12 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [addAnotherCAPrompt, setAddAnotherCAPrompt] = useState(false)
   // Inline field editing (direct edit without Lex)
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
+  // V2J-B1 — legislation panel
+  const [legislationResults, setLegislationResults] = useState<LegislationResult[]>([])
+  const [showLegislationPanel, setShowLegislationPanel] = useState(false)
+  const [legislationLoading, setLegislationLoading] = useState(false)
+  // V2J-B2 — track coherent action IDs so panel can attach to the right CA
+  const [coherentActionIds, setCoherentActionIds] = useState<string[]>([])
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -729,6 +749,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   useEffect(() => { currentFieldIndexRef.current = currentFieldIndex }, [currentFieldIndex])
 
   const progress = calcProgress(userMsgCount, fields, currentStage, coherentActionsCount)
+
+  // V2J-B2 — derive current coherent action ID from caLoopCount
+  const currentStep = FIELD_SEQUENCE[currentFieldIndex]
+  const inCASection = currentStep?.section === 'coherentActions'
+  const currentCoherentActionId = inCASection ? (coherentActionIds[caLoopCount] ?? null) : null
 
   // ── Populate fieldValues from idea data ───────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -791,10 +816,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     }
 
     // CoherentActions
-    ideaData.coherentActions?.forEach((ca: { title?: string; summarySnippet?: string }, i: number) => {
+    const caIds: string[] = []
+    ideaData.coherentActions?.forEach((ca: { id?: string; title?: string; summarySnippet?: string }, i: number) => {
+      if (ca.id) caIds.push(ca.id)
       if (ca.title) vals[`coherentAction_${i}_title`] = ca.title
       if (ca.summarySnippet) vals[`coherentAction_${i}_summary`] = ca.summarySnippet
     })
+    if (caIds.length > 0) setCoherentActionIds(caIds)
 
     // Cross-map summary keys → entity display keys for Stage 1 ideas (no entity records yet)
     Object.entries(SUMMARY_TO_ENTITY_MAP).forEach(([summaryKey, entityKey]) => {
@@ -1001,6 +1029,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             currentFieldKey: currentStep?.key ?? null,
             currentFieldLabel: currentStep?.label ?? null,
             currentFieldSection: currentStep?.sectionLabel ?? null,
+            // V2J-C1 — inject top 2 legislation results as context for Lex
+            ...(legislationResults.length > 0 ? {
+              legislationContext: legislationResults.slice(0, 2).map(r => ({
+                actTitle: r.actTitle,
+                sectionNumber: r.sectionNumber,
+                sectionTitle: r.sectionTitle ?? '',
+                compiledText: r.compiledText ?? '',
+              })),
+            } : {}),
           }),
         })
       } else {
@@ -1376,6 +1413,28 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   }, [messages, handleProposalAccept])
 
   // ── V2H-A2: Accept from currentProposal — platform advances field sequence ─
+  // V2J-B1 — search legislation DB and populate panel
+  const searchLegislation = useCallback(async (query: string) => {
+    if (!ideaId || !isSignedIn) return
+    setLegislationLoading(true)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/legislation-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, limit: 3 }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.results?.length > 0) {
+          setLegislationResults(data.results)
+          setShowLegislationPanel(true)
+        }
+      }
+    } finally {
+      setLegislationLoading(false)
+    }
+  }, [ideaId, isSignedIn])
+
   const handleCurrentProposalAccept = useCallback(async (value: string) => {
     if (!currentProposal) return
     const { fieldKey, fieldLabel } = currentProposal
@@ -1399,6 +1458,16 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     // Send silent system message so Lex persists the accepted value
     await handleSend(false, `Accepted: ${fieldLabel}`)
 
+    // V2J-B1 — trigger legislation search at three moments
+    if (fieldKey === 'summaryDescription') {
+      const query = [fieldValues['title'], value].filter(Boolean).join(' ')
+      searchLegislation(query)
+    } else if (fieldKey === 'diagnosis.whyPersisted') {
+      searchLegislation(value)
+    } else if (fieldKey === 'coherentAction.title') {
+      searchLegislation(value)
+    }
+
     // Advance field sequence using ref (avoids stale closure)
     const idx = currentFieldIndexRef.current
     const currentStep = FIELD_SEQUENCE[idx]
@@ -1419,7 +1488,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         handleSend(false, `Please generate a summary for: ${nextStep.label}`)
       }, 300)
     }
-  }, [currentProposal, handleSend])
+  }, [currentProposal, fieldValues, handleSend, searchLegislation])
 
   const handleCurrentProposalEdit = useCallback((proposedValue: string) => {
     setCurrentProposal(null)
@@ -1503,6 +1572,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       >
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-3">
+            {/* V2J-B2 — legislation toggle button (desktop) */}
+            {(legislationResults.length > 0 || legislationLoading) && (
+              <button
+                onClick={() => setShowLegislationPanel(v => !v)}
+                className="hidden lg:inline-flex items-center px-3 py-1 rounded-md border border-teal-300 text-teal-700 hover:bg-teal-50 text-xs transition-colors"
+              >
+                {legislationLoading ? 'Searching legislation…' : 'Legislation'}
+              </button>
+            )}
             {!isSignedIn && (
               <SignInButton mode="modal">
                 <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -1549,13 +1627,21 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       </div>
 
       {/* See completed answers — full-width black button, mobile only */}
-      <div className="lg:hidden px-4 py-2 border-b">
+      <div className="lg:hidden px-4 py-2 border-b flex gap-2">
         <button
           onClick={() => setMobilePanelOpen(true)}
-          className="w-full py-2.5 rounded-lg bg-foreground text-background text-sm font-medium"
+          className="flex-1 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium"
         >
           See completed answers →
         </button>
+        {(legislationResults.length > 0 || legislationLoading) && (
+          <button
+            onClick={() => setShowLegislationPanel(true)}
+            className="px-3 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium shrink-0"
+          >
+            {legislationLoading ? '…' : 'Legislation'}
+          </button>
+        )}
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
@@ -2071,6 +2157,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           </div>
         </aside>
       </div>
+
+      {/* ── Legislation panel slide-over ─────────────────────────────── */}
+      {ideaId && (
+        <LegislationPanel
+          results={legislationResults}
+          isOpen={showLegislationPanel}
+          onClose={() => setShowLegislationPanel(false)}
+          currentCoherentActionId={currentCoherentActionId}
+          ideaId={ideaId}
+          onLinkSaved={() => {}}
+        />
+      )}
 
       {/* ── Bottom nav ───────────────────────────────────────────────────── */}
       <SiteFooter />
