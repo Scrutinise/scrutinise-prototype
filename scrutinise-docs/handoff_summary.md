@@ -1,23 +1,26 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 21 April 2026 v30*
+*Last updated: 22 April 2026 v31*
 
 ***
 
 ## CURRENT STATE — SPRINT V2-I COMPLETE ✅
 
-One commit to Main. `tsc --noEmit` clean. No schema changes.
+Two commits to Main. `tsc --noEmit` clean. No schema changes.
 
 ### V2I commit summary
 
 1. **V2I-A1** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added Llama 4 Maverick (Together AI) to legislation-compare. New entry in `MODELS` array (`provider: 'together'`). New `together` caller in `PROMPTS` (OpenAI-compatible, endpoint `https://api.together.xyz/v1/chat/completions`). `together: ''` added to `apiKeys` state. Together AI API key input added to API keys section (placeholder `key_...`). Per-provider placeholder strings added to all API key inputs.
 
+2. **V2I-A2** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added `cleanTnaText()` function. Strips metadata preamble (seeks first operative statutory line: section number + capital letter, "Part N", "Chapter N", `**N`). Strips amendment footnotes from tail (lines starting "Words in s.", "S. N", "Substituted", "Inserted", "Omitted", "Repealed", "Modified"). Applied to gold text in both success and error scoring paths. TNA Gold Standard display shows `(cleaned)` label.
+
 ### New files/changes this sprint
-- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Together AI integration
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Together AI integration + TNA text cleaning
 
 ### Architecture notes
 - Together AI uses identical request/response format to OpenAI (`choices[0].message.content`). No server-side proxy needed.
 - Model ID is the full Together AI path: `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8`.
+- `cleanTnaText()` operates on the already-XML-stripped plain text returned by `extractText()`. The preamble detection scans forward for the first operative section line; footnote stripping scans backward and stops at the first non-footnote line to avoid removing content from the middle.
 
 ### Deploy actions needed
 - None — client-side only change.

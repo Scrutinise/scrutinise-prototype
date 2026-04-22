@@ -63,6 +63,40 @@ function extractText(xml: string): string {
   return xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+function cleanTnaText(raw: string): string {
+  const lines = raw.split('\n')
+
+  let startIdx = 0
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (/^\d+[A-Z]?\s+[A-Z]/.test(line) ||
+        /^Part\s+\d/i.test(line) ||
+        /^Chapter\s+\d/i.test(line) ||
+        /^\*\*\d/.test(line)) {
+      startIdx = i
+      break
+    }
+  }
+
+  let endIdx = lines.length
+  for (let i = lines.length - 1; i >= startIdx; i--) {
+    const line = lines[i].trim()
+    if (/^Words in s\./i.test(line) ||
+        /^S\.\s+\d/i.test(line) ||
+        /^Substituted/i.test(line) ||
+        /^Inserted/i.test(line) ||
+        /^Omitted/i.test(line) ||
+        /^Repealed/i.test(line) ||
+        /^Modified/i.test(line)) {
+      endIdx = i
+    } else if (endIdx < lines.length) {
+      break
+    }
+  }
+
+  return lines.slice(startIdx, endIdx).join('\n').trim()
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // API callers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -292,13 +326,15 @@ export default function LegislationCompareClient() {
         try {
           const caller = PROMPTS[modelDef.provider]
           const aiText = await caller(SYSTEM_PROMPT, userPrompt, apiKey, modelId)
-          const goldText = goldTexts[s.label] ?? ''
+          const rawGold = goldTexts[s.label] ?? ''
+          const goldText = rawGold ? cleanTnaText(rawGold) : ''
           const score = goldText ? jaccardSimilarity(goldText, aiText) : 0
           sectionResults.push({ label: s.label, goldText, aiText, score })
         } catch (err) {
+          const rawGoldErr = goldTexts[s.label] ?? ''
           sectionResults.push({
             label: s.label,
-            goldText: goldTexts[s.label] ?? '',
+            goldText: rawGoldErr ? cleanTnaText(rawGoldErr) : '',
             aiText: '',
             score: 0,
             error: String(err),
@@ -511,7 +547,9 @@ export default function LegislationCompareClient() {
                         {expandedSection === `${r.modelId}-${s.label}` && (
                           <div className="mt-3 grid gap-3 sm:grid-cols-2">
                             <div>
-                              <p className="mb-1 text-xs font-medium text-gray-500">TNA Gold Standard</p>
+                              <p className="mb-1 text-xs font-medium text-gray-500">
+                                TNA Gold Standard <span className="text-gray-600">(cleaned)</span>
+                              </p>
                               <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-gray-800 p-2 text-xs text-gray-300">
                                 {s.goldText || '(not fetched)'}
                               </pre>

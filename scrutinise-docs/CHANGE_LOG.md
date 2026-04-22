@@ -2,7 +2,18 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 21 April 2026*
+*Last updated: 22 April 2026*
+
+---
+
+## CODE CHANGES — 22 April 2026 Sprint V2-I (continued)
+
+### V2I-A2: Clean TNA gold standard text before Jaccard scoring
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | Added `cleanTnaText()` function that strips metadata preamble (seeks first line matching operative statutory text: section number + capital, "Part N", "Chapter N", or `**N`) and amendment footnotes from the end (strips trailing lines starting "Words in s.", "S. N", "Substituted", "Inserted", "Omitted", "Repealed", "Modified"). Applied to gold text before Jaccard comparison in both success and error paths. TNA Gold Standard display heading shows `(cleaned)` label in grey. |
+
+**Deploy actions needed:** None.
 
 ---
 
