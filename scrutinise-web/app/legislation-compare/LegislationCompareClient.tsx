@@ -37,7 +37,7 @@ const MODELS = [
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai' },
   { id: 'grok-3-fast', label: 'Grok 3 Fast', provider: 'xai' },
   { id: 'sonar', label: 'Perplexity Sonar', provider: 'perplexity' },
-  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8', label: 'Llama 4 Maverick', provider: 'together' },
+  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-Turbo', label: 'Llama 4 Maverick', provider: 'together' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,6 +75,16 @@ function cleanTnaText(raw: string): string {
         /^\*\*\d/.test(line)) {
       startIdx = i
       break
+    }
+  }
+
+  // Fallback for single-line text (no newlines found a start marker)
+  if (startIdx === 0 && lines.length <= 2) {
+    const singleLineMatch = raw.match(/\s(\d+[A-Z]?\s+[A-Z][a-z])/)
+    if (singleLineMatch && singleLineMatch.index !== undefined) {
+      const sliced = raw.slice(singleLineMatch.index).trim()
+      // Strip trailing footnotes from single-line text
+      return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted|Inserted|Omitted|Repealed|Modified).*/i, '').trim()
     }
   }
 
