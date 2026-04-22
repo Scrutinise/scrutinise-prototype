@@ -217,20 +217,16 @@ const PROMPTS: Record<string, (systemPrompt: string, userPrompt: string, apiKey:
   },
 
   together: async (systemPrompt, userPrompt, apiKey, model) => {
-    const res = await fetch('https://api.together.xyz/v1/chat/completions', {
+    const res = await fetch('/api/legislation/together-proxy', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
+        apiKey,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        max_tokens: 8192,
-        temperature: 0.2,
       }),
     })
     const data = await res.json()
