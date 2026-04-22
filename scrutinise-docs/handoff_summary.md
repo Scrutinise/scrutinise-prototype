@@ -1,21 +1,23 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 22 April 2026 v31*
+*Last updated: 22 April 2026 v32*
 
 ***
 
 ## CURRENT STATE — SPRINT V2-I COMPLETE ✅
 
-Two commits to Main. `tsc --noEmit` clean. No schema changes.
+Three commits to Main. `tsc --noEmit` clean. No schema changes.
 
 ### V2I commit summary
 
 1. **V2I-A1** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added Llama 4 Maverick (Together AI) to legislation-compare. New entry in `MODELS` array (`provider: 'together'`). New `together` caller in `PROMPTS` (OpenAI-compatible, endpoint `https://api.together.xyz/v1/chat/completions`). `together: ''` added to `apiKeys` state. Together AI API key input added to API keys section (placeholder `key_...`). Per-provider placeholder strings added to all API key inputs.
 
-2. **V2I-A2** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added `cleanTnaText()` function. Strips metadata preamble (seeks first operative statutory line: section number + capital letter, "Part N", "Chapter N", `**N`). Strips amendment footnotes from tail (lines starting "Words in s.", "S. N", "Substituted", "Inserted", "Omitted", "Repealed", "Modified"). Applied to gold text in both success and error scoring paths. TNA Gold Standard display shows `(cleaned)` label.
+2. **V2I-A2** — `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx`: Added `cleanTnaText()` function.
+3. **V2I-A3** — New `scrutinise-web/app/api/legislation/together-proxy/route.ts`: server-side POST proxy for Together AI. Reads `{ model, messages, apiKey }`, forwards to `https://api.together.xyz/v1/chat/completions`. Client `together` caller updated to POST to `/api/legislation/together-proxy` to avoid CORS block. Strips metadata preamble (seeks first operative statutory line: section number + capital letter, "Part N", "Chapter N", `**N`). Strips amendment footnotes from tail (lines starting "Words in s.", "S. N", "Substituted", "Inserted", "Omitted", "Repealed", "Modified"). Applied to gold text in both success and error scoring paths. TNA Gold Standard display shows `(cleaned)` label.
 
 ### New files/changes this sprint
-- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Together AI integration + TNA text cleaning
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Together AI integration + TNA text cleaning + proxy caller
+- `scrutinise-web/app/api/legislation/together-proxy/route.ts` — new server-side proxy for Together AI
 
 ### Architecture notes
 - Together AI uses identical request/response format to OpenAI (`choices[0].message.content`). No server-side proxy needed.

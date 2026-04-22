@@ -8,6 +8,16 @@
 
 ## CODE CHANGES — 22 April 2026 Sprint V2-I (continued)
 
+### V2I-A3: Server-side proxy for Together AI (CORS fix)
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/legislation/together-proxy/route.ts` | New POST route. Reads `{ model, messages, apiKey }` from request body, forwards to `https://api.together.xyz/v1/chat/completions` with `Authorization: Bearer {apiKey}`, returns response JSON. Proxies the request server-side to avoid browser CORS block. |
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | `together` caller updated to POST to `/api/legislation/together-proxy` instead of calling Together AI directly. `apiKey` included in body rather than Authorization header. |
+
+**Deploy actions needed:** None.
+
+---
+
 ### V2I-A2: Clean TNA gold standard text before Jaccard scoring
 | File | Change |
 |------|--------|
