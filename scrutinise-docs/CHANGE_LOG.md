@@ -6,6 +6,57 @@
 
 ---
 
+## CODE CHANGES — 22 April 2026 Sprint V2-J
+
+### V2J-D1: Llama 4 Maverick model ID fix + TNA cleaning improvement
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | Fixed Llama 4 Maverick model ID from `Llama-4-Maverick-17B-128E-Instruct-FP8` to `Llama-4-Maverick-17B-128E-Instruct-Turbo` (FP8 requires a dedicated endpoint). Extended `cleanTnaText()` with single-line fallback: when no newline-based start found, tries regex `\s(\d+[A-Z]?\s+[A-Z][a-z])` on full raw string and slices from there. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2J-C1: Inject legislation context into Lex system prompt
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/ai/[ideaId]/route.ts` | `MessageSchema` extended with optional `legislationContext` array (actTitle, sectionNumber, sectionTitle, compiledText). `buildSystemPrompt` ctx type extended with same. When `legislationContext` provided, appends `RELEVANT LEGISLATION FOUND` block to `fieldInstruction` with per-section text (first 800 chars). Includes scripted language guidance for Moments 1/2 vs Moment 3 (Coherent Actions). POST handler destructures and passes `legislationContext` to `buildSystemPrompt`. |
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | `handleSend` now includes `legislationContext` in request body (top 2 results, mapped to actTitle/sectionNumber/sectionTitle/compiledText) when `legislationResults.length > 0`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2J-B2: LegislationPanel slide-out component
+| File | Change |
+|------|--------|
+| `scrutinise-web/components/LegislationPanel.tsx` | New component. Slide-over panel (fixed right, full-height, max-w-md, z-50). Backdrop overlay. Header with close button. Amber disclaimer banner linking to legislation.gov.uk. Per-result cards: act title + section number + year, teal section title, scrollable monospace compiled text (max-h-200px), legislation.gov.uk link, change type selector (Amend/Repeal/Add), proposed wording textarea, "Attach to this action" button (only visible when `currentCoherentActionId` set). Calls POST `/api/ideas/[id]/legislation-link`. Shows saved state. Empty state message. |
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | Imported `LegislationPanel`. Added `coherentActionIds: string[]` state populated from `ideaData.coherentActions[*].id` in `populateFieldValuesFromIdea`. Derived `currentCoherentActionId = coherentActionIds[caLoopCount]` when in `coherentActions` section. Added legislation toggle button to toolbar (desktop: hidden lg:inline-flex, teal; mobile: alongside "See completed answers"). Rendered `<LegislationPanel>` as slide-over before `<SiteFooter>`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2J-B1: Three-moment legislation search in CreateIdeaClient
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | Added `LegislationResult` interface. Added state: `legislationResults`, `showLegislationPanel`, `legislationLoading`. Added `searchLegislation(query)` function (POST to `/api/ideas/[id]/legislation-search`, sets results + opens panel). Added three trigger moments in `handleCurrentProposalAccept` after `handleSend`: (1) `summaryDescription` accepted → search `title + value`; (2) `diagnosis.whyPersisted` accepted → search `value`; (3) `coherentAction.title` accepted → search `value`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2J-A1: Legislation search API, CoherentActionSection schema, legislation-link route
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `CoherentActionSection` model (cuid id, coherentActionId, legislationSectionId, proposedWording?, changeType default AMEND, timestamps). Added `legislationSections CoherentActionSection[]` to `CoherentAction`. Added `coherentActionLinks CoherentActionSection[]` to `LegislationSection`. |
+| `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` | New POST route. Auth required. Zod body: `{ query, limit? }`. Runs PostgreSQL FTS query via `prisma.$queryRaw` — joins LegislationSection + LegislationItem, filters `compilationStatus = COMPILED` and `compiledText IS NOT NULL`, ranks by `ts_rank` DESC and `amendmentCount` ASC. Returns `{ results: [...] }`. |
+| `scrutinise-web/app/api/ideas/[id]/legislation-link/route.ts` | New POST + DELETE route. POST: auth + idea ownership check, upsert CoherentActionSection (findFirst + update/create). DELETE: auth + ownership check, delete by id. |
+
+**Deploy actions needed:** `npx prisma db push` ✅ `npx prisma generate` ✅
+
+---
+
 ## CODE CHANGES — 22 April 2026 Sprint V2-I (continued)
 
 ### V2I-A3: Server-side proxy for Together AI (CORS fix)

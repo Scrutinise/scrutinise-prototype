@@ -1,6 +1,44 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 22 April 2026 v32*
+*Last updated: 22 April 2026 v33*
+
+***
+
+## CURRENT STATE — SPRINT V2-J COMPLETE ✅
+
+Five commits to Main. `tsc --noEmit` clean. `prisma db push` + `prisma generate` done (CoherentActionSection schema).
+
+### V2J commit summary
+
+1. **V2J-A1** — New model `CoherentActionSection` in `prisma/schema.prisma`. New `app/api/ideas/[id]/legislation-search/route.ts` (POST, FTS via `$queryRaw`, returns top N compiled sections). New `app/api/ideas/[id]/legislation-link/route.ts` (POST upsert + DELETE for CoherentActionSection links). `prisma db push` ✅ `prisma generate` ✅.
+
+2. **V2J-B1** — `app/ideas/create/CreateIdeaClient.tsx`: `LegislationResult` interface, state (`legislationResults`, `showLegislationPanel`, `legislationLoading`), `searchLegislation()` function. Three search trigger moments in `handleCurrentProposalAccept`: (1) `summaryDescription` accepted → search title+value; (2) `diagnosis.whyPersisted` → search value; (3) `coherentAction.title` → search value.
+
+3. **V2J-B2** — New `components/LegislationPanel.tsx`. Slide-over panel (fixed right, backdrop, amber disclaimer, per-section cards with monospace text, legislation.gov.uk link, change type selector, proposed wording textarea, attach button). `CreateIdeaClient.tsx`: `coherentActionIds` state populated from idea fetch, `currentCoherentActionId` derived from `coherentActionIds[caLoopCount]` when in CA section. Legislation toggle button in toolbar (desktop + mobile). `LegislationPanel` rendered before `SiteFooter`.
+
+4. **V2J-C1** — `app/api/ai/[ideaId]/route.ts`: `MessageSchema` + `buildSystemPrompt` ctx extended with optional `legislationContext` array. When provided, appends `RELEVANT LEGISLATION FOUND` block to `fieldInstruction` (800 char limit per section, scripted language for Moments 1/2 vs 3). `CreateIdeaClient.tsx`: `handleSend` includes top-2 legislation results in AI request body.
+
+5. **V2J-D1** — `app/legislation-compare/LegislationCompareClient.tsx`: Fixed Llama 4 Maverick model ID from `FP8` to `Turbo`. Extended `cleanTnaText()` with single-line fallback (regex `\s(\d+[A-Z]?\s+[A-Z][a-z])` on full raw string when no newline-based start found).
+
+### New files/changes this sprint
+- `scrutinise-web/prisma/schema.prisma` — `CoherentActionSection` model + reverse relations on `CoherentAction` and `LegislationSection`
+- `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` — new FTS search route
+- `scrutinise-web/app/api/ideas/[id]/legislation-link/route.ts` — new link CRUD route
+- `scrutinise-web/components/LegislationPanel.tsx` — new slide-over legislation panel
+- `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` — legislation state, search triggers, panel wiring, legislation context in AI request
+- `scrutinise-web/app/api/ai/[ideaId]/route.ts` — `legislationContext` in MessageSchema + buildSystemPrompt
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — model ID fix + single-line TNA cleaning fallback
+
+### Architecture notes
+- `CoherentActionSection` uses `cuid()` IDs (matching `LegislationCrossRef` pattern). No @@unique on [coherentActionId, legislationSectionId] — upsert uses `findFirst + update/create` pattern.
+- `currentCoherentActionId` is derived client-side: `coherentActionIds[caLoopCount]` when `currentStep.section === 'coherentActions'`. `coherentActionIds` is populated from `ideaData.coherentActions[*].id` in `populateFieldValuesFromIdea` (re-called on every `hasFieldUpdates` re-fetch).
+- Legislation search triggers fire after `handleSend` completes (i.e., after the AI has written the accepted value to DB). Results persist in `legislationResults` state and are passed to every subsequent AI request as `legislationContext`.
+- The `Llama-4-Maverick-17B-128E-Instruct-Turbo` model ID is the correct serverless Together AI endpoint. The `FP8` variant requires a dedicated hourly instance.
+
+### Deploy actions needed
+- `npx prisma db push` ✅ (already done locally)
+- `npx prisma generate` ✅ (already done locally)
+- No new env vars required
 
 ***
 
