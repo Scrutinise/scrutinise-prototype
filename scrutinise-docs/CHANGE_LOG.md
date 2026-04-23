@@ -2,7 +2,85 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 22 April 2026*
+*Last updated: 23 April 2026*
+
+---
+
+## CODE CHANGES — 23 April 2026 Sprint V2-K
+
+### V2K-D2: Lex onboarding flow + userProfiling step
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | Added `onboardingState` ('pending'→'done') and `skipUserProfilingRef`. Two onboarding choice handlers: `handleOnboardingKnow` (sets done, marks skip flag) and `handleOnboardingTellMore` (sets done). Two teal pill buttons rendered below first Lex message when `i === 0 && onboardingState === 'pending' && !msg.isStreaming`. `handleCurrentProposalAccept`: injects "Congratulations — Stage 1 complete" Lex message when `fieldKey === 'ideaType'`. Uses `effectiveNextIdx` to skip `userProfiling` when `skipUserProfilingRef.current` is true. |
+| `scrutinise-web/lib/field-labels.ts` | Added `userProfiling` step to `FIELD_SEQUENCE` between `title` (index 0) and `summaryDescription` (index 2). |
+| `scrutinise-web/app/api/ai/[ideaId]/route.ts` | Added `userProfilingInstruction` constant. `fieldInstruction` condition now excludes `userProfiling`. System prompt appends `userProfilingInstruction` after `fieldInstruction`. `applyFieldUpdatesAndSave`: extracts `parsedJson.userAdditionalNotes`, persists to DB, adds `userAdditionalNotes` to `DIRECT_IDEA_FIELDS`. Returns `userAdditionalNotes` in done event. |
+| `scrutinise-web/app/api/ideas/[id]/route.ts` | Added `userAdditionalNotes: z.string().optional()` to `PatchIdeaSchema`. |
+
+**Deploy actions needed:** `npx prisma db push` + `npx prisma generate` (for `userAdditionalNotes String?` on `Idea`).
+
+---
+
+### V2K-D1: `userAdditionalNotes` schema field
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `userAdditionalNotes String?` to `Idea` model. |
+
+**Deploy actions needed:** `npx prisma db push` ✅ `npx prisma generate` ✅
+
+---
+
+### V2K-C1: Homepage — Vision/Tool section + layout reorder
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/page.tsx` | Added new Section 2 "Vision and Tool" (dark `bg-[#0a0a0f]`, large bold headline, two labelled paragraphs, three dark info boxes). Moved "If you're serious" from Section 3 to Section 8 (bottom). Changed "into" → "to help build" in middle box. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2K-B1: Legislation compare — Llama model fix + single-line TNA cleaning
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | Fixed Llama model ID to `meta-llama/Llama-3.3-70B-Instruct-Turbo`, label `'Llama 3.3 70B'`. System prompt changed to verbatim-accuracy prompt. `cleanTnaText()` improved: single-line path now tries subsection marker regex `(\d+[A-Z]?\s+[A-Z][a-z][^\n]{0,60}\n?\s*\(\d+\))` before falling back to `sectionNumber` last-occurrence scan. Both call sites pass `s.section`. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2K-A4: Legislation search route + LegislationPanel TNA/lexSummary
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` | Added `tnaCompiledText`, `lexSummary` to SELECT. FTS tsvector updated to `COALESCE(tnaCompiledText, compiledText)`. |
+| `scrutinise-web/components/LegislationPanel.tsx` | `LegislationResult` interface gets `tnaCompiledText?` and `lexSummary?`. TNA verified badge (teal) shown when `tnaCompiledText` present. Plain English / statutory text toggle shown when `lexSummary` present. `statutoryText = tnaCompiledText ?? compiledText`. |
+
+**Deploy actions needed:** None (schema fields added in A1).
+
+---
+
+### V2K-A3: Verbatim-first compile script
+| File | Change |
+|------|--------|
+| `scripts/legislation/compile.ts` | Rewritten. `VERBATIM_SYSTEM_PROMPT` (legal editor prompt). `SUMMARY_SYSTEM_PROMPT` (plain English for Lex). `compileSection()`: if `tnaCompiledText` present, copies to `compiledText`, sets `HIGH` confidence, skips Gemini, generates `lexSummary` via separate Gemini call. Else: calls Gemini with verbatim JSON prompt, generates `lexSummary`. Progress logging: `✓ s.N — TNA (verbatim)` vs `✓ s.N — AI (verbatim attempt)`. |
+
+**Deploy actions needed:** Re-run `cd scrutinise-web && npx ts-node ../scripts/legislation/compile.ts` to compile any sections with `tnaCompiledText`.
+
+---
+
+### V2K-A2: Ingest script — fetch TNA compiled text per section
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | Added `cleanTnaCompiledText(raw, sectionNumber)`: multi-line path (find content start, strip footnotes) and single-line path (subsection marker regex, then sectionNumber fallback). Added `fetchTnaCompiledText(legislationGovUkId, sectionNumber)`: fetches `https://www.legislation.gov.uk/{id}/section/{num}`, 404-safe (warning + null). `ingestAct()`: after each section upsert, 1000ms delay then fetch + store `tnaCompiledText`. |
+
+**Deploy actions needed:** Re-run `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts` to populate `tnaCompiledText` for existing sections.
+
+---
+
+### V2K-A1: `LegislationSection` — `tnaCompiledText` + `lexSummary` fields
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `tnaCompiledText String?` and `lexSummary String?` to `LegislationSection` model. |
+
+**Deploy actions needed:** `npx prisma db push` ✅ `npx prisma generate` ✅
 
 ---
 

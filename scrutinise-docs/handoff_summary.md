@@ -1,6 +1,55 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 22 April 2026 v33*
+*Last updated: 23 April 2026 v34*
+
+***
+
+## CURRENT STATE — SPRINT V2-K COMPLETE ✅
+
+Eight commits to Main. `tsc --noEmit` clean. `prisma db push` + `prisma generate` done (V2K-A1 and V2K-D1 schema changes).
+
+### V2K commit summary
+
+1. **V2K-A1** — `LegislationSection` schema: added `tnaCompiledText String?` and `lexSummary String?`. `prisma db push` ✅ `prisma generate` ✅.
+
+2. **V2K-A2** — `scripts/legislation/ingest.ts`: added `cleanTnaCompiledText(raw, sectionNumber)` (multi-line + single-line paths), `fetchTnaCompiledText()` (fetches `legislation.gov.uk/{id}/section/{num}`, 404-safe, 1000ms delay between calls). `ingestAct()` fetches and stores `tnaCompiledText` per section after upsert.
+
+3. **V2K-A3** — `scripts/legislation/compile.ts`: verbatim-first logic. If `tnaCompiledText` present → copy to `compiledText`, skip Gemini, generate `lexSummary` separately. Else → Gemini verbatim prompt + `lexSummary`. Two system prompts: `VERBATIM_SYSTEM_PROMPT`, `SUMMARY_SYSTEM_PROMPT`.
+
+4. **V2K-A4** — `legislation-search/route.ts`: added `tnaCompiledText`/`lexSummary` to SELECT; FTS uses `COALESCE(tnaCompiledText, compiledText)`. `LegislationPanel.tsx`: TNA verified badge, plain English / statutory text toggle.
+
+5. **V2K-B1** — `LegislationCompareClient.tsx`: model `meta-llama/Llama-3.3-70B-Instruct-Turbo`, verbatim system prompt, improved `cleanTnaText()` single-line path (subsection marker regex + sectionNumber fallback), both call sites pass `s.section`.
+
+6. **V2K-C1** — `app/page.tsx`: new Vision/Tool section (dark bg, Section 2), "If you're serious" moved to Section 8, "into" → "to help build".
+
+7. **V2K-D1** — `Idea` schema: added `userAdditionalNotes String?`. `prisma db push` ✅ `prisma generate` ✅.
+
+8. **V2K-D2** — Lex onboarding flow. `lib/field-labels.ts`: `userProfiling` step at FIELD_SEQUENCE index 1. `api/ideas/[id]/route.ts`: `userAdditionalNotes` in PatchIdeaSchema. `api/ai/[ideaId]/route.ts`: `userProfilingInstruction`, `userAdditionalNotes` extraction + persistence. `CreateIdeaClient.tsx`: `onboardingState` + `skipUserProfilingRef`, `handleOnboardingKnow`/`handleOnboardingTellMore` handlers, teal pill buttons below first Lex message, Stage 1 congratulations injection on `ideaType` accept, skip-userProfiling logic in `handleCurrentProposalAccept`.
+
+### New files/changes this sprint
+- `scrutinise-web/prisma/schema.prisma` — `tnaCompiledText`, `lexSummary` on `LegislationSection`; `userAdditionalNotes` on `Idea`
+- `scripts/legislation/ingest.ts` — TNA compiled text fetch per section
+- `scripts/legislation/compile.ts` — verbatim-first compile logic + lexSummary generation
+- `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` — tnaCompiledText/lexSummary in results
+- `scrutinise-web/components/LegislationPanel.tsx` — TNA badge + plain English toggle
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — Llama 3.3 model fix + improved TNA cleaning
+- `scrutinise-web/app/page.tsx` — Vision/Tool section + layout reorder
+- `scrutinise-web/lib/field-labels.ts` — userProfiling step in FIELD_SEQUENCE
+- `scrutinise-web/app/api/ideas/[id]/route.ts` — userAdditionalNotes in PatchIdeaSchema
+- `scrutinise-web/app/api/ai/[ideaId]/route.ts` — userProfiling instruction + userAdditionalNotes persistence
+- `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` — onboarding buttons + Stage 1 congratulations
+
+### Architecture notes
+- `userProfiling` is at FIELD_SEQUENCE index 1. If user clicks "I know what I'm doing →", `skipUserProfilingRef.current = true` and `handleCurrentProposalAccept` jumps from `title` (index 0) directly to `summaryDescription` (index 2).
+- `userAdditionalNotes` is synthesised by Lex during the `userProfiling` step and persisted server-side. Client receives it in the `done` event but does not need to act on it.
+- Stage 1 completion message is injected as a fake Lex message immediately before `handleSend('Accepted: ideaType')`, so it appears first in the chat then Lex's real response follows.
+- TNA verbatim text is preferred over AI-compiled text in all legislation display surfaces. Re-ingest required: `cd scrutinise-web && npx ts-node ../scripts/legislation/ingest.ts`
+
+### Deploy actions needed
+- `npx prisma db push` ✅ (done locally for both A1 and D1)
+- `npx prisma generate` ✅
+- Re-run ingest script to populate `tnaCompiledText` for existing sections
+- Re-run compile script to generate `lexSummary` for all sections
 
 ***
 
