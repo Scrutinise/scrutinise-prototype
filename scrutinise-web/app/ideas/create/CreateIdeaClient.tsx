@@ -733,6 +733,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [legislationLoading, setLegislationLoading] = useState(false)
   // V2J-B2 — track coherent action IDs so panel can attach to the right CA
   const [coherentActionIds, setCoherentActionIds] = useState<string[]>([])
+  // V2K-D2 — onboarding state: pending (show buttons) → done (proceed)
+  const [onboardingState, setOnboardingState] = useState<'pending' | 'done'>('pending')
+  const skipUserProfilingRef = useRef(false)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1455,6 +1458,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setLastAcceptedField(normKey)
     }
 
+    // V2K-D2 — Stage 1 completion: inject congratulations before Lex's next response
+    if (fieldKey === 'ideaType') {
+      setMessages(prev => [...prev, {
+        role: 'lex',
+        content: "Congratulations — you've completed Stage 1. You now have a title, summary, and key context for your idea. Now let's build out your diagnosis — let's understand the challenge you want to solve.",
+        timestamp: new Date().toISOString(),
+      }])
+    }
+
     // Send silent system message so Lex persists the accepted value
     await handleSend(false, `Accepted: ${fieldLabel}`)
 
@@ -1480,12 +1492,17 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       return
     }
 
-    setCurrentFieldIndex(nextIdx)
+    // V2K-D2 — skip userProfiling if user chose "I know what I'm doing"
+    const effectiveNextIdx = skipUserProfilingRef.current && FIELD_SEQUENCE[nextIdx]?.key === 'userProfiling'
+      ? nextIdx + 1
+      : nextIdx
+    const effectiveNextStep = FIELD_SEQUENCE[effectiveNextIdx]
+    setCurrentFieldIndex(effectiveNextIdx)
 
     // If next step is isLexGenerated, auto-send a silent generation request (after state flush)
-    if (nextStep?.isLexGenerated) {
+    if (effectiveNextStep?.isLexGenerated) {
       setTimeout(() => {
-        handleSend(false, `Please generate a summary for: ${nextStep.label}`)
+        handleSend(false, `Please generate a summary for: ${effectiveNextStep.label}`)
       }, 300)
     }
   }, [currentProposal, fieldValues, handleSend, searchLegislation])
@@ -1533,6 +1550,16 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   // ── V2H-A2: Skip current field ─────────────────────────────────────────────
   const handleSkipField = useCallback(() => {
     setCurrentFieldIndex(prev => prev + 1)
+  }, [])
+
+  // ── V2K-D2: Onboarding choice ──────────────────────────────────────────────
+  const handleOnboardingKnow = useCallback(() => {
+    setOnboardingState('done')
+    skipUserProfilingRef.current = true
+  }, [])
+
+  const handleOnboardingTellMore = useCallback(() => {
+    setOnboardingState('done')
   }, [])
 
   // ── Swipe gesture handlers ────────────────────────────────────────────────
@@ -1771,6 +1798,23 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                                 onDiscuss={() => handleProposalDiscuss(i, pi)}
                               />
                             ))}
+                          </div>
+                        )}
+                        {/* V2K-D2 — Onboarding choice buttons (first Lex message only) */}
+                        {i === 0 && onboardingState === 'pending' && !msg.isStreaming && (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                              onClick={handleOnboardingTellMore}
+                              className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors"
+                            >
+                              Tell me more about this
+                            </button>
+                            <button
+                              onClick={handleOnboardingKnow}
+                              className="px-4 py-2 text-sm font-medium border border-zinc-300 text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors"
+                            >
+                              I know what I&apos;m doing →
+                            </button>
                           </div>
                         )}
                       </div>

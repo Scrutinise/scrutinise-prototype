@@ -10,6 +10,7 @@ export interface FieldStep {
 export const FIELD_SEQUENCE: FieldStep[] = [
   // Initial Information
   { key: 'title',              label: '1. Title',               section: 'initialInformation', sectionLabel: 'Initial Information' },
+  { key: 'userProfiling',      label: 'User Profiling',         section: 'initialInformation', sectionLabel: 'Initial Information' },
   { key: 'summaryDescription', label: '2. Summary Description', section: 'initialInformation', sectionLabel: 'Initial Information' },
   { key: 'govtArea',           label: '3. Government Area',     section: 'initialInformation', sectionLabel: 'Initial Information' },
   { key: 'ideaType',           label: '4. Idea Type',           section: 'initialInformation', sectionLabel: 'Initial Information' },

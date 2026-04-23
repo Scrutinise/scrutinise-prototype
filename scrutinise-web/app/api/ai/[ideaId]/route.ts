@@ -76,8 +76,32 @@ function buildSystemPrompt(ctx: {
 }): string {
   const isStage1 = ctx.currentStage === 'STAGE_1'
 
+  // V2K-D2 — userProfiling step: special instruction injected instead of standard field instruction
+  const userProfilingInstruction = ctx.currentFieldKey === 'userProfiling' ? `
+
+CURRENT TASK — USER PROFILING:
+You are now gathering background information about the user to calibrate the support you give them. Start by saying:
+"It would be helpful to understand a bit about you and your idea so I can give you the right support. Is that okay? If you'd rather just get started, just say so."
+
+If they agree, ask open questions in this priority order, adapting naturally based on what they tell you. Do not ask multiple questions at once — ask one at a time and build on their answers:
+
+0. "Tell me about your background, what you want to change, and why."
+1. After that: What level of support do they want? Full guidance step-by-step, expert assistant who checks their work, or something in between?
+2. More about the specific idea
+3. More about their background and why this matters to them
+4. How familiar are they with the policy/legislative process?
+5. Have they published or campaigned on this before?
+
+Once you have a reasonable picture — or if they say they want to move on — synthesise what you've learned into 3-5 sentences covering: their background/expertise, what they want to change and why, their familiarity with the process, and the level of support they want. Then say: "Thanks — that's really helpful. Let's move to the proposal." The platform will then save your synthesis and advance to the first field.
+
+IMPORTANT: The synthesis you produce at the end of this step will be stored. Format the synthesis as a JSON object on its own line (in addition to the fieldProposal):
+{"fieldProposal": {"fieldKey": "userProfiling", "fieldLabel": "User Profiling", "proposedValue": "..."}, "userAdditionalNotes": "[synthesis text here]"}
+
+Where proposedValue contains the same synthesis text as userAdditionalNotes.
+` : ''
+
   // V2H-B1 — dynamic single-field instruction (platform controls field sequence)
-  const fieldInstruction = ctx.currentFieldKey ? `
+  const fieldInstruction = ctx.currentFieldKey && ctx.currentFieldKey !== 'userProfiling' ? `
 
 CURRENT TASK — FILL ONE FIELD ONLY:
 You are currently helping the user fill this single field:
@@ -476,7 +500,7 @@ RH SIDEBAR FIELDS (the seven completion markers):
 6. Evidence Base (research)
 7. Proposed Wording (proposedWording)
 ${stageSection}
-${fieldInstruction}
+${fieldInstruction}${userProfilingInstruction}
 
 WHAT LEX NEVER DOES:
 - Calls itself "Claude", "the AI", or "an AI assistant"
@@ -740,11 +764,12 @@ export async function POST(req: Request, { params }: Params) {
     triggerSavePrompt: boolean
     pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }>
     fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null
-  }> {
+  } & { userAdditionalNotes: string | null }> {
     let displayText = fullText
     let fieldUpdates: Record<string, string | null> | null = null
     let triggerSavePrompt = false
     let fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null = null
+    let userAdditionalNotes: string | null = null
     let insightFlag: {
       title: string; userQuote: string; conversationContext: string;
       lexConclusion: string; lexRecommendation: string
@@ -776,6 +801,10 @@ export async function POST(req: Request, { params }: Params) {
             }
           }
         }
+        // V2K-D2 — extract userAdditionalNotes from userProfiling step
+        if (parsedJson.userAdditionalNotes && typeof parsedJson.userAdditionalNotes === 'string') {
+          userAdditionalNotes = parsedJson.userAdditionalNotes
+        }
         if (parsedJson.insightFlag && typeof parsedJson.insightFlag === 'object') {
           const f = parsedJson.insightFlag
           if (f.title && f.userQuote && f.conversationContext && f.lexConclusion && f.lexRecommendation) {
@@ -800,6 +829,14 @@ export async function POST(req: Request, { params }: Params) {
       .replace(/```[\s\S]*?```/g, '')
       .trim()
 
+    // V2K-D2 — persist userAdditionalNotes when extracted from userProfiling step
+    if (userAdditionalNotes) {
+      prisma.idea.update({
+        where: { id: ideaId },
+        data: { userAdditionalNotes },
+      }).catch(err => console.error('[/api/ai/[ideaId]] userAdditionalNotes write failed:', err))
+    }
+
     if (insightFlag) {
       prisma.lexInsight.create({
         data: {
@@ -817,7 +854,7 @@ export async function POST(req: Request, { params }: Params) {
       const DIRECT_IDEA_FIELDS = new Set([
         'title', 'summaryDescription', 'summaryDiagnosis', 'summaryGuidingPolicy',
         'summaryCoherentActions', 'govtArea', 'ideaType', 'whoAffected', 'proposedWording',
-        'diagnosis', 'rootCause', 'guidingPolicy',
+        'diagnosis', 'rootCause', 'guidingPolicy', 'userAdditionalNotes',
       ])
       const toUpdate: Record<string, string> = {}
       for (const [key, value] of Object.entries(fieldUpdates)) {
@@ -929,7 +966,7 @@ export async function POST(req: Request, { params }: Params) {
       },
     })
 
-    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals, fieldProposal }
+    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals, fieldProposal, userAdditionalNotes }
   }
 
   const encoder = new TextEncoder()
@@ -976,7 +1013,7 @@ export async function POST(req: Request, { params }: Params) {
       }
 
       // Parse and persist
-      const { displayText, fieldUpdates, triggerSavePrompt: aiTrigger, pendingProposals, fieldProposal } = await applyFieldUpdatesAndSave(fullText)
+      const { displayText, fieldUpdates, triggerSavePrompt: aiTrigger, pendingProposals, fieldProposal, userAdditionalNotes: lexUserNotes } = await applyFieldUpdatesAndSave(fullText)
 
       // Stage gate check
       await checkAndAdvanceStage(ideaId, idea.creatorId)
@@ -1058,6 +1095,7 @@ export async function POST(req: Request, { params }: Params) {
         completedFields,
         pendingProposals,
         fieldProposal,
+        userAdditionalNotes: lexUserNotes,
         currentStage: latest?.stage ?? idea.stage,
         coherentActionsCount: cActionsCount,
         hasFieldUpdates: !!fieldUpdates,

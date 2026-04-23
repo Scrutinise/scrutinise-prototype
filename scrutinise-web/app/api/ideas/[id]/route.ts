@@ -26,6 +26,7 @@ const PatchIdeaSchema = z.object({
     timestamp: z.string().optional(),
   })).optional(),
   aiCurrentField: z.string().optional(),
+  userAdditionalNotes: z.string().optional(),
 }).strict()
 
 // GET /api/ideas/[id]
