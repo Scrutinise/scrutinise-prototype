@@ -69,16 +69,16 @@ export default function HomePage() {
         <section className="border-t border-border bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-bold text-white sm:text-3xl text-balance">
-              Scrutinise is a vision and a tool.<br />What will you do with it?
+              Scrutinise is a vision and a tool<br />What will you do with it?
             </h2>
             <div className="mb-8 space-y-3 text-sm leading-relaxed sm:text-base">
               <p className="text-gray-200">
                 <span className="font-semibold text-white">The Vision:</span>{" "}
-                Empower you to change the world through debate and action instead of the fury of impotence.
+                To empower you to change your world through debate and action instead of the fury of impotence
               </p>
               <p className="text-gray-200">
                 <span className="font-semibold text-white">The Tool:</span>{" "}
-                helps professionals and amateurs achieve that vision — this is your personal guide and researcher to help you:
+                Scrutinise helps professionals and amateurs achieve that vision as your personal guide and researcher. We&apos;ll help you:
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-3">
@@ -131,18 +131,6 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Section 4 — Engine of change (paragraph 1 only) */}
-        <section className="border-t border-border">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Be the engine of the change you want to see in the world
-            </h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
-              A &lsquo;policy entrepreneur&rsquo; is someone who identifies a challenge that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
-            </p>
           </div>
         </section>
 
@@ -231,6 +219,18 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Section 4 — Engine of change (moved to bottom, V2K-C3) */}
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              Be the engine of the change you want to see in the world
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
+              A &lsquo;policy entrepreneur&rsquo; is someone who identifies a challenge that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
+            </p>
           </div>
         </section>
       </main>

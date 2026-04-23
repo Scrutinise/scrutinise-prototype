@@ -8,6 +8,15 @@
 
 ## CODE CHANGES — 23 April 2026 Sprint V2-K
 
+### V2K-C3: Homepage Section 2 text tweaks + Section 4 moved to bottom
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/page.tsx` | H2 headline: removed trailing full stop from "Scrutinise is a vision and a tool." Vision paragraph: "Empower you to change the world" → "To empower you to change your world"; removed trailing full stop. Tool paragraph: "helps professionals…to help you:" → "Scrutinise helps professionals…as your personal guide and researcher. We'll help you:" Section 4 ("Be the engine of the change…") removed from between Section 3 and Section 5 and moved to bottom of page, after Section 8 ("If you're serious"), before footer. |
+
+**Deploy actions needed:** None.
+
+---
+
 ### V2K-D2: Lex onboarding flow + userProfiling step
 | File | Change |
 |------|--------|
