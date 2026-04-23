@@ -569,6 +569,8 @@ model Idea {
   ideaOrigin                IdeaOrigin      @default(USER)
   bannerColour              String?         // Hex colour for banner; null = no banner shown
   bannerText                String?         // Override banner text; null = use default for origin
+  // User profiling (V2K-D1)
+  userAdditionalNotes       String?         // Lex-synthesised notes about user background, expertise, motivations
   // Referral
   referralLinkActive        Boolean         @default(false)
   // Ownership transfer
@@ -1471,7 +1473,9 @@ model LegislationSection {
   sectionTitle          String?
   // Text content
   originalText          String?                 // As-enacted CLML text
-  compiledText          String?                 // AI-compiled current text
+  compiledText          String?                 // Best available operative text (tnaCompiledText if available, else AI verbatim)
+  tnaCompiledText       String?                 // Verbatim compiled text fetched directly from legislation.gov.uk
+  lexSummary            String?                 // AI plain-English summary for Lex context (NOT statutory text)
   // Compilation quality
   confidence            CompilationConfidence?
   confidenceReason      String?
