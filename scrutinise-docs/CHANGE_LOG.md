@@ -29,6 +29,15 @@
 
 ---
 
+### V2K-C2: Homepage Section 2 text tweaks
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/page.tsx` | Vision paragraph: "Empower anyone" → "Empower you"; removed "We call it: 'Active Democracy'." Third box: removed "and MPs to promote it" from influencers sentence. |
+
+**Deploy actions needed:** None.
+
+---
+
 ### V2K-C1: Homepage — Vision/Tool section + layout reorder
 | File | Change |
 |------|--------|

@@ -74,7 +74,7 @@ export default function HomePage() {
             <div className="mb-8 space-y-3 text-sm leading-relaxed sm:text-base">
               <p className="text-gray-200">
                 <span className="font-semibold text-white">The Vision:</span>{" "}
-                Empower anyone to change the world through debate and action instead of the fury of impotence. We call it: &lsquo;Active Democracy&rsquo;.
+                Empower you to change the world through debate and action instead of the fury of impotence.
               </p>
               <p className="text-gray-200">
                 <span className="font-semibold text-white">The Tool:</span>{" "}
@@ -94,7 +94,7 @@ export default function HomePage() {
               </div>
               <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
                 <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
-                  Identify the right influencers and MPs to promote it and build support to get it accepted into the parliamentary system
+                  Identify the right influencers to build the right support to get it accepted into the parliamentary system
                 </p>
               </div>
             </div>
