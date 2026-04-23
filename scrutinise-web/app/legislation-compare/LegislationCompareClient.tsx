@@ -37,7 +37,7 @@ const MODELS = [
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai' },
   { id: 'grok-3-fast', label: 'Grok 3 Fast', provider: 'xai' },
   { id: 'sonar', label: 'Perplexity Sonar', provider: 'perplexity' },
-  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-Turbo', label: 'Llama 4 Maverick', provider: 'together' },
+  { id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', label: 'Llama 3.3 70B', provider: 'together' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,48 +63,67 @@ function extractText(xml: string): string {
   return xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-function cleanTnaText(raw: string): string {
+function cleanTnaText(raw: string, sectionNumber?: string): string {
   const lines = raw.split('\n')
 
-  let startIdx = 0
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (/^\d+[A-Z]?\s+[A-Z]/.test(line) ||
-        /^Part\s+\d/i.test(line) ||
-        /^Chapter\s+\d/i.test(line) ||
-        /^\*\*\d/.test(line)) {
-      startIdx = i
-      break
+  if (lines.length > 2) {
+    // Multi-line path: find start of operative section
+    let startIdx = 0
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (/^\d+[A-Z]?\s+[A-Z]/.test(line) ||
+          /^Part\s+\d/i.test(line) ||
+          /^Chapter\s+\d/i.test(line) ||
+          /^\*\*\d/.test(line)) {
+        startIdx = i
+        break
+      }
+    }
+
+    // Strip amendment footnotes from tail
+    let endIdx = lines.length
+    for (let i = lines.length - 1; i >= startIdx; i--) {
+      const line = lines[i].trim()
+      if (/^Words in s\./i.test(line) ||
+          /^S\.\s+\d/i.test(line) ||
+          /^Substituted/i.test(line) ||
+          /^Inserted/i.test(line) ||
+          /^Omitted/i.test(line) ||
+          /^Repealed/i.test(line) ||
+          /^Modified/i.test(line)) {
+        endIdx = i
+      } else if (endIdx < lines.length) {
+        break
+      }
+    }
+
+    return lines.slice(startIdx, endIdx).join('\n').trim()
+  }
+
+  // Single-line path: look for section heading followed by a subsection marker
+  // e.g. "13 Direct discrimination\n(1)" — far less likely to match preamble than simple digit-capital pattern
+  const subsectionMatch = raw.match(/(\d+[A-Z]?\s+[A-Z][a-z][^\n]{0,60}\n?\s*\(\d+\))/)
+  if (subsectionMatch && subsectionMatch.index !== undefined) {
+    const sliced = raw.slice(subsectionMatch.index).trim()
+    return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
+  }
+
+  // Fallback: find last occurrence of the section number in the text (if provided)
+  if (sectionNumber) {
+    const escapedNum = sectionNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const secNumRegex = new RegExp(`(${escapedNum}\\s+[A-Z][a-z])`, 'g')
+    const matches = [...raw.matchAll(secNumRegex)]
+    if (matches.length > 0) {
+      const lastMatch = matches[matches.length - 1]
+      if (lastMatch.index !== undefined) {
+        const sliced = raw.slice(lastMatch.index).trim()
+        return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
+      }
     }
   }
 
-  // Fallback for single-line text (no newlines found a start marker)
-  if (startIdx === 0 && lines.length <= 2) {
-    const singleLineMatch = raw.match(/\s(\d+[A-Z]?\s+[A-Z][a-z])/)
-    if (singleLineMatch && singleLineMatch.index !== undefined) {
-      const sliced = raw.slice(singleLineMatch.index).trim()
-      // Strip trailing footnotes from single-line text
-      return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted|Inserted|Omitted|Repealed|Modified).*/i, '').trim()
-    }
-  }
-
-  let endIdx = lines.length
-  for (let i = lines.length - 1; i >= startIdx; i--) {
-    const line = lines[i].trim()
-    if (/^Words in s\./i.test(line) ||
-        /^S\.\s+\d/i.test(line) ||
-        /^Substituted/i.test(line) ||
-        /^Inserted/i.test(line) ||
-        /^Omitted/i.test(line) ||
-        /^Repealed/i.test(line) ||
-        /^Modified/i.test(line)) {
-      endIdx = i
-    } else if (endIdx < lines.length) {
-      break
-    }
-  }
-
-  return lines.slice(startIdx, endIdx).join('\n').trim()
+  // Ultimate fallback: strip obvious footnote patterns and return
+  return raw.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,7 +299,7 @@ export default function LegislationCompareClient() {
   const [running, setRunning] = useState(false)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
-  const SYSTEM_PROMPT = `You are a UK legislative compilation specialist. Given a section reference, output the current revised text of that section exactly as it appears on legislation.gov.uk. Include all subsections and paragraphs. Output only the legislative text — no preamble, no explanation.`
+  const SYSTEM_PROMPT = `You are a legal editor applying amendments to UK statutory text. Reproduce the statutory language word-for-word, applying only the listed amendments. Do NOT paraphrase or summarise. Do NOT add explanatory language. Preserve all subsection numbering, punctuation, and capitalisation exactly. Output only the complete amended statutory text.`
 
   const toggleModel = (modelId: string) => {
     setSelectedModels(prev =>
@@ -333,14 +352,14 @@ export default function LegislationCompareClient() {
           const caller = PROMPTS[modelDef.provider]
           const aiText = await caller(SYSTEM_PROMPT, userPrompt, apiKey, modelId)
           const rawGold = goldTexts[s.label] ?? ''
-          const goldText = rawGold ? cleanTnaText(rawGold) : ''
+          const goldText = rawGold ? cleanTnaText(rawGold, s.section) : ''
           const score = goldText ? jaccardSimilarity(goldText, aiText) : 0
           sectionResults.push({ label: s.label, goldText, aiText, score })
         } catch (err) {
           const rawGoldErr = goldTexts[s.label] ?? ''
           sectionResults.push({
             label: s.label,
-            goldText: rawGoldErr ? cleanTnaText(rawGoldErr) : '',
+            goldText: rawGoldErr ? cleanTnaText(rawGoldErr, s.section) : '',
             aiText: '',
             score: 0,
             error: String(err),
