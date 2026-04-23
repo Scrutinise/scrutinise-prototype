@@ -28,6 +28,8 @@ export async function POST(req: Request, { params }: Params) {
     sectionNumber: string
     sectionTitle: string | null
     compiledText: string | null
+    tnaCompiledText: string | null
+    lexSummary: string | null
     actTitle: string
     year: number
     legislationGovUkId: string
@@ -42,6 +44,8 @@ export async function POST(req: Request, { params }: Params) {
       ls."sectionNumber",
       ls."sectionTitle",
       ls."compiledText",
+      ls."tnaCompiledText",
+      ls."lexSummary",
       li.title as "actTitle",
       li.year,
       li."legislationGovUkId",
@@ -53,14 +57,14 @@ export async function POST(req: Request, { params }: Params) {
     WHERE ls."compilationStatus" = 'COMPILED'
       AND ls."compiledText" IS NOT NULL
       AND to_tsvector('english',
-          coalesce(ls."compiledText", '') || ' ' ||
+          coalesce(ls."tnaCompiledText", ls."compiledText", '') || ' ' ||
           coalesce(ls."sectionTitle", '') || ' ' ||
           coalesce(ls."policyArea", ''))
         @@ plainto_tsquery('english', ${query})
     ORDER BY
       ts_rank(
         to_tsvector('english',
-          coalesce(ls."compiledText", '') || ' ' ||
+          coalesce(ls."tnaCompiledText", ls."compiledText", '') || ' ' ||
           coalesce(ls."sectionTitle", '')),
         plainto_tsquery('english', ${query})
       ) DESC,

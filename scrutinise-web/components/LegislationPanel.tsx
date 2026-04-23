@@ -7,6 +7,8 @@ interface LegislationResult {
   sectionNumber: string
   sectionTitle: string | null
   compiledText: string | null
+  tnaCompiledText?: string | null
+  lexSummary?: string | null
   actTitle: string
   year: number
   legislationGovUkId: string
@@ -31,6 +33,7 @@ interface CardState {
   proposedWording: string
   saving: boolean
   saved: boolean
+  showPlainEnglish: boolean
 }
 
 export default function LegislationPanel({
@@ -44,7 +47,13 @@ export default function LegislationPanel({
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({})
 
   function getCardState(id: string): CardState {
-    return cardStates[id] ?? { changeType: 'AMEND', proposedWording: '', saving: false, saved: false }
+    return cardStates[id] ?? {
+      changeType: 'AMEND',
+      proposedWording: '',
+      saving: false,
+      saved: false,
+      showPlainEnglish: false,
+    }
   }
 
   function updateCardState(id: string, patch: Partial<CardState>) {
@@ -104,7 +113,7 @@ export default function LegislationPanel({
         {/* Disclaimer */}
         <div className="mx-4 mt-3 mb-2 px-3 py-2 rounded bg-amber-50 border border-amber-200 shrink-0">
           <p className="text-xs text-amber-800 leading-snug">
-            AI compilation for reference only. Always verify at{' '}
+            For reference only. Always verify at{' '}
             <a
               href="https://www.legislation.gov.uk"
               target="_blank"
@@ -127,13 +136,24 @@ export default function LegislationPanel({
             results.map(result => {
               const state = getCardState(result.id)
               const url = buildLegislationUrl(result.legislationGovUkId, result.sectionNumber)
+              const isTnaVerified = !!result.tnaCompiledText
+              const statutoryText = result.tnaCompiledText ?? result.compiledText
+              const hasPlainEnglish = !!result.lexSummary
+
               return (
                 <div key={result.id} className="rounded-lg border border-border bg-card p-4 space-y-3">
                   {/* Act + section heading */}
                   <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {result.actTitle} {result.year} — s.{result.sectionNumber}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-[11px] text-muted-foreground">
+                        {result.actTitle} {result.year} — s.{result.sectionNumber}
+                      </p>
+                      {isTnaVerified && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 border border-teal-200 font-medium shrink-0">
+                          TNA verified
+                        </span>
+                      )}
+                    </div>
                     {result.sectionTitle && (
                       <p className="text-sm font-semibold text-teal-700 mt-0.5 leading-snug">
                         {result.sectionTitle}
@@ -141,12 +161,38 @@ export default function LegislationPanel({
                     )}
                   </div>
 
-                  {/* Compiled text */}
-                  {result.compiledText && (
-                    <div className="max-h-[200px] overflow-y-auto rounded bg-muted/50 p-2">
-                      <pre className="text-[11px] text-foreground font-mono whitespace-pre-wrap leading-relaxed">
-                        {result.compiledText}
-                      </pre>
+                  {/* Statutory text / plain English toggle */}
+                  {statutoryText && (
+                    <div className="space-y-1">
+                      {hasPlainEnglish && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            {state.showPlainEnglish ? 'Plain English' : `Statutory text${isTnaVerified ? ' (TNA)' : ''}`}
+                          </span>
+                          <button
+                            onClick={() => updateCardState(result.id, { showPlainEnglish: !state.showPlainEnglish })}
+                            className="text-[10px] text-teal-600 hover:underline"
+                          >
+                            {state.showPlainEnglish ? 'Show statutory text' : 'Show plain English'}
+                          </button>
+                        </div>
+                      )}
+                      {!hasPlainEnglish && (
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          {`Statutory text${isTnaVerified ? ' (TNA)' : ''}`}
+                        </p>
+                      )}
+                      <div className="max-h-[200px] overflow-y-auto rounded bg-muted/50 p-2">
+                        {state.showPlainEnglish && result.lexSummary ? (
+                          <p className="text-[11px] text-foreground leading-relaxed">
+                            {result.lexSummary}
+                          </p>
+                        ) : (
+                          <pre className="text-[11px] text-foreground font-mono whitespace-pre-wrap leading-relaxed">
+                            {statutoryText}
+                          </pre>
+                        )}
+                      </div>
                     </div>
                   )}
 
