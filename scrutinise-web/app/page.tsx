@@ -65,7 +65,43 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 2 — Five Steps */}
+        {/* Section 2 — Vision and Tool (V2K-C1) */}
+        <section className="border-t border-border bg-[#0a0a0f]">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="mb-6 text-2xl font-bold text-white sm:text-3xl text-balance">
+              Scrutinise is a vision and a tool.<br />What will you do with it?
+            </h2>
+            <div className="mb-8 space-y-3 text-sm leading-relaxed sm:text-base">
+              <p className="text-gray-200">
+                <span className="font-semibold text-white">The Vision:</span>{" "}
+                Empower anyone to change the world through debate and action instead of the fury of impotence. We call it: &lsquo;Active Democracy&rsquo;.
+              </p>
+              <p className="text-gray-200">
+                <span className="font-semibold text-white">The Tool:</span>{" "}
+                helps professionals and amateurs achieve that vision — this is your personal guide and researcher to help you:
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
+                <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
+                  Develop a strong, credible, structured proposal
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
+                <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
+                  Improve it with private and public scrutiny — aligned with policy to be more effective
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
+                <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
+                  Identify the right influencers and MPs to promote it and build support to get it accepted into the parliamentary system
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3 — Five Steps */}
         <section className="border-t border-border bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <div className="mb-8 sm:mb-10">
@@ -94,32 +130,6 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Section 3 — Three card row */}
-        <section className="border-t border-border bg-gray-50">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
-              If you&apos;re serious about wanting a better-run country
-            </h2>
-            <div className="grid gap-6 sm:grid-cols-3">
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  Scrutinise is a civic technology platform for &lsquo;policy entrepreneurs&rsquo; — legislators, experts and engaged citizens.
-                </p>
-              </div>
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  Develop, test and refine your good ideas into better legislation and stronger public systems.
-                </p>
-              </div>
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                  We are building an online community around craft, expertise and a common interest in better quality laws and government.
-                </p>
-              </div>
             </div>
           </div>
         </section>
@@ -195,6 +205,32 @@ export default function HomePage() {
             <p className="mt-4 text-center text-sm text-gray-400">
               Citizens crafting legislation, one idea at a time
             </p>
+          </div>
+        </section>
+
+        {/* Section 8 — "If you're serious" (moved to bottom, V2K-C1) */}
+        <section className="border-t border-border bg-gray-50">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
+              If you&apos;re serious about wanting a better-run country
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  Scrutinise is a civic technology platform for &lsquo;policy entrepreneurs&rsquo; — legislators, experts and engaged citizens.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  Develop, test and refine your good ideas to help build better legislation and stronger public systems.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  We are building an online community around craft, expertise and a common interest in better quality laws and government.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </main>
