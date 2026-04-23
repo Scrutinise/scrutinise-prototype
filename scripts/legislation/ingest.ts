@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { prisma } from '../../scrutinise-web/lib/prisma'
 import { LegislationTier, LegislationType, CompilationStatus } from '@prisma/client'
 
@@ -63,6 +64,100 @@ function fetchSectionsFromXml(xml: string): Array<{
   return sections
 }
 
+// Strip HTML tags from fetched HTML page
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+// Clean TNA compiled text: strip preamble and amendment footnotes
+// Handles both single-line and multi-line text
+function cleanTnaCompiledText(raw: string, sectionNumber: string): string {
+  const lines = raw.split('\n')
+
+  if (lines.length > 2) {
+    // Multi-line path: find start of operative section
+    let startIdx = 0
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (/^\d+[A-Z]?\s+[A-Z]/.test(line) ||
+          /^Part\s+\d/i.test(line) ||
+          /^Chapter\s+\d/i.test(line) ||
+          /^\*\*\d/.test(line)) {
+        startIdx = i
+        break
+      }
+    }
+
+    // Strip amendment footnotes from tail
+    let endIdx = lines.length
+    for (let i = lines.length - 1; i >= startIdx; i--) {
+      const line = lines[i].trim()
+      if (/^Words in s\./i.test(line) ||
+          /^S\.\s+\d/i.test(line) ||
+          /^Substituted/i.test(line) ||
+          /^Inserted/i.test(line) ||
+          /^Omitted/i.test(line) ||
+          /^Repealed/i.test(line) ||
+          /^Modified/i.test(line)) {
+        endIdx = i
+      } else if (endIdx < lines.length) {
+        break
+      }
+    }
+
+    return lines.slice(startIdx, endIdx).join('\n').trim()
+  }
+
+  // Single-line path: look for section heading followed by a subsection marker
+  const subsectionMatch = raw.match(/(\d+[A-Z]?\s+[A-Z][a-z][^\n]{0,60}\n?\s*\(\d+\))/)
+  if (subsectionMatch && subsectionMatch.index !== undefined) {
+    const sliced = raw.slice(subsectionMatch.index).trim()
+    return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
+  }
+
+  // Fallback: find last occurrence of the section number in the text
+  const escapedNum = sectionNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const secNumRegex = new RegExp(`(${escapedNum}\\s+[A-Z][a-z])`)
+  const matches = [...raw.matchAll(new RegExp(secNumRegex, 'g'))]
+  if (matches.length > 0) {
+    const lastMatch = matches[matches.length - 1]
+    if (lastMatch.index !== undefined) {
+      const sliced = raw.slice(lastMatch.index).trim()
+      return sliced.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
+    }
+  }
+
+  // Ultimate fallback: return stripped text as-is
+  return raw.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
+}
+
+// Fetch TNA compiled HTML for a single section and return cleaned text (or null on 404)
+async function fetchTnaCompiledText(
+  legislationGovUkId: string,
+  sectionNumber: string
+): Promise<string | null> {
+  const url = `https://www.legislation.gov.uk/${legislationGovUkId}/section/${sectionNumber}`
+  try {
+    const res = await fetch(url, {
+      headers: { 'Accept': 'text/html' },
+    })
+    if (res.status === 404) {
+      console.warn(`    ⚠ s.${sectionNumber} — 404 (not yet compiled by TNA)`)
+      return null
+    }
+    if (!res.ok) {
+      console.warn(`    ⚠ s.${sectionNumber} — HTTP ${res.status}`)
+      return null
+    }
+    const html = await res.text()
+    const plainText = stripHtml(html)
+    return cleanTnaCompiledText(plainText, sectionNumber)
+  } catch (err) {
+    console.warn(`    ⚠ s.${sectionNumber} — fetch error: ${err}`)
+    return null
+  }
+}
+
 async function ingestAct(act: { title: string, year: number, number: number, id: string, clmlUrl: string }) {
   console.log(`Ingesting: ${act.title} (${act.year})...`)
 
@@ -73,9 +168,11 @@ async function ingestAct(act: { title: string, year: number, number: number, id:
   // Extract jurisdiction and subject classification from CLML metadata
   const { jurisdiction, subjectArea, policyArea } = extractClmlMetadata(clmlXml)
 
+  const legislationGovUkId = `ukpga/${act.year}/${act.number}`
+
   // Upsert the LegislationItem
   const item = await prisma.legislationItem.upsert({
-    where: { legislationGovUkId: `ukpga/${act.year}/${act.number}` },
+    where: { legislationGovUkId },
     create: {
       legislationType: LegislationType.UKPGA,
       tier: LegislationTier.TIER_1,
@@ -85,7 +182,7 @@ async function ingestAct(act: { title: string, year: number, number: number, id:
       jurisdiction,
       subjectArea,
       policyArea,
-      legislationGovUkId: `ukpga/${act.year}/${act.number}`,
+      legislationGovUkId,
       clmlUrl: act.clmlUrl,
       compilationStatus: CompilationStatus.PENDING,
     },
@@ -111,6 +208,22 @@ async function ingestAct(act: { title: string, year: number, number: number, id:
       },
       update: { originalText: s.originalText, sectionTitle: s.sectionTitle },
     })
+
+    // Fetch TNA compiled text for this section (1s delay per section to avoid blocking)
+    await new Promise(r => setTimeout(r, 1000))
+    const tnaCompiledText = await fetchTnaCompiledText(legislationGovUkId, s.sectionNumber)
+    if (tnaCompiledText) {
+      await prisma.legislationSection.update({
+        where: {
+          legislationItemId_sectionNumber: {
+            legislationItemId: item.id,
+            sectionNumber: s.sectionNumber,
+          },
+        },
+        data: { tnaCompiledText },
+      })
+      console.log(`    ✓ s.${s.sectionNumber} — TNA compiled text stored`)
+    }
   }
 
   await prisma.legislationItem.update({
@@ -126,7 +239,7 @@ async function main() {
   const acts = await fetchActList(TIER_1_FEED)
   console.log(`Found ${acts.length} Acts`)
 
-  for (const act of acts.slice(0, 10)) { // Start with first 10 for testing
+  for (const act of acts) { // Start with first 10 for testing
     await ingestAct(act)
     await new Promise(r => setTimeout(r, 500)) // Rate limit
   }
