@@ -8,6 +8,17 @@
 
 ## CODE CHANGES — 24 April 2026 Sprint V2-L (patch)
 
+### V2L-A4-fix: Compile script — Claude Haiku fallback on Gemini 429
+| File | Change |
+|------|--------|
+| `scripts/legislation/compile.ts` | Added `@anthropic-ai/sdk` import and lazy `getAnthropic()` client. Added `callClaudeJson()` using `claude-haiku-4-5-20251001`. `callWithRetry` now returns `{ result, compiledBy }` — on Gemini 429 logs `⟳ Gemini 429 — trying Claude fallback` and delegates to `callClaudeJson`; result stored with `compiledBy: 'claude-fallback'`. On failure Claude throws and the outer catch marks section FAILED as before. |
+| `scrutinise-web/package.json` | Added `@anthropic-ai/sdk ^0.91.0` dependency. |
+| `scrutinise-web/package-lock.json` | Updated. |
+
+**Deploy actions needed:** Add `ANTHROPIC_API_KEY` to Railway and Vercel env vars (if not already present).
+
+---
+
 ### V2L-A3-fix3: Ingest TNA fetch — switch to CLML XML endpoint, add --recompile-tna flag
 | File | Change |
 |------|--------|

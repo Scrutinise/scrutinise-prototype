@@ -1,11 +1,29 @@
 import 'dotenv/config'
+import * as fs from 'fs'
+import * as path from 'path'
+import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '../../scrutinise-web/lib/prisma'
 import { CompilationStatus, CompilationConfidence } from '@prisma/client'
+import { r2Get, r2Put, compiledKey, summaryKey } from './r2-client'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY!
 const MODEL = 'gemini-2.5-flash'
+const CLAUDE_FALLBACK_MODEL = 'claude-haiku-4-5-20251001'
+const BATCH = 5
 
-// Verbatim-accuracy system prompt for AI compilation (V2K-A3)
+let _anthropic: Anthropic | null = null
+function getAnthropic(): Anthropic {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+  return _anthropic
+}
+
+// Pause sentinel — same location as ingest
+const PAUSE_FILE = path.join(__dirname, 'PAUSE')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// System prompts
+// ─────────────────────────────────────────────────────────────────────────────
+
 const VERBATIM_SYSTEM_PROMPT = `You are a legal editor applying amendments to UK statutory text.
 Your task is to produce the exact amended text of a legislative section. You must reproduce the statutory language word-for-word, applying only the listed amendments as instructed.
 Rules:
@@ -19,8 +37,11 @@ Rules:
 - If an amendment omits text, remove only those words
 - Output the complete amended section text and nothing else`
 
-// Plain English summary system prompt (for lexSummary field)
 const SUMMARY_SYSTEM_PROMPT = `You are a legal analyst. Produce a clear, plain English summary of what this section of UK legislation says and does. Write 2-4 sentences suitable for a non-lawyer. Do not reproduce the statutory language verbatim.`
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gemini callers
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function callGeminiText(systemPrompt: string, userPrompt: string): Promise<string> {
   const res = await fetch(
@@ -61,51 +82,65 @@ async function callGeminiJson(systemPrompt: string, userPrompt: string): Promise
   return JSON.parse(rawText)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Claude fallback caller
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function callClaudeJson(systemPrompt: string, userPrompt: string): Promise<Record<string, unknown>> {
+  const msg = await getAnthropic().messages.create({
+    model: CLAUDE_FALLBACK_MODEL,
+    max_tokens: 8192,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+  })
+  const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
+  // Strip markdown code fences if present
+  const clean = text.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '').trim()
+  return JSON.parse(clean)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pause helper
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function waitIfPaused(): Promise<void> {
+  while (fs.existsSync(PAUSE_FILE)) {
+    console.log('  ⏸ PAUSE file detected — waiting 30s...')
+    await new Promise(r => setTimeout(r, 30000))
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compile single section
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function compileSection(sectionId: string): Promise<void> {
   const section = await prisma.legislationSection.findUnique({
     where: { id: sectionId },
     include: {
-      legislationItem: { select: { title: true, year: true } },
+      legislationItem: { select: { title: true, year: true, legislationGovUkId: true } },
       amendments: { orderBy: { orderIndex: 'asc' } },
     },
   })
 
-  if (!section || !section.originalText) return
+  if (!section) return
 
-  // ── V2K-A3: Verbatim-first logic ─────────────────────────────────────────
-  if (section.tnaCompiledText) {
-    // TNA verified text available — use directly, skip Gemini compilation call
-    await prisma.legislationSection.update({
-      where: { id: sectionId },
-      data: {
-        compiledText: section.tnaCompiledText,
-        confidence: CompilationConfidence.HIGH,
-        compilationStatus: CompilationStatus.COMPILED,
-        needsReview: false,
-        compiledAt: new Date(),
-        compiledBy: 'tna-direct',
-        compilationVersion: { increment: 1 },
-      },
-    })
-    console.log(`  ✓ s.${section.sectionNumber} — TNA (verbatim)`)
+  const { legislationGovUkId } = section.legislationItem
+  const cKey = compiledKey(legislationGovUkId, section.sectionNumber)
+  const sKey = summaryKey(legislationGovUkId, section.sectionNumber)
 
-    // Still generate lexSummary from the TNA text
-    try {
-      const lexSummary = await callGeminiText(
-        SUMMARY_SYSTEM_PROMPT,
-        `Summarise this section: ${section.tnaCompiledText.slice(0, 3000)}`
-      )
-      await prisma.legislationSection.update({
-        where: { id: sectionId },
-        data: { lexSummary },
-      })
-    } catch (err) {
-      console.warn(`  ⚠ s.${section.sectionNumber} — lexSummary failed: ${err}`)
+  // Fetch source text: prefer raw XML from R2, fall back to originalText
+  let sourceText = section.originalText ?? ''
+  if (section.rawXmlKey) {
+    const rawXml = await r2Get(section.rawXmlKey)
+    if (rawXml) {
+      // Strip tags for AI consumption (richer source than pre-stripped originalText)
+      sourceText = rawXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
     }
-    return
   }
 
-  // ── No TNA text — use AI with verbatim prompt ─────────────────────────────
+  if (!sourceText) return
+
   const amendmentList = section.amendments.map(a =>
     `- Source: ${a.sourceInstrument} (${a.effectDate?.toISOString().split('T')[0] ?? 'unknown'})
   Type: ${a.amendmentType}
@@ -114,23 +149,9 @@ async function compileSection(sectionId: string): Promise<void> {
   ${a.substitutedText ? `Substitute with: ${a.substitutedText}` : ''}`
   ).join('\n\n')
 
-  const truncatedText = section.originalText.slice(0, 3000)
-  const isTruncated = section.originalText.length > 3000
+  const truncatedText = sourceText.slice(0, 3000)
+  const isTruncated   = sourceText.length > 3000
 
-  const userPrompt = `Apply the following amendments to this section of UK legislation and output the complete amended text.
-
-SECTION: Section ${section.sectionNumber}
-ACT: ${section.legislationItem.title} ${section.legislationItem.year}
-
-ORIGINAL TEXT:${isTruncated ? '\nNote: this section may be truncated for length.' : ''}
-${truncatedText}
-
-AMENDMENTS TO APPLY:
-${amendmentList || 'No amendments recorded — output the original text unchanged.'}
-
-Output the exact amended statutory text with no other content.`
-
-  // JSON compilation call for metadata
   const jsonSystemPrompt = `You are a legal editor applying amendments to UK statutory text.
 Your task is to produce the exact amended text of a legislative section. You must reproduce the statutory language word-for-word, applying only the listed amendments as instructed.
 Rules:
@@ -167,48 +188,67 @@ OUTPUT FORMAT (JSON only):
     data: { compilationStatus: CompilationStatus.COMPILING },
   })
 
-  const callGeminiJsonWithRetry = async () => {
-    let result
+  const callWithRetry = async (): Promise<{ result: Record<string, unknown>; compiledBy: string }> => {
     try {
-      result = await callGeminiJson(jsonSystemPrompt, jsonUserPrompt)
+      const result = await callGeminiJson(jsonSystemPrompt, jsonUserPrompt)
+      return { result, compiledBy: MODEL }
     } catch (err) {
       if (String(err).includes('503')) {
         console.warn(`  ⚠ s.${section.sectionNumber} — 503, retrying in 10s...`)
         await new Promise(r => setTimeout(r, 10000))
-        result = await callGeminiJson(jsonSystemPrompt, jsonUserPrompt)
-      } else {
-        throw err
+        const result = await callGeminiJson(jsonSystemPrompt, jsonUserPrompt)
+        return { result, compiledBy: MODEL }
       }
+      if (String(err).includes('429')) {
+        console.warn(`  ⟳ s.${section.sectionNumber} — Gemini 429 — trying Claude fallback`)
+        const result = await callClaudeJson(jsonSystemPrompt, jsonUserPrompt)
+        return { result, compiledBy: 'claude-fallback' }
+      }
+      throw err
     }
-    return result
   }
 
   try {
-    const result = await callGeminiJsonWithRetry()
+    const { result, compiledBy: usedModel } = await callWithRetry()
 
-    const confidence = result.confidence as CompilationConfidence
-    const needsReview = confidence === 'LOW'
-
-    const amendmentCount = section.amendments.length
-    const complexityScore = Math.min(5, Math.ceil(amendmentCount / 3))
-
+    const confidence   = result.confidence as CompilationConfidence
+    const needsReview  = confidence === 'LOW'
+    const compiledText = String(result.compiledText ?? '')
     const tags: string[] = Array.isArray(result.tags)
       ? (result.tags as unknown[]).filter((t): t is string => typeof t === 'string').slice(0, 10)
       : []
 
-    const compiledText = String(result.compiledText ?? '')
+    // Write compiled text to R2
+    await r2Put(cKey, compiledText)
+
+    // Generate and write lexSummary to R2
+    let lexSummaryStored = false
+    try {
+      const lexSummary = await callGeminiText(
+        SUMMARY_SYSTEM_PROMPT,
+        `Summarise this section: ${compiledText.slice(0, 3000)}`
+      )
+      await r2Put(sKey, lexSummary)
+      lexSummaryStored = true
+    } catch (err) {
+      console.warn(`  ⚠ s.${section.sectionNumber} — lexSummary failed: ${err}`)
+    }
+
+    const amendmentCount  = section.amendments.length
+    const complexityScore = Math.min(5, Math.ceil(amendmentCount / 3))
 
     await prisma.legislationSection.update({
       where: { id: sectionId },
       data: {
-        compiledText,
+        compiledTextKey: cKey,
+        lexSummaryKey: lexSummaryStored ? sKey : null,
         confidence,
         confidenceReason: result.confidenceReason ? String(result.confidenceReason) : null,
         unappliedAmendments: Array.isArray(result.unappliedAmendments) ? result.unappliedAmendments : [],
         commencementNote: result.commencementNote ? String(result.commencementNote) : null,
         compilationStatus: needsReview ? CompilationStatus.NEEDS_REVIEW : CompilationStatus.COMPILED,
         compiledAt: new Date(),
-        compiledBy: MODEL,
+        compiledBy: usedModel,
         needsReview,
         compilationVersion: { increment: 1 },
         tags,
@@ -217,21 +257,7 @@ OUTPUT FORMAT (JSON only):
       },
     })
 
-    console.log(`  ✓ s.${section.sectionNumber} — AI (verbatim attempt) ${confidence}${needsReview ? ' (flagged for review)' : ''}`)
-
-    // Generate lexSummary as a separate call
-    try {
-      const lexSummary = await callGeminiText(
-        SUMMARY_SYSTEM_PROMPT,
-        `Summarise this section: ${compiledText.slice(0, 3000)}`
-      )
-      await prisma.legislationSection.update({
-        where: { id: sectionId },
-        data: { lexSummary },
-      })
-    } catch (err) {
-      console.warn(`  ⚠ s.${section.sectionNumber} — lexSummary failed: ${err}`)
-    }
+    console.log(`  ✓ s.${section.sectionNumber} — ${usedModel} (verbatim) ${confidence}${needsReview ? ' (flagged)' : ''}`)
 
   } catch (err) {
     await prisma.legislationSection.update({
@@ -242,21 +268,62 @@ OUTPUT FORMAT (JSON only):
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function main() {
+  // --reset-failed: reset FAILED sections back to PENDING
+  if (process.argv[2] === '--reset-failed') {
+    const { count } = await prisma.legislationSection.updateMany({
+      where: { compilationStatus: CompilationStatus.FAILED },
+      data: { compilationStatus: CompilationStatus.PENDING },
+    })
+    console.log(`Reset ${count} FAILED sections to PENDING`)
+    return
+  }
+
   const pendingSections = await prisma.legislationSection.findMany({
     where: { compilationStatus: CompilationStatus.PENDING },
     select: { id: true },
-    take: 50, // batch of 50 at a time
+    take: 50,
   })
 
-  console.log(`Compiling ${pendingSections.length} sections...`)
+  const totalInDb = await prisma.legislationSection.count()
+  const compiledInDb = await prisma.legislationSection.count({
+    where: { compilationStatus: CompilationStatus.COMPILED },
+  })
+  const pendingTotal = await prisma.legislationSection.count({
+    where: { compilationStatus: CompilationStatus.PENDING },
+  })
 
-  for (const { id } of pendingSections) {
-    await compileSection(id)
-    await new Promise(r => setTimeout(r, 5000)) // 5s gap = 12 RPM
+  console.log(`Compiling ${pendingSections.length} sections (batch of 50)...`)
+  console.log(`DB: ${compiledInDb}/${totalInDb} compiled, ${pendingTotal} pending`)
+
+  let done = 0
+
+  for (let i = 0; i < pendingSections.length; i += BATCH) {
+    await waitIfPaused()
+
+    const batch = pendingSections.slice(i, i + BATCH)
+    await Promise.all(batch.map(({ id }) => compileSection(id)))
+    done += batch.length
+
+    console.log(`  Compiled ${done}/${pendingSections.length} sections this run.`)
+
+    if (i + BATCH < pendingSections.length) {
+      await new Promise(r => setTimeout(r, 6000)) // 6s gap between batches
+    }
   }
 
-  console.log('Batch complete')
+  const compiledAfter = await prisma.legislationSection.count({
+    where: { compilationStatus: CompilationStatus.COMPILED },
+  })
+  const pendingAfter = await prisma.legislationSection.count({
+    where: { compilationStatus: CompilationStatus.PENDING },
+  })
+
+  console.log(`\nBatch complete. ${compiledAfter} COMPILED total in DB. ${pendingAfter} PENDING remaining.`)
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect())
