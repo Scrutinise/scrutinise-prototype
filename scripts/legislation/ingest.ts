@@ -138,20 +138,60 @@ function fetchSectionsFromXml(xml: string): Array<{
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Adaptive throttle — adjusts delay based on TNA response codes
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AdaptiveThrottle {
+  private delay = 200
+  private readonly MIN = 100
+  private readonly MAX = 5000
+  private readonly WINDOW = 10
+  private history: boolean[] = [] // true = ok, false = rate-limited
+
+  async wait(): Promise<void> {
+    await new Promise(r => setTimeout(r, this.delay))
+  }
+
+  success(): void {
+    this.history.push(true)
+    if (this.history.length > this.WINDOW) this.history.shift()
+    if (this.history.length === this.WINDOW && this.history.every(v => v)) {
+      const before = this.delay
+      this.delay = Math.max(this.MIN, Math.floor(this.delay * 0.9))
+      if (this.delay < before) console.log(`  ✓ Running at ${this.delay}ms/request`)
+    }
+  }
+
+  backoff(): void {
+    this.history.push(false)
+    if (this.history.length > this.WINDOW) this.history.shift()
+    this.delay = Math.min(this.MAX, this.delay * 2)
+    console.warn(`  ⚠ TNA rate limit detected — throttling to ${this.delay}ms`)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TNA compiled text helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function fetchTnaCompiledText(legislationGovUkId: string, sectionNumber: string): Promise<string | null> {
+async function fetchTnaCompiledText(
+  legislationGovUkId: string,
+  sectionNumber: string
+): Promise<{ text: string | null; rateLimited: boolean }> {
   const url = `https://www.legislation.gov.uk/${legislationGovUkId}/section/${sectionNumber}/data.xml`
   try {
     const res = await fetch(url, { headers: { 'Accept': 'application/xml' } })
     if (res.status === 404) {
       console.warn(`    ⚠ s.${sectionNumber} — 404 (not yet compiled by TNA)`)
-      return null
+      return { text: null, rateLimited: false }
+    }
+    if (res.status === 429 || res.status === 503) {
+      console.warn(`    ⚠ s.${sectionNumber} — HTTP ${res.status}`)
+      return { text: null, rateLimited: true }
     }
     if (!res.ok) {
       console.warn(`    ⚠ s.${sectionNumber} — HTTP ${res.status}`)
-      return null
+      return { text: null, rateLimited: false }
     }
     const xml = await res.text()
     let text = xml.replace(/<[^>]+>/g, ' ')
@@ -163,10 +203,10 @@ async function fetchTnaCompiledText(legislationGovUkId: string, sectionNumber: s
       .replace(/&nbsp;/g, ' ')
       .replace(/&#xD;/g, '')
       .replace(/&#x9;/g, ' ')
-    return text || null
+    return { text: text || null, rateLimited: false }
   } catch (err) {
     console.warn(`    ⚠ s.${sectionNumber} — fetch error: ${err}`)
-    return null
+    return { text: null, rateLimited: false }
   }
 }
 
@@ -200,7 +240,8 @@ async function ingestAct(
   completed: Set<string>,
   totalActs: number,
   doneCount: number,
-  recompileTna: boolean = false
+  recompileTna: boolean = false,
+  throttle: AdaptiveThrottle = new AdaptiveThrottle()
 ): Promise<void> {
   const legislationGovUkId = buildLegislationGovUkId(act.feedUrl, act.year, act.number)
 
@@ -301,9 +342,11 @@ async function ingestAct(
       continue
     }
 
-    // Fetch TNA compiled text (1s delay per section)
-    await new Promise(r => setTimeout(r, 1000))
-    const tnaText = await fetchTnaCompiledText(legislationGovUkId, s.sectionNumber)
+    // Fetch TNA compiled text with adaptive throttle
+    await throttle.wait()
+    const { text: tnaText, rateLimited } = await fetchTnaCompiledText(legislationGovUkId, s.sectionNumber)
+    if (rateLimited) throttle.backoff()
+    else throttle.success()
 
     if (tnaText) {
       await r2Put(cKey, tnaText)
@@ -392,9 +435,10 @@ async function main() {
   console.log(`${remaining.length} Acts to ingest (${completed.size} already checkpointed)`)
 
   let doneCount = completed.size
+  const throttle = new AdaptiveThrottle()
 
   for (const act of acts) {
-    await ingestAct(act, completed, acts.length, doneCount, recompileTna)
+    await ingestAct(act, completed, acts.length, doneCount, recompileTna, throttle)
     doneCount++
 
     // Update checkpoint after each act (--full mode)

@@ -8,6 +8,15 @@
 
 ## CODE CHANGES — 24 April 2026 Sprint V2-L (patch)
 
+### V2L-A3-fix4: Ingest TNA fetch — adaptive throttle replaces fixed 1s delay
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | Added `AdaptiveThrottle` class: starts at 200ms, doubles on 429/503 (max 5000ms), reduces 10% after 10 consecutive successes (min 100ms). `fetchTnaCompiledText` return type changed from `string | null` to `{ text: string | null; rateLimited: boolean }` — 429/503 sets `rateLimited: true`. `ingestAct` accepts `throttle: AdaptiveThrottle` (defaulted); replaces fixed `setTimeout(1000)` with `throttle.wait()` + `throttle.backoff()`/`throttle.success()` calls. `main()` creates one shared `AdaptiveThrottle` and passes it across all acts. |
+
+**Deploy actions needed:** None.
+
+---
+
 ### V2L-A4-fix: Compile script — Claude Haiku fallback on Gemini 429
 | File | Change |
 |------|--------|
