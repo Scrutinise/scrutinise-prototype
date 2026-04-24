@@ -9,7 +9,9 @@
     "paths": {
       "@prisma/client": ["./node_modules/@prisma/client"],
       "@aws-sdk/client-s3": ["./node_modules/@aws-sdk/client-s3"],
-      "@aws-sdk/client-s3/*": ["./node_modules/@aws-sdk/client-s3/*"]
+      "@aws-sdk/client-s3/*": ["./node_modules/@aws-sdk/client-s3/*"],
+      "@anthropic-ai/sdk": ["./node_modules/@anthropic-ai/sdk"],
+      "@anthropic-ai/sdk/*": ["./node_modules/@anthropic-ai/sdk/*"]
     }
   }
 }
