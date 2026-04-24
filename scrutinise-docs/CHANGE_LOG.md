@@ -8,6 +8,15 @@
 
 ## CODE CHANGES — 24 April 2026 Sprint V2-L (patch)
 
+### V2L-A3-fix3: Ingest TNA fetch — switch to CLML XML endpoint, add --recompile-tna flag
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | `fetchTnaCompiledText`: URL changed from HTML page to `/data.xml` CLML endpoint. Removed `stripHtml` and `cleanTnaCompiledText` helpers. New parsing: strip XML tags, collapse whitespace, manually decode XML entities (`&amp;`, `&lt;`, `&gt;`, `&nbsp;`, `&#xD;`, `&#x9;`). `ingestAct`: accepts `recompileTna` flag — skips R2 existence check when set. `main`: parses `--recompile-tna` arg independently of mode flag; passes through to `ingestAct`. |
+
+**Deploy actions needed:** Re-run ingest with `--recompile-tna` to overwrite existing compiled text with clean XML-sourced text.
+
+---
+
 ### V2L-A3-fix: Ingest feed pagination — HTML entity decode + infinite loop guard
 | File | Change |
 |------|--------|

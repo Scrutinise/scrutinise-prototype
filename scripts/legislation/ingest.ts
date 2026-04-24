@@ -141,62 +141,10 @@ function fetchSectionsFromXml(xml: string): Array<{
 // TNA compiled text helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function cleanTnaCompiledText(raw: string, sectionNumber: string): string {
-  const lines = raw.split('\n')
-
-  if (lines.length > 2) {
-    let startIdx = 0
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (/^\d+[A-Z]?\s+[A-Z]/.test(line) ||
-          /^Part\s+\d/i.test(line) ||
-          /^Chapter\s+\d/i.test(line) ||
-          /^\*\*\d/.test(line)) {
-        startIdx = i
-        break
-      }
-    }
-    let endIdx = lines.length
-    for (let i = lines.length - 1; i >= startIdx; i--) {
-      const line = lines[i].trim()
-      if (/^Words in s\./i.test(line) || /^S\.\s+\d/i.test(line) ||
-          /^Substituted/i.test(line) || /^Inserted/i.test(line) ||
-          /^Omitted/i.test(line) || /^Repealed/i.test(line) || /^Modified/i.test(line)) {
-        endIdx = i
-      } else if (endIdx < lines.length) {
-        break
-      }
-    }
-    return lines.slice(startIdx, endIdx).join('\n').trim()
-  }
-
-  const subsectionMatch = raw.match(/(\d+[A-Z]?\s+[A-Z][a-z][^\n]{0,60}\n?\s*\(\d+\))/)
-  if (subsectionMatch?.index !== undefined) {
-    return raw.slice(subsectionMatch.index).trim()
-      .replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
-  }
-
-  const escapedNum = sectionNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const matches = [...raw.matchAll(new RegExp(`(${escapedNum}\\s+[A-Z][a-z])`, 'g'))]
-  if (matches.length > 0) {
-    const lastMatch = matches[matches.length - 1]
-    if (lastMatch.index !== undefined) {
-      return raw.slice(lastMatch.index).trim()
-        .replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
-    }
-  }
-
-  return raw.replace(/\s*(Words in s\.|S\.\s+\d|Substituted by|Inserted by|Omitted by|Repealed by|Modified by).*/i, '').trim()
-}
-
 async function fetchTnaCompiledText(legislationGovUkId: string, sectionNumber: string): Promise<string | null> {
-  const url = `https://www.legislation.gov.uk/${legislationGovUkId}/section/${sectionNumber}`
+  const url = `https://www.legislation.gov.uk/${legislationGovUkId}/section/${sectionNumber}/data.xml`
   try {
-    const res = await fetch(url, { headers: { 'Accept': 'text/html' } })
+    const res = await fetch(url, { headers: { 'Accept': 'application/xml' } })
     if (res.status === 404) {
       console.warn(`    ⚠ s.${sectionNumber} — 404 (not yet compiled by TNA)`)
       return null
@@ -205,8 +153,17 @@ async function fetchTnaCompiledText(legislationGovUkId: string, sectionNumber: s
       console.warn(`    ⚠ s.${sectionNumber} — HTTP ${res.status}`)
       return null
     }
-    const html = await res.text()
-    return cleanTnaCompiledText(stripHtml(html), sectionNumber)
+    const xml = await res.text()
+    let text = xml.replace(/<[^>]+>/g, ' ')
+    text = text.replace(/\s+/g, ' ').trim()
+    text = text
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&#xD;/g, '')
+      .replace(/&#x9;/g, ' ')
+    return text || null
   } catch (err) {
     console.warn(`    ⚠ s.${sectionNumber} — fetch error: ${err}`)
     return null
@@ -242,7 +199,8 @@ async function ingestAct(
   act: ActRef,
   completed: Set<string>,
   totalActs: number,
-  doneCount: number
+  doneCount: number,
+  recompileTna: boolean = false
 ): Promise<void> {
   const legislationGovUkId = buildLegislationGovUkId(act.feedUrl, act.year, act.number)
 
@@ -321,9 +279,9 @@ async function ingestAct(
       },
     })
 
-    // Check if compiled text already in R2 — skip TNA fetch if so
+    // Check if compiled text already in R2 — skip TNA fetch if so (unless --recompile-tna)
     const cKey = compiledKey(legislationGovUkId, s.sectionNumber)
-    if (await r2Exists(cKey)) {
+    if (!recompileTna && await r2Exists(cKey)) {
       console.log(`    ⏭ s.${s.sectionNumber} — compiled text already in R2`)
       // Ensure DB has the key recorded
       await prisma.legislationSection.update({
@@ -380,7 +338,9 @@ async function ingestAct(
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const mode = process.argv[2] ?? '--tier1'
+  const args = process.argv.slice(2)
+  const recompileTna = args.includes('--recompile-tna')
+  const mode = args.find(a => a !== '--recompile-tna') ?? '--tier1'
 
   // --reset-checkpoint: wipe checkpoint and exit
   if (mode === '--reset-checkpoint') {
@@ -434,7 +394,7 @@ async function main() {
   let doneCount = completed.size
 
   for (const act of acts) {
-    await ingestAct(act, completed, acts.length, doneCount)
+    await ingestAct(act, completed, acts.length, doneCount, recompileTna)
     doneCount++
 
     // Update checkpoint after each act (--full mode)
