@@ -2,7 +2,97 @@
 *Pending and applied changes to all spec documents.*
 *PENDING section: cleared after each batch application.*
 *APPLIED section: permanent audit trail, never deleted.*
-*Last updated: 23 April 2026*
+*Last updated: 24 April 2026*
+
+---
+
+## CODE CHANGES — 24 April 2026 Sprint V2-L (patch)
+
+### V2L-A3-fix: Ingest feed pagination — HTML entity decode + infinite loop guard
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | `fetchFeedPage`: decode `&amp;` → `&` in extracted next-page URL before use. `fetchAllActsFromFeed`: break if `nextUrl === url` to prevent infinite loop if entity decode still fails. |
+| `scripts/tsconfig.json` | `@aws-sdk/client-s3` path alias committed (was already on disk, missed from V2L-A2 commit). |
+
+**Deploy actions needed:** None.
+
+---
+
+## CODE CHANGES — 24 April 2026 Sprint V2-L
+
+### V2L-D1: Docs — CHANGE_LOG + handoff v35
+| File | Change |
+|------|--------|
+| `scrutinise-docs/CHANGE_LOG.md` | Sprint V2L entry added. |
+| `scrutinise-docs/handoff_summary.md` | Bumped to v35. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2L-C1: CLAUDE.md storage policy
+| File | Change |
+|------|--------|
+| `scrutinise-docs/CLAUDE.md` | Added STORAGE ARCHITECTURE section: Railway 5GB hard limit policy, R2 key scheme, on-demand fetch flow, R2 client file locations. |
+
+**Deploy actions needed:** None.
+
+---
+
+### V2L-B1: Legislation-compare page rebuild
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/legislation/test-sections/route.ts` | NEW. GET handler (no auth). Fetches up to 20 COMPILED sections from DB, fetches compiledText + lexSummary from R2. Returns amendments array for each section. |
+| `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` | REBUILT. Dynamic sections from `/api/legislation/test-sections` (replaces static TEST_SECTIONS). Gold standard = compiledText from R2. User prompt = "apply amendments to original text" verbatim task. System prompt = VERBATIM_SYSTEM_PROMPT. Removed cleanTnaText(), fetchLegislationXml(), goldTexts state. Added loading state, empty-DB message. Section list shows TNA/AI label. |
+
+**Deploy actions needed:** None (after schema + R2 client deploys).
+
+---
+
+### V2L-A5: Legislation search API — R2 fetch
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` | SQL updated: selects compiledTextKey, lexSummaryKey, compiledBy (not removed text fields). FTS uses originalText (in Railway). After query: parallel r2Get() for compiledText + lexSummary. Returns isTnaVerified = (compiledBy === 'tna-direct'). |
+| `scrutinise-web/components/LegislationPanel.tsx` | Interface: removed tnaCompiledText, added isTnaVerified flag. Display uses compiledText from R2. TNA badge uses isTnaVerified. Labels updated to "Compiled text (TNA)" / "Compiled text (AI)". |
+
+**Deploy actions needed:** None (after schema + R2 client deploys).
+
+---
+
+### V2L-A4: Compile script — R2 round-trip + parallel batches
+| File | Change |
+|------|--------|
+| `scripts/legislation/compile.ts` | Imports r2Get, r2Put, compiledKey, summaryKey from r2-client. Fetches rawXml from R2 via rawXmlKey (falls back to originalText). Writes compiledText to R2 via compiledKey; writes lexSummary to R2 via summaryKey. DB updated with compiledTextKey, lexSummaryKey (not text fields). Parallel batches of 5. --reset-failed flag. Progress summary after each batch. PAUSE file support. |
+
+**Deploy actions needed:** None (after R2 client deploy).
+
+---
+
+### V2L-A3: Ingest script — R2-first writes + full corpus feed
+| File | Change |
+|------|--------|
+| `scripts/legislation/ingest.ts` | Imports r2Put, r2Exists, r2Get, xmlKey, compiledKey from r2-client. fetchSectionsFromXml: returns rawXml per section. Writes raw XML to R2 (skip if exists). Writes TNA compiled text to R2; stores compiledTextKey, compiledBy: 'tna-direct' in DB. Skip if compiledTextKey already in R2. Full corpus flags: --full (ukpga all), --si (uksi), --eu (euretained). Atom feed pagination (follows 'next' rel links, 500ms delay). Checkpoint/resume (ingest-checkpoint.json, --reset-checkpoint flag). PAUSE file support. Progress: [{done}/{total}] per act. feedUrl stored on LegislationItem. |
+
+**Deploy actions needed:** `npx prisma db push --accept-data-loss` + `npx prisma generate` (V2L-A1 schema changes).
+
+---
+
+### V2L-A2: R2 client utility
+| File | Change |
+|------|--------|
+| `scripts/legislation/r2-client.ts` | NEW. r2Put, r2Get, r2Exists, xmlKey, compiledKey, summaryKey. Uses @aws-sdk/client-s3. Reads CLOUDFLARE_R2_ACCOUNT_ID, CLOUDFLARE_R2_ACCESS_KEY_ID, CLOUDFLARE_R2_SECRET_ACCESS_KEY, CLOUDFLARE_R2_BUCKET_NAME from env. |
+| `scrutinise-web/lib/r2.ts` | NEW. r2Get, r2Exists, compiledKey, summaryKey for Next.js app routes. Same S3 client setup. |
+
+**Deploy actions needed:** `npm install @aws-sdk/client-s3` ✅ (installed). Add env vars to Railway + Vercel (see handoff).
+
+---
+
+### V2L-A1: Schema — lean FTS fields + R2 pointer keys
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | LegislationSection: REMOVED compiledText, tnaCompiledText, lexSummary. ADDED rawXmlKey String?, compiledTextKey String?, lexSummaryKey String?, ftsVector String?. LegislationItem: ADDED feedUrl String?. |
+
+**Deploy actions needed:** `npx prisma db push --accept-data-loss` + `npx prisma generate` ✅ (generate done locally).
 
 ---
 
