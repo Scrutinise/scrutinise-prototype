@@ -1,6 +1,158 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 23 April 2026 v34*
+*Last updated: 24 April 2026 v36*
+
+***
+
+## CURRENT STATE — SPRINT V2-L COMPLETE ✅
+
+Eight commits to Main. `tsc --noEmit` clean. `prisma generate` done locally. `prisma db push --accept-data-loss` and env vars are MANUAL STEPS (see below).
+
+### V2L commit summary
+
+1. **V2L-A1** — Schema: `LegislationSection`: removed `compiledText`, `tnaCompiledText`, `lexSummary`; added `rawXmlKey String?`, `compiledTextKey String?`, `lexSummaryKey String?`, `ftsVector String?`. `LegislationItem`: added `feedUrl String?`. `prisma generate` ✅ (locally). `prisma db push --accept-data-loss` is a MANUAL STEP (data loss acceptable — rebuilding into R2).
+
+2. **V2L-A2** — `scripts/legislation/r2-client.ts` (NEW): `r2Put`, `r2Get`, `r2Exists`, `xmlKey`, `compiledKey`, `summaryKey`. `scrutinise-web/lib/r2.ts` (NEW): same for Next.js API routes. `@aws-sdk/client-s3` installed ✅.
+
+3. **V2L-A3** — `scripts/legislation/ingest.ts`: R2-first writes — raw XML and TNA compiled text to R2; stores `rawXmlKey`, `compiledTextKey`, `compiledBy: 'tna-direct'` in DB. Full corpus feed flags: `--full` (ukpga all), `--si`, `--eu`. Atom feed pagination with 500ms delay. Checkpoint/resume (`ingest-checkpoint.json`, `--reset-checkpoint` flag). PAUSE file support. Progress logging `[done/total]`.
+
+4. **V2L-A4** — `scripts/legislation/compile.ts`: fetches raw XML from R2 via `rawXmlKey`. Writes compiled text + lexSummary to R2; stores `compiledTextKey`, `lexSummaryKey` in DB. Parallel batches of 5 (6s between batches). `--reset-failed` flag. Progress summary + PAUSE file.
+
+5. **V2L-A5** — `app/api/ideas/[id]/legislation-search/route.ts`: SQL selects `compiledTextKey`, `lexSummaryKey`, `compiledBy`; FTS uses `originalText` (in Railway). After query: parallel `r2Get()` for each result. Returns `compiledText`, `lexSummary`, `isTnaVerified` (compiledBy === 'tna-direct'). `components/LegislationPanel.tsx`: interface updated — removed `tnaCompiledText`, added `isTnaVerified`; labels updated.
+
+6. **V2L-B1** — `app/api/legislation/test-sections/route.ts` (NEW): GET, no auth. Fetches 20 COMPILED sections + amendments from DB; fetches compiledText + lexSummary from R2. `app/legislation-compare/LegislationCompareClient.tsx`: rebuilt — dynamic sections from API, gold standard from R2, verbatim amendment-compilation task, removed cleanTnaText() and live-fetch logic.
+
+7. **V2L-C1** — `scrutinise-docs/CLAUDE.md`: added STORAGE ARCHITECTURE section (Railway 5GB limit, R2 key scheme, on-demand flow).
+
+8. **V2L-D1** — `CHANGE_LOG.md` + `handoff_summary.md` bumped to v35.
+
+### New files/changes this sprint
+- `scrutinise-web/prisma/schema.prisma` — V2L-A1 schema changes
+- `scripts/legislation/r2-client.ts` — NEW R2 utility for scripts
+- `scrutinise-web/lib/r2.ts` — NEW R2 utility for app routes
+- `scripts/legislation/ingest.ts` — R2-first, full corpus, checkpoint/resume, PAUSE
+- `scripts/legislation/compile.ts` — R2 round-trip, parallel batches, --reset-failed, PAUSE
+- `scrutinise-web/app/api/ideas/[id]/legislation-search/route.ts` — R2 text fetch
+- `scrutinise-web/components/LegislationPanel.tsx` — isTnaVerified, updated labels
+- `scrutinise-web/app/api/legislation/test-sections/route.ts` — NEW
+- `scrutinise-web/app/legislation-compare/LegislationCompareClient.tsx` — REBUILT
+- `scrutinise-docs/CLAUDE.md` — storage architecture section
+
+### Architecture notes
+- `compiledTextKey` holds the same R2 path regardless of TNA or AI source. `compiledBy === 'tna-direct'` distinguishes TNA from AI in Railway.
+- FTS query uses `originalText` (short, in Railway). `ftsVector` field reserved for future pre-computed tsvector from full compiled text.
+- `ingest --full` processes all ukpga Acts with checkpoint/resume. Safe to interrupt: restart with same flag to continue.
+- `compile.ts` only processes `PENDING` sections — sections marked `COMPILED` by ingest (TNA path) are skipped.
+- `LegislationItemClient.tsx` (`/legislation/[itemId]`) will show no compiled text after migration — graceful degradation, not an error. A proper R2-fetch UI for that page is post-sprint work.
+
+### ⚠ MANUAL STEPS REQUIRED before next deploy
+
+1. **Add to .env (Railway + Vercel):**
+   ```
+   CLOUDFLARE_R2_ACCESS_KEY_ID=
+   CLOUDFLARE_R2_SECRET_ACCESS_KEY=
+   CLOUDFLARE_R2_ACCOUNT_ID=37fa38a5097767c7c82089cb3d3bf6e6
+   CLOUDFLARE_R2_BUCKET_NAME=scrutinise-legislation
+   ```
+
+2. **Run on Railway DB:**
+   ```
+   npx prisma db push --accept-data-loss
+   ```
+   (Data loss is acceptable — removing text columns that will be re-populated in R2)
+
+3. **Re-ingest existing Acts to populate R2 + new DB fields:**
+   ```
+   cd scrutinise-web
+   NODE_PATH=./node_modules npx ts-node \
+     --project ../scripts/tsconfig.json \
+     ../scripts/legislation/ingest.ts
+   ```
+   (Default --tier1 mode, re-ingests existing Acts)
+
+4. **Run compile loop for AI compilations:**
+   ```
+   while true; do
+     NODE_PATH=./node_modules npx ts-node \
+       --project ../scripts/tsconfig.json \
+       ../scripts/legislation/compile.ts
+     sleep 60
+   done
+   ```
+
+5. **Full primary Acts corpus (run overnight):**
+   ```
+   NODE_PATH=./node_modules npx ts-node \
+     --project ../scripts/tsconfig.json \
+     ../scripts/legislation/ingest.ts --full
+   ```
+   Checkpoint saved to `scripts/legislation/ingest-checkpoint.json`. Safe to interrupt + resume.
+
+6. **To pause either script:** `touch scripts/legislation/PAUSE` — deletes to resume.
+
+***
+
+## Sprint V2L — R2-first legislation storage architecture
+*Completed 24 April 2026*
+
+### Architecture decision
+Railway PostgreSQL holds metadata and R2 keys only (hard 5GB limit). All heavy content (raw CLML XML, compiled text, lexSummaries) stored in Cloudflare R2 bucket `scrutinise-legislation`. Key scheme:
+- `{legislationGovUkId}/sections/{N}.xml` — raw CLML
+- `{legislationGovUkId}/sections/{N}.compiled.txt` — compiled text
+- `{legislationGovUkId}/sections/{N}.summary.txt` — lex summary
+
+### Schema changes (V2L-A1)
+LegislationSection: removed `compiledText`, `tnaCompiledText`, `lexSummary`; added `rawXmlKey`, `compiledTextKey`, `lexSummaryKey`, `ftsVector`. LegislationItem: added `feedUrl`. Applied with `prisma db push --accept-data-loss` (dropped 2,105 compiled text values — intentional).
+
+### R2 client utilities (V2L-A2)
+`scripts/legislation/r2-client.ts` and `scrutinise-web/lib/r2.ts` — `r2Put`, `r2Get`, `r2Exists`, `xmlKey`, `compiledKey`, `summaryKey`. `@aws-sdk/client-s3` installed.
+
+### Ingest script (V2L-A3 + patches)
+Full corpus ingest pipeline. Flags: `--tier1` (2010-2025, 100 Acts), `--full` (all ~12,000 UK Public General Acts), `--si` (Statutory Instruments), `--recompile-tna` (force re-fetch TNA text even if already in R2).
+
+Key fixes applied:
+- V2L-A3-fix: Feed pagination HTML entity decode + infinite loop guard
+- V2L-A3-fix3: TNA compiled text fetch changed from HTML page to CLML XML endpoint (`/section/{N}/data.xml`). Strips XML tags, decodes XML entities. Eliminates `&#xD;` corruption.
+- V2L-A3-fix4: AdaptiveThrottle class replaces fixed 1000ms delay. Starts at 200ms, doubles on 429/503 (max 5000ms), reduces 10% after 10 clean successes (min 100ms).
+
+Checkpoint/resume via `ingest-checkpoint.json`. PAUSE file support. Progress logging.
+
+### Compile script (V2L-A4 + patch)
+Parallel batches of 5. Gemini 2.5 Flash primary. V2L-A4-fix: Claude Haiku (`claude-haiku-4-5-20251001`) fallback on Gemini 429 — logs `⟳ Gemini 429 — trying Claude fallback`, stores with `compiledBy: 'claude-fallback'`. `@anthropic-ai/sdk` installed and added to tsconfig paths. `--reset-failed` flag. PAUSE file support.
+
+### Legislation search API + LegislationPanel (V2L-A5)
+FTS uses `originalText` in Railway. Parallel `r2Get()` fetches compiled text per result. Returns `isTnaVerified` flag. LegislationPanel shows "TNA verified" or "AI compiled" label.
+
+### Legislation-compare page rebuild (V2L-B1)
+New `/api/legislation/test-sections` route: fetches 20 compiled sections from DB, parallel R2 fetches for compiled text and lexSummary. `LegislationCompareClient.tsx` rebuilt: dynamic sections from API, tests verbatim compilation against stored gold standard.
+
+### CLAUDE.md storage policy (V2L-C1)
+Storage architecture documented: Railway 5GB limit, R2 key scheme, on-demand flow.
+
+### Environment variables (all set)
+`.env`, Railway Variables, Vercel Environment Variables:
+- `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_R2_ACCOUNT_ID=37fa38a5097767c7c82089cb3d3bf6e6`
+- `CLOUDFLARE_R2_BUCKET_NAME=scrutinise-legislation`
+- `ANTHROPIC_API_KEY` (added 24 Apr for Claude compile fallback)
+
+### Current corpus state (as of 24 April 2026 evening)
+- Tier 1 (100 Acts, 2010-2025): fully ingested and compiled
+- Full corpus (`--full`): actively running, ~1,200/12,009 Acts
+- `--recompile-tna`: running to overwrite corrupted HTML-sourced text with clean XML-sourced text
+- Compile loop: running with Gemini + Claude fallback
+- R2 bucket: ~17,000+ sections stored, growing
+
+### Legislation-compare page status
+Page is live at scrutinise.org/legislation-compare but gold standard text is currently corrupted (HTML entities from old ingest method). Will be fixed once `--recompile-tna` completes for Tier 1 Acts. Companies Act 2006 s.172/s.174 show "(not fetched)" — will resolve when `--full` ingest reaches Companies Act 2006 (pre-2010).
+
+### Next priorities
+1. Verify legislation-compare Jaccard scores once recompile-tna completes — this validates compilation quality
+2. Tax corpus: included in main `--full` ingest (Income Tax Act 2007, Corporation Tax Act 2009/2010, TCGA 1992, ITEPA 2003, VATA 1994 etc.) — no separate step needed
+3. Statutory Instruments: run `--si` flag after `--full` completes (~600,000 sections, ~£180 AI cost)
+4. Grok fallback: add as third tier after Claude in compile script (V2L-A4-fix2, future)
+5. Case law: BAILII scraper needed — separate engineering project (V3+)
 
 ***
 
