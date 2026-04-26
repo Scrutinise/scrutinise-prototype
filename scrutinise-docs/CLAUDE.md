@@ -1,19 +1,57 @@
 # SCRUTINISE — CLAUDE CODE CONTEXT FILE
 
-*Read this first, every session, before touching any code.* *Last updated: 22 March 2026 — v3. Updated with UX/voice build notes, Lex welcome message, AI style descriptions, amendment UX, prototype fixes.*
+*Read this first, every session, before touching any code.* *Last updated: 25 April 2026 — v4. Added Section 0 (verify before asserting), updated Section 1 boot checklist, current-state pointer, current sprint pointer.*
 
 ## CONTENTS
 
-1.  Start of Session Checklist
-2.  Project Overview
-3.  The Five Stages
-4.  Key Terminology
-5.  Repository Structure
-6.  Critical Architecture Decisions
-7.  Security Rules
-8.  Coding Patterns
-9.  Environment Variables
-10. Out of Scope for Sprint 1
+**Verify before asserting (READ FIRST)**
+
+Start of Session Checklist
+
+Project Overview
+
+The Five Stages
+
+Key Terminology
+
+Repository Structure
+
+Critical Architecture Decisions
+
+Security Rules
+
+Coding Patterns
+
+Environment Variables
+
+Out of Scope (per-sprint)
+
+Field & Document Preservation
+
+Git Discipline
+
+***
+
+## 0. VERIFY BEFORE ASSERTING
+
+CCh and CC must verify factual claims before stating them as fact. This applies to:
+
+-   URLs, endpoints, and access status (public/private/paywalled/decommissioned)
+-   File contents, line counts, and code structure
+-   Schema fields, database state, and R2 keys
+-   Tool/library behaviour and version-specific features
+-   Third-party API responses and rate limits
+-   What another instance (CCh or CC) has reportedly found
+
+**The failure mode to avoid:** tool or sub-instance returns a surprising result → build a plan on top of it → discover the result was wrong.
+
+When something is reported that contradicts expectation, verify directly before responding. "CC said X" is not verification; CC's report is itself a claim that needs checking when consequential.
+
+When a claim cannot be verified within reasonable effort, state it as uncertain ("CC reports that…", "this appears to be…", "I haven't confirmed but…") rather than asserting it as fact.
+
+This rule takes precedence over speed. A 30-second verification prevents hours of rework on a wrong premise.
+
+**For CC specifically:** an HTTP 401 on one path does not mean the whole site is invite-only. An HTTP 403 on one S3 prefix does not mean the bucket is decommissioned. Test the homepage and at least one canonical path before drawing site-wide conclusions.
 
 ***
 
@@ -21,12 +59,14 @@
 
 Before writing any code:
 
-1.  Read `entity_list_v5.md` — know every entity and field
-2.  Read `process_list_v2.md` — for the specific feature area you are building
-3.  Read `system_mechanics_v0.7.md` — the rules behind what you are building
-4.  Read `CC_Sprint1_Briefing.md` — confirm what week/day you are on and what is in scope
-5.  Run `git status` — know where the codebase is before changing it
-6.  Never assume — if a spec is ambiguous, stop and ask Charlie before building
+1.  Read `scrutinise-docs/handoff_summary.md` first. The top section ("CURRENT STATE") is authoritative for what is in progress and what just happened. If it conflicts with anything below in this file, the handoff wins.
+2.  Read `scrutinise-docs/CHANGE_LOG.md` top entries — last 5–10 changes provide recent context.
+3.  Read `scrutinise-docs/entity_list_v5.md` — when working on schema or DB changes.
+4.  Read `scrutinise-docs/process_list_v2.md` — for the specific feature area being built.
+5.  Read `scrutinise-docs/system_mechanics_v0_8.md` — when working on credibility, voting, points, stage gates.
+6.  If a brief from CCh references specific files (e.g. `V2.75_architecture_audit.md`), read those before any code work.
+7.  **Do NOT run** `git status` **mid-session.** See Section 12. Git is end-of-sprint only via `commit-all.sh`.
+8.  Never assume — if a spec is ambiguous, stop and ask Charlie before building.
 
 ***
 
@@ -34,7 +74,9 @@ Before writing any code:
 
 Scrutinise is a not-for-profit civic engagement platform enabling citizens, aspiring politicians, and engaged professionals to develop policy ideas into Parliament-ready legislation through a structured, AI-guided collaborative process.
 
-Stack: Next.js 14 (App Router), TypeScript, Prisma, PostgreSQL (Railway EU West Amsterdam), Cloudflare R2, Clerk Auth, Vercel, Resend (email), Gemini 2.5 Flash / Grok 4.1 Fast (AI)
+Stack: Next.js 14 (App Router), TypeScript, Prisma, PostgreSQL (Railway EU West Amsterdam), Cloudflare R2, Clerk Auth, Vercel, Resend (email), Gemini 2.5 Flash / Grok 4.1 Fast / Claude Haiku 4.5 fallback (AI), Sentry (errors), GA4 + Vercel Web Analytics.
+
+Production: scrutinise.org. Active platform with V1 features live. V2 sprint development in progress. Authoritative status: `scrutinise-docs/handoff_summary.md`.
 
 ***
 
@@ -63,37 +105,38 @@ Stage 1 — CREATE: Owner develops basic idea and strategic kernel with Lex. Vis
 ## 5. REPOSITORY STRUCTURE
 
 ```
-scrutinise/
-├── CLAUDE.md
-├── docs/
-│   ├── entity_list_v5.md           (CCh-only — never edit)
+scrutinise-prototype/
+├── CLAUDE.md                           (this file — root)
+├── commit-all.sh                       (transient, end of sprint only)
+├── ecosystem.config.js                 (PM2 unattended runner)
+├── scrutinise-docs/                    (specs and handoff)
+│   ├── handoff_summary.md              (READ FIRST every session)
+│   ├── CHANGE_LOG.md                   (recent changes)
+│   ├── entity_list_v5.md               (CCh-only — never edit without Charlie)
 │   ├── process_list_v2.md
-│   ├── system_mechanics_v0.7.md
-│   ├── lex_system_prompt_v4.md     (confidential)
+│   ├── system_mechanics_v0_8.md
+│   ├── lex_system_prompt_v5_1.md       (confidential — current Lex prompt)
 │   ├── wireframes_v3.md
-│   ├── UX_and_voice_build_notes.md (queue for Lex UI sprint)
-│   └── CC_Sprint1_Briefing.md      (current sprint — read every session)
-├── prisma/schema.prisma
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx                    (homepage — public)
-│   ├── about/page.tsx
-│   ├── training/page.tsx
-│   ├── (auth)/
-│   ├── dashboard/page.tsx
-│   ├── ideas/
-│   │   ├── page.tsx                (browse — Stage 4+)
-│   │   ├── [id]/page.tsx           (idea detail)
-│   │   └── create/page.tsx         (Lex chat)
-│   ├── user/[username]/page.tsx
-│   ├── invite/[token]/page.tsx
-│   ├── unsubscribe/[token]/page.tsx
-│   ├── admin/
-│   └── api/
-└── lib/
-    ├── prisma.ts, auth.ts, stage-gates.ts
-    ├── points.ts, credibility.ts
-    ├── notifications.ts, email.ts, r2.ts, ai.ts
+│   ├── UX_and_voice_build_notes.md
+│   └── decision-analysis-design-note.md
+├── scrutinise-web/                     (Next.js app)
+│   ├── prisma/schema.prisma
+│   ├── lib/                            (prisma, auth, r2, ai, points, …)
+│   ├── components/
+│   ├── app/
+│   │   ├── page.tsx, layout.tsx
+│   │   ├── (auth)/, dashboard/, ideas/, user/[username]/, invite/[token]/
+│   │   ├── legislation/, legislation-compare/
+│   │   ├── admin/
+│   │   └── api/                        (legislation-search, test-sections, …)
+│   └── package.json
+└── scripts/
+    ├── tsconfig.json
+    └── legislation/
+        ├── ingest.ts                   (R2-first, --full, checkpoint/resume)
+        ├── compile.ts                  (R2 round-trip, AI compile + Lex summary)
+        ├── r2-client.ts                (R2 utility for scripts)
+        └── ingest-checkpoint.json      (state file)
 ```
 
 ***
@@ -106,6 +149,7 @@ scrutinise/
 -   Sign-up includes: preferred name field, age confirmation (18+), T&Cs, community rules checkboxes.
 -   **Preferred name** (how the user wants Lex to address them) defaults to first name. Stored as `preferredName` on User.
 -   2FA: optional for CITIZEN, mandatory for ADMIN and SUPER_ADMIN.
+-   Clerk webhook URL must use `www.scrutinise.org` (not bare domain).
 
 ### STAGE 1 ONBOARDING — NO UPFRONT REGISTRATION GATE
 
@@ -120,7 +164,7 @@ scrutinise/
 -   File upload (PDF/doc) accepted for background context.
 -   Voice dictation via Web Speech API — mic button conditionally rendered (hide if unsupported).
 -   Auto-save every 3 seconds of inactivity after first input.
--   Progress indicator starts at 20% on first message sent (see UX_and_voice_build_notes.md Section 4).
+-   Progress indicator starts at 20% on first message sent (see UX_and_voice_build_notes.md).
 -   **Chat input position:** immediately below the last Lex message. Previous messages scroll upward. Clear scroll-up arrow button for history. Input is NOT pinned to the bottom of the browser window.
 -   Cursor auto-focused in input on page load — no click required.
 -   Mobile: input must not be obscured by keyboard — test on iOS Safari.
@@ -138,31 +182,68 @@ Three modes selectable in Settings and on idea creation. **Default is Collaborat
 ### DATABASE
 
 -   PostgreSQL on Railway. Prisma ORM always. `prisma.$transaction` for multi-table ops.
+-   Wrap Prisma calls in `withPrismaRetry()` for ingest/compile scripts (handles P1017/P1001).
+-   Build command: `npm run build` with `postinstall: "prisma generate"`.
 
-### FILE STORAGE
+### STORAGE ARCHITECTURE (V2L onwards)
 
--   Cloudflare R2. Private bucket: 24hr signed URLs. Public CDN: profile images.
--   ClamAV virus scan all PDFs. Google Safe Browsing API all external URLs.
+Railway PostgreSQL (Hobby 5GB — HARD LIMIT):
+
+-   Stores ONLY: FTS fields (`originalText`, `sectionTitle`, `policyArea`), pointer keys (`rawXmlKey`, `compiledTextKey`, `lexSummaryKey`), metadata, user data.
+-   NEVER stores: compiledText, tnaCompiledText, lexSummary, rawXml.
+-   Before any schema change, estimate Railway size impact.
+-   If Railway DB exceeds 4GB, alert Charlie before proceeding.
+
+Cloudflare R2 (`scrutinise-legislation` bucket):
+
+**V2L key scheme (current production):**
+
+```
+{legislationGovUkId}/sections/{N}.xml           (raw CLML — current state TNA)
+{legislationGovUkId}/sections/{N}.compiled.txt  (AI compiled or TNA direct)
+{legislationGovUkId}/sections/{N}.summary.txt   (Lex plain-English summary)
+```
+
+**V2.75-H key scheme (in transition):**
+
+```
+{legislationGovUkId}/sections/{N}.original.xml  (enacted CLML)
+{legislationGovUkId}/sections/{N}.tna.xml       (current revised CLML)
+{legislationGovUkId}/effects.xml                (structured effects feed per act)
+```
+
+On-demand flow: FTS query Railway → R2 key → r2Get() → user. Analytics flow: copy batch R2→Railway, run analysis, delete source.
+
+R2 client files:
+
+-   `scripts/legislation/r2-client.ts` (for ingest/compile scripts)
+-   `scrutinise-web/lib/r2.ts` (for Next.js API routes)
 
 ### AI (LEX)
 
--   Provider locked at Idea level on creation. Primary: Gemini 2.5 Flash. Fallback: Grok 4.1 Fast.
+-   Provider locked at Idea level on creation. Primary: Gemini 2.5 Flash. Fallback for compile.ts: Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) on Gemini 429.
 -   Lex scope v1: idea creation and contribution pages only — not site-wide.
 -   JSON field updates stripped server-side before returning to client.
+-   LexInsight: DB table + admin panel; hard cap alert at 50-rule limit; fire-and-forget pattern in API routes.
 
 ### EMAIL
 
 -   Resend. Always check EmailSuppression before sending. One-click unsubscribe on every email.
 
+### VERCEL
+
+-   `maxDuration: 60` set in `vercel.json` for compile-heavy routes.
+-   Vercel Web Analytics integrated.
+
 ### PRIVACY LOG
 
 -   Every ADMIN/SUPER_ADMIN access to another user's idea creates an ActivityLog record.
 -   Admin panel shows reason-selection dropdown before loading another user's idea.
--   Privacy Log tab on idea detail — owner-only. Sprint 2 UI; log events from Sprint 1.
+-   Privacy Log tab on idea detail — owner-only.
 
 ### SUPER_ADMIN
 
--   Email: cl@scrutinise.org. Role = SUPER_ADMIN. Seeded on first migration.
+-   Email: cl@scrutinise.org. Role = SUPER_ADMIN.
 
 ***
 
@@ -181,41 +262,22 @@ Three modes selectable in Settings and on idea creation. **Default is Collaborat
 
 ***
 
-\#\# GIT COMMAND APPROVAL POLICY
-
-***
+## GIT COMMAND APPROVAL POLICY (legacy, see Section 12)
 
 All git operations in this project are pre-approved for the following conditions:
 
-***
+-   cd target is always `D:/Dropbox/GitHub/scrutinise-prototype` or a subdirectory
+-   git commands are limited to: status, add, commit, push, pull, log, branch, checkout
+-   No git fetch or clone from remote URLs other than origin (`https://github.com/Scrutinise/scrutinise-prototype.git`)
+-   Commits use descriptive messages matching sprint naming conventions
 
-\- cd target is always D:/Dropbox/GitHub/scrutinise-prototype or a subdirectory
-
-***
-
-\- git commands are limited to: status, add, commit, push, pull, log, branch, checkout
-
-***
-
-\- No git fetch or clone from remote URLs other than origin (https://github.com/Scrutinise/scrutinise-prototype.git)
-
-***
-
-\- Commits use descriptive messages matching sprint naming conventions (e.g. V2C-leg-ingest)
-
-***
-
-***
-
-CC should proceed with all git commands meeting the above criteria without pausing for approval.
-
-***
+**However:** per Section 12, CC does NOT call git mid-sprint. The above approval policy exists so that the single end-of-sprint `commit-all.sh` execution does not need re-approval per command. CC produces commit-all.sh, Charlie approves the single execution, then CC deletes commit-all.sh.
 
 ***
 
 ## 8. CODING PATTERNS
 
-Standard API route, stage gate, and privacy log patterns: see CC_Sprint1_Briefing.md Section 8.
+Standard API route, stage gate, and privacy log patterns: see process_list_v2.md and entity_list_v5.md. Refer to existing routes (`app/api/ideas/[id]/legislation-search/route.ts` etc.) as canonical examples.
 
 ***
 
@@ -228,8 +290,12 @@ CLERK_SECRET_KEY=
 CLERK_WEBHOOK_SECRET=
 GEMINI_API_KEY=
 GROK_API_KEY=
-CLOUDFLARE_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
+ANTHROPIC_API_KEY=                          (Claude Haiku fallback)
+CLOUDFLARE_R2_ACCESS_KEY_ID=
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=
+CLOUDFLARE_R2_ACCOUNT_ID=
+CLOUDFLARE_R2_BUCKET_NAME=scrutinise-legislation
+R2_ACCESS_KEY_ID=                            (legacy — uploads/profiles buckets)
 R2_SECRET_ACCESS_KEY=
 R2_BUCKET_UPLOADS=scrutinise-uploads
 R2_BUCKET_PROFILES=scrutinise-profiles
@@ -237,14 +303,22 @@ R2_PUBLIC_URL=
 RESEND_API_KEY=
 GOOGLE_SAFE_BROWSING_API_KEY=
 NEXT_PUBLIC_GA4_MEASUREMENT_ID=
-NEXT_PUBLIC_APP_URL=https://scrutinise.co.uk
+NEXT_PUBLIC_APP_URL=https://www.scrutinise.org
+SENTRY_DSN=
 ```
 
 ***
 
-## 10. OUT OF SCOPE FOR SPRINT 1
+## 10. OUT OF SCOPE (per-sprint)
 
-Red Team mechanic, Campaign in a Box, site-wide Lex, credibility-weighted ratings, political spectrum UI (store fields only), team roles, Policy Development Group veto, Privacy Log UI (log events only), field encryption, voice dictation UI (queue for Lex UI sprint), address book import, offline mode, WhatsApp, fundraising, SMS verification, Parliament Members API.
+The current "out of scope" list is sprint-specific and lives in the active CCh brief, not in this static file. Refer to handoff_summary.md "CURRENT STATE" section for what is in scope right now.
+
+Long-term out-of-scope items (no firm sprint date):
+
+-   Red Team mechanic, Campaign in a Box, site-wide Lex
+-   Credibility-weighted ratings (mechanics designed, UI deferred)
+-   Political spectrum UI (store fields only)
+-   Address book import, offline mode, WhatsApp integration, SMS verification, Parliament Members API integration
 
 ***
 
@@ -252,15 +326,17 @@ Red Team mechanic, Campaign in a Box, site-wide Lex, credibility-weighted rating
 
 Never remove a field, entity, or section without Charlie's explicit instruction. `entity_list_v5.md` is CCh-only.
 
+***
+
 ## 12. GIT DISCIPLINE
 
 One logical unit of work per commit. Descriptive commit messages matching sprint naming conventions.
 
-**IMPORTANT — DO NOT call git during a sprint build.** Claude Code's security layer prompts for approval on every compound cd + git command, which interrupts runs. Instead, follow this pattern at the end of every sprint:
+**IMPORTANT — DO NOT call git during a sprint build.** Claude Code's security layer prompts for approval on every compound `cd + git` command, which interrupts runs. Instead, follow this pattern at the end of every sprint:
 
-1. Write all code changes to disk during the sprint — no git calls.
-2. Run tsc --noEmit to confirm clean.
-3. At the very end, produce a file called commit-all.sh in the project root containing all git commands in sequence:
+1.  Write all code changes to disk during the sprint — no git calls.
+2.  Run `tsc --noEmit` to confirm clean.
+3.  At the very end, produce a file called `commit-all.sh` in the project root containing all git commands in sequence:
 
 ```bash
 #!/bin/bash
@@ -277,10 +353,12 @@ git push origin Main
 echo "Done."
 ```
 
-4. Execute commit-all.sh immediately — Charlie approves the single execution prompt.
-5. Delete commit-all.sh after successful push.
+4.  Execute commit-all.sh immediately — Charlie approves the single execution prompt.
+5.  Delete commit-all.sh after successful push.
 
-Update CHANGE_LOG.md and handoff_summary.md content during the sprint, but include those files in commit-all.sh rather than committing mid-session.
+**Exception:** `handoff_summary.md` and `CHANGE_LOG.md` may be updated mid-sprint where the working state changes are significant for context preservation across `/clear` boundaries. They are still committed only at end of sprint via `commit-all.sh`.
+
+The last several sprints have ended with mid-sprint commits despite this rule. Every CCh brief must explicitly remind CC of Section 12. If CC reaches for git mid-sprint, CC stops and writes commit-all.sh instead.
 
 ***
 
