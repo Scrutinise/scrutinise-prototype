@@ -7,8 +7,8 @@ interface LegislationResult {
   sectionNumber: string
   sectionTitle: string | null
   compiledText: string | null
-  tnaCompiledText?: string | null
   lexSummary?: string | null
+  isTnaVerified?: boolean
   actTitle: string
   year: number
   legislationGovUkId: string
@@ -134,10 +134,9 @@ export default function LegislationPanel({
             </p>
           ) : (
             results.map(result => {
-              const state = getCardState(result.id)
-              const url = buildLegislationUrl(result.legislationGovUkId, result.sectionNumber)
-              const isTnaVerified = !!result.tnaCompiledText
-              const statutoryText = result.tnaCompiledText ?? result.compiledText
+              const state           = getCardState(result.id)
+              const url             = buildLegislationUrl(result.legislationGovUkId, result.sectionNumber)
+              const isTnaVerified   = result.isTnaVerified ?? false
               const hasPlainEnglish = !!result.lexSummary
 
               return (
@@ -162,12 +161,12 @@ export default function LegislationPanel({
                   </div>
 
                   {/* Statutory text / plain English toggle */}
-                  {statutoryText && (
+                  {result.compiledText && (
                     <div className="space-y-1">
                       {hasPlainEnglish && (
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                            {state.showPlainEnglish ? 'Plain English' : `Statutory text${isTnaVerified ? ' (TNA)' : ''}`}
+                            {state.showPlainEnglish ? 'Plain English' : `Compiled text${isTnaVerified ? ' (TNA)' : ' (AI)'}`}
                           </span>
                           <button
                             onClick={() => updateCardState(result.id, { showPlainEnglish: !state.showPlainEnglish })}
@@ -179,7 +178,7 @@ export default function LegislationPanel({
                       )}
                       {!hasPlainEnglish && (
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          {`Statutory text${isTnaVerified ? ' (TNA)' : ''}`}
+                          {`Compiled text${isTnaVerified ? ' (TNA)' : ' (AI)'}`}
                         </p>
                       )}
                       <div className="max-h-[200px] overflow-y-auto rounded bg-muted/50 p-2">
@@ -189,7 +188,7 @@ export default function LegislationPanel({
                           </p>
                         ) : (
                           <pre className="text-[11px] text-foreground font-mono whitespace-pre-wrap leading-relaxed">
-                            {statutoryText}
+                            {result.compiledText}
                           </pre>
                         )}
                       </div>

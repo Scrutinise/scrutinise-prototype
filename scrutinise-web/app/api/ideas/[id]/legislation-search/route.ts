@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { r2Get } from '@/lib/r2'
 import { getAuthenticatedUser } from '@/lib/auth'
 
 type Params = { params: Promise<{ id: string }> }
@@ -27,9 +28,9 @@ export async function POST(req: Request, { params }: Params) {
     id: string
     sectionNumber: string
     sectionTitle: string | null
-    compiledText: string | null
-    tnaCompiledText: string | null
-    lexSummary: string | null
+    compiledTextKey: string | null
+    lexSummaryKey: string | null
+    compiledBy: string | null
     actTitle: string
     year: number
     legislationGovUkId: string
@@ -38,14 +39,15 @@ export async function POST(req: Request, { params }: Params) {
     tags: string[]
   }
 
+  // FTS using originalText (in Railway) — compiledText lives in R2
   const results = await prisma.$queryRaw<RawResult[]>`
     SELECT
       ls.id,
       ls."sectionNumber",
       ls."sectionTitle",
-      ls."compiledText",
-      ls."tnaCompiledText",
-      ls."lexSummary",
+      ls."compiledTextKey",
+      ls."lexSummaryKey",
+      ls."compiledBy",
       li.title as "actTitle",
       li.year,
       li."legislationGovUkId",
@@ -55,16 +57,16 @@ export async function POST(req: Request, { params }: Params) {
     FROM "LegislationSection" ls
     JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
     WHERE ls."compilationStatus" = 'COMPILED'
-      AND ls."compiledText" IS NOT NULL
+      AND ls."compiledTextKey" IS NOT NULL
       AND to_tsvector('english',
-          coalesce(ls."tnaCompiledText", ls."compiledText", '') || ' ' ||
+          coalesce(ls."originalText", '') || ' ' ||
           coalesce(ls."sectionTitle", '') || ' ' ||
           coalesce(ls."policyArea", ''))
         @@ plainto_tsquery('english', ${query})
     ORDER BY
       ts_rank(
         to_tsvector('english',
-          coalesce(ls."tnaCompiledText", ls."compiledText", '') || ' ' ||
+          coalesce(ls."originalText", '') || ' ' ||
           coalesce(ls."sectionTitle", '')),
         plainto_tsquery('english', ${query})
       ) DESC,
@@ -72,5 +74,27 @@ export async function POST(req: Request, { params }: Params) {
     LIMIT ${limit}
   `
 
-  return NextResponse.json({ results })
+  // Fetch compiled text and lexSummary from R2 for each result
+  const withText = await Promise.all(results.map(async r => {
+    const [compiledText, lexSummary] = await Promise.all([
+      r.compiledTextKey ? r2Get(r.compiledTextKey) : Promise.resolve(null),
+      r.lexSummaryKey   ? r2Get(r.lexSummaryKey)   : Promise.resolve(null),
+    ])
+    return {
+      id: r.id,
+      sectionNumber: r.sectionNumber,
+      sectionTitle: r.sectionTitle,
+      compiledText,
+      lexSummary,
+      isTnaVerified: r.compiledBy === 'tna-direct',
+      actTitle: r.actTitle,
+      year: r.year,
+      legislationGovUkId: r.legislationGovUkId,
+      amendmentCount: r.amendmentCount,
+      confidence: r.confidence,
+      tags: r.tags,
+    }
+  }))
+
+  return NextResponse.json({ results: withText })
 }

@@ -129,10 +129,10 @@ async function compileSection(sectionId: string): Promise<void> {
   const cKey = compiledKey(legislationGovUkId, section.sectionNumber)
   const sKey = summaryKey(legislationGovUkId, section.sectionNumber)
 
-  // Fetch source text: prefer raw XML from R2, fall back to originalText
+  // Fetch source text: prefer enacted XML from R2, fall back to originalText
   let sourceText = section.originalText ?? ''
-  if (section.rawXmlKey) {
-    const rawXml = await r2Get(section.rawXmlKey)
+  if (section.originalXmlKey) {
+    const rawXml = await r2Get(section.originalXmlKey)
     if (rawXml) {
       // Strip tags for AI consumption (richer source than pre-stripped originalText)
       sourceText = rawXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -281,6 +281,19 @@ async function main() {
     })
     console.log(`Reset ${count} FAILED sections to PENDING`)
     return
+  }
+
+  // Reclaim sections stuck in COMPILING from a previous crashed/restarted worker run
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000)
+  const { count: reclaimedCount } = await prisma.legislationSection.updateMany({
+    where: {
+      compilationStatus: CompilationStatus.COMPILING,
+      updatedAt: { lt: staleThreshold },
+    },
+    data: { compilationStatus: CompilationStatus.PENDING },
+  })
+  if (reclaimedCount > 0) {
+    console.log(`♻ Reclaimed ${reclaimedCount} stale COMPILING sections → PENDING`)
   }
 
   const pendingSections = await prisma.legislationSection.findMany({
