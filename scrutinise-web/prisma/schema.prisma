@@ -1450,6 +1450,9 @@ model LegislationItem {
   // Subject classification (V2E-B1)
   subjectArea           String?
   policyArea            String?
+  feedUrl               String?             // source Atom feed URL (V2L-A1)
+  effectsKey            String?             // R2: {legislationGovUkId}/effects.xml (TNA effects/amendments feed)
+  effectsFetchedAt      DateTime?           // when effects feed was last fetched
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
@@ -1472,10 +1475,13 @@ model LegislationSection {
   sectionNumber         String                  // "1", "13E", "172" etc
   sectionTitle          String?
   // Text content
-  originalText          String?                 // As-enacted CLML text
-  compiledText          String?                 // Best available operative text (tnaCompiledText if available, else AI verbatim)
-  tnaCompiledText       String?                 // Verbatim compiled text fetched directly from legislation.gov.uk
-  lexSummary            String?                 // AI plain-English summary for Lex context (NOT statutory text)
+  originalText          String?                 // Tag-stripped full-act CLML section text — kept in Railway for FTS
+  // R2 pointer keys (V2L-A1, V2.75-H2) — actual text stored in Cloudflare R2
+  originalXmlKey        String?                 // R2: {legislationGovUkId}/sections/{N}.original.xml (enacted CLML P1group)
+  tnaXmlKey             String?                 // R2: {legislationGovUkId}/sections/{N}.tna.xml (current CLML P1group)
+  compiledTextKey       String?                 // R2: {legislationGovUkId}/sections/{N}.compiled.txt
+  lexSummaryKey         String?                 // R2: {legislationGovUkId}/sections/{N}.summary.txt
+  ftsVector             String?                 // pre-computed tsvector stored as text for Railway FTS
   // Compilation quality
   confidence            CompilationConfidence?
   confidenceReason      String?
