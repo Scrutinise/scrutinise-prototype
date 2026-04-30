@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx ts-node ../scripts/legislation/*)",
+      "Bash(NODE_PATH=./node_modules npx ts-node --project ../scripts/tsconfig.json ../scripts/legislation/*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(bash D:/Dropbox/GitHub/scrutinise-prototype/commit-all.sh)",
+      "Bash(rm D:/Dropbox/GitHub/scrutinise-prototype/commit-all.sh)",
+      "Bash(git status*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git pull*)",
+      "Bash(npm install*)",
+      "Bash(npm install -g pm2*)",
+      "Bash(pm2 *)",
+      "PowerShell(Set-Location*)",
+      "PowerShell($env:GIT_TMPDIR*)",
+      "PowerShell(Get-Content*)",
+      "PowerShell(Copy-Item*)",
+      "PowerShell(Remove-Item*)",
+      "PowerShell(Invoke-WebRequest*)",
+      "PowerShell(Write-Host*)"
+    ]
+  }
+}
