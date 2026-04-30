@@ -48,23 +48,46 @@ const EU_FEED     = 'https://www.legislation.gov.uk/euretained/data.feed'
 const CHECKPOINT_FILE = path.join(__dirname, 'ingest-checkpoint.json')
 // Pause sentinel — create this file to pause the loop; delete to resume
 const PAUSE_FILE = path.join(__dirname, 'PAUSE')
+// Crash log for permanently-skipped acts
+const CRASH_LOG_FILE = path.join(__dirname, '../../V2.75_crash_log.md')
+// Permanently skip an act after this many consecutive failures
+const MAX_ATTEMPTS = 3
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Checkpoint helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function loadCheckpoint(): Set<string> {
+interface CheckpointData {
+  completed: string[]
+  permanentlySkipped?: string[]
+  attemptCounts?: Record<string, number>
+}
+
+function loadCheckpoint(): { completed: Set<string>, permanentlySkipped: Set<string>, attemptCounts: Record<string, number> } {
   try {
     const raw = fs.readFileSync(CHECKPOINT_FILE, 'utf8')
-    const data = JSON.parse(raw) as { completed: string[] }
-    return new Set(data.completed)
+    const data = JSON.parse(raw) as CheckpointData
+    return {
+      completed: new Set(data.completed),
+      permanentlySkipped: new Set(data.permanentlySkipped ?? []),
+      attemptCounts: data.attemptCounts ?? {},
+    }
   } catch {
-    return new Set()
+    return { completed: new Set(), permanentlySkipped: new Set(), attemptCounts: {} }
   }
 }
 
-function saveCheckpoint(completed: Set<string>): void {
-  fs.writeFileSync(CHECKPOINT_FILE, JSON.stringify({ completed: [...completed] }, null, 2))
+function saveCheckpoint(completed: Set<string>, permanentlySkipped: Set<string>, attemptCounts: Record<string, number>): void {
+  fs.writeFileSync(CHECKPOINT_FILE, JSON.stringify({
+    completed: [...completed],
+    permanentlySkipped: [...permanentlySkipped],
+    attemptCounts,
+  }, null, 2))
+}
+
+function writeCrashLog(actId: string, attempts: number, error: string): void {
+  const line = `| ${new Date().toISOString()} | \`${actId}\` | ${attempts} | ${error.replace(/\|/g, '‖').slice(0, 200)} |\n`
+  try { fs.appendFileSync(CRASH_LOG_FILE, line) } catch { /* diagnostic only */ }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -605,34 +628,46 @@ async function main() {
 
   console.log(`Found ${acts.length} Acts`)
 
-  const completed = mode === '--full' ? loadCheckpoint() : new Set<string>()
+  const { completed, permanentlySkipped, attemptCounts } = mode === '--full'
+    ? loadCheckpoint()
+    : { completed: new Set<string>(), permanentlySkipped: new Set<string>(), attemptCounts: {} as Record<string, number> }
+
   const remaining = acts.filter(a => {
     const id = buildLegislationGovUkId(a.feedUrl, a.year, a.number)
-    return !completed.has(id)
+    return !completed.has(id) && !permanentlySkipped.has(id)
   })
 
-  console.log(`${remaining.length} Acts to ingest (${completed.size} already checkpointed)`)
+  console.log(`${remaining.length} acts to ingest (${completed.size} done, ${permanentlySkipped.size} perm-skipped)`)
+
+  if (remaining.length === 0) {
+    console.log('\nCorpus complete — all acts already in checkpoint. Exiting cleanly.')
+    return
+  }
 
   let doneCount = completed.size
   const throttle = new AdaptiveThrottle()
   let failCount = 0
 
-  for (const act of acts) {
+  for (const act of remaining) {
+    const id = buildLegislationGovUkId(act.feedUrl, act.year, act.number)
+    const attempts = (attemptCounts[id] ?? 0) + 1
+    attemptCounts[id] = attempts
+
     try {
       await ingestAct(act, completed, acts.length, doneCount, throttle)
+      completed.add(id)
     } catch (err: any) {
-      const id = buildLegislationGovUkId(act.feedUrl, act.year, act.number)
-      console.error(`❌ Failed act ${id}: ${err?.message ?? err}`)
+      console.error(`❌ Failed act ${id} (attempt ${attempts}/${MAX_ATTEMPTS}): ${err?.message ?? err}`)
+      if (attempts >= MAX_ATTEMPTS) {
+        permanentlySkipped.add(id)
+        console.error(`  ⛔ Permanently skipping ${id} after ${attempts} failed attempts`)
+        writeCrashLog(id, attempts, err?.message ?? String(err))
+      }
       failCount++
     }
     doneCount++
 
-    // Update checkpoint after each act (--full mode)
-    if (mode === '--full') {
-      const id = buildLegislationGovUkId(act.feedUrl, act.year, act.number)
-      completed.add(id)
-      saveCheckpoint(completed)
-    }
+    if (mode === '--full') saveCheckpoint(completed, permanentlySkipped, attemptCounts)
 
     await new Promise(r => setTimeout(r, 500))  // rate limit between acts
     await waitIfPaused()
@@ -645,4 +680,10 @@ async function main() {
   }
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect())
+main()
+  .then(() => prisma.$disconnect())
+  .catch(err => {
+    console.error('Fatal error in main():', err)
+    prisma.$disconnect()
+    process.exit(1)
+  })

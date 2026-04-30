@@ -8,6 +8,7 @@ module.exports = {
       NODE_PATH: 'D:/Dropbox/GitHub/scrutinise-prototype/scrutinise-web/node_modules'
     },
     autorestart: true,
+    stop_exit_codes: [0],
     max_restarts: 10,
     min_uptime: '60s',
     watch: false,
