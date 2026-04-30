@@ -1,10 +1,10 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 26 April 2026 v40*
+*Last updated: 30 April 2026 v41*
 
 ***
 
-## CURRENT STATE — SPRINT V2.75-H IN PROGRESS ⚠
+## CURRENT STATE — SPRINT V2.75-I COMPLETE ✓
 
 **This section supersedes everything below. The V2L commit summary that follows is preserved as historical context but does not reflect current working state.**
 
@@ -41,6 +41,7 @@ The legislation-compare page was structurally incapable of scoring 100% — comp
 | V2.75-H3   | 26 Apr | Phase 3 complete — R2 partial wipe. 65,255 objects deleted (40,635 `.xml` + 24,620 `.compiled.txt`). 1,142 `.summary.txt` files preserved. `wipe-r2-partial.ts` script produced. `prisma db push --accept-data-loss` applied to Railway. |
 | V2.75-H4   | 26 Apr | Phase 4 complete — 5-act verification. VERDICT: PARTIAL (4/5). Equality Act 2010: 239 sections, 500 effects ✓. Theft Act 1968: 40 sections, 71 effects ✓. Income Tax Act 2007: 1776 sections, 500 effects ✓. Finance Act 2024: 269 sections, 93 effects ✓. Companies Act 2006: 0 sections — TNA returns 202 for full-act CLML (expected, handled gracefully) ✗. 7 bugs discovered and fixed in ingest.ts during Phase 4 (dotenv path, ECONNREFUSED retry, P1group regex, Pnumber tag-strip, 202 handling, fetch timeout, pnum mismatch). New scripts: `wipe-r2-partial.ts`, `test-ingest-5.ts`, `clear-test-acts.ts`. Full verification report: `V2.75_phase4_verification.md`. |
 | V2.75-H5   | 26 Apr | Phase 5 complete — PM2 unattended runner configured and dry-run verified. `ecosystem.config.js` at project root. PM2 6.0.14 installed globally. Dry run confirmed: feed fetched (600 pages, 12,009 acts total in UKPGA corpus), section writes to R2 (`✓ s.N enacted → R2`, `✓ s.N current → R2`) observed, effects feed fetched. `MAX_PAGES` raised 10→200 (Equality Act + Income Tax Act hit cap at 500 entries). `scripts/tsconfig.json` dotenv path added. **READY TO LAUNCH** — awaiting Charlie's go. |
+| V2.75-I    | 30 Apr | Resilient resume complete. Root cause identified: PM2 `autorestart: true` restarted on clean exit code 0; main loop iterated all 12,009 acts with 500ms delay each (100 min/restart) even when corpus was complete. Full corpus ingested Apr 29 03:59. Three fixes: (1) `stop_exit_codes: [0]` in `ecosystem.config.js` prevents restart on clean exit; (2) main loop now iterates `remaining` only (not `acts`) — skips 500ms delay for done acts; (3) if `remaining.length === 0`, process logs "Corpus complete" and exits immediately. Also added: checkpoint format upgrade (`permanentlySkipped`, `attemptCounts`), attempt tracking (≥3 failures → permanent skip + crash log), crash exit code (`process.exit(1)` on unhandled errors so PM2 restarts on real crashes). tsc clean. 3-act test passed. PM2 restarted with new config — 241 remaining acts being processed. |
 
 ### Critical architectural breakthrough — TNA Effects API
 
@@ -82,14 +83,15 @@ No schema changes to `LegislationSection`.
 
 **Per-act effects fetch is fast:** \~12,000 acts × \~200ms = \~40 minutes total, trivial relative to the \~4-day per-section run.
 
-### Current state of R2 and Railway (as of 26 April 2026, post Phase 3+4)
+### Current state of R2 and Railway (as of 30 April 2026, post V2.75-I)
 
 | Store                              | Content                                                                    | Status                                      |
 |------------------------------------|----------------------------------------------------------------------------|---------------------------------------------|
-| R2 (scrutinise-legislation bucket) | 5 acts ingested: ~1,327 `.original.xml`, ~2,063 `.tna.xml`, 5 `effects.xml`, 1,142 `.summary.txt` | **Clean — V2.75-H key scheme active** |
-| Railway `LegislationSection`       | 5 test acts: 2,324 rows (239+40+1776+269+0)                                | **Clean — new schema applied**              |
-| Railway `LegislationItem`          | 11,765 rows (act metadata preserved)                                       | **Clean — effectsKey/effectsFetchedAt added** |
+| R2 (scrutinise-legislation bucket) | 267,963 objects: 117,957 `.original.xml`, 145,274 `.tna.xml`, 3,590 `effects.xml`, 1,142 `.summary.txt` | **Full corpus V2.75-H key scheme** |
+| Railway `LegislationSection`       | ~11,768+ acts ingested, sections growing                                   | **In progress — 241 remaining acts**        |
+| Railway `LegislationItem`          | ~12,009 rows (full UKPGA corpus)                                           | **Complete**                                |
 | Railway `Amendment`                | 0 rows                                                                     | Empty (never populated)                     |
+| PM2 `scrutinise-ingest`            | Running with new V2.75-I code — 241 remaining acts being processed         | **Online — will self-terminate on completion** |
 
 ### Bulk download status
 
@@ -97,23 +99,18 @@ Bulk download alpha site (`leggovuk.s3-website-eu-west-1.amazonaws.com`) decommi
 
 ### Next CC action
 
-**Phase 5 complete — PM2 dry-run verified. READY TO LAUNCH — awaiting Charlie's explicit go.**
+**V2.75-I complete. Full corpus ingest finishing — 241 remaining acts processing now.**
 
-All pre-flight steps done: `prisma db push` applied, R2 wiped (65,255 deleted, 1,142 `.summary.txt` preserved), 5-act ingest verified (4/5 PARTIAL), `ecosystem.config.js` created and PM2 dry-run confirmed working (feed fetched, section writes to R2 observed, 12,009 acts in UKPGA corpus).
-
-**Launch command:**
-```bash
-pm2 start ecosystem.config.js --only scrutinise-ingest
-```
+PM2 is running (`pm2 status` → online, PID active). When 241 acts finish, process logs "Corpus complete — all acts already in checkpoint. Exiting cleanly." and exits with code 0. PM2 **will NOT restart** (new `stop_exit_codes: [0]` config). Status becomes "stopped" — this is correct and expected.
 
 Monitor: `pm2 logs scrutinise-ingest --lines 50`  
-Stop: `pm2 stop scrutinise-ingest`  
-Corpus: 12,009 UKPGA acts. Estimated run time: ~4 days.  
-Checkpoint/resume: `scripts/legislation/ingest-checkpoint.json` (updated every act).
+Check done: look for "Corpus complete" in log, then `pm2 status` should show stopped/0 restarts.
 
-**Known limitation:** Acts where TNA returns HTTP 202 for full-act CLML (e.g. Companies Act 2006) will produce 0-section LegislationItems — handled gracefully, future sprint fix.
+**Next sprint** (post-trip): compile.ts — build the amendment-aware compiler using `.original.xml`, `.tna.xml`, and `effects.xml` per section. The three-layer data is now in R2; the compiler can apply Effects feed data to produce deterministic compiled text for Jaccard scoring.
 
-**`commit-all.sh` ready** at project root. Execute after Charlie's launch approval (per Section 12 — no git mid-sprint).
+**Known limitation:** Acts where TNA returns HTTP 202 for full-act CLML (e.g. Companies Act 2006) produce 0-section LegislationItems — handled gracefully, future sprint.
+
+**`commit-all.sh` ready** at project root (per Section 12 — execute then delete).
 
 ### Sprint phasing — strategic priorities post-trip
 

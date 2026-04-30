@@ -1,6 +1,31 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 26 April 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 30 April 2026*
+
+***
+
+## CODE CHANGES — 30 April 2026 Sprint V2.75-I (Resilient Resume)
+
+### V2.75-I: Checkpoint resilience, skip-loop fix, PM2 clean-exit
+
+**Root cause diagnosed:** Full corpus was ingested Apr 29 03:59 (12,012 acts). PM2 `autorestart: true` restarted on clean exit code 0. Old main loop iterated all 12,009 acts with 500ms inter-act delay = ~100 min/restart. 17+ idle restarts accumulated over 12 hours.
+
+**Fixes applied:**
+
+| File | Change |
+|------|--------|
+| `ecosystem.config.js` | Added `stop_exit_codes: [0]`. PM2 no longer restarts on clean exit (code 0). Genuine crashes (code 1) still trigger autorestart. |
+| `scripts/legislation/ingest.ts` | Main loop now iterates `remaining` (not `acts`). Eliminates 500ms delay on already-checkpointed acts — reduces idle restart time from ~100 min to <1 min. |
+| `scripts/legislation/ingest.ts` | Completion detection: if `remaining.length === 0` after feed load, logs "Corpus complete — all acts already in checkpoint. Exiting cleanly." and returns (code 0 → PM2 stops). |
+| `scripts/legislation/ingest.ts` | Checkpoint format upgraded: `{ completed, permanentlySkipped, attemptCounts }`. Backward-compatible with old `{ completed }` format. |
+| `scripts/legislation/ingest.ts` | Attempt tracking: `attemptCounts[id]` incremented per act attempt. Acts failing ≥ 3 times → `permanentlySkipped` set + `writeCrashLog()`. Excluded from future `remaining` filter. |
+| `scripts/legislation/ingest.ts` | Crash exit code: `main().catch(err => { console.error(err); process.exit(1) })`. Previously `.catch(console.error)` let crashes exit code 0, indistinguishable from clean completion. |
+| `V2.75_crash_log.md` (NEW) | Markdown table; `writeCrashLog()` appends rows for permanently-skipped acts. |
+| `V2.75_crashing_acts.md` (NEW) | Phase 1 diagnostic report — full root-cause analysis of the idle-restart loop. |
+
+**tsc clean. 3-act test passed** (`ukpga/2023/1`, `ukpga/2022/3`, `ukpga/2021/24`).
+
+**PM2 restarted** with new `ecosystem.config.js` at 10:46 Apr 30. 241 remaining acts being processed. Self-terminates on completion.
 
 ***
 
