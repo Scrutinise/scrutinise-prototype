@@ -28,3 +28,16 @@ Thumbs.db
 # Session logging
 session-log.txt
 ~$*
+
+# Claude Code local settings (may contain credentials)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Sprint verification artifacts (scraped HTML/PDF — not project code)
+V2.75_bulk_site_index.html
+V2.75_research_data_page.html
+V2.75_research_home.html
+V2.75_tna_bulk_download_pdf.pdf
+
+# Checkpoint backups
+scripts/legislation/ingest-checkpoint*.bak
