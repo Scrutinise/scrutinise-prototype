@@ -50,71 +50,26 @@ export default function HomePage() {
         {/* Block 1 — Hero */}
         <section className="bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
-
-            {/* Text content — constrained width */}
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl">
-                Shape the Nation
-              </h1>
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty sm:mt-6 sm:text-lg">
-                Scrutinise is a tool and collaboration platform for those committed to transforming how our countries are governed. A platform designed to support a Movement: individuals challenging the inertia of entrenched systems, working to create laws and policies that truly serve the people.
-              </p>
-              <p className="mt-4 text-base font-semibold text-foreground sm:mt-5 sm:text-lg">
-                How will you use it?
-              </p>
-
-              {/* Four navigation buttons */}
-              <div className="mt-5 flex flex-wrap gap-3">
-                {navButtons.map(({ label, href }) => (
-                  <Button key={href} variant="outline" asChild>
-                    <a href={href}>{label}</a>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Five Steps graphic — full width within max-w-5xl */}
-            <div className="mt-12 grid gap-6 sm:grid-cols-5 sm:gap-4 lg:gap-6">
-              {stages.map((stage) => (
-                <div
-                  key={stage.number}
-                  className="flex items-start gap-4 sm:flex-col sm:gap-3"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground sm:size-11">
-                    {stage.number}
-                  </span>
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{stage.name}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      {stage.description}
-                    </p>
-                  </div>
-                </div>
+            <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground text-balance sm:text-4xl lg:text-5xl">
+              Shape the Nation
+            </h1>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty sm:mt-6 sm:text-lg">
+              Scrutinise is a tool and collaboration platform for those committed to transforming how our countries are governed. A platform designed to support a Movement: individuals challenging the inertia of entrenched systems, working to create laws and policies that truly serve the people.
+            </p>
+            <p className="mt-4 text-base font-semibold text-foreground sm:mt-5 sm:text-lg">
+              How will you use it?
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {navButtons.map(({ label, href }) => (
+                <Button key={href} variant="outline" asChild>
+                  <a href={href}>{label}</a>
+                </Button>
               ))}
             </div>
-
-            {/* Relocated subtitle and primary CTAs */}
-            <div className="mt-8">
-              <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Turn any idea into Parliament-ready law in 5 stages.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <Button size="lg" asChild className="w-full sm:w-auto">
-                  <Link href="/ideas/create">
-                    Get Started
-                    <ArrowRight className="ml-2 size-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-                  <Link href="/prototype/browse">Vote</Link>
-                </Button>
-              </div>
-            </div>
-
           </div>
         </section>
 
-        {/* Block 2 — Quality legislation — open sourced (moved up) */}
+        {/* Block 2 — Quality legislation — open sourced */}
         <section className="bg-[#0a0a0f]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold text-white sm:text-3xl">
@@ -137,8 +92,49 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 3 — What is it? */}
-        <section id="what-is-it" className="border-t border-border bg-background">
+        {/* Block 3 — The Five Steps */}
+        <section className="border-t border-border bg-background">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+              The Five Steps
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Turn any idea into Parliament-ready law in 5 stages.
+            </p>
+            <div className="mt-8 grid gap-6 sm:grid-cols-5 sm:gap-4 sm:mt-10 lg:gap-6">
+              {stages.map((stage) => (
+                <div
+                  key={stage.number}
+                  className="flex items-start gap-4 sm:flex-col sm:gap-3"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground sm:size-11">
+                    {stage.number}
+                  </span>
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{stage.name}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {stage.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <Button size="lg" asChild className="w-full sm:w-auto">
+                <Link href="/ideas/create">
+                  Get Started
+                  <ArrowRight className="ml-2 size-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
+                <Link href="/prototype/browse">Vote</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Block 4 — What is it? */}
+        <section id="what-is-it" className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold tracking-tight sm:text-3xl">
               What is it?
@@ -157,8 +153,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 4 — Who is it for? */}
-        <section id="who-is-it-for" className="border-t border-border">
+        {/* Block 5 — Who is it for? */}
+        <section id="who-is-it-for" className="border-t border-border bg-background">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold tracking-tight sm:text-3xl">
               Who is it for?
@@ -194,8 +190,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 5 — How does it work? */}
-        <section id="how-does-it-work" className="border-t border-border bg-background">
+        {/* Block 6 — How does it work? */}
+        <section id="how-does-it-work" className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-2xl font-semibold tracking-tight sm:text-3xl">
               How does it work?
@@ -208,7 +204,7 @@ export default function HomePage() {
                 The AI does the structural work &#8212; research, drafting, finding the relevant legislation, organising the argument, checking for logical and evidential flaws. That&apos;s the part that used to take weeks and now takes hours.
               </p>
               <p>
-                The scrutiny is human. Every serious proposal needs people with real experience to pressure-test it &#8212; to catch the dumb thing before it becomes law, to bring the perspective the AI can&apos;t.
+                The scrutiny is human. Every serious proposal needs people with real experience to pressure-test it &#8212; to catch that embarrassing mistake before it becomes law, to bring the perspective the AI can&apos;t.
               </p>
               <p>
                 Scrutinise lets you build your own network of people you trust to scrutinise your work privately, and as the platform grows, those networks help each other. The goal is to fix, earlier, what most of our bad laws have in common: not enough people who knew what they were talking about looked at them hard enough, soon enough.
@@ -220,7 +216,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 6 — Stay calm and move quickly through the chaos */}
+        {/* Block 7 — Stay calm and move quickly through the chaos */}
         <section className="border-t border-border bg-gray-50">
           <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-6 text-xl font-semibold tracking-tight sm:text-2xl">
@@ -237,7 +233,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 7 — Is this you? */}
+        {/* Block 8 — Is this you? */}
         <section id="is-this-you" className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
@@ -252,7 +248,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Block 8 — If you're serious about wanting a better-run country */}
+        {/* Block 9 — If you're serious about wanting a better-run country */}
         <section className="border-t border-border bg-gray-50">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
             <h2 className="mb-8 text-center text-xl font-semibold tracking-tight sm:text-2xl">
