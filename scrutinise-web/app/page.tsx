@@ -147,6 +147,9 @@ export default function HomePage() {
                 Scrutinise is an AI-guided workspace that takes you through the process step by step. Lex, our AI guide and researcher, helps you think clearly, find the right evidence, sharpen your argument, and identify the legislation that needs to change.
               </p>
               <p>
+                The platform then allows you to network your idea to human colleagues and specialists for detailed scrutiny, to lift the quality of your proposal to parliamentary standards.
+              </p>
+              <p>
                 What you get at the end is a proposal that&apos;s been properly thought through, scrutinised, and ready to put into the hands of those in Parliament who can help take it forward. What happens there is their job. Getting it there in a form they can trust is ours.
               </p>
             </div>
@@ -166,7 +169,7 @@ export default function HomePage() {
               <div>
                 <p>
                   <strong className="text-foreground">For MPs and their teams:</strong>{" "}
-                  a structured workspace to develop policy, co-ordinate candidates, councillors, and outside experts, and build a pipeline of Parliament-ready proposals &#8212; with a central view of everything in flight.
+                  Scrutinise provides you with a structured workspace to develop policy, co-ordinate specialist AI research on the platform, your own researchers, colleagues, parliamentary expertise and outside experts, and build a pipeline of Parliament-ready proposals &#8212; faster, to a high quality and with a central view of everything in flight. Key benefits include:
                 </p>
                 <ul className="mt-4 space-y-2">
                   {[
@@ -175,8 +178,8 @@ export default function HomePage() {
                     "Mentor candidates into legislators-in-waiting",
                     "Battle-test and strengthen your policy positions",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                       {item}
                     </li>
                   ))}
@@ -243,7 +246,7 @@ export default function HomePage() {
               Be the engine of the change you want to see in the world
             </h3>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base">
-              A &lsquo;policy entrepreneur&rsquo; is someone who identifies a challenge that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
+              A &lsquo;policy entrepreneur&rsquo; is someone who identifies a problem that can be overcome through changes in legislation or government operations and then builds the coalition, the evidence, and the argument to fix it. They don&apos;t wait for permission.
             </p>
           </div>
         </section>
