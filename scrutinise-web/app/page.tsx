@@ -54,7 +54,7 @@ export default function HomePage() {
               Shape the Nation
             </h1>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground text-pretty sm:mt-6 sm:text-lg">
-              Scrutinise is a tool and collaboration platform for those committed to transforming how our countries are governed. A platform designed to support a Movement: individuals challenging the inertia of entrenched systems, working to create laws and policies that truly serve the people.
+              Scrutinise is a not-for-profit, non-partisan tool and collaboration platform to help turn good policy ideas into better quality legislation and stronger public systems.
             </p>
             <p className="mt-4 text-base font-semibold text-foreground sm:mt-5 sm:text-lg">
               How will you use it?
@@ -171,7 +171,7 @@ export default function HomePage() {
                   <strong className="text-foreground">For MPs and their teams:</strong>{" "}
                   Scrutinise provides you with a structured workspace to develop policy, co-ordinate specialist AI research on the platform, your own researchers, colleagues, parliamentary expertise and outside experts, and build a pipeline of Parliament-ready proposals &#8212; faster, to a high quality and with a central view of everything in flight. Key benefits include:
                 </p>
-                <ul className="mt-4 space-y-2">
+                <ul className="mt-4 space-y-2 pl-4">
                   {[
                     "Your own team of trained researchers at no cost",
                     "Build a policy portfolio that positions you for power",
