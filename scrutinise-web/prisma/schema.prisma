@@ -486,6 +486,7 @@ model User {
   referralsMade             ReferralEvent[]  @relation("ReferrerUser")
   referralsReceived         ReferralEvent[]  @relation("ReferredUser")
   legislationCorrections    LegislationCorrection[]
+  feedbacks                 Feedback[]
 
   @@index([clerkId])
   @@index([email])
@@ -1597,6 +1598,31 @@ model LegislationCrossRef {
 
   @@index([sourceItemId])
   @@index([targetItemId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPORT — Feedback
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Feedback {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  email           String
+  subject         String
+  message         String    @db.Text
+  feedbackType    String?   // "feature" | "bug" | "general" | "support" | null
+  status          String    @default("NEW") // "NEW" | "TRIAGED" | "RESOLVED" | "WONTFIX"
+  adminNotes      String?   @db.Text
+  // Roadmap fields — populated later by AI categorisation
+  aiCategory      String?
+  aiPriority      String?   // "low" | "medium" | "high" | "urgent"
+  aiSummary       String?   @db.Text
+  aiCategorisedAt DateTime?
+
+  @@index([status, createdAt])
+  @@index([userId])
 }
 
 // Link between a CoherentAction and a LegislationSection with proposed wording

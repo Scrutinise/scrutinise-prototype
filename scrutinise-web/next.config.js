@@ -2,7 +2,16 @@
 const { withSentryConfig } = require('@sentry/nextjs')
 
 const nextConfig = {
-  output: 'standalone'
+  output: 'standalone',
+  async redirects() {
+    return [
+      {
+        source: '/training',
+        destination: '/support',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = withSentryConfig(nextConfig, {

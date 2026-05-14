@@ -733,8 +733,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [legislationLoading, setLegislationLoading] = useState(false)
   // V2J-B2 — track coherent action IDs so panel can attach to the right CA
   const [coherentActionIds, setCoherentActionIds] = useState<string[]>([])
-  // V2K-D2 — onboarding state: pending (show buttons) → done (proceed)
-  const [onboardingState, setOnboardingState] = useState<'pending' | 'done'>('pending')
+  // V2K-D2 — onboarding state: pending (show buttons) → explain (show how-it-works text) → done
+  const [onboardingState, setOnboardingState] = useState<'pending' | 'explain' | 'done'>('pending')
   const skipUserProfilingRef = useRef(false)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -1559,7 +1559,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   }, [])
 
   const handleOnboardingTellMore = useCallback(() => {
-    setOnboardingState('done')
+    setOnboardingState('explain')
   }, [])
 
   // ── Swipe gesture handlers ────────────────────────────────────────────────
@@ -1800,14 +1800,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             ))}
                           </div>
                         )}
-                        {/* V2K-D2 — Onboarding choice buttons (first Lex message only) */}
+                        {/* V2K-D2 — Onboarding choice buttons / explanation (first Lex message only) */}
                         {i === 0 && onboardingState === 'pending' && !msg.isStreaming && (
                           <div className="mt-4 flex flex-wrap gap-2">
                             <button
                               onClick={handleOnboardingTellMore}
                               className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors"
                             >
-                              Tell me more about this
+                              How does this work?
                             </button>
                             <button
                               onClick={handleOnboardingKnow}
@@ -1815,6 +1815,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             >
                               I know what I&apos;m doing →
                             </button>
+                          </div>
+                        )}
+                        {i === 0 && onboardingState === 'explain' && !msg.isStreaming && (
+                          <div className="mt-4 max-w-xl space-y-3 text-sm leading-relaxed text-zinc-700">
+                            <p>This page works like any chat interface. You are talking with Lex the Scrutinise specialist AI, and between you you will develop a structured statement of your proposed policy idea. Lex will ask you questions, you can ask Lex to help you in any area of research or with ideas.</p>
+                            <p>You will start with the problem or challenge, investigate its causes, the policy you think will deal with the causes, and the actions you propose in line with your policy. Lex will help you identify and analyse the target legislation and support you with research to build your evidence base. For more detail on the process go to <a href="/support?tab=faqs" className="underline text-teal-700 hover:text-teal-900">Support / FAQs</a>.</p>
+                            <p>Once you have laid out your proposal in detail you can invite specialists and friends to help you scrutinise your work (find the embarrassing errors and practical hurdles as early as possible in the process). Once your policy idea has been fully scrutinised there are tools to help you promote it and build and earn parliamentary and specialist endorsements.</p>
+                            <p className="font-medium text-zinc-900">Would you like to begin the first stage? Type or dictate into the box below the challenge or problem you would like to address.</p>
                           </div>
                         )}
                       </div>

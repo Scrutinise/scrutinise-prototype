@@ -176,6 +176,72 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
   await sendEmail({ to: toEmail, subject, html, text })
 }
 
+export async function sendFeedbackAdminEmail({
+  feedbackId,
+  subject,
+  message,
+  feedbackType,
+  fromEmail,
+  fromName,
+}: {
+  feedbackId: string
+  subject: string
+  message: string
+  feedbackType?: string | null
+  fromEmail: string
+  fromName?: string | null
+}): Promise<void> {
+  const adminEmail = 'cl@scrutinise.org'
+  const typeLabel = feedbackType
+    ? { feature: 'Feature suggestion', bug: 'Bug or problem', general: 'General comment', support: 'I need help with my account' }[feedbackType] ?? feedbackType
+    : 'Not specified'
+
+  const emailSubject = `[Scrutinise Feedback] ${subject}`
+
+  const text = `
+New feedback submission on Scrutinise.
+
+From: ${fromName ?? 'Unknown'} <${fromEmail}>
+Type: ${typeLabel}
+Subject: ${subject}
+
+Message:
+${message}
+
+---
+Feedback ID: ${feedbackId}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">New Feedback</h2>
+  <table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+    <tr>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600; width: 80px;">From</td>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${fromName ?? 'Unknown'} &lt;${fromEmail}&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Type</td>
+      <td style="padding: 6px 12px; font-size: 13px;">${typeLabel}</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600;">Subject</td>
+      <td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${subject}</td>
+    </tr>
+  </table>
+  <p style="font-size: 13px; font-weight: 600;">Message:</p>
+  <p style="font-size: 13px; white-space: pre-wrap; padding: 12px; background: #f9f9f9; border-radius: 4px;">${message}</p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">Feedback ID: ${feedbackId}</p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: adminEmail, subject: emailSubject, html, text })
+}
+
 export async function sendInviteMismatchNotificationEmail({
   toEmail,
   toFirstName,
