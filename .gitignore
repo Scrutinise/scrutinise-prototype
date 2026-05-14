@@ -41,3 +41,16 @@ V2.75_tna_bulk_download_pdf.pdf
 
 # Checkpoint backups
 scripts/legislation/ingest-checkpoint*.bak
+
+# V2.76-A bulk data samples — local discovery artefacts, not project code (large binaries/CSVs)
+scripts/legislation/v276-samples/
+
+# V2.76-B bulk archive — 1.32 GB ZIP and extracted files, never commit
+scripts/legislation/v276-bulk/extracted/
+scripts/legislation/v276-bulk/best-collection-xml.zip
+
+# V2.76-B intermediate data files — large, regenerable from scripts
+scripts/legislation/v276-bulk/phase2-db-counts.json
+scripts/legislation/v276-bulk/phase2-bulk-p1groups.json
+scripts/legislation/v276-bulk/phase2-results.json
+scripts/legislation/v276-bulk/phase3a-progress.json

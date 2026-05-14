@@ -374,6 +374,7 @@ enum CompilationStatus {
   COMPILED      // Complete
   FAILED        // Compilation failed — see errorLog
   NEEDS_REVIEW  // LOW confidence — queued for human review
+  PRINT_ONLY    // No digital XML exists; permanently excluded from compilation
 }
 
 enum CorrectionStatus {
