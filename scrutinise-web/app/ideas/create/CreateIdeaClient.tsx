@@ -731,6 +731,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [legislationResults, setLegislationResults] = useState<LegislationResult[]>([])
   const [showLegislationPanel, setShowLegislationPanel] = useState(false)
   const [legislationLoading, setLegislationLoading] = useState(false)
+  const [pulseLegButton, setPulseLegButton] = useState(false)
   // V2J-B2 — track coherent action IDs so panel can attach to the right CA
   const [coherentActionIds, setCoherentActionIds] = useState<string[]>([])
   // V2K-D2 — onboarding state: pending (show buttons) → explain (show how-it-works text) → done
@@ -1417,7 +1418,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
   // ── V2H-A2: Accept from currentProposal — platform advances field sequence ─
   // V2J-B1 — search legislation DB and populate panel
-  const searchLegislation = useCallback(async (query: string) => {
+  const searchLegislation = useCallback(async (query: string, opts: { pulseButton?: boolean } = {}) => {
     if (!ideaId || !isSignedIn) return
     setLegislationLoading(true)
     try {
@@ -1430,7 +1431,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         const data = await res.json()
         if (data.results?.length > 0) {
           setLegislationResults(data.results)
-          setShowLegislationPanel(true)
+          if (opts.pulseButton) {
+            setPulseLegButton(true)
+            setTimeout(() => setPulseLegButton(false), 2000)
+          }
         }
       }
     } finally {
@@ -1474,10 +1478,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (fieldKey === 'summaryDescription') {
       const query = [fieldValues['title'], value].filter(Boolean).join(' ')
       searchLegislation(query)
-    } else if (fieldKey === 'diagnosis.whyPersisted') {
+    } else if (fieldKey === 'summaryDiagnosis' || fieldKey === 'diagnosis.text') {
       searchLegislation(value)
     } else if (fieldKey === 'coherentAction.title') {
-      searchLegislation(value)
+      searchLegislation(value, { pulseButton: true })
     }
 
     // Advance field sequence using ref (avoids stale closure)
@@ -1603,7 +1607,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             {(legislationResults.length > 0 || legislationLoading) && (
               <button
                 onClick={() => setShowLegislationPanel(v => !v)}
-                className="hidden lg:inline-flex items-center px-3 py-1 rounded-md border border-teal-300 text-teal-700 hover:bg-teal-50 text-xs transition-colors"
+                className={`hidden lg:inline-flex items-center px-3 py-1 rounded-md border border-teal-300 text-teal-700 hover:bg-teal-50 text-xs transition-colors${pulseLegButton ? ' animate-pulse ring-2 ring-teal-400' : ''}`}
               >
                 {legislationLoading ? 'Searching legislation…' : 'Legislation'}
               </button>
@@ -1664,7 +1668,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         {(legislationResults.length > 0 || legislationLoading) && (
           <button
             onClick={() => setShowLegislationPanel(true)}
-            className="px-3 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium shrink-0"
+            className={`px-3 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium shrink-0${pulseLegButton ? ' animate-pulse ring-2 ring-teal-400' : ''}`}
           >
             {legislationLoading ? '…' : 'Legislation'}
           </button>

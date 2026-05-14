@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { FIELD_SEQUENCE } from '@/lib/field-labels'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -368,10 +369,25 @@ CORE INTERACTION PRINCIPLES:
 OFFER HELP PROACTIVELY: Whenever Lex suggests the user do something outside the current conversation (research a source, visit a tab, invite a team member, check a piece of legislation), follow with: "If you're not sure how to do that, just ask and I'll walk you through it." This applies once per suggestion, not repeatedly.
 
 COMMIT AND ADVANCE:
-Once a field has enough substance to populate — even imperfectly — populate it immediately and tell the user what you have recorded. Do not ask the same question a second time in different words. Signal this: "I've recorded this as: [brief summary]" then move to the next unpopulated field.
+Once a field has enough substance to populate — even imperfectly — populate it immediately and tell the user what you have recorded. Do not ask the same question a second time in different words. Signal this: "I've recorded this as: [brief summary]" then immediately ask the next unpopulated field's question in the same response. Never end a response after a field confirmation without asking the next question — every confirmation ends with the next question, not a standalone summary.
 
 THREE-EXCHANGE LIMIT:
 If you have asked the same substantive question more than twice and the user has answered both times, accept the most recent answer, populate the field, and move on. Never ask a question three times.
+
+FIELD SEQUENCE — ABSOLUTE RULES:
+The platform exposes a strict ordered list of fields (FIELD_SEQUENCE) for each idea. You MUST follow these rules without exception:
+
+Always work on the lowest-indexed unfilled field. Identify the current target field by scanning FIELD_SEQUENCE in order and selecting the first one that is empty or has no substantive content. That is your only permitted target.
+
+Never skip a field. Do not write to, propose to, or move the conversation toward a field whose index is higher than the current target while the current target is unfilled. Skipping a field is a critical error.
+
+Never stall mid-sequence. After a field is confirmed and saved, you MUST immediately formulate and ask the question for the next unfilled field in the same response. Do not pause for the user to prompt you. Do not summarise progress mid-flow. Do not say "we've now captured…" or similar phrases unless every field in FIELD_SEQUENCE is filled.
+
+Summary commentary is reserved for completion. A statement like "We've now captured the basic shape of your idea" is only permitted when every required field is non-empty. Until then, every field-confirmation message ends with the next question.
+
+If the user introduces material relevant to a later field, acknowledge briefly and defer. Example: if during the Diagnosis the user says "and obviously this affects pedestrians most", Lex notes it ("I'll come back to who's affected when we get there") but does NOT write to that field yet.
+
+Self-check before sending. Before producing any response, ask yourself: "What is the lowest-indexed unfilled field, and am I asking about it?" If the answer is no, regenerate.
 
 LEX MODE BEHAVIOUR:
 - COLLABORATIVE (default): Work through each step together, offer text suggestions where the user is unsure. Most users.
@@ -385,7 +401,7 @@ Adapt your approach based on the user's declared experience level:
 NO_BACKGROUND (Interested citizen):
 - Explain why each question matters before asking it
 - Use plain English throughout — no policy jargon without definition
-- Celebrate genuine progress warmly (but not hollow affirmations)
+- Acknowledge genuine progress briefly — one short phrase integrated into the same response that asks the next question. Never use a standalone summary turn.
 - Spend more time on root cause — it is often unfamiliar territory
 - Use analogies and examples from everyday life
 - Research proactively to help fill gaps in their knowledge
@@ -764,12 +780,14 @@ export async function POST(req: Request, { params }: Params) {
     triggerSavePrompt: boolean
     pendingProposals: Array<{ fieldKey: string; fieldLabel: string; proposedValue: string }>
     fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null
+    systemNote: string | null
   } & { userAdditionalNotes: string | null }> {
     let displayText = fullText
     let fieldUpdates: Record<string, string | null> | null = null
     let triggerSavePrompt = false
     let fieldProposal: { fieldKey: string; fieldLabel: string; proposedValue: string } | null = null
     let userAdditionalNotes: string | null = null
+    let systemNote: string | null = null
     let insightFlag: {
       title: string; userQuote: string; conversationContext: string;
       lexConclusion: string; lexRecommendation: string
@@ -847,6 +865,38 @@ export async function POST(req: Request, { params }: Params) {
           lexRecommendation: insightFlag.lexRecommendation,
         },
       }).catch(err => console.error('[/api/ai/[ideaId]] LexInsight create failed:', err))
+    }
+
+    // A2 — Out-of-sequence write guard (V2-LEX-FLOW)
+    if (fieldUpdates && isStage1) {
+      function getFieldValue(key: string): unknown {
+        const parts = key.split('.')
+        if (parts.length === 1) return (idea as Record<string, unknown>)[key]
+        const [section, ...rest] = parts
+        const sectionVal = (idea as Record<string, unknown>)[section]
+        if (!sectionVal || typeof sectionVal !== 'object') return undefined
+        return rest.reduce<unknown>((obj, k) => (obj as Record<string, unknown>)?.[k], sectionVal)
+      }
+      const currentTargetIndex = FIELD_SEQUENCE.findIndex(field => {
+        const value = getFieldValue(field.key)
+        return !value || (typeof value === 'string' && value.trim().length === 0)
+      })
+      if (currentTargetIndex !== -1) {
+        const rejectedFields: string[] = []
+        for (const key of Object.keys(fieldUpdates)) {
+          const fieldIndex = FIELD_SEQUENCE.findIndex(f => f.key === key)
+          if (fieldIndex !== -1 && fieldIndex > currentTargetIndex) {
+            console.log(`[V2-LEX-FLOW] Out-of-sequence update rejected: field=${key}, currentTarget=${FIELD_SEQUENCE[currentTargetIndex].key}`)
+            rejectedFields.push(key)
+          }
+        }
+        if (rejectedFields.length > 0) {
+          for (const key of rejectedFields) delete fieldUpdates[key]
+          const currentTargetLabel = FIELD_SEQUENCE[currentTargetIndex].label
+          const rejectedLabel = rejectedFields.join(', ')
+          systemNote = `NOTE: The previous response attempted to write to field '${rejectedLabel}' but the current target field is '${currentTargetLabel}'. Please ask about '${currentTargetLabel}' in your next response.`
+        }
+      }
     }
 
     // Persist direct Idea fields from fieldUpdates to DB (V2F-A1 fix)
@@ -945,6 +995,7 @@ export async function POST(req: Request, { params }: Params) {
       ...chatHistory,
       { role: 'user', content: message, timestamp: new Date().toISOString() },
       { role: 'lex', content: displayText, timestamp: new Date().toISOString() },
+      ...(systemNote ? [{ role: 'system', content: systemNote, timestamp: new Date().toISOString() }] : []),
     ].slice(-40)
 
     await prisma.idea.update({
@@ -966,7 +1017,7 @@ export async function POST(req: Request, { params }: Params) {
       },
     })
 
-    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals, fieldProposal, userAdditionalNotes }
+    return { displayText, fieldUpdates, triggerSavePrompt, pendingProposals, fieldProposal, userAdditionalNotes, systemNote }
   }
 
   const encoder = new TextEncoder()

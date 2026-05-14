@@ -30,3 +30,18 @@ Users can add their own API key for one or more AI providers (OpenAI, Anthropic,
 ## Admin feedback view
 
 A `/admin/feedback` listing page for reviewing and triaging user feedback submissions. Status management (NEW → TRIAGED → RESOLVED / WONTFIX), admin notes, and filtering by type and status. Separate sprint from V2-SUPPORT-TAB — entity is already built.
+
+---
+
+## Funding-route guidance for non-legislative ideas
+
+Many policy proposals require new money or reallocation rather than (or in addition to) statutory change. The platform should be able to recognise this and surface the relevant non-legislative pathways:
+
+- Departmental Spending Review bids
+- Estimates / Supply and Appropriation Bill line items
+- Departmental Annual Report and Accounts
+- HM Treasury "Green Book" appraisal requirements
+
+First step: an information page explaining the funding pathways for users whose ideas need money rather than (or as well as) law. Later: ingest Spending Review documents and Departmental Annual Reports into a parallel corpus to enable Lex to reference current departmental spending and identify realistic funding routes.
+
+**Target:** design after V2-LEX-FLOW-AND-LEGPANEL ships.
