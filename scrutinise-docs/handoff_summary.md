@@ -1,16 +1,92 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 30 April 2026 v41*
+*Last updated: 14 May 2026 v44*
 
 ***
 
-## CURRENT STATE — SPRINT V2.75-I COMPLETE ✓
+## CURRENT STATE — V2.76-B COMPLETE ✓ | PHASE 3B (COUNT_DIFF) AWAITING DECISION
 
-**This section supersedes everything below. The V2L commit summary that follows is preserved as historical context but does not reflect current working state.**
+**This section supersedes everything below. Sections below are preserved as historical context.**
 
 ### What is happening right now
 
-Charlie is leaving for 4 days early on 26 April 2026. V2.75 is an architectural reset triggered by three failures discovered after V2L's full-corpus ingest had been running for \~24 hours.
+V2.76-B Phase 3A is complete. Companies Act 2006 is now fully ingested (1,665 sections in Railway + R2). 1,077 PATCH_GAPS sections patched across 316 acts. 9,043 print-only acts marked `PRINT_ONLY` in Railway. Schema updated with `CompilationStatus.PRINT_ONLY`.
+
+Next decision needed: Phase 3B — COUNT_DIFF treatment for 1,146 acts where bulk has more sections than Railway (bulk is always the superset). Options: (A) full re-ingest from bulk; (B) additive top-up only; (C) defer to V2.76-C.
+
+### Sprints since V2.75-I (all committed and pushed)
+
+| Sprint | Commit | What shipped |
+|--------|--------|------|
+| V2-HOMEPAGE-RESTRUCTURE | 05836df | Copy restructure, block reorder |
+| V2-HOMEPAGE-RESTRUCTURE-2 | 5c6576b | Hero width, Five Steps title, copy edit |
+| V2-HOMEPAGE-RESTRUCTURE-3 | d685b93 | Networking paragraph, MPs copy, bullet alignment |
+| V2-SUPPORT-TAB | 196387f | Training→Support tab; FAQs; Feedback; How does this work? button fix |
+| V2-LEX-FLOW-AND-LEGPANEL | fd3993e | Lex field-sequence guard (A1/A2/A3); LegislationPanel pulse/trigger fixes (B); Legislation nav gated to admin |
+| V2.76-A homepage | f1404be | Not-for-profit non-partisan hero copy; Who is it for? bullet indent |
+| V2.76-A Phase 1 (extended) | (this commit) | Bulk data inventory Sections 1–13 + 14–17 (EN, InForce, coverage, UKSI); corpus categorisation in handoff |
+| V2.76-B Phase 1–4 | (this commit) | Bulk ZIP download + verification; manifest; reconciliation; FULL_INGEST Companies Act 2006; PATCH_GAPS 316 acts; PRINT_ONLY 9,043 acts |
+
+### V2.76-A Phase 1 key findings (original + extended)
+
+- Site: `research.legislation.gov.uk` — HTTP Basic Auth (`research` / `n3w_s!te`)
+- Best Collection XML: 1.32 GB (best available version of all 350,557 documents), updated daily
+- Amendment bulk XML: same schema as TNA Changes API, per-type per-year ZIPs — but **6 months stale** (Oct 2025 latest)
+- **Companies Act 2006:** `Revised Current English: Yes` in bulk — resolves HTTP 202 issue from per-section ingest
+- **Explanatory Notes:** NOT in bulk. Separate document at `/{type}/{year}/{num}/notes/data.xml`. Root element `<EN>` with `en.xsd` schema. Public endpoint (no auth). Scope: 1988+ primary legislation. Must be fetched per-act. Target: Phase 3 ingest pass.
+- **InForce Dataset granularity:** Act-level only for modern UKPGA (Equality Act 2010 = 1 row). Section-level only for ancient AEP surviving provisions. Jurisdiction-specific repeal codes exist (`repealedEWBy`, `NIUnknownStatus` etc.) but only for repeal end-state — NOT for partial commencement. No commencement order cross-references. `Prosp` status correctly flags 5 acts with Royal Assent but no commencement order yet. **For NI partial-enactment: use Effects XML** (`InForceDates` + `AffectingEffectsExtent` in amendments data), not InForce Dataset.
+- **Historical coverage:** 7,634 of 12,020 UKPGA (64%) are print/PDF-only — no XML, not solved by bulk download. 4,386 (36%) have machine-readable XML. By era: 1988+ = 100%, 1901–87 = 38%, 1800s = 16%, pre-1800 = AEP type not UKPGA. The bulk download solves the 202-failing modern acts (Companies Act 2006 class) but does NOT solve the historical print-only problem. 7,634 should be marked permanently excluded from XML ingest.
+- **UKSI in bulk:** ALL 108,798 UKSI are in Best Collection. Per-type sub-downloads confirmed 404 (monolithic ZIP only). Devolved: NIA 95%, ASP 99%, ANAW 100% Revised Current. UKSI only 8% (SIs are superseded not revised — normal). No Explanatory Notes equivalent for secondary legislation.
+- Full details: `scrutinise-docs/V2.76_bulk_data_inventory.md`
+
+### V2.76-B — complete (14 May 2026)
+
+**Railway state after V2.76-B Phase 3A:**
+
+| Metric | Before | After |
+|--------|--------|-------|
+| LegislationItem total | 11,768 | 11,768 |
+| Items with section data | 4,340 | **4,341** (+1 Companies Act 2006) |
+| Total LegislationSection rows | 168,970 | **170,635** (+1,665) |
+| tnaXml only | 29,164 | **31,932** (+2,768) |
+| NEITHER key | 21,850 | **20,747** (−1,103 resolved) |
+| PRINT_ONLY items | 0 | **9,043** |
+
+**What was done:**
+- Bulk archive (1.32 GB, MD5: F9BEE248B5235CDA06C9373EBA6DD587) downloaded and verified
+- Manifest: 4,407 UKPGA acts indexed from ZIP
+- Cross-check: 2,750 in bulk+Railway; 1,657 NEW_TO_RAILWAY; 9,043 PRINT_ONLY
+- Companies Act 2006: 1,665 sections created in Railway, all R2 `.tna.xml` keys written
+- PATCH_GAPS (316 acts): 1,077 neither-key sections patched with bulk XML keys; 639 unmatched (likely repealed sections)
+- PRINT_ONLY: 9,043 LegislationItem rows marked `compilationStatus = PRINT_ONLY`
+- Schema: `CompilationStatus.PRINT_ONLY` added to enum + pushed to Railway
+
+**Still deferred (Phase 3B decision needed):**
+- COUNT_DIFF: 1,146 acts where bulk has more sections than Railway (bulk always superset). Options: full re-ingest, additive top-up, or defer to V2.76-C.
+- NEW_TO_RAILWAY: 1,657 acts in bulk but not in Railway (regnal-era + 6 × 2026 acts) — requires schema decision.
+
+**Scripts in `scripts/legislation/v276-bulk/`:**
+- `phase2-db-counts.ts`, `phase2-bulk-p1groups.ps1`, `phase2-categorise.ts` — Phase 2 reconciliation
+- `phase3a-zip-helper.ps1`, `phase3a-patch-gaps.ts`, `phase3a-print-only.ts` — Phase 3A ingest
+- `phase4-verify.ts` — verification
+- `sample-comparison.md` — Phase 2 report (human-readable)
+- `manifest-ukpga.json`, `reconcile-results.json` — reference data (committed)
+- `best-collection-xml.zip` — gitignored (1.32 GB); re-downloadable via `research.legislation.gov.uk`
+
+### Other pending manual steps
+
+- `npx prisma db push` on Railway for Feedback table (V2-SUPPORT-TAB — schema was pushed locally but Railway needs manual run)
+- A4 acceptance test for V2-LEX-FLOW: walk through fresh Stage 1 idea to verify all 3 Lex field-sequence bugs are fixed
+
+---
+
+## HISTORICAL — SPRINT V2.75-I COMPLETE ✓ (30 April 2026)
+
+**This section supersedes everything below. The V2L commit summary that follows is preserved as historical context but does not reflect current working state.**
+
+### What happened in V2.75
+
+Charlie left for 4 days on 26 April 2026. V2.75 was an architectural reset triggered by three failures discovered after V2L's full-corpus ingest had been running for \~24 hours.
 
 **The three failures (24 April 2026):**
 
@@ -112,12 +188,31 @@ Check done: look for "Corpus complete" in log, then `pm2 status` should show sto
 
 **`commit-all.sh` ready** at project root (per Section 12 — execute then delete).
 
-### Sprint phasing — strategic priorities post-trip
+### Corpus categorisation — strategic decision (14 May 2026)
 
-1.  **Phase 1 (now):** legislation.gov.uk corpus — primary, secondary, amendments. UKPGA, UKSI, ASP, ANAW, NIA, NISI, UKLA, historic acts.
-2.  **Phase 2+3 (combined post-trip):** scraping workstreams — HMRC manuals, BAILII case law, FCA Handbook, PRA Rulebook, CMA decisions, other regulator codes. Finance/tax content prioritised first.
-3.  **Phase 4:** Cabinet Office codes (Ministerial Code, Civil Service Code), professional codes, ACAS guidance.
-4.  **Phase 5:** Hansard, bills-in-progress.
+Charlie has defined three corpus categories along user-intent lines. This supersedes the previous Phase 1–5 engineering sub-phase list (which now organises within these categories).
+
+| Corpus | What it contains | Source infrastructure | Status |
+|--------|-----------------|----------------------|--------|
+| **Legislative Corpus** | Statutes, SIs, devolved equivalents, amendments, commencement, Explanatory Notes | legislation.gov.uk + research.legislation.gov.uk bulk | **Active — V2.75-H ingesting, V2.76-A Phase 2 pending** |
+| **Financial Corpus** | Estimates, Spending Reviews, Departmental Annual Reports, PESA, HM Treasury Green Book | gov.uk PDFs, parliament.uk — separate ingest infrastructure | Future workstream |
+| **Operational Corpus** | Departmental policy papers, Cabinet Office codes, regulator codes, HMRC manuals, Hansard ministerial statements | Gov.uk, regulators — scraping workstreams | Future workstream |
+
+### Sprint phasing within corpus categories
+
+**Legislative Corpus sub-phases:**
+
+1. **V2.75-H (done):** Per-section ingest — UKPGA, enacted + current XML, effects feed. 12,009 acts processed.
+2. **V2.76-A Phase 2 (pending approval):** Bulk Best Collection download — patch Companies Act 2006 class (HTTP 202 failures); backfill historical enacted text (794+ 1800s + 2,019 1900–87 acts with Encoded ePublished). Mark 7,634 print-only permanently excluded.
+3. **V2.76-B (future):** Extend to UKSI, ASP, NIA, ANAW, NISI — same three-layer ingest (enacted + current + effects). Use bulk download for initial load.
+4. **V2.76-C (future):** Explanatory Notes ingest — fetch `/notes.xml` per act for 1988+ primary legislation (~12,009 acts). Phase 3 of Legislative Corpus.
+5. **V2.76-D (future):** Amendment-aware compiler — apply Effects feed data against `.original.xml` + `.tna.xml` per section. Deterministic compilation for Jaccard scoring.
+
+**Financial Corpus sub-phases (future):** Estimates, Departmental Annual Reports, PESA, Green Book. New ingest infrastructure (PDF extraction, not CLML). Separate data pipeline.
+
+**Operational Corpus sub-phases (future):** HMRC manuals, BAILII case law, FCA Handbook, PRA Rulebook, CMA decisions, Cabinet Office codes, professional codes, Hansard. Primarily scraping workstreams. Most of the old Phase 2+3+4+5 list maps here.
+
+**Note on old Phase list:** The previous "Phase 1 (legislation) / Phase 2+3 (scraping) / Phase 4 (codes) / Phase 5 (Hansard)" ordering is subsumed by the ternary categorisation above. Phase 2+3 scraping maps to Operational Corpus; Phase 4 codes map to Operational Corpus; Phase 5 Hansard spans all three.
 
 ***
 

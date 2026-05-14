@@ -1,6 +1,97 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 30 April 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 14 May 2026*
+
+***
+
+## CODE CHANGES — 14 May 2026 Sprint V2.76-B (Bulk Corpus Download, Correction, Verification)
+
+### V2.76-B: Best Collection bulk ingest — Phase 3A complete
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `PRINT_ONLY` to `CompilationStatus` enum. Pushed to Railway. |
+| `scripts/legislation/check-state.ts` (NEW) | Railway DB state diagnostic script |
+| `scripts/legislation/check-reconcile.ts` (NEW) | Cross-check bulk manifest vs Railway; produces `reconcile-results.json` |
+| `scripts/legislation/v276-bulk/phase2-db-counts.ts` (NEW) | Query Railway section counts for in-bulk acts |
+| `scripts/legislation/v276-bulk/phase2-bulk-p1groups.ps1` (NEW) | Count P1groups from ZIP for all in-bulk acts |
+| `scripts/legislation/v276-bulk/phase2-categorise.ts` (NEW) | Merge DB + bulk counts → categorise → `sample-comparison.md` |
+| `scripts/legislation/v276-bulk/phase3a-zip-helper.ps1` (NEW) | PowerShell helper: extract named P1groups from ZIP entry via stdin/stdout |
+| `scripts/legislation/v276-bulk/phase3a-patch-gaps.ts` (NEW) | FULL_INGEST (Companies Act 2006) + PATCH_GAPS (316 acts): upload to R2, update Railway |
+| `scripts/legislation/v276-bulk/phase3a-print-only.ts` (NEW) | Mark 9,043 print-only LegislationItems with `compilationStatus = PRINT_ONLY` |
+| `scripts/legislation/v276-bulk/phase4-verify.ts` (NEW) | Phase 4 verification spot-checks (PRINT_ONLY count, R2 existence, neither-key delta) |
+| `scripts/legislation/v276-bulk/build-manifest.ts` (NEW) | TypeScript manifest builder (reference; PowerShell version used in practice) |
+| `scripts/legislation/v276-bulk/sample-comparison.md` (NEW) | Phase 2 reconciliation report |
+| `scripts/legislation/v276-bulk/manifest-ukpga.json` (NEW) | 4,407-act UKPGA manifest from bulk ZIP |
+| `scripts/legislation/v276-bulk/reconcile-results.json` (NEW) | Cross-check results: categories + actId lists |
+| `.gitignore` | Added `v276-bulk/extracted/`, `best-collection-xml.zip`, and 4 large intermediate JSON files |
+| `scrutinise-docs/handoff_summary.md` | Updated to v44: V2.76-B complete; Railway state delta table; deferred items |
+| `scrutinise-docs/CHANGE_LOG.md` | This entry |
+
+**Results:**
+- Companies Act 2006: 1,665 sections created in Railway + R2 (`ukpga/2006/46/sections/{N}.tna.xml`)
+- PATCH_GAPS: 1,077 of ~1,716 neither-key sections patched; 639 unmatched (likely repealed sections absent from revised bulk)
+- PRINT_ONLY: 9,043 LegislationItem rows marked permanently excluded
+- NEITHER-key sections: 21,850 → 20,747 (−1,103)
+- Schema: `CompilationStatus.PRINT_ONLY` added + Railway pushed
+
+**Deferred:** COUNT_DIFF (1,146 acts) and NEW_TO_RAILWAY (1,657 acts) — await Phase 3B decision.
+
+**tsc clean. All changes to be committed via commit-all.sh.**
+
+---
+
+## CODE CHANGES — 14 May 2026 Sprint V2.76-A (Bulk Data Discovery — Extended Phase 1)
+
+### V2.76-A: research.legislation.gov.uk Phase 1 inventory (original + extended)
+
+Phase 1 extended discovery sprint — no code changes, no DB changes, no ingest modifications.
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-docs/V2.76_bulk_data_inventory.md` (NEW, extended) | Full Phase 1 inventory: access verification, dataset map, amendment XML schema, Companies Act 2006 confirmation, download order, size estimates, gotchas, Phase 2 plan + Sections 14–17: Explanatory Notes, InForce granularity, historical coverage, UKSI/devolved scope |
+| `.gitignore` | Added `scripts/legislation/v276-samples/` — local discovery artefacts (large CSVs/XML), not committed |
+| `scrutinise-docs/handoff_summary.md` | Updated to v43: extended Phase 1 findings + corpus categorisation (Legislative / Financial / Operational) + sprint phasing within categories |
+
+**Original Phase 1 key findings:**
+
+- Credentials `research` / `n3w_s!te` confirmed working (HTTP Basic Auth on all download paths)
+- Dataset A — Legislative Texts: 6 version-datasets × 6 formats. Best Collection XML: 1.32 GB. Updated daily.
+- Dataset B — Amendments: 29 legislation types × per-year ZIPs. Same XML format as TNA Changes API but bulk pre-paginated. **6 months stale** (Oct 2025 latest).
+- Dataset C — Statute Book Metadata: Legislation on Website CSV 350,557 rows (daily); InForce CSVs back to 1235.
+- **Companies Act 2006:** `Revised Current English: Yes` in bulk CSV — resolves HTTP 202 problem.
+
+**Extended Phase 1 key findings (14 May 2026):**
+
+- **Explanatory Notes:** NOT in bulk. Separate document at `/{type}/{year}/{num}/notes/data.xml`. Root element `<EN>`, schema `en.xsd`. Public endpoint (no auth). Scope: 1988+ primary. Must be fetched per-act in a dedicated pass. Root element is `<ExplanatoryNotes>` → `<ENprelims>` + `<Body>` → `<Division>` paragraphs.
+- **InForce Dataset granularity:** Act-level for modern UKPGA. Section-level only for ancient AEP surviving provisions. Jurisdiction-specific repeal codes exist but only for repeal end-state. No commencement order cross-references. For NI partial-enactment: use Effects XML (`InForceDates` + `AffectingEffectsExtent`).
+- **Historical UKPGA coverage:** 7,634 of 12,020 (64%) are print/PDF-only — no XML, NOT solved by bulk. 1988+ = 100% XML; 1901–87 = 38%; 1800s = 16%. Bulk DOES solve 202-failing modern acts and adds 2,813 historical acts with Enacted ePublished digital text. 7,634 print-only to be marked permanently excluded.
+- **UKSI in bulk:** ALL 108,798 UKSI in Best Collection. Per-type sub-downloads = 404 (monolithic ZIP only). Devolved: NIA 95%, ASP 99%, ANAW 100% Revised Current.
+- **Corpus categorisation decision:** Three corpora defined — Legislative (legislation.gov.uk + bulk), Financial (gov.uk PDFs), Operational (HMRC, BAILII, regulators, Hansard).
+
+**Phase 2 status:** AWAITING CHARLIE APPROVAL. Do not bulk-download. Do not modify PM2 ingest. Do not modify DB.
+
+---
+
+## CODE CHANGES — 14 May 2026 Sprint V2-LEX-FLOW-AND-LEGPANEL + V2.76-A Homepage
+
+### V2-LEX-FLOW-AND-LEGPANEL: Lex field sequence + LegislationPanel
+
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/api/ai/[ideaId]/route.ts` | A1: FIELD SEQUENCE — ABSOLUTE RULES section in `buildSystemPrompt`; A2: out-of-sequence write guard in `applyFieldUpdatesAndSave` (rejects writes to fields ahead of current target, injects self-correction system note); A3: removed standalone summary-turn encouragement |
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | B: `pulseLegButton` state; `searchLegislation` no longer auto-opens panel; Moment 2 field key fixed (`summaryDiagnosis`/`diagnosis.text`); Moment 3 triggers 2s pulse on both Legislation buttons |
+| `scrutinise-web/components/PublicNav.tsx` | Legislation nav link gated to `isAdmin` (desktop + mobile) |
+| `scrutinise-docs/roadmap.md` | Funding-route guidance entry added |
+
+### V2.76-A: Homepage copy + indentation
+
+| File | Change |
+|------|--------|
+| `scrutinise-web/app/page.tsx` | Hero paragraph changed to "not-for-profit, non-partisan…" copy |
+| `scrutinise-web/app/page.tsx` | Who is it for? bullet `<ul>` — added `pl-4` (indent bullets one tab) |
+
+**tsc clean. All changes committed and pushed to Main.**
 
 ***
 
