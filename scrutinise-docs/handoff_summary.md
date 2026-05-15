@@ -1,16 +1,89 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 15 May 2026 v46*
+*Last updated: 15 May 2026 v48*
 
 ***
 
-## CURRENT STATE — V.3-A COMPLETE ✓ | NEXT: V.3-B (FCA Handbook or Operational Corpus expansion)
+## CURRENT STATE — V.3-B IN PROGRESS | Phase 2 (pilot) COMPLETE ✓ | Awaiting Phase 3 approval
 
 **This section supersedes everything below. Sections below are preserved as historical context.**
 
 ### What is happening right now
 
-Sprint V.3-A (HMRC Tax Manuals Pilot + Operational Corpus Framework) is complete. Three HMRC internal manuals are ingested into Railway and R2. The `OperationalDocument` / `OperationalSection` schema is live on Railway. The `DocumentSourceType` enum (7 values) is in place. Framework design doc written.
+Sprint V.3-B (UKSI Bulk Ingest) is in progress. Phase 1 (pipeline review) ✓, Phase 1.5 (pre-flight) ✓, Phase 2 (100-UKSI pilot + verification) ✓.
+
+**Phase 3 (full 61,179-item ingest) requires explicit Charlie + CCh approval before CC runs `--full` mode.**
+
+### V.3-B Phase 2 pilot results (15 May 2026)
+
+**Pilot outcome:**
+
+| Metric | Count |
+|--------|-------|
+| LegislationItem rows created | 100 |
+| LegislationSection rows created | 1,041 |
+| R2 objects written | 1,041 |
+| → tnaXmlKey (revised-current) | 393 |
+| → originalXmlKey (made/enacted) | 648 |
+| Zero-section items | 0 |
+| Errors (final state) | 0 |
+
+**Verification results:**
+
+| Check | Result |
+|-------|--------|
+| Railway integrity (type, tier, jurisdiction, yearRaw, sectionCount, UKPGA baseline) | **PASS** ✓ |
+| R2 spot-check (30 sections: 15 RC + 15 made) | **PASS** ✓ 30/30 |
+| Web cross-check (10 UKSI vs TNA) | 1/10 exact, advisory — see pilot report |
+| Title decoding (10 sample titles) | **PASS** ✓ |
+
+**Bugs found and fixed:**
+1. Duplicate `<Pnumber>` in 18 CLML files → unique constraint error → fixed with `seenSectionNumbers` Set
+2. `sectionCount` set to pre-dedup count → fixed to `seenSectionNumbers.size`; 18 Railway rows reconciled
+3. Verify script R2 band used array position → fixed to use manifest versionMap
+4. Verify script web check used wrong CSS class → fixed to `Leg(Article|Rule|...)No` pattern
+
+**Phase 3 estimate:** ~3.5 hours, ~637,000 sections, ~620,000 R2 writes. No schema changes needed.
+
+### V.3-B Phase 1.5 results (15 May 2026)
+
+**Schema shipped:**
+- `yearRaw String?` added to `LegislationItem` — nullable, backfilled for all UKSI rows during ingest
+- `prisma db push` + `prisma generate` complete; Railway confirmed
+
+**Key manifest findings (`scripts/legislation/v3b-uksi/manifest-uksi.json`):**
+
+| Finding | Value | Impact |
+|---------|-------|--------|
+| UKSI with XML in bulk ZIP | **61,179** | Phase 3 will process this count, not 108,798 |
+| Revised-current | **8,796** (14.4%) | → `tnaXmlKey` |
+| Made / enacted | **52,383** (85.6%) | → `originalXmlKey` |
+| PDF-only (not in ZIP) | **~47,619** (43.8%) | Deferred to V.3-H — no in-ZIP flag |
+| Year formats | **All integers** (1948–2026) | `yearRaw` = string integer, no complex parsing |
+| Zero-section SIs in ZIP | **~0** (0/300 sampled) | Defensive code only; rarely triggers |
+
+### V.3-B files produced (Phase 1.5 + Phase 2)
+
+- `scripts/legislation/v3b-uksi/build-manifest-uksi.ps1` — ZIP enumerator
+- `scripts/legislation/v3b-uksi/build-manifest-uksi.ts` — TypeScript wrapper
+- `scripts/legislation/v3b-uksi/manifest-uksi.json` — generated manifest (gitignored, 61,179 entries)
+- `scripts/legislation/v3b-uksi/zip-helper-uksi.ps1` — CLML extractor (title + P1group/P1 fallback)
+- `scripts/legislation/v3b-uksi/key-helper.ts` — version-aware R2 key selection
+- `scripts/legislation/v3b-uksi/phase3-uksi-ingest.ts` — main ingest (pilot + full modes)
+- `scripts/legislation/v3b-uksi/phase4-verify-uksi.ts` — 4-check verifier (with pre-flight reconciliation)
+- `scripts/legislation/v3b-uksi/cleanup-errors.ts` — one-off cleanup (served its purpose; delete before commit)
+- `scrutinise-docs/v3b_pipeline_review.md` — Phase 1 pipeline review
+- `scrutinise-docs/v3b_uksi_manifest_findings.md` — Phase 1.5 findings
+- `scrutinise-docs/v3b_pilot_report.md` — Phase 2 pilot report ← READ FOR FULL DETAIL
+
+**Next action:** Charlie + CCh approve Phase 3 (`--full` mode). CC runs `phase3-uksi-ingest.ts --full`.
+After Phase 3, CC runs verify, updates handoff, writes commit-all.sh.
+
+---
+
+---
+
+## HISTORICAL — V.3-A COMPLETE ✓ (15 May 2026)
 
 **Railway DB size after V.3-A: still 250 MB (0.244 GB)** — R2 stores all HTML and text; only 1 000-char FTS excerpts in Railway. Well clear of 4.5 GB alert threshold.
 
@@ -39,7 +112,7 @@ All 90 `OperationalSection` rows carry `sourceType = ADMINISTRATIVE_GUIDANCE`. `
 - `OperationalSection` model — new (Section 15 of schema)
 - All pushed to Railway via `prisma db push`
 
-**Flag for CCh:** The CCh correction specified the new enum as `SourceType`, but the schema already had `enum SourceType { ACADEMIC | GOVERNMENT | NEWS | CASE_STUDY | LEGISLATION | OTHER }` on `Research` and `Evidence`. CC renamed the new enum to `DocumentSourceType` to avoid a Prisma P1012 collision. CCh should confirm `DocumentSourceType` is the intended permanent name, or propose an alternative before V.3-B adds more references.
+**Naming decision — `DocumentSourceType` vs `sourceType`:** Enum named `DocumentSourceType` (not `SourceType`) to avoid collision with the existing `SourceType` enum used by `Research` and `Evidence` models. Field on all models is `sourceType`. Field name describes the column; enum name describes the type it draws from. This is the permanent name — do not rename without updating all four model definitions.
 
 ### New scripts produced in V.3-A
 
