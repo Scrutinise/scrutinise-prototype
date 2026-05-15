@@ -54,3 +54,15 @@ scripts/legislation/v276-bulk/phase2-db-counts.json
 scripts/legislation/v276-bulk/phase2-bulk-p1groups.json
 scripts/legislation/v276-bulk/phase2-results.json
 scripts/legislation/v276-bulk/phase3a-progress.json
+
+# V2.76-B runtime state
+scripts/legislation/v276-bulk/phase3b-progress.json
+
+# V.3-A operational state (runtime artifacts)
+scripts/operational/hmrc-checkpoint.json
+scripts/operational/hmrc-pilot-log.csv
+
+# V.3-B UKSI — large manifest and intermediate data files (regenerable from scripts)
+scripts/legislation/v3b-uksi/manifest-uksi.json
+scripts/legislation/v3b-uksi/phase3-uksi-progress.json
+scripts/legislation/v3b-uksi/pilot-log.csv
