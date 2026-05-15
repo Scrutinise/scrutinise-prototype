@@ -1,8 +1,38 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 14 May 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 15 May 2026*
 
 ***
+
+## CODE CHANGES — 15 May 2026 Sprint V2.76-B Phase 3B + Verification (COUNT_DIFF top-up, closes V2.76-B)
+
+### V2.76-B Phase 3B: COUNT_DIFF additive top-up + Phase 4 verification
+
+| Item | Detail |
+|------|--------|
+| `scripts/legislation/v276-bulk/phase3b-count-diff.ts` (NEW) | Additive top-up for 1,146 COUNT_DIFF acts: skip already-keyed sections, update neither-key sections, create genuinely missing rows. Checkpoint/resume every 20 acts. |
+| `scripts/legislation/v276-bulk/phase4-verify.ts` (UPDATED) | Extended to cover Phase 3A + 3B: corpus overview, key coverage stats, Companies Act 2006 R2 spot-check, retry act verification, 20-act random spot-check, full delta summary table. |
+| `scrutinise-docs/handoff_summary.md` | Updated to v45: V2.76-B fully complete; final Railway state delta table; Phase 3B results; verification findings; deferred items updated |
+| `scrutinise-docs/CHANGE_LOG.md` | This entry |
+
+**Phase 3B results:**
+- 1,146 COUNT_DIFF acts processed (additive top-up — never overwrites existing keys)
+- 15,034 Railway row updates, 587 Railway row creates, 121,040 skipped (already keyed)
+- 15,621 R2 writes
+- 4 acts retried after duplicate-P1group bug fix — all clean on retry; 0 errors final
+- Bug fixed: `existingMap` now updated after `create` to handle duplicate P1groups in bulk XML
+
+**Phase 4 verification results (15 May 2026):**
+- PRINT_ONLY: 9,043 ✓ (exact match)
+- Companies Act 2006: 1,665 sections ✓; R2 s.1–s.1000 all present
+- tnaXmlKey sections: 29,164 → **162,785** (+133,621)
+- NEITHER-key sections: 21,850 → **7,208** (−14,642, −67%)
+- tnaXmlKey coverage: ~17% → **95.8%** of all sections
+- 20-act spot-check: 13/20 fully keyed; residual neither-key sections confirmed as repealed provisions absent from revised bulk
+
+**V2.76-B is closed. Next sprint to be decided.**
+
+---
 
 ## CODE CHANGES — 14 May 2026 Sprint V2.76-B (Bulk Corpus Download, Correction, Verification)
 

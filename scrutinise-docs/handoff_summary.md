@@ -1,18 +1,18 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 14 May 2026 v44*
+*Last updated: 15 May 2026 v45*
 
 ***
 
-## CURRENT STATE — V2.76-B COMPLETE ✓ | PHASE 3B (COUNT_DIFF) AWAITING DECISION
+## CURRENT STATE — V2.76-B FULLY COMPLETE ✓ | NEXT: V2.76-C (Explanatory Notes or NEW_TO_RAILWAY decision)
 
 **This section supersedes everything below. Sections below are preserved as historical context.**
 
 ### What is happening right now
 
-V2.76-B Phase 3A is complete. Companies Act 2006 is now fully ingested (1,665 sections in Railway + R2). 1,077 PATCH_GAPS sections patched across 316 acts. 9,043 print-only acts marked `PRINT_ONLY` in Railway. Schema updated with `CompilationStatus.PRINT_ONLY`.
+V2.76-B is fully complete (Phase 3A + Phase 3B + Phase 4 verification). The bulk ingest sprint is closed. NEITHER-key sections reduced from 21,850 to 7,208 (−14,642, −67%). tnaXmlKey coverage now at 95.8% of all sections. The 7,208 residual are sections absent from TNA's revised current bulk (repealed/removed from current text) — irreducible from this source.
 
-Next decision needed: Phase 3B — COUNT_DIFF treatment for 1,146 acts where bulk has more sections than Railway (bulk is always the superset). Options: (A) full re-ingest from bulk; (B) additive top-up only; (C) defer to V2.76-C.
+Next sprint options: (A) V2.76-C — Explanatory Notes ingest (fetch `/notes.xml` per act for 1988+ primary legislation); (B) NEW_TO_RAILWAY — 1,657 regnal-era + 2026 acts in bulk not yet in Railway (schema decision needed); (C) switch to Financial Corpus or product work.
 
 ### Sprints since V2.75-I (all committed and pushed)
 
@@ -24,8 +24,9 @@ Next decision needed: Phase 3B — COUNT_DIFF treatment for 1,146 acts where bul
 | V2-SUPPORT-TAB | 196387f | Training→Support tab; FAQs; Feedback; How does this work? button fix |
 | V2-LEX-FLOW-AND-LEGPANEL | fd3993e | Lex field-sequence guard (A1/A2/A3); LegislationPanel pulse/trigger fixes (B); Legislation nav gated to admin |
 | V2.76-A homepage | f1404be | Not-for-profit non-partisan hero copy; Who is it for? bullet indent |
-| V2.76-A Phase 1 (extended) | (this commit) | Bulk data inventory Sections 1–13 + 14–17 (EN, InForce, coverage, UKSI); corpus categorisation in handoff |
-| V2.76-B Phase 1–4 | (this commit) | Bulk ZIP download + verification; manifest; reconciliation; FULL_INGEST Companies Act 2006; PATCH_GAPS 316 acts; PRINT_ONLY 9,043 acts |
+| V2.76-A Phase 1 (extended) | ff8961f | Bulk data inventory Sections 1–13 + 14–17 (EN, InForce, coverage, UKSI); corpus categorisation in handoff |
+| V2.76-B Phase 1–4 | 555ff96 | Bulk ZIP download + verification; manifest; reconciliation; FULL_INGEST Companies Act 2006; PATCH_GAPS 316 acts; PRINT_ONLY 9,043 acts |
+| V2.76-B Phase 3B + verification | (this commit) | COUNT_DIFF additive top-up (1,146 acts); Phase 4 verification; NEITHER-key 21,850→7,208 |
 
 ### V2.76-A Phase 1 key findings (original + extended)
 
@@ -39,36 +40,52 @@ Next decision needed: Phase 3B — COUNT_DIFF treatment for 1,146 acts where bul
 - **UKSI in bulk:** ALL 108,798 UKSI are in Best Collection. Per-type sub-downloads confirmed 404 (monolithic ZIP only). Devolved: NIA 95%, ASP 99%, ANAW 100% Revised Current. UKSI only 8% (SIs are superseded not revised — normal). No Explanatory Notes equivalent for secondary legislation.
 - Full details: `scrutinise-docs/V2.76_bulk_data_inventory.md`
 
-### V2.76-B — complete (14 May 2026)
+### V2.76-B — fully complete (15 May 2026)
 
-**Railway state after V2.76-B Phase 3A:**
+**Railway state — final post-V2.76-B (Phase 3A + 3B + verification):**
 
-| Metric | Before | After |
-|--------|--------|-------|
-| LegislationItem total | 11,768 | 11,768 |
+| Metric | Pre-V2.76-B | Post-V2.76-B |
+|--------|-------------|--------------|
+| LegislationItem total | 11,768 | **11,768** |
 | Items with section data | 4,340 | **4,341** (+1 Companies Act 2006) |
-| Total LegislationSection rows | 168,970 | **170,635** (+1,665) |
-| tnaXml only | 29,164 | **31,932** (+2,768) |
-| NEITHER key | 21,850 | **20,747** (−1,103 resolved) |
+| Total LegislationSection rows | 168,970 | **171,346** (+2,376) |
+| tnaXmlKey sections | 29,164 | **162,785** (+133,621) |
+| NEITHER-key sections | 21,850 | **7,208** (−14,642, −67%) |
 | PRINT_ONLY items | 0 | **9,043** |
+| tnaXmlKey coverage | ~17% | **95.8%** |
 
-**What was done:**
+**What was done (Phase 3A):**
 - Bulk archive (1.32 GB, MD5: F9BEE248B5235CDA06C9373EBA6DD587) downloaded and verified
 - Manifest: 4,407 UKPGA acts indexed from ZIP
 - Cross-check: 2,750 in bulk+Railway; 1,657 NEW_TO_RAILWAY; 9,043 PRINT_ONLY
 - Companies Act 2006: 1,665 sections created in Railway, all R2 `.tna.xml` keys written
-- PATCH_GAPS (316 acts): 1,077 neither-key sections patched with bulk XML keys; 639 unmatched (likely repealed sections)
+- PATCH_GAPS (316 acts): 1,077 neither-key sections patched; 639 unmatched (likely repealed)
 - PRINT_ONLY: 9,043 LegislationItem rows marked `compilationStatus = PRINT_ONLY`
 - Schema: `CompilationStatus.PRINT_ONLY` added to enum + pushed to Railway
 
-**Still deferred (Phase 3B decision needed):**
-- COUNT_DIFF: 1,146 acts where bulk has more sections than Railway (bulk always superset). Options: full re-ingest, additive top-up, or defer to V2.76-C.
-- NEW_TO_RAILWAY: 1,657 acts in bulk but not in Railway (regnal-era + 6 × 2026 acts) — requires schema decision.
+**What was done (Phase 3B — COUNT_DIFF additive top-up):**
+- 1,146 COUNT_DIFF acts processed (bulk had more P1groups than Railway sections)
+- Approach: additive only — never overwrote existing `tnaXmlKey`
+- 15,034 Railway row updates (missing tnaXmlKey added); 587 new Railway rows created; 121,040 already-keyed skipped
+- 15,621 R2 writes total
+- 4 acts retried after duplicate-P1group bug fix (`ukpga/1968/73`, `1974/37`, `1988/33`, `1992/19`) — all clean on retry
+- `created=0` for nearly all acts confirms bulk is a near-perfect superset of Railway section numbering
+
+**Phase 4 verification (15 May 2026):**
+- PRINT_ONLY: 9,043 ✓
+- Companies Act 2006: 1,665 sections ✓; R2 s.1–s.1000 all OK
+- NEITHER-key: 7,208 residual — sections absent from TNA revised current bulk (repealed/removed); irreducible
+- 20-act spot-check: 13/20 fully keyed; 7/20 partial (residual neither-key sections confirmed to be repealed provisions)
+
+**Still deferred:**
+- NEW_TO_RAILWAY: 1,657 acts in bulk but not in Railway (regnal-era + 6 × 2026 acts) — requires schema decision
+- NEITHER-key residual: 7,208 sections — not fixable from revised bulk; would need enacted/historical source
 
 **Scripts in `scripts/legislation/v276-bulk/`:**
 - `phase2-db-counts.ts`, `phase2-bulk-p1groups.ps1`, `phase2-categorise.ts` — Phase 2 reconciliation
 - `phase3a-zip-helper.ps1`, `phase3a-patch-gaps.ts`, `phase3a-print-only.ts` — Phase 3A ingest
-- `phase4-verify.ts` — verification
+- `phase3b-count-diff.ts` — Phase 3B COUNT_DIFF additive top-up
+- `phase4-verify.ts` — full verification (covers Phase 3A + 3B)
 - `sample-comparison.md` — Phase 2 report (human-readable)
 - `manifest-ukpga.json`, `reconcile-results.json` — reference data (committed)
 - `best-collection-xml.zip` — gitignored (1.32 GB); re-downloadable via `research.legislation.gov.uk`
