@@ -266,7 +266,7 @@ R2 client files:
 
 All git operations in this project are pre-approved for the following conditions:
 
--   cd target is always `D:/Dropbox/GitHub/scrutinise-prototype` or a subdirectory
+-   cd target is always `C:/Code/scrutinise-prototype` or a subdirectory
 -   git commands are limited to: status, add, commit, push, pull, log, branch, checkout
 -   No git fetch or clone from remote URLs other than origin (`https://github.com/Scrutinise/scrutinise-prototype.git`)
 -   Commits use descriptive messages matching sprint naming conventions
@@ -341,7 +341,7 @@ One logical unit of work per commit. Descriptive commit messages matching sprint
 ```bash
 #!/bin/bash
 set -e
-cd D:/Dropbox/GitHub/scrutinise-prototype
+cd C:/Code/scrutinise-prototype
 
 git add [specific files for commit 1]
 git commit -m "commit message 1"

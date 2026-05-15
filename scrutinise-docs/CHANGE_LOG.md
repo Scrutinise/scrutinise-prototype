@@ -4,6 +4,31 @@
 
 ***
 
+## CODE CHANGES — 15 May 2026 Sprint V.3-A (HMRC Tax Manuals Pilot + Operational Corpus Framework)
+
+### V.3-A: Operational Corpus — schema, HMRC pilot ingest, framework doc
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `DocumentSourceType` enum (7 values), `OperationalIngestStatus` enum (4 values). Added `sourceType: DocumentSourceType @default(STATUTE)` to `LegislationItem` and `LegislationSection`. Added `OperationalDocument` and `OperationalSection` models (Section 15). Pushed to Railway via `prisma db push`. |
+| `scripts/operational/hmrc-ingest.ts` (NEW) | HMRC internal manuals scraper: 3 manuals (EIM, CG, CH), rate-limited (1 req/2s), exponential backoff on 429/503, robots.txt check, R2 HTML+text writes, Railway upserts via raw pg, checkpoint/resume, CSV audit log, `--manual=` flag. |
+| `scripts/operational/phase-b-verify.ts` (NEW) | Verification script: Railway counts, sourceType filter check, DB size confirmation. |
+| `scrutinise-docs/operational_corpus_framework_v1.md` (NEW) | Design doc: canonical model, source taxonomy, R2 key scheme, OperationalScraper interface, rate-limiting policy, provenance flags, update strategy, known limitations, next-source priority list. |
+| `scrutinise-docs/handoff_summary.md` | Updated to v46: V.3-A results, Railway state, schema changes, pending items, next sprint options. |
+| `scrutinise-docs/CLAUDE.md` | Fixed two occurrences of `D:/Dropbox/GitHub/scrutinise-prototype` → `C:/Code/scrutinise-prototype` (Section 8 git approval policy + Section 12 `commit-all.sh` example). |
+| `scrutinise-docs/CHANGE_LOG.md` | This entry. |
+
+**V.3-A ingest results (all manuals COMPLETE):**
+- Employment Income Manual: 42 pages, `operational/hmrc/employment-income-manual/{ch}/{slug}.html/.text`
+- Capital Gains Manual: 17 pages, `operational/hmrc/capital-gains-manual/{ch}/{slug}.html/.text`
+- Compliance Handbook: 31 pages, `operational/hmrc/compliance-handbook/{ch}/{slug}.html/.text`
+- Total: 90 OperationalSection rows in Railway; all `sourceType = ADMINISTRATIVE_GUIDANCE`
+- Railway DB size unchanged: 250 MB (0.244 GB) — full text in R2 only
+
+**Flag for CCh — enum name collision:** CCh correction specified new enum as `SourceType` but that name already exists in schema for Research/Evidence. CC renamed to `DocumentSourceType`. CCh to confirm before V.3-B.
+
+---
+
 ## CODE CHANGES — 15 May 2026 Sprint V2.76-B Phase 3B + Verification (COUNT_DIFF top-up, closes V2.76-B)
 
 ### V2.76-B Phase 3B: COUNT_DIFF additive top-up + Phase 4 verification

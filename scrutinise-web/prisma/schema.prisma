@@ -391,6 +391,23 @@ enum CorrectionDecision {
   UNCERTAIN
 }
 
+enum DocumentSourceType {
+  STATUTE                  // UKPGA, UKSI, ASP, NIA, ANAW, NISI, NISR, SSI, WSI
+  STATUTORY_GUIDANCE       // Documents with statutory force but not statutes (FCA Handbook, PRA Rulebook)
+  ADMINISTRATIVE_GUIDANCE  // HMRC manuals, Civil Service Code, departmental policy papers
+  EXPLANATORY              // Explanatory Notes, Impact Assessments, HoC Library briefings
+  PARLIAMENTARY            // Hansard, Bills in progress, Committee reports
+  JUDICIAL                 // BAILII case law
+  FINANCIAL_DOCUMENT       // Estimates, Spending Reviews, Departmental Annual Reports, PESA
+}
+
+enum OperationalIngestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETE
+  FAILED
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 — CORE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1434,6 +1451,7 @@ model LegislationItem {
   year                  Int
   number                Int                 // Chapter number (Acts) or SI number
   jurisdiction          String              // 'UK', 'Scotland', 'Wales', 'NI'
+  sourceType            DocumentSourceType  @default(STATUTE)
   // Source
   legislationGovUkId    String              @unique // e.g. "ukpga/2006/46"
   clmlUrl               String              // URL to bulk CLML XML on legislation.gov.uk
@@ -1476,6 +1494,7 @@ model LegislationSection {
   // Identity
   sectionNumber         String                  // "1", "13E", "172" etc
   sectionTitle          String?
+  sourceType            DocumentSourceType      @default(STATUTE)
   // Text content
   originalText          String?                 // Tag-stripped full-act CLML section text — kept in Railway for FTS
   // R2 pointer keys (V2L-A1, V2.75-H2) — actual text stored in Cloudflare R2
@@ -1641,4 +1660,69 @@ model CoherentActionSection {
 
   @@index([coherentActionId])
   @@index([legislationSectionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 15 — OPERATIONAL CORPUS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Top-level operational document (an HMRC manual, FCA Handbook chapter, etc.)
+model OperationalDocument {
+  id              String                  @id @default(uuid())
+  sourceType      DocumentSourceType      @default(ADMINISTRATIVE_GUIDANCE)
+  // Source identification
+  sourceSlug      String                  // e.g. "employment-income-manual"
+  publisherName   String                  // e.g. "HMRC"
+  title           String
+  description     String?
+  sourceUrl       String                  // canonical URL on gov.uk or regulator site
+  // R2 storage
+  r2Prefix        String                  // e.g. "operational/hmrc/employment-income-manual"
+  // Metadata
+  jurisdiction    String                  @default("UK")
+  // Ingest state
+  ingestStatus    OperationalIngestStatus @default(PENDING)
+  pageCount       Int                     @default(0)
+  lastFetchedAt   DateTime?
+  // Timestamps
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  sections        OperationalSection[]
+
+  @@unique([sourceType, sourceSlug])
+  @@index([sourceType])
+  @@index([ingestStatus])
+}
+
+// Individual page within an operational document
+model OperationalSection {
+  id                      String                  @id @default(uuid())
+  operationalDocumentId   String
+  operationalDocument     OperationalDocument     @relation(fields: [operationalDocumentId], references: [id])
+  sourceType              DocumentSourceType      @default(ADMINISTRATIVE_GUIDANCE)
+  // Identity within the document
+  pageSlug                String                  // e.g. "eim01000" — HMRC page ID or equivalent
+  chapterSlug             String?                 // e.g. "chapter-1-employment-income"
+  pageTitle               String?
+  sourceUrl               String                  // URL of this specific page
+  orderIndex              Int                     @default(0)
+  // R2 pointer keys
+  htmlKey                 String?                 // operational/hmrc/{doc}/{chapter}/{slug}.html
+  textKey                 String?                 // operational/hmrc/{doc}/{chapter}/{slug}.text
+  // FTS content (short excerpt stored in Railway for search — full text in R2 via textKey)
+  extractedText           String?
+  wordCount               Int?
+  // Provenance (Phase C will formalise enum; String for now)
+  extractedBy             String?                 // "html-direct" | "pdf-text" | "pdf-ocr" | "ai-summary"
+  // Ingest state
+  ingestStatus            OperationalIngestStatus @default(PENDING)
+  fetchedAt               DateTime?
+  // Timestamps
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@unique([operationalDocumentId, pageSlug])
+  @@index([operationalDocumentId])
+  @@index([ingestStatus])
 }

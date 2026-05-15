@@ -1,18 +1,67 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 15 May 2026 v45*
+*Last updated: 15 May 2026 v46*
 
 ***
 
-## CURRENT STATE — V2.76-B FULLY COMPLETE ✓ | NEXT: V2.76-C (Explanatory Notes or NEW_TO_RAILWAY decision)
+## CURRENT STATE — V.3-A COMPLETE ✓ | NEXT: V.3-B (FCA Handbook or Operational Corpus expansion)
 
 **This section supersedes everything below. Sections below are preserved as historical context.**
 
 ### What is happening right now
 
-V2.76-B is fully complete (Phase 3A + Phase 3B + Phase 4 verification). The bulk ingest sprint is closed. NEITHER-key sections reduced from 21,850 to 7,208 (−14,642, −67%). tnaXmlKey coverage now at 95.8% of all sections. The 7,208 residual are sections absent from TNA's revised current bulk (repealed/removed from current text) — irreducible from this source.
+Sprint V.3-A (HMRC Tax Manuals Pilot + Operational Corpus Framework) is complete. Three HMRC internal manuals are ingested into Railway and R2. The `OperationalDocument` / `OperationalSection` schema is live on Railway. The `DocumentSourceType` enum (7 values) is in place. Framework design doc written.
 
-Next sprint options: (A) V2.76-C — Explanatory Notes ingest (fetch `/notes.xml` per act for 1988+ primary legislation); (B) NEW_TO_RAILWAY — 1,657 regnal-era + 2026 acts in bulk not yet in Railway (schema decision needed); (C) switch to Financial Corpus or product work.
+**Railway DB size after V.3-A: still 250 MB (0.244 GB)** — R2 stores all HTML and text; only 1 000-char FTS excerpts in Railway. Well clear of 4.5 GB alert threshold.
+
+### V.3-A results
+
+| Manual | Pages ingested | Status | R2 prefix |
+|---|---|---|---|
+| Employment Income Manual | 42 | COMPLETE | `operational/hmrc/employment-income-manual/` |
+| Capital Gains Manual | 17 | COMPLETE | `operational/hmrc/capital-gains-manual/` |
+| Compliance Handbook | 31 | COMPLETE | `operational/hmrc/compliance-handbook/` |
+| **Total** | **90** | | |
+
+All 90 `OperationalSection` rows carry `sourceType = ADMINISTRATIVE_GUIDANCE`. `OperationalDocument` rows marked `COMPLETE`.
+
+**Known limitation in pilot:** `pageTitle` on individual sections shows the manual-level title (e.g. "Employment Income Manual") rather than the section-level heading. gov.uk pages have the specific section heading in a `<h2>` element — refinement needed in V.3-B. Does not affect R2 storage or FTS.
+
+**Note on page counts:** These are top-level index-linked pages only. EIM has ~3,000 total pages — full ingest will need recursive link following. Pilot confirms the pipeline works.
+
+### Schema changes shipped in V.3-A
+
+- `DocumentSourceType` enum (7 values: STATUTE, STATUTORY_GUIDANCE, ADMINISTRATIVE_GUIDANCE, EXPLANATORY, PARLIAMENTARY, JUDICIAL, FINANCIAL_DOCUMENT)
+- `OperationalIngestStatus` enum (PENDING, IN_PROGRESS, COMPLETE, FAILED)
+- `LegislationItem.sourceType: DocumentSourceType @default(STATUTE)` — added
+- `LegislationSection.sourceType: DocumentSourceType @default(STATUTE)` — added
+- `OperationalDocument` model — new (Section 15 of schema)
+- `OperationalSection` model — new (Section 15 of schema)
+- All pushed to Railway via `prisma db push`
+
+**Flag for CCh:** The CCh correction specified the new enum as `SourceType`, but the schema already had `enum SourceType { ACADEMIC | GOVERNMENT | NEWS | CASE_STUDY | LEGISLATION | OTHER }` on `Research` and `Evidence`. CC renamed the new enum to `DocumentSourceType` to avoid a Prisma P1012 collision. CCh should confirm `DocumentSourceType` is the intended permanent name, or propose an alternative before V.3-B adds more references.
+
+### New scripts produced in V.3-A
+
+- `scripts/operational/hmrc-ingest.ts` — HMRC manual scraper (rate-limited, checkpoint/resume, R2 + Railway)
+- `scripts/operational/phase-b-verify.ts` — verification query (Railway counts + sample rows)
+- `scripts/legislation/phase-a-verify.ts` — schema verification (temp, not committed)
+
+### New docs produced in V.3-A
+
+- `scrutinise-docs/operational_corpus_framework_v1.md` — canonical model, scraper interface, rate-limiting policy, provenance flags, update strategy, known limitations, next-source priority list
+
+### Other pending manual steps (carried from v45)
+
+- `npx prisma db push` on Railway for Feedback table (V2-SUPPORT-TAB — schema pushed locally but Railway needs manual run)
+- A4 acceptance test for V2-LEX-FLOW: walk through fresh Stage 1 idea to verify all 3 Lex field-sequence bugs are fixed
+
+### Next sprint options
+
+- **V.3-B** — Operational Corpus expansion: FCA Handbook (`STATUTORY_GUIDANCE`) using their structured API; full EIM ingest (recursive link following); page title refinement
+- **V2.76-C** — Legislative Corpus: Explanatory Notes ingest (fetch `/notes.xml` per act, 1988+ primary legislation)
+- **NEW_TO_RAILWAY** — 1,657 regnal-era + 2026 acts in bulk not yet in Railway (schema decision needed)
+- **Product work** — any of the V2-support-tab or V2-lex-flow acceptance tests
 
 ### Sprints since V2.75-I (all committed and pushed)
 
