@@ -1449,6 +1449,7 @@ model LegislationItem {
   tier                  LegislationTier
   title                 String
   year                  Int
+  yearRaw               String?             // Original year segment from actId (e.g. "S.I._1970", "2021"); always set for UKSI
   number                Int                 // Chapter number (Acts) or SI number
   jurisdiction          String              // 'UK', 'Scotland', 'Wales', 'NI'
   sourceType            DocumentSourceType  @default(STATUTE)
