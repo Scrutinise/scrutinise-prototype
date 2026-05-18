@@ -1,19 +1,20 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { Webhook } from 'svix'
+import { clerkClient } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendInviteMismatchNotificationEmail } from '@/lib/email'
-import { markInviteUsed } from '@/lib/invites'
 
-// Clerk sends webhooks using svix — install: npm install svix
-// CLERK_WEBHOOK_SECRET must be set in Vercel env vars
+// CLERK_WEBHOOK_SECRET must be set in Vercel env vars.
+// Subscribe endpoint to user.created (and user.updated for name sync).
 
 interface ClerkUserEvent {
   type: 'user.created' | 'user.updated'
   data: {
     id: string
-    email_addresses: Array<{ email_address: string; verification: { status: string } }>
+    email_addresses: Array<{ id: string; email_address: string; verification: { status: string } }>
+    primary_email_address_id: string | null
     first_name: string | null
     last_name: string | null
     username: string | null
@@ -22,11 +23,23 @@ interface ClerkUserEvent {
   }
 }
 
+async function deleteClerkUser(userId: string, reason: string) {
+  console.log(`[clerk-webhook] Deleting user ${userId}: ${reason}`)
+  try {
+    const client = await clerkClient()
+    await client.users.deleteUser(userId)
+  } catch (err) {
+    // If delete fails the Clerk account persists but has no app-side User record —
+    // they can authenticate but won't have access to anything. Log for manual cleanup.
+    console.error(`[clerk-webhook] Failed to delete user ${userId}:`, err)
+  }
+}
+
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
   if (!WEBHOOK_SECRET) {
-    console.error('CLERK_WEBHOOK_SECRET not set')
-    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+    console.error('[clerk-webhook] CLERK_WEBHOOK_SECRET not set')
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   }
 
   // Verify svix signature
@@ -57,13 +70,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true })
   }
 
-  const { id: clerkId, email_addresses, first_name, last_name, username, unsafe_metadata } = event.data
+  const { id: clerkId, email_addresses, primary_email_address_id, first_name, last_name, username, unsafe_metadata } = event.data
 
   const firstName = first_name ?? 'User'
   const lastName = last_name ?? ''
   const fullName = [firstName, lastName].filter(Boolean).join(' ')
 
-  // user.updated — sync name fields only
+  // user.updated — sync name fields only, no invite check needed
   if (event.type === 'user.updated') {
     try {
       await prisma.user.updateMany({
@@ -80,28 +93,49 @@ export async function POST(req: Request) {
     }
   }
 
-  const primaryEmail = email_addresses.find(e => e.verification.status === 'verified')?.email_address
+  // Resolve primary email
+  const primaryEmail = (
+    email_addresses.find(e => e.id === primary_email_address_id)?.email_address
+    ?? email_addresses.find(e => e.verification.status === 'verified')?.email_address
     ?? email_addresses[0]?.email_address
+  )?.toLowerCase()
 
   if (!primaryEmail) {
-    return NextResponse.json({ error: 'No email found' }, { status: 400 })
+    await deleteClerkUser(clerkId, 'no primary email')
+    return NextResponse.json({ ok: true, action: 'deleted_no_email' })
   }
 
+  // ── Invite gate ────────────────────────────────────────────────────────────
+  // Only allow sign-up if a valid (unused, unrevoked, unexpired) invite exists
+  // for this email. If not, delete the Clerk account immediately.
+  const invite = await prisma.invite.findUnique({ where: { email: primaryEmail } })
+  const now = new Date()
+  const inviteValid = invite && !invite.usedAt && !invite.revokedAt && invite.expiresAt > now
+
+  if (!inviteValid) {
+    await deleteClerkUser(clerkId, `no valid invite for ${primaryEmail}`)
+    return NextResponse.json({ ok: true, action: 'deleted_no_invite' })
+  }
+
+  // Mark invite used before creating the app-side user (idempotent on re-delivery
+  // because the upsert below will just no-op if the User row already exists)
+  await prisma.invite.update({
+    where: { id: invite.id },
+    data: { usedAt: now },
+  })
+  // ── End invite gate ────────────────────────────────────────────────────────
+
   // Username: Clerk may send null — always generate a unique fallback.
-  // Matches the JIT sync pattern in lib/auth.ts exactly.
   const usernameBase = username
     ?? (firstName.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'user')
   const uniqueUsername = usernameBase.slice(0, 20) + '_' + Date.now().toString(36)
 
-  // Consent fields from onboarding page (written via PATCH /api/user/onboarding,
-  // not via Clerk metadata — these will be null/false at webhook time)
+  // Consent fields from onboarding (written via PATCH /api/user/onboarding;
+  // not available at webhook time — will be null/false here)
   const preferredName = (unsafe_metadata?.preferredName as string | undefined) ?? firstName
   const ageConfirmed = (unsafe_metadata?.ageConfirmed as boolean | undefined) === true
   const tcAgreed = (unsafe_metadata?.tcAgreed as boolean | undefined) === true
   const rulesAgreed = (unsafe_metadata?.rulesAgreed as boolean | undefined) === true
-  const now = new Date()
-
-  // webhook received — user.created event
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -128,7 +162,6 @@ export async function POST(req: Request) {
         },
       })
 
-      // Create credibility score record
       await tx.credibilityScore.upsert({
         where: { userId: newUser.id },
         update: {},
@@ -138,15 +171,7 @@ export async function POST(req: Request) {
       return newUser
     })
 
-    // Mark sign-up invite as used (invite-only mode)
-    const signUpInvite = await prisma.invite.findUnique({ where: { email: primaryEmail } })
-    if (signUpInvite && !signUpInvite.usedAt && !signUpInvite.revokedAt) {
-      await markInviteUsed(signUpInvite.token).catch(err =>
-        console.error('[webhook] markInviteUsed failed —', err),
-      )
-    }
-
-    // Check for pending invite to this email — if name differs, notify inviter
+    // Check for pending collaborator invite to this email — if name differs, notify inviter
     const pendingInvite = await prisma.userInvite.findFirst({
       where: { email: primaryEmail, status: 'PENDING' },
       orderBy: { createdAt: 'desc' },
@@ -157,7 +182,6 @@ export async function POST(req: Request) {
       const nameChanged = fullName.toLowerCase() !== originalFullName.toLowerCase()
 
       if (nameChanged) {
-        // Fetch inviter and idea title in parallel — fire-and-forget block
         Promise.all([
           prisma.user.findUnique({
             where: { id: pendingInvite.invitedByUserId },
