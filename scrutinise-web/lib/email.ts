@@ -1,7 +1,7 @@
 import { prisma } from './prisma'
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
-const FROM = 'Scrutinise <hello@scrutinise.org>'
+const FROM = 'Scrutinise <noreply@messages.scrutinise.org>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://scrutinise.org'
 
 /**
