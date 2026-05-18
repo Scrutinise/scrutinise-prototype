@@ -18,9 +18,10 @@ interface SendEmailOptions {
   subject: string
   html: string
   text: string
+  replyTo?: string
 }
 
-async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<void> {
+async function sendEmail({ to, subject, html, text, replyTo }: SendEmailOptions): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     console.warn('RESEND_API_KEY not set — email not sent to', to)
     return
@@ -32,18 +33,21 @@ async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise
     return
   }
 
+  const body: Record<string, unknown> = { from: FROM, to, subject, html, text }
+  if (replyTo) body.reply_to = replyTo
+
   const res = await fetch(RESEND_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
     },
-    body: JSON.stringify({ from: FROM, to, subject, html, text }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Resend error ${res.status}: ${body}`)
+    const resBody = await res.text()
+    throw new Error(`Resend error ${res.status}: ${resBody}`)
   }
 }
 
@@ -108,6 +112,65 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
 `.trim()
 
   await sendEmail({ to: toEmail, subject, html, text })
+}
+
+export async function sendSignUpInviteEmail(
+  email: string,
+  token: string,
+  invitedByName?: string,
+): Promise<void> {
+  const url = `${APP_URL}/sign-up?invite=${token}`
+  const subject = "You're invited to join Scrutinise"
+
+  const text = `
+You've been invited${invitedByName ? ` by ${invitedByName}` : ''} to join Scrutinise — a community dedicated to bringing high standards of quality to policy development and scrutiny of legislation.
+
+This invite is locked to ${email} and expires in 14 days.
+
+Accept your invitation: ${url}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
+  <h1 style="font-size: 22px; font-weight: 600; margin-bottom: 16px;">Welcome to Scrutinise</h1>
+  <p>You've been invited${invitedByName ? ` by <strong>${invitedByName}</strong>` : ''} to join Scrutinise — a community dedicated to bringing high standards of quality to policy development and scrutiny of legislation.</p>
+  <p>This invite is locked to <strong>${email}</strong> and expires in 14 days.</p>
+  <p style="margin: 32px 0;">
+    <a href="${url}" style="background: #18181b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">Accept invitation</a>
+  </p>
+  <p style="color: #71717a; font-size: 13px;">Or paste this link into your browser:<br/>${url}</p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: email, subject, html, text })
+}
+
+export async function sendContactFormEmail(
+  fromEmail: string,
+  fromName: string,
+  message: string,
+): Promise<void> {
+  const adminEmail = 'cl@scrutinise.org'
+  const subject = `Scrutinise contact: ${fromName}`
+
+  const text = `From: ${fromName} <${fromEmail}>\n\n${message}`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Contact form message</h2>
+  <p><strong>From:</strong> ${fromName} &lt;${fromEmail}&gt;</p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 16px 0;" />
+  <p style="white-space: pre-wrap;">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: adminEmail, subject, html, text, replyTo: fromEmail })
 }
 
 export async function sendOwnershipTransferEmail({

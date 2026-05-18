@@ -1,14 +1,61 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 15 May 2026 v48*
+*Last updated: 18 May 2026 v49*
 
 ***
 
-## CURRENT STATE — V.3-B IN PROGRESS | Phase 2 (pilot) COMPLETE ✓ | Awaiting Phase 3 approval
+## CURRENT STATE — V1.6-A INVITE-ONLY SIGN-UP COMPLETE ✓ | V.3-B UKSI PAUSED (awaiting Phase 3 approval)
 
 **This section supersedes everything below. Sections below are preserved as historical context.**
 
-### What is happening right now
+### V1.6-A: Invite-Only Sign-Up (18 May 2026) — COMPLETE ✓
+
+All code written and tsc clean. Awaiting `commit-all.sh` execution + Railway migration + Clerk dashboard config.
+
+**Files created/modified:**
+
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `Invite` model (Section 16) |
+| `scrutinise-web/lib/invites.ts` | NEW — token generation, createInvite, revokeInvite, validateInviteToken |
+| `scrutinise-web/lib/email.ts` | Added `sendSignUpInviteEmail`, `sendContactFormEmail`; added `replyTo` support |
+| `scrutinise-web/app/api/invites/route.ts` | NEW — GET (list) + POST (issue) |
+| `scrutinise-web/app/api/invites/[id]/route.ts` | NEW — DELETE (revoke) + POST (resend) |
+| `scrutinise-web/app/api/contact/route.ts` | NEW — public contact form (rate-limited) |
+| `scrutinise-web/app/sign-up/[[...sign-up]]/page.tsx` | Replaced with invite-gated version |
+| `scrutinise-web/components/InviteOnlyLanding.tsx` | NEW — invite-only message + contact form |
+| `scrutinise-web/app/admin/invites/page.tsx` | NEW — SUPER_ADMIN invite management panel |
+| `scrutinise-web/app/admin/page.tsx` | Added "Invites" link to tab nav (SUPER_ADMIN only) |
+
+**Manual steps required after commit:**
+
+1. **Railway migration:** `npx prisma db push` in `scrutinise-web/` to add the `Invite` table
+2. **Clerk dashboard:** User & Authentication → Restrictions → set Sign-up mode to **Restricted**, confirm allowlist is enabled
+3. **Vercel env vars:** Confirm `NEXT_PUBLIC_APP_URL` is set (used in invite email link)
+4. **Email sender:** Current FROM is `hello@scrutinise.org` (consistent with existing emails). The brief specified `noreply@scrutinise.org` — if that sender domain is separately verified in Resend, update `FROM` in `lib/email.ts`
+
+**Sequence for production cutover:**
+1. Execute `commit-all.sh`, delete it
+2. Run `npx prisma db push` on Railway
+3. Deploy to Vercel preview, run full test plan from brief
+4. Flip Clerk production sign-up mode to Restricted (final cutover)
+
+**Test plan reminder (from brief):**
+- `/sign-up` with no token → invite-only landing
+- Contact form → email arrives at `cl@scrutinise.org` with replyTo
+- Issue invite from `/admin/invites` → check email arrives
+- Click link → email pre-filled in Clerk sign-up
+- Complete sign-up → `usedAt` populates
+- Reuse link → "already used" message
+- Revoke invite → "no longer valid" message
+
+---
+
+## CURRENT STATE — V.3-B IN PROGRESS | Phase 2 (pilot) COMPLETE ✓ | Awaiting Phase 3 approval
+
+**V.3-B is paused. V1.6-A product sprint took priority. V.3-B Phase 3 approval still required from Charlie + CCh before CC runs `--full` mode.**
+
+### What is happening right now (V.3-B)
 
 Sprint V.3-B (UKSI Bulk Ingest) is in progress. Phase 1 (pipeline review) ✓, Phase 1.5 (pre-flight) ✓, Phase 2 (100-UKSI pilot + verification) ✓.
 

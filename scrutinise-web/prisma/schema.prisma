@@ -1646,6 +1646,27 @@ model Feedback {
   @@index([userId])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 16 — INVITE-ONLY SIGN-UP
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Token gates link access; Clerk allowlist gates email match.
+// Single-use enforced via usedAt; expiry enforced via expiresAt.
+// Re-issuing an invite to the same email upserts — no duplicate rows.
+model Invite {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  token       String    @unique
+  invitedBy   String              // Clerk userId of issuing SUPER_ADMIN
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  revokedAt   DateTime?
+
+  @@index([token])
+  @@index([email])
+}
+
 // Link between a CoherentAction and a LegislationSection with proposed wording
 model CoherentActionSection {
   id                   String   @id @default(cuid())

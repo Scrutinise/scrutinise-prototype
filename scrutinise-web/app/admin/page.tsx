@@ -862,6 +862,14 @@ export default function AdminPage() {
               {s.label}
             </button>
           ))}
+          {isSuperAdmin && (
+            <a
+              href="/admin/invites"
+              className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Invites
+            </a>
+          )}
         </div>
 
         {section === 'reports' && (

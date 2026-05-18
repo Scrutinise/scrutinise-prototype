@@ -4,6 +4,7 @@ import { Webhook } from 'svix'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendInviteMismatchNotificationEmail } from '@/lib/email'
+import { markInviteUsed } from '@/lib/invites'
 
 // Clerk sends webhooks using svix — install: npm install svix
 // CLERK_WEBHOOK_SECRET must be set in Vercel env vars
@@ -136,6 +137,14 @@ export async function POST(req: Request) {
 
       return newUser
     })
+
+    // Mark sign-up invite as used (invite-only mode)
+    const signUpInvite = await prisma.invite.findUnique({ where: { email: primaryEmail } })
+    if (signUpInvite && !signUpInvite.usedAt && !signUpInvite.revokedAt) {
+      await markInviteUsed(signUpInvite.token).catch(err =>
+        console.error('[webhook] markInviteUsed failed —', err),
+      )
+    }
 
     // Check for pending invite to this email — if name differs, notify inviter
     const pendingInvite = await prisma.userInvite.findFirst({
