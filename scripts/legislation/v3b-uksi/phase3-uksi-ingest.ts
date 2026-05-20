@@ -26,8 +26,14 @@ const DIR           = __dirname
 const ZIP_PATH      = path.join(DIR, '../v276-bulk/best-collection-xml.zip')
 const MANIFEST_PATH = path.join(DIR, 'manifest-uksi.json')
 const HELPER_PS1    = path.join(DIR, 'zip-helper-uksi.ps1')
-const PROGRESS_FILE = path.join(DIR, 'phase3-uksi-progress.json')
-const LOG_FILE      = path.join(DIR, 'pilot-log.csv')
+// Progress and log on D: to avoid filling the C: system drive during the long full ingest.
+// The pilot progress file (on C:) is a separate file — full run writes here.
+const PROGRESS_FILE = process.argv.includes('--full')
+  ? 'D:\\uksi-phase3-progress.json'
+  : path.join(DIR, 'phase3-uksi-progress.json')
+const LOG_FILE      = process.argv.includes('--full')
+  ? 'D:\\uksi-phase3-log.csv'
+  : path.join(DIR, 'pilot-log.csv')
 
 interface ManifestEntry {
   actId: string
@@ -58,6 +64,7 @@ interface Progress {
     tnaKeyWrites: number
     originalKeyWrites: number
     zeroSection: number
+    normalized: number
     elapsed: number
   }
 }
@@ -101,22 +108,25 @@ function selectPilotSample(manifest: ManifestEntry[]): ManifestEntry[] {
 
 function extractFromZip(entryPath: string): ZipHelperResult {
   const req = JSON.stringify({ zipPath: ZIP_PATH, entryPath })
-  const result = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-File', HELPER_PS1], {
-    input: req, encoding: 'utf8', maxBuffer: 100 * 1024 * 1024, timeout: 120_000,
-  })
-  if (result.status !== 0) throw new Error(`PS helper failed: ${result.stderr}`)
-  const raw = result.stdout.trim()
-  if (!raw || raw === 'null') return { title: '', p1groups: [] }
-  try {
-    const parsed = JSON.parse(raw) as ZipHelperResult
-    // ConvertTo-Json wraps single-element arrays as objects
-    const p1groups = parsed.p1groups
-      ? (Array.isArray(parsed.p1groups) ? parsed.p1groups : [parsed.p1groups as unknown as P1groupResult])
-      : []
-    return { title: parsed.title ?? '', p1groups }
-  } catch {
-    throw new Error(`Cannot parse PS helper JSON: ${raw.slice(0, 200)}`)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const result = spawnSync('pwsh', ['-NoProfile', '-NonInteractive', '-File', HELPER_PS1], {
+      input: req, maxBuffer: 100 * 1024 * 1024, timeout: 120_000,
+    })
+    if (result.status !== 0) throw new Error(`PS helper failed: ${(result.stderr as Buffer|null)?.toString('utf8') ?? ''}`)
+    const raw = (result.stdout as Buffer | null)?.toString('utf8').trim() ?? ''
+    if (!raw || raw === 'null') return { title: '', p1groups: [] }
+    try {
+      const parsed = JSON.parse(raw) as ZipHelperResult
+      const p1groups = parsed.p1groups
+        ? (Array.isArray(parsed.p1groups) ? parsed.p1groups : [parsed.p1groups as unknown as P1groupResult])
+        : []
+      return { title: parsed.title ?? '', p1groups }
+    } catch {
+      if (attempt < 3) { console.log(`  [retry ${attempt}/3 — parse failure for ${entryPath}]`); continue }
+      throw new Error(`Cannot parse PS helper JSON: ${raw.slice(0, 200)}`)
+    }
   }
+  throw new Error('extractFromZip: retry loop exhausted')
 }
 
 // ── ActId parsing ─────────────────────────────────────────────────────────────
@@ -134,7 +144,7 @@ function parseActId(actId: string): { yearStr: string; yearInt: number; num: num
 
 function loadProgress(): Progress {
   try { return JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf-8')) } catch {
-    return { completed: [], skipped: [], errors: {}, stats: { created: 0, sectionsCreated: 0, r2Writes: 0, tnaKeyWrites: 0, originalKeyWrites: 0, zeroSection: 0, elapsed: 0 } }
+    return { completed: [], skipped: [], errors: {}, stats: { created: 0, sectionsCreated: 0, r2Writes: 0, tnaKeyWrites: 0, originalKeyWrites: 0, zeroSection: 0, normalized: 0, elapsed: 0 } }
   }
 }
 function saveProgress(p: Progress) { fs.writeFileSync(PROGRESS_FILE, JSON.stringify(p, null, 2)) }
@@ -163,6 +173,16 @@ class AdaptiveThrottle {
 async function ingestUksi(entry: ManifestEntry, progress: Progress, throttle: AdaptiveThrottle, idx: number, total: number): Promise<void> {
   const { actId, zipPath, version } = entry
   const prefix = `[${idx}/${total}]`
+
+  // ISBN-draft filter: numbers > Int32 max are 13-digit ISBNs — pre-publication drafts
+  // superseded by properly numbered SIs (already ingested). Skip without any DB write.
+  const numberSegment = actId.split('/')[2]
+  if (parseInt(numberSegment, 10) > 2_147_483_647) {
+    console.log(`${prefix} SKIPPED_ISBN_DRAFT: ${actId}`)
+    progress.skipped.push(actId)
+    appendCsv({ actId, version, sectionCount: 0, r2KeyType: 'N/A', titleDecoded: false, notes: 'SKIPPED_ISBN_DRAFT' })
+    return
+  }
 
   // Check idempotency
   const existing = await prisma.legislationItem.findUnique({ where: { legislationGovUkId: actId } })
@@ -204,7 +224,14 @@ async function ingestUksi(entry: ManifestEntry, progress: Progress, throttle: Ad
   let tnaWrites = 0, originalWrites = 0
   const seenSectionNumbers = new Set<string>()
 
-  for (const { sectionNumber, xml } of validP1groups) {
+  for (const { sectionNumber: rawSectionNumber, xml } of validP1groups) {
+    // Normalise: trim whitespace and strip trailing dots (e.g. "3." → "3")
+    // Only sectionNumber is a dedup/join key — sectionTitle and title are display strings
+    const sectionNumber = rawSectionNumber.trim().replace(/\.+$/, '')
+    if (rawSectionNumber !== sectionNumber) {
+      console.log(`  [normalize] ${actId} Pnumber "${rawSectionNumber}" -> "${sectionNumber}"`)
+      progress.stats.normalized++
+    }
     if (seenSectionNumbers.has(sectionNumber)) continue  // first occurrence wins
     seenSectionNumbers.add(sectionNumber)
     const { key, field } = getR2KeyForSection(actId, sectionNumber, version)
@@ -260,6 +287,12 @@ async function main() {
   const isPilot = !process.argv.includes('--full')
   const isResume = process.argv.includes('--resume')
 
+  // Verify pwsh (PowerShell 7+) is available — required for ConvertTo-Json to correctly escape " in strings
+  const pwshCheck = spawnSync('pwsh', ['--version'])
+  if (pwshCheck.error || pwshCheck.status !== 0) {
+    throw new Error('pwsh (PowerShell 7+) required but not found in PATH. Install from https://aka.ms/powershell.')
+  }
+
   console.log(`\n=== V.3-B UKSI INGEST — ${isPilot ? 'PILOT (100 UKSI)' : 'FULL (61,179 UKSI)'} ===`)
   if (!fs.existsSync(ZIP_PATH)) { console.error(`ZIP not found: ${ZIP_PATH}`); process.exit(1) }
 
@@ -291,6 +324,8 @@ async function main() {
       await ingestUksi(entry, progress, throttle, i, entries.length)
       progress.completed.push(entry.actId)
       completed.add(entry.actId)
+      // Clear any stale error entry for this actId on successful completion
+      if (progress.errors[entry.actId]) delete progress.errors[entry.actId]
     } catch (err: any) {
       console.error(`\n[${i}/${entries.length}] ERROR ${entry.actId}: ${err.message}`)
       progress.errors[entry.actId] = err.message
@@ -317,6 +352,7 @@ async function main() {
   console.log(`  → tnaXmlKey:      ${progress.stats.tnaKeyWrites}`)
   console.log(`  → originalXmlKey: ${progress.stats.originalKeyWrites}`)
   console.log(`Zero-section items: ${progress.stats.zeroSection}`)
+  console.log(`Normalisations:     ${progress.stats.normalized}`)
   console.log(`Skipped (exists):   ${progress.skipped.length}`)
   console.log(`Errors:             ${Object.keys(progress.errors).length}`)
   console.log(`Elapsed:            ${elapsed}s`)

@@ -8,6 +8,7 @@
   Reads a JSON request from stdin: { zipPath, entryPath }
   Writes a JSON object to stdout: { title, p1groups: [ { sectionNumber, xml }, ... ] }
 #>
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $raw = [Console]::In.ReadToEnd()
@@ -22,7 +23,7 @@ if (-not $entry) {
     exit 0
 }
 
-$reader = [System.IO.StreamReader]::new($entry.Open())
+$reader = [System.IO.StreamReader]::new($entry.Open(), [System.Text.Encoding]::UTF8)
 $xml    = $reader.ReadToEnd()
 $reader.Dispose()
 $zip.Dispose()
@@ -70,9 +71,5 @@ if ($p1Matches.Count -gt 0) {
     }
 }
 
-$result = [PSCustomObject]@{
-    title    = $title
-    p1groups = $p1groups
-}
-
+$result = [PSCustomObject]@{ title = $title; p1groups = $p1groups }
 $result | ConvertTo-Json -Depth 3 -Compress

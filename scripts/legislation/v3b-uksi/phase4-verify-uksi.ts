@@ -19,7 +19,10 @@ import { r2Exists, tnaXmlKey, originalXmlKey } from '../r2-client'
 import { CompilationStatus, LegislationType, LegislationTier } from '@prisma/client'
 
 const DIR           = __dirname
-const PROGRESS_FILE = path.join(DIR, 'phase3-uksi-progress.json')
+const isFull        = process.argv.includes('--full')
+const PROGRESS_FILE = isFull
+  ? 'D:\\uksi-phase3-progress.json'
+  : path.join(DIR, 'phase3-uksi-progress.json')
 const MANIFEST_PATH = path.join(DIR, 'manifest-uksi.json')
 
 interface ManifestEntry {
@@ -57,7 +60,7 @@ function parseSectionNumbersFromHtml(html: string): string[] {
 }
 
 async function main() {
-  console.log('=== V.3-B PHASE 4 — UKSI PILOT VERIFICATION ===')
+  console.log(`=== V.3-B PHASE 4 — UKSI ${isFull ? 'FULL CORPUS' : 'PILOT'} VERIFICATION ===`)
   console.log(`Run at: ${new Date().toISOString()}\n`)
 
   // Load manifest for version-aware R2 classification
@@ -125,7 +128,7 @@ async function main() {
 
   // UKPGA contamination check
   const ukpgaCount = await prisma.legislationItem.count({ where: { legislationType: LegislationType.UKPGA } })
-  const KNOWN_UKPGA_BASELINE = 11768
+  const KNOWN_UKPGA_BASELINE = 11768  // unchanged — UKSI ingest does not create UKPGA rows
   const contaminated = ukpgaCount !== KNOWN_UKPGA_BASELINE
   console.log(`  UKPGA item count: ${ukpgaCount} (expected ${KNOWN_UKPGA_BASELINE}) ${contaminated ? '⚠️  UNEXPECTED CHANGE' : '✓'}`)
 
@@ -167,17 +170,19 @@ async function main() {
     return { pass, fail }
   }
 
-  const rcSpot   = await spotCheck(rcItems,   15, 'tnaXmlKey')
-  const madeSpot = await spotCheck(madeItems, 15, 'originalXmlKey')
-  console.log(`  Revised-current spot-check: ${rcSpot.pass}/15 PASS`)
-  console.log(`  Made (enacted) spot-check:  ${madeSpot.pass}/15 PASS`)
+  const r2Sample = isFull ? 50 : 15
+  const rcSpot   = await spotCheck(rcItems,   r2Sample, 'tnaXmlKey')
+  const madeSpot = await spotCheck(madeItems, r2Sample, 'originalXmlKey')
+  console.log(`  Revised-current spot-check: ${rcSpot.pass}/${r2Sample} PASS`)
+  console.log(`  Made (enacted) spot-check:  ${madeSpot.pass}/${r2Sample} PASS`)
 
   // ── 3. Web cross-check ────────────────────────────────────────────────────────
   console.log('\n── 3. Web cross-check (10 UKSI vs legislation.gov.uk) ──')
 
-  // Pick 10 deterministically: every 10th ingested item
-  const step10    = Math.max(1, Math.floor(uksiItems.length / 10))
-  const webSample = uksiItems.filter((_, i) => i % step10 === 0).slice(0, 10)
+  // Pick deterministically: every Nth ingested item (10 for pilot, 20 for full)
+  const webCount  = isFull ? 20 : 10
+  const step10    = Math.max(1, Math.floor(uksiItems.length / webCount))
+  const webSample = uksiItems.filter((_, i) => i % step10 === 0).slice(0, webCount)
 
   let webPass = 0, webFail = 0, webError = 0
   for (const item of webSample) {
@@ -206,7 +211,7 @@ async function main() {
       console.log(`  ERROR ${actId}: ${err.message}`)
     }
   }
-  console.log(`  Web cross-check: ${webPass}/10 exact match, ${webFail} diff, ${webError} no-web-nums/error`)
+  console.log(`  Web cross-check: ${webPass}/${webCount} exact match, ${webFail} diff, ${webError} no-web-nums/error`)
 
   // ── 4. Title decoding check ───────────────────────────────────────────────────
   console.log('\n── 4. Title decoding check (10 sample titles) ──')
