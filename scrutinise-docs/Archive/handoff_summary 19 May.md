@@ -1,16 +1,59 @@
 # SCRUTINISE — CONVERSATION HANDOFF SUMMARY
 
-*Last updated: 18 May 2026 v49*
+*Last updated: 19 May 2026 v50*
 
 ***
 
-## CURRENT STATE — V1.6-A INVITE-ONLY SIGN-UP COMPLETE ✓ | V.3-B UKSI PAUSED (awaiting Phase 3 approval)
+## CURRENT STATE — V1.6-A INVITE-ONLY SIGN-UP COMPLETE ✓ | V.3-B UKSI COMPLETE ✓ (pending close-out commit)
 
 **This section supersedes everything below. Sections below are preserved as historical context.**
 
-### V1.6-A: Invite-Only Sign-Up (18 May 2026) — COMPLETE ✓
+---
 
-All code written and tsc clean. Awaiting `commit-all.sh` execution + Railway migration + Clerk dashboard config.
+### V.3-B: UKSI Bulk Ingest (19 May 2026) — COMPLETE ✓
+
+Full ingest of 60,167 UKSI complete. Pending close-out commit (see § Commit below).
+
+**Final stats:**
+
+| Metric | Value |
+|--------|-------|
+| LegislationItem rows | 60,167 |
+| LegislationSection rows | 473,782 |
+| R2 writes | 473,782 |
+| Zero-section items | 207 |
+| Real errors | 0 (uksi/2016/245 transient — retried, resolved) |
+| ISBN-overflow non-ingests | 16 (KNOWN_SUPERSEDED_DRAFT — canonical versions already ingested) |
+
+**Documents produced:**
+
+| File | Contents |
+|------|----------|
+| `scrutinise-docs/v3b_phase3_report.md` | Final ingest report: stats, encoding-bug saga, ISBN finding, perf analysis |
+| `scrutinise-docs/v3b_isbn_overflow_investigation.md` | ISBN-overflow investigation (16 items — all confirmed superseded pre-publication drafts) |
+
+**Script changes shipped:**
+
+| File | Change |
+|------|--------|
+| `scripts/legislation/v3b-uksi/phase3-uksi-ingest.ts` | ISBN pre-flight filter (Int32 overflow guard); clear errors on successful retry |
+| `scripts/legislation/v3b-uksi/phase4-verify-uksi.ts` | `--full` flag for full-corpus verification (D: progress file, larger samples) |
+
+**Phase 4 verification:** run after close-out retry. See `scrutinise-docs/v3b_phase3_report.md`.
+
+**Technical learnings (for CLAUDE.md — CCh to provide text):**
+1. Parse-failure diagnostic protocol — bytes before hypotheses; PS 5.1 ConvertTo-Json unescaped-quote bug noted
+2. Windows PowerShell stdout encoding — `[Console]::OutputEncoding = UTF8` mandatory for any script emitting non-ASCII
+
+**Deferred:**
+- V.3-H: 47,619 metadata-only UKSI (no XML in bulk ZIP) — separate pipeline required
+- No schema changes
+
+---
+
+### V1.6-A: Invite-Only Sign-Up (18 May 2026) — COMPLETE ✓ (committed, deployed to Vercel)
+
+Code committed (3 commits: `bc04e63`, `de4b8f7`, `3de5178`). Railway migration done (`npx prisma db push`). Vercel deployed. Pending: Clerk webhook config + production test plan (see below).
 
 **Files created/modified:**
 
@@ -27,18 +70,15 @@ All code written and tsc clean. Awaiting `commit-all.sh` execution + Railway mig
 | `scrutinise-web/app/admin/invites/page.tsx` | NEW — SUPER_ADMIN invite management panel |
 | `scrutinise-web/app/admin/page.tsx` | Added "Invites" link to tab nav (SUPER_ADMIN only) |
 
-**Manual steps required after commit:**
+**Remaining manual steps (pre-production cutover):**
 
-1. **Railway migration:** `npx prisma db push` in `scrutinise-web/` to add the `Invite` table
-2. **Clerk dashboard:** User & Authentication → Restrictions → set Sign-up mode to **Restricted**, confirm allowlist is enabled
-3. **Vercel env vars:** Confirm `NEXT_PUBLIC_APP_URL` is set (used in invite email link)
-4. **Email sender:** Current FROM is `hello@scrutinise.org` (consistent with existing emails). The brief specified `noreply@scrutinise.org` — if that sender domain is separately verified in Resend, update `FROM` in `lib/email.ts`
-
-**Sequence for production cutover:**
-1. Execute `commit-all.sh`, delete it
-2. Run `npx prisma db push` on Railway
-3. Deploy to Vercel preview, run full test plan from brief
-4. Flip Clerk production sign-up mode to Restricted (final cutover)
+1. **Clerk dashboard:** Webhooks → Add Endpoint:
+   - Production: `https://www.scrutinise.org/api/webhooks/clerk`
+   - Preview: preview URL endpoint
+   - Subscribe to `user.created` and `user.updated`
+   - Copy signing secret → `CLERK_WEBHOOK_SECRET` in Vercel (prod + preview)
+2. **Test plan** (7 cases from brief) on Vercel preview
+3. **Clerk production sign-up mode:** User & Authentication → Restrictions → set to Restricted (final cutover)
 
 **Test plan reminder (from brief):**
 - `/sign-up` with no token → invite-only landing
@@ -51,15 +91,13 @@ All code written and tsc clean. Awaiting `commit-all.sh` execution + Railway mig
 
 ---
 
-## CURRENT STATE — V.3-B IN PROGRESS | Phase 2 (pilot) COMPLETE ✓ | Awaiting Phase 3 approval
+## HISTORICAL — V.3-B PHASE 2 PILOT DETAIL (superseded by COMPLETE above)
 
-**V.3-B is paused. V1.6-A product sprint took priority. V.3-B Phase 3 approval still required from Charlie + CCh before CC runs `--full` mode.**
-
-### What is happening right now (V.3-B)
+### What was happening at V.3-B Phase 2
 
 Sprint V.3-B (UKSI Bulk Ingest) is in progress. Phase 1 (pipeline review) ✓, Phase 1.5 (pre-flight) ✓, Phase 2 (100-UKSI pilot + verification) ✓.
 
-**Phase 3 (full 61,179-item ingest) requires explicit Charlie + CCh approval before CC runs `--full` mode.**
+**Phase 3 is complete. See CURRENT STATE above.**
 
 ### V.3-B Phase 2 pilot results (15 May 2026)
 
@@ -123,8 +161,7 @@ Sprint V.3-B (UKSI Bulk Ingest) is in progress. Phase 1 (pipeline review) ✓, P
 - `scrutinise-docs/v3b_uksi_manifest_findings.md` — Phase 1.5 findings
 - `scrutinise-docs/v3b_pilot_report.md` — Phase 2 pilot report ← READ FOR FULL DETAIL
 
-**Next action:** Charlie + CCh approve Phase 3 (`--full` mode). CC runs `phase3-uksi-ingest.ts --full`.
-After Phase 3, CC runs verify, updates handoff, writes commit-all.sh.
+**Phase 3 complete.** See CURRENT STATE above for final stats and close-out actions.
 
 ---
 
