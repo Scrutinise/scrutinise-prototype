@@ -13,6 +13,7 @@ const MESSAGES = [
   "Analysing the diagnosis...",
   "Consulting the statute book...",
   "Drawing on the evidence...",
+  "Searching the legislation...",
 ]
 
 interface LexThinkingProps {

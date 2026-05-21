@@ -6,7 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
-import { searchLegislation } from '@/lib/search'
+import { searchLegislation, type SearchResult } from '@/lib/search'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -131,15 +131,16 @@ SCOPE BOUNDARIES — NEVER discuss these in the Lex chat:
 - Any platform features not directly related to filling idea fields
 If the user asks about these, tell them: "That's managed in the relevant tab — I'm focused on helping you build the idea content."
 ${ctx.legislationContext && ctx.legislationContext.length > 0 ? `
-RELEVANT LEGISLATION FOUND:
-The platform has identified the following legislation as potentially relevant to this idea. Reference it naturally where appropriate.
-Do NOT invent or hallucinate legislation not listed here.
-Do NOT claim this is definitive — always note it should be verified.
+CANDIDATE LEGISLATION (keyword-matched — treat as leads, not confirmed sources):
+The following sections were surfaced by keyword search against the legislation corpus. Keyword search can return a wordy-but-wrong act (e.g. a statute that frequently mentions "human rights" but isn't the Human Rights Act). Phase 2 semantic search will improve precision.
+- Treat each as a candidate worth examining, not an authoritative match.
+- If a section seems genuinely on-point, mention it briefly and suggest the user verify it.
+- Do NOT present these as the definitive set of relevant legislation.
+- Do NOT invent or hallucinate sections not listed here.
 ${ctx.legislationContext.map(l => `--- ${l.actTitle} — Section ${l.sectionNumber}: ${l.sectionTitle}\n${l.compiledText.slice(0, 800)}`).join('\n')}
-When surfacing this to the user at summary/diagnosis stages, say something like:
-"I've found a section of [Act] that may be relevant — [brief description]. We'll look at this more carefully when we reach the Coherent Actions stage."
-At the Coherent Actions stage, say:
-"To implement this action, you'll likely need to amend [Act] s.[X] — [section title]. Here's what it currently says: [brief quote]. Would you like me to draft proposed amendment wording?"
+When a candidate section seems relevant, say something like:
+"The keyword search flagged a section of [Act] that may be relevant here — worth verifying. [brief description]."
+Do not say the platform has confirmed this is relevant — it is a candidate.
 ` : ''}` : `
 You are Lex, Scrutinise's AI assistant. All fields are complete for this session. Help the user refine their idea, answer questions about the process, or prepare for the next stage.
 
@@ -724,16 +725,37 @@ export async function POST(req: Request, { params }: Params) {
         idea.research.length > 0 && `${idea.research.length} Research item(s)`,
       ].filter(Boolean).join(', ') || 'None yet'
 
-  // Fetch approved LexInsight rules to inject into system prompt (max 50, most recent)
-  const approvedInsights = await prisma.lexInsight.findMany({
-    where: { status: 'APPROVED', approvedRule: { not: null } },
-    orderBy: { updatedAt: 'desc' },
-    take: 50,
-    select: { approvedRule: true },
-  })
+  const messageWordCount = message.trim().split(/\s+/).length
+  const shouldSearch = messageWordCount >= 4 && (!legislationContext || legislationContext.length === 0)
+
+  // Run lexInsight lookup and FTS search in parallel — independent DB reads.
+  // searchLegislation has an 8s statement_timeout stall-guard; catch here
+  // ensures any search failure is never fatal to the Lex response.
+  const [approvedInsights, autoSearch] = await Promise.all([
+    prisma.lexInsight.findMany({
+      where: { status: 'APPROVED', approvedRule: { not: null } },
+      orderBy: { updatedAt: 'desc' },
+      take: 50,
+      select: { approvedRule: true },
+    }),
+    shouldSearch
+      ? searchLegislation({ q: message, limit: 4, minRank: 0.25 }).catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
+      : Promise.resolve({ results: [] as SearchResult[], totalMatches: 0 }),
+  ])
+
   const approvedRules = approvedInsights
     .map(r => r.approvedRule)
     .filter((r): r is string => r !== null)
+
+  let resolvedLegislationContext = legislationContext
+  if (shouldSearch && autoSearch.results.length > 0) {
+    resolvedLegislationContext = autoSearch.results.map(r => ({
+      actTitle:      r.actTitle,
+      sectionNumber: r.sectionNumber,
+      sectionTitle:  r.title ?? '',
+      compiledText:  r.snippet.replace(/<<|>>/g, ''),
+    }))
+  }
 
   // Reconstruct recent chat history for the API call
   const chatHistory = Array.isArray(idea.aiChatHistory) ? idea.aiChatHistory as Array<{role: string; content: string; timestamp?: string}> : []
@@ -751,27 +773,6 @@ export async function POST(req: Request, { params }: Params) {
       data: { aiSessionCount: { increment: 1 } },
     })
     idea.aiSessionCount = (idea.aiSessionCount ?? 0) + 1
-  }
-
-  // Auto-search: only run for substantive messages (≥4 words) to avoid
-  // wasting a DB round-trip on filler turns like "yes", "ok", "go ahead".
-  // Fire-and-forget on error — a failed search never blocks the Lex response.
-  let resolvedLegislationContext = legislationContext
-  const messageWordCount = message.trim().split(/\s+/).length
-  if (messageWordCount >= 4 && (!resolvedLegislationContext || resolvedLegislationContext.length === 0)) {
-    try {
-      const { results } = await searchLegislation({ q: message, limit: 4, minRank: 0.25 })
-      if (results.length > 0) {
-        resolvedLegislationContext = results.map(r => ({
-          actTitle:      r.actTitle,
-          sectionNumber: r.sectionNumber,
-          sectionTitle:  r.title ?? '',
-          compiledText:  r.snippet.replace(/<<|>>/g, ''),
-        }))
-      }
-    } catch {
-      // search failure is non-fatal
-    }
   }
 
   const systemPrompt = buildSystemPrompt({

@@ -143,7 +143,12 @@ export async function searchLegislation(opts: {
       ORDER BY rank DESC
     `
 
-    const rows = await prisma.$queryRawUnsafe<LegRow[]>(sql, ...params)
+    // statement_timeout is a stall-guard: normal queries complete in <2s;
+    // 8s only trips on a genuinely stuck DB or pathological query.
+    const rows = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
+      return tx.$queryRawUnsafe<LegRow[]>(sql, ...params)
+    })
     for (const r of rows) {
       results.push({
         type:          r.legislationType.toLowerCase(),
@@ -196,7 +201,10 @@ export async function searchLegislation(opts: {
       ORDER BY rank DESC
     `
 
-    const rows = await prisma.$queryRawUnsafe<OpRow[]>(sql, q)
+    const rows = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
+      return tx.$queryRawUnsafe<OpRow[]>(sql, q)
+    })
     for (const r of rows) {
       results.push({
         type:          'operational',
