@@ -1503,7 +1503,7 @@ model LegislationSection {
   tnaXmlKey             String?                 // R2: {legislationGovUkId}/sections/{N}.tna.xml (current CLML P1group)
   compiledTextKey       String?                 // R2: {legislationGovUkId}/sections/{N}.compiled.txt
   lexSummaryKey         String?                 // R2: {legislationGovUkId}/sections/{N}.summary.txt
-  ftsVector             String?                 // pre-computed tsvector stored as text for Railway FTS
+  ftsVector             Unsupported("tsvector")? // GIN-indexed FTS column — managed via fts-migration.ts, not Prisma migrate
   // Compilation quality
   confidence            CompilationConfidence?
   confidenceReason      String?
@@ -1538,6 +1538,7 @@ model LegislationSection {
   @@index([legislationItemId])
   @@index([compilationStatus])
   @@index([needsReview])
+  @@index([ftsVector], type: Gin)
 }
 
 // Amendment applied to a section
@@ -1735,6 +1736,7 @@ model OperationalSection {
   // FTS content (short excerpt stored in Railway for search — full text in R2 via textKey)
   extractedText           String?
   wordCount               Int?
+  ftsVector               Unsupported("tsvector")? // GIN-indexed FTS column — managed via fts-migration.ts, not Prisma migrate
   // Provenance (Phase C will formalise enum; String for now)
   extractedBy             String?                 // "html-direct" | "pdf-text" | "pdf-ocr" | "ai-summary"
   // Ingest state
@@ -1747,4 +1749,5 @@ model OperationalSection {
   @@unique([operationalDocumentId, pageSlug])
   @@index([operationalDocumentId])
   @@index([ingestStatus])
+  @@index([ftsVector], type: Gin)
 }
