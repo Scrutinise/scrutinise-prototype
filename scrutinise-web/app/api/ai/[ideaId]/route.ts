@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
+import { searchLegislation } from '@/lib/search'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -752,6 +753,27 @@ export async function POST(req: Request, { params }: Params) {
     idea.aiSessionCount = (idea.aiSessionCount ?? 0) + 1
   }
 
+  // Auto-search: only run for substantive messages (≥4 words) to avoid
+  // wasting a DB round-trip on filler turns like "yes", "ok", "go ahead".
+  // Fire-and-forget on error — a failed search never blocks the Lex response.
+  let resolvedLegislationContext = legislationContext
+  const messageWordCount = message.trim().split(/\s+/).length
+  if (messageWordCount >= 4 && (!resolvedLegislationContext || resolvedLegislationContext.length === 0)) {
+    try {
+      const { results } = await searchLegislation({ q: message, limit: 4, minRank: 0.25 })
+      if (results.length > 0) {
+        resolvedLegislationContext = results.map(r => ({
+          actTitle:      r.actTitle,
+          sectionNumber: r.sectionNumber,
+          sectionTitle:  r.title ?? '',
+          compiledText:  r.snippet.replace(/<<|>>/g, ''),
+        }))
+      }
+    } catch {
+      // search failure is non-fatal
+    }
+  }
+
   const systemPrompt = buildSystemPrompt({
     ideaTitle: idea.title,
     currentStage: idea.stage,
@@ -767,7 +789,7 @@ export async function POST(req: Request, { params }: Params) {
     currentFieldKey: currentFieldKey ?? null,
     currentFieldLabel: currentFieldLabel ?? null,
     currentFieldSection: currentFieldSection ?? null,
-    legislationContext: legislationContext ?? undefined,
+    legislationContext: resolvedLegislationContext ?? undefined,
   })
 
   const startTime = Date.now()
