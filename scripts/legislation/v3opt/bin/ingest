@@ -1,0 +1,6 @@
+#!/bin/bash
+# V.3-B-opt ingest entry point
+# Usage: bash bin/ingest [--full] [--resume]
+set -e
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+node "$DIR/dist/main.js" "$@"

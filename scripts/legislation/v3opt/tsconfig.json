@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "baseUrl": "../../../scrutinise-web",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "paths": {
+      "dotenv": ["./node_modules/dotenv"],
+      "dotenv/*": ["./node_modules/dotenv/*"],
+      "@prisma/client": ["./node_modules/@prisma/client"],
+      "@prisma/adapter-pg": ["./node_modules/@prisma/adapter-pg"],
+      "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"],
+      "@aws-sdk/client-s3": ["./node_modules/@aws-sdk/client-s3"],
+      "@aws-sdk/client-s3/*": ["./node_modules/@aws-sdk/client-s3/*"],
+      "adm-zip": ["../scripts/legislation/v3opt/node_modules/adm-zip"],
+      "fast-xml-parser": ["../scripts/legislation/v3opt/node_modules/fast-xml-parser"],
+      "fast-xml-parser/*": ["../scripts/legislation/v3opt/node_modules/fast-xml-parser/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

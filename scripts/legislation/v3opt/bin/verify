@@ -1,0 +1,6 @@
+#!/bin/bash
+# V.3-B-opt standalone verification
+# Usage: bash bin/verify
+set -e
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+node "$DIR/dist/verify.js" "$@"
