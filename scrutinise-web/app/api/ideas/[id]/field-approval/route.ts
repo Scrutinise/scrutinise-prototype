@@ -10,13 +10,14 @@ const FieldApprovalSchema = z.object({
   value: z.string(),
 })
 
-// Stage 1 Idea-level fields — written directly to Idea record
+// Stage 1 Idea-level scalar fields — written directly to Idea record
 const IDEA_STAGE1_FIELDS = new Set([
   'title',
   'summaryDescription',
   'summaryDiagnosis',
   'summaryGuidingPolicy',
   'summaryCoherentActions',
+  'backgroundResearch',
   'govtArea',
 ])
 
@@ -45,9 +46,12 @@ async function buildCompletedFields(ideaId: string) {
       summaryDiagnosis: true,
       summaryGuidingPolicy: true,
       summaryCoherentActions: true,
+      backgroundResearch: true,
+      initialThoughts: true,
       whoAffected: true,
       proposedWording: true,
       coherentActions: { select: { id: true } },
+      legislationLinks: { select: { id: true } },
       diagnoses: {
         select: {
           text: true, obstacleDefined: true, whoAffected: true, howAffected: true,
@@ -66,15 +70,20 @@ async function buildCompletedFields(ideaId: string) {
   const diag = latest?.diagnoses?.[0]
   const gp = latest?.guidingPolicies?.[0]
   const cActionsCount = latest?.coherentActions.length ?? 0
+  const legLinksCount = latest?.legislationLinks?.length ?? 0
 
   return {
     completedFields: {
-      // Initial Information
+      // Stage 1 — Create
       title: !!latest?.title,
       summaryDescription: !!latest?.summaryDescription,
-      govtArea: !!latest?.govtArea,
-      ideaType: !!latest?.ideaType,
       summaryDiagnosis: !!latest?.summaryDiagnosis || !!latest?.diagnosis,
+      backgroundResearch: !!latest?.backgroundResearch,
+      ideaLegislation: legLinksCount > 0,
+      initialThoughts: latest?.initialThoughts != null,
+      govtArea: !!latest?.govtArea,
+      // retained for Stage 2 cross-map
+      ideaType: !!latest?.ideaType,
       rootCause: !!latest?.rootCause,
       summaryGuidingPolicy: !!latest?.summaryGuidingPolicy || !!latest?.guidingPolicy,
       summaryCoherentActions: cActionsCount > 0 || !!latest?.summaryCoherentActions?.trim(),
@@ -137,7 +146,35 @@ export async function POST(req: Request, { params }: Params) {
   const { fieldKey, value } = parsed.data
 
   try {
-    if (fieldKey === 'ideaType') {
+    if (fieldKey === 'initialThoughts') {
+      // Structured Json field — parse and write
+      let parsed: unknown
+      try { parsed = JSON.parse(value) } catch { parsed = null }
+      if (!parsed || typeof parsed !== 'object') {
+        return NextResponse.json({ error: 'initialThoughts must be valid JSON' }, { status: 422 })
+      }
+      await prisma.idea.update({ where: { id: ideaId }, data: { initialThoughts: parsed } })
+
+    } else if (fieldKey === 'ideaLegislation') {
+      // Relation field — parse JSON array of candidates and create IdeaLegislation rows
+      let candidates: Array<{ legislationGovUkId?: string; actTitle?: string }> = []
+      try { candidates = JSON.parse(value) } catch { candidates = [] }
+      if (!Array.isArray(candidates)) candidates = []
+      for (const c of candidates) {
+        if (!c.legislationGovUkId) continue
+        const legItem = await prisma.legislationItem.findUnique({
+          where: { legislationGovUkId: c.legislationGovUkId },
+          select: { id: true },
+        })
+        if (!legItem) continue
+        await prisma.ideaLegislation.upsert({
+          where: { ideaId_legislationItemId: { ideaId, legislationItemId: legItem.id } },
+          create: { ideaId, legislationItemId: legItem.id, linkType: 'relevant', addedByUserId: user.id },
+          update: {},
+        })
+      }
+
+    } else if (fieldKey === 'ideaType') {
       // Enum field — validate before writing
       if (value !== 'LEGISLATION' && value !== 'ORGANISATION') {
         return NextResponse.json({ error: 'Invalid ideaType value' }, { status: 422 })

@@ -45,6 +45,7 @@ export async function GET(req: Request, { params }: Params) {
       guidingPolicies: true,
       research: { orderBy: { createdAt: 'asc' } },
       collaborators: { include: { user: { select: { id: true, name: true, email: true } } } },
+      legislationLinks: { select: { id: true, legislationItemId: true } },
     },
   })
 

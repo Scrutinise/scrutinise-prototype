@@ -7,13 +7,21 @@ export interface FieldStep {
   isLoop?: boolean          // if true (coherent actions), loop resumes after completion
 }
 
+// Single source of truth for Stage 1 field sequence — sidebar count and currentFieldIndex
+// must both derive from this, or they drift (the V2H 'X of N' bug).
+export const STAGE_1_FIELDS: FieldStep[] = [
+  { key: 'title',              label: 'Title',                 section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'summaryDescription', label: 'The idea',              section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'summaryDiagnosis',   label: "What's causing it",     section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'backgroundResearch', label: 'Background',            section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'ideaLegislation',    label: 'Reference legislation', section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'initialThoughts',    label: 'Initial thoughts',      section: 'initialInformation', sectionLabel: 'Create Your Idea' },
+  { key: 'govtArea',           label: 'Government area',       section: 'initialInformation', sectionLabel: 'Create Your Idea', isLexGenerated: true },
+]
+
 export const FIELD_SEQUENCE: FieldStep[] = [
-  // Initial Information
-  { key: 'title',              label: '1. Title',               section: 'initialInformation', sectionLabel: 'Initial Information' },
-  { key: 'userProfiling',      label: 'User Profiling',         section: 'initialInformation', sectionLabel: 'Initial Information' },
-  { key: 'summaryDescription', label: '2. Summary Description', section: 'initialInformation', sectionLabel: 'Initial Information' },
-  { key: 'govtArea',           label: '3. Government Area',     section: 'initialInformation', sectionLabel: 'Initial Information' },
-  { key: 'ideaType',           label: '4. Idea Type',           section: 'initialInformation', sectionLabel: 'Initial Information' },
+  // Stage 1 — Create
+  ...STAGE_1_FIELDS,
 
   // Diagnosis
   { key: 'diagnosis.text',              label: "5. What's the Challenge?", section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
