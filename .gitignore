@@ -66,3 +66,7 @@ scripts/operational/hmrc-pilot-log.csv
 scripts/legislation/v3b-uksi/manifest-uksi.json
 scripts/legislation/v3b-uksi/phase3-uksi-progress.json
 scripts/legislation/v3b-uksi/pilot-log.csv
+
+files.zip
+scripts/legislation/v3opt/checkpoints-v3opt/
+commit-all.sh
