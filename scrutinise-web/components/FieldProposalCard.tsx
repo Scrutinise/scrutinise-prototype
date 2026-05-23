@@ -1,12 +1,25 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 type CardState = 'pending' | 'saved' | 'discussed'
+
+interface LegislationCandidate {
+  actTitle: string
+  sectionNumber?: string
+  sectionTitle?: string
+  legislationGovUkId?: string
+}
+
+interface InitialThoughtsOption {
+  id: number
+  routeType: string
+  summary: string
+}
 
 interface Props {
   fieldKey: string
@@ -22,14 +35,22 @@ interface Props {
 }
 
 // Swipe detection constants
-const SWIPE_HORIZONTAL_THRESHOLD = 50   // minimum horizontal pixels
-const SWIPE_DIRECTION_RATIO = 2.5       // horizontal must be 2.5× the vertical
+const SWIPE_HORIZONTAL_THRESHOLD = 50
+const SWIPE_DIRECTION_RATIO = 2.5
+
+const ROUTE_TYPE_LABELS: Record<string, string> = {
+  legislation: 'Changing legislation',
+  enforcement: 'Changing enforcement',
+  organisational: 'Changing organisational practice',
+  funding: 'Raising money',
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FieldProposalCard
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function FieldProposalCard({
+  fieldKey,
   fieldLabel,
   proposedValue,
   onAccept,
@@ -37,6 +58,8 @@ export default function FieldProposalCard({
   onDiscuss,
   autoAcceptSeconds = 30,
 }: Props) {
+  const isComplex = fieldKey === 'ideaLegislation' || fieldKey === 'initialThoughts'
+
   const [state, setState] = useState<CardState>('pending')
   const [countdown, setCountdown] = useState(autoAcceptSeconds)
   const [isPaused, setIsPaused] = useState(false)
@@ -44,12 +67,39 @@ export default function FieldProposalCard({
   const [isPulsing, setIsPulsing] = useState(false)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
 
+  // Parsed values for complex fields (stable across renders)
+  const legCandidates = useMemo<LegislationCandidate[]>(() => {
+    if (fieldKey !== 'ideaLegislation') return []
+    try {
+      const parsed = JSON.parse(proposedValue)
+      return Array.isArray(parsed) ? parsed : []
+    } catch { return [] }
+  }, [fieldKey, proposedValue])
+
+  const thoughtsData = useMemo<{ options: InitialThoughtsOption[]; chosen: number[] }>(() => {
+    if (fieldKey !== 'initialThoughts') return { options: [], chosen: [] }
+    try {
+      const parsed = JSON.parse(proposedValue)
+      if (parsed && Array.isArray(parsed.options)) {
+        return { options: parsed.options, chosen: Array.isArray(parsed.chosen) ? parsed.chosen : [] }
+      }
+    } catch { /* ignore */ }
+    return { options: [], chosen: [] }
+  }, [fieldKey, proposedValue])
+
+  // Multi-select state for ideaLegislation — pre-select all candidates
+  const [selectedLeg, setSelectedLeg] = useState<Set<string>>(() =>
+    new Set(legCandidates.filter(c => c.legislationGovUkId).map(c => c.legislationGovUkId!))
+  )
+
+  // Option selection state for initialThoughts — nothing pre-selected
+  const [selectedThoughts, setSelectedThoughts] = useState<Set<number>>(new Set())
+
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef<number>(0)
   const touchStartY = useRef<number>(0)
 
-  // Show swipe hint on mobile only if not yet dismissed
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const seen = localStorage.getItem('hasSeenSwipeHint')
@@ -66,7 +116,7 @@ export default function FieldProposalCard({
     }
   }, [])
 
-  // ── Accept handler ───────────────────────────────────────────────────────
+  // ── Accept handlers ──────────────────────────────────────────────────────
 
   const handleAccept = useCallback(() => {
     clearCountdown()
@@ -74,16 +124,37 @@ export default function FieldProposalCard({
     setState('saved')
     setSavedValue(proposedValue)
     onAccept(proposedValue)
-    // Dismiss swipe hint after first acceptance
     if (typeof window !== 'undefined' && !localStorage.getItem('hasSeenSwipeHint')) {
       localStorage.setItem('hasSeenSwipeHint', '1')
       setShowSwipeHint(false)
     }
-    // Signal the chat input to refocus after card acceptance
     window.dispatchEvent(new CustomEvent('lex-field-accepted'))
   }, [clearCountdown, proposedValue, onAccept])
 
-  // ── Edit handler — copies text to chat input, dismisses card ────────────
+  const handleAcceptLegislation = useCallback(() => {
+    const selected = legCandidates.filter(
+      c => c.legislationGovUkId && selectedLeg.has(c.legislationGovUkId)
+    )
+    clearCountdown()
+    setIsPulsing(true)
+    setState('saved')
+    setSavedValue(`${selected.length} legislation item${selected.length !== 1 ? 's' : ''} saved`)
+    onAccept(JSON.stringify(selected))
+    window.dispatchEvent(new CustomEvent('lex-field-accepted'))
+  }, [clearCountdown, legCandidates, selectedLeg, onAccept])
+
+  const handleAcceptThoughts = useCallback(() => {
+    const updated = { ...thoughtsData, chosen: Array.from(selectedThoughts) }
+    clearCountdown()
+    setIsPulsing(true)
+    setState('saved')
+    const n = selectedThoughts.size
+    setSavedValue(`${n} route${n !== 1 ? 's' : ''} selected`)
+    onAccept(JSON.stringify(updated))
+    window.dispatchEvent(new CustomEvent('lex-field-accepted'))
+  }, [clearCountdown, thoughtsData, selectedThoughts, onAccept])
+
+  // ── Edit / Discuss handlers ──────────────────────────────────────────────
 
   const handleEdit = useCallback(() => {
     clearCountdown()
@@ -91,18 +162,16 @@ export default function FieldProposalCard({
     onEdit(proposedValue)
   }, [clearCountdown, proposedValue, onEdit])
 
-  // ── Discuss handler ───────────────────────────────────────────────────────
-
   const handleDiscuss = useCallback(() => {
     clearCountdown()
     setState('discussed')
     onDiscuss()
   }, [clearCountdown, onDiscuss])
 
-  // ── Auto-accept countdown ───────────────────────────────────────────────
+  // ── Auto-accept countdown — disabled for complex fields ─────────────────
 
   useEffect(() => {
-    if (state !== 'pending' || isPaused) return
+    if (isComplex || state !== 'pending' || isPaused) return
 
     countdownRef.current = setInterval(() => {
       setCountdown(prev => {
@@ -116,12 +185,12 @@ export default function FieldProposalCard({
     }, 1000)
 
     return clearCountdown
-  }, [state, isPaused, handleAccept, clearCountdown])
+  }, [isComplex, state, isPaused, handleAccept, clearCountdown])
 
-  // ── Global keyboard shortcut — Enter accepts, Escape edits ──────────────
+  // ── Global keyboard shortcut — Enter accepts, Escape edits (standard only) ─
 
   useEffect(() => {
-    if (state !== 'pending') return
+    if (state !== 'pending' || isComplex) return
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
@@ -137,12 +206,12 @@ export default function FieldProposalCard({
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [state, handleAccept, handleEdit])
+  }, [state, isComplex, handleAccept, handleEdit])
 
   // ── Card keyboard shortcuts ──────────────────────────────────────────────
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (state !== 'pending') return
+    if (state !== 'pending' || isComplex) return
     if (e.key === 'Enter') {
       e.preventDefault()
       handleAccept()
@@ -155,7 +224,7 @@ export default function FieldProposalCard({
     }
   }
 
-  // ── Touch / swipe — improved threshold to avoid scroll conflicts ─────────
+  // ── Touch / swipe (standard fields only) ─────────────────────────────────
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -164,23 +233,16 @@ export default function FieldProposalCard({
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (state !== 'pending') return
+    if (state !== 'pending' || isComplex) return
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = e.changedTouches[0].clientY - touchStartY.current
     const absDx = Math.abs(dx)
     const absDy = Math.abs(dy)
 
-    // Only register as a swipe if horizontal movement dominates
     if (absDx > SWIPE_HORIZONTAL_THRESHOLD && absDx > absDy * SWIPE_DIRECTION_RATIO) {
-      if (dx > 0) {
-        // Swipe right → Accept
-        handleAccept()
-      } else {
-        // Swipe left → Edit (copy to input)
-        handleEdit()
-      }
+      if (dx > 0) handleAccept()
+      else handleEdit()
     } else {
-      // Not a directional swipe — resume countdown
       setIsPaused(false)
     }
   }
@@ -215,7 +277,140 @@ export default function FieldProposalCard({
     return null
   }
 
-  // ── Pending state ───────────────────────────────────────────────────────
+  // ── Complex field: ideaLegislation ──────────────────────────────────────
+
+  if (fieldKey === 'ideaLegislation') {
+    return (
+      <div className="rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-950/30 p-4 my-3">
+        <p className="text-sm font-medium text-teal-800 dark:text-teal-200 mb-3">
+          Proposed legislation references — uncheck any to exclude:
+        </p>
+        <div className="space-y-2 mb-4">
+          {legCandidates.length === 0 && (
+            <p className="text-sm text-zinc-500">No legislation candidates found.</p>
+          )}
+          {legCandidates.map((c, i) => (
+            <label
+              key={c.legislationGovUkId ?? i}
+              className="flex items-start gap-2.5 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={!!(c.legislationGovUkId && selectedLeg.has(c.legislationGovUkId))}
+                onChange={() => {
+                  if (!c.legislationGovUkId) return
+                  setSelectedLeg(prev => {
+                    const next = new Set(prev)
+                    if (next.has(c.legislationGovUkId!)) next.delete(c.legislationGovUkId!)
+                    else next.add(c.legislationGovUkId!)
+                    return next
+                  })
+                }}
+                className="mt-0.5 accent-teal-600"
+              />
+              <span className="text-sm text-gray-800 dark:text-gray-200">
+                <span className="font-medium">{c.actTitle}</span>
+                {c.sectionNumber && (
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {' — '}s.{c.sectionNumber}{c.sectionTitle ? `: ${c.sectionTitle}` : ''}
+                  </span>
+                )}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleEdit}
+            className="text-xs px-3 py-1.5 rounded border border-teal-400 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleAcceptLegislation}
+            disabled={selectedLeg.size === 0}
+            className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Accept{selectedLeg.size > 0 ? ` (${selectedLeg.size})` : ''}
+          </button>
+          <button
+            onClick={handleDiscuss}
+            className="text-xs text-zinc-500 hover:text-zinc-700 ml-auto transition-colors"
+          >
+            Discuss instead
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Complex field: initialThoughts ──────────────────────────────────────
+
+  if (fieldKey === 'initialThoughts') {
+    return (
+      <div className="rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-950/30 p-4 my-3">
+        <p className="text-sm font-medium text-teal-800 dark:text-teal-200 mb-3">
+          Choose a route forward — select any that interest you:
+        </p>
+        <div className="space-y-2 mb-4">
+          {thoughtsData.options.length === 0 && (
+            <p className="text-sm text-zinc-500">No routes proposed.</p>
+          )}
+          {thoughtsData.options.map(opt => {
+            const isSelected = selectedThoughts.has(opt.id)
+            return (
+              <button
+                key={opt.id}
+                onClick={() =>
+                  setSelectedThoughts(prev => {
+                    const next = new Set(prev)
+                    if (next.has(opt.id)) next.delete(opt.id)
+                    else next.add(opt.id)
+                    return next
+                  })
+                }
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  isSelected
+                    ? 'border-teal-500 bg-teal-100 dark:bg-teal-900/50'
+                    : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-teal-300 dark:hover:border-teal-600'
+                }`}
+              >
+                <span className="inline-block text-xs font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300 mb-1">
+                  {ROUTE_TYPE_LABELS[opt.routeType] ?? opt.routeType}
+                </span>
+                <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">{opt.summary}</p>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleEdit}
+            className="text-xs px-3 py-1.5 rounded border border-teal-400 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleAcceptThoughts}
+            disabled={selectedThoughts.size === 0}
+            className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Accept{selectedThoughts.size > 0
+              ? ` (${selectedThoughts.size} route${selectedThoughts.size > 1 ? 's' : ''})`
+              : ''}
+          </button>
+          <button
+            onClick={handleDiscuss}
+            className="text-xs text-zinc-500 hover:text-zinc-700 ml-auto transition-colors"
+          >
+            Discuss instead
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Standard pending state ───────────────────────────────────────────────
 
   return (
     <div

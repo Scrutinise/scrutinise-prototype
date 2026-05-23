@@ -9,7 +9,7 @@ import LegislationPanel from '@/components/LegislationPanel'
 import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
-import { SIDEBAR_SECTIONS, FIELD_SEQUENCE } from '@/lib/field-labels'
+import { STAGE_1_FIELDS, FIELD_SEQUENCE } from '@/lib/field-labels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -33,13 +33,16 @@ interface ChatMessage {
 }
 
 interface FieldCompletion {
-  // Initial Information
+  // Stage 1 — Create
   title: boolean
   summaryDescription: boolean
-  govtArea: boolean
-  ideaType: boolean
-  // Stage 1
   summaryDiagnosis: boolean
+  backgroundResearch: boolean
+  ideaLegislation: boolean
+  initialThoughts: boolean
+  govtArea: boolean
+  // retained for Stage 2 cross-map and backward compat
+  ideaType: boolean
   rootCause: boolean
   summaryGuidingPolicy: boolean
   summaryCoherentActions: boolean
@@ -87,21 +90,15 @@ interface Props {
 
 const DEFAULT_OPENING_MESSAGE = "I'm Lex, your researcher and guide. What's the challenge you want to fix?"
 
-const SIDEBAR_FIELDS: { key: keyof FieldCompletion; label: string }[] = [
-  { key: 'title',                  label: 'Title' },
-  { key: 'summaryDiagnosis',       label: "What's the Challenge?" },
-  { key: 'rootCause',              label: "What's Causing It?" },
-  { key: 'summaryGuidingPolicy',   label: 'How Will We Solve It?' },
-  { key: 'summaryCoherentActions', label: 'A Practical Step' },
-  { key: 'whoAffected',            label: "Who's Affected?" },
-  { key: 'proposedWording',        label: 'Proposed Wording' },
-]
+// Derived from STAGE_1_FIELDS — never defined separately (see V2H 'X of N' bug)
+const SIDEBAR_FIELDS = STAGE_1_FIELDS.map(f => ({ key: f.key as keyof FieldCompletion, label: f.label }))
 
 const EMPTY_FIELDS: FieldCompletion = {
-  // Initial Information
-  title: false, summaryDescription: false, govtArea: false, ideaType: false,
-  // Stage 1
-  summaryDiagnosis: false, rootCause: false,
+  // Stage 1 — Create
+  title: false, summaryDescription: false, summaryDiagnosis: false,
+  backgroundResearch: false, ideaLegislation: false, initialThoughts: false, govtArea: false,
+  // retained for Stage 2
+  ideaType: false, rootCause: false,
   summaryGuidingPolicy: false, summaryCoherentActions: false,
   whoAffected: false, proposedWording: false,
   // Stage 2 — Diagnosis
@@ -388,7 +385,6 @@ function Stage2Sidebar({
   )
 }
 
-// Progress map per UX notes Section 4 / lex_system_prompt_v5 Section 18
 function calcProgress(userMsgCount: number, fields: FieldCompletion, stage: string, coherentActionsCount: number): number {
   if (stage === 'STAGE_2') {
     const diagnosisComplete = fields.diagnosisText && fields.diagnosisWhoAffected &&
@@ -403,14 +399,13 @@ function calcProgress(userMsgCount: number, fields: FieldCompletion, stage: stri
     if (fields.diagnosisText) return 25
     return 15
   }
-  const { summaryDiagnosis, rootCause, summaryGuidingPolicy, summaryCoherentActions, whoAffected } = fields
-  const allCore = summaryDiagnosis && rootCause && summaryGuidingPolicy && summaryCoherentActions && whoAffected
-  if (allCore)                    return 90
-  if (summaryCoherentActions)     return 75
-  if (summaryGuidingPolicy)       return 60
-  if (summaryDiagnosis)           return 45
-  if (userMsgCount >= 2)          return 30
-  if (userMsgCount >= 1)          return 20
+  // Stage 1 — progress tracks the 7-field Create sequence
+  const stage1Done = STAGE_1_FIELDS.filter(f => fields[f.key as keyof FieldCompletion]).length
+  if (stage1Done === STAGE_1_FIELDS.length) return 95
+  const pct = Math.round((stage1Done / STAGE_1_FIELDS.length) * 85)
+  if (pct > 0) return Math.max(pct, userMsgCount >= 1 ? 20 : 10)
+  if (userMsgCount >= 2) return 30
+  if (userMsgCount >= 1) return 20
   return 0
 }
 
@@ -736,8 +731,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [coherentActionIds, setCoherentActionIds] = useState<string[]>([])
   // V2K-D2 — onboarding state: pending (show buttons) → explain (show how-it-works text) → done
   const [onboardingState, setOnboardingState] = useState<'pending' | 'explain' | 'done'>('pending')
-  const skipUserProfilingRef = useRef(false)
-
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -765,12 +758,19 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (!ideaData) return
     const vals: Record<string, string> = {}
 
-    // Core idea fields (Initial Information)
+    // Core idea fields
     if (ideaData.title) vals['title'] = ideaData.title
     if (ideaData.summaryDescription) vals['summaryDescription'] = ideaData.summaryDescription
     if (ideaData.govtArea) vals['govtArea'] = ideaData.govtArea
     if (ideaData.ideaType) vals['ideaType'] = ideaData.ideaType
     if (ideaData.summaryDiagnosis) vals['summaryDiagnosis'] = ideaData.summaryDiagnosis
+    if (ideaData.backgroundResearch) vals['backgroundResearch'] = ideaData.backgroundResearch
+    if (ideaData.initialThoughts != null) {
+      // Store as JSON string for display; null-safe
+      try { vals['initialThoughts'] = typeof ideaData.initialThoughts === 'string'
+        ? ideaData.initialThoughts : JSON.stringify(ideaData.initialThoughts)
+      } catch { /* skip */ }
+    }
     if (ideaData.summaryGuidingPolicy) vals['summaryGuidingPolicy'] = ideaData.summaryGuidingPolicy
     if (ideaData.summaryCoherentActions) vals['summaryCoherentActions'] = ideaData.summaryCoherentActions
     if (ideaData.whoAffected) vals['whoAffected'] = ideaData.whoAffected
@@ -778,6 +778,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     if (ideaData.diagnosis) vals['diagnosis'] = ideaData.diagnosis
     if (ideaData.guidingPolicy) vals['guidingPolicy'] = ideaData.guidingPolicy
     if (ideaData.rootCause) vals['rootCause'] = ideaData.rootCause
+    // IdeaLegislation links — track count for sidebar and panel visibility
+    if ((ideaData.legislationLinks?.length ?? 0) > 0) {
+      vals['ideaLegislation'] = `${ideaData.legislationLinks.length} link${ideaData.legislationLinks.length === 1 ? '' : 's'}`
+    }
 
     // Diagnosis entity fields — keyed to match FieldCompletion and DIAGNOSIS_FIELDS
     const diag = ideaData.diagnoses?.[0]
@@ -834,6 +838,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     })
 
     setFieldValues(vals)
+
+    // Derive Stage 1 completion state from loaded data — null fields = incomplete, not error
+    setFields(prev => ({
+      ...prev,
+      title: !!ideaData.title,
+      summaryDescription: !!ideaData.summaryDescription,
+      summaryDiagnosis: !!ideaData.summaryDiagnosis,
+      backgroundResearch: !!ideaData.backgroundResearch,
+      ideaLegislation: (ideaData.legislationLinks?.length ?? 0) > 0,
+      initialThoughts: ideaData.initialThoughts != null,
+      govtArea: !!ideaData.govtArea,
+    }))
 
     // Auto-open fields that have values — last 2 populated
     const populated = Object.keys(vals).filter(k => vals[k])
@@ -1315,7 +1331,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }
 
-  const completedCount = Object.values(fields).filter(Boolean).length
+  const completedCount = STAGE_1_FIELDS.filter(f => fields[f.key as keyof FieldCompletion]).length
 
   // Check if any proposals across all messages are still pending
   const hasPendingProposals = messages.some(
@@ -1462,17 +1478,21 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setLastAcceptedField(normKey)
     }
 
-    // V2K-D2 — Stage 1 completion: inject congratulations before Lex's next response
-    if (fieldKey === 'ideaType') {
-      setMessages(prev => [...prev, {
-        role: 'lex',
-        content: "Congratulations — you've completed Stage 1. You now have a title, summary, and key context for your idea. Now let's build out your diagnosis — let's understand the challenge you want to solve.",
-        timestamp: new Date().toISOString(),
-      }])
+    // Relation and Json fields bypass the Lex roundtrip — write directly via field-approval
+    if ((fieldKey === 'ideaLegislation' || fieldKey === 'initialThoughts') && ideaId && isSignedIn) {
+      const r = await fetch(`/api/ideas/${ideaId}/field-approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fieldKey, value }),
+      })
+      if (r.ok) {
+        const data = await r.json()
+        if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
+      }
+    } else {
+      // Send silent system message so Lex persists the accepted value
+      await handleSend(false, `Accepted: ${fieldLabel}`)
     }
-
-    // Send silent system message so Lex persists the accepted value
-    await handleSend(false, `Accepted: ${fieldLabel}`)
 
     // V2J-B1 — trigger legislation search at three moments
     if (fieldKey === 'summaryDescription') {
@@ -1496,20 +1516,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       return
     }
 
-    // V2K-D2 — skip userProfiling if user chose "I know what I'm doing"
-    const effectiveNextIdx = skipUserProfilingRef.current && FIELD_SEQUENCE[nextIdx]?.key === 'userProfiling'
-      ? nextIdx + 1
-      : nextIdx
-    const effectiveNextStep = FIELD_SEQUENCE[effectiveNextIdx]
-    setCurrentFieldIndex(effectiveNextIdx)
+    setCurrentFieldIndex(nextIdx)
 
     // If next step is isLexGenerated, auto-send a silent generation request (after state flush)
-    if (effectiveNextStep?.isLexGenerated) {
+    if (FIELD_SEQUENCE[nextIdx]?.isLexGenerated) {
       setTimeout(() => {
-        handleSend(false, `Please generate a summary for: ${effectiveNextStep.label}`)
+        handleSend(false, `Please generate a summary for: ${FIELD_SEQUENCE[nextIdx].label}`)
       }, 300)
     }
-  }, [currentProposal, fieldValues, handleSend, searchLegislation])
+  }, [currentProposal, fieldValues, handleSend, searchLegislation, ideaId, isSignedIn])
 
   const handleCurrentProposalEdit = useCallback((proposedValue: string) => {
     setCurrentProposal(null)
@@ -1559,7 +1574,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   // ── V2K-D2: Onboarding choice ──────────────────────────────────────────────
   const handleOnboardingKnow = useCallback(() => {
     setOnboardingState('done')
-    skipUserProfilingRef.current = true
   }, [])
 
   const handleOnboardingTellMore = useCallback(() => {
@@ -1604,7 +1618,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-3">
             {/* V2J-B2 — legislation toggle button (desktop) */}
-            {(legislationResults.length > 0 || legislationLoading) && (
+            {(legislationResults.length > 0 || legislationLoading || fields.ideaLegislation) && (
               <button
                 onClick={() => setShowLegislationPanel(v => !v)}
                 className={`hidden lg:inline-flex items-center px-3 py-1 rounded-md border border-teal-300 text-teal-700 hover:bg-teal-50 text-xs transition-colors${pulseLegButton ? ' animate-pulse ring-2 ring-teal-400' : ''}`}
