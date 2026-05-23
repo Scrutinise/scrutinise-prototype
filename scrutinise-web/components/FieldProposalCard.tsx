@@ -87,10 +87,8 @@ export default function FieldProposalCard({
     return { options: [], chosen: [] }
   }, [fieldKey, proposedValue])
 
-  // Multi-select state for ideaLegislation — pre-select all candidates
-  const [selectedLeg, setSelectedLeg] = useState<Set<string>>(() =>
-    new Set(legCandidates.filter(c => c.legislationGovUkId).map(c => c.legislationGovUkId!))
-  )
+  // Opt-in not opt-out: FTS candidates are keyword-matched and may be wrong (v6.0 §7); the user's tick is the verification step.
+  const [selectedLeg, setSelectedLeg] = useState<Set<string>>(() => new Set())
 
   // Option selection state for initialThoughts — nothing pre-selected
   const [selectedThoughts, setSelectedThoughts] = useState<Set<number>>(new Set())

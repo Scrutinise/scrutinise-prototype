@@ -7,6 +7,14 @@ export interface FieldStep {
   isLoop?: boolean          // if true (coherent actions), loop resumes after completion
 }
 
+export interface PageDefinition {
+  number: number                            // 1-indexed page number
+  name: string                              // display name (e.g. 'Initial Information')
+  section: string                           // matches FieldStep.section
+  fields: { key: string; label: string }[]
+  isDynamic?: boolean                       // true for Coherent Actions (pages grow per action)
+}
+
 // Single source of truth for Stage 1 field sequence — sidebar count and currentFieldIndex
 // must both derive from this, or they drift (the V2H 'X of N' bug).
 export const STAGE_1_FIELDS: FieldStep[] = [
@@ -55,6 +63,43 @@ export const FIELD_SEQUENCE: FieldStep[] = [
   { key: 'coherentAction.netCostOngoing',  label: '26. Ongoing Net Cost',     section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
   { key: 'coherentAction.netCostOneOff',   label: '27. One-off Net Cost',     section: 'coherentActions', sectionLabel: 'Coherent Actions', isLoop: true },
   { key: 'summaryCoherentActions',         label: 'Summary: Coherent Actions', section: 'coherentActions', sectionLabel: 'Coherent Actions', isLexGenerated: true },
+]
+
+// Single ordered page registry — sidebar AND currentFieldIndex read only this.
+// Two parallel field models (Stage 1 vs Kernel) caused new ideas to load the
+// wrong sequence (L6-A live test, screenshots 3-6).
+export const PAGE_REGISTRY: PageDefinition[] = [
+  {
+    number: 1,
+    name: 'Initial Information',
+    section: 'initialInformation',
+    fields: STAGE_1_FIELDS.map(f => ({ key: f.key, label: f.label })),
+  },
+  {
+    number: 2,
+    name: 'Diagnosis',
+    section: 'diagnosis',
+    fields: FIELD_SEQUENCE
+      .filter(f => f.section === 'diagnosis')
+      .map(f => ({ key: f.key, label: f.label })),
+  },
+  {
+    number: 3,
+    name: 'Guiding Policy',
+    section: 'guidingPolicy',
+    fields: FIELD_SEQUENCE
+      .filter(f => f.section === 'guidingPolicy')
+      .map(f => ({ key: f.key, label: f.label })),
+  },
+  {
+    number: 4,
+    name: 'Coherent Actions',
+    section: 'coherentActions',
+    fields: FIELD_SEQUENCE
+      .filter(f => f.section === 'coherentActions')
+      .map(f => ({ key: f.key, label: f.label })),
+    isDynamic: true,
+  },
 ]
 
 export const FIELD_LABELS: Record<string, { sectionHeading?: string; userLabel: string }> = {

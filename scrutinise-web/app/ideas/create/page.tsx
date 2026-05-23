@@ -56,10 +56,12 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   }
 
   let openingMessage: string
+  let isFirstIdea = false
 
   if (!dbUser) {
     // JIT sync not yet run — fall back to default
-    openingMessage = "I'm Lex, your researcher and guide. What's the challenge you want to fix?"
+    openingMessage = "I'm Lex, your researcher and guide. Before we start, would you like a quick guide to how this works, or do you want to dive straight in?"
+    isFirstIdea = true
   } else {
     const ideaCount = await prisma.idea.count({ where: { creatorId: dbUser.id } })
     const name = dbUser.preferredName ?? dbUser.firstName ?? ''
@@ -67,9 +69,10 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     const timeOfDay = getTimeOfDay(hour)
 
     if (ideaCount === 0) {
-      openingMessage = `Welcome ${name}, I'm Lex, your researcher and guide. To get started with your idea, we should start with the causes. What is the challenge you want to overcome?`
+      isFirstIdea = true
+      openingMessage = `Welcome ${name}, I'm Lex, your researcher and guide. Before we start, would you like a quick guide to how this works, or do you want to dive straight in?`
     } else {
-      openingMessage = `Good ${timeOfDay} ${name}, let's develop another idea. What is the challenge you want to overcome?`
+      openingMessage = `Good ${timeOfDay} ${name}, I assume you know what you're doing, but just in case, the button below takes you on a short guided tour. What's the problem or challenge you want to address?`
     }
   }
 
@@ -79,6 +82,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
       initialIdeaId={initialIdeaId}
       initialMessages={initialMessages}
       initialStage={initialStage}
+      isFirstIdea={isFirstIdea}
     />
   )
 }

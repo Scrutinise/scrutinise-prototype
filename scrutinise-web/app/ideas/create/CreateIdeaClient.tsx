@@ -9,7 +9,7 @@ import LegislationPanel from '@/components/LegislationPanel'
 import LexThinking from '@/components/LexThinking'
 import PublicNav from '@/components/PublicNav'
 import SiteFooter from '@/components/SiteFooter'
-import { STAGE_1_FIELDS, FIELD_SEQUENCE } from '@/lib/field-labels'
+import { STAGE_1_FIELDS, FIELD_SEQUENCE, PAGE_REGISTRY } from '@/lib/field-labels'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -82,6 +82,7 @@ interface Props {
   initialIdeaId?: string
   initialMessages?: unknown[]
   initialStage?: string
+  isFirstIdea?: boolean
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -558,11 +559,15 @@ function MobileSidebarContent({
     )
   }
 
+  // ideaType absent from Page 1 (L6-B Task 3.3) — column retained for Coherent Actions stage
   const initialInfoFields: { key: keyof FieldCompletion; label: string }[] = [
     { key: 'title',              label: '1. Title' },
-    { key: 'summaryDescription', label: '2. Summary Description' },
-    { key: 'govtArea',           label: '3. Government Area' },
-    { key: 'ideaType',           label: '4. Idea Type' },
+    { key: 'summaryDescription', label: '2. The idea' },
+    { key: 'summaryDiagnosis',   label: "3. What's causing it" },
+    { key: 'backgroundResearch', label: '4. Background' },
+    { key: 'ideaLegislation',    label: '5. Reference legislation' },
+    { key: 'initialThoughts',    label: '6. Initial thoughts' },
+    { key: 'govtArea',           label: '7. Government area' },
   ]
 
   const initialInfoHasContent = !!(fieldValues['title'] || fieldValues['summaryDescription'])
@@ -676,7 +681,7 @@ function MobileSidebarContent({
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages, initialStage }: Props) {
+export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages, initialStage, isFirstIdea = false }: Props) {
   const { isSignedIn } = useUser()
   const router = useRouter()
   const resolvedOpening = openingMessage ?? DEFAULT_OPENING_MESSAGE
@@ -720,6 +725,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0)
   const [caLoopCount, setCaLoopCount] = useState(0)
   const [addAnotherCAPrompt, setAddAnotherCAPrompt] = useState(false)
+  // L6-B Task 2.5 — revisit: saved index to return to after revisiting an earlier field
+  const [revisitReturnIndex, setRevisitReturnIndex] = useState<number | null>(null)
+  const revisitReturnIndexRef = useRef<number | null>(null)
+  useEffect(() => { revisitReturnIndexRef.current = revisitReturnIndex }, [revisitReturnIndex])
   // Inline field editing (direct edit without Lex)
   const [editingField, setEditingField] = useState<{ key: string; label: string; value: string } | null>(null)
   // V2J-B1 — legislation panel
@@ -751,6 +760,18 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const currentStep = FIELD_SEQUENCE[currentFieldIndex]
   const inCASection = currentStep?.section === 'coherentActions'
   const currentCoherentActionId = inCASection ? (coherentActionIds[caLoopCount] ?? null) : null
+
+  // L6-B Task 1.2/1.3 — active page derived from currentFieldIndex, not idea.stage.
+  // This is the structural fix: idea.stage auto-advances to STAGE_2 after fields 1+2,
+  // but the sidebar must stay on Page 1 until currentFieldIndex actually crosses into diagnosis.
+  const activeSection = currentStep?.section ?? 'initialInformation'
+  const activePage = PAGE_REGISTRY.find(p => p.section === activeSection) ?? PAGE_REGISTRY[0]
+
+  // L6-B Task 1.4 — per-page progress counter (resets on each page, never global)
+  const pageCompletedCount = activePage.fields.filter(f => {
+    const normKey = f.key.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
+    return fields[normKey as keyof FieldCompletion] || fields[f.key as keyof FieldCompletion]
+  }).length
 
   // ── Populate fieldValues from idea data ───────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -839,9 +860,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
     setFieldValues(vals)
 
-    // Derive Stage 1 completion state from loaded data — null fields = incomplete, not error
+    // Derive completion state for all pages — null fields = incomplete, not error
     setFields(prev => ({
       ...prev,
+      // Page 1
       title: !!ideaData.title,
       summaryDescription: !!ideaData.summaryDescription,
       summaryDiagnosis: !!ideaData.summaryDiagnosis,
@@ -849,6 +871,20 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       ideaLegislation: (ideaData.legislationLinks?.length ?? 0) > 0,
       initialThoughts: ideaData.initialThoughts != null,
       govtArea: !!ideaData.govtArea,
+      // Page 2 — Diagnosis
+      diagnosisText: !!(diag?.text),
+      diagnosisObstacleDefined: !!(diag?.obstacleDefined),
+      diagnosisWhoAffected: !!(diag?.whoAffected),
+      diagnosisHowAffected: !!(diag?.howAffected),
+      diagnosisWhyPersisted: !!(diag?.whyPersisted),
+      diagnosisImpactDescription: !!(diag?.impactDescription),
+      diagnosisImpactCost: !!(diag?.impactCost),
+      // Page 3 — Guiding Policy
+      guidingPolicyText: !!(gp?.text),
+      guidingPolicyCoreTheory: !!(gp?.coreTheory),
+      guidingPolicyMechanism: !!(gp?.mechanismTypes?.length),
+      guidingPolicyTradeOffs: !!(gp?.tradeOffs),
+      guidingPolicyCompetitiveIdeaAnalysis: !!(gp?.competitiveIdeaAnalysis),
     }))
 
     // Auto-open fields that have values — last 2 populated
@@ -1331,8 +1367,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }
 
-  const completedCount = STAGE_1_FIELDS.filter(f => fields[f.key as keyof FieldCompletion]).length
-
   // Check if any proposals across all messages are still pending
   const hasPendingProposals = messages.some(
     m => m.proposals?.some(p => p.status === 'pending')
@@ -1516,7 +1550,38 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       return
     }
 
+    // L6-B Task 2.5 — if in revisit mode, return to saved index instead of advancing
+    if (revisitReturnIndexRef.current !== null) {
+      const returnIdx = revisitReturnIndexRef.current
+      setRevisitReturnIndex(null)
+      setCurrentFieldIndex(returnIdx)
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'lex' as const,
+          content: "Are there any other fields you'd like to revisit before we continue?",
+          timestamp: new Date().toISOString(),
+        },
+      ])
+      return
+    }
+
     setCurrentFieldIndex(nextIdx)
+
+    // L6-B Task 2.3 — inject Page 1→2 transition message before first Diagnosis question
+    const crossingToPage2 =
+      currentStep?.section === 'initialInformation' &&
+      FIELD_SEQUENCE[nextIdx]?.section === 'diagnosis'
+    if (crossingToPage2) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'lex' as const,
+          content: "We're going to drill down more into the causes, because to write effective legislation it's essential to identify the original and most significant causes, not necessarily the most obvious ones.",
+          timestamp: new Date().toISOString(),
+        },
+      ])
+    }
 
     // If next step is isLexGenerated, auto-send a silent generation request (after state flush)
     if (FIELD_SEQUENCE[nextIdx]?.isLexGenerated) {
@@ -1541,6 +1606,28 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const handleCurrentProposalDiscuss = useCallback(() => {
     setCurrentProposal(null)
   }, [])
+
+  // L6-B Task 2.5 — Back-navigation: clicking a completed field in the sidebar
+  // temporarily sets currentFieldIndex to that field so Lex discusses/edits it.
+  // revisitReturnIndex stores where to return. When the revisit is done (user
+  // clicks "Done revisiting"), Lex asks if they want to revisit anything else, then
+  // currentFieldIndex is restored.
+  const handleRevisitField = useCallback((fieldKey: string) => {
+    const targetIdx = FIELD_SEQUENCE.findIndex(s => s.key === fieldKey)
+    if (targetIdx < 0) return
+    const savedIdx = currentFieldIndexRef.current
+    if (targetIdx >= savedIdx) return // not a backward move
+    setRevisitReturnIndex(savedIdx)
+    setCurrentFieldIndex(targetIdx)
+    handleSend(false, `I'd like to revisit: ${FIELD_SEQUENCE[targetIdx].label}`)
+  }, [handleSend])
+
+  const handleRevisitDone = useCallback(() => {
+    if (revisitReturnIndex === null) return
+    setCurrentFieldIndex(revisitReturnIndex)
+    setRevisitReturnIndex(null)
+    handleSend(false, 'Revisit done — returning to where I was')
+  }, [revisitReturnIndex, handleSend])
 
   // ── V2H-A2: CA loop — "Add another Coherent Action?" response ─────────────
   const handleAddAnotherCA = useCallback((yes: boolean) => {
@@ -1818,7 +1905,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             ))}
                           </div>
                         )}
-                        {/* V2K-D2 — Onboarding choice buttons / explanation (first Lex message only) */}
+                        {/* L6-B Task 2.2 — Onboarding buttons: two for first idea, one for subsequent */}
                         {i === 0 && onboardingState === 'pending' && !msg.isStreaming && (
                           <div className="mt-4 flex flex-wrap gap-2">
                             <button
@@ -1827,12 +1914,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             >
                               How does this work?
                             </button>
-                            <button
-                              onClick={handleOnboardingKnow}
-                              className="px-4 py-2 text-sm font-medium border border-zinc-300 text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors"
-                            >
-                              I know what I&apos;m doing →
-                            </button>
+                            {isFirstIdea && (
+                              <button
+                                onClick={handleOnboardingKnow}
+                                className="px-4 py-2 text-sm font-medium border border-zinc-300 text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors"
+                              >
+                                I know what I&apos;m doing →
+                              </button>
+                            )}
                           </div>
                         )}
                         {i === 0 && onboardingState === 'explain' && !msg.isStreaming && (
@@ -2075,11 +2164,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
 
         {/* ── Sidebar — desktop only (lg+) ──────────────────────────────── */}
         <aside className={`hidden lg:flex flex-col shrink-0 border-l border-border bg-zinc-50/50 overflow-y-auto transition-all duration-300 ${sidebarExpanded ? 'w-1/2' : 'w-72'}`}>
-          {/* Sidebar header with expand toggle */}
+          {/* Sidebar header with page indicator and expand toggle */}
           <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-              Your idea
-            </p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                Page {activePage.number} — {activePage.name}
+              </p>
+            </div>
             <button
               onClick={() => setSidebarExpanded(e => !e)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -2090,7 +2181,19 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-4 gap-1">
-            {currentStage === 'STAGE_1' ? (
+            {/* L6-B Task 2.5 — revisit banner */}
+            {revisitReturnIndex !== null && (
+              <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 flex items-center justify-between gap-2">
+                <span className="text-xs text-amber-700">Revisiting an earlier field</span>
+                <button
+                  onClick={handleRevisitDone}
+                  className="text-xs px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors shrink-0"
+                >
+                  Done revisiting
+                </button>
+              </div>
+            )}
+            {activeSection === 'initialInformation' ? (
               <>
                 {SIDEBAR_FIELDS.map(({ key, label }) => {
                   const done = fields[key]
@@ -2098,6 +2201,8 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                   const keyStr = String(key)
                   const isOpen = openFields.has(keyStr)
                   const value = fieldValues[keyStr]
+                  const fieldSeqIdx = FIELD_SEQUENCE.findIndex(s => s.key === keyStr)
+                  const canRevisit = done && fieldSeqIdx >= 0 && fieldSeqIdx < currentFieldIndex && revisitReturnIndex === null
                   return (
                     <div key={keyStr} className="mb-1">
                       <div
@@ -2120,6 +2225,15 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                         <span className={`text-sm transition-colors flex-1 ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
                           {label}
                         </span>
+                        {canRevisit && (
+                          <button
+                            onClick={e => { e.stopPropagation(); handleRevisitField(keyStr) }}
+                            className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-teal-600 transition-all px-1"
+                            title="Revisit this field with Lex"
+                          >
+                            ↩
+                          </button>
+                        )}
                         {value && (
                           <span className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
                             {isOpen ? '▲' : '▼'}
@@ -2195,9 +2309,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                     </div>
                   )
                 })}
-                {completedCount > 0 && (
+                {pageCompletedCount > 0 && (
                   <p className="text-xs text-zinc-400 mt-4">
-                    {completedCount} of 7 fields complete
+                    {pageCompletedCount} of {activePage.fields.length} fields complete
                   </p>
                 )}
               </>
