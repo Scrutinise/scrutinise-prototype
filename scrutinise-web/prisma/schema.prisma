@@ -542,6 +542,8 @@ model Idea {
   summaryDiagnosis          String?
   summaryGuidingPolicy      String?
   summaryCoherentActions    String?
+  backgroundResearch        String?
+  initialThoughts           Json?
   ideaType                  IdeaType        @default(LEGISLATION)
   govtArea                  String
   govtLevel                 GovtLevel       @default(NATIONAL)
