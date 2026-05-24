@@ -357,7 +357,10 @@ enum LegislationType {
   SSI     // Scottish Statutory Instrument
   ANAW    // Act of the National Assembly for Wales / Senedd
   WSI     // Welsh Statutory Instrument
-  NIER    // Northern Ireland legislation
+  NIER    // Northern Ireland legislation (generic / legacy)
+  NISR    // Northern Ireland Statutory Rule
+  NISI    // Northern Ireland Statutory Instrument (Order in Council)
+  NIA     // Act of the Northern Ireland Assembly
   EUR     // Retained EU legislation
   OTHER
 }

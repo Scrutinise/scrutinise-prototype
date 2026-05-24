@@ -1,0 +1,6041 @@
+[
+  {
+    "actId": "anaw/2012/1",
+    "zipPath": "2012/anaw-2012-1-revised-data.xml",
+    "compressedSize": 4171,
+    "uncompressedSize": 19592,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2012/2",
+    "zipPath": "2012/anaw-2012-2-revised-data.xml",
+    "compressedSize": 25871,
+    "uncompressedSize": 229387,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/1",
+    "zipPath": "2013/anaw-2013-1-revised-data.xml",
+    "compressedSize": 126294,
+    "uncompressedSize": 1263862,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/2",
+    "zipPath": "2013/anaw-2013-2-revised-data.xml",
+    "compressedSize": 19750,
+    "uncompressedSize": 145405,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/3",
+    "zipPath": "2013/anaw-2013-3-revised-data.xml",
+    "compressedSize": 66398,
+    "uncompressedSize": 603339,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/4",
+    "zipPath": "2013/anaw-2013-4-revised-data.xml",
+    "compressedSize": 88446,
+    "uncompressedSize": 874410,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/5",
+    "zipPath": "2013/anaw-2013-5-revised-data.xml",
+    "compressedSize": 15809,
+    "uncompressedSize": 123468,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/6",
+    "zipPath": "2013/anaw-2013-6-revised-data.xml",
+    "compressedSize": 88845,
+    "uncompressedSize": 729513,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2013/7",
+    "zipPath": "2013/anaw-2013-7-revised-data.xml",
+    "compressedSize": 11473,
+    "uncompressedSize": 88527,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/1",
+    "zipPath": "2014/anaw-2014-1-revised-data.xml",
+    "compressedSize": 11412,
+    "uncompressedSize": 77763,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/2",
+    "zipPath": "2014/anaw-2014-2-revised-data.xml",
+    "compressedSize": 3674,
+    "uncompressedSize": 18151,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/3",
+    "zipPath": "2014/anaw-2014-3-revised-data.xml",
+    "compressedSize": 5975,
+    "uncompressedSize": 37434,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/4",
+    "zipPath": "2014/anaw-2014-4-revised-data.xml",
+    "compressedSize": 225769,
+    "uncompressedSize": 2037557,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/5",
+    "zipPath": "2014/anaw-2014-5-revised-data.xml",
+    "compressedSize": 47396,
+    "uncompressedSize": 396766,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/6",
+    "zipPath": "2014/anaw-2014-6-revised-data.xml",
+    "compressedSize": 11030,
+    "uncompressedSize": 68550,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2014/7",
+    "zipPath": "2014/anaw-2014-7-revised-data.xml",
+    "compressedSize": 115934,
+    "uncompressedSize": 951347,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/1",
+    "zipPath": "2015/anaw-2015-1-revised-data.xml",
+    "compressedSize": 39621,
+    "uncompressedSize": 325378,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/2",
+    "zipPath": "2015/anaw-2015-2-revised-data.xml",
+    "compressedSize": 64429,
+    "uncompressedSize": 530971,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/3",
+    "zipPath": "2015/anaw-2015-3-revised-data.xml",
+    "compressedSize": 19076,
+    "uncompressedSize": 133176,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/4",
+    "zipPath": "2015/anaw-2015-4-revised-data.xml",
+    "compressedSize": 68502,
+    "uncompressedSize": 599245,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/5",
+    "zipPath": "2015/anaw-2015-5-revised-data.xml",
+    "compressedSize": 58629,
+    "uncompressedSize": 531883,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2015/6",
+    "zipPath": "2015/anaw-2015-6-revised-data.xml",
+    "compressedSize": 6399,
+    "uncompressedSize": 52613,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/1",
+    "zipPath": "2016/anaw-2016-1-revised-data.xml",
+    "compressedSize": 231948,
+    "uncompressedSize": 2212370,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/2",
+    "zipPath": "2016/anaw-2016-2-revised-data.xml",
+    "compressedSize": 186338,
+    "uncompressedSize": 1749009,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/3",
+    "zipPath": "2016/anaw-2016-3-revised-data.xml",
+    "compressedSize": 66340,
+    "uncompressedSize": 522492,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/4",
+    "zipPath": "2016/anaw-2016-4-revised-data.xml",
+    "compressedSize": 5503,
+    "uncompressedSize": 54410,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/5",
+    "zipPath": "2016/anaw-2016-5-revised-data.xml",
+    "compressedSize": 5743,
+    "uncompressedSize": 28015,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2016/6",
+    "zipPath": "2016/anaw-2016-6-revised-data.xml",
+    "compressedSize": 173833,
+    "uncompressedSize": 1624278,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2017/1",
+    "zipPath": "2017/anaw-2017-1-revised-data.xml",
+    "compressedSize": 263836,
+    "uncompressedSize": 2463774,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2017/2",
+    "zipPath": "2017/anaw-2017-2-revised-data.xml",
+    "compressedSize": 100536,
+    "uncompressedSize": 819038,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2017/3",
+    "zipPath": "2017/anaw-2017-3-revised-data.xml",
+    "compressedSize": 67502,
+    "uncompressedSize": 544506,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2017/4",
+    "zipPath": "2017/anaw-2017-4-revised-data.xml",
+    "compressedSize": 3200,
+    "uncompressedSize": 14291,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2018/1",
+    "zipPath": "2018/anaw-2018-1-revised-data.xml",
+    "compressedSize": 9368,
+    "uncompressedSize": 71980,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2018/2",
+    "zipPath": "2018/anaw-2018-2-revised-data.xml",
+    "compressedSize": 203909,
+    "uncompressedSize": 2400880,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2018/3",
+    "zipPath": "2018/anaw-2018-3-revised-data.xml",
+    "compressedSize": 4023,
+    "uncompressedSize": 31155,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2018/4",
+    "zipPath": "2018/anaw-2018-4-revised-data.xml",
+    "compressedSize": 14580,
+    "uncompressedSize": 111993,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2018/5",
+    "zipPath": "2018/anaw-2018-5-revised-data.xml",
+    "compressedSize": 20994,
+    "uncompressedSize": 152240,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2019/1",
+    "zipPath": "2019/anaw-2019-1-revised-data.xml",
+    "compressedSize": 6136,
+    "uncompressedSize": 38582,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2019/2",
+    "zipPath": "2019/anaw-2019-2-revised-data.xml",
+    "compressedSize": 25468,
+    "uncompressedSize": 203418,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2019/3",
+    "zipPath": "2019/anaw-2019-3-revised-data.xml",
+    "compressedSize": 84355,
+    "uncompressedSize": 717275,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2019/4",
+    "zipPath": "2019/anaw-2019-4-revised-data.xml",
+    "compressedSize": 57980,
+    "uncompressedSize": 604771,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2020/1",
+    "zipPath": "2020/anaw-2020-1-revised-data.xml",
+    "compressedSize": 37656,
+    "uncompressedSize": 286352,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2020/2",
+    "zipPath": "2020/anaw-2020-2-revised-data.xml",
+    "compressedSize": 3635,
+    "uncompressedSize": 19185,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "anaw/2020/3",
+    "zipPath": "2020/anaw-2020-3-revised-data.xml",
+    "compressedSize": 3464,
+    "uncompressedSize": 19850,
+    "version": "revised-current",
+    "legislationType": "ANAW",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asp/1999/1",
+    "zipPath": "1999/asp-1999-1-revised-data.xml",
+    "compressedSize": 2279,
+    "uncompressedSize": 10373,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/1",
+    "zipPath": "2000/asp-2000-1-revised-data.xml",
+    "compressedSize": 43766,
+    "uncompressedSize": 382101,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/10",
+    "zipPath": "2000/asp-2000-10-revised-data.xml",
+    "compressedSize": 37191,
+    "uncompressedSize": 287448,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/11",
+    "zipPath": "2000/asp-2000-11-revised-data.xml",
+    "compressedSize": 36449,
+    "uncompressedSize": 338592,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/12",
+    "zipPath": "2000/asp-2000-12-revised-data.xml",
+    "compressedSize": 1820,
+    "uncompressedSize": 7029,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/2",
+    "zipPath": "2000/asp-2000-2-revised-data.xml",
+    "compressedSize": 13691,
+    "uncompressedSize": 83163,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/3",
+    "zipPath": "2000/asp-2000-3-revised-data.xml",
+    "compressedSize": 1839,
+    "uncompressedSize": 7688,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/4",
+    "zipPath": "2000/asp-2000-4-revised-data.xml",
+    "compressedSize": 121020,
+    "uncompressedSize": 1108633,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/5",
+    "zipPath": "2000/asp-2000-5-revised-data.xml",
+    "compressedSize": 107960,
+    "uncompressedSize": 913214,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/6",
+    "zipPath": "2000/asp-2000-6-revised-data.xml",
+    "compressedSize": 35492,
+    "uncompressedSize": 286317,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/7",
+    "zipPath": "2000/asp-2000-7-revised-data.xml",
+    "compressedSize": 52534,
+    "uncompressedSize": 428885,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/8",
+    "zipPath": "2000/asp-2000-8-revised-data.xml",
+    "compressedSize": 3844,
+    "uncompressedSize": 21868,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2000/9",
+    "zipPath": "2000/asp-2000-9-revised-data.xml",
+    "compressedSize": 10096,
+    "uncompressedSize": 72466,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/1",
+    "zipPath": "2001/asp-2001-1-revised-data.xml",
+    "compressedSize": 5103,
+    "uncompressedSize": 26611,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/10",
+    "zipPath": "2001/asp-2001-10-revised-data.xml",
+    "compressedSize": 118429,
+    "uncompressedSize": 1060930,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/11",
+    "zipPath": "2001/asp-2001-11-revised-data.xml",
+    "compressedSize": 6060,
+    "uncompressedSize": 36063,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/12",
+    "zipPath": "2001/asp-2001-12-revised-data.xml",
+    "compressedSize": 1995,
+    "uncompressedSize": 8677,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/13",
+    "zipPath": "2001/asp-2001-13-revised-data.xml",
+    "compressedSize": 40739,
+    "uncompressedSize": 303089,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/14",
+    "zipPath": "2001/asp-2001-14-revised-data.xml",
+    "compressedSize": 7172,
+    "uncompressedSize": 47477,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/15",
+    "zipPath": "2001/asp-2001-15-revised-data.xml",
+    "compressedSize": 2277,
+    "uncompressedSize": 10827,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/2",
+    "zipPath": "2001/asp-2001-2-revised-data.xml",
+    "compressedSize": 88408,
+    "uncompressedSize": 887210,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/3",
+    "zipPath": "2001/asp-2001-3-revised-data.xml",
+    "compressedSize": 2062,
+    "uncompressedSize": 9892,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/4",
+    "zipPath": "2001/asp-2001-4-revised-data.xml",
+    "compressedSize": 16142,
+    "uncompressedSize": 115241,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/5",
+    "zipPath": "2001/asp-2001-5-revised-data.xml",
+    "compressedSize": 7357,
+    "uncompressedSize": 43914,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/6",
+    "zipPath": "2001/asp-2001-6-revised-data.xml",
+    "compressedSize": 3201,
+    "uncompressedSize": 16471,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/7",
+    "zipPath": "2001/asp-2001-7-revised-data.xml",
+    "compressedSize": 29478,
+    "uncompressedSize": 212706,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/8",
+    "zipPath": "2001/asp-2001-8-revised-data.xml",
+    "compressedSize": 55779,
+    "uncompressedSize": 532454,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2001/9",
+    "zipPath": "2001/asp-2001-9-revised-data.xml",
+    "compressedSize": 1810,
+    "uncompressedSize": 7511,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/1",
+    "zipPath": "2002/asp-2002-1-revised-data.xml",
+    "compressedSize": 12257,
+    "uncompressedSize": 92700,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/10",
+    "zipPath": "2002/asp-2002-10-revised-data.xml",
+    "compressedSize": 5456,
+    "uncompressedSize": 27317,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/11",
+    "zipPath": "2002/asp-2002-11-revised-data.xml",
+    "compressedSize": 83399,
+    "uncompressedSize": 721635,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/12",
+    "zipPath": "2002/asp-2002-12-revised-data.xml",
+    "compressedSize": 5702,
+    "uncompressedSize": 31573,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/13",
+    "zipPath": "2002/asp-2002-13-revised-data.xml",
+    "compressedSize": 92220,
+    "uncompressedSize": 772302,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/14",
+    "zipPath": "2002/asp-2002-14-revised-data.xml",
+    "compressedSize": 2319,
+    "uncompressedSize": 11628,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/15",
+    "zipPath": "2002/asp-2002-15-revised-data.xml",
+    "compressedSize": 2005,
+    "uncompressedSize": 8677,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/16",
+    "zipPath": "2002/asp-2002-16-revised-data.xml",
+    "compressedSize": 14877,
+    "uncompressedSize": 108854,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/17",
+    "zipPath": "2002/asp-2002-17-revised-data.xml",
+    "compressedSize": 76555,
+    "uncompressedSize": 717412,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/2",
+    "zipPath": "2002/asp-2002-2-revised-data.xml",
+    "compressedSize": 3498,
+    "uncompressedSize": 15962,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/3",
+    "zipPath": "2002/asp-2002-3-revised-data.xml",
+    "compressedSize": 104022,
+    "uncompressedSize": 1052689,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/4",
+    "zipPath": "2002/asp-2002-4-revised-data.xml",
+    "compressedSize": 2520,
+    "uncompressedSize": 11244,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/5",
+    "zipPath": "2002/asp-2002-5-revised-data.xml",
+    "compressedSize": 22825,
+    "uncompressedSize": 173812,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/6",
+    "zipPath": "2002/asp-2002-6-revised-data.xml",
+    "compressedSize": 2699,
+    "uncompressedSize": 17946,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/7",
+    "zipPath": "2002/asp-2002-7-revised-data.xml",
+    "compressedSize": 20238,
+    "uncompressedSize": 146929,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/8",
+    "zipPath": "2002/asp-2002-8-revised-data.xml",
+    "compressedSize": 3944,
+    "uncompressedSize": 18683,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2002/9",
+    "zipPath": "2002/asp-2002-9-revised-data.xml",
+    "compressedSize": 13373,
+    "uncompressedSize": 85727,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/1",
+    "zipPath": "2003/asp-2003-1-revised-data.xml",
+    "compressedSize": 41616,
+    "uncompressedSize": 290163,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/10",
+    "zipPath": "2003/asp-2003-10-revised-data.xml",
+    "compressedSize": 12859,
+    "uncompressedSize": 87407,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/11",
+    "zipPath": "2003/asp-2003-11-revised-data.xml",
+    "compressedSize": 126597,
+    "uncompressedSize": 1244365,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/12",
+    "zipPath": "2003/asp-2003-12-revised-data.xml",
+    "compressedSize": 8739,
+    "uncompressedSize": 51742,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/13",
+    "zipPath": "2003/asp-2003-13-revised-data.xml",
+    "compressedSize": 324943,
+    "uncompressedSize": 3351929,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/14",
+    "zipPath": "2003/asp-2003-14-revised-data.xml",
+    "compressedSize": 3368,
+    "uncompressedSize": 15057,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/15",
+    "zipPath": "2003/asp-2003-15-revised-data.xml",
+    "compressedSize": 79963,
+    "uncompressedSize": 697018,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/16",
+    "zipPath": "2003/asp-2003-16-revised-data.xml",
+    "compressedSize": 2239,
+    "uncompressedSize": 9816,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/17",
+    "zipPath": "2003/asp-2003-17-revised-data.xml",
+    "compressedSize": 23602,
+    "uncompressedSize": 196369,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/18",
+    "zipPath": "2003/asp-2003-18-revised-data.xml",
+    "compressedSize": 2348,
+    "uncompressedSize": 10087,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/19",
+    "zipPath": "2003/asp-2003-19-revised-data.xml",
+    "compressedSize": 7497,
+    "uncompressedSize": 39306,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/2",
+    "zipPath": "2003/asp-2003-2-revised-data.xml",
+    "compressedSize": 167604,
+    "uncompressedSize": 1674251,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/3",
+    "zipPath": "2003/asp-2003-3-revised-data.xml",
+    "compressedSize": 66372,
+    "uncompressedSize": 607688,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/4",
+    "zipPath": "2003/asp-2003-4-revised-data.xml",
+    "compressedSize": 48617,
+    "uncompressedSize": 389670,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/5",
+    "zipPath": "2003/asp-2003-5-revised-data.xml",
+    "compressedSize": 6682,
+    "uncompressedSize": 49369,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/6",
+    "zipPath": "2003/asp-2003-6-revised-data.xml",
+    "compressedSize": 22870,
+    "uncompressedSize": 170336,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/7",
+    "zipPath": "2003/asp-2003-7-revised-data.xml",
+    "compressedSize": 102746,
+    "uncompressedSize": 852509,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/8",
+    "zipPath": "2003/asp-2003-8-revised-data.xml",
+    "compressedSize": 61356,
+    "uncompressedSize": 508777,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2003/9",
+    "zipPath": "2003/asp-2003-9-revised-data.xml",
+    "compressedSize": 107415,
+    "uncompressedSize": 870638,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/1",
+    "zipPath": "2004/asp-2004-1-revised-data.xml",
+    "compressedSize": 15560,
+    "uncompressedSize": 117094,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/10",
+    "zipPath": "2004/asp-2004-10-revised-data.xml",
+    "compressedSize": 28664,
+    "uncompressedSize": 196247,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/11",
+    "zipPath": "2004/asp-2004-11-revised-data.xml",
+    "compressedSize": 44181,
+    "uncompressedSize": 313207,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/12",
+    "zipPath": "2004/asp-2004-12-revised-data.xml",
+    "compressedSize": 13370,
+    "uncompressedSize": 100038,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/2",
+    "zipPath": "2004/asp-2004-2-revised-data.xml",
+    "compressedSize": 20691,
+    "uncompressedSize": 148448,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/3",
+    "zipPath": "2004/asp-2004-3-revised-data.xml",
+    "compressedSize": 33485,
+    "uncompressedSize": 278353,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/4",
+    "zipPath": "2004/asp-2004-4-revised-data.xml",
+    "compressedSize": 70365,
+    "uncompressedSize": 672941,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/5",
+    "zipPath": "2004/asp-2004-5-revised-data.xml",
+    "compressedSize": 44617,
+    "uncompressedSize": 379101,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/6",
+    "zipPath": "2004/asp-2004-6-revised-data.xml",
+    "compressedSize": 84407,
+    "uncompressedSize": 699390,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/7",
+    "zipPath": "2004/asp-2004-7-revised-data.xml",
+    "compressedSize": 10708,
+    "uncompressedSize": 70744,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/8",
+    "zipPath": "2004/asp-2004-8-revised-data.xml",
+    "compressedSize": 130224,
+    "uncompressedSize": 1158329,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2004/9",
+    "zipPath": "2004/asp-2004-9-revised-data.xml",
+    "compressedSize": 16458,
+    "uncompressedSize": 116343,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/1",
+    "zipPath": "2005/asp-2005-1-revised-data.xml",
+    "compressedSize": 4310,
+    "uncompressedSize": 18970,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/10",
+    "zipPath": "2005/asp-2005-10-revised-data.xml",
+    "compressedSize": 146009,
+    "uncompressedSize": 1390111,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/11",
+    "zipPath": "2005/asp-2005-11-revised-data.xml",
+    "compressedSize": 2964,
+    "uncompressedSize": 13384,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/12",
+    "zipPath": "2005/asp-2005-12-revised-data.xml",
+    "compressedSize": 56294,
+    "uncompressedSize": 452870,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/13",
+    "zipPath": "2005/asp-2005-13-revised-data.xml",
+    "compressedSize": 55177,
+    "uncompressedSize": 458993,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/14",
+    "zipPath": "2005/asp-2005-14-revised-data.xml",
+    "compressedSize": 22776,
+    "uncompressedSize": 160857,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/15",
+    "zipPath": "2005/asp-2005-15-revised-data.xml",
+    "compressedSize": 34016,
+    "uncompressedSize": 277001,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/16",
+    "zipPath": "2005/asp-2005-16-revised-data.xml",
+    "compressedSize": 185043,
+    "uncompressedSize": 1795846,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/2",
+    "zipPath": "2005/asp-2005-2-revised-data.xml",
+    "compressedSize": 9039,
+    "uncompressedSize": 62172,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/3",
+    "zipPath": "2005/asp-2005-3-revised-data.xml",
+    "compressedSize": 66619,
+    "uncompressedSize": 553906,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/4",
+    "zipPath": "2005/asp-2005-4-revised-data.xml",
+    "compressedSize": 20544,
+    "uncompressedSize": 150983,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/5",
+    "zipPath": "2005/asp-2005-5-revised-data.xml",
+    "compressedSize": 88169,
+    "uncompressedSize": 872448,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/6",
+    "zipPath": "2005/asp-2005-6-revised-data.xml",
+    "compressedSize": 92810,
+    "uncompressedSize": 982084,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/7",
+    "zipPath": "2005/asp-2005-7-revised-data.xml",
+    "compressedSize": 25860,
+    "uncompressedSize": 229879,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/8",
+    "zipPath": "2005/asp-2005-8-revised-data.xml",
+    "compressedSize": 18263,
+    "uncompressedSize": 217875,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2005/9",
+    "zipPath": "2005/asp-2005-9-revised-data.xml",
+    "compressedSize": 12750,
+    "uncompressedSize": 101420,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/1",
+    "zipPath": "2006/asp-2006-1-revised-data.xml",
+    "compressedSize": 196109,
+    "uncompressedSize": 1694486,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/10",
+    "zipPath": "2006/asp-2006-10-revised-data.xml",
+    "compressedSize": 93703,
+    "uncompressedSize": 808254,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/11",
+    "zipPath": "2006/asp-2006-11-revised-data.xml",
+    "compressedSize": 77113,
+    "uncompressedSize": 704750,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/12",
+    "zipPath": "2006/asp-2006-12-revised-data.xml",
+    "compressedSize": 25693,
+    "uncompressedSize": 232132,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/13",
+    "zipPath": "2006/asp-2006-13-revised-data.xml",
+    "compressedSize": 52058,
+    "uncompressedSize": 393031,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/14",
+    "zipPath": "2006/asp-2006-14-revised-data.xml",
+    "compressedSize": 47067,
+    "uncompressedSize": 377358,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/15",
+    "zipPath": "2006/asp-2006-15-revised-data.xml",
+    "compressedSize": 7386,
+    "uncompressedSize": 54502,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/16",
+    "zipPath": "2006/asp-2006-16-revised-data.xml",
+    "compressedSize": 25695,
+    "uncompressedSize": 200539,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/17",
+    "zipPath": "2006/asp-2006-17-revised-data.xml",
+    "compressedSize": 75314,
+    "uncompressedSize": 570817,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/2",
+    "zipPath": "2006/asp-2006-2-revised-data.xml",
+    "compressedSize": 35974,
+    "uncompressedSize": 261597,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/3",
+    "zipPath": "2006/asp-2006-3-revised-data.xml",
+    "compressedSize": 2743,
+    "uncompressedSize": 16524,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/4",
+    "zipPath": "2006/asp-2006-4-revised-data.xml",
+    "compressedSize": 76422,
+    "uncompressedSize": 835241,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/5",
+    "zipPath": "2006/asp-2006-5-revised-data.xml",
+    "compressedSize": 20011,
+    "uncompressedSize": 144962,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/6",
+    "zipPath": "2006/asp-2006-6-revised-data.xml",
+    "compressedSize": 52639,
+    "uncompressedSize": 338269,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/7",
+    "zipPath": "2006/asp-2006-7-revised-data.xml",
+    "compressedSize": 55547,
+    "uncompressedSize": 356287,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/8",
+    "zipPath": "2006/asp-2006-8-revised-data.xml",
+    "compressedSize": 20455,
+    "uncompressedSize": 146827,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2006/9",
+    "zipPath": "2006/asp-2006-9-revised-data.xml",
+    "compressedSize": 3631,
+    "uncompressedSize": 23742,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/1",
+    "zipPath": "2007/asp-2007-1-revised-data.xml",
+    "compressedSize": 34448,
+    "uncompressedSize": 225475,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/10",
+    "zipPath": "2007/asp-2007-10-revised-data.xml",
+    "compressedSize": 61641,
+    "uncompressedSize": 487175,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/11",
+    "zipPath": "2007/asp-2007-11-revised-data.xml",
+    "compressedSize": 3414,
+    "uncompressedSize": 15248,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/12",
+    "zipPath": "2007/asp-2007-12-revised-data.xml",
+    "compressedSize": 35191,
+    "uncompressedSize": 280067,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/13",
+    "zipPath": "2007/asp-2007-13-revised-data.xml",
+    "compressedSize": 4804,
+    "uncompressedSize": 23187,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/14",
+    "zipPath": "2007/asp-2007-14-revised-data.xml",
+    "compressedSize": 167663,
+    "uncompressedSize": 1686458,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/15",
+    "zipPath": "2007/asp-2007-15-revised-data.xml",
+    "compressedSize": 7332,
+    "uncompressedSize": 45225,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/16",
+    "zipPath": "2007/asp-2007-16-revised-data.xml",
+    "compressedSize": 48240,
+    "uncompressedSize": 336381,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/17",
+    "zipPath": "2007/asp-2007-17-revised-data.xml",
+    "compressedSize": 43030,
+    "uncompressedSize": 368876,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/18",
+    "zipPath": "2007/asp-2007-18-revised-data.xml",
+    "compressedSize": 2046,
+    "uncompressedSize": 9311,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/19",
+    "zipPath": "2007/asp-2007-19-revised-data.xml",
+    "compressedSize": 53155,
+    "uncompressedSize": 399780,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/2",
+    "zipPath": "2007/asp-2007-2-revised-data.xml",
+    "compressedSize": 1751,
+    "uncompressedSize": 7234,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/3",
+    "zipPath": "2007/asp-2007-3-revised-data.xml",
+    "compressedSize": 179532,
+    "uncompressedSize": 1615256,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/4",
+    "zipPath": "2007/asp-2007-4-revised-data.xml",
+    "compressedSize": 101374,
+    "uncompressedSize": 945358,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/5",
+    "zipPath": "2007/asp-2007-5-revised-data.xml",
+    "compressedSize": 92226,
+    "uncompressedSize": 807892,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/6",
+    "zipPath": "2007/asp-2007-6-revised-data.xml",
+    "compressedSize": 89319,
+    "uncompressedSize": 721220,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/7",
+    "zipPath": "2007/asp-2007-7-revised-data.xml",
+    "compressedSize": 58214,
+    "uncompressedSize": 402221,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/8",
+    "zipPath": "2007/asp-2007-8-revised-data.xml",
+    "compressedSize": 47638,
+    "uncompressedSize": 370268,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2007/9",
+    "zipPath": "2007/asp-2007-9-revised-data.xml",
+    "compressedSize": 23996,
+    "uncompressedSize": 181483,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/1",
+    "zipPath": "2008/asp-2008-1-revised-data.xml",
+    "compressedSize": 4714,
+    "uncompressedSize": 27152,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/2",
+    "zipPath": "2008/asp-2008-2-revised-data.xml",
+    "compressedSize": 22739,
+    "uncompressedSize": 167556,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/3",
+    "zipPath": "2008/asp-2008-3-revised-data.xml",
+    "compressedSize": 3385,
+    "uncompressedSize": 16967,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/4",
+    "zipPath": "2008/asp-2008-4-revised-data.xml",
+    "compressedSize": 23905,
+    "uncompressedSize": 186714,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/5",
+    "zipPath": "2008/asp-2008-5-revised-data.xml",
+    "compressedSize": 101546,
+    "uncompressedSize": 941659,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/6",
+    "zipPath": "2008/asp-2008-6-revised-data.xml",
+    "compressedSize": 66044,
+    "uncompressedSize": 619362,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2008/7",
+    "zipPath": "2008/asp-2008-7-revised-data.xml",
+    "compressedSize": 9929,
+    "uncompressedSize": 67034,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/1",
+    "zipPath": "2009/asp-2009-1-revised-data.xml",
+    "compressedSize": 52052,
+    "uncompressedSize": 444643,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/10",
+    "zipPath": "2009/asp-2009-10-revised-data.xml",
+    "compressedSize": 4019,
+    "uncompressedSize": 22164,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/11",
+    "zipPath": "2009/asp-2009-11-revised-data.xml",
+    "compressedSize": 1993,
+    "uncompressedSize": 8892,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/12",
+    "zipPath": "2009/asp-2009-12-revised-data.xml",
+    "compressedSize": 103498,
+    "uncompressedSize": 1039950,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/2",
+    "zipPath": "2009/asp-2009-2-revised-data.xml",
+    "compressedSize": 18770,
+    "uncompressedSize": 125922,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/3",
+    "zipPath": "2009/asp-2009-3-revised-data.xml",
+    "compressedSize": 9366,
+    "uncompressedSize": 75162,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/4",
+    "zipPath": "2009/asp-2009-4-revised-data.xml",
+    "compressedSize": 3336,
+    "uncompressedSize": 18193,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/5",
+    "zipPath": "2009/asp-2009-5-revised-data.xml",
+    "compressedSize": 6142,
+    "uncompressedSize": 39752,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/6",
+    "zipPath": "2009/asp-2009-6-revised-data.xml",
+    "compressedSize": 81119,
+    "uncompressedSize": 665717,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/7",
+    "zipPath": "2009/asp-2009-7-revised-data.xml",
+    "compressedSize": 13282,
+    "uncompressedSize": 95906,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/8",
+    "zipPath": "2009/asp-2009-8-revised-data.xml",
+    "compressedSize": 2045,
+    "uncompressedSize": 9299,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2009/9",
+    "zipPath": "2009/asp-2009-9-revised-data.xml",
+    "compressedSize": 52096,
+    "uncompressedSize": 525665,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/1",
+    "zipPath": "2010/asp-2010-1-revised-data.xml",
+    "compressedSize": 58350,
+    "uncompressedSize": 486126,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/10",
+    "zipPath": "2010/asp-2010-10-revised-data.xml",
+    "compressedSize": 57254,
+    "uncompressedSize": 485079,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/11",
+    "zipPath": "2010/asp-2010-11-revised-data.xml",
+    "compressedSize": 49134,
+    "uncompressedSize": 448508,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/12",
+    "zipPath": "2010/asp-2010-12-revised-data.xml",
+    "compressedSize": 2917,
+    "uncompressedSize": 13160,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/13",
+    "zipPath": "2010/asp-2010-13-revised-data.xml",
+    "compressedSize": 239141,
+    "uncompressedSize": 2141411,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/14",
+    "zipPath": "2010/asp-2010-14-revised-data.xml",
+    "compressedSize": 81315,
+    "uncompressedSize": 725946,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/15",
+    "zipPath": "2010/asp-2010-15-revised-data.xml",
+    "compressedSize": 5292,
+    "uncompressedSize": 32103,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/16",
+    "zipPath": "2010/asp-2010-16-revised-data.xml",
+    "compressedSize": 123103,
+    "uncompressedSize": 1121877,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/17",
+    "zipPath": "2010/asp-2010-17-revised-data.xml",
+    "compressedSize": 108323,
+    "uncompressedSize": 996786,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/18",
+    "zipPath": "2010/asp-2010-18-revised-data.xml",
+    "compressedSize": 13708,
+    "uncompressedSize": 98293,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/2",
+    "zipPath": "2010/asp-2010-2-revised-data.xml",
+    "compressedSize": 46559,
+    "uncompressedSize": 485983,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/3",
+    "zipPath": "2010/asp-2010-3-revised-data.xml",
+    "compressedSize": 43215,
+    "uncompressedSize": 395819,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/4",
+    "zipPath": "2010/asp-2010-4-revised-data.xml",
+    "compressedSize": 13449,
+    "uncompressedSize": 90333,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/5",
+    "zipPath": "2010/asp-2010-5-revised-data.xml",
+    "compressedSize": 133355,
+    "uncompressedSize": 1096064,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/6",
+    "zipPath": "2010/asp-2010-6-revised-data.xml",
+    "compressedSize": 11272,
+    "uncompressedSize": 81470,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/7",
+    "zipPath": "2010/asp-2010-7-revised-data.xml",
+    "compressedSize": 2168,
+    "uncompressedSize": 9575,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/8",
+    "zipPath": "2010/asp-2010-8-revised-data.xml",
+    "compressedSize": 231985,
+    "uncompressedSize": 2108476,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2010/9",
+    "zipPath": "2010/asp-2010-9-revised-data.xml",
+    "compressedSize": 12881,
+    "uncompressedSize": 85806,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/1",
+    "zipPath": "2011/asp-2011-1-revised-data.xml",
+    "compressedSize": 164657,
+    "uncompressedSize": 1551462,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/10",
+    "zipPath": "2011/asp-2011-10-revised-data.xml",
+    "compressedSize": 11071,
+    "uncompressedSize": 88125,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/11",
+    "zipPath": "2011/asp-2011-11-revised-data.xml",
+    "compressedSize": 24122,
+    "uncompressedSize": 184920,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/12",
+    "zipPath": "2011/asp-2011-12-revised-data.xml",
+    "compressedSize": 22017,
+    "uncompressedSize": 161983,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/13",
+    "zipPath": "2011/asp-2011-13-revised-data.xml",
+    "compressedSize": 4469,
+    "uncompressedSize": 23664,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/14",
+    "zipPath": "2011/asp-2011-14-revised-data.xml",
+    "compressedSize": 28483,
+    "uncompressedSize": 207626,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/15",
+    "zipPath": "2011/asp-2011-15-revised-data.xml",
+    "compressedSize": 14931,
+    "uncompressedSize": 111221,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/16",
+    "zipPath": "2011/asp-2011-16-revised-data.xml",
+    "compressedSize": 23907,
+    "uncompressedSize": 207704,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/2",
+    "zipPath": "2011/asp-2011-2-revised-data.xml",
+    "compressedSize": 53675,
+    "uncompressedSize": 507582,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/3",
+    "zipPath": "2011/asp-2011-3-revised-data.xml",
+    "compressedSize": 30713,
+    "uncompressedSize": 217398,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/4",
+    "zipPath": "2011/asp-2011-4-revised-data.xml",
+    "compressedSize": 15013,
+    "uncompressedSize": 100296,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/5",
+    "zipPath": "2011/asp-2011-5-revised-data.xml",
+    "compressedSize": 22285,
+    "uncompressedSize": 174479,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/6",
+    "zipPath": "2011/asp-2011-6-revised-data.xml",
+    "compressedSize": 53734,
+    "uncompressedSize": 393036,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/7",
+    "zipPath": "2011/asp-2011-7-revised-data.xml",
+    "compressedSize": 14039,
+    "uncompressedSize": 99043,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/8",
+    "zipPath": "2011/asp-2011-8-revised-data.xml",
+    "compressedSize": 35559,
+    "uncompressedSize": 320196,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2011/9",
+    "zipPath": "2011/asp-2011-9-revised-data.xml",
+    "compressedSize": 70324,
+    "uncompressedSize": 622170,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/1",
+    "zipPath": "2012/asp-2012-1-revised-data.xml",
+    "compressedSize": 2485,
+    "uncompressedSize": 16045,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/10",
+    "zipPath": "2012/asp-2012-10-revised-data.xml",
+    "compressedSize": 3409,
+    "uncompressedSize": 20673,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/11",
+    "zipPath": "2012/asp-2012-11-revised-data.xml",
+    "compressedSize": 5216,
+    "uncompressedSize": 29625,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/2",
+    "zipPath": "2012/asp-2012-2-revised-data.xml",
+    "compressedSize": 12820,
+    "uncompressedSize": 83371,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/3",
+    "zipPath": "2012/asp-2012-3-revised-data.xml",
+    "compressedSize": 16615,
+    "uncompressedSize": 129852,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/4",
+    "zipPath": "2012/asp-2012-4-revised-data.xml",
+    "compressedSize": 5226,
+    "uncompressedSize": 30626,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/5",
+    "zipPath": "2012/asp-2012-5-revised-data.xml",
+    "compressedSize": 117041,
+    "uncompressedSize": 1100089,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/6",
+    "zipPath": "2012/asp-2012-6-revised-data.xml",
+    "compressedSize": 3334,
+    "uncompressedSize": 15002,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/7",
+    "zipPath": "2012/asp-2012-7-revised-data.xml",
+    "compressedSize": 7450,
+    "uncompressedSize": 42791,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/8",
+    "zipPath": "2012/asp-2012-8-revised-data.xml",
+    "compressedSize": 154602,
+    "uncompressedSize": 1428224,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2012/9",
+    "zipPath": "2012/asp-2012-9-revised-data.xml",
+    "compressedSize": 51950,
+    "uncompressedSize": 430348,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/1",
+    "zipPath": "2013/asp-2013-1-revised-data.xml",
+    "compressedSize": 18657,
+    "uncompressedSize": 154971,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/10",
+    "zipPath": "2013/asp-2013-10-revised-data.xml",
+    "compressedSize": 5774,
+    "uncompressedSize": 36203,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/11",
+    "zipPath": "2013/asp-2013-11-revised-data.xml",
+    "compressedSize": 191180,
+    "uncompressedSize": 1868553,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/12",
+    "zipPath": "2013/asp-2013-12-revised-data.xml",
+    "compressedSize": 41724,
+    "uncompressedSize": 326216,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/13",
+    "zipPath": "2013/asp-2013-13-revised-data.xml",
+    "compressedSize": 3212,
+    "uncompressedSize": 21588,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/14",
+    "zipPath": "2013/asp-2013-14-revised-data.xml",
+    "compressedSize": 142497,
+    "uncompressedSize": 1270226,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/2",
+    "zipPath": "2013/asp-2013-2-revised-data.xml",
+    "compressedSize": 4972,
+    "uncompressedSize": 25946,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/3",
+    "zipPath": "2013/asp-2013-3-revised-data.xml",
+    "compressedSize": 19763,
+    "uncompressedSize": 150396,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/4",
+    "zipPath": "2013/asp-2013-4-revised-data.xml",
+    "compressedSize": 12302,
+    "uncompressedSize": 79846,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/5",
+    "zipPath": "2013/asp-2013-5-revised-data.xml",
+    "compressedSize": 45492,
+    "uncompressedSize": 372273,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/6",
+    "zipPath": "2013/asp-2013-6-revised-data.xml",
+    "compressedSize": 19027,
+    "uncompressedSize": 151798,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/7",
+    "zipPath": "2013/asp-2013-7-revised-data.xml",
+    "compressedSize": 63133,
+    "uncompressedSize": 496795,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/8",
+    "zipPath": "2013/asp-2013-8-revised-data.xml",
+    "compressedSize": 4637,
+    "uncompressedSize": 25674,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2013/9",
+    "zipPath": "2013/asp-2013-9-revised-data.xml",
+    "compressedSize": 3771,
+    "uncompressedSize": 18125,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/1",
+    "zipPath": "2014/asp-2014-1-revised-data.xml",
+    "compressedSize": 45366,
+    "uncompressedSize": 444444,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/10",
+    "zipPath": "2014/asp-2014-10-revised-data.xml",
+    "compressedSize": 79074,
+    "uncompressedSize": 719487,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/11",
+    "zipPath": "2014/asp-2014-11-revised-data.xml",
+    "compressedSize": 6052,
+    "uncompressedSize": 66974,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/12",
+    "zipPath": "2014/asp-2014-12-revised-data.xml",
+    "compressedSize": 40182,
+    "uncompressedSize": 335590,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/13",
+    "zipPath": "2014/asp-2014-13-revised-data.xml",
+    "compressedSize": 4692,
+    "uncompressedSize": 22511,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/14",
+    "zipPath": "2014/asp-2014-14-revised-data.xml",
+    "compressedSize": 88562,
+    "uncompressedSize": 788378,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/15",
+    "zipPath": "2014/asp-2014-15-revised-data.xml",
+    "compressedSize": 3584,
+    "uncompressedSize": 17054,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/16",
+    "zipPath": "2014/asp-2014-16-revised-data.xml",
+    "compressedSize": 148868,
+    "uncompressedSize": 1381391,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/17",
+    "zipPath": "2014/asp-2014-17-revised-data.xml",
+    "compressedSize": 3968,
+    "uncompressedSize": 21398,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/18",
+    "zipPath": "2014/asp-2014-18-revised-data.xml",
+    "compressedSize": 121261,
+    "uncompressedSize": 1083689,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/19",
+    "zipPath": "2014/asp-2014-19-revised-data.xml",
+    "compressedSize": 67813,
+    "uncompressedSize": 691004,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/2",
+    "zipPath": "2014/asp-2014-2-revised-data.xml",
+    "compressedSize": 29146,
+    "uncompressedSize": 247843,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/3",
+    "zipPath": "2014/asp-2014-3-revised-data.xml",
+    "compressedSize": 88403,
+    "uncompressedSize": 780078,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/4",
+    "zipPath": "2014/asp-2014-4-revised-data.xml",
+    "compressedSize": 3772,
+    "uncompressedSize": 15963,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/5",
+    "zipPath": "2014/asp-2014-5-revised-data.xml",
+    "compressedSize": 46118,
+    "uncompressedSize": 386454,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/6",
+    "zipPath": "2014/asp-2014-6-revised-data.xml",
+    "compressedSize": 14577,
+    "uncompressedSize": 97504,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/7",
+    "zipPath": "2014/asp-2014-7-revised-data.xml",
+    "compressedSize": 5150,
+    "uncompressedSize": 25610,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/8",
+    "zipPath": "2014/asp-2014-8-revised-data.xml",
+    "compressedSize": 68869,
+    "uncompressedSize": 596564,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2014/9",
+    "zipPath": "2014/asp-2014-9-revised-data.xml",
+    "compressedSize": 41865,
+    "uncompressedSize": 355374,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/1",
+    "zipPath": "2015/asp-2015-1-revised-data.xml",
+    "compressedSize": 37048,
+    "uncompressedSize": 295028,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/10",
+    "zipPath": "2015/asp-2015-10-revised-data.xml",
+    "compressedSize": 74601,
+    "uncompressedSize": 639067,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/11",
+    "zipPath": "2015/asp-2015-11-revised-data.xml",
+    "compressedSize": 6659,
+    "uncompressedSize": 44610,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/12",
+    "zipPath": "2015/asp-2015-12-revised-data.xml",
+    "compressedSize": 36037,
+    "uncompressedSize": 306803,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/13",
+    "zipPath": "2015/asp-2015-13-revised-data.xml",
+    "compressedSize": 2280,
+    "uncompressedSize": 10861,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/2",
+    "zipPath": "2015/asp-2015-2-revised-data.xml",
+    "compressedSize": 12702,
+    "uncompressedSize": 83529,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/3",
+    "zipPath": "2015/asp-2015-3-revised-data.xml",
+    "compressedSize": 2389,
+    "uncompressedSize": 11854,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/4",
+    "zipPath": "2015/asp-2015-4-revised-data.xml",
+    "compressedSize": 5308,
+    "uncompressedSize": 30484,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/5",
+    "zipPath": "2015/asp-2015-5-revised-data.xml",
+    "compressedSize": 8871,
+    "uncompressedSize": 62067,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/6",
+    "zipPath": "2015/asp-2015-6-revised-data.xml",
+    "compressedSize": 122190,
+    "uncompressedSize": 1016162,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/7",
+    "zipPath": "2015/asp-2015-7-revised-data.xml",
+    "compressedSize": 13040,
+    "uncompressedSize": 92082,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/8",
+    "zipPath": "2015/asp-2015-8-revised-data.xml",
+    "compressedSize": 3352,
+    "uncompressedSize": 16002,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2015/9",
+    "zipPath": "2015/asp-2015-9-revised-data.xml",
+    "compressedSize": 36433,
+    "uncompressedSize": 318930,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/1",
+    "zipPath": "2016/asp-2016-1-revised-data.xml",
+    "compressedSize": 96362,
+    "uncompressedSize": 856430,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/10",
+    "zipPath": "2016/asp-2016-10-revised-data.xml",
+    "compressedSize": 37271,
+    "uncompressedSize": 333976,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/11",
+    "zipPath": "2016/asp-2016-11-revised-data.xml",
+    "compressedSize": 8180,
+    "uncompressedSize": 48705,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/12",
+    "zipPath": "2016/asp-2016-12-revised-data.xml",
+    "compressedSize": 14558,
+    "uncompressedSize": 101631,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/13",
+    "zipPath": "2016/asp-2016-13-revised-data.xml",
+    "compressedSize": 2392,
+    "uncompressedSize": 10520,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/14",
+    "zipPath": "2016/asp-2016-14-revised-data.xml",
+    "compressedSize": 25473,
+    "uncompressedSize": 203014,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/15",
+    "zipPath": "2016/asp-2016-15-revised-data.xml",
+    "compressedSize": 14700,
+    "uncompressedSize": 109891,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/16",
+    "zipPath": "2016/asp-2016-16-revised-data.xml",
+    "compressedSize": 33167,
+    "uncompressedSize": 274510,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/17",
+    "zipPath": "2016/asp-2016-17-revised-data.xml",
+    "compressedSize": 17360,
+    "uncompressedSize": 136118,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/18",
+    "zipPath": "2016/asp-2016-18-revised-data.xml",
+    "compressedSize": 125528,
+    "uncompressedSize": 1076448,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/19",
+    "zipPath": "2016/asp-2016-19-revised-data.xml",
+    "compressedSize": 105992,
+    "uncompressedSize": 1120272,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/2",
+    "zipPath": "2016/asp-2016-2-revised-data.xml",
+    "compressedSize": 32780,
+    "uncompressedSize": 279617,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/20",
+    "zipPath": "2016/asp-2016-20-revised-data.xml",
+    "compressedSize": 70521,
+    "uncompressedSize": 681852,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/21",
+    "zipPath": "2016/asp-2016-21-revised-data.xml",
+    "compressedSize": 253095,
+    "uncompressedSize": 2235688,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/22",
+    "zipPath": "2016/asp-2016-22-revised-data.xml",
+    "compressedSize": 39654,
+    "uncompressedSize": 333832,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/3",
+    "zipPath": "2016/asp-2016-3-revised-data.xml",
+    "compressedSize": 8315,
+    "uncompressedSize": 56112,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/4",
+    "zipPath": "2016/asp-2016-4-revised-data.xml",
+    "compressedSize": 10055,
+    "uncompressedSize": 58980,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/5",
+    "zipPath": "2016/asp-2016-5-revised-data.xml",
+    "compressedSize": 4816,
+    "uncompressedSize": 31889,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/6",
+    "zipPath": "2016/asp-2016-6-revised-data.xml",
+    "compressedSize": 2861,
+    "uncompressedSize": 12385,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/7",
+    "zipPath": "2016/asp-2016-7-revised-data.xml",
+    "compressedSize": 17246,
+    "uncompressedSize": 134475,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/8",
+    "zipPath": "2016/asp-2016-8-revised-data.xml",
+    "compressedSize": 40538,
+    "uncompressedSize": 339600,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2016/9",
+    "zipPath": "2016/asp-2016-9-revised-data.xml",
+    "compressedSize": 28700,
+    "uncompressedSize": 245569,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/1",
+    "zipPath": "2017/asp-2017-1-revised-data.xml",
+    "compressedSize": 11518,
+    "uncompressedSize": 67946,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/2",
+    "zipPath": "2017/asp-2017-2-revised-data.xml",
+    "compressedSize": 29056,
+    "uncompressedSize": 216692,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/3",
+    "zipPath": "2017/asp-2017-3-revised-data.xml",
+    "compressedSize": 3555,
+    "uncompressedSize": 14855,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/4",
+    "zipPath": "2017/asp-2017-4-revised-data.xml",
+    "compressedSize": 7263,
+    "uncompressedSize": 40414,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/5",
+    "zipPath": "2017/asp-2017-5-revised-data.xml",
+    "compressedSize": 6973,
+    "uncompressedSize": 48615,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/6",
+    "zipPath": "2017/asp-2017-6-revised-data.xml",
+    "compressedSize": 13342,
+    "uncompressedSize": 102630,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2017/7",
+    "zipPath": "2017/asp-2017-7-revised-data.xml",
+    "compressedSize": 4222,
+    "uncompressedSize": 23102,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/1",
+    "zipPath": "2018/asp-2018-1-revised-data.xml",
+    "compressedSize": 2647,
+    "uncompressedSize": 12924,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/10",
+    "zipPath": "2018/asp-2018-10-revised-data.xml",
+    "compressedSize": 19233,
+    "uncompressedSize": 142999,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/11",
+    "zipPath": "2018/asp-2018-11-revised-data.xml",
+    "compressedSize": 2030,
+    "uncompressedSize": 9415,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/12",
+    "zipPath": "2018/asp-2018-12-revised-data.xml",
+    "compressedSize": 28537,
+    "uncompressedSize": 226378,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/13",
+    "zipPath": "2018/asp-2018-13-revised-data.xml",
+    "compressedSize": 12298,
+    "uncompressedSize": 97440,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/14",
+    "zipPath": "2018/asp-2018-14-revised-data.xml",
+    "compressedSize": 9936,
+    "uncompressedSize": 68275,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/15",
+    "zipPath": "2018/asp-2018-15-revised-data.xml",
+    "compressedSize": 9430,
+    "uncompressedSize": 70698,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/2",
+    "zipPath": "2018/asp-2018-2-revised-data.xml",
+    "compressedSize": 2051,
+    "uncompressedSize": 8773,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/3",
+    "zipPath": "2018/asp-2018-3-revised-data.xml",
+    "compressedSize": 11863,
+    "uncompressedSize": 89206,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/4",
+    "zipPath": "2018/asp-2018-4-revised-data.xml",
+    "compressedSize": 13164,
+    "uncompressedSize": 91235,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/5",
+    "zipPath": "2018/asp-2018-5-revised-data.xml",
+    "compressedSize": 16674,
+    "uncompressedSize": 136064,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/6",
+    "zipPath": "2018/asp-2018-6-revised-data.xml",
+    "compressedSize": 16142,
+    "uncompressedSize": 109095,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/7",
+    "zipPath": "2018/asp-2018-7-revised-data.xml",
+    "compressedSize": 2593,
+    "uncompressedSize": 11845,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/8",
+    "zipPath": "2018/asp-2018-8-revised-data.xml",
+    "compressedSize": 37446,
+    "uncompressedSize": 347623,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2018/9",
+    "zipPath": "2018/asp-2018-9-revised-data.xml",
+    "compressedSize": 122264,
+    "uncompressedSize": 1194593,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/1",
+    "zipPath": "2019/asp-2019-1-revised-data.xml",
+    "compressedSize": 28211,
+    "uncompressedSize": 239527,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/10",
+    "zipPath": "2019/asp-2019-10-revised-data.xml",
+    "compressedSize": 14244,
+    "uncompressedSize": 110143,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/11",
+    "zipPath": "2019/asp-2019-11-revised-data.xml",
+    "compressedSize": 20698,
+    "uncompressedSize": 187885,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/12",
+    "zipPath": "2019/asp-2019-12-revised-data.xml",
+    "compressedSize": 2209,
+    "uncompressedSize": 9825,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/13",
+    "zipPath": "2019/asp-2019-13-revised-data.xml",
+    "compressedSize": 70041,
+    "uncompressedSize": 537501,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/14",
+    "zipPath": "2019/asp-2019-14-revised-data.xml",
+    "compressedSize": 43493,
+    "uncompressedSize": 367977,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/15",
+    "zipPath": "2019/asp-2019-15-revised-data.xml",
+    "compressedSize": 23180,
+    "uncompressedSize": 174290,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/16",
+    "zipPath": "2019/asp-2019-16-revised-data.xml",
+    "compressedSize": 2645,
+    "uncompressedSize": 11872,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/17",
+    "zipPath": "2019/asp-2019-17-revised-data.xml",
+    "compressedSize": 103594,
+    "uncompressedSize": 810360,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/2",
+    "zipPath": "2019/asp-2019-2-revised-data.xml",
+    "compressedSize": 19661,
+    "uncompressedSize": 139581,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/3",
+    "zipPath": "2019/asp-2019-3-revised-data.xml",
+    "compressedSize": 14817,
+    "uncompressedSize": 93719,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/4",
+    "zipPath": "2019/asp-2019-4-revised-data.xml",
+    "compressedSize": 13858,
+    "uncompressedSize": 83987,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/5",
+    "zipPath": "2019/asp-2019-5-revised-data.xml",
+    "compressedSize": 2671,
+    "uncompressedSize": 12228,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/6",
+    "zipPath": "2019/asp-2019-6-revised-data.xml",
+    "compressedSize": 26934,
+    "uncompressedSize": 219420,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/7",
+    "zipPath": "2019/asp-2019-7-revised-data.xml",
+    "compressedSize": 60799,
+    "uncompressedSize": 543909,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/8",
+    "zipPath": "2019/asp-2019-8-revised-data.xml",
+    "compressedSize": 12020,
+    "uncompressedSize": 85845,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2019/9",
+    "zipPath": "2019/asp-2019-9-revised-data.xml",
+    "compressedSize": 17344,
+    "uncompressedSize": 145606,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/1",
+    "zipPath": "2020/asp-2020-1-revised-data.xml",
+    "compressedSize": 3461,
+    "uncompressedSize": 29016,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/10",
+    "zipPath": "2020/asp-2020-10-revised-data.xml",
+    "compressedSize": 19276,
+    "uncompressedSize": 178000,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/11",
+    "zipPath": "2020/asp-2020-11-revised-data.xml",
+    "compressedSize": 21690,
+    "uncompressedSize": 180422,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/12",
+    "zipPath": "2020/asp-2020-12-revised-data.xml",
+    "compressedSize": 26232,
+    "uncompressedSize": 230603,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/13",
+    "zipPath": "2020/asp-2020-13-revised-data.xml",
+    "compressedSize": 137335,
+    "uncompressedSize": 1395003,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/14",
+    "zipPath": "2020/asp-2020-14-revised-data.xml",
+    "compressedSize": 24840,
+    "uncompressedSize": 184019,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/15",
+    "zipPath": "2020/asp-2020-15-revised-data.xml",
+    "compressedSize": 22108,
+    "uncompressedSize": 182629,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/16",
+    "zipPath": "2020/asp-2020-16-revised-data.xml",
+    "compressedSize": 26903,
+    "uncompressedSize": 203239,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/17",
+    "zipPath": "2020/asp-2020-17-revised-data.xml",
+    "compressedSize": 23221,
+    "uncompressedSize": 190608,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/18",
+    "zipPath": "2020/asp-2020-18-revised-data.xml",
+    "compressedSize": 17612,
+    "uncompressedSize": 127820,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/2",
+    "zipPath": "2020/asp-2020-2-revised-data.xml",
+    "compressedSize": 149981,
+    "uncompressedSize": 1326545,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/3",
+    "zipPath": "2020/asp-2020-3-revised-data.xml",
+    "compressedSize": 17076,
+    "uncompressedSize": 127891,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/4",
+    "zipPath": "2020/asp-2020-4-revised-data.xml",
+    "compressedSize": 29572,
+    "uncompressedSize": 230999,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/5",
+    "zipPath": "2020/asp-2020-5-revised-data.xml",
+    "compressedSize": 15669,
+    "uncompressedSize": 100086,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/6",
+    "zipPath": "2020/asp-2020-6-revised-data.xml",
+    "compressedSize": 8655,
+    "uncompressedSize": 61457,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/7",
+    "zipPath": "2020/asp-2020-7-revised-data.xml",
+    "compressedSize": 21748,
+    "uncompressedSize": 211666,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/8",
+    "zipPath": "2020/asp-2020-8-revised-data.xml",
+    "compressedSize": 24587,
+    "uncompressedSize": 200461,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2020/9",
+    "zipPath": "2020/asp-2020-9-revised-data.xml",
+    "compressedSize": 12164,
+    "uncompressedSize": 80131,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/1",
+    "zipPath": "2021/asp-2021-1-revised-data.xml",
+    "compressedSize": 8846,
+    "uncompressedSize": 61290,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/10",
+    "zipPath": "2021/asp-2021-10-revised-data.xml",
+    "compressedSize": 28802,
+    "uncompressedSize": 227297,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/11",
+    "zipPath": "2021/asp-2021-11-revised-data.xml",
+    "compressedSize": 3594,
+    "uncompressedSize": 17600,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/12",
+    "zipPath": "2021/asp-2021-12-revised-data.xml",
+    "compressedSize": 2818,
+    "uncompressedSize": 14004,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/13",
+    "zipPath": "2021/asp-2021-13-revised-data.xml",
+    "compressedSize": 1575,
+    "uncompressedSize": 6435,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/14",
+    "zipPath": "2021/asp-2021-14-revised-data.xml",
+    "compressedSize": 18606,
+    "uncompressedSize": 147038,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/15",
+    "zipPath": "2021/asp-2021-15-revised-data.xml",
+    "compressedSize": 83317,
+    "uncompressedSize": 743938,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/16",
+    "zipPath": "2021/asp-2021-16-revised-data.xml",
+    "compressedSize": 17410,
+    "uncompressedSize": 135485,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/17",
+    "zipPath": "2021/asp-2021-17-revised-data.xml",
+    "compressedSize": 26086,
+    "uncompressedSize": 209608,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/18",
+    "zipPath": "2021/asp-2021-18-revised-data.xml",
+    "compressedSize": 6070,
+    "uncompressedSize": 33115,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/19",
+    "zipPath": "2021/asp-2021-19-revised-data.xml",
+    "compressedSize": 8091,
+    "uncompressedSize": 52228,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/2",
+    "zipPath": "2021/asp-2021-2-revised-data.xml",
+    "compressedSize": 4975,
+    "uncompressedSize": 24935,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/20",
+    "zipPath": "2021/asp-2021-20-revised-data.xml",
+    "compressedSize": 2598,
+    "uncompressedSize": 11764,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/3",
+    "zipPath": "2021/asp-2021-3-revised-data.xml",
+    "compressedSize": 19384,
+    "uncompressedSize": 154894,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/4",
+    "zipPath": "2021/asp-2021-4-revised-data.xml",
+    "compressedSize": 45818,
+    "uncompressedSize": 359279,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/5",
+    "zipPath": "2021/asp-2021-5-revised-data.xml",
+    "compressedSize": 6596,
+    "uncompressedSize": 42235,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/6",
+    "zipPath": "2021/asp-2021-6-revised-data.xml",
+    "compressedSize": 4699,
+    "uncompressedSize": 26942,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/7",
+    "zipPath": "2021/asp-2021-7-revised-data.xml",
+    "compressedSize": 2427,
+    "uncompressedSize": 10713,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/8",
+    "zipPath": "2021/asp-2021-8-revised-data.xml",
+    "compressedSize": 18396,
+    "uncompressedSize": 132048,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2021/9",
+    "zipPath": "2021/asp-2021-9-revised-data.xml",
+    "compressedSize": 56961,
+    "uncompressedSize": 485507,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/1",
+    "zipPath": "2022/asp-2022-1-revised-data.xml",
+    "compressedSize": 4177,
+    "uncompressedSize": 23597,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/10",
+    "zipPath": "2022/asp-2022-10-revised-data.xml",
+    "compressedSize": 10279,
+    "uncompressedSize": 94085,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/2",
+    "zipPath": "2022/asp-2022-2-revised-data.xml",
+    "compressedSize": 4688,
+    "uncompressedSize": 32346,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/3",
+    "zipPath": "2022/asp-2022-3-revised-data.xml",
+    "compressedSize": 15385,
+    "uncompressedSize": 97503,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/4",
+    "zipPath": "2022/asp-2022-4-revised-data.xml",
+    "compressedSize": 1977,
+    "uncompressedSize": 9582,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/5",
+    "zipPath": "2022/asp-2022-5-revised-data.xml",
+    "compressedSize": 24679,
+    "uncompressedSize": 196994,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/6",
+    "zipPath": "2022/asp-2022-6-revised-data.xml",
+    "compressedSize": 4614,
+    "uncompressedSize": 23836,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/7",
+    "zipPath": "2022/asp-2022-7-revised-data.xml",
+    "compressedSize": 3787,
+    "uncompressedSize": 19598,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/8",
+    "zipPath": "2022/asp-2022-8-revised-data.xml",
+    "compressedSize": 67886,
+    "uncompressedSize": 621642,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2022/9",
+    "zipPath": "2022/asp-2022-9-revised-data.xml",
+    "compressedSize": 49493,
+    "uncompressedSize": 434990,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/1",
+    "zipPath": "2023/asp-2023-1-revised-data.xml",
+    "compressedSize": 34690,
+    "uncompressedSize": 300296,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/2",
+    "zipPath": "2023/asp-2023-2-revised-data.xml",
+    "compressedSize": 20560,
+    "uncompressedSize": 145242,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/3",
+    "zipPath": "2023/asp-2023-3-revised-data.xml",
+    "compressedSize": 93908,
+    "uncompressedSize": 850334,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/4",
+    "zipPath": "2023/asp-2023-4-revised-data.xml",
+    "compressedSize": 24896,
+    "uncompressedSize": 174075,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/5",
+    "zipPath": "2023/asp-2023-5-revised-data.xml",
+    "compressedSize": 33782,
+    "uncompressedSize": 267288,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2023/6",
+    "zipPath": "2023/asp-2023-6-revised-data.xml",
+    "compressedSize": 26114,
+    "uncompressedSize": 221690,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/1",
+    "zipPath": "2024/asp-2024-1-revised-data.xml",
+    "compressedSize": 50239,
+    "uncompressedSize": 398336,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/10",
+    "zipPath": "2024/asp-2024-10-revised-data.xml",
+    "compressedSize": 11979,
+    "uncompressedSize": 102095,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/11",
+    "zipPath": "2024/asp-2024-11-revised-data.xml",
+    "compressedSize": 40988,
+    "uncompressedSize": 332968,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/12",
+    "zipPath": "2024/asp-2024-12-revised-data.xml",
+    "compressedSize": 1876,
+    "uncompressedSize": 8110,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/13",
+    "zipPath": "2024/asp-2024-13-revised-data.xml",
+    "compressedSize": 28569,
+    "uncompressedSize": 214897,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/14",
+    "zipPath": "2024/asp-2024-14-revised-data.xml",
+    "compressedSize": 48161,
+    "uncompressedSize": 392844,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/15",
+    "zipPath": "2024/asp-2024-15-revised-data.xml",
+    "compressedSize": 12314,
+    "uncompressedSize": 90518,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/2",
+    "zipPath": "2024/asp-2024-2-revised-data.xml",
+    "compressedSize": 64658,
+    "uncompressedSize": 555662,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/3",
+    "zipPath": "2024/asp-2024-3-revised-data.xml",
+    "compressedSize": 20749,
+    "uncompressedSize": 147703,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/4",
+    "zipPath": "2024/asp-2024-4-revised-data.xml",
+    "compressedSize": 42599,
+    "uncompressedSize": 333171,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/5",
+    "zipPath": "2024/asp-2024-5-revised-data.xml",
+    "compressedSize": 42159,
+    "uncompressedSize": 333272,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/6",
+    "zipPath": "2024/asp-2024-6-revised-data.xml",
+    "compressedSize": 7123,
+    "uncompressedSize": 48195,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/7",
+    "zipPath": "2024/asp-2024-7-revised-data.xml",
+    "compressedSize": 29053,
+    "uncompressedSize": 241665,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/8",
+    "zipPath": "2024/asp-2024-8-revised-data.xml",
+    "compressedSize": 50695,
+    "uncompressedSize": 438346,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2024/9",
+    "zipPath": "2024/asp-2024-9-revised-data.xml",
+    "compressedSize": 19069,
+    "uncompressedSize": 142846,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/1",
+    "zipPath": "2025/asp-2025-1-revised-data.xml",
+    "compressedSize": 10244,
+    "uncompressedSize": 70341,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/10",
+    "zipPath": "2025/asp-2025-10-revised-data.xml",
+    "compressedSize": 34733,
+    "uncompressedSize": 292705,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/11",
+    "zipPath": "2025/asp-2025-11-revised-data.xml",
+    "compressedSize": 74713,
+    "uncompressedSize": 706472,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/12",
+    "zipPath": "2025/asp-2025-12-revised-data.xml",
+    "compressedSize": 101346,
+    "uncompressedSize": 793052,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/13",
+    "zipPath": "2025/asp-2025-13-revised-data.xml",
+    "compressedSize": 83948,
+    "uncompressedSize": 717337,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/14",
+    "zipPath": "2025/asp-2025-14-revised-data.xml",
+    "compressedSize": 45937,
+    "uncompressedSize": 367595,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/15",
+    "zipPath": "2025/asp-2025-15-revised-data.xml",
+    "compressedSize": 125779,
+    "uncompressedSize": 1107334,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/2",
+    "zipPath": "2025/asp-2025-2-revised-data.xml",
+    "compressedSize": 37979,
+    "uncompressedSize": 273603,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/3",
+    "zipPath": "2025/asp-2025-3-revised-data.xml",
+    "compressedSize": 42237,
+    "uncompressedSize": 350746,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/4",
+    "zipPath": "2025/asp-2025-4-revised-data.xml",
+    "compressedSize": 64182,
+    "uncompressedSize": 534856,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/5",
+    "zipPath": "2025/asp-2025-5-revised-data.xml",
+    "compressedSize": 21135,
+    "uncompressedSize": 148005,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/6",
+    "zipPath": "2025/asp-2025-6-revised-data.xml",
+    "compressedSize": 6501,
+    "uncompressedSize": 42728,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/7",
+    "zipPath": "2025/asp-2025-7-revised-data.xml",
+    "compressedSize": 16353,
+    "uncompressedSize": 103381,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/8",
+    "zipPath": "2025/asp-2025-8-revised-data.xml",
+    "compressedSize": 170878,
+    "uncompressedSize": 1521283,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2025/9",
+    "zipPath": "2025/asp-2025-9-revised-data.xml",
+    "compressedSize": 31261,
+    "uncompressedSize": 227175,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/1",
+    "zipPath": "2026/asp-2026-1-revised-data.xml",
+    "compressedSize": 3360,
+    "uncompressedSize": 15411,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/10",
+    "zipPath": "2026/asp-2026-10-enacted-data.xml",
+    "compressedSize": 12999,
+    "uncompressedSize": 99872,
+    "version": "made",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/11",
+    "zipPath": "2026/asp-2026-11-enacted-data.xml",
+    "compressedSize": 9210,
+    "uncompressedSize": 55096,
+    "version": "made",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/12",
+    "zipPath": "2026/asp-2026-12-revised-data.xml",
+    "compressedSize": 4420,
+    "uncompressedSize": 23834,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/2",
+    "zipPath": "2026/asp-2026-2-revised-data.xml",
+    "compressedSize": 5543,
+    "uncompressedSize": 33665,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/3",
+    "zipPath": "2026/asp-2026-3-revised-data.xml",
+    "compressedSize": 5469,
+    "uncompressedSize": 29927,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/4",
+    "zipPath": "2026/asp-2026-4-revised-data.xml",
+    "compressedSize": 34512,
+    "uncompressedSize": 264793,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/5",
+    "zipPath": "2026/asp-2026-5-revised-data.xml",
+    "compressedSize": 22076,
+    "uncompressedSize": 161288,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/6",
+    "zipPath": "2026/asp-2026-6-revised-data.xml",
+    "compressedSize": 46623,
+    "uncompressedSize": 326110,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/7",
+    "zipPath": "2026/asp-2026-7-revised-data.xml",
+    "compressedSize": 12740,
+    "uncompressedSize": 101128,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/8",
+    "zipPath": "2026/asp-2026-8-revised-data.xml",
+    "compressedSize": 12374,
+    "uncompressedSize": 60253,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "asp/2026/9",
+    "zipPath": "2026/asp-2026-9-revised-data.xml",
+    "compressedSize": 6805,
+    "uncompressedSize": 39366,
+    "version": "revised-current",
+    "legislationType": "ASP",
+    "jurisdiction": "Scotland"
+  },
+  {
+    "actId": "nia/2000/1",
+    "zipPath": "2000/nia-2000-1-revised-data.xml",
+    "compressedSize": 2923,
+    "uncompressedSize": 14057,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2000/2",
+    "zipPath": "2000/nia-2000-2-enacted-data.xml",
+    "compressedSize": 6170,
+    "uncompressedSize": 26402,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2000/3",
+    "zipPath": "2000/nia-2000-3-revised-data.xml",
+    "compressedSize": 4388,
+    "uncompressedSize": 24052,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2000/4",
+    "zipPath": "2000/nia-2000-4-revised-data.xml",
+    "compressedSize": 60097,
+    "uncompressedSize": 438742,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2000/5",
+    "zipPath": "2000/nia-2000-5-revised-data.xml",
+    "compressedSize": 3385,
+    "uncompressedSize": 14440,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/1",
+    "zipPath": "2001/nia-2001-1-revised-data.xml",
+    "compressedSize": 3901,
+    "uncompressedSize": 21773,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/10",
+    "zipPath": "2001/nia-2001-10-revised-data.xml",
+    "compressedSize": 4863,
+    "uncompressedSize": 26356,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/11",
+    "zipPath": "2001/nia-2001-11-revised-data.xml",
+    "compressedSize": 17795,
+    "uncompressedSize": 122298,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/12",
+    "zipPath": "2001/nia-2001-12-revised-data.xml",
+    "compressedSize": 5651,
+    "uncompressedSize": 30220,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/13",
+    "zipPath": "2001/nia-2001-13-revised-data.xml",
+    "compressedSize": 1858,
+    "uncompressedSize": 8285,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/14",
+    "zipPath": "2001/nia-2001-14-revised-data.xml",
+    "compressedSize": 19818,
+    "uncompressedSize": 145349,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/15",
+    "zipPath": "2001/nia-2001-15-revised-data.xml",
+    "compressedSize": 1812,
+    "uncompressedSize": 7512,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/16",
+    "zipPath": "2001/nia-2001-16-enacted-data.xml",
+    "compressedSize": 8975,
+    "uncompressedSize": 56988,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/17",
+    "zipPath": "2001/nia-2001-17-revised-data.xml",
+    "compressedSize": 36594,
+    "uncompressedSize": 337584,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/2",
+    "zipPath": "2001/nia-2001-2-revised-data.xml",
+    "compressedSize": 3399,
+    "uncompressedSize": 19320,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/3",
+    "zipPath": "2001/nia-2001-3-revised-data.xml",
+    "compressedSize": 58113,
+    "uncompressedSize": 469053,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/4",
+    "zipPath": "2001/nia-2001-4-revised-data.xml",
+    "compressedSize": 4856,
+    "uncompressedSize": 23894,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/5",
+    "zipPath": "2001/nia-2001-5-revised-data.xml",
+    "compressedSize": 22835,
+    "uncompressedSize": 135400,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/6",
+    "zipPath": "2001/nia-2001-6-revised-data.xml",
+    "compressedSize": 15417,
+    "uncompressedSize": 116423,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/7",
+    "zipPath": "2001/nia-2001-7-enacted-data.xml",
+    "compressedSize": 9135,
+    "uncompressedSize": 65815,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/8",
+    "zipPath": "2001/nia-2001-8-revised-data.xml",
+    "compressedSize": 20731,
+    "uncompressedSize": 143483,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2001/9",
+    "zipPath": "2001/nia-2001-9-revised-data.xml",
+    "compressedSize": 6291,
+    "uncompressedSize": 36595,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/1",
+    "zipPath": "2002/nia-2002-1-revised-data.xml",
+    "compressedSize": 13309,
+    "uncompressedSize": 108235,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/10",
+    "zipPath": "2002/nia-2002-10-revised-data.xml",
+    "compressedSize": 6784,
+    "uncompressedSize": 34281,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/11",
+    "zipPath": "2002/nia-2002-11-revised-data.xml",
+    "compressedSize": 7905,
+    "uncompressedSize": 42706,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/12",
+    "zipPath": "2002/nia-2002-12-revised-data.xml",
+    "compressedSize": 13568,
+    "uncompressedSize": 128163,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/13",
+    "zipPath": "2002/nia-2002-13-revised-data.xml",
+    "compressedSize": 4720,
+    "uncompressedSize": 24988,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/14",
+    "zipPath": "2002/nia-2002-14-revised-data.xml",
+    "compressedSize": 21523,
+    "uncompressedSize": 153422,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/2",
+    "zipPath": "2002/nia-2002-2-revised-data.xml",
+    "compressedSize": 4067,
+    "uncompressedSize": 23191,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/3",
+    "zipPath": "2002/nia-2002-3-enacted-data.xml",
+    "compressedSize": 11495,
+    "uncompressedSize": 106629,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/4",
+    "zipPath": "2002/nia-2002-4-revised-data.xml",
+    "compressedSize": 2110,
+    "uncompressedSize": 10525,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/5",
+    "zipPath": "2002/nia-2002-5-revised-data.xml",
+    "compressedSize": 5250,
+    "uncompressedSize": 27464,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/6",
+    "zipPath": "2002/nia-2002-6-revised-data.xml",
+    "compressedSize": 10398,
+    "uncompressedSize": 78729,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/7",
+    "zipPath": "2002/nia-2002-7-enacted-data.xml",
+    "compressedSize": 9326,
+    "uncompressedSize": 59992,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/8",
+    "zipPath": "2002/nia-2002-8-revised-data.xml",
+    "compressedSize": 7993,
+    "uncompressedSize": 48431,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2002/9",
+    "zipPath": "2002/nia-2002-9-revised-data.xml",
+    "compressedSize": 8566,
+    "uncompressedSize": 55036,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2007/1",
+    "zipPath": "2007/nia-2007-1-revised-data.xml",
+    "compressedSize": 10962,
+    "uncompressedSize": 72216,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2007/2",
+    "zipPath": "2007/nia-2007-2-revised-data.xml",
+    "compressedSize": 118594,
+    "uncompressedSize": 1508499,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2007/3",
+    "zipPath": "2007/nia-2007-3-revised-data.xml",
+    "compressedSize": 1763,
+    "uncompressedSize": 7340,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/1",
+    "zipPath": "2008/nia-2008-1-revised-data.xml",
+    "compressedSize": 47810,
+    "uncompressedSize": 371889,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/10",
+    "zipPath": "2008/nia-2008-10-revised-data.xml",
+    "compressedSize": 46712,
+    "uncompressedSize": 378957,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/11",
+    "zipPath": "2008/nia-2008-11-revised-data.xml",
+    "compressedSize": 11056,
+    "uncompressedSize": 72122,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/12",
+    "zipPath": "2008/nia-2008-12-revised-data.xml",
+    "compressedSize": 188639,
+    "uncompressedSize": 1485592,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/13",
+    "zipPath": "2008/nia-2008-13-revised-data.xml",
+    "compressedSize": 140718,
+    "uncompressedSize": 1263129,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/2",
+    "zipPath": "2008/nia-2008-2-revised-data.xml",
+    "compressedSize": 22192,
+    "uncompressedSize": 172618,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/3",
+    "zipPath": "2008/nia-2008-3-revised-data.xml",
+    "compressedSize": 18248,
+    "uncompressedSize": 135981,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/4",
+    "zipPath": "2008/nia-2008-4-revised-data.xml",
+    "compressedSize": 52355,
+    "uncompressedSize": 429048,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/5",
+    "zipPath": "2008/nia-2008-5-revised-data.xml",
+    "compressedSize": 2234,
+    "uncompressedSize": 9152,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/6",
+    "zipPath": "2008/nia-2008-6-revised-data.xml",
+    "compressedSize": 6419,
+    "uncompressedSize": 31474,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/7",
+    "zipPath": "2008/nia-2008-7-revised-data.xml",
+    "compressedSize": 6045,
+    "uncompressedSize": 35855,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/8",
+    "zipPath": "2008/nia-2008-8-revised-data.xml",
+    "compressedSize": 17414,
+    "uncompressedSize": 123078,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2008/9",
+    "zipPath": "2008/nia-2008-9-revised-data.xml",
+    "compressedSize": 9651,
+    "uncompressedSize": 66540,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/1",
+    "zipPath": "2009/nia-2009-1-revised-data.xml",
+    "compressedSize": 60291,
+    "uncompressedSize": 552143,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/2",
+    "zipPath": "2009/nia-2009-2-revised-data.xml",
+    "compressedSize": 5019,
+    "uncompressedSize": 28451,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/3",
+    "zipPath": "2009/nia-2009-3-revised-data.xml",
+    "compressedSize": 14815,
+    "uncompressedSize": 114498,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/4",
+    "zipPath": "2009/nia-2009-4-revised-data.xml",
+    "compressedSize": 9033,
+    "uncompressedSize": 55225,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/5",
+    "zipPath": "2009/nia-2009-5-revised-data.xml",
+    "compressedSize": 2419,
+    "uncompressedSize": 13497,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/6",
+    "zipPath": "2009/nia-2009-6-revised-data.xml",
+    "compressedSize": 15995,
+    "uncompressedSize": 118333,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/7",
+    "zipPath": "2009/nia-2009-7-revised-data.xml",
+    "compressedSize": 2427,
+    "uncompressedSize": 12721,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/8",
+    "zipPath": "2009/nia-2009-8-revised-data.xml",
+    "compressedSize": 15125,
+    "uncompressedSize": 101972,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2009/9",
+    "zipPath": "2009/nia-2009-9-revised-data.xml",
+    "compressedSize": 4070,
+    "uncompressedSize": 22957,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/1",
+    "zipPath": "2010/nia-2010-1-revised-data.xml",
+    "compressedSize": 15021,
+    "uncompressedSize": 85277,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/10",
+    "zipPath": "2010/nia-2010-10-revised-data.xml",
+    "compressedSize": 26941,
+    "uncompressedSize": 188266,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/11",
+    "zipPath": "2010/nia-2010-11-revised-data.xml",
+    "compressedSize": 2539,
+    "uncompressedSize": 14111,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/12",
+    "zipPath": "2010/nia-2010-12-revised-data.xml",
+    "compressedSize": 6998,
+    "uncompressedSize": 43392,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/13",
+    "zipPath": "2010/nia-2010-13-revised-data.xml",
+    "compressedSize": 41123,
+    "uncompressedSize": 360905,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/14",
+    "zipPath": "2010/nia-2010-14-revised-data.xml",
+    "compressedSize": 11787,
+    "uncompressedSize": 73698,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/15",
+    "zipPath": "2010/nia-2010-15-revised-data.xml",
+    "compressedSize": 6801,
+    "uncompressedSize": 39627,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/16",
+    "zipPath": "2010/nia-2010-16-revised-data.xml",
+    "compressedSize": 21489,
+    "uncompressedSize": 145553,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/2",
+    "zipPath": "2010/nia-2010-2-revised-data.xml",
+    "compressedSize": 87984,
+    "uncompressedSize": 788712,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/3",
+    "zipPath": "2010/nia-2010-3-revised-data.xml",
+    "compressedSize": 5450,
+    "uncompressedSize": 41014,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/4",
+    "zipPath": "2010/nia-2010-4-revised-data.xml",
+    "compressedSize": 8074,
+    "uncompressedSize": 57022,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/5",
+    "zipPath": "2010/nia-2010-5-revised-data.xml",
+    "compressedSize": 1721,
+    "uncompressedSize": 6993,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/6",
+    "zipPath": "2010/nia-2010-6-revised-data.xml",
+    "compressedSize": 2362,
+    "uncompressedSize": 13637,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/7",
+    "zipPath": "2010/nia-2010-7-revised-data.xml",
+    "compressedSize": 19922,
+    "uncompressedSize": 156186,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/8",
+    "zipPath": "2010/nia-2010-8-revised-data.xml",
+    "compressedSize": 2288,
+    "uncompressedSize": 11649,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2010/9",
+    "zipPath": "2010/nia-2010-9-revised-data.xml",
+    "compressedSize": 12754,
+    "uncompressedSize": 69314,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/1",
+    "zipPath": "2011/nia-2011-1-revised-data.xml",
+    "compressedSize": 30153,
+    "uncompressedSize": 225282,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/10",
+    "zipPath": "2011/nia-2011-10-revised-data.xml",
+    "compressedSize": 25261,
+    "uncompressedSize": 199115,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/11",
+    "zipPath": "2011/nia-2011-11-revised-data.xml",
+    "compressedSize": 33005,
+    "uncompressedSize": 257059,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/12",
+    "zipPath": "2011/nia-2011-12-revised-data.xml",
+    "compressedSize": 24202,
+    "uncompressedSize": 175876,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/13",
+    "zipPath": "2011/nia-2011-13-revised-data.xml",
+    "compressedSize": 15096,
+    "uncompressedSize": 107121,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/14",
+    "zipPath": "2011/nia-2011-14-revised-data.xml",
+    "compressedSize": 2438,
+    "uncompressedSize": 13618,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/15",
+    "zipPath": "2011/nia-2011-15-revised-data.xml",
+    "compressedSize": 27680,
+    "uncompressedSize": 177739,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/16",
+    "zipPath": "2011/nia-2011-16-revised-data.xml",
+    "compressedSize": 47415,
+    "uncompressedSize": 379547,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/17",
+    "zipPath": "2011/nia-2011-17-revised-data.xml",
+    "compressedSize": 27663,
+    "uncompressedSize": 213251,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/18",
+    "zipPath": "2011/nia-2011-18-revised-data.xml",
+    "compressedSize": 21984,
+    "uncompressedSize": 144909,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/19",
+    "zipPath": "2011/nia-2011-19-revised-data.xml",
+    "compressedSize": 16532,
+    "uncompressedSize": 133770,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/2",
+    "zipPath": "2011/nia-2011-2-revised-data.xml",
+    "compressedSize": 2583,
+    "uncompressedSize": 10591,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/20",
+    "zipPath": "2011/nia-2011-20-revised-data.xml",
+    "compressedSize": 14853,
+    "uncompressedSize": 126291,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/21",
+    "zipPath": "2011/nia-2011-21-revised-data.xml",
+    "compressedSize": 15590,
+    "uncompressedSize": 108491,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/22",
+    "zipPath": "2011/nia-2011-22-revised-data.xml",
+    "compressedSize": 14683,
+    "uncompressedSize": 89053,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/23",
+    "zipPath": "2011/nia-2011-23-revised-data.xml",
+    "compressedSize": 80626,
+    "uncompressedSize": 645459,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/24",
+    "zipPath": "2011/nia-2011-24-revised-data.xml",
+    "compressedSize": 102955,
+    "uncompressedSize": 824086,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/25",
+    "zipPath": "2011/nia-2011-25-revised-data.xml",
+    "compressedSize": 263069,
+    "uncompressedSize": 2430256,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/26",
+    "zipPath": "2011/nia-2011-26-revised-data.xml",
+    "compressedSize": 2265,
+    "uncompressedSize": 9444,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/27",
+    "zipPath": "2011/nia-2011-27-revised-data.xml",
+    "compressedSize": 7652,
+    "uncompressedSize": 59573,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/28",
+    "zipPath": "2011/nia-2011-28-revised-data.xml",
+    "compressedSize": 3365,
+    "uncompressedSize": 17234,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/29",
+    "zipPath": "2011/nia-2011-29-revised-data.xml",
+    "compressedSize": 2585,
+    "uncompressedSize": 15221,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/3",
+    "zipPath": "2011/nia-2011-3-revised-data.xml",
+    "compressedSize": 6199,
+    "uncompressedSize": 34175,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/4",
+    "zipPath": "2011/nia-2011-4-revised-data.xml",
+    "compressedSize": 6497,
+    "uncompressedSize": 38211,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/5",
+    "zipPath": "2011/nia-2011-5-revised-data.xml",
+    "compressedSize": 10632,
+    "uncompressedSize": 66389,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/6",
+    "zipPath": "2011/nia-2011-6-revised-data.xml",
+    "compressedSize": 31248,
+    "uncompressedSize": 228682,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/7",
+    "zipPath": "2011/nia-2011-7-revised-data.xml",
+    "compressedSize": 11903,
+    "uncompressedSize": 86093,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/8",
+    "zipPath": "2011/nia-2011-8-revised-data.xml",
+    "compressedSize": 1725,
+    "uncompressedSize": 7578,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2011/9",
+    "zipPath": "2011/nia-2011-9-revised-data.xml",
+    "compressedSize": 10591,
+    "uncompressedSize": 61936,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2012/1",
+    "zipPath": "2012/nia-2012-1-revised-data.xml",
+    "compressedSize": 6082,
+    "uncompressedSize": 28368,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2012/2",
+    "zipPath": "2012/nia-2012-2-revised-data.xml",
+    "compressedSize": 2443,
+    "uncompressedSize": 13641,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2012/3",
+    "zipPath": "2012/nia-2012-3-revised-data.xml",
+    "compressedSize": 37196,
+    "uncompressedSize": 324272,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2012/4",
+    "zipPath": "2012/nia-2012-4-revised-data.xml",
+    "compressedSize": 2465,
+    "uncompressedSize": 13823,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2012/5",
+    "zipPath": "2012/nia-2012-5-revised-data.xml",
+    "compressedSize": 3190,
+    "uncompressedSize": 16593,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/1",
+    "zipPath": "2013/nia-2013-1-revised-data.xml",
+    "compressedSize": 3264,
+    "uncompressedSize": 16181,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/10",
+    "zipPath": "2013/nia-2013-10-revised-data.xml",
+    "compressedSize": 43435,
+    "uncompressedSize": 326986,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/2",
+    "zipPath": "2013/nia-2013-2-revised-data.xml",
+    "compressedSize": 12848,
+    "uncompressedSize": 83651,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/3",
+    "zipPath": "2013/nia-2013-3-revised-data.xml",
+    "compressedSize": 12123,
+    "uncompressedSize": 80649,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/4",
+    "zipPath": "2013/nia-2013-4-revised-data.xml",
+    "compressedSize": 2398,
+    "uncompressedSize": 13660,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/5",
+    "zipPath": "2013/nia-2013-5-revised-data.xml",
+    "compressedSize": 8577,
+    "uncompressedSize": 56713,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/6",
+    "zipPath": "2013/nia-2013-6-revised-data.xml",
+    "compressedSize": 2099,
+    "uncompressedSize": 8352,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/7",
+    "zipPath": "2013/nia-2013-7-revised-data.xml",
+    "compressedSize": 23901,
+    "uncompressedSize": 147282,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/8",
+    "zipPath": "2013/nia-2013-8-revised-data.xml",
+    "compressedSize": 8418,
+    "uncompressedSize": 53677,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2013/9",
+    "zipPath": "2013/nia-2013-9-revised-data.xml",
+    "compressedSize": 2405,
+    "uncompressedSize": 12882,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/1",
+    "zipPath": "2014/nia-2014-1-revised-data.xml",
+    "compressedSize": 2738,
+    "uncompressedSize": 11470,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/10",
+    "zipPath": "2014/nia-2014-10-revised-data.xml",
+    "compressedSize": 2525,
+    "uncompressedSize": 13112,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/11",
+    "zipPath": "2014/nia-2014-11-revised-data.xml",
+    "compressedSize": 22411,
+    "uncompressedSize": 171217,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/12",
+    "zipPath": "2014/nia-2014-12-revised-data.xml",
+    "compressedSize": 26919,
+    "uncompressedSize": 243500,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/2",
+    "zipPath": "2014/nia-2014-2-revised-data.xml",
+    "compressedSize": 59216,
+    "uncompressedSize": 521141,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/3",
+    "zipPath": "2014/nia-2014-3-revised-data.xml",
+    "compressedSize": 2407,
+    "uncompressedSize": 13635,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/4",
+    "zipPath": "2014/nia-2014-4-revised-data.xml",
+    "compressedSize": 23323,
+    "uncompressedSize": 193974,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/5",
+    "zipPath": "2014/nia-2014-5-revised-data.xml",
+    "compressedSize": 4673,
+    "uncompressedSize": 25191,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/6",
+    "zipPath": "2014/nia-2014-6-revised-data.xml",
+    "compressedSize": 6683,
+    "uncompressedSize": 35874,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/7",
+    "zipPath": "2014/nia-2014-7-revised-data.xml",
+    "compressedSize": 5323,
+    "uncompressedSize": 33071,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/8",
+    "zipPath": "2014/nia-2014-8-revised-data.xml",
+    "compressedSize": 110948,
+    "uncompressedSize": 926730,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2014/9",
+    "zipPath": "2014/nia-2014-9-revised-data.xml",
+    "compressedSize": 24927,
+    "uncompressedSize": 188667,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/1",
+    "zipPath": "2015/nia-2015-1-revised-data.xml",
+    "compressedSize": 48483,
+    "uncompressedSize": 423659,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/10",
+    "zipPath": "2015/nia-2015-10-revised-data.xml",
+    "compressedSize": 7110,
+    "uncompressedSize": 42696,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/2",
+    "zipPath": "2015/nia-2015-2-revised-data.xml",
+    "compressedSize": 62462,
+    "uncompressedSize": 507660,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/3",
+    "zipPath": "2015/nia-2015-3-revised-data.xml",
+    "compressedSize": 4762,
+    "uncompressedSize": 33708,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/4",
+    "zipPath": "2015/nia-2015-4-revised-data.xml",
+    "compressedSize": 2518,
+    "uncompressedSize": 15482,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/5",
+    "zipPath": "2015/nia-2015-5-revised-data.xml",
+    "compressedSize": 119861,
+    "uncompressedSize": 1175691,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/6",
+    "zipPath": "2015/nia-2015-6-revised-data.xml",
+    "compressedSize": 1882,
+    "uncompressedSize": 8057,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/7",
+    "zipPath": "2015/nia-2015-7-revised-data.xml",
+    "compressedSize": 2553,
+    "uncompressedSize": 13930,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/8",
+    "zipPath": "2015/nia-2015-8-revised-data.xml",
+    "compressedSize": 68242,
+    "uncompressedSize": 551276,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2015/9",
+    "zipPath": "2015/nia-2015-9-revised-data.xml",
+    "compressedSize": 153239,
+    "uncompressedSize": 1320637,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/1",
+    "zipPath": "2016/nia-2016-1-revised-data.xml",
+    "compressedSize": 13230,
+    "uncompressedSize": 126626,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/10",
+    "zipPath": "2016/nia-2016-10-revised-data.xml",
+    "compressedSize": 5437,
+    "uncompressedSize": 32563,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/11",
+    "zipPath": "2016/nia-2016-11-revised-data.xml",
+    "compressedSize": 27779,
+    "uncompressedSize": 195821,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/12",
+    "zipPath": "2016/nia-2016-12-revised-data.xml",
+    "compressedSize": 6698,
+    "uncompressedSize": 38477,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/13",
+    "zipPath": "2016/nia-2016-13-revised-data.xml",
+    "compressedSize": 25016,
+    "uncompressedSize": 185475,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/14",
+    "zipPath": "2016/nia-2016-14-revised-data.xml",
+    "compressedSize": 43057,
+    "uncompressedSize": 358640,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/15",
+    "zipPath": "2016/nia-2016-15-revised-data.xml",
+    "compressedSize": 28451,
+    "uncompressedSize": 233347,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/16",
+    "zipPath": "2016/nia-2016-16-revised-data.xml",
+    "compressedSize": 21830,
+    "uncompressedSize": 165984,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/17",
+    "zipPath": "2016/nia-2016-17-revised-data.xml",
+    "compressedSize": 6672,
+    "uncompressedSize": 36382,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/18",
+    "zipPath": "2016/nia-2016-18-revised-data.xml",
+    "compressedSize": 242879,
+    "uncompressedSize": 2140587,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/19",
+    "zipPath": "2016/nia-2016-19-revised-data.xml",
+    "compressedSize": 4950,
+    "uncompressedSize": 27873,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/2",
+    "zipPath": "2016/nia-2016-2-revised-data.xml",
+    "compressedSize": 36136,
+    "uncompressedSize": 279038,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/20",
+    "zipPath": "2016/nia-2016-20-revised-data.xml",
+    "compressedSize": 4199,
+    "uncompressedSize": 25385,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/21",
+    "zipPath": "2016/nia-2016-21-revised-data.xml",
+    "compressedSize": 72736,
+    "uncompressedSize": 571862,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/22",
+    "zipPath": "2016/nia-2016-22-revised-data.xml",
+    "compressedSize": 82434,
+    "uncompressedSize": 707053,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/23",
+    "zipPath": "2016/nia-2016-23-revised-data.xml",
+    "compressedSize": 5744,
+    "uncompressedSize": 28917,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/24",
+    "zipPath": "2016/nia-2016-24-revised-data.xml",
+    "compressedSize": 3603,
+    "uncompressedSize": 18941,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/25",
+    "zipPath": "2016/nia-2016-25-revised-data.xml",
+    "compressedSize": 4781,
+    "uncompressedSize": 26934,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/26",
+    "zipPath": "2016/nia-2016-26-revised-data.xml",
+    "compressedSize": 15642,
+    "uncompressedSize": 116231,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/27",
+    "zipPath": "2016/nia-2016-27-revised-data.xml",
+    "compressedSize": 2670,
+    "uncompressedSize": 12809,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/28",
+    "zipPath": "2016/nia-2016-28-revised-data.xml",
+    "compressedSize": 5300,
+    "uncompressedSize": 29684,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/29",
+    "zipPath": "2016/nia-2016-29-revised-data.xml",
+    "compressedSize": 1943,
+    "uncompressedSize": 7993,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/3",
+    "zipPath": "2016/nia-2016-3-revised-data.xml",
+    "compressedSize": 19402,
+    "uncompressedSize": 147086,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/30",
+    "zipPath": "2016/nia-2016-30-revised-data.xml",
+    "compressedSize": 2531,
+    "uncompressedSize": 13998,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/4",
+    "zipPath": "2016/nia-2016-4-revised-data.xml",
+    "compressedSize": 52440,
+    "uncompressedSize": 437617,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/5",
+    "zipPath": "2016/nia-2016-5-revised-data.xml",
+    "compressedSize": 3396,
+    "uncompressedSize": 17993,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/6",
+    "zipPath": "2016/nia-2016-6-revised-data.xml",
+    "compressedSize": 4702,
+    "uncompressedSize": 22844,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/7",
+    "zipPath": "2016/nia-2016-7-revised-data.xml",
+    "compressedSize": 10203,
+    "uncompressedSize": 79066,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/8",
+    "zipPath": "2016/nia-2016-8-revised-data.xml",
+    "compressedSize": 16428,
+    "uncompressedSize": 129675,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2016/9",
+    "zipPath": "2016/nia-2016-9-revised-data.xml",
+    "compressedSize": 2423,
+    "uncompressedSize": 13959,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/1",
+    "zipPath": "2020/nia-2020-1-enacted-data.xml",
+    "compressedSize": 24639,
+    "uncompressedSize": 158984,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/2",
+    "zipPath": "2020/nia-2020-2-revised-data.xml",
+    "compressedSize": 3842,
+    "uncompressedSize": 20468,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/3",
+    "zipPath": "2020/nia-2020-3-enacted-data.xml",
+    "compressedSize": 10487,
+    "uncompressedSize": 74336,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/4",
+    "zipPath": "2020/nia-2020-4-enacted-data.xml",
+    "compressedSize": 2296,
+    "uncompressedSize": 9551,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/5",
+    "zipPath": "2020/nia-2020-5-enacted-data.xml",
+    "compressedSize": 6635,
+    "uncompressedSize": 41511,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2020/6",
+    "zipPath": "2020/nia-2020-6-revised-data.xml",
+    "compressedSize": 12572,
+    "uncompressedSize": 93427,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/1",
+    "zipPath": "2021/nia-2021-1-revised-data.xml",
+    "compressedSize": 1833,
+    "uncompressedSize": 7450,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/2",
+    "zipPath": "2021/nia-2021-2-revised-data.xml",
+    "compressedSize": 34635,
+    "uncompressedSize": 270464,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/3",
+    "zipPath": "2021/nia-2021-3-revised-data.xml",
+    "compressedSize": 10225,
+    "uncompressedSize": 61370,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/4",
+    "zipPath": "2021/nia-2021-4-revised-data.xml",
+    "compressedSize": 21745,
+    "uncompressedSize": 145576,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/5",
+    "zipPath": "2021/nia-2021-5-enacted-data.xml",
+    "compressedSize": 18004,
+    "uncompressedSize": 86324,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/6",
+    "zipPath": "2021/nia-2021-6-revised-data.xml",
+    "compressedSize": 65029,
+    "uncompressedSize": 581342,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/7",
+    "zipPath": "2021/nia-2021-7-revised-data.xml",
+    "compressedSize": 47629,
+    "uncompressedSize": 366352,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2021/8",
+    "zipPath": "2021/nia-2021-8-revised-data.xml",
+    "compressedSize": 4105,
+    "uncompressedSize": 22901,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/1",
+    "zipPath": "2022/nia-2022-1-revised-data.xml",
+    "compressedSize": 8834,
+    "uncompressedSize": 46955,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/10",
+    "zipPath": "2022/nia-2022-10-revised-data.xml",
+    "compressedSize": 3909,
+    "uncompressedSize": 17881,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/11",
+    "zipPath": "2022/nia-2022-11-revised-data.xml",
+    "compressedSize": 7239,
+    "uncompressedSize": 39335,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/12",
+    "zipPath": "2022/nia-2022-12-revised-data.xml",
+    "compressedSize": 2915,
+    "uncompressedSize": 12246,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/13",
+    "zipPath": "2022/nia-2022-13-revised-data.xml",
+    "compressedSize": 4494,
+    "uncompressedSize": 23487,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/14",
+    "zipPath": "2022/nia-2022-14-revised-data.xml",
+    "compressedSize": 12313,
+    "uncompressedSize": 75020,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/15",
+    "zipPath": "2022/nia-2022-15-revised-data.xml",
+    "compressedSize": 10198,
+    "uncompressedSize": 67591,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/16",
+    "zipPath": "2022/nia-2022-16-revised-data.xml",
+    "compressedSize": 3135,
+    "uncompressedSize": 12057,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/17",
+    "zipPath": "2022/nia-2022-17-revised-data.xml",
+    "compressedSize": 18690,
+    "uncompressedSize": 135592,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/18",
+    "zipPath": "2022/nia-2022-18-revised-data.xml",
+    "compressedSize": 132062,
+    "uncompressedSize": 1028548,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/19",
+    "zipPath": "2022/nia-2022-19-revised-data.xml",
+    "compressedSize": 38045,
+    "uncompressedSize": 278578,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/2",
+    "zipPath": "2022/nia-2022-2-revised-data.xml",
+    "compressedSize": 4403,
+    "uncompressedSize": 26467,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/20",
+    "zipPath": "2022/nia-2022-20-revised-data.xml",
+    "compressedSize": 24492,
+    "uncompressedSize": 174010,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/21",
+    "zipPath": "2022/nia-2022-21-revised-data.xml",
+    "compressedSize": 3986,
+    "uncompressedSize": 20821,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/22",
+    "zipPath": "2022/nia-2022-22-revised-data.xml",
+    "compressedSize": 3474,
+    "uncompressedSize": 18133,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/23",
+    "zipPath": "2022/nia-2022-23-revised-data.xml",
+    "compressedSize": 3430,
+    "uncompressedSize": 20146,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/24",
+    "zipPath": "2022/nia-2022-24-revised-data.xml",
+    "compressedSize": 2794,
+    "uncompressedSize": 13420,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/25",
+    "zipPath": "2022/nia-2022-25-revised-data.xml",
+    "compressedSize": 9077,
+    "uncompressedSize": 60420,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/26",
+    "zipPath": "2022/nia-2022-26-revised-data.xml",
+    "compressedSize": 6510,
+    "uncompressedSize": 38815,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/27",
+    "zipPath": "2022/nia-2022-27-revised-data.xml",
+    "compressedSize": 5726,
+    "uncompressedSize": 27814,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/28",
+    "zipPath": "2022/nia-2022-28-revised-data.xml",
+    "compressedSize": 2694,
+    "uncompressedSize": 11259,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/29",
+    "zipPath": "2022/nia-2022-29-revised-data.xml",
+    "compressedSize": 2007,
+    "uncompressedSize": 8474,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/3",
+    "zipPath": "2022/nia-2022-3-revised-data.xml",
+    "compressedSize": 88711,
+    "uncompressedSize": 857803,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/30",
+    "zipPath": "2022/nia-2022-30-revised-data.xml",
+    "compressedSize": 8566,
+    "uncompressedSize": 52365,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/31",
+    "zipPath": "2022/nia-2022-31-revised-data.xml",
+    "compressedSize": 31535,
+    "uncompressedSize": 239262,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/4",
+    "zipPath": "2022/nia-2022-4-revised-data.xml",
+    "compressedSize": 12296,
+    "uncompressedSize": 92011,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/5",
+    "zipPath": "2022/nia-2022-5-revised-data.xml",
+    "compressedSize": 20347,
+    "uncompressedSize": 150043,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/6",
+    "zipPath": "2022/nia-2022-6-revised-data.xml",
+    "compressedSize": 20263,
+    "uncompressedSize": 98171,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/7",
+    "zipPath": "2022/nia-2022-7-revised-data.xml",
+    "compressedSize": 4309,
+    "uncompressedSize": 22057,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/8",
+    "zipPath": "2022/nia-2022-8-revised-data.xml",
+    "compressedSize": 3413,
+    "uncompressedSize": 15559,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2022/9",
+    "zipPath": "2022/nia-2022-9-revised-data.xml",
+    "compressedSize": 2653,
+    "uncompressedSize": 10535,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2023/1",
+    "zipPath": "2023/nia-2023-1-revised-data.xml",
+    "compressedSize": 5683,
+    "uncompressedSize": 33169,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2024/1",
+    "zipPath": "2024/nia-2024-1-revised-data.xml",
+    "compressedSize": 36386,
+    "uncompressedSize": 267131,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2024/2",
+    "zipPath": "2024/nia-2024-2-revised-data.xml",
+    "compressedSize": 2023,
+    "uncompressedSize": 8834,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2024/3",
+    "zipPath": "2024/nia-2024-3-revised-data.xml",
+    "compressedSize": 4211,
+    "uncompressedSize": 18654,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2024/4",
+    "zipPath": "2024/nia-2024-4-revised-data.xml",
+    "compressedSize": 24016,
+    "uncompressedSize": 170608,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/1",
+    "zipPath": "2025/nia-2025-1-revised-data.xml",
+    "compressedSize": 37735,
+    "uncompressedSize": 279451,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/2",
+    "zipPath": "2025/nia-2025-2-revised-data.xml",
+    "compressedSize": 2947,
+    "uncompressedSize": 12784,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/3",
+    "zipPath": "2025/nia-2025-3-revised-data.xml",
+    "compressedSize": 3879,
+    "uncompressedSize": 19635,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/4",
+    "zipPath": "2025/nia-2025-4-revised-data.xml",
+    "compressedSize": 21979,
+    "uncompressedSize": 152906,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/5",
+    "zipPath": "2025/nia-2025-5-revised-data.xml",
+    "compressedSize": 5566,
+    "uncompressedSize": 30927,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2025/6",
+    "zipPath": "2025/nia-2025-6-revised-data.xml",
+    "compressedSize": 4240,
+    "uncompressedSize": 21355,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2026/1",
+    "zipPath": "2026/nia-2026-1-revised-data.xml",
+    "compressedSize": 10087,
+    "uncompressedSize": 67206,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2026/2",
+    "zipPath": "2026/nia-2026-2-revised-data.xml",
+    "compressedSize": 9338,
+    "uncompressedSize": 65880,
+    "version": "revised-current",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  },
+  {
+    "actId": "nia/2026/3",
+    "zipPath": "2026/nia-2026-3-enacted-data.xml",
+    "compressedSize": 35755,
+    "uncompressedSize": 251954,
+    "version": "made",
+    "legislationType": "NIA",
+    "jurisdiction": "Northern Ireland"
+  }
+]

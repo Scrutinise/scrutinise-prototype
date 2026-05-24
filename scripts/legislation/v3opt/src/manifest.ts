@@ -7,6 +7,10 @@ export interface ManifestEntry {
   compressedSize: number
   uncompressedSize: number
   version: ManifestVersion
+  /** LegislationType enum value name, e.g. 'UKSI', 'SSI', 'NISR'. Defaults to 'UKSI' if absent (back-compat with manifest-uksi.json). */
+  legislationType?: string
+  /** Jurisdiction string stored on LegislationItem, e.g. 'UK', 'Scotland', 'Wales', 'Northern Ireland'. Defaults to 'UK' if absent. */
+  jurisdiction?: string
 }
 
 export function loadManifest(manifestPath: string): ManifestEntry[] {

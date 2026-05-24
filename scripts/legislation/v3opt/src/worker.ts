@@ -6,6 +6,15 @@ dotenv.config({ path: path.resolve(__dirname, '../../../../scrutinise-web/.env')
 import { getPrisma, disconnectPrisma } from './db'
 import { CompilationStatus, LegislationType, LegislationTier } from './runtime-deps'
 
+/** Derive the correct tier from the LegislationType value name. */
+function deriveTier(lt: string): string {
+  const secondary = new Set(['UKSI', 'SSI', 'NISR', 'WSI', 'NISI'])
+  const primaryPost2010 = new Set(['UKPGA'])
+  if (secondary.has(lt))       return LegislationTier.TIER_3
+  if (primaryPost2010.has(lt)) return LegislationTier.TIER_1
+  return LegislationTier.TIER_2  // ASP, NIA, ANAW, UKLA, NIER, etc.
+}
+
 import type { ManifestEntry } from './manifest'
 import { parseItem } from './parser'
 import { parseActId, IsbnDraftError } from './parseActId'
@@ -102,19 +111,27 @@ async function processItem(
 
   // Parse title and sections
   const { title: rawTitle, sections } = parseItem(xmlStr)
-  const title = decodeEntities(rawTitle) || `SI ${actId.split('/')[1]}/${actId.split('/')[2]}`
+  // Generic title fallback: derive from actId prefix (e.g. ssi/1999/1 → "SSI 1999/1")
+  const [legTypePrefix, yr, numPart] = actId.split('/')
+  const title = decodeEntities(rawTitle) || `${legTypePrefix.toUpperCase()} ${yr}/${numPart}`
   if (trace) log(workerId, 'info', `TRACE parsed: title="${title}" raw-sections=${sections.length}`)
+
+  // Resolve legislationType and jurisdiction from manifest entry (back-compat: defaults to UKSI/UK)
+  const legTypeName = entry.legislationType ?? 'UKSI'
+  const legTypeValue = (LegislationType as Record<string, string>)[legTypeName] ?? LegislationType.UKSI
+  const jurisdiction  = entry.jurisdiction ?? 'UK'
+  const tier          = deriveTier(legTypeName)
 
   // Create LegislationItem
   const item = await getPrisma().legislationItem.create({
     data: {
-      legislationType: LegislationType.UKSI,
-      tier: LegislationTier.TIER_3,
+      legislationType: legTypeValue as any,
+      tier: tier as any,
       title,
       year: yearInt,
       yearRaw: yearStr,
       number: num,
-      jurisdiction: 'UK',
+      jurisdiction,
       legislationGovUkId: actId,
       clmlUrl: `https://www.legislation.gov.uk/${actId}/data.xml`,
       compilationStatus: CompilationStatus.PENDING,

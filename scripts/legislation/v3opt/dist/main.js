@@ -47,7 +47,11 @@ const checkpoint_1 = require("./checkpoint");
 const log_1 = require("./log");
 const DIR = __dirname;
 const ZIP_PATH = path.resolve(DIR, '../../v276-bulk/best-collection-xml.zip');
-const MANIFEST_PATH = path.resolve(DIR, '../../v3b-uksi/manifest-uksi.json');
+// --manifest <path> overrides the default UKSI manifest (back-compat if flag absent)
+const manifestArgIdx = process.argv.indexOf('--manifest');
+const MANIFEST_PATH = manifestArgIdx >= 0
+    ? path.resolve(process.argv[manifestArgIdx + 1])
+    : path.resolve(DIR, '../../v3b-uksi/manifest-uksi.json');
 const CHECKPOINT_DIR = process.env.CHECKPOINT_DIR ?? path.resolve(DIR, '../checkpoints-v3opt');
 const WORKER_COUNT = Math.min(8, Math.max(1, parseInt(process.env.WORKER_COUNT ?? '4', 10)));
 const BATCH_SIZE = 50;
@@ -89,8 +93,9 @@ async function main() {
     const isPilot1000 = process.argv.includes('--pilot-1000');
     const isResume = process.argv.includes('--resume');
     const r2Prefix = process.env.R2_KEY_PREFIX ?? '';
-    const mode = isFull ? 'FULL (61,179)' : isPilot1000 ? 'PILOT-1000' : 'PILOT-100';
-    (0, log_1.log)(null, 'info', `V.3-B-opt UKSI ingest — ${mode} — workers=${WORKER_COUNT} batch=${BATCH_SIZE}`);
+    const manifestLabel = path.basename(MANIFEST_PATH, '.json');
+    const mode = isFull ? `FULL` : isPilot1000 ? 'PILOT-1000' : 'PILOT-100';
+    (0, log_1.log)(null, 'info', `Ingest — manifest=${manifestLabel} — ${mode} — workers=${WORKER_COUNT} batch=${BATCH_SIZE}`);
     // Print host/database only — password is at the front of the Railway URL so slicing leaks it.
     const dbDisplay = (() => {
         try {

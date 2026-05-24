@@ -10,6 +10,16 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../../../../scrutinise-web/.env') });
 const db_1 = require("./db");
 const runtime_deps_1 = require("./runtime-deps");
+/** Derive the correct tier from the LegislationType value name. */
+function deriveTier(lt) {
+    const secondary = new Set(['UKSI', 'SSI', 'NISR', 'WSI', 'NISI']);
+    const primaryPost2010 = new Set(['UKPGA']);
+    if (secondary.has(lt))
+        return runtime_deps_1.LegislationTier.TIER_3;
+    if (primaryPost2010.has(lt))
+        return runtime_deps_1.LegislationTier.TIER_1;
+    return runtime_deps_1.LegislationTier.TIER_2; // ASP, NIA, ANAW, UKLA, NIER, etc.
+}
 const parser_1 = require("./parser");
 const parseActId_1 = require("./parseActId");
 const r2keys_1 = require("./r2keys");
@@ -68,19 +78,26 @@ async function processItem(entry, zip, workerId, batchSize, cp, trace = false) {
         (0, log_1.log)(workerId, 'info', `TRACE XML extracted: ${xmlStr.length} chars`);
     // Parse title and sections
     const { title: rawTitle, sections } = (0, parser_1.parseItem)(xmlStr);
-    const title = (0, r2keys_1.decodeEntities)(rawTitle) || `SI ${actId.split('/')[1]}/${actId.split('/')[2]}`;
+    // Generic title fallback: derive from actId prefix (e.g. ssi/1999/1 → "SSI 1999/1")
+    const [legTypePrefix, yr, numPart] = actId.split('/');
+    const title = (0, r2keys_1.decodeEntities)(rawTitle) || `${legTypePrefix.toUpperCase()} ${yr}/${numPart}`;
     if (trace)
         (0, log_1.log)(workerId, 'info', `TRACE parsed: title="${title}" raw-sections=${sections.length}`);
+    // Resolve legislationType and jurisdiction from manifest entry (back-compat: defaults to UKSI/UK)
+    const legTypeName = entry.legislationType ?? 'UKSI';
+    const legTypeValue = runtime_deps_1.LegislationType[legTypeName] ?? runtime_deps_1.LegislationType.UKSI;
+    const jurisdiction = entry.jurisdiction ?? 'UK';
+    const tier = deriveTier(legTypeName);
     // Create LegislationItem
     const item = await (0, db_1.getPrisma)().legislationItem.create({
         data: {
-            legislationType: runtime_deps_1.LegislationType.UKSI,
-            tier: runtime_deps_1.LegislationTier.TIER_3,
+            legislationType: legTypeValue,
+            tier: tier,
             title,
             year: yearInt,
             yearRaw: yearStr,
             number: num,
-            jurisdiction: 'UK',
+            jurisdiction,
             legislationGovUkId: actId,
             clmlUrl: `https://www.legislation.gov.uk/${actId}/data.xml`,
             compilationStatus: runtime_deps_1.CompilationStatus.PENDING,
