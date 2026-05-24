@@ -1,78 +1,177 @@
-# Handover summary — V.3-B-opt CLOSED → V.4-FTS-1 (pending deploy) + V.4-FTS-2 (next)
+# Handover summary — V.3-C-2 CLOSED + V.3-D CLOSED + V.3-C HMRC pending + V.4-FTS-1 pending deploy
 
-**Date:** 23 May 2026  
-**Previous conversations:** V.4-FTS-1 sprint (Session 2); V.3-B-opt (Sessions 1 & 2)  
-**Status:** V.3-B-opt sprint CLOSED. V.4-FTS-1 working-tree complete, not yet deployed to Vercel. V.4-FTS-2 not yet started.
+**Date:** 24 May 2026  
+**Previous conversations:** V.3-C-2 operational codes (this session); V.3-D, V.3-C, V.3-B-opt, V.4-FTS-1 (earlier sessions)  
+**Status:** V.3-C-2 CLOSED (operational codes scraper — Civil Service, GovS, Treasury, PACE, ACAS, ICO — all complete). V.3-D CLOSED (devolved corpus ingest). V.3-C HMRC scraper written, run pending. V.3-B-opt CLOSED (UKSI full ingest still pending). V.4-FTS-1 working-tree complete, not yet deployed to Vercel.
 
 ---
 
 ## CURRENT STATE
 
+### V.3-C-2 — Operational Codes Scraper Sprint — CLOSED (24 May 2026)
+
+**What was delivered this session:**
+
+Implemented and ran scrapers for all priority operational code sources (Priority 1–6). All scripts follow the standard pattern: robots.txt check, 2s rate limit, exponential backoff, checkpoint/resume, `OperationalDocument` + `OperationalSection` DB writes, R2 under `operational/{publisher}/{slug}/`.
+
+| Source Group | Script | Status |
+|---|---|---|
+| Civil Service core (Code, CSMC, Ministerial Code, Cabinet Manual) | `civil-service-ingest.ts` | 3/4 ✓ (CSMC 404 on gov.uk) |
+| Government Functional Standards (GovS 001–015 + 3 companions) | `govs-ingest.ts` | 17/17 ✓ |
+| HM Treasury appraisal guidance (5 docs) | `treasury-guidance-ingest.ts` | 5/5 ✓ |
+| PACE Codes A–I (8 codes) | `pace-codes-ingest.ts` | 8/8 ✓ |
+| ACAS codes + guides | `acas-ingest.ts` | 3/3 ✓ |
+| ICO Codes (5 multi-chapter) | `ico-ingest.ts` | 5/5 ✓ |
+| College of Policing APP | `college-of-policing-ingest.ts` | 0/1 ✗ WAF 403 |
+
+**Permanent blocks / gaps:**
+- **Civil Service Management Code**: HTTP 404 on all gov.uk URL variants — document appears archived/removed. Not found via search. Needs manual investigation.
+- **College of Policing APP**: HTTP 403 from WAF on all `/app/*` and `/guidance/*` paths, all IPs, all user-agents including Googlebot and browser UA. robots.txt is permissive. DB record `college-of-policing-app` marked `FAILED`. Needs CoP partnership access or bulk data export.
+
+**Key technical fixes this session:**
+- `r2-client.ts`: `r2Put()` extended to accept `Buffer | Uint8Array` for PDF binary upload
+- `pdf-parse v2.4.5`: class-based API (`PDFParse`) — CJS entry at `dist/pdf-parse/cjs/index.cjs`
+- GovS 002: special-case fetches PDF from `projectdelivery.gov.uk` (robots.txt permissive, dynamic download link discovery)
+- GovS 008: `HTML_OVERRIDES` map in `govs-ingest.ts` — landing page first link was wrong
+- ICO: rewritten as multi-chapter crawler (v2) — previous hub-page captures (707w, 1,033w, 47w) overwritten
+- ACAS: `extractMainContent` uses `<article>` first (`.body-wrapper` div is subscription widget, not content)
+- Aqua Book URL: corrected from `/government/publications/...` (404) to `/guidance/the-aqua-book`
+
+**Run commands for reference:**
+```powershell
+cd C:\Code\scrutinise-prototype\scrutinise-web
+
+# Civil Service core
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/civil-service-ingest.ts
+
+# GovS standards (all / single: --govs=002)
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/govs-ingest.ts
+
+# HM Treasury
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/treasury-guidance-ingest.ts
+
+# PACE Codes
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/pace-codes-ingest.ts
+
+# ACAS
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/acas-ingest.ts
+
+# ICO (all / single: --slug=ico-data-sharing-code)
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/ico-ingest.ts
+
+# College of Policing (script ready, currently blocked)
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/college-of-policing-ingest.ts
+```
+
+---
+
+### V.3-D — Devolved Corpus Ingest — CLOSED (24 May 2026)
+
+**What was delivered this session:**
+
+1. **Schema enum extension** — added NISR, NISI, NIA to `LegislationType` in `schema.prisma`. Pushed to Railway production. Prisma client regenerated.
+2. **Pipeline generalised** — `worker.ts` now derives `legislationType`, `jurisdiction`, `tier` from `ManifestEntry` rather than UKSI hardcodes. `main.ts` accepts `--manifest <path>`. Fully backward-compatible (existing UKSI manifest has no `legislationType`/`jurisdiction` fields; defaults to `'UKSI'`/`'UK'`).
+3. **Manifest interface extended** — `manifest.ts`: optional `legislationType?` and `jurisdiction?` on `ManifestEntry`.
+4. **New manifest builder** — `scripts/legislation/v3opt/src/build-manifest-devolved.ts` — pure TypeScript, reads ZIP directly via adm-zip, applies revised-current-wins dedup, outputs two manifest files.
+5. **Manifests built:**
+   - `manifest-devolved-secondary.json` — 23,202 entries (SSI 8,680 · NISR 9,316 · WSI 4,648 · NISI 558). 900 made versions dropped where revised-current existed.
+   - `manifest-devolved-primary.json` — 671 entries (ASP 395 · NIA 232 · ANAW 44).
+6. **Full ingest run (production, no isolation):**
+
+| Run | Items created | Sections | Errors | Elapsed | Throughput |
+|---|---|---|---|---|---|
+| Secondary full (SSI+NISR+WSI+NISI) | 23,097 | 124,406 | 0 | 3,247s | ~25,608/hr |
+| Primary full (ASP+NIA+ANAW) | 671 | 10,526 | 0 | 148s | ~16,322/hr |
+
+All production writes: `DATABASE_URL` → public schema, no R2_KEY_PREFIX.
+
+**DB state by LegislationType (post-V.3-D):**
+
+| Type | Items | Notes |
+|---|---|---|
+| UKSI | ~998 | Pilot only — full ingest (61,179) still pending |
+| SSI | ~8,680 | V.3-D — complete |
+| NISR | ~9,316 | V.3-D — complete |
+| WSI | ~4,648 | V.3-D — complete |
+| NISI | ~558 | V.3-D — complete |
+| ASP | 395 | V.3-D — complete |
+| NIA | 232 | V.3-D — complete |
+| ANAW | 44 | V.3-D — complete |
+| **Total (legislation)** | **~23,871** | excl. HMRC |
+
+**Tier assignment logic (deriveTier in worker.ts):**
+- TIER_3 (secondary SI): UKSI, SSI, NISR, WSI, NISI
+- TIER_1 (post-2010 primary UK Act): UKPGA
+- TIER_2 (all other primary): ASP, NIA, ANAW, UKLA, NIER, etc.
+
+---
+
+### V.3-C — HMRC Full Ingest (scraper ready, run pending)
+
+`scripts/operational/hmrc-full-ingest.ts` — full-corpus HMRC ingest covering **137 manuals** from `https://www.gov.uk/government/collections/hmrc-manuals`.
+
+**Run command (from Charlie's terminal):**
+```powershell
+cd C:\Code\scrutinise-prototype\scrutinise-web
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts
+```
+
+**Single-manual smoke test:**
+```powershell
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts --manual=compliance-handbook
+```
+
+**Resume from a specific manual:**
+```powershell
+npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts --from=company-taxation-manual
+```
+
+**Note:** Use `tsx` (not `ts-node --transpile-only`). tsx applies tsconfig `paths` at runtime via esbuild so `@prisma/client` resolves correctly to `scrutinise-web/node_modules`. This matches the pattern used by CC-A for all other operational scripts.
+
+**Estimated duration:** 20–30 hours. Checkpoint/resume handles drops.  
+**Pre-run state:** Railway DB well under 4 GB. robots.txt passes.  
+**Expected Railway growth:** ~50–80 MB. Expected R2 growth: ~2–3 GB.
+
+---
+
 ### V.3-B-opt — CLOSED (23 May 2026)
 
-Pure-TypeScript UKSI ingest pipeline rewrite is complete and validated.
+Pure-TypeScript UKSI ingest pipeline. Full ingest (61,179 items) still pending Charlie's go/no-go.  
+Pipeline approved. Pre-flight checklist in `v3opt_pilot_report.md`.
 
-**What was delivered:**
-1. **Full pipeline rewrite** — `scripts/legislation/v3opt/` — pure TypeScript, no PowerShell, no encoding risk. Eliminates the Windows-1252 encoding bug class that caused V.3-B to silently corrupt Unicode at item 33,942.
-2. **4-worker parallel architecture** — `worker_threads` + checkpoint/resume per worker. Worker crash recovery (3 retries before give-up).
-3. **PGSCHEMA isolation mechanism** — `db.ts` + `setup-test-schema.js` — allows full pilot runs against an isolated schema without touching production.
-4. **R2_KEY_PREFIX isolation** — pilot R2 writes under `v3opt-pilot/` prefix, zero production namespace pollution.
-5. **Verify module** — `src/verify.ts` — DB integrity checks (sectionCount header vs actual rows, R2 blob spot-checks, web parity against legislation.gov.uk). PGSCHEMA fix applied for `$queryRaw` schema qualification.
-6. **Unit + integration test suite** — `__tests__/` — vitest, covers parser, batch, checkpoint, parseActId, r2keys.
+**Run command:**
+```powershell
+cd C:\Code\scrutinise-prototype\scripts\legislation\v3opt
+npx ts-node --transpile-only src/main.ts --full
+```
 
-**Pilot results (see `v3opt_pilot_report.md` for full data):**
+---
 
-| Pilot | Items | Sections | Errors | Elapsed | Throughput |
-|-------|-------|----------|--------|---------|-----------|
-| Pilot-100 | 100 | 658 | 0 | 54s | ~6,667/hr |
-| Pilot-1000 | 998 (898 new) | 5,343 | 0 | 304s | **~10,634/hr** |
+### V.4-FTS-1 — Full-text search (working-tree complete, Vercel deploy pending)
 
-**Benchmark: 10,634 items/hr vs V.3-B baseline ~700/hr → 15.2× improvement.**
+Working-tree changes in `scrutinise-web/`. DB migration ran against production Railway.  
+**Smoke test:** `cd scrutinise-web && npx ts-node --project ..\scripts\tsconfig.json ..\scripts\legislation\fts-smoke-test.ts`
 
-**Cross-comparison vs V.3-B production (see `v3opt_v3b_comparison.md`):**
-- 998/998 items matched in production (100% coverage)
-- 16 title differences: expected (`(revoked)` suffix — v3opt is more accurate)
-- 273 sectionCount differences: expected (made vs revised-current version distinction)
-- 8 items where v3opt has MORE sections than production: positive (fresher TNA data)
-- **Overall: No correctness bugs found. Pipeline approved for full ingest.**
+---
 
-**Committed:** `89dc782` — `V.3-B-opt: UKSI ingest rewrite — 100-item pilot pass (100 items, 658 sections, 0 errors, 54s, idempotent)`
+## What's NOT done
 
-### What's NOT done yet
-
-- **Full ingest not run** — 61,179 items awaiting `--full` run. Pre-flight checklist in `v3opt_pilot_report.md`. Charlie to decide timing and whether to filter to `revised-current` only (see comparison report Option A/B analysis).
-- **V.4-FTS-1 not deployed to Vercel** — working tree changes in `scrutinise-web/`. The DB migration ran against production Railway in the previous sprint. App changes need a Vercel deploy.
-- **V.4-FTS-1 smoke test not run** — run: `cd scrutinise-web && npx ts-node --project ..\scripts\tsconfig.json ..\scripts\legislation\fts-smoke-test.ts`
-
-### Next immediate actions (in priority order)
-
-1. **Run V.4-FTS-1 smoke test** (Charlie, in terminal) then deploy to Vercel.
-2. **Decide V.3-B-opt full ingest timing** — Option A (all versions, 61,179 items, ~6hrs) or Option B (revised-current only). See `v3opt_v3b_comparison.md`.
-3. **Start V.4-FTS-2** — pgvector + Gemini embeddings (brief not yet written).
+- **UKSI full ingest** — 61,179 items, pipeline approved, awaiting Charlie decision
+- **HMRC full ingest** — script ready (`hmrc-full-ingest.ts`), run pending
+- **V.4-FTS-1 Vercel deploy** — working-tree complete, smoke test not run
+- **V.4-FTS-2** — pgvector + Gemini embeddings — brief not yet written
+- **UKPGA/UKLA** — UK primary Acts not yet ingested
 
 ---
 
 ## Forward roadmap
 
-### Active parallel streams
-
-**Stream A: V.3-B-opt full ingest** (pending Charlie decision)
-- Pre-flight checklist complete; pipeline approved
-- Run `node dist/main.js --full` from `scripts/legislation/v3opt/`
-- ~5–6 hours estimated
-
-**Stream B: V.4-FTS-2** (next sprint for this session)
-- pgvector + Gemini text-embedding-004
-- Semantic search to close the "GDPR ≠ data protection" gap
-- Requires: embedding column on LegislationSection, batch embed job, cosine-similarity query path
-
-### Near-term (sprints 3-5)
-
-| Sprint | Focus | Stream A (Backend) | Stream B (Search) |
+| Sprint | Focus | Backend | Search |
 |---|---|---|---|
-| 3 | V.3-D + FTS Phase 2 | Devolved primary (~1,363 items, using new pipeline) | pgvector + Gemini embeddings |
-| 4 | V.3-G + FTS Phase 3 | Devolved secondary (~37,000 items) | Hybrid FTS+vector with RRF |
-| 5 | V.4-A + Lex analytical | HMRC manuals full ingest (~80) | Cross-corpus analytical mode |
+| Next | UKSI full ingest + HMRC | 61,179 UKSI items (v3opt --full) + HMRC 137 manuals | — |
+| +1 | V.4-FTS-1 deploy + V.4-FTS-2 | Vercel deploy | pgvector + Gemini embeddings |
+| +2 | V.3-G | UKPGA/UKLA ingest | Hybrid FTS+vector with RRF |
+| +3 | V.4-A | Lex cross-corpus analytical mode | — |
 
 ---
 
@@ -82,47 +181,33 @@ Pure-TypeScript UKSI ingest pipeline rewrite is complete and validated.
 |---|---|
 | Project root | `C:/Code/scrutinise-prototype` |
 | Web app | `scrutinise-web/` |
-| Scripts | `scripts/legislation/` |
 | v3opt ingest | `scripts/legislation/v3opt/` |
+| HMRC ingest | `scripts/operational/hmrc-full-ingest.ts` |
 | Docs | `scrutinise-docs/` |
 | Schema | `scrutinise-web/prisma/schema.prisma` |
-| Search library | `scrutinise-web/lib/search.ts` |
-| Search API | `scrutinise-web/app/api/search/route.ts` |
-| Lex AI route | `scrutinise-web/app/api/ai/[ideaId]/route.ts` |
-| FTS smoke test | `scripts/legislation/fts-smoke-test.ts` |
-| FTS phase 1 report | `scrutinise-docs/fts_phase1_report.md` |
-| v3opt pilot report | `scrutinise-docs/v3opt_pilot_report.md` |
-| v3opt vs V.3-B comparison | `scrutinise-docs/v3opt_v3b_comparison.md` |
+| Devolved manifest builder | `scripts/legislation/v3opt/src/build-manifest-devolved.ts` |
+| Devolved secondary manifest | `scripts/legislation/v3opt/manifest-devolved-secondary.json` |
+| Devolved primary manifest | `scripts/legislation/v3opt/manifest-devolved-primary.json` |
+| UKSI manifest | `scripts/legislation/v3opt/manifest-uksi.json` (in v3b-uksi dir) |
 | R2 bucket | `scrutinise-legislation` |
 | Railway project | `scrutinise-db` (Hobby tier) |
 
 ---
 
-## Open questions for Charlie to decide
+## Open questions for Charlie
 
-- **V.3-B-opt full ingest: Option A or B?** Option A ingests all versions (made + revised-current, 61,179 items). Option B ingests revised-current only (fewer items, corpus closer to V.3-B). See `v3opt_v3b_comparison.md` for full analysis. CC recommends Option A.
-- **V.4-FTS-2 timing** — start before or after V.3-B-opt full ingest completes?
-- **minRank default** (FTS) — 0.05 is conservative. Review after smoke test rank distribution output; consider raising to 0.1–0.15.
-- **Lex tool call mode (Phase 2)** — explicit `searchLegislation` tool vs auto-search only.
-
----
-
-## Apprentice-mode education delivered in V.3-B-opt sessions
-
-(Continuing from V.4-FTS-1 handover)
-
-- `worker_threads` architecture: why parallelism requires checkpoint-per-worker for safe crash recovery
-- Prisma adapter schema option vs `$queryRaw` literal SQL — why schema qualification must be explicit in raw queries
-- UKSI instrument versioning: `made` (original enacted) vs `revised-current` (TNA current) — why section counts naturally diverge over time
-- R2 key prefix isolation as a safe pilot pattern — how to write to a quarantine namespace without code changes beyond env vars
-- Cross-schema SQL comparison as a verification technique for ingest correctness
+- **UKSI full ingest timing** — go/no-go for 61,179 items? Pre-flight checklist in `v3opt_pilot_report.md`.
+- **HMRC full ingest timing** — run now or wait until after UKSI? (Both use Railway DB; stagger by 30 min if simultaneous.)
+- **V.4-FTS-2 brief** — Charlie to write before next CC session.
+- **FTS minRank default** — currently 0.05. Review after smoke test.
 
 ---
 
 ## Notes for next CC session
 
-- Read `scrutinise-docs/CLAUDE.md` especially Sections 12 (git discipline), 13 (parse failure protocol), 14 (PowerShell encoding)
-- Check memory files in `C:\Users\charl\.claude\projects\C--Code-scrutinise-prototype\memory\`
-- V.3-B-opt full ingest decision rests with Charlie (Option A/B above)
-- V.4-FTS-2 brief does not yet exist — Charlie will write it
-- Do NOT touch `scripts/legislation/v3opt/` node_modules or run `npm install` in that directory without checking the existing dependency set first
+- V.3-D is fully closed. No devolved ingest work remains unless UKPGA/UKLA is added.
+- Devolved manifests are committed and can be re-run with `--resume` if needed.
+- `deriveTier()` in `worker.ts` handles all known legislation types; extend the `secondary` set if any new SI types are added.
+- The `--manifest <path>` flag on `main.ts` means any new corpus manifest can be ingested without code changes.
+- Read Section 12 (git discipline) before any code work.
+- Do NOT run `npm install` in `scripts/legislation/v3opt/` without checking existing dependency set.

@@ -1,8 +1,92 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 15 May 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 24 May 2026*
 
 ***
+
+## CODE CHANGES — 24 May 2026 Sprint V.3-C-2 (Operational Codes Scraper — Civil Service, GovS, Treasury, PACE, ACAS, ICO)
+
+### V.3-C-2: Operational codes scraper sprint — all priority sources implemented and ingested
+
+| Item | Detail |
+|------|--------|
+| `scripts/legislation/r2-client.ts` | `r2Put()` signature extended to accept `Buffer \| Uint8Array` in addition to `string`. Required for PDF binary upload. |
+| `scrutinise-web/package.json` | Added `pdf-parse@2.4.5` dependency. Installed. |
+| `scripts/operational/civil-service-ingest.ts` (NEW) | Ingests 4 civil service core documents: Civil Service Code, Civil Service Management Code (404 — confirmed absent from gov.uk), Ministerial Code, Cabinet Manual. Discovers HTML or PDF from gov.uk publication landing pages. Checkpoint: `civil-service-checkpoint.json`. |
+| `scripts/operational/govs-ingest.ts` (NEW) | Ingests all 17 Government Functional Standards (GovS 001–015 + 3 companion docs) from `gov.uk/government/collections/functional-standards`. Auto-discovers chapter links and derives `govs-{NNN}` slug. Special case: GovS 002 (Project Delivery) fetched from `projectdelivery.gov.uk` — robots.txt permissive, PDF download discovered dynamically. GovS 008 overridden via `HTML_OVERRIDES` map (first link on landing page was wrong). Checkpoint: `govs-checkpoint.json`. |
+| `scripts/operational/treasury-guidance-ingest.ts` (NEW) | Ingests 5 HM Treasury appraisal guidance documents: Green Book, Magenta Book, Aqua Book, Orange Book, Managing Public Money. All HTML or PDF. Aqua Book URL corrected to `/guidance/the-aqua-book`. Checkpoint: `treasury-checkpoint.json`. |
+| `scripts/operational/pace-codes-ingest.ts` (NEW) | Ingests 8 PACE Codes (A, B, C, D, EF, G, H, I) from gov.uk. Pre-checks legislation corpus to confirm codes are not in statutes DB. Discovers accessible HTML versions from publication landing pages. Checkpoint: `pace-codes-checkpoint.json`. |
+| `scripts/operational/acas-ingest.ts` (NEW) | Ingests 3 ACAS sources: Code of Practice 1 (statutory), Discipline & Grievances Guide (multi-chapter, explicit URL list — ACAS restructured from PDFs to web pages), Dismissal Guide (multi-chapter, auto-discovered from `/dismissals/` namespace). `extractMainContent` fixed to use `<article>` first (ACAS `body-wrapper` div is a subscription widget, not content). Checkpoint: `acas-checkpoint.json`. |
+| `scripts/operational/ico-ingest.ts` (NEW) | Ingests 5 ICO codes. v2 rewrite: multi-chapter crawler. Discovers all immediate sub-pages of each code's root URL and concatenates text into one `main` section. Sources: Data Sharing Code (25pp, 32,858w), Children's Code (30pp, 42,384w), Direct Marketing Guidance (9pp, 19,611w), Journalism Code (15pp, 25,660w), FOI Guidance (14pp, 11,479w). Previous shallow hub captures (707w, 1,033w, 47w) overwritten via ON CONFLICT UPDATE. Checkpoint: `ico-checkpoint.json`. |
+| `scripts/operational/college-of-policing-ingest.ts` (NEW) | Script written. robots.txt permissive, but all `/app/*` and `/guidance/*` paths return HTTP 403 from WAF (all IPs, all user-agents including browser UA and Googlebot). DB record marked FAILED. Checkpoint updated with `httpBlocked: true`. Needs manual export or CoP partnership access. |
+| `scripts/operational/mark-cop-failed.js` (NEW) | One-off utility — marks College of Policing APP DB record as FAILED. |
+
+**Ingest results:**
+
+| Source | Words | Pages | Status |
+|--------|-------|-------|--------|
+| Civil Service Code | 1,018 | 1 | ✓ |
+| Civil Service Management Code | — | — | ✗ 404 on gov.uk (archived/removed) |
+| Ministerial Code | 11,285 | 1 | ✓ |
+| Cabinet Manual | 46,054 | 1 | ✓ (PDF) |
+| GovS 001–015 + 3 companion docs (17 total) | varies | 1 each | ✓ (16 HTML, 1 PDF from projectdelivery.gov.uk) |
+| Green Book | 28,441 | 1 | ✓ |
+| Magenta Book | 38,287 | 1 | ✓ |
+| Aqua Book | 13,760 | 1 | ✓ |
+| Orange Book | 13,153 | 1 | ✓ |
+| Managing Public Money | 83,530 | 1 | ✓ (PDF) |
+| PACE Codes A–I (8) | varies | 1 each | ✓ all |
+| ACAS Code of Practice | 3,219 | 1 | ✓ |
+| ACAS Discipline & Grievances Guide | 3,557 | 6 | ✓ |
+| ACAS Dismissal Guide | 4,152 | 6 | ✓ |
+| ICO Data Sharing Code | 32,858 | 25 | ✓ |
+| ICO Children's Code | 42,384 | 30 | ✓ |
+| ICO Direct Marketing Guidance | 19,611 | 9 | ✓ |
+| ICO Journalism Code | 25,660 | 15 | ✓ |
+| ICO FOI Guidance | 11,479 | 14 | ✓ |
+| College of Policing APP | — | — | ✗ HTTP 403 WAF (all paths, all IPs) |
+
+---
+
+## CODE CHANGES — 24 May 2026 Sprint V.3-D (Devolved Corpus — Secondary)
+
+### V.3-D: Devolved secondary ingest (SSI, NISR, WSI, NISI) — pipeline extension + production ingest
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `NISR`, `NISI`, `NIA` to `LegislationType` enum. Updated `NIER` comment to clarify legacy/generic status. Pushed to production Railway via `prisma db push`. Prisma client regenerated. |
+| `scripts/legislation/v3opt/src/manifest.ts` | Extended `ManifestEntry` with optional `legislationType?: string` and `jurisdiction?: string`. Backward-compatible — existing `manifest-uksi.json` works unchanged. |
+| `scripts/legislation/v3opt/src/build-manifest-devolved.ts` (NEW) | Pure TypeScript manifest builder for all 7 devolved types. Reads directly from `best-collection-xml.zip` via adm-zip (no PowerShell). Applies version dedup (revised-current preferred; falls back to made/enacted). Outputs `manifest-devolved-secondary.json` (SSI+NISR+WSI+NISI) and `manifest-devolved-primary.json` (ASP+NIA+ANAW). |
+| `scripts/legislation/v3opt/src/worker.ts` | Parameterised `legislationType`, `jurisdiction`, `tier` — read from manifest entry, no longer hardcoded to UKSI/UK/TIER_3. Added `deriveTier()` helper. Fixed title fallback to be type-aware (e.g. `SSI 1999/1` not `SI 1999/1`). |
+| `scripts/legislation/v3opt/src/main.ts` | Added `--manifest <path>` CLI arg (default: backward-compat UKSI manifest). Mode label now uses manifest filename, not hardcoded `UKSI` / `(61,179)`. |
+| `scripts/legislation/v3opt/manifest-devolved-secondary.json` (NEW) | 23,202-entry manifest: SSI 8,680 · NISR 9,316 · WSI 4,648 · NISI 558. Dedup: 900 items had both revised+made; revised-current kept. |
+| `scripts/legislation/v3opt/manifest-devolved-primary.json` (NEW) | 671-entry manifest: ASP 395 · NIA 232 · ANAW 44. Ready for Step 3 (pending secondary completion). |
+
+**Pilot-100 results (against production):** 100 items · 444 sections · 0 errors · 0 R2 failures · 183s  
+**DB integrity confirmed:** `legislationType=NISR/NISI/SSI/WSI`, `tier=TIER_3`, `jurisdiction=Northern Ireland/Scotland/Wales` all correct on pilot records.
+
+**Secondary full run (SSI+NISR+WSI+NISI):** 23,097 items · 124,406 sections · **0 errors · 0 R2 failures** · 3,247s (54 min) · **25,608 items/hr**  
+**Primary full run (ASP+NIA+ANAW):** 671 items · 10,526 sections · **0 errors · 0 R2 failures** · 148s (2.5 min) · **16,322 items/hr**  
+**Total devolved in production DB:** 23,868 items · 135,376 sections (inc. 100 pilot items)
+
+---
+
+## CODE CHANGES — 24 May 2026 Sprint V.3-C (HMRC Full Ingest — Tax Corpus)
+
+### V.3-C: HMRC full ingest scraper — all 137 manuals, BFS page discovery
+
+| Item | Detail |
+|------|--------|
+| `scripts/operational/hmrc-full-ingest.ts` (NEW) | Full HMRC ingest: 137 manuals from gov.uk/government/collections/hmrc-manuals. BFS page discovery per manual (recursively follows all linked pages within the manual's URL namespace — needed because HMRC manuals are 3+ levels deep: manual index → chapter contents → sub-chapter contents → leaf pages). Rate-limited 1 req/2s, exponential backoff 30s→10min, robots.txt check, R2+Railway upsert, checkpoint every 20 pages, `--manual=` and `--from=` CLI flags, ETA display. New checkpoint file: `hmrc-full-checkpoint.json`. Transpilation verified clean. |
+
+**Manual list verified from:** `https://www.gov.uk/government/collections/hmrc-manuals`  
+**Count:** 137 manuals (135 confirmed on page; 2 additional included that may 404-gracefully if absent)  
+**DB state pre-run:** 3 OperationalDocument rows (V.3-A pilot), 90 OperationalSection rows, 1.406 GB Railway  
+**Run command:** `cd scrutinise-web && npx ts-node --project ..\scripts\tsconfig.json --transpile-only ..\scripts\operational\hmrc-full-ingest.ts`  
+**Estimated duration:** 20–30 hours for full run (~27,000–35,000 pages × 2s + R2/DB writes)  
+**CC-A coordination:** If v3opt UKSI full ingest is running simultaneously, stagger by 30 min to distribute Railway pool pressure.
+
+---
 
 ## CODE CHANGES — 15 May 2026 Sprint V.3-A (HMRC Tax Manuals Pilot + Operational Corpus Framework)
 
