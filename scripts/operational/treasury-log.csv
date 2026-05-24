@@ -1,0 +1,13 @@
+timestamp,method,url,statusCode,durationMs,notes
+2026-05-24T02:05:50.461Z,GET,https://www.gov.uk/robots.txt,200,196,""
+2026-05-24T02:05:52.384Z,GET,https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government,200,114,""
+2026-05-24T02:05:54.479Z,GET,https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government/the-green-book-2026,200,208,""
+2026-05-24T02:05:56.365Z,GET,https://www.gov.uk/government/publications/the-magenta-book,200,92,""
+2026-05-24T02:05:58.536Z,GET,https://www.gov.uk/government/publications/the-magenta-book/magenta-book-central-government-guidance-on-evaluation-html,200,263,""
+2026-05-24T02:06:00.359Z,GET,https://www.gov.uk/government/publications/aqua-book-guidance-on-producing-quality-analysis-for-government,404,77,""
+2026-05-24T02:06:02.371Z,GET,https://www.gov.uk/government/publications/orange-book,200,81,""
+2026-05-24T02:06:04.472Z,GET,https://www.gov.uk/government/publications/orange-book/the-orange-book-management-of-risk-principles-and-concepts,200,173,""
+2026-05-24T02:06:06.396Z,GET,https://www.gov.uk/government/publications/managing-public-money,200,82,""
+2026-05-24T02:06:08.676Z,GET,https://assets.publishing.service.gov.uk/media/69e0b17861d2e8e9b9e42e13/Managing_Public_Money_-_April_2026.pdf,200,349,""
+2026-05-24T11:50:58.044Z,GET,https://www.gov.uk/robots.txt,200,183,""
+2026-05-24T11:51:04.325Z,GET,https://www.gov.uk/guidance/the-aqua-book,200,257,""

@@ -1,0 +1,10 @@
+{
+  "robotsChecked": true,
+  "robotsBlocked": false,
+  "httpBlocked": true,
+  "httpBlockReason": "HTTP 403 returned for all /app/* and /guidance/* paths regardless of User-Agent (WAF IP block). robots.txt is permissive. Needs manual export or direct partnership access.",
+  "documentId": "ed12db69-da06-45dd-85a2-635cfd76848e",
+  "discoveredTopics": [],
+  "completedTopics": [],
+  "completedPages": {}
+}

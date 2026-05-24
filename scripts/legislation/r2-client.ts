@@ -15,7 +15,7 @@ export const r2 = new S3Client({
   },
 })
 
-export async function r2Put(key: string, body: string, contentType = 'text/plain'): Promise<void> {
+export async function r2Put(key: string, body: string | Buffer | Uint8Array, contentType = 'text/plain'): Promise<void> {
   await r2.send(new PutObjectCommand({
     Bucket: R2_BUCKET, Key: key, Body: body, ContentType: contentType,
   }))
