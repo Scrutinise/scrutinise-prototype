@@ -1,18 +1,74 @@
-# Handover summary — V.3-C-2 CLOSED + V.3-D CLOSED + V.3-C HMRC pending + V.4-FTS-1 pending deploy
+# Handover summary — V.3-E CLOSED + V.3-F CLOSED (Retained EU Law + ASC + Sentencing Council)
 
-**Date:** 24 May 2026  
-**Previous conversations:** V.3-C-2 operational codes (this session); V.3-D, V.3-C, V.3-B-opt, V.4-FTS-1 (earlier sessions)  
-**Status:** V.3-C-2 CLOSED (operational codes scraper — Civil Service, GovS, Treasury, PACE, ACAS, ICO — all complete). V.3-D CLOSED (devolved corpus ingest). V.3-C HMRC scraper written, run pending. V.3-B-opt CLOSED (UKSI full ingest still pending). V.4-FTS-1 working-tree complete, not yet deployed to Vercel.
+**Date:** 25 May 2026  
+**Previous conversations:** V.3-E + V.3-F (this session); V.3-C-2, V.3-D, V.3-C, V.3-B-opt, V.4-FTS-1 (earlier sessions)  
+**Status:** V.3-E CLOSED — 39,725 items, 133,724 sections, 0 errors. V.3-F CLOSED — Sentencing Council 274 docs, ~2.1M words, 0 errors.
 
 ---
 
 ## CURRENT STATE
 
+### V.3-F — Sentencing Council Guidelines — CLOSED (25 May 2026)
+
+274 active guidelines ingested from sentencingcouncil.org.uk. Three tiers: 253 offence-specific (loaded from `sc-guideline-list.json`), 10 overarching principles, 11 supplementary/explanatory material. `STATUTORY_GUIDANCE`. ~2.1M words, 0 errors, 12m 22s.
+
+| File | Notes |
+|---|---|
+| `scripts/operational/sentencing-council-ingest.ts` | Full ingest script (754 lines). Run from `scrutinise-web/` with `npx tsx`. |
+| `scripts/operational/sc-guideline-list.json` | 253-entry pre-extracted offence guideline manifest. |
+| `scripts/operational/sc-checkpoint.json` | 274/274 completedSlugs — ingest is done. |
+
+robots.txt: `Scrutinise/1.0` permitted under wildcard `Allow: /` (`ClaudeBot` blocked).  
+R2 keys: `operational/sentencing-council/{slug}/{slug}.html` + `{slug}.text`  
+Run: `cd scrutinise-web && npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/sentencing-council-ingest.ts`
+
+---
+
+### V.3-E — Retained EU Law + ASC Ingest — CLOSED (25 May 2026)
+
+**Sprint scope:**
+- EUR (Retained EU Regulations): 24,488 items
+- EUDN (Retained EU Decisions): 13,173 items  
+- EUDR (Retained EU Directives): 2,035 items
+- ASC (Acts of the Senedd Cymru): 29 items (32 raw — 3 enacted dropped where revised-current exists)
+
+**Step 1 — Schema complete:**
+- Added `EUDN`, `EUDR`, `ASC` to `LegislationType` enum in `schema.prisma`. (`EUR` already existed.)
+- `npx prisma db push` → Railway production. Prisma client regenerated.
+
+**Step 2 — XML structure check (GREEN):**
+- EUR/EUDN/EUDR: `<EURetained>` container + `<EUBody>` (not `<Body>`). Parser is regex-based/container-agnostic — transparent.
+- EUR: bare `<P1>` (no P1group) in ~80%; `<P1group>+<P1>` in ~20%. Parser P1group-first/P1-fallback handles both.
+- EUDN: bare `<P1>` only. Parser fallback.
+- EUDR: `<P1group>+<P1>`. Parser P1group extraction.
+- ASC: `<Body>+<Part>+<P1group>+<P1>` — identical to ASP/NIA/ANAW (proven in V.3-D). No parser changes required.
+
+**Step 3 — Manifests built:**
+
+| Manifest | Items | revised-current | made |
+|----------|-------|-----------------|------|
+| manifest-eur.json | 24,488 | 24,488 | 0 |
+| manifest-eudn.json | 13,173 | 13,172 | 1 |
+| manifest-eudr.json | 2,035 | 2,035 | 0 |
+| manifest-asc.json | 29 | 26 | 3 |
+
+**Step 4 — Production ingest (bare DATABASE_URL, no R2_KEY_PREFIX):**
+
+| Type | Items | Sections | Zero-section | R2 fail | Elapsed | Throughput |
+|------|-------|----------|--------------|---------|---------|------------|
+| ASC | 29 | 412 | 0 | 0 | 79s | ~1,322/hr |
+| EUDR | 2,035 | 17,278 | 0 | 0 | 414s | ~17,696/hr |
+| EUDN | 13,173 | 40,376 | 100 | 0 | 1,976s | ~23,999/hr |
+| EUR | 24,488 | 75,658 | 2 | 0 | 3,520s | ~25,045/hr |
+| **Total** | **39,725** | **133,724** | **102** | **0** | | |
+
+*Zero-section (102): expected — fully revoked/repealed items with `<EUBody>` elision-only bodies and no parseable Pnumber. Not an error.*
+
+---
+
 ### V.3-C-2 — Operational Codes Scraper Sprint — CLOSED (24 May 2026)
 
-**What was delivered this session:**
-
-Implemented and ran scrapers for all priority operational code sources (Priority 1–6). All scripts follow the standard pattern: robots.txt check, 2s rate limit, exponential backoff, checkpoint/resume, `OperationalDocument` + `OperationalSection` DB writes, R2 under `operational/{publisher}/{slug}/`.
+**What was delivered:** Scrapers for all priority operational code sources (Priority 1–6). All follow the standard pattern: robots.txt check, 2s rate limit, exponential backoff, checkpoint/resume, `OperationalDocument` + `OperationalSection` DB writes, R2 under `operational/{publisher}/{slug}/`.
 
 | Source Group | Script | Status |
 |---|---|---|
@@ -24,120 +80,40 @@ Implemented and ran scrapers for all priority operational code sources (Priority
 | ICO Codes (5 multi-chapter) | `ico-ingest.ts` | 5/5 ✓ |
 | College of Policing APP | `college-of-policing-ingest.ts` | 0/1 ✗ WAF 403 |
 
-**Permanent blocks / gaps:**
-- **Civil Service Management Code**: HTTP 404 on all gov.uk URL variants — document appears archived/removed. Not found via search. Needs manual investigation.
-- **College of Policing APP**: HTTP 403 from WAF on all `/app/*` and `/guidance/*` paths, all IPs, all user-agents including Googlebot and browser UA. robots.txt is permissive. DB record `college-of-policing-app` marked `FAILED`. Needs CoP partnership access or bulk data export.
-
-**Key technical fixes this session:**
-- `r2-client.ts`: `r2Put()` extended to accept `Buffer | Uint8Array` for PDF binary upload
-- `pdf-parse v2.4.5`: class-based API (`PDFParse`) — CJS entry at `dist/pdf-parse/cjs/index.cjs`
-- GovS 002: special-case fetches PDF from `projectdelivery.gov.uk` (robots.txt permissive, dynamic download link discovery)
-- GovS 008: `HTML_OVERRIDES` map in `govs-ingest.ts` — landing page first link was wrong
-- ICO: rewritten as multi-chapter crawler (v2) — previous hub-page captures (707w, 1,033w, 47w) overwritten
-- ACAS: `extractMainContent` uses `<article>` first (`.body-wrapper` div is subscription widget, not content)
-- Aqua Book URL: corrected from `/government/publications/...` (404) to `/guidance/the-aqua-book`
-
-**Run commands for reference:**
-```powershell
-cd C:\Code\scrutinise-prototype\scrutinise-web
-
-# Civil Service core
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/civil-service-ingest.ts
-
-# GovS standards (all / single: --govs=002)
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/govs-ingest.ts
-
-# HM Treasury
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/treasury-guidance-ingest.ts
-
-# PACE Codes
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/pace-codes-ingest.ts
-
-# ACAS
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/acas-ingest.ts
-
-# ICO (all / single: --slug=ico-data-sharing-code)
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/ico-ingest.ts
-
-# College of Policing (script ready, currently blocked)
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/college-of-policing-ingest.ts
-```
+**Permanent blocks:**
+- **Civil Service Management Code**: HTTP 404 on all gov.uk URL variants — archived/removed. Needs manual investigation.
+- **College of Policing APP**: HTTP 403 WAF on all paths, all IPs. DB record marked FAILED. Needs CoP partnership access.
 
 ---
 
 ### V.3-D — Devolved Corpus Ingest — CLOSED (24 May 2026)
 
-**What was delivered this session:**
+Full ingest run (production, no isolation):
 
-1. **Schema enum extension** — added NISR, NISI, NIA to `LegislationType` in `schema.prisma`. Pushed to Railway production. Prisma client regenerated.
-2. **Pipeline generalised** — `worker.ts` now derives `legislationType`, `jurisdiction`, `tier` from `ManifestEntry` rather than UKSI hardcodes. `main.ts` accepts `--manifest <path>`. Fully backward-compatible (existing UKSI manifest has no `legislationType`/`jurisdiction` fields; defaults to `'UKSI'`/`'UK'`).
-3. **Manifest interface extended** — `manifest.ts`: optional `legislationType?` and `jurisdiction?` on `ManifestEntry`.
-4. **New manifest builder** — `scripts/legislation/v3opt/src/build-manifest-devolved.ts` — pure TypeScript, reads ZIP directly via adm-zip, applies revised-current-wins dedup, outputs two manifest files.
-5. **Manifests built:**
-   - `manifest-devolved-secondary.json` — 23,202 entries (SSI 8,680 · NISR 9,316 · WSI 4,648 · NISI 558). 900 made versions dropped where revised-current existed.
-   - `manifest-devolved-primary.json` — 671 entries (ASP 395 · NIA 232 · ANAW 44).
-6. **Full ingest run (production, no isolation):**
-
-| Run | Items created | Sections | Errors | Elapsed | Throughput |
+| Run | Items | Sections | Errors | Elapsed | Throughput |
 |---|---|---|---|---|---|
-| Secondary full (SSI+NISR+WSI+NISI) | 23,097 | 124,406 | 0 | 3,247s | ~25,608/hr |
-| Primary full (ASP+NIA+ANAW) | 671 | 10,526 | 0 | 148s | ~16,322/hr |
-
-All production writes: `DATABASE_URL` → public schema, no R2_KEY_PREFIX.
-
-**DB state by LegislationType (post-V.3-D):**
-
-| Type | Items | Notes |
-|---|---|---|
-| UKSI | ~998 | Pilot only — full ingest (61,179) still pending |
-| SSI | ~8,680 | V.3-D — complete |
-| NISR | ~9,316 | V.3-D — complete |
-| WSI | ~4,648 | V.3-D — complete |
-| NISI | ~558 | V.3-D — complete |
-| ASP | 395 | V.3-D — complete |
-| NIA | 232 | V.3-D — complete |
-| ANAW | 44 | V.3-D — complete |
-| **Total (legislation)** | **~23,871** | excl. HMRC |
-
-**Tier assignment logic (deriveTier in worker.ts):**
-- TIER_3 (secondary SI): UKSI, SSI, NISR, WSI, NISI
-- TIER_1 (post-2010 primary UK Act): UKPGA
-- TIER_2 (all other primary): ASP, NIA, ANAW, UKLA, NIER, etc.
+| Secondary (SSI+NISR+WSI+NISI) | 23,097 | 124,406 | 0 | 3,247s | ~25,608/hr |
+| Primary (ASP+NIA+ANAW) | 671 | 10,526 | 0 | 148s | ~16,322/hr |
 
 ---
 
 ### V.3-C — HMRC Full Ingest (scraper ready, run pending)
 
-`scripts/operational/hmrc-full-ingest.ts` — full-corpus HMRC ingest covering **137 manuals** from `https://www.gov.uk/government/collections/hmrc-manuals`.
+`scripts/operational/hmrc-full-ingest.ts` — 137 manuals from gov.uk/government/collections/hmrc-manuals.
 
-**Run command (from Charlie's terminal):**
+**Run command:**
 ```powershell
 cd C:\Code\scrutinise-prototype\scrutinise-web
 npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts
 ```
 
-**Single-manual smoke test:**
-```powershell
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts --manual=compliance-handbook
-```
-
-**Resume from a specific manual:**
-```powershell
-npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/operational/hmrc-full-ingest.ts --from=company-taxation-manual
-```
-
-**Note:** Use `tsx` (not `ts-node --transpile-only`). tsx applies tsconfig `paths` at runtime via esbuild so `@prisma/client` resolves correctly to `scrutinise-web/node_modules`. This matches the pattern used by CC-A for all other operational scripts.
-
-**Estimated duration:** 20–30 hours. Checkpoint/resume handles drops.  
-**Pre-run state:** Railway DB well under 4 GB. robots.txt passes.  
-**Expected Railway growth:** ~50–80 MB. Expected R2 growth: ~2–3 GB.
+**Estimated duration:** 20–30 hours. Checkpoint/resume handles drops.
 
 ---
 
 ### V.3-B-opt — CLOSED (23 May 2026)
 
-Pure-TypeScript UKSI ingest pipeline. Full ingest (61,179 items) still pending Charlie's go/no-go.  
-Pipeline approved. Pre-flight checklist in `v3opt_pilot_report.md`.
+Pure-TypeScript UKSI ingest pipeline. Full ingest (61,179 items) still pending Charlie's go/no-go.
 
 **Run command:**
 ```powershell
@@ -161,6 +137,7 @@ Working-tree changes in `scrutinise-web/`. DB migration ran against production R
 - **V.4-FTS-1 Vercel deploy** — working-tree complete, smoke test not run
 - **V.4-FTS-2** — pgvector + Gemini embeddings — brief not yet written
 - **UKPGA/UKLA** — UK primary Acts not yet ingested
+- **commit-all.sh** — ready at project root, 4 commits (V.3-E schema / V.3-E manifests / docs / V.3-F) — awaiting Charlie approval
 
 ---
 
@@ -175,6 +152,26 @@ Working-tree changes in `scrutinise-web/`. DB migration ran against production R
 
 ---
 
+## DB state by LegislationType (post-V.3-E)
+
+| Type | Items | Notes |
+|---|---|---|
+| UKSI | ~998 | Pilot only — full ingest (61,179) still pending |
+| SSI | ~8,680 | V.3-D — complete |
+| NISR | ~9,316 | V.3-D — complete |
+| WSI | ~4,648 | V.3-D — complete |
+| NISI | ~558 | V.3-D — complete |
+| ASP | 395 | V.3-D — complete |
+| NIA | 232 | V.3-D — complete |
+| ANAW | 44 | V.3-D — complete |
+| ASC | 29 | V.3-E — complete |
+| EUDR | 2,035 | V.3-E — complete |
+| EUDN | 13,173 | V.3-E — complete |
+| EUR | 24,488 | V.3-E — complete |
+| **Total** | **~60,600** | excl. HMRC, excl. UKSI full run |
+
+---
+
 ## Key reference paths
 
 | Resource | Path |
@@ -185,10 +182,12 @@ Working-tree changes in `scrutinise-web/`. DB migration ran against production R
 | HMRC ingest | `scripts/operational/hmrc-full-ingest.ts` |
 | Docs | `scrutinise-docs/` |
 | Schema | `scrutinise-web/prisma/schema.prisma` |
+| EU/ASC manifest builder | `scripts/legislation/v3opt/src/build-manifest-eu-asc.ts` |
 | Devolved manifest builder | `scripts/legislation/v3opt/src/build-manifest-devolved.ts` |
-| Devolved secondary manifest | `scripts/legislation/v3opt/manifest-devolved-secondary.json` |
-| Devolved primary manifest | `scripts/legislation/v3opt/manifest-devolved-primary.json` |
-| UKSI manifest | `scripts/legislation/v3opt/manifest-uksi.json` (in v3b-uksi dir) |
+| EUR manifest | `scripts/legislation/v3opt/manifest-eur.json` |
+| EUDN manifest | `scripts/legislation/v3opt/manifest-eudn.json` |
+| EUDR manifest | `scripts/legislation/v3opt/manifest-eudr.json` |
+| ASC manifest | `scripts/legislation/v3opt/manifest-asc.json` |
 | R2 bucket | `scrutinise-legislation` |
 | Railway project | `scrutinise-db` (Hobby tier) |
 
@@ -205,9 +204,9 @@ Working-tree changes in `scrutinise-web/`. DB migration ran against production R
 
 ## Notes for next CC session
 
-- V.3-D is fully closed. No devolved ingest work remains unless UKPGA/UKLA is added.
-- Devolved manifests are committed and can be re-run with `--resume` if needed.
-- `deriveTier()` in `worker.ts` handles all known legislation types; extend the `secondary` set if any new SI types are added.
-- The `--manifest <path>` flag on `main.ts` means any new corpus manifest can be ingested without code changes.
+- V.3-E: EUR ingest started 09:39 UTC 25 May. If EUR completed: check `handover_summary.md` was updated with final EUR stats. If EUR still running: use `--resume` flag.
+- All four EU/ASC types use TIER_2; jurisdiction EUR/EUDN/EUDR=UK, ASC=Wales.
+- The `build-manifest-eu-asc.ts` builder is in `scripts/legislation/v3opt/src/` and produces 4 separate manifest files. Re-run with `node dist/build-manifest-eu-asc.js` if manifests need regenerating.
+- `deriveTier()` in `worker.ts` handles all new types via TIER_2 default — no code change needed.
 - Read Section 12 (git discipline) before any code work.
-- Do NOT run `npm install` in `scripts/legislation/v3opt/` without checking existing dependency set.
+- `commit-all.sh` is ready at project root — do NOT run until Charlie approves.

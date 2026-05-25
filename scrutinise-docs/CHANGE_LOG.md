@@ -1,8 +1,57 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 24 May 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 25 May 2026*
 
 ***
+
+## CODE CHANGES — 25 May 2026 Sprint V.3-F (Sentencing Council Guidelines)
+
+### V.3-F: Sentencing Council guidelines ingest — 274 docs, ~2.1M words, 0 errors
+
+| Item | Detail |
+|------|--------|
+| `scripts/operational/sentencing-council-ingest.ts` (NEW) | Ingests all 274 active Sentencing Council guidelines from sentencingcouncil.org.uk. Three tiers: 253 offence-specific (Crown Court + Magistrates, loaded from `sc-guideline-list.json`), 10 overarching principles (hardcoded in script), 11 supplementary/explanatory material (hardcoded). `STATUTORY_GUIDANCE`. Rate: 1 req/2s, exponential backoff 30s→10min. Checkpoint: `sc-checkpoint.json`. Audit log: `sc-log.csv`. R2 keys: `operational/sentencing-council/{slug}/{slug}.html` and `.text`. 1 OperationalDocument + 1 OperationalSection per guideline. robots.txt: `Scrutinise/1.0` permitted under wildcard `Allow: /` rule (`ClaudeBot` blocked). Run time: 12m 22s. Word range: 82–17,313; avg 7,680. |
+| `scripts/operational/sc-guideline-list.json` (NEW) | 253-entry pre-extracted JSON array — offence-specific guideline metadata (slug, name, courts, acts, category, URL) extracted from embedded page JSON on sentencingcouncil.org.uk. Tier 2 (10 overarching) and Tier 3 (11 supplementary) are hardcoded in the script. |
+
+**Ingest results:**
+
+| Source | Docs | Words | Errors | Elapsed |
+|--------|------|-------|--------|---------|
+| Sentencing Council guidelines (all 3 tiers) | 274 | ~2,100,000 | 0 | 12m 22s |
+
+---
+
+## CODE CHANGES — 25 May 2026 Sprint V.3-E (Retained EU Law + Acts of the Senedd Cymru)
+
+### V.3-E: EU retained law ingest (EUR, EUDN, EUDR) + ASC — schema extension + production ingest
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `EUDN` (Retained EU Decision), `EUDR` (Retained EU Directive), `ASC` (Act of the Senedd Cymru) to `LegislationType` enum. `EUR` (Retained EU Regulation) was already present. Pushed to Railway production via `prisma db push`. Prisma client regenerated. |
+| `scripts/legislation/v3opt/src/build-manifest-eu-asc.ts` (NEW) | Pure TypeScript manifest builder for EUR, EUDN, EUDR, ASC. Reads `best-collection-xml.zip` via adm-zip. Applies revised-current-wins dedup (3 ASC 2026 enacted versions dropped where revised-current existed; 1 EUDN adopted-only item kept as `made`). Version mapping: `revised`→`revised-current`, `enacted`/`adopted`→`made`. Jurisdiction: EUR/EUDN/EUDR → `UK`; ASC → `Wales`. Tier: all four types → `TIER_2` (retained EU primary + devolved Senedd primary). |
+| `scripts/legislation/v3opt/manifest-eur.json` (NEW) | 24,488-entry manifest. All `revised-current`. |
+| `scripts/legislation/v3opt/manifest-eudn.json` (NEW) | 13,173-entry manifest. 13,172 `revised-current` + 1 `made` (`eudn/2004/513` — adopted-only). |
+| `scripts/legislation/v3opt/manifest-eudr.json` (NEW) | 2,035-entry manifest. All `revised-current`. |
+| `scripts/legislation/v3opt/manifest-asc.json` (NEW) | 29-entry manifest (32 raw entries; 3 ASC 2026 enacted dropped where revised-current existed). 26 `revised-current` + 3 `made`. |
+
+**XML structure check (Step 2):**
+
+All four types use `<EURetained>` (EU) or `<Primary>` (ASC) as document container. EU types use `<EUBody>` instead of `<Body>`, but the regex-based parser scans the full XML string and is container-agnostic. EUR and EUDN typically use bare `<P1>` (no P1group); EUDR uses `<P1group>+<P1>`; ASC uses `<Part>+<P1group>+<P1>` (identical to ASP/NIA/ANAW). Parser `extractSections` (P1group-first, P1 fallback) handles all four correctly. No parser changes required.
+
+**Ingest results:**
+
+| Type | Items created | Sections | Zero-section | R2 failures | Elapsed | Throughput |
+|------|--------------|----------|--------------|-------------|---------|------------|
+| ASC | 29 | 412 | 0 | 0 | 79s | ~1,322/hr |
+| EUDR | 2,035 | 17,278 | 0 | 0 | 414s | ~17,696/hr |
+| EUDN | 13,173 | 40,376 | 100 | 0 | 1,976s | ~23,999/hr |
+| EUR | 24,488 | 75,658 | 2 | 0 | 3,520s | ~25,045/hr |
+| **Total** | **39,725** | **133,724** | | | | |
+
+*EUDN zero-section (100 items): expected — fully revoked/repealed early decisions where `<EUBody>` contains only elision-marker text with no parseable Pnumber.*  
+*EUR zero-section (2 items): same cause — two fully revoked early regulations with empty bodies.*
+
+---
 
 ## CODE CHANGES — 24 May 2026 Sprint V.3-C-2 (Operational Codes Scraper — Civil Service, GovS, Treasury, PACE, ACAS, ICO)
 
