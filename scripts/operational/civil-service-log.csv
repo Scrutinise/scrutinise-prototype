@@ -12,3 +12,5 @@ timestamp,method,url,statusCode,durationMs,notes
 2026-05-24T02:04:07.564Z,GET,https://www.gov.uk/government/publications/civil-service-management-code,404,106,"non-200 status"
 2026-05-24T02:04:09.602Z,GET,https://www.gov.uk/government/publications/cabinet-manual,200,129,""
 2026-05-24T02:04:12.720Z,GET,https://assets.publishing.service.gov.uk/media/5a79d5d7e5274a18ba50f2b6/cabinet-manual.pdf,200,1238,""
+2026-05-25T08:39:24.941Z,GET,https://www.gov.uk/robots.txt,200,143,""
+2026-05-25T08:39:27.091Z,GET,https://assets.publishing.service.gov.uk/media/5a75a37ee5274a545822d0ee/CSMC_November_2016.docx,200,291,""

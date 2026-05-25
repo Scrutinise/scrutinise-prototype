@@ -46,6 +46,9 @@ const pool = new Pool({
 // pdf-parse v2 — CJS entry (class-based API, not the old function API)
 const PDF_PARSE_CJS = path.join(__dirname, '../../scrutinise-web/node_modules/pdf-parse/dist/pdf-parse/cjs/index.cjs')
 
+// mammoth — docx → plain text (handles .docx / OOXML only, not .doc OLE)
+const MAMMOTH_PATH = path.join(__dirname, '../../scrutinise-web/node_modules/mammoth')
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,6 +76,7 @@ interface SourceDef {
   publicationUrl: string           // gov.uk landing page
   knownHtmlUrl?: string            // direct HTML content URL (if known)
   knownPdfUrl?: string             // direct PDF URL (if known)
+  knownDocxUrl?: string            // direct .docx URL (used when no PDF/HTML available)
   preferHtml: boolean              // prefer HTML over PDF when both found
   r2Prefix: string
 }
@@ -93,9 +97,12 @@ const SOURCES: SourceDef[] = [
     title: 'Civil Service Management Code',
     description: "Statutory rules and regulations governing civil servants' rights and responsibilities, terms and conditions of employment.",
     publisherName: 'Cabinet Office',
-    publicationUrl: `${GOV_UK_BASE}/government/publications/civil-service-management-code`,
-    preferHtml: true,  // discover from landing page; falls back to PDF
-    r2Prefix: 'operational/cabinet-office/civil-service-management-code',
+    publicationUrl: `${GOV_UK_BASE}/government/publications/civil-servants-terms-and-conditions`,
+    // Only available as .docx — no PDF or HTML content page exists on gov.uk
+    // .doc (Statement of Changes) skipped: OLE format not supported by mammoth
+    knownDocxUrl: 'https://assets.publishing.service.gov.uk/media/5a75a37ee5274a545822d0ee/CSMC_November_2016.docx',
+    preferHtml: false,
+    r2Prefix: 'operational/civil-service/csmc',
   },
   {
     slug: 'ministerial-code',
@@ -392,6 +399,23 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DOCX extraction (mammoth — OOXML only; not .doc OLE format)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function extractDocxText(buffer: Buffer): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mammoth = require(MAMMOTH_PATH)
+  const result = await mammoth.extractRawText({ buffer })
+  if (result.messages && result.messages.length > 0) {
+    const warnings = result.messages.filter((m: any) => m.type === 'warning')
+    if (warnings.length > 0) {
+      console.warn(`  mammoth warnings: ${warnings.length} (first: ${warnings[0].message})`)
+    }
+  }
+  return (result.value ?? '').replace(/\s{3,}/g, '\n\n').trim()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DB helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -499,10 +523,15 @@ async function ingestSource(src: SourceDef, cp: CheckpointData): Promise<void> {
   }
 
   // Determine content URL and type
+  // knownDocxUrl bypasses all URL discovery — use it directly as the source URL
   let contentUrl: string
   let isPdf: boolean
 
-  if (src.knownHtmlUrl) {
+  if (src.knownDocxUrl) {
+    contentUrl = src.knownDocxUrl
+    isPdf = false
+    console.log(`  Content: DOCX at ${contentUrl}`)
+  } else if (src.knownHtmlUrl) {
     contentUrl = src.knownHtmlUrl
     isPdf = false
     console.log(`  Content: HTML at ${contentUrl}`)
@@ -544,7 +573,26 @@ async function ingestSource(src: SourceDef, cp: CheckpointData): Promise<void> {
   let htmlKey: string | null = null
   let extractedBy: string
 
-  if (isPdf) {
+  if (src.knownDocxUrl) {
+    // DOCX-only path (e.g. CSMC — only available as .docx on assets.publishing.service.gov.uk)
+    console.log(`  Downloading DOCX: ${src.knownDocxUrl}`)
+    const { buffer, status } = await fetchBinary(src.knownDocxUrl)
+    if (status !== 200 || buffer.length === 0) {
+      console.error(`  ✗ DOCX download failed (status ${status}) — skipping`)
+      return
+    }
+    console.log(`  DOCX downloaded: ${(buffer.length / 1024).toFixed(0)} KB`)
+
+    // Store raw DOCX in R2
+    const docxKey = `${src.r2Prefix}/main.docx`
+    await r2Put(docxKey, buffer, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    console.log(`  R2: ${docxKey}`)
+
+    console.log(`  Extracting DOCX text via mammoth...`)
+    plainText = await extractDocxText(buffer)
+    pageTitle = src.title
+    extractedBy = 'docx-mammoth'
+  } else if (isPdf) {
     console.log(`  Downloading PDF...`)
     const { buffer, status } = await fetchBinary(contentUrl)
     if (status !== 200 || buffer.length === 0) {
