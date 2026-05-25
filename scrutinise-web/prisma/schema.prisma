@@ -361,7 +361,10 @@ enum LegislationType {
   NISR    // Northern Ireland Statutory Rule
   NISI    // Northern Ireland Statutory Instrument (Order in Council)
   NIA     // Act of the Northern Ireland Assembly
-  EUR     // Retained EU legislation
+  EUR     // Retained EU Regulation
+  EUDN    // Retained EU Decision
+  EUDR    // Retained EU Directive
+  ASC     // Act of the Senedd Cymru
   OTHER
 }
 
