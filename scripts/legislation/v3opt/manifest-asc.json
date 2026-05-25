@@ -1,0 +1,263 @@
+[
+  {
+    "actId": "asc/2020/1",
+    "zipPath": "2020/asc-2020-1-revised-data.xml",
+    "compressedSize": 30226,
+    "uncompressedSize": 252625,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2020/2",
+    "zipPath": "2020/asc-2020-2-revised-data.xml",
+    "compressedSize": 10904,
+    "uncompressedSize": 76165,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2021/1",
+    "zipPath": "2021/asc-2021-1-revised-data.xml",
+    "compressedSize": 188332,
+    "uncompressedSize": 1641398,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2021/2",
+    "zipPath": "2021/asc-2021-2-revised-data.xml",
+    "compressedSize": 2904,
+    "uncompressedSize": 19366,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2021/3",
+    "zipPath": "2021/asc-2021-3-revised-data.xml",
+    "compressedSize": 25731,
+    "uncompressedSize": 206599,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2021/4",
+    "zipPath": "2021/asc-2021-4-revised-data.xml",
+    "compressedSize": 69970,
+    "uncompressedSize": 670782,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2022/1",
+    "zipPath": "2022/asc-2022-1-revised-data.xml",
+    "compressedSize": 163792,
+    "uncompressedSize": 1535155,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2022/2",
+    "zipPath": "2022/asc-2022-2-revised-data.xml",
+    "compressedSize": 7113,
+    "uncompressedSize": 52389,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2023/1",
+    "zipPath": "2023/asc-2023-1-revised-data.xml",
+    "compressedSize": 35843,
+    "uncompressedSize": 297866,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2023/2",
+    "zipPath": "2023/asc-2023-2-revised-data.xml",
+    "compressedSize": 18885,
+    "uncompressedSize": 139265,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2023/3",
+    "zipPath": "2023/asc-2023-3-revised-data.xml",
+    "compressedSize": 255662,
+    "uncompressedSize": 2218530,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2023/4",
+    "zipPath": "2023/asc-2023-4-revised-data.xml",
+    "compressedSize": 55901,
+    "uncompressedSize": 496370,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/1",
+    "zipPath": "2024/asc-2024-1-revised-data.xml",
+    "compressedSize": 3783,
+    "uncompressedSize": 19133,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/2",
+    "zipPath": "2024/asc-2024-2-revised-data.xml",
+    "compressedSize": 28446,
+    "uncompressedSize": 209582,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/3",
+    "zipPath": "2024/asc-2024-3-revised-data.xml",
+    "compressedSize": 124147,
+    "uncompressedSize": 1005059,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/4",
+    "zipPath": "2024/asc-2024-4-revised-data.xml",
+    "compressedSize": 41457,
+    "uncompressedSize": 300621,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/5",
+    "zipPath": "2024/asc-2024-5-revised-data.xml",
+    "compressedSize": 62645,
+    "uncompressedSize": 468755,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2024/6",
+    "zipPath": "2024/asc-2024-6-revised-data.xml",
+    "compressedSize": 35950,
+    "uncompressedSize": 284121,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2025/1",
+    "zipPath": "2025/asc-2025-1-revised-data.xml",
+    "compressedSize": 40840,
+    "uncompressedSize": 313011,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2025/2",
+    "zipPath": "2025/asc-2025-2-revised-data.xml",
+    "compressedSize": 48306,
+    "uncompressedSize": 365154,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2025/3",
+    "zipPath": "2025/asc-2025-3-revised-data.xml",
+    "compressedSize": 41397,
+    "uncompressedSize": 350692,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2025/4",
+    "zipPath": "2025/asc-2025-4-revised-data.xml",
+    "compressedSize": 58795,
+    "uncompressedSize": 461092,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2025/5",
+    "zipPath": "2025/asc-2025-5-revised-data.xml",
+    "compressedSize": 58778,
+    "uncompressedSize": 437261,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/1",
+    "zipPath": "2026/asc-2026-1-revised-data.xml",
+    "compressedSize": 3040,
+    "uncompressedSize": 14848,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/11",
+    "zipPath": "2026/asc-2026-11-enacted-data.xml",
+    "compressedSize": 7256,
+    "uncompressedSize": 49024,
+    "version": "made",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/2",
+    "zipPath": "2026/asc-2026-2-revised-data.xml",
+    "compressedSize": 35451,
+    "uncompressedSize": 279656,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/3",
+    "zipPath": "2026/asc-2026-3-revised-data.xml",
+    "compressedSize": 35707,
+    "uncompressedSize": 260230,
+    "version": "revised-current",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/4",
+    "zipPath": "2026/asc-2026-4-enacted-data.xml",
+    "compressedSize": 37561,
+    "uncompressedSize": 296385,
+    "version": "made",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  },
+  {
+    "actId": "asc/2026/9",
+    "zipPath": "2026/asc-2026-9-enacted-data.xml",
+    "compressedSize": 25457,
+    "uncompressedSize": 190844,
+    "version": "made",
+    "legislationType": "ASC",
+    "jurisdiction": "Wales"
+  }
+]
