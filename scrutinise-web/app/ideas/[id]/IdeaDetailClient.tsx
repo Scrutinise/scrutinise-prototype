@@ -98,6 +98,7 @@ interface Idea {
   summaryDiagnosis: string | null
   summaryGuidingPolicy: string | null
   summaryCoherentActions: string | null
+  backgroundResearch: string | null
   stage: string
   visibility: string
   govtArea: string
@@ -1184,6 +1185,13 @@ function IdeaTab({
               <p className="text-sm leading-relaxed text-zinc-800">{idea.summaryDescription}</p>
             ) : (
               <p className="text-sm italic text-zinc-400">Not yet completed</p>
+            )}
+            {/* Task 7: backgroundResearch — added in L6-A, rendered here per L6-C brief */}
+            {idea.backgroundResearch && (
+              <div className="mt-5">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Background Research</p>
+                <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">{idea.backgroundResearch}</p>
+              </div>
             )}
             {(idea.summaryDiagnosis || idea.summaryGuidingPolicy || idea.summaryCoherentActions) && (
               <div className="mt-5 space-y-4">

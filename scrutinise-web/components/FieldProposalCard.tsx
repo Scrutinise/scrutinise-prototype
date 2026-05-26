@@ -141,6 +141,16 @@ export default function FieldProposalCard({
     window.dispatchEvent(new CustomEvent('lex-field-accepted'))
   }, [clearCountdown, legCandidates, selectedLeg, onAccept])
 
+  // Skip handler for legislation field when no candidates found — advances without writing any rows
+  const handleSkipLegislation = useCallback(() => {
+    clearCountdown()
+    setIsPulsing(true)
+    setState('saved')
+    setSavedValue('Skipped — can be added later')
+    onAccept('[]')
+    window.dispatchEvent(new CustomEvent('lex-field-accepted'))
+  }, [clearCountdown, onAccept])
+
   const handleAcceptThoughts = useCallback(() => {
     const updated = { ...thoughtsData, chosen: Array.from(selectedThoughts) }
     clearCountdown()
@@ -278,15 +288,16 @@ export default function FieldProposalCard({
   // ── Complex field: ideaLegislation ──────────────────────────────────────
 
   if (fieldKey === 'ideaLegislation') {
+    const hasNoCandidates = legCandidates.length === 0
+
     return (
       <div className="rounded-lg border-l-4 border-teal-500 bg-teal-50 dark:bg-teal-950/30 p-4 my-3">
         <p className="text-sm font-medium text-teal-800 dark:text-teal-200 mb-3">
-          Proposed legislation references — uncheck any to exclude:
+          {hasNoCandidates
+            ? 'No legislation found for this idea — you can skip for now or tell Lex a specific Act to search for:'
+            : 'Proposed legislation references — uncheck any to exclude:'}
         </p>
         <div className="space-y-2 mb-4">
-          {legCandidates.length === 0 && (
-            <p className="text-sm text-zinc-500">No legislation candidates found.</p>
-          )}
           {legCandidates.map((c, i) => (
             <label
               key={c.legislationGovUkId ?? i}
@@ -318,19 +329,30 @@ export default function FieldProposalCard({
           ))}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={handleEdit}
-            className="text-xs px-3 py-1.5 rounded border border-teal-400 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleAcceptLegislation}
-            disabled={selectedLeg.size === 0}
-            className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Accept{selectedLeg.size > 0 ? ` (${selectedLeg.size})` : ''}
-          </button>
+          {!hasNoCandidates && (
+            <button
+              onClick={handleEdit}
+              className="text-xs px-3 py-1.5 rounded border border-teal-400 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
+            >
+              Edit
+            </button>
+          )}
+          {hasNoCandidates ? (
+            <button
+              onClick={handleSkipLegislation}
+              className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+            >
+              Skip for now →
+            </button>
+          ) : (
+            <button
+              onClick={handleAcceptLegislation}
+              disabled={selectedLeg.size === 0}
+              className="text-xs px-3 py-1.5 rounded bg-teal-600 text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Accept{selectedLeg.size > 0 ? ` (${selectedLeg.size})` : ''}
+            </button>
+          )}
           <button
             onClick={handleDiscuss}
             className="text-xs text-zinc-500 hover:text-zinc-700 ml-auto transition-colors"

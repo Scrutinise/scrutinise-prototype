@@ -120,8 +120,8 @@ The platform controls which field is active via the CURRENT FIELD block. You wor
 PROSE CAP: 3 sentences of prose per response in Stage 1, EXCEPT field 6 (initialThoughts) which is the one expansive field. The JSON options/proposal block is never counted toward this cap.
 
 OPENING:
-- Fresh idea (no chat history): "Good [morning/afternoon/evening], [preferredName]. I'm Lex. What's the problem or challenge you want to address?" — introduce yourself once and never again.
-- Resuming: "Welcome back, [preferredName]. We're working on [idea title]. The next thing to fill is [currentFieldLabel]." Then the field question. 3 sentences max; never re-introduce.
+- Fresh idea (no chat history): the server has already delivered the opening message introducing Lex. Do NOT re-introduce yourself. Begin directly with the first field's question — no "Good morning", no "I'm Lex".
+- Resuming (chat history present): "Welcome back, [preferredName]. We're working on [idea title]. The next thing to fill is [currentFieldLabel]." Then the field question. 3 sentences max; never re-introduce.
 
 FIELD GUIDE:
 
@@ -140,9 +140,16 @@ Enrich with prior-attempt research: anywhere in world, what happened, especially
 
 Field 5 — Reference legislation (key: ideaLegislation) — RELATION, ONLY FIELD WHERE LEX LISTS LEGISLATION
 Open: "My initial review of the legislation has turned up the following, which may interest you to review, and which we'll look at in more detail when it comes to nailing down the precise legislative changes — if that's the best route — in the final section, Coherent Actions."
-Use legislationCandidates from runtime context. Every suggestion is "worth verifying" — never present as confirmed. If candidates are "none" and you know of no clearly relevant statute, say so plainly.
+Use legislationCandidates from runtime context. Every suggestion is "worth verifying" — never present as confirmed.
 proposedValue must be a JSON array: [{"actTitle":"...","sectionNumber":"...","sectionTitle":"...","legislationGovUkId":"..."}]
-Use legislationGovUkId from runtime context candidates. At ALL OTHER Stage 1 fields: do NOT list legislation — candidates may inform silent reasoning only.
+Use legislationGovUkId from runtime context candidates. When expanding abbreviations in your reasoning: Electoral Administration Act → "electoral administration", Representation of the People Act → "representation people electoral", etc.
+
+EMPTY CANDIDATES — MANDATORY PATH: If legislationCandidates is "none" OR you know of no clearly applicable statute:
+- Say in natural language: "I couldn't find directly applicable legislation in the corpus — this may be a policy area without a clear statutory framework, or the terms may need refining. You can skip this field for now and return to it later, or tell me if you know of a specific Act and I'll look it up."
+- STILL emit a fieldProposal with an empty array so the platform can offer a Skip option:
+  {"fieldProposal": {"fieldKey": "ideaLegislation", "fieldLabel": "Reference legislation", "proposedValue": "[]"}}
+- If the user names a specific Act, run a targeted FTS query for that Act in your next response and return a fresh proposal.
+At ALL OTHER Stage 1 fields: do NOT list legislation — candidates may inform silent reasoning only.
 
 Field 6 — Initial thoughts (key: initialThoughts) — EXPANSIVE, no prose cap
 Draw on fields 1–5, survey realistic routes forward. Propose 3–5 candidate approaches from these route types (choose the ones that fit — do not use all four mechanically):
@@ -642,8 +649,20 @@ export async function POST(req: Request, { params }: Params) {
         idea.research.length > 0 && `${idea.research.length} Research item(s)`,
       ].filter(Boolean).join(', ') || 'None yet'
 
+  // Field 5 always triggers FTS. Query derived from title + description + provisional diagnosis
+  // for maximum recall at keyword-match stage (v6.0 §7.1 trigger 1).
+  const isAtLegislationField = currentFieldKey === 'ideaLegislation'
   const messageWordCount = message.trim().split(/\s+/).length
-  const shouldSearch = messageWordCount >= 4 && (!legislationContext || legislationContext.length === 0)
+  const shouldSearch = (isAtLegislationField || messageWordCount >= 4) &&
+    (!legislationContext || legislationContext.length === 0)
+
+  // At field 5 use idea content as query for better coverage; elsewhere use the user message.
+  const ftsQuery = isAtLegislationField
+    ? [idea.title, idea.summaryDescription, idea.summaryDiagnosis]
+        .filter((v): v is string => !!(v?.trim()))
+        .join(' ')
+        .slice(0, 250)
+    : message
 
   // Run lexInsight lookup and FTS search in parallel — independent DB reads.
   // searchLegislation has an 8s statement_timeout stall-guard; catch here
@@ -656,7 +675,7 @@ export async function POST(req: Request, { params }: Params) {
       select: { approvedRule: true },
     }),
     shouldSearch
-      ? searchLegislation({ q: message, limit: 4, minRank: 0.25 }).catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
+      ? searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 }).catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
       : Promise.resolve({ results: [] as SearchResult[], totalMatches: 0 }),
   ])
 

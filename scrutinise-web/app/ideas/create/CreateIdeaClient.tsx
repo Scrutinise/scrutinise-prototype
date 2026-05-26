@@ -624,11 +624,21 @@ function MobileSidebarContent({
             <span className="text-[10px] text-zinc-400">{openSections.has('diagnosis') ? '▲' : '▼'}</span>
           )}
         </div>
-        {(activeSection === 'diagnosis' || openSections.has('diagnosis')) && (
+        {(activeSection === 'diagnosis' || openSections.has('diagnosis')) ? (
           <div className="space-y-2">
             {DIAGNOSIS_FIELDS.map(({ key, label }) => renderFieldCard(key, label))}
           </div>
-        )}
+        ) : !diagHasContent ? (
+          /* Task 5: future page — greyed labels only until reached */
+          <div className="space-y-0.5 ml-3 mt-1">
+            {DIAGNOSIS_FIELDS.map(({ key, label }) => (
+              <div key={String(key)} className="flex items-center gap-2 py-1">
+                <span className="w-2 h-2 rounded-full bg-zinc-100 border border-zinc-200 shrink-0" />
+                <span className="text-xs text-zinc-300">{label}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Section: Guiding Policy — Your Approach */}
@@ -652,11 +662,21 @@ function MobileSidebarContent({
             <span className="text-[10px] text-zinc-400">{openSections.has('guidingPolicy') ? '▲' : '▼'}</span>
           )}
         </div>
-        {(activeSection === 'guidingPolicy' || openSections.has('guidingPolicy')) && (
+        {(activeSection === 'guidingPolicy' || openSections.has('guidingPolicy')) ? (
           <div className="space-y-2">
             {GUIDING_POLICY_FIELDS.map(({ key, label }) => renderFieldCard(key, label))}
           </div>
-        )}
+        ) : !gpHasContent ? (
+          /* Task 5: future page — greyed labels only until reached */
+          <div className="space-y-0.5 ml-3 mt-1">
+            {GUIDING_POLICY_FIELDS.map(({ key, label }) => (
+              <div key={String(key)} className="flex items-center gap-2 py-1">
+                <span className="w-2 h-2 rounded-full bg-zinc-100 border border-zinc-200 shrink-0" />
+                <span className="text-xs text-zinc-300">{label}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Section: Coherent Actions — What Is to Be Changed */}
@@ -671,6 +691,15 @@ function MobileSidebarContent({
             Coherent Actions — What Is to Be Changed
           </span>
         </div>
+        {/* Task 5: future page — greyed placeholder until reached */}
+        {activeSection !== 'coherentActions' && (
+          <div className="ml-3 mt-1">
+            <div className="flex items-center gap-2 py-1">
+              <span className="w-2 h-2 rounded-full bg-zinc-100 border border-zinc-200 shrink-0" />
+              <span className="text-xs text-zinc-300 italic">1 Coherent Action</span>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>
@@ -1182,26 +1211,21 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (typeof doneData.coherentActionsCount === 'number') setCoherentActionsCount(doneData.coherentActionsCount as number)
           if (doneData.triggerSavePrompt && !isSignedIn) setShowSavePrompt(true)
           // Handle fieldProposal — platform controls field sequence (V2H-A2)
-          if (doneData.fieldProposal) {
+          // Task 4: Do not replace the proposal card on 'Accepted:' system messages —
+          // that causes duplicate cards and re-proposes the just-accepted field.
+          if (doneData.fieldProposal && !messageText.startsWith('Accepted: ')) {
             const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
             if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
               setCurrentProposal(fp)
             }
           }
-          // Commit 4 — auto-open newly completed fields in sidebar
-          if (doneData.completedFields) {
-            const cf = doneData.completedFields as Partial<FieldCompletion>
-            const newlyDone = Object.entries(cf).filter(([, v]) => v).map(([k]) => k)
-            if (newlyDone.length > 0) {
-              setOpenFields(prev => {
-                const next = new Set(prev)
-                newlyDone.forEach(k => next.add(k))
-                return next
-              })
-            }
-          }
-          // Re-populate field values from DB when Lex has written field updates
-          if (doneData.hasFieldUpdates && ideaId) {
+          // Task 6: Fields default to collapsed — do NOT auto-open newly completed fields.
+          // The sidebar shows a truncated preview in the collapsed row; user clicks to expand.
+          // Task 4: Re-populate field values from DB when Lex has written field updates.
+          // Skip for 'Accepted:' system messages — the field was already set optimistically
+          // and the DB write is confirmed server-side; a re-fetch here overwrites the local
+          // value with stale DB data during the Lex response latency window.
+          if (doneData.hasFieldUpdates && ideaId && !messageText.startsWith('Accepted: ')) {
             fetch(`/api/ideas/${ideaId}`)
               .then(r => r.json())
               .then(updated => populateFieldValuesFromIdea(updated))
@@ -1512,16 +1536,27 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setLastAcceptedField(normKey)
     }
 
-    // Relation and Json fields bypass the Lex roundtrip — write directly via field-approval
+    // Relation and Json fields bypass the Lex roundtrip — write directly via field-approval.
+    // Exception: legislation with empty array (skip path) — no DB write, just advance via Lex.
     if ((fieldKey === 'ideaLegislation' || fieldKey === 'initialThoughts') && ideaId && isSignedIn) {
-      const r = await fetch(`/api/ideas/${ideaId}/field-approval`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fieldKey, value }),
-      })
-      if (r.ok) {
-        const data = await r.json()
-        if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
+      let parsedCandidates: unknown[] = []
+      try { parsedCandidates = JSON.parse(value) } catch { parsedCandidates = [] }
+      const isLegislationSkip = fieldKey === 'ideaLegislation' && Array.isArray(parsedCandidates) && parsedCandidates.length === 0
+
+      if (isLegislationSkip) {
+        // Skip path: zero candidates — don't write rows, just send Accepted to advance Lex to field 6
+        await handleSend(false, `Accepted: ${fieldLabel}`)
+        // ideaLegislation stays false in completedFields — correct (intentionally deferred)
+      } else {
+        const r = await fetch(`/api/ideas/${ideaId}/field-approval`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fieldKey, value }),
+        })
+        if (r.ok) {
+          const data = await r.json()
+          if (data.completedFields) setFields(prev => ({ ...prev, ...data.completedFields }))
+        }
       }
     } else {
       // Send silent system message so Lex persists the accepted value
@@ -2193,6 +2228,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 </button>
               </div>
             )}
+            {/* ── Active page content ──────────────────────────────────── */}
             {activeSection === 'initialInformation' ? (
               <>
                 {SIDEBAR_FIELDS.map(({ key, label }) => {
@@ -2222,20 +2258,26 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             </svg>
                           )}
                         </span>
-                        <span className={`text-sm transition-colors flex-1 ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
+                        <span className={`text-sm transition-colors flex-1 min-w-0 ${done ? 'text-zinc-900 font-medium' : 'text-zinc-500'}`}>
                           {label}
                         </span>
+                        {/* Task 6: truncated preview in collapsed state */}
+                        {done && value && !isOpen && (
+                          <span className="text-xs text-zinc-400 truncate max-w-[100px] shrink-0">
+                            {value.substring(0, 40)}{value.length > 40 ? '…' : ''}
+                          </span>
+                        )}
                         {canRevisit && (
                           <button
                             onClick={e => { e.stopPropagation(); handleRevisitField(keyStr) }}
-                            className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-teal-600 transition-all px-1"
+                            className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-teal-600 transition-all px-1 shrink-0"
                             title="Revisit this field with Lex"
                           >
                             ↩
                           </button>
                         )}
                         {value && (
-                          <span className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                             {isOpen ? '▲' : '▼'}
                           </span>
                         )}
@@ -2338,6 +2380,41 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                 }}
               />
             )}
+
+            {/* ── Task 5: Future pages — visible from start, greyed until reached ── */}
+            {PAGE_REGISTRY.filter(page => {
+              // Show pages not yet active (future pages)
+              const firstFieldIdx = FIELD_SEQUENCE.findIndex(f => f.section === page.section)
+              return page.section !== activeSection && firstFieldIdx > currentFieldIndex
+            }).map(page => (
+              <div key={page.section} className="mt-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-zinc-200 shrink-0" />
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                    Page {page.number} — {page.name}
+                  </p>
+                </div>
+                <div className="space-y-0.5 ml-4">
+                  {page.fields
+                    .filter(f => {
+                      const step = FIELD_SEQUENCE.find(s => s.key === f.key)
+                      return !step?.isLexGenerated
+                    })
+                    .slice(0, page.isDynamic ? 1 : undefined)
+                    .map(f => (
+                      <div key={f.key} className="flex items-center gap-2.5 py-1">
+                        <span className="w-3.5 h-3.5 rounded-full bg-zinc-100 border border-zinc-200 shrink-0" />
+                        <span className="text-xs text-zinc-300">{f.label}</span>
+                      </div>
+                    ))}
+                  {page.isDynamic && (
+                    <div className="flex items-center gap-2.5 py-1 ml-0">
+                      <span className="text-xs text-zinc-300 italic ml-5">1 Coherent Action</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </aside>
       </div>

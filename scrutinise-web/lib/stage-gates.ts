@@ -11,8 +11,22 @@ const REVIEW_OUTCOME_SCORE: Record<string, number> = {
 
 /**
  * Stage 1→2: AUTOMATIC
- * Fires on every idea PATCH when title + summaryDescription are both non-empty.
- * Sends Lex achievement notification.
+ * Fires on every field-approval write when all 7 Page 1 (Initial Information) fields
+ * are complete: title, summaryDescription, summaryDiagnosis, backgroundResearch,
+ * ideaLegislation (≥1 link), initialThoughts, govtArea.
+ *
+ * Previously fired after title + summaryDescription only — fixed in L6-C Task 8.
+ * Consumers of idea.stage affected by this change:
+ *   - app/api/ai/[ideaId]/route.ts: isStage1 / currentStage passed to buildSystemPrompt.
+ *     Effect: Lex prompt will correctly show STAGE_1 context for the full Page 1 journey.
+ *     Was showing STAGE_2 from field 3 onwards. Now fixed.
+ *   - app/api/ideas/[id]/route.ts: awards IDEA_STARTED points when idea is blank at STAGE_1.
+ *     Effect: no change — IDEA_STARTED is guarded by content being blank, not by stage alone.
+ *   - app/api/ideas/[id]/contributions/route.ts: isStage2 flag used for comment visibility.
+ *     Effect: ideas with only 2 fields filled stayed STAGE_1 — minor; not user-facing yet.
+ *   - app/api/ideas/[id]/vote/route.ts: gates voting to STAGE_4+. Not affected.
+ *   - app/sitemap.ts: filters STAGE_3+. Not affected.
+ *   - All endorsement/review routes: gate STAGE_4+. Not affected.
  */
 export async function checkAndAdvanceStage(ideaId: string, ownerId: string): Promise<void> {
   const idea = await prisma.idea.findUnique({
@@ -22,21 +36,34 @@ export async function checkAndAdvanceStage(ideaId: string, ownerId: string): Pro
       stage: true,
       title: true,
       summaryDescription: true,
+      summaryDiagnosis: true,
+      backgroundResearch: true,
+      initialThoughts: true,
+      govtArea: true,
       diagnosis: true,
       guidingPolicy: true,
       coherentActions: { select: { id: true } },
       research: { select: { id: true } },
+      legislationLinks: { select: { id: true } },
     },
   })
 
   if (!idea) return
 
-  // Stage 1 → 2: automatic when title + summaryDescription non-empty
-  if (
+  // Stage 1 → 2: all 7 Page 1 (Initial Information) fields must be complete.
+  // ideaLegislation requires ≥1 linked legislation row — a skip (zero rows) keeps
+  // the gate closed; the user must link at least one Act to advance.
+  const page1Complete =
     idea.stage === 'STAGE_1' &&
-    idea.title?.trim() &&
-    idea.summaryDescription?.trim()
-  ) {
+    !!idea.title?.trim() &&
+    !!idea.summaryDescription?.trim() &&
+    !!idea.summaryDiagnosis?.trim() &&
+    !!idea.backgroundResearch?.trim() &&
+    (idea.legislationLinks?.length ?? 0) > 0 &&
+    idea.initialThoughts != null &&
+    !!idea.govtArea?.trim()
+
+  if (page1Complete) {
     await prisma.$transaction([
       prisma.idea.update({
         where: { id: ideaId },
@@ -48,7 +75,7 @@ export async function checkAndAdvanceStage(ideaId: string, ownerId: string): Pro
           fromStage: 'STAGE_1',
           toStage: 'STAGE_2',
           triggeredByUserId: ownerId,
-          transitionReason: 'Automatic: title and summaryDescription completed',
+          transitionReason: 'Automatic: all 7 Page 1 (Initial Information) fields completed',
         },
       }),
       prisma.notification.create({
