@@ -70,3 +70,7 @@ scripts/legislation/v3b-uksi/pilot-log.csv
 files.zip
 scripts/legislation/v3opt/checkpoints-v3opt/
 commit-all.sh
+
+# V.3-C-2c College of Policing APP browser crawl — 45 MB source data, local-only
+# Ingest is reproducible from cop-app-ingest.ts; crawl conducted 25 May 2026
+scripts/operational/cop-app-crawl.json
