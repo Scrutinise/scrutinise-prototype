@@ -45,6 +45,55 @@ type OpRow = {
   snippet:       string
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Prefix-aware tsquery builder
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Builds the tsquery function name and query string for a given input.
+ *
+ * When the input ends with a space, all tokens are complete — use plainto_tsquery
+ * which handles stemming, stop words, and spacing correctly.
+ *
+ * When the input does NOT end with a space, the last token may be mid-word.
+ * Use to_tsquery with :* on the final token to enable prefix matching.
+ * :* suffix enables prefix matching on final token — catches mid-word input without breaking completed queries
+ *
+ * Examples:
+ *   "data protection "  → plainto_tsquery('english', 'data protection')
+ *   "data prot"         → to_tsquery('english', 'data & prot:*')
+ *   "employ"            → to_tsquery('english', 'employ:*')
+ *
+ * Note: to_tsquery with :* does not handle stop words in the completed tokens
+ * as gracefully as plainto_tsquery. For the legislation search context (policy
+ * and legal terms), single stop-word queries are unlikely. If a completed token
+ * is a stop word it will be silently removed from the tsquery by PostgreSQL.
+ */
+function buildTsQuery(rawQ: string): { fn: 'plainto_tsquery' | 'to_tsquery'; queryStr: string } {
+  // Completed input: ends with space — use plainto_tsquery
+  if (rawQ.endsWith(' ')) {
+    return { fn: 'plainto_tsquery', queryStr: rawQ.trim() }
+  }
+
+  const trimmed = rawQ.trim()
+
+  // Sanitize: remove to_tsquery operator chars from individual tokens.
+  // Prevents injection via special characters in the query string.
+  const sanitize = (t: string) => t.replace(/[&|!():<>*\\]/g, '').trim()
+  const tokens = trimmed.split(/\s+/).map(sanitize).filter(Boolean)
+
+  if (tokens.length === 0) {
+    return { fn: 'plainto_tsquery', queryStr: trimmed }
+  }
+
+  // :* suffix enables prefix matching on final token — catches mid-word input without breaking completed queries
+  const tsQueryStr = tokens
+    .map((tok, i) => (i === tokens.length - 1 ? `${tok}:*` : tok))
+    .join(' & ')
+
+  return { fn: 'to_tsquery', queryStr: tsQueryStr }
+}
+
 /**
  * Core FTS search across LegislationSection and OperationalSection.
  * Uses pre-computed GIN-indexed ftsVector columns (built by fts-migration.ts).
@@ -53,6 +102,9 @@ type OpRow = {
  *   Inner CTE: ts_rank_cd on all GIN matches, ORDER BY rank LIMIT fetchLimit
  *   Outer SELECT: ts_headline only on ≤fetchLimit rows
  * This keeps ts_headline (expensive) off the full match set for common terms.
+ *
+ * Prefix matching: when the raw query doesn't end with a space, the final token
+ * gets :* appended for prefix matching (e.g. "data prot" matches "data protection").
  *
  * totalMatches caveat: reports the window size (≤fetchLimit), not a true corpus
  * count. Sufficient for Lex grounding; a future search UI would need COUNT(*) per
@@ -78,9 +130,12 @@ export async function searchLegislation(opts: {
   // Fetch enough rows pre-merge so we have headroom after offset
   const fetchLimit = limit + offset
 
+  // Build prefix-aware tsquery (fn = 'plainto_tsquery' or 'to_tsquery')
+  const { fn: tsqFn, queryStr: tsqStr } = buildTsQuery(q)
+
   // ── Legislation sections (rank-then-headline CTE) ────────────────────────
   if (type !== 'operational') {
-    const params: unknown[] = [q]
+    const params: unknown[] = [tsqStr]
     let p = 2
     const extra: string[] = []
 
@@ -115,10 +170,10 @@ export async function searchLegislation(opts: {
           li.title                    AS "actTitle",
           li."legislationType"::text  AS "legislationType",
           li.year,
-          ts_rank_cd(ls."ftsVector", plainto_tsquery('english', $1)) AS rank
+          ts_rank_cd(ls."ftsVector", ${tsqFn}('english', $1)) AS rank
         FROM "LegislationSection" ls
         JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
-        WHERE ls."ftsVector" @@ plainto_tsquery('english', $1)
+        WHERE ls."ftsVector" @@ ${tsqFn}('english', $1)
           ${extraWhere}
         ORDER BY rank DESC
         LIMIT ${fetchLimit}
@@ -135,7 +190,7 @@ export async function searchLegislation(opts: {
         ts_headline(
           'english',
           coalesce("sectionTitle", '') || ' ' || coalesce("originalText", ''),
-          plainto_tsquery('english', $1),
+          ${tsqFn}('english', $1),
           'MaxFragments=2,MinWords=10,MaxWords=30,StartSel=<<,StopSel=>>'
         ) AS snippet
       FROM ranked
@@ -175,10 +230,10 @@ export async function searchLegislation(opts: {
           od."sourceSlug"     AS "docSlug",
           od.title            AS "docTitle",
           od."publisherName",
-          ts_rank_cd(os."ftsVector", plainto_tsquery('english', $1)) AS rank
+          ts_rank_cd(os."ftsVector", ${tsqFn}('english', $1)) AS rank
         FROM "OperationalSection" os
         JOIN "OperationalDocument" od ON os."operationalDocumentId" = od.id
-        WHERE os."ftsVector" @@ plainto_tsquery('english', $1)
+        WHERE os."ftsVector" @@ ${tsqFn}('english', $1)
         ORDER BY rank DESC
         LIMIT ${fetchLimit}
       )
@@ -193,7 +248,7 @@ export async function searchLegislation(opts: {
         ts_headline(
           'english',
           coalesce("pageTitle", '') || ' ' || coalesce("extractedText", ''),
-          plainto_tsquery('english', $1),
+          ${tsqFn}('english', $1),
           'MaxFragments=2,MinWords=10,MaxWords=30,StartSel=<<,StopSel=>>'
         ) AS snippet
       FROM ranked
@@ -203,7 +258,7 @@ export async function searchLegislation(opts: {
 
     const rows = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
-      return tx.$queryRawUnsafe<OpRow[]>(sql, q)
+      return tx.$queryRawUnsafe<OpRow[]>(sql, tsqStr)
     })
     for (const r of rows) {
       results.push({

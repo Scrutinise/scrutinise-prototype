@@ -1,0 +1,63 @@
+# Scrutinise — PostgreSQL Thesaurus Dictionary
+# File: legislation_synonyms.ths
+#
+# Format: term : synonym [: synonym ...]
+# Each line defines a bidirectional synonym pair or group.
+# The thesaurus processes the query through the base dictionary (english) first,
+# then maps lexemes to their synonyms. Matches are case-insensitive.
+#
+# DEPLOYMENT: Copy this file to $PGDATA/../share/tsearch_data/ on the PostgreSQL
+# server, then run apply-fts-config.sql to register it as a dictionary.
+# On managed PostgreSQL (Neon, RDS, Supabase), this file cannot be placed on the
+# server filesystem — use application-layer synonym expansion in lib/search.ts.
+#
+# NOTE: This file must be re-applied to any new database instance.
+# See: scrutinise-docs/CLAUDE.md § "PostgreSQL thesaurus dictionary"
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Data protection / privacy
+# ─────────────────────────────────────────────────────────────────────────────
+gdpr : data protection
+data protection : gdpr
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Employment / labour
+# ─────────────────────────────────────────────────────────────────────────────
+employment : labour
+labour : employment
+
+# ─────────────────────────────────────────────────────────────────────────────
+# National Health Service
+# ─────────────────────────────────────────────────────────────────────────────
+nhs : national health service
+national health service : nhs
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HMRC / Revenue
+# ─────────────────────────────────────────────────────────────────────────────
+hmrc : revenue customs
+revenue customs : hmrc
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Planning
+# ─────────────────────────────────────────────────────────────────────────────
+planning permission : development consent
+development consent : planning permission
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Judicial review
+# ─────────────────────────────────────────────────────────────────────────────
+judicial review : jr
+jr : judicial review
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Freedom of information
+# ─────────────────────────────────────────────────────────────────────────────
+freedom of information : foi
+foi : freedom of information
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Equality
+# ─────────────────────────────────────────────────────────────────────────────
+equality act : protected characteristics
+protected characteristics : equality act
