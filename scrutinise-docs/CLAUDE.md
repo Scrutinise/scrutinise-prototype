@@ -443,3 +443,30 @@ When in doubt, specify UTF-8 explicitly at every encoding boundary.
 ### Long-term remediation
 
 The mandatory `[Console]::OutputEncoding` rule is a workaround for a Windows legacy default that bites every cross-language pipeline on Windows. The strategic remediation is to **eliminate PowerShell from ingest pipelines entirely** — write helpers in TypeScript using Node-native libraries (`adm-zip`, `fast-xml-parser`, etc.). This is being addressed in V.3-B-opt (rewrite UKSI pipeline in pure TypeScript). Future ingest sprints (V.3-D, V.3-G, V.4-A) should not introduce new PowerShell helpers.
+
+***
+
+## 15. POSTGRESQL THESAURUS DICTIONARY
+
+A thesaurus synonym file is maintained at `scrutinise-web/prisma/pg_thesaurus/legislation_synonyms.ths`. It maps key policy synonym pairs (GDPR↔data protection, NHS↔national health service, etc.).
+
+**This file must be applied to any new database instance** to enable synonym-aware search. The setup script is `scripts/legislation/apply-fts-config.sql`.
+
+### Self-hosted PostgreSQL (full thesaurus setup)
+
+1. Copy `legislation_synonyms.ths` to `$PGDATA/../share/tsearch_data/` on the server.
+2. Run: `psql -d $DATABASE_URL -f scripts/legislation/apply-fts-config.sql`
+3. The script creates: `legislation_thesaurus` (TEXT SEARCH DICTIONARY) and `legislation_english` (TEXT SEARCH CONFIGURATION extending 'english' with thesaurus).
+4. FTS triggers on `LegislationSection` and `OperationalSection` use `legislation_english`.
+
+### Managed PostgreSQL (Neon) — current deployment
+
+The thesaurus template requires placing `.ths` files on the server filesystem, which is not possible on managed PG services (Neon, RDS, Supabase). On Neon:
+
+- `legislation_english` is created as a plain copy of `english` via `scripts/legislation/neon-fts-setup.ts`.
+- Synonym expansion is handled at the **application layer** in `scrutinise-web/lib/search.ts`.
+- To extend synonyms: add pairs to `legislation_synonyms.ths` (documentation), and update the synonym map in `search.ts` when application-layer expansion is implemented (V.4-FTS-2 scope).
+
+### FTS query: prefix matching
+
+`scrutinise-web/lib/search.ts` uses `buildTsQuery()` to detect mid-word input (no trailing space) and appends `:*` to the final token, switching from `plainto_tsquery` to `to_tsquery`. This enables "data prot" → "data protection" matching without waiting for a space keystroke.

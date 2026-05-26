@@ -1,8 +1,48 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 25 May 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 26 May 2026*
 
 ***
+
+## CODE CHANGES — 26 May 2026 Sprint V.4-FTS-3 (Neon migration + search enhancements)
+
+### V.4-FTS-3: Neon DB connection, schema push, FTS setup, prefix matching
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/lib/prisma-search.ts` (NEW) | Separate Prisma client pointing at `NEON_DATABASE_URL` (Neon search DB). Uses lazy Proxy-based initialisation — client created on first property access so dotenv timing issues are avoided. Runtime role: read-only search. All writes continue via `prisma.ts` → Railway. |
+| `scripts/legislation/test-neon-connection.ts` (NEW) | One-off connectivity probe: SELECT 1, PostgreSQL version, pgvector availability, existing table count. Result: PostgreSQL 17.10, pgvector v0.8.0, fresh DB ✓. |
+| `scripts/legislation/neon-fts-setup.ts` (NEW) | Idempotent Neon FTS setup script. Creates `legislation_english` TEXT SEARCH CONFIGURATION (copy of `english`). Verifies `tsvector` columns. Installs FTS triggers using `legislation_english` on `LegislationSection` and `OperationalSection`. Confirms GIN indexes. Enables `pgvector` extension. Adds `embedding vector(768)` to `LegislationSection` (nullable — V.4-FTS-2 semantic sprint). |
+| `scrutinise-web/prisma/pg_thesaurus/legislation_synonyms.ths` (NEW) | PostgreSQL thesaurus synonym file. 9 bidirectional synonym pairs: GDPR↔data protection, employment↔labour, NHS↔national health service, HMRC↔revenue customs, planning permission↔development consent, judicial review↔JR, freedom of information↔FOI, equality act↔protected characteristics. For use with `apply-fts-config.sql` on self-hosted PostgreSQL. |
+| `scripts/legislation/apply-fts-config.sql` (NEW) | Repeatable SQL setup script for self-hosted PostgreSQL deployments. Creates `legislation_thesaurus` TEXT SEARCH DICTIONARY (thesaurus template, `.ths` file-based). Alters `legislation_english` config to use thesaurus + English stemming. Rebuilds triggers and GIN indexes. NOTE: not applicable to managed PG (Neon) — .ths file requires server filesystem access. |
+| `scrutinise-web/lib/search.ts` | Added `buildTsQuery()` helper. When input ends without space → `to_tsquery` with `:*` on last token (e.g. "data prot" → `data & prot:*`). When ends with space → `plainto_tsquery` (completed, standard). Both legislation and operational branches updated. SQL uses dynamic `${tsqFn}` function name. |
+| `scripts/legislation/transfer-to-neon.ts` (NEW) | Data transfer script: Railway → Neon. Cursor-based pagination (no OFFSET), 1,000 rows/batch. Checkpoint/resume every 10,000 rows to `neon-transfer-checkpoint.json`. Transfers `LegislationItem` then `LegislationSection`. Post-transfer verification compares counts by `legislationType`. GATED — do not run until Charlie confirms HMRC ingest complete. |
+| `scrutinise-docs/CLAUDE.md` | Added §15: PostgreSQL thesaurus dictionary. Documents .ths file location, deployment steps for self-hosted vs managed PG, Neon limitation, and application-layer fallback path. Documents prefix matching implementation in `buildTsQuery()`. |
+
+**Neon DB state post-setup:**
+- 54 tables (full Prisma schema)
+- `legislation_english` FTS config: copy of english (thesaurus to add post-V.4-FTS-2)
+- `ftsVector tsvector` on `LegislationSection` + `OperationalSection` ✓
+- GIN indexes on both tables ✓
+- FTS triggers using `legislation_english` ✓
+- pgvector enabled, `embedding vector(768)` on `LegislationSection` ✓
+- No data yet — data transfer gated on HMRC completion
+
+---
+
+## CODE CHANGES — 26 May 2026 Sprint L6-C (Lex field 5 stall, panel race, sidebar)
+
+### L6-C: Fix Lex legislation field stall, panel race condition, and sidebar journey view
+
+| Item | Detail |
+|------|--------|
+| `scrutinise-web/app/api/ai/[ideaId]/route.ts` | **Task 3:** FTS always fires at field 5 (`isAtLegislationField` guard). Query derived from `idea.title + summaryDescription + summaryDiagnosis` instead of user message. `shouldSearch` word-count gate bypassed for field 5. Comment added per v6.0 §7.1 trigger 1. **Task 9:** `buildSystemPrompt` OPENING instruction updated — Lex no longer re-introduces itself on first turn (server message is now canonical intro). **Task 2:** System prompt for field 5 (ideaLegislation) updated: `EMPTY CANDIDATES — MANDATORY PATH` instruction added; Lex must emit `{"fieldProposal":{"fieldKey":"ideaLegislation","proposedValue":"[]"}}` with natural-language explanation when no candidates found. |
+| `scrutinise-web/components/FieldProposalCard.tsx` | **Task 2:** `handleSkipLegislation` useCallback added at component level (unconditionally — hooks rules). When `legCandidates.length === 0`: header shows "No legislation found", "Skip for now →" button shown and enabled, `onAccept('[]')` called and gate advances. Previous disabled Accept button behaviour removed. |
+| `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx` | **Task 2:** `handleCurrentProposalAccept` — for `ideaLegislation` with empty parsed array (`parsedCandidates.length === 0`): skip field-approval, send `Accepted: Reference legislation` directly to Lex. Field stays `false` in completedFields (intentionally deferred). **Task 4:** Two race-condition guards: (a) `setCurrentProposal` suppressed for `Accepted:` responses — no duplicate card; (b) DB re-fetch suppressed for `Accepted:` messages — no panel revert. **Task 5 (desktop):** `PAGE_REGISTRY` future pages rendered after active page: greyed section header + field labels only, no tick; Coherent Actions shows "1 Coherent Action" placeholder. **Task 5 (mobile, `MobileSidebarContent`):** Diagnosis and Guiding Policy sections show greyed field labels when section has no content and is not active. Coherent Actions shows greyed "1 Coherent Action" placeholder. **Task 6:** Removed auto-open block for newly accepted fields (default collapsed). 40-char truncated preview shown in collapsed state. |
+| `scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx` | **Task 7:** `backgroundResearch: string | null` added to `Idea` interface. Rendered in Overview tab left column as "Background Research" section (above summary fields). Root cause was missing type and render — server page already fetches all scalars via `include`. |
+| `scrutinise-web/lib/stage-gates.ts` | **Task 8:** `checkAndAdvanceStage()` now requires all 7 Page 1 (Initial Information) fields: `title`, `summaryDescription`, `summaryDiagnosis`, `backgroundResearch`, `ideaLegislation` (≥1 `legislationLinks`), `initialThoughts`, `govtArea`. Previously fired after title + summaryDescription only. Consumer audit documented in comments. `transitionReason` updated to "Automatic: all 7 Page 1 (Initial Information) fields completed". |
+
+---
 
 ## CODE CHANGES — 25 May 2026 Sprint V.3-F (Sentencing Council Guidelines)
 
