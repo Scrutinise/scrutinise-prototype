@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/prisma'
+import { prisma }       from '@/lib/prisma'
+import { prismaSearch } from '@/lib/prisma-search'
 
 export type SearchResult = {
   type:          string        // legislationType lowercase or 'operational'
@@ -200,7 +201,8 @@ export async function searchLegislation(opts: {
 
     // statement_timeout is a stall-guard: normal queries complete in <2s;
     // 8s only trips on a genuinely stuck DB or pathological query.
-    const rows = await prisma.$transaction(async (tx) => {
+    // Legislation data lives on Neon (V.4-FTS-3 migration) — use prismaSearch.
+    const rows = await prismaSearch.$transaction(async (tx) => {
       await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
       return tx.$queryRawUnsafe<LegRow[]>(sql, ...params)
     })
