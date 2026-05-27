@@ -1,66 +1,64 @@
 /**
- * transfer-to-neon.ts — Transfer LegislationItem + LegislationSection from
- * Railway (source) to Neon (destination) in batches of 1,000 rows.
+ * transfer-to-neon.ts — Transfer LegislationItem + LegislationSection
+ * from Railway (source) to Neon (destination).
  *
  * ── GATED ────────────────────────────────────────────────────────────────────
- * Do NOT run until Charlie confirms the HMRC full ingest (CC-C terminal) has
- * completed successfully. This script reads from Railway and writes to Neon;
- * running mid-ingest would transfer a partial dataset.
+ * Do NOT run until Charlie confirms the HMRC full ingest is complete.
+ * Gate confirmed open: 27 May 2026.
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Transfer order:
- *   1. LegislationItem (parent — must exist before child FK rows)
- *   2. LegislationSection (child — FK to LegislationItem)
+ * Strategy:
+ *   - Source: Railway pg Pool (with SSL)
+ *   - Destination: Neon pg Pool (with SSL)
+ *   - Cursor-based pagination on `id` — no OFFSET (degrades at scale)
+ *   - Multi-row batched INSERT (BATCH_SIZE rows per statement)
+ *   - ON CONFLICT (id) DO NOTHING — idempotent; safe to re-run
+ *   - ftsVector NOT transferred — Neon trigger repopulates from sectionTitle
+ *     + originalText using legislation_english config on INSERT
+ *   - embedding NOT inserted — Neon-only column, populated in V.4-FTS-2
  *
- * Pagination: cursor-based on `id` (UUID, UUID-ordered). OFFSET is not used
- * as it degrades at scale with large offsets.
- *
- * Checkpoint/resume: progress is written to neon-transfer-checkpoint.json
- * every 10,000 rows. A dropped connection resumes from the last checkpoint.
- *
- * Verification: after transfer, row counts on Railway vs Neon are compared
- * by legislationType. Discrepancies are reported before declaring success.
+ * Checkpoint/resume:
+ *   Writes neon-transfer-checkpoint.json every CHECKPOINT_EVERY rows.
+ *   Re-run to resume from last saved cursor after a dropped connection.
  *
  * Run:
  *   cd scrutinise-web
  *   npx tsx --tsconfig ../scripts/tsconfig.json ../scripts/legislation/transfer-to-neon.ts
- *
- * To resume a dropped transfer:
- *   (same command — checkpoint file is detected automatically)
  */
 
 import * as path from 'path'
-import * as fs from 'fs'
+import * as fs   from 'fs'
 import dotenv from 'dotenv'
 dotenv.config({ path: path.join(__dirname, '../../scrutinise-web/.env') })
 
-import { prisma }       from '../../scrutinise-web/lib/prisma'
-import { prismaSearch } from '../../scrutinise-web/lib/prisma-search'
+import { getRailwayPool, getNeonPool, endPools } from '../../scrutinise-web/lib/pg-pool'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Config
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BATCH_SIZE        = 1_000   // rows per INSERT batch
-const CHECKPOINT_EVERY  = 10_000  // write checkpoint file every N rows
-const CHECKPOINT_PATH   = path.join(__dirname, 'neon-transfer-checkpoint.json')
+const BATCH_SIZE       = 200   // rows per SELECT + per multi-row INSERT
+const CHECKPOINT_EVERY = 5_000 // write checkpoint every N rows
+const CHECKPOINT_PATH  = path.join(__dirname, 'neon-transfer-checkpoint.json')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 type Checkpoint = {
-  startedAt:          string
-  lastUpdatedAt:      string
-  legItemCursor:      string | null  // last LegislationItem.id transferred
-  legItemDone:        boolean
-  legSectionCursor:   string | null  // last LegislationSection.id transferred
-  legSectionDone:     boolean
-  legItemTotal:       number
-  legSectionTotal:    number
-  legItemTransferred: number
+  startedAt:             string
+  lastUpdatedAt:         string
+  legItemCursor:         string | null
+  legItemDone:           boolean
+  legSectionCursor:      string | null
+  legSectionDone:        boolean
+  legItemTotal:          number
+  legSectionTotal:       number
+  legItemTransferred:    number
   legSectionTransferred: number
 }
 
-function ts() {
-  return new Date().toISOString().replace('T', ' ').slice(0, 19)
-}
+function ts() { return new Date().toISOString().replace('T', ' ').slice(0, 19) }
 function log(msg: string) { console.log(`[${ts()}] ${msg}`) }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,9 +68,9 @@ function log(msg: string) { console.log(`[${ts()}] ${msg}`) }
 function loadCheckpoint(): Checkpoint | null {
   if (!fs.existsSync(CHECKPOINT_PATH)) return null
   try {
-    return JSON.parse(fs.readFileSync(CHECKPOINT_PATH, 'utf8')) as Checkpoint
+    return JSON.parse(fs.readFileSync(CHECKPOINT_PATH, 'utf8'))
   } catch {
-    log('Warning: checkpoint file corrupt — starting from scratch')
+    log('Warning: checkpoint file unreadable — starting from scratch')
     return null
   }
 }
@@ -83,128 +81,187 @@ function saveCheckpoint(cp: Checkpoint) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Multi-row INSERT builder
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Builds a multi-row parameterised INSERT for the given table.
+ * colDefs: [{ name, cast? }] where cast is a PostgreSQL type name for explicit
+ *   casting — required for enum columns so NULL casts work correctly.
+ * rows: array of arrays (each inner array = one row's values in column order)
+ */
+function buildBulkInsert(
+  table: string,
+  colDefs: { name: string; cast?: string }[],
+  rows:    unknown[][]
+): { sql: string; params: unknown[] } {
+  const params: unknown[] = []
+  const valueGroups: string[] = []
+
+  for (const row of rows) {
+    const placeholders = colDefs.map((col, i) => {
+      params.push(row[i])
+      const idx = params.length
+      return col.cast ? `$${idx}::${col.cast}` : `$${idx}`
+    })
+    valueGroups.push(`(${placeholders.join(', ')})`)
+  }
+
+  const colList = colDefs.map(c => `"${c.name}"`).join(', ')
+  const sql = `
+    INSERT INTO "${table}" (${colList})
+    VALUES ${valueGroups.join(',\n    ')}
+    ON CONFLICT (id) DO NOTHING
+  `
+  return { sql, params }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Column definitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ITEM_COLS: { name: string; cast?: string }[] = [
+  { name: 'id' },
+  { name: 'legislationType', cast: '"LegislationType"' },
+  { name: 'tier',            cast: '"LegislationTier"' },
+  { name: 'title' },
+  { name: 'year' },
+  { name: 'yearRaw' },
+  { name: 'number' },
+  { name: 'jurisdiction' },
+  { name: 'sourceType',      cast: '"DocumentSourceType"' },
+  { name: 'legislationGovUkId' },
+  { name: 'clmlUrl' },
+  { name: 'r2Key' },
+  { name: 'compilationStatus', cast: '"CompilationStatus"' },
+  { name: 'compilationProvider' },
+  { name: 'compiledAt' },
+  { name: 'sectionCount' },
+  { name: 'compiledSectionCount' },
+  { name: 'shortTitle' },
+  { name: 'longTitle' },
+  { name: 'enactmentDate' },
+  { name: 'inForce' },
+  { name: 'subjectArea' },
+  { name: 'policyArea' },
+  { name: 'feedUrl' },
+  { name: 'effectsKey' },
+  { name: 'effectsFetchedAt' },
+  { name: 'createdAt' },
+  { name: 'updatedAt' },
+]
+
+const SECTION_COLS: { name: string; cast?: string }[] = [
+  { name: 'id' },
+  { name: 'legislationItemId' },
+  { name: 'sectionNumber' },
+  { name: 'sectionTitle' },
+  { name: 'sourceType',        cast: '"DocumentSourceType"' },
+  { name: 'originalText' },
+  { name: 'originalXmlKey' },
+  { name: 'tnaXmlKey' },
+  { name: 'compiledTextKey' },
+  { name: 'lexSummaryKey' },
+  { name: 'confidence',        cast: '"CompilationConfidence"' },
+  { name: 'confidenceReason' },
+  { name: 'compilationVersion' },
+  { name: 'compilationNotes' },
+  { name: 'unappliedAmendments', cast: 'jsonb' },
+  { name: 'commencementNote' },
+  { name: 'compiledAt' },
+  { name: 'compiledBy' },
+  { name: 'compilationStatus', cast: '"CompilationStatus"' },
+  { name: 'isRepealed' },
+  { name: 'needsReview' },
+  { name: 'createdAt' },
+  { name: 'updatedAt' },
+  { name: 'tags' },
+  { name: 'amendmentCount' },
+  { name: 'complexityScore' },
+  { name: 'inForce' },
+  { name: 'jurisdiction' },
+  { name: 'policyArea' },
+  // NOTE: ftsVector excluded — Neon trigger populates from originalText + sectionTitle
+  // NOTE: embedding excluded — Neon-only vector column (V.4-FTS-2)
+]
+
+// Convert a DB row (from pg Pool query) to the values array matching colDefs
+function itemToRow(r: Record<string, unknown>): unknown[] {
+  return ITEM_COLS.map(c => r[c.name] ?? null)
+}
+
+function sectionToRow(r: Record<string, unknown>): unknown[] {
+  return SECTION_COLS.map(c => {
+    if (c.name === 'unappliedAmendments') {
+      // pg returns JSONB as a JS object; pass as JSON string for ::jsonb cast
+      const v = r[c.name]
+      if (v === null || v === undefined) return null
+      return typeof v === 'string' ? v : JSON.stringify(v)
+    }
+    return r[c.name] ?? null
+  })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Transfer: LegislationItem
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function transferLegislationItems(cp: Checkpoint): Promise<void> {
   if (cp.legItemDone) {
-    log('LegislationItem: already complete per checkpoint — skipping')
+    log('LegislationItem: checkpoint shows done — skipping')
     return
   }
 
-  log('LegislationItem: counting source rows on Railway...')
-  const countResult = await prisma.$queryRaw<{ count: bigint }[]>`
-    SELECT COUNT(*) AS count FROM "LegislationItem"
-  `
-  cp.legItemTotal = Number(countResult[0].count)
-  log(`LegislationItem: ${cp.legItemTotal.toLocaleString()} source rows`)
+  const src  = getRailwayPool()
+  const dest = getNeonPool()
 
-  if (cp.legItemCursor) {
-    log(`LegislationItem: resuming from cursor ${cp.legItemCursor}`)
-  }
+  const countRes = await src.query('SELECT COUNT(*) AS count FROM "LegislationItem"')
+  cp.legItemTotal = Number(countRes.rows[0].count)
+  log(`LegislationItem: ${cp.legItemTotal.toLocaleString()} source rows on Railway`)
 
-  let cursor = cp.legItemCursor
-  let transferred = cp.legItemTransferred
+  if (cp.legItemCursor) log(`  Resuming from cursor: ${cp.legItemCursor}`)
+
+  const colNames = ITEM_COLS.map(c => `"${c.name}"`).join(', ')
+  let cursor         = cp.legItemCursor
+  let transferred    = cp.legItemTransferred
   let sinceCheckpoint = 0
+  const t0 = Date.now()
 
   while (true) {
-    // Cursor-based pagination: fetch rows with id > cursor, ordered by id
-    // LegislationItem is small enough that all fields are transferred
-    type RawItem = {
-      id: string
-      legislationType: string
-      tier: string
-      title: string
-      year: number
-      yearRaw: string | null
-      number: number
-      jurisdiction: string
-      sourceType: string
-      legislationGovUkId: string
-      clmlUrl: string
-      r2Key: string | null
-      compilationStatus: string
-      compilationProvider: string | null
-      compiledAt: Date | null
-      sectionCount: number
-      compiledSectionCount: number
-      shortTitle: string | null
-      longTitle: string | null
-      enactmentDate: Date | null
-      inForce: boolean
-      subjectArea: string | null
-      policyArea: string | null
-      feedUrl: string | null
-      effectsKey: string | null
-      effectsFetchedAt: Date | null
-      createdAt: Date
-      updatedAt: Date
-    }
+    const query = cursor
+      ? `SELECT ${colNames} FROM "LegislationItem" WHERE id > $1 ORDER BY id LIMIT $2`
+      : `SELECT ${colNames} FROM "LegislationItem" ORDER BY id LIMIT $1`
+    const params = cursor ? [cursor, BATCH_SIZE] : [BATCH_SIZE]
+    const res = await src.query(query, params)
 
-    const rows = cursor
-      ? await prisma.$queryRaw<RawItem[]>`
-          SELECT * FROM "LegislationItem"
-          WHERE id > ${cursor}
-          ORDER BY id
-          LIMIT ${BATCH_SIZE}
-        `
-      : await prisma.$queryRaw<RawItem[]>`
-          SELECT * FROM "LegislationItem"
-          ORDER BY id
-          LIMIT ${BATCH_SIZE}
-        `
+    if (res.rows.length === 0) break
 
-    if (rows.length === 0) break
+    const rows = res.rows.map(itemToRow)
+    const { sql, params: insertParams } = buildBulkInsert('LegislationItem', ITEM_COLS, rows)
+    await dest.query(sql, insertParams)
 
-    // Upsert batch to Neon — ON CONFLICT DO NOTHING for idempotent re-runs
-    // Use raw SQL for the batch insert to avoid N round-trips
-    for (const row of rows) {
-      await prismaSearch.$executeRaw`
-        INSERT INTO "LegislationItem" (
-          id, "legislationType", tier, title, year, "yearRaw", number,
-          jurisdiction, "sourceType", "legislationGovUkId", "clmlUrl", "r2Key",
-          "compilationStatus", "compilationProvider", "compiledAt",
-          "sectionCount", "compiledSectionCount", "shortTitle", "longTitle",
-          "enactmentDate", "inForce", "subjectArea", "policyArea",
-          "feedUrl", "effectsKey", "effectsFetchedAt", "createdAt", "updatedAt"
-        ) VALUES (
-          ${row.id}, ${row.legislationType}::"LegislationType",
-          ${row.tier}::"LegislationTier", ${row.title}, ${row.year},
-          ${row.yearRaw}, ${row.number}, ${row.jurisdiction},
-          ${row.sourceType}::"DocumentSourceType",
-          ${row.legislationGovUkId}, ${row.clmlUrl}, ${row.r2Key},
-          ${row.compilationStatus}::"CompilationStatus",
-          ${row.compilationProvider}, ${row.compiledAt}, ${row.sectionCount},
-          ${row.compiledSectionCount}, ${row.shortTitle}, ${row.longTitle},
-          ${row.enactmentDate}, ${row.inForce}, ${row.subjectArea},
-          ${row.policyArea}, ${row.feedUrl}, ${row.effectsKey},
-          ${row.effectsFetchedAt}, ${row.createdAt}, ${row.updatedAt}
-        )
-        ON CONFLICT (id) DO NOTHING
-      `
-    }
-
-    cursor = rows[rows.length - 1].id
-    transferred += rows.length
-    sinceCheckpoint += rows.length
+    cursor           = res.rows[res.rows.length - 1].id as string
+    transferred     += res.rows.length
+    sinceCheckpoint += res.rows.length
     cp.legItemCursor      = cursor
     cp.legItemTransferred = transferred
 
-    const pct = ((transferred / cp.legItemTotal) * 100).toFixed(1)
-    log(`  LegislationItem: ${transferred.toLocaleString()} / ${cp.legItemTotal.toLocaleString()} (${pct}%)`)
+    const pct     = ((transferred / cp.legItemTotal) * 100).toFixed(1)
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(0)
+    const rate    = (transferred / ((Date.now() - t0) / 1000)).toFixed(0)
+    log(`  LegislationItem: ${transferred.toLocaleString()} / ${cp.legItemTotal.toLocaleString()} (${pct}%) — ${elapsed}s @ ${rate}/s`)
 
     if (sinceCheckpoint >= CHECKPOINT_EVERY) {
       saveCheckpoint(cp)
-      log(`  Checkpoint saved (cursor: ${cursor})`)
       sinceCheckpoint = 0
     }
 
-    if (rows.length < BATCH_SIZE) break
+    if (res.rows.length < BATCH_SIZE) break
   }
 
   cp.legItemDone = true
   saveCheckpoint(cp)
-  log(`LegislationItem transfer complete: ${transferred.toLocaleString()} rows`)
+  log(`LegislationItem complete: ${transferred.toLocaleString()} rows in ${((Date.now() - t0) / 1000).toFixed(1)}s`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -213,234 +270,153 @@ async function transferLegislationItems(cp: Checkpoint): Promise<void> {
 
 async function transferLegislationSections(cp: Checkpoint): Promise<void> {
   if (cp.legSectionDone) {
-    log('LegislationSection: already complete per checkpoint — skipping')
+    log('LegislationSection: checkpoint shows done — skipping')
     return
   }
+  if (!cp.legItemDone) throw new Error('LegislationItem must be done before LegislationSection')
 
-  if (!cp.legItemDone) {
-    throw new Error('LegislationItem must be transferred before LegislationSection')
-  }
+  const src  = getRailwayPool()
+  const dest = getNeonPool()
 
-  log('LegislationSection: counting source rows on Railway...')
-  const countResult = await prisma.$queryRaw<{ count: bigint }[]>`
-    SELECT COUNT(*) AS count FROM "LegislationSection"
-  `
-  cp.legSectionTotal = Number(countResult[0].count)
-  log(`LegislationSection: ${cp.legSectionTotal.toLocaleString()} source rows`)
+  const countRes = await src.query('SELECT COUNT(*) AS count FROM "LegislationSection"')
+  cp.legSectionTotal = Number(countRes.rows[0].count)
+  log(`LegislationSection: ${cp.legSectionTotal.toLocaleString()} source rows on Railway`)
 
-  if (cp.legSectionCursor) {
-    log(`LegislationSection: resuming from cursor ${cp.legSectionCursor}`)
-  }
+  if (cp.legSectionCursor) log(`  Resuming from cursor: ${cp.legSectionCursor}`)
 
-  let cursor = cp.legSectionCursor
-  let transferred = cp.legSectionTransferred
+  // Select all needed columns except ftsVector and embedding
+  const colNames = SECTION_COLS.map(c => `"${c.name}"`).join(', ')
+
+  let cursor          = cp.legSectionCursor
+  let transferred     = cp.legSectionTransferred
   let sinceCheckpoint = 0
+  const t0 = Date.now()
 
   while (true) {
-    // Fetch section metadata only — do NOT transfer ftsVector (will be rebuilt
-    // by the trigger when originalText / sectionTitle are written).
-    // Transfer originalText and sectionTitle so the trigger fires on insert.
-    type RawSection = {
-      id: string
-      legislationItemId: string
-      sectionNumber: string
-      sectionTitle: string | null
-      sourceType: string
-      originalText: string | null
-      originalXmlKey: string | null
-      tnaXmlKey: string | null
-      compiledTextKey: string | null
-      lexSummaryKey: string | null
-      confidence: string | null
-      confidenceReason: string | null
-      compilationVersion: number
-      compilationNotes: string | null
-      unappliedAmendments: unknown
-      commencementNote: string | null
-      compiledAt: Date | null
-      compiledBy: string | null
-      compilationStatus: string
-      isRepealed: boolean
-      needsReview: boolean
-      createdAt: Date
-      updatedAt: Date
-      tags: string[]
-      amendmentCount: number
-      complexityScore: number
-      inForce: boolean
-      jurisdiction: string
-      policyArea: string | null
-    }
+    const query = cursor
+      ? `SELECT ${colNames} FROM "LegislationSection" WHERE id > $1 ORDER BY id LIMIT $2`
+      : `SELECT ${colNames} FROM "LegislationSection" ORDER BY id LIMIT $1`
+    const params = cursor ? [cursor, BATCH_SIZE] : [BATCH_SIZE]
+    const res = await src.query(query, params)
 
-    const rows = cursor
-      ? await prisma.$queryRaw<RawSection[]>`
-          SELECT
-            id, "legislationItemId", "sectionNumber", "sectionTitle",
-            "sourceType", "originalText", "originalXmlKey", "tnaXmlKey",
-            "compiledTextKey", "lexSummaryKey", confidence, "confidenceReason",
-            "compilationVersion", "compilationNotes", "unappliedAmendments",
-            "commencementNote", "compiledAt", "compiledBy", "compilationStatus",
-            "isRepealed", "needsReview", "createdAt", "updatedAt",
-            tags, "amendmentCount", "complexityScore", "inForce",
-            jurisdiction, "policyArea"
-          FROM "LegislationSection"
-          WHERE id > ${cursor}
-          ORDER BY id
-          LIMIT ${BATCH_SIZE}
-        `
-      : await prisma.$queryRaw<RawSection[]>`
-          SELECT
-            id, "legislationItemId", "sectionNumber", "sectionTitle",
-            "sourceType", "originalText", "originalXmlKey", "tnaXmlKey",
-            "compiledTextKey", "lexSummaryKey", confidence, "confidenceReason",
-            "compilationVersion", "compilationNotes", "unappliedAmendments",
-            "commencementNote", "compiledAt", "compiledBy", "compilationStatus",
-            "isRepealed", "needsReview", "createdAt", "updatedAt",
-            tags, "amendmentCount", "complexityScore", "inForce",
-            jurisdiction, "policyArea"
-          FROM "LegislationSection"
-          ORDER BY id
-          LIMIT ${BATCH_SIZE}
-        `
+    if (res.rows.length === 0) break
 
-    if (rows.length === 0) break
+    const rows = res.rows.map(sectionToRow)
+    const { sql, params: insertParams } = buildBulkInsert('LegislationSection', SECTION_COLS, rows)
+    await dest.query(sql, insertParams)
 
-    // Insert batch to Neon. ON CONFLICT DO NOTHING for idempotent re-runs.
-    // The FTS trigger fires on INSERT and populates ftsVector automatically
-    // from sectionTitle + originalText using the legislation_english config.
-    for (const row of rows) {
-      await prismaSearch.$executeRaw`
-        INSERT INTO "LegislationSection" (
-          id, "legislationItemId", "sectionNumber", "sectionTitle",
-          "sourceType", "originalText", "originalXmlKey", "tnaXmlKey",
-          "compiledTextKey", "lexSummaryKey", confidence, "confidenceReason",
-          "compilationVersion", "compilationNotes", "unappliedAmendments",
-          "commencementNote", "compiledAt", "compiledBy", "compilationStatus",
-          "isRepealed", "needsReview", "createdAt", "updatedAt",
-          tags, "amendmentCount", "complexityScore", "inForce",
-          jurisdiction, "policyArea"
-        ) VALUES (
-          ${row.id}, ${row.legislationItemId}, ${row.sectionNumber},
-          ${row.sectionTitle}, ${row.sourceType}::"DocumentSourceType",
-          ${row.originalText}, ${row.originalXmlKey}, ${row.tnaXmlKey},
-          ${row.compiledTextKey}, ${row.lexSummaryKey},
-          ${row.confidence}::"CompilationConfidence",
-          ${row.confidenceReason}, ${row.compilationVersion},
-          ${row.compilationNotes}, ${row.unappliedAmendments},
-          ${row.commencementNote}, ${row.compiledAt}, ${row.compiledBy},
-          ${row.compilationStatus}::"CompilationStatus",
-          ${row.isRepealed}, ${row.needsReview}, ${row.createdAt},
-          ${row.updatedAt}, ${row.tags}, ${row.amendmentCount},
-          ${row.complexityScore}, ${row.inForce}, ${row.jurisdiction},
-          ${row.policyArea}
-        )
-        ON CONFLICT (id) DO NOTHING
-      `
-    }
-
-    cursor = rows[rows.length - 1].id
-    transferred += rows.length
-    sinceCheckpoint += rows.length
+    cursor          = res.rows[res.rows.length - 1].id as string
+    transferred    += res.rows.length
+    sinceCheckpoint += res.rows.length
     cp.legSectionCursor      = cursor
     cp.legSectionTransferred = transferred
 
-    const pct = ((transferred / cp.legSectionTotal) * 100).toFixed(1)
-    log(`  LegislationSection: ${transferred.toLocaleString()} / ${cp.legSectionTotal.toLocaleString()} (${pct}%)`)
+    const pct     = ((transferred / cp.legSectionTotal) * 100).toFixed(1)
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(0)
+    const rate    = (transferred / ((Date.now() - t0) / 1000)).toFixed(0)
+
+    if (transferred % 10_000 < BATCH_SIZE) {
+      log(`  LegislationSection: ${transferred.toLocaleString()} / ${cp.legSectionTotal.toLocaleString()} (${pct}%) — ${elapsed}s @ ${rate}/s`)
+    }
 
     if (sinceCheckpoint >= CHECKPOINT_EVERY) {
       saveCheckpoint(cp)
-      log(`  Checkpoint saved (cursor: ${cursor})`)
+      log(`  Checkpoint saved at ${transferred.toLocaleString()} rows`)
       sinceCheckpoint = 0
     }
 
-    if (rows.length < BATCH_SIZE) break
+    if (res.rows.length < BATCH_SIZE) break
   }
 
   cp.legSectionDone = true
   saveCheckpoint(cp)
-  log(`LegislationSection transfer complete: ${transferred.toLocaleString()} rows`)
+  log(`LegislationSection complete: ${transferred.toLocaleString()} rows in ${((Date.now() - t0) / 1000).toFixed(1)}s`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Verification: compare row counts by legislationType
+// Verification
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function verifyTransfer(): Promise<boolean> {
-  log('Verification: comparing row counts Railway vs Neon by legislationType')
+  log('Verification: Railway vs Neon row counts by legislationType')
 
-  type TypeCount = { legislationType: string; count: bigint }
+  const src  = getRailwayPool()
+  const dest = getNeonPool()
 
-  const railwayCounts = await prisma.$queryRaw<TypeCount[]>`
-    SELECT li."legislationType"::text AS "legislationType", COUNT(*) AS count
+  const typeQuery = `
+    SELECT li."legislationType"::text AS type, COUNT(*) AS sections
     FROM "LegislationSection" ls
     JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
-    GROUP BY li."legislationType"
-    ORDER BY count DESC
+    GROUP BY li."legislationType" ORDER BY sections DESC
   `
+  const [rCounts, nCounts] = await Promise.all([
+    src.query(typeQuery),
+    dest.query(typeQuery),
+  ])
 
-  const neonCounts = await prismaSearch.$queryRaw<TypeCount[]>`
-    SELECT li."legislationType"::text AS "legislationType", COUNT(*) AS count
-    FROM "LegislationSection" ls
-    JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
-    GROUP BY li."legislationType"
-    ORDER BY count DESC
-  `
-
-  const neonMap = new Map(neonCounts.map(r => [r.legislationType, Number(r.count)]))
-  const railwayMap = new Map(railwayCounts.map(r => [r.legislationType, Number(r.count)]))
+  const neonMap    = new Map<string, number>(nCounts.rows.map((r: { type: string; sections: string }) => [r.type, Number(r.sections)]))
+  const railwayMap = new Map<string, number>(rCounts.rows.map((r: { type: string; sections: string }) => [r.type, Number(r.sections)]))
 
   let allMatch = true
-  const rows: string[] = []
+  log('  Type     Railway    Neon       Match')
+  log('  ──────────────────────────────────────')
 
-  for (const [type, railwayCount] of railwayMap) {
-    const neonCount = neonMap.get(type) ?? 0
-    const match = railwayCount === neonCount
+  for (const [type, rCount] of railwayMap) {
+    const nCount = neonMap.get(type) ?? 0
+    const match  = rCount === nCount
     if (!match) allMatch = false
-    rows.push(`  ${type.padEnd(8)} Railway: ${String(railwayCount).padStart(8)} | Neon: ${String(neonCount).padStart(8)} ${match ? '✓' : '✗ MISMATCH'}`)
+    log(`  ${type.padEnd(8)} ${String(rCount).padStart(8)}   ${String(nCount).padStart(8)}   ${match ? '✓' : '✗ MISMATCH'}`)
   }
 
-  // Types on Neon but not Railway (unexpected)
-  for (const [type, neonCount] of neonMap) {
+  for (const [type, nCount] of neonMap) {
     if (!railwayMap.has(type)) {
       allMatch = false
-      rows.push(`  ${type.padEnd(8)} Railway:        0 | Neon: ${String(neonCount).padStart(8)} ✗ EXTRA ON NEON`)
+      log(`  ${type.padEnd(8)}        0   ${String(nCount).padStart(8)}   ✗ EXTRA ON NEON`)
     }
   }
 
-  rows.forEach(r => log(r))
-
-  // LegislationItem total comparison
-  const railwayItemCount = await prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) AS count FROM "LegislationItem"`
-  const neonItemCount    = await prismaSearch.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) AS count FROM "LegislationItem"`
-  const ri = Number(railwayItemCount[0].count)
-  const ni = Number(neonItemCount[0].count)
-  const itemMatch = ri === ni
+  // LegislationItem totals
+  const [ri, ni] = await Promise.all([
+    src.query('SELECT COUNT(*) AS count FROM "LegislationItem"'),
+    dest.query('SELECT COUNT(*) AS count FROM "LegislationItem"'),
+  ])
+  const rItems = Number(ri.rows[0].count)
+  const nItems = Number(ni.rows[0].count)
+  const itemMatch = rItems === nItems
   if (!itemMatch) allMatch = false
-  log(`  LegislationItem total: Railway ${ri.toLocaleString()} | Neon ${ni.toLocaleString()} ${itemMatch ? '✓' : '✗ MISMATCH'}`)
+  log(`\n  LegislationItem total:`)
+  log(`    Railway: ${rItems.toLocaleString()}   Neon: ${nItems.toLocaleString()}   ${itemMatch ? '✓' : '✗ MISMATCH'}`)
 
-  if (allMatch) {
-    log('Verification: ALL COUNTS MATCH ✓')
-  } else {
-    log('Verification: DISCREPANCIES FOUND — do not switch search to Neon until resolved')
-  }
-
+  log(allMatch
+    ? '\n  ✓ ALL COUNTS MATCH — transfer verified'
+    : '\n  ✗ DISCREPANCIES — investigate before switching search to Neon'
+  )
   return allMatch
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function main() {
-  log('V.4-FTS-3 Transfer to Neon starting')
-  log('Source: Railway (DATABASE_URL)')
-  log('Destination: Neon (NEON_DATABASE_URL)')
+  log('V.4-FTS-3 Part 3: Railway → Neon transfer')
+  log(`Source: Railway (${process.env.DATABASE_URL?.split('@')[1]?.split('/')[0] ?? '?'})`)
+  log(`Dest:   Neon    (${process.env.NEON_DATABASE_URL?.split('@')[1]?.split('/')[0] ?? '?'})`)
 
-  // Load or initialise checkpoint
   let cp = loadCheckpoint()
+
+  // If both tables are already done, skip straight to verification
+  if (cp?.legItemDone && cp?.legSectionDone) {
+    log('Both tables already transferred — running verification only')
+    const verified = await verifyTransfer()
+    await endPools()
+    process.exit(verified ? 0 : 1)
+  }
+
   const isResume = cp !== null && (!cp.legItemDone || !cp.legSectionDone)
+
   if (isResume) {
     log(`Resuming from checkpoint (started: ${cp!.startedAt})`)
-    log(`  LegislationItem: ${cp!.legItemTransferred.toLocaleString()} transferred, done: ${cp!.legItemDone}`)
-    log(`  LegislationSection: ${cp!.legSectionTransferred.toLocaleString()} transferred, done: ${cp!.legSectionDone}`)
+    log(`  LegislationItem: ${cp!.legItemTransferred.toLocaleString()} rows, done: ${cp!.legItemDone}`)
+    log(`  LegislationSection: ${cp!.legSectionTransferred.toLocaleString()} rows, done: ${cp!.legSectionDone}`)
   } else {
     cp = {
       startedAt:             new Date().toISOString(),
@@ -455,7 +431,6 @@ async function main() {
       legSectionTransferred: 0,
     }
     saveCheckpoint(cp)
-    log('Fresh transfer — checkpoint initialised')
   }
 
   const t0 = Date.now()
@@ -464,26 +439,23 @@ async function main() {
   await transferLegislationSections(cp)
 
   const elapsed = ((Date.now() - t0) / 1000 / 60).toFixed(1)
-  log(`Transfer finished in ${elapsed} minutes`)
+  log(`\nTransfer finished in ${elapsed} minutes`)
 
   const verified = await verifyTransfer()
 
-  if (verified) {
-    log('\nTransfer verified ✓')
-    log('Next step (Part 4): update search.ts to query Neon via prisma-search.ts')
-    log('  Search query client switch is documented in the sprint brief.')
-  } else {
-    log('\nTransfer verification FAILED — investigate discrepancies above')
+  await endPools()
+
+  if (!verified) {
+    log('\nDo not switch search to Neon until discrepancies are resolved.')
     process.exit(1)
   }
 
-  await prisma.$disconnect()
-  await prismaSearch.$disconnect()
+  log('\nPart 3 complete ✓')
+  log('Ready for Part 4: switch search.ts + route.ts to use prismaSearch (Neon)')
 }
 
 main().catch(async err => {
-  console.error(`[${ts()}] Transfer failed:`, err)
-  await prisma.$disconnect().catch(() => {})
-  await prismaSearch.$disconnect().catch(() => {})
+  console.error(`[${ts()}] Transfer error:`, err.message || err)
+  await endPools().catch(() => {})
   process.exit(1)
 })
