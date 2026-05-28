@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { CompilationStatus, LegislationType } from '@prisma/client'
+import { LegislationType } from '@prisma/client'
 
 // GET /api/legislation/search?q=...&type=...&year=...&jurisdiction=...&page=1
 // Public — no auth required
@@ -13,9 +13,12 @@ export async function GET(req: Request) {
   const page = parseInt(searchParams.get('page') ?? '1')
   const limit = 20
 
+  // compilationStatus filter removed — all items are PENDING or PRINT_ONLY at
+  // this stage (compile pipeline not yet run). Browse page shows all ingested
+  // legislation; compiledSectionCount/sectionCount in the response indicate
+  // compilation progress to the UI.
   const items = await prisma.legislationItem.findMany({
     where: {
-      compilationStatus: { in: [CompilationStatus.COMPILED, CompilationStatus.NEEDS_REVIEW] },
       ...(type ? { legislationType: type as LegislationType } : {}),
       ...(year ? { year: parseInt(year) } : {}),
       ...(jurisdiction ? { jurisdiction } : {}),
