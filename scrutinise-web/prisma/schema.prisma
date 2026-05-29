@@ -1759,3 +1759,30 @@ model OperationalSection {
   @@index([ingestStatus])
   @@index([ftsVector], type: Gin)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Corpus Ingest Tracking
+// Added: L6-E Corpus Ingest System sprint
+// Tracks metadata for every section ingested by the 10-worker corpus pipeline.
+// Compiled text and raw content live in R2 (r2Key / r2RawKey point there).
+// Never store compiled text in this table — R2 only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CorpusSection {
+  // "{corpus}:{docId}:{sectionRef}" — globally unique across all corpora
+  id          String    @id
+  corpus      String    // e.g. "primary-acts-pre-2000", "tna-caselaw", "hmrc-codes-guidance"
+  sourceUrl   String?   // original fetch URL
+  r2Key       String?   // compiled plain-text location in R2
+  r2RawKey    String?   // raw XML/HTML location in R2 (optional)
+  compiledAt  DateTime?
+  wordCount   Int?
+  // pending | compiled | failed | skipped
+  status      String    @default("pending")
+  errorMsg    String?
+  createdAt   DateTime  @default(now())
+
+  @@index([corpus])
+  @@index([status])
+  @@map("corpus_sections")
+}
