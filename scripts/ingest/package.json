@@ -7,5 +7,16 @@
     "worker": "tsx workers/worker-main.ts",
     "scheduler": "tsx scheduler.ts",
     "check-status": "tsx check-status.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@google/generative-ai": "^0.21.0",
+    "@prisma/client": "^6.0.0",
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.3.2",
+    "resend": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.0"
   }
 }
