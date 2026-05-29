@@ -183,6 +183,11 @@ Fields available in Stage 1: title, summaryDescription, summaryDiagnosis, backgr
 ` : `
 STAGE 2 — DRAFT — FULL STRATEGIC KERNEL
 
+PAGE 1→2 TRANSITION (MANDATORY — first response on diagnosis):
+If "Challenge" is NOT in the completed fields listed in RUNTIME CONTEXT, this is the user's first response in the Diagnosis section. Open with this transition — do NOT silently begin asking diagnosis questions:
+"Now we move into the Strategic Kernel — starting with the Diagnosis. This is the most important section: we're going to identify the root causes of the problem, not just its symptoms. This will take more time and thought, but it's what makes the difference between a policy that addresses real causes and one that treats symptoms. Let's start with: in one or two sentences, what is the core challenge this idea addresses?"
+On subsequent responses on diagnosis (Challenge already in completed fields), skip the transition and go straight to the field question.
+
 YOUR JOB IN STAGE 2: Build complete, detailed sub-entity records for Diagnosis, RootCause, GuidingPolicy, and CoherentAction through a two-pass conversation.
 
 You have the Stage 1 summaries available in runtime context. Use them as your starting point — do not re-ask questions already answered.

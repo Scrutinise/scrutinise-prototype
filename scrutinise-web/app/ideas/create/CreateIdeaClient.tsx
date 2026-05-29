@@ -800,6 +800,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const pageCompletedCount = activePage.fields.filter(f => {
     const normKey = f.key.replace(/\.([a-z])/g, (_: string, c: string) => c.toUpperCase())
     return fields[normKey as keyof FieldCompletion] || fields[f.key as keyof FieldCompletion]
+      || !!fieldValues[normKey] || !!fieldValues[f.key]
   }).length
 
   // ── Populate fieldValues from idea data ───────────────────────────────────
@@ -1536,6 +1537,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setFieldValues(prev => ({ ...prev, [entityKey]: value }))
     }
     setOpenFields(prev => { const next = new Set(prev); next.add(normKey); return next })
+    // Optimistic tick — mirrors fieldValues update above so the green dot appears immediately
+    // even if the server's completedFields hasn't confirmed the DB write yet.
+    setFields(prev => {
+      const k = normKey as keyof FieldCompletion
+      if (k in prev) return { ...prev, [k]: true }
+      return prev
+    })
     setCurrentProposal(null)
     // On mobile: auto-flip to answers panel and trigger field whoosh animation
     if (window.innerWidth < 1024) {
@@ -1543,9 +1551,10 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
       setLastAcceptedField(normKey)
     }
 
-    // Relation and Json fields bypass the Lex roundtrip — write directly via field-approval.
+    // Relation, Json, and Lex-generated fields bypass the Lex roundtrip — write directly via
+    // field-approval. govtArea is Lex-generated and must persist reliably (not via Lex fieldUpdates).
     // Exception: legislation with empty array (skip path) — no DB write, just advance via Lex.
-    if ((fieldKey === 'ideaLegislation' || fieldKey === 'initialThoughts') && ideaId && isSignedIn) {
+    if ((fieldKey === 'ideaLegislation' || fieldKey === 'initialThoughts' || fieldKey === 'govtArea') && ideaId && isSignedIn) {
       let parsedCandidates: unknown[] = []
       try { parsedCandidates = JSON.parse(value) } catch { parsedCandidates = [] }
       const isLegislationSkip = fieldKey === 'ideaLegislation' && Array.isArray(parsedCandidates) && parsedCandidates.length === 0
@@ -1619,7 +1628,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         ...prev,
         {
           role: 'lex' as const,
-          content: "We're going to drill down more into the causes, because to write effective legislation it's essential to identify the original and most significant causes, not necessarily the most obvious ones.",
+          content: "That completes the initial picture of your idea. Now we move into the Strategic Kernel — starting with the Diagnosis. This is the most important section: we're going to identify the root causes of the problem, not just its symptoms. This will take more time and thought, but it's what makes the difference between a policy that addresses real causes and one that treats symptoms.",
           timestamp: new Date().toISOString(),
         },
       ])
@@ -2239,7 +2248,7 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             {activeSection === 'initialInformation' ? (
               <>
                 {SIDEBAR_FIELDS.map(({ key, label }) => {
-                  const done = fields[key]
+                  const done = fields[key] || !!fieldValues[String(key)]
                   const active = isLoading && !done
                   const keyStr = String(key)
                   const isOpen = openFields.has(keyStr)
