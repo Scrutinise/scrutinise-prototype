@@ -10,7 +10,7 @@ import { r2Exists, r2Put, compiledKey, rawKey } from '../shared/r2-client'
 import { compileLegislation, compileGeneral } from '../shared/compile'
 import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
 import {
-  listActIds, enumerateSections, fetchSectionXml,
+  listActIds, enumerateSections,
   WORKER_CORPORA,
 } from '../sources/tna-legislation'
 import {
@@ -93,8 +93,14 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
       if (cp.lastProcessedId !== '' && actId <= cp.lastProcessedId) continue // resume
 
       console.log(`[worker-${workerId}] processing act: ${actId}`)
+      // enumerateSections fetches data.xml and splits into <P1> elements inline —
+      // 1 HTTP request per act, section XML is already available, no second fetch needed.
       const sections = await enumerateSections(actId)
       console.log(`[worker-${workerId}] ${actId}: ${sections.length} sections`)
+      if (sections.length === 0) {
+        // Empty/repealed act — still mark as processed so we don't retry
+        recordSuccess(cp, actId)
+      }
       for (const section of sections) {
         const secId = sectionId(phase1Corpus, actId, section.sectionRef)
         const cKey = compiledKey(phase1Corpus, actId, section.sectionRef)
@@ -104,24 +110,23 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
           continue
         }
 
-        const xml = await fetchSectionXml(section.url)
-        if (!xml) { recordError(cp, secId, 'fetch failed'); continue }
-
+        // section.xml is the full <P1> CLML fragment — save raw and compile
         const rKey = rawKey(phase1Corpus, actId, section.sectionRef, 'xml')
-        await r2Put(rKey, xml, 'application/xml')
+        await r2Put(rKey, section.xml, 'application/xml')
 
+        const sourceUrl = `https://www.legislation.gov.uk/${actId}/${section.sectionRef}`
         try {
-          const compiled = await compileLegislation(xml)
+          const compiled = await compileLegislation(section.xml)
           await r2Put(cKey, compiled)
           await upsertSection({
             id: secId, corpus: phase1Corpus,
-            sourceUrl: section.url, r2Key: cKey, r2RawKey: rKey,
+            sourceUrl, r2Key: cKey, r2RawKey: rKey,
             wordCount: countWords(compiled), status: 'compiled',
           })
           recordSuccess(cp, actId)
         } catch (err: unknown) {
           recordError(cp, secId, String(err))
-          await upsertSection({ id: secId, corpus: phase1Corpus, status: 'failed', errorMsg: String(err) })
+          await upsertSection({ id: secId, corpus: phase1Corpus, sourceUrl, status: 'failed', errorMsg: String(err) })
         }
 
         sinceCheckpoint++
