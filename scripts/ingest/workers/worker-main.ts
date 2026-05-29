@@ -62,6 +62,12 @@ async function main(): Promise<void> {
   console.log(`[worker-${workerId}] all corpora complete. ` +
     `completed=${cp.completed} failed=${cp.failed} skipped=${cp.skipped}`)
   await disconnectDb()
+
+  // Keep container alive — Railway restarts if the process exits.
+  // Sleep 24h then exit cleanly, triggering a restart which will find
+  // phase1Complete=true and exit again after the next 24h sleep.
+  console.log(`[worker-${workerId}] sleeping 24h to keep container alive`)
+  await new Promise(r => setTimeout(r, 24 * 60 * 60 * 1000))
 }
 
 // ── Phase 1 — TNA Legislation ─────────────────────────────────────────────────

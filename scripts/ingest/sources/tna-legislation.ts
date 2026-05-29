@@ -26,29 +26,68 @@ async function fetchText(url: string): Promise<string | null> {
 
 // ── Act enumeration ────────────────────────────────────────────────────────────
 // TNA year-level Atom feed: https://www.legislation.gov.uk/{type}/{year}/data.feed
-// Each <id> element: http://www.legislation.gov.uk/id/{type}/{year}/{number}
+// Returns only 20 items per page. Dense years (e.g. uksi/1983 has 1129 SIs) include
+// range-bucket navigation links (href=".../0-99/data.feed", ".../100-199/data.feed" etc.)
+// that must be fetched individually and paginated.
+//
+// IMPORTANT: regex must match ONLY <id>...</id> elements.
+// The bucket hrefs like ".../uksi/1983/0-99/data.feed" would otherwise match as
+// "uksi/1983/0" (regex stops at the dash), producing fake sequential IDs.
+
+function extractIdElements(xml: string, type: string, year: number, ids: string[], seen: Set<string>): void {
+  const idRx = new RegExp(
+    `<id>https?://www\\.legislation\\.gov\\.uk/(?:id/)?(${type}/${year}/\\d+)</id>`,
+    'g'
+  )
+  let m: RegExpExecArray | null
+  while ((m = idRx.exec(xml)) !== null) {
+    if (!seen.has(m[1])) { ids.push(m[1]); seen.add(m[1]) }
+  }
+}
+
+async function fetchAllPages(baseUrl: string, type: string, year: number, ids: string[], seen: Set<string>): Promise<void> {
+  let start = 1
+  while (true) {
+    const url = start === 1 ? baseUrl : `${baseUrl}?start=${start}`
+    const xml = await fetchText(url)
+    if (!xml) break
+    const before = ids.length
+    extractIdElements(xml, type, year, ids, seen)
+    const moreMatch = /<leg:morePages>(\d+)<\/leg:morePages>/.exec(xml)
+    if (!moreMatch || parseInt(moreMatch[1], 10) === 0 || ids.length === before) break
+    start += 20
+  }
+}
 
 export async function listActIds(type: string, yearMin: number, yearMax: number): Promise<string[]> {
   const ids: string[] = []
+  const seen = new Set<string>()
   let yearsWithResults = 0
 
   for (let year = yearMin; year <= yearMax; year++) {
-    const listUrl = `${TNA_BASE}/${type}/${year}/data.feed`
-    const xml = await fetchText(listUrl)
-    if (!xml) continue
+    const yearUrl = `${TNA_BASE}/${type}/${year}/data.feed`
+    const yearXml = await fetchText(yearUrl)
+    if (!yearXml) continue
 
-    // TNA <id> format: http://www.legislation.gov.uk/id/{type}/{year}/{number}
-    // Handle both http:// and https://, and optional /id/ prefix
-    const idRx = new RegExp(
-      `https?://www\\.legislation\\.gov\\.uk/(?:id/)?(${type}/${year}/\\d+)`,
-      'g'
-    )
-    let m: RegExpExecArray | null
     const before = ids.length
-    const seen = new Set(ids)
-    while ((m = idRx.exec(xml)) !== null) {
-      if (!seen.has(m[1])) { ids.push(m[1]); seen.add(m[1]) }
+
+    // Extract range-bucket URLs from year feed (present when year has >20 items)
+    // e.g. href="http://www.legislation.gov.uk/uksi/1983/0-99/data.feed"
+    const bucketRx = /href="(https?:\/\/www\.legislation\.gov\.uk\/[^"]+\/\d+-\d+\/data\.feed)"/g
+    const bucketUrls: string[] = []
+    let bm: RegExpExecArray | null
+    while ((bm = bucketRx.exec(yearXml)) !== null) bucketUrls.push(bm[1])
+
+    if (bucketUrls.length > 0) {
+      // Paginate each range bucket — each bucket may itself have multiple pages
+      for (const bucketUrl of bucketUrls) {
+        await fetchAllPages(bucketUrl, type, year, ids, seen)
+      }
+    } else {
+      // Small year: all items fit in one page, extract from year feed directly
+      await fetchAllPages(yearUrl, type, year, ids, seen)
     }
+
     if (ids.length > before) yearsWithResults++
   }
 
