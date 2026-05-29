@@ -7,7 +7,7 @@
     "worker": "tsx workers/worker-main.ts",
     "scheduler": "tsx scheduler.ts",
     "check-status": "tsx check-status.ts",
-    "postinstall": "prisma generate --schema=../../scrutinise-web/prisma/schema.prisma"
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
