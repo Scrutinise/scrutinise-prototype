@@ -1,0 +1,11 @@
+{
+  "name": "scrutinise-ingest",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx workers/worker-main.ts",
+    "worker": "tsx workers/worker-main.ts",
+    "scheduler": "tsx scheduler.ts",
+    "check-status": "tsx check-status.ts"
+  }
+}
