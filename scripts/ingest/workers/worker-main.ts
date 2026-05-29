@@ -37,9 +37,10 @@ import { getPhase1Corpus, getPhase2Corpora, CORPUS_LABELS } from './phase-router
 const CHECKPOINT_INTERVAL = 100  // write to R2 every N sections
 
 async function main(): Promise<void> {
-  const workerId = parseInt(process.env.WORKER_ID ?? '1', 10)
-  if (isNaN(workerId) || workerId < 1 || workerId > 10) {
-    throw new Error(`WORKER_ID must be 1–10, got: ${process.env.WORKER_ID}`)
+  const workerIdRaw = parseInt(process.env.WORKER_ID ?? '1', 10)
+  const workerId = (isNaN(workerIdRaw) || workerIdRaw < 1 || workerIdRaw > 10) ? 1 : workerIdRaw
+  if (workerId !== workerIdRaw) {
+    console.warn(`[worker] WORKER_ID="${process.env.WORKER_ID}" invalid or not yet set — defaulting to 1`)
   }
 
   console.log(`[worker-${workerId}] starting — loading checkpoint from R2`)
