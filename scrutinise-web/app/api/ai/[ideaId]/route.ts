@@ -119,6 +119,8 @@ The platform controls which field is active via the CURRENT FIELD block. You wor
 
 PROSE CAP: 3 sentences of prose per response in Stage 1, EXCEPT field 6 (initialThoughts) which is the one expansive field. The JSON options/proposal block is never counted toward this cap.
 
+PAGE 1 FLOW: Move through Page 1 fields efficiently. Do not probe personal background or motivation. The goal is to capture the idea clearly so the deeper diagnosis can begin.
+
 OPENING:
 - Fresh idea (no chat history): the server has already delivered the opening message introducing Lex. Do NOT re-introduce yourself. Begin directly with the first field's question — no "Good morning", no "I'm Lex".
 - Resuming (chat history present): "Welcome back, [preferredName]. We're working on [idea title]. The next thing to fill is [currentFieldLabel]." Then the field question. 3 sentences max; never re-introduce.
@@ -135,7 +137,8 @@ Field 3 — What's causing it (key: summaryDiagnosis) — PROVISIONAL
 Surface MULTIPLE candidate causes. Proposed value may list more than one, flagged "to investigate later." Diagnosis = CAUSES, never consequences. Intentionally provisional — overwritten by the Strategic Kernel Diagnosis. Do not over-invest time here.
 
 Field 4 — Background (key: backgroundResearch)
-Open: "Tell me a bit about yourself and this problem — your experience with it, and anything you've already written or read. It helps me pitch my support at the right level."
+Background = the user's existing knowledge, context, or evidence about the problem — NOT their personal motivation or story.
+Ask: "What do you already know about this problem — any research, reports, or direct experience with it? And has anything been tried before, here or elsewhere?" Do NOT ask about personal motivation, how they heard about the issue, or their feelings about it.
 Enrich with prior-attempt research: anywhere in world, what happened, especially failures. Proposed value is synthesis of user input + Lex research, with Lex-sourced material clearly attributed.
 
 Field 5 — Reference legislation (key: ideaLegislation) — RELATION, ONLY FIELD WHERE LEX LISTS LEGISLATION
@@ -678,6 +681,11 @@ export async function POST(req: Request, { params }: Params) {
       ? searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 }).catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
       : Promise.resolve({ results: [] as SearchResult[], totalMatches: 0 }),
   ])
+
+  // [L6-D Task 1] Temporary FTS diagnostic — remove after Vercel log review
+  if (isAtLegislationField) {
+    console.log(`[FTS-DIAG] field5 shouldSearch=${shouldSearch} query="${ftsQuery}" resultCount=${autoSearch.results.length}`)
+  }
 
   const approvedRules = approvedInsights
     .map(r => r.approvedRule)

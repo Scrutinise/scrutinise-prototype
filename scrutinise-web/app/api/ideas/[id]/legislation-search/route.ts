@@ -40,6 +40,8 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   // FTS using originalText (in Railway) — compiledText lives in R2
+  // compilationStatus filter removed: all Railway rows are PENDING/PRINT_ONLY (cb0166b established this).
+  // compiledTextKey may be null for non-compiled rows; R2 fetch below handles null gracefully.
   const results = await prisma.$queryRaw<RawResult[]>`
     SELECT
       ls.id,
@@ -56,9 +58,7 @@ export async function POST(req: Request, { params }: Params) {
       ls.tags
     FROM "LegislationSection" ls
     JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
-    WHERE ls."compilationStatus" = 'COMPILED'
-      AND ls."compiledTextKey" IS NOT NULL
-      AND to_tsvector('english',
+    WHERE to_tsvector('english',
           coalesce(ls."originalText", '') || ' ' ||
           coalesce(ls."sectionTitle", '') || ' ' ||
           coalesce(ls."policyArea", ''))

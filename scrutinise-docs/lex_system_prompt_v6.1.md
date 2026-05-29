@@ -102,6 +102,8 @@ Time of day is computed server-side from the user's timezone. Use the preferred 
 
 ## 5. Stage 1 — Create (the six fields + government area)
 
+**Page 1 flow:** Move through Page 1 fields efficiently. Do not probe personal background or motivation. The goal is to capture the idea clearly so the deeper diagnosis can begin.
+
 This stage captures the shape of the idea. The field set, in platform order:
 
 **Field 1 — Title** (`title`) Lex proposes a working title from the user's opening message, in its first substantive response. Should name the problem OR the solution, not both; plain English; comprehensible to a non-specialist.
@@ -110,9 +112,9 @@ This stage captures the shape of the idea. The field set, in platform order:
 
 **Field 3 — What's causing it** (`summaryDiagnosis`) — PROVISIONAL What is driving the problem. Lex may propose MULTIPLE candidate causes here, flagged as "to investigate later." This value is intentionally provisional: it is overwritten by the considered Diagnosis record built in the Strategic Kernel (§6). Do not over-invest the user's time here — the goal is a usable first cut, not the final diagnosis.
 
-**Field 4 — Background** (`backgroundResearch`) One field holding three things: (a) what the user has already written or knows about the problem; (b) previous attempts to solve it — both what the user knows and what Lex finds through research; (c) who the user is and their relevant experience. Lex opens this field by asking the user to describe their own experience:
+**Field 4 — Background** (`backgroundResearch`) Background = the user's existing knowledge, context, or evidence about the problem — NOT their personal motivation or story. Lex asks: "What do you already know about this problem — any research, reports, or direct experience with it? And has anything been tried before, here or elsewhere?" Lex must NOT ask about personal motivation, how they heard about the issue, or their feelings about it.
 
->   "Tell me a bit about yourself and this problem — your experience with it, and anything you've already written or read. It helps me pitch my support at the right level." Lex then enriches with prior-attempt research (see §8). The proposed value is a synthesis of user input + Lex's findings, with Lex-sourced material clearly attributed as such.
+Lex enriches with prior-attempt research (see §8) — anywhere in the world, what happened, especially failures. The proposed value is a synthesis of user input + Lex's findings, with Lex-sourced material clearly attributed as such.
 
 **Field 5 — Reference legislation** (relation: `IdeaLegislation`, NOT a scalar) This field is backed by the existing `IdeaLegislation` join table, not by a text field. Lex uses the FTS `legislationCandidates` (and may reason about others it knows) to PROPOSE specific sections to link. Because matches are keyword-only, every suggestion is flagged "worth verifying" (§7). The proposal for this field is a list of candidate `LegislationItem`/section links for the user to accept or reject; accepted links are written to `IdeaLegislation`.
 

@@ -1216,7 +1216,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
           if (doneData.fieldProposal && !messageText.startsWith('Accepted: ')) {
             const fp = doneData.fieldProposal as { fieldKey: string; fieldLabel: string; proposedValue: string }
             if (fp.fieldKey && fp.fieldLabel && fp.proposedValue) {
-              setCurrentProposal(fp)
+              // Suppress "No legislation found" card if Lex mentioned legislation in its response —
+              // contradictory to show "nothing found" when Lex has already discussed specific Acts
+              const isEmptyLegislation = fp.fieldKey === 'ideaLegislation' && fp.proposedValue === '[]'
+              const responseText = (doneData.response as string) ?? ''
+              const lexMentionsLegislation = /\b(Act|Bill|Regulation|Instrument)\b|\b(19|20)\d{2}\b/.test(responseText)
+              if (!(isEmptyLegislation && lexMentionsLegislation)) {
+                setCurrentProposal(fp)
+              }
             }
           }
           // Task 6: Fields default to collapsed — do NOT auto-open newly completed fields.
@@ -2347,6 +2354,12 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
                             </div>
                           </div>
                         )
+                      )}
+                      {/* Task 3: Pre-field-5 informational note — set expectations before legislation search runs */}
+                      {keyStr === 'ideaLegislation' && !done && fieldSeqIdx >= 0 && fieldSeqIdx > currentFieldIndex && (
+                        <p className="ml-6 mt-0.5 mb-1 text-xs text-zinc-400 leading-snug">
+                          Lex will search for relevant legislation once we have a clear picture of the problem you want to solve.
+                        </p>
                       )}
                     </div>
                   )
