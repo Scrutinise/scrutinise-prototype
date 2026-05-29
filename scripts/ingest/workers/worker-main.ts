@@ -79,15 +79,22 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
   console.log(`[worker-${workerId}] Phase 1: ${CORPUS_LABELS[phase1Corpus]}`)
 
   let sinceCheckpoint = 0
+  let totalActsEnumerated = 0
 
   for (const type of config.types) {
+    console.log(`[worker-${workerId}] enumerating ${type} acts (${config.yearMin}–${config.yearMax})…`)
     const actIds = await listActIds(type, config.yearMin, config.yearMax)
+    totalActsEnumerated += actIds.length
     cp.totalInCorpus = Math.max(cp.totalInCorpus, actIds.length * 50) // rough estimate
+    console.log(`[worker-${workerId}] ${type}: ${actIds.length} acts to process (lastProcessedId="${cp.lastProcessedId}")`)
+    if (actIds.length > 0) console.log(`[worker-${workerId}] first act: ${actIds[0]}`)
 
     for (const actId of actIds) {
-      if (actId <= cp.lastProcessedId && cp.lastProcessedId !== '') continue // resume
+      if (cp.lastProcessedId !== '' && actId <= cp.lastProcessedId) continue // resume
 
+      console.log(`[worker-${workerId}] processing act: ${actId}`)
       const sections = await enumerateSections(actId)
+      console.log(`[worker-${workerId}] ${actId}: ${sections.length} sections`)
       for (const section of sections) {
         const secId = sectionId(phase1Corpus, actId, section.sectionRef)
         const cKey = compiledKey(phase1Corpus, actId, section.sectionRef)
@@ -126,9 +133,15 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
     }
   }
 
+  if (totalActsEnumerated === 0) {
+    console.error(`[worker-${workerId}] Phase 1: 0 acts enumerated — TNA feed returned no results. NOT marking phase1Complete to allow retry on next restart.`)
+    await writeCheckpoint(cp)
+    return
+  }
+
   cp.phase1Complete = true
   await writeCheckpoint(cp)
-  console.log(`[worker-${workerId}] Phase 1 complete`)
+  console.log(`[worker-${workerId}] Phase 1 complete — ${cp.completed} compiled, ${cp.failed} failed, ${cp.skipped} skipped`)
 }
 
 // ── Non-TNA Phase 1 (workers 7–10) ────────────────────────────────────────────

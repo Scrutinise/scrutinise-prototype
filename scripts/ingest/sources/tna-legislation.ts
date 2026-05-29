@@ -29,23 +29,32 @@ async function fetchText(url: string): Promise<string | null> {
 export async function enumerateSections(actId: string): Promise<TnaSection[]> {
   const feedUrl = `${TNA_BASE}/${actId}/data.feed`
   const xml = await fetchText(feedUrl)
-  if (!xml) return []
+  if (!xml) {
+    console.log(`[tna] enumerateSections: no feed for ${actId}`)
+    return []
+  }
 
   const sections: TnaSection[] = []
-  // TNA feed returns Atom-style entries with links — extract section hrefs
-  const entryRx = /<entry[\s\S]*?<\/entry>/g
-  let match: RegExpExecArray | null
-  while ((match = entryRx.exec(xml)) !== null) {
-    const entry = match[0]
-    // Find data.xml links (section content)
-    const linkRx = /href="([^"]+\/section\/[^"]+\/data\.xml)"/
-    const linkMatch = linkRx.exec(entry)
-    if (!linkMatch) continue
-    const href = linkMatch[1]
-    // Extract section ref from URL path
-    const sectionMatch = /\/section\/([^/]+)\/data\.xml$/.exec(href)
-    if (!sectionMatch) continue
-    sections.push({ sectionRef: sectionMatch[1], url: href.startsWith('http') ? href : `${TNA_BASE}${href}` })
+  // TNA section links: href="http://www.legislation.gov.uk/{actId}/section/{N}/data.xml"
+  // Also handle schedule, crossheading, etc. — match any /data.xml link containing the actId
+  const linkRx = new RegExp(
+    `href="(https?://www\\.legislation\\.gov\\.uk/${actId}/[^"]+/data\\.xml)"`,
+    'g'
+  )
+  let m: RegExpExecArray | null
+  while ((m = linkRx.exec(xml)) !== null) {
+    const href = m[1]
+    // Extract the section ref: everything between actId/ and /data.xml
+    const refMatch = new RegExp(`/${actId}/(.+)/data\\.xml$`).exec(href)
+    if (!refMatch) continue
+    const sectionRef = refMatch[1]
+    // Skip top-level document links (no sub-path component)
+    if (!sectionRef.includes('/')) continue
+    sections.push({ sectionRef, url: href })
+  }
+
+  if (sections.length === 0) {
+    console.log(`[tna] enumerateSections: 0 sections found for ${actId} — feed may use different link format`)
   }
   return sections
 }
@@ -58,17 +67,29 @@ export async function fetchSectionXml(url: string): Promise<string | null> {
 
 export async function listActIds(type: string, yearMin: number, yearMax: number): Promise<string[]> {
   const ids: string[] = []
+  let yearsWithResults = 0
+
   for (let year = yearMin; year <= yearMax; year++) {
     const listUrl = `${TNA_BASE}/${type}/${year}/data.feed`
     const xml = await fetchText(listUrl)
     if (!xml) continue
 
-    const idRx = new RegExp(`<id>${TNA_BASE}/(${type}/${year}/\\d+)</id>`, 'g')
+    // TNA Atom feed <id> format: http://www.legislation.gov.uk/id/{type}/{year}/{number}
+    // Handle both http:// and https://, and optional /id/ prefix
+    const idRx = new RegExp(
+      `https?://www\\.legislation\\.gov\\.uk/(?:id/)?(${type}/${year}/\\d+)`,
+      'g'
+    )
     let m: RegExpExecArray | null
+    let countBefore = ids.length
     while ((m = idRx.exec(xml)) !== null) {
-      ids.push(m[1])
+      if (!ids.includes(m[1])) ids.push(m[1])
     }
+    if (ids.length > countBefore) yearsWithResults++
   }
+
+  console.log(`[tna] listActIds type=${type} years=${yearMin}-${yearMax}: ${ids.length} acts across ${yearsWithResults} years`)
+  if (ids.length > 0) console.log(`[tna] first act: ${ids[0]}, last: ${ids[ids.length - 1]}`)
   return ids
 }
 
