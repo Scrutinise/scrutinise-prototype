@@ -30,8 +30,10 @@ All services share these (already set in Railway project — verify they are pre
 | `CLOUDFLARE_R2_ACCESS_KEY_ID` | Cloudflare R2 API token | All workers + scheduler |
 | `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | Cloudflare R2 API token | All workers + scheduler |
 | `CLOUDFLARE_R2_BUCKET_NAME` | `scrutinise-legislation` | All workers + scheduler |
-| `GEMINI_API_KEY` | Google AI Studio | Workers 1–6 (legislation compilation) |
-| `ANTHROPIC_API_KEY` | Anthropic console | All workers (Haiku fallback + Workers 7–10) |
+| `GEMINI_API_KEY` | Google AI Studio | Workers 1–6 (legislation compilation, primary) |
+| `OPENAI_API_KEY` | OpenAI dashboard | All workers (GPT-4o mini, 2nd in fallback chain) |
+| `TOGETHER_API_KEY` | Together AI dashboard | All workers (Llama 3.3 70B, 3rd in fallback chain) |
+| `ANTHROPIC_API_KEY` | Anthropic console | All workers (Haiku last resort) |
 | `RESEND_API_KEY` | Resend dashboard | Scheduler only |
 
 **New per-worker variable (set individually):**
