@@ -124,7 +124,7 @@ export async function sendProgressEmail(agg: ProgressAggregate): Promise<void> {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Scrutinise Ingest <ingest@scrutinise.org>',
+      from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
       to: [TO],
       subject: `Corpus Ingest: ${agg.totalPct} complete — ${bst}`,
       text: body,
