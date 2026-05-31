@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 const GEMINI_MODEL = 'gemini-2.5-flash'
+const GPT4O_MINI_MODEL = 'gpt-4o-mini'
+const LLAMA_MODEL = 'meta-llama/Llama-3.3-70B-Instruct-Turbo'
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
 let _anthropic: Anthropic | null = null
@@ -11,7 +13,7 @@ function getAnthropic(): Anthropic {
 
 async function callGemini(prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) throw new Error('GEMINI_API_KEY not set')
+  if (!apiKey) throw Object.assign(new Error('GEMINI_API_KEY not set'), { rateLimited: true })
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
@@ -34,6 +36,48 @@ async function callGemini(prompt: string): Promise<string> {
   return candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 }
 
+async function callGpt4oMini(prompt: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw Object.assign(new Error('OPENAI_API_KEY not set'), { rateLimited: true })
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: GPT4O_MINI_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 8192,
+    }),
+  })
+  if (res.status === 429 || res.status === 503) throw Object.assign(new Error(`GPT-4o mini ${res.status}`), { rateLimited: true })
+  if (!res.ok) throw new Error(`GPT-4o mini HTTP ${res.status}`)
+  const data = await res.json() as Record<string, unknown>
+  const choices = data.choices as Array<{ message?: { content?: string } }> | undefined
+  return choices?.[0]?.message?.content ?? ''
+}
+
+async function callLlama(prompt: string): Promise<string> {
+  const apiKey = process.env.TOGETHER_API_KEY
+  if (!apiKey) throw Object.assign(new Error('TOGETHER_API_KEY not set'), { rateLimited: true })
+
+  const res = await fetch('https://api.together.xyz/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: LLAMA_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 8192,
+    }),
+  })
+  if (res.status === 429 || res.status === 503) throw Object.assign(new Error(`Llama ${res.status}`), { rateLimited: true })
+  if (!res.ok) throw new Error(`Llama HTTP ${res.status}`)
+  const data = await res.json() as Record<string, unknown>
+  const choices = data.choices as Array<{ message?: { content?: string } }> | undefined
+  return choices?.[0]?.message?.content ?? ''
+}
+
 async function callHaiku(prompt: string): Promise<string> {
   const res = await getAnthropic().messages.create({
     model: HAIKU_MODEL,
@@ -45,38 +89,41 @@ async function callHaiku(prompt: string): Promise<string> {
   return block.text
 }
 
-// ── Legislation compiler (Gemini primary, Haiku fallback) ─────────────────────
+// ── Prompts ───────────────────────────────────────────────────────────────────
 
 const LEG_PROMPT = (xml: string) =>
   `Convert this CLML XML section into clean, readable plain text suitable for legal research. ` +
   `Preserve all legal meaning, section numbers, cross-references, and defined terms. ` +
   `Remove XML markup. Output plain text only — no preamble.\n\nCLML XML:\n${xml}`
 
-export async function compileLegislation(rawXml: string): Promise<string> {
-  const prompt = LEG_PROMPT(rawXml)
-  try {
-    return await callGemini(prompt)
-  } catch (err: unknown) {
-    if ((err as { rateLimited?: boolean }).rateLimited) {
-      console.warn('  [compile] Gemini rate limited — falling back to Haiku')
-      return await callHaikuWithBackoff(prompt)
-    }
-    throw err
-  }
-}
-
-// ── General compiler (Haiku) ──────────────────────────────────────────────────
-
 const GEN_PROMPT = (content: string) =>
   `Extract clean readable plain text from this document. ` +
   `Preserve all factual content, headings, numbered points, and citations. ` +
   `Remove HTML/XML markup and boilerplate navigation. Output plain text only.\n\nCONTENT:\n${content}`
 
-export async function compileGeneral(rawContent: string): Promise<string> {
-  return await callHaikuWithBackoff(GEN_PROMPT(rawContent))
+// ── Legislation compiler: Gemini → GPT-4o mini → Llama 3.3 70B → Haiku ──────
+
+export async function compileLegislation(_rawXml: string): Promise<string> {
+  throw new Error('LLM compilation disabled — use rawToText() instead')
 }
 
-// ── Haiku with backoff ────────────────────────────────────────────────────────
+// ── General compiler: GPT-4o mini → Llama 3.3 70B → Haiku ───────────────────
+
+export async function compileGeneral(_rawContent: string): Promise<string> {
+  throw new Error('LLM compilation disabled — use rawToText() instead')
+}
+
+// ── Tag-stripping compiler (no LLM — used by ingest workers) ─────────────────
+
+export function rawToText(input: string): string {
+  return input
+    .replace(/<[^>]+>/g, ' ')   // remove all XML/HTML tags
+    .replace(/&[a-z]+;/gi, ' ') // remove HTML entities (&amp; &lt; etc)
+    .replace(/\s+/g, ' ')       // collapse whitespace
+    .trim()
+}
+
+// ── Haiku with backoff (last resort) ─────────────────────────────────────────
 
 async function callHaikuWithBackoff(prompt: string, maxAttempts = 3): Promise<string> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

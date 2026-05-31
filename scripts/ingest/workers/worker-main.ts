@@ -7,7 +7,7 @@ import {
   WorkerCheckpoint,
 } from '../shared/checkpoint'
 import { r2Exists, r2Put, compiledKey, rawKey } from '../shared/r2-client'
-import { compileLegislation, compileGeneral } from '../shared/compile'
+import { rawToText } from '../shared/compile'
 import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
 import {
   listActIds, enumerateSections,
@@ -85,6 +85,9 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
   console.log(`[worker-${workerId}] Phase 1: ${CORPUS_LABELS[phase1Corpus]}`)
 
   let sinceCheckpoint = 0
+
+  // Enumerate all types first so we can log total before processing begins
+  const allActsByType: Array<{ type: string; actIds: string[] }> = []
   let totalActsEnumerated = 0
 
   for (const type of config.types) {
@@ -92,9 +95,21 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
     const actIds = await listActIds(type, config.yearMin, config.yearMax)
     totalActsEnumerated += actIds.length
     cp.totalInCorpus = Math.max(cp.totalInCorpus, actIds.length * 50) // rough estimate
-    console.log(`[worker-${workerId}] ${type}: ${actIds.length} acts to process (lastProcessedId="${cp.lastProcessedId}")`)
-    if (actIds.length > 0) console.log(`[worker-${workerId}] first act: ${actIds[0]}`)
+    console.log(`[worker-${workerId}] ${type}: ${actIds.length} acts enumerated`)
+    if (actIds.length > 0) console.log(`[worker-${workerId}] first act: ${actIds[0]}  last act: ${actIds[actIds.length - 1]}`)
+    allActsByType.push({ type, actIds })
+  }
 
+  console.log(`[worker-${workerId}] total acts enumerated: ${totalActsEnumerated}`)
+
+  if (totalActsEnumerated === 0) {
+    console.error(`[worker-${workerId}] Phase 1: 0 acts enumerated — TNA feed returned no results. NOT marking phase1Complete to allow retry on next restart.`)
+    await writeCheckpoint(cp)
+    return
+  }
+
+  for (const { type, actIds } of allActsByType) {
+    console.log(`[worker-${workerId}] processing ${type}: ${actIds.length} acts (resuming from lastProcessedId="${cp.lastProcessedId}")`)
     for (const actId of actIds) {
       if (cp.lastProcessedId !== '' && actId <= cp.lastProcessedId) continue // resume
 
@@ -122,7 +137,7 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
 
         const sourceUrl = `https://www.legislation.gov.uk/${actId}/${section.sectionRef}`
         try {
-          const compiled = await compileLegislation(section.xml)
+          const compiled = rawToText(section.xml)
           await r2Put(cKey, compiled)
           await upsertSection({
             id: secId, corpus: phase1Corpus,
@@ -142,12 +157,6 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
         }
       }
     }
-  }
-
-  if (totalActsEnumerated === 0) {
-    console.error(`[worker-${workerId}] Phase 1: 0 acts enumerated — TNA feed returned no results. NOT marking phase1Complete to allow retry on next restart.`)
-    await writeCheckpoint(cp)
-    return
   }
 
   cp.phase1Complete = true
@@ -182,7 +191,7 @@ async function runNonTnaPhase1(workerId: number, cp: WorkerCheckpoint): Promise<
     await r2Put(rKey, raw)
 
     try {
-      const compiled = await compileGeneral(raw.slice(0, 50_000))
+      const compiled = rawToText(raw.slice(0, 50_000))
       await r2Put(cKey, compiled)
       await upsertSection({
         id: secId, corpus: corpusName, sourceUrl,
@@ -270,7 +279,7 @@ async function runPhase2Corpus(
     const cKey = compiledKey(corpus, id, '1')
     if (await r2Exists(cKey)) { recordSkip(cp); return }
     try {
-      const compiled = await compileGeneral(raw.slice(0, 50_000))
+      const compiled = rawToText(raw.slice(0, 50_000))
       await r2Put(cKey, compiled)
       await upsertSection({ id: sectionId(corpus, id, '1'), corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
       recordSuccess(cp, id)
