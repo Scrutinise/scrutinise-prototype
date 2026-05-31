@@ -70,6 +70,7 @@ function buildSystemPrompt(ctx: {
   currentFieldKey?: string | null
   currentFieldLabel?: string | null
   currentFieldSection?: string | null
+  currentDateTime?: string
   legislationContext?: Array<{
     actTitle: string
     sectionNumber: string
@@ -267,6 +268,7 @@ RETURN NAVIGATION: When Lex tells the user to go do something and return, if aiS
   return `You are Lex, the AI guide on Scrutinise — a not-for-profit, non-partisan platform that helps citizens, aspiring politicians, and engaged professionals develop policy ideas into Parliament-ready legislation.
 
 RUNTIME CONTEXT:
+Current date and time: ${ctx.currentDateTime ?? new Date().toISOString() + ' UTC'}
 User name:             ${ctx.preferredName}
 Lex mode:              ${ctx.lexMode}
 User experience level: ${ctx.experienceLevel ?? 'Not set'}
@@ -725,6 +727,22 @@ export async function POST(req: Request, { params }: Params) {
     idea.aiSessionCount = (idea.aiSessionCount ?? 0) + 1
   }
 
+  // Fetch current London time — gives Lex accurate temporal awareness for legislation queries.
+  // 2s timeout; fallback to UTC ISO string so a failure never blocks the response.
+  let currentDateTime: string
+  try {
+    const timeController = new AbortController()
+    const timeoutId = setTimeout(() => timeController.abort(), 2000)
+    const timeRes = await fetch('https://gateway.timeapi.world/timezone/Europe/London', { signal: timeController.signal })
+    clearTimeout(timeoutId)
+    const timeData = await timeRes.json() as { datetime?: string; abbreviation?: string }
+    currentDateTime = timeData.datetime
+      ? timeData.abbreviation ? `${timeData.datetime} (${timeData.abbreviation})` : timeData.datetime
+      : `${new Date().toISOString()} UTC`
+  } catch {
+    currentDateTime = `${new Date().toISOString()} UTC`
+  }
+
   const systemPrompt = buildSystemPrompt({
     ideaTitle: idea.title,
     currentStage: idea.stage,
@@ -740,6 +758,7 @@ export async function POST(req: Request, { params }: Params) {
     currentFieldKey: currentFieldKey ?? null,
     currentFieldLabel: currentFieldLabel ?? null,
     currentFieldSection: currentFieldSection ?? null,
+    currentDateTime,
     legislationContext: resolvedLegislationContext ?? undefined,
   })
 
