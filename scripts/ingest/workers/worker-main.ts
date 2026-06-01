@@ -332,6 +332,11 @@ async function runPhase2Corpus(
   console.log(`[worker-${workerId}] Phase 2: ${CORPUS_LABELS[corpus as keyof typeof CORPUS_LABELS] ?? corpus}`)
   let sinceCheckpoint = 0
 
+  // Snapshot before running source — lets us detect 0-item returns at the end
+  const completedBefore = cp.completed
+  const skippedBefore  = cp.skipped
+  const failedBefore   = cp.failed
+
   async function processText(id: string, raw: string | null, sourceUrl: string): Promise<void> {
     if (!raw) { recordError(cp, sectionId(corpus, id, '1'), 'empty content'); return }
     const cKey = compiledKey(corpus, id, '1')
@@ -370,10 +375,27 @@ async function runPhase2Corpus(
         await processText(c.caseRef, text, c.url)
       }
     }
+  } else {
+    // No implementation for this corpus yet — log and sleep rather than silently completing.
+    console.warn(`[worker-${workerId}] Phase 2: ${corpus} — not yet implemented, skipping. Sleeping 4h.`)
+    await new Promise(r => setTimeout(r, 4 * 60 * 60 * 1000))
+    return // no checkpoint write — will retry on next wake
+  }
+
+  // Guard: if the source returned zero items (no new, skipped, or failed rows),
+  // the API is likely unavailable or broken. Do NOT mark this corpus complete —
+  // sleep 4h and let the next wake retry. Without this guard, workers complete
+  // Phase 2 instantly on every 24h restart and waste Railway compute.
+  const totalHandled = (cp.completed - completedBefore) + (cp.skipped - skippedBefore) + (cp.failed - failedBefore)
+  if (totalHandled === 0) {
+    console.warn(`[worker-${workerId}] Phase 2: ${corpus} — source returned 0 items (API unavailable or misconfigured?). Sleeping 4h before retry.`)
+    await new Promise(r => setTimeout(r, 4 * 60 * 60 * 1000))
+    return // no checkpoint write — corpus will retry on next wake
   }
 
   await writeCheckpoint(cp)
-  console.log(`[worker-${workerId}] Phase 2 corpus ${corpus} complete`)
+  console.log(`[worker-${workerId}] Phase 2 corpus ${corpus} complete — ` +
+    `${cp.completed - completedBefore} new, ${cp.skipped - skippedBefore} skipped, ${cp.failed - failedBefore} failed`)
 }
 
 // ── Entry ─────────────────────────────────────────────────────────────────────

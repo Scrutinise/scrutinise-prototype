@@ -35,7 +35,7 @@ const PHASE2_CORPORA: Record<number, CorpusId[]> = {
   7: ['bailii-privy-ni'],
   8: [], // Worker 8 is a single corpus — no Phase 2
   9: [], // Worker 9 is a single corpus — no Phase 2
-  10: ['echr-hudoc', 'eur-lex', 'uk-treaties', 'oecd'],
+  10: ['uk-treaties'], // echr-hudoc / eur-lex / oecd handled in Phase 1; uk-treaties not yet implemented
 }
 
 export function getPhase1Corpus(workerId: number): CorpusId {

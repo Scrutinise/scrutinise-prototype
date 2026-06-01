@@ -209,7 +209,7 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
     } else if (hasNoProvisions(fullXml)) {
       // NumberOfProvisions="0": metadata-only CLML, body content is PDF-only.
       // Don't store as clml-unparsed — fall through to HTML/PDF fetchers below.
-      console.log(`[tna] ${actId}: CLML NumberOfProvisions=0 — falling through to HTML/PDF`)
+      console.log(`[tna] ${actId}: hasNoProvisions=true, trying PDF`)
     } else {
       // CLML present but no recognised element types — store as clml-unparsed
       // so the scheduler email can show the XML preview for regex diagnosis.
