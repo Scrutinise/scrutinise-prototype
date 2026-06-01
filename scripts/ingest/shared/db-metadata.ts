@@ -28,7 +28,7 @@ export interface SectionMeta {
   wordCount?: number
   status: 'pending' | 'compiled' | 'failed' | 'skipped' | 'unavailable'
   errorMsg?: string
-  format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable'
+  format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
   xmlPreview?: string
   notes?: string
 }

@@ -3,7 +3,7 @@ import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 const TNA_BASE = 'https://www.legislation.gov.uk'
 const throttle = new AdaptiveThrottle({ floor: 200 })
 
-export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable'
+export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
 
 // One logical section from a TNA act.
 // clml:          a single known CLML element (P1/Article/Regulation/Rule/Paragraph/Section)
@@ -172,61 +172,65 @@ function extractClmlSections(xml: string): TnaSection[] {
   return sections
 }
 
-// ── enumerateSections — fetch priority chain ──────────────────────────────────
-// 1. CLML (data.xml)  — extract known elements; if 0 found, store full XML as clml-unparsed
-// 2. HTML  (data.htm) — strip tags in worker; stored as rawHtml
-// 3. PDF   (data.pdf) — stored as binary; worker writes placeholder compiled text
-// 4. Unavailable      — all three returned nothing; DB row with status=unavailable
+// ── enumerateSections — fetch priority chain + parallel effects feed ──────────
+// Primary content: CLML (data.xml) → HTML (data.htm) → PDF (data.pdf) → unavailable
+// Effects feed: fetched in parallel with data.xml; appended as a separate section
+//   if the feed returns content regardless of which primary format was used.
 
 export async function enumerateSections(actId: string): Promise<TnaSection[]> {
-  // 1. CLML
-  const xmlUrl = `${TNA_BASE}/${actId}/data.xml`
-  const fullXml = await fetchText(xmlUrl)
+  // Kick off CLML and effects feed in parallel — saves one RTT per act
+  const [fullXml, effectsXml] = await Promise.all([
+    fetchText(`${TNA_BASE}/${actId}/data.xml`),
+    fetchText(`${TNA_BASE}/${actId}/effects/data.feed`),
+  ])
 
+  const sections: TnaSection[] = []
+
+  // ── Primary format ────────────────────────────────────────────────────────
   if (fullXml && fullXml.trim().length > 0) {
     const isEnactedOnly = detectEnactedOnly(fullXml)
     if (isEnactedOnly) console.log(`[tna] ${actId}: enacted-only (no consolidated version)`)
 
-    const sections = extractClmlSections(fullXml)
-    if (sections.length > 0) {
-      return isEnactedOnly
-        ? sections.map(s => ({ ...s, isEnactedOnly: true }))
-        : sections
+    const clmlSections = extractClmlSections(fullXml)
+    if (clmlSections.length > 0) {
+      sections.push(...(isEnactedOnly
+        ? clmlSections.map(s => ({ ...s, isEnactedOnly: true }))
+        : clmlSections))
+    } else {
+      console.log(`[tna] ${actId}: 0 known CLML elements (XML ${fullXml.length} chars) — storing as clml-unparsed`)
+      sections.push({
+        sectionRef: 'full-doc',
+        format: 'clml-unparsed',
+        xml: fullXml,
+        xmlPreview: fullXml.trim().slice(0, 200),
+        isEnactedOnly,
+      })
     }
-    // XML returned but no known CLML elements found — store whole doc as one blob
-    console.log(`[tna] ${actId}: 0 known CLML elements (XML ${fullXml.length} chars) — storing as clml-unparsed`)
-    return [{
-      sectionRef: 'full-doc',
-      format: 'clml-unparsed',
-      xml: fullXml,
-      xmlPreview: fullXml.trim().slice(0, 200),
-      isEnactedOnly,
-    }]
+  } else {
+    // HTML fallback
+    const rawHtml = await fetchText(`${TNA_BASE}/${actId}/data.htm`)
+    if (rawHtml && rawHtml.trim().length > 0) {
+      console.log(`[tna] ${actId}: HTML fallback (${rawHtml.length} chars)`)
+      sections.push({ sectionRef: 'full-doc-html', format: 'html', rawHtml })
+    } else {
+      // PDF fallback
+      const pdfBuffer = await fetchBinary(`${TNA_BASE}/${actId}/data.pdf`)
+      if (pdfBuffer && pdfBuffer.length > 0) {
+        console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)
+        sections.push({ sectionRef: 'full-doc-pdf', format: 'pdf', pdfBuffer })
+      } else {
+        console.log(`[tna] ${actId}: no CLML/HTML/PDF — marking unavailable`)
+        sections.push({ sectionRef: 'unavailable', format: 'unavailable', errorMsg: 'No CLML/HTML/PDF found on TNA' })
+      }
+    }
   }
 
-  // 2. HTML fallback
-  const htmlUrl = `${TNA_BASE}/${actId}/data.htm`
-  const rawHtml = await fetchText(htmlUrl)
-  if (rawHtml && rawHtml.trim().length > 0) {
-    console.log(`[tna] ${actId}: HTML fallback (${rawHtml.length} chars)`)
-    return [{ sectionRef: 'full-doc-html', format: 'html', rawHtml }]
+  // ── Effects feed — appended regardless of primary format ─────────────────
+  if (effectsXml && effectsXml.trim().length > 0) {
+    sections.push({ sectionRef: 'effects', format: 'effects', xml: effectsXml })
   }
 
-  // 3. PDF fallback
-  const pdfUrl = `${TNA_BASE}/${actId}/data.pdf`
-  const pdfBuffer = await fetchBinary(pdfUrl)
-  if (pdfBuffer && pdfBuffer.length > 0) {
-    console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)
-    return [{ sectionRef: 'full-doc-pdf', format: 'pdf', pdfBuffer }]
-  }
-
-  // 4. Unavailable
-  console.log(`[tna] ${actId}: no CLML/HTML/PDF — marking unavailable`)
-  return [{
-    sectionRef: 'unavailable',
-    format: 'unavailable',
-    errorMsg: 'No CLML/HTML/PDF found on TNA',
-  }]
+  return sections
 }
 
 // ── Worker corpus config ───────────────────────────────────────────────────────

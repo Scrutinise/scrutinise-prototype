@@ -119,8 +119,33 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
 
       for (const section of sections) {
         const secId = sectionId(phase1Corpus, actId, section.sectionRef)
-        const cKey = compiledKey(phase1Corpus, actId, section.sectionRef)
         const actBaseUrl = `https://www.legislation.gov.uk/${actId}`
+
+        // Effects feed: stored at its own R2 key, not the standard compiled-key path
+        if (section.format === 'effects') {
+          const effectsKey = `effects/${actId}/effects.xml`
+          if (await r2Exists(effectsKey)) { recordSkip(cp); continue }
+          try {
+            await r2Put(effectsKey, section.xml!, 'application/xml')
+            await upsertSection({
+              id: secId, corpus: phase1Corpus,
+              sourceUrl: `${actBaseUrl}/effects/data.feed`,
+              r2Key: effectsKey, r2RawKey: effectsKey,
+              wordCount: 0, status: 'compiled', format: 'effects',
+            })
+            recordSuccess(cp, actId)
+          } catch (err: unknown) {
+            recordError(cp, secId, String(err))
+          }
+          sinceCheckpoint++
+          if (sinceCheckpoint % CHECKPOINT_INTERVAL === 0) {
+            await writeCheckpoint(cp)
+            console.log(`[worker-${workerId}] checkpoint: ${cp.completed} done, ${cp.failed} failed`)
+          }
+          continue
+        }
+
+        const cKey = compiledKey(phase1Corpus, actId, section.sectionRef)
 
         // Unavailable: upsert DB row and advance checkpoint — no R2 writes
         if (section.format === 'unavailable') {
