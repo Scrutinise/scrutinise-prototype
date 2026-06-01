@@ -1785,10 +1785,13 @@ model CorpusSection {
   format      String?
   // first 200 chars of raw XML for clml-unparsed rows — used in scheduler alert email
   xmlPreview  String?
+  // act-level flags, e.g. 'enacted-only' where TNA has no consolidated version
+  notes       String?
   createdAt   DateTime  @default(now())
 
   @@index([corpus])
   @@index([status])
   @@index([format])
+  @@index([notes])
   @@map("corpus_sections")
 }
