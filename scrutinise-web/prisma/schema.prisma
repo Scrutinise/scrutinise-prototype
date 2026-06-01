@@ -1780,7 +1780,7 @@ model CorpusSection {
   // pending | compiled | failed | skipped | unavailable
   status      String    @default("pending")
   errorMsg    String?
-  // clml | clml-unparsed | html | pdf | unavailable
+  // clml | clml-unparsed | html | pdf | unavailable | effects
   format      String?
   // first 200 chars of raw XML for clml-unparsed rows — used in scheduler alert email
   xmlPreview  String?
