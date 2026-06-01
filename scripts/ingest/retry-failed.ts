@@ -48,7 +48,7 @@ async function resolveRaw(row: FailedRow): Promise<{ content: string; key: strin
 }
 
 async function main(): Promise<void> {
-  const db = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } })
+  const db = new PrismaClient({ datasource: { db: { url: process.env.DATABASE_URL } } })
   const throttle = new AdaptiveThrottle({ floor: 200 })
 
   let totalProcessed = 0
