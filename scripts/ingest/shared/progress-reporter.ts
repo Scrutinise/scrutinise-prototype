@@ -1,6 +1,6 @@
 import { r2Get, r2Put, r2List, PROGRESS_KEY, csvKey } from './r2-client'
 import { WorkerCheckpoint, readCheckpoint } from './checkpoint'
-import { UnrecognisedFormatRow } from './db-metadata'
+import { UnrecognisedFormatRow, FormatCount } from './db-metadata'
 
 const RESEND_API = 'https://api.resend.com/emails'
 const TO = 'cl@scrutinise.org'
@@ -97,6 +97,7 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
 export async function sendProgressEmail(
   agg: ProgressAggregate,
   unrecognised: UnrecognisedFormatRow[] = [],
+  formatBreakdown: FormatCount[] = [],
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
@@ -123,6 +124,16 @@ export async function sendProgressEmail(
     '',
     `Errors: see daily CSV in R2 at ingest-csv/progress-${new Date().toISOString().slice(0, 10)}.csv`,
   ]
+
+  if (formatBreakdown.length > 0) {
+    bodyParts.push('')
+    bodyParts.push('FORMAT BREAKDOWN (cumulative)')
+    for (const row of formatBreakdown) {
+      const label = (row.format ?? '(no format)').padEnd(16)
+      const count = row.count.toLocaleString().padStart(12)
+      bodyParts.push(`  ${label}${count}`)
+    }
+  }
 
   if (unrecognised.length > 0) {
     bodyParts.push('')

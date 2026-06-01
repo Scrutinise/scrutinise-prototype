@@ -11,19 +11,24 @@ import {
   appendCsvRow,
   sendProgressEmail,
 } from './shared/progress-reporter'
-import { queryUnrecognisedFormats, disconnectDb } from './shared/db-metadata'
+import { queryUnrecognisedFormats, queryFormatBreakdown, disconnectDb } from './shared/db-metadata'
 
 async function run(): Promise<void> {
   console.log('[scheduler] building progress aggregate')
   const agg = await buildAggregate()
 
-  console.log('[scheduler] querying unrecognised formats (last 4hrs)')
+  console.log('[scheduler] querying format breakdown + unrecognised formats')
   let unrecognised = []
+  let formatBreakdown = []
   try {
-    unrecognised = await queryUnrecognisedFormats(4)
-    console.log(`[scheduler] unrecognised formats: ${unrecognised.length}`)
+    ;[unrecognised, formatBreakdown] = await Promise.all([
+      queryUnrecognisedFormats(4),
+      queryFormatBreakdown(),
+    ])
+    console.log(`[scheduler] format breakdown: ${formatBreakdown.map(r => `${r.format ?? 'null'}=${r.count}`).join(' ')}`)
+    console.log(`[scheduler] unrecognised formats (last 4hrs): ${unrecognised.length}`)
   } catch (err) {
-    console.warn('[scheduler] could not query unrecognised formats:', err)
+    console.warn('[scheduler] could not query DB:', err)
   }
 
   console.log('[scheduler] writing to R2')
@@ -33,7 +38,7 @@ async function run(): Promise<void> {
   await appendCsvRow(agg)
 
   console.log('[scheduler] sending email')
-  await sendProgressEmail(agg, unrecognised)
+  await sendProgressEmail(agg, unrecognised, formatBreakdown)
 
   const total = agg.totalCompleted.toLocaleString()
   const est = agg.totalEstimated.toLocaleString()

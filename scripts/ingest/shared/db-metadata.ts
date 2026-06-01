@@ -72,6 +72,22 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
   })
 }
 
+export interface FormatCount {
+  format: string | null
+  count: number
+}
+
+export async function queryFormatBreakdown(): Promise<FormatCount[]> {
+  const db = getPrisma()
+  const rows = await db.$queryRaw<Array<{ format: string | null; count: number }>>`
+    SELECT format, COUNT(*)::int AS count
+    FROM corpus_sections
+    GROUP BY format
+    ORDER BY count DESC
+  `
+  return rows
+}
+
 export interface UnrecognisedFormatRow {
   sourceUrl: string | null
   xmlPreview: string | null
