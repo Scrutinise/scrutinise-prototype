@@ -6,7 +6,7 @@ import {
   recordSuccess, recordError, recordSkip,
   WorkerCheckpoint,
 } from '../shared/checkpoint'
-import { r2Exists, r2Put, compiledKey, rawKey } from '../shared/r2-client'
+import { r2Exists, r2Put, compiledKey, rawKey, caselawKey, caselawRawKey, bailiiKey, hansardKey } from '../shared/r2-client'
 import { rawToText } from '../shared/compile'
 import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
 import {
@@ -14,24 +14,25 @@ import {
   WORKER_CORPORA,
 } from '../sources/tna-legislation'
 import {
-  listJudgments, fetchJudgmentXml, extractJudgmentText,
+  listJudgments, fetchJudgmentXml, getTotalJudgments,
 } from '../sources/tna-caselaw'
 import {
   listCases, fetchCaseHtml, extractCaseText, WORKER_DB_SUBSETS,
 } from '../sources/bailii-scraper'
 import {
-  listHansardDebates, fetchDebateText, HANSARD_PARTITIONS,
-  listCommitteeReports,
+  listHansardDebates, fetchDebateText, countHansardDebates, HANSARD_PARTITIONS,
+  listCommitteeReports, fetchReportContent,
 } from '../sources/parliament-api'
-import { listFcaSections, fetchSectionText as fetchFcaText } from '../sources/fca-handbook'
+import { listFcaSections, fetchSectionText as fetchFcaText, FcaSection } from '../sources/fca-handbook'
 import {
   listHmrcManuals, listNaoReports, listHoCLReports,
   listExplanatoryNotes, listImpactAssessments, listConsultations,
   fetchDocumentText,
 } from '../sources/gov-scraper'
-import { listUkCases, fetchCaseText as fetchEchrText } from '../sources/echr-hudoc'
-import { listRetainedEuInstruments, fetchDocumentText as fetchEurLexText } from '../sources/eurlex'
-import { listOecdOpenDocs, fetchDocText as fetchOecdText } from '../sources/oecd-free'
+import { listUkCases, fetchCaseText as fetchEchrText, countUkCases } from '../sources/echr-hudoc'
+import { listRetainedEuInstruments, fetchDocumentText as fetchEurLexText, EurLexDoc } from '../sources/eurlex'
+import { listOecdOpenDocs, fetchDocText as fetchOecdText, OecdDoc } from '../sources/oecd-free'
+import { listUkTreaties, fetchTreatyText, UkTreaty } from '../sources/uk-treaties'
 import { getPhase1Corpus, getPhase2Corpora, CORPUS_LABELS } from './phase-router'
 
 const CHECKPOINT_INTERVAL = 100  // write to R2 every N sections
@@ -266,7 +267,16 @@ async function runNonTnaPhase1(workerId: number, cp: WorkerCheckpoint): Promise<
   }
 
   if (workerId === 7) {
+    // Enumerate all sections first so we can log count before processing begins
+    console.log(`[worker-7] fca-handbook: enumerating sections…`)
+    const allFcaSections: FcaSection[] = []
     for await (const section of listFcaSections()) {
+      allFcaSections.push(section)
+    }
+    console.log(`[worker-7] fca-handbook: ${allFcaSections.length} items enumerated before processing`)
+    cp.totalInCorpus = Math.max(cp.totalInCorpus, allFcaSections.length)
+
+    for (const section of allFcaSections) {
       const text = await fetchFcaText(section.url)
       await processItem(section.id, () => Promise.resolve(text), section.url, corpus)
     }
@@ -290,36 +300,78 @@ async function runNonTnaPhase1(workerId: number, cp: WorkerCheckpoint): Promise<
       await processItem(doc.id, () => fetchDocumentText(doc.url), doc.url, corpus, 'html')
     }
   } else if (workerId === 9) {
+    // Enumerate total from search API before processing begins
+    const totalJudgments = await getTotalJudgments()
+    console.log(`[worker-9] tna-caselaw: ${totalJudgments} items enumerated before processing`)
+    cp.totalInCorpus = Math.max(cp.totalInCorpus, totalJudgments)
+
     for await (const j of listJudgments()) {
-      await processItem(
-        j.neutralCitation || j.uri,
-        async () => {
-          const xml = await fetchJudgmentXml(j.xmlUrl)
-          return xml ? extractJudgmentText(xml) : null
-        },
-        j.xmlUrl, corpus, 'xml',
-      )
+      // Use neutral citation as the stable document ID; fall back to URI path
+      const docId = j.neutralCitation
+        ? j.neutralCitation
+        : j.uri.replace(/^\//, '').replace(/\//g, '-')
+
+      const cKey = caselawKey(docId)
+      if (await r2Exists(cKey)) { recordSkip(cp); continue }
+
+      const secId = sectionId('tna-caselaw', docId, '1')
+      try {
+        const xml = await fetchJudgmentXml(j.xmlUrl)
+        if (!xml) { recordError(cp, secId, 'fetch failed'); continue }
+
+        const rKey = caselawRawKey(docId)
+        await r2Put(rKey, xml, 'application/xml')
+        const compiled = rawToText(xml)   // full judgment — no truncation
+        await r2Put(cKey, compiled)
+        await upsertSection({
+          id: secId, corpus: 'tna-caselaw', sourceUrl: j.xmlUrl,
+          r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled',
+        })
+        recordSuccess(cp, docId)
+      } catch (err: unknown) {
+        recordError(cp, secId, String(err))
+        await upsertSection({ id: secId, corpus: 'tna-caselaw', sourceUrl: j.xmlUrl, status: 'failed', errorMsg: String(err) })
+      }
+
+      sinceCheckpoint++
+      if (sinceCheckpoint % CHECKPOINT_INTERVAL === 0) {
+        await writeCheckpoint(cp)
+        console.log(`[worker-9] checkpoint: ${cp.completed} done, ${cp.failed} failed`)
+      }
     }
   } else if (workerId === 10) {
+    // ECHR HUDOC — get total from API before iterating
+    const echrTotal = await countUkCases()
+    console.log(`[worker-10] echr-hudoc: ${echrTotal} items enumerated before processing`)
+    cp.totalInCorpus = Math.max(cp.totalInCorpus, echrTotal)
     for await (const c of listUkCases()) {
       await processItem(c.itemId, () => fetchEchrText(c.itemId, c.docName), c.url, 'echr-hudoc')
     }
-    for await (const doc of listRetainedEuInstruments()) {
+
+    // EUR-Lex — collect to array (SPARQL returns bounded set)
+    console.log(`[worker-10] eur-lex: enumerating retained EU instruments…`)
+    const eurLexItems: EurLexDoc[] = []
+    for await (const doc of listRetainedEuInstruments()) eurLexItems.push(doc)
+    console.log(`[worker-10] eur-lex: ${eurLexItems.length} items enumerated before processing`)
+    cp.totalInCorpus += eurLexItems.length
+    for (const doc of eurLexItems) {
       await processItem(doc.celexId, () => fetchEurLexText(doc.celexId), doc.url, 'eur-lex')
     }
-    for await (const doc of listOecdOpenDocs()) {
-      await processItem(doc.id, () => fetchDocText(doc.url), doc.url, 'oecd')
+
+    // OECD free tier
+    console.log(`[worker-10] oecd: enumerating open-access documents…`)
+    const oecdItems: OecdDoc[] = []
+    for await (const doc of listOecdOpenDocs()) oecdItems.push(doc)
+    console.log(`[worker-10] oecd: ${oecdItems.length} items enumerated before processing`)
+    cp.totalInCorpus += oecdItems.length
+    for (const doc of oecdItems) {
+      await processItem(doc.id, () => fetchOecdText(doc.url), doc.url, 'oecd')
     }
   }
 
   cp.phase1Complete = true
   await writeCheckpoint(cp)
   console.log(`[worker-${workerId}] Phase 1 complete`)
-}
-
-async function fetchDocText(url: string): Promise<string | null> {
-  const { fetchDocText } = await import('../sources/oecd-free')
-  return fetchDocText(url)
 }
 
 // ── Phase 2 ───────────────────────────────────────────────────────────────────
@@ -337,12 +389,19 @@ async function runPhase2Corpus(
   const skippedBefore  = cp.skipped
   const failedBefore   = cp.failed
 
-  async function processText(id: string, raw: string | null, sourceUrl: string): Promise<void> {
+  // customKey overrides the default compiledKey(corpus, id, '1') path.
+  // No truncation — parliamentary and judicial texts must be stored complete.
+  async function processText(
+    id: string,
+    raw: string | null,
+    sourceUrl: string,
+    customKey?: string,
+  ): Promise<void> {
     if (!raw) { recordError(cp, sectionId(corpus, id, '1'), 'empty content'); return }
-    const cKey = compiledKey(corpus, id, '1')
+    const cKey = customKey ?? compiledKey(corpus, id, '1')
     if (await r2Exists(cKey)) { recordSkip(cp); return }
     try {
-      const compiled = rawToText(raw.slice(0, 50_000))
+      const compiled = rawToText(raw)  // full text — no truncation
       await r2Put(cKey, compiled)
       await upsertSection({ id: sectionId(corpus, id, '1'), corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
       recordSuccess(cp, id)
@@ -358,22 +417,47 @@ async function runPhase2Corpus(
     const workerNum = corpus.endsWith('-a') ? (house === 'Commons' ? 1 : 3) : (house === 'Commons' ? 2 : 4)
     const partition = HANSARD_PARTITIONS[workerNum]
     if (!partition) return
+
+    // Enumerate total before processing begins
+    const total = await countHansardDebates(partition.house, partition.startDate, partition.endDate)
+    console.log(`[worker-${workerId}] ${corpus}: ${total} items enumerated before processing`)
+    cp.totalInCorpus = Math.max(cp.totalInCorpus, total)
+
     for await (const debate of listHansardDebates(partition.house, partition.startDate, partition.endDate)) {
       const text = await fetchDebateText(debate.id)
-      await processText(debate.id, text, debate.url)
+      await processText(debate.id, text, debate.url, hansardKey(debate.date, debate.id))
     }
   } else if (corpus.startsWith('committees')) {
     for await (const report of listCommitteeReports()) {
-      await processText(report.id, report.title, report.url)
+      // Fetch the actual publication text; fall back to title-only if URL is unavailable
+      const text = await fetchReportContent(report.url) ?? report.title
+      await processText(report.id, text, report.url, hansardKey(report.date, report.id))
     }
   } else if (corpus.startsWith('bailii')) {
     const dbs = WORKER_DB_SUBSETS[workerId] ?? []
     for (const db of dbs) {
-      for await (const c of listCases(db.path)) {
+      // Enumerate listing pages first (no case HTML fetched) to log count before processing
+      const courtCases: Array<{ url: string; caseRef: string }> = []
+      for await (const c of listCases(db.path)) courtCases.push(c)
+      console.log(`[worker-${workerId}] bailii ${db.court}: ${courtCases.length} items enumerated before processing`)
+      cp.totalInCorpus += courtCases.length
+
+      for (const c of courtCases) {
         const html = await fetchCaseHtml(c.url)
         const text = html ? extractCaseText(html) : null
-        await processText(c.caseRef, text, c.url)
+        await processText(c.caseRef, text, c.url, bailiiKey(c.caseRef))
       }
+    }
+  } else if (corpus === 'uk-treaties') {
+    console.log(`[worker-${workerId}] uk-treaties: enumerating treaties…`)
+    const allTreaties: UkTreaty[] = []
+    for await (const t of listUkTreaties()) allTreaties.push(t)
+    console.log(`[worker-${workerId}] uk-treaties: ${allTreaties.length} items enumerated before processing`)
+    cp.totalInCorpus = Math.max(cp.totalInCorpus, allTreaties.length)
+
+    for (const t of allTreaties) {
+      const text = await fetchTreatyText(t.url)
+      await processText(t.id, text, t.url)
     }
   } else {
     // No implementation for this corpus yet — log and sleep rather than silently completing.

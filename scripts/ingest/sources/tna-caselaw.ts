@@ -20,6 +20,13 @@ async function fetchJson(url: string): Promise<unknown | null> {
   try { return await res.json() } catch { return null }
 }
 
+// Probe the first search page and return the total judgment count.
+export async function getTotalJudgments(): Promise<number> {
+  const url = `${TNA_CASELAW_BASE}/search/results.json?query=*&page=1&per_page=1&order=date`
+  const data = await fetchJson(url) as SearchResult | null
+  return data?.total ?? 0
+}
+
 async function fetchText(url: string): Promise<string | null> {
   await throttle.wait()
   const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (Open Justice)' } })
@@ -67,11 +74,3 @@ export async function fetchJudgmentXml(xmlUrl: string): Promise<string | null> {
   return fetchText(xmlUrl)
 }
 
-export function extractJudgmentText(xml: string): string {
-  // Strip XML tags, normalize whitespace
-  return xml
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}

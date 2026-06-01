@@ -96,3 +96,38 @@ export const PROGRESS_KEY = 'ingest-checkpoint/corpus-progress.json'
 export function csvKey(date: string): string {
   return `ingest-csv/progress-${date}.csv`
 }
+
+// ── Source-specific key helpers ───────────────────────────────────────────────
+
+// Sanitize a string for use as an R2 key path component.
+// Allows alphanumeric, hyphens, underscores, dots, and forward-slashes;
+// replaces everything else (brackets, spaces, colons, etc.) with hyphens.
+function safeKeyPart(s: string): string {
+  return s
+    .replace(/[[\]()]/g, '')
+    .replace(/[^a-zA-Z0-9\-_.]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase()
+    .slice(0, 200)
+}
+
+// TNA Find Case Law: caselaw/{safe-citation}/compiled.txt
+export function caselawKey(citation: string): string {
+  return `caselaw/${safeKeyPart(citation)}/compiled.txt`
+}
+
+export function caselawRawKey(citation: string): string {
+  return `caselaw/${safeKeyPart(citation)}/raw.xml`
+}
+
+// BAILII: caselaw/bailii/{safe-ref}/compiled.txt
+export function bailiiKey(courtRef: string): string {
+  return `caselaw/bailii/${safeKeyPart(courtRef)}/compiled.txt`
+}
+
+// Hansard / Parliament: hansard/{YYYY-MM-DD}/{safe-id}/compiled.txt
+export function hansardKey(date: string, debateId: string): string {
+  const safeDate = (date ?? '').slice(0, 10).replace(/[^0-9-]/g, '') || 'unknown'
+  return `hansard/${safeDate}/${safeKeyPart(debateId)}/compiled.txt`
+}
