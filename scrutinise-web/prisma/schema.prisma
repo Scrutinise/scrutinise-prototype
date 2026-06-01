@@ -1777,12 +1777,17 @@ model CorpusSection {
   r2RawKey    String?   // raw XML/HTML location in R2 (optional)
   compiledAt  DateTime?
   wordCount   Int?
-  // pending | compiled | failed | skipped
+  // pending | compiled | failed | skipped | unavailable
   status      String    @default("pending")
   errorMsg    String?
+  // clml | clml-unparsed | html | pdf | unavailable
+  format      String?
+  // first 200 chars of raw XML for clml-unparsed rows — used in scheduler alert email
+  xmlPreview  String?
   createdAt   DateTime  @default(now())
 
   @@index([corpus])
   @@index([status])
+  @@index([format])
   @@map("corpus_sections")
 }
