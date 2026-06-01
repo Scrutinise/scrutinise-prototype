@@ -3,17 +3,33 @@ import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 const TNA_BASE = 'https://www.legislation.gov.uk'
 const throttle = new AdaptiveThrottle({ floor: 200 })
 
-// Section = one <P1> element extracted from the full act CLML XML.
-// No separate per-section URL fetch needed — all sections come from one data.xml download.
+export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable'
+
+// One logical section from a TNA act.
+// clml:          a single known CLML element (P1/Article/Regulation/Rule/Paragraph/Section)
+// clml-unparsed: CLML returned but no known elements found — full XML stored as one blob
+// html:          CLML returned nothing, HTML fallback succeeded — raw HTML stored in rawHtml
+// pdf:           HTML also failed, PDF fallback succeeded — binary in pdfBuffer
+// unavailable:   all three formats returned nothing
 export interface TnaSection {
-  sectionRef: string  // e.g. "section-1", "schedule-1-paragraph-2"
-  xml: string         // full <P1>...</P1> CLML fragment
+  sectionRef: string
+  format: SectionFormat
+  xml?: string        // clml / clml-unparsed
+  rawHtml?: string    // html
+  pdfBuffer?: Buffer  // pdf
+  xmlPreview?: string // clml-unparsed: first 200 chars of raw XML for diagnostic email
+  errorMsg?: string   // unavailable
 }
+
+// ── HTTP helpers ───────────────────────────────────────────────────────────────
 
 async function fetchText(url: string): Promise<string | null> {
   await throttle.wait()
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' } })
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
+    })
+    if (res.status === 404 || res.status === 410) return null
     if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
     if (!res.ok) return null
     throttle.success()
@@ -24,10 +40,27 @@ async function fetchText(url: string): Promise<string | null> {
   }
 }
 
+async function fetchBinary(url: string): Promise<Buffer | null> {
+  await throttle.wait()
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
+    })
+    if (res.status === 404 || res.status === 410) return null
+    if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
+    if (!res.ok) return null
+    throttle.success()
+    return Buffer.from(await res.arrayBuffer())
+  } catch (err) {
+    console.warn(`[tna] fetch error ${url}: ${err}`)
+    return null
+  }
+}
+
 // ── Act enumeration ────────────────────────────────────────────────────────────
 // TNA year-level Atom feed: https://www.legislation.gov.uk/{type}/{year}/data.feed
 // Returns only 20 items per page. Dense years (e.g. uksi/1983 has 1129 SIs) include
-// range-bucket navigation links (href=".../0-99/data.feed", ".../100-199/data.feed" etc.)
+// range-bucket navigation links (href=".../uksi/1983/0-99/data.feed", ".../100-199/data.feed" etc.)
 // that must be fetched individually and paginated.
 //
 // IMPORTANT: regex must match ONLY <id>...</id> elements.
@@ -97,32 +130,82 @@ export async function listActIds(type: string, yearMin: number, yearMax: number)
 }
 
 // ── Section extraction ─────────────────────────────────────────────────────────
-// Download the full act CLML via data.xml, then extract <P1> elements.
-// Each <P1 id="section-N"> is one section. This costs 1 HTTP request per act,
-// not 1 per section — far more efficient and avoids the data.feed format confusion.
+// Known CLML section element types that carry top-level numbered content.
+// If none are found in the downloaded XML, the full XML is stored as clml-unparsed.
+const CLML_SECTION_ELEMENTS = ['P1', 'Article', 'Regulation', 'Rule', 'Paragraph', 'Section']
+const CLML_ELEM_PATTERN = CLML_SECTION_ELEMENTS.join('|')
 
-export async function enumerateSections(actId: string): Promise<TnaSection[]> {
-  const xmlUrl = `${TNA_BASE}/${actId}/data.xml`
-  const fullXml = await fetchText(xmlUrl)
-  if (!fullXml) {
-    console.log(`[tna] no XML returned for ${actId} (${xmlUrl})`)
-    return []
-  }
+// Matches <ElemName id="..."> ... </ElemName> non-greedily.
+// Backreference \1 ensures the opening and closing tags are the same element type.
+// Note: nested elements of the same type may get incorrect inner-match boundaries,
+// but this is acceptable — content is preserved and ids are unique.
+const CLML_SECTION_RX = new RegExp(
+  `<(${CLML_ELEM_PATTERN})(\\s[^>]*)?>([\\s\\S]*?)<\\/\\1>`,
+  'g'
+)
 
+function extractClmlSections(xml: string): TnaSection[] {
   const sections: TnaSection[] = []
-  // <P1 ...id="section-1"...> ... </P1>  — sections in body and schedules
-  // Non-greedy so we get individual P1s, not one giant match.
-  // P1 elements don't nest inside other P1 elements in CLML.
-  const p1Rx = /<P1\s[^>]*\bid="([^"]+)"[^>]*>[\s\S]*?<\/P1>/g
+  CLML_SECTION_RX.lastIndex = 0
   let m: RegExpExecArray | null
-  while ((m = p1Rx.exec(fullXml)) !== null) {
-    sections.push({ sectionRef: m[1], xml: m[0] })
-  }
-
-  if (sections.length === 0) {
-    console.log(`[tna] 0 <P1> sections in ${actId} (XML length=${fullXml.length} — may be empty/repealed act)`)
+  while ((m = CLML_SECTION_RX.exec(xml)) !== null) {
+    const attrs = m[2] ?? ''
+    const idMatch = /\bid="([^"]+)"/.exec(attrs)
+    if (!idMatch) continue
+    sections.push({ sectionRef: idMatch[1], format: 'clml', xml: m[0] })
   }
   return sections
+}
+
+// ── enumerateSections — fetch priority chain ──────────────────────────────────
+// 1. CLML (data.xml)  — extract known elements; if 0 found, store full XML as clml-unparsed
+// 2. HTML  (data.htm) — strip tags in worker; stored as rawHtml
+// 3. PDF   (data.pdf) — stored as binary; worker writes placeholder compiled text
+// 4. Unavailable      — all three returned nothing; DB row with status=unavailable
+
+export async function enumerateSections(actId: string): Promise<TnaSection[]> {
+  // 1. CLML
+  const xmlUrl = `${TNA_BASE}/${actId}/data.xml`
+  const fullXml = await fetchText(xmlUrl)
+
+  if (fullXml && fullXml.trim().length > 0) {
+    const sections = extractClmlSections(fullXml)
+    if (sections.length > 0) {
+      return sections
+    }
+    // XML returned but no known CLML elements found — store whole doc as one blob
+    console.log(`[tna] ${actId}: 0 known CLML elements (XML ${fullXml.length} chars) — storing as clml-unparsed`)
+    return [{
+      sectionRef: 'full-doc',
+      format: 'clml-unparsed',
+      xml: fullXml,
+      xmlPreview: fullXml.trim().slice(0, 200),
+    }]
+  }
+
+  // 2. HTML fallback
+  const htmlUrl = `${TNA_BASE}/${actId}/data.htm`
+  const rawHtml = await fetchText(htmlUrl)
+  if (rawHtml && rawHtml.trim().length > 0) {
+    console.log(`[tna] ${actId}: HTML fallback (${rawHtml.length} chars)`)
+    return [{ sectionRef: 'full-doc-html', format: 'html', rawHtml }]
+  }
+
+  // 3. PDF fallback
+  const pdfUrl = `${TNA_BASE}/${actId}/data.pdf`
+  const pdfBuffer = await fetchBinary(pdfUrl)
+  if (pdfBuffer && pdfBuffer.length > 0) {
+    console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)
+    return [{ sectionRef: 'full-doc-pdf', format: 'pdf', pdfBuffer }]
+  }
+
+  // 4. Unavailable
+  console.log(`[tna] ${actId}: no CLML/HTML/PDF — marking unavailable`)
+  return [{
+    sectionRef: 'unavailable',
+    format: 'unavailable',
+    errorMsg: 'No CLML/HTML/PDF found on TNA',
+  }]
 }
 
 // ── Worker corpus config ───────────────────────────────────────────────────────

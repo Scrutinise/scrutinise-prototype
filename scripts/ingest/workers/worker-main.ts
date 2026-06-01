@@ -114,36 +114,68 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
       if (cp.lastProcessedId !== '' && actId <= cp.lastProcessedId) continue // resume
 
       console.log(`[worker-${workerId}] processing act: ${actId}`)
-      // enumerateSections fetches data.xml and splits into <P1> elements inline —
-      // 1 HTTP request per act, section XML is already available, no second fetch needed.
       const sections = await enumerateSections(actId)
-      console.log(`[worker-${workerId}] ${actId}: ${sections.length} sections`)
-      if (sections.length === 0) {
-        // Empty/repealed act — still mark as processed so we don't retry
-        recordSuccess(cp, actId)
-      }
+      console.log(`[worker-${workerId}] ${actId}: ${sections.length} section(s) [${sections.map(s => s.format).join(',')}]`)
+
       for (const section of sections) {
         const secId = sectionId(phase1Corpus, actId, section.sectionRef)
         const cKey = compiledKey(phase1Corpus, actId, section.sectionRef)
+        const actBaseUrl = `https://www.legislation.gov.uk/${actId}`
+
+        // Unavailable: upsert DB row and advance checkpoint — no R2 writes
+        if (section.format === 'unavailable') {
+          await upsertSection({
+            id: secId, corpus: phase1Corpus, sourceUrl: actBaseUrl,
+            status: 'unavailable', errorMsg: section.errorMsg, format: 'unavailable',
+          })
+          recordSuccess(cp, actId)
+          sinceCheckpoint++
+          if (sinceCheckpoint % CHECKPOINT_INTERVAL === 0) {
+            await writeCheckpoint(cp)
+            console.log(`[worker-${workerId}] checkpoint: ${cp.completed} done, ${cp.failed} failed`)
+          }
+          continue
+        }
 
         if (await r2Exists(cKey)) {
           recordSkip(cp)
           continue
         }
 
-        // section.xml is the full <P1> CLML fragment — save raw and compile
-        const rKey = rawKey(phase1Corpus, actId, section.sectionRef, 'xml')
-        await r2Put(rKey, section.xml, 'application/xml')
+        const sourceUrl = section.format === 'clml'
+          ? `${actBaseUrl}/${section.sectionRef}`
+          : actBaseUrl
 
-        const sourceUrl = `https://www.legislation.gov.uk/${actId}/${section.sectionRef}`
         try {
-          const compiled = rawToText(section.xml)
-          await r2Put(cKey, compiled)
-          await upsertSection({
-            id: secId, corpus: phase1Corpus,
-            sourceUrl, r2Key: cKey, r2RawKey: rKey,
-            wordCount: countWords(compiled), status: 'compiled',
-          })
+          if (section.format === 'clml' || section.format === 'clml-unparsed') {
+            const rKey = rawKey(phase1Corpus, actId, section.sectionRef, 'xml')
+            await r2Put(rKey, section.xml!, 'application/xml')
+            const compiled = rawToText(section.xml!)
+            await r2Put(cKey, compiled)
+            await upsertSection({
+              id: secId, corpus: phase1Corpus, sourceUrl,
+              r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled),
+              status: 'compiled', format: section.format, xmlPreview: section.xmlPreview,
+            })
+          } else if (section.format === 'html') {
+            const compiled = rawToText(section.rawHtml!)
+            await r2Put(cKey, compiled)
+            await upsertSection({
+              id: secId, corpus: phase1Corpus, sourceUrl,
+              r2Key: cKey, wordCount: countWords(compiled),
+              status: 'compiled', format: 'html',
+            })
+          } else if (section.format === 'pdf') {
+            const rKey = rawKey(phase1Corpus, actId, section.sectionRef, 'pdf')
+            await r2Put(rKey, section.pdfBuffer!, 'application/pdf')
+            const placeholder = '[PDF - pending text extraction]'
+            await r2Put(cKey, placeholder)
+            await upsertSection({
+              id: secId, corpus: phase1Corpus, sourceUrl,
+              r2Key: cKey, r2RawKey: rKey, wordCount: 0,
+              status: 'compiled', format: 'pdf',
+            })
+          }
           recordSuccess(cp, actId)
         } catch (err: unknown) {
           recordError(cp, secId, String(err))

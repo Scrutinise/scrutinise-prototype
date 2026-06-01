@@ -1,5 +1,6 @@
 import { r2Get, r2Put, r2List, PROGRESS_KEY, csvKey } from './r2-client'
 import { WorkerCheckpoint, readCheckpoint } from './checkpoint'
+import { UnrecognisedFormatRow } from './db-metadata'
 
 const RESEND_API = 'https://api.resend.com/emails'
 const TO = 'cl@scrutinise.org'
@@ -93,7 +94,10 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
   await r2Put(key, content, 'text/csv')
 }
 
-export async function sendProgressEmail(agg: ProgressAggregate): Promise<void> {
+export async function sendProgressEmail(
+  agg: ProgressAggregate,
+  unrecognised: UnrecognisedFormatRow[] = [],
+): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
 
@@ -107,7 +111,7 @@ export async function sendProgressEmail(agg: ProgressAggregate): Promise<void> {
     return `  Worker ${w.workerId.toString().padStart(2)}  ${padded}: ${String(w.completed).padStart(7)} / ${String(w.total).padStart(9)} (${w.pct.padStart(6)})  ${status}`
   })
 
-  const body = [
+  const bodyParts = [
     'Scrutinise Corpus Ingest — Progress Report',
     `[${bst} BST]`,
     '',
@@ -118,7 +122,20 @@ export async function sendProgressEmail(agg: ProgressAggregate): Promise<void> {
     `Estimated completion: ${estimateCompletion(agg)}`,
     '',
     `Errors: see daily CSV in R2 at ingest-csv/progress-${new Date().toISOString().slice(0, 10)}.csv`,
-  ].join('\n')
+  ]
+
+  if (unrecognised.length > 0) {
+    bodyParts.push('')
+    bodyParts.push(`UNRECOGNISED FORMATS (last 4hrs): ${unrecognised.length} act(s)`)
+    for (const row of unrecognised) {
+      bodyParts.push(`  ${row.sourceUrl ?? '(no url)'}`)
+      if (row.xmlPreview) {
+        bodyParts.push(`    ${row.xmlPreview.replace(/\n/g, ' ')}`)
+      }
+    }
+  }
+
+  const body = bodyParts.join('\n')
 
   const res = await fetch(RESEND_API, {
     method: 'POST',
@@ -140,12 +157,10 @@ export async function sendProgressEmail(agg: ProgressAggregate): Promise<void> {
 
 function estimateCompletion(agg: ProgressAggregate): string {
   if (agg.totalCompleted === 0 || agg.totalEstimated === 0) return 'Insufficient data'
-  // Based on 4-hour reporting interval: extrapolate from total %
   const remaining = agg.totalEstimated - agg.totalCompleted
-  const rate = agg.workers.reduce((sum, w) => sum + w.completed, 0) // completed in all time
+  const rate = agg.workers.reduce((sum, w) => sum + w.completed, 0)
   if (rate === 0) return 'No rate data'
-  // Very rough: assume 4hr intervals, take pct done over assumed 4hr window
-  const hoursNeeded = (remaining / (rate / 24)) // workers running 24hr, per hour rate
+  const hoursNeeded = (remaining / (rate / 24))
   const eta = new Date(Date.now() + hoursNeeded * 3600_000)
   return eta.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 }
