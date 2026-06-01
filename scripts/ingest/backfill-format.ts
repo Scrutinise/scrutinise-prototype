@@ -19,7 +19,7 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-we
 import { PrismaClient } from '@prisma/client'
 
 async function main(): Promise<void> {
-  const db = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } })
+  const db = new PrismaClient()
 
   console.log('[backfill] counting rows to update...')
 
