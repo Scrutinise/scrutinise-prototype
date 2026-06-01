@@ -16,36 +16,33 @@
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
 
-import { PrismaClient } from '@prisma/client'
+import { Pool } from 'pg'
 
 async function main(): Promise<void> {
-  const db = new PrismaClient({ datasource: { db: { url: process.env.DATABASE_URL } } })
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
   console.log('[backfill] counting rows to update...')
-
-  const countResult = await db.$queryRaw<[{ count: bigint }]>`
-    SELECT COUNT(*) AS count
-    FROM corpus_sections
-    WHERE format IS NULL AND status = 'compiled' AND "r2Key" IS NOT NULL
-  `
-  const count = Number(countResult[0].count)
+  const { rows: countRows } = await pool.query<{ count: string }>(
+    `SELECT COUNT(*) AS count FROM corpus_sections
+     WHERE format IS NULL AND status = 'compiled' AND "r2Key" IS NOT NULL`
+  )
+  const count = parseInt(countRows[0].count, 10)
   console.log(`[backfill] ${count.toLocaleString()} rows to update`)
 
   if (count === 0) {
     console.log('[backfill] nothing to do')
-    await db.$disconnect()
+    await pool.end()
     return
   }
 
   console.log('[backfill] running UPDATE...')
-  const updated = await db.$executeRaw`
-    UPDATE corpus_sections
-    SET format = 'clml'
-    WHERE format IS NULL AND status = 'compiled' AND "r2Key" IS NOT NULL
-  `
-  console.log(`[backfill] done — ${Number(updated).toLocaleString()} rows updated to format='clml'`)
+  const result = await pool.query(
+    `UPDATE corpus_sections SET format = 'clml'
+     WHERE format IS NULL AND status = 'compiled' AND "r2Key" IS NOT NULL`
+  )
+  console.log(`[backfill] done — ${result.rowCount?.toLocaleString()} rows updated to format='clml'`)
 
-  await db.$disconnect()
+  await pool.end()
 }
 
 main().catch(err => { console.error('[backfill] fatal:', err); process.exit(1) })

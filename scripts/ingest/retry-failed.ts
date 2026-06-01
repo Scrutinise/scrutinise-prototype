@@ -1,9 +1,9 @@
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
 
-import { PrismaClient } from '@prisma/client'
+import { Pool } from 'pg'
 import { r2Get, r2Put, rawKey, compiledKey } from './shared/r2-client'
-import { upsertSection, countWords } from './shared/db-metadata'
+import { countWords } from './shared/db-metadata'
 import { rawToText } from './shared/compile'
 import { AdaptiveThrottle } from './shared/adaptive-throttle'
 
@@ -48,7 +48,7 @@ async function resolveRaw(row: FailedRow): Promise<{ content: string; key: strin
 }
 
 async function main(): Promise<void> {
-  const db = new PrismaClient({ datasource: { db: { url: process.env.DATABASE_URL } } })
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
   const throttle = new AdaptiveThrottle({ floor: 200 })
 
   let totalProcessed = 0
@@ -61,19 +61,14 @@ async function main(): Promise<void> {
   // Cursor-based pagination ordered by id so updates (failed→compiled) don't
   // shift the result window — each row is visited exactly once per run.
   while (true) {
-    const rows = await (db as unknown as {
-      corpusSection: {
-        findMany: (args: {
-          where: Record<string, unknown>
-          take: number
-          orderBy: Record<string, string>
-        }) => Promise<FailedRow[]>
-      }
-    }).corpusSection.findMany({
-      where: { status: 'failed', id: { gt: lastId } },
-      take: BATCH_SIZE,
-      orderBy: { id: 'asc' },
-    })
+    const { rows } = await pool.query<FailedRow>(
+      `SELECT id, corpus, "r2RawKey", "r2Key"
+       FROM corpus_sections
+       WHERE status = 'failed' AND id > $1
+       ORDER BY id ASC
+       LIMIT $2`,
+      [lastId, BATCH_SIZE]
+    )
 
     if (rows.length === 0) break
 
@@ -104,17 +99,14 @@ async function main(): Promise<void> {
 
       try {
         const compiled = rawToText(content)
-
         await r2Put(cKey, compiled)
-        await upsertSection({
-          id: row.id,
-          corpus,
-          r2Key: cKey,
-          r2RawKey: rawR2Key,
-          wordCount: countWords(compiled),
-          status: 'compiled',
-        })
-
+        await pool.query(
+          `UPDATE corpus_sections
+           SET "r2Key" = $1, "r2RawKey" = $2, "wordCount" = $3,
+               status = 'compiled', "compiledAt" = NOW(), "errorMsg" = NULL
+           WHERE id = $4`,
+          [cKey, rawR2Key, countWords(compiled), row.id]
+        )
         throttle.success()
         totalSucceeded++
         console.log(`  ✓ ${row.id}`)
@@ -122,15 +114,19 @@ async function main(): Promise<void> {
         throttle.backoff()
         totalFailed++
         const msg = String(err).slice(0, 500)
-        // Preserve the discovered rawR2Key so the next retry run can find the raw content
-        await upsertSection({ id: row.id, corpus, r2RawKey: rawR2Key, status: 'failed', errorMsg: msg })
+        await pool.query(
+          `UPDATE corpus_sections
+           SET "r2RawKey" = $1, status = 'failed', "errorMsg" = $2
+           WHERE id = $3`,
+          [rawR2Key, msg, row.id]
+        )
         console.error(`  ✗ ${row.id} — ${msg}`)
       }
     }
   }
 
   console.log(`\nretry-failed complete: ${totalSucceeded} compiled, ${totalFailed} still failed (${totalProcessed} total)`)
-  await db.$disconnect()
+  await pool.end()
 }
 
 main().catch(err => { console.error('[retry-failed] fatal:', err); process.exit(1) })
