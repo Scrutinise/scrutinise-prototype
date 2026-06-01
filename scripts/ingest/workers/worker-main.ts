@@ -156,6 +156,7 @@ async function runPhase1(workerId: number, cp: WorkerCheckpoint): Promise<void> 
               id: secId, corpus: phase1Corpus, sourceUrl,
               r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled),
               status: 'compiled', format: section.format, xmlPreview: section.xmlPreview,
+              ...(section.isEnactedOnly ? { notes: 'enacted-only' } : {}),
             })
           } else if (section.format === 'html') {
             const compiled = rawToText(section.rawHtml!)

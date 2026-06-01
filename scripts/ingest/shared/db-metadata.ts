@@ -30,6 +30,7 @@ export interface SectionMeta {
   errorMsg?: string
   format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable'
   xmlPreview?: string
+  notes?: string
 }
 
 type CorpusSectionClient = {
@@ -58,6 +59,7 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
       errorMsg: meta.errorMsg ?? null,
       format: meta.format ?? null,
       xmlPreview: meta.xmlPreview ?? null,
+      notes: meta.notes ?? null,
     },
     update: {
       r2Key: meta.r2Key ?? null,
@@ -67,6 +69,7 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
       errorMsg: meta.errorMsg ?? null,
       format: meta.format ?? null,
       xmlPreview: meta.xmlPreview ?? null,
+      notes: meta.notes ?? null,
       ...(meta.status === 'compiled' ? { compiledAt: new Date() } : {}),
     },
   })

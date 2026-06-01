@@ -14,11 +14,12 @@ export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavail
 export interface TnaSection {
   sectionRef: string
   format: SectionFormat
-  xml?: string        // clml / clml-unparsed
-  rawHtml?: string    // html
-  pdfBuffer?: Buffer  // pdf
-  xmlPreview?: string // clml-unparsed: first 200 chars of raw XML for diagnostic email
-  errorMsg?: string   // unavailable
+  xml?: string          // clml / clml-unparsed
+  rawHtml?: string      // html
+  pdfBuffer?: Buffer    // pdf
+  xmlPreview?: string   // clml-unparsed: first 200 chars of raw XML for diagnostic email
+  errorMsg?: string     // unavailable
+  isEnactedOnly?: boolean // true when TNA only has enacted text (no consolidated version)
 }
 
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
@@ -129,6 +130,20 @@ export async function listActIds(type: string, yearMin: number, yearMax: number)
   return ids
 }
 
+// ── Enacted-only detection ────────────────────────────────────────────────────
+// TNA serves two versions of legislation: revised (consolidated with amendments)
+// and enacted (original text only). When only the enacted version exists, the root
+// element attributes contain the word "enacted". Detecting this early lets us flag
+// sections so we can later identify acts that need amendment tracking.
+
+function detectEnactedOnly(xml: string): boolean {
+  // Skip XML declaration (<?xml ... ?>) if present, then inspect root element attrs
+  const afterDecl = xml.trimStart().startsWith('<?') ? xml.indexOf('?>') + 2 : 0
+  const rootTagEnd = xml.indexOf('>', afterDecl)
+  if (rootTagEnd === -1) return false
+  return /\benacted\b/i.test(xml.slice(afterDecl, rootTagEnd + 1))
+}
+
 // ── Section extraction ─────────────────────────────────────────────────────────
 // Known CLML section element types that carry top-level numbered content.
 // If none are found in the downloaded XML, the full XML is stored as clml-unparsed.
@@ -169,9 +184,14 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
   const fullXml = await fetchText(xmlUrl)
 
   if (fullXml && fullXml.trim().length > 0) {
+    const isEnactedOnly = detectEnactedOnly(fullXml)
+    if (isEnactedOnly) console.log(`[tna] ${actId}: enacted-only (no consolidated version)`)
+
     const sections = extractClmlSections(fullXml)
     if (sections.length > 0) {
-      return sections
+      return isEnactedOnly
+        ? sections.map(s => ({ ...s, isEnactedOnly: true }))
+        : sections
     }
     // XML returned but no known CLML elements found — store whole doc as one blob
     console.log(`[tna] ${actId}: 0 known CLML elements (XML ${fullXml.length} chars) — storing as clml-unparsed`)
@@ -180,6 +200,7 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
       format: 'clml-unparsed',
       xml: fullXml,
       xmlPreview: fullXml.trim().slice(0, 200),
+      isEnactedOnly,
     }]
   }
 
