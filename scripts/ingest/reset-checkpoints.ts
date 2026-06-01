@@ -1,3 +1,12 @@
+/**
+ * reset-checkpoints.ts — delete worker checkpoint files from R2 so workers
+ * restart Phase 1 from scratch on next Railway redeploy.
+ *
+ * Usage:
+ *   npx tsx scripts/ingest/reset-checkpoints.ts          # resets workers 1–4 (default)
+ *   npx tsx scripts/ingest/reset-checkpoints.ts 3 4      # resets only workers 3 and 4
+ *   npx tsx scripts/ingest/reset-checkpoints.ts 1 2 3 4  # explicit full reset
+ */
 import path from 'path'
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
@@ -14,14 +23,14 @@ const r2 = new S3Client({
   },
 })
 
-const KEYS = [
-  'ingest-checkpoint/worker-1.json',
-  'ingest-checkpoint/worker-2.json',
-  'ingest-checkpoint/worker-3.json',
-  'ingest-checkpoint/worker-4.json',
-]
+// Parse worker IDs from args, defaulting to 1–4
+const argIds = process.argv.slice(2).map(Number).filter(n => n >= 1 && n <= 10)
+const workerIds = argIds.length > 0 ? argIds : [1, 2, 3, 4]
+
+const KEYS = workerIds.map(id => `ingest-checkpoint/worker-${id}.json`)
 
 async function main() {
+  console.log(`Resetting checkpoints for worker(s): ${workerIds.join(', ')}`)
   for (const key of KEYS) {
     try {
       await r2.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
@@ -30,7 +39,7 @@ async function main() {
       console.error(`failed: ${key} — ${err}`)
     }
   }
-  console.log('done — workers 1–4 will start Phase 1 from scratch on next restart')
+  console.log(`done — worker(s) ${workerIds.join(', ')} will start Phase 1 from scratch on next restart`)
 }
 
 main().catch(err => { console.error(err); process.exit(1) })
