@@ -130,18 +130,28 @@ export async function listActIds(type: string, yearMin: number, yearMax: number)
   return ids
 }
 
-// ── Enacted-only detection ────────────────────────────────────────────────────
-// TNA serves two versions of legislation: revised (consolidated with amendments)
-// and enacted (original text only). When only the enacted version exists, the root
-// element attributes contain the word "enacted". Detecting this early lets us flag
-// sections so we can later identify acts that need amendment tracking.
+// ── Root attribute helpers ────────────────────────────────────────────────────
 
-function detectEnactedOnly(xml: string): boolean {
-  // Skip XML declaration (<?xml ... ?>) if present, then inspect root element attrs
+function rootAttrs(xml: string): string {
+  // Returns the root element's opening tag, skipping any XML declaration.
   const afterDecl = xml.trimStart().startsWith('<?') ? xml.indexOf('?>') + 2 : 0
-  const rootTagEnd = xml.indexOf('>', afterDecl)
-  if (rootTagEnd === -1) return false
-  return /\benacted\b/i.test(xml.slice(afterDecl, rootTagEnd + 1))
+  const end = xml.indexOf('>', afterDecl)
+  return end === -1 ? '' : xml.slice(afterDecl, end + 1)
+}
+
+// TNA serves two versions of legislation:
+//   revised  — consolidated with amendments applied by TNA editorial
+//   enacted/made — original text only (Primary Acts: /enacted, SIs: /made)
+// The DocumentURI attribute identifies which version this document is.
+// Revised versions have no suffix (just /ukpga/2000/8).
+function detectEnactedOnly(xml: string): boolean {
+  return /\bDocumentURI="[^"]*\/(enacted|made)"/.test(rootAttrs(xml))
+}
+
+// NumberOfProvisions="0" means the CLML contains metadata only — no body text.
+// These acts exist as PDF-only; falling through to the HTML/PDF fetchers is correct.
+function hasNoProvisions(xml: string): boolean {
+  return /\bNumberOfProvisions="0"/.test(rootAttrs(xml))
 }
 
 // ── Section extraction ─────────────────────────────────────────────────────────
@@ -189,14 +199,20 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
   // ── Primary format ────────────────────────────────────────────────────────
   if (fullXml && fullXml.trim().length > 0) {
     const isEnactedOnly = detectEnactedOnly(fullXml)
-    if (isEnactedOnly) console.log(`[tna] ${actId}: enacted-only (no consolidated version)`)
+    if (isEnactedOnly) console.log(`[tna] ${actId}: enacted/made — flagging as enacted-only`)
 
     const clmlSections = extractClmlSections(fullXml)
     if (clmlSections.length > 0) {
       sections.push(...(isEnactedOnly
         ? clmlSections.map(s => ({ ...s, isEnactedOnly: true }))
         : clmlSections))
+    } else if (hasNoProvisions(fullXml)) {
+      // NumberOfProvisions="0": metadata-only CLML, body content is PDF-only.
+      // Don't store as clml-unparsed — fall through to HTML/PDF fetchers below.
+      console.log(`[tna] ${actId}: CLML NumberOfProvisions=0 — falling through to HTML/PDF`)
     } else {
+      // CLML present but no recognised element types — store as clml-unparsed
+      // so the scheduler email can show the XML preview for regex diagnosis.
       console.log(`[tna] ${actId}: 0 known CLML elements (XML ${fullXml.length} chars) — storing as clml-unparsed`)
       sections.push({
         sectionRef: 'full-doc',
@@ -206,14 +222,15 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
         isEnactedOnly,
       })
     }
-  } else {
-    // HTML fallback
+  }
+
+  // HTML/PDF fallback — runs when CLML was absent OR NumberOfProvisions=0
+  if (sections.length === 0) {
     const rawHtml = await fetchText(`${TNA_BASE}/${actId}/data.htm`)
     if (rawHtml && rawHtml.trim().length > 0) {
       console.log(`[tna] ${actId}: HTML fallback (${rawHtml.length} chars)`)
       sections.push({ sectionRef: 'full-doc-html', format: 'html', rawHtml })
     } else {
-      // PDF fallback
       const pdfBuffer = await fetchBinary(`${TNA_BASE}/${actId}/data.pdf`)
       if (pdfBuffer && pdfBuffer.length > 0) {
         console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)
