@@ -41,10 +41,14 @@ const BAILII_DATABASES: Array<{ jurisdiction: string; court: string; path: strin
   { jurisdiction: 'UK',  court: 'UKPC',  path: '/uk/cases/UKPC/' },
 ]
 
-// Map worker ID to which database subset to handle
+// Map worker ID to which BAILII court subsets to process in Phase 2.
+// All 10 courts are covered across workers 5, 6, 7.
+// Worker 5 (bailii-tribunals): Supreme Court + Employment Tribunals + Scottish courts
+// Worker 6 (bailii-eat):       Court of Appeal + High Court + Employment Appeals
+// Worker 7 (bailii-privy-ni):  Privy Council + NI courts
 export const WORKER_DB_SUBSETS: Record<number, typeof BAILII_DATABASES> = {
-  5: BAILII_DATABASES.filter(d => ['UKET', 'ET'].includes(d.court) || d.court.startsWith('ET')),
-  6: BAILII_DATABASES.filter(d => ['EAT', 'UKEAT'].includes(d.court)),
+  5: BAILII_DATABASES.filter(d => ['UKSC', 'CSIH', 'CSOH', 'UKET'].includes(d.court)),
+  6: BAILII_DATABASES.filter(d => ['EWCA', 'EWHC', 'UKEAT'].includes(d.court)),
   7: BAILII_DATABASES.filter(d => ['UKPC', 'NICA', 'NIQB'].includes(d.court)),
 }
 
