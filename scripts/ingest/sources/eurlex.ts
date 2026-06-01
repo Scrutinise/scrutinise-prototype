@@ -21,43 +21,52 @@ async function fetchHtml(url: string): Promise<string | null> {
   return res.text()
 }
 
-// Focus on instruments cross-referenced in UK legislation.gov.uk (eudn/eur/eudr types)
-// These are the ~4,000 instruments that became UK retained EU law
-// We enumerate from the EUR-Lex SPARQL endpoint (no auth required for basic queries)
-const SPARQL_ENDPOINT = 'https://publications.europa.eu/webapi/rdf/sparql'
+interface SearchPage {
+  results?: Array<{ celex?: string; title?: string; date?: string }>
+}
 
-async function sparqlQuery(query: string): Promise<{ results?: { bindings: Array<Record<string, { value: string }>> } } | null> {
+async function fetchSearchPage(page: number, pageSize: number): Promise<SearchPage | null> {
   await throttle.wait()
-  const url = `${SPARQL_ENDPOINT}?query=${encodeURIComponent(query)}&format=application%2Fjson`
-  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Scrutinise-Ingest/1.0' } })
+  const url = `${EUR_LEX_BASE}/search.html` +
+    `?scope=EURLEX&type=quick&lang=en` +
+    `&andText0=united+kingdom&celex=3*` +
+    `&page=${page}&pageSize=${pageSize}&format=json`
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', 'User-Agent': 'Scrutinise-Ingest/1.0' },
+  })
   if (res.status === 429) { throttle.backoff(); return null }
   if (!res.ok) return null
   throttle.success()
-  try { return await res.json() } catch { return null }
+  try { return await res.json() as SearchPage } catch { return null }
 }
 
-export async function* listRetainedEuInstruments(): AsyncGenerator<EurLexDoc> {
-  // Query EUR-Lex for instruments classified as UK retained (using SPARQL)
-  const query = `
-    PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
-    SELECT ?celexId ?title ?date WHERE {
-      ?doc cdm:resource_legal_id_celex ?celexId ;
-           cdm:work_title_alternative ?title ;
-           cdm:work_date_document ?date .
-      FILTER(LANG(?title) = "en")
-      FILTER(STRSTARTS(?celexId, "3"))
-    } LIMIT 100
-  `
-  const data = await sparqlQuery(query)
-  for (const row of data?.results?.bindings ?? []) {
-    const celexId = row.celexId?.value
-    if (!celexId) continue
-    yield {
-      celexId,
-      title: row.title?.value ?? '',
-      date: row.date?.value ?? '',
-      url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${celexId}`,
+// Paginate through EUR-Lex CELEX series 3 (secondary legislation) filtered to
+// UK-relevant instruments — the ~4 000 items that became UK retained EU law.
+export async function* listRetainedEuInstruments(maxItems = 5000): AsyncGenerator<EurLexDoc> {
+  let page = 1
+  const pageSize = 100
+  let fetched = 0
+
+  while (fetched < maxItems) {
+    const data = await fetchSearchPage(page, pageSize)
+    if (!data) continue  // rate-limited — throttle already backed off, retry same page
+
+    const items = data.results ?? []
+    if (items.length === 0) break
+
+    for (const item of items) {
+      if (!item.celex) continue
+      yield {
+        celexId: item.celex,
+        title: item.title ?? '',
+        date: item.date ?? '',
+        url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${item.celex}`,
+      }
+      if (++fetched >= maxItems) return
     }
+
+    if (items.length < pageSize) break
+    page++
   }
 }
 

@@ -29,12 +29,24 @@ async function fetchText(url: string): Promise<string | null> {
   return res.text()
 }
 
+const UK_QUERY = 'country:GBR AND (doctype:JUDGMENTS OR doctype:DECISIONS)'
+
+// Get total number of UK judgments/decisions from HUDOC before iterating.
+export async function countUkCases(): Promise<number> {
+  const url = `${HUDOC_BASE}/app/query/results` +
+    `?select=itemid&query=${encodeURIComponent(UK_QUERY)}&start=0&length=1`
+  const data = await fetchJson(url) as {
+    results?: { resultcount?: number }
+  } | null
+  return data?.results?.resultcount ?? 0
+}
+
 export async function* listUkCases(pageSize = 50): AsyncGenerator<EchrCase> {
   let start = 0
   while (true) {
     const url = `${HUDOC_BASE}/app/query/results` +
       `?select=itemid,docname,kpdate,importance` +
-      `&query=contry:GBR AND (doctype:JUDGMENTS OR doctype:DECISIONS)` +
+      `&query=${encodeURIComponent(UK_QUERY)}` +
       `&start=${start}&length=${pageSize}`
 
     const data = await fetchJson(url) as {
