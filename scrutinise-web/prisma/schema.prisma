@@ -1831,6 +1831,18 @@ model IngestQueue {
   @@map("ingest_queue")
 }
 
+// Per-source rate-limit token buckets — shared across all workers.
+model SourceRateLimit {
+  sourceKey       String    @id
+  intervalMs      Int
+  lastIssuedAt    BigInt    @default(0)
+  suspended       Boolean   @default(false)
+  suspendedUntil  DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@map("source_rate_limits")
+}
+
 // Append-only time-series — one row per corpus per scheduler run.
 // Never updated. Provides historical ingest velocity over time.
 model IngestProgressSnapshot {

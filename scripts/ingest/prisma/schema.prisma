@@ -1817,6 +1817,19 @@ model IngestQueue {
   @@map("ingest_queue")
 }
 
+// Per-source request rate limits. Workers JOIN this table before claiming a row
+// so no source is hit faster than its interval allows across all workers combined.
+model SourceRateLimit {
+  sourceKey       String    @id
+  intervalMs      Int
+  lastIssuedAt    BigInt    @default(0)
+  suspended       Boolean   @default(false)
+  suspendedUntil  DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@map("source_rate_limits")
+}
+
 model IngestProgressSnapshot {
   id                Int      @id @default(autoincrement())
   capturedAt        DateTime @default(now())
