@@ -1,76 +1,113 @@
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 
 const TNA_CASELAW_BASE = 'https://caselaw.nationalarchives.gov.uk'
-const throttle = new AdaptiveThrottle({ floor: 200 })
+const ATOM_FEED = `${TNA_CASELAW_BASE}/atom.xml`
+const ITEMS_PER_PAGE = 50  // TNA atom feed returns 50 entries per page
+const throttle = new AdaptiveThrottle({ floor: 200, ceiling: 30_000 })
+const UA = 'Scrutinise-Ingest/1.0 (Open Justice; contact: cl@scrutinise.org)'
 
 export interface CaseLawJudgment {
-  uri: string          // e.g. "/ewca/civ/2023/100"
-  neutralCitation: string
+  uri: string            // e.g. "uksc/2024/1" or "d-f11e093f-..."
+  neutralCitation: string // e.g. "[2024] UKSC 1"
   name: string
-  date: string
-  xmlUrl: string
-}
-
-async function fetchJson(url: string): Promise<unknown | null> {
-  await throttle.wait()
-  const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (Open Justice)' } })
-  if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
-  if (!res.ok) return null
-  throttle.success()
-  try { return await res.json() } catch { return null }
-}
-
-// Probe the first search page and return the total judgment count.
-export async function getTotalJudgments(): Promise<number> {
-  const url = `${TNA_CASELAW_BASE}/search/results.json?query=*&page=1&per_page=1&order=date`
-  const data = await fetchJson(url) as SearchResult | null
-  return data?.total ?? 0
+  date: string           // YYYY-MM-DD
+  xmlUrl: string         // https://…/data.xml
 }
 
 async function fetchText(url: string): Promise<string | null> {
   await throttle.wait()
-  const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (Open Justice)' } })
+  const res = await fetch(url, { headers: { 'User-Agent': UA } })
   if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
+  if (res.status === 404 || res.status === 410) return null
   if (!res.ok) return null
   throttle.success()
   return res.text()
 }
 
-interface SearchResult {
-  results?: Array<{
-    uri: string
-    neutral_citation?: string
-    name?: string
-    date?: string
-  }>
-  total?: number
+// Extract last-page number from the Atom feed's <link rel="last"> element.
+// Feed links have the form: href="...?page=7485" rel="last"
+function extractLastPage(xml: string): number {
+  // href always comes before rel in TNA feed link elements
+  const m = /href="[^"]+\?page=([0-9]+)"[^>]*rel="last"/.exec(xml)
+    ?? /rel="last"[^>]*href="[^"]+\?page=([0-9]+)"/.exec(xml)
+  return m ? parseInt(m[1], 10) : 0
 }
 
-export async function* listJudgments(pageSize = 50): AsyncGenerator<CaseLawJudgment> {
-  let page = 1
-  let exhausted = false
+// Get total judgment count.  Fetches just the first Atom page, reads the
+// last-page link, and multiplies by ITEMS_PER_PAGE.
+export async function getTotalJudgments(): Promise<number> {
+  const xml = await fetchText(ATOM_FEED)
+  if (!xml) return 0
+  const lastPage = extractLastPage(xml)
+  return lastPage > 0 ? lastPage * ITEMS_PER_PAGE : 0
+}
 
-  while (!exhausted) {
-    const url = `${TNA_CASELAW_BASE}/search/results.json?query=*&page=${page}&per_page=${pageSize}&order=date`
-    const data = await fetchJson(url) as SearchResult | null
-    if (!data || !Array.isArray(data.results) || data.results.length === 0) break
+// Parse all CaseLawJudgment entries out of one page of the Atom feed.
+function parseEntries(xml: string): CaseLawJudgment[] {
+  const results: CaseLawJudgment[] = []
+  const entryRx = /<entry>([\s\S]*?)<\/entry>/g
+  let m: RegExpExecArray | null
 
-    for (const item of data.results) {
-      yield {
-        uri: item.uri,
-        neutralCitation: item.neutral_citation ?? '',
-        name: item.name ?? '',
-        date: item.date ?? '',
-        xmlUrl: `${TNA_CASELAW_BASE}${item.uri}/data.xml`,
-      }
-    }
+  while ((m = entryRx.exec(xml)) !== null) {
+    const entry = m[1]
 
-    if (data.results.length < pageSize) exhausted = true
-    page++
+    // AKN XML link: type="application/akn+xml"
+    const xmlLinkM = /href="(https:\/\/caselaw\.nationalarchives\.gov\.uk\/[^"]+\/data\.xml)"/.exec(entry)
+    if (!xmlLinkM) continue
+    const xmlUrl = xmlLinkM[1]
+
+    // Derive URI by stripping base URL and /data.xml suffix
+    const uri = xmlUrl
+      .replace(`${TNA_CASELAW_BASE}/`, '')
+      .replace('/data.xml', '')
+
+    // Neutral citation (type="ukncn") — not all documents have one
+    const ncnM = /<tna:identifier[^>]+type="ukncn"[^>]*>([^<]+)<\/tna:identifier>/.exec(entry)
+      ?? /tna:identifier[^>]+type="ukncn">([^<]+)</.exec(entry)
+    const neutralCitation = ncnM ? ncnM[1].trim() : ''
+
+    // Title (second <title> element — first is the feed title)
+    const titleM = /<title>([^<]+)<\/title>/.exec(entry)
+    const name = titleM ? titleM[1].trim() : ''
+
+    // Published date
+    const dateM = /<published>([0-9]{4}-[0-9]{2}-[0-9]{2})/.exec(entry)
+    const date = dateM ? dateM[1] : ''
+
+    results.push({ uri, neutralCitation, name, date, xmlUrl })
+  }
+
+  return results
+}
+
+// Paginate through the entire Atom feed, oldest-first (highest page first)
+// so checkpoint resume by neutralCitation / URI works correctly.
+// Oldest judgments are on the highest page numbers; newest on page 1.
+// We iterate page 1 → lastPage so newest are ingested first (higher value).
+export async function* listJudgments(): AsyncGenerator<CaseLawJudgment> {
+  const firstXml = await fetchText(ATOM_FEED)
+  if (!firstXml) return
+
+  const lastPage = extractLastPage(firstXml)
+  if (lastPage === 0) {
+    // Fallback: just yield entries from the first page we already have
+    for (const j of parseEntries(firstXml)) yield j
+    return
+  }
+
+  // Yield page 1 (already fetched)
+  for (const j of parseEntries(firstXml)) yield j
+
+  // Fetch remaining pages
+  for (let page = 2; page <= lastPage; page++) {
+    const xml = await fetchText(`${ATOM_FEED}?page=${page}`)
+    if (!xml) continue
+    const entries = parseEntries(xml)
+    if (entries.length === 0) break
+    for (const j of entries) yield j
   }
 }
 
 export async function fetchJudgmentXml(xmlUrl: string): Promise<string | null> {
   return fetchText(xmlUrl)
 }
-
