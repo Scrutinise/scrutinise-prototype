@@ -9,7 +9,7 @@ let _prisma: PrismaClient | null = null
 
 function getPrisma(): PrismaClient {
   if (!_prisma) {
-    _prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } })
+    _prisma = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL })
   }
   return _prisma
 }
