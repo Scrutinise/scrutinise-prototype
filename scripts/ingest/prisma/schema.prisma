@@ -1816,3 +1816,17 @@ model IngestQueue {
   @@index([claimedBy], name: "ingest_queue_claimed_by")
   @@map("ingest_queue")
 }
+
+model IngestProgressSnapshot {
+  id                Int      @id @default(autoincrement())
+  capturedAt        DateTime @default(now())
+  workerLabel       String
+  sourceKey         String
+  sectionsCompiled  Int
+  sectionsEstimated Int
+  phase             String
+
+  @@index([capturedAt])
+  @@index([sourceKey])
+  @@map("ingest_progress_snapshots")
+}

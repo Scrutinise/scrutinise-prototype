@@ -1830,3 +1830,19 @@ model IngestQueue {
   @@index([claimedBy], name: "ingest_queue_claimed_by")
   @@map("ingest_queue")
 }
+
+// Append-only time-series — one row per corpus per scheduler run.
+// Never updated. Provides historical ingest velocity over time.
+model IngestProgressSnapshot {
+  id                Int      @id @default(autoincrement())
+  capturedAt        DateTime @default(now())
+  workerLabel       String   // e.g. "Primary Acts pre-2000"
+  sourceKey         String   // corpus label — matches corpus_sections.corpus
+  sectionsCompiled  Int
+  sectionsEstimated Int
+  phase             String   // "phase1" | "phase2" | "queue"
+
+  @@index([capturedAt])
+  @@index([sourceKey])
+  @@map("ingest_progress_snapshots")
+}
