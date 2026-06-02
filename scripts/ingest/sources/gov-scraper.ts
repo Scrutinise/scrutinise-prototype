@@ -82,6 +82,37 @@ export async function* listConsultations(): AsyncGenerator<GovDocument> {
   yield* searchGovUk('consultation response gov.uk', 'consultations', 3000)
 }
 
+// ── HMRC TIINs ────────────────────────────────────────────────────────────────
+// Tax Information and Impact Notes published via gov.uk content API.
+// Collection URL: /government/collections/tax-information-and-impact-notes-tiins
+
+export async function* listHmrcTiins(): AsyncGenerator<GovDocument> {
+  // Use the gov.uk content API to enumerate the TIINS collection
+  const collection = await fetchJson(`${GOV_CONTENT}/government/collections/tax-information-and-impact-notes-tiins`) as {
+    links?: { documents?: Array<{ api_url?: string; title?: string; web_url?: string }> }
+  } | null
+
+  const docs = collection?.links?.documents ?? []
+  if (docs.length === 0) {
+    // Fallback: search API
+    yield* searchGovUk('tax information impact note TIIN', 'hmrc-tiins', 3000)
+    return
+  }
+
+  for (const doc of docs) {
+    if (!doc.web_url) continue
+    const id = (doc.api_url ?? doc.web_url).replace(/[^a-z0-9-]/gi, '-').slice(-120)
+    yield { id, title: doc.title ?? '', url: doc.web_url, corpus: 'hmrc-tiins' }
+  }
+}
+
+// ── Office of Tax Simplification Reports ─────────────────────────────────────
+// OTS was abolished in 2021 — historical reports remain on gov.uk.
+
+export async function* listOtsReports(): AsyncGenerator<GovDocument> {
+  yield* searchGovUk('office of tax simplification report', 'ots-reports', 500)
+}
+
 // ── Text extraction ────────────────────────────────────────────────────────────
 
 export async function fetchDocumentText(url: string): Promise<string | null> {
