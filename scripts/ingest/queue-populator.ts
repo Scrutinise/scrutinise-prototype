@@ -17,7 +17,11 @@ import { listActIds, WORKER_CORPORA } from './sources/tna-legislation'
 import { getTotalJudgments } from './sources/tna-caselaw'
 import { HANSARD_PARTITIONS } from './sources/parliament-api'
 import { WORKER_DB_SUBSETS } from './sources/bailii-scraper'
+import { FCA_KNOWN_SOURCEBOOKS } from './sources/fca-handbook'
+import { countUkCases } from './sources/echr-hudoc'
 import { AdaptiveThrottle } from './shared/adaptive-throttle'
+
+type QueueRowInput = { id: string; corpus: string; docId: string; sourceType: string; priority: number }
 
 // ── Priority mapping ──────────────────────────────────────────────────────────
 // Per corpus plan: 1=highest, 5=lowest
@@ -241,6 +245,147 @@ function workerIdToBailiiCorpus(workerId: number): string {
   return map[workerId] ?? 'bailii-tribunals'
 }
 
+// ── C1 — Committee Reports ────────────────────────────────────────────────────
+
+async function populateCommittees(): Promise<number> {
+  const rows = [
+    { id: 'committees:__index', corpus: 'committees-a', docId: '__index', sourceType: 'hansard', priority: 2 },
+  ]
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] committees: 1 discovery row → ${inserted} new row inserted`)
+  return inserted
+}
+
+// ── C2 — FCA Handbook per-sourcebook rows ─────────────────────────────────────
+
+async function populateFcaSourcebooks(): Promise<number> {
+  const rows = FCA_KNOWN_SOURCEBOOKS.map(code => ({
+    id: `fca-regulators:sourcebook:${code}`,
+    corpus: 'fca-regulators',
+    docId: `sourcebook:${code}`,
+    sourceType: 'fca',
+    priority: 2,
+  }))
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] fca-regulators: ${rows.length} sourcebook rows → ${inserted} new rows inserted`)
+  return inserted
+}
+
+// ── C4 — ECHR HUDOC paginated rows ───────────────────────────────────────────
+
+async function populateEchrPages(): Promise<number> {
+  let totalCases = 0
+  try {
+    totalCases = await countUkCases()
+    console.log(`[populator] echr-hudoc: total UK cases from API = ${totalCases}`)
+  } catch (err) {
+    console.warn('[populator] echr-hudoc: could not query total — using 30,000 default:', err)
+    totalCases = 30_000
+  }
+
+  const pageSize = 50
+  const totalPages = Math.max(Math.ceil(totalCases / pageSize), 600)
+  const rows = []
+  for (let start = 0; start < totalPages * pageSize; start += pageSize) {
+    rows.push({
+      id: `echr-hudoc:page:${start}`,
+      corpus: 'echr-hudoc',
+      docId: `page:${start}`,
+      sourceType: 'echr',
+      priority: 3,
+    })
+  }
+
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] echr-hudoc: ${rows.length} page rows → ${inserted} new rows inserted`)
+  return inserted
+}
+
+// ── C5 — EUR-Lex paginated rows ───────────────────────────────────────────────
+
+async function populateEurLexPages(totalPages = 50): Promise<number> {
+  const rows = []
+  for (let page = 1; page <= totalPages; page++) {
+    rows.push({
+      id: `eur-lex:page:${page}`,
+      corpus: 'eur-lex',
+      docId: `page:${page}`,
+      sourceType: 'eurlex',
+      priority: 3,
+    })
+  }
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] eur-lex: ${rows.length} page rows → ${inserted} new rows inserted`)
+  return inserted
+}
+
+// ── Shared helper — generate monthly chunk rows ───────────────────────────────
+
+function monthlyChunks(
+  corpus: string, sourceType: string, prefix: string,
+  startDate: string, endDate: string, prio: number,
+): QueueRowInput[] {
+  const rows: QueueRowInput[] = []
+  const end = new Date(endDate)
+  let current = new Date(startDate)
+  while (current <= end) {
+    const monthStart = current.toISOString().slice(0, 10)
+    const next = new Date(current)
+    next.setMonth(next.getMonth() + 1)
+    const monthEnd = new Date(Math.min(next.getTime() - 1, end.getTime())).toISOString().slice(0, 10)
+    const docId = `${prefix}:${monthStart}:${monthEnd}`
+    rows.push({ id: `${corpus}:${docId}`, corpus, docId, sourceType, priority: prio })
+    current = next
+  }
+  return rows
+}
+
+// ── F1 — Parliamentary Written Answers ────────────────────────────────────────
+
+async function populateWrittenAnswers(): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10)
+  const rows = monthlyChunks('written-answers', 'hansard', 'answers', '2000-01-01', today, 2)
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] written-answers: ${rows.length} monthly chunks → ${inserted} new rows inserted`)
+  return rows.length
+}
+
+// ── F1 — Parliamentary Written Ministerial Statements ─────────────────────────
+
+async function populateWrittenStatements(): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10)
+  const rows = monthlyChunks('written-statements', 'hansard', 'statements', '1997-05-01', today, 2)
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] written-statements: ${rows.length} monthly chunks → ${inserted} new rows inserted`)
+  return rows.length
+}
+
+// ── F2/F3/F4/F5 — Single-row placeholder sources ──────────────────────────────
+
+async function populateNewSingleRowSources(): Promise<void> {
+  const rows: QueueRowInput[] = [
+    { id: 'hmrc-tiins:__index',  corpus: 'hmrc-tiins',  docId: '__index', sourceType: 'gov-uk',    priority: 2 },
+    { id: 'ots-reports:__index', corpus: 'ots-reports', docId: '__index', sourceType: 'gov-uk',    priority: 3 },
+    { id: 'scotlawcom:__index',  corpus: 'scotlawcom',  docId: '__index', sourceType: 'scotlawcom',priority: 2 },
+    { id: 'nilawcom:__index',    corpus: 'nilawcom',    docId: '__index', sourceType: 'nilawcom',  priority: 3 },
+  ]
+  await bulkUpsertQueueRows(rows)
+  console.log(`[populator] new single-row sources: ${rows.length} rows inserted`)
+}
+
+// ── C6 — UK Treaties refresh row ─────────────────────────────────────────────
+
+async function populateUkTreatiesRefresh(): Promise<number> {
+  // The original __index row is done but produced 0 sections. Add a fresh
+  // discovery row to retry the full enumeration (r2Exists skips already compiled).
+  const rows = [
+    { id: 'uk-treaties:v2:__index', corpus: 'uk-treaties', docId: '__index', sourceType: 'treaties', priority: 3 },
+  ]
+  const inserted = await bulkUpsertQueueRows(rows)
+  console.log(`[populator] uk-treaties: retry row → ${inserted} new row inserted`)
+  return inserted
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -255,15 +400,24 @@ async function main(): Promise<void> {
   const hansardCount   = await populateHansard()
   const bailiiCount    = await populateBailii()
 
-  // FCA, ECHR, EUR-Lex, OECD, Treaties — smaller sets, use placeholder rows
-  // that workers will expand on first claim
+  // New parallel-friendly populators (C1–C6)
+  const committeeCount = await populateCommittees()
+  const fcaCount       = await populateFcaSourcebooks()
+  const echrCount      = await populateEchrPages()
+  const eurLexCount    = await populateEurLexPages()
+  const treatyCount    = await populateUkTreatiesRefresh()
+
+  // F1 — Written Answers + Statements (monthly chunks)
+  const answersCount    = await populateWrittenAnswers()
+  const statementsCount = await populateWrittenStatements()
+
+  // F2–F5 — New single-row sources (TIINs, OTS, Scottish/NI law commission)
+  await populateNewSingleRowSources()
+
+  // Single-row placeholder sources (hmrc active, oecd already done)
   const miscRows = [
-    { id: 'fca-regulators:__index', corpus: 'fca-regulators', docId: '__index', sourceType: 'fca', priority: priority('fca-regulators') },
-    { id: 'echr-hudoc:__index',     corpus: 'echr-hudoc',     docId: '__index', sourceType: 'echr', priority: priority('echr-hudoc') },
-    { id: 'eur-lex:__index',        corpus: 'eur-lex',        docId: '__index', sourceType: 'eurlex', priority: priority('eur-lex') },
     { id: 'hmrc-codes-guidance:__index', corpus: 'hmrc-codes-guidance', docId: '__index', sourceType: 'hmrc', priority: priority('hmrc-codes-guidance') },
-    { id: 'uk-treaties:__index',    corpus: 'uk-treaties',    docId: '__index', sourceType: 'treaties', priority: priority('uk-treaties') },
-    { id: 'oecd:__index',           corpus: 'oecd',           docId: '__index', sourceType: 'oecd', priority: priority('oecd') },
+    { id: 'oecd:__index',                corpus: 'oecd',                 docId: '__index', sourceType: 'oecd', priority: priority('oecd') },
   ]
   await bulkUpsertQueueRows(miscRows)
 
@@ -273,6 +427,14 @@ async function main(): Promise<void> {
   console.log(`  TNA caselaw:     ~${caselawCount} feed pages`)
   console.log(`  Hansard:         ~${hansardCount} monthly chunks`)
   console.log(`  BAILII:          ~${bailiiCount} cases`)
+  console.log(`  Committees:      ~${committeeCount} discovery rows`)
+  console.log(`  FCA sourcebooks: ~${fcaCount} rows`)
+  console.log(`  ECHR pages:      ~${echrCount} rows`)
+  console.log(`  EUR-Lex pages:   ~${eurLexCount} rows`)
+  console.log(`  UK Treaties:     ~${treatyCount} retry row`)
+  console.log(`  Written Answers: ~${answersCount} monthly chunks`)
+  console.log(`  Written Statements: ~${statementsCount} monthly chunks`)
+  console.log(`  New single-row (TIINs, OTS, Scot/NI law commissions): 4 rows`)
   console.log('Queue state after:', countsAfter)
 
   await disconnectQueue()
