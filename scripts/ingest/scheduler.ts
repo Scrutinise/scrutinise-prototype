@@ -63,9 +63,15 @@ async function run(): Promise<void> {
   await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown)
 }
 
+const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop
+
 async function loop(): Promise<never> {
   while (true) {
-    await run().catch(err => console.error('[scheduler] run failed:', err))
+    const timeoutP = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('run() timed out after 5 min')), RUN_TIMEOUT_MS)
+    )
+    await Promise.race([run(), timeoutP])
+      .catch(err => console.error('[scheduler] run failed or timed out:', err))
     console.log(`[scheduler] sleeping ${INTERVAL_HOURS}h`)
     await new Promise(r => setTimeout(r, INTERVAL_MS))
   }

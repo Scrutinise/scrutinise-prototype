@@ -103,7 +103,12 @@ function getPool(): Pool {
   if (!_pool) {
     const url = process.env.DATABASE_URL
     if (!url) throw new Error('DATABASE_URL not set')
-    _pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } })
+    _pool = new Pool({
+      connectionString: url,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10_000,
+      statement_timeout: 30_000,
+    })
   }
   return _pool
 }
@@ -137,7 +142,12 @@ export async function queryNeonCount(): Promise<number> {
     console.log('[reporter] NEON_DATABASE_URL not set — using confirmed baseline')
     return NEON_FALLBACK
   }
-  const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } })
+  const pool = new Pool({
+    connectionString: url,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10_000,
+    statement_timeout: 30_000,
+  })
   try {
     const res = await pool.query<{ count: number }>('SELECT COUNT(*)::int AS count FROM "LegislationSection"')
     return res.rows[0]?.count ?? NEON_FALLBACK
