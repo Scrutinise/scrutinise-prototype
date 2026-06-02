@@ -31,6 +31,8 @@ export interface SectionMeta {
   format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
   xmlPreview?: string
   notes?: string
+  // First 10 000 chars of compiled text — stored in DB for FTS; full text in R2
+  compiledText?: string
 }
 
 type CorpusSectionClient = {
@@ -60,6 +62,7 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
       format: meta.format ?? null,
       xmlPreview: meta.xmlPreview ?? null,
       notes: meta.notes ?? null,
+      compiledText: meta.compiledText ?? null,
     },
     update: {
       r2Key: meta.r2Key ?? null,
@@ -70,9 +73,12 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
       format: meta.format ?? null,
       xmlPreview: meta.xmlPreview ?? null,
       notes: meta.notes ?? null,
+      compiledText: meta.compiledText ?? null,
       ...(meta.status === 'compiled' ? { compiledAt: new Date() } : {}),
     },
   })
+  // fts_vector is maintained by the DB trigger installed in migration 20260602090000.
+  // No application-layer update needed — trigger fires on compiledText INSERT/UPDATE.
 }
 
 export interface FormatCount {
