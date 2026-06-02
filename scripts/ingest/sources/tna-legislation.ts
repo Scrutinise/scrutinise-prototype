@@ -58,6 +58,33 @@ async function fetchBinary(url: string): Promise<Buffer | null> {
   }
 }
 
+// ── Format discovery ──────────────────────────────────────────────────────────
+// Before attempting CLML/HTML/PDF, query TNA's per-document Atom feed to discover
+// what formats are actually available.  Never attempt a format that isn't listed.
+//
+// Returns e.g. ["xml", "html", "pdf"] or [] if the feed is unavailable.
+// Stored as formatsAvailable in ingest_queue for permanent record.
+export async function discoverFormats(actId: string): Promise<string[]> {
+  const feedUrl = `${TNA_BASE}/${actId}/data.feed`
+  const xml = await fetchText(feedUrl)
+  if (!xml) return []
+
+  const formats: string[] = []
+  // <link rel="alternate" type="application/xml" title="XML" href="..."/>
+  // <link rel="alternate" type="application/pdf" .../>
+  // <link rel="alternate" type="text/html" .../>
+  const linkRx = /<link[^>]+type="([^"]+)"[^>]*>/g
+  let m: RegExpExecArray | null
+  while ((m = linkRx.exec(xml)) !== null) {
+    const mime = m[1]
+    if (mime.includes('xml'))  formats.push('xml')
+    else if (mime.includes('pdf'))  formats.push('pdf')
+    else if (mime.includes('html')) formats.push('html')
+  }
+  // Deduplicate preserving order
+  return [...new Set(formats)]
+}
+
 // ── Act enumeration ────────────────────────────────────────────────────────────
 // TNA year-level Atom feed: https://www.legislation.gov.uk/{type}/{year}/data.feed
 // Returns only 20 items per page. Dense years (e.g. uksi/1983 has 1129 SIs) include
