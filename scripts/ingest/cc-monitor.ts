@@ -160,7 +160,7 @@ async function checkStalledWorkers(): Promise<Array<{ workerId: number; lastUpda
   const stalled = []
   const now = Date.now()
 
-  for (let id = 1; id <= 10; id++) {
+  for (let id = 1; id <= 20; id++) {
     try {
       const cp = await readCheckpoint(id)
       if (!cp.lastUpdated) continue
@@ -287,15 +287,13 @@ async function runPoll(): Promise<void> {
     }
   }
 
-  // Auto-redeploy crashed services — DISABLED until build loop is resolved
-  // Uncomment once workers are building successfully.
-  // for (const svc of crashedServices) {
-  //   console.log(`[monitor] → auto-redeploying ${svc.serviceName}…`)
-  //   const ok = await railwayRedeploy(svc.id)
-  //   const logLine = `${ts} | REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svc.serviceName} | deployment=${svc.id}`
-  //   console.log(`[monitor]   ${logLine}`)
-  //   await appendRedeployLog(logLine)
-  // }
+  for (const svc of crashedServices) {
+    console.log(`[monitor] → auto-redeploying ${svc.serviceName}…`)
+    const ok = await railwayRedeploy(svc.id)
+    const logLine = `${ts} | REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svc.serviceName} | deployment=${svc.id}`
+    console.log(`[monitor]   ${logLine}`)
+    await appendRedeployLog(logLine)
+  }
   report.crashedServices = crashedServices.map(s => s.serviceName)
 
   // 3. Stalled worker detection (checkpoint not updated in >2h)
@@ -313,13 +311,10 @@ async function runPoll(): Promise<void> {
         d.serviceName.toLowerCase().includes(`worker-${s.workerId}`) ||
         d.serviceName.toLowerCase().includes(svcName)
       )
-      // DISABLED — stall-redeploy also disabled until build loop is resolved
-      // if (svc && svc.status !== 'CRASHED') {
-      //   const ok = await railwayRedeploy(svc.id)
-      //   await appendRedeployLog(`${ts} | STALL-REDEPLOY ${ok?'OK':'FAILED'} | ${svcName}`)
-      // }
-      if (svc) {
-        console.log(`[monitor]   (stall-redeploy disabled — fix build loop first)`)
+      if (svc && svc.status !== 'CRASHED') {
+        const ok = await railwayRedeploy(svc.id)
+        console.log(`[monitor]   stall-redeploy ${ok ? 'OK' : 'FAILED'} for ${svcName}`)
+        await appendRedeployLog(`${ts} | STALL-REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svcName}`)
       }
     }
   }
