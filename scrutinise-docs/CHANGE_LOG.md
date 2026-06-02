@@ -1,8 +1,72 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 27 May 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2 Jun 2026*
 
 ***
+
+## CODE CHANGES — 2 Jun 2026 Sprint: Build fix + architecture deployment
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/railway.json` | Removed `{"builder":"NIXPACKS"}` — Railway migrated to Railpack; NIXPACKS was triggering a compatibility mode that looked for `start.sh` and failed. Railpack now auto-detects Node.js from `package.json`. |
+| `scripts/ingest/package.json` | `start`/`worker` scripts now point to `worker-queue.ts`. `worker-legacy` alias for `worker-main.ts`. Version bumped to 1.0.1 to force worker-1 auto-deploy. |
+| `scripts/ingest/prisma/schema.prisma` | Synced with main schema: `CorpusSection` adds `compiledText` + `ftsVector`; `IngestQueue` model added. Required for `prisma generate` to succeed on Railway. |
+| `scripts/ingest/cc-monitor.ts` | Auto-redeploy calls commented out until workers confirmed stable. Monitor still logs crashes/stalls. |
+| Railway service config | `rootDirectory = "scripts/ingest"` set on all 11 services via GraphQL API. Was unset (root of repo), causing Railpack to receive partial snapshot. |
+| `scripts/ingest/shared/progress-reporter.ts` | Progress bar email: `████░░░░` Unicode bar in subject + body, overall % prominent, per-worker bars, status summary (Phase 1 complete count, error count). |
+
+**Post-build state:** Workers 2–10 + scheduler SUCCESS on `02979a94`. Worker-1 auto-deploy in progress (`484d105`). `ingest_queue` seeded with 60,575 rows.
+
+---
+
+## CODE CHANGES — 1 Jun 2026 Sprint: Source-client implementations (Workers 7, 9, 10 Phase 1 + Workers 1–7 Phase 2)
+
+### Commit 1 — TNA Find Case Law (Worker 9 Phase 1)
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/shared/r2-client.ts` | Added `caselawKey()`, `caselawRawKey()`, `bailiiKey()`, `hansardKey()` key helpers. Shared `safeKeyPart()` normaliser (brackets/spaces → hyphens, lowercase, 200-char cap). |
+| `scripts/ingest/sources/tna-caselaw.ts` | Added `getTotalJudgments()` — probes `/search/results.json?per_page=1` to get total count before iteration. Removed `extractJudgmentText` export (rawToText used directly). |
+| `scripts/ingest/workers/worker-main.ts` | Worker 9: enumerate total, log `[worker-9] tna-caselaw: N items enumerated`; store at `caselaw/{safe-citation}/compiled.txt` + `raw.xml`; full judgment, no 50k truncation; rawToText() only. |
+
+### Commit 2 — Parliament API / Hansard (Workers 1–4 Phase 2)
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/sources/parliament-api.ts` | Added `countHansardDebates()` (probes `take=1` to get total); `fetchHtml()`; `fetchReportContent()` (committee publication HTML scraper); ceiling raised to 60s. |
+| `scripts/ingest/workers/worker-main.ts` | Phase 2 hansard: log count before processing, store at `hansard/{date}/{id}/compiled.txt`; committees: fetch real content via `fetchReportContent()`; `processText()` accepts `customKey` param, no 50k truncation. |
+
+### Commit 3 — BAILII scraper (Workers 5, 6, 7 Phase 2)
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/sources/bailii-scraper.ts` | `WORKER_DB_SUBSETS` extended to cover all 10 courts: W5 = UKSC+CSIH+CSOH+UKET, W6 = EWCA+EWHC+UKEAT, W7 = UKPC+NICA+NIQB. |
+| `scripts/ingest/workers/worker-main.ts` | Phase 2 bailii: per-court enumerate listing pages first (no HTML fetch), log count per court, then process; store at `caselaw/bailii/{ref}/compiled.txt`. |
+
+### Commit 4 — FCA Handbook (Worker 7 Phase 1)
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/sources/fca-handbook.ts` | Rewrite from JSON API stub to HTML scraper. `discoverSourcebooks()` fetches handbook index, extracts `/handbook/{CODE}` links; falls back to 30 known sourcebook codes. `getSourcebookSections()` fetches each sourcebook TOC. `fetchSectionText()` extracts `<main>` body. `FcaSection` interface updated (`sourcebook` replaces `instrumentCode`). |
+| `scripts/ingest/workers/worker-main.ts` | Worker 7: collect all sections to array, log count before processing. |
+
+### Commit 5 — Worker 10 International Sources + UK Treaties
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/sources/echr-hudoc.ts` | Fixed `contry:GBR` → `country:GBR` typo; extracted `UK_QUERY` constant; added `countUkCases()` for pre-processing count. |
+| `scripts/ingest/sources/eurlex.ts` | Replaced 100-item SPARQL stub with paginated EUR-Lex search API (CELEX series 3, up to 5000 items). Clean `fetchSearchPage()` helper. |
+| `scripts/ingest/sources/oecd-free.ts` | Rewritten from non-existent iLibrary JSON endpoint to gov.uk content API search for OECD-framework documents. |
+| `scripts/ingest/sources/uk-treaties.ts` (NEW) | FCDO treaties via gov.uk search API (up to 2000 items); `fetchTreatyText()` uses gov.uk JSON content API first, then HTML fallback; 500ms floor; corpus: `uk-treaties` (Worker 10 Phase 2). |
+| `scripts/ingest/workers/worker-main.ts` | Worker 10: enumerate ECHR total via `countUkCases()`; collect EUR-Lex+OECD to arrays, log counts; `uk-treaties` Phase 2 handler; removed stale `fetchDocText` wrapper. |
+
+**Post-push reset/redeploy checklist:**
+- Worker 9: `npx tsx scripts/ingest/reset-checkpoints.ts 9` → redeploy
+- Workers 1–4: `npx tsx scripts/ingest/reset-checkpoints.ts 1 2 3 4` → redeploy
+- Workers 5–7: `npx tsx scripts/ingest/reset-checkpoints.ts 5 6 7` → redeploy
+- Worker 10: `npx tsx scripts/ingest/reset-checkpoints.ts 10` → redeploy
+
+---
 
 ## CODE CHANGES — 27 May 2026 Sprint V.4-FTS-3 Parts 3+4 (Transfer complete + search switched to Neon)
 

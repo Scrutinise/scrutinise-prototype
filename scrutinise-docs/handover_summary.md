@@ -1,12 +1,86 @@
-# Handover summary — V.4-FTS-3 COMPLETE + L6-C COMPLETE (not yet pushed)
+# Handover summary — Architecture sprint + build fix (2 Jun 2026)
 
-**Date:** 27 May 2026  
-**Previous conversations:** V.4-FTS-3 (this session + prior session); L6-C, V.3-E + V.3-F (earlier)  
-**Status:** V.4-FTS-3 ALL PARTS COMPLETE. L6-C COMPLETE. Awaiting `commit-all.sh` approval and push.
+**Date:** 2 Jun 2026  
+**Previous conversations:** V.4-FTS-3 + L6-C + source-client sprint (prior sessions); architecture + build fixes (this session)  
+**Status:** All pushed. Workers 2–10 + scheduler ACTIVE on Railway. Worker-1 auto-deploy triggered (fix commit `484d105`). cc-monitor auto-redeploy DISABLED — re-enable after confirming all workers stable.
 
 ---
 
 ## CURRENT STATE
+
+### Railway Worker Status (as of 2 Jun 2026 ~11:30 BST)
+
+| Service | Status | Commit | Note |
+|---------|--------|--------|------|
+| ingest-worker-2 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-3 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-4 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-5 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-6 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-7 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-8 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-9 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| ingest-worker-10 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
+| Ingest-scheduler | ✅ SUCCESS | 02979a94 | Progress bar email active |
+| ingest-worker-1 | ⏳ DEPLOYING | 484d105 | Auto-deploy triggered; should be SUCCESS within ~2 min |
+
+**Root cause of build loop:** Railway silently migrated to Railpack builder. Workers had no `rootDirectory` set, so Railpack received a stale/partial snapshot (3 files only). Fix: set `rootDirectory = "scripts/ingest"` on all 11 Railway services + remove NIXPACKS from `railway.json`. Workers now build from `package.json` in `scripts/ingest/`.
+
+**cc-monitor auto-redeploy is DISABLED** (`cc-monitor.ts` lines ~145–153 commented out). Re-enable once all workers confirmed stable for 24h. The monitor still logs crashes and stall warnings — it just doesn't act on them.
+
+### Queue State (as of 2 Jun ~02:45 BST)
+- `ingest_queue`: 60,575 pending rows seeded
+  - TNA legislation: 47,540 acts (priority 1–2)
+  - TNA caselaw: 7,485 Atom pages (~374k judgments, priority 1)
+  - Hansard: 5,544 monthly chunks (priority 2)
+  - BAILII: 0 (Cloudflare WAF blocking scraper — deferred)
+  - FCA/ECHR/EUR-Lex/HMRC/Treaties/OECD: 6 index placeholder rows
+
+### Architecture sprint — ALL PARTS COMPLETE (pushed)
+
+| Commit | What |
+|--------|------|
+| `e82ced3` | `ingest_queue` table + `compiledText` + `fts_vector` on `corpus_sections` |
+| `0c82f32` | `queue-client.ts` (FOR UPDATE SKIP LOCKED) + `queue-populator.ts` |
+| `90aaabe` | `worker-queue.ts` — dynamic queue claiming, all workers interchangeable |
+| `47b96ad` | `discoverFormats()` — TNA metadata feed before fetch |
+| `f38b0c1` | `compiledText` in `upsertSection()` → DB trigger maintains `fts_vector` |
+| `dd37601` | `cc-monitor.ts` + `known-errors.json` |
+| `8e5dc24` | Progress bar email (████ + % + status breakdown) |
+| `02979a9` | Build fix: remove NIXPACKS, sync ingest prisma schema, disable cc-monitor auto-redeploy |
+| `484d105` | Patch bump to force worker-1 auto-deploy |
+
+### Source-Client Sprint — ALL 5 PRIORITIES COMPLETE (not yet pushed)
+
+All source clients previously exiting immediately are now fully implemented:
+
+| Priority | Source | Workers | Status |
+|----------|--------|---------|--------|
+| 1 | TNA Find Case Law | Worker 9 Phase 1 | ✅ COMPLETE |
+| 2 | Parliament API / Hansard | Workers 1–4 Phase 2 | ✅ COMPLETE |
+| 3 | BAILII scraper | Workers 5, 6, 7 Phase 2 | ✅ COMPLETE |
+| 4 | FCA Handbook | Worker 7 Phase 1 | ✅ COMPLETE |
+| 5 | International (ECHR, EUR-Lex, OECD, Treaties) | Worker 10 Phase 1+2 | ✅ COMPLETE |
+
+**Key changes:**
+- `r2-client.ts`: new key helpers `caselawKey`, `bailiiKey`, `hansardKey`
+- `tna-caselaw.ts`: `getTotalJudgments()` pre-processing count
+- `parliament-api.ts`: `countHansardDebates()`, `fetchReportContent()`
+- `bailii-scraper.ts`: WORKER_DB_SUBSETS extended to all 10 courts
+- `fca-handbook.ts`: rewritten as HTML scraper (30+ sourcebooks)
+- `echr-hudoc.ts`: fixed `country:GBR` typo, added `countUkCases()`
+- `eurlex.ts`: paginated search API (was 100-item SPARQL stub)
+- `oecd-free.ts`: rewritten to gov.uk content API for OECD docs
+- `uk-treaties.ts` (NEW): FCDO treaties via gov.uk search + content API
+- `worker-main.ts`: all workers now enumerate count before processing,
+  use source-specific R2 keys, rawToText() only (no LLM calls)
+
+**tsc --noEmit (ingest/ only): CLEAN** (pre-existing errors in backfill/v3opt unrelated)
+
+**After push, reset + redeploy each worker set in order — see CHANGE_LOG for commands.**
+
+---
+
 
 ### V.4-FTS-3 — Neon Migration + Search Enhancements — ✅ COMPLETE (all 4 parts)
 
