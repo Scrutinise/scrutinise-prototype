@@ -41,6 +41,32 @@ export async function countUkCases(): Promise<number> {
   return data?.results?.resultcount ?? 0
 }
 
+// Fetch a single page of UK ECHR cases starting at `start` offset.
+export async function* listUkCasesPage(start: number, length = 50): AsyncGenerator<EchrCase> {
+  const url = `${HUDOC_BASE}/app/query/results` +
+    `?select=itemid,docname,kpdate,importance` +
+    `&query=${encodeURIComponent(UK_QUERY)}` +
+    `&start=${start}&length=${length}`
+
+  const data = await fetchJson(url) as {
+    results?: {
+      Result?: Array<{ itemid?: string; docname?: string; kpdate?: string; importance?: string }>
+    }
+  } | null
+
+  const items = data?.results?.Result ?? []
+  for (const item of items) {
+    if (!item.itemid) continue
+    yield {
+      itemId: item.itemid,
+      docName: item.docname ?? '',
+      date: item.kpdate ?? '',
+      importance: item.importance ?? '',
+      url: `${HUDOC_BASE}/#{"itemid":["${item.itemid}"]}`,
+    }
+  }
+}
+
 export async function* listUkCases(pageSize = 50): AsyncGenerator<EchrCase> {
   let start = 0
   while (true) {

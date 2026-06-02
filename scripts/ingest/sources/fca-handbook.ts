@@ -23,7 +23,7 @@ async function fetchHtml(url: string): Promise<string | null> {
 
 // Known FCA Handbook sourcebook codes, used as fallback if the index page scrape fails.
 // These are the main blocks of the FCA Handbook as of 2026.
-const KNOWN_SOURCEBOOKS = [
+export const FCA_KNOWN_SOURCEBOOKS = [
   // Block 1 — High Level Standards
   'PRIN', 'SYSC', 'APER', 'TC', 'GEN', 'FEES', 'COCON',
   // Block 2 — Prudential Standards
@@ -44,7 +44,7 @@ async function discoverSourcebooks(): Promise<string[]> {
   const html = await fetchHtml(`${FCA_BASE}/handbook`)
   if (!html) {
     console.log('[fca-handbook] index unavailable — using fallback sourcebook list')
-    return KNOWN_SOURCEBOOKS
+    return FCA_KNOWN_SOURCEBOOKS
   }
 
   // Handbook index links sourcebooks as /handbook/{CODE} where CODE is 2–12 uppercase chars
@@ -58,7 +58,7 @@ async function discoverSourcebooks(): Promise<string[]> {
   }
 
   const discovered = Array.from(codes)
-  return discovered.length >= 5 ? discovered : KNOWN_SOURCEBOOKS
+  return discovered.length >= 5 ? discovered : FCA_KNOWN_SOURCEBOOKS
 }
 
 // For a given sourcebook code, fetch its TOC page and extract section links.
@@ -93,6 +93,13 @@ async function getSourcebookSections(sourcebook: string): Promise<FcaSection[]> 
   }
 
   return sections
+}
+
+// List sections for a single sourcebook — used by per-sourcebook queue rows.
+export async function* listFcaSectionsForSourcebook(sourcebook: string): AsyncGenerator<FcaSection> {
+  const sections = await getSourcebookSections(sourcebook)
+  console.log(`[fca-handbook] ${sourcebook}: ${sections.length} section(s) found`)
+  for (const sec of sections) yield sec
 }
 
 export async function* listFcaSections(): AsyncGenerator<FcaSection> {

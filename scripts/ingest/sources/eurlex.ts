@@ -40,6 +40,21 @@ async function fetchSearchPage(page: number, pageSize: number): Promise<SearchPa
   try { return await res.json() as SearchPage } catch { return null }
 }
 
+// Fetch a single page of EUR-Lex retained EU instruments (page is 1-indexed).
+export async function* listRetainedEuPage(page: number, pageSize = 100): AsyncGenerator<EurLexDoc> {
+  const data = await fetchSearchPage(page, pageSize)
+  if (!data) return
+  for (const item of data.results ?? []) {
+    if (!item.celex) continue
+    yield {
+      celexId: item.celex,
+      title: item.title ?? '',
+      date: item.date ?? '',
+      url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${item.celex}`,
+    }
+  }
+}
+
 // Paginate through EUR-Lex CELEX series 3 (secondary legislation) filtered to
 // UK-relevant instruments — the ~4 000 items that became UK retained EU law.
 export async function* listRetainedEuInstruments(maxItems = 5000): AsyncGenerator<EurLexDoc> {
