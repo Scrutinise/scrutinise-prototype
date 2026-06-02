@@ -1,108 +1,155 @@
-# Handover summary — Corpus Monitoring + Rate Limiting sprint (2 Jun 2026, evening)
+# Handover summary — Full queue seeding + corpus email manifest (3 Jun 2026)
 
-**Date:** 2 Jun 2026 (evening session)
-**Previous conversations:** Architecture sprint + build fixes (earlier today)
-**Status:** All pushed and deployed. Workers 1–10 running with rate-limit token bucket. Scheduler sending hourly emails. Workers 11–20 cleared to add in Railway — see NEXT STEPS.
+**Date:** 3 Jun 2026 (overnight session)
+**Previous conversations:** Corpus Monitoring + Rate Limiting sprint (2 Jun evening)
+**Status:** All code changes written to disk. commit-all.sh produced. Awaiting Charlie's single execution approval.
 
 ---
 
 ## CURRENT STATE
 
-### Railway Worker Status (as of 2 Jun 2026 ~22:45 BST)
+### Railway Worker Status
 
 | Service | Status | Commit | Note |
 |---------|--------|--------|------|
-| ingest-worker-1 through 10 | ✅ Should be SUCCESS | `9acd458` | Running worker-queue.ts with rate-limit-aware claim |
-| ingest-scheduler | ✅ SUCCESS | `9acd458` | Persistent hourly loop — no cron schedule needed |
+| ingest-worker-1 through 10 | ✅ Active | `9acd458` | Running worker-queue.ts with rate-limit token bucket |
+| ingest-worker-11 through 20 | Initialising | `9acd458` | Added in Railway — WORKER_ID 11–20 set |
+| ingest-scheduler | ✅ Active | `9acd458` | Persistent hourly loop — fires on startup |
 
-**Workers 11–20:** NOT YET ADDED. Ready to add — see NEXT STEPS.
+**cc-monitor auto-redeploy:** Re-enabled this sprint (crash + stall). Extended to workers 1–20.
 
-**Ingest progress:** 426,343 new pipeline sections compiled + 914,274 legacy (Neon) = **1,340,617 total = 18.9% overall**.
+### Queue State (as of 3 Jun 2026 ~00:00 BST)
 
-### Queue State (as of 2 Jun 2026 ~22:00 BST)
+| Corpus | Status | Count |
+|--------|--------|-------|
+| si-pre-2010 | pending | 3,213 |
+| si-pre-2010 | claimed | 80 |
+| si-pre-2010 | done | 27,614 |
+| primary-acts-2000plus | claimed | 25 |
+| primary-acts-2000plus | done | 515 |
+| primary-acts-pre-2000 | claimed | 10 |
+| primary-acts-pre-2000 | done | 730 |
+| regional | claimed | 11 |
+| regional | done | 6,142 |
+| si-2010plus | claimed | 11 |
+| si-2010plus | done | 5,799 |
+| tna-caselaw | done | 7,485 (all complete ✅) |
+| retained-eu | done | 3,390 |
+| hansard-commons-a/b | done | 2,772 (all monthly chunks) |
+| hansard-lords-a/b | done | 2,772 (all monthly chunks) |
+| hmrc-codes-guidance | claimed | 1 (active) |
+| eur-lex | claimed | 1 (active) |
+| oecd | done | 1 |
+| echr-hudoc | done | 1 |
+| fca-regulators | done | 1 |
+| uk-treaties | done | 1 |
 
-- `tna-legislation`: ~33,000 pending (down from 40,070 — workers actively processing)
-- `tna-caselaw`: 7,485 done ✅
-- `hansard`: 5,544 done ✅
-- `fca`, `hmrc`, `echr`, `eurlex`, `oecd`, `treaties`: 1 pending each (priority 3–5, will process after TNA legislation drains)
+**NEW queue rows added this sprint** (pending after queue-populator run):
+- `fca-regulators`: 30 per-sourcebook rows (one per FCA Handbook sourcebook code)
+- `echr-hudoc`: ~600 per-page rows (HUDOC offset-based pagination)
+- `eur-lex`: 50 per-page rows (EUR-Lex page-based pagination)
+- `committees-a`: 1 discovery row (`__index`)
+- `uk-treaties`: 1 refresh row (`v2:__index`)
 
-### Key tables added this session
+### corpus_sections compiled counts
 
-| Table | Purpose |
-|-------|---------|
-| `source_rate_limits` | Token bucket per sourceType — seeded with 10 entries (200ms–1000ms) |
-| `ingest_progress_snapshots` | Append-only time-series, one row per corpus per scheduler run |
+| Corpus | Compiled | Failed |
+|--------|---------|--------|
+| primary-acts-2000plus | 83,183 | 7,676 |
+| primary-acts-pre-2000 | 62,637 | 27 |
+| si-2010plus | 59,920 | 12 |
+| si-pre-2010 | 152,258 | 1,379 (in progress) |
+| regional | 92,681 | 0 |
+| retained-eu | 14,390 | 0 |
+| tna-caselaw | 74,730 | 0 |
+| hmrc-codes-guidance | 13,425+ | 0 (in progress) |
+| oecd | 462 | 0 |
+| fca-regulators | 0 | 0 (re-seeded this sprint) |
+| echr-hudoc | 0 | 0 (re-seeded this sprint) |
+| **Total new pipeline** | **~553,686** | |
+| **+ Neon legacy** | **914,274** | ✅ |
+| **GRAND TOTAL** | **~1,467,960** | **~20.6%** |
 
 ---
 
-## WHAT WAS DONE THIS SESSION
+## WHAT WAS DONE THIS SPRINT
 
-### Fix: Workers 1–4 build failures
-- Root cause: missing `scripts/ingest/package-lock.json` — non-deterministic npm installs
-- Fix: generated lockfile (Prisma 6.19.3, tsx 4.22.4, pg 8.21.0 pinned)
-- Also fixed: `db-metadata.ts` used deprecated Prisma `datasources` constructor option → `new PrismaClient()` (no options, reads DATABASE_URL from env; works Prisma 6 and 7)
+### Part A — Diagnostic
+- Ran 3 diagnostic queries: si-pre-2010 failures (0 — none at all), overall status (57,221 done / 3,213 pending / 141 claimed), per-corpus breakdown.
+- Discovered DB uses `corpus` column (not `source_key`) and `lastError` (not `error_message`).
+- Confirmed 7 sourceKey discrepancies between brief manifest and actual DB values.
+- Queried corpus_sections: FCA, ECHR, Hansard, UK Treaties show 0 compiled despite done queue rows — silent failures in workers.
 
-### Fix: Scheduler silence (no emails after 15:42)
-- Root cause: `queryNeonCount()` created a pg Pool with no timeouts → Neon idle-timeout caused a silent hang → loop stuck forever
-- Fix: `connectionTimeoutMillis: 10_000` + `statement_timeout: 30_000` on both pools
-- Fix: `Promise.race([run(), timeout(5min)])` in scheduler loop — hung run() aborts, loop continues
+### Part B — SI pre-2010 failure fix
+- No action needed. Zero failures in the entire queue. 3,213 pending rows are healthy.
 
-### Scheduler architecture change
-- Converted from Railway cron service to **persistent always-on loop**
-- Default interval: `SCHEDULER_INTERVAL_HOURS=1` (env var set in Railway)
-- Fires immediately on startup — redeploy = immediate email
-- Remove the Railway cron schedule from `ingest-scheduler` if still set
-
-### Corpus Monitoring sprint (B1–B3)
+### Part C — Queue seeding for parallel sources
 | Item | Detail |
 |------|--------|
-| `IngestProgressSnapshot` table | Append-only, one row per corpus per run. Migration: `20260602150000`. Applied ✅ |
-| `progress-reporter.ts` rewrite | CORPUS_TARGETS const (~6.9M total), per-corpus section targets, Neon count query, unified email showing legacy + new pipeline totals |
-| `scheduler.ts` update | Queries corpus_sections + Neon; writes IngestProgressSnapshot rows; new email API |
-| `pdf-parse` added | `pdfToText()` in compile.ts — extracts machine-readable PDFs; low-yield (scanned) PDFs flagged `notes='pdf-ocr-needed'` for later Tesseract pass |
-| Worker-queue.ts PDF branch | Now calls `pdfToText()` instead of storing placeholder text |
+| `populateCommittees()` | 1 `committees-a:__index` row — triggers `listCommitteeReports()` on worker claim |
+| `populateFcaSourcebooks()` | 30 per-sourcebook rows (FCA_KNOWN_SOURCEBOOKS). Worker `processFca()` updated to handle `sourcebook:{CODE}` docId |
+| `populateEchrPages()` | ~600 per-page rows at `page:{start}` offsets. Worker `processEchr()` updated to handle per-page rows. Queries HUDOC API for total count on populator run. |
+| `populateEurLexPages()` | 50 per-page rows at `page:{N}` (1-indexed). Worker `processEurLex()` updated similarly. |
+| `populateUkTreatiesRefresh()` | 1 fresh retry row `uk-treaties:v2:__index` (original `__index` done but 0 compiled) |
+| **source_rate_limits** | No changes needed — all sourceTypes already seeded |
 
-### Rate Limiting sprint (B1–B5)
-| Item | Detail |
-|------|--------|
-| `SourceRateLimit` table | Token bucket per sourceType. Migration: `20260602160000`. Applied ✅. Seeded ✅ |
-| `claimNextChunk()` rewrite | Two-phase: (1) find highest-priority source with available token via JOIN; (2) claim row + update lastIssuedAt atomically. Falls back to unconstrained sources if rate-limit table empty |
-| `getSleepDuration()` | Workers sleep until next token available (not fixed 5-min sleep). Wakes in as little as 10ms |
-| `suspendSource()` / `clearExpiredSuspensions()` | 429 suspension written to source_rate_limits; scheduler sweeps expired suspensions each run |
-| `AdaptiveThrottle.onSuspend` | Callback fired when delay ≥ 60s. Wired on tna-legislation and tna-caselaw |
-| WORKER_ID cap removed | Was capped at 10; now accepts any positive value — workers 11–20 supported |
-| `seed-rate-limits.ts` | Upsert script. Already run (data live). dotenv path fixed in `9acd458` |
+### Part D — Full corpus email manifest
+- `progress-reporter.ts` full rewrite:
+  - `CorpusEntry` interface with `dbCorpora` mapping to actual DB corpus values
+  - `CORPUS_MANIFEST` array: 37 entries, priority-grouped 0–4
+  - `queryQueueCorpora()` — detects seeded vs not-started sources
+  - `queryEtaFromSnapshots()` — time-series ETA from last 6 snapshots (more accurate than single-snapshot)
+  - `sendProgressEmail()` — full manifest email with tier separators, ✅/⛔ flags, progress bars, not-started detection
+  - `buildAggregate()` extended to workers 1–20
+
+### Part E — cc-monitor auto-redeploy
+- Uncommented crash auto-redeploy loop (~lines 292–298)
+- Uncommented stall auto-redeploy block (~lines 317–320)
+- Extended `checkStalledWorkers()` from 10 to 20 workers
+
+### Part F — New source clients + queue seeding
+
+| Part | Source | Outcome |
+|------|--------|---------|
+| F1 | Parliamentary Written Answers | `fetchWrittenAnswers(from, to)` added to parliament-api.ts. WQS API confirmed live (swagger verified). Monthly chunks 2000-01 to present (~317 rows). Worker handles `answers:{from}:{to}` and `statements:{from}:{to}` docId prefixes. |
+| F1 | Written Ministerial Statements | `fetchWrittenStatements(from, to)` added. Monthly chunks 1997-05 to present (~349 rows). |
+| F2 | HMRC TIINs | `listHmrcTiins()` added to gov-scraper.ts — uses gov.uk content API for TIINS collection, falls back to search. sourceType = 'gov-uk'. 1 `__index` row seeded. |
+| F3 | OTS Reports | `listOtsReports()` added to gov-scraper.ts — gov.uk search API. sourceType = 'gov-uk'. 1 `__index` row. |
+| F4 | Scottish Law Commission | New `law-commissions.ts` — scrapes 46 listing pages, follows publication pages, downloads PDFs at `/sites/default/files/YYYY-MM/*.pdf`. 454 publications. 1 `__index` row. sourceType = 'scotlawcom'. |
+| F5 | NI Law Commission | Same file — defunct since April 2015, ~18 historical PDFs scraped from index page. 1 `__index` row. sourceType = 'nilawcom'. |
+| F6 | SSRN | **NOT IMPLEMENTED** — API returned 403 Forbidden on live verification (3 Jun 2026). Rate limit entry added as placeholder. Blocked in CORPUS_MANIFEST. Needs manual access investigation. |
+| F7 | seed-rate-limits.ts | Added: `gov-uk` (300ms), `scotlawcom` (300ms), `nilawcom` (300ms), `ssrn` (200ms placeholder). |
 
 ---
 
 ## NEXT STEPS
 
-### 1. Add workers 11–20 in Railway (CLEARED — do now)
+### 1. Approve and run commit-all.sh
+```bash
+bash commit-all.sh
+```
 
-Pre-conditions all met:
-- ✅ source_rate_limits seeded
-- ✅ claimNextChunk() with token bucket deployed on workers 1–10
-- ✅ WORKER_ID cap removed
+### 2. Redeploy scheduler (picks up manifest email immediately)
+In Railway: redeploy `ingest-scheduler` service — next email will show full manifest.
 
-For each `ingest-worker-11` through `ingest-worker-20`:
-- Same repo, `rootDirectory = scripts/ingest`, start command `npm run worker`
-- Copy all env vars from `ingest-worker-1`
-- Set `WORKER_ID` = 11 through 20
+### 3. Run queue-populator.ts to seed new rows
+```bash
+cd C:/Code/scrutinise-prototype
+NODE_PATH=scrutinise-web/node_modules \
+scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json \
+scripts/ingest/queue-populator.ts
+```
+Expect: ~30 FCA rows, ~600 ECHR rows, 50 EUR-Lex rows, 1 committee row, 1 UK treaty retry row inserted.
 
-### 2. Add NEON_DATABASE_URL to ingest-scheduler in Railway
-Currently falls back to hardcoded 914,274 baseline. Add the env var to keep the Neon count live.
+### 4. Verify next hourly email shows full manifest
+Look for: tier separators (PRIORITY 1–4), ✅ on Neon legacy, per-corpus progress bars for active sources, "not started" for unseeded sources.
 
-### 3. Verify source_rate_limits updating
-After next scheduler email, query: `SELECT "sourceKey", "lastIssuedAt", suspended FROM source_rate_limits ORDER BY "lastIssuedAt" DESC` — should show non-zero lastIssuedAt values for tna-legislation and tna-caselaw.
-
-### 4. Re-enable cc-monitor auto-redeploy (deferred)
-Once workers 11–20 are stable for 24h. Uncomment lines ~145–153 in `cc-monitor.ts`.
-
-### 5. Backlog
-- Tesseract OCR pass for PDFs with `notes='pdf-ocr-needed'` (separate post-ingest cleanup job)
-- BAILII data access request to unblock BAILII scraper (Cloudflare WAF blocking)
-- V.4-FTS-2: pgvector semantic search (embedding vector(768) on Neon is empty, ready to populate)
-- Shared rate-limit bucket for HMRC/FCA/OECD sources if workers added for those
+### 5. Backlog (unchanged)
+- Tesseract OCR pass for PDFs with `notes='pdf-ocr-needed'`
+- BAILII data access request (Cloudflare WAF blocking)
+- V.4-FTS-2: pgvector semantic search
+- Hansard corpus_sections backfill: content exists in R2 but not in corpus_sections (from worker-main.ts era)
+- Investigate Hansard / FCA / ECHR silent failures — determine if API endpoints are correct
 
 ---
 
@@ -110,20 +157,22 @@ Once workers 11–20 are stable for 24h. Uncomment lines ~145–153 in `cc-monit
 
 | File | Purpose |
 |------|---------|
-| `scripts/ingest/shared/queue-client.ts` | claimNextChunk (rate-limited), getSleepDuration, suspendSource, clearExpiredSuspensions |
-| `scripts/ingest/shared/progress-reporter.ts` | Corpus coverage email — CORPUS_TARGETS, Neon query, snapshot write |
+| `scripts/ingest/queue-populator.ts` | Queue seeding — run once per sprint before workers process new sources |
+| `scripts/ingest/workers/worker-queue.ts` | Queue worker — handles per-sourcebook FCA, per-page ECHR/EUR-Lex, committees |
+| `scripts/ingest/shared/progress-reporter.ts` | Full corpus manifest + email + ETA from snapshots |
+| `scripts/ingest/shared/queue-client.ts` | claimNextChunk (rate-limited), getSleepDuration, suspendSource |
 | `scripts/ingest/shared/compile.ts` | rawToText() (XML/HTML), pdfToText() (pdf-parse) |
 | `scripts/ingest/scheduler.ts` | Persistent hourly loop, clearExpiredSuspensions sweep |
-| `scripts/ingest/seed-rate-limits.ts` | Rate limit seed (already run — re-run to reset) |
-| `scripts/ingest/workers/worker-queue.ts` | Queue worker — smart sleep, WORKER_ID unrestricted |
-| `scripts/ingest/shared/adaptive-throttle.ts` | Rate throttle with onSuspend callback |
-| `scrutinise-web/prisma/migrations/20260602150000_*` | IngestProgressSnapshot migration (applied) |
-| `scrutinise-web/prisma/migrations/20260602160000_*` | source_rate_limits migration (applied) |
+| `scripts/ingest/cc-monitor.ts` | Auto-redeploy for crashed/stalled workers — now active for workers 1–20 |
+| `scripts/ingest/sources/fca-handbook.ts` | FCA scraper — exports FCA_KNOWN_SOURCEBOOKS, listFcaSectionsForSourcebook |
+| `scripts/ingest/sources/echr-hudoc.ts` | ECHR HUDOC — exports listUkCasesPage for parallel pagination |
+| `scripts/ingest/sources/eurlex.ts` | EUR-Lex — exports listRetainedEuPage for parallel pagination |
 
 ---
 
 ## Notes for next CC session
 
-- The Prisma error on local `queryUnrecognisedFormats` runs is **local-only** — scrutinise-web uses Prisma 7 which rejects `new PrismaClient()` without options. Railway workers use Prisma 6.19.3 (lockfile-pinned) and work correctly.
-- The scheduler's format breakdown query (`queryUnrecognisedFormats`) uses Prisma client. It fails locally but is caught by try/catch — emails still send. On Railway it works fine.
-- CORPUS_TARGETS total is ~6.9M sections. The brief comment says ~6.5M after excluding out-of-scope rows. Current denominator uses full sum.
+- `handoff_summary.md` renamed from `handover_summary.md` in some references. The file is at `scrutinise-docs/handover_summary.md`.
+- The Prisma error on local `queryUnrecognisedFormats` runs is **local-only** — scrutinise-web uses Prisma 7; Railway workers use Prisma 6.19.3 (lockfile-pinned).
+- CORPUS_MANIFEST uses `dbCorpora: []` for sources not yet seeded — these render as "not started" in emails.
+- Hansard shows 0 corpus_sections despite 5,544 done queue rows — content is in R2 (compiled by worker-main.ts legacy). A backfill script is needed to populate corpus_sections from existing R2 keys. Out of scope this sprint.

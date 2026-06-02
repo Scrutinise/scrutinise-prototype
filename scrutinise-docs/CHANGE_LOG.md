@@ -1,8 +1,81 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2 Jun 2026 (evening)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026*
 
 ***
+
+## CODE CHANGES — 3 Jun 2026 Sprint: Full queue seeding + corpus email manifest
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/queue-populator.ts` | Added `populateCommittees()`, `populateFcaSourcebooks()`, `populateEchrPages()`, `populateEurLexPages()`, `populateUkTreatiesRefresh()`. Imports `FCA_KNOWN_SOURCEBOOKS`, `countUkCases`. Updated `main()`. |
+| `scripts/ingest/workers/worker-queue.ts` | `processFca()` handles `sourcebook:{CODE}` docId (per-sourcebook parallelism). `processEchr()` handles `page:{start}` docId. `processEurLex()` handles `page:{N}` docId. Imports new per-page/per-sourcebook functions. |
+| `scripts/ingest/sources/fca-handbook.ts` | Exported `FCA_KNOWN_SOURCEBOOKS` (was unexported `KNOWN_SOURCEBOOKS`). Added `listFcaSectionsForSourcebook(sourcebook)` export. |
+| `scripts/ingest/sources/echr-hudoc.ts` | Added `listUkCasesPage(start, length)` export — fetches single HUDOC page at given offset. |
+| `scripts/ingest/sources/eurlex.ts` | Added `listRetainedEuPage(page, pageSize)` export — fetches single EUR-Lex search page. |
+| `scripts/ingest/shared/progress-reporter.ts` | Full rewrite: `CorpusEntry` interface + `CORPUS_MANIFEST` (37 entries, priority-grouped). `MANIFEST_TO_DB_CORPORA` replaced by `dbCorpora` field on each entry. `queryQueueCorpora()` for seeded-vs-not-started detection. `queryEtaFromSnapshots()` uses ingest_progress_snapshots time-series (last 6 snapshots). `saveProgressSnapshot()` maps to manifest. `buildAggregate()` extended to workers 1–20. `sendProgressEmail()` full manifest email with per-tier grouping, ✅/⛔ flags, not-started detection. |
+| `scripts/ingest/cc-monitor.ts` | Auto-redeploy re-enabled for crashed services (lines ~292–298). Stall-redeploy re-enabled (lines ~317–320). Stall check extended from workers 1–10 to 1–20. |
+
+### Diagnostic findings (Part A)
+
+- **SI pre-2010**: ZERO failures. 27,614 done, 80 claimed, 3,213 pending. No SQL remediation needed.
+- **Queue field naming**: `corpus` (not `source_key`); `lastError` (not `error_message`). Brief SQL queries used wrong column names.
+- **FCA, ECHR, UK Treaties**: all had 1 `done` row (processed) but 0 corpus_sections compiled — workers ran but produced no output (likely API rate-limit or parse failures). Re-seeded with per-sourcebook/per-page rows.
+- **Hansard**: 5,544 monthly chunk rows all `done`, but 0 corpus_sections rows. Content exists in R2 from worker-main.ts era; upsertSection was skipped by r2Exists checks. Not addressed in this sprint.
+- **TNA caselaw**: 7,485 Atom pages done, 74,730 sections compiled.
+- **HMRC**: 1 row `claimed`, 13,425 sections compiled and growing.
+- **OECD**: 1 row `done`, 462 sections compiled.
+
+### Key sourceKey discrepancies (brief vs DB corpus column)
+
+| Brief manifest sourceKey | DB corpus value |
+|---|---|
+| `primary-acts-post-2000` | `primary-acts-2000plus` |
+| `si-post-2010` | `si-2010plus` |
+| `retained-eu-law` | `retained-eu` |
+| `fca-handbook` | `fca-regulators` |
+| `hmrc-web` | `hmrc-codes-guidance` |
+| `gov-uk` | `uk-treaties` |
+| `oecd-free` | `oecd` |
+
+Manifest uses DB values throughout. Aggregate entries (hansard-commons, hansard-lords, committee-reports, bailii) sum across multiple DB corpora.
+
+### corpus_sections state as of diagnostic (2 Jun 2026 ~23:51)
+
+| Corpus | Compiled | Failed |
+|--------|---------|--------|
+| primary-acts-2000plus | 83,183 | 7,676 |
+| primary-acts-pre-2000 | 62,637 | 27 |
+| si-2010plus | 59,920 | 12 |
+| si-pre-2010 | 152,258 | 1,379 |
+| regional | 92,681 | 0 |
+| retained-eu | 14,390 | 0 |
+| tna-caselaw | 74,730 | 0 |
+| hmrc-codes-guidance | 13,425 | 0 (in progress) |
+| oecd | 462 | 0 |
+| Total new pipeline | ~553,686 | |
+
+### Part F — New source clients (addendum)
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/parliament-api.ts` | Added `WQS_BASE` constant, `fetchWrittenAnswers(from, to)`, `fetchWrittenStatements(from, to)`. WQS API confirmed live via swagger (`/swagger/v1/swagger.json`). Written questions endpoint: `/api/writtenquestions/questions`. Statements: `/api/writtenstatements/statements`. |
+| `scripts/ingest/sources/gov-scraper.ts` | Added `listHmrcTiins()` (gov.uk content API → TIINS collection, falls back to search) and `listOtsReports()` (gov.uk search for OTS historical reports). |
+| `scripts/ingest/sources/law-commissions.ts` | **New file.** `listScotLawComReports()` — scrapes 46 listing pages at scotlawcom.gov.uk, follows individual publication pages, yields primary PDF per report. `listNiLawComReports()` — index-page scrape of defunct NI Law Commission (~18 historical reports). |
+| `scripts/ingest/seed-rate-limits.ts` | Added 4 new entries: `gov-uk` (300ms), `scotlawcom` (300ms), `nilawcom` (300ms), `ssrn` (200ms placeholder). |
+| `scripts/ingest/queue-populator.ts` | Added `monthlyChunks()` helper, `populateWrittenAnswers()` (317 rows), `populateWrittenStatements()` (349 rows), `populateNewSingleRowSources()` (hmrc-tiins, ots-reports, scotlawcom, nilawcom — 4 rows). |
+| `scripts/ingest/workers/worker-queue.ts` | New switch cases: `gov-uk` → `processGovUk()`, `scotlawcom`/`nilawcom` → `processLawCommission()`. `processHansard()` updated to handle `answers:{from}:{to}` and `statements:{from}:{to}` docId prefixes. |
+| `scripts/ingest/shared/progress-reporter.ts` | Added to `CORPUS_MANIFEST`: Written Answers (500k est), Written Statements (50k est), HMRC TIINs (2k), Law Commission E&W renamed, Scottish Law Commission (500), NI Law Commission (50, historic), OTS Reports (200), SSRN blocked (403). |
+
+**F6 (SSRN) — NOT IMPLEMENTED.** Live check: `https://api.ssrn.com/content/v1/bindings` returned 403 Forbidden. API is gated. No queue rows seeded. Marked `blocked: true` in manifest. Needs manual investigation (SSRN API credentials or alternative endpoint).
+
+### Sprint history reference
+
+All prior sprint entries below cover work since 1 Jun 2026. Do not modify.
+
+---
 
 ## CODE CHANGES — 2 Jun 2026 Evening Sprint: Corpus Monitoring + Rate Limiting
 
