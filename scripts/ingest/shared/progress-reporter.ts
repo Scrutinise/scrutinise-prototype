@@ -5,96 +5,87 @@ import { WorkerCheckpoint, readCheckpoint } from './checkpoint'
 const RESEND_API = 'https://api.resend.com/emails'
 const TO = 'cl@scrutinise.org'
 
-// ── Corpus planning targets — from Legislation_Corpus_Breakdown_v2.xlsx ──────
-// Update as estimates sharpen. taxLegislation excluded — subset of SIs.
+// ── Corpus manifest ───────────────────────────────────────────────────────────
+// sourceKey values use the DB corpus column values where available (verified
+// against ingest_queue.corpus from 2 Jun 2026 diagnostic).
+// Discrepancies from brief noted inline.
 
-const CORPUS_TARGETS = {
-  primaryActs:           180_000,
-  statutoryInstruments:  600_000,
-  retainedEuLaw:          80_000,
-  scottishWelshNI:       160_000,
-  localPrivateActs:       10_000,
-  hmrcManuals:           500_000,
-  fcaHandbook:           150_000,
-  sentencingCouncil:       2_000,
-  collegeOfPolicing:       8_000,
-  pace:                      800,
-  civilServiceCodes:         500,
-  treasuryGreenBook:         500,
-  erskineMay:              3_000,
-  nhsGuidance:            20_000,
-  planningPolicy:          5_000,
-  buildingRegs:            3_000,
-  cmaGuidelines:           8_000,
-  regulatorRulebooks:     40_000,
-  hansardCommons:      2_000_000,
-  hansardLords:          500_000,
-  billPages:              50_000,
-  committeeReports:      100_000,
-  explanatoryNotes:       50_000,
-  impactAssessments:      30_000,
-  caselaw_tna:           374_250,
-  caselaw_bailii:      2_000_000,
-  echr:                   30_000,
-  treaties:               10_000,
-  eurLex:                 80_000,
-  lawCommission:          20_000,
-  consultations:          50_000,
-  naoReports:             10_000,
+export interface CorpusEntry {
+  label: string
+  sourceKey: string        // matches DB corpus value (or aspirational for not-yet-seeded)
+  dbCorpora: string[]      // ingest_queue.corpus / corpus_sections.corpus values
+  estSections: number
+  priority: number
+  complete?: boolean
+  blocked?: boolean
 }
 
-const TOTAL_ESTIMATED = Object.values(CORPUS_TARGETS).reduce((a, b) => a + b, 0)
+export const CORPUS_MANIFEST: CorpusEntry[] = [
+  // LEGACY — already in Neon, complete
+  { label: 'HMRC Manuals (Neon legacy)',      sourceKey: '__neon_legacy__',        dbCorpora: [],                                        estSections: 914_274,   priority: 0, complete: true },
 
-// Per-corpus section targets — maps corpus_sections.corpus → expected section count
-const SECTION_TARGETS: Record<string, number> = {
-  'primary-acts-pre-2000':  80_000,
-  'primary-acts-2000plus': 100_000,
-  'si-pre-2010':           300_000,
-  'si-2010plus':           300_000,
-  'regional':              160_000,
-  'retained-eu':            80_000,
-  'fca-regulators':        190_000,   // fcaHandbook + regulatorRulebooks
-  'hmrc-codes-guidance':   640_000,   // hmrc + explanatoryNotes + impactAssessments + nao + consultations
-  'tna-caselaw':           374_250,
-  'hansard-commons-a':     600_000,
-  'hansard-commons-b':   1_400_000,
-  'hansard-lords-a':       150_000,
-  'hansard-lords-b':       350_000,
-  'committees-a':           50_000,
-  'committees-b':           50_000,
-  'bailii-tribunals':      700_000,
-  'bailii-eat':            100_000,
-  'bailii-privy-ni':        50_000,
-  'echr-hudoc':             30_000,
-  'eur-lex':                80_000,
-  'uk-treaties':            10_000,
-  'oecd':                   10_000,
-}
+  // PRIORITY 1 — UK Statute
+  // Brief used 'primary-acts-post-2000'; DB corpus = 'primary-acts-2000plus'
+  { label: 'Primary Acts 2000+',              sourceKey: 'primary-acts-2000plus',  dbCorpora: ['primary-acts-2000plus'],                  estSections: 100_000,   priority: 1 },
+  { label: 'Primary Acts pre-2000',           sourceKey: 'primary-acts-pre-2000',  dbCorpora: ['primary-acts-pre-2000'],                  estSections: 80_000,    priority: 1 },
+  // Brief used 'si-post-2010'; DB corpus = 'si-2010plus'
+  { label: 'Statutory Instruments 2010+',     sourceKey: 'si-2010plus',            dbCorpora: ['si-2010plus'],                            estSections: 300_000,   priority: 1 },
+  { label: 'Statutory Instruments pre-2010',  sourceKey: 'si-pre-2010',            dbCorpora: ['si-pre-2010'],                            estSections: 300_000,   priority: 1 },
 
-const CORPUS_DISPLAY: Record<string, string> = {
-  'primary-acts-pre-2000': 'Primary Acts pre-2000',
-  'primary-acts-2000plus': 'Primary Acts 2000+',
-  'si-pre-2010':           'Statutory Instruments pre-2010',
-  'si-2010plus':           'Statutory Instruments 2010+',
-  'regional':              'Regional (Scot/Wales/NI)',
-  'retained-eu':           'Retained EU Law',
-  'fca-regulators':        'FCA Handbook + Regulators',
-  'hmrc-codes-guidance':   'HMRC + Guidance',
-  'tna-caselaw':           'TNA Find Case Law',
-  'hansard-commons-a':     'Hansard Commons A (pre-1981)',
-  'hansard-commons-b':     'Hansard Commons B (1981+)',
-  'hansard-lords-a':       'Hansard Lords A (pre-1981)',
-  'hansard-lords-b':       'Hansard Lords B (1981+)',
-  'committees-a':          'Committee Reports A',
-  'committees-b':          'Committee Reports B',
-  'bailii-tribunals':      'BAILII Tribunals',
-  'bailii-eat':            'BAILII EAT',
-  'bailii-privy-ni':       'BAILII Privy/NI',
-  'echr-hudoc':            'ECHR HUDOC',
-  'eur-lex':               'EUR-Lex',
-  'uk-treaties':           'UK Treaties',
-  'oecd':                  'OECD',
-}
+  // PRIORITY 2 — Major open sources
+  { label: 'Regional (Scot/Wales/NI)',        sourceKey: 'regional',               dbCorpora: ['regional'],                               estSections: 160_000,   priority: 2 },
+  // Brief used 'retained-eu-law'; DB corpus = 'retained-eu'
+  { label: 'Retained EU Law',                 sourceKey: 'retained-eu',            dbCorpora: ['retained-eu'],                            estSections: 80_000,    priority: 2 },
+  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 374_250,   priority: 2 },
+  { label: 'BAILII (full corpus)',            sourceKey: 'bailii',                 dbCorpora: ['bailii-tribunals','bailii-eat','bailii-privy-ni'], estSections: 2_000_000, priority: 2, blocked: true },
+  // hansard: DB uses -a/-b split; aggregated here
+  { label: 'Hansard Commons',                sourceKey: 'hansard-commons',         dbCorpora: ['hansard-commons-a','hansard-commons-b'],   estSections: 2_000_000, priority: 2 },
+  { label: 'Hansard Lords',                  sourceKey: 'hansard-lords',           dbCorpora: ['hansard-lords-a','hansard-lords-b'],       estSections: 500_000,   priority: 2 },
+  { label: 'Committee Reports',              sourceKey: 'committee-reports',       dbCorpora: ['committees-a','committees-b'],             estSections: 100_000,   priority: 2 },
+  { label: 'Written Answers (PQs)',          sourceKey: 'written-answers',         dbCorpora: ['written-answers'],                        estSections: 500_000,   priority: 2 },
+  { label: 'Written Ministerial Statements', sourceKey: 'written-statements',      dbCorpora: ['written-statements'],                     estSections: 50_000,    priority: 2 },
+  { label: 'Bill Pages',                     sourceKey: 'bill-pages',              dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
+  { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
+  { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
+  { label: 'House of Commons Library',       sourceKey: 'hoc-library',             dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
+  // Brief used 'fca-handbook'; DB corpus = 'fca-regulators'
+  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
+  // Brief used 'hmrc-web'; DB corpus = 'hmrc-codes-guidance'
+  { label: 'HMRC + Guidance',                sourceKey: 'hmrc-codes-guidance',     dbCorpora: ['hmrc-codes-guidance'],                    estSections: 640_000,   priority: 2 },
+  { label: 'HMRC TIINs',                     sourceKey: 'hmrc-tiins',              dbCorpora: ['hmrc-tiins'],                             estSections: 2_000,     priority: 2 },
+  { label: 'Law Commission Reports (E&W)',   sourceKey: 'law-commission',          dbCorpora: [],                                         estSections: 20_000,    priority: 2 },
+  { label: 'Scottish Law Commission',        sourceKey: 'scotlawcom',              dbCorpora: ['scotlawcom'],                             estSections: 500,       priority: 2 },
+
+  // PRIORITY 3 — Secondary sources
+  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_000,    priority: 3 },
+  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 80_000,    priority: 3 },
+  // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
+  { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
+  { label: 'White / Green Papers',            sourceKey: 'command-papers',         dbCorpora: [],                                         estSections: 20_000,    priority: 3 },
+  { label: 'Sentencing Council',              sourceKey: 'sentencing-council',     dbCorpora: [],                                         estSections: 2_000,     priority: 3 },
+  { label: 'College of Policing APP',         sourceKey: 'college-of-policing',    dbCorpora: [],                                         estSections: 8_000,     priority: 3 },
+  { label: 'PACE Codes A–H',                 sourceKey: 'pace-codes',             dbCorpora: [],                                         estSections: 800,       priority: 3 },
+  { label: 'Civil Service / Min. Codes',      sourceKey: 'civil-service-codes',    dbCorpora: [],                                         estSections: 500,       priority: 3 },
+  { label: 'Treasury Green/Magenta Book',     sourceKey: 'treasury-books',         dbCorpora: [],                                         estSections: 500,       priority: 3 },
+  { label: 'Erskine May + Standing Orders',   sourceKey: 'erskine-may',            dbCorpora: [],                                         estSections: 3_000,     priority: 3 },
+  { label: 'Public Consultations',            sourceKey: 'consultations',          dbCorpora: [],                                         estSections: 50_000,    priority: 3 },
+  { label: 'NAO Reports',                     sourceKey: 'nao-reports',            dbCorpora: [],                                         estSections: 10_000,    priority: 3 },
+  { label: 'OTS Reports',                     sourceKey: 'ots-reports',            dbCorpora: ['ots-reports'],                            estSections: 200,       priority: 3 },
+  { label: 'NI Law Commission (historic)',    sourceKey: 'nilawcom',               dbCorpora: ['nilawcom'],                               estSections: 50,        priority: 3 },
+  { label: 'SSRN UK Legal Scholarship',       sourceKey: 'ssrn',                   dbCorpora: [],                                         estSections: 50_000,    priority: 3, blocked: true },
+  { label: 'Post-Legislative Memoranda',      sourceKey: 'post-leg-memoranda',     dbCorpora: [],                                         estSections: 5_000,     priority: 3 },
+
+  // PRIORITY 4 — Lower priority
+  { label: 'Local / Private Acts',            sourceKey: 'local-private-acts',     dbCorpora: [],                                         estSections: 10_000,    priority: 4 },
+  { label: 'NHS Guidance',                    sourceKey: 'nhs-guidance',           dbCorpora: [],                                         estSections: 20_000,    priority: 4 },
+  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
+  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: [],                                         estSections: 3_000,     priority: 4 },
+  { label: 'CMA Guidelines',                  sourceKey: 'cma-guidelines',         dbCorpora: [],                                         estSections: 8_000,     priority: 4 },
+  { label: 'Ofcom/Ofwat/Ofgem/Ofsted',        sourceKey: 'regulator-rulebooks',    dbCorpora: [],                                         estSections: 40_000,    priority: 4 },
+  // Brief used 'oecd-free'; DB corpus = 'oecd'
+  { label: 'OECD (free tier)',                sourceKey: 'oecd',                   dbCorpora: ['oecd'],                                   estSections: 10_000,    priority: 4 },
+  { label: 'ONS Statistical Datasets',        sourceKey: 'ons-statistics',         dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
+]
 
 // ── DB pool (Railway) ─────────────────────────────────────────────────────────
 
@@ -132,6 +123,12 @@ export async function queryCorpusCounts(): Promise<Record<string, { compiled: nu
   return out
 }
 
+// Returns set of all corpus values that have any row in ingest_queue.
+export async function queryQueueCorpora(): Promise<Set<string>> {
+  const res = await getPool().query<{ corpus: string }>('SELECT DISTINCT corpus FROM ingest_queue')
+  return new Set(res.rows.map(r => r.corpus))
+}
+
 // ── Neon LegislationSection count (legacy pipeline) ──────────────────────────
 
 const NEON_FALLBACK = 914_274  // confirmed count from 2 Jun 2026 transfer
@@ -167,8 +164,9 @@ export async function saveProgressSnapshot(
 ): Promise<void> {
   const pool = getPool()
   for (const [corpus, counts] of Object.entries(corpusCounts)) {
-    const label = CORPUS_DISPLAY[corpus] ?? corpus
-    const estimated = SECTION_TARGETS[corpus] ?? 0
+    const entry = CORPUS_MANIFEST.find(e => e.dbCorpora.includes(corpus))
+    const label = entry?.label ?? corpus
+    const estimated = entry?.estSections ?? 0
     await pool.query(`
       INSERT INTO ingest_progress_snapshots
         ("capturedAt", "workerLabel", "sourceKey", "sectionsCompiled", "sectionsEstimated", phase)
@@ -177,7 +175,42 @@ export async function saveProgressSnapshot(
   }
 }
 
-// ── Checkpoint aggregate (kept for ETA calculation) ───────────────────────────
+// ── Time-series ETA from snapshots ───────────────────────────────────────────
+
+async function queryEtaFromSnapshots(totalEstimated: number, currentCompiled: number): Promise<string> {
+  try {
+    const res = await getPool().query<{ capturedAt: Date; total: number }>(`
+      SELECT "capturedAt", SUM("sectionsCompiled")::int AS total
+      FROM ingest_progress_snapshots
+      GROUP BY "capturedAt"
+      ORDER BY "capturedAt" DESC
+      LIMIT 6
+    `)
+    const points = res.rows.reverse()  // oldest first
+    if (points.length < 2) return 'Insufficient data'
+
+    const newest = points[points.length - 1]
+    const oldest = points[0]
+    const deltaCompiled = Number(newest.total) - Number(oldest.total)
+    const deltaMs = new Date(newest.capturedAt).getTime() - new Date(oldest.capturedAt).getTime()
+
+    if (deltaMs <= 0 || deltaCompiled <= 0) return 'No rate data'
+
+    const sectionsPerHour = deltaCompiled / (deltaMs / 3_600_000)
+    const remaining = totalEstimated - currentCompiled
+    if (remaining <= 0) return 'Complete'
+
+    const hoursNeeded = remaining / sectionsPerHour
+    const eta = new Date(Date.now() + hoursNeeded * 3_600_000)
+    const rate = Math.round(sectionsPerHour).toLocaleString()
+    const dateStr = eta.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    return `${dateStr}  (${rate} secs/hr)`
+  } catch {
+    return 'ETA unavailable'
+  }
+}
+
+// ── Checkpoint aggregate (kept for legacy R2 writes) ─────────────────────────
 
 export interface WorkerSummary {
   workerId: number
@@ -217,7 +250,7 @@ export async function buildAggregate(): Promise<ProgressAggregate> {
   let totalCompleted = 0
   let totalEstimated = 0
 
-  for (let id = 1; id <= 10; id++) {
+  for (let id = 1; id <= 20; id++) {
     const cp = await readCheckpoint(id)
     const pct = cp.totalInCorpus > 0
       ? ((cp.completed / cp.totalInCorpus) * 100).toFixed(1) + '%'
@@ -293,44 +326,75 @@ export async function sendProgressEmail(
     timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
   }).format(new Date(agg.timestamp))
 
+  // Query which corpora have any queue rows (to distinguish not-started from seeded)
+  let queueCorpora = new Set<string>()
+  try { queueCorpora = await queryQueueCorpora() } catch { /* non-fatal */ }
+
   // ── Totals ────────────────────────────────────────────────────────────────
-  const newPipelineTotal = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
-  const overallCompiled  = neonCount + newPipelineTotal
-  const overallPct       = (overallCompiled / TOTAL_ESTIMATED) * 100
-  const overallBar       = progressBar(overallPct)
+  // Sum compiled sections across all DB corpora
+  const newPipelineCompiled = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
+  const overallCompiled = neonCount + newPipelineCompiled
 
-  // ── Per-corpus rows (sorted by compiled desc) ─────────────────────────────
-  const corpusOrder = [
-    'primary-acts-2000plus', 'primary-acts-pre-2000',
-    'si-2010plus', 'si-pre-2010', 'regional', 'retained-eu',
-    'tna-caselaw', 'hmrc-codes-guidance', 'fca-regulators',
-    'hansard-commons-a', 'hansard-commons-b', 'hansard-lords-a', 'hansard-lords-b',
-    'committees-a', 'committees-b',
-    'echr-hudoc', 'eur-lex', 'uk-treaties', 'oecd',
-    'bailii-tribunals', 'bailii-eat', 'bailii-privy-ni',
-  ]
+  // Estimated: sum of all non-blocked entries (excl. Neon legacy)
+  const totalEstimated = CORPUS_MANIFEST
+    .filter(e => !e.complete && !e.blocked)
+    .reduce((s, e) => s + e.estSections, 0)
 
-  const corpusLines: string[] = []
-  for (const corpus of corpusOrder) {
-    const counts = corpusCounts[corpus]
-    if (!counts) continue
-    const label   = (CORPUS_DISPLAY[corpus] ?? corpus).padEnd(34)
-    const target  = SECTION_TARGETS[corpus] ?? 0
-    const compiled = counts.compiled
-    const pct     = pctStr(compiled, target)
-    const bar     = progressBar(target > 0 ? (compiled / target) * 100 : 0, 10)
-    const failStr = counts.failed > 0 ? `  (${counts.failed.toLocaleString()} failed)` : ''
-    corpusLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)} / ${(target || 0).toLocaleString().padStart(9)}  ${bar} ${pct}${failStr}`)
+  const overallPct = (overallCompiled / (neonCount + totalEstimated)) * 100
+  const overallBar = progressBar(overallPct)
+
+  const eta = await queryEtaFromSnapshots(totalEstimated, newPipelineCompiled)
+
+  // ── Per-entry rows grouped by priority ───────────────────────────────────
+  const manifestLines: string[] = []
+  let currentPriority = -1
+
+  for (const entry of CORPUS_MANIFEST) {
+    if (entry.priority !== currentPriority) {
+      currentPriority = entry.priority
+      const tierLabel = entry.priority === 0 ? 'LEGACY'
+        : entry.priority === 1 ? 'PRIORITY 1 — UK Statute'
+        : entry.priority === 2 ? 'PRIORITY 2 — Major open sources'
+        : entry.priority === 3 ? 'PRIORITY 3 — Secondary sources'
+        : 'PRIORITY 4 — Lower priority'
+      manifestLines.push('', `── ${tierLabel} ──`)
+    }
+
+    const label = entry.label.padEnd(36)
+
+    if (entry.complete) {
+      // Neon legacy — use neonCount
+      manifestLines.push(`  ${label} ${neonCount.toLocaleString().padStart(9)}  ✅`)
+      continue
+    }
+
+    if (entry.blocked) {
+      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${entry.estSections.toLocaleString().padStart(9)}  ⛔ blocked`)
+      continue
+    }
+
+    // Sum compiled across this entry's DB corpora
+    const compiled = entry.dbCorpora.reduce((s, c) => s + (corpusCounts[c]?.compiled ?? 0), 0)
+    const failed   = entry.dbCorpora.reduce((s, c) => s + (corpusCounts[c]?.failed ?? 0), 0)
+    const est      = entry.estSections
+    const isSeeded = entry.dbCorpora.some(c => queueCorpora.has(c))
+
+    if (compiled === 0 && !isSeeded && entry.dbCorpora.length > 0) {
+      // Corpus in DB schema but no queue rows — something unexpected
+      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
+      continue
+    }
+
+    if (compiled === 0 && entry.dbCorpora.length === 0) {
+      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
+      continue
+    }
+
+    const pct = pctStr(compiled, est)
+    const bar = progressBar(est > 0 ? (compiled / est) * 100 : 0, 10)
+    const failStr = failed > 0 ? `  (${failed.toLocaleString()} failed)` : ''
+    manifestLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)} / ${est.toLocaleString().padStart(9)}  ${bar} ${pct}${failStr}`)
   }
-
-  // Other corpora not in the known order
-  for (const [corpus, counts] of Object.entries(corpusCounts)) {
-    if (corpusOrder.includes(corpus)) continue
-    const label = (CORPUS_DISPLAY[corpus] ?? corpus).padEnd(34)
-    corpusLines.push(`  ${label} ${counts.compiled.toLocaleString().padStart(9)}`)
-  }
-
-  const eta = estimateCompletion(agg)
 
   const parts: string[] = [
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
@@ -339,16 +403,16 @@ export async function sendProgressEmail(
     `  ${bst} BST`,
     '',
     `  ${overallBar}  ${overallPct.toFixed(1)}%`,
-    `  ${overallCompiled.toLocaleString()} / ${TOTAL_ESTIMATED.toLocaleString()} est. sections`,
+    `  ${overallCompiled.toLocaleString()} / ${(neonCount + totalEstimated).toLocaleString()} est. sections`,
     `  ETA: ${eta}`,
     '',
     `  LEGACY (Neon — legislation.gov.uk):  ${neonCount.toLocaleString().padStart(9)}  ✅`,
-    `  NEW PIPELINE (10 workers):           ${newPipelineTotal.toLocaleString().padStart(9)}`,
+    `  NEW PIPELINE (20 workers):           ${newPipelineCompiled.toLocaleString().padStart(9)}`,
     '',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'PER-CORPUS BREAKDOWN',
+    'CORPUS MANIFEST',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    ...corpusLines,
+    ...manifestLines,
   ]
 
   if (formatBreakdown.length > 0) {
@@ -385,14 +449,4 @@ export async function sendProgressEmail(
   } else {
     console.log(`[reporter] Email sent to ${TO} — ${overallPct.toFixed(1)}% overall`)
   }
-}
-
-function estimateCompletion(agg: ProgressAggregate): string {
-  if (agg.totalCompleted === 0 || agg.totalEstimated === 0) return 'Insufficient data'
-  const remaining = agg.totalEstimated - agg.totalCompleted
-  const rate = agg.workers.reduce((sum, w) => sum + w.completed, 0)
-  if (rate === 0) return 'No rate data'
-  const hoursNeeded = remaining / (rate / 24)
-  const eta = new Date(Date.now() + hoursNeeded * 3_600_000)
-  return eta.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 }
