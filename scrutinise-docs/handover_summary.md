@@ -1,165 +1,108 @@
-# Handover summary — Architecture sprint + build fix (2 Jun 2026)
+# Handover summary — Corpus Monitoring + Rate Limiting sprint (2 Jun 2026, evening)
 
-**Date:** 2 Jun 2026  
-**Previous conversations:** V.4-FTS-3 + L6-C + source-client sprint (prior sessions); architecture + build fixes (this session)  
-**Status:** All pushed. Workers 2–10 + scheduler ACTIVE on Railway. Worker-1 auto-deploy triggered (fix commit `484d105`). cc-monitor auto-redeploy DISABLED — re-enable after confirming all workers stable.
+**Date:** 2 Jun 2026 (evening session)
+**Previous conversations:** Architecture sprint + build fixes (earlier today)
+**Status:** All pushed and deployed. Workers 1–10 running with rate-limit token bucket. Scheduler sending hourly emails. Workers 11–20 cleared to add in Railway — see NEXT STEPS.
 
 ---
 
 ## CURRENT STATE
 
-### Railway Worker Status (as of 2 Jun 2026 ~11:30 BST)
+### Railway Worker Status (as of 2 Jun 2026 ~22:45 BST)
 
 | Service | Status | Commit | Note |
 |---------|--------|--------|------|
-| ingest-worker-2 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-3 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-4 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-5 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-6 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-7 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-8 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-9 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| ingest-worker-10 | ✅ SUCCESS | 02979a94 | Running worker-queue.ts |
-| Ingest-scheduler | ✅ SUCCESS | 02979a94 | Progress bar email active |
-| ingest-worker-1 | ⏳ DEPLOYING | 484d105 | Auto-deploy triggered; should be SUCCESS within ~2 min |
+| ingest-worker-1 through 10 | ✅ Should be SUCCESS | `9acd458` | Running worker-queue.ts with rate-limit-aware claim |
+| ingest-scheduler | ✅ SUCCESS | `9acd458` | Persistent hourly loop — no cron schedule needed |
 
-**Root cause of build loop:** Railway silently migrated to Railpack builder. Workers had no `rootDirectory` set, so Railpack received a stale/partial snapshot (3 files only). Fix: set `rootDirectory = "scripts/ingest"` on all 11 Railway services + remove NIXPACKS from `railway.json`. Workers now build from `package.json` in `scripts/ingest/`.
+**Workers 11–20:** NOT YET ADDED. Ready to add — see NEXT STEPS.
 
-**cc-monitor auto-redeploy is DISABLED** (`cc-monitor.ts` lines ~145–153 commented out). Re-enable once all workers confirmed stable for 24h. The monitor still logs crashes and stall warnings — it just doesn't act on them.
+**Ingest progress:** 426,343 new pipeline sections compiled + 914,274 legacy (Neon) = **1,340,617 total = 18.9% overall**.
 
-### Queue State (as of 2 Jun ~02:45 BST)
-- `ingest_queue`: 60,575 pending rows seeded
-  - TNA legislation: 47,540 acts (priority 1–2)
-  - TNA caselaw: 7,485 Atom pages (~374k judgments, priority 1)
-  - Hansard: 5,544 monthly chunks (priority 2)
-  - BAILII: 0 (Cloudflare WAF blocking scraper — deferred)
-  - FCA/ECHR/EUR-Lex/HMRC/Treaties/OECD: 6 index placeholder rows
+### Queue State (as of 2 Jun 2026 ~22:00 BST)
 
-### Architecture sprint — ALL PARTS COMPLETE (pushed)
+- `tna-legislation`: ~33,000 pending (down from 40,070 — workers actively processing)
+- `tna-caselaw`: 7,485 done ✅
+- `hansard`: 5,544 done ✅
+- `fca`, `hmrc`, `echr`, `eurlex`, `oecd`, `treaties`: 1 pending each (priority 3–5, will process after TNA legislation drains)
 
-| Commit | What |
-|--------|------|
-| `e82ced3` | `ingest_queue` table + `compiledText` + `fts_vector` on `corpus_sections` |
-| `0c82f32` | `queue-client.ts` (FOR UPDATE SKIP LOCKED) + `queue-populator.ts` |
-| `90aaabe` | `worker-queue.ts` — dynamic queue claiming, all workers interchangeable |
-| `47b96ad` | `discoverFormats()` — TNA metadata feed before fetch |
-| `f38b0c1` | `compiledText` in `upsertSection()` → DB trigger maintains `fts_vector` |
-| `dd37601` | `cc-monitor.ts` + `known-errors.json` |
-| `8e5dc24` | Progress bar email (████ + % + status breakdown) |
-| `02979a9` | Build fix: remove NIXPACKS, sync ingest prisma schema, disable cc-monitor auto-redeploy |
-| `484d105` | Patch bump to force worker-1 auto-deploy |
+### Key tables added this session
 
-### Source-Client Sprint — ALL 5 PRIORITIES COMPLETE (not yet pushed)
-
-All source clients previously exiting immediately are now fully implemented:
-
-| Priority | Source | Workers | Status |
-|----------|--------|---------|--------|
-| 1 | TNA Find Case Law | Worker 9 Phase 1 | ✅ COMPLETE |
-| 2 | Parliament API / Hansard | Workers 1–4 Phase 2 | ✅ COMPLETE |
-| 3 | BAILII scraper | Workers 5, 6, 7 Phase 2 | ✅ COMPLETE |
-| 4 | FCA Handbook | Worker 7 Phase 1 | ✅ COMPLETE |
-| 5 | International (ECHR, EUR-Lex, OECD, Treaties) | Worker 10 Phase 1+2 | ✅ COMPLETE |
-
-**Key changes:**
-- `r2-client.ts`: new key helpers `caselawKey`, `bailiiKey`, `hansardKey`
-- `tna-caselaw.ts`: `getTotalJudgments()` pre-processing count
-- `parliament-api.ts`: `countHansardDebates()`, `fetchReportContent()`
-- `bailii-scraper.ts`: WORKER_DB_SUBSETS extended to all 10 courts
-- `fca-handbook.ts`: rewritten as HTML scraper (30+ sourcebooks)
-- `echr-hudoc.ts`: fixed `country:GBR` typo, added `countUkCases()`
-- `eurlex.ts`: paginated search API (was 100-item SPARQL stub)
-- `oecd-free.ts`: rewritten to gov.uk content API for OECD docs
-- `uk-treaties.ts` (NEW): FCDO treaties via gov.uk search + content API
-- `worker-main.ts`: all workers now enumerate count before processing,
-  use source-specific R2 keys, rawToText() only (no LLM calls)
-
-**tsc --noEmit (ingest/ only): CLEAN** (pre-existing errors in backfill/v3opt unrelated)
-
-**After push, reset + redeploy each worker set in order — see CHANGE_LOG for commands.**
+| Table | Purpose |
+|-------|---------|
+| `source_rate_limits` | Token bucket per sourceType — seeded with 10 entries (200ms–1000ms) |
+| `ingest_progress_snapshots` | Append-only time-series, one row per corpus per scheduler run |
 
 ---
 
+## WHAT WAS DONE THIS SESSION
 
-### V.4-FTS-3 — Neon Migration + Search Enhancements — ✅ COMPLETE (all 4 parts)
+### Fix: Workers 1–4 build failures
+- Root cause: missing `scripts/ingest/package-lock.json` — non-deterministic npm installs
+- Fix: generated lockfile (Prisma 6.19.3, tsx 4.22.4, pg 8.21.0 pinned)
+- Also fixed: `db-metadata.ts` used deprecated Prisma `datasources` constructor option → `new PrismaClient()` (no options, reads DATABASE_URL from env; works Prisma 6 and 7)
 
-#### Part 1 — Neon connection + prisma-search.ts — ✅ COMPLETE
-- `NEON_DATABASE_URL` in `.env`.
-- `scrutinise-web/lib/prisma-search.ts` — separate Prisma client targeting Neon via `NEON_DATABASE_URL`. Lazy Proxy-based init (avoids tsx ESM dotenv timing).
-- `scrutinise-web/lib/pg-pool.ts` — raw `pg.Pool` wrapper for Railway + Neon, used by scripts. Railway uses `ssl: { rejectUnauthorized: false }`.
+### Fix: Scheduler silence (no emails after 15:42)
+- Root cause: `queryNeonCount()` created a pg Pool with no timeouts → Neon idle-timeout caused a silent hang → loop stuck forever
+- Fix: `connectionTimeoutMillis: 10_000` + `statement_timeout: 30_000` on both pools
+- Fix: `Promise.race([run(), timeout(5min)])` in scheduler loop — hung run() aborts, loop continues
 
-#### Part 2 — Neon schema + FTS enhancements — ✅ COMPLETE
-- Schema pushed (54 tables), FTS config `legislation_english` created, triggers + GIN indexes installed, pgvector enabled, `embedding vector(768)` added.
-- `buildTsQuery()` in `search.ts` — prefix matching via `:*` on final token when input has no trailing space.
-- Thesaurus file: `scrutinise-web/prisma/pg_thesaurus/legislation_synonyms.ths` (9 synonym pairs).
-- `scripts/legislation/apply-fts-config.sql` — self-hosted PG setup.
-- `scrutinise-docs/CLAUDE.md` §15 added (thesaurus + prefix matching docs).
+### Scheduler architecture change
+- Converted from Railway cron service to **persistent always-on loop**
+- Default interval: `SCHEDULER_INTERVAL_HOURS=1` (env var set in Railway)
+- Fires immediately on startup — redeploy = immediate email
+- Remove the Railway cron schedule from `ingest-scheduler` if still set
 
-#### Part 3 — Railway → Neon data transfer — ✅ COMPLETE
-- Transfer script: `scripts/legislation/transfer-to-neon.ts`
-  - Multi-row batched INSERT (200 rows/batch), cursor-based pagination, checkpoint/resume.
-  - Hit Neon 512 MB free-tier limit at 215,000 sections. Neon upgraded to Pro. Resumed from checkpoint.
-  - Total time: ~83 minutes across two runs (72s items + 678s sections in second run).
-- **Verification — ALL COUNTS MATCH:**
+### Corpus Monitoring sprint (B1–B3)
+| Item | Detail |
+|------|--------|
+| `IngestProgressSnapshot` table | Append-only, one row per corpus per run. Migration: `20260602150000`. Applied ✅ |
+| `progress-reporter.ts` rewrite | CORPUS_TARGETS const (~6.9M total), per-corpus section targets, Neon count query, unified email showing legacy + new pipeline totals |
+| `scheduler.ts` update | Queries corpus_sections + Neon; writes IngestProgressSnapshot rows; new email API |
+| `pdf-parse` added | `pdfToText()` in compile.ts — extracts machine-readable PDFs; low-yield (scanned) PDFs flagged `notes='pdf-ocr-needed'` for later Tesseract pass |
+| Worker-queue.ts PDF branch | Now calls `pdfToText()` instead of storing placeholder text |
 
-| Type | Railway | Neon |
-|------|---------|------|
-| UKSI | 473,828 | 473,828 ✓ |
-| UKPGA | 171,346 | 171,346 ✓ |
-| EUR | 75,658 | 75,658 ✓ |
-| SSI | 44,943 | 44,943 ✓ |
-| NISR | 42,477 | 42,477 ✓ |
-| EUDN | 40,376 | 40,376 ✓ |
-| WSI | 25,404 | 25,404 ✓ |
-| EUDR | 17,278 | 17,278 ✓ |
-| NISI | 12,026 | 12,026 ✓ |
-| ASP | 6,678 | 6,678 ✓ |
-| NIA | 3,114 | 3,114 ✓ |
-| ANAW | 734 | 734 ✓ |
-| ASC | 412 | 412 ✓ |
-| **LegislationItem** | **135,531** | **135,531** ✓ |
-| **LegislationSection** | **914,274** | **914,274** ✓ |
-
-- `ANALYZE "LegislationSection"` run post-transfer to update planner statistics.
-
-#### Part 4 — Switch search to Neon — ✅ COMPLETE
-- `scrutinise-web/lib/search.ts`: imports `prismaSearch` from `@/lib/prisma-search`; legislation search branch now queries Neon; operational branch keeps Railway (`prisma`).
-- `scripts/legislation/fts-smoke-test.ts`: updated to target Neon (`prismaSearch`), latency threshold adjusted for managed cloud DB (5s vs 2s for "person" worst-case), GIN assertion replaced with performance assertion.
-- `scripts/legislation/neon-analyze.ts`: one-off post-transfer ANALYZE script (run once ✓).
-- **Smoke test: ALL PASS** against Neon.
-
-**Smoke test results (Neon):**
-- ftsVector fully populated: 914,274 rows ✓
-- CTE bounds ts_headline ≤20 rows ✓
-- "cryptoasset" selective term: 40ms ✓
-- Data Protection Act 2018: 20 results, 96ms ✓
-- Human Rights Act 1998: 20 results, 68ms ✓
-- UKSI commencement: 20 results, 3,743ms ✓
-- actId filter: 20 results, 32ms ✓
-- p99 "person" worst-case: 2,883ms (≤5s target) ✓
-
-**tsc --noEmit: CLEAN ✓**
-
----
-
-### L6-C — Lex Reliability Sprint — ✅ COMPLETE (not yet pushed)
-
-5 web app files modified (see CHANGE_LOG.md §L6-C for detail):
-- `scrutinise-web/app/api/ai/[ideaId]/route.ts`
-- `scrutinise-web/components/FieldProposalCard.tsx`
-- `scrutinise-web/app/ideas/create/CreateIdeaClient.tsx`
-- `scrutinise-web/app/ideas/[id]/IdeaDetailClient.tsx`
-- `scrutinise-web/lib/stage-gates.ts`
+### Rate Limiting sprint (B1–B5)
+| Item | Detail |
+|------|--------|
+| `SourceRateLimit` table | Token bucket per sourceType. Migration: `20260602160000`. Applied ✅. Seeded ✅ |
+| `claimNextChunk()` rewrite | Two-phase: (1) find highest-priority source with available token via JOIN; (2) claim row + update lastIssuedAt atomically. Falls back to unconstrained sources if rate-limit table empty |
+| `getSleepDuration()` | Workers sleep until next token available (not fixed 5-min sleep). Wakes in as little as 10ms |
+| `suspendSource()` / `clearExpiredSuspensions()` | 429 suspension written to source_rate_limits; scheduler sweeps expired suspensions each run |
+| `AdaptiveThrottle.onSuspend` | Callback fired when delay ≥ 60s. Wired on tna-legislation and tna-caselaw |
+| WORKER_ID cap removed | Was capped at 10; now accepts any positive value — workers 11–20 supported |
+| `seed-rate-limits.ts` | Upsert script. Already run (data live). dotenv path fixed in `9acd458` |
 
 ---
 
 ## NEXT STEPS
 
-1. **Charlie approves `commit-all.sh`** at project root → CC runs it → push to Main.
-2. **Vercel deploy** — `scrutinise-web/lib/search.ts` now imports `prismaSearch`. Ensure `NEON_DATABASE_URL` is set in Vercel environment variables before deploying. Then deploy to preview, verify search works, promote to production.
-3. **V.4-FTS-2** — pgvector embeddings (semantic search) — `embedding vector(768)` column is on Neon, ready to populate.
-4. **UKSI full ingest** — 61,179 items, pipeline approved, awaiting Charlie decision.
+### 1. Add workers 11–20 in Railway (CLEARED — do now)
+
+Pre-conditions all met:
+- ✅ source_rate_limits seeded
+- ✅ claimNextChunk() with token bucket deployed on workers 1–10
+- ✅ WORKER_ID cap removed
+
+For each `ingest-worker-11` through `ingest-worker-20`:
+- Same repo, `rootDirectory = scripts/ingest`, start command `npm run worker`
+- Copy all env vars from `ingest-worker-1`
+- Set `WORKER_ID` = 11 through 20
+
+### 2. Add NEON_DATABASE_URL to ingest-scheduler in Railway
+Currently falls back to hardcoded 914,274 baseline. Add the env var to keep the Neon count live.
+
+### 3. Verify source_rate_limits updating
+After next scheduler email, query: `SELECT "sourceKey", "lastIssuedAt", suspended FROM source_rate_limits ORDER BY "lastIssuedAt" DESC` — should show non-zero lastIssuedAt values for tna-legislation and tna-caselaw.
+
+### 4. Re-enable cc-monitor auto-redeploy (deferred)
+Once workers 11–20 are stable for 24h. Uncomment lines ~145–153 in `cc-monitor.ts`.
+
+### 5. Backlog
+- Tesseract OCR pass for PDFs with `notes='pdf-ocr-needed'` (separate post-ingest cleanup job)
+- BAILII data access request to unblock BAILII scraper (Cloudflare WAF blocking)
+- V.4-FTS-2: pgvector semantic search (embedding vector(768) on Neon is empty, ready to populate)
+- Shared rate-limit bucket for HMRC/FCA/OECD sources if workers added for those
 
 ---
 
@@ -167,24 +110,20 @@ All source clients previously exiting immediately are now fully implemented:
 
 | File | Purpose |
 |------|---------|
-| `scrutinise-web/lib/prisma-search.ts` | Neon Prisma client (lazy init, read-only search) |
-| `scrutinise-web/lib/pg-pool.ts` | Raw pg Pool for Railway + Neon (used by scripts) |
-| `scrutinise-web/lib/search.ts` | FTS search — prefix matching + Neon for legislation |
-| `scrutinise-web/prisma/pg_thesaurus/legislation_synonyms.ths` | Synonym pairs (self-hosted PG) |
-| `scripts/legislation/neon-fts-setup.ts` | Neon FTS schema setup (idempotent) |
-| `scripts/legislation/apply-fts-config.sql` | Self-hosted PG thesaurus setup |
-| `scripts/legislation/transfer-to-neon.ts` | Data transfer Railway→Neon (complete ✓) |
-| `scripts/legislation/neon-transfer-checkpoint.json` | Transfer progress (both tables done) |
-| `scripts/legislation/neon-analyze.ts` | Post-transfer ANALYZE script (run once ✓) |
-| `scripts/legislation/fts-smoke-test.ts` | FTS smoke test — Neon target, ALL PASS |
-| `scripts/legislation/check-railway-counts.ts` | Railway row count diagnostic |
-| `scripts/legislation/test-neon-connection.ts` | Neon connectivity test |
+| `scripts/ingest/shared/queue-client.ts` | claimNextChunk (rate-limited), getSleepDuration, suspendSource, clearExpiredSuspensions |
+| `scripts/ingest/shared/progress-reporter.ts` | Corpus coverage email — CORPUS_TARGETS, Neon query, snapshot write |
+| `scripts/ingest/shared/compile.ts` | rawToText() (XML/HTML), pdfToText() (pdf-parse) |
+| `scripts/ingest/scheduler.ts` | Persistent hourly loop, clearExpiredSuspensions sweep |
+| `scripts/ingest/seed-rate-limits.ts` | Rate limit seed (already run — re-run to reset) |
+| `scripts/ingest/workers/worker-queue.ts` | Queue worker — smart sleep, WORKER_ID unrestricted |
+| `scripts/ingest/shared/adaptive-throttle.ts` | Rate throttle with onSuspend callback |
+| `scrutinise-web/prisma/migrations/20260602150000_*` | IngestProgressSnapshot migration (applied) |
+| `scrutinise-web/prisma/migrations/20260602160000_*` | source_rate_limits migration (applied) |
 
 ---
 
 ## Notes for next CC session
 
-- `commit-all.sh` is at project root — awaiting Charlie's approval to run.
-- Before Vercel deploy: confirm `NEON_DATABASE_URL` is in Vercel env vars (Settings → Environment Variables).
-- Operational data (OperationalDocument / OperationalSection) remains on Railway — NOT transferred to Neon. Operational search still queries Railway via `prisma`.
-- The `embedding vector(768)` column on Neon's LegislationSection is empty (nullable) — V.4-FTS-2 will populate it.
+- The Prisma error on local `queryUnrecognisedFormats` runs is **local-only** — scrutinise-web uses Prisma 7 which rejects `new PrismaClient()` without options. Railway workers use Prisma 6.19.3 (lockfile-pinned) and work correctly.
+- The scheduler's format breakdown query (`queryUnrecognisedFormats`) uses Prisma client. It fails locally but is caught by try/catch — emails still send. On Railway it works fine.
+- CORPUS_TARGETS total is ~6.9M sections. The brief comment says ~6.5M after excluding out-of-scope rows. Current denominator uses full sum.

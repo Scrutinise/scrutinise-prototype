@@ -1,8 +1,35 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2 Jun 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2 Jun 2026 (evening)*
 
 ***
+
+## CODE CHANGES — 2 Jun 2026 Evening Sprint: Corpus Monitoring + Rate Limiting
+
+### Commits: `3e85931` → `9acd458`
+
+| Item | Detail |
+|------|--------|
+| `scripts/ingest/package-lock.json` | Added lockfile — root cause of workers 1–4 build failures. Pins Prisma 6.19.3, tsx 4.22.4, pg 8.21.0. |
+| `scripts/ingest/shared/db-metadata.ts` | `new PrismaClient()` — no constructor options. Prisma 6 reads DATABASE_URL from env automatically. Fixes deprecated `datasources` option. |
+| `scripts/ingest/tsconfig.json` + `scripts/tsconfig.json` | Added `pg`/`pg/*` path mappings. |
+| `scripts/ingest/scheduler.ts` | Converted from one-shot cron to persistent hourly loop. `SCHEDULER_INTERVAL_HOURS` env var (default 1). Fires immediately on startup. `Promise.race` 5-min timeout prevents hung run() blocking loop. Calls `clearExpiredSuspensions()` each run. |
+| `scripts/ingest/shared/progress-reporter.ts` | Full rewrite: CORPUS_TARGETS const (~6.9M total), per-corpus SECTION_TARGETS + CORPUS_DISPLAY, `queryCorpusCounts()` (Railway corpus_sections), `queryNeonCount()` (Neon LegislationSection with 10s/30s timeouts), `saveProgressSnapshot()` (writes IngestProgressSnapshot rows), unified email showing legacy + new pipeline totals + per-corpus bars. |
+| `scripts/ingest/shared/compile.ts` | `pdfToText(buffer, url)` — pdf-parse extracts machine-readable PDFs; low-yield (scanned) returns null + logs warning. |
+| `scripts/ingest/workers/worker-queue.ts` | PDF branch calls `pdfToText()`. WORKER_ID cap removed (1–10 → any positive). Smart sleep via `getSleepDuration()` replaces fixed 5-min poll. |
+| `scripts/ingest/package.json` | Added `pdf-parse@1.1.1` + `@types/pdf-parse`. Version bumped to 1.0.2 (worker redeploy trigger). |
+| `scripts/ingest/shared/queue-client.ts` | `claimNextChunk()` rewritten: two-phase rate-limit-aware claim (JOIN source_rate_limits → claim row → update lastIssuedAt, all atomic). `getSleepDuration()` computes minimum wait until next token. `suspendSource()` writes 429 suspension. `clearExpiredSuspensions()` unsuspends expired rows. |
+| `scripts/ingest/shared/adaptive-throttle.ts` | `onSuspend` callback + `suspendThresholdMs` option. Fires when delay ≥ threshold after repeated backoffs. |
+| `scripts/ingest/sources/tna-legislation.ts` | Wired `onSuspend` → `suspendSource('tna-legislation', ...)`. |
+| `scripts/ingest/sources/tna-caselaw.ts` | Wired `onSuspend` → `suspendSource('tna-caselaw', ...)`. |
+| `scripts/ingest/seed-rate-limits.ts` | Upsert script for source_rate_limits. Already run. |
+| `scrutinise-web/prisma/schema.prisma` + `scripts/ingest/prisma/schema.prisma` | Added `IngestProgressSnapshot` and `SourceRateLimit` models. |
+| Migration `20260602150000_ingest_progress_snapshot` | Applied ✅ |
+| Migration `20260602160000_source_rate_limits` | Applied ✅. Seeded ✅ (10 rows, 200ms–1000ms per source). |
+
+**Post-sprint state:** 426,343 new pipeline + 914,274 Neon legacy = 1,340,617 sections (18.9%). Workers 1–10 active with rate-limit token bucket. Workers 11–20 cleared to add.
+
+---
 
 ## CODE CHANGES — 2 Jun 2026 Sprint: Build fix + architecture deployment
 
