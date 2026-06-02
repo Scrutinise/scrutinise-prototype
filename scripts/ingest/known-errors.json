@@ -1,0 +1,30 @@
+{
+  "_comment": "Known ingest error patterns. Each entry suppresses the 'new pattern' investigation trigger in cc-monitor.ts.",
+  "patterns": [
+    {
+      "pattern": "fetch failed",
+      "description": "HTTP fetch returned null — transient network error or 404. Will auto-retry.",
+      "action": "retry"
+    },
+    {
+      "pattern": "0 known CLML elements",
+      "description": "CLML returned by TNA but no recognised element types (P1/Article/etc). Stored as clml-unparsed.",
+      "action": "review-xml-preview"
+    },
+    {
+      "pattern": "NumberOfProvisions=\"0\"",
+      "description": "TNA act has no provisions in CLML — PDF-only act. Fallback to PDF is correct.",
+      "action": "expected"
+    },
+    {
+      "pattern": "No CLML/HTML/PDF found on TNA",
+      "description": "All three format fallbacks returned nothing. Act may be very old or not digitised.",
+      "action": "expected"
+    },
+    {
+      "pattern": "Atom feed HTTP",
+      "description": "TNA Atom feed page returned non-200. Transient.",
+      "action": "retry"
+    }
+  ]
+}
