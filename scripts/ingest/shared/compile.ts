@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string; numpages: number; numrender: number }>
 
 const GEMINI_MODEL = 'gemini-2.5-flash'
 const GPT4O_MINI_MODEL = 'gpt-4o-mini'
@@ -121,6 +123,24 @@ export function rawToText(input: string): string {
     .replace(/&[a-z]+;/gi, ' ') // remove HTML entities (&amp; &lt; etc)
     .replace(/\s+/g, ' ')       // collapse whitespace
     .trim()
+}
+
+// ── PDF text extraction ───────────────────────────────────────────────────────
+// Uses pdf-parse for machine-readable PDFs. Scanned/image PDFs return low or
+// empty text — callers should check the return length and flag for OCR.
+
+export async function pdfToText(buffer: Buffer, sourceUrl = ''): Promise<string | null> {
+  try {
+    const data = await pdfParse(buffer)
+    const text = data.text?.trim() ?? ''
+    if (text.length > 100) return text
+    // Low yield — likely a scanned PDF. Return what we have (may be empty).
+    console.warn(`[pdf] low text yield (${text.length} chars) for ${sourceUrl || 'unknown'} — likely scanned`)
+    return text || null
+  } catch (err) {
+    console.warn(`[pdf] parse failed for ${sourceUrl || 'unknown'}:`, err)
+    return null
+  }
 }
 
 // ── Haiku with backoff (last resort) ─────────────────────────────────────────

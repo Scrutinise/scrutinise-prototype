@@ -112,7 +112,7 @@ export async function queryUnrecognisedFormats(sinceHours = 4): Promise<Unrecogn
     } as Record<string, unknown>,
     select: { sourceUrl: true, xmlPreview: true },
   })
-  return rows as UnrecognisedFormatRow[]
+  return (rows as unknown) as UnrecognisedFormatRow[]
 }
 
 export function sectionId(corpus: string, docId: string, sectionRef: string): string {

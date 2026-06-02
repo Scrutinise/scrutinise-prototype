@@ -17,7 +17,7 @@ import {
   updateFormatsAvailable, disconnectQueue, QueueRow,
 } from '../shared/queue-client'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
-import { rawToText } from '../shared/compile'
+import { rawToText, pdfToText } from '../shared/compile'
 import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
 import { readCheckpoint, writeCheckpoint } from '../shared/checkpoint'
 
@@ -148,8 +148,14 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
     } else if (section.format === 'pdf') {
       const rKey = rawKey(row.corpus, actId, section.sectionRef, 'pdf')
       await r2Put(rKey, section.pdfBuffer!, 'application/pdf')
-      await r2Put(cKey, '[PDF - pending text extraction]')
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: 0, status: 'compiled', format: 'pdf' })
+      const extracted = await pdfToText(section.pdfBuffer!, sourceUrl)
+      if (extracted) {
+        await r2Put(cKey, extracted)
+        await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(extracted), status: 'compiled', format: 'pdf', compiledText: extracted.slice(0, 10_000) })
+      } else {
+        await r2Put(cKey, '[PDF - scanned/unreadable — OCR pass needed]')
+        await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: 0, status: 'compiled', format: 'pdf', notes: 'pdf-ocr-needed' })
+      }
     }
   }
 

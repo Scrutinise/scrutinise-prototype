@@ -12,6 +12,7 @@
     "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "dependencies": {
+    "@types/pdf-parse": "^1.1.4",
     "@types/pg": "^8.11.0",
     "pg": "^8.13.0",
     "@anthropic-ai/sdk": "^0.39.0",
@@ -20,6 +21,7 @@
     "@prisma/client": "^6.0.0",
     "dotenv": "^16.0.0",
     "node-fetch": "^3.3.2",
+    "pdf-parse": "^1.1.1",
     "prisma": "^6.0.0",
     "resend": "^4.0.0",
     "tsx": "^4.19.0",
