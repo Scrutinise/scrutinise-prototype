@@ -1770,27 +1770,63 @@ model OperationalSection {
 
 model CorpusSection {
   // "{corpus}:{docId}:{sectionRef}" — globally unique across all corpora
-  id          String    @id
-  corpus      String    // e.g. "primary-acts-pre-2000", "tna-caselaw", "hmrc-codes-guidance"
-  sourceUrl   String?   // original fetch URL
-  r2Key       String?   // compiled plain-text location in R2
-  r2RawKey    String?   // raw XML/HTML location in R2 (optional)
-  compiledAt  DateTime?
-  wordCount   Int?
+  id           String    @id
+  corpus       String    // e.g. "primary-acts-pre-2000", "tna-caselaw", "hmrc-codes-guidance"
+  sourceUrl    String?   // original fetch URL
+  r2Key        String?   // compiled plain-text location in R2
+  r2RawKey     String?   // raw XML/HTML location in R2 (optional)
+  compiledAt   DateTime?
+  wordCount    Int?
   // pending | compiled | failed | skipped | unavailable
-  status      String    @default("pending")
-  errorMsg    String?
+  status       String    @default("pending")
+  errorMsg     String?
   // clml | clml-unparsed | html | pdf | unavailable | effects
-  format      String?
+  format       String?
   // first 200 chars of raw XML for clml-unparsed rows — used in scheduler alert email
-  xmlPreview  String?
+  xmlPreview   String?
   // act-level flags, e.g. 'enacted-only' where TNA has no consolidated version
-  notes       String?
-  createdAt   DateTime  @default(now())
+  notes        String?
+  // First 10 000 chars of compiled text — sufficient for FTS; full text in R2
+  compiledText String?
+  createdAt    DateTime  @default(now())
+
+  // fts_vector is maintained by a DB trigger (see migration SQL).
+  // Declared as Unsupported so Prisma carries the column without attempting type mapping.
+  ftsVector    Unsupported("tsvector")?
 
   @@index([corpus])
   @@index([status])
   @@index([format])
   @@index([notes])
   @@map("corpus_sections")
+}
+
+// Central ingest work queue — workers claim rows atomically via FOR UPDATE SKIP LOCKED.
+// Populated by queue-populator.ts before workers start.
+model IngestQueue {
+  // "{corpus}:{docId}" e.g. "primary-acts-pre-2000:ukpga/1998/42"
+  id             String    @id
+  corpus         String
+  docId          String
+  // "tna-legislation" | "tna-caselaw" | "bailii" | "hansard" | "fca" | "echr" | "eurlex" | "treaties" | "oecd"
+  sourceType     String
+  // 1=highest priority (UK Primary Acts), 5=lowest
+  priority       Int       @default(5)
+  // pending | claimed | done | failed | skipped
+  status         String    @default("pending")
+  claimedBy      Int?
+  claimedAt      DateTime?
+  completedAt    DateTime?
+  attempts       Int       @default(0)
+  lastError      String?
+  // Formats discovered from TNA metadata feed (comma-separated), e.g. "xml,html,pdf"
+  formatsAvailable String?
+  // Format actually used when retrieving content
+  formatFound    String?
+  createdAt      DateTime  @default(now())
+
+  @@index([status, priority, id], name: "ingest_queue_status_priority")
+  @@index([corpus], name: "ingest_queue_corpus")
+  @@index([claimedBy], name: "ingest_queue_claimed_by")
+  @@map("ingest_queue")
 }
