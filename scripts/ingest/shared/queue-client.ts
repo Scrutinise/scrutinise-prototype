@@ -41,34 +41,142 @@ export async function disconnectQueue(): Promise<void> {
   _pool = null
 }
 
-// Atomic claim: returns the claimed row or null if queue is empty.
-// Uses FOR UPDATE SKIP LOCKED so concurrent workers never claim the same row.
+// Two-phase atomic claim with rate-limit token check.
+//
+// Phase 1: find the highest-priority sourceType that has an available token in
+//          source_rate_limits (elapsed >= intervalMs, not suspended).
+//          Falls back to any pending source with no rate-limit entry.
+// Phase 2: claim one row from that source and update lastIssuedAt atomically.
+//
+// Two workers running Phase 1 simultaneously may both select the same source —
+// Phase 2's SKIP LOCKED ensures they claim different rows and both update
+// lastIssuedAt. The result is at most 2 requests per interval rather than N.
+// This is acceptable and far better than the previous N×(1/200ms) aggregate rate.
+
 export async function claimNextChunk(workerId: number): Promise<QueueRow | null> {
   const client = await getPool().connect()
+  const nowMs = Date.now().toString()
   try {
     await client.query('BEGIN')
-    const res = await client.query<QueueRow>(`
+
+    // Phase 1a: highest-priority source with available token
+    const tokenRes = await client.query<{ sourceType: string }>(`
+      SELECT q."sourceType"
+      FROM ingest_queue q
+      JOIN source_rate_limits r ON r."sourceKey" = q."sourceType"
+      WHERE q.status = 'pending'
+        AND r.suspended = false
+        AND ($1::bigint - r."lastIssuedAt") >= r."intervalMs"
+      ORDER BY q.priority ASC, r."lastIssuedAt" ASC
+      LIMIT 1
+    `, [nowMs])
+
+    let sourceType: string | null = tokenRes.rows[0]?.sourceType ?? null
+
+    // Phase 1b: fallback — pending rows for sources not in source_rate_limits
+    if (!sourceType) {
+      const unconstrainedRes = await client.query<{ sourceType: string }>(`
+        SELECT DISTINCT q."sourceType"
+        FROM ingest_queue q
+        WHERE q.status = 'pending'
+          AND NOT EXISTS (
+            SELECT 1 FROM source_rate_limits r WHERE r."sourceKey" = q."sourceType"
+          )
+        ORDER BY q."sourceType"
+        LIMIT 1
+      `)
+      sourceType = unconstrainedRes.rows[0]?.sourceType ?? null
+    }
+
+    if (!sourceType) {
+      await client.query('ROLLBACK')
+      return null  // no token available or queue truly empty
+    }
+
+    // Phase 2: claim one row from the selected source
+    const claimRes = await client.query<QueueRow>(`
       UPDATE ingest_queue
-      SET status = 'claimed',
+      SET status     = 'claimed',
           "claimedBy" = $1,
           "claimedAt" = NOW(),
           attempts    = attempts + 1
       WHERE id = (
         SELECT id FROM ingest_queue
         WHERE status = 'pending'
+          AND "sourceType" = $2
         ORDER BY priority ASC, id ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED
       )
       RETURNING *
-    `, [workerId])
+    `, [workerId, sourceType])
+
+    if (claimRes.rows.length === 0) {
+      await client.query('ROLLBACK')
+      return null
+    }
+
+    // Update token timestamp atomically with the claim
+    await client.query(`
+      UPDATE source_rate_limits
+      SET "lastIssuedAt" = $1, "updatedAt" = NOW()
+      WHERE "sourceKey" = $2
+    `, [nowMs, sourceType])
+
     await client.query('COMMIT')
-    return res.rows[0] ?? null
+    return claimRes.rows[0]
   } catch (err) {
     await client.query('ROLLBACK')
     throw err
   } finally {
     client.release()
+  }
+}
+
+// Returns how long the worker should sleep when claimNextChunk() returns null.
+// Computes the minimum time until the next token becomes available across all
+// pending sources, so workers wake up exactly when work can resume.
+export async function getSleepDuration(): Promise<number> {
+  const now = BigInt(Date.now())
+  const res = await getPool().query<{ intervalMs: number; lastIssuedAt: string }>(`
+    SELECT DISTINCT r."intervalMs", r."lastIssuedAt"
+    FROM source_rate_limits r
+    JOIN ingest_queue q ON q."sourceType" = r."sourceKey"
+    WHERE q.status = 'pending' AND r.suspended = false
+    LIMIT 20
+  `)
+  if (res.rows.length === 0) return 60_000  // queue empty — check in 1 min
+
+  const waits = res.rows.map(r => {
+    const nextAvailable = BigInt(r.lastIssuedAt) + BigInt(r.intervalMs)
+    const wait = nextAvailable - now
+    return wait > 0n ? Number(wait) : 0
+  })
+  return Math.max(10, Math.min(...waits))
+}
+
+// Suspend a source after receiving a 429. Duration defaults to 60s if no
+// Retry-After header was provided.
+export async function suspendSource(sourceKey: string, durationMs: number): Promise<void> {
+  const until = new Date(Date.now() + durationMs)
+  await getPool().query(`
+    UPDATE source_rate_limits
+    SET suspended = true, "suspendedUntil" = $1, "updatedAt" = NOW()
+    WHERE "sourceKey" = $2
+  `, [until.toISOString(), sourceKey])
+  console.warn(`[rate-limit] ${sourceKey} suspended until ${until.toISOString()}`)
+}
+
+// Unsuspend sources whose suspendedUntil has passed. Called by the scheduler.
+export async function clearExpiredSuspensions(): Promise<void> {
+  const res = await getPool().query(`
+    UPDATE source_rate_limits
+    SET suspended = false, "suspendedUntil" = NULL, "updatedAt" = NOW()
+    WHERE suspended = true AND "suspendedUntil" < NOW()
+    RETURNING "sourceKey"
+  `)
+  if (res.rows.length > 0) {
+    console.log('[rate-limit] unsuspended:', res.rows.map((r: { sourceKey: string }) => r.sourceKey).join(', '))
   }
 }
 

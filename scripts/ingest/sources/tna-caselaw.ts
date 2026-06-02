@@ -1,9 +1,18 @@
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
+import { suspendSource } from '../shared/queue-client'
 
 const TNA_CASELAW_BASE = 'https://caselaw.nationalarchives.gov.uk'
 const ATOM_FEED = `${TNA_CASELAW_BASE}/atom.xml`
 const ITEMS_PER_PAGE = 50  // TNA atom feed returns 50 entries per page
-const throttle = new AdaptiveThrottle({ floor: 200, ceiling: 30_000 })
+const throttle = new AdaptiveThrottle({
+  floor: 200,
+  ceiling: 30_000,
+  suspendThresholdMs: 60_000,
+  onSuspend: (delayMs) => {
+    suspendSource('tna-caselaw', delayMs * 2)
+      .catch(err => console.warn('[tna-caselaw] suspend write failed:', err))
+  },
+})
 const UA = 'Scrutinise-Ingest/1.0 (Open Justice; contact: cl@scrutinise.org)'
 
 export interface CaseLawJudgment {

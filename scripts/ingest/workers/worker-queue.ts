@@ -14,7 +14,7 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise
 
 import {
   claimNextChunk, markDone, markFailed, markSkipped,
-  updateFormatsAvailable, disconnectQueue, QueueRow,
+  updateFormatsAvailable, disconnectQueue, getSleepDuration, QueueRow,
 } from '../shared/queue-client'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
@@ -37,12 +37,12 @@ import {
   fetchDocumentText as fetchGovText,
 } from '../sources/gov-scraper'
 
-const SLEEP_ON_EMPTY_MS = 5 * 60 * 1000   // 5 min between empty-queue polls
-const CHECKPOINT_EVERY  = 50               // write worker progress checkpoint every N items
+const CHECKPOINT_EVERY = 50  // write worker progress checkpoint every N items
 
 async function main(): Promise<void> {
   const workerIdRaw = parseInt(process.env.WORKER_ID ?? '1', 10)
-  const workerId = (isNaN(workerIdRaw) || workerIdRaw < 1 || workerIdRaw > 10) ? 1 : workerIdRaw
+  // Accept any positive WORKER_ID — supports workers 11–20 and beyond
+  const workerId = (isNaN(workerIdRaw) || workerIdRaw < 1) ? 1 : workerIdRaw
 
   console.log(`[worker-${workerId}] starting queue-driven mode`)
   const cp = await readCheckpoint(workerId)
@@ -52,8 +52,11 @@ async function main(): Promise<void> {
     const row = await claimNextChunk(workerId)
 
     if (!row) {
-      console.log(`[worker-${workerId}] queue empty — sleeping ${SLEEP_ON_EMPTY_MS / 60000} min`)
-      await new Promise(r => setTimeout(r, SLEEP_ON_EMPTY_MS))
+      // null = queue empty OR all source tokens at rate limit.
+      // Sleep until the next token becomes available rather than a fixed interval.
+      const sleepMs = await getSleepDuration().catch(() => 60_000)
+      console.log(`[worker-${workerId}] no token available — sleeping ${sleepMs}ms`)
+      await new Promise(r => setTimeout(r, sleepMs))
       continue
     }
 

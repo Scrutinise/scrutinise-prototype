@@ -15,6 +15,7 @@ import {
   saveProgressSnapshot,
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
+import { clearExpiredSuspensions } from './shared/queue-client'
 
 const INTERVAL_HOURS = parseInt(process.env.SCHEDULER_INTERVAL_HOURS ?? '1', 10)
 const INTERVAL_MS = INTERVAL_HOURS * 60 * 60 * 1000
@@ -45,6 +46,9 @@ async function run(): Promise<void> {
   } catch (err) {
     console.warn('[scheduler] could not query DB for format breakdown:', err)
   }
+
+  console.log('[scheduler] clearing expired suspensions')
+  try { await clearExpiredSuspensions() } catch (err) { console.warn('[scheduler] suspension clear failed:', err) }
 
   console.log('[scheduler] saving progress snapshot')
   try {

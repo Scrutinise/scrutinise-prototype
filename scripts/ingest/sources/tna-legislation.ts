@@ -1,7 +1,15 @@
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
+import { suspendSource } from '../shared/queue-client'
 
 const TNA_BASE = 'https://www.legislation.gov.uk'
-const throttle = new AdaptiveThrottle({ floor: 200 })
+const throttle = new AdaptiveThrottle({
+  floor: 200,
+  suspendThresholdMs: 60_000,
+  onSuspend: (delayMs) => {
+    suspendSource('tna-legislation', delayMs * 2)
+      .catch(err => console.warn('[tna-leg] suspend write failed:', err))
+  },
+})
 
 export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
 
