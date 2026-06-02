@@ -1,6 +1,7 @@
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 
 const PARLIAMENT_BASE = 'https://api.parliament.uk/v1'
+const WQS_BASE = 'https://questions-statements-api.parliament.uk'
 const throttle = new AdaptiveThrottle({ floor: 500, ceiling: 60_000 })
 
 export interface HansardDebate {
@@ -118,6 +119,77 @@ export async function* listCommitteeReports(): AsyncGenerator<CommitteeReport> {
       }
     }
   }
+}
+
+// ── Written Questions & Statements ───────────────────────────────────────────
+// API confirmed live via swagger: questions-statements-api.parliament.uk
+// Written Questions endpoint: /api/writtenquestions/questions
+// Written Statements endpoint: /api/writtenstatements/statements
+
+// Returns combined plain text of all written questions+answers in the date range.
+// Answers may be HTML; stripped inline. Returns empty string if no results.
+export async function fetchWrittenAnswers(fromDate: string, toDate: string, maxItems = 5000): Promise<string> {
+  let skip = 0
+  const take = 100
+  const parts: string[] = []
+
+  while (parts.length < maxItems) {
+    const url = `${WQS_BASE}/api/writtenquestions/questions`
+      + `?answeredWhenFrom=${fromDate}&answeredWhenTo=${toDate}&take=${take}&skip=${skip}`
+    const data = await fetchJson(url) as {
+      totalResults?: number
+      results?: Array<{
+        value?: { questionText?: string; answerText?: string; heading?: string }
+      }>
+    } | null
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) break
+
+    for (const r of data.results) {
+      const v = r.value
+      if (!v) continue
+      const heading  = (v.heading ?? '').trim()
+      const question = (v.questionText ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      const answer   = (v.answerText   ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (question || answer) parts.push([heading, question, answer].filter(Boolean).join('\n'))
+    }
+
+    if (data.results.length < take) break
+    skip += take
+  }
+
+  return parts.join('\n\n---\n\n')
+}
+
+// Returns combined plain text of all written ministerial statements in the date range.
+export async function fetchWrittenStatements(fromDate: string, toDate: string, maxItems = 2000): Promise<string> {
+  let skip = 0
+  const take = 100
+  const parts: string[] = []
+
+  while (parts.length < maxItems) {
+    const url = `${WQS_BASE}/api/writtenstatements/statements`
+      + `?madeWhenFrom=${fromDate}&madeWhenTo=${toDate}&take=${take}&skip=${skip}`
+    const data = await fetchJson(url) as {
+      totalResults?: number
+      results?: Array<{
+        value?: { title?: string; text?: string }
+      }>
+    } | null
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) break
+
+    for (const r of data.results) {
+      const v = r.value
+      if (!v) continue
+      const title = (v.title ?? '').trim()
+      const text  = (v.text  ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (title || text) parts.push([title, text].filter(Boolean).join('\n'))
+    }
+
+    if (data.results.length < take) break
+    skip += take
+  }
+
+  return parts.join('\n\n---\n\n')
 }
 
 // Worker 1: Hansard Commons A (1800–1980), Worker 2: Commons B (1981+)
