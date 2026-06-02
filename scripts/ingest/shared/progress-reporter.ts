@@ -94,6 +94,17 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
   await r2Put(key, content, 'text/csv')
 }
 
+// Render a 20-character block-fill progress bar.
+// e.g. at 35%: ███████░░░░░░░░░░░░░  35.0%
+function progressBar(pctString: string): string {
+  const pct = parseFloat(pctString) || 0
+  const BAR_WIDTH = 20
+  const filled = Math.round((pct / 100) * BAR_WIDTH)
+  const empty   = BAR_WIDTH - filled
+  const bar = '█'.repeat(filled) + '░'.repeat(empty)
+  return `${bar}  ${pct.toFixed(1)}%`
+}
+
 export async function sendProgressEmail(
   agg: ProgressAggregate,
   unrecognised: UnrecognisedFormatRow[] = [],
@@ -106,23 +117,43 @@ export async function sendProgressEmail(
     timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
   }).format(new Date(agg.timestamp))
 
+  // ── Per-worker lines ──────────────────────────────────────────────────────
   const lines = agg.workers.map(w => {
     const status = w.phase1Complete ? '✓' : '⋯'
     const padded = w.corpus.padEnd(24)
-    return `  Worker ${w.workerId.toString().padStart(2)}  ${padded}: ${String(w.completed).padStart(7)} / ${String(w.total).padStart(9)} (${w.pct.padStart(6)})  ${status}`
+    const bar = progressBar(w.pct)
+    return `  Worker ${w.workerId.toString().padStart(2)}  ${padded}: ${String(w.completed).padStart(7)} / ${String(w.total).padStart(9)}  ${bar}  ${status}`
   })
 
+  // ── Overall progress bar ──────────────────────────────────────────────────
+  const overallPct = parseFloat(agg.totalPct) || 0
+  const overallBar = progressBar(agg.totalPct)
+  const etaStr = estimateCompletion(agg)
+
+  // ── Status breakdown counts ───────────────────────────────────────────────
+  // Phase 1 complete vs in-progress split
+  const phase1Done   = agg.workers.filter(w => w.phase1Complete).length
+  const phase1Total  = agg.workers.length
+  const totalFailed  = agg.workers.reduce((s, w) => s + w.failed, 0)
+
   const bodyParts = [
-    'Scrutinise Corpus Ingest — Progress Report',
-    `[${bst} BST]`,
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    'SCRUTINISE CORPUS INGEST',
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `  ${bst} BST`,
     '',
-    'PHASE 1 LEGISLATION',
+    `  OVERALL  ${overallBar}`,
+    `  ${agg.totalCompleted.toLocaleString()} / ${agg.totalEstimated.toLocaleString()} sections compiled`,
+    `  ETA: ${etaStr}`,
+    '',
+    `  Workers Phase 1 complete: ${phase1Done} / ${phase1Total}`,
+    `  Total errors logged:      ${totalFailed.toLocaleString()}`,
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '',
+    'PER-WORKER BREAKDOWN',
     ...lines,
     '',
-    `TOTAL: ${agg.totalCompleted.toLocaleString()} / ${agg.totalEstimated.toLocaleString()} sections compiled (${agg.totalPct})`,
-    `Estimated completion: ${estimateCompletion(agg)}`,
-    '',
-    `Errors: see daily CSV in R2 at ingest-csv/progress-${new Date().toISOString().slice(0, 10)}.csv`,
+    `Errors CSV: ingest-csv/progress-${new Date().toISOString().slice(0, 10)}.csv`,
   ]
 
   if (formatBreakdown.length > 0) {
@@ -154,7 +185,7 @@ export async function sendProgressEmail(
     body: JSON.stringify({
       from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
       to: [TO],
-      subject: `Corpus Ingest: ${agg.totalPct} complete — ${bst}`,
+      subject: `Corpus Ingest: ${overallPct.toFixed(1)}% [${'█'.repeat(Math.round(overallPct/5))}${'░'.repeat(20-Math.round(overallPct/5))}] — ${bst}`,
       text: body,
     }),
   })
