@@ -25,15 +25,16 @@ import { readCheckpoint, writeCheckpoint } from '../shared/checkpoint'
 import { listJudgments, fetchJudgmentXml } from '../sources/tna-caselaw'
 import { enumerateSections, discoverFormats } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
-import { fetchDebateText, fetchReportContent } from '../sources/parliament-api'
-import { fetchSectionText as fetchFcaText, listFcaSections } from '../sources/fca-handbook'
-import { fetchCaseText as fetchEchrText, listUkCases } from '../sources/echr-hudoc'
-import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments } from '../sources/eurlex'
+import { fetchDebateText, fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements } from '../sources/parliament-api'
+import { fetchSectionText as fetchFcaText, listFcaSections, listFcaSectionsForSourcebook } from '../sources/fca-handbook'
+import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
+import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
 import {
   listHmrcManuals, listNaoReports, listHoCLReports,
   listExplanatoryNotes, listImpactAssessments, listConsultations,
+  listHmrcTiins, listOtsReports,
   fetchDocumentText as fetchGovText,
 } from '../sources/gov-scraper'
 
@@ -93,6 +94,9 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'hmrc':            return processHmrc(row)
     case 'treaties':        return processTreaties(row)
     case 'oecd':            return processOecd(row)
+    case 'gov-uk':          return processGovUk(row)
+    case 'scotlawcom':      return processLawCommission(row)
+    case 'nilawcom':        return processLawCommission(row)
     default:
       await markSkipped(row.id)
       console.warn(`[worker] unknown sourceType ${row.sourceType} — skipped`)
@@ -260,14 +264,18 @@ async function processBailii(row: QueueRow): Promise<void> {
 }
 
 // ── Hansard ───────────────────────────────────────────────────────────────────
-// docId = "{house}:{startDate}:{endDate}" — fetch all debates in that month
+// docId dispatch:
+//   "__index"                   → committee reports (full enumeration)
+//   "answers:{from}:{to}"       → written parliamentary questions (F1)
+//   "statements:{from}:{to}"    → written ministerial statements (F1)
+//   "{house}:{from}:{to}"       → Hansard debates
 
 async function processHansard(row: QueueRow): Promise<void> {
   const { listHansardDebates, listCommitteeReports } = await import('../sources/parliament-api')
 
   const parts = row.docId.split(':')
+
   if (parts[0] === '__index') {
-    // Expand committees index row into individual report rows — for now just fetch all
     for await (const report of listCommitteeReports()) {
       const text = await fetchReportContent(report.url) ?? report.title
       if (!text) continue
@@ -282,15 +290,38 @@ async function processHansard(row: QueueRow): Promise<void> {
     return
   }
 
+  if (parts[0] === 'answers' || parts[0] === 'statements') {
+    const [prefix, startDate, endDate] = parts
+    if (!startDate || !endDate) { await markSkipped(row.id); return }
+
+    const text = prefix === 'answers'
+      ? await fetchWrittenAnswers(startDate, endDate)
+      : await fetchWrittenStatements(startDate, endDate)
+
+    if (!text) { await markDone(row.id, 'html'); return }
+
+    const cKey = compiledKey(row.corpus, `${startDate}:${endDate}`, '1')
+    if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+
+    const compiled = rawToText(text)
+    await r2Put(cKey, compiled)
+    const secId = sectionId(row.corpus, `${startDate}:${endDate}`, '1')
+    const sourceUrl = prefix === 'answers'
+      ? `https://questions-statements-api.parliament.uk/api/writtenquestions/questions?answeredWhenFrom=${startDate}&answeredWhenTo=${endDate}`
+      : `https://questions-statements-api.parliament.uk/api/writtenstatements/statements?madeWhenFrom=${startDate}&madeWhenTo=${endDate}`
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await markDone(row.id, 'html')
+    return
+  }
+
   // Expected: "commons:2024-01-01:2024-01-31" or "lords:2024-01-01:2024-01-31"
   const [houseRaw, startDate, endDate] = parts
   if (!houseRaw || !startDate || !endDate) { await markSkipped(row.id); return }
   const house = houseRaw === 'commons' ? 'Commons' : 'Lords'
 
-  let processed = 0
   for await (const debate of listHansardDebates(house as 'Commons' | 'Lords', startDate, endDate)) {
     const cKey = hansardKey(debate.date, debate.id)
-    if (await r2Exists(cKey)) { processed++; continue }
+    if (await r2Exists(cKey)) continue
 
     const text = await fetchDebateText(debate.id)
     if (!text) continue
@@ -299,16 +330,20 @@ async function processHansard(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId(row.corpus, debate.id, '1')
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
-    processed++
   }
 
   await markDone(row.id, 'html')
 }
 
 // ── FCA Handbook ──────────────────────────────────────────────────────────────
+// docId = 'sourcebook:{CODE}' for per-sourcebook rows, or '__index' for full corpus.
 
 async function processFca(row: QueueRow): Promise<void> {
-  for await (const section of listFcaSections()) {
+  const gen = row.docId.startsWith('sourcebook:')
+    ? listFcaSectionsForSourcebook(row.docId.replace('sourcebook:', ''))
+    : listFcaSections()
+
+  for await (const section of gen) {
     const cKey = compiledKey('fca-regulators', section.id, '1')
     if (await r2Exists(cKey)) continue
 
@@ -324,9 +359,14 @@ async function processFca(row: QueueRow): Promise<void> {
 }
 
 // ── ECHR HUDOC ────────────────────────────────────────────────────────────────
+// docId = 'page:{start}' for per-page rows (start is HUDOC offset), or '__index'.
 
 async function processEchr(row: QueueRow): Promise<void> {
-  for await (const c of listUkCases()) {
+  const gen = row.docId.startsWith('page:')
+    ? listUkCasesPage(parseInt(row.docId.replace('page:', ''), 10))
+    : listUkCases()
+
+  for await (const c of gen) {
     const cKey = compiledKey('echr-hudoc', c.itemId, '1')
     if (await r2Exists(cKey)) continue
 
@@ -342,9 +382,14 @@ async function processEchr(row: QueueRow): Promise<void> {
 }
 
 // ── EUR-Lex ───────────────────────────────────────────────────────────────────
+// docId = 'page:{N}' for per-page rows (1-indexed), or '__index'.
 
 async function processEurLex(row: QueueRow): Promise<void> {
-  for await (const doc of listRetainedEuInstruments()) {
+  const gen = row.docId.startsWith('page:')
+    ? listRetainedEuPage(parseInt(row.docId.replace('page:', ''), 10))
+    : listRetainedEuInstruments()
+
+  for await (const doc of gen) {
     const cKey = compiledKey('eur-lex', doc.celexId, '1')
     if (await r2Exists(cKey)) continue
 
@@ -415,6 +460,52 @@ async function processOecd(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId('oecd', doc.id, '1')
     await upsertSection({ id: secId, corpus: 'oecd', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+  }
+  await markDone(row.id)
+}
+
+// ── GOV.UK general sources (TIINs, OTS) ──────────────────────────────────────
+// sourceType = 'gov-uk', corpus drives which listing function to use.
+
+async function processGovUk(row: QueueRow): Promise<void> {
+  const gen = row.corpus === 'ots-reports' ? listOtsReports() : listHmrcTiins()
+
+  for await (const doc of gen) {
+    const cKey = compiledKey(row.corpus, doc.id, '1')
+    if (await r2Exists(cKey)) continue
+
+    const text = await fetchGovText(doc.url)
+    if (!text) continue
+
+    const compiled = rawToText(text.slice(0, 50_000))
+    await r2Put(cKey, compiled)
+    const secId = sectionId(row.corpus, doc.id, '1')
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+  }
+  await markDone(row.id)
+}
+
+// ── Law Commissions (Scottish + NI) ──────────────────────────────────────────
+// Downloads PDFs and extracts text via pdf-parse.
+
+async function processLawCommission(row: QueueRow): Promise<void> {
+  const { listScotLawComReports, listNiLawComReports } = await import('../sources/law-commissions')
+  const gen = row.sourceType === 'scotlawcom' ? listScotLawComReports() : listNiLawComReports()
+
+  for await (const report of gen) {
+    const cKey = compiledKey(row.corpus, report.id, '1')
+    if (await r2Exists(cKey)) continue
+
+    const res = await fetch(report.pdfUrl, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' } })
+    if (!res.ok) continue
+
+    const buffer = Buffer.from(await res.arrayBuffer())
+    const text = await pdfToText(buffer, report.pdfUrl)
+    if (!text) continue
+
+    await r2Put(cKey, text)
+    const secId = sectionId(row.corpus, report.id, '1')
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.sourceUrl, r2Key: cKey, wordCount: countWords(text), status: 'compiled', compiledText: text.slice(0, 10_000) })
   }
   await markDone(row.id)
 }
