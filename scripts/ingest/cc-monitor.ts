@@ -287,14 +287,15 @@ async function runPoll(): Promise<void> {
     }
   }
 
-  // Auto-redeploy crashed services
-  for (const svc of crashedServices) {
-    console.log(`[monitor] → auto-redeploying ${svc.serviceName}…`)
-    const ok = await railwayRedeploy(svc.id)
-    const logLine = `${ts} | REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svc.serviceName} | deployment=${svc.id}`
-    console.log(`[monitor]   ${logLine}`)
-    await appendRedeployLog(logLine)
-  }
+  // Auto-redeploy crashed services — DISABLED until build loop is resolved
+  // Uncomment once workers are building successfully.
+  // for (const svc of crashedServices) {
+  //   console.log(`[monitor] → auto-redeploying ${svc.serviceName}…`)
+  //   const ok = await railwayRedeploy(svc.id)
+  //   const logLine = `${ts} | REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svc.serviceName} | deployment=${svc.id}`
+  //   console.log(`[monitor]   ${logLine}`)
+  //   await appendRedeployLog(logLine)
+  // }
   report.crashedServices = crashedServices.map(s => s.serviceName)
 
   // 3. Stalled worker detection (checkpoint not updated in >2h)
@@ -312,12 +313,13 @@ async function runPoll(): Promise<void> {
         d.serviceName.toLowerCase().includes(`worker-${s.workerId}`) ||
         d.serviceName.toLowerCase().includes(svcName)
       )
-      if (svc && svc.status !== 'CRASHED') {
-        console.log(`[monitor] → redeploying stalled ${svcName}…`)
-        const ok = await railwayRedeploy(svc.id)
-        const logLine = `${ts} | STALL-REDEPLOY ${ok ? 'OK' : 'FAILED'} | ${svcName} | last=${s.lastUpdated}`
-        console.log(`[monitor]   ${logLine}`)
-        await appendRedeployLog(logLine)
+      // DISABLED — stall-redeploy also disabled until build loop is resolved
+      // if (svc && svc.status !== 'CRASHED') {
+      //   const ok = await railwayRedeploy(svc.id)
+      //   await appendRedeployLog(`${ts} | STALL-REDEPLOY ${ok?'OK':'FAILED'} | ${svcName}`)
+      // }
+      if (svc) {
+        console.log(`[monitor]   (stall-redeploy disabled — fix build loop first)`)
       }
     }
   }

@@ -1771,27 +1771,48 @@ model OperationalSection {
 
 model CorpusSection {
   // "{corpus}:{docId}:{sectionRef}" — globally unique across all corpora
-  id          String    @id
-  corpus      String    // e.g. "primary-acts-pre-2000", "tna-caselaw", "hmrc-codes-guidance"
-  sourceUrl   String?   // original fetch URL
-  r2Key       String?   // compiled plain-text location in R2
-  r2RawKey    String?   // raw XML/HTML location in R2 (optional)
-  compiledAt  DateTime?
-  wordCount   Int?
-  // pending | compiled | failed | skipped | unavailable
-  status      String    @default("pending")
-  errorMsg    String?
-  // clml | clml-unparsed | html | pdf | unavailable | effects
-  format      String?
-  // first 200 chars of raw XML for clml-unparsed rows — used in scheduler alert email
-  xmlPreview  String?
-  // act-level flags, e.g. 'enacted-only' where TNA has no consolidated version
-  notes       String?
-  createdAt   DateTime  @default(now())
+  id           String    @id
+  corpus       String
+  sourceUrl    String?
+  r2Key        String?
+  r2RawKey     String?
+  compiledAt   DateTime?
+  wordCount    Int?
+  status       String    @default("pending")
+  errorMsg     String?
+  format       String?
+  xmlPreview   String?
+  notes        String?
+  compiledText String?
+  createdAt    DateTime  @default(now())
+
+  ftsVector    Unsupported("tsvector")?
 
   @@index([corpus])
   @@index([status])
   @@index([format])
   @@index([notes])
   @@map("corpus_sections")
+}
+
+model IngestQueue {
+  id               String    @id
+  corpus           String
+  docId            String
+  sourceType       String
+  priority         Int       @default(5)
+  status           String    @default("pending")
+  claimedBy        Int?
+  claimedAt        DateTime?
+  completedAt      DateTime?
+  attempts         Int       @default(0)
+  lastError        String?
+  formatsAvailable String?
+  formatFound      String?
+  createdAt        DateTime  @default(now())
+
+  @@index([status, priority, id], name: "ingest_queue_status_priority")
+  @@index([corpus], name: "ingest_queue_corpus")
+  @@index([claimedBy], name: "ingest_queue_claimed_by")
+  @@map("ingest_queue")
 }
