@@ -1,6 +1,6 @@
 /**
- * Scheduler — runs as a separate Railway service on cron: 0 *\/4 * * *
- * Aggregates all worker checkpoints, writes progress CSV, sends email.
+ * Scheduler — persistent loop, runs immediately then every SCHEDULER_INTERVAL_HOURS (default 1).
+ * Deploy as an always-on Railway service (not cron). Remove any Railway cron schedule.
  */
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
@@ -13,6 +13,9 @@ import {
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown, disconnectDb } from './shared/db-metadata'
 
+const INTERVAL_HOURS = parseInt(process.env.SCHEDULER_INTERVAL_HOURS ?? '1', 10)
+const INTERVAL_MS = INTERVAL_HOURS * 60 * 60 * 1000
+
 async function run(): Promise<void> {
   console.log('[scheduler] building progress aggregate')
   const agg = await buildAggregate()
@@ -22,11 +25,11 @@ async function run(): Promise<void> {
   let formatBreakdown = []
   try {
     ;[unrecognised, formatBreakdown] = await Promise.all([
-      queryUnrecognisedFormats(4),
+      queryUnrecognisedFormats(INTERVAL_HOURS),
       queryFormatBreakdown(),
     ])
     console.log(`[scheduler] format breakdown: ${formatBreakdown.map(r => `${r.format ?? 'null'}=${r.count}`).join(' ')}`)
-    console.log(`[scheduler] unrecognised formats (last 4hrs): ${unrecognised.length}`)
+    console.log(`[scheduler] unrecognised formats (last ${INTERVAL_HOURS}h): ${unrecognised.length}`)
   } catch (err) {
     console.warn('[scheduler] could not query DB:', err)
   }
@@ -43,11 +46,14 @@ async function run(): Promise<void> {
   const total = agg.totalCompleted.toLocaleString()
   const est = agg.totalEstimated.toLocaleString()
   console.log(`[scheduler] done — ${total} / ${est} (${agg.totalPct})`)
-
-  await disconnectDb()
 }
 
-run().catch(err => {
-  console.error('[scheduler] fatal:', err)
-  process.exit(1)
-})
+async function loop(): Promise<never> {
+  while (true) {
+    await run().catch(err => console.error('[scheduler] run failed:', err))
+    console.log(`[scheduler] sleeping ${INTERVAL_HOURS}h`)
+    await new Promise(r => setTimeout(r, INTERVAL_MS))
+  }
+}
+
+loop()
