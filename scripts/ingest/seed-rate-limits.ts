@@ -29,6 +29,10 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; note: string }
   { sourceKey: 'oecd',            intervalMs: 300,  note: 'gov.uk content API (OECD docs)' },
   { sourceKey: 'treaties',        intervalMs: 300,  note: 'gov.uk content API (FCDO treaties)' },
   { sourceKey: 'bailii',          intervalMs: 1000, note: 'www.bailii.org — explicitly requests 1s floor' },
+  { sourceKey: 'gov-uk',          intervalMs: 300,  note: 'gov.uk general content (TIINs, OTS, etc.) — same rate as treaties/hmrc' },
+  { sourceKey: 'scotlawcom',      intervalMs: 300,  note: 'scotlawcom.gov.uk — law commission publications' },
+  { sourceKey: 'nilawcom',        intervalMs: 300,  note: 'nilawcommission.gov.uk — defunct since 2015, ~18 historical reports' },
+  { sourceKey: 'ssrn',            intervalMs: 200,  note: 'ssrn.com — PLACEHOLDER: API returned 403 Forbidden on 3 Jun 2026 check; do not seed queue rows until access confirmed' },
 ]
 
 async function main(): Promise<void> {
