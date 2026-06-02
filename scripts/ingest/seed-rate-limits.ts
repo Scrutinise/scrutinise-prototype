@@ -6,7 +6,7 @@
  * Safe to re-run — upserts on conflict.
  */
 import path from 'path'
-try { require('dotenv').config({ path: path.join(__dirname, '../scrutinise-web/.env') }) } catch { /* ok */ }
+try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
 
 import { Pool } from 'pg'
 
