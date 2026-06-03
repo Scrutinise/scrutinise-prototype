@@ -1,8 +1,69 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (V6 complete)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V1)*
 
 ***
+
+## POST-DEPLOY ACTIONS — 4 Jun 2026 V1 (Charlie to run after push)
+
+| Action | Command / Detail |
+|--------|-----------------|
+| `prisma migrate deploy` | Apply `20260604010000_scheduler_lock` — creates `scheduler_lock` table |
+| Reset stuck HMRC row | `UPDATE ingest_queue SET status='pending', "claimedBy"=NULL, "claimedAt"=NULL WHERE corpus='hmrc-codes-guidance' AND status='claimed'` |
+| Reset LDA 524 failures | `UPDATE ingest_queue SET status='pending', "lastError"=NULL, "claimedBy"=NULL WHERE corpus='lda-commonswrittenquestions' AND status='failed'` |
+| Redeploy workers + scheduler | Trigger in Railway dashboard (worker-2 specifically needs fresh "Deploy" from Main — not "Redeploy" of old deployment) |
+| Seed new sources | `tsx scripts/ingest/queue-populator.ts` (adds nao-reports, fca-publications, sentencing-council, college-of-policing seed rows) |
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V1: Corpus audit + scheduler lock + new source clients
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/scheduler.ts` | Import and call `acquireSchedulerLock()` at the start of `run()`. Skips run if another instance holds the lock. |
+| `scripts/ingest/shared/progress-reporter.ts` | Add `acquireSchedulerLock()` — DB-based mutex using `scheduler_lock` table. Uses random per-startup ID (not process.pid — all Railway containers start as PID 1). Falls back to proceeding if table doesn't exist yet (pre-migration). Update CORPUS_MANIFEST: set dbCorpora for nao-reports, fca-publications, sentencing-council, college-of-policing. Rename 'FCA Publications (PDFs)' → 'FCA Publications'. |
+| `scrutinise-web/prisma/schema.prisma` | Add `SchedulerLock` model mapping to `scheduler_lock` table. |
+| `scrutinise-web/prisma/migrations/20260604010000_scheduler_lock/migration.sql` | CREATE TABLE scheduler_lock (single-row mutex). process_id is TEXT not INTEGER (avoids Railway container PID=1 collision). |
+| `scripts/ingest/sources/lda-parliament.ts` | Add retry logic for HTTP 524/502/503/504 (transient Cloudflare/origin timeouts) in `fetchLdaPage`. Up to 3 retries with 3s×attempt backoff. Was causing 388 permanent failures in lda-commonswrittenquestions queue. |
+| `scripts/ingest/sources/gov-scraper.ts` | Add `searchGovUkByOrg()` (GOV.UK search filtered by org slug). Add `listFcaPublications()`, `listSentencingCouncilGuidelines()`, `listCollegeOfPolicing()`. Fix `listNaoReports()` to use org-filtered search (financial-conduct-authority, national-audit-office, sentencing-council orgs). |
+| `scripts/ingest/workers/worker-queue.ts` | Extend `processGovUk()` switch to handle nao-reports, fca-publications, sentencing-council, college-of-policing. Add `fca-publications` to processRow dispatcher. Import new listing functions. Add new corpora to `sourceTypeMap`. |
+| `scripts/ingest/queue-populator.ts` | Add seed rows for nao-reports, fca-publications, sentencing-council, college-of-policing. |
+| `scripts/ingest/census/source-audit.ts` | New script — live HTTP audit of all 50 corpus sources. Runs in 10 concurrent batches. |
+
+### V1 findings
+
+**Part 1 — worker-2 build failure root cause:**
+Railway keeps retrying an OLD deployment (commit `4f9cc389`) that has `{"build":{"builder":"NIXPACKS"}}` in railway.json and the old postinstall path `../../scrutinise-web/prisma/schema.prisma`. The current running instance (SUCCESS at 22:47, commit f83977f6) IS live. The failure is spam from Railway retrying the old deployment every hour. Fix: Charlie triggers a fresh "Deploy" from Main in Railway dashboard (NOT "Redeploy" of old deployment). This stops the retry loop.
+
+**Part 3 — Source audit (50 sources tested):**
+- ✅ 29 accessible: TNA Legislation, TNA Caselaw, EUR-Lex SPARQL, OECD, Scottish Law Commission, Law Commission E&W, HMRC TIINs, **FCA Publications** (162KB HTML), BAILII homepage, Sentencing Council, College of Policing APP, Bills API, Civil Service Code, Treasury Green Book, NPPF, Building Regulations, CMA, Ofcom, Ofgem, Ofsted, Consultations, NAO Reports, NHS Guidance, WQS Written Answers/Statements APIs, White/Green Papers, Impact Assessments, Post-Leg Memoranda, Explanatory Notes, HMRC Manuals
+- ⛔ 18 blocked: FCA Handbook (JS SPA), ECHR HUDOC (both APIs dead), NI Law Commission (404), OTS collection (404 — URL changed), Erskine May (CF 403), Bill Pages site (CF 403), PACE Codes (404), Ofwat (403), ONS Datasets API (404), SSRN (CF 403), HoC Library (CF 403), LDA endpoints (timeout from local — works from Railway)
+- ⚠️ 3 warnings: TNA Legislation (XML tag regex mismatch — false alarm), WQS Written Statements (empty for test range), Post-Leg Memoranda (empty for test filter)
+
+**Part 4 — Stalled source diagnoses:**
+
+*SI 2010+*: Queue exhausted (5,813 done / 5,824 total). Not stalling — the seeded docs are processed. Under-seeded vs 120k estimate. Needs `reseed-si-gaps.ts` to seed 2015–2026 gap (Charlie action, V2).
+
+*HMRC*: Single `__index` row claimed by worker 8 for **26 hours** — definitively stuck (SIGTERM during multi-source crawl). `processHmrc` aggregates 6 source generators (HMRC manuals, NAO, HoCL, Explanatory Notes, Impact Assessments, Consultations) in a single queue claim — far exceeds Railway's container lifetime. Reset stuck row to pending (SQL above). Long-term: split into per-source queue rows (future sprint).
+
+*LDA commonswrittenquestions*: 388 failed rows (HTTP 524 = Cloudflare/origin timeout). Fix applied: retry logic added to `fetchLdaPage` (3 retries, 3s×attempt backoff). Reset failed rows to pending (SQL above).
+
+**Part 6 — TWFY parser.theyworkforyou.com:**
+- `parser.theyworkforyou.com` = ParlParse documentation site (accessible, static)
+- `/data/`, `/dumps/`, `/api/` all 404 (GitHub Pages paths don't exist)
+- `**theyworkforyou.com/pwdata/scrapedxml/` = GOLD MINE — free bulk data accessible without auth:**
+  - `debates/` — Commons Hansard XML from **1919 to present** (e.g. `debates2024-11-06a.xml` = 431KB, one per sitting day, structured ParlParse XML with speeches, dates, members)
+  - `wrans/` — Written Answers XML from **2001 to present** (3,259 files, daily, `answers2026-06-02.xml` current)
+  - `wms/` — Written Ministerial Statements
+  - `westminhall/` — Westminster Hall debates
+  - `lordspages/` — Lords debates
+  - `sp/` — Scottish Parliament
+  - No API key required. Files are ~100-500KB each.
+- **Recommendation**: This supersedes TWFY API (needs key), LDA (JSON, not full speeches), and the Parliament API (403 from Railway). Build a `pwdata-parliament.ts` bulk ingest client in a dedicated sprint (V2). Estimate: ~27,000 sitting-day XML files for Commons debates alone.
+
+---
 
 ## POST-DEPLOY ACTIONS — 3 Jun 2026 V7 (all completed)
 

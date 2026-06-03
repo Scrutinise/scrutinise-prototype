@@ -2,15 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jun 2026 (V7 post-deploy actions complete)*
+*Last updated: 4 Jun 2026 (V1 — corpus audit + scheduler lock + new source clients)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V7 — Worker-ID throughput + FCA status fix + all post-deploy actions (3 Jun 2026)
-**Latest commits:** `f912b3a` (V7) — docs commit pending for post-deploy results
+**Last sprint:** V1 (4 Jun 2026) — Full corpus audit, scheduler lock, LDA 524 fix, 4 new source clients
+**Previous sprint:** V7 (3 Jun 2026) — Worker-ID throughput + FCA status fix
+
+### What just happened (4 Jun 2026 V1)
+
+1. **Scheduler email deduplication (PART 2)** — Added `scheduler_lock` table + `acquireSchedulerLock()`. Scheduler acquires a DB-based mutex at the start of each `run()`. If another instance holds the lock (set within last 50 minutes), the run is skipped. Uses random per-startup ID (not process.pid — all Railway containers are PID 1). Migration: `20260604010000_scheduler_lock`.
+
+2. **Source audit (PART 3)** — 50 sources tested live. Full results in CHANGE_LOG. Key: **FCA Publications accessible** (162KB HTML), Sentencing Council, College of Policing, Ofcom/Ofgem/Ofsted all accessible. FCA Handbook (JS SPA), ECHR, SSRN, HoC Library, Erskine May all blocked.
+
+3. **Stalled source diagnoses (PART 4)**:
+   - *HMRC*: Single `__index` row stuck claimed for 26h (worker 8). Root cause: `processHmrc` runs 6 generators (~17k items) in one claim — killed by Railway SIGTERM. **Reset SQL in post-deploy actions.**
+   - *LDA commonswrittenquestions*: 388 failures with HTTP 524 (Cloudflare timeout). Fix applied: retry logic added to `fetchLdaPage`. **Reset SQL in post-deploy actions.**
+   - *SI 2010+*: Queue exhausted (5,813/5,824 done). Not stalling — needs reseeding for 2015–2026 gap.
+
+4. **Worker-2 build failure (PART 1)** — Root cause: Railway retrying an old deployment (commit `4f9cc389`) with Nixpacks + old postinstall path. Worker-2 IS running (SUCCESS at 22:47). Fix: Charlie triggers fresh "Deploy" from Main in Railway (NOT "Redeploy"). Stops hourly spam.
+
+5. **New source clients (PART 5)** — Added `listFcaPublications()`, `listSentencingCouncilGuidelines()`, `listCollegeOfPolicing()` to gov-scraper.ts (GOV.UK search API by org). Wired into processGovUk switch + processRow dispatcher. Queue seeds added to queue-populator.ts.
+
+6. **LDA retry fix (PART 4 fix)** — `fetchLdaPage` now retries on HTTP 524/502/503/504 (up to 3 retries, 3s×attempt backoff). 388 failed rows need reset to pending (SQL in post-deploy actions).
+
+7. **TWFY pwdata discovery (PART 6)** — `theyworkforyou.com/pwdata/scrapedxml/` is freely accessible. `debates/` has Commons Hansard XML from 1919 to present (~431KB/day, daily files). `wrans/` has Written Answers from 2001+ (3,259 files). This supersedes all other Hansard ingest approaches. **Do not build yet — awaiting CCh review.** See CHANGE_LOG for full findings.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
+
+### V1 post-deploy (all required before workers pick up new sources)
+
+1. **`npx prisma migrate deploy`** — Apply `20260604010000_scheduler_lock` migration
+2. **Reset stuck HMRC row:**
+   ```sql
+   UPDATE ingest_queue SET status='pending', "claimedBy"=NULL, "claimedAt"=NULL 
+   WHERE corpus='hmrc-codes-guidance' AND status='claimed';
+   ```
+3. **Reset LDA 524 failures:**
+   ```sql
+   UPDATE ingest_queue SET status='pending', "lastError"=NULL, "claimedBy"=NULL 
+   WHERE corpus='lda-commonswrittenquestions' AND status='failed';
+   ```
+4. **Fix worker-2 build loop** — Railway dashboard → ingest-worker-2 → Settings → trigger a new "Deploy" from Main branch (not "Redeploy" of existing deployment). This uses fresh commit + empty railway.json → RAILPACK builder → succeeds.
+5. **Redeploy workers + scheduler** — So LDA retry fix and scheduler lock go live.
+6. **Seed new source rows** — Run `tsx scripts/ingest/queue-populator.ts` (adds nao-reports, fca-publications, sentencing-council, college-of-policing seed rows — safe to re-run, ON CONFLICT DO NOTHING).
+
+### V7 (still pending)
+- **Manually redeploy workers + scheduler** in Railway dashboard — so containers pick up `writeWorkerSnapshot()` call.
+
+### V5 (still pending)
+- **Register TWFY API key** at theyworkforyou.com/api/key. Add `TWFY_API_KEY` to Railway env.
+- **Run `seed-twfy-queue.ts`** after key is added.
+- **Review data access request drafts** in `docs/data-access-requests/`.
+
+---
+
+## ARCHITECTURE SNAPSHOT (4 Jun 2026 — post V1)
 
 ### What just happened (3 Jun 2026 V7 post-deploy — all seeding and SQL actions complete)
 
@@ -161,19 +213,20 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 
 ---
 
-## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V7)
+## ARCHITECTURE SNAPSHOT (4 Jun 2026 — post V1)
 
 - **20 Railway workers** ingesting via `worker-queue.ts` — queue-claim model with `FOR UPDATE SKIP LOCKED`
-- **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **Two instances currently running — redeploy needed.**
+- **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **DB-based mutex added (V1)** — duplicate email sends now prevented without needing Railway redeploy.
 - **Self-discovery** working — detects under-seeded corpora and triggers full historical scan
-- **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total
-- **Hansard:** TWFY client built (needs API key). Parliament API (api.parliament.uk) returns 403 from Railway.
-- **LDA Parliament:** 5 datasets integrated, 1,602 queue pages seeded and pending. Workers processing now.
-- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. 50 queue rows reset to pending. Workers retrying with new API.
-- **FCA Handbook:** Confirmed blocked (pure JS SPA). FCA Publications (fca.org.uk) viable for V7.
-- **ECHR:** Still blocked (404 endpoint change, no alternative found).
+- **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total (approximately)
+- **Hansard:** TWFY client built (needs API key). **MAJOR FIND: `theyworkforyou.com/pwdata/scrapedxml/` has free bulk Hansard XML from 1919 — awaiting CCh review before building client.**
+- **LDA Parliament:** 5 datasets integrated, workers processing. `lda-commonswrittenquestions` had 388 HTTP 524 failures — retry fix applied (V1), rows need reset to pending.
+- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. Workers processing.
+- **FCA Handbook:** Confirmed blocked (pure JS SPA). **FCA Publications confirmed accessible (V1 audit)** — source client added (GOV.UK search approach), seed row added.
+- **ECHR:** Both APIs dead (api.echr.coe.int connect error, /app/query path 404). No accessible alternative found.
 - **TNA Caselaw:** Complete (~74,950 available judgments all ingested).
-- **Active work:** pre-1963 UKPGA + SSI + WSI queue rows being processed.
+- **New V1 sources:** nao-reports, fca-publications, sentencing-council, college-of-policing added — seeded and ready.
+- **HMRC:** Stuck claimed row (26h) — reset needed (SQL above). Long-term: needs per-source queue split.
 
 ## DEPLOYMENT
 
