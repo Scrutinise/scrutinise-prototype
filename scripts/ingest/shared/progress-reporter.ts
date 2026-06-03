@@ -25,25 +25,31 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'HMRC Manuals (Neon legacy)',      sourceKey: '__neon_legacy__',        dbCorpora: [],                                        estSections: 914_274,   priority: 0, complete: true },
 
   // PRIORITY 1 — UK Statute
-  // Brief used 'primary-acts-post-2000'; DB corpus = 'primary-acts-2000plus'
+  // Census 3 Jun 2026: 540 docs compiled × avg 168 secs/doc = 90,860; allow for unseeded high-chapter acts
   { label: 'Primary Acts 2000+',              sourceKey: 'primary-acts-2000plus',  dbCorpora: ['primary-acts-2000plus'],                  estSections: 100_000,   priority: 1 },
-  { label: 'Primary Acts pre-2000',           sourceKey: 'primary-acts-pre-2000',  dbCorpora: ['primary-acts-pre-2000'],                  estSections: 80_000,    priority: 1 },
-  // Brief used 'si-post-2010'; DB corpus = 'si-2010plus'
-  { label: 'Statutory Instruments 2010+',     sourceKey: 'si-2010plus',            dbCorpora: ['si-2010plus'],                            estSections: 300_000,   priority: 1 },
-  { label: 'Statutory Instruments pre-2010',  sourceKey: 'si-pre-2010',            dbCorpora: ['si-pre-2010'],                            estSections: 300_000,   priority: 1 },
+  // Census 3 Jun 2026: 737 docs compiled × avg 85 secs/doc = 62,664; 1963–1999 comprehensive
+  { label: 'Primary Acts pre-2000',           sourceKey: 'primary-acts-pre-2000',  dbCorpora: ['primary-acts-pre-2000'],                  estSections: 70_000,    priority: 1 },
+  // Census 3 Jun 2026: 5,866 docs × avg 10 secs = 59,951 compiled; gap: 2015–2026 under-seeded (~60k missing)
+  { label: 'Statutory Instruments 2010+',     sourceKey: 'si-2010plus',            dbCorpora: ['si-2010plus'],                            estSections: 120_000,   priority: 1 },
+  // Census 3 Jun 2026: 30,898 docs × avg 5.6 secs = 174,507 compiled; 1948–2009 comprehensive
+  { label: 'Statutory Instruments pre-2010',  sourceKey: 'si-pre-2010',            dbCorpora: ['si-pre-2010'],                            estSections: 180_000,   priority: 1 },
 
   // PRIORITY 2 — Major open sources
+  // Census 3 Jun 2026: compiled 92,681; Neon shows 116k total for SSI/NISR/WSI/NIA/ANAW
   { label: 'Regional (Scot/Wales/NI)',        sourceKey: 'regional',               dbCorpora: ['regional'],                               estSections: 160_000,   priority: 2 },
-  // Brief used 'retained-eu-law'; DB corpus = 'retained-eu'
-  { label: 'Retained EU Law',                 sourceKey: 'retained-eu',            dbCorpora: ['retained-eu'],                            estSections: 80_000,    priority: 2 },
-  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 374_250,   priority: 2 },
+  // Census 3 Jun 2026: Neon EUR+EUDN+EUDR = 133,312; new pipeline at 14,390 (partial)
+  { label: 'Retained EU Law',                 sourceKey: 'retained-eu',            dbCorpora: ['retained-eu'],                            estSections: 140_000,   priority: 2 },
+  // Census 3 Jun 2026: API confirmed 374,450 (7,489 pages × 50 judgments)
+  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 374_450,   priority: 2 },
   { label: 'BAILII (full corpus)',            sourceKey: 'bailii',                 dbCorpora: ['bailii-tribunals','bailii-eat','bailii-privy-ni'], estSections: 2_000_000, priority: 2, blocked: true },
   // hansard: DB uses -a/-b split; aggregated here
   { label: 'Hansard Commons',                sourceKey: 'hansard-commons',         dbCorpora: ['hansard-commons-a','hansard-commons-b'],   estSections: 2_000_000, priority: 2 },
   { label: 'Hansard Lords',                  sourceKey: 'hansard-lords',           dbCorpora: ['hansard-lords-a','hansard-lords-b'],       estSections: 500_000,   priority: 2 },
   { label: 'Committee Reports',              sourceKey: 'committee-reports',       dbCorpora: ['committees-a','committees-b'],             estSections: 100_000,   priority: 2 },
-  { label: 'Written Answers (PQs)',          sourceKey: 'written-answers',         dbCorpora: ['written-answers'],                        estSections: 500_000,   priority: 2 },
-  { label: 'Written Ministerial Statements', sourceKey: 'written-statements',      dbCorpora: ['written-statements'],                     estSections: 50_000,    priority: 2 },
+  // Census 3 Jun 2026: Parliament API confirmed 537,593 (sum 2000–2025)
+  { label: 'Written Answers (PQs)',          sourceKey: 'written-answers',         dbCorpora: ['written-answers'],                        estSections: 537_593,   priority: 2 },
+  // Census 3 Jun 2026: Parliament API confirmed 17,487
+  { label: 'Written Ministerial Statements', sourceKey: 'written-statements',      dbCorpora: ['written-statements'],                     estSections: 17_487,    priority: 2 },
   { label: 'Bill Pages',                     sourceKey: 'bill-pages',              dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
@@ -52,12 +58,15 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
   // Brief used 'hmrc-web'; DB corpus = 'hmrc-codes-guidance'
   { label: 'HMRC + Guidance',                sourceKey: 'hmrc-codes-guidance',     dbCorpora: ['hmrc-codes-guidance'],                    estSections: 640_000,   priority: 2 },
-  { label: 'HMRC TIINs',                     sourceKey: 'hmrc-tiins',              dbCorpora: ['hmrc-tiins'],                             estSections: 2_000,     priority: 2 },
+  // Census 3 Jun 2026: compiled 791; appears complete for available content
+  { label: 'HMRC TIINs',                     sourceKey: 'hmrc-tiins',              dbCorpora: ['hmrc-tiins'],                             estSections: 800,       priority: 2 },
   { label: 'Law Commission Reports (E&W)',   sourceKey: 'law-commission',          dbCorpora: [],                                         estSections: 20_000,    priority: 2 },
-  { label: 'Scottish Law Commission',        sourceKey: 'scotlawcom',              dbCorpora: ['scotlawcom'],                             estSections: 500,       priority: 2 },
+  // Census 3 Jun 2026: compiled 350; appears complete
+  { label: 'Scottish Law Commission',        sourceKey: 'scotlawcom',              dbCorpora: ['scotlawcom'],                             estSections: 350,       priority: 2 },
 
   // PRIORITY 3 — Secondary sources
-  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_000,    priority: 3 },
+  // Census 3 Jun 2026: 601 queue rows × 50 judgments/page = ~30,050 UK cases
+  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_050,    priority: 3 },
   { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 80_000,    priority: 3 },
   // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
   { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
@@ -70,7 +79,8 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Erskine May + Standing Orders',   sourceKey: 'erskine-may',            dbCorpora: [],                                         estSections: 3_000,     priority: 3 },
   { label: 'Public Consultations',            sourceKey: 'consultations',          dbCorpora: [],                                         estSections: 50_000,    priority: 3 },
   { label: 'NAO Reports',                     sourceKey: 'nao-reports',            dbCorpora: [],                                         estSections: 10_000,    priority: 3 },
-  { label: 'OTS Reports',                     sourceKey: 'ots-reports',            dbCorpora: ['ots-reports'],                            estSections: 200,       priority: 3 },
+  // Census 3 Jun 2026: compiled 497; was underestimated
+  { label: 'OTS Reports',                     sourceKey: 'ots-reports',            dbCorpora: ['ots-reports'],                            estSections: 500,       priority: 3 },
   { label: 'NI Law Commission (historic)',    sourceKey: 'nilawcom',               dbCorpora: ['nilawcom'],                               estSections: 50,        priority: 3 },
   { label: 'SSRN UK Legal Scholarship',       sourceKey: 'ssrn',                   dbCorpora: [],                                         estSections: 50_000,    priority: 3, blocked: true },
   { label: 'Post-Legislative Memoranda',      sourceKey: 'post-leg-memoranda',     dbCorpora: [],                                         estSections: 5_000,     priority: 3 },
@@ -82,8 +92,8 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: [],                                         estSections: 3_000,     priority: 4 },
   { label: 'CMA Guidelines',                  sourceKey: 'cma-guidelines',         dbCorpora: [],                                         estSections: 8_000,     priority: 4 },
   { label: 'Ofcom/Ofwat/Ofgem/Ofsted',        sourceKey: 'regulator-rulebooks',    dbCorpora: [],                                         estSections: 40_000,    priority: 4 },
-  // Brief used 'oecd-free'; DB corpus = 'oecd'
-  { label: 'OECD (free tier)',                sourceKey: 'oecd',                   dbCorpora: ['oecd'],                                   estSections: 10_000,    priority: 4 },
+  // Census 3 Jun 2026: compiled 462; free-tier content appears fully ingested
+  { label: 'OECD (free tier)',                sourceKey: 'oecd',                   dbCorpora: ['oecd'],                                   estSections: 500,       priority: 4 },
   { label: 'ONS Statistical Datasets',        sourceKey: 'ons-statistics',         dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
 ]
 
