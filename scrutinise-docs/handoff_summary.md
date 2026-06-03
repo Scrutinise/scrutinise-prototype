@@ -9,8 +9,18 @@
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** Corpus census (3 Jun 2026 late evening)
-**Latest commits:** `6df88bf` (scheduler fix sprint) — code changes from this session not yet committed
+**Last sprint:** Queue gap seeding + worker efficiency email (3 Jun 2026 late evening Sprint 2)
+**Latest commits:** `e84c8a6` (corpus census sprint) — code changes from this session not yet committed
+
+### What just happened (3 Jun 2026 Sprint 2 — queue gap seeding)
+
+1. **Queue reset (Part 2):** 6,185 rows reset to pending for corpora with 0 corpus_sections (Hansard, FCA, ECHR, Treaties). Root cause: `api.parliament.uk/v1/hansard` returns 403 from Railway IPs — workers looped over 0 debates and marked rows done. FCA/ECHR similar pattern. Workers will retry on next claim cycle; Hansard API access needs Railway investigation.
+
+2. **Queue reseed (Part 1):** `reseed-si-gaps.ts` run: (A) UKSI 2010–2026 enumeration from TNA (adds ~5k–8k new rows for 2015–2026 gap); (B) UKPGA pre-1963: 6,897 new rows inserted from Neon items with 0 sections; (C) SSI+WSI added to regional corpus. Workers now have 13,082+ pending rows — queue is no longer empty.
+
+3. **Worker efficiency email (Part 3):** `queryWorkerThroughput` extended with sourceKey, efficiency %, and ⚡low/🔴critical flags. Each source has theoretical max adjusted by number of workers sharing the token bucket.
+
+4. **Discovery fix (Part 4):** `TNA_CORPUS_META.regional` now includes ssi+wsi. `discoverTnaLegislation` detects under-seeded corpora dynamically (threshold 400 rows/yr) and triggers full historical scan when needed.
 
 ### What just happened (3 Jun 2026 late evening — corpus census sprint)
 

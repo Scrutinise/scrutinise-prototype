@@ -4,6 +4,41 @@
 
 ***
 
+## CODE CHANGES — 3 Jun 2026 Sprint 2: Queue gap seeding + worker efficiency email
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/reseed-si-gaps.ts` | **New.** One-off reseed script: (A) UKSI 2010–2026 full enumeration from TNA, (B) UKPGA pre-1963 from Neon items with 0 sections, (C) SSI+WSI types added to regional corpus. |
+| `scripts/ingest/backfill/reset-queue-done.ts` | **New.** Resets 'done' rows back to 'pending' for corpora with 0 corpus_sections. Run and confirmed: 6,185 rows across 8 corpora reset. |
+| `scripts/ingest/backfill/r2-pattern-check.ts` | **New.** R2 key diagnostic — confirmed hansard/fca-regulators/echr-hudoc have 0 R2 keys. |
+| `scripts/ingest/shared/progress-reporter.ts` | **Add:** `THEORETICAL_SECTIONS_PER_HOUR` map per source type. `WorkerThroughputRow` extended with `sourceKey`, `efficiencyPct`, `efficiencyFlag`. `queryWorkerThroughput()` now includes `sourceKey` from snapshot, computes fair-share efficiency (divides theoretical by workers-on-same-source). Email row now shows `% eff ⚡low/🔴critical`. |
+| `scripts/ingest/shared/discovery.ts` | **Fix:** `TNA_CORPUS_META.regional` now includes `ssi+wsi` types (was only `asp+anaw+nia`). `discoverTnaLegislation` no longer has a static `COMPLETE_TNA_CORPORA` exclusion list — instead detects under-seeded corpora dynamically and triggers full scan from yearMin when historical row count < threshold. |
+
+### Sprint 2 findings
+
+**Part 2 root cause (Hansard/FCA/ECHR 0 corpus_sections):**
+Workers use `if (await r2Exists(cKey)) continue` to skip already-fetched content.
+But the actual failure was UPSTREAM: `listHansardDebates()` called `api.parliament.uk/v1/hansard/search`
+which returns 403 from Railway IPs. Workers looped over 0 debates → called `markDone()` with nothing written.
+R2 check confirmed: 0 keys under `hansard/`, `fca-regulators/`, `echr-hudoc/`.
+Fix: reset 6,185 rows to 'pending'. Workers will retry. Hansard API access from Railway needs further investigation.
+
+**Part 1 reseed results (run during sprint):**
+- UKPGA pre-1963: 6,897 new queue rows inserted (from Neon items with 0 sections)
+- UKSI 2010–2026: TNA enumeration in progress (expected: ~5k–8k new rows for 2015–2026)
+- SSI+WSI: enumeration pending (after UKSI completes)
+
+**Queue state after sprint:** 13,082+ pending rows (workers have immediate work)
+
+**R2 structure audit (r2-top-level diagnostic):**
+- `caselaw/` has 149,702 keys (~74,851 judgment sections in R2). TNA caselaw worker uses `caselawKey()` → `caselaw/` prefix (NOT `tna-caselaw/`). corpus_sections has 74,730 `tna-caselaw` rows consistent with R2.
+- **TNA caselaw gap:** queue has 7,489 done page-rows × 50 = 374,450 expected judgments, but only ~74,851 in R2/corpus_sections (~20%). ~300k judgments either failed silently or were skipped. Needs investigation in next sprint.
+- Confirmed: hansard/, fca-regulators/, echr-hudoc/ have 0 R2 keys — reset approach is correct.
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 Sprint 1: Corpus census
 
 ### Files changed
