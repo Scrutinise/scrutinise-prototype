@@ -233,6 +233,38 @@ With SI 2015–2026 reseed (~50–80k sections): could add several weeks of work
 With Hansard backfill (~2M sections in R2 already): major acceleration possible.
 
 **Year gaps requiring action:**
-1. SI 2015–2026: ~5,000–8,000 documents not seeded — reseed required
-2. UKPGA pre-1963: 7,427 Neon items with 0 sections — new pipeline doesn't cover pre-1963
-3. Hansard/ECHR/FCA in R2 (backfill sprint planned)
+1. ~~SI 2015–2026 reseed~~ — DONE V3. TNA feed confirms low counts are accurate.
+2. UKPGA pre-1963: 6,897 rows seeded V3. Workers processing.
+3. Hansard: api.parliament.uk 403 from Railway. TWFY alternative being integrated (V5).
+4. FCA: JS SPA — blocked. Needs structured data API or Playwright.
+5. ECHR: API 404 — blocked. Needs new endpoint.
+
+---
+
+## 8. Sources with no client yet (sprint needed)
+
+The following sources have no ingest client built. Each needs a dedicated sprint to
+build and seed. Sorted by estimated value to Lex.
+
+| Source | Est sections | URL / API | Notes |
+|--------|-------------|-----------|-------|
+| Bill Pages | 50,000 | https://bills.parliament.uk/ | Parliament Bills API; structured JSON |
+| Explanatory Notes | 50,000 | https://www.legislation.gov.uk/id/en | TNA provides ENs alongside Acts |
+| Impact Assessments | 30,000 | https://www.legislation.gov.uk/id/ia | TNA |
+| House of Commons Library | 30,000 | https://commonslibrary.parliament.uk/ | Research briefings; HTML + PDF |
+| Sentencing Council | 2,000 | https://www.sentencingcouncil.org.uk/guidelines/ | HTML guidelines |
+| College of Policing APP | 8,000 | https://www.college.police.uk/app | HTML; structured by theme |
+| PACE Codes A–H | 800 | https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice | PDFs on gov.uk |
+| Civil Service / Min. Codes | 500 | https://www.gov.uk/government/publications/civil-service-code | PDFs on gov.uk |
+| Treasury Green/Magenta Book | 500 | https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-governent | PDF on gov.uk |
+| Erskine May + Standing Orders | 3,000 | https://erskinemay.parliament.uk/ | HTML; Parliament website |
+| Public Consultations | 50,000 | https://www.gov.uk/search/policy-papers-and-consultations?content_store_document_type=open_consultations | gov.uk; HTML |
+| NAO Reports | 10,000 | https://www.nao.org.uk/reports/ | HTML + PDF |
+| White / Green Papers | 20,000 | https://www.gov.uk/search/policy-papers-and-consultations?content_store_document_type=policy_papers | gov.uk |
+| NHS Guidance | 20,000 | https://www.england.nhs.uk/publication/ | HTML |
+| Planning Policy (NPPF/PPG) | 5,000 | https://www.gov.uk/government/collections/planners-practice-guidance | gov.uk HTML |
+| Building Regulations | 3,000 | https://www.gov.uk/guidance/building-regulations-and-approved-documents | gov.uk HTML + PDF |
+| CMA Guidelines | 8,000 | https://www.gov.uk/cma-cases | gov.uk structured |
+| Ofcom/Ofwat/Ofgem/Ofsted | 40,000 | Various regulator websites | Per-regulator scrape |
+| ONS Statistical Datasets | 5,000 | https://www.ons.gov.uk/datasets | API available |
+| BAILII | 2,000,000 | https://www.bailii.org/ | **Blocked — WAF. Data access request sent.** |
