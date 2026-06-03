@@ -4,6 +4,52 @@
 
 ***
 
+## CODE CHANGES — 3 Jun 2026 V4: Caselaw gap diagnosis + silent failure fixes
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/tna-caselaw.ts` | **Fix `getTotalJudgments()`:** feed reports page 7,489 as last but pages 1,500+ are empty. Now verifies last page has entries; binary-searches for true last non-empty page (~1,499 × 50 = ~74,950). Prevents phantom queue rows being seeded. |
+| `scripts/ingest/workers/worker-queue.ts` | **Fix `processHansard()`, `processFca()`, `processEchr()`:** all three silently called `markDone()` when 0 items were yielded (API returning 403/404). Now marks `failed` with explanatory message when 0 items found. Makes failures visible in queue instead of silently hidden. |
+| `scripts/ingest/shared/progress-reporter.ts` | **Update `estSections`:** TNA Case Law 374,450→75,000 (confirmed ~74,950 available; binary-search validated). |
+| `scripts/ingest/diagnose-v4.ts` | **New:** diagnostic script — SQL + API tests for all Part 1/2 sources. |
+| `scripts/ingest/diagnose-v4b.ts` | **New:** FCA section URL test + ECHR new endpoint discovery. |
+| `scripts/ingest/verify-v4.ts` | **New:** Part 5 verification queries. |
+
+### V4 diagnostic findings
+
+**TNA Caselaw (Category A):**
+- Queue has 7,490 page-rows, all marked done with null lastError.
+- Pages 1–1,499 return 50 entries each; pages 1,500+ return empty feeds.
+- 74,730 corpus_sections ≈ 1,499 pages × 50 = 74,950 judgments. **We've ingested all available content.**
+- Root cause of 374,450 estimate: `link rel="last"` on the TNA feed reports page 7,489, but those pages are empty. Fixed by binary-search in `getTotalJudgments()`.
+
+**FCA Handbook (Category B):**
+- `handbook.fca.org.uk` is a JavaScript SPA (Angular). Static HTML has 63 nav hrefs, 0 section links.
+- `getSourcebookSections()` scraped static HTML → 0 sections → `processFca` silently marked done.
+- Fix: mark failed with explanation. FCA content requires JS rendering (Playwright/Puppeteer) — out of scope for current pipeline.
+
+**ECHR HUDOC (Category B):**
+- `/app/query/results` endpoint returns 404 as of Jun 2026 — API has changed.
+- Workers looped over 0 items, silently marked done.
+- Fix: mark failed with explanation. ECHR will need new endpoint investigation.
+
+**Hansard debates (Category B):**
+- `api.parliament.uk/v1/hansard` returns 403 from Railway IPs.
+- Workers looped over 0 debates, silently marked done.
+- Fix: mark failed with explanation. Written Answers/Statements use a different base URL and work fine.
+
+**Verification state (3 Jun 2026 late):**
+- Grand total corpus_sections: 587,128 (was 585,576 at start of day)
+- primary-acts-pre-2000: 5,307 pending rows (workers actively processing pre-1963 UKPGA)
+- SSI+WSI: 1,959 new regional rows added to queue
+- Hansard/FCA/ECHR: back to 'done' (workers re-processed after Sprint 2 reset, before V4 fix deployed)
+- After Railway redeploy: these rows will become 'failed' instead of 'done' — visible in logs
+- UKSI 2010–2026 gap was smaller than estimated — TNA feed confirms 200–324 SIs/year for 2015–2026 is the actual count (not a seeding gap)
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 Sprint 2: Queue gap seeding + worker efficiency email
 
 ### Files changed
@@ -25,12 +71,13 @@ which returns 403 from Railway IPs. Workers looped over 0 debates → called `ma
 R2 check confirmed: 0 keys under `hansard/`, `fca-regulators/`, `echr-hudoc/`.
 Fix: reset 6,185 rows to 'pending'. Workers will retry. Hansard API access from Railway needs further investigation.
 
-**Part 1 reseed results (run during sprint):**
-- UKPGA pre-1963: 6,897 new queue rows inserted (from Neon items with 0 sections)
-- UKSI 2010–2026: TNA enumeration in progress (expected: ~5k–8k new rows for 2015–2026)
-- SSI+WSI: enumeration pending (after UKSI completes)
+**Part 1 reseed results (COMPLETE — reseed-si-gaps.ts run):**
+- UKSI 2010–2026: **0 new rows** — TNA returned 5,596 acts; queue already had 5,821 rows. Gap was smaller than estimated — TNA feed genuinely has 200–324 SIs/year for 2015–2026.
+- UKPGA pre-1963: **6,897 new rows** — Neon items with 0 LegislationSections seeded.
+- SSI + WSI: **1,959 new rows** (1,419 SSI + 540 WSI from TNA).
+- **Total: 8,856 new queue rows inserted.**
 
-**Queue state after sprint:** 13,082+ pending rows (workers have immediate work)
+**Queue state after sprint:** 13,082 pending rows confirmed (workers have work)
 
 **R2 structure audit (r2-top-level diagnostic):**
 - `caselaw/` has 149,702 keys (~74,851 judgment sections in R2). TNA caselaw worker uses `caselawKey()` → `caselaw/` prefix (NOT `tna-caselaw/`). corpus_sections has 74,730 `tna-caselaw` rows consistent with R2.

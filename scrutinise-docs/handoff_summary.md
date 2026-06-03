@@ -9,8 +9,21 @@
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** Queue gap seeding + worker efficiency email (3 Jun 2026 late evening Sprint 2)
-**Latest commits:** `e84c8a6` (corpus census sprint) — code changes from this session not yet committed
+**Last sprint:** V4 — caselaw diagnosis + silent failure fixes (3 Jun 2026)
+**Latest commits:** `52ead1e` (Sprint 2) — V4 code changes not yet committed
+
+### What just happened (3 Jun 2026 V4 — caselaw diagnosis + silent failure fixes)
+
+1. **Caselaw `getTotalJudgments()` fixed** — TNA feed reports 7,489 pages but pages 1,500+ are empty. Binary-search now finds true last non-empty page (~1,499). We've ingested all ~74,950 available TNA caselaw judgments. `estSections` updated to 75,000.
+
+2. **Silent failures now surfaced** — `processHansard`, `processFca`, `processEchr` now mark 'failed' (not 'done') when 0 items are yielded. Root causes confirmed:
+   - FCA: `handbook.fca.org.uk` is a JS SPA — HTML scraping never works. Needs Playwright.
+   - ECHR: `/app/query/results` returns 404 — API endpoint changed Jun 2026. Needs new endpoint.
+   - Hansard: `api.parliament.uk/v1/hansard` returns 403 from Railway IPs. Written Answers/Statements use a different API that works fine.
+
+3. **Reseed running:** UKPGA pre-1963 (6,897 rows) inserted; UKSI 2010-2026 completed; SSI/WSI enumeration rate-limited at 30s/request — still running.
+
+4. **Queue state:** 5,307 primary-acts-pre-2000 pending rows, workers actively processing. Grand total corpus_sections: 587,128.
 
 ### What just happened (3 Jun 2026 Sprint 2 — queue gap seeding)
 
