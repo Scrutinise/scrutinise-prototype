@@ -42,13 +42,34 @@ function extractLastPage(xml: string): number {
   return m ? parseInt(m[1], 10) : 0
 }
 
-// Get total judgment count.  Fetches just the first Atom page, reads the
-// last-page link, and multiplies by ITEMS_PER_PAGE.
+// Get total judgment count.  Fetches the first Atom page, reads the
+// last-page link, then verifies it has entries.  The TNA feed reports a
+// large last-page number (e.g. 7,489) but pages beyond ~1,500 are empty
+// — the feed appears to index ~75k publicly available judgments, not 374k.
+// We binary-search for the true last non-empty page to avoid seeding
+// thousands of phantom queue rows.
 export async function getTotalJudgments(): Promise<number> {
   const xml = await fetchText(ATOM_FEED)
   if (!xml) return 0
-  const lastPage = extractLastPage(xml)
-  return lastPage > 0 ? lastPage * ITEMS_PER_PAGE : 0
+  const reportedLastPage = extractLastPage(xml)
+  if (reportedLastPage === 0) return parseEntries(xml).length
+
+  // Verify: if the reported last page is empty, binary-search for true last page
+  const lastPageXml = await fetchText(`${ATOM_FEED}?page=${reportedLastPage}`)
+  if (lastPageXml && parseEntries(lastPageXml).length > 0) {
+    return reportedLastPage * ITEMS_PER_PAGE
+  }
+
+  // Reported last page is empty — find the true last non-empty page
+  let lo = 1, hi = reportedLastPage
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2)
+    const midXml = await fetchText(`${ATOM_FEED}?page=${mid}`)
+    if (midXml && parseEntries(midXml).length > 0) lo = mid
+    else hi = mid - 1
+  }
+  console.log(`[tna-caselaw] getTotalJudgments: feed reports ${reportedLastPage} pages, true last non-empty page = ${lo}`)
+  return lo * ITEMS_PER_PAGE
 }
 
 // Parse all CaseLawJudgment entries out of one page of the Atom feed.
