@@ -2,15 +2,26 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jun 2026 (V7 complete — pending commit)*
+*Last updated: 3 Jun 2026 (V7 post-deploy actions complete)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V7 — Worker-ID throughput + FCA status fix (3 Jun 2026)
-**Latest commits:** `8cc89d9` (V6b) — V7 changes written, commit-all.sh pending execution
+**Last sprint:** V7 — Worker-ID throughput + FCA status fix + all post-deploy actions (3 Jun 2026)
+**Latest commits:** `f912b3a` (V7) — docs commit pending for post-deploy results
+
+### What just happened (3 Jun 2026 V7 post-deploy — all seeding and SQL actions complete)
+
+All V6/V7 pending actions now done:
+- **`prisma migrate deploy`** ✅ — `workerId` column live on Railway DB
+- **`seed-rate-limits.ts`** ✅ — 16 entries, including `lda-parliament` (200ms) and `fca-publications` (300ms)
+- **`seed-lda-queue.ts`** ✅ — 1,602 LDA queue rows inserted (5 datasets seeded)
+- **EUR-Lex queue reset** ✅ — 50 done rows → pending (workers will retry with SPARQL API)
+- **Format backfill** ✅ — 688 null `formatFound` rows fixed (echr-hudoc/eur-lex/fca → html); 695 → 7 remaining nulls
+- **Queue health:** 1,652 pending / 200 claimed / 70,560 done — workers actively picking up LDA + EUR-Lex
+- **ONE remaining action (Charlie):** Manually redeploy workers + scheduler in Railway dashboard so `writeWorkerSnapshot()` is active and next email shows per-worker throughput
 
 ### What just happened (3 Jun 2026 V7 — Worker-ID throughput + FCA status)
 
@@ -124,13 +135,16 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-### V7 (new)
-1. **Run `commit-all.sh`** — commits and pushes V7 changes. Railway will auto-redeploy.
-2. **Run `npx prisma migrate deploy`** in `scrutinise-web/` — applies `workerId` column migration.
-3. **Redeploy workers + scheduler** in Railway so they pick up the snapshot-writing change.
-4. **Run `seed-rate-limits.ts`** — registers `fca-publications` rate limit entry.
-5. **Run format backfill SQL** (optional, see CHANGE_LOG V7 findings).
-6. **Run Part 6 verification SQL** after deploy to confirm workers are processing.
+### ONE REMAINING ACTION (Charlie)
+- **Manually redeploy workers + scheduler** in Railway dashboard — so running containers pick up the `writeWorkerSnapshot()` call added to worker-queue.ts. Auto-redeploy only fires on new pushes; current containers are still running pre-V7 code. After redeploy, next hourly email will show per-worker throughput.
+
+### V7 (all done ✅)
+1. ~~Run `commit-all.sh`~~ — Done (`f912b3a`)
+2. ~~`npx prisma migrate deploy`~~ — Done (workerId column applied)
+3. Redeploy workers + scheduler — **Charlie to do** (see above)
+4. ~~`seed-rate-limits.ts`~~ — Done (16 entries including fca-publications)
+5. ~~Format backfill SQL~~ — Done (688 rows fixed)
+6. ~~Verification SQL~~ — Done (1,652 pending, 200 claimed, workers active)
 
 ### V6b (resolved)
 1. ~~Run `commit-all.sh`~~ — Done (`8cc89d9`). Workers stable since 22:07.
@@ -147,15 +161,15 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 
 ---
 
-## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V6)
+## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V7)
 
 - **20 Railway workers** ingesting via `worker-queue.ts` — queue-claim model with `FOR UPDATE SKIP LOCKED`
 - **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **Two instances currently running — redeploy needed.**
 - **Self-discovery** working — detects under-seeded corpora and triggers full historical scan
 - **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total
 - **Hansard:** TWFY client built (needs API key). Parliament API (api.parliament.uk) returns 403 from Railway.
-- **LDA Parliament:** 5 datasets integrated (~799K records, 1,602 queue pages). Seeder needs running after deploy.
-- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. ~232K documents available. Queue rows need reset to pending.
+- **LDA Parliament:** 5 datasets integrated, 1,602 queue pages seeded and pending. Workers processing now.
+- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. 50 queue rows reset to pending. Workers retrying with new API.
 - **FCA Handbook:** Confirmed blocked (pure JS SPA). FCA Publications (fca.org.uk) viable for V7.
 - **ECHR:** Still blocked (404 endpoint change, no alternative found).
 - **TNA Caselaw:** Complete (~74,950 available judgments all ingested).

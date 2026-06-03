@@ -4,6 +4,21 @@
 
 ***
 
+## POST-DEPLOY ACTIONS — 3 Jun 2026 V7 (all completed)
+
+| Action | Result |
+|--------|--------|
+| `prisma migrate deploy` | Applied `20260603220000_snapshot_worker_id` — `workerId` column live |
+| `seed-rate-limits.ts` | 16 entries upserted, `fca-publications` added at 300ms |
+| `seed-lda-queue.ts` | 1,602 rows inserted (commons oral 140, lords written 207, commons written 1,238, commons divs 12, lords divs 5) |
+| EUR-Lex queue reset | 50 rows reset `done → pending` (workers will retry with new SPARQL API) |
+| Format backfill (null → html) | 601 echr-hudoc + 50 eur-lex + 37 fca-regulators = 688 rows fixed; null format count: 695 → 7 |
+| Queue health check | 1,652 pending / 200 claimed / 70,560 done — workers actively claiming LDA + EUR-Lex rows |
+
+Railway redeploy (workers + scheduler) still needed — Charlie to trigger in Railway dashboard so workers pick up the `writeWorkerSnapshot` call and the new throughput email format activates.
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 V7: Worker-ID throughput + FCA status fix
 
 ### Files changed
