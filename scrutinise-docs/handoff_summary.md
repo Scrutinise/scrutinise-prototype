@@ -2,15 +2,32 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jun 2026 (V6b complete — pending commit)*
+*Last updated: 3 Jun 2026 (V7 complete — pending commit)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V6b — Worker crash-loop fix (TNA discovery full-scan removed) (3 Jun 2026)
-**Latest commits:** `27ae54b` (V6) — V6b changes written, commit-all.sh pending execution
+**Last sprint:** V7 — Worker-ID throughput + FCA status fix (3 Jun 2026)
+**Latest commits:** `8cc89d9` (V6b) — V7 changes written, commit-all.sh pending execution
+
+### What just happened (3 Jun 2026 V7 — Worker-ID throughput + FCA status)
+
+1. **Worker throughput now by worker ID** — Workers write their own snapshots to `ingest_progress_snapshots` (with `workerId` column, new migration). Every 50 rows processed, each worker records `sectionsCompiled` (actual upsertSection calls). Email now shows "Worker 1  si-2010plus  4,230 /hr  ████  87% eff" — sorted numerically. Workers with no recent activity don't appear.
+
+2. **FCA status corrected** — `blocked: true` removed from FCA Handbook entry. Since queue rows exist (failed status), it auto-shows `⚠️ failing` rather than `⛔ blocked`. FCA Publications placeholder added (shows "not started" — V8 build scope).
+
+3. **Duplicate scheduler confirmed resolved** — Railway API: one `Ingest-scheduler` service, one `loop()` call. All 20 workers + scheduler SUCCESS at 22:07 post-V6b.
+
+4. **ACTION NEEDED (Charlie):** `npx prisma migrate deploy` in `scrutinise-web/` after push (adds `workerId` column). Then redeploy workers and scheduler.
+
+5. **SQL backfill (informational):**
+   ```sql
+   UPDATE ingest_queue SET format = 'clml' WHERE format IS NULL AND status = 'done'
+     AND (corpus LIKE '%primary-acts%' OR corpus LIKE '%si-%' OR corpus LIKE '%regional%');
+   UPDATE ingest_queue SET format = 'html' WHERE format IS NULL AND status = 'done' AND corpus = 'tna-caselaw';
+   ```
 
 ### What just happened (3 Jun 2026 V6b — Worker crash-loop fix)
 
@@ -107,8 +124,16 @@ Workers 6, 9 (and others) were crash-looping via self-discovery: when their prim
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-### V6b (urgent — crash loop)
-1. **Run `commit-all.sh`** — commits and pushes V6b fix. Railway will auto-redeploy workers.
+### V7 (new)
+1. **Run `commit-all.sh`** — commits and pushes V7 changes. Railway will auto-redeploy.
+2. **Run `npx prisma migrate deploy`** in `scrutinise-web/` — applies `workerId` column migration.
+3. **Redeploy workers + scheduler** in Railway so they pick up the snapshot-writing change.
+4. **Run `seed-rate-limits.ts`** — registers `fca-publications` rate limit entry.
+5. **Run format backfill SQL** (optional, see CHANGE_LOG V7 findings).
+6. **Run Part 6 verification SQL** after deploy to confirm workers are processing.
+
+### V6b (resolved)
+1. ~~Run `commit-all.sh`~~ — Done (`8cc89d9`). Workers stable since 22:07.
 2. **Confirm workers stable** — check Railway logs after redeploy. Workers should no longer SIGTERM. Look for `[worker-N] all sources exhausted — sleeping 5min` instead of crash.
 3. **Reset EUR-Lex queue rows** after redeploy: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
 4. **Run `seed-lda-queue.ts`** — seeds 1,602 LDA Parliament queue rows: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts`

@@ -4,6 +4,40 @@
 
 ***
 
+## CODE CHANGES — 3 Jun 2026 V7: Worker-ID throughput + FCA status fix
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Add `workerId Int?` to `IngestProgressSnapshot`. NULL = scheduler-written corpus snapshot. Non-null = worker-written session snapshot. Add `@@index([workerId])`. |
+| `scrutinise-web/prisma/migrations/20260603220000_snapshot_worker_id/migration.sql` | `ALTER TABLE ingest_progress_snapshots ADD COLUMN "workerId" integer` + index. |
+| `scripts/ingest/shared/progress-reporter.ts` | **(2a)** Add `writeWorkerSnapshot(workerId, sourceKey, sectionsCompiled)` — writes per-worker snapshot with `phase='worker'`. **(2b)** Rewrite `queryWorkerThroughput()`: groups by `workerId IS NOT NULL` rows instead of `workerLabel`. **(2c)** Email format: "Worker N  corpus  4,230 /hr  ████  87% eff" — sorted by worker ID. Stalled/critical flags now show "Worker N" not corpus label. **(3a)** Remove `blocked: true` from FCA Handbook — now auto-shows ⚠️ failing (queue rows exist, 0 sections). **(3b)** Add FCA Publications placeholder entry (estSections 20k, priority 3, dbCorpora=['fca-publications'], no queue rows → shows "not started"). |
+| `scripts/ingest/workers/worker-queue.ts` | **(2b)** Wrap `upsertSection` import with local tracker — increments `sessionSectionsCompiled` on every section write without changing call sites. Import `writeWorkerSnapshot`. Every `CHECKPOINT_EVERY` rows, write a worker snapshot (non-fatal on failure). |
+| `scripts/ingest/seed-rate-limits.ts` | Add `fca-publications` at 300ms interval. |
+
+### V7 findings
+
+**Part 1 — Duplicate scheduler:** Railway API confirms exactly ONE `Ingest-scheduler` service. `loop()` called exactly once in `scheduler.ts`. Workers 1–4 had FAILED deployments at 20:56/21:56 (pre-V6b crash loop era). All 22 services show `SUCCESS` at 22:07 post-fix. Duplicate was two Railway deployment instances of the same service — resolved by V6b redeploy. No code change needed.
+
+**Parts 4–5 (informational — Charlie to run):**
+
+Part 4 — Format backfill SQL:
+```sql
+UPDATE ingest_queue SET format = 'clml'
+WHERE format IS NULL AND status = 'done'
+  AND (corpus LIKE '%primary-acts%' OR corpus LIKE '%si-%' OR corpus LIKE '%regional%');
+
+UPDATE ingest_queue SET format = 'html'
+WHERE format IS NULL AND status = 'done' AND corpus = 'tna-caselaw';
+```
+
+Part 5 — Railway cost: 20 workers × ~128MB = negligible memory. Primary cost driver is network egress from TNA XML downloads (~20KB/section × throughput). At 7,200 sections/hr (stable rate) × 720hrs/month = ~5.2M sections × 20KB = ~100GB/month egress. Railway charges network egress — this explains the $33 vs expected $8-12. Crash loop prior to V6b would have multiplied this by repeated failed requests. Post-fix cost should normalise.
+
+**Part 6 — Worker stability:** All workers `SUCCESS` at 22:07. Run verification SQL after V7 deploy to confirm productive processing.
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 V6b: Discovery crash-loop fix (TNA full-scan removed)
 
 ### Files changed
