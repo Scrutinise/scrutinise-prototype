@@ -1838,6 +1838,7 @@ model SourceRateLimit {
   lastIssuedAt    BigInt    @default(0)
   suspended       Boolean   @default(false)
   suspendedUntil  DateTime?
+  isComplete      Boolean   @default(false)
   updatedAt       DateTime  @updatedAt
 
   @@map("source_rate_limits")
