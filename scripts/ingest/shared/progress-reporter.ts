@@ -39,8 +39,10 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Regional (Scot/Wales/NI)',        sourceKey: 'regional',               dbCorpora: ['regional'],                               estSections: 160_000,   priority: 2 },
   // Census 3 Jun 2026: Neon EUR+EUDN+EUDR = 133,312; new pipeline at 14,390 (partial)
   { label: 'Retained EU Law',                 sourceKey: 'retained-eu',            dbCorpora: ['retained-eu'],                            estSections: 140_000,   priority: 2 },
-  // Census 3 Jun 2026: API confirmed 374,450 (7,489 pages × 50 judgments)
-  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 374_450,   priority: 2 },
+  // V4 3 Jun 2026: feed reports 7,489 pages but pages 1,500+ are empty.
+  // Binary-search in getTotalJudgments() confirmed ~1,499 usable pages × 50 = ~74,950.
+  // We have 74,730 compiled — effectively complete for currently available content.
+  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 75_000,    priority: 2 },
   { label: 'BAILII (full corpus)',            sourceKey: 'bailii',                 dbCorpora: ['bailii-tribunals','bailii-eat','bailii-privy-ni'], estSections: 2_000_000, priority: 2, blocked: true },
   // hansard: DB uses -a/-b split; aggregated here
   { label: 'Hansard Commons',                sourceKey: 'hansard-commons',         dbCorpora: ['hansard-commons-a','hansard-commons-b'],   estSections: 2_000_000, priority: 2 },
