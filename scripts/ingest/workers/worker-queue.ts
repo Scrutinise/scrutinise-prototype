@@ -363,9 +363,10 @@ async function processHansard(row: QueueRow): Promise<void> {
   if (!houseRaw || !startDate || !endDate) { await markSkipped(row.id); return }
   const house = houseRaw === 'commons' ? 'Commons' : 'Lords'
 
+  let written = 0
   for await (const debate of listHansardDebates(house as 'Commons' | 'Lords', startDate, endDate)) {
     const cKey = hansardKey(debate.date, debate.id)
-    if (await r2Exists(cKey)) continue
+    if (await r2Exists(cKey)) { written++; continue }
 
     const text = await fetchDebateText(debate.id)
     if (!text) continue
@@ -374,9 +375,15 @@ async function processHansard(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId(row.corpus, debate.id, '1')
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    written++
   }
-
-  await markDone(row.id, 'html')
+  // 0 debates means api.parliament.uk/v1/hansard returned 403 or empty — mark failed
+  // so the gap is visible and the row can be retried once the API is accessible.
+  if (written === 0) {
+    await markFailed(row.id, 'Hansard: 0 debates returned — api.parliament.uk/v1/hansard may return 403 from this environment')
+  } else {
+    await markDone(row.id, 'html')
+  }
 }
 
 // ── FCA Handbook ──────────────────────────────────────────────────────────────
@@ -387,9 +394,10 @@ async function processFca(row: QueueRow): Promise<void> {
     ? listFcaSectionsForSourcebook(row.docId.replace('sourcebook:', ''))
     : listFcaSections()
 
+  let written = 0
   for await (const section of gen) {
     const cKey = compiledKey('fca-regulators', section.id, '1')
-    if (await r2Exists(cKey)) continue
+    if (await r2Exists(cKey)) { written++; continue }
 
     const text = await fetchFcaText(section.url)
     if (!text) continue
@@ -398,8 +406,15 @@ async function processFca(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId('fca-regulators', section.id, '1')
     await upsertSection({ id: secId, corpus: 'fca-regulators', sourceUrl: section.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    written++
   }
-  await markDone(row.id)
+  // 0 sections means scraping failed — handbook.fca.org.uk is a JS SPA, static HTML
+  // has no section links. Mark failed so we don't silently hide the gap.
+  if (written === 0) {
+    await markFailed(row.id, 'FCA: 0 sections found — handbook is JS-rendered, HTML scraping ineffective')
+  } else {
+    await markDone(row.id)
+  }
 }
 
 // ── ECHR HUDOC ────────────────────────────────────────────────────────────────
@@ -410,9 +425,10 @@ async function processEchr(row: QueueRow): Promise<void> {
     ? listUkCasesPage(parseInt(row.docId.replace('page:', ''), 10))
     : listUkCases()
 
+  let written = 0
   for await (const c of gen) {
     const cKey = compiledKey('echr-hudoc', c.itemId, '1')
-    if (await r2Exists(cKey)) continue
+    if (await r2Exists(cKey)) { written++; continue }
 
     const text = await fetchEchrText(c.itemId, c.docName)
     if (!text) continue
@@ -421,8 +437,15 @@ async function processEchr(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId('echr-hudoc', c.itemId, '1')
     await upsertSection({ id: secId, corpus: 'echr-hudoc', sourceUrl: c.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    written++
   }
-  await markDone(row.id)
+  // 0 cases means API failure — HUDOC /app/query/results returns 404 as of Jun 2026.
+  // Mark failed so we don't silently hide the gap. Can retry once API is restored.
+  if (written === 0) {
+    await markFailed(row.id, 'ECHR: 0 cases returned — HUDOC query API returning 404 (endpoint changed Jun 2026)')
+  } else {
+    await markDone(row.id)
+  }
 }
 
 // ── EUR-Lex ───────────────────────────────────────────────────────────────────
