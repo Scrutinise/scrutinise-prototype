@@ -1,8 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (afternoon)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (evening)*
 
 ***
+
+## CODE CHANGES — 3 Jun 2026 Sprint: Scheduler fix + throughput email + sprint workflow
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/shared/progress-reporter.ts` | **Fix:** `progressBar()` — clamp `pct` to `[0,100]` and `filled` to `[0,width]` before `String.repeat()`. Eliminates `RangeError: Invalid count value` crash in scheduler email. |
+| `scripts/ingest/shared/progress-reporter.ts` | **Add:** `queryWorkerThroughput()` — queries `ingest_progress_snapshots`, pivots 3 most-recent snapshots per workerLabel, computes sections/hr rate, flags stalled (0 rate for 2+ intervals) vs idle (0 rate, was positive). |
+| `scripts/ingest/shared/progress-reporter.ts` | **Add:** Worker throughput section appended to email body in `sendProgressEmail()`. Shows per-corpus rate, mini bar, ⚠️/ℹ️ flags, total rate, stalled list. |
+| `scrutinise-docs/CLAUDE.md` | **Add:** Sprint brief protocol section under §12 Git Discipline — CCh writes briefs to `docs/SPRINT.md`, CC archives at sprint end. |
+| `docs/SPRINT.md` | **New:** Empty sprint brief template (replaces ad-hoc brief pasting). |
+
+### Diagnostic findings — Part 3
+
+Queue state as of 3 Jun 2026 ~12:30 BST:
+- **120 claimed, 61,829 done, 0 pending.** Queue exhausted for initial backlog.
+- **Self-discovery IS working** — new 2026 SIs and case law pages trickling in. No silent failure.
+- **Root cause of near-zero throughput:** Initial seeded backlog exhausted. Workers now follow live publication rate (handful of new SIs per day, occasional case law pages). Not a bug.
+- **Snapshot doubling at 11:54 BST:** Each workerLabel appears ×2 in that snapshot → SUM = 1,152,952 (double actual 576,476). Likely caused by two scheduler instances running simultaneously during Railway restart. One-time anomaly.
+- **Hansard/ECHR/FCA/Treaties gap confirmed** (Part 5): All have done queue rows but 0 corpus_sections. Content is in R2 but not in DB.
+
+### Part 5 findings (Hansard R2 backfill — next sprint)
+
+R2 key pattern for Hansard: `hansard/{YYYY-MM-DD}/{safe-debateId}/compiled.txt`
+(from `r2-client.ts` `hansardKey()` — list under `hansard/` prefix to enumerate all keys)
+
+Queue rows done → corpus_sections gap:
+- hansard-commons-a: 2,172 done → 0 sections
+- hansard-commons-b: 600 done → 0 sections
+- hansard-lords-a: 2,172 done → 0 sections
+- hansard-lords-b: 600 done → 0 sections
+- **Total Hansard: 5,544 queue rows → 0 corpus_sections**
+- echr-hudoc: 601 done → 0 sections
+- fca-regulators: 37 done → 0 sections
+- uk-treaties: 2 done → 0 sections
+
+FCA/ECHR have no dedicated key functions in `r2-client.ts` — if they used the legacy pipeline, keys would follow the same Hansard-style pattern. Needs investigation before backfill sprint.
+R2 key count for Hansard: estimated ~2M individual debate items across 5,544 monthly chunks (~361/chunk average). Actual count requires paginated R2 list under `hansard/` prefix.
+
+---
 
 ## CODE CHANGES — 3 Jun 2026 Sprint: Self-discovering workers
 
