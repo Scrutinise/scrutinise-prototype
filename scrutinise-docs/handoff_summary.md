@@ -2,15 +2,34 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jun 2026 (evening)*
+*Last updated: 3 Jun 2026 (V6 complete — pending commit)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V5 — Hansard alternative + blocked sources + email state (3 Jun 2026)
-**Latest commits:** `3cd7713` (V5 — all changes committed and pushed)
+**Last sprint:** V6 — EUR-Lex SPARQL fix + LDA Parliament integration (3 Jun 2026)
+**Latest commits:** `3cd7713` (V5) — V6 changes written, commit-all.sh pending execution
+
+### What just happened (3 Jun 2026 V6 — EUR-Lex SPARQL fix + LDA Parliament)
+
+1. **EUR-Lex unblocked via CELLAR SPARQL** — `search.html?format=json` now returns HTML (SPA redesign). Fixed: use `publications.europa.eu/webapi/rdf/sparql` (no auth). Confirmed: 232,988 series-3 CELEX IDs enumerable; `fetchDocumentText` returns full text (GDPR: 350KB). EstSections updated 80k→232k.
+   - **ACTION NEEDED (Charlie):** Reset existing EUR-Lex done rows: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
+
+2. **FCA Handbook confirmed truly blocked** — Every URL (including /sitemap.xml) returns same JS SPA shell. Explicit "JavaScript disabled" message. No rule text in initial HTML. FCA Publications (fca.org.uk/publications) is a viable V7 corpus but requires scraper build.
+
+3. **LDA Parliament integrated** — 5 datasets confirmed, 799K records across 1,602 queue pages:
+   - Commons Oral Questions: 69,852 records (140 pages)
+   - Lords Written Questions: 103,137 records (207 pages)
+   - Commons Written Questions: 618,599 records (1,238 pages)
+   - Commons Divisions: 5,553 records (12 pages)
+   - Lords Divisions: 2,089 records (5 pages)
+   - `lda-parliament.ts` source client built; `processLda()` added to worker-queue.ts; seeder written.
+   - **ACTION NEEDED (Charlie):** Run `seed-lda-queue.ts` after deploy to seed 1,602 queue rows.
+   - **ACTION NEEDED (Charlie):** Run `seed-rate-limits.ts` to register `lda-parliament` rate limit (200ms).
+
+4. **CORPUS_MANIFEST updated** — EUR-Lex unblocked (blocked→not blocked), estSections 80k→232k. 5 new LDA entries added at correct priorities. FCA comment updated with V6 confirmation.
 
 ### What just happened (3 Jun 2026 V5 — Hansard alternative + blocked sources)
 
@@ -77,21 +96,31 @@
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-1. **Redeploy `ingest-scheduler` on Railway** — kills duplicate deployment causing alternating email formats. Settings → Deployments → Redeploy.
-2. **Register TWFY API key** at theyworkforyou.com/api/key (free for civic use). Add `TWFY_API_KEY` to Railway env vars for all workers + scheduler.
-3. **Run `seed-twfy-queue.ts`** after key is added — seeds ~4,700 monthly Hansard rows for Commons (1988–), Lords (1988–), Westminster Hall (1999–).
-4. **Review data access request drafts** in `docs/data-access-requests/` — BAILII and Parliament Hansard bulk data.
+### V6 (new)
+1. **Run `commit-all.sh`** — commits and pushes all V6 changes. Railway will auto-redeploy.
+2. **Reset EUR-Lex queue rows** after deploy: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
+3. **Run `seed-lda-queue.ts`** after deploy — seeds 1,602 LDA Parliament queue rows: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts`
+4. **Run `seed-rate-limits.ts`** — adds `lda-parliament` rate limit: same tsx command, `scripts/ingest/seed-rate-limits.ts`
+
+### V5 (still pending)
+5. **Redeploy `ingest-scheduler` on Railway** — kills duplicate deployment causing alternating email formats. Settings → Deployments → Redeploy.
+6. **Register TWFY API key** at theyworkforyou.com/api/key (free for civic use). Add `TWFY_API_KEY` to Railway env vars for all workers + scheduler.
+7. **Run `seed-twfy-queue.ts`** after key is added — seeds ~4,700 monthly Hansard rows for Commons (1988–), Lords (1988–), Westminster Hall (1999–).
+8. **Review data access request drafts** in `docs/data-access-requests/` — BAILII and Parliament Hansard bulk data.
 
 ---
 
-## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V5)
+## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V6)
 
 - **20 Railway workers** ingesting via `worker-queue.ts` — queue-claim model with `FOR UPDATE SKIP LOCKED`
 - **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **Two instances currently running — redeploy needed.**
 - **Self-discovery** working — detects under-seeded corpora and triggers full historical scan
 - **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total
 - **Hansard:** TWFY client built (needs API key). Parliament API (api.parliament.uk) returns 403 from Railway.
-- **FCA, ECHR, EUR-Lex:** All blocked (API changes). Marked `blocked: true` in manifest.
+- **LDA Parliament:** 5 datasets integrated (~799K records, 1,602 queue pages). Seeder needs running after deploy.
+- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. ~232K documents available. Queue rows need reset to pending.
+- **FCA Handbook:** Confirmed blocked (pure JS SPA). FCA Publications (fca.org.uk) viable for V7.
+- **ECHR:** Still blocked (404 endpoint change, no alternative found).
 - **TNA Caselaw:** Complete (~74,950 available judgments all ingested).
 - **Active work:** pre-1963 UKPGA + SSI + WSI queue rows being processed.
 

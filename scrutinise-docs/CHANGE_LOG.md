@@ -1,8 +1,47 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (end of day — V5 complete, all changes committed)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (V6 complete)*
 
 ***
+
+## CODE CHANGES — 3 Jun 2026 V6: EUR-Lex SPARQL fix + LDA Parliament integration
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/eurlex.ts` | **Fix parser — CELLAR SPARQL.** Replaces broken `search.html?format=json` (now returns HTML SPA). Uses `publications.europa.eu/webapi/rdf/sparql` — no auth required. SPARQL query enumerates all ~232,988 series-3 CELEX IDs via LIMIT/OFFSET pagination (500/page). `fetchDocumentText` unchanged — confirmed working (GDPR: 350KB text). Remove `blocked: true` from manifest. |
+| `scripts/ingest/sources/lda-parliament.ts` | **New.** `lda.data.parliament.uk` source client. `fetchLdaPage(slug, page, pageSize=500)` returns `{items, totalResults}`. `ldaItemToText()` handles questions (oral/written) and divisions. No auth required. |
+| `scripts/ingest/seed-lda-queue.ts` | **New.** Seeds queue rows for 5 confirmed LDA datasets: commonsoralquestions (140 pages), lordswrittenquestions (207 pages), commonswrittenquestions (1,238 pages), commonsdivisions (12 pages), lordsdivisions (5 pages). Run once after deploy. |
+| `scripts/ingest/seed-rate-limits.ts` | **Add `lda-parliament` rate limit:** `intervalMs: 200`. |
+| `scripts/ingest/shared/progress-reporter.ts` | **CORPUS_MANIFEST:** Unblock EUR-Lex (estSections 80k→232k). Update FCA comment (confirmed JS-only SPA — FCA Publications noted as V7 target). Add 5 LDA entries (Commons Oral Q: 70k, Lords Written Q: 103k, Commons Written Q: 619k, Commons Divisions: 5,553, Lords Divisions: 2,089). Add `lda-parliament` to THEORETICAL_SECTIONS_PER_HOUR + sourceType derivation. |
+| `scripts/ingest/workers/worker-queue.ts` | **Add `processLda()`.** Derives slug from `row.corpus` (strips `lda-` prefix). Fetches LDA page, stores each item as R2 section + corpus_sections row. Add `case 'lda-parliament'` to router. Add LDA corpus→sourceType mappings for completion marking. |
+| `scripts/ingest/shared/discovery.ts` | **Add LDA corpora** to `SINGLE_PASS_CORPORA` (all pages seeded upfront) and `DISCOVERY_CORPUS_ORDER` (priority 2 for questions, priority 3 for divisions). |
+
+### V6 diagnostic findings
+
+**EUR-Lex (Part 1):**
+- `search.html?format=json` → HTML SPA shell (200 OK but JS-rendered, no results in initial HTML)
+- REST API (`/api/eurlex/rest/v1/EurlexSearchResult`) → 404
+- **CELLAR SPARQL** (`publications.europa.eu/webapi/rdf/sparql`) → ✅ Working. No auth. COUNT query confirms 232,988 series-3 CELEX IDs. SELECT without ORDER BY returns IDs correctly (ORDER BY on date field caused empty results). `fetchDocumentText(celexId)` confirmed: GDPR (32016R0679) returns 350KB clean text.
+- **Fix implemented.** EUR-Lex unblocked.
+- **Action required (Charlie):** `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';` — reset existing done rows to pending so workers retry with new API.
+
+**FCA (Part 2):**
+- `/sitemap.xml`, `/robots.txt`, `/handbook/COBS/1/1.html` all return identical SPA HTML shell (`<title>FCA Handbook - Home</title>`)
+- Extracted text: 2,884 chars — "JavaScript is disabled in your browser. This application requires JavaScript to run properly."
+- No COBS text, no rule numbers — `\d+\.\d+\.\d+` matches in JS bundle were version strings (e.g. `17.3.12`, `94.94.94`)
+- **FCA Handbook: confirmed JS-only. Remains blocked.**
+- FCA Publications (`fca.org.uk/publications`) returns 200 HTML with `/publications/search-results?...` links (Drupal CMS). Viable for V7 — no PDF links in listing HTML, needs scraper design.
+
+**LDA Parliament (Part 3):**
+- Confirmed working: `commonsoralquestions` (69,852), `lordswrittenquestions` (103,137), `commonswrittenquestions` (618,599), `commonsdivisions` (5,553), `lordsdivisions` (2,089)
+- Not available (404): hansardcommons, hansardlords, committees, billsamendments
+- `hansardcommonsdocuments` returns 200 but 0 records
+- Item structure inspected: questions have `questionText`, `AnsweringBody`, `dateTabled`; divisions have `title`, `date`, `uin`
+- **All 5 working datasets integrated.** Total: ~799K records across 1,602 pages.
+
+---
 
 ## CODE CHANGES — 3 Jun 2026 V5: Hansard alternative + blocked source fixes + email state
 
