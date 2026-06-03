@@ -219,33 +219,30 @@ const TNA_CORPUS_META: Record<string, { types: string[]; yearMin: number; yearMa
   'retained-eu':           { types: ['eur','eudn','eudr'], yearMin: 1960, yearMax: 2024, sourceType: 'tna-legislation', priority: 2 },
 }
 
-// Threshold below which a year is considered under-seeded and worth re-checking.
-// SI years 2015–2026 were seeded with <350/yr; TNA typically has 500–1,200/yr.
-const UNDER_SEEDED_THRESHOLD = 400
-
 async function discoverTnaLegislation(corpus: string): Promise<DiscoveredRow[]> {
   const meta = TNA_CORPUS_META[corpus]
   if (!meta) return []
 
   const currentYear = new Date().getFullYear()
+
+  // Historical-only corpora (yearMax already in the past) are fully seeded.
+  // Nothing new to discover inline — return [] so the worker moves on.
+  if (meta.yearMax < currentYear - 1) return []
+
+  // Ongoing corpora only: check the last 2 years for newly published acts.
+  //
+  // CRITICAL — never do a full historical scan inline. listActIds makes one HTTP
+  // request per year: 'ukpga' from yearMin=1267 is 733 sequential TNA calls and
+  // will hit Railway's container timeout before finishing, causing a crash loop.
+  // Historical backfill must use reseed-si-gaps.ts run separately outside Railway.
+  const checkFrom = Math.max(meta.yearMin, currentYear - 1)
+
+  // If the queue is genuinely empty for this corpus, warn but do not attempt a
+  // full-history inline scan — that is what caused the crash loop.
   const existing = await getAllDocIdsForCorpus(corpus)
-
-  // Decide check range: fast (recent 2 years) vs full historical scan.
-  // Full scan triggers when queue appears under-seeded for older years.
-  // We detect this by counting existing rows in the year range yearMin..currentYear-2.
-  // If count < (yearSpan × UNDER_SEEDED_THRESHOLD), do a full scan.
-  const historicalYears = Math.max(0, currentYear - 2 - meta.yearMin)
-  const historicalRows = [...existing].filter(id => {
-    const m = id.match(/\/(\d{4})\//)
-    if (!m) return false
-    const y = parseInt(m[1])
-    return y >= meta.yearMin && y <= currentYear - 2
-  }).length
-  const needsFullScan = historicalRows < historicalYears * UNDER_SEEDED_THRESHOLD
-
-  const checkFrom = needsFullScan ? meta.yearMin : Math.max(meta.yearMin, currentYear - 1)
-  if (needsFullScan) {
-    console.log(`[discovery] ${corpus}: under-seeded (${historicalRows} rows for ${historicalYears} yrs) — full scan from ${checkFrom}`)
+  if (existing.size === 0) {
+    console.warn(`[discovery] ${corpus}: queue is empty — run reseed-si-gaps.ts to seed historical rows`)
+    return []
   }
 
   try {
