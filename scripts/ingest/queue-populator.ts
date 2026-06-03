@@ -364,10 +364,14 @@ async function populateWrittenStatements(): Promise<number> {
 
 async function populateNewSingleRowSources(): Promise<void> {
   const rows: QueueRowInput[] = [
-    { id: 'hmrc-tiins:__index',  corpus: 'hmrc-tiins',  docId: '__index', sourceType: 'gov-uk',    priority: 2 },
-    { id: 'ots-reports:__index', corpus: 'ots-reports', docId: '__index', sourceType: 'gov-uk',    priority: 3 },
-    { id: 'scotlawcom:__index',  corpus: 'scotlawcom',  docId: '__index', sourceType: 'scotlawcom',priority: 2 },
-    { id: 'nilawcom:__index',    corpus: 'nilawcom',    docId: '__index', sourceType: 'nilawcom',  priority: 3 },
+    { id: 'hmrc-tiins:__index',      corpus: 'hmrc-tiins',      docId: '__index', sourceType: 'gov-uk',           priority: 2 },
+    { id: 'ots-reports:__index',     corpus: 'ots-reports',     docId: '__index', sourceType: 'gov-uk',           priority: 3 },
+    { id: 'scotlawcom:__index',      corpus: 'scotlawcom',      docId: '__index', sourceType: 'scotlawcom',       priority: 2 },
+    { id: 'nilawcom:__index',        corpus: 'nilawcom',        docId: '__index', sourceType: 'nilawcom',         priority: 3 },
+    { id: 'nao-reports:__index',     corpus: 'nao-reports',     docId: '__index', sourceType: 'gov-uk',           priority: 3 },
+    { id: 'fca-publications:__index',corpus: 'fca-publications',docId: '__index', sourceType: 'fca-publications', priority: 3 },
+    { id: 'sentencing-council:__index',corpus:'sentencing-council',docId:'__index',sourceType:'gov-uk',           priority: 3 },
+    { id: 'college-of-policing:__index',corpus:'college-of-policing',docId:'__index',sourceType:'gov-uk',        priority: 3 },
   ]
   await bulkUpsertQueueRows(rows)
   console.log(`[populator] new single-row sources: ${rows.length} rows inserted`)

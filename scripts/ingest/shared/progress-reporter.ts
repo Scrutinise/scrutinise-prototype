@@ -61,7 +61,7 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   // FCA Publications (fca.org.uk/publications, Drupal/PDF) is the viable alternative — V8 build.
   { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
   // V7: placeholder entry so it shows "not started" in email — actual scraper build is V8 work.
-  { label: 'FCA Publications (PDFs)',         sourceKey: 'fca-publications',        dbCorpora: ['fca-publications'],                       estSections: 20_000,    priority: 3 },
+  { label: 'FCA Publications',                sourceKey: 'fca-publications',        dbCorpora: ['fca-publications'],                       estSections: 20_000,    priority: 3 },
   // V6 3 Jun 2026: lda.data.parliament.uk — no auth, JSON, 500 records/page. Confirmed working.
   // Actual totals from V6 diagnostic: 69,852 / 103,137 / 618,599 records respectively.
   { label: 'Commons Oral Questions (LDA)',    sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsoralquestions'],               estSections: 70_000,    priority: 2 },
@@ -89,14 +89,14 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
   { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
   { label: 'White / Green Papers',            sourceKey: 'command-papers',         dbCorpora: [],                                         estSections: 20_000,    priority: 3 },
-  { label: 'Sentencing Council',              sourceKey: 'sentencing-council',     dbCorpora: [],                                         estSections: 2_000,     priority: 3 },
-  { label: 'College of Policing APP',         sourceKey: 'college-of-policing',    dbCorpora: [],                                         estSections: 8_000,     priority: 3 },
+  { label: 'Sentencing Council',              sourceKey: 'sentencing-council',     dbCorpora: ['sentencing-council'],                     estSections: 2_000,     priority: 3 },
+  { label: 'College of Policing APP',         sourceKey: 'college-of-policing',    dbCorpora: ['college-of-policing'],                    estSections: 8_000,     priority: 3 },
   { label: 'PACE Codes A–H',                 sourceKey: 'pace-codes',             dbCorpora: [],                                         estSections: 800,       priority: 3 },
   { label: 'Civil Service / Min. Codes',      sourceKey: 'civil-service-codes',    dbCorpora: [],                                         estSections: 500,       priority: 3 },
   { label: 'Treasury Green/Magenta Book',     sourceKey: 'treasury-books',         dbCorpora: [],                                         estSections: 500,       priority: 3 },
   { label: 'Erskine May + Standing Orders',   sourceKey: 'erskine-may',            dbCorpora: [],                                         estSections: 3_000,     priority: 3 },
   { label: 'Public Consultations',            sourceKey: 'consultations',          dbCorpora: [],                                         estSections: 50_000,    priority: 3 },
-  { label: 'NAO Reports',                     sourceKey: 'nao-reports',            dbCorpora: [],                                         estSections: 10_000,    priority: 3 },
+  { label: 'NAO Reports',                     sourceKey: 'nao-reports',            dbCorpora: ['nao-reports'],                            estSections: 10_000,    priority: 3 },
   // Census 3 Jun 2026: compiled 497; was underestimated
   { label: 'OTS Reports',                     sourceKey: 'ots-reports',            dbCorpora: ['ots-reports'],                            estSections: 500,       priority: 3 },
   { label: 'NI Law Commission (historic)',    sourceKey: 'nilawcom',               dbCorpora: ['nilawcom'],                               estSections: 50,        priority: 3 },
@@ -130,6 +130,36 @@ function getPool(): Pool {
     })
   }
   return _pool
+}
+
+// ── Scheduler lock — prevents duplicate email sends when two instances overlap ─
+// Uses a random per-startup ID (not process.pid) because Railway containers all start as PID 1.
+
+const SCHEDULER_INSTANCE_ID = Math.random().toString(36).slice(2)
+
+export async function acquireSchedulerLock(): Promise<boolean> {
+  const pool = getPool()
+  try {
+    await pool.query(`
+      INSERT INTO scheduler_lock (id, locked_at, process_id)
+      VALUES (1, NOW(), $1)
+      ON CONFLICT (id) DO UPDATE
+        SET locked_at = NOW(), process_id = $1
+        WHERE scheduler_lock.locked_at < NOW() - INTERVAL '50 minutes'
+    `, [SCHEDULER_INSTANCE_ID])
+    const res = await pool.query<{ process_id: string }>(
+      'SELECT process_id FROM scheduler_lock WHERE id = 1'
+    )
+    return res.rows[0]?.process_id === SCHEDULER_INSTANCE_ID
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('does not exist') || msg.includes('relation "scheduler_lock"')) {
+      console.warn('[scheduler] scheduler_lock table not yet created — running without lock')
+      return true
+    }
+    console.warn('[scheduler] lock acquisition failed:', msg)
+    return false
+  }
 }
 
 // ── Per-corpus compiled section counts (Railway corpus_sections) ──────────────

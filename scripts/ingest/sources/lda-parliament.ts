@@ -13,23 +13,35 @@ export interface LdaItem {
   sourceUrl: string
 }
 
+// Transient HTTP codes that warrant retry with backoff (Cloudflare/origin timeout/overload)
+const TRANSIENT_STATUS = new Set([524, 502, 503, 504])
+
 export async function fetchLdaPage(
   slug: string,
   page: number,
-  pageSize = 500
+  pageSize = 500,
+  maxRetries = 3,
 ): Promise<{ items: LdaItem[]; totalResults: number }> {
   const url =
     `https://lda.data.parliament.uk/${slug}.json?_pageSize=${pageSize}&_page=${page}`
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' },
-  })
-  if (!res.ok) throw new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
-  const data = await res.json()
-  const rawItems: unknown[] = data.result?.items ?? []
-  return {
-    items: rawItems.map(item => ldaRawToItem(item as Record<string, unknown>, slug)),
-    totalResults: (data.result?.totalResults as number) ?? 0,
+
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 3000 * attempt))
+    const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' } })
+    if (TRANSIENT_STATUS.has(res.status)) {
+      lastError = new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
+      continue
+    }
+    if (!res.ok) throw new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
+    const data = await res.json()
+    const rawItems: unknown[] = data.result?.items ?? []
+    return {
+      items: rawItems.map(item => ldaRawToItem(item as Record<string, unknown>, slug)),
+      totalResults: (data.result?.totalResults as number) ?? 0,
+    }
   }
+  throw lastError ?? new Error(`LDA ${slug} page ${page}: all retries exhausted`)
 }
 
 function ldaRawToItem(item: Record<string, unknown>, slug: string): LdaItem {

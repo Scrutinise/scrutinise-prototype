@@ -13,6 +13,7 @@ import {
   queryCorpusCounts,
   queryNeonCount,
   saveProgressSnapshot,
+  acquireSchedulerLock,
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
 import { clearExpiredSuspensions } from './shared/queue-client'
@@ -21,6 +22,12 @@ const INTERVAL_HOURS = parseInt(process.env.SCHEDULER_INTERVAL_HOURS ?? '1', 10)
 const INTERVAL_MS = INTERVAL_HOURS * 60 * 60 * 1000
 
 async function run(): Promise<void> {
+  const hasLock = await acquireSchedulerLock()
+  if (!hasLock) {
+    console.log('[scheduler] another instance holds the lock — skipping this run')
+    return
+  }
+
   const capturedAt = new Date()
   console.log('[scheduler] querying corpus counts + Neon')
   const [corpusCounts, neonCount] = await Promise.all([

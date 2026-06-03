@@ -63,7 +63,45 @@ export async function* listHmrcManuals(): AsyncGenerator<GovDocument> {
 }
 
 export async function* listNaoReports(): AsyncGenerator<GovDocument> {
-  yield* searchGovUk('site:nao.org.uk report', 'nao-reports', 2000)
+  // GOV.UK search index includes most NAO reports; also try direct NAO Atom feed
+  yield* searchGovUkByOrg('national-audit-office', 'nao-reports', 3000)
+}
+
+async function* searchGovUkByOrg(org: string, corpus: string, count = 1000): AsyncGenerator<GovDocument> {
+  let start = 0
+  const pageSize = 50
+  while (start < count) {
+    const url = `${GOV_SEARCH}?organisations[]=${encodeURIComponent(org)}&count=${pageSize}&start=${start}`
+    const data = await fetchJson(url) as {
+      results?: Array<{ title?: string; link?: string; _id?: string }>
+    } | null
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) break
+    for (const r of data.results) {
+      if (!r.link) continue
+      yield {
+        id: (r._id ?? r.link).replace(/[^a-z0-9-]/gi, '-'),
+        title: r.title ?? '',
+        url: r.link.startsWith('http') ? r.link : `https://www.gov.uk${r.link}`,
+        corpus,
+      }
+    }
+    if (data.results.length < pageSize) break
+    start += pageSize
+  }
+}
+
+export async function* listFcaPublications(): AsyncGenerator<GovDocument> {
+  yield* searchGovUkByOrg('financial-conduct-authority', 'fca-publications', 3000)
+}
+
+export async function* listSentencingCouncilGuidelines(): AsyncGenerator<GovDocument> {
+  // Sentencing guidelines via GOV.UK (sentencing-council org) and direct site listing
+  yield* searchGovUkByOrg('sentencing-council', 'sentencing-council', 2000)
+}
+
+export async function* listCollegeOfPolicing(): AsyncGenerator<GovDocument> {
+  // College of Policing Authorised Professional Practice via gov.uk search
+  yield* searchGovUk('college of policing authorised professional practice', 'college-of-policing', 2000)
 }
 
 export async function* listHoCLReports(): AsyncGenerator<GovDocument> {

@@ -48,6 +48,7 @@ import {
   listHmrcManuals, listNaoReports, listHoCLReports,
   listExplanatoryNotes, listImpactAssessments, listConsultations,
   listHmrcTiins, listOtsReports,
+  listFcaPublications, listSentencingCouncilGuidelines, listCollegeOfPolicing,
   fetchDocumentText as fetchGovText,
 } from '../sources/gov-scraper'
 
@@ -92,6 +93,8 @@ async function main(): Promise<void> {
                 'echr-hudoc': 'echr', 'eur-lex': 'eurlex',
                 'fca-regulators': 'fca',
                 'hmrc-codes-guidance': 'hmrc', 'hmrc-tiins': 'gov-uk', 'ots-reports': 'gov-uk',
+                'nao-reports': 'gov-uk', 'fca-publications': 'fca-publications',
+                'sentencing-council': 'gov-uk', 'college-of-policing': 'gov-uk',
                 'scotlawcom': 'scotlawcom', 'nilawcom': 'nilawcom',
                 'oecd': 'oecd', 'uk-treaties': 'treaties',
                 'lda-commonsoralquestions': 'lda-parliament',
@@ -157,9 +160,10 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'eurlex':          return processEurLex(row)
     case 'lda-parliament':  return processLda(row)
     case 'hmrc':            return processHmrc(row)
-    case 'treaties':        return processTreaties(row)
-    case 'oecd':            return processOecd(row)
-    case 'gov-uk':          return processGovUk(row)
+    case 'treaties':          return processTreaties(row)
+    case 'oecd':              return processOecd(row)
+    case 'gov-uk':            return processGovUk(row)
+    case 'fca-publications':  return processGovUk(row)
     case 'scotlawcom':      return processLawCommission(row)
     case 'nilawcom':        return processLawCommission(row)
     default:
@@ -617,7 +621,15 @@ async function processOecd(row: QueueRow): Promise<void> {
 // sourceType = 'gov-uk', corpus drives which listing function to use.
 
 async function processGovUk(row: QueueRow): Promise<void> {
-  const gen = row.corpus === 'ots-reports' ? listOtsReports() : listHmrcTiins()
+  let gen
+  switch (row.corpus) {
+    case 'ots-reports':         gen = listOtsReports(); break
+    case 'nao-reports':         gen = listNaoReports(); break
+    case 'fca-publications':    gen = listFcaPublications(); break
+    case 'sentencing-council':  gen = listSentencingCouncilGuidelines(); break
+    case 'college-of-policing': gen = listCollegeOfPolicing(); break
+    default:                    gen = listHmrcTiins()
+  }
 
   for await (const doc of gen) {
     const cKey = compiledKey(row.corpus, doc.id, '1')

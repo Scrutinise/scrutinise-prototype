@@ -1861,3 +1861,13 @@ model IngestProgressSnapshot {
   @@index([workerId])
   @@map("ingest_progress_snapshots")
 }
+
+// Single-row mutex — prevents duplicate scheduler runs when two instances are active.
+// Acquired at the start of each run(); only the holder sends the email.
+model SchedulerLock {
+  id        Int      @id @default(1)
+  lockedAt  DateTime @db.Timestamptz(6)
+  processId String
+
+  @@map("scheduler_lock")
+}
