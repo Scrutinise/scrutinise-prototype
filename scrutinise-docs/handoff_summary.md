@@ -9,8 +9,20 @@
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** Scheduler fix + throughput email + sprint workflow (3 Jun 2026 evening)
-**Latest commits:** `c5c7fee` (docs update, 3 Jun afternoon) — code changes from this session not yet committed
+**Last sprint:** Corpus census (3 Jun 2026 late evening)
+**Latest commits:** `6df88bf` (scheduler fix sprint) — code changes from this session not yet committed
+
+### What just happened (3 Jun 2026 late evening — corpus census sprint)
+
+1. **Census scripts created** (`scripts/ingest/census/`): neon-counts.ts, railway-counts.ts, tna-counts.ts, source-counts.ts. Reusable — re-run quarterly.
+
+2. **Census report written** (`docs/corpus-census.md`): Full findings with Neon vs. new pipeline comparison, gap analysis, source API counts.
+
+3. **CORPUS_MANIFEST estSections updated** (`progress-reporter.ts`): Revised 8 estimates based on confirmed data. Most significant: SI-2010+ 300k→120k, Written Statements 50k→17,487. Total corpus estimate revised from ~7M to ~5.3M sections.
+
+4. **Key action items identified:**
+   - **SI-2010plus 2015–2026 reseed:** ~5k–8k missing SIs (50k–80k sections). High priority.
+   - **Hansard/ECHR/FCA R2 backfill:** CCh to write backfill sprint brief.
 
 ### What just happened (3 Jun 2026 evening sprint)
 

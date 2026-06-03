@@ -1,6 +1,31 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (evening)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (late evening)*
+
+***
+
+## CODE CHANGES — 3 Jun 2026 Sprint 1: Corpus census
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/census/neon-counts.ts` | **New.** Queries Neon DB for LegislationItem and LegislationSection counts by type. |
+| `scripts/ingest/census/railway-counts.ts` | **New.** Queries Railway corpus_sections and ingest_queue for new pipeline counts and SI/UKPGA year coverage. |
+| `scripts/ingest/census/tna-counts.ts` | **New.** Queries TNA Atom feeds for authoritative doc counts. (Feeds were unresponsive from CC sandbox — Neon counts used as proxy.) |
+| `scripts/ingest/census/source-counts.ts` | **New.** Queries Parliament APIs, TNA caselaw, ECHR, FCA for non-legislation source counts. |
+| `docs/corpus-census.md` | **New.** Full census report with all findings, gap analysis, updated estimates. |
+| `scripts/ingest/shared/progress-reporter.ts` | **Update CORPUS_MANIFEST estSections:** SI-2010+ 300k→120k, SI-pre-2010 300k→180k, Primary pre-2000 80k→70k, Retained EU 80k→140k, TNA Case Law 374,250→374,450, Written Answers 500k→537,593, Written Statements 50k→17,487, HMRC TIINs 2k→800, ScotLawCom 500→350, OTS Reports 200→500, OECD 10k→500, ECHR 30k→30,050. |
+
+### Key census findings
+
+- **Total corpus estimate revised:** ~5.3M sections (was ~7M). Major revisions: SI-2010+ and Written Statements were overestimated; Retained EU was underestimated.
+- **SI-2010plus queue gap:** 2015–2026 under-seeded. ~5,000–8,000 SIs missing from queue → ~50,000–80,000 sections unprocessed. **Action: reseed si-2010plus for 2015–2026.**
+- **UKPGA Neon gap:** 7,427 Primary Acts have 0 sections in Neon (63% of all UKPGA items). Not covered by new pipeline (starts at 1963). Pre-1963 acts remain without content.
+- **Hansard/ECHR/FCA R2 backfill confirmed** (from previous sprint diagnostics).
+- **Current new pipeline coverage:** 585,576 / ~5.3M = ~11% (accurate, not the misleadingly-high prior estimate).
+
+---
 
 ***
 
