@@ -298,13 +298,68 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
 // ── Format helpers ────────────────────────────────────────────────────────────
 
 function progressBar(pct: number, width = 20): string {
-  const filled = Math.round((pct / 100) * width)
+  const clampedPct = Math.min(100, Math.max(0, pct))
+  const filled = Math.min(width, Math.max(0, Math.round((clampedPct / 100) * width)))
   return '█'.repeat(filled) + '░'.repeat(width - filled)
 }
 
 function pctStr(compiled: number, estimated: number): string {
   if (estimated === 0) return '  n/a'
   return ((compiled / estimated) * 100).toFixed(1).padStart(5) + '%'
+}
+
+// ── Worker throughput from snapshots ─────────────────────────────────────────
+
+interface WorkerThroughputRow {
+  label: string
+  ratePerHour: number
+  stalled: boolean
+  idle: boolean
+}
+
+async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
+  const pool = getPool()
+  // Pivot the 3 most-recent snapshots per workerLabel into a single row each
+  const res = await pool.query<{
+    workerLabel: string
+    compiled_t1: number | null
+    at_t1: Date | null
+    compiled_t2: number | null
+    at_t2: Date | null
+    compiled_t3: number | null
+  }>(`
+    WITH ranked AS (
+      SELECT "workerLabel", "capturedAt", "sectionsCompiled",
+             ROW_NUMBER() OVER (PARTITION BY "workerLabel" ORDER BY "capturedAt" DESC) AS rn
+      FROM ingest_progress_snapshots
+    )
+    SELECT
+      "workerLabel",
+      MAX(CASE WHEN rn = 1 THEN "sectionsCompiled" END) AS compiled_t1,
+      MAX(CASE WHEN rn = 1 THEN "capturedAt" END) AS at_t1,
+      MAX(CASE WHEN rn = 2 THEN "sectionsCompiled" END) AS compiled_t2,
+      MAX(CASE WHEN rn = 2 THEN "capturedAt" END) AS at_t2,
+      MAX(CASE WHEN rn = 3 THEN "sectionsCompiled" END) AS compiled_t3
+    FROM ranked
+    WHERE rn <= 3
+    GROUP BY "workerLabel"
+    ORDER BY "workerLabel"
+  `)
+
+  return res.rows.map(row => {
+    const c1 = Number(row.compiled_t1 ?? 0)
+    const c2 = Number(row.compiled_t2 ?? null)
+    const c3 = Number(row.compiled_t3 ?? null)
+    const t1 = row.at_t1 ? new Date(row.at_t1).getTime() : 0
+    const t2 = row.at_t2 ? new Date(row.at_t2).getTime() : 0
+    const deltaMs = t1 > 0 && t2 > 0 ? t1 - t2 : 0
+    const deltaCompiled = row.compiled_t2 != null ? c1 - c2 : 0
+    const ratePerHour = deltaMs > 0 ? Math.max(0, Math.round(deltaCompiled / (deltaMs / 3_600_000))) : 0
+    const prevDelta = row.compiled_t3 != null && row.compiled_t2 != null ? c2 - c3 : undefined
+    const stalled = ratePerHour === 0 && prevDelta !== undefined && prevDelta === 0
+    const idle = ratePerHour === 0 && !stalled
+    return { label: row.workerLabel, ratePerHour, stalled, idle }
+  }).sort((a, b) => b.ratePerHour - a.ratePerHour)
 }
 
 // ── Unified progress email ────────────────────────────────────────────────────
@@ -428,6 +483,33 @@ export async function sendProgressEmail(
       parts.push(`  ${row.sourceUrl ?? '(no url)'}`)
       if (row.xmlPreview) parts.push(`    ${row.xmlPreview.replace(/\n/g, ' ')}`)
     }
+  }
+
+  // ── Worker throughput ───────────────────────────────────────────────────────
+  try {
+    const workerRows = await queryWorkerThroughput()
+    if (workerRows.length > 0) {
+      const totalRate = workerRows.reduce((s, w) => s + w.ratePerHour, 0)
+      const stalledLabels = workerRows.filter(w => w.stalled).map(w => w.label)
+      const maxRate = Math.max(...workerRows.map(w => w.ratePerHour), 1)
+      parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      parts.push('WORKER THROUGHPUT (last 1h)')
+      parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      for (const w of workerRows) {
+        const label = w.label.slice(0, 34).padEnd(34)
+        const rateStr = w.ratePerHour.toLocaleString().padStart(7) + ' /hr'
+        const bar = progressBar((w.ratePerHour / maxRate) * 100, 8)
+        const flag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
+        parts.push(`  ${label}  ${rateStr}  ${bar}${flag}`)
+      }
+      parts.push('')
+      parts.push(`  Total: ${totalRate.toLocaleString()} /hr across ${workerRows.length} workers`)
+      if (stalledLabels.length > 0) {
+        parts.push(`  Stalled: ${stalledLabels.join(', ')}`)
+      }
+    }
+  } catch (err) {
+    parts.push('', `[Worker throughput unavailable: ${err}]`)
   }
 
   const body = parts.join('\n')
