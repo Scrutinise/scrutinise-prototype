@@ -1,5 +1,1 @@
-{
-  "deploy": {
-    "startCommand": "npm run worker"
-  }
-}
+{}
