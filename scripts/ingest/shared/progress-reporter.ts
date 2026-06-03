@@ -318,20 +318,39 @@ function pctStr(compiled: number, estimated: number): string {
   return ((compiled / estimated) * 100).toFixed(1).padStart(5) + '%'
 }
 
+// ── Theoretical throughput ceilings per source ───────────────────────────────
+// (3_600_000 ms/hr ÷ intervalMs) × avgSectionsPerRequest — before sharing the
+// token bucket across workers on the same source.
+const THEORETICAL_SECTIONS_PER_HOUR: Record<string, number> = {
+  'tna-legislation': Math.floor((3_600_000 / 200) * 5),   // 90,000/hr
+  'tna-caselaw':     Math.floor((3_600_000 / 200) * 3),   // 54,000/hr
+  'hansard':         Math.floor((3_600_000 / 500) * 20),  // 144,000/hr
+  'fca':             Math.floor((3_600_000 / 300) * 10),  // 120,000/hr
+  'hmrc':            Math.floor((3_600_000 / 300) * 8),   //  96,000/hr
+  'echr':            Math.floor((3_600_000 / 500) * 50),  // 360,000/hr
+  'eurlex':          Math.floor((3_600_000 / 500) * 10),  //  72,000/hr
+  'default':         1_000,
+}
+
 // ── Worker throughput from snapshots ─────────────────────────────────────────
 
 interface WorkerThroughputRow {
   label: string
+  sourceKey: string
   ratePerHour: number
   stalled: boolean
   idle: boolean
+  efficiencyPct: number    // actual / fair-share-theoretical × 100
+  efficiencyFlag: '' | '⚡low' | '🔴critical'
 }
 
 async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
   const pool = getPool()
-  // Pivot the 3 most-recent snapshots per workerLabel into a single row each
+  // Pivot the 3 most-recent snapshots per workerLabel into a single row each.
+  // Also grab sourceKey from the most-recent snapshot for efficiency lookup.
   const res = await pool.query<{
     workerLabel: string
+    sourceKey: string
     compiled_t1: number | null
     at_t1: Date | null
     compiled_t2: number | null
@@ -339,12 +358,13 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
     compiled_t3: number | null
   }>(`
     WITH ranked AS (
-      SELECT "workerLabel", "capturedAt", "sectionsCompiled",
+      SELECT "workerLabel", "sourceKey", "capturedAt", "sectionsCompiled",
              ROW_NUMBER() OVER (PARTITION BY "workerLabel" ORDER BY "capturedAt" DESC) AS rn
       FROM ingest_progress_snapshots
     )
     SELECT
       "workerLabel",
+      MAX(CASE WHEN rn = 1 THEN "sourceKey" END) AS "sourceKey",
       MAX(CASE WHEN rn = 1 THEN "sectionsCompiled" END) AS compiled_t1,
       MAX(CASE WHEN rn = 1 THEN "capturedAt" END) AS at_t1,
       MAX(CASE WHEN rn = 2 THEN "sectionsCompiled" END) AS compiled_t2,
@@ -356,19 +376,48 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
     ORDER BY "workerLabel"
   `)
 
-  return res.rows.map(row => {
+  // First pass: compute rates so we can count workers per source for fair-share calc
+  const rawRows = res.rows.map(row => {
     const c1 = Number(row.compiled_t1 ?? 0)
-    const c2 = Number(row.compiled_t2 ?? null)
-    const c3 = Number(row.compiled_t3 ?? null)
+    const c2 = row.compiled_t2 != null ? Number(row.compiled_t2) : null
+    const c3 = row.compiled_t3 != null ? Number(row.compiled_t3) : null
     const t1 = row.at_t1 ? new Date(row.at_t1).getTime() : 0
     const t2 = row.at_t2 ? new Date(row.at_t2).getTime() : 0
     const deltaMs = t1 > 0 && t2 > 0 ? t1 - t2 : 0
-    const deltaCompiled = row.compiled_t2 != null ? c1 - c2 : 0
+    const deltaCompiled = c2 != null ? c1 - c2 : 0
     const ratePerHour = deltaMs > 0 ? Math.max(0, Math.round(deltaCompiled / (deltaMs / 3_600_000))) : 0
-    const prevDelta = row.compiled_t3 != null && row.compiled_t2 != null ? c2 - c3 : undefined
+    const prevDelta = c3 != null && c2 != null ? c2 - c3 : undefined
     const stalled = ratePerHour === 0 && prevDelta !== undefined && prevDelta === 0
     const idle = ratePerHour === 0 && !stalled
-    return { label: row.workerLabel, ratePerHour, stalled, idle }
+    // Derive sourceType from sourceKey for theoretical lookup
+    const sk = row.sourceKey ?? ''
+    const sourceType = sk.startsWith('si-') || sk.startsWith('primary-acts') || sk === 'regional' || sk === 'retained-eu'
+      ? 'tna-legislation'
+      : sk === 'tna-caselaw' ? 'tna-caselaw'
+      : sk.startsWith('hansard') || sk.startsWith('committees') || sk.startsWith('written')
+        ? 'hansard'
+      : sk === 'fca-regulators' ? 'fca'
+      : sk.startsWith('hmrc') ? 'hmrc'
+      : sk === 'echr-hudoc' ? 'echr'
+      : sk === 'eur-lex' ? 'eurlex'
+      : 'default'
+    return { label: row.workerLabel, sourceKey: sk, sourceType, ratePerHour, stalled, idle }
+  })
+
+  // Count workers per sourceType for fair-share division
+  const workersPerSource: Record<string, number> = {}
+  for (const r of rawRows) workersPerSource[r.sourceType] = (workersPerSource[r.sourceType] ?? 0) + 1
+
+  // Second pass: compute efficiency against fair-share theoretical
+  return rawRows.map(r => {
+    const theoretical = THEORETICAL_SECTIONS_PER_HOUR[r.sourceType] ?? THEORETICAL_SECTIONS_PER_HOUR.default
+    const fairShare = theoretical / Math.max(1, workersPerSource[r.sourceType] ?? 1)
+    const efficiencyPct = fairShare > 0 ? Math.round((r.ratePerHour / fairShare) * 100) : 0
+    const efficiencyFlag: WorkerThroughputRow['efficiencyFlag'] =
+      r.ratePerHour > 0 && efficiencyPct < 20 ? '🔴critical'
+      : r.ratePerHour > 0 && efficiencyPct < 60 ? '⚡low'
+      : ''
+    return { ...r, efficiencyPct, efficiencyFlag }
   }).sort((a, b) => b.ratePerHour - a.ratePerHour)
 }
 
@@ -506,17 +555,20 @@ export async function sendProgressEmail(
       parts.push('WORKER THROUGHPUT (last 1h)')
       parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       for (const w of workerRows) {
-        const label = w.label.slice(0, 34).padEnd(34)
+        const label = w.label.slice(0, 30).padEnd(30)
         const rateStr = w.ratePerHour.toLocaleString().padStart(7) + ' /hr'
-        const bar = progressBar((w.ratePerHour / maxRate) * 100, 8)
-        const flag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
-        parts.push(`  ${label}  ${rateStr}  ${bar}${flag}`)
+        const bar = progressBar((w.ratePerHour / maxRate) * 100, 6)
+        const effStr = w.ratePerHour > 0 ? `  ${w.efficiencyPct}% eff${w.efficiencyFlag ? ' ' + w.efficiencyFlag : ''}` : ''
+        const statusFlag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
+        parts.push(`  ${label}  ${rateStr}  ${bar}${effStr}${statusFlag}`)
       }
       parts.push('')
       parts.push(`  Total: ${totalRate.toLocaleString()} /hr across ${workerRows.length} workers`)
       if (stalledLabels.length > 0) {
         parts.push(`  Stalled: ${stalledLabels.join(', ')}`)
       }
+      const critical = workerRows.filter(w => w.efficiencyFlag === '🔴critical').map(w => w.label)
+      if (critical.length > 0) parts.push(`  Critical efficiency: ${critical.join(', ')}`)
     }
   } catch (err) {
     parts.push('', `[Worker throughput unavailable: ${err}]`)
