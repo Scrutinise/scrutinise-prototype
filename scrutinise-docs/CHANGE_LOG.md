@@ -4,6 +4,39 @@
 
 ***
 
+## CODE CHANGES — 3 Jun 2026 V5: Hansard alternative + blocked source fixes + email state
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/theyworkforyou.ts` | **New.** TheyWorkForYou API client — fetches Hansard Commons/Lords/Westminster Hall by day within a month. `listDebatesForMonth()`, `twfyMonthlyDocIds()`. Requires `TWFY_API_KEY` env var (register free at theyworkforyou.com/api/key). |
+| `scripts/ingest/workers/worker-queue.ts` | **Add TWFY route to `processHansard()`:** handles `twfy:{type}:{YYYY-MM}` docIds. Fetches all debates for each day in the month via TWFY API. Non-sitting days return 0 debates (marked done, not failed — legitimate). |
+| `scripts/ingest/seed-twfy-queue.ts` | **New.** Seed queue rows for TWFY Hansard (Commons 1988–, Lords 1988–, Westminster Hall 1999–). Run after `TWFY_API_KEY` is added to Railway env vars. |
+| `scripts/ingest/shared/progress-reporter.ts` | **Mark FCA, ECHR, EUR-Lex as `blocked: true`** in CORPUS_MANIFEST (API changes confirmed). **Add ⚠️ failing state:** sources with queue rows but 0 corpus_sections now display `⚠️ failing` instead of appearing at 0% progress. |
+| `docs/corpus-census.md` | **Add §8:** "Sources with no client yet" — 19 sources with URLs and notes for future sprints. |
+| `docs/data-access-requests/bailii-request.md` | **New.** Formal BAILII bulk data access request draft. |
+| `docs/data-access-requests/parliament-hansard-request.md` | **New.** Parliament bulk Hansard data access request draft. |
+| `scripts/ingest/diagnose-v5.ts` | **New.** V5 diagnostic script. |
+
+### V5 findings
+
+**Scheduler duplicates:** Single `loop()` call confirmed in `scheduler.ts` — code is not the cause. Two Railway deployments are running simultaneously. Fix: redeploy `ingest-scheduler` on Railway to force kill old instance. Settings → Cron Schedule must be empty.
+
+**TheyWorkForYou (Part 1):** ✅ Accessible from Railway IPs (status 200). Returns JSON. Needs API key only. Register at theyworkforyou.com/api/key — free for non-commercial/civic. `TWFY_API_KEY` env var needed on Railway workers + scheduler before running `seed-twfy-queue.ts`.
+
+**FCA (Part 2):** ❌ All alternative endpoints (RSS, XML, publications) return 404 or JS SPA HTML. Marked `blocked: true` in manifest.
+
+**ECHR (Part 3):** ❌ All alternative endpoints return 404 or 403. Marked `blocked: true` in manifest. BAILII data access request drafted.
+
+**EUR-Lex (Part 4):** ❌ `search.html?...&format=json` returns HTML (API changed). Queue has 50 done rows, 0 corpus_sections (⚠️ failing). Marked `blocked: true` in manifest.
+
+**Committee Reports (Part 5):** `api.parliament.uk/v1/committees` returns 500 from Railway — same environment issue. Will work once TWFY or direct Parliament data access is resolved.
+
+**Email ⚠️ failing state (Part 7):** Added to manifest rendering — sources with queue rows but 0 sections now visibly flagged instead of appearing at 0% progress.
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 V4: Caselaw gap diagnosis + silent failure fixes
 
 ### Files changed

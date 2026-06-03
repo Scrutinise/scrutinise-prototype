@@ -9,8 +9,22 @@
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V4 — caselaw diagnosis + silent failure fixes (3 Jun 2026)
-**Latest commits:** `52ead1e` (Sprint 2) — V4 code changes not yet committed
+**Last sprint:** V5 — Hansard alternative + blocked sources + email state (3 Jun 2026)
+**Latest commits:** `0d4fd84` (V4) — V5 code changes not yet committed
+
+### What just happened (3 Jun 2026 V5 — Hansard alternative + blocked sources)
+
+1. **TWFY client built** (`theyworkforyou.ts`): TheyWorkForYou API confirmed accessible from Railway (status 200, needs API key only). Source client + worker route + queue seeder all built. **ACTION NEEDED:** Register for TWFY API key at theyworkforyou.com/api/key, add `TWFY_API_KEY` to Railway env, then run `seed-twfy-queue.ts` (~4,700 monthly rows for Commons+Lords+Westminster Hall).
+
+2. **FCA, ECHR, EUR-Lex blocked in manifest**: All APIs confirmed non-functional from Railway environment. Marked `blocked: true` — will show ⛔ blocked in email instead of ⚠️ failing.
+
+3. **⚠️ failing state added to email**: Sources with queue rows but 0 corpus_sections now show `⚠️ failing` — visible signal that something is broken rather than appearing at 0%.
+
+4. **Scheduler duplicate**: Not a code bug — two Railway deployments running simultaneously. Fix: manually redeploy `ingest-scheduler` in Railway dashboard to kill old instance.
+
+5. **Data access request drafts**: `docs/data-access-requests/bailii-request.md` and `parliament-hansard-request.md` ready to send.
+
+6. **corpus-census.md §8**: 19 sources with "client needed" added, with URLs for future build sprints.
 
 ### What just happened (3 Jun 2026 V4 — caselaw diagnosis + silent failure fixes)
 
