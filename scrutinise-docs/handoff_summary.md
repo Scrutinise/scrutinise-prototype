@@ -10,7 +10,7 @@
 
 **Active branch:** Main
 **Last sprint:** V5 — Hansard alternative + blocked sources + email state (3 Jun 2026)
-**Latest commits:** `0d4fd84` (V4) — V5 code changes not yet committed
+**Latest commits:** `3cd7713` (V5 — all changes committed and pushed)
 
 ### What just happened (3 Jun 2026 V5 — Hansard alternative + blocked sources)
 
@@ -57,9 +57,9 @@
 
 3. **CORPUS_MANIFEST estSections updated** (`progress-reporter.ts`): Revised 8 estimates based on confirmed data. Most significant: SI-2010+ 300k→120k, Written Statements 50k→17,487. Total corpus estimate revised from ~7M to ~5.3M sections.
 
-4. **Key action items identified:**
-   - **SI-2010plus 2015–2026 reseed:** ~5k–8k missing SIs (50k–80k sections). High priority.
-   - **Hansard/ECHR/FCA R2 backfill:** CCh to write backfill sprint brief.
+4. **Key action items (status):**
+   - ~~SI-2010plus reseed~~ — Done V3 (TNA feed confirms counts were accurate, not a gap).
+   - ~~Hansard/ECHR/FCA R2 backfill~~ — V2–V5: confirmed no R2 content. Workers marked done due to API failures (403/404). Hansard addressed via TWFY (V5). FCA/ECHR blocked.
 
 ### What just happened (3 Jun 2026 evening sprint)
 
@@ -73,46 +73,32 @@
 
 5. **Part 5 (read-only):** Confirmed Hansard/ECHR/FCA/Treaties have the R2 backfill gap. See CHANGE_LOG for exact counts and key patterns.
 
-### Pending commit
+---
 
-All changes above need to be committed via `commit-all.sh`. **Do not run git mid-sprint** — produce `commit-all.sh` at end.
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-Files changed:
-- `scripts/ingest/shared/progress-reporter.ts`
-- `scrutinise-docs/CLAUDE.md`
-- `scrutinise-docs/CHANGE_LOG.md`
-- `scrutinise-docs/handoff_summary.md` (this file)
-- `docs/SPRINT.md` (new)
-- `scrutinise-docs/SPRINT.md` (CCh's original brief — can be cleared after commit)
+1. **Redeploy `ingest-scheduler` on Railway** — kills duplicate deployment causing alternating email formats. Settings → Deployments → Redeploy.
+2. **Register TWFY API key** at theyworkforyou.com/api/key (free for civic use). Add `TWFY_API_KEY` to Railway env vars for all workers + scheduler.
+3. **Run `seed-twfy-queue.ts`** after key is added — seeds ~4,700 monthly Hansard rows for Commons (1988–), Lords (1988–), Westminster Hall (1999–).
+4. **Review data access request drafts** in `docs/data-access-requests/` — BAILII and Parliament Hansard bulk data.
 
 ---
 
-## NEXT STEPS
-
-1. **Redeploy `ingest-scheduler` on Railway** — picks up the progressBar fix immediately
-2. **Trigger one local scheduler run** to confirm email sends cleanly (no RangeError)
-3. **Next sprint:** Hansard R2 backfill — CCh to write brief to `docs/SPRINT.md`:
-   - List R2 keys under `hansard/` prefix
-   - For each key, check corpus_sections existence
-   - Fetch from R2, parse text, call upsertSection()
-   - Run as one-off migration script
-   - Investigate FCA/ECHR R2 key patterns before including them
-
----
-
-## ARCHITECTURE SNAPSHOT (3 Jun 2026)
+## ARCHITECTURE SNAPSHOT (3 Jun 2026 — post V5)
 
 - **20 Railway workers** ingesting via `worker-queue.ts` — queue-claim model with `FOR UPDATE SKIP LOCKED`
-- **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots
-- **Self-discovery** working — fills queue from live publication feeds when empty
-- **Corpus coverage:** ~585,576 Railway sections + 914,274 Neon legacy = ~1.5M total
-- **Hansard gap:** ~5,544 queue rows done, 0 corpus_sections — content in R2 only
-- **ECHR/FCA gaps:** smaller but same pattern
+- **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **Two instances currently running — redeploy needed.**
+- **Self-discovery** working — detects under-seeded corpora and triggers full historical scan
+- **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total
+- **Hansard:** TWFY client built (needs API key). Parliament API (api.parliament.uk) returns 403 from Railway.
+- **FCA, ECHR, EUR-Lex:** All blocked (API changes). Marked `blocked: true` in manifest.
+- **TNA Caselaw:** Complete (~74,950 available judgments all ingested).
+- **Active work:** pre-1963 UKPGA + SSI + WSI queue rows being processed.
 
 ## DEPLOYMENT
 
 - Ingest workers: Railway (20 services)
-- Scheduler: Railway (1 always-on service — `ecosystem.config.js`)
+- Scheduler: Railway (1 always-on service — currently 2 running, needs redeploy)
 - DB: Railway PostgreSQL (`switchback.proxy.rlwy.net:16156`)
 - R2: Cloudflare `scrutinise-legislation` bucket
 - Web app: Vercel (scrutinise.org)
