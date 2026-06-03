@@ -1849,13 +1849,15 @@ model SourceRateLimit {
 model IngestProgressSnapshot {
   id                Int      @id @default(autoincrement())
   capturedAt        DateTime @default(now())
-  workerLabel       String   // e.g. "Primary Acts pre-2000"
+  workerLabel       String   // e.g. "Primary Acts pre-2000" or "Worker 3"
+  workerId          Int?     // NULL = scheduler corpus snapshot; non-null = per-worker session snapshot
   sourceKey         String   // corpus label — matches corpus_sections.corpus
   sectionsCompiled  Int
   sectionsEstimated Int
-  phase             String   // "phase1" | "phase2" | "queue"
+  phase             String   // "phase1" | "phase2" | "queue" | "worker"
 
   @@index([capturedAt])
   @@index([sourceKey])
+  @@index([workerId])
   @@map("ingest_progress_snapshots")
 }
