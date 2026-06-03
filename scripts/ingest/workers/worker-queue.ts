@@ -28,6 +28,7 @@ import { listJudgments, fetchJudgmentXml } from '../sources/tna-caselaw'
 import { enumerateSections, discoverFormats } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
 import { fetchDebateText, fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements } from '../sources/parliament-api'
+import { listDebatesForMonth } from '../sources/theyworkforyou'
 import { fetchSectionText as fetchFcaText, listFcaSections, listFcaSectionsForSourcebook } from '../sources/fca-handbook'
 import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
@@ -354,6 +355,26 @@ async function processHansard(row: QueueRow): Promise<void> {
       ? `https://questions-statements-api.parliament.uk/api/writtenquestions/questions?answeredWhenFrom=${startDate}&answeredWhenTo=${endDate}`
       : `https://questions-statements-api.parliament.uk/api/writtenstatements/statements?madeWhenFrom=${startDate}&madeWhenTo=${endDate}`
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await markDone(row.id, 'html')
+    return
+  }
+
+  // TheyWorkForYou route — docId format: "twfy:{type}:{YYYY-MM}"
+  if (parts[0] === 'twfy') {
+    const [, typeRaw, yearMonth] = parts
+    if (!typeRaw || !yearMonth) { await markSkipped(row.id); return }
+    const twfyType = typeRaw as 'commons' | 'lords' | 'westminhall'
+    let written = 0
+    for await (const debate of listDebatesForMonth(twfyType, yearMonth)) {
+      const cKey = hansardKey(debate.date, `twfy-${twfyType}-${debate.date}`)
+      if (await r2Exists(cKey)) { written++; continue }
+      const compiled = rawToText(debate.text)
+      await r2Put(cKey, compiled)
+      const secId = sectionId(row.corpus, `twfy-${twfyType}-${debate.date}`, '1')
+      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+      written++
+    }
+    // 0 is OK — parliament may not have sat any day this month
     await markDone(row.id, 'html')
     return
   }
