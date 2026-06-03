@@ -360,6 +360,14 @@ echo "Done."
 
 The last several sprints have ended with mid-sprint commits despite this rule. Every CCh brief must explicitly remind CC of Section 12. If CC reaches for git mid-sprint, CC stops and writes commit-all.sh instead.
 
+### Sprint brief protocol
+
+- CCh writes each sprint brief to `docs/SPRINT.md` before each CC session
+- CC reads `docs/SPRINT.md` at session start using a targeted view (not full file dump)
+- CC archives completed sprint to `CHANGE_LOG.md` at sprint end and clears `SPRINT.md`
+- Never paste the full brief into chat — keep briefs in the file to save context
+- When reading large files, always use line-range view or grep — never dump entire files
+
 ***
 
 *Update this file immediately whenever a decision changes.*
