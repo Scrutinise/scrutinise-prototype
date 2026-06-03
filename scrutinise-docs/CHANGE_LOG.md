@@ -4,6 +4,24 @@
 
 ***
 
+## CODE CHANGES — 3 Jun 2026 V6b: Discovery crash-loop fix (TNA full-scan removed)
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/shared/discovery.ts` | **Remove full historical scan from `discoverTnaLegislation()`**. The old `needsFullScan` logic called `listActIds(type, yearMin, yearMax)` with yearMin as far back as 1267 — one HTTP request per year, 733+ sequential TNA calls for `primary-acts-pre-2000`. Railway SIGTERM'd the container at ~10 min, worker restarted, loop repeated. Fix: historical-only corpora (`yearMax < currentYear - 1`) return [] immediately. Ongoing corpora check only the last 2 years inline (`checkFrom = max(yearMin, currentYear - 1)`). Queue-empty warning added to Railway logs. Full historical backfill remains in `reseed-si-gaps.ts`. |
+
+### Root cause
+
+`UNDER_SEEDED_THRESHOLD = 400` × `historicalYears` produced thresholds no queue could meet:
+- `primary-acts-pre-2000`: 757 years × 400 = 302,800 threshold. Even with 70,000+ rows → `needsFullScan = true` → `listActIds('ukpga', 1267, 1999)` = 733 HTTP calls → SIGTERM.
+- `si-pre-2010`, `retained-eu` similarly affected.
+
+Affected workers (6=retained-eu, 9=tna-caselaw) crash-looped via self-discovery triggering the full scan when their primary corpus was exhausted and they checked TNA corpora in DISCOVERY_CORPUS_ORDER.
+
+---
+
 ## CODE CHANGES — 3 Jun 2026 V6: EUR-Lex SPARQL fix + LDA Parliament integration
 
 ### Files changed

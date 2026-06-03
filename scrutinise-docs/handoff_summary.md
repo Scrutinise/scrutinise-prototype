@@ -2,15 +2,26 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jun 2026 (V6 complete — pending commit)*
+*Last updated: 3 Jun 2026 (V6b complete — pending commit)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V6 — EUR-Lex SPARQL fix + LDA Parliament integration (3 Jun 2026)
-**Latest commits:** `3cd7713` (V5) — V6 changes written, commit-all.sh pending execution
+**Last sprint:** V6b — Worker crash-loop fix (TNA discovery full-scan removed) (3 Jun 2026)
+**Latest commits:** `27ae54b` (V6) — V6b changes written, commit-all.sh pending execution
+
+### What just happened (3 Jun 2026 V6b — Worker crash-loop fix)
+
+Workers 6, 9 (and others) were crash-looping via self-discovery: when their primary corpus was exhausted, they walked `DISCOVERY_CORPUS_ORDER` and hit TNA legislation corpora. `discoverTnaLegislation` triggered a full historical scan (`listActIds('ukpga', 1267, 1999)` = 733 sequential TNA HTTP calls). Railway SIGTERM'd the container at ~10 min. Worker restarted. Loop repeated.
+
+**Fix:** `discoverTnaLegislation` now:
+- Returns [] immediately for historical-only corpora (`yearMax < currentYear - 1`)
+- For ongoing corpora, checks only the last 2 years inline (`checkFrom = max(yearMin, currentYear - 1)`)
+- Warns in logs if queue is genuinely empty (don't trigger full scan inline — use `reseed-si-gaps.ts`)
+
+`UNDER_SEEDED_THRESHOLD` logic and `needsFullScan` path removed entirely.
 
 ### What just happened (3 Jun 2026 V6 — EUR-Lex SPARQL fix + LDA Parliament)
 
@@ -96,11 +107,12 @@
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-### V6 (new)
-1. **Run `commit-all.sh`** — commits and pushes all V6 changes. Railway will auto-redeploy.
-2. **Reset EUR-Lex queue rows** after deploy: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
-3. **Run `seed-lda-queue.ts`** after deploy — seeds 1,602 LDA Parliament queue rows: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts`
-4. **Run `seed-rate-limits.ts`** — adds `lda-parliament` rate limit: same tsx command, `scripts/ingest/seed-rate-limits.ts`
+### V6b (urgent — crash loop)
+1. **Run `commit-all.sh`** — commits and pushes V6b fix. Railway will auto-redeploy workers.
+2. **Confirm workers stable** — check Railway logs after redeploy. Workers should no longer SIGTERM. Look for `[worker-N] all sources exhausted — sleeping 5min` instead of crash.
+3. **Reset EUR-Lex queue rows** after redeploy: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
+4. **Run `seed-lda-queue.ts`** — seeds 1,602 LDA Parliament queue rows: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts`
+5. **Run `seed-rate-limits.ts`** — adds `lda-parliament` rate limit: same tsx command, `scripts/ingest/seed-rate-limits.ts`
 
 ### V5 (still pending)
 5. **Redeploy `ingest-scheduler` on Railway** — kills duplicate deployment causing alternating email formats. Settings → Deployments → Redeploy.
