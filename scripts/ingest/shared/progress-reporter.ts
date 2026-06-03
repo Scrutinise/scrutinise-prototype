@@ -56,12 +56,12 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
   { label: 'House of Commons Library',       sourceKey: 'hoc-library',             dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
-  // V5/V6 3 Jun 2026: handbook.fca.org.uk is a pure JS SPA (data-critters-container Angular build).
-  // Every URL including /sitemap.xml and /robots.txt returns the same SPA shell.
-  // "JavaScript is disabled" message confirms — no server-side content. Genuinely blocked.
-  // FCA Publications (fca.org.uk/publications) is a viable alternative corpus for V7 (Drupal HTML,
-  // accessible at /publications/search-results) but scraper build is out of scope for V6.
-  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2, blocked: true },
+  // V5/V6: handbook.fca.org.uk is a pure JS SPA — no server-side content. Cannot scrape without
+  // Playwright. Source client exists, queue rows exist, 0 sections compiled → shows ⚠️ failing.
+  // FCA Publications (fca.org.uk/publications, Drupal/PDF) is the viable alternative — V8 build.
+  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
+  // V7: placeholder entry so it shows "not started" in email — actual scraper build is V8 work.
+  { label: 'FCA Publications (PDFs)',         sourceKey: 'fca-publications',        dbCorpora: ['fca-publications'],                       estSections: 20_000,    priority: 3 },
   // V6 3 Jun 2026: lda.data.parliament.uk — no auth, JSON, 500 records/page. Confirmed working.
   // Actual totals from V6 diagnostic: 69,852 / 103,137 / 618,599 records respectively.
   { label: 'Commons Oral Questions (LDA)',    sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsoralquestions'],               estSections: 70_000,    priority: 2 },
@@ -182,6 +182,23 @@ export async function queryNeonCount(): Promise<number> {
   } finally {
     await pool.end()
   }
+}
+
+// ── Per-worker snapshot write ─────────────────────────────────────────────────
+// Called by worker-queue.ts every CHECKPOINT_EVERY rows.
+// workerId = integer WORKER_ID; sourceKey = current corpus; sectionsCompiled = cumulative session count.
+
+export async function writeWorkerSnapshot(
+  workerId: number,
+  sourceKey: string,
+  sectionsCompiled: number,
+): Promise<void> {
+  const pool = getPool()
+  await pool.query(`
+    INSERT INTO ingest_progress_snapshots
+      ("capturedAt", "workerId", "workerLabel", "sourceKey", "sectionsCompiled", "sectionsEstimated", phase)
+    VALUES (NOW(), $1, $2, $3, $4, 0, 'worker')
+  `, [workerId, `Worker ${workerId}`, sourceKey, sectionsCompiled])
 }
 
 // ── IngestProgressSnapshot write ─────────────────────────────────────────────
@@ -352,9 +369,11 @@ const THEORETICAL_SECTIONS_PER_HOUR: Record<string, number> = {
 }
 
 // ── Worker throughput from snapshots ─────────────────────────────────────────
+// Groups by workerId (non-null rows written by workers every CHECKPOINT_EVERY items).
+// Scheduler-written rows (workerId IS NULL) are excluded — those are per-corpus aggregates.
 
 interface WorkerThroughputRow {
-  label: string
+  workerId: number
   sourceKey: string
   ratePerHour: number
   stalled: boolean
@@ -365,10 +384,8 @@ interface WorkerThroughputRow {
 
 async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
   const pool = getPool()
-  // Pivot the 3 most-recent snapshots per workerLabel into a single row each.
-  // Also grab sourceKey from the most-recent snapshot for efficiency lookup.
   const res = await pool.query<{
-    workerLabel: string
+    workerId: number
     sourceKey: string
     compiled_t1: number | null
     at_t1: Date | null
@@ -377,12 +394,13 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
     compiled_t3: number | null
   }>(`
     WITH ranked AS (
-      SELECT "workerLabel", "sourceKey", "capturedAt", "sectionsCompiled",
-             ROW_NUMBER() OVER (PARTITION BY "workerLabel" ORDER BY "capturedAt" DESC) AS rn
+      SELECT "workerId", "sourceKey", "capturedAt", "sectionsCompiled",
+             ROW_NUMBER() OVER (PARTITION BY "workerId" ORDER BY "capturedAt" DESC) AS rn
       FROM ingest_progress_snapshots
+      WHERE "workerId" IS NOT NULL
     )
     SELECT
-      "workerLabel",
+      "workerId",
       MAX(CASE WHEN rn = 1 THEN "sourceKey" END) AS "sourceKey",
       MAX(CASE WHEN rn = 1 THEN "sectionsCompiled" END) AS compiled_t1,
       MAX(CASE WHEN rn = 1 THEN "capturedAt" END) AS at_t1,
@@ -391,11 +409,10 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
       MAX(CASE WHEN rn = 3 THEN "sectionsCompiled" END) AS compiled_t3
     FROM ranked
     WHERE rn <= 3
-    GROUP BY "workerLabel"
-    ORDER BY "workerLabel"
+    GROUP BY "workerId"
+    ORDER BY "workerId"
   `)
 
-  // First pass: compute rates so we can count workers per source for fair-share calc
   const rawRows = res.rows.map(row => {
     const c1 = Number(row.compiled_t1 ?? 0)
     const c2 = row.compiled_t2 != null ? Number(row.compiled_t2) : null
@@ -408,7 +425,6 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
     const prevDelta = c3 != null && c2 != null ? c2 - c3 : undefined
     const stalled = ratePerHour === 0 && prevDelta !== undefined && prevDelta === 0
     const idle = ratePerHour === 0 && !stalled
-    // Derive sourceType from sourceKey for theoretical lookup
     const sk = row.sourceKey ?? ''
     const sourceType = sk.startsWith('si-') || sk.startsWith('primary-acts') || sk === 'regional' || sk === 'retained-eu'
       ? 'tna-legislation'
@@ -421,24 +437,22 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
       : sk === 'eur-lex' ? 'eurlex'
       : sk.startsWith('lda-') ? 'lda-parliament'
       : 'default'
-    return { label: row.workerLabel, sourceKey: sk, sourceType, ratePerHour, stalled, idle }
+    return { workerId: Number(row.workerId), sourceKey: sk, sourceType, ratePerHour, stalled, idle }
   })
 
-  // Count workers per sourceType for fair-share division
   const workersPerSource: Record<string, number> = {}
   for (const r of rawRows) workersPerSource[r.sourceType] = (workersPerSource[r.sourceType] ?? 0) + 1
 
-  // Second pass: compute efficiency against fair-share theoretical
   return rawRows.map(r => {
     const theoretical = THEORETICAL_SECTIONS_PER_HOUR[r.sourceType] ?? THEORETICAL_SECTIONS_PER_HOUR.default
     const fairShare = theoretical / Math.max(1, workersPerSource[r.sourceType] ?? 1)
     const efficiencyPct = fairShare > 0 ? Math.round((r.ratePerHour / fairShare) * 100) : 0
     const efficiencyFlag: WorkerThroughputRow['efficiencyFlag'] =
       r.ratePerHour > 0 && efficiencyPct < 20 ? '🔴critical'
-      : r.ratePerHour > 0 && efficiencyPct < 60 ? '⚡low'
+      : r.ratePerHour > 0 && efficiencyPct < 40 ? '⚡low'
       : ''
     return { ...r, efficiencyPct, efficiencyFlag }
-  }).sort((a, b) => b.ratePerHour - a.ratePerHour)
+  }).sort((a, b) => a.workerId - b.workerId)
 }
 
 // ── Unified progress email ────────────────────────────────────────────────────
@@ -574,25 +588,24 @@ export async function sendProgressEmail(
     const workerRows = await queryWorkerThroughput()
     if (workerRows.length > 0) {
       const totalRate = workerRows.reduce((s, w) => s + w.ratePerHour, 0)
-      const stalledLabels = workerRows.filter(w => w.stalled).map(w => w.label)
       const maxRate = Math.max(...workerRows.map(w => w.ratePerHour), 1)
       parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      parts.push('WORKER THROUGHPUT (last 1h)')
+      parts.push('WORKER THROUGHPUT (by worker ID, last 1h)')
       parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       for (const w of workerRows) {
-        const label = w.label.slice(0, 30).padEnd(30)
+        const workerStr = `Worker ${String(w.workerId).padStart(2)}`
+        const sourceStr = (w.sourceKey || '[idle]').slice(0, 26).padEnd(26)
         const rateStr = w.ratePerHour.toLocaleString().padStart(7) + ' /hr'
         const bar = progressBar((w.ratePerHour / maxRate) * 100, 6)
         const effStr = w.ratePerHour > 0 ? `  ${w.efficiencyPct}% eff${w.efficiencyFlag ? ' ' + w.efficiencyFlag : ''}` : ''
         const statusFlag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
-        parts.push(`  ${label}  ${rateStr}  ${bar}${effStr}${statusFlag}`)
+        parts.push(`  ${workerStr}  ${sourceStr}  ${rateStr}  ${bar}${effStr}${statusFlag}`)
       }
       parts.push('')
-      parts.push(`  Total: ${totalRate.toLocaleString()} /hr across ${workerRows.length} workers`)
-      if (stalledLabels.length > 0) {
-        parts.push(`  Stalled: ${stalledLabels.join(', ')}`)
-      }
-      const critical = workerRows.filter(w => w.efficiencyFlag === '🔴critical').map(w => w.label)
+      parts.push(`  Total: ${totalRate.toLocaleString()} /hr across ${workerRows.length} workers reporting`)
+      const stalledIds = workerRows.filter(w => w.stalled).map(w => `Worker ${w.workerId}`)
+      if (stalledIds.length > 0) parts.push(`  Stalled: ${stalledIds.join(', ')}`)
+      const critical = workerRows.filter(w => w.efficiencyFlag === '🔴critical').map(w => `Worker ${w.workerId}`)
       if (critical.length > 0) parts.push(`  Critical efficiency: ${critical.join(', ')}`)
     }
   } catch (err) {

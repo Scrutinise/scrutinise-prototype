@@ -20,8 +20,17 @@ import {
 import { discoverForCorpus, DISCOVERY_CORPUS_ORDER } from '../shared/discovery'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
-import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
+import { upsertSection as _upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
 import { readCheckpoint, writeCheckpoint } from '../shared/checkpoint'
+import { writeWorkerSnapshot } from '../shared/progress-reporter'
+
+// Track sections compiled this session for per-worker throughput snapshots.
+let sessionSectionsCompiled = 0
+// Wrap upsertSection so all processX calls are counted without changing their signatures.
+async function upsertSection(data: Parameters<typeof _upsertSection>[0]): Promise<void> {
+  await _upsertSection(data)
+  sessionSectionsCompiled++
+}
 
 // Source clients
 import { listJudgments, fetchJudgmentXml } from '../sources/tna-caselaw'
@@ -127,6 +136,10 @@ async function main(): Promise<void> {
     if (sinceCheckpoint % CHECKPOINT_EVERY === 0) {
       await writeCheckpoint(cp)
       console.log(`[worker-${workerId}] progress: ${cp.completed} done, ${cp.failed} failed`)
+      // Write per-worker snapshot for throughput email (non-fatal if it fails)
+      await writeWorkerSnapshot(workerId, row.corpus, sessionSectionsCompiled).catch(e =>
+        console.warn(`[worker-${workerId}] snapshot write failed: ${e}`)
+      )
     }
   }
 }
