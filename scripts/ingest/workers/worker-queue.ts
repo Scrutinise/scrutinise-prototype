@@ -14,8 +14,10 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise
 
 import {
   claimNextChunk, markDone, markFailed, markSkipped,
-  updateFormatsAvailable, disconnectQueue, getSleepDuration, QueueRow,
+  updateFormatsAvailable, disconnectQueue, getSleepDuration,
+  countPendingRows, markSourceTypeComplete, bulkUpsertQueueRows, QueueRow,
 } from '../shared/queue-client'
+import { discoverForCorpus, DISCOVERY_CORPUS_ORDER } from '../shared/discovery'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
 import { upsertSection, sectionId, countWords, disconnectDb } from '../shared/db-metadata'
@@ -53,11 +55,53 @@ async function main(): Promise<void> {
     const row = await claimNextChunk(workerId)
 
     if (!row) {
-      // null = queue empty OR all source tokens at rate limit.
-      // Sleep until the next token becomes available rather than a fixed interval.
-      const sleepMs = await getSleepDuration().catch(() => 60_000)
-      console.log(`[worker-${workerId}] no token available — sleeping ${sleepMs}ms`)
-      await new Promise(r => setTimeout(r, sleepMs))
+      // Distinguish: queue empty vs all sources rate-limited.
+      const pending = await countPendingRows().catch(() => -1)
+
+      if (pending === 0) {
+        // Queue genuinely empty — attempt self-discovery before sleeping.
+        let discoveredAny = false
+        for (const corpus of DISCOVERY_CORPUS_ORDER) {
+          try {
+            const newRows = await discoverForCorpus(corpus)
+            if (newRows.length > 0) {
+              await bulkUpsertQueueRows(newRows)
+              console.log(`[worker-${workerId}] self-discovered ${newRows.length} new rows for ${corpus}`)
+              discoveredAny = true
+              break  // claim loop will pick them up immediately
+            } else {
+              // Corpus exhausted — mark its sourceType complete so we skip it next time.
+              // Derive sourceType from the first row we would have returned (or from corpus name).
+              const sourceTypeMap: Record<string, string> = {
+                'written-answers': 'hansard', 'written-statements': 'hansard',
+                'hansard-commons-a': 'hansard', 'hansard-commons-b': 'hansard',
+                'hansard-lords-a': 'hansard', 'hansard-lords-b': 'hansard',
+                'committees-a': 'hansard',
+                'tna-caselaw': 'tna-caselaw',
+                'echr-hudoc': 'echr', 'eur-lex': 'eurlex',
+                'fca-regulators': 'fca',
+                'hmrc-codes-guidance': 'hmrc', 'hmrc-tiins': 'gov-uk', 'ots-reports': 'gov-uk',
+                'scotlawcom': 'scotlawcom', 'nilawcom': 'nilawcom',
+                'oecd': 'oecd', 'uk-treaties': 'treaties',
+              }
+              const sourceType = sourceTypeMap[corpus]
+              if (sourceType) await markSourceTypeComplete(sourceType).catch(() => {})
+            }
+          } catch (err) {
+            console.warn(`[worker-${workerId}] discovery error for ${corpus}:`, err)
+          }
+        }
+
+        if (!discoveredAny) {
+          console.log(`[worker-${workerId}] all sources exhausted — sleeping 5min`)
+          await new Promise(r => setTimeout(r, 300_000))
+        }
+      } else {
+        // Pending rows exist but all sources are rate-limited — sleep until next token.
+        const sleepMs = await getSleepDuration().catch(() => 60_000)
+        console.log(`[worker-${workerId}] rate-limited — sleeping ${sleepMs}ms`)
+        await new Promise(r => setTimeout(r, sleepMs))
+      }
       continue
     }
 
