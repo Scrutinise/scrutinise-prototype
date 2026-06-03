@@ -253,6 +253,66 @@ export async function upsertQueueRow(row: {
   `, [row.id, row.corpus, row.docId, row.sourceType, row.priority])
 }
 
+// Returns count of all pending rows — used to distinguish empty queue from rate-limited.
+export async function countPendingRows(): Promise<number> {
+  const res = await getPool().query<{ count: number }>(
+    'SELECT COUNT(*)::int AS count FROM ingest_queue WHERE status = \'pending\''
+  )
+  return res.rows[0]?.count ?? 0
+}
+
+// Returns the lexicographically highest docId for a corpus — used as discovery cursor.
+export async function getMaxDocIdForCorpus(corpus: string): Promise<string | null> {
+  const res = await getPool().query<{ docId: string }>(
+    'SELECT "docId" FROM ingest_queue WHERE corpus = $1 ORDER BY "docId" DESC LIMIT 1',
+    [corpus]
+  )
+  return res.rows[0]?.docId ?? null
+}
+
+// Returns all docIds for a corpus — used by FCA discovery to find missing sourcebooks.
+export async function getAllDocIdsForCorpus(corpus: string): Promise<Set<string>> {
+  const res = await getPool().query<{ docId: string }>(
+    'SELECT "docId" FROM ingest_queue WHERE corpus = $1',
+    [corpus]
+  )
+  return new Set(res.rows.map(r => r.docId))
+}
+
+// Mark a sourceType as exhausted — workers skip it in their priority selection.
+// Reset by scheduler weekly or via seed-rate-limits.ts re-run.
+export async function markSourceTypeComplete(sourceType: string): Promise<void> {
+  await getPool().query(
+    'UPDATE source_rate_limits SET "isComplete" = true, "updatedAt" = NOW() WHERE "sourceKey" = $1',
+    [sourceType]
+  )
+  console.log(`[queue] marked ${sourceType} as complete`)
+}
+
+// Returns the highest-priority sourceType that still has work to do:
+// either pending rows OR not yet marked isComplete.
+// Used by the worker to decide which source to self-discover next.
+export async function getNextDiscoveryTarget(): Promise<string | null> {
+  // Priority order mirrors CORPUS_MANIFEST: lower number = higher priority.
+  // We pick the first sourceType that is NOT isComplete and has the lowest
+  // priority value in the queue (or a known rate-limit entry not yet complete).
+  const res = await getPool().query<{ sourceType: string; minPriority: number }>(`
+    SELECT q."sourceType", MIN(q.priority) AS "minPriority"
+    FROM ingest_queue q
+    LEFT JOIN source_rate_limits r ON r."sourceKey" = q."sourceType"
+    WHERE q.status IN ('done', 'pending', 'claimed')
+      AND (r."isComplete" IS NULL OR r."isComplete" = false)
+      AND NOT EXISTS (
+        SELECT 1 FROM ingest_queue q2
+        WHERE q2."sourceType" = q."sourceType" AND q2.status = 'pending'
+      )
+    GROUP BY q."sourceType"
+    ORDER BY "minPriority" ASC, q."sourceType" ASC
+    LIMIT 1
+  `)
+  return res.rows[0]?.sourceType ?? null
+}
+
 // Bulk upsert — much faster than individual upserts for large populations
 export async function bulkUpsertQueueRows(rows: Array<{
   id: string
