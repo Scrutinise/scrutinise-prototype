@@ -56,8 +56,9 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
   { label: 'House of Commons Library',       sourceKey: 'hoc-library',             dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
-  // Brief used 'fca-handbook'; DB corpus = 'fca-regulators'
-  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
+  // V5 3 Jun 2026: handbook.fca.org.uk is a JS SPA — static HTML scraping returns 0 sections.
+  // Needs Playwright/headless browser. Blocked until FCA provides a structured data API.
+  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2, blocked: true },
   // Brief used 'hmrc-web'; DB corpus = 'hmrc-codes-guidance'
   { label: 'HMRC + Guidance',                sourceKey: 'hmrc-codes-guidance',     dbCorpora: ['hmrc-codes-guidance'],                    estSections: 640_000,   priority: 2 },
   // Census 3 Jun 2026: compiled 791; appears complete for available content
@@ -67,9 +68,12 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Scottish Law Commission',        sourceKey: 'scotlawcom',              dbCorpora: ['scotlawcom'],                             estSections: 350,       priority: 2 },
 
   // PRIORITY 3 — Secondary sources
-  // Census 3 Jun 2026: 601 queue rows × 50 judgments/page = ~30,050 UK cases
-  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_050,    priority: 3 },
-  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 80_000,    priority: 3 },
+  // V5 3 Jun 2026: HUDOC /app/query/results returns 404 — API endpoint changed.
+  // No working alternative endpoint found. Blocked until new API is identified.
+  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_050,    priority: 3, blocked: true },
+  // V5 3 Jun 2026: search.html?...&format=json returns HTML not JSON — API changed.
+  // CELLAR/SPARQL API requires auth. Blocked until search API is fixed or replaced.
+  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 80_000,    priority: 3, blocked: true },
   // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
   { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
   { label: 'White / Green Papers',            sourceKey: 'command-papers',         dbCorpora: [],                                         estSections: 20_000,    priority: 3 },
@@ -496,13 +500,18 @@ export async function sendProgressEmail(
     const isSeeded = entry.dbCorpora.some(c => queueCorpora.has(c))
 
     if (compiled === 0 && !isSeeded && entry.dbCorpora.length > 0) {
-      // Corpus in DB schema but no queue rows — something unexpected
       manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
       continue
     }
 
     if (compiled === 0 && entry.dbCorpora.length === 0) {
       manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
+      continue
+    }
+
+    // Seeded but producing 0 sections — source client is broken or API is down
+    if (compiled === 0 && isSeeded) {
+      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  ⚠️  failing (0 sections despite queue rows)`)
       continue
     }
 
