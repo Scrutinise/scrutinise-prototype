@@ -1,6 +1,6 @@
 {
   "name": "scrutinise-ingest",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "start": "tsx workers/worker-queue.ts",
