@@ -1,8 +1,47 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jun 2026 (afternoon)*
 
 ***
+
+## CODE CHANGES — 3 Jun 2026 Sprint: Self-discovering workers
+
+### Commits: `0d60b2c` → `fc1a172`
+
+| File | Change |
+|------|--------|
+| `scrutinise-web/prisma/schema.prisma` | Added `isComplete Boolean @default(false)` to `SourceRateLimit` model |
+| `scripts/ingest/prisma/schema.prisma` | Same |
+| `scrutinise-web/prisma/migrations/20260603100000_source_rate_limits_is_complete/` | Migration SQL: `ALTER TABLE source_rate_limits ADD COLUMN "isComplete" boolean NOT NULL DEFAULT false`. Applied directly to Railway DB. |
+| `scripts/ingest/shared/queue-client.ts` | Added: `countPendingRows()` (distinguishes empty queue from rate-limited), `getMaxDocIdForCorpus()` (discovery cursor), `getAllDocIdsForCorpus()` (FCA membership check), `markSourceTypeComplete()` (sets isComplete=true), `getNextDiscoveryTarget()` (highest-priority sourceType with no pending rows) |
+| `scripts/ingest/shared/discovery.ts` | **New file.** `discoverForCorpus(corpus)` dispatcher + per-corpus discovery logic: written-answers/statements (date arithmetic → next monthly chunks), hansard (month extension), tna-caselaw (new Atom pages), echr-hudoc (new HUDOC offset pages), eur-lex (next batch of pages), fca-regulators (missing sourcebook rows), tna-legislation (current-year acts), historical fixed sets and single-pass sources return []. `DISCOVERY_CORPUS_ORDER` priority list. |
+| `scripts/ingest/workers/worker-queue.ts` | Main loop updated: when `claimNextChunk()` returns null, `countPendingRows()` distinguishes empty vs rate-limited. If empty: iterates `DISCOVERY_CORPUS_ORDER`, calls `discoverForCorpus()`, inserts new rows and loops immediately. If all exhausted: sleeps 5 min. If rate-limited: existing sleep behaviour unchanged. |
+
+**Diagnostic findings this session:**
+- `claimNextChunk()` returns null for both "queue empty" and "all rate-limited" with no distinction. `getSleepDuration()` only partially signals this. Fix: explicit `countPendingRows()`.
+- Workers 1–4 were FAILED on old commits — root cause was `railway.json` `startCommand` override (fixed in previous commit `253e339`). All 4 resolved automatically when railway.json was fixed.
+- `Ingest-scheduler` was running `worker-queue.ts` as WORKER_ID=1 instead of `scheduler.ts` — same railway.json cause. Fixed by `253e339`.
+
+---
+
+## CODE CHANGES — 3 Jun 2026: railway.json fix + direct queue seeding
+
+### Commit: `253e339`
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/railway.json` | Removed `startCommand: "npm run worker"`. This field was overriding service-level start commands for ALL services sharing rootDirectory=scripts/ingest, including the scheduler. Scheduler was running worker-queue.ts (WORKER_ID=1) instead of scheduler.ts — no emails sent, no progress snapshots written. Workers 1–4 were FAILED for the same reason. Empty `{}` lets each service use its Railway dashboard start command. |
+
+**Direct DB seeding (not in a commit — applied via node script):**
+1,360 rows inserted directly to ingest_queue bypassing the populator's slow TNA enumeration:
+- FCA sourcebooks: 36 rows (`fca-regulators:sourcebook:CODE`)
+- ECHR pages: 600 rows (`echr-hudoc:page:{offset}`)
+- EUR-Lex pages: 50 rows
+- Written Answers monthly chunks: 318 rows (2000-01 to 2026-06-03)
+- Written Statements monthly chunks: 350 rows (1997-05 to 2026-06-03)
+- Single-row sources: 6 rows (committees-a, hmrc-tiins, ots-reports, scotlawcom, nilawcom, uk-treaties:v2)
+
+---
 
 ## CODE CHANGES — 3 Jun 2026 Sprint: Full queue seeding + corpus email manifest
 
