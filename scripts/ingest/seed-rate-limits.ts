@@ -33,6 +33,7 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; note: string }
   { sourceKey: 'scotlawcom',      intervalMs: 300,  note: 'scotlawcom.gov.uk — law commission publications' },
   { sourceKey: 'nilawcom',        intervalMs: 300,  note: 'nilawcommission.gov.uk — defunct since 2015, ~18 historical reports' },
   { sourceKey: 'ssrn',            intervalMs: 200,  note: 'ssrn.com — PLACEHOLDER: API returned 403 Forbidden on 3 Jun 2026 check; do not seed queue rows until access confirmed' },
+  { sourceKey: 'lda-parliament',  intervalMs: 200,  note: 'lda.data.parliament.uk — no auth, 500 records/page; confirmed working V6 3 Jun 2026' },
 ]
 
 async function main(): Promise<void> {

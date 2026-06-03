@@ -278,6 +278,9 @@ async function discoverSinglePass(_corpus: string): Promise<DiscoveredRow[]> {
 const SINGLE_PASS_CORPORA = new Set([
   'hmrc-codes-guidance', 'hmrc-tiins', 'ots-reports', 'scotlawcom',
   'nilawcom', 'oecd', 'uk-treaties', 'fca-regulators',
+  // LDA Parliament — all pages seeded upfront by seed-lda-queue.ts; no discovery needed
+  'lda-commonsoralquestions', 'lda-lordswrittenquestions', 'lda-commonswrittenquestions',
+  'lda-commonsdivisions', 'lda-lordsdivisions',
 ])
 
 export async function discoverForCorpus(corpus: string): Promise<DiscoveredRow[]> {
@@ -314,8 +317,10 @@ export const DISCOVERY_CORPUS_ORDER = [
   'hansard-commons-a', 'hansard-commons-b', 'hansard-lords-a', 'hansard-lords-b',
   'committees-a', 'written-answers', 'written-statements',
   'fca-regulators', 'hmrc-codes-guidance', 'hmrc-tiins', 'scotlawcom',
+  'lda-commonsoralquestions', 'lda-lordswrittenquestions', 'lda-commonswrittenquestions',
   // Priority 3
   'echr-hudoc', 'eur-lex', 'uk-treaties', 'nilawcom', 'ots-reports',
+  'lda-commonsdivisions', 'lda-lordsdivisions',
   // Priority 4
   'oecd',
 ]

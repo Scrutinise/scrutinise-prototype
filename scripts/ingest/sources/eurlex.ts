@@ -1,6 +1,10 @@
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 
 const EUR_LEX_BASE = 'https://eur-lex.europa.eu'
+// V6 3 Jun 2026: search.html?format=json now returns HTML (SPA redesign).
+// REST API returns 404. Using CELLAR SPARQL endpoint instead — returns CELEX IDs
+// for all series-3 (secondary legislation) items. ~232,000 items available.
+const CELLAR_SPARQL = 'https://publications.europa.eu/webapi/rdf/sparql'
 const throttle = new AdaptiveThrottle({ floor: 500 })
 
 export interface EurLexDoc {
@@ -21,66 +25,76 @@ async function fetchHtml(url: string): Promise<string | null> {
   return res.text()
 }
 
-interface SearchPage {
-  results?: Array<{ celex?: string; title?: string; date?: string }>
+interface SparqlResult {
+  results: { bindings: Array<{ celex: { value: string } }> }
 }
 
-async function fetchSearchPage(page: number, pageSize: number): Promise<SearchPage | null> {
+// Fetch a page of CELEX IDs for series-3 (secondary legislation) via CELLAR SPARQL.
+// page is 1-indexed; uses OFFSET pagination with pageSize=500.
+// Note: SPARQL OFFSET without ORDER BY may not be stable across calls — r2Exists
+// deduplication in processEurLex handles any overlap gracefully.
+async function fetchCelexIds(page: number, pageSize: number): Promise<string[]> {
   await throttle.wait()
-  const url = `${EUR_LEX_BASE}/search.html` +
-    `?scope=EURLEX&type=quick&lang=en` +
-    `&andText0=united+kingdom&celex=3*` +
-    `&page=${page}&pageSize=${pageSize}&format=json`
+  const offset = (page - 1) * pageSize
+  const query =
+    `PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>\n` +
+    `SELECT ?celex WHERE {\n` +
+    `  ?doc cdm:resource_legal_id_celex ?celex .\n` +
+    `  FILTER(STRSTARTS(STR(?celex), "3"))\n` +
+    `} LIMIT ${pageSize} OFFSET ${offset}`
+  const url =
+    `${CELLAR_SPARQL}?query=${encodeURIComponent(query)}&format=application%2Fsparql-results%2Bjson`
   const res = await fetch(url, {
-    headers: { Accept: 'application/json', 'User-Agent': 'Scrutinise-Ingest/1.0' },
+    headers: {
+      'User-Agent': 'Scrutinise-Ingest/1.0',
+      Accept: 'application/sparql-results+json',
+    },
   })
-  if (res.status === 429) { throttle.backoff(); return null }
-  if (!res.ok) return null
+  if (res.status === 429) { throttle.backoff(); return [] }
+  if (!res.ok) return []
   throttle.success()
-  try { return await res.json() as SearchPage } catch { return null }
+  try {
+    const data = await res.json() as SparqlResult
+    return (data.results?.bindings ?? [])
+      .map(b => b.celex?.value)
+      .filter((v): v is string => !!v)
+  } catch { return [] }
 }
 
-// Fetch a single page of EUR-Lex retained EU instruments (page is 1-indexed).
-export async function* listRetainedEuPage(page: number, pageSize = 100): AsyncGenerator<EurLexDoc> {
-  const data = await fetchSearchPage(page, pageSize)
-  if (!data) return
-  for (const item of data.results ?? []) {
-    if (!item.celex) continue
+// Fetch a single page of EUR-Lex secondary legislation CELEX IDs (page is 1-indexed).
+export async function* listRetainedEuPage(page: number, pageSize = 500): AsyncGenerator<EurLexDoc> {
+  const celexIds = await fetchCelexIds(page, pageSize)
+  for (const celexId of celexIds) {
     yield {
-      celexId: item.celex,
-      title: item.title ?? '',
-      date: item.date ?? '',
-      url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${item.celex}`,
+      celexId,
+      title: '',
+      date: '',
+      url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${celexId}`,
     }
   }
 }
 
-// Paginate through EUR-Lex CELEX series 3 (secondary legislation) filtered to
-// UK-relevant instruments — the ~4 000 items that became UK retained EU law.
-export async function* listRetainedEuInstruments(maxItems = 5000): AsyncGenerator<EurLexDoc> {
+// Paginate through all EUR-Lex series-3 secondary legislation CELEX IDs.
+export async function* listRetainedEuInstruments(maxItems = 250_000): AsyncGenerator<EurLexDoc> {
   let page = 1
-  const pageSize = 100
+  const pageSize = 500
   let fetched = 0
 
   while (fetched < maxItems) {
-    const data = await fetchSearchPage(page, pageSize)
-    if (!data) continue  // rate-limited — throttle already backed off, retry same page
+    const celexIds = await fetchCelexIds(page, pageSize)
+    if (celexIds.length === 0) break
 
-    const items = data.results ?? []
-    if (items.length === 0) break
-
-    for (const item of items) {
-      if (!item.celex) continue
+    for (const celexId of celexIds) {
       yield {
-        celexId: item.celex,
-        title: item.title ?? '',
-        date: item.date ?? '',
-        url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${item.celex}`,
+        celexId,
+        title: '',
+        date: '',
+        url: `${EUR_LEX_BASE}/legal-content/EN/TXT/HTML/?uri=CELEX:${celexId}`,
       }
       if (++fetched >= maxItems) return
     }
 
-    if (items.length < pageSize) break
+    if (celexIds.length < pageSize) break
     page++
   }
 }

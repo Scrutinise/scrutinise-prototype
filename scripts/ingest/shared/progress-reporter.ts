@@ -56,9 +56,17 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
   { label: 'House of Commons Library',       sourceKey: 'hoc-library',             dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
-  // V5 3 Jun 2026: handbook.fca.org.uk is a JS SPA — static HTML scraping returns 0 sections.
-  // Needs Playwright/headless browser. Blocked until FCA provides a structured data API.
+  // V5/V6 3 Jun 2026: handbook.fca.org.uk is a pure JS SPA (data-critters-container Angular build).
+  // Every URL including /sitemap.xml and /robots.txt returns the same SPA shell.
+  // "JavaScript is disabled" message confirms — no server-side content. Genuinely blocked.
+  // FCA Publications (fca.org.uk/publications) is a viable alternative corpus for V7 (Drupal HTML,
+  // accessible at /publications/search-results) but scraper build is out of scope for V6.
   { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2, blocked: true },
+  // V6 3 Jun 2026: lda.data.parliament.uk — no auth, JSON, 500 records/page. Confirmed working.
+  // Actual totals from V6 diagnostic: 69,852 / 103,137 / 618,599 records respectively.
+  { label: 'Commons Oral Questions (LDA)',    sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsoralquestions'],               estSections: 70_000,    priority: 2 },
+  { label: 'Lords Written Questions (LDA)',   sourceKey: 'lda-parliament',          dbCorpora: ['lda-lordswrittenquestions'],              estSections: 103_000,   priority: 2 },
+  { label: 'Commons Written Questions (LDA)', sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonswrittenquestions'],            estSections: 619_000,   priority: 2 },
   // Brief used 'hmrc-web'; DB corpus = 'hmrc-codes-guidance'
   { label: 'HMRC + Guidance',                sourceKey: 'hmrc-codes-guidance',     dbCorpora: ['hmrc-codes-guidance'],                    estSections: 640_000,   priority: 2 },
   // Census 3 Jun 2026: compiled 791; appears complete for available content
@@ -71,9 +79,13 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   // V5 3 Jun 2026: HUDOC /app/query/results returns 404 — API endpoint changed.
   // No working alternative endpoint found. Blocked until new API is identified.
   { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_050,    priority: 3, blocked: true },
-  // V5 3 Jun 2026: search.html?...&format=json returns HTML not JSON — API changed.
-  // CELLAR/SPARQL API requires auth. Blocked until search API is fixed or replaced.
-  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 80_000,    priority: 3, blocked: true },
+  // V6 3 Jun 2026: search.html?format=json returns HTML (SPA redesign) — REST API 404.
+  // Fixed via CELLAR SPARQL (publications.europa.eu/webapi/rdf/sparql) — no auth required.
+  // Returns all ~232,988 series-3 secondary legislation CELEX IDs. fetchDocumentText confirmed working.
+  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 232_000,   priority: 3 },
+  // V6 3 Jun 2026: lda.data.parliament.uk — voting records. Actual totals: 5,553 / 2,089 records.
+  { label: 'Commons Divisions (LDA)',         sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsdivisions'],                  estSections: 5_553,     priority: 3 },
+  { label: 'Lords Divisions (LDA)',           sourceKey: 'lda-parliament',          dbCorpora: ['lda-lordsdivisions'],                    estSections: 2_089,     priority: 3 },
   // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
   { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
   { label: 'White / Green Papers',            sourceKey: 'command-papers',         dbCorpora: [],                                         estSections: 20_000,    priority: 3 },
@@ -335,6 +347,7 @@ const THEORETICAL_SECTIONS_PER_HOUR: Record<string, number> = {
   'hmrc':            Math.floor((3_600_000 / 300) * 8),   //  96,000/hr
   'echr':            Math.floor((3_600_000 / 500) * 50),  // 360,000/hr
   'eurlex':          Math.floor((3_600_000 / 500) * 10),  //  72,000/hr
+  'lda-parliament':  Math.floor((3_600_000 / 200) * 500), // 9,000,000/hr ceiling (500 items/req)
   'default':         1_000,
 }
 
@@ -406,6 +419,7 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
       : sk.startsWith('hmrc') ? 'hmrc'
       : sk === 'echr-hudoc' ? 'echr'
       : sk === 'eur-lex' ? 'eurlex'
+      : sk.startsWith('lda-') ? 'lda-parliament'
       : 'default'
     return { label: row.workerLabel, sourceKey: sk, sourceType, ratePerHour, stalled, idle }
   })

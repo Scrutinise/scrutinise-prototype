@@ -32,6 +32,7 @@ import { listDebatesForMonth } from '../sources/theyworkforyou'
 import { fetchSectionText as fetchFcaText, listFcaSections, listFcaSectionsForSourcebook } from '../sources/fca-handbook'
 import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
+import { fetchLdaPage } from '../sources/lda-parliament'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
 import {
@@ -84,6 +85,11 @@ async function main(): Promise<void> {
                 'hmrc-codes-guidance': 'hmrc', 'hmrc-tiins': 'gov-uk', 'ots-reports': 'gov-uk',
                 'scotlawcom': 'scotlawcom', 'nilawcom': 'nilawcom',
                 'oecd': 'oecd', 'uk-treaties': 'treaties',
+                'lda-commonsoralquestions': 'lda-parliament',
+                'lda-lordswrittenquestions': 'lda-parliament',
+                'lda-commonswrittenquestions': 'lda-parliament',
+                'lda-commonsdivisions': 'lda-parliament',
+                'lda-lordsdivisions': 'lda-parliament',
               }
               const sourceType = sourceTypeMap[corpus]
               if (sourceType) await markSourceTypeComplete(sourceType).catch(() => {})
@@ -136,6 +142,7 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'fca':             return processFca(row)
     case 'echr':            return processEchr(row)
     case 'eurlex':          return processEurLex(row)
+    case 'lda-parliament':  return processLda(row)
     case 'hmrc':            return processHmrc(row)
     case 'treaties':        return processTreaties(row)
     case 'oecd':            return processOecd(row)
@@ -488,6 +495,47 @@ async function processEurLex(row: QueueRow): Promise<void> {
     await r2Put(cKey, compiled)
     const secId = sectionId('eur-lex', doc.celexId, '1')
     await upsertSection({ id: secId, corpus: 'eur-lex', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+  }
+  await markDone(row.id)
+}
+
+// ── LDA Parliament ────────────────────────────────────────────────────────────
+
+async function processLda(row: QueueRow): Promise<void> {
+  // corpus like 'lda-commonsoralquestions' → slug 'commonsoralquestions'
+  const slug = row.corpus.replace(/^lda-/, '')
+  const page = parseInt(row.docId.replace('page:', ''), 10)
+
+  let items
+  try {
+    const result = await fetchLdaPage(slug, page)
+    items = result.items
+  } catch (err) {
+    await markFailed(row.id, String(err))
+    return
+  }
+
+  if (items.length === 0) {
+    await markFailed(row.id, `LDA ${slug} page ${page}: 0 items returned`)
+    return
+  }
+
+  for (const item of items) {
+    const cKey = compiledKey(row.corpus, item.id, '1')
+    if (await r2Exists(cKey)) continue
+    const compiled = rawToText(item.text)
+    if (!compiled.trim()) continue
+    await r2Put(cKey, compiled)
+    const secId = sectionId(row.corpus, item.id, '1')
+    await upsertSection({
+      id: secId,
+      corpus: row.corpus,
+      sourceUrl: item.sourceUrl,
+      r2Key: cKey,
+      wordCount: countWords(compiled),
+      status: 'compiled',
+      compiledText: compiled.slice(0, 10_000),
+    })
   }
   await markDone(row.id)
 }
