@@ -44,14 +44,19 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   // We have 74,730 compiled — effectively complete for currently available content.
   { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 75_000,    priority: 2 },
   { label: 'BAILII (full corpus)',            sourceKey: 'bailii',                 dbCorpora: ['bailii-tribunals','bailii-eat','bailii-privy-ni'], estSections: 2_000_000, priority: 2, blocked: true },
-  // hansard: DB uses -a/-b split; aggregated here
-  { label: 'Hansard Commons',                sourceKey: 'hansard-commons',         dbCorpora: ['hansard-commons-a','hansard-commons-b'],   estSections: 2_000_000, priority: 2 },
-  { label: 'Hansard Lords',                  sourceKey: 'hansard-lords',           dbCorpora: ['hansard-lords-a','hansard-lords-b'],       estSections: 500_000,   priority: 2 },
+  // TWFY pwdata — free bulk XML from theyworkforyou.com/pwdata/scrapedxml/ (verified 4 Jun 2026)
+  // Supersedes parliament-api.ts (403 from Railway) and TWFY API (1k quota).
+  // 19,999 files (1919–present); new files added daily. One queue row per file.
+  { label: 'Hansard Commons (TWFY)',          sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-debates'],                         estSections: 2_000_000, priority: 2 },
+  // 5,663 files (1999–present)
+  { label: 'Hansard Lords (TWFY)',            sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-lords'],                           estSections: 500_000,   priority: 2 },
   { label: 'Committee Reports',              sourceKey: 'committee-reports',       dbCorpora: ['committees-a','committees-b'],             estSections: 100_000,   priority: 2 },
-  // Census 3 Jun 2026: Parliament API confirmed 537,593 (sum 2000–2025)
-  { label: 'Written Answers (PQs)',          sourceKey: 'written-answers',         dbCorpora: ['written-answers'],                        estSections: 537_593,   priority: 2 },
+  // TWFY pwdata wrans/ — 6,857 files (2001–present); supersedes blocked written-answers corpus
+  { label: 'Written Answers (TWFY)',          sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-wrans'],                           estSections: 537_593,   priority: 2 },
   // Census 3 Jun 2026: Parliament API confirmed 17,487
   { label: 'Written Ministerial Statements', sourceKey: 'written-statements',      dbCorpora: ['written-statements'],                     estSections: 17_487,    priority: 2 },
+  // TWFY pwdata westminhall/ — 3,932 files (2000–present)
+  { label: 'Westminster Hall (TWFY)',         sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-westminster'],                     estSections: 100_000,   priority: 3 },
   { label: 'Bill Pages',                     sourceKey: 'bill-pages',              dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
   { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
@@ -106,8 +111,9 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   // PRIORITY 4 — Lower priority
   { label: 'Local / Private Acts',            sourceKey: 'local-private-acts',     dbCorpora: [],                                         estSections: 10_000,    priority: 4 },
   { label: 'NHS Guidance',                    sourceKey: 'nhs-guidance',           dbCorpora: [],                                         estSections: 20_000,    priority: 4 },
-  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
-  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: [],                                         estSections: 3_000,     priority: 4 },
+  // V2 Part 3: PPG 63 chapters + NPPF (HTML text). Building Regs 21 docs (description text; PDFs future work).
+  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: ['planning-policy'],                        estSections: 64,        priority: 4 },
+  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: ['building-regs'],                          estSections: 21,        priority: 4 },
   { label: 'CMA Guidelines',                  sourceKey: 'cma-guidelines',         dbCorpora: [],                                         estSections: 8_000,     priority: 4 },
   { label: 'Ofcom/Ofwat/Ofgem/Ofsted',        sourceKey: 'regulator-rulebooks',    dbCorpora: [],                                         estSections: 40_000,    priority: 4 },
   // Census 3 Jun 2026: compiled 462; free-tier content appears fully ingested

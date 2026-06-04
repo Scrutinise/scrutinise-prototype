@@ -42,6 +42,7 @@ import { fetchSectionText as fetchFcaText, listFcaSections, listFcaSectionsForSo
 import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
 import { fetchLdaPage } from '../sources/lda-parliament'
+import { fetchPwdataFile, parsePwdataXml, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
 import {
@@ -49,6 +50,7 @@ import {
   listExplanatoryNotes, listImpactAssessments, listConsultations,
   listHmrcTiins, listOtsReports,
   listFcaPublications, listSentencingCouncilGuidelines, listCollegeOfPolicing,
+  listPlanningPolicyNppf, listBuildingRegs,
   fetchDocumentText as fetchGovText,
 } from '../sources/gov-scraper'
 
@@ -102,6 +104,12 @@ async function main(): Promise<void> {
                 'lda-commonswrittenquestions': 'lda-parliament',
                 'lda-commonsdivisions': 'lda-parliament',
                 'lda-lordsdivisions': 'lda-parliament',
+                'pwdata-debates': 'twfy-pwdata',
+                'pwdata-lords': 'twfy-pwdata',
+                'pwdata-wrans': 'twfy-pwdata',
+                'pwdata-westminster': 'twfy-pwdata',
+                'planning-policy': 'gov-uk',
+                'building-regs': 'gov-uk',
               }
               const sourceType = sourceTypeMap[corpus]
               if (sourceType) await markSourceTypeComplete(sourceType).catch(() => {})
@@ -159,6 +167,7 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'echr':            return processEchr(row)
     case 'eurlex':          return processEurLex(row)
     case 'lda-parliament':  return processLda(row)
+    case 'twfy-pwdata':     return processPwdata(row)
     case 'hmrc':            return processHmrc(row)
     case 'treaties':          return processTreaties(row)
     case 'oecd':              return processOecd(row)
@@ -628,6 +637,8 @@ async function processGovUk(row: QueueRow): Promise<void> {
     case 'fca-publications':    gen = listFcaPublications(); break
     case 'sentencing-council':  gen = listSentencingCouncilGuidelines(); break
     case 'college-of-policing': gen = listCollegeOfPolicing(); break
+    case 'planning-policy':     gen = listPlanningPolicyNppf(); break
+    case 'building-regs':       gen = listBuildingRegs(); break
     default:                    gen = listHmrcTiins()
   }
 
@@ -644,6 +655,51 @@ async function processGovUk(row: QueueRow): Promise<void> {
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
   }
   await markDone(row.id)
+}
+
+// ── TWFY pwdata (bulk Hansard XML) ────────────────────────────────────────────
+// docId = filename without .xml extension (e.g. "debates2026-06-03a", "answers2026-06-01")
+
+async function processPwdata(row: QueueRow): Promise<void> {
+  if (!PWDATA_CORPUS_CONFIG[row.corpus]) {
+    await markSkipped(row.id)
+    console.warn(`[worker] unknown pwdata corpus ${row.corpus} — skipped`)
+    return
+  }
+
+  const xml = await fetchPwdataFile(row.corpus, row.docId)
+  if (!xml) {
+    // 404 means no sitting that day — treat as done (not an error)
+    await markDone(row.id)
+    return
+  }
+
+  const text = parsePwdataXml(xml)
+  if (!text.trim()) {
+    // File exists but contains no extractable text (rare)
+    await markDone(row.id)
+    return
+  }
+
+  const compiled = rawToText(text)
+  const cKey = compiledKey(row.corpus, row.docId, '1')
+
+  if (!await r2Exists(cKey)) {
+    await r2Put(cKey, compiled)
+  }
+
+  const sourceUrl = `https://www.theyworkforyou.com/pwdata/scrapedxml/${PWDATA_CORPUS_CONFIG[row.corpus].dir}/${row.docId}.xml`
+  const secId = sectionId(row.corpus, row.docId, '1')
+  await upsertSection({
+    id: secId,
+    corpus: row.corpus,
+    sourceUrl,
+    r2Key: cKey,
+    wordCount: countWords(compiled),
+    status: 'compiled',
+    compiledText: compiled.slice(0, 10_000),
+  })
+  await markDone(row.id, 'xml')
 }
 
 // ── Law Commissions (Scottish + NI) ──────────────────────────────────────────

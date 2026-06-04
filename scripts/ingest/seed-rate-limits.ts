@@ -35,6 +35,7 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; note: string }
   { sourceKey: 'ssrn',            intervalMs: 200,  note: 'ssrn.com — PLACEHOLDER: API returned 403 Forbidden on 3 Jun 2026 check; do not seed queue rows until access confirmed' },
   { sourceKey: 'lda-parliament',    intervalMs: 200,  note: 'lda.data.parliament.uk — no auth, 500 records/page; confirmed working V6 3 Jun 2026' },
   { sourceKey: 'fca-publications',  intervalMs: 300,  note: 'fca.org.uk/publications — Drupal CMS, PDFs via pdf-parse; client not yet built (V8)' },
+  { sourceKey: 'twfy-pwdata',       intervalMs: 500,  note: 'theyworkforyou.com/pwdata — polite rate; mySociety server, no stated limit (V2 4 Jun 2026)' },
 ]
 
 async function main(): Promise<void> {

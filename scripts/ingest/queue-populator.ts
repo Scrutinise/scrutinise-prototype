@@ -372,6 +372,9 @@ async function populateNewSingleRowSources(): Promise<void> {
     { id: 'fca-publications:__index',corpus: 'fca-publications',docId: '__index', sourceType: 'fca-publications', priority: 3 },
     { id: 'sentencing-council:__index',corpus:'sentencing-council',docId:'__index',sourceType:'gov-uk',           priority: 3 },
     { id: 'college-of-policing:__index',corpus:'college-of-policing',docId:'__index',sourceType:'gov-uk',        priority: 3 },
+    // V2 Part 3: confirmed accessible V1 audit. PPG 63 HTML chapters; Building Regs 21 docs.
+    { id: 'planning-policy:__index',   corpus: 'planning-policy',  docId: '__index', sourceType: 'gov-uk',          priority: 4 },
+    { id: 'building-regs:__index',     corpus: 'building-regs',    docId: '__index', sourceType: 'gov-uk',          priority: 4 },
   ]
   await bulkUpsertQueueRows(rows)
   console.log(`[populator] new single-row sources: ${rows.length} rows inserted`)
