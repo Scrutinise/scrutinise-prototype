@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 4 Jun 2026 (V2 complete — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit done)*
+*Last updated: 4 Jun 2026 (V2 complete — all workers redeployed, cron audit done, queue at 37,869 pending)*
 
 ---
 
@@ -56,7 +56,10 @@ All directories return HTTP 200. Files current through 2026-06-03. XML parseable
 - V1 blocked: Erskine May, Bill Pages, HoC Library all CF 403 — not built
 - Seed rows inserted: `planning-policy:__index`, `building-regs:__index`
 
-**Remaining action (Charlie):** Run `commit-all.sh` then redeploy workers + scheduler in Railway to pick up all V2 code changes (processPwdata, LDA fallback, URLSearchParams fix, NPPF/BuildRegs).
+**All post-deploy actions complete:**
+- ~~`commit-all.sh`~~ ✅ pushed (commits `a526de9..3b0b676`)
+- ~~Redeploy workers~~ ✅ all 20 redeployed via Railway API
+- **Redeploy scheduler** — Charlie to do manually (or CC can trigger via API if needed)
 
 ---
 

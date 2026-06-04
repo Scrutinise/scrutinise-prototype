@@ -28,7 +28,11 @@
 | Workers with recent snapshots | None yet (workers just redeployed, no 50-row checkpoint hit) |
 | Other services running scheduler | **None** — all 20 workers run `npm run worker` |
 
-**Verdict:** No duplicate scheduler service exists. The 09:56 old-format email was from the `08:00 REMOVED` deployment container lingering until the `08:24 SUCCESS` fully replaced it. One-time bleed — no code or config change needed. Monitor the 10:56 email to confirm it shows "20 workers" format. If a second old-format email arrives, Charlie should check if there is a second Railway project with scheduler code.
+**cronSchedule check (addendum query):** All 22 service instances return `cronSchedule: null`. No Railway cron job is set on any service including `Ingest-scheduler`. The cron-job theory is ruled out.
+
+**Final verdict:** No persistent duplicate scheduler mechanism found via Railway API. The 09:56 old-format email was a one-time bleed from a lingering container of the `08:00 REMOVED` deployment. With `scheduler_lock` table live and the 08:24 deployment the only running instance, duplicate emails should stop. If they continue, next step is checking Railway logs directly for two simultaneous process IDs.
+
+**Workers redeployed (CC via Railway API):** All 20 workers triggered via `serviceInstanceRedeploy` mutation (environmentId `991f733c`). V2 code now live on all workers.
 
 ### Issues 2 and 3 (already completed in Part 2 this session)
 
