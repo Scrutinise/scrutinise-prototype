@@ -1,10 +1,14 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V1)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V1 + monitoring)*
 
 ***
 
-## POST-DEPLOY ACTIONS — 4 Jun 2026 V1 (Charlie to run after push)
+## POST-DEPLOY ACTIONS — 4 Jun 2026 V1 (ALL STILL PENDING — Charlie to run)
+
+**Monitoring check (~02:00 BST):** scheduler_lock table not yet created, per-worker snapshots = 0, queue has 491 failed (LDA 524s accumulating). All actions below still required.
+
+## POST-DEPLOY CHECKLIST — 4 Jun 2026 V1
 
 | Action | Command / Detail |
 |--------|-----------------|

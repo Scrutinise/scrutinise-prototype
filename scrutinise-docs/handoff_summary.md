@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 4 Jun 2026 (V1 — corpus audit + scheduler lock + new source clients)*
+*Last updated: 4 Jun 2026 (V1 post-sprint monitoring — all actions confirmed pending)*
 
 ---
 
@@ -11,6 +11,22 @@
 **Active branch:** Main
 **Last sprint:** V1 (4 Jun 2026) — Full corpus audit, scheduler lock, LDA 524 fix, 4 new source clients
 **Previous sprint:** V7 (3 Jun 2026) — Worker-ID throughput + FCA status fix
+
+### Post-sprint monitoring (4 Jun 2026 ~02:00 BST)
+
+Queried Railway DB directly after push. **All V1 post-deploy actions still pending** — Charlie has not yet run migration or redeployed.
+
+| Check | Result |
+|-------|--------|
+| `scheduler_lock` table | Does not exist — `prisma migrate deploy` not yet run |
+| Per-worker snapshots | 0 rows — workers not yet redeployed (still running pre-V7 code) |
+| Last scheduler run | 2026-06-03T23:56 UTC (corpus-level snapshots only, no per-worker breakdown) |
+| Queue state | 955 pending / 257 claimed / 70,709 done / **491 failed** (LDA 524s accumulating — reset SQL still needed) |
+| `acquireSchedulerLock()` fallback | Working correctly — returns `true` (proceeds without lock) when table missing |
+
+Next hourly email will still show the old per-corpus format (no per-worker rows) until Charlie redeployes.
+
+---
 
 ### What just happened (4 Jun 2026 V1)
 
