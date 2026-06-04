@@ -2,15 +2,63 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 4 Jun 2026 (V1 post-sprint monitoring — all actions confirmed pending)*
+*Last updated: 4 Jun 2026 (V2 complete — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit done)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V1 (4 Jun 2026) — Full corpus audit, scheduler lock, LDA 524 fix, 4 new source clients
-**Previous sprint:** V7 (3 Jun 2026) — Worker-ID throughput + FCA status fix
+**Last sprint:** V2 (4 Jun 2026) — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit
+**Previous sprint:** V1 (4 Jun 2026) — Full corpus audit, scheduler lock, LDA 524 fix, 4 new source clients
+
+### V2 Part 1 — TWFY pwdata client (4 Jun 2026)
+
+**Directory probe verified before building.** Three mismatches from brief:
+- `lords/` → actual path `lordspages/`, prefix `daylord{date}{a/b}.xml`
+- `westminster/` → actual path `westminhall/`, prefix `westminster{date}{a/b}.xml`
+- `wrans/` → filename prefix is `answers` not `wrans`
+
+| Corpus | Dir | Files | Coverage |
+|--------|-----|-------|----------|
+| pwdata-debates | `debates/` | 19,999 | 1919–present |
+| pwdata-lords | `lordspages/` | 5,663 | 1999–present |
+| pwdata-wrans | `wrans/` | 6,857 | 2001–present |
+| pwdata-westminster | `westminhall/` | 3,932 | 2000–present |
+
+All directories return HTTP 200. Files current through 2026-06-03. XML parseable — speech format for debates, ques/reply format for written answers.
+
+**Files created/modified:**
+- `scripts/ingest/sources/twfy-pwdata.ts` (new — source client)
+- `scripts/ingest/seed-pwdata-queue.ts` (new — seeder, ~36k rows)
+- `scripts/ingest/workers/worker-queue.ts` (processPwdata added)
+- `scripts/ingest/shared/progress-reporter.ts` (CORPUS_MANIFEST updated — Hansard/WA entries now point to pwdata corpora)
+- `scripts/ingest/seed-rate-limits.ts` (twfy-pwdata 500ms added)
+- `scripts/ingest/shared/discovery.ts` (pwdata corpora added to SINGLE_PASS_CORPORA + ORDER)
+
+**Post-deploy actions needed:** ~~Run `seed-pwdata-queue.ts`~~ ✅ done | ~~Run `seed-rate-limits.ts`~~ ✅ done | Redeploy workers (Charlie).
+
+---
+
+### V2 Part 2 — LDA 524 fallback + UK Treaties fix (4 Jun 2026)
+
+**LDA 524 fallback:** `fetchLdaPage` now retries with `pageSize 100` on HTTP 524 when original size > 100. Prevents permanent failure; accepts partial page coverage over zero. 1,416 LDA failed rows reset to pending.
+
+**UK Treaties silent failure:** Root cause was `filter_organisations[]=` sent as literal `[]` in URL — gov.uk API returns 422. Fix: `URLSearchParams` encodes as `%5B%5D`. Query now returns 1,104 FCDO treaty results. 2 done rows reset to pending.
+
+**LDA Divisions content:** Each record = title + date + UIN only (no narrative). Low text volume but descriptive titles retained; already priority 3.
+
+**Queue state after all V2 post-deploy actions:** 37,869 pending | 270 claimed | 70,730 done | 0 failed
+
+**V2 Part 3 — NPPF/PPG + Building Regs (4 Jun 2026)**
+- `listPlanningPolicyNppf()`: enumerates PPG collection 63 HTML chapters (~60KB text each) + NPPF page
+- `listBuildingRegs()`: enumerates 21 Approved Documents (description text; PDFs future work)
+- V1 blocked: Erskine May, Bill Pages, HoC Library all CF 403 — not built
+- Seed rows inserted: `planning-policy:__index`, `building-regs:__index`
+
+**Remaining action (Charlie):** Run `commit-all.sh` then redeploy workers + scheduler in Railway to pick up all V2 code changes (processPwdata, LDA fallback, URLSearchParams fix, NPPF/BuildRegs).
+
+---
 
 ### Post-sprint monitoring (4 Jun 2026 ~02:00 BST)
 

@@ -1,8 +1,139 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V1 + monitoring)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V2 Part 1 — TWFY pwdata client)*
 
 ***
+
+## POST-DEPLOY ACTIONS — 4 Jun 2026 V2 (Charlie to run after commit)
+
+| Action | Command / Detail |
+|--------|-----------------|
+| Seed pwdata queue rows | `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-pwdata-queue.ts` — seeds ~36,451 rows across 4 corpora |
+| Add twfy-pwdata rate limit | Run updated `seed-rate-limits.ts` (adds `twfy-pwdata` at 500ms) |
+| Redeploy workers + scheduler | So new `processPwdata` case is live |
+| Monitor next email | Should show Hansard Commons (TWFY), Hansard Lords (TWFY), Written Answers (TWFY), Westminster Hall (TWFY) in manifest |
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V2 Addendum: Railway audit + duplicate scheduler verdict
+
+### Issue 1 findings
+
+| Check | Result |
+|-------|--------|
+| Railway API: scheduler services | **1 only** — `Ingest-scheduler` (id `7a4f3ffb`) |
+| Active deployment | SUCCESS at 08:24, commit `646b2c2f` (V1 code, "20 workers") |
+| Previous deployments | All REMOVED |
+| scheduler_lock table | **Exists** (P1 was completed). Lock held by `17h6521s7zah` since 08:26 |
+| Workers with recent snapshots | None yet (workers just redeployed, no 50-row checkpoint hit) |
+| Other services running scheduler | **None** — all 20 workers run `npm run worker` |
+
+**Verdict:** No duplicate scheduler service exists. The 09:56 old-format email was from the `08:00 REMOVED` deployment container lingering until the `08:24 SUCCESS` fully replaced it. One-time bleed — no code or config change needed. Monitor the 10:56 email to confirm it shows "20 workers" format. If a second old-format email arrives, Charlie should check if there is a second Railway project with scheduler code.
+
+### Issues 2 and 3 (already completed in Part 2 this session)
+
+`seed-pwdata-queue.ts`: `bulkUpsertQueueRows` already uses `BATCH = 500` internally — no change needed. 36,451 rows already seeded. `seed-rate-limits.ts` already run (17 entries). Both confirmed idempotent.
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V2 Part 3: NPPF/PPG and Building Regs source clients
+
+### V1 audit verdict for Part 3 candidates
+
+| Source | V1 Audit | Action |
+|--------|----------|--------|
+| Erskine May | ⛔ CF 403 | Not built |
+| Bill Pages (bills.parliament.uk) | ⛔ CF 403 | Not built |
+| House of Commons Library | ⛔ CF 403 | Not built |
+| Planning Policy NPPF/PPG | ✅ accessible | Built ✅ |
+| Building Regulations | ✅ accessible | Built ✅ |
+
+### Implementation notes
+
+**NPPF/PPG (`listPlanningPolicyNppf`):**
+Uses gov.uk content API to enumerate the PPG collection (63 chapters). Each chapter is a `detailed_guide` with ~60KB HTML body text (confirmed for "Advertisements" chapter). Also yields NPPF guidance page. Workers use `fetchDocumentText` (HTML scrape) — full content available.
+
+**Building Regulations (`listBuildingRegs`):**
+Uses gov.uk content API to enumerate the Approved Documents collection (21 docs). Content is in PDF attachments — `fetchDocumentText` captures the description/metadata text only (~1KB each). Full PDF ingest is future work.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/gov-scraper.ts` | Add `listPlanningPolicyNppf()` — gov.uk content API enumeration of PPG collection (63 chapters) + NPPF page. Add `listBuildingRegs()` — content API enumeration of Approved Documents collection (21 docs). |
+| `scripts/ingest/workers/worker-queue.ts` | Import `listPlanningPolicyNppf`, `listBuildingRegs`. Add `case 'planning-policy'` and `case 'building-regs'` to `processGovUk` switch. Add to sourceTypeMap. |
+| `scripts/ingest/shared/progress-reporter.ts` | Update CORPUS_MANIFEST: `planning-policy` dbCorpora `['planning-policy']` estSections 64; `building-regs` dbCorpora `['building-regs']` estSections 21. |
+| `scripts/ingest/queue-populator.ts` | Add `planning-policy:__index` and `building-regs:__index` seed rows (priority 4, sourceType gov-uk). |
+| `scripts/ingest/shared/discovery.ts` | Add `planning-policy` and `building-regs` to SINGLE_PASS_CORPORA and DISCOVERY_CORPUS_ORDER. |
+
+### Post-deploy actions completed
+
+`queue-populator.ts` run — seeds `planning-policy:__index` and `building-regs:__index` rows.
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V2 Part 2: LDA 524 fix + UK Treaties silent failure fix
+
+### Findings
+
+**LDA Divisions content:** Each record contains only `title`, `date`, `UIN` (no vote counts, no member votes, no narrative). Example: `"The Tribunal Procedure (Upper Tribunal)... Rules 2024 | Date: 2024-05-24 | UIN: CD:2024-05-24:1824"`. Minimal text for policy research but titles are descriptive. Kept in corpus; de-prioritised (already priority 3).
+
+**UK Treaties — silent failure root cause confirmed:** `listUkTreaties()` constructs the gov.uk search URL with `filter_organisations[]=...` as a literal template string. Node's `fetch` sends `[]` unencoded; gov.uk search API returns HTTP 422. `fetchJson()` returns `null` on non-ok status. Loop yields 0 items. Worker marks row done silently. Fix: use `URLSearchParams` which encodes `[]` as `%5B%5D`. Fixed URL returns 1,104 FCDO treaty results (verified).
+
+**LDA 524 fix:** On 524 with pageSize > 100, worker now retries with pageSize 100. Note: page*100 offset ≠ page*500 offset — partial coverage is accepted over zero coverage.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/lda-parliament.ts` | Add 524 fallback: if 524 and pageSize > 100, retry recursively with pageSize 100. Prevents permanent failure on large page timeouts. |
+| `scripts/ingest/sources/uk-treaties.ts` | Fix `listUkTreaties()` URL construction: use `URLSearchParams` for `filter_organisations[]` to produce `%5B%5D` encoding accepted by gov.uk API. |
+
+### Post-deploy actions completed (CC ran)
+
+| Action | Result |
+|--------|--------|
+| `seed-pwdata-queue.ts` | **36,451 rows inserted** (debates 19,999; lords 5,663; wrans 6,857; westminster 3,932) |
+| `seed-rate-limits.ts` | `twfy-pwdata` 500ms entry added (17 total entries) |
+| UK Treaties queue reset | 2 `done` rows → `pending` (will re-run with URLSearchParams fix) |
+| LDA failed rows reset | **1,416 rows** → `pending` (all LDA sourceType failed rows reset) |
+| **Total pending queue** | **37,869 rows** |
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V2 Part 1: TWFY pwdata bulk Hansard client
+
+### Directory findings (verified 4 Jun 2026, before building)
+
+The brief's directory names were slightly off. Actual paths and prefixes:
+
+| Content | Dir path | Filename prefix | File count | Coverage |
+|---------|----------|-----------------|------------|----------|
+| Commons debates | `debates/` | `debates{date}{a/b}.xml` | 19,999 | 1919–present |
+| Written Answers | `wrans/` | `answers{date}.xml` | 6,857 | 2001–present |
+| Westminster Hall | `westminhall/` | `westminster{date}{a/b}.xml` | 3,932 | 2000–present |
+| Lords debates | `lordspages/` | `daylord{date}{a/b}.xml` | 5,663 | 1999–present |
+
+Brief said `lords/` (→ actual `lordspages/`), `westminster/` (→ actual `westminhall/`), and `wrans/` prefix `wrans` (→ actual prefix `answers`).
+
+XML formats confirmed:
+- Debates/Lords/WH: `<publicwhip>` → `<speech speakername="..."><p>text</p></speech>` (422 speeches, ~571KB for one day)
+- Written Answers: `<publicwhip>` → `<ques speakername="...">`, `<reply speakername="...">` (284 Q+A pairs, ~387KB)
+
+Bonus directories not in brief but accessible: `wms/` (4,462), `lordswms/` (3,672), `lordswrans/` (5,165) — all current through 2026-06-03.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/sources/twfy-pwdata.ts` | NEW — source client. `PWDATA_CORPUS_CONFIG` maps corpus to actual dir/prefix. `listPwdataFiles(corpus)` — fetches directory listing, returns all file refs. `fetchPwdataFile(corpus, docId)` — fetches one file, returns null on 404. `parsePwdataXml(xml)` — handles both `<speech>` (debates) and `<ques>`/`<reply>` (wrans) formats; includes speaker attribution. |
+| `scripts/ingest/seed-pwdata-queue.ts` | NEW — seeder. Fetches all 4 directory listings, inserts one row per file. ~36,451 total rows. Safe to re-run (ON CONFLICT DO NOTHING). |
+| `scripts/ingest/workers/worker-queue.ts` | Import `fetchPwdataFile`, `parsePwdataXml`, `PWDATA_CORPUS_CONFIG`. Add `case 'twfy-pwdata': return processPwdata(row)` to dispatcher. Add `processPwdata()` function. Add pwdata corpora to sourceTypeMap. |
+| `scripts/ingest/shared/progress-reporter.ts` | CORPUS_MANIFEST: replace Hansard Commons → `Hansard Commons (TWFY)` with dbCorpora `['pwdata-debates']`. Replace Hansard Lords → `Hansard Lords (TWFY)` with dbCorpora `['pwdata-lords']`. Replace Written Answers → `Written Answers (TWFY)` with dbCorpora `['pwdata-wrans']`. Add new entry: `Westminster Hall (TWFY)` with dbCorpora `['pwdata-westminster']`, priority 3. |
+| `scripts/ingest/seed-rate-limits.ts` | Add `twfy-pwdata` at 500ms (polite; mySociety server). |
+| `scripts/ingest/shared/discovery.ts` | Add pwdata corpora to `SINGLE_PASS_CORPORA` and `DISCOVERY_CORPUS_ORDER`. |
+
+---
 
 ## POST-DEPLOY ACTIONS — 4 Jun 2026 V1 (ALL STILL PENDING — Charlie to run)
 
