@@ -1,8 +1,43 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V2 Part 1 — TWFY pwdata client)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V3 — DB size monitoring + worker resurrection)*
 
 ***
+
+## POST-DEPLOY ACTIONS — 4 Jun 2026 V3 (Charlie to do after commit)
+
+| Action | Command / Detail |
+|--------|-----------------|
+| Redeploy all services | ✅ CC triggered via Railway API — all 20 workers + scheduler redeploying now |
+| Run cleanup SQL in Railway dashboard | See SQL below — run in Railway → DB → Query tab |
+| Cleanup SQL (snapshots) | `DELETE FROM ingest_progress_snapshots WHERE "capturedAt" < NOW() - INTERVAL '24 hours';` |
+| Cleanup SQL (done rows) | `DELETE FROM ingest_queue WHERE status = 'done' AND "updatedAt" < NOW() - INTERVAL '7 days';` |
+| Verify DB size | Next hourly email will show DB size % — confirm it drops after cleanup |
+
+---
+
+## CODE CHANGES — 4 Jun 2026 V3: Railway volume crash recovery + DB size monitoring
+
+### Context
+
+Railway volume hit 5GB hard limit at ~6pm, causing all 20 workers + scheduler to crash. Volume resized to 20GB. Workers crashed again at ~7pm (presumably during restart against still-full volume). CC triggered full redeploy of all 21 services via Railway API at ~8pm.
+
+Root cause of volume fill: full text is being stored in the DB. Charlie to discuss with CCh what the strategy is for managing this long-term.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/shared/progress-reporter.ts` | Add `queryDbSize()` — queries `pg_database_size`, returns bytes/pretty/pct against 20GB limit. Add `DbSizeResult` interface. Wire into `sendProgressEmail()` as optional param — shows DB size line in email header with ⚠️ WARNING at 80% and ⚠️ CRITICAL at 90%. Email subject gets `⚠️ DB XX%` suffix when >80%. |
+| `scripts/ingest/scheduler.ts` | Import `queryDbSize`. Query DB size in parallel with corpus counts each hourly run. Log DB size to console (with warning if >80%). Pass to `sendProgressEmail`. |
+
+### Post-deploy actions
+
+- **Workers redeployed:** All 20 workers triggered via Railway API `serviceInstanceRedeploy` mutation ✅
+- **Scheduler redeployed:** Triggered via Railway API ✅  
+- **Cleanup SQL:** Must be run manually in Railway dashboard (CC cannot connect to Railway DB from local — `switchback.proxy.rlwy.net` resets connection from outside Railway network)
+
+---
 
 ## POST-DEPLOY ACTIONS — 4 Jun 2026 V2 (Charlie to run after commit)
 

@@ -2,15 +2,15 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 4 Jun 2026 (V2 complete — all workers redeployed, cron audit done, queue at 37,869 pending)*
+*Last updated: 4 Jun 2026 (V3 — Railway volume crash recovery, workers redeployed, DB size monitoring added)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V2 (4 Jun 2026) — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit
-**Previous sprint:** V1 (4 Jun 2026) — Full corpus audit, scheduler lock, LDA 524 fix, 4 new source clients
+**Last sprint:** V3 (4 Jun 2026) — Railway 5GB volume crash, all workers redeployed, DB size check in scheduler
+**Previous sprint:** V2 (4 Jun 2026) — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit
 
 ### V2 Part 1 — TWFY pwdata client (4 Jun 2026)
 
@@ -101,6 +101,23 @@ Next hourly email will still show the old per-corpus format (no per-worker rows)
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
+
+### V3 — DB cleanup SQL (run in Railway dashboard → DB service → Query tab)
+
+```sql
+-- Delete old progress snapshots (keep last 24 hours only)
+DELETE FROM ingest_progress_snapshots 
+WHERE "capturedAt" < NOW() - INTERVAL '24 hours';
+
+-- Delete old done queue rows (keep last 7 days)
+DELETE FROM ingest_queue 
+WHERE status = 'done' 
+AND "updatedAt" < NOW() - INTERVAL '7 days';
+```
+
+Workers + scheduler are already redeploying (CC triggered all 21 via Railway API at ~8pm). Once cleanup SQL runs, next hourly email will show DB size % in header.
+
+**Note:** CC cannot connect to Railway DB from local machine — `switchback.proxy.rlwy.net:16156` gives ECONNRESET from outside Railway's network. All DB operations must be run from Railway dashboard or a Railway-hosted service.
 
 ### V1 post-deploy (all required before workers pick up new sources)
 

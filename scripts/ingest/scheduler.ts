@@ -14,6 +14,7 @@ import {
   queryNeonCount,
   saveProgressSnapshot,
   acquireSchedulerLock,
+  queryDbSize,
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
 import { clearExpiredSuspensions } from './shared/queue-client'
@@ -29,11 +30,18 @@ async function run(): Promise<void> {
   }
 
   const capturedAt = new Date()
-  console.log('[scheduler] querying corpus counts + Neon')
-  const [corpusCounts, neonCount] = await Promise.all([
+  console.log('[scheduler] querying corpus counts + Neon + DB size')
+  const [corpusCounts, neonCount, dbSize] = await Promise.all([
     queryCorpusCounts(),
     queryNeonCount(),
+    queryDbSize().catch(err => { console.warn('[scheduler] DB size query failed:', err); return undefined }),
   ])
+  if (dbSize) {
+    console.log(`[scheduler] DB size: ${dbSize.sizePretty} (${dbSize.usedPct.toFixed(1)}% of ${(dbSize.limitBytes / 1_073_741_824).toFixed(0)}GB limit)`)
+    if (dbSize.usedPct >= 80) {
+      console.warn(`[scheduler] ⚠️ DB volume at ${dbSize.usedPct.toFixed(1)}% — run cleanup SQL to reclaim space`)
+    }
+  }
   const newTotal = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
   console.log(`[scheduler] new pipeline: ${newTotal.toLocaleString()} compiled — Neon legacy: ${neonCount.toLocaleString()}`)
 
@@ -71,7 +79,7 @@ async function run(): Promise<void> {
   await appendCsvRow(agg)
 
   console.log('[scheduler] sending email')
-  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown)
+  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize)
 }
 
 const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop

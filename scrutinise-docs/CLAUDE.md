@@ -187,12 +187,13 @@ Three modes selectable in Settings and on idea creation. **Default is Collaborat
 
 ### STORAGE ARCHITECTURE (V2L onwards)
 
-Railway PostgreSQL (Hobby 5GB — HARD LIMIT):
+Railway PostgreSQL (volume resized to 20GB after 5GB crash on 4 Jun 2026 — HARD LIMIT):
 
 -   Stores ONLY: FTS fields (`originalText`, `sectionTitle`, `policyArea`), pointer keys (`rawXmlKey`, `compiledTextKey`, `lexSummaryKey`), metadata, user data.
 -   NEVER stores: compiledText, tnaCompiledText, lexSummary, rawXml.
 -   Before any schema change, estimate Railway size impact.
--   If Railway DB exceeds 4GB, alert Charlie before proceeding.
+-   If Railway DB exceeds 4GB (old limit) / 16GB (80% of 20GB), alert Charlie before proceeding.
+-   Scheduler emails now include DB size % in every hourly email — ⚠️ at 80%, ⚠️ CRITICAL at 90%.
 
 Cloudflare R2 (`scrutinise-legislation` bucket):
 

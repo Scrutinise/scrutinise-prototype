@@ -14,7 +14,9 @@
       "@anthropic-ai/sdk": ["./node_modules/@anthropic-ai/sdk"],
       "@anthropic-ai/sdk/*": ["./node_modules/@anthropic-ai/sdk/*"],
       "pg": ["./node_modules/pg"],
-      "pg/*": ["./node_modules/pg/*"]
+      "pg/*": ["./node_modules/pg/*"],
+      "@prisma/adapter-pg": ["./node_modules/@prisma/adapter-pg"],
+      "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"]
     }
   }
 }

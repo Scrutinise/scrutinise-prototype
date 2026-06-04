@@ -376,6 +376,33 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
   await r2Put(key, content, 'text/csv')
 }
 
+// ── DB size check ─────────────────────────────────────────────────────────────
+
+export interface DbSizeResult {
+  sizeBytes: number
+  sizePretty: string
+  limitBytes: number
+  usedPct: number
+}
+
+const DB_LIMIT_GB = 20  // current Railway volume limit after resize
+
+export async function queryDbSize(): Promise<DbSizeResult> {
+  const pool = getPool()
+  const res = await pool.query<{ db_size_bytes: string; db_size: string }>(`
+    SELECT pg_database_size(current_database())::text AS db_size_bytes,
+           pg_size_pretty(pg_database_size(current_database())) AS db_size
+  `)
+  const sizeBytes = parseInt(res.rows[0].db_size_bytes, 10)
+  const limitBytes = DB_LIMIT_GB * 1_073_741_824
+  return {
+    sizeBytes,
+    sizePretty: res.rows[0].db_size,
+    limitBytes,
+    usedPct: (sizeBytes / limitBytes) * 100,
+  }
+}
+
 // ── Format helpers ────────────────────────────────────────────────────────────
 
 function progressBar(pct: number, width = 20): string {
@@ -502,6 +529,7 @@ export async function sendProgressEmail(
   neonCount: number,
   unrecognised: UnrecognisedFormatRow[] = [],
   formatBreakdown: FormatCount[] = [],
+  dbSize?: DbSizeResult,
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
@@ -585,6 +613,17 @@ export async function sendProgressEmail(
     manifestLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)} / ${est.toLocaleString().padStart(9)}  ${bar} ${pct}${failStr}`)
   }
 
+  // ── DB size block ─────────────────────────────────────────────────────────
+  const dbSizeLines: string[] = []
+  if (dbSize) {
+    const dbBar = progressBar(dbSize.usedPct, 10)
+    const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
+    const flag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL — pause ingest, delete rows immediately'
+      : dbSize.usedPct >= 80 ? '  ⚠️  WARNING — run cleanup SQL soon'
+      : ''
+    dbSizeLines.push(`  DB size: ${dbSize.sizePretty.padEnd(10)} ${dbBar}  ${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB limit${flag}`)
+  }
+
   const parts: string[] = [
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     'SCRUTINISE CORPUS INGEST — OVERALL COVERAGE',
@@ -597,6 +636,8 @@ export async function sendProgressEmail(
     '',
     `  LEGACY (Neon — legislation.gov.uk):  ${neonCount.toLocaleString().padStart(9)}  ✅`,
     `  NEW PIPELINE (20 workers):           ${newPipelineCompiled.toLocaleString().padStart(9)}`,
+    '',
+    ...dbSizeLines,
     '',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     'CORPUS MANIFEST',
@@ -651,13 +692,14 @@ export async function sendProgressEmail(
   const body = parts.join('\n')
 
   const subjectBar = progressBar(overallPct, 10)
+  const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
   const res = await fetch(RESEND_API, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
       to: [TO],
-      subject: `Corpus: ${overallPct.toFixed(1)}% [${subjectBar}] ${overallCompiled.toLocaleString()} secs — ${bst}`,
+      subject: `Corpus: ${overallPct.toFixed(1)}% [${subjectBar}] ${overallCompiled.toLocaleString()} secs — ${bst}${dbWarn}`,
       text: body,
     }),
   })
