@@ -151,6 +151,61 @@ export async function* listOtsReports(): AsyncGenerator<GovDocument> {
   yield* searchGovUk('office of tax simplification report', 'ots-reports', 500)
 }
 
+// ── Planning Policy (NPPF + PPG) ──────────────────────────────────────────────
+// Planning Practice Guidance (PPG): 63 chapters enumerated from gov.uk collection.
+// Each chapter is a detailed_guide with full HTML body text (avg ~60KB).
+// NPPF itself is a separate guidance document.
+// V1 audit confirmed accessible (HTTP 200). V2 Part 3 implementation.
+
+export async function* listPlanningPolicyNppf(): AsyncGenerator<GovDocument> {
+  // Enumerate the PPG collection — 63 guidance chapters
+  const collData = await fetchJson(`${GOV_CONTENT}/government/collections/planning-practice-guidance`) as {
+    links?: { documents?: Array<{ base_path?: string; title?: string }> }
+  } | null
+
+  const docs = collData?.links?.documents ?? []
+  for (const doc of docs) {
+    if (!doc.base_path) continue
+    yield {
+      id: doc.base_path.replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-').slice(0, 160),
+      title: doc.title ?? '',
+      url: `https://www.gov.uk${doc.base_path}`,
+      corpus: 'planning-policy',
+    }
+  }
+
+  // Yield the NPPF document itself
+  yield {
+    id: 'guidance-national-planning-policy-framework',
+    title: 'National Planning Policy Framework',
+    url: 'https://www.gov.uk/guidance/national-planning-policy-framework',
+    corpus: 'planning-policy',
+  }
+}
+
+// ── Building Regulations (Approved Documents) ─────────────────────────────────
+// 21 Approved Documents enumerated from gov.uk collection.
+// Content is primarily in PDF attachments — fetchDocumentText captures description text.
+// Full PDF ingest is future work.
+// V1 audit confirmed accessible (HTTP 200). V2 Part 3 implementation.
+
+export async function* listBuildingRegs(): AsyncGenerator<GovDocument> {
+  const collData = await fetchJson(`${GOV_CONTENT}/government/collections/approved-documents`) as {
+    links?: { documents?: Array<{ base_path?: string; title?: string }> }
+  } | null
+
+  const docs = collData?.links?.documents ?? []
+  for (const doc of docs) {
+    if (!doc.base_path) continue
+    yield {
+      id: doc.base_path.replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-').slice(0, 160),
+      title: doc.title ?? '',
+      url: `https://www.gov.uk${doc.base_path}`,
+      corpus: 'building-regs',
+    }
+  }
+}
+
 // ── Text extraction ────────────────────────────────────────────────────────────
 
 export async function fetchDocumentText(url: string): Promise<string | null> {
