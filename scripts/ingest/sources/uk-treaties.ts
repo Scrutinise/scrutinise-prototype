@@ -47,10 +47,12 @@ export async function* listUkTreaties(maxItems = 2000): AsyncGenerator<UkTreaty>
   const seenIds = new Set<string>()
 
   while (yielded < maxItems) {
-    // gov.uk search: filter by "treaty" keyword and FCDO/FCO as publishing organisation
-    const url =
-      `${GOV_SEARCH}?q=treaty&filter_organisations[]=foreign-commonwealth-development-office` +
-      `&count=${pageSize}&start=${start}&order=newest`
+    // gov.uk search: filter by "treaty" keyword and FCDO/FCO as publishing organisation.
+    // URLSearchParams is required to properly encode filter_organisations[] as %5B%5D.
+    // Literal [] in the URL string causes HTTP 422 from the gov.uk API.
+    const params = new URLSearchParams({ q: 'treaty', count: String(pageSize), start: String(start), order: 'newest' })
+    params.append('filter_organisations[]', 'foreign-commonwealth-development-office')
+    const url = `${GOV_SEARCH}?${params}`
 
     const data = await fetchJson(url) as {
       results?: Array<{

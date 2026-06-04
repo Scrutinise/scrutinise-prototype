@@ -29,6 +29,13 @@ export async function fetchLdaPage(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 3000 * attempt))
     const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' } })
+    if (res.status === 524 && pageSize > 100) {
+      // Large page timed out — retry once with a smaller page size.
+      // Note: page*100 is a different offset than page*500, so this fetches
+      // a different (smaller) slice. Accepts partial coverage over zero.
+      console.warn(`[lda] 524 on ${slug} page ${page} (size ${pageSize}) — retrying with pageSize 100`)
+      return fetchLdaPage(slug, page, 100, maxRetries)
+    }
     if (TRANSIENT_STATUS.has(res.status)) {
       lastError = new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
       continue
