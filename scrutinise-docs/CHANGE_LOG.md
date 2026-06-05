@@ -1,6 +1,47 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (V2 — Fix email counts + census + migrate Railway→Neon)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V3 — Migrate → Backfill → Clean Architecture → Rebuild Email)*
+
+---
+
+## SPRINT V3 — 5–6 Jun 2026 (Migrate → Backfill → Clean Architecture → Rebuild Email)
+
+### Summary
+
+1. **Scheduler redeployed** — V2 code (Neon count queries) deployed. Double-email issue resolved (single clean scheduler instance).
+
+2. **Migration complete** — 732,954 rows migrated Railway→Neon corpus_sections. Neon total: 751,949 (includes ~19k direct writes from workers since V1).
+
+3. **R2 backfill verified** — 665,719 rows checked. Written: 0. Already existed: 665,719. R2 coverage 100% — compiled text was already in R2 for all rows (pipeline writes R2 first). TRUNCATE safe.
+
+4. **Railway corpus_sections TRUNCATEd** — 732,954 rows deleted. Frees ~4GB on Railway volume.
+
+5. **compiledText column dropped from Neon** — FTS trigger updated (no-op, removes compiledText reference), column dropped. Compiled text lives in R2 only.
+
+6. **upsertSection() R2-first** — `db-metadata.ts` updated: compiledText written to R2 at r2Key BEFORE DB upsert. If R2 fails, DB insert does not proceed. compiledText removed from all DB INSERT/UPDATE SQL.
+
+7. **Email rebuilt from corpus_targets** — `progress-reporter.ts` fully rewritten:
+   - `corpus_targets` table created on Neon (39 rows with labels, estimates, confirmed flags)
+   - CORPUS_MANIFEST removed entirely from code
+   - Estimated denominators marked with `~`; confirmed denominators (TNA caselaw) unmarked
+   - Queue state section (pending/claimed/done/failed) added
+   - Unlabelled corpora shown in separate section
+
+### Files modified
+
+- `scripts/ingest/shared/db-metadata.ts` — R2 client added; upsertSection() writes compiledText→R2 first; compiledText removed from DB SQL
+- `scripts/ingest/shared/progress-reporter.ts` — CORPUS_MANIFEST removed; reads corpus_targets from Neon; queue state section; unlabelled section
+- `scripts/ingest/backfill-compiled-to-r2.ts` — new script; 665,719 rows checked; 0 gaps found
+- `scripts/ingest/drop-compiled-text-col.ts` — new script; updated trigger + dropped column
+
+### Post-deploy state
+
+- Railway corpus_sections: 0 rows (TRUNCATEd)
+- Neon corpus_sections: 751,949 rows (no compiledText column)
+- R2: 100% coverage of compiled text for all rows that had compiledText
+- Scheduler: redeployed with V3 code
+
+---
 
 ***
 

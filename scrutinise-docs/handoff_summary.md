@@ -2,41 +2,34 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 5 Jun 2026 (V2 — Fix email counts → Neon; live-census.ts; migrate script; email fixes)*
+*Last updated: 6 Jun 2026 (V3 — Migrate complete; R2 backfill 100%; TRUNCATE done; compiledText column dropped; email rebuilt from corpus_targets)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V2 (5 Jun 2026) — scheduler now reads corpus counts from Neon; live-census.ts hourly; CORPUS_MANIFEST estSections fixed; worker throughput 2h filter; worker count dynamic; migration ready to run
-**Previous sprint:** V1 (5 Jun 2026) — corpus_sections writes to Neon; discovery lock; concurrency limits; pwdata daily discovery; stalled alerting
+**Last commit:** a13b7fa (V3 — backfill R2, drop compiledText, rebuild email)
+**Last sprint:** V3 (5–6 Jun 2026) — migration done; R2 100%; Railway TRUNCATEd; Neon column dropped; email from DB
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED (for Charlie) — V2 post-deploy
+## IMMEDIATE ACTIONS REQUIRED — none
 
-1. **Push + redeploy scheduler** on Railway — picks up Neon count queries, live-census.ts, fixed email
-2. **Run migration (30-60 min):**
-   ```bash
-   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/migrate-corpus-to-neon.ts
-   ```
-3. **Verify** at end of migration — script prints Railway count and Neon count; confirm they match
-4. **TRUNCATE Railway corpus_sections** (frees ~4GB):
-   ```sql
-   TRUNCATE corpus_sections;
-   ```
-5. **Confirm** next hourly email shows Neon-sourced counts (numbers will now move as workers write)
+V3 is fully deployed. Workers are writing to Neon. Email reads from corpus_targets. No pending actions.
+
+**Confirm** by checking next hourly email shows Neon-sourced counts from corpus_targets.
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V2)
+## KEY ARCHITECTURE STATE (as of V3)
 
-- **Neon corpus_sections:** 27,849 rows (post-V1 writes) — grows to ~760k after migration
-- **Railway corpus_sections:** 732,954 rows — will be TRUNCATEd after migration
-- **Railway DB:** ~4.8GB of 20GB — drops to ~1GB after TRUNCATE
-- **Workers:** 20 active, all on pwdata-westminster (priority 3) — priorities 1/2 fully done
-- **Queue:** priority 1 all done; only 28 priority 2 LDA rows remain pending
+- **Neon corpus_sections:** 751,949 rows — no compiledText column (dropped V3)
+- **Neon corpus_targets:** 39 rows — email denominators; edit via SQL to update estimates
+- **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
+- **Railway DB:** ~0.8GB of 20GB — target maintained
+- **R2 compiled text:** 100% coverage verified — all compiledText is in R2 at r2Key paths
+- **Workers:** 20 active, on pwdata-* (priority 3) — priorities 1/2 fully done
 - **Neon DB limit:** `DB_LIMIT_GB = 10` in progress-reporter.ts — update if on Scale plan (50GB)
 
 ---
