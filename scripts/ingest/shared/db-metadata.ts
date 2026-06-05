@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client'
+import { Pool } from 'pg'
 import path from 'path'
 
 try {
   require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.env') })
 } catch { /* dotenv optional */ }
 
+// Railway Prisma client — used for analytics queries (format breakdown, unrecognised formats)
 let _prisma: PrismaClient | null = null
 
 function getPrisma(): PrismaClient {
@@ -14,9 +16,24 @@ function getPrisma(): PrismaClient {
   return _prisma
 }
 
+// Neon pool — used for corpus_sections writes (upsertSection).
+// Queue operations stay on Railway via queue-client.ts.
+let _neonPool: Pool | null = null
+
+function getNeonPool(): Pool {
+  if (!_neonPool) {
+    const url = process.env.NEON_DATABASE_URL
+    if (!url) throw new Error('NEON_DATABASE_URL not set')
+    _neonPool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } })
+  }
+  return _neonPool
+}
+
 export async function disconnectDb(): Promise<void> {
   await _prisma?.$disconnect()
   _prisma = null
+  await _neonPool?.end()
+  _neonPool = null
 }
 
 export interface SectionMeta {
@@ -47,38 +64,40 @@ type CorpusSectionClient = {
 }
 
 export async function upsertSection(meta: SectionMeta): Promise<void> {
-  const db = getPrisma() as unknown as CorpusSectionClient
-  await db.corpusSection.upsert({
-    where: { id: meta.id },
-    create: {
-      id: meta.id,
-      corpus: meta.corpus,
-      sourceUrl: meta.sourceUrl ?? null,
-      r2Key: meta.r2Key ?? null,
-      r2RawKey: meta.r2RawKey ?? null,
-      wordCount: meta.wordCount ?? null,
-      status: meta.status,
-      errorMsg: meta.errorMsg ?? null,
-      format: meta.format ?? null,
-      xmlPreview: meta.xmlPreview ?? null,
-      notes: meta.notes ?? null,
-      compiledText: meta.compiledText ?? null,
-    },
-    update: {
-      r2Key: meta.r2Key ?? null,
-      r2RawKey: meta.r2RawKey ?? null,
-      wordCount: meta.wordCount ?? null,
-      status: meta.status,
-      errorMsg: meta.errorMsg ?? null,
-      format: meta.format ?? null,
-      xmlPreview: meta.xmlPreview ?? null,
-      notes: meta.notes ?? null,
-      compiledText: meta.compiledText ?? null,
-      ...(meta.status === 'compiled' ? { compiledAt: new Date() } : {}),
-    },
-  })
-  // fts_vector is maintained by the DB trigger installed in migration 20260602090000.
-  // No application-layer update needed — trigger fires on compiledText INSERT/UPDATE.
+  const pool = getNeonPool()
+  const now = new Date()
+  await pool.query(`
+    INSERT INTO corpus_sections
+      (id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
+       format, "xmlPreview", notes, "compiledText", "compiledAt", "createdAt")
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW())
+    ON CONFLICT (id) DO UPDATE SET
+      "r2Key"        = EXCLUDED."r2Key",
+      "r2RawKey"     = EXCLUDED."r2RawKey",
+      "wordCount"    = EXCLUDED."wordCount",
+      status         = EXCLUDED.status,
+      "errorMsg"     = EXCLUDED."errorMsg",
+      format         = EXCLUDED.format,
+      "xmlPreview"   = EXCLUDED."xmlPreview",
+      notes          = EXCLUDED.notes,
+      "compiledText" = EXCLUDED."compiledText",
+      "compiledAt"   = CASE WHEN EXCLUDED.status = 'compiled' THEN $13 ELSE corpus_sections."compiledAt" END
+  `, [
+    meta.id,
+    meta.corpus,
+    meta.sourceUrl ?? null,
+    meta.r2Key ?? null,
+    meta.r2RawKey ?? null,
+    meta.wordCount ?? null,
+    meta.status,
+    meta.errorMsg ?? null,
+    meta.format ?? null,
+    meta.xmlPreview ?? null,
+    meta.notes ?? null,
+    meta.compiledText ?? null,
+    meta.status === 'compiled' ? now : null,
+  ])
+  // fts_vector maintained by trigger on Neon — fires on compiledText INSERT/UPDATE.
 }
 
 export interface FormatCount {
