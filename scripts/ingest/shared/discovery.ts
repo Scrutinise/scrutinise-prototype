@@ -270,6 +270,36 @@ async function discoverSinglePass(_corpus: string): Promise<DiscoveredRow[]> {
   return []
 }
 
+// ── TWFY pwdata discovery ─────────────────────────────────────────────────────
+// TWFY adds new XML files daily. Discovery checks for files not yet in the queue
+// and inserts the missing ones. Returns [] only when no new files are found.
+// Idempotent — bulkUpsertQueueRows uses ON CONFLICT DO NOTHING.
+
+async function discoverPwdata(corpus: string): Promise<DiscoveredRow[]> {
+  const { listPwdataFiles, PWDATA_CORPUS_CONFIG } = await import('../sources/twfy-pwdata')
+  const config = PWDATA_CORPUS_CONFIG[corpus]
+  if (!config) return []
+
+  const priority = corpus === 'pwdata-westminster' ? 3 : 2
+
+  let files: Array<{ docId: string }>
+  try {
+    files = await listPwdataFiles(corpus)
+  } catch {
+    return []
+  }
+  if (files.length === 0) return []
+
+  const existing = await getAllDocIdsForCorpus(corpus)
+  const newRows: DiscoveredRow[] = []
+  for (const f of files) {
+    if (!existing.has(f.docId)) {
+      newRows.push({ id: `${corpus}:${f.docId}`, corpus, docId: f.docId, sourceType: 'twfy-pwdata', priority })
+    }
+  }
+  return newRows
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 const SINGLE_PASS_CORPORA = new Set([
@@ -278,10 +308,9 @@ const SINGLE_PASS_CORPORA = new Set([
   // LDA Parliament — all pages seeded upfront by seed-lda-queue.ts; no discovery needed
   'lda-commonsoralquestions', 'lda-lordswrittenquestions', 'lda-commonswrittenquestions',
   'lda-commonsdivisions', 'lda-lordsdivisions',
-  // TWFY pwdata — all files seeded upfront by seed-pwdata-queue.ts; no discovery needed
-  'pwdata-debates', 'pwdata-lords', 'pwdata-wrans', 'pwdata-westminster',
   // NPPF/PPG and Building Regs — single __index row, enumerates collection at run time
   'planning-policy', 'building-regs',
+  // pwdata removed from single-pass — discoverPwdata() handles daily new files
 ])
 
 export async function discoverForCorpus(corpus: string): Promise<DiscoveredRow[]> {
@@ -301,6 +330,9 @@ export async function discoverForCorpus(corpus: string): Promise<DiscoveredRow[]
   if (corpus === 'echr-hudoc')  return discoverEchr()
   if (corpus === 'eur-lex')     return discoverEurLex()
   if (corpus === 'fca-regulators') return discoverFca()
+
+  // TWFY pwdata — check for new daily files
+  if (corpus.startsWith('pwdata-')) return discoverPwdata(corpus)
 
   // Single-pass sources — always exhausted after first pass
   if (SINGLE_PASS_CORPORA.has(corpus)) return discoverSinglePass(corpus)
