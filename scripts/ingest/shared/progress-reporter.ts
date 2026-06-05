@@ -5,122 +5,6 @@ import { WorkerCheckpoint, readCheckpoint } from './checkpoint'
 const RESEND_API = 'https://api.resend.com/emails'
 const TO = 'cl@scrutinise.org'
 
-// ── Corpus manifest ───────────────────────────────────────────────────────────
-// sourceKey values use the DB corpus column values where available (verified
-// against ingest_queue.corpus from 2 Jun 2026 diagnostic).
-// Discrepancies from brief noted inline.
-
-export interface CorpusEntry {
-  label: string
-  sourceKey: string        // matches DB corpus value (or aspirational for not-yet-seeded)
-  dbCorpora: string[]      // ingest_queue.corpus / corpus_sections.corpus values
-  estSections: number
-  priority: number
-  complete?: boolean
-  blocked?: boolean
-}
-
-export const CORPUS_MANIFEST: CorpusEntry[] = [
-  // LEGACY — already in Neon, complete
-  { label: 'HMRC Manuals (Neon legacy)',      sourceKey: '__neon_legacy__',        dbCorpora: [],                                        estSections: 914_274,   priority: 0, complete: true },
-
-  // PRIORITY 1 — UK Statute
-  // Census 3 Jun 2026: 540 docs compiled × avg 168 secs/doc = 90,860; allow for unseeded high-chapter acts
-  { label: 'Primary Acts 2000+',              sourceKey: 'primary-acts-2000plus',  dbCorpora: ['primary-acts-2000plus'],                  estSections: 100_000,   priority: 1 },
-  // Census 3 Jun 2026: 737 docs compiled × avg 85 secs/doc = 62,664; 1963–1999 comprehensive
-  { label: 'Primary Acts pre-2000',           sourceKey: 'primary-acts-pre-2000',  dbCorpora: ['primary-acts-pre-2000'],                  estSections: 70_000,    priority: 1 },
-  // Census 3 Jun 2026: 5,866 docs × avg 10 secs = 59,951 compiled; gap: 2015–2026 under-seeded (~60k missing)
-  { label: 'Statutory Instruments 2010+',     sourceKey: 'si-2010plus',            dbCorpora: ['si-2010plus'],                            estSections: 120_000,   priority: 1 },
-  // Census 3 Jun 2026: 30,898 docs × avg 5.6 secs = 174,507 compiled; 1948–2009 comprehensive
-  { label: 'Statutory Instruments pre-2010',  sourceKey: 'si-pre-2010',            dbCorpora: ['si-pre-2010'],                            estSections: 180_000,   priority: 1 },
-
-  // PRIORITY 2 — Major open sources
-  // Census 3 Jun 2026: compiled 92,681; Neon shows 116k total for SSI/NISR/WSI/NIA/ANAW
-  { label: 'Regional (Scot/Wales/NI)',        sourceKey: 'regional',               dbCorpora: ['regional'],                               estSections: 160_000,   priority: 2 },
-  // Census 3 Jun 2026: Neon EUR+EUDN+EUDR = 133,312; new pipeline at 14,390 (partial)
-  { label: 'Retained EU Law',                 sourceKey: 'retained-eu',            dbCorpora: ['retained-eu'],                            estSections: 140_000,   priority: 2 },
-  // V4 3 Jun 2026: feed reports 7,489 pages but pages 1,500+ are empty.
-  // Binary-search in getTotalJudgments() confirmed ~1,499 usable pages × 50 = ~74,950.
-  // We have 74,730 compiled — effectively complete for currently available content.
-  { label: 'TNA Find Case Law',               sourceKey: 'tna-caselaw',            dbCorpora: ['tna-caselaw'],                            estSections: 75_000,    priority: 2 },
-  { label: 'BAILII (full corpus)',            sourceKey: 'bailii',                 dbCorpora: ['bailii-tribunals','bailii-eat','bailii-privy-ni'], estSections: 2_000_000, priority: 2, blocked: true },
-  // TWFY pwdata — free bulk XML from theyworkforyou.com/pwdata/scrapedxml/ (verified 4 Jun 2026)
-  // Supersedes parliament-api.ts (403 from Railway) and TWFY API (1k quota).
-  // 19,999 files (1919–present); new files added daily. One queue row per file.
-  { label: 'Hansard Commons (TWFY)',          sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-debates'],                         estSections: 2_000_000, priority: 2 },
-  // 5,663 files (1999–present)
-  { label: 'Hansard Lords (TWFY)',            sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-lords'],                           estSections: 500_000,   priority: 2 },
-  { label: 'Committee Reports',              sourceKey: 'committee-reports',       dbCorpora: ['committees-a','committees-b'],             estSections: 100_000,   priority: 2 },
-  // TWFY pwdata wrans/ — 6,857 files (2001–present); supersedes blocked written-answers corpus
-  { label: 'Written Answers (TWFY)',          sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-wrans'],                           estSections: 537_593,   priority: 2 },
-  // Census 3 Jun 2026: Parliament API confirmed 17,487
-  { label: 'Written Ministerial Statements', sourceKey: 'written-statements',      dbCorpora: ['written-statements'],                     estSections: 17_487,    priority: 2 },
-  // TWFY pwdata westminhall/ — 3,932 files (2000–present)
-  { label: 'Westminster Hall (TWFY)',         sourceKey: 'twfy-pwdata',             dbCorpora: ['pwdata-westminster'],                     estSections: 100_000,   priority: 3 },
-  { label: 'Bill Pages',                     sourceKey: 'bill-pages',              dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
-  { label: 'Explanatory Notes',              sourceKey: 'explanatory-notes',       dbCorpora: [],                                         estSections: 50_000,    priority: 2 },
-  { label: 'Impact Assessments',             sourceKey: 'impact-assessments',      dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
-  { label: 'House of Commons Library',       sourceKey: 'hoc-library',             dbCorpora: [],                                         estSections: 30_000,    priority: 2 },
-  // V5/V6: handbook.fca.org.uk is a pure JS SPA — no server-side content. Cannot scrape without
-  // Playwright. Source client exists, queue rows exist, 0 sections compiled → shows ⚠️ failing.
-  // FCA Publications (fca.org.uk/publications, Drupal/PDF) is the viable alternative — V8 build.
-  { label: 'FCA Handbook',                   sourceKey: 'fca-regulators',          dbCorpora: ['fca-regulators'],                         estSections: 150_000,   priority: 2 },
-  // V7: placeholder entry so it shows "not started" in email — actual scraper build is V8 work.
-  { label: 'FCA Publications',                sourceKey: 'fca-publications',        dbCorpora: ['fca-publications'],                       estSections: 20_000,    priority: 3 },
-  // V6 3 Jun 2026: lda.data.parliament.uk — no auth, JSON, 500 records/page. Confirmed working.
-  // Actual totals from V6 diagnostic: 69,852 / 103,137 / 618,599 records respectively.
-  { label: 'Commons Oral Questions (LDA)',    sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsoralquestions'],               estSections: 70_000,    priority: 2 },
-  { label: 'Lords Written Questions (LDA)',   sourceKey: 'lda-parliament',          dbCorpora: ['lda-lordswrittenquestions'],              estSections: 103_000,   priority: 2 },
-  { label: 'Commons Written Questions (LDA)', sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonswrittenquestions'],            estSections: 619_000,   priority: 2 },
-  // Brief used 'hmrc-web'; DB corpus = 'hmrc-codes-guidance'
-  { label: 'HMRC + Guidance',                sourceKey: 'hmrc-codes-guidance',     dbCorpora: ['hmrc-codes-guidance'],                    estSections: 640_000,   priority: 2 },
-  // Census 3 Jun 2026: compiled 791; appears complete for available content
-  { label: 'HMRC TIINs',                     sourceKey: 'hmrc-tiins',              dbCorpora: ['hmrc-tiins'],                             estSections: 800,       priority: 2 },
-  { label: 'Law Commission Reports (E&W)',   sourceKey: 'law-commission',          dbCorpora: [],                                         estSections: 20_000,    priority: 2 },
-  // Census 3 Jun 2026: compiled 350; appears complete
-  { label: 'Scottish Law Commission',        sourceKey: 'scotlawcom',              dbCorpora: ['scotlawcom'],                             estSections: 350,       priority: 2 },
-
-  // PRIORITY 3 — Secondary sources
-  // V5 3 Jun 2026: HUDOC /app/query/results returns 404 — API endpoint changed.
-  // No working alternative endpoint found. Blocked until new API is identified.
-  { label: 'ECHR / HUDOC',                   sourceKey: 'echr-hudoc',              dbCorpora: ['echr-hudoc'],                             estSections: 30_050,    priority: 3, blocked: true },
-  // V6 3 Jun 2026: search.html?format=json returns HTML (SPA redesign) — REST API 404.
-  // Fixed via CELLAR SPARQL (publications.europa.eu/webapi/rdf/sparql) — no auth required.
-  // Returns all ~232,988 series-3 secondary legislation CELEX IDs. fetchDocumentText confirmed working.
-  { label: 'EUR-Lex (retained origins)',      sourceKey: 'eur-lex',                dbCorpora: ['eur-lex'],                                estSections: 232_000,   priority: 3 },
-  // V6 3 Jun 2026: lda.data.parliament.uk — voting records. Actual totals: 5,553 / 2,089 records.
-  { label: 'Commons Divisions (LDA)',         sourceKey: 'lda-parliament',          dbCorpora: ['lda-commonsdivisions'],                  estSections: 5_553,     priority: 3 },
-  { label: 'Lords Divisions (LDA)',           sourceKey: 'lda-parliament',          dbCorpora: ['lda-lordsdivisions'],                    estSections: 2_089,     priority: 3 },
-  // Brief used 'gov-uk'; DB corpus = 'uk-treaties'
-  { label: 'UK Treaties (FCDO)',              sourceKey: 'uk-treaties',            dbCorpora: ['uk-treaties'],                            estSections: 10_000,    priority: 3 },
-  { label: 'White / Green Papers',            sourceKey: 'command-papers',         dbCorpora: [],                                         estSections: 20_000,    priority: 3 },
-  { label: 'Sentencing Council',              sourceKey: 'sentencing-council',     dbCorpora: ['sentencing-council'],                     estSections: 2_000,     priority: 3 },
-  { label: 'College of Policing APP',         sourceKey: 'college-of-policing',    dbCorpora: ['college-of-policing'],                    estSections: 8_000,     priority: 3 },
-  { label: 'PACE Codes A–H',                 sourceKey: 'pace-codes',             dbCorpora: [],                                         estSections: 800,       priority: 3 },
-  { label: 'Civil Service / Min. Codes',      sourceKey: 'civil-service-codes',    dbCorpora: [],                                         estSections: 500,       priority: 3 },
-  { label: 'Treasury Green/Magenta Book',     sourceKey: 'treasury-books',         dbCorpora: [],                                         estSections: 500,       priority: 3 },
-  { label: 'Erskine May + Standing Orders',   sourceKey: 'erskine-may',            dbCorpora: [],                                         estSections: 3_000,     priority: 3 },
-  { label: 'Public Consultations',            sourceKey: 'consultations',          dbCorpora: [],                                         estSections: 50_000,    priority: 3 },
-  { label: 'NAO Reports',                     sourceKey: 'nao-reports',            dbCorpora: ['nao-reports'],                            estSections: 10_000,    priority: 3 },
-  // Census 3 Jun 2026: compiled 497; was underestimated
-  { label: 'OTS Reports',                     sourceKey: 'ots-reports',            dbCorpora: ['ots-reports'],                            estSections: 500,       priority: 3 },
-  { label: 'NI Law Commission (historic)',    sourceKey: 'nilawcom',               dbCorpora: ['nilawcom'],                               estSections: 50,        priority: 3 },
-  { label: 'SSRN UK Legal Scholarship',       sourceKey: 'ssrn',                   dbCorpora: [],                                         estSections: 50_000,    priority: 3, blocked: true },
-  { label: 'Post-Legislative Memoranda',      sourceKey: 'post-leg-memoranda',     dbCorpora: [],                                         estSections: 5_000,     priority: 3 },
-
-  // PRIORITY 4 — Lower priority
-  { label: 'Local / Private Acts',            sourceKey: 'local-private-acts',     dbCorpora: [],                                         estSections: 10_000,    priority: 4 },
-  { label: 'NHS Guidance',                    sourceKey: 'nhs-guidance',           dbCorpora: [],                                         estSections: 20_000,    priority: 4 },
-  // V2 Part 3: PPG 63 chapters + NPPF (HTML text). Building Regs 21 docs (description text; PDFs future work).
-  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: ['planning-policy'],                        estSections: 5_000,     priority: 4 },
-  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: ['building-regs'],                          estSections: 3_000,     priority: 4 },
-  { label: 'CMA Guidelines',                  sourceKey: 'cma-guidelines',         dbCorpora: [],                                         estSections: 8_000,     priority: 4 },
-  { label: 'Ofcom/Ofwat/Ofgem/Ofsted',        sourceKey: 'regulator-rulebooks',    dbCorpora: [],                                         estSections: 40_000,    priority: 4 },
-  // Census 3 Jun 2026: compiled 462; free-tier content appears fully ingested
-  { label: 'OECD (free tier)',                sourceKey: 'oecd',                   dbCorpora: ['oecd'],                                   estSections: 500,       priority: 4 },
-  { label: 'ONS Statistical Datasets',        sourceKey: 'ons-statistics',         dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
-]
-
 // ── DB pool (Railway — ingest_queue, snapshots, scheduler_lock) ──────────────
 
 let _pool: Pool | null = null
@@ -138,7 +22,7 @@ function getPool(): Pool {
   return _pool
 }
 
-// ── DB pool (Neon — corpus_sections, LegislationSection) ─────────────────────
+// ── DB pool (Neon — corpus_sections, corpus_targets) ─────────────────────────
 
 let _neonPool: Pool | null = null
 function getNeonPool(): Pool {
@@ -185,7 +69,29 @@ export async function acquireSchedulerLock(): Promise<boolean> {
   }
 }
 
-// ── Per-corpus compiled section counts (Railway corpus_sections) ──────────────
+// ── corpus_targets row ────────────────────────────────────────────────────────
+
+interface CorpusTarget {
+  corpus_key: string
+  display_label: string
+  est_sections: number | null
+  est_is_confirmed: boolean
+  priority: number
+  blocked: boolean
+  blocked_reason: string | null
+}
+
+async function queryCorpusTargets(): Promise<CorpusTarget[]> {
+  const res = await getNeonPool().query<CorpusTarget>(`
+    SELECT corpus_key, display_label, est_sections, est_is_confirmed,
+           priority, blocked, blocked_reason
+    FROM corpus_targets
+    ORDER BY priority, corpus_key
+  `)
+  return res.rows
+}
+
+// ── Per-corpus compiled section counts (Neon corpus_sections) ────────────────
 
 export async function queryCorpusCounts(): Promise<Record<string, { compiled: number; failed: number }>> {
   const res = await getNeonPool().query<{ corpus: string; status: string; count: number }>(`
@@ -238,8 +144,6 @@ export async function queryNeonCount(): Promise<number> {
 }
 
 // ── Per-worker snapshot write ─────────────────────────────────────────────────
-// Called by worker-queue.ts every CHECKPOINT_EVERY rows.
-// workerId = integer WORKER_ID; sourceKey = current corpus; sectionsCompiled = cumulative session count.
 
 export async function writeWorkerSnapshot(
   workerId: number,
@@ -262,14 +166,11 @@ export async function saveProgressSnapshot(
 ): Promise<void> {
   const pool = getPool()
   for (const [corpus, counts] of Object.entries(corpusCounts)) {
-    const entry = CORPUS_MANIFEST.find(e => e.dbCorpora.includes(corpus))
-    const label = entry?.label ?? corpus
-    const estimated = entry?.estSections ?? 0
     await pool.query(`
       INSERT INTO ingest_progress_snapshots
         ("capturedAt", "workerLabel", "sourceKey", "sectionsCompiled", "sectionsEstimated", phase)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [capturedAt, label, corpus, counts.compiled, estimated, 'queue'])
+      VALUES ($1, $2, $3, $4, 0, $5)
+    `, [capturedAt, corpus, corpus, counts.compiled, 'queue'])
   }
 }
 
@@ -393,7 +294,7 @@ export async function appendCsvRow(agg: ProgressAggregate): Promise<void> {
   await r2Put(key, content, 'text/csv')
 }
 
-// ── DB size check ─────────────────────────────────────────────────────────────
+// ── DB size check (Neon) ──────────────────────────────────────────────────────
 
 export interface DbSizeResult {
   sizeBytes: number
@@ -421,7 +322,6 @@ export async function queryDbSize(): Promise<DbSizeResult> {
 }
 
 // ── Hourly cleanup — keeps Railway volume from filling up ─────────────────────
-// Runs every scheduler cycle. DELETEs are idempotent; cheap when rows are young.
 
 export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows: number }> {
   const pool = getPool()
@@ -447,30 +347,32 @@ function progressBar(pct: number, width = 20): string {
   return '█'.repeat(filled) + '░'.repeat(width - filled)
 }
 
-function pctStr(compiled: number, estimated: number): string {
+function pctStr(compiled: number, estimated: number | null): string {
+  if (estimated == null) return '     ?'
   if (estimated === 0) return '  n/a'
   return ((compiled / estimated) * 100).toFixed(1).padStart(5) + '%'
 }
 
+function estLabel(est: number | null, confirmed: boolean): string {
+  if (est == null) return 'unknown denominator'
+  return (confirmed ? '' : '~') + est.toLocaleString() + ' est.'
+}
+
 // ── Theoretical throughput ceilings per source ───────────────────────────────
-// (3_600_000 ms/hr ÷ intervalMs) × avgSectionsPerRequest — before sharing the
-// token bucket across workers on the same source.
 const THEORETICAL_SECTIONS_PER_HOUR: Record<string, number> = {
-  'tna-legislation': Math.floor((3_600_000 / 200) * 5),   //  90,000/hr
-  'tna-caselaw':     Math.floor((3_600_000 / 200) * 3),   //  54,000/hr
-  'hansard':         Math.floor((3_600_000 / 500) * 20),  // 144,000/hr
-  'fca':             Math.floor((3_600_000 / 300) * 10),  // 120,000/hr
-  'hmrc':            Math.floor((3_600_000 / 300) * 8),   //  96,000/hr
-  'echr':            Math.floor((3_600_000 / 500) * 50),  // 360,000/hr
-  'eurlex':          Math.floor((3_600_000 / 500) * 10),  //  72,000/hr
-  'lda-parliament':  Math.floor((3_600_000 / 200) * 500), //   9M/hr ceiling (500 items/req)
-  'twfy-pwdata':     Math.floor((3_600_000 / 500) * 300), //   2.16M/hr (~300 speeches/file)
+  'tna-legislation': Math.floor((3_600_000 / 200) * 5),
+  'tna-caselaw':     Math.floor((3_600_000 / 200) * 3),
+  'hansard':         Math.floor((3_600_000 / 500) * 20),
+  'fca':             Math.floor((3_600_000 / 300) * 10),
+  'hmrc':            Math.floor((3_600_000 / 300) * 8),
+  'echr':            Math.floor((3_600_000 / 500) * 50),
+  'eurlex':          Math.floor((3_600_000 / 500) * 10),
+  'lda-parliament':  Math.floor((3_600_000 / 200) * 500),
+  'twfy-pwdata':     Math.floor((3_600_000 / 500) * 300),
   'default':         1_000,
 }
 
 // ── Worker throughput from snapshots ─────────────────────────────────────────
-// Groups by workerId (non-null rows written by workers every CHECKPOINT_EVERY items).
-// Scheduler-written rows (workerId IS NULL) are excluded — those are per-corpus aggregates.
 
 interface WorkerThroughputRow {
   workerId: number
@@ -478,7 +380,7 @@ interface WorkerThroughputRow {
   ratePerHour: number
   stalled: boolean
   idle: boolean
-  efficiencyPct: number    // actual / fair-share-theoretical × 100
+  efficiencyPct: number
   efficiencyFlag: '' | '⚡low' | '🔴critical'
 }
 
@@ -557,14 +459,9 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
   }).sort((a, b) => a.workerId - b.workerId)
 }
 
-// ── Unified progress email ────────────────────────────────────────────────────
+// ── Stalled sources ───────────────────────────────────────────────────────────
 
-export interface UnrecognisedFormatRow { sourceUrl: string | null; xmlPreview: string | null }
-export interface FormatCount { format: string | null; count: number }
-
-// Sources with 'done' queue rows but zero corpus_sections after 24h — diagnostics hook.
 export async function queryStalledSources(): Promise<string[]> {
-  // Two-step: corpus_sections is on Neon, ingest_queue is on Railway — can't do a cross-DB subquery
   try {
     const neonRes = await getNeonPool().query<{ corpus: string }>(
       'SELECT DISTINCT corpus FROM corpus_sections'
@@ -582,6 +479,11 @@ export async function queryStalledSources(): Promise<string[]> {
   } catch { return [] }
 }
 
+// ── Unified progress email ────────────────────────────────────────────────────
+
+export interface UnrecognisedFormatRow { sourceUrl: string | null; xmlPreview: string | null }
+export interface FormatCount { format: string | null; count: number }
+
 export async function sendProgressEmail(
   agg: ProgressAggregate,
   corpusCounts: Record<string, { compiled: number; failed: number }>,
@@ -598,11 +500,11 @@ export async function sendProgressEmail(
     timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
   }).format(new Date(agg.timestamp))
 
-  // Query which corpora have any queue rows (to distinguish not-started from seeded)
+  // Query which corpora have any queue rows
   let queueCorpora = new Set<string>()
   try { queueCorpora = await queryQueueCorpora() } catch { /* non-fatal */ }
 
-  // Count active workers from recent snapshots — replaces hardcoded count
+  // Count active workers from recent snapshots
   let activeWorkerCount = 0
   try {
     const wRes = await getPool().query<{ n: number }>(`
@@ -614,75 +516,102 @@ export async function sendProgressEmail(
     activeWorkerCount = wRes.rows[0]?.n ?? 0
   } catch { /* keep 0 */ }
 
+  // Load corpus targets from DB
+  let targets: CorpusTarget[] = []
+  try { targets = await queryCorpusTargets() } catch { /* non-fatal */ }
+
+  // ── Queue state ────────────────────────────────────────────────────────────
+  let queueState = { pending: 0, claimed: 0, done: 0, failed: 0 }
+  try {
+    const qRes = await getPool().query<{ status: string; n: number }>(`
+      SELECT status, COUNT(*)::int AS n FROM ingest_queue GROUP BY status
+    `)
+    for (const r of qRes.rows) {
+      if (r.status === 'pending') queueState.pending = r.n
+      else if (r.status === 'claimed') queueState.claimed = r.n
+      else if (r.status === 'done') queueState.done = r.n
+      else if (r.status === 'failed') queueState.failed = r.n
+    }
+  } catch { /* non-fatal */ }
+
   // ── Totals ────────────────────────────────────────────────────────────────
-  // Sum compiled sections across all DB corpora
   const newPipelineCompiled = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
   const overallCompiled = neonCount + newPipelineCompiled
 
-  // Estimated: sum of all non-blocked entries (excl. Neon legacy)
-  const totalEstimated = CORPUS_MANIFEST
-    .filter(e => !e.complete && !e.blocked)
-    .reduce((s, e) => s + e.estSections, 0)
+  // Sum only non-blocked, non-null estimated targets for overall %
+  const totalEstimated = targets
+    .filter(t => !t.blocked && t.est_sections != null)
+    .reduce((s, t) => s + (t.est_sections ?? 0), 0)
 
-  const overallPct = (overallCompiled / (neonCount + totalEstimated)) * 100
+  const overallPct = totalEstimated > 0
+    ? ((newPipelineCompiled / totalEstimated) * 100)
+    : 0
   const overallBar = progressBar(overallPct)
 
   const eta = await queryEtaFromSnapshots(totalEstimated, newPipelineCompiled)
 
-  // ── Per-entry rows grouped by priority ───────────────────────────────────
-  const manifestLines: string[] = []
+  // ── Per-corpus rows grouped by priority ───────────────────────────────────
+  const corpusLines: string[] = []
   let currentPriority = -1
 
-  for (const entry of CORPUS_MANIFEST) {
-    if (entry.priority !== currentPriority) {
-      currentPriority = entry.priority
-      const tierLabel = entry.priority === 0 ? 'LEGACY'
-        : entry.priority === 1 ? 'PRIORITY 1 — UK Statute'
-        : entry.priority === 2 ? 'PRIORITY 2 — Major open sources'
-        : entry.priority === 3 ? 'PRIORITY 3 — Secondary sources'
-        : 'PRIORITY 4 — Lower priority'
-      manifestLines.push('', `── ${tierLabel} ──`)
+  // Priority groups in order
+  const priorityGroups = [1, 2, 3, 4]
+  const priorityLabels: Record<number, string> = {
+    1: 'PRIORITY 1 — UK Statute',
+    2: 'PRIORITY 2 — Major open sources',
+    3: 'PRIORITY 3 — Secondary sources',
+    4: 'PRIORITY 4 — Lower priority',
+  }
+
+  for (const pri of priorityGroups) {
+    const group = targets.filter(t => t.priority === pri)
+    if (group.length === 0) continue
+
+    corpusLines.push('', `── ${priorityLabels[pri]} ──`)
+
+    for (const target of group) {
+      const label = target.display_label.padEnd(40)
+      const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
+      const failed = corpusCounts[target.corpus_key]?.failed ?? 0
+      const est = target.est_sections
+      const isSeeded = queueCorpora.has(target.corpus_key)
+
+      if (target.blocked) {
+        corpusLines.push(`  ${label} ⛔ blocked${target.blocked_reason ? ': ' + target.blocked_reason : ''}`)
+        continue
+      }
+
+      if (compiled === 0 && !isSeeded) {
+        const estPart = est != null ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}` : ''
+        corpusLines.push(`  ${label} ${(0).toString().padStart(9)}${estPart}  · not started`)
+        continue
+      }
+
+      if (compiled === 0 && isSeeded) {
+        const estPart = est != null ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}` : ''
+        corpusLines.push(`  ${label} ${(0).toString().padStart(9)}${estPart}  ⚠️  failing`)
+        continue
+      }
+
+      const pct = pctStr(compiled, est)
+      const bar = est != null ? progressBar((compiled / est) * 100, 10) : '░'.repeat(10)
+      const estStr = est != null
+        ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}`
+        : ' / ?'
+      const failStr = failed > 0 ? `  (${failed.toLocaleString()} failed)` : ''
+      corpusLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)}${estStr}  ${bar} ${pct}${failStr}`)
     }
+  }
 
-    const label = entry.label.padEnd(36)
-
-    if (entry.complete) {
-      // Neon legacy — use neonCount
-      manifestLines.push(`  ${label} ${neonCount.toLocaleString().padStart(9)}  ✅`)
-      continue
+  // Any corpus in corpusCounts that has no target row — show as unlabelled
+  const knownKeys = new Set(targets.map(t => t.corpus_key))
+  const unlabelled = Object.entries(corpusCounts)
+    .filter(([k]) => !knownKeys.has(k) && corpusCounts[k].compiled > 0)
+  if (unlabelled.length > 0) {
+    corpusLines.push('', '── Unlabelled (no corpus_targets row) ──')
+    for (const [corpus, counts] of unlabelled) {
+      corpusLines.push(`  ${corpus.padEnd(40)} ${counts.compiled.toLocaleString().padStart(9)}`)
     }
-
-    if (entry.blocked) {
-      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${entry.estSections.toLocaleString().padStart(9)}  ⛔ blocked`)
-      continue
-    }
-
-    // Sum compiled across this entry's DB corpora
-    const compiled = entry.dbCorpora.reduce((s, c) => s + (corpusCounts[c]?.compiled ?? 0), 0)
-    const failed   = entry.dbCorpora.reduce((s, c) => s + (corpusCounts[c]?.failed ?? 0), 0)
-    const est      = entry.estSections
-    const isSeeded = entry.dbCorpora.some(c => queueCorpora.has(c))
-
-    if (compiled === 0 && !isSeeded && entry.dbCorpora.length > 0) {
-      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
-      continue
-    }
-
-    if (compiled === 0 && entry.dbCorpora.length === 0) {
-      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  · not started`)
-      continue
-    }
-
-    // Seeded but producing 0 sections — source client is broken or API is down
-    if (compiled === 0 && isSeeded) {
-      manifestLines.push(`  ${label} ${(0).toString().padStart(9)} / ${est.toLocaleString().padStart(9)}  ⚠️  failing (0 sections despite queue rows)`)
-      continue
-    }
-
-    const pct = pctStr(compiled, est)
-    const bar = progressBar(est > 0 ? (compiled / est) * 100 : 0, 10)
-    const failStr = failed > 0 ? `  (${failed.toLocaleString()} failed)` : ''
-    manifestLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)} / ${est.toLocaleString().padStart(9)}  ${bar} ${pct}${failStr}`)
   }
 
   // ── DB size block ─────────────────────────────────────────────────────────
@@ -693,53 +622,45 @@ export async function sendProgressEmail(
     const flag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL — pause ingest, delete rows immediately'
       : dbSize.usedPct >= 80 ? '  ⚠️  WARNING — run cleanup SQL soon'
       : ''
-    dbSizeLines.push(`  DB size: ${dbSize.sizePretty.padEnd(10)} ${dbBar}  ${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB limit${flag}`)
+    dbSizeLines.push(`  Neon DB: ${dbSize.sizePretty.padEnd(10)} ${dbBar}  ${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB${flag}`)
   }
 
   const parts: string[] = [
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'SCRUTINISE CORPUS INGEST — OVERALL COVERAGE',
+    'SCRUTINISE INGEST PROGRESS',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     `  ${bst} BST`,
     '',
     `  ${overallBar}  ${overallPct.toFixed(1)}%`,
-    `  ${overallCompiled.toLocaleString()} / ${(neonCount + totalEstimated).toLocaleString()} est. sections`,
+    `  ${newPipelineCompiled.toLocaleString()} / ~${totalEstimated.toLocaleString()} est. new pipeline sections`,
+    `  LEGACY (Neon — legislation.gov.uk): ${neonCount.toLocaleString()}  ✅`,
     `  ETA: ${eta}`,
-    '',
-    `  LEGACY (Neon — legislation.gov.uk):  ${neonCount.toLocaleString().padStart(9)}  ✅`,
-    `${'  NEW PIPELINE (' + activeWorkerCount + ' workers):'.padEnd(39)}${newPipelineCompiled.toLocaleString().padStart(9)}`,
     '',
     ...dbSizeLines,
     '',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'CORPUS MANIFEST',
+    'CORPUS STATUS',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    ...manifestLines,
+    ...corpusLines,
   ]
 
-  if (formatBreakdown.length > 0) {
-    parts.push('', 'FORMAT BREAKDOWN (cumulative)')
-    for (const row of formatBreakdown) {
-      parts.push(`  ${(row.format ?? '(no format)').padEnd(16)}${row.count.toLocaleString().padStart(12)}`)
-    }
-  }
+  // ── Queue state ────────────────────────────────────────────────────────────
+  parts.push(
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    'QUEUE STATE',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    `  pending: ${queueState.pending.toLocaleString()}  |  claimed: ${queueState.claimed.toLocaleString()}  |  done: ${queueState.done.toLocaleString()}  |  failed: ${queueState.failed.toLocaleString()}`,
+  )
 
-  if (unrecognised.length > 0) {
-    parts.push('', `UNRECOGNISED FORMATS (last run): ${unrecognised.length} act(s)`)
-    for (const row of unrecognised.slice(0, 10)) {
-      parts.push(`  ${row.sourceUrl ?? '(no url)'}`)
-      if (row.xmlPreview) parts.push(`    ${row.xmlPreview.replace(/\n/g, ' ')}`)
-    }
-  }
-
-  // ── Worker throughput ───────────────────────────────────────────────────────
+  // ── Worker throughput ─────────────────────────────────────────────────────
   try {
     const workerRows = await queryWorkerThroughput()
     if (workerRows.length > 0) {
       const totalRate = workerRows.reduce((s, w) => s + w.ratePerHour, 0)
       const maxRate = Math.max(...workerRows.map(w => w.ratePerHour), 1)
       parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      parts.push('WORKER THROUGHPUT (by worker ID, last 1h)')
+      parts.push(`WORKER ACTIVITY (last 2h)  |  ${activeWorkerCount} active  |  ${totalRate.toLocaleString()} /hr total`)
       parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       for (const w of workerRows) {
         const workerStr = `Worker ${String(w.workerId).padStart(2)}`
@@ -750,10 +671,8 @@ export async function sendProgressEmail(
         const statusFlag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
         parts.push(`  ${workerStr}  ${sourceStr}  ${rateStr}  ${bar}${effStr}${statusFlag}`)
       }
-      parts.push('')
-      parts.push(`  Total: ${totalRate.toLocaleString()} /hr across ${workerRows.length} workers reporting`)
       const stalledIds = workerRows.filter(w => w.stalled).map(w => `Worker ${w.workerId}`)
-      if (stalledIds.length > 0) parts.push(`  Stalled: ${stalledIds.join(', ')}`)
+      if (stalledIds.length > 0) parts.push(``, `  Stalled workers: ${stalledIds.join(', ')}`)
       const critical = workerRows.filter(w => w.efficiencyFlag === '🔴critical').map(w => `Worker ${w.workerId}`)
       if (critical.length > 0) parts.push(`  Critical efficiency: ${critical.join(', ')}`)
     }
@@ -764,12 +683,12 @@ export async function sendProgressEmail(
   // ── Attention needed: stalled sources ─────────────────────────────────────
   if (stalledSources.length > 0) {
     parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    parts.push('⚠️  ATTENTION NEEDED — done queue rows, 0 corpus_sections after 24h')
+    parts.push('⚠️  ATTENTION — done queue rows, 0 corpus_sections after 24h')
     parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     for (const corpus of stalledSources) {
       parts.push(`  ${corpus}`)
     }
-    console.warn('[reporter] stalled sources (done rows, 0 sections):', stalledSources.join(', '))
+    console.warn('[reporter] stalled sources:', stalledSources.join(', '))
   }
 
   const body = parts.join('\n')
@@ -782,7 +701,7 @@ export async function sendProgressEmail(
     body: JSON.stringify({
       from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
       to: [TO],
-      subject: `Corpus: ${overallPct.toFixed(1)}% [${subjectBar}] ${overallCompiled.toLocaleString()} secs — ${bst}${dbWarn}`,
+      subject: `Corpus: ${overallPct.toFixed(1)}% [${subjectBar}] ${newPipelineCompiled.toLocaleString()} secs — ${bst}${dbWarn}`,
       text: body,
     }),
   })
