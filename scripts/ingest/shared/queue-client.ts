@@ -59,7 +59,7 @@ export async function claimNextChunk(workerId: number): Promise<QueueRow | null>
   try {
     await client.query('BEGIN')
 
-    // Phase 1a: highest-priority source with available token
+    // Phase 1a: highest-priority source with available token and worker slot
     const tokenRes = await client.query<{ sourceType: string }>(`
       SELECT q."sourceType"
       FROM ingest_queue q
@@ -67,6 +67,10 @@ export async function claimNextChunk(workerId: number): Promise<QueueRow | null>
       WHERE q.status = 'pending'
         AND r.suspended = false
         AND ($1::bigint - r."lastIssuedAt") >= r."intervalMs"
+        AND (
+          SELECT COUNT(*) FROM ingest_queue q2
+          WHERE q2."sourceType" = q."sourceType" AND q2.status = 'claimed'
+        ) < COALESCE(r."maxConcurrentWorkers", 20)
       ORDER BY q.priority ASC, r."lastIssuedAt" ASC
       LIMIT 1
     `, [nowMs])
@@ -311,6 +315,34 @@ export async function getNextDiscoveryTarget(): Promise<string | null> {
     LIMIT 1
   `)
   return res.rows[0]?.sourceType ?? null
+}
+
+// ── Discovery lock ────────────────────────────────────────────────────────────
+// Only one worker runs discovery at a time to prevent thundering-herd on TNA.
+// Uses scheduler_lock id=2 (id=1 is the scheduler mutex).
+// 10-minute timeout ensures lock auto-expires if a worker crashes mid-discovery.
+
+export async function acquireDiscoveryLock(workerId: string): Promise<boolean> {
+  try {
+    await getPool().query(`
+      INSERT INTO scheduler_lock (id, locked_at, process_id)
+      VALUES (2, NOW(), $1)
+      ON CONFLICT (id) DO UPDATE
+        SET locked_at = NOW(), process_id = $1
+        WHERE scheduler_lock.locked_at < NOW() - INTERVAL '10 minutes'
+    `, [workerId])
+    const res = await getPool().query<{ process_id: string }>(
+      'SELECT process_id FROM scheduler_lock WHERE id = 2'
+    )
+    return res.rows[0]?.process_id === workerId
+  } catch { return false }
+}
+
+export async function releaseDiscoveryLock(workerId: string): Promise<void> {
+  await getPool().query(
+    'DELETE FROM scheduler_lock WHERE id = 2 AND process_id = $1',
+    [workerId]
+  ).catch(() => {})
 }
 
 // Bulk upsert — much faster than individual upserts for large populations
