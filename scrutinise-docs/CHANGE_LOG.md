@@ -1,18 +1,39 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 4 Jun 2026 (V3 — DB size monitoring + worker resurrection)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (D-series diagnostic complete)*
 
 ***
 
-## POST-DEPLOY ACTIONS — 4 Jun 2026 V3 (Charlie to do after commit)
+## DIAGNOSTIC — 5 Jun 2026 (D-series, read-only, no code changes)
 
-| Action | Command / Detail |
-|--------|-----------------|
-| Redeploy all services | ✅ CC triggered via Railway API — all 20 workers + scheduler redeploying now |
-| Run cleanup SQL in Railway dashboard | See SQL below — run in Railway → DB → Query tab |
-| Cleanup SQL (snapshots) | `DELETE FROM ingest_progress_snapshots WHERE "capturedAt" < NOW() - INTERVAL '24 hours';` |
-| Cleanup SQL (done rows) | `DELETE FROM ingest_queue WHERE status = 'done' AND "updatedAt" < NOW() - INTERVAL '7 days';` |
-| Verify DB size | Next hourly email will show DB size % — confirm it drops after cleanup |
+### Summary
+
+Full diagnostic of Railway DB + R2 bucket contents. Key findings:
+
+- **732,942 corpus_sections rows, DB at 4.7 GB / 20 GB**
+- **compiledText column = 1.6 GB** — root cause of volume fill. By design for FTS (10k chars/row). Needs CCh decision on whether to remove/reduce.
+- **Queue exhausted: 0 pending** — workers processed all remaining rows during the 1.5h post-recovery window. 409 stale claimed rows.
+- **lda-commonswrittenquestions: 0 DB rows, 0 R2 keys** — expected ~619k rows. Unknown whether inserts failed silently at capacity or rows were never seeded. Needs investigation.
+- **R2/DB ratio:** ~2× for legislation (raw.xml + compiled.txt), 1× for text-only sources.
+- **Legacy R2 prefixes:** ukpga/, uksi/, eudn/ etc. from old Neon pipeline exist in R2 but not Railway DB.
+
+See handoff_summary.md DIAGNOSTIC SNAPSHOT for full table detail.
+
+### Scripts created (diagnostic only — safe to delete)
+
+- `scripts/ingest/diag-db.ts` — DB queries (D1, D4, D5). Works from local via PrismaPg adapter now that DB is healthy.
+- `scripts/ingest/diag-r2.ts` — R2 prefix + key count survey (D2).
+- `scripts/ingest/run-cleanup.ts` — manual cleanup runner (idempotent). Can be used from local now.
+
+---
+
+## POST-DEPLOY ACTIONS — 4 Jun 2026 V3 ✅ ALL COMPLETE
+
+| Action | Status |
+|--------|--------|
+| Railway PostgreSQL restarted | ✅ CC via Railway API |
+| All 20 workers redeployed | ✅ SUCCESS |
+| Scheduler redeployed (DB size + hourly cleanup) | ✅ commits e11f9ea + b0a7a7d |
 
 ---
 

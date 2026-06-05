@@ -2,15 +2,98 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 4 Jun 2026 (V3 — Railway volume crash recovery, workers redeployed, DB size monitoring added)*
+*Last updated: 5 Jun 2026 (D-series diagnostic — DB/R2 state confirmed, queue exhausted, compiledText identified as volume driver)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V3 (4 Jun 2026) — Railway 5GB volume crash, all workers redeployed, DB size check in scheduler
+**Last sprint:** V3 (4 Jun 2026) — Railway 5GB volume crash, all workers redeployed, DB size check + hourly cleanup in scheduler
 **Previous sprint:** V2 (4 Jun 2026) — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit
+
+---
+
+## DIAGNOSTIC SNAPSHOT — 5 Jun 2026 (run ~01:00 UTC)
+
+### DB state (Railway corpus_sections)
+
+**Total rows: 732,942 — DB: 4,824 MB (4.7 GB of 20 GB) — table: 581 MB**
+
+compiledText column: 665,707 rows populated, ~1,617 MB raw text. This is the primary volume driver — by design for FTS (schema: "First 10,000 chars; full text in R2"), but at 732k rows it dominates the DB.
+
+| corpus | rows |
+|--------|-----:|
+| si-pre-2010 | 174,507 |
+| regional | 109,695 |
+| primary-acts-2000plus | 90,860 |
+| tna-caselaw | 74,730 |
+| primary-acts-pre-2000 | 69,501 |
+| lda-commonsoralquestions | 65,806 |
+| si-2010plus | 60,485 |
+| eur-lex | 18,973 |
+| pwdata-debates | 18,937 |
+| retained-eu | 14,390 |
+| hmrc-codes-guidance | 13,425 |
+| pwdata-wrans | 6,429 |
+| pwdata-lords | 5,448 |
+| pwdata-westminster | 3,860 |
+| college-of-policing | 1,944 |
+| building-regs / hmrc-tiins / planning-policy | 791 each |
+| ots-reports | 497 |
+| oecd | 462 |
+| scotlawcom | 350 |
+| written-answers | 142 |
+| written-statements | 128 |
+
+**Zero rows for:** lda-lordswrittenquestions, lda-commonswrittenquestions, lda-commonsdivisions, lda-lordsdivisions, uk-treaties, echr-hudoc, fca-regulators, sentencing-council, nao-reports.
+
+### Queue state (ingest_queue)
+
+**pending: 0 — claimed: 409 (stale from crash) — done: 106,945**
+
+Queue is **fully exhausted**. Workers processed all remaining pending rows in the ~1.5h they ran after recovery (20:43–21:11 UTC on 4 Jun). 409 claimed rows are stale locks — will expire. No new ingest can happen until the queue is reseeded.
+
+**Open question:** `lda-commonswrittenquestions` (expected ~619k records across 1,238 queue pages) shows 0 DB rows and 0 R2 keys. Was it processed when DB was full (inserts silently failed)? Or was it never seeded? Needs investigation before next seed run.
+
+### R2 state (scrutinise-legislation bucket — 41 top-level prefixes)
+
+Legislation corpora (CLML) store 2 keys per section (raw.xml + compiled.txt), hence ~2× ratio. Text-only corpora (pwdata, LDA, etc.) store 1 key per section.
+
+| prefix | R2 keys | DB rows | ratio |
+|--------|--------:|--------:|------:|
+| si-pre-2010/ | 331,925 | 174,507 | ~1.9× |
+| regional/ | 216,179 | 109,695 | ~2.0× |
+| primary-acts-2000plus/ | 174,079 | 90,860 | ~1.9× |
+| caselaw/ | 149,702 | 74,730 | ~2.0× |
+| si-2010plus/ | 118,782 | 60,485 | ~2.0× |
+| lda-commonsoralquestions/ | 65,813 | 65,806 | 1.0× |
+| retained-eu/ | 26,704 | 14,390 | ~1.9× |
+| hmrc-codes-guidance/ | 26,659 | 13,425 | ~2.0× |
+| eur-lex/ | 18,973 | 18,973 | 1.0× |
+| pwdata-debates/ | 18,945 | 18,937 | 1.0× |
+| pwdata-wrans/ | 6,429 | 6,429 | 1.0× |
+| pwdata-lords/ | 5,448 | 5,448 | 1.0× |
+| pwdata-westminster/ | 3,860 | 3,860 | 1.0× |
+
+Key naming: caselaw is stored under `caselaw/` (not `tna-caselaw/`). LDA, pwdata, eur-lex: compiled.txt only. Legislation: raw.xml + compiled.txt per section.
+
+Legacy R2 prefixes from old Neon pipeline (not in Railway DB): `ukpga/`, `uksi/`, `eudn/`, `eudr/`, `eur/`, `anaw/`, `asp/`, `asc/`, `nia/`, `nisi/`, `nisr/`, `ssi/`, `wsi/`, `operational/` — these correspond to the 914,274 Neon legacy sections.
+
+### Root cause of volume fill (confirmed)
+
+`processPwdata` (and all other source clients) calls both `r2Put()` AND `upsertSection({ compiledText: compiled.slice(0, 10_000) })`. The `compiledText` field stores up to 10KB per row in Railway DB by design — intentional for FTS. At ~730k rows this is 1.6GB of text in Postgres.
+
+**This is an architectural decision to discuss with CCh.** Options:
+1. Remove compiledText from corpus_sections entirely — rely on R2 for full text, FTS via tsvector trigger only (already maintained)
+2. Reduce slice to 2,000 chars (enough for FTS lexemes, less storage)
+3. Accept it and plan for larger Railway volume as corpus grows
+
+Hourly cleanup (added V3) handles snapshot + done-row accumulation but does NOT address compiledText growth. That requires a schema/code decision.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
 ### V2 Part 1 — TWFY pwdata client (4 Jun 2026)
 
@@ -102,22 +185,19 @@ Next hourly email will still show the old per-corpus format (no per-worker rows)
 
 ## IMMEDIATE ACTIONS REQUIRED (for Charlie)
 
-### V3 — DB cleanup SQL (run in Railway dashboard → DB service → Query tab)
+### V3 — all complete ✅
 
-```sql
--- Delete old progress snapshots (keep last 24 hours only)
-DELETE FROM ingest_progress_snapshots 
-WHERE "capturedAt" < NOW() - INTERVAL '24 hours';
+| Action | Status |
+|--------|--------|
+| Railway PostgreSQL restarted | ✅ CC via Railway API |
+| All 20 workers redeployed | ✅ all SUCCESS by ~20:43 UTC 4 Jun |
+| Scheduler redeployed with DB size + hourly cleanup | ✅ commit b0a7a7d live |
+| Hourly cleanup running | ✅ scheduler deletes old snapshots + done rows every cycle |
+| DB size in email | ✅ every hourly email now shows %, warns at 80%/90% |
 
--- Delete old done queue rows (keep last 7 days)
-DELETE FROM ingest_queue 
-WHERE status = 'done' 
-AND "updatedAt" < NOW() - INTERVAL '7 days';
-```
+**Remaining decision for CCh:** What to do about `compiledText` (see diagnostic snapshot above). This is the root cause of volume fill — not a code bug, an architectural choice.
 
-Workers + scheduler are already redeploying (CC triggered all 21 via Railway API at ~8pm). Once cleanup SQL runs, next hourly email will show DB size % in header.
-
-**Note:** CC cannot connect to Railway DB from local machine — `switchback.proxy.rlwy.net:16156` gives ECONNRESET from outside Railway's network. All DB operations must be run from Railway dashboard or a Railway-hosted service.
+**Open investigation:** `lda-commonswrittenquestions` — 0 rows in DB and R2 despite being seeded. Determine if queue rows exist (check failed count), and whether inserts failed silently when DB was at capacity.
 
 ### V1 post-deploy (all required before workers pick up new sources)
 
