@@ -1,8 +1,65 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (D-series diagnostic complete)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (V1 — Neon writes + discovery lock + concurrency limits)*
 
 ***
+
+## SPRINT V1 — 5 Jun 2026 (Architecture fix: Neon writes + single-worker discovery + priority enforcement)
+
+### Summary
+
+Three root-cause fixes deployed:
+
+1. **Neon writes** — `upsertSection()` in `db-metadata.ts` now writes `corpus_sections` to Neon via raw pg Pool instead of Railway Prisma. Railway DB stops growing; Neon gets FTS-ready data. `corpus_sections` table created on Neon with full schema + FTS trigger (0 rows — populates from new ingest onwards; migration script for existing 732k rows provided separately).
+
+2. **Single-worker discovery** — Thundering herd eliminated. `acquireDiscoveryLock()` / `releaseDiscoveryLock()` added to `queue-client.ts` using `scheduler_lock id=2`. Worker-queue wraps the discovery loop so only one worker enumerates TNA at a time; others sleep 30s and retry.
+
+3. **Source concurrency limits** — `maxConcurrentWorkers` column added to `source_rate_limits` (migration `20260605010000`). `claimNextChunk()` now checks claimed count against limit before issuing a token. Seeds: TNA 6, caselaw 4, TWFY 10, LDA 4, etc. Prevents all 20 workers piling onto a single rate-limited source.
+
+4. **pwdata daily discovery** — Removed pwdata corpora from `SINGLE_PASS_CORPORA`. Added `discoverPwdata()` which fetches TWFY directory listing and inserts any docIds not yet in queue. Workers now pick up new daily files automatically. Priority for `pwdata-westminster` corrected to 3 (was 2).
+
+5. **Stalled source alerting** — `queryStalledSources()` added to `progress-reporter.ts`. Scheduler calls it each run; sources with `done` queue rows but 0 corpus_sections after 24h are listed in a new ⚠️ ATTENTION NEEDED email section.
+
+6. **Worker throughput fix** — `twfy-pwdata` entry added to `THEORETICAL_SECTIONS_PER_HOUR` (2.16M/hr at 500ms × ~300 speeches/file) and sourceType detection map.
+
+7. **Migration script** — `scripts/ingest/migrate-corpus-to-neon.ts` created. Reads Railway `corpus_sections` in batches of 200, bulk-inserts to Neon with ON CONFLICT DO NOTHING. Checkpoint/resume safe. Run after Part 2 is confirmed working; then TRUNCATE Railway corpus_sections to reclaim ~580 MB.
+
+### Files modified
+
+- `scripts/ingest/shared/db-metadata.ts` — Neon pool + raw-SQL upsertSection
+- `scripts/ingest/shared/queue-client.ts` — discovery lock functions + maxConcurrentWorkers check in claimNextChunk
+- `scripts/ingest/workers/worker-queue.ts` — discovery block wrapped with lock
+- `scripts/ingest/shared/discovery.ts` — discoverPwdata() added; pwdata removed from SINGLE_PASS_CORPORA
+- `scripts/ingest/shared/progress-reporter.ts` — twfy-pwdata in THEORETICAL_SECTIONS_PER_HOUR + sourceType map + queryStalledSources() + email section
+- `scripts/ingest/scheduler.ts` — calls queryStalledSources, passes to sendProgressEmail
+- `scripts/ingest/seed-rate-limits.ts` — maxConcurrentWorkers added to all entries
+- `scrutinise-web/prisma/schema.prisma` — maxConcurrentWorkers field on SourceRateLimit
+- `scrutinise-web/prisma/migrations/20260605010000_source_rate_limits_max_workers/migration.sql` — new migration
+- `scripts/ingest/migrate-corpus-to-neon.ts` — new one-time migration script (corpus_sections Railway→Neon)
+
+### Post-deploy actions required (Charlie — run via Railway dashboard SQL or tsx)
+
+1. **`npx prisma migrate deploy`** in `scrutinise-web/` — applies `20260605010000_source_rate_limits_max_workers`
+2. **Fix pwdata-westminster priority:**
+   ```sql
+   UPDATE ingest_queue SET priority = 3 WHERE corpus = 'pwdata-westminster';
+   ```
+3. **Reseed missing queue rows** (ON CONFLICT DO NOTHING — safe to re-run):
+   ```bash
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-pwdata-queue.ts
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/queue-populator.ts
+   ```
+4. **Re-run seed-rate-limits** to populate maxConcurrentWorkers:
+   ```bash
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-rate-limits.ts
+   ```
+5. **Redeploy all workers + scheduler** (code already redeployed for NEON_DATABASE_URL; redeploy again after push for new code)
+6. **Verify** one new corpus_sections row appears in Neon after a worker processes an item
+7. **Run migrate-corpus-to-neon.ts** (can run locally — both Neon and Railway accessible from local... actually Railway ECONNRESET from local. Run from a Railway service or after confirming Neon writes work, defer migration to next sprint)
+8. **After migration verified:** `TRUNCATE corpus_sections;` on Railway to reclaim ~580 MB
+
+---
 
 ## DIAGNOSTIC — 5 Jun 2026 (D-series, read-only, no code changes)
 

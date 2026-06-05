@@ -2,15 +2,39 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 5 Jun 2026 (D-series diagnostic — DB/R2 state confirmed, queue exhausted, compiledText identified as volume driver)*
+*Last updated: 5 Jun 2026 (V1 — Neon writes, discovery lock, concurrency limits, pwdata discovery, stalled alerting)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V3 (4 Jun 2026) — Railway 5GB volume crash, all workers redeployed, DB size check + hourly cleanup in scheduler
-**Previous sprint:** V2 (4 Jun 2026) — pwdata 36k rows, LDA/Treaties fixes, NPPF/BuildRegs wired, Railway audit
+**Last sprint:** V1 (5 Jun 2026) — corpus_sections now writes to Neon; thundering-herd discovery fixed; maxConcurrentWorkers enforced; pwdata daily discovery live; stalled source alerting in email
+**Previous sprint:** D-series diagnostic (5 Jun 2026) — DB/R2 state confirmed, queue exhausted, compiledText identified as volume driver
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie) — V1 post-deploy
+
+1. **`npx prisma migrate deploy`** in `scrutinise-web/` — applies `20260605010000_source_rate_limits_max_workers`
+2. **Fix pwdata-westminster priority** (Railway dashboard → DB → Query):
+   ```sql
+   UPDATE ingest_queue SET priority = 3 WHERE corpus = 'pwdata-westminster';
+   ```
+3. **Reseed missing queue rows:**
+   ```bash
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-pwdata-queue.ts
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/queue-populator.ts
+   ```
+4. **Re-run seed-rate-limits** (populates maxConcurrentWorkers column):
+   ```bash
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-rate-limits.ts
+   ```
+5. **Redeploy all workers + scheduler** (after push — new code picks up Neon writes + discovery lock)
+6. **Verify** one new `corpus_sections` row appears in Neon after a worker processes an item
+7. **Defer migration** of 732k existing Railway rows to next sprint (Railway ECONNRESET from local; needs Railway-hosted runner)
+8. **After Neon migration verified:** `TRUNCATE corpus_sections;` on Railway to reclaim ~580 MB
 
 ---
 
