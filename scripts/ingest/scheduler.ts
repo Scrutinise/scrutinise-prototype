@@ -15,6 +15,7 @@ import {
   saveProgressSnapshot,
   acquireSchedulerLock,
   queryDbSize,
+  runHourlyCleanup,
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
 import { clearExpiredSuspensions } from './shared/queue-client'
@@ -61,6 +62,14 @@ async function run(): Promise<void> {
   } catch (err) {
     console.warn('[scheduler] could not query DB for format breakdown:', err)
   }
+
+  console.log('[scheduler] running hourly cleanup (old snapshots + done queue rows)')
+  try {
+    const cleaned = await runHourlyCleanup()
+    if (cleaned.snapshots > 0 || cleaned.doneRows > 0) {
+      console.log(`[scheduler] cleanup: deleted ${cleaned.snapshots} snapshots, ${cleaned.doneRows} done queue rows`)
+    }
+  } catch (err) { console.warn('[scheduler] cleanup failed:', err) }
 
   console.log('[scheduler] clearing expired suspensions')
   try { await clearExpiredSuspensions() } catch (err) { console.warn('[scheduler] suspension clear failed:', err) }

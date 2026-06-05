@@ -403,6 +403,25 @@ export async function queryDbSize(): Promise<DbSizeResult> {
   }
 }
 
+// ── Hourly cleanup — keeps Railway volume from filling up ─────────────────────
+// Runs every scheduler cycle. DELETEs are idempotent; cheap when rows are young.
+
+export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows: number }> {
+  const pool = getPool()
+  const [r1, r2] = await Promise.all([
+    pool.query(`
+      DELETE FROM ingest_progress_snapshots
+      WHERE "capturedAt" < NOW() - INTERVAL '24 hours'
+    `),
+    pool.query(`
+      DELETE FROM ingest_queue
+      WHERE status = 'done'
+      AND "updatedAt" < NOW() - INTERVAL '7 days'
+    `),
+  ])
+  return { snapshots: r1.rowCount ?? 0, doneRows: r2.rowCount ?? 0 }
+}
+
 // ── Format helpers ────────────────────────────────────────────────────────────
 
 function progressBar(pct: number, width = 20): string {
