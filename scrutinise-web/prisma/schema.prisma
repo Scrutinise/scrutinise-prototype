@@ -1833,13 +1833,14 @@ model IngestQueue {
 
 // Per-source rate-limit token buckets — shared across all workers.
 model SourceRateLimit {
-  sourceKey       String    @id
-  intervalMs      Int
-  lastIssuedAt    BigInt    @default(0)
-  suspended       Boolean   @default(false)
-  suspendedUntil  DateTime?
-  isComplete      Boolean   @default(false)
-  updatedAt       DateTime  @updatedAt
+  sourceKey            String    @id
+  intervalMs           Int
+  lastIssuedAt         BigInt    @default(0)
+  suspended            Boolean   @default(false)
+  suspendedUntil       DateTime?
+  isComplete           Boolean   @default(false)
+  maxConcurrentWorkers Int       @default(20)
+  updatedAt            DateTime  @updatedAt
 
   @@map("source_rate_limits")
 }
