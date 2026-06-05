@@ -16,6 +16,7 @@ import {
   acquireSchedulerLock,
   queryDbSize,
   runHourlyCleanup,
+  queryStalledSources,
 } from './shared/progress-reporter'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
 import { clearExpiredSuspensions } from './shared/queue-client'
@@ -87,8 +88,12 @@ async function run(): Promise<void> {
   console.log('[scheduler] appending CSV row')
   await appendCsvRow(agg)
 
+  console.log('[scheduler] checking for stalled sources')
+  let stalledSources: string[] = []
+  try { stalledSources = await queryStalledSources() } catch (err) { console.warn('[scheduler] stalled check failed:', err) }
+
   console.log('[scheduler] sending email')
-  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize)
+  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize, stalledSources)
 }
 
 const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop

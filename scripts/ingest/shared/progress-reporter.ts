@@ -439,14 +439,15 @@ function pctStr(compiled: number, estimated: number): string {
 // (3_600_000 ms/hr ÷ intervalMs) × avgSectionsPerRequest — before sharing the
 // token bucket across workers on the same source.
 const THEORETICAL_SECTIONS_PER_HOUR: Record<string, number> = {
-  'tna-legislation': Math.floor((3_600_000 / 200) * 5),   // 90,000/hr
-  'tna-caselaw':     Math.floor((3_600_000 / 200) * 3),   // 54,000/hr
+  'tna-legislation': Math.floor((3_600_000 / 200) * 5),   //  90,000/hr
+  'tna-caselaw':     Math.floor((3_600_000 / 200) * 3),   //  54,000/hr
   'hansard':         Math.floor((3_600_000 / 500) * 20),  // 144,000/hr
   'fca':             Math.floor((3_600_000 / 300) * 10),  // 120,000/hr
   'hmrc':            Math.floor((3_600_000 / 300) * 8),   //  96,000/hr
   'echr':            Math.floor((3_600_000 / 500) * 50),  // 360,000/hr
   'eurlex':          Math.floor((3_600_000 / 500) * 10),  //  72,000/hr
-  'lda-parliament':  Math.floor((3_600_000 / 200) * 500), // 9,000,000/hr ceiling (500 items/req)
+  'lda-parliament':  Math.floor((3_600_000 / 200) * 500), //   9M/hr ceiling (500 items/req)
+  'twfy-pwdata':     Math.floor((3_600_000 / 500) * 300), //   2.16M/hr (~300 speeches/file)
   'default':         1_000,
 }
 
@@ -518,6 +519,7 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
       : sk === 'echr-hudoc' ? 'echr'
       : sk === 'eur-lex' ? 'eurlex'
       : sk.startsWith('lda-') ? 'lda-parliament'
+      : sk.startsWith('pwdata-') ? 'twfy-pwdata'
       : 'default'
     return { workerId: Number(row.workerId), sourceKey: sk, sourceType, ratePerHour, stalled, idle }
   })
@@ -542,6 +544,23 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
 export interface UnrecognisedFormatRow { sourceUrl: string | null; xmlPreview: string | null }
 export interface FormatCount { format: string | null; count: number }
 
+// Sources with 'done' queue rows but zero corpus_sections after 24h — diagnostics hook.
+export async function queryStalledSources(): Promise<string[]> {
+  try {
+    const res = await getPool().query<{ corpus: string }>(`
+      SELECT DISTINCT q.corpus
+      FROM ingest_queue q
+      WHERE q.status = 'done'
+        AND q."completedAt" < NOW() - INTERVAL '24 hours'
+        AND NOT EXISTS (
+          SELECT 1 FROM corpus_sections cs WHERE cs.corpus = q.corpus
+        )
+      ORDER BY q.corpus
+    `)
+    return res.rows.map(r => r.corpus)
+  } catch { return [] }
+}
+
 export async function sendProgressEmail(
   agg: ProgressAggregate,
   corpusCounts: Record<string, { compiled: number; failed: number }>,
@@ -549,6 +568,7 @@ export async function sendProgressEmail(
   unrecognised: UnrecognisedFormatRow[] = [],
   formatBreakdown: FormatCount[] = [],
   dbSize?: DbSizeResult,
+  stalledSources: string[] = [],
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
@@ -706,6 +726,17 @@ export async function sendProgressEmail(
     }
   } catch (err) {
     parts.push('', `[Worker throughput unavailable: ${err}]`)
+  }
+
+  // ── Attention needed: stalled sources ─────────────────────────────────────
+  if (stalledSources.length > 0) {
+    parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    parts.push('⚠️  ATTENTION NEEDED — done queue rows, 0 corpus_sections after 24h')
+    parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    for (const corpus of stalledSources) {
+      parts.push(`  ${corpus}`)
+    }
+    console.warn('[reporter] stalled sources (done rows, 0 sections):', stalledSources.join(', '))
   }
 
   const body = parts.join('\n')
