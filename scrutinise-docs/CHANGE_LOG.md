@@ -1,6 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (V1 — Neon writes + discovery lock + concurrency limits)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jun 2026 (V2 — Fix email counts + census + migrate Railway→Neon)*
+
+***
+
+## SPRINT V2 — 5 Jun 2026 (Fix scheduler counts → Neon; live-census.ts; email fixes)
+
+### Summary
+
+1. **Scheduler reads Neon, not Railway** — `queryCorpusCounts()` and `queryDbSize()` in `progress-reporter.ts` now use `NEON_DATABASE_URL` pool instead of Railway. Emails will show counts from Neon (where workers are writing).
+
+2. **queryStalledSources() fixed** — was doing a cross-DB subquery (`ingest_queue` Railway vs `corpus_sections` Railway). After migration, Railway corpus_sections is truncated, breaking the check. Now two-step: query Neon for compiled corpora, then filter Railway ingest_queue.
+
+3. **live-census.ts** — new file at `scripts/ingest/census/live-census.ts`. Queries Neon corpus_sections + Railway ingest_queue state. Writes JSON snapshot to R2 as `ingest-csv/census-{date}.json`. Called from scheduler every hour; replaces redundant separate queryCorpusCounts() + queryNeonCount() calls.
+
+4. **CORPUS_MANIFEST estSections fixed** — Planning Policy: 64 → 5,000. Building Regs: 21 → 3,000. Was causing 1235% and 3766% absurd percentages. Actual compiled count is 791 for each (from Railway pre-migration); estimates raised to account for PDFs and future expansion.
+
+5. **Worker throughput filter** — `queryWorkerThroughput()` CTE now filters `AND "capturedAt" > NOW() - INTERVAL '2 hours'`. Previously included stale snapshots from before the V1 redeploy, causing the 78,586/hr ghost figure.
+
+6. **Worker count dynamic** — Email "NEW PIPELINE (N workers)" now counts distinct workerIds from recent (2h) snapshots instead of hardcoded "20". Shows 0 if no recent snapshots (correctly indicates workers not reporting).
+
+### Files modified
+
+- `scripts/ingest/shared/progress-reporter.ts` — getNeonPool(); queryCorpusCounts()→Neon; queryDbSize()→Neon; queryStalledSources() two-step; estSections fix; throughput 2h filter; dynamic worker count
+- `scripts/ingest/census/live-census.ts` — new file (CensusResult type + runCensus() + saveToR2())
+- `scripts/ingest/scheduler.ts` — imports runCensus/saveToR2; replaces queryCorpusCounts+queryNeonCount with runCensus(); saves census to R2 each hour
+
+### Post-deploy actions required (Charlie)
+
+1. **Push + Redeploy scheduler** — picks up Neon count queries and census
+2. **Run migration** — `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/migrate-corpus-to-neon.ts` — takes 30-60 min for 732,954 rows
+3. **Verify** Neon count matches Railway count (script reports both at end)
+4. **TRUNCATE corpus_sections on Railway** — frees ~4GB: `TRUNCATE corpus_sections;` (Railway dashboard → DB → Query)
+5. **Confirm** next hourly email shows Neon-sourced counts (numbers should now move)
+
+### Queue / priority state (confirmed 5 Jun 2026 ~17:30 BST)
+
+- Priority 1 (TNA legislation): **all done** — 540/7637/5838/30907/8117/3390 ingest_queue rows done, matching Railway corpus_sections compiled counts. Workers correctly on priority 3.
+- Priority 2: only 28 LDA rows pending (lda-commonswrittenquestions: 21, lda-lordswrittenquestions: 7)
+- Neon corpus_sections: 27,849 rows (post-V1 new writes only — migration pending)
+- Railway corpus_sections: 732,954 rows (full pre-migration population)
+
+### Neon DB limit note
+
+`DB_LIMIT_GB` in progress-reporter.ts set to 10 (Neon Launch plan). If on Scale plan (50GB), update this constant.
 
 ***
 

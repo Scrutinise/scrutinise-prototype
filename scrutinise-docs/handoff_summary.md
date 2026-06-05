@@ -2,39 +2,42 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 5 Jun 2026 (V1 — Neon writes, discovery lock, concurrency limits, pwdata discovery, stalled alerting)*
+*Last updated: 5 Jun 2026 (V2 — Fix email counts → Neon; live-census.ts; migrate script; email fixes)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last sprint:** V1 (5 Jun 2026) — corpus_sections now writes to Neon; thundering-herd discovery fixed; maxConcurrentWorkers enforced; pwdata daily discovery live; stalled source alerting in email
-**Previous sprint:** D-series diagnostic (5 Jun 2026) — DB/R2 state confirmed, queue exhausted, compiledText identified as volume driver
+**Last sprint:** V2 (5 Jun 2026) — scheduler now reads corpus counts from Neon; live-census.ts hourly; CORPUS_MANIFEST estSections fixed; worker throughput 2h filter; worker count dynamic; migration ready to run
+**Previous sprint:** V1 (5 Jun 2026) — corpus_sections writes to Neon; discovery lock; concurrency limits; pwdata daily discovery; stalled alerting
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED (for Charlie) — V1 post-deploy
+## IMMEDIATE ACTIONS REQUIRED (for Charlie) — V2 post-deploy
 
-1. **`npx prisma migrate deploy`** in `scrutinise-web/` — applies `20260605010000_source_rate_limits_max_workers`
-2. **Fix pwdata-westminster priority** (Railway dashboard → DB → Query):
+1. **Push + redeploy scheduler** on Railway — picks up Neon count queries, live-census.ts, fixed email
+2. **Run migration (30-60 min):**
+   ```bash
+   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/migrate-corpus-to-neon.ts
+   ```
+3. **Verify** at end of migration — script prints Railway count and Neon count; confirm they match
+4. **TRUNCATE Railway corpus_sections** (frees ~4GB):
    ```sql
-   UPDATE ingest_queue SET priority = 3 WHERE corpus = 'pwdata-westminster';
+   TRUNCATE corpus_sections;
    ```
-3. **Reseed missing queue rows:**
-   ```bash
-   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-pwdata-queue.ts
-   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts
-   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/queue-populator.ts
-   ```
-4. **Re-run seed-rate-limits** (populates maxConcurrentWorkers column):
-   ```bash
-   NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-rate-limits.ts
-   ```
-5. **Redeploy all workers + scheduler** (after push — new code picks up Neon writes + discovery lock)
-6. **Verify** one new `corpus_sections` row appears in Neon after a worker processes an item
-7. **Defer migration** of 732k existing Railway rows to next sprint (Railway ECONNRESET from local; needs Railway-hosted runner)
-8. **After Neon migration verified:** `TRUNCATE corpus_sections;` on Railway to reclaim ~580 MB
+5. **Confirm** next hourly email shows Neon-sourced counts (numbers will now move as workers write)
+
+---
+
+## KEY ARCHITECTURE STATE (as of V2)
+
+- **Neon corpus_sections:** 27,849 rows (post-V1 writes) — grows to ~760k after migration
+- **Railway corpus_sections:** 732,954 rows — will be TRUNCATEd after migration
+- **Railway DB:** ~4.8GB of 20GB — drops to ~1GB after TRUNCATE
+- **Workers:** 20 active, all on pwdata-westminster (priority 3) — priorities 1/2 fully done
+- **Queue:** priority 1 all done; only 28 priority 2 LDA rows remain pending
+- **Neon DB limit:** `DB_LIMIT_GB = 10` in progress-reporter.ts — update if on Scale plan (50GB)
 
 ---
 
