@@ -10,14 +10,13 @@ import {
   writeProgressToR2,
   appendCsvRow,
   sendProgressEmail,
-  queryCorpusCounts,
-  queryNeonCount,
   saveProgressSnapshot,
   acquireSchedulerLock,
   queryDbSize,
   runHourlyCleanup,
   queryStalledSources,
 } from './shared/progress-reporter'
+import { runCensus, saveToR2 as saveCensusToR2 } from './census/live-census'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
 import { clearExpiredSuspensions } from './shared/queue-client'
 
@@ -32,20 +31,30 @@ async function run(): Promise<void> {
   }
 
   const capturedAt = new Date()
-  console.log('[scheduler] querying corpus counts + Neon + DB size')
-  const [corpusCounts, neonCount, dbSize] = await Promise.all([
-    queryCorpusCounts(),
-    queryNeonCount(),
+  console.log('[scheduler] running census (Neon corpus_sections + queue state)')
+  const [census, dbSize] = await Promise.all([
+    runCensus(),
     queryDbSize().catch(err => { console.warn('[scheduler] DB size query failed:', err); return undefined }),
   ])
+
+  // Convert census result to the format expected by sendProgressEmail / saveProgressSnapshot
+  const corpusCounts: Record<string, { compiled: number; failed: number }> = {}
+  for (const c of census.corpusSections) {
+    corpusCounts[c.corpus] = { compiled: c.compiled, failed: c.failed }
+  }
+  const neonCount = census.legacyLegislationSections
+
   if (dbSize) {
-    console.log(`[scheduler] DB size: ${dbSize.sizePretty} (${dbSize.usedPct.toFixed(1)}% of ${(dbSize.limitBytes / 1_073_741_824).toFixed(0)}GB limit)`)
+    console.log(`[scheduler] Neon DB size: ${dbSize.sizePretty} (${dbSize.usedPct.toFixed(1)}% of ${(dbSize.limitBytes / 1_073_741_824).toFixed(0)}GB limit)`)
     if (dbSize.usedPct >= 80) {
-      console.warn(`[scheduler] ⚠️ DB volume at ${dbSize.usedPct.toFixed(1)}% — run cleanup SQL to reclaim space`)
+      console.warn(`[scheduler] ⚠️ Neon DB at ${dbSize.usedPct.toFixed(1)}% — alert Charlie`)
     }
   }
   const newTotal = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
   console.log(`[scheduler] new pipeline: ${newTotal.toLocaleString()} compiled — Neon legacy: ${neonCount.toLocaleString()}`)
+
+  // Save census snapshot to R2
+  try { await saveCensusToR2(census) } catch (err) { console.warn('[scheduler] census R2 save failed:', err) }
 
   console.log('[scheduler] building checkpoint aggregate (ETA)')
   const agg = await buildAggregate()

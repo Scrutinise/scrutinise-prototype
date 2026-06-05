@@ -112,8 +112,8 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'Local / Private Acts',            sourceKey: 'local-private-acts',     dbCorpora: [],                                         estSections: 10_000,    priority: 4 },
   { label: 'NHS Guidance',                    sourceKey: 'nhs-guidance',           dbCorpora: [],                                         estSections: 20_000,    priority: 4 },
   // V2 Part 3: PPG 63 chapters + NPPF (HTML text). Building Regs 21 docs (description text; PDFs future work).
-  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: ['planning-policy'],                        estSections: 64,        priority: 4 },
-  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: ['building-regs'],                          estSections: 21,        priority: 4 },
+  { label: 'Planning Policy (NPPF/PPG)',       sourceKey: 'planning-policy',        dbCorpora: ['planning-policy'],                        estSections: 5_000,     priority: 4 },
+  { label: 'Building Regulations',            sourceKey: 'building-regs',          dbCorpora: ['building-regs'],                          estSections: 3_000,     priority: 4 },
   { label: 'CMA Guidelines',                  sourceKey: 'cma-guidelines',         dbCorpora: [],                                         estSections: 8_000,     priority: 4 },
   { label: 'Ofcom/Ofwat/Ofgem/Ofsted',        sourceKey: 'regulator-rulebooks',    dbCorpora: [],                                         estSections: 40_000,    priority: 4 },
   // Census 3 Jun 2026: compiled 462; free-tier content appears fully ingested
@@ -121,7 +121,7 @@ export const CORPUS_MANIFEST: CorpusEntry[] = [
   { label: 'ONS Statistical Datasets',        sourceKey: 'ons-statistics',         dbCorpora: [],                                         estSections: 5_000,     priority: 4 },
 ]
 
-// ── DB pool (Railway) ─────────────────────────────────────────────────────────
+// ── DB pool (Railway — ingest_queue, snapshots, scheduler_lock) ──────────────
 
 let _pool: Pool | null = null
 function getPool(): Pool {
@@ -136,6 +136,23 @@ function getPool(): Pool {
     })
   }
   return _pool
+}
+
+// ── DB pool (Neon — corpus_sections, LegislationSection) ─────────────────────
+
+let _neonPool: Pool | null = null
+function getNeonPool(): Pool {
+  if (!_neonPool) {
+    const url = process.env.NEON_DATABASE_URL
+    if (!url) throw new Error('NEON_DATABASE_URL not set')
+    _neonPool = new Pool({
+      connectionString: url,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10_000,
+      statement_timeout: 30_000,
+    })
+  }
+  return _neonPool
 }
 
 // ── Scheduler lock — prevents duplicate email sends when two instances overlap ─
@@ -171,7 +188,7 @@ export async function acquireSchedulerLock(): Promise<boolean> {
 // ── Per-corpus compiled section counts (Railway corpus_sections) ──────────────
 
 export async function queryCorpusCounts(): Promise<Record<string, { compiled: number; failed: number }>> {
-  const res = await getPool().query<{ corpus: string; status: string; count: number }>(`
+  const res = await getNeonPool().query<{ corpus: string; status: string; count: number }>(`
     SELECT corpus, status, COUNT(*)::int AS count
     FROM corpus_sections
     WHERE status IN ('compiled', 'failed')
@@ -385,10 +402,10 @@ export interface DbSizeResult {
   usedPct: number
 }
 
-const DB_LIMIT_GB = 20  // current Railway volume limit after resize
+const DB_LIMIT_GB = 10  // Neon Launch plan — update if on Scale plan (50GB)
 
 export async function queryDbSize(): Promise<DbSizeResult> {
-  const pool = getPool()
+  const pool = getNeonPool()
   const res = await pool.query<{ db_size_bytes: string; db_size: string }>(`
     SELECT pg_database_size(current_database())::text AS db_size_bytes,
            pg_size_pretty(pg_database_size(current_database())) AS db_size
@@ -481,6 +498,7 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
              ROW_NUMBER() OVER (PARTITION BY "workerId" ORDER BY "capturedAt" DESC) AS rn
       FROM ingest_progress_snapshots
       WHERE "workerId" IS NOT NULL
+        AND "capturedAt" > NOW() - INTERVAL '2 hours'
     )
     SELECT
       "workerId",
@@ -546,18 +564,21 @@ export interface FormatCount { format: string | null; count: number }
 
 // Sources with 'done' queue rows but zero corpus_sections after 24h — diagnostics hook.
 export async function queryStalledSources(): Promise<string[]> {
+  // Two-step: corpus_sections is on Neon, ingest_queue is on Railway — can't do a cross-DB subquery
   try {
-    const res = await getPool().query<{ corpus: string }>(`
+    const neonRes = await getNeonPool().query<{ corpus: string }>(
+      'SELECT DISTINCT corpus FROM corpus_sections'
+    )
+    const compiledCorpora = new Set(neonRes.rows.map(r => r.corpus))
+
+    const railwayRes = await getPool().query<{ corpus: string }>(`
       SELECT DISTINCT q.corpus
       FROM ingest_queue q
       WHERE q.status = 'done'
         AND q."completedAt" < NOW() - INTERVAL '24 hours'
-        AND NOT EXISTS (
-          SELECT 1 FROM corpus_sections cs WHERE cs.corpus = q.corpus
-        )
       ORDER BY q.corpus
     `)
-    return res.rows.map(r => r.corpus)
+    return railwayRes.rows.map(r => r.corpus).filter(c => !compiledCorpora.has(c))
   } catch { return [] }
 }
 
@@ -580,6 +601,18 @@ export async function sendProgressEmail(
   // Query which corpora have any queue rows (to distinguish not-started from seeded)
   let queueCorpora = new Set<string>()
   try { queueCorpora = await queryQueueCorpora() } catch { /* non-fatal */ }
+
+  // Count active workers from recent snapshots — replaces hardcoded count
+  let activeWorkerCount = 0
+  try {
+    const wRes = await getPool().query<{ n: number }>(`
+      SELECT COUNT(DISTINCT "workerId")::int AS n
+      FROM ingest_progress_snapshots
+      WHERE "workerId" IS NOT NULL
+        AND "capturedAt" > NOW() - INTERVAL '2 hours'
+    `)
+    activeWorkerCount = wRes.rows[0]?.n ?? 0
+  } catch { /* keep 0 */ }
 
   // ── Totals ────────────────────────────────────────────────────────────────
   // Sum compiled sections across all DB corpora
@@ -674,7 +707,7 @@ export async function sendProgressEmail(
     `  ETA: ${eta}`,
     '',
     `  LEGACY (Neon — legislation.gov.uk):  ${neonCount.toLocaleString().padStart(9)}  ✅`,
-    `  NEW PIPELINE (20 workers):           ${newPipelineCompiled.toLocaleString().padStart(9)}`,
+    `${'  NEW PIPELINE (' + activeWorkerCount + ' workers):'.padEnd(39)}${newPipelineCompiled.toLocaleString().padStart(9)}`,
     '',
     ...dbSizeLines,
     '',
