@@ -16,16 +16,15 @@
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-1. **Run `commit-all.sh`** — in project root. Commits V8 changes, pushes to Main. Railway auto-deploys workers + scheduler.
-2. **Reset skipped rows after deploy** — Railway workers picked up new corpus rows with OLD code (before V8 deployed) and marked them `skipped` (unknown corpus). After workers redeploy with V8 code, run this SQL on Railway DB:
-   ```sql
-   UPDATE ingest_queue SET status='pending', "lastError"=NULL
-   WHERE corpus IN ('pwdata-lordswrans','pwdata-wms','pwdata-lordswms')
-     AND status='skipped';
-   ```
-   State at time of V8 sprint end: pwdata-lordswms 3,673 skipped; pwdata-lordswrans 1,314 skipped; pwdata-wms 0 skipped (still pending — workers will process correctly after deploy).
-3. **Hansard API rows retired** — all 6,788 rows are now done with retirement audit trail. hansard-commons-a/b and hansard-lords-a/b are blocked in corpus_targets on Neon.
-4. **Redeploy workers** — workers must be redeployed after the push to pick up V8 code (new PWDATA_CORPUS_CONFIG entries). Railway auto-deploy fires on push but running containers need manual redeploy.
+**All V8 post-deploy actions complete ✅**
+
+| Action | Status |
+|--------|--------|
+| `commit-all.sh` pushed (352ed7b) | ✅ done |
+| All 20 workers + scheduler redeployed | ✅ done via Railway API |
+| Skipped rows reset to pending | ✅ 13,303 rows reset |
+
+**No further action needed.** Workers are processing the new corpora with V8 code. Overnight queue is 15,315 pending rows.
 
 ---
 
