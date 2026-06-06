@@ -3,8 +3,8 @@
   "version": "1.0.3",
   "private": true,
   "scripts": {
-    "start": "tsx workers/worker-queue.ts",
-    "worker": "tsx workers/worker-queue.ts",
+    "start": "exec tsx workers/worker-queue.ts",
+    "worker": "exec tsx workers/worker-queue.ts",
     "worker-legacy": "tsx workers/worker-main.ts",
     "scheduler": "exec tsx scheduler.ts",
     "check-status": "tsx check-status.ts",

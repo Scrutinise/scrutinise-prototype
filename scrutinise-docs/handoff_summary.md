@@ -2,32 +2,35 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 6 Jun 2026 (V4 — census crash fixed; corpus_snapshots created; email redesigned)*
+*Last updated: 6 Jun 2026 (V6 — claim reaper wired in; email stalled-source dedup; exec worker fix; TWFY silent failure identified)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** (V4 — see commit-all.sh — not yet pushed)
-**Last sprint:** V4 (6 Jun 2026) — census crash fixed; corpus_snapshots on Neon; email V4 design
+**Last commit:** 4649a2e (V4 docs handoff) — V5 and V6 commit-all.sh ready to run
+**Last sprint:** V6 (6 Jun 2026) — reclaimStaleRows() added; queryStalledSources() deduped; exec on worker scripts; TWFY silent failure confirmed
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-1. **Run `commit-all.sh`** — push V4 code to Main (Railway auto-deploys scheduler)
-2. **Monitor first hourly email after deploy** — should show `Ingest HH:MM | -- this hour | 1,664,958 total | XX.X%` (no delta on first run)
-3. **Monitor second hourly email** — should show `+N this hour` delta
+1. **Run `commit-all.sh`** — in project root. Single commit + push to Main. Railway auto-deploys scheduler.
+2. **TWFY silent failure — investigate next sprint**: Workers are claiming `hansard-commons-a` rows but writing 0 sections. Confirmed via Railway logs (worker-1 deployment `66844414`): 51 claim lines, 0 upsertSection lines, 0 errors. Root cause is in `theyworkforyou.ts` — the source client silently returns 0 items. Do not reset hansard rows until this is fixed; the reaper will handle stale claimed rows automatically.
+3. **Claim reaper now active**: After redeploy, scheduler will auto-reclaim any rows stuck claimed > 90 minutes. No more manual resets needed for SIGTERM orphans.
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V4)
+## KEY ARCHITECTURE STATE (as of V5)
 
 - **Neon corpus_sections:** ~751,949+ rows — no compiledText column
-- **Neon corpus_snapshots:** 0 rows (created this sprint — populated on first scheduler run after deploy)
-- **Neon corpus_targets:** 39 rows — email denominators
+- **Neon corpus_snapshots:** populated every hour since V4 deploy
+- **Neon corpus_targets:** 39 rows — 11 now have `blocked=true` with reasons (V5)
 - **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
+- **Scheduler loop:** FIXED — now sleeps until :01 past next clock hour (not INTERVAL_MS from deploy time)
+- **TWFY_API_KEY:** SET on all 21 Railway services (workers 1–20 + scheduler)
+- **Prisma CorpusSection:** `compiledText` field REMOVED from schema.prisma; `npx prisma generate` run; no compiledText in worker or db-metadata code
 - **Railway DB:** ~0.8GB of 20GB
 - **R2 compiled text:** 100% coverage
 - **Workers:** 20 active, writing to Neon

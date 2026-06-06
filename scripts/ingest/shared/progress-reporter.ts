@@ -395,6 +395,29 @@ export async function queryDbSize(): Promise<DbSizeResult> {
   }
 }
 
+// ── Claim reaper — reclaims rows left claimed by SIGTERM'd workers ────────────
+
+// WHY: workers SIGTERM'd during Railway deploys leave rows permanently claimed.
+// No heartbeat exists — the only safety net is this reaper running each cycle.
+// 90-minute threshold: covers worst-case LDA fetch (45s × 3 retries + backoff
+// ≈ 90s) with large margin. Any claim older than 90 min is a crashed worker.
+export async function reclaimStaleRows(): Promise<number> {
+  const { rowCount } = await getPool().query(`
+    UPDATE ingest_queue
+    SET status      = 'pending',
+        "lastError" = 'reclaimed by scheduler — worker SIGTERM or crash',
+        "claimedBy" = NULL,
+        "claimedAt" = NULL
+    WHERE status = 'claimed'
+      AND "claimedAt" < NOW() - INTERVAL '90 minutes'
+  `)
+  const count = rowCount ?? 0
+  if (count > 0) {
+    console.log(`[scheduler] reclaimed ${count} stale claimed rows`)
+  }
+  return count
+}
+
 // ── Hourly cleanup — keeps Railway volume from filling up ─────────────────────
 
 export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows: number }> {
@@ -537,10 +560,15 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
 
 export async function queryStalledSources(): Promise<string[]> {
   try {
-    const neonRes = await getNeonPool().query<{ corpus: string }>(
-      'SELECT DISTINCT corpus FROM corpus_sections'
-    )
-    const compiledCorpora = new Set(neonRes.rows.map(r => r.corpus))
+    const neonPool = getNeonPool()
+    // WHY: blocked sources are already surfaced in the ⛔ section. Showing them
+    // again as ⚠️ stalled creates duplicate noise and obscures real stalls.
+    const [sectionsRes, blockedRes] = await Promise.all([
+      neonPool.query<{ corpus: string }>('SELECT DISTINCT corpus FROM corpus_sections'),
+      neonPool.query<{ corpus_key: string }>('SELECT corpus_key FROM corpus_targets WHERE blocked = true'),
+    ])
+    const compiledCorpora = new Set(sectionsRes.rows.map(r => r.corpus))
+    const blockedSet = new Set(blockedRes.rows.map(r => r.corpus_key))
 
     const railwayRes = await getPool().query<{ corpus: string }>(`
       SELECT DISTINCT q.corpus
@@ -549,7 +577,9 @@ export async function queryStalledSources(): Promise<string[]> {
         AND q."completedAt" < NOW() - INTERVAL '24 hours'
       ORDER BY q.corpus
     `)
-    return railwayRes.rows.map(r => r.corpus).filter(c => !compiledCorpora.has(c))
+    return railwayRes.rows
+      .map(r => r.corpus)
+      .filter(c => !compiledCorpora.has(c) && !blockedSet.has(c))
   } catch { return [] }
 }
 
@@ -567,6 +597,7 @@ export async function sendProgressEmail(
   dbSize?: DbSizeResult,
   stalledSources: string[] = [],
   hourlyDelta: Map<string, number> = new Map(),
+  reclaimedCount: number = 0,
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
@@ -755,6 +786,10 @@ export async function sendProgressEmail(
 
   // ── ISSUES ────────────────────────────────────────────────────────────────
   const issueLines: string[] = []
+
+  if (reclaimedCount > 0) {
+    issueLines.push(`  ⚠️  Reclaimed ${reclaimedCount} stale claimed rows (workers SIGTERM'd mid-claim — now pending)`)
+  }
 
   for (const row of failedByCorpus) {
     const snippet = row.last_error ? row.last_error.slice(0, 80).replace(/\n/g, ' ') : 'unknown'

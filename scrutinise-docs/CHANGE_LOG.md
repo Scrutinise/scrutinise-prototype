@@ -1,6 +1,109 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V4 — Fix census crash + corpus_snapshots + email redesign)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V6 — Claim reaper + email deduplication + exec fix)*
+
+---
+
+## SPRINT V6 — 6 Jun 2026 (Claim reaper + email deduplication + exec fix)
+
+### Part 1 — Claim reaper added to scheduler
+
+**Root cause:** Workers SIGTERM'd during Railway redeployments leave `ingest_queue` rows stuck in `claimed` state permanently. No heartbeat mechanism exists. 2,337 rows had to be manually reset before this sprint.
+
+**Fix:** `reclaimStaleRows()` added to `progress-reporter.ts` (exported). Runs as first operation in `run()` after lock acquisition. Any row with `status='claimed'` and `claimedAt < NOW() - INTERVAL '90 minutes'` is reset to `pending` with `lastError='reclaimed by scheduler — worker SIGTERM or crash'`.
+
+**90-minute threshold rationale:** Worst-case LDA fetch is 45s × 3 retries + backoff ≈ 90s. Threshold provides ample margin while catching any worker that crashed or was SIGTERM'd.
+
+**Email integration:** `sendProgressEmail()` now accepts `reclaimedCount` parameter. When > 0, adds `⚠️  Reclaimed N stale claimed rows` as the FIRST item in the ISSUES section (above failed rows, above stalled sources).
+
+**Files:** `scripts/ingest/shared/progress-reporter.ts`, `scripts/ingest/scheduler.ts`
+
+### Part 2 — Email stalled-sources deduplication
+
+**Root cause:** `queryStalledSources()` returned sources with done queue rows but 0 corpus sections. Sources already marked `blocked=true` in `corpus_targets` were included — they appeared both in the `⛔ BLOCKED` section and the `⚠️ stalled` section, creating noise.
+
+**Fix:** Added parallel Neon query for `corpus_targets WHERE blocked=true`. Results filtered to exclude blocked corpus keys before returning stalled list. Blocked sources now appear only in the `⛔` section.
+
+**Files:** `scripts/ingest/shared/progress-reporter.ts`
+
+### Part 3 — exec prefix added to worker start scripts
+
+**Status:** Scheduler already had `exec tsx scheduler.ts` in `scripts/ingest/package.json` (committed in V5 via Railway service fix). Added `exec` prefix to `start` and `worker` scripts for worker processes. Railway SIGTERM now reaches the `tsx` process directly instead of the shell wrapper, reducing stale claim generation on redeploy.
+
+**Files:** `scripts/ingest/package.json`
+
+### Part 4 — TWFY silent failure identified (investigation for next sprint)
+
+**Finding:** Worker-1 Railway logs (deployment `66844414`) confirm workers ARE claiming `hansard-commons-a` rows (51 claim log lines observed at 17:22–17:25 UTC). However:
+- 0 `upsertSection` log lines found
+- 0 `corpus_sections` rows for any `hansard-*` corpus in Neon
+- 0 error log lines
+
+Workers claim → complete in seconds → mark done → 0 sections written. Classic silent failure pattern. Root cause is in the TWFY source client (`theyworkforyou.ts`) — likely the API response parser returning 0 items without logging failure. **Investigation needed before next Hansard sprint.**
+
+---
+
+## SPRINT V5 — 6 Jun 2026 (Scheduler loop + TWFY key + Prisma compiledText + row resets)
+
+### Part 1 — Scheduler hourly loop fixed
+
+**Root cause:** Loop used `setTimeout(run, INTERVAL_MS)` where `INTERVAL_MS = 1h`. Deployed at 09:53 → ran at 09:53, slept 1h, next run would be 10:53 not 10:01. Process stayed alive so Railway saw it as healthy; no second email at 10:01.
+
+**Fix:** Added `msUntilNextRun()` helper. Calculates time until :01 past the next clock hour. Loop now sleeps that duration instead of a fixed hour. Deploy at any time → next run always at :01.
+
+**Files:** `scripts/ingest/scheduler.ts`
+
+### Part 2 — TWFY_API_KEY deployed to Railway
+
+**Key:** Set on all 21 Railway services (workers 1–20 + Ingest-scheduler). Railway will auto-redeploy each service on variable set — this is the desired behaviour.
+
+**Queue reset:** 1,244 Hansard failed rows reset to pending on Railway ingest_queue:
+- hansard-commons-a: 462 rows
+- hansard-commons-b: 320 rows
+- hansard-lords-a: 462 rows
+
+### Part 3 — Prisma compiledText removed
+
+**Root cause of PrismaClientUnknownRequestError on pwdata-debates:** `compiledText String?` field remained in `schema.prisma` CorpusSection after the column was dropped from Neon in V3. Prisma client (regenerated on container build) included the field; any Prisma-based code path referencing it would error.
+
+**Additional fix:** Removed the redundant R2 write inside `upsertSection` that was overwriting full compiled text (from explicit `r2Put` calls) with a truncated 10K slice. All callers already do explicit `r2Put` before calling `upsertSection`.
+
+**Files:** `scrutinise-web/prisma/schema.prisma`, `scripts/ingest/shared/db-metadata.ts`, `scripts/ingest/workers/worker-queue.ts`
+
+**Post-deploy:** `npx prisma generate` run locally — Railway will regenerate on next build.
+
+**Queue reset:** 7 pwdata-debates failed rows reset to pending.
+
+### Part 4 — Broken sources marked blocked in corpus_targets
+
+11 corpus_targets rows updated with `blocked=true` and `blocked_reason` on Neon:
+- committees-a/b: Parliament API 403 from Railway IPs
+- echr-hudoc: HUDOC /app/query endpoint 404 (Jun 2026)
+- fca-publications/fca-regulators: JS SPA, needs Playwright
+- nilawcom, sentencing-council, nao-reports: 0 sections, uninvestigated
+- uk-treaties: URLSearchParams fix applied but still 0 sections
+
+Note: hansard-commons-a/b, hansard-lords-a/b corpus_keys do not exist in corpus_targets (these corpora use pwdata-* keys).
+
+### Part 5 — LDA fetch timeout + retry
+
+**Fix:** Added 45s `AbortController` timeout per fetch attempt. Added HTTP 500 to `TRANSIENT_STATUS` (was 524/502/503/504 only). Changed backoff from `3000 * attempt` (linear) to `2000 * 2^(attempt-1)` (exponential: 2s, 4s). AbortError counts as transient and retries.
+
+**Files:** `scripts/ingest/sources/lda-parliament.ts`
+
+**Queue reset:** 1,409 LDA failed rows reset to pending:
+- lda-commonswrittenquestions: 1,213
+- lda-lordswrittenquestions: 207
+- lda-commonsdivisions: 12
+- lda-lordsdivisions: 5
+
+### Files created/modified
+
+- `scripts/ingest/scheduler.ts` — `msUntilNextRun()` helper; loop uses it instead of `INTERVAL_MS`
+- `scripts/ingest/sources/lda-parliament.ts` — `LDA_FETCH_TIMEOUT_MS=45000`; 500 in `TRANSIENT_STATUS`; AbortController per attempt; exponential backoff
+- `scrutinise-web/prisma/schema.prisma` — removed `compiledText String?` from `CorpusSection`
+- `scripts/ingest/shared/db-metadata.ts` — removed `compiledText` from `SectionMeta`; removed R2 write via compiledText from `upsertSection`; removed unused S3Client/PutObjectCommand imports
+- `scripts/ingest/workers/worker-queue.ts` — removed `compiledText: ...slice(0, 10_000)` from all `upsertSection` calls (18 occurrences)
 
 ---
 

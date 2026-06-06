@@ -15,6 +15,7 @@ import {
   queryDbSize,
   runHourlyCleanup,
   queryStalledSources,
+  reclaimStaleRows,
   writeCorpusSnapshot,
   getHourlyDelta,
   type CorpusSnapshotEntry,
@@ -32,6 +33,8 @@ async function run(): Promise<void> {
     console.log('[scheduler] another instance holds the lock — skipping this run')
     return
   }
+
+  const reclaimedCount = await reclaimStaleRows()
 
   const capturedAt = new Date()
   console.log('[scheduler] running census (Neon corpus_sections + queue state)')
@@ -129,7 +132,7 @@ async function run(): Promise<void> {
   } catch (err) { console.warn('[scheduler] hourly delta failed:', err) }
 
   console.log('[scheduler] sending email')
-  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize, stalledSources, hourlyDelta)
+  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize, stalledSources, hourlyDelta, reclaimedCount)
 }
 
 const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop
