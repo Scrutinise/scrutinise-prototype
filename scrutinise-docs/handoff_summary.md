@@ -2,23 +2,36 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 6 Jun 2026 (V3 — Migrate complete; R2 backfill 100%; TRUNCATE done; compiledText column dropped; email rebuilt from corpus_targets)*
+*Last updated: 6 Jun 2026 (V4 — census crash fixed; corpus_snapshots created; email redesigned)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** a13b7fa (V3 — backfill R2, drop compiledText, rebuild email)
-**Last sprint:** V3 (5–6 Jun 2026) — migration done; R2 100%; Railway TRUNCATEd; Neon column dropped; email from DB
+**Last commit:** (V4 — see commit-all.sh — not yet pushed)
+**Last sprint:** V4 (6 Jun 2026) — census crash fixed; corpus_snapshots on Neon; email V4 design
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED — none
+## IMMEDIATE ACTIONS REQUIRED
 
-V3 is fully deployed. Workers are writing to Neon. Email reads from corpus_targets. No pending actions.
+1. **Run `commit-all.sh`** — push V4 code to Main (Railway auto-deploys scheduler)
+2. **Monitor first hourly email after deploy** — should show `Ingest HH:MM | -- this hour | 1,664,958 total | XX.X%` (no delta on first run)
+3. **Monitor second hourly email** — should show `+N this hour` delta
 
-**Confirm** by checking next hourly email shows Neon-sourced counts from corpus_targets.
+---
+
+## KEY ARCHITECTURE STATE (as of V4)
+
+- **Neon corpus_sections:** ~751,949+ rows — no compiledText column
+- **Neon corpus_snapshots:** 0 rows (created this sprint — populated on first scheduler run after deploy)
+- **Neon corpus_targets:** 39 rows — email denominators
+- **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
+- **Railway DB:** ~0.8GB of 20GB
+- **R2 compiled text:** 100% coverage
+- **Workers:** 20 active, writing to Neon
+- **Scheduler crash bug:** FIXED — `ingest_queue."updatedAt"` → `"completedAt"` in live-census.ts and runHourlyCleanup()
 
 ---
 

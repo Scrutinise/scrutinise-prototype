@@ -1,6 +1,50 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V3 — Migrate → Backfill → Clean Architecture → Rebuild Email)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V4 — Fix census crash + corpus_snapshots + email redesign)*
+
+---
+
+## SPRINT V4 — 6 Jun 2026 (Fix census crash + corpus_snapshots + email redesign)
+
+### Root cause (Part 1)
+
+Scheduler was crashing silently on every run since V3 (and likely since V2). Root cause: `live-census.ts` queried `MAX("updatedAt")` on `ingest_queue`, but `ingest_queue` has no `updatedAt` column (only `completedAt`). This caused `runCensus()` to throw, `run()` to fail, and **no emails to be sent**. The "914,274/7,075,050" email Charlie saw was from a pre-V3 deployment.
+
+Deployed commit confirmed: `b0fb5c5` (correct). Bug was always present in the query.
+
+### Changes
+
+1. **Bug fix: `updatedAt` → `completedAt`** — `live-census.ts` query on `ingest_queue` now uses `MAX(COALESCE("completedAt", "createdAt"))`. `runHourlyCleanup()` in `progress-reporter.ts` also fixed.
+
+2. **`corpus_snapshots` table created on Neon** — Stores per-corpus section counts every hour. `UNIQUE(hour, corpus_key)`. `ON CONFLICT DO UPDATE` so re-runs are idempotent. `hour` is truncated to clock hour (not capture time) to make delta queries simple.
+
+3. **`writeCorpusSnapshot()` added** — Called after `runCensus()` on each hourly scheduler run. Writes all corpus_sections counts + legacy LegislationSection as a single row (corpus_key = 'legacy-legislation-section').
+
+4. **`getHourlyDelta()` added** — Queries previous hour's snapshot from corpus_snapshots. Returns `Map<string, number>` of deltas per corpus. Returns empty map (shows "--") if no previous snapshot (first run after deploy).
+
+5. **`sendProgressEmail()` fully rebuilt (V4 design)**:
+   - Subject: `Ingest HH:MM | +{delta} this hour | {total} total | {pct}%`
+   - `THIS HOUR` section: per-corpus delta from corpus_snapshots
+   - `TOTAL CORPUS` section: progress bar, legacy + new pipeline breakdown
+   - `ACTIVE CORPORA` section: only corpora with worker activity in last 2h; per-corpus worker state (active/stalled IDs, rate)
+   - `QUEUE` section: totals + per-corpus pending/failed; queue-exhausted warning
+   - `ISSUES` section: failed rows with last error snippet, stalled sources, blocked corpora
+   - `ALL CORPORA STATUS` section: one-line per corpus with emoji status indicator
+   - ETA removed (queue exhausted, meaningless)
+
+### Files created/modified
+
+- `scripts/ingest/census/live-census.ts` — fix `updatedAt` → `completedAt`
+- `scripts/ingest/shared/progress-reporter.ts` — add `writeCorpusSnapshot`, `getHourlyDelta`; fix `runHourlyCleanup`; rebuild `sendProgressEmail`
+- `scripts/ingest/scheduler.ts` — import new functions; call `writeCorpusSnapshot` after census; compute `hourlyDelta`; pass delta to email
+- `scripts/ingest/migrations/create-corpus-snapshots.ts` — migration script (already executed on Neon)
+
+### Post-deploy actions
+
+- Deploy: push to Main → Railway auto-deploys scheduler
+- First email after deploy will show `-- this hour` (no previous snapshot yet); second email will show real delta
+
+---
 
 ---
 
