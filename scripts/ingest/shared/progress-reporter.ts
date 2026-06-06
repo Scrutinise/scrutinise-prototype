@@ -143,6 +143,80 @@ export async function queryNeonCount(): Promise<number> {
   }
 }
 
+// ── corpus_snapshots write ────────────────────────────────────────────────────
+
+export interface CorpusSnapshotEntry {
+  corpus: string
+  count: number
+  compiled: number
+}
+
+export async function writeCorpusSnapshot(
+  censusCounts: CorpusSnapshotEntry[],
+  legacyCount: number,
+): Promise<void> {
+  const neonPool = getNeonPool()
+  const hour = new Date()
+  hour.setMinutes(0, 0, 0)
+  hour.setMilliseconds(0)
+
+  const entries: Array<{ hour: string; corpus_key: string; section_count: number; compiled_count: number; source: string }> = [
+    ...censusCounts.map(c => ({
+      hour: hour.toISOString(),
+      corpus_key: c.corpus,
+      section_count: c.count,
+      compiled_count: c.compiled,
+      source: 'corpus_sections',
+    })),
+    {
+      hour: hour.toISOString(),
+      corpus_key: 'legacy-legislation-section',
+      section_count: legacyCount,
+      compiled_count: legacyCount,
+      source: 'legacy',
+    },
+  ]
+
+  for (const v of entries) {
+    await neonPool.query(`
+      INSERT INTO corpus_snapshots (hour, corpus_key, section_count, compiled_count, source)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (hour, corpus_key) DO UPDATE
+        SET section_count  = EXCLUDED.section_count,
+            compiled_count = EXCLUDED.compiled_count,
+            captured_at    = now()
+    `, [v.hour, v.corpus_key, v.section_count, v.compiled_count, v.source])
+  }
+  console.log(`[reporter] wrote ${entries.length} snapshot rows for hour ${hour.toISOString()}`)
+}
+
+// ── Hourly delta from corpus_snapshots ───────────────────────────────────────
+
+export async function getHourlyDelta(
+  currentCounts: Map<string, number>,
+  currentHour: Date,
+): Promise<Map<string, number>> {
+  const neonPool = getNeonPool()
+  const prevHour = new Date(currentHour.getTime() - 60 * 60 * 1000)
+  try {
+    const { rows } = await neonPool.query<{ corpus_key: string; section_count: number }>(`
+      SELECT corpus_key, section_count
+      FROM corpus_snapshots
+      WHERE hour = $1
+    `, [prevHour.toISOString()])
+    if (rows.length === 0) return new Map()  // no previous snapshot → show "--" not a fabricated total
+    const prevCounts = new Map<string, number>(rows.map(r => [r.corpus_key, Number(r.section_count)]))
+    const delta = new Map<string, number>()
+    for (const [corpus, current] of currentCounts) {
+      const prev = prevCounts.get(corpus) ?? 0
+      delta.set(corpus, current - prev)
+    }
+    return delta
+  } catch {
+    return new Map()
+  }
+}
+
 // ── Per-worker snapshot write ─────────────────────────────────────────────────
 
 export async function writeWorkerSnapshot(
@@ -333,7 +407,7 @@ export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows:
     pool.query(`
       DELETE FROM ingest_queue
       WHERE status = 'done'
-      AND "updatedAt" < NOW() - INTERVAL '7 days'
+      AND "completedAt" < NOW() - INTERVAL '7 days'
     `),
   ])
   return { snapshots: r1.rowCount ?? 0, doneRows: r2.rowCount ?? 0 }
@@ -492,220 +566,253 @@ export async function sendProgressEmail(
   formatBreakdown: FormatCount[] = [],
   dbSize?: DbSizeResult,
   stalledSources: string[] = [],
+  hourlyDelta: Map<string, number> = new Map(),
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
 
-  const bst = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
-  }).format(new Date(agg.timestamp))
+  const now = new Date(agg.timestamp)
+  const bstFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })
+  const bst = bstFmt.format(now)
+  const bstTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).format(now)
 
-  // Query which corpora have any queue rows
-  let queueCorpora = new Set<string>()
-  try { queueCorpora = await queryQueueCorpora() } catch { /* non-fatal */ }
+  // Previous hour window label (e.g. "08:00–08:59")
+  const prevHourStart = new Date(now)
+  prevHourStart.setMinutes(0, 0, 0)
+  prevHourStart.setTime(prevHourStart.getTime() - 60 * 60 * 1000)
+  const prevHourEnd = new Date(prevHourStart.getTime() + 59 * 60 * 1000)
+  const timeFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false })
+  const prevWindow = `${timeFmt.format(prevHourStart)}–${timeFmt.format(prevHourEnd)}`
 
-  // Count active workers from recent snapshots
-  let activeWorkerCount = 0
-  try {
-    const wRes = await getPool().query<{ n: number }>(`
-      SELECT COUNT(DISTINCT "workerId")::int AS n
-      FROM ingest_progress_snapshots
-      WHERE "workerId" IS NOT NULL
-        AND "capturedAt" > NOW() - INTERVAL '2 hours'
-    `)
-    activeWorkerCount = wRes.rows[0]?.n ?? 0
-  } catch { /* keep 0 */ }
-
-  // Load corpus targets from DB
+  // ── Load data ──────────────────────────────────────────────────────────────
   let targets: CorpusTarget[] = []
   try { targets = await queryCorpusTargets() } catch { /* non-fatal */ }
 
-  // ── Queue state ────────────────────────────────────────────────────────────
+  let queueCorpora = new Set<string>()
+  try { queueCorpora = await queryQueueCorpora() } catch { /* non-fatal */ }
+
+  let workerRows: WorkerThroughputRow[] = []
+  try { workerRows = await queryWorkerThroughput() } catch { /* non-fatal */ }
+
+  // Per-corpus queue breakdown
+  interface QueueCorpusRow { corpus: string; status: string; n: number }
+  let queueByCorpus: QueueCorpusRow[] = []
   let queueState = { pending: 0, claimed: 0, done: 0, failed: 0 }
   try {
-    const qRes = await getPool().query<{ status: string; n: number }>(`
-      SELECT status, COUNT(*)::int AS n FROM ingest_queue GROUP BY status
+    const qRes = await getPool().query<{ corpus: string; status: string; n: number }>(`
+      SELECT corpus, status, COUNT(*)::int AS n
+      FROM ingest_queue
+      GROUP BY corpus, status
+      ORDER BY corpus, status
     `)
+    queueByCorpus = qRes.rows
     for (const r of qRes.rows) {
-      if (r.status === 'pending') queueState.pending = r.n
-      else if (r.status === 'claimed') queueState.claimed = r.n
-      else if (r.status === 'done') queueState.done = r.n
-      else if (r.status === 'failed') queueState.failed = r.n
+      if (r.status === 'pending') queueState.pending += r.n
+      else if (r.status === 'claimed') queueState.claimed += r.n
+      else if (r.status === 'done') queueState.done += r.n
+      else if (r.status === 'failed') queueState.failed += r.n
     }
+  } catch { /* non-fatal */ }
+
+  // Last error per corpus (for ISSUES section)
+  interface FailedRow { corpus: string; n: number; last_error: string | null }
+  let failedByCorpus: FailedRow[] = []
+  try {
+    const fRes = await getPool().query<FailedRow>(`
+      SELECT corpus, COUNT(*)::int AS n,
+             (array_agg("lastError" ORDER BY id DESC))[1] AS last_error
+      FROM ingest_queue
+      WHERE status = 'failed' AND "lastError" IS NOT NULL
+      GROUP BY corpus
+      ORDER BY n DESC
+    `)
+    failedByCorpus = fRes.rows
   } catch { /* non-fatal */ }
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const newPipelineCompiled = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
-  const overallCompiled = neonCount + newPipelineCompiled
-
-  // Sum only non-blocked, non-null estimated targets for overall %
   const newPipelineEstimated = targets
     .filter(t => !t.blocked && t.est_sections != null)
     .reduce((s, t) => s + (t.est_sections ?? 0), 0)
-
-  // Overall = legacy + new pipeline in both numerator and denominator
   const grandTotalCompiled = neonCount + newPipelineCompiled
   const grandTotalEstimated = neonCount + newPipelineEstimated
-
-  const overallPct = grandTotalEstimated > 0
-    ? ((grandTotalCompiled / grandTotalEstimated) * 100)
-    : 0
+  const overallPct = grandTotalEstimated > 0 ? (grandTotalCompiled / grandTotalEstimated) * 100 : 0
   const overallBar = progressBar(overallPct)
 
-  const eta = await queryEtaFromSnapshots(newPipelineEstimated, newPipelineCompiled)
+  // ── This-hour delta ───────────────────────────────────────────────────────
+  const hasDelta = hourlyDelta.size > 0
+  const totalDelta = hasDelta
+    ? [...hourlyDelta.values()].reduce((s, v) => s + Math.max(0, v), 0)
+    : null
 
-  // ── Per-corpus rows grouped by priority ───────────────────────────────────
-  const corpusLines: string[] = []
-  let currentPriority = -1
+  // ── Active corpora = corpora with worker activity in last 2h ─────────────
+  const activeCorpusKeys = new Set(workerRows.map(w => w.sourceKey).filter(Boolean))
 
-  // Priority groups in order
-  const priorityGroups = [1, 2, 3, 4]
-  const priorityLabels: Record<number, string> = {
-    1: 'PRIORITY 1 — UK Statute',
-    2: 'PRIORITY 2 — Major open sources',
-    3: 'PRIORITY 3 — Secondary sources',
-    4: 'PRIORITY 4 — Lower priority',
+  // Group workers by corpus
+  const workersByCorpus = new Map<string, WorkerThroughputRow[]>()
+  for (const w of workerRows) {
+    if (!w.sourceKey) continue
+    if (!workersByCorpus.has(w.sourceKey)) workersByCorpus.set(w.sourceKey, [])
+    workersByCorpus.get(w.sourceKey)!.push(w)
   }
 
-  for (const pri of priorityGroups) {
-    const group = targets.filter(t => t.priority === pri)
-    if (group.length === 0) continue
+  // ── Subject ───────────────────────────────────────────────────────────────
+  const deltaStr = totalDelta != null ? `+${totalDelta.toLocaleString()}` : '--'
+  const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
+  const subject = `Ingest ${bstTime} | ${deltaStr} this hour | ${grandTotalCompiled.toLocaleString()} total | ${overallPct.toFixed(1)}%${dbWarn}`
 
-    corpusLines.push('', `── ${priorityLabels[pri]} ──`)
+  const SEP = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+  const parts: string[] = [SEP, `SCRUTINISE INGEST — ${bst} BST`, SEP]
 
-    for (const target of group) {
-      const label = target.display_label.padEnd(40)
-      const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
-      const failed = corpusCounts[target.corpus_key]?.failed ?? 0
-      const est = target.est_sections
-      const isSeeded = queueCorpora.has(target.corpus_key)
-
-      if (target.blocked) {
-        corpusLines.push(`  ${label} ⛔ blocked${target.blocked_reason ? ': ' + target.blocked_reason : ''}`)
-        continue
-      }
-
-      if (compiled === 0 && !isSeeded) {
-        const estPart = est != null ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}` : ''
-        corpusLines.push(`  ${label} ${(0).toString().padStart(9)}${estPart}  · not started`)
-        continue
-      }
-
-      if (compiled === 0 && isSeeded) {
-        const estPart = est != null ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}` : ''
-        corpusLines.push(`  ${label} ${(0).toString().padStart(9)}${estPart}  ⚠️  failing`)
-        continue
-      }
-
-      const pct = pctStr(compiled, est)
-      const bar = est != null ? progressBar((compiled / est) * 100, 10) : '░'.repeat(10)
-      const estStr = est != null
-        ? ` / ${(target.est_is_confirmed ? '' : '~') + est.toLocaleString()}`
-        : ' / ?'
-      const failStr = failed > 0 ? `  (${failed.toLocaleString()} failed)` : ''
-      corpusLines.push(`  ${label} ${compiled.toLocaleString().padStart(9)}${estStr}  ${bar} ${pct}${failStr}`)
+  // ── THIS HOUR ─────────────────────────────────────────────────────────────
+  parts.push('', `THIS HOUR  (${prevWindow})`)
+  if (!hasDelta) {
+    parts.push('  Total added:  -- sections  (no previous snapshot yet)')
+  } else {
+    parts.push(`  Total added:  +${totalDelta!.toLocaleString()} sections`)
+    const activeDelta = [...hourlyDelta.entries()]
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a)
+    for (const [corpus, delta] of activeDelta) {
+      const label = targets.find(t => t.corpus_key === corpus)?.display_label ?? corpus
+      parts.push(`  ${label.padEnd(38)} +${delta.toLocaleString()}`)
     }
+    if (activeDelta.length === 0) parts.push('  (no corpora added sections this hour)')
   }
 
-  // Any corpus in corpusCounts that has no target row — show as unlabelled
-  const knownKeys = new Set(targets.map(t => t.corpus_key))
-  const unlabelled = Object.entries(corpusCounts)
-    .filter(([k]) => !knownKeys.has(k) && corpusCounts[k].compiled > 0)
-  if (unlabelled.length > 0) {
-    corpusLines.push('', '── Unlabelled (no corpus_targets row) ──')
-    for (const [corpus, counts] of unlabelled) {
-      corpusLines.push(`  ${corpus.padEnd(40)} ${counts.compiled.toLocaleString().padStart(9)}`)
-    }
-  }
-
-  // ── DB size block ─────────────────────────────────────────────────────────
-  const dbSizeLines: string[] = []
+  // ── TOTAL CORPUS ──────────────────────────────────────────────────────────
+  parts.push('', SEP, 'TOTAL CORPUS', SEP)
+  parts.push(`  ${overallBar}  ${overallPct.toFixed(1)}%`)
+  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections  (${neonCount.toLocaleString()} legacy + ${newPipelineCompiled.toLocaleString()} new pipeline)`)
+  parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
+  parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
   if (dbSize) {
-    const dbBar = progressBar(dbSize.usedPct, 10)
     const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
-    const flag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL — pause ingest, delete rows immediately'
-      : dbSize.usedPct >= 80 ? '  ⚠️  WARNING — run cleanup SQL soon'
-      : ''
-    dbSizeLines.push(`  Neon DB: ${dbSize.sizePretty.padEnd(10)} ${dbBar}  ${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB${flag}`)
+    const dbFlag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL'
+      : dbSize.usedPct >= 80 ? '  ⚠️  WARNING' : ''
+    parts.push(`  DB: Neon ${dbSize.sizePretty}  (${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB)${dbFlag}`)
   }
 
-  const parts: string[] = [
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'SCRUTINISE INGEST PROGRESS',
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    `  ${bst} BST`,
-    '',
-    `  ${overallBar}  ${overallPct.toFixed(1)}%`,
-    `  ${grandTotalCompiled.toLocaleString()} / ~${grandTotalEstimated.toLocaleString()} est. total sections`,
-    `  New pipeline: ${newPipelineCompiled.toLocaleString()}  |  Legacy (legislation.gov.uk): ${neonCount.toLocaleString()}  ✅`,
-    `  ETA (new pipeline): ${eta}`,
-    '',
-    ...dbSizeLines,
-    '',
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'CORPUS STATUS',
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    ...corpusLines,
-  ]
+  // ── ACTIVE CORPORA ────────────────────────────────────────────────────────
+  const activeTargets = targets.filter(t => activeCorpusKeys.has(t.corpus_key))
+  if (activeTargets.length > 0) {
+    parts.push('', SEP, `ACTIVE CORPORA  (workers assigned this hour)`, SEP)
+    for (const target of activeTargets) {
+      const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
+      const est = target.est_sections
+      const pct = est != null && est > 0 ? ((compiled / est) * 100).toFixed(1) : '?'
+      const estStr = est != null ? `  /  ${(target.est_is_confirmed ? '✓' : '~') + est.toLocaleString()} est.  [${pct}%]` : ''
+      parts.push(`  ${target.display_label}`)
+      parts.push(`    ${compiled.toLocaleString()} sections${estStr}`)
 
-  // ── Queue state ────────────────────────────────────────────────────────────
-  parts.push(
-    '',
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    'QUEUE STATE',
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    `  pending: ${queueState.pending.toLocaleString()}  |  claimed: ${queueState.claimed.toLocaleString()}  |  done: ${queueState.done.toLocaleString()}  |  failed: ${queueState.failed.toLocaleString()}`,
-  )
+      const workers = workersByCorpus.get(target.corpus_key) ?? []
+      const activeW = workers.filter(w => w.ratePerHour > 0)
+      const stalledW = workers.filter(w => w.stalled)
+      const totalRate = workers.reduce((s, w) => s + w.ratePerHour, 0)
 
-  // ── Worker throughput ─────────────────────────────────────────────────────
-  try {
-    const workerRows = await queryWorkerThroughput()
-    if (workerRows.length > 0) {
-      const totalRate = workerRows.reduce((s, w) => s + w.ratePerHour, 0)
-      const maxRate = Math.max(...workerRows.map(w => w.ratePerHour), 1)
-      parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      parts.push(`WORKER ACTIVITY (last 2h)  |  ${activeWorkerCount} active  |  ${totalRate.toLocaleString()} /hr total`)
-      parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      for (const w of workerRows) {
-        const workerStr = `Worker ${String(w.workerId).padStart(2)}`
-        const sourceStr = (w.sourceKey || '[idle]').slice(0, 26).padEnd(26)
-        const rateStr = w.ratePerHour.toLocaleString().padStart(7) + ' /hr'
-        const bar = progressBar((w.ratePerHour / maxRate) * 100, 6)
-        const effStr = w.ratePerHour > 0 ? `  ${w.efficiencyPct}% eff${w.efficiencyFlag ? ' ' + w.efficiencyFlag : ''}` : ''
-        const statusFlag = w.stalled ? '  ⚠️  stalled' : w.idle ? '  ℹ️  idle' : ''
-        parts.push(`  ${workerStr}  ${sourceStr}  ${rateStr}  ${bar}${effStr}${statusFlag}`)
-      }
-      const stalledIds = workerRows.filter(w => w.stalled).map(w => `Worker ${w.workerId}`)
-      if (stalledIds.length > 0) parts.push(``, `  Stalled workers: ${stalledIds.join(', ')}`)
-      const critical = workerRows.filter(w => w.efficiencyFlag === '🔴critical').map(w => `Worker ${w.workerId}`)
-      if (critical.length > 0) parts.push(`  Critical efficiency: ${critical.join(', ')}`)
+      const activeIds = activeW.map(w => w.workerId).join(',')
+      const stalledIds = stalledW.map(w => w.workerId).join(',')
+      let workerLine = `    Workers: ${activeW.length} active`
+      if (activeIds) workerLine += ` [${activeIds}]`
+      if (stalledW.length > 0) workerLine += `  |  ${stalledW.length} stalled [${stalledIds}]`
+      parts.push(workerLine)
+      if (totalRate > 0) parts.push(`    Rate: ${totalRate.toLocaleString()}/hr`)
     }
-  } catch (err) {
-    parts.push('', `[Worker throughput unavailable: ${err}]`)
   }
 
-  // ── Attention needed: stalled sources ─────────────────────────────────────
-  if (stalledSources.length > 0) {
-    parts.push('', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    parts.push('⚠️  ATTENTION — done queue rows, 0 corpus_sections after 24h')
-    parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    for (const corpus of stalledSources) {
-      parts.push(`  ${corpus}`)
+  // ── QUEUE ─────────────────────────────────────────────────────────────────
+  parts.push('', SEP, 'QUEUE', SEP)
+  parts.push(`  pending: ${queueState.pending.toLocaleString()}  |  claimed: ${queueState.claimed.toLocaleString()}  |  done: ${queueState.done.toLocaleString()}  |  failed: ${queueState.failed.toLocaleString()}`)
+
+  // Per-corpus breakdown: show corpora that have pending or failed rows
+  const corpusQueueMap = new Map<string, { pending: number; failed: number }>()
+  for (const r of queueByCorpus) {
+    if (!corpusQueueMap.has(r.corpus)) corpusQueueMap.set(r.corpus, { pending: 0, failed: 0 })
+    if (r.status === 'pending') corpusQueueMap.get(r.corpus)!.pending = r.n
+    if (r.status === 'failed') corpusQueueMap.get(r.corpus)!.failed = r.n
+  }
+  const noteworthyCorpora = [...corpusQueueMap.entries()]
+    .filter(([, v]) => v.pending > 0 || v.failed > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+  if (noteworthyCorpora.length > 0) {
+    parts.push('  By corpus:')
+    for (const [corpus, v] of noteworthyCorpora) {
+      const pend = v.pending > 0 ? `${v.pending.toLocaleString()} pending` : ''
+      const fail = v.failed > 0 ? `${v.failed.toLocaleString()} failed` : ''
+      parts.push(`    ${corpus}: ${[pend, fail].filter(Boolean).join('  ')}`)
     }
-    console.warn('[reporter] stalled sources:', stalledSources.join(', '))
+  }
+
+  // Queue exhausted warning
+  if (queueState.pending === 0) {
+    const highPriTargets = targets.filter(t => (t.priority === 1 || t.priority === 2) && !t.blocked)
+    const pri12Keys = new Set(highPriTargets.map(t => t.corpus_key))
+    const pri12Pending = [...corpusQueueMap.entries()]
+      .filter(([k]) => pri12Keys.has(k))
+      .reduce((s, [, v]) => s + v.pending, 0)
+    parts.push(`  ⚠️  Queue exhausted — priority 1/2 pending: ${pri12Pending}`)
+  }
+
+  // ── ISSUES ────────────────────────────────────────────────────────────────
+  const issueLines: string[] = []
+
+  for (const row of failedByCorpus) {
+    const snippet = row.last_error ? row.last_error.slice(0, 80).replace(/\n/g, ' ') : 'unknown'
+    issueLines.push(`  ${row.corpus}: ${row.n.toLocaleString()} failed rows — ${snippet}`)
+  }
+
+  for (const corpus of stalledSources) {
+    issueLines.push(`  ${corpus}: stalled — done queue rows, 0 sections after 24h`)
+  }
+
+  for (const target of targets.filter(t => t.blocked && t.blocked_reason)) {
+    issueLines.push(`  ${target.corpus_key}: blocked — ${target.blocked_reason}`)
+  }
+
+  if (issueLines.length > 0) {
+    parts.push('', SEP, '⚠️  ISSUES', SEP)
+    parts.push(...issueLines)
+  }
+
+  // ── ALL CORPORA STATUS ────────────────────────────────────────────────────
+  parts.push('', SEP, 'ALL CORPORA STATUS', SEP)
+  for (const target of targets) {
+    const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
+    const est = target.est_sections
+    const isActive = activeCorpusKeys.has(target.corpus_key)
+
+    if (target.blocked) {
+      const reason = target.blocked_reason ? `: ${target.blocked_reason}` : ''
+      parts.push(`  ⛔ ${target.corpus_key.padEnd(38)} blocked${reason}`)
+      continue
+    }
+
+    if (est != null && compiled >= est) {
+      parts.push(`  ✅ ${target.corpus_key.padEnd(38)} ${compiled.toLocaleString()}  [100% complete]`)
+      continue
+    }
+
+    if (compiled === 0) {
+      const estStr = est != null ? ` / ~${est.toLocaleString()}` : ''
+      parts.push(`  ○  ${target.corpus_key.padEnd(38)} 0${estStr}  — not started`)
+      continue
+    }
+
+    const pct = est != null ? `${((compiled / est) * 100).toFixed(1)}%` : '?%'
+    const estStr = est != null ? ` / ${(target.est_is_confirmed ? '✓' : '~') + est.toLocaleString()}` : ''
+    const activeFlag = isActive ? '  — active' : ''
+    parts.push(`  ▶  ${target.corpus_key.padEnd(38)} ${compiled.toLocaleString().padStart(9)}${estStr}  [${pct}]${activeFlag}`)
   }
 
   const body = parts.join('\n')
 
-  const subjectBar = progressBar(overallPct, 10)
-  const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
   const res = await fetch(RESEND_API, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
       to: [TO],
-      subject: `Corpus: ${overallPct.toFixed(1)}% [${subjectBar}] ${newPipelineCompiled.toLocaleString()} secs — ${bst}${dbWarn}`,
+      subject,
       text: body,
     }),
   })
@@ -713,6 +820,6 @@ export async function sendProgressEmail(
   if (!res.ok) {
     console.error(`[reporter] Resend failed: ${res.status} ${await res.text()}`)
   } else {
-    console.log(`[reporter] Email sent to ${TO} — ${overallPct.toFixed(1)}% overall`)
+    console.log(`[reporter] Email sent to ${TO} — ${overallPct.toFixed(1)}% overall, delta ${deltaStr}`)
   }
 }

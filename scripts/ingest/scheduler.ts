@@ -15,6 +15,9 @@ import {
   queryDbSize,
   runHourlyCleanup,
   queryStalledSources,
+  writeCorpusSnapshot,
+  getHourlyDelta,
+  type CorpusSnapshotEntry,
 } from './shared/progress-reporter'
 import { runCensus, saveToR2 as saveCensusToR2 } from './census/live-census'
 import { queryUnrecognisedFormats, queryFormatBreakdown } from './shared/db-metadata'
@@ -55,6 +58,16 @@ async function run(): Promise<void> {
 
   // Save census snapshot to R2
   try { await saveCensusToR2(census) } catch (err) { console.warn('[scheduler] census R2 save failed:', err) }
+
+  // Write per-corpus counts to corpus_snapshots (hourly delta source)
+  try {
+    const snapshotEntries: CorpusSnapshotEntry[] = census.corpusSections.map(c => ({
+      corpus: c.corpus,
+      count: c.total,
+      compiled: c.compiled,
+    }))
+    await writeCorpusSnapshot(snapshotEntries, neonCount)
+  } catch (err) { console.warn('[scheduler] corpus snapshot write failed:', err) }
 
   console.log('[scheduler] building checkpoint aggregate (ETA)')
   const agg = await buildAggregate()
@@ -101,8 +114,22 @@ async function run(): Promise<void> {
   let stalledSources: string[] = []
   try { stalledSources = await queryStalledSources() } catch (err) { console.warn('[scheduler] stalled check failed:', err) }
 
+  console.log('[scheduler] computing hourly delta from corpus_snapshots')
+  let hourlyDelta = new Map<string, number>()
+  try {
+    const currentHour = new Date(capturedAt)
+    currentHour.setMinutes(0, 0, 0)
+    currentHour.setMilliseconds(0)
+    const currentCounts = new Map<string, number>()
+    for (const c of census.corpusSections) currentCounts.set(c.corpus, c.compiled)
+    currentCounts.set('legacy-legislation-section', neonCount)
+    hourlyDelta = await getHourlyDelta(currentCounts, currentHour)
+    const totalDelta = [...hourlyDelta.values()].reduce((s, v) => s + Math.max(0, v), 0)
+    console.log(`[scheduler] hourly delta: +${totalDelta.toLocaleString()} sections`)
+  } catch (err) { console.warn('[scheduler] hourly delta failed:', err) }
+
   console.log('[scheduler] sending email')
-  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize, stalledSources)
+  await sendProgressEmail(agg, corpusCounts, neonCount, unrecognised, formatBreakdown, dbSize, stalledSources, hourlyDelta)
 }
 
 const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop
