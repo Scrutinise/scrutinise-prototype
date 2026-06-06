@@ -13,8 +13,12 @@ export interface LdaItem {
   sourceUrl: string
 }
 
+// WHY: LDA API regularly takes 10–30s per page — no timeout means fetch can hang
+// indefinitely, eventually triggering Railway's 524 gateway timeout with no retry.
+// 45s covers slow responses; 500/524 are retried with exponential backoff.
+const LDA_FETCH_TIMEOUT_MS = 45_000
 // Transient HTTP codes that warrant retry with backoff (Cloudflare/origin timeout/overload)
-const TRANSIENT_STATUS = new Set([524, 502, 503, 504])
+const TRANSIENT_STATUS = new Set([500, 502, 503, 504, 524])
 
 export async function fetchLdaPage(
   slug: string,
@@ -27,25 +31,41 @@ export async function fetchLdaPage(
 
   let lastError: Error | null = null
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, 3000 * attempt))
-    const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' } })
-    if (res.status === 524 && pageSize > 100) {
-      // Large page timed out — retry once with a smaller page size.
-      // Note: page*100 is a different offset than page*500, so this fetches
-      // a different (smaller) slice. Accepts partial coverage over zero.
-      console.warn(`[lda] 524 on ${slug} page ${page} (size ${pageSize}) — retrying with pageSize 100`)
-      return fetchLdaPage(slug, page, 100, maxRetries)
-    }
-    if (TRANSIENT_STATUS.has(res.status)) {
-      lastError = new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
-      continue
-    }
-    if (!res.ok) throw new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
-    const data = await res.json()
-    const rawItems: unknown[] = data.result?.items ?? []
-    return {
-      items: rawItems.map(item => ldaRawToItem(item as Record<string, unknown>, slug)),
-      totalResults: (data.result?.totalResults as number) ?? 0,
+    if (attempt > 0) await new Promise(r => setTimeout(r, 2000 * Math.pow(2, attempt - 1)))
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), LDA_FETCH_TIMEOUT_MS)
+    try {
+      const res = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': 'Scrutinise-Ingest/1.0' } })
+      clearTimeout(timer)
+      if (res.status === 524 && pageSize > 100) {
+        // Large page timed out — retry once with a smaller page size.
+        // Note: page*100 is a different offset than page*500, so this fetches
+        // a different (smaller) slice. Accepts partial coverage over zero.
+        console.warn(`[lda] 524 on ${slug} page ${page} (size ${pageSize}) — retrying with pageSize 100`)
+        return fetchLdaPage(slug, page, 100, maxRetries)
+      }
+      if (TRANSIENT_STATUS.has(res.status)) {
+        lastError = new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
+        continue
+      }
+      if (!res.ok) throw new Error(`LDA ${slug} page ${page}: HTTP ${res.status}`)
+      const data = await res.json()
+      const rawItems: unknown[] = data.result?.items ?? []
+      return {
+        items: rawItems.map(item => ldaRawToItem(item as Record<string, unknown>, slug)),
+        totalResults: (data.result?.totalResults as number) ?? 0,
+      }
+    } catch (err) {
+      clearTimeout(timer)
+      if (err instanceof Error && err.name === 'AbortError') {
+        lastError = new Error(`LDA ${slug} page ${page}: fetch timed out after ${LDA_FETCH_TIMEOUT_MS}ms`)
+        continue
+      }
+      if (attempt < maxRetries - 1) {
+        lastError = err instanceof Error ? err : new Error(String(err))
+        continue
+      }
+      throw err
     }
   }
   throw lastError ?? new Error(`LDA ${slug} page ${page}: all retries exhausted`)
