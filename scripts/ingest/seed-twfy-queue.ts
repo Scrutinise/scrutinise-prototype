@@ -26,7 +26,7 @@ async function main() {
     const corpus = HOUSE_TO_CORPUS[house]
     const rows = []
     for (const docId of twfyMonthlyDocIds(house)) {
-      rows.push({ id: `${corpus}:${docId}`, corpus, docId, sourceType: 'hansard', priority: 2 })
+      rows.push({ id: `${corpus}:${docId}`, corpus, docId, sourceType: 'twfy-api', priority: 2 })
     }
     console.log(`[seed] ${house}: ${rows.length} monthly rows`)
     const inserted = await bulkUpsertQueueRows(rows)

@@ -1,6 +1,79 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V6 — Claim reaper + email deduplication + exec fix)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V7 — TWFY fix + legislation reseed + overnight queue)*
+
+---
+
+## SPRINT V7 — 6 Jun 2026 (TWFY 429 fix + legislation reseed + overnight queue)
+
+### Part 1 — TWFY client silent failure fixed
+
+**Root cause confirmed:** TWFY API returns HTTP 429 "Usage limit reached" for every call. The free-tier daily quota was exhausted by 20 workers processing TWFY rows concurrently.
+
+**Previous behaviour:** `fetchDebatesForDate` handled 429 with `throttle.backoff(); return null`. The monthly generator yielded 0 debates. The worker marked the row DONE with 0 sections written. No error visible anywhere.
+
+**Fix in `theyworkforyou.ts`:**
+- HTTP 429 now throws `Error('TWFY API usage limit reached (HTTP 429)...')` instead of returning null
+- This propagates through the `for await` generator in `processHansard`, caught by the outer try/catch, row marked FAILED with visible error message
+- Non-429 HTTP errors now log the status code (was silently null before)
+- `data.error` responses now log raw keys for diagnosis
+
+**Fix in `worker-queue.ts`:**
+- TWFY route now logs a warning when 0 debates are written for a month (parliament recess vs. silent API failure now distinguishable in logs)
+
+**Rate limiting fix:**
+- New `twfy-api` source type added to `source_rate_limits`: 1500ms interval, `maxConcurrentWorkers: 1`
+- `seed-rate-limits.ts` updated and applied to Railway DB
+- 1,244 existing TWFY queue rows updated from `sourceType='hansard'` to `sourceType='twfy-api'` (prevents multiple workers burning the daily quota simultaneously)
+- `seed-twfy-queue.ts` updated to seed new rows with `sourceType='twfy-api'`
+
+**Queue state (hansard corpora):**
+- hansard-commons-a: 2,172 FAILED rows (OLD `commons:DATE:DATE` format — api.parliament.uk 403, pre-existing). 442 pending TWFY rows.
+- hansard-lords-a: 462 pending TWFY rows (lords old API rows already DONE from earlier working state)
+- hansard-commons-b (Westminster Hall TWFY): 320 pending
+- After fix deploy: TWFY rows will be marked FAILED when 429 is hit (not silently done). Rows will retry daily until quota resets.
+
+### Part 2 — Legislation corpora audit and reseed
+
+**si-2010plus estimate corrected:**
+TNA enumeration confirmed: 5,810 UKSI acts exist for 2010–2026 (not ~11,500 as the 120,000-section estimate implied). Queue has 5,838 rows — essentially complete. All acts processed. The 120,000-section estimate in corpus_targets was wrong.
+
+**reseed-si-gaps.ts run:**
+- A) UKSI 2010-2026: 0 new rows (queue fully seeded, TNA has 5,810 acts)
+- B) UKPGA pre-1963: 0 new rows (all 6,897 Neon items already in queue)
+- C) SSI+WSI: **1,317 new rows inserted** (1,297 SSI + 20 WSI — genuine gap, workers actively processing)
+
+**Workers confirmed active:** regional corpus_sections latest timestamp = 6 Jun 2026 19:32 (today), 112,205 sections already written.
+
+**corpus_targets updated in Neon (confirmed complete):**
+| Corpus | Old Estimate | New Confirmed Count |
+|--------|-------------|---------------------|
+| si-2010plus | 120,000 | 61,017 |
+| primary-acts-2000plus | 100,000 | 90,860 |
+| primary-acts-pre-2000 | 70,000 | 70,714 |
+| si-pre-2010 | 180,000 | 174,555 |
+
+### Part 3 — LDA rate limit and overnight queue
+
+**LDA rate limit raised:** `lda-parliament` intervalMs 200ms → 500ms to reduce 524 timeouts. Applied via seed-rate-limits.ts.
+
+**LDA failed rows reset:** 362 `lda-commonswrittenquestions` failed rows (timeout errors) reset to pending. Now 1,234 pending rows.
+
+**Overnight queue state (post-fixes):**
+| Corpus | Pending |
+|--------|---------|
+| lda-commonswrittenquestions | 1,234 |
+| hansard-lords-a (TWFY) | 462 |
+| hansard-commons-a (TWFY) | 442 |
+| regional (new SSI/WSI) | 931 |
+| hansard-commons-b (TWFY) | 320 |
+| lda-lordswrittenquestions | 207 |
+| lda-commonsdivisions | 12 |
+| lda-lordsdivisions | 5 |
+| eur-lex | 3 |
+| **Total** | **3,616** |
+
+Workers: 30 claimed at time of snapshot. Actively processing.
 
 ---
 

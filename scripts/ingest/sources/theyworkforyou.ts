@@ -30,13 +30,19 @@ async function fetchDebatesForDate(type: TwfyHouse, date: string): Promise<strin
   const url = `${TWFY_BASE}/getDebates?type=${type}&date=${date}&output=json&key=${key}`
   const res = await fetch(url, { headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (civic research; +https://scrutinise.org/about)' } })
 
-  if (res.status === 429) { throttle.backoff(); return null }
-  if (!res.ok) return null
+  if (res.status === 429) {
+    throttle.backoff()
+    throw new Error(`TWFY API usage limit reached (HTTP 429) — daily quota exhausted for this key. Row will be marked failed and retried when limit resets.`)
+  }
+  if (!res.ok) { console.warn(`[twfy] ${type} ${date}: HTTP ${res.status}`); return null }
   throttle.success()
 
   try {
     const data = await res.json() as { error?: string; rows?: Array<{ body?: string; speaker?: unknown; subject?: string }> }
-    if (data.error) { console.warn(`[twfy] ${type} ${date}: ${data.error}`); return null }
+    if (data.error) {
+      console.warn(`[twfy] ${type} ${date}: API error — ${data.error} — raw keys: ${Object.keys(data).join(', ')}`)
+      return null
+    }
     if (!data.rows?.length) return null
     // Combine all debate sections into one text block
     return data.rows

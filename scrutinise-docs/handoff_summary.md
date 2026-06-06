@@ -2,39 +2,45 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 6 Jun 2026 (V6 — claim reaper wired in; email stalled-source dedup; exec worker fix; TWFY silent failure identified)*
+*Last updated: 6 Jun 2026 (V7 — TWFY 429 fix; legislation reseed; overnight queue seeded; corpus_targets corrected)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** 4649a2e (V4 docs handoff) — V5 and V6 commit-all.sh ready to run
-**Last sprint:** V6 (6 Jun 2026) — reclaimStaleRows() added; queryStalledSources() deduped; exec on worker scripts; TWFY silent failure confirmed
+**Last commit:** 9943245 (V6 — claim reaper + email dedup + exec fix)
+**Last sprint:** V7 (6 Jun 2026) — TWFY silent failure fixed (throw on 429); 1,317 regional rows reseeded; LDA rate limit raised; corpus_targets corrected; 3,616 rows pending overnight
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-1. **Run `commit-all.sh`** — in project root. Single commit + push to Main. Railway auto-deploys scheduler.
-2. **TWFY silent failure — investigate next sprint**: Workers are claiming `hansard-commons-a` rows but writing 0 sections. Confirmed via Railway logs (worker-1 deployment `66844414`): 51 claim lines, 0 upsertSection lines, 0 errors. Root cause is in `theyworkforyou.ts` — the source client silently returns 0 items. Do not reset hansard rows until this is fixed; the reaper will handle stale claimed rows automatically.
-3. **Claim reaper now active**: After redeploy, scheduler will auto-reclaim any rows stuck claimed > 90 minutes. No more manual resets needed for SIGTERM orphans.
+1. **Run `commit-all.sh`** — in project root. Commits V7 changes, pushes to Main. Railway auto-deploys workers + scheduler.
+2. **TWFY rows will still fail until API limit resets** — after the fix deploys, workers will correctly mark TWFY hansard rows as FAILED (not silently done). The rows will retry automatically each time the claim reaper resets them. The TWFY free tier daily quota resets daily — rows will process successfully once the limit resets. No manual action needed.
+3. **2,172 hansard-commons-a OLD failed rows** — these use the old `commons:DATE:DATE` format (api.parliament.uk 403). Do NOT reset them — there is no fix for the parliament API 403 from Railway IPs. These rows are permanently blocked until Parliament API access is resolved. (Note: this is separate from the TWFY rows — TWFY rows are the `twfy:commons:YYYY-MM` format rows and are being fixed.)
+4. **Overnight monitoring** — next scheduler email should show: lda-commonswrittenquestions active (1,234 rows), regional active (931 rows), LDA oral/divisions active. TWFY rows should appear as failing (not silently done). If email shows TWFY rows still in done state, the V7 deploy hasn't reached the workers yet.
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V5)
+## KEY ARCHITECTURE STATE (as of V7)
 
-- **Neon corpus_sections:** ~751,949+ rows — no compiledText column
+- **Neon corpus_sections:** ~758,683 rows (as of 6 Jun 2026 ~19:30 UTC)
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
-- **Neon corpus_targets:** 39 rows — 11 now have `blocked=true` with reasons (V5)
+- **Neon corpus_targets:** 39 rows — estimates corrected for 4 corpora (V7); 11 `blocked=true` (V5)
 - **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
-- **Scheduler loop:** FIXED — now sleeps until :01 past next clock hour (not INTERVAL_MS from deploy time)
+- **Railway ingest_queue:** 3,616 pending / 30 claimed / 105,408 done (post-V7 fixes)
+- **TWFY fix:** `theyworkforyou.ts` now throws on HTTP 429 → rows marked failed instead of silently done
+- **TWFY source type:** 1,244 queue rows updated to `sourceType='twfy-api'` (1500ms, 1 worker max)
+- **LDA rate limit:** raised 200ms → 500ms; 362 failed rows reset to pending (1,234 total pending)
+- **regional corpus:** 1,317 new SSI+WSI rows inserted; workers actively processing
+- **corpus_targets corrected:** si-2010plus 120k→61k, primary-acts-2000plus 100k→90.9k, primary-acts-pre-2000 70k→70.7k, si-pre-2010 180k→174.6k (all est_is_confirmed=true)
 - **TWFY_API_KEY:** SET on all 21 Railway services (workers 1–20 + scheduler)
-- **Prisma CorpusSection:** `compiledText` field REMOVED from schema.prisma; `npx prisma generate` run; no compiledText in worker or db-metadata code
-- **Railway DB:** ~0.8GB of 20GB
-- **R2 compiled text:** 100% coverage
+- **Scheduler loop:** FIXED — sleeps until :01 past next clock hour
+- **Claim reaper:** active in scheduler (V6) — resets claims > 90 min to pending hourly
+- **Prisma CorpusSection:** `compiledText` field REMOVED from schema.prisma (V5)
+- **Railway DB:** ~2.0GB of 20GB
 - **Workers:** 20 active, writing to Neon
-- **Scheduler crash bug:** FIXED — `ingest_queue."updatedAt"` → `"completedAt"` in live-census.ts and runHourlyCleanup()
 
 ---
 

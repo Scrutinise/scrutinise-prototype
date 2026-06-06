@@ -419,7 +419,9 @@ async function processHansard(row: QueueRow): Promise<void> {
       await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
       written++
     }
-    // 0 is OK — parliament may not have sat any day this month
+    if (written === 0) {
+      console.warn(`[twfy] ${row.docId}: 0 debates written — parliament may not have sat this month`)
+    }
     await markDone(row.id, 'html')
     return
   }
