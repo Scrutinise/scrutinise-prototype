@@ -539,16 +539,20 @@ export async function sendProgressEmail(
   const overallCompiled = neonCount + newPipelineCompiled
 
   // Sum only non-blocked, non-null estimated targets for overall %
-  const totalEstimated = targets
+  const newPipelineEstimated = targets
     .filter(t => !t.blocked && t.est_sections != null)
     .reduce((s, t) => s + (t.est_sections ?? 0), 0)
 
-  const overallPct = totalEstimated > 0
-    ? ((newPipelineCompiled / totalEstimated) * 100)
+  // Overall = legacy + new pipeline in both numerator and denominator
+  const grandTotalCompiled = neonCount + newPipelineCompiled
+  const grandTotalEstimated = neonCount + newPipelineEstimated
+
+  const overallPct = grandTotalEstimated > 0
+    ? ((grandTotalCompiled / grandTotalEstimated) * 100)
     : 0
   const overallBar = progressBar(overallPct)
 
-  const eta = await queryEtaFromSnapshots(totalEstimated, newPipelineCompiled)
+  const eta = await queryEtaFromSnapshots(newPipelineEstimated, newPipelineCompiled)
 
   // ── Per-corpus rows grouped by priority ───────────────────────────────────
   const corpusLines: string[] = []
@@ -632,9 +636,9 @@ export async function sendProgressEmail(
     `  ${bst} BST`,
     '',
     `  ${overallBar}  ${overallPct.toFixed(1)}%`,
-    `  ${newPipelineCompiled.toLocaleString()} / ~${totalEstimated.toLocaleString()} est. new pipeline sections`,
-    `  LEGACY (Neon — legislation.gov.uk): ${neonCount.toLocaleString()}  ✅`,
-    `  ETA: ${eta}`,
+    `  ${grandTotalCompiled.toLocaleString()} / ~${grandTotalEstimated.toLocaleString()} est. total sections`,
+    `  New pipeline: ${newPipelineCompiled.toLocaleString()}  |  Legacy (legislation.gov.uk): ${neonCount.toLocaleString()}  ✅`,
+    `  ETA (new pipeline): ${eta}`,
     '',
     ...dbSizeLines,
     '',
