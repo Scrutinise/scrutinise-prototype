@@ -108,7 +108,7 @@ export async function runCensus(): Promise<CensusResult> {
     corpus: string; status: string; rows: string; last_activity: Date | null
   }>(`
     SELECT corpus, status, COUNT(*)::text AS rows,
-           MAX("updatedAt") AS last_activity
+           MAX(COALESCE("completedAt", "createdAt")) AS last_activity
     FROM ingest_queue
     GROUP BY corpus, status
     ORDER BY corpus, status
