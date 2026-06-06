@@ -1786,8 +1786,6 @@ model CorpusSection {
   xmlPreview   String?
   // act-level flags, e.g. 'enacted-only' where TNA has no consolidated version
   notes        String?
-  // First 10 000 chars of compiled text — sufficient for FTS; full text in R2
-  compiledText String?
   createdAt    DateTime  @default(now())
 
   // fts_vector is maintained by a DB trigger (see migration SQL).

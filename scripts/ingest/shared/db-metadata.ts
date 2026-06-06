@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import { Pool } from 'pg'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import path from 'path'
 
 try {
@@ -30,37 +29,11 @@ function getNeonPool(): Pool {
   return _neonPool
 }
 
-// R2 client — used for compiled text writes before DB upsert.
-let _r2: S3Client | null = null
-
-function getR2(): S3Client {
-  if (!_r2) {
-    const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID
-    const accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
-    const secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
-    if (!accountId || !accessKey || !secretKey) {
-      throw new Error('R2 credentials not set')
-    }
-    _r2 = new S3Client({
-      region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId: accessKey, secretAccessKey: secretKey },
-    })
-  }
-  return _r2
-}
-
-function getR2Bucket(): string {
-  return process.env.CLOUDFLARE_R2_BUCKET_NAME ?? 'scrutinise-legislation'
-}
-
 export async function disconnectDb(): Promise<void> {
   await _prisma?.$disconnect()
   _prisma = null
   await _neonPool?.end()
   _neonPool = null
-  _r2?.destroy()
-  _r2 = null
 }
 
 export interface SectionMeta {
@@ -75,8 +48,6 @@ export interface SectionMeta {
   format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
   xmlPreview?: string
   notes?: string
-  // Compiled text — written to R2 at r2Key before DB upsert; not stored in DB column.
-  compiledText?: string
 }
 
 type CorpusSectionClient = {
@@ -91,17 +62,6 @@ type CorpusSectionClient = {
 }
 
 export async function upsertSection(meta: SectionMeta): Promise<void> {
-  // Write compiled text to R2 first — if R2 fails, DB insert does not proceed.
-  // This ensures R2 is the authoritative source for compiled text.
-  if (meta.compiledText && meta.r2Key) {
-    await getR2().send(new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: meta.r2Key,
-      Body: meta.compiledText,
-      ContentType: 'text/plain',
-    }))
-  }
-
   const pool = getNeonPool()
   const now = new Date()
   await pool.query(`

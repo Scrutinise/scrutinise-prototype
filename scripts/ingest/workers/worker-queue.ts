@@ -237,18 +237,18 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
       await r2Put(rKey, section.xml!, 'application/xml')
       const compiled = rawToText(section.xml!)
       await r2Put(cKey, compiled)
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled', format: section.format, compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled', format: section.format })
     } else if (section.format === 'html') {
       const compiled = rawToText(section.rawHtml!)
       await r2Put(cKey, compiled)
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', format: 'html', compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', format: 'html' })
     } else if (section.format === 'pdf') {
       const rKey = rawKey(row.corpus, actId, section.sectionRef, 'pdf')
       await r2Put(rKey, section.pdfBuffer!, 'application/pdf')
       const extracted = await pdfToText(section.pdfBuffer!, sourceUrl)
       if (extracted) {
         await r2Put(cKey, extracted)
-        await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(extracted), status: 'compiled', format: 'pdf', compiledText: extracted.slice(0, 10_000) })
+        await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(extracted), status: 'compiled', format: 'pdf' })
       } else {
         await r2Put(cKey, '[PDF - scanned/unreadable — OCR pass needed]')
         await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: 0, status: 'compiled', format: 'pdf', notes: 'pdf-ocr-needed' })
@@ -307,7 +307,7 @@ async function processTnaCaselaw(row: QueueRow): Promise<void> {
       await r2Put(rKey, judgmentXml, 'application/xml')
       const compiled = rawToText(judgmentXml)
       await r2Put(cKey, compiled)
-      await upsertSection({ id: secId, corpus: 'tna-caselaw', sourceUrl: xmlUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: 'tna-caselaw', sourceUrl: xmlUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled' })
       processed++
     } catch (err: unknown) {
       console.warn(`[worker] caselaw ${docId}: ${err}`)
@@ -349,7 +349,7 @@ async function processBailii(row: QueueRow): Promise<void> {
   const compiled = rawToText(text)
   await r2Put(cKey, compiled)
   const secId = sectionId(row.corpus, row.docId, '1')
-  await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: caseUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+  await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: caseUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
   await markDone(row.id, 'html')
 }
 
@@ -374,7 +374,7 @@ async function processHansard(row: QueueRow): Promise<void> {
       const compiled = rawToText(text)
       await r2Put(cKey, compiled)
       const secId = sectionId(row.corpus, report.id, '1')
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     }
     await markDone(row.id)
     return
@@ -399,7 +399,7 @@ async function processHansard(row: QueueRow): Promise<void> {
     const sourceUrl = prefix === 'answers'
       ? `https://questions-statements-api.parliament.uk/api/writtenquestions/questions?answeredWhenFrom=${startDate}&answeredWhenTo=${endDate}`
       : `https://questions-statements-api.parliament.uk/api/writtenstatements/statements?madeWhenFrom=${startDate}&madeWhenTo=${endDate}`
-    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     await markDone(row.id, 'html')
     return
   }
@@ -416,7 +416,7 @@ async function processHansard(row: QueueRow): Promise<void> {
       const compiled = rawToText(debate.text)
       await r2Put(cKey, compiled)
       const secId = sectionId(row.corpus, `twfy-${twfyType}-${debate.date}`, '1')
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
       written++
     }
     // 0 is OK — parliament may not have sat any day this month
@@ -440,7 +440,7 @@ async function processHansard(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId(row.corpus, debate.id, '1')
-    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: debate.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     written++
   }
   // 0 debates means api.parliament.uk/v1/hansard returned 403 or empty — mark failed
@@ -471,7 +471,7 @@ async function processFca(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId('fca-regulators', section.id, '1')
-    await upsertSection({ id: secId, corpus: 'fca-regulators', sourceUrl: section.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: 'fca-regulators', sourceUrl: section.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     written++
   }
   // 0 sections means scraping failed — handbook.fca.org.uk is a JS SPA, static HTML
@@ -502,7 +502,7 @@ async function processEchr(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId('echr-hudoc', c.itemId, '1')
-    await upsertSection({ id: secId, corpus: 'echr-hudoc', sourceUrl: c.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: 'echr-hudoc', sourceUrl: c.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     written++
   }
   // 0 cases means API failure — HUDOC /app/query/results returns 404 as of Jun 2026.
@@ -532,7 +532,7 @@ async function processEurLex(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId('eur-lex', doc.celexId, '1')
-    await upsertSection({ id: secId, corpus: 'eur-lex', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: 'eur-lex', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
   }
   await markDone(row.id)
 }
@@ -572,7 +572,6 @@ async function processLda(row: QueueRow): Promise<void> {
       r2Key: cKey,
       wordCount: countWords(compiled),
       status: 'compiled',
-      compiledText: compiled.slice(0, 10_000),
     })
   }
   await markDone(row.id)
@@ -596,7 +595,7 @@ async function processHmrc(row: QueueRow): Promise<void> {
       const compiled = rawToText(text.slice(0, 50_000))
       await r2Put(cKey, compiled)
       const secId = sectionId('hmrc-codes-guidance', doc.id, '1')
-      await upsertSection({ id: secId, corpus: 'hmrc-codes-guidance', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+      await upsertSection({ id: secId, corpus: 'hmrc-codes-guidance', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     }
   }
   await markDone(row.id)
@@ -615,7 +614,7 @@ async function processTreaties(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId('uk-treaties', t.id, '1')
-    await upsertSection({ id: secId, corpus: 'uk-treaties', sourceUrl: t.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: 'uk-treaties', sourceUrl: t.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
   }
   await markDone(row.id)
 }
@@ -633,7 +632,7 @@ async function processOecd(row: QueueRow): Promise<void> {
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId('oecd', doc.id, '1')
-    await upsertSection({ id: secId, corpus: 'oecd', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: 'oecd', sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
   }
   await markDone(row.id)
 }
@@ -664,7 +663,7 @@ async function processGovUk(row: QueueRow): Promise<void> {
     const compiled = rawToText(text.slice(0, 50_000))
     await r2Put(cKey, compiled)
     const secId = sectionId(row.corpus, doc.id, '1')
-    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled', compiledText: compiled.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: doc.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
   }
   await markDone(row.id)
 }
@@ -709,7 +708,6 @@ async function processPwdata(row: QueueRow): Promise<void> {
     r2Key: cKey,
     wordCount: countWords(compiled),
     status: 'compiled',
-    compiledText: compiled.slice(0, 10_000),
   })
   await markDone(row.id, 'xml')
 }
@@ -734,7 +732,7 @@ async function processLawCommission(row: QueueRow): Promise<void> {
 
     await r2Put(cKey, text)
     const secId = sectionId(row.corpus, report.id, '1')
-    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.sourceUrl, r2Key: cKey, wordCount: countWords(text), status: 'compiled', compiledText: text.slice(0, 10_000) })
+    await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.sourceUrl, r2Key: cKey, wordCount: countWords(text), status: 'compiled' })
   }
   await markDone(row.id)
 }
