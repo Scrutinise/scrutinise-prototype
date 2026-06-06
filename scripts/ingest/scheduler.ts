@@ -134,6 +134,19 @@ async function run(): Promise<void> {
 
 const RUN_TIMEOUT_MS = 5 * 60 * 1000  // 5 min — if run() hangs, abort and continue loop
 
+// WHY: a fixed INTERVAL_MS sleep drifts from wall-clock hours (e.g. deploy at 09:53
+// → next run at 10:53, not 10:01). Sleeping until :01 past the next hour keeps
+// runs aligned to clock hours regardless of when the process started or how long
+// run() took.
+function msUntilNextRun(): number {
+  const now = new Date()
+  const next = new Date(now)
+  next.setMinutes(1, 0, 0)
+  next.setMilliseconds(0)
+  if (next.getTime() <= now.getTime()) next.setHours(next.getHours() + INTERVAL_HOURS)
+  return next.getTime() - now.getTime()
+}
+
 async function loop(): Promise<never> {
   while (true) {
     const timeoutP = new Promise<never>((_, reject) =>
@@ -141,8 +154,9 @@ async function loop(): Promise<never> {
     )
     await Promise.race([run(), timeoutP])
       .catch(err => console.error('[scheduler] run failed or timed out:', err))
-    console.log(`[scheduler] sleeping ${INTERVAL_HOURS}h`)
-    await new Promise(r => setTimeout(r, INTERVAL_MS))
+    const delay = msUntilNextRun()
+    console.log(`[scheduler] next run in ${Math.round(delay / 60_000)}min (at :01)`)
+    await new Promise(r => setTimeout(r, delay))
   }
 }
 
