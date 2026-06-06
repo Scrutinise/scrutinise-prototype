@@ -1,6 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V7 — TWFY fix + legislation reseed + overnight queue)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V8 — Retire Hansard API queue + add lordswrans/wms/lordswms)*
+
+---
+
+## SPRINT V8 — 6 Jun 2026 (Retire Hansard API queue + add 3 missing pwdata corpora)
+
+### Part 1 — pwdata coverage verified
+
+- pwdata-debates (debates/): 1919-02-04 → 2026-06-04 (20,004 files)
+- pwdata-lords (lordspages/): 1999-11-17 → 2026-06-05 (5,668 files)
+- Hansard API queue rows: hansard-commons-a/b had 2,187 rows (Parliament API 403 + TWFY API); hansard-lords-a/b had 3,234 rows
+- Coverage confirmed: pwdata bulk XML covers 1919+ for Commons and 1999+ for Lords — surpasses TWFY API (1988+)
+
+### Part 2 — Hansard API queue rows retired
+
+- 6,788 ingest_queue rows updated to status='done', lastError='retired — content covered by pwdata bulk XML (pwdata-debates/pwdata-lords)'
+- Final counts: hansard-commons-a 2,634 done; hansard-commons-b 920 done; hansard-lords-a 2,634 done; hansard-lords-b 600 done
+- 4 corpus_targets rows inserted to Neon as blocked=true with retirement reason
+
+### Part 3 — written-statements source confirmed
+
+- `written-statements` uses discoverWrittenChunks with sourceType='hansard' (Parliament API monthly chunks), NOT wms/ bulk XML
+- `pwdata-wms` and `pwdata-lordswms` are genuinely new corpora
+
+### Part 4 — 3 new pwdata corpora added to source client
+
+Filename prefixes confirmed by live directory fetch:
+- `lordswrans/` → prefix `lordswrans`; `wms/` → prefix `ministerial`; `lordswms/` → prefix `lordswms`
+
+Added to PWDATA_CORPUS_CONFIG in twfy-pwdata.ts:
+- pwdata-lordswrans / pwdata-wms / pwdata-lordswms
+
+### Part 5 — corpus_targets, queue seeded
+
+- 3 new corpus_targets rows (Neon): pwdata-lordswrans, pwdata-wms, pwdata-lordswms (priority 2)
+- No new source_rate_limits entries needed — all 3 share existing twfy-pwdata rate (500ms, 10 workers)
+- Queue seeded: pwdata-lordswrans 5,167 rows; pwdata-wms 4,463 rows; pwdata-lordswms 3,673 rows = 13,303 total new rows (priority 2)
+- Workers already picking up new rows
+
+### Part 6 — worker-queue.ts and discovery.ts updated
+
+- worker-queue.ts: 3 new corpus→'twfy-pwdata' entries in sourceTypeMap
+- discovery.ts: 3 new corpora in DISCOVERY_CORPUS_ORDER (priority 2 band)
+- seed-pwdata-queue.ts: CORPUS_PRIORITIES updated with priority 2 for new corpora
 
 ---
 

@@ -2,39 +2,46 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 6 Jun 2026 (V7 — TWFY 429 fix; legislation reseed; overnight queue seeded; corpus_targets corrected)*
+*Last updated: 6 Jun 2026 (V8 — Retire Hansard API queue; add lordswrans/wms/lordswms pwdata corpora)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** 9943245 (V6 — claim reaper + email dedup + exec fix)
-**Last sprint:** V7 (6 Jun 2026) — TWFY silent failure fixed (throw on 429); 1,317 regional rows reseeded; LDA rate limit raised; corpus_targets corrected; 3,616 rows pending overnight
+**Last commit:** edef8f6 (V7 — TWFY 429 fix + regional reseed)
+**Last sprint:** V8 (6 Jun 2026) — Hansard API queue rows retired (6,788 rows); 3 new pwdata corpora added (lordswrans/wms/lordswms); 13,303 new queue rows seeded; workers already processing
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-1. **Run `commit-all.sh`** — in project root. Commits V7 changes, pushes to Main. Railway auto-deploys workers + scheduler.
-2. **TWFY rows will still fail until API limit resets** — after the fix deploys, workers will correctly mark TWFY hansard rows as FAILED (not silently done). The rows will retry automatically each time the claim reaper resets them. The TWFY free tier daily quota resets daily — rows will process successfully once the limit resets. No manual action needed.
-3. **2,172 hansard-commons-a OLD failed rows** — these use the old `commons:DATE:DATE` format (api.parliament.uk 403). Do NOT reset them — there is no fix for the parliament API 403 from Railway IPs. These rows are permanently blocked until Parliament API access is resolved. (Note: this is separate from the TWFY rows — TWFY rows are the `twfy:commons:YYYY-MM` format rows and are being fixed.)
-4. **Overnight monitoring** — next scheduler email should show: lda-commonswrittenquestions active (1,234 rows), regional active (931 rows), LDA oral/divisions active. TWFY rows should appear as failing (not silently done). If email shows TWFY rows still in done state, the V7 deploy hasn't reached the workers yet.
+1. **Run `commit-all.sh`** — in project root. Commits V8 changes, pushes to Main. Railway auto-deploys workers + scheduler.
+2. **Reset skipped rows after deploy** — Railway workers picked up new corpus rows with OLD code (before V8 deployed) and marked them `skipped` (unknown corpus). After workers redeploy with V8 code, run this SQL on Railway DB:
+   ```sql
+   UPDATE ingest_queue SET status='pending', "lastError"=NULL
+   WHERE corpus IN ('pwdata-lordswrans','pwdata-wms','pwdata-lordswms')
+     AND status='skipped';
+   ```
+   State at time of V8 sprint end: pwdata-lordswms 3,673 skipped; pwdata-lordswrans 1,314 skipped; pwdata-wms 0 skipped (still pending — workers will process correctly after deploy).
+3. **Hansard API rows retired** — all 6,788 rows are now done with retirement audit trail. hansard-commons-a/b and hansard-lords-a/b are blocked in corpus_targets on Neon.
+4. **Redeploy workers** — workers must be redeployed after the push to pick up V8 code (new PWDATA_CORPUS_CONFIG entries). Railway auto-deploy fires on push but running containers need manual redeploy.
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V7)
+## KEY ARCHITECTURE STATE (as of V8)
 
-- **Neon corpus_sections:** ~758,683 rows (as of 6 Jun 2026 ~19:30 UTC)
+- **Neon corpus_sections:** ~758,683 rows (as of 6 Jun 2026 ~19:30 UTC) — growing as new corpora process
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
-- **Neon corpus_targets:** 39 rows — estimates corrected for 4 corpora (V7); 11 `blocked=true` (V5)
+- **Neon corpus_targets:** 46 rows — 3 new pwdata corpora added (V8); 4 hansard corpora inserted as blocked (V8); 15 total `blocked=true`
 - **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
-- **Railway ingest_queue:** 3,616 pending / 30 claimed / 105,408 done (post-V7 fixes)
+- **Railway ingest_queue:** ~16,919+ pending / claimed / 111,908+ done (post-V8: Hansard rows retired, 13,303 new pwdata rows seeded)
+- **Hansard API queue:** ALL RETIRED — 6,788 rows set to done with audit trail. pwdata-debates and pwdata-lords provide same content without quota limits.
+- **New pwdata corpora active:** pwdata-lordswrans (5,167 rows), pwdata-wms (4,463 rows), pwdata-lordswms (3,673 rows) — workers already processing
+- **written-statements:** uses hansard sourceType (Parliament API monthly chunks) — separate from pwdata-wms
 - **TWFY fix:** `theyworkforyou.ts` now throws on HTTP 429 → rows marked failed instead of silently done
-- **TWFY source type:** 1,244 queue rows updated to `sourceType='twfy-api'` (1500ms, 1 worker max)
 - **LDA rate limit:** raised 200ms → 500ms; 362 failed rows reset to pending (1,234 total pending)
 - **regional corpus:** 1,317 new SSI+WSI rows inserted; workers actively processing
-- **corpus_targets corrected:** si-2010plus 120k→61k, primary-acts-2000plus 100k→90.9k, primary-acts-pre-2000 70k→70.7k, si-pre-2010 180k→174.6k (all est_is_confirmed=true)
 - **TWFY_API_KEY:** SET on all 21 Railway services (workers 1–20 + scheduler)
 - **Scheduler loop:** FIXED — sleeps until :01 past next clock hour
 - **Claim reaper:** active in scheduler (V6) — resets claims > 90 min to pending hourly

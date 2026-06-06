@@ -7,7 +7,12 @@
  *   pwdata-wrans       → wrans/        6,857 files (2001–present)
  *   pwdata-westminster → westminhall/  3,932 files (2000–present)
  *
- * Run once after V2 deploy:
+ * Added (6 Jun 2026 V8):
+ *   pwdata-lordswrans  → lordswrans/   5,167 files (1999–present) Lords Written Answers
+ *   pwdata-wms         → wms/          4,463 files (2002–present) Commons Written Ministerial Statements
+ *   pwdata-lordswms    → lordswms/     3,673 files (2004–present) Lords Written Ministerial Statements
+ *
+ * Run once after V8 deploy:
  *   NODE_PATH=scrutinise-web/node_modules \
  *   scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json \
  *   scripts/ingest/seed-pwdata-queue.ts
@@ -25,6 +30,9 @@ const CORPUS_PRIORITIES: Record<string, number> = {
   'pwdata-debates':     2,
   'pwdata-lords':       2,
   'pwdata-wrans':       2,
+  'pwdata-lordswrans':  2,
+  'pwdata-wms':         2,
+  'pwdata-lordswms':    2,
   'pwdata-westminster': 3,
 }
 

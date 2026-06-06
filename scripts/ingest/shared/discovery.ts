@@ -352,6 +352,7 @@ export const DISCOVERY_CORPUS_ORDER = [
   'fca-regulators', 'hmrc-codes-guidance', 'hmrc-tiins', 'scotlawcom',
   'lda-commonsoralquestions', 'lda-lordswrittenquestions', 'lda-commonswrittenquestions',
   'pwdata-debates', 'pwdata-lords', 'pwdata-wrans',
+  'pwdata-lordswrans', 'pwdata-wms', 'pwdata-lordswms',
   // Priority 3
   'echr-hudoc', 'eur-lex', 'uk-treaties', 'nilawcom', 'ots-reports',
   'lda-commonsdivisions', 'lda-lordsdivisions',

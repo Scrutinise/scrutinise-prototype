@@ -25,6 +25,9 @@ export const PWDATA_CORPUS_CONFIG: Record<string, PwdataCorpusConfig> = {
   'pwdata-lords':       { dir: 'lordspages',  prefix: 'daylord' },
   'pwdata-wrans':       { dir: 'wrans',       prefix: 'answers' },
   'pwdata-westminster': { dir: 'westminhall', prefix: 'westminster' },
+  'pwdata-lordswrans':  { dir: 'lordswrans',  prefix: 'lordswrans' },
+  'pwdata-wms':         { dir: 'wms',         prefix: 'ministerial' },
+  'pwdata-lordswms':    { dir: 'lordswms',    prefix: 'lordswms' },
 }
 
 export interface PwdataFileRef {

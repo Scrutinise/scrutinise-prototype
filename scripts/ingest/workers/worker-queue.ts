@@ -117,6 +117,9 @@ async function main(): Promise<void> {
                   'pwdata-lords': 'twfy-pwdata',
                   'pwdata-wrans': 'twfy-pwdata',
                   'pwdata-westminster': 'twfy-pwdata',
+                  'pwdata-lordswrans': 'twfy-pwdata',
+                  'pwdata-wms': 'twfy-pwdata',
+                  'pwdata-lordswms': 'twfy-pwdata',
                   'planning-policy': 'gov-uk',
                   'building-regs': 'gov-uk',
                 }
