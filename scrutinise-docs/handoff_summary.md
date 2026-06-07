@@ -2,51 +2,63 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 6 Jun 2026 (V8 — Retire Hansard API queue; add lordswrans/wms/lordswms pwdata corpora)*
+*Last updated: 7 Jun 2026 (V9 — Monitor service + email cleanup + partial reseeding + corpus labels)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** edef8f6 (V7 — TWFY 429 fix + regional reseed)
-**Last sprint:** V8 (6 Jun 2026) — Hansard API queue rows retired (6,788 rows); 3 new pwdata corpora added (lordswrans/wms/lordswms); 13,303 new queue rows seeded; workers already processing
+**Last commit:** 352ed7b (V8 post-deploy)
+**Last sprint:** V9 (7 Jun 2026) — Autonomous monitor service created; email cleanup; 42 corpus labels updated; Excel populated
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-**All V8 post-deploy actions complete ✅**
+**V9 — One action required:**
 
 | Action | Status |
 |--------|--------|
-| `commit-all.sh` pushed (352ed7b) | ✅ done |
-| All 20 workers + scheduler redeployed | ✅ done via Railway API |
-| Skipped rows reset to pending | ✅ 13,303 rows reset |
+| `commit-all.sh` pushed | ⏳ pending |
+| Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do |
+| Trigger first deploy of `ingest-monitor` | ⏳ after GitHub connected |
 
-**No further action needed.** Workers are processing the new corpora with V8 code. Overnight queue is 15,315 pending rows.
+**Monitor service details:**
+- Service name: `ingest-monitor`
+- Service ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`
+- Start command: `npm run monitor`
+- DATABASE_URL + NEON_DATABASE_URL already set via API
+- Repo: Scrutinise/scrutinise-prototype, branch: Main
+- Steps: Railway dashboard → Projects → scrutinise-prototype → ingest-monitor → Settings → Source → connect GitHub → Deploy
+
+**V9 SQL already applied to Neon:**
+- `retired` column added to corpus_targets
+- 4 hansard API corpora marked retired (won't appear in emails)
+- 42 corpus_targets display_labels updated to match Excel
+
+**V9 partial reseeding:**
+- 6,038 primary-acts-pre-2000 items detected with < 3 sections (covers the 1,084 section gap)
+- Monitor will auto-reseed these on first cycle once deployed
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V8)
+## KEY ARCHITECTURE STATE (as of V9)
 
-- **Neon corpus_sections:** ~758,683 rows (as of 6 Jun 2026 ~19:30 UTC) — growing as new corpora process
+- **Neon corpus_sections:** ~785,099 rows (as of 7 Jun 2026 ~00:45 UTC) — growing as pwdata/LDA corpora process
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
-- **Neon corpus_targets:** 46 rows — 3 new pwdata corpora added (V8); 4 hansard corpora inserted as blocked (V8); 15 total `blocked=true`
+- **Neon corpus_targets:** 46 rows — `retired` column added (V9); 4 hansard API corpora marked retired; 42 display labels updated to Excel names
+- **Monitor service:** NEW (V9) — `ingest-monitor` (ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`); needs GitHub connect + deploy in Railway
 - **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
-- **Railway ingest_queue:** ~16,919+ pending / claimed / 111,908+ done (post-V8: Hansard rows retired, 13,303 new pwdata rows seeded)
-- **Hansard API queue:** ALL RETIRED — 6,788 rows set to done with audit trail. pwdata-debates and pwdata-lords provide same content without quota limits.
-- **New pwdata corpora active:** pwdata-lordswrans (5,167 rows), pwdata-wms (4,463 rows), pwdata-lordswms (3,673 rows) — workers already processing
-- **written-statements:** uses hansard sourceType (Parliament API monthly chunks) — separate from pwdata-wms
-- **TWFY fix:** `theyworkforyou.ts` now throws on HTTP 429 → rows marked failed instead of silently done
-- **LDA rate limit:** raised 200ms → 500ms; 362 failed rows reset to pending (1,234 total pending)
-- **regional corpus:** 1,317 new SSI+WSI rows inserted; workers actively processing
-- **TWFY_API_KEY:** SET on all 21 Railway services (workers 1–20 + scheduler)
-- **Scheduler loop:** FIXED — sleeps until :01 past next clock hour
-- **Claim reaper:** active in scheduler (V6) — resets claims > 90 min to pending hourly
-- **Prisma CorpusSection:** `compiledText` field REMOVED from schema.prisma (V5)
+- **Railway ingest_queue:** ~16,919+ pending / claimed / 111,908+ done (post-V8)
+- **Hansard API queue:** ALL RETIRED (V8); `retired=true` on corpus_targets (V9); suppressed from email entirely
+- **New pwdata corpora active:** pwdata-lordswrans (5,167 rows), pwdata-wms (4,463 rows), pwdata-lordswms (3,673 rows) — workers processing
+- **Email:** Legacy/new pipeline split removed (V9); retired corpora filtered from all sections
+- **primary-acts-pre-2000 gap:** 6,038 partial items detected; monitor will auto-reseed on first cycle
+- **Excel:** `scrutinise-docs/Legislation_Corpus_Current_Status.xlsx` columns H-N populated (V9)
 - **Railway DB:** ~2.0GB of 20GB
 - **Workers:** 20 active, writing to Neon
+- **Claim reaper:** active in both scheduler (hourly) AND monitor (every 15 min) after V9
 
 ---
 

@@ -1,6 +1,42 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 6 Jun 2026 (V8 — Retire Hansard API queue + add lordswrans/wms/lordswms)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V9 — Monitor service + email cleanup + partial reseeding + corpus labels)*
+
+---
+
+## SPRINT V9 — 7 Jun 2026 (Autonomous monitor service + email cleanup + corpus label alignment)
+
+### Part 1 — Railway monitoring service (monitor.ts)
+
+- Created `scripts/ingest/monitor.ts` — new autonomous service, runs every 15 minutes
+- 4 corrective functions: reclaimStale, reseedPartialItems, checkQueueExhaustion, resetRetryableFailures
+- Key implementation notes: uses r2Key regex to extract govUkId from corpus_sections (no legislationGovUkId column on Neon); correct column names claimedBy/claimedAt/completedAt; HAVING clause on Neon query returns only partial IDs directly (no cross-reference loop)
+- Railway service created: `ingest-monitor` (ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`), start command `npm run monitor`, DATABASE_URL + NEON_DATABASE_URL set
+- Manual step remaining: connect service to GitHub repo in Railway dashboard + trigger first deploy
+- Added `"monitor"` script to root `package.json`
+
+### Part 2 — Email fixes (progress-reporter.ts)
+
+**2a:** Removed legacy/new pipeline breakdown line — email now shows `X sections ingested` (total only).
+
+**2b:** Added `retired` column to Neon `corpus_targets` (ALTER TABLE + COALESCE in query). 4 hansard API corpora (hansard-commons-a/b, hansard-lords-a/b) marked retired=true. Retired corpora now suppressed from ALL email sections (ISSUES, BLOCKED, ALL CORPORA STATUS, ACTIVE CORPORA) and from queryStalledSources. CorpusTarget interface updated with `retired: boolean`.
+
+**2c:** Updated 42 corpus_targets display_label values on Neon to match Excel Corpus/Source column. All 42 updated (0 not found).
+
+### Part 3 — Partial section detection (primary-acts-pre-2000)
+
+Diagnostic via Neon r2Key aggregation (query on 785,099 rows):
+- `primary-acts-pre-2000`: **6,038 items** with < 3 sections (1-2 sections only, likely ancient pre-1900 Acts)
+- Monitor service will auto-reseed these on first cycle; workers will re-compile
+- Note: 6,038 items covers the 1,084-section gap + ~5,821 legitimately short Acts (idempotent upsert = harmless)
+- Railway DB ECONNRESET locally (transient) — monitor handles this on Railway where it runs
+
+### Part 4 — Excel status file updated
+
+`scrutinise-docs/Legislation_Corpus_Current_Status.xlsx` columns H-N populated:
+- 29 rows mapped from 46 corpus_keys (grand total: 785,099 sections ingested)
+- Notable complete corpora: UK Primary Acts 161,574/161,574 (100%), SIs 235,572/235,572 (100%), OTS 497/497 (100%), Scotlawcom 350/350 (100%)
+- Most active: Regional 123,058/160,000 (76.9%), TNA Case Law 74,730/75,000 (99.6%), HMRC TIINs 791/800 (98.9%)
 
 ---
 
