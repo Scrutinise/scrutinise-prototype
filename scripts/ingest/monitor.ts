@@ -56,14 +56,16 @@ async function reclaimStale(pool: Pool): Promise<void> {
 // r2Key format: {corpus}/{govUkId}/sections/{N}.compiled.txt
 async function reseedPartialItems(pool: Pool): Promise<void> {
   // Step 1: query Neon for govUkIds with too few sections (HAVING does the threshold filter).
-  // Limit to TNA legislation corpora — the only ones with legislationGovUkId in the queue.
-  const { Client } = require('pg')
-  const neon = new Client({
+  // Limit to TNA legislation corpora — the only ones with govUkId-style docId in the queue.
+  // WHY Pool not Client: Client was removed to avoid require() inside a function.
+  // Pool used with max:1 is functionally identical to Client for single-shot queries.
+  const neonPool = new Pool({
     connectionString: process.env.NEON_DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     statement_timeout: 120_000,
+    max: 1,
   })
-  await neon.connect()
+  const neon = await neonPool.connect()
 
   const { rows } = await neon.query(`
     SELECT substring("r2Key" from '^[^/]+/(.+)/sections/') AS gov_uk_id
@@ -76,7 +78,8 @@ async function reseedPartialItems(pool: Pool): Promise<void> {
     GROUP BY 1
     HAVING COUNT(*) < $1
   `, [PARTIAL_SECTION_THRESHOLD])
-  await neon.end()
+  neon.release()
+  await neonPool.end()
 
   // partialIds = govUkIds that Neon considers partial (< threshold sections)
   const partialIds = (rows as Array<{ gov_uk_id: string | null }>)
@@ -96,7 +99,7 @@ async function reseedPartialItems(pool: Pool): Promise<void> {
            "lastError" = 'reseeded by monitor — partial section count detected',
            "claimedBy" = NULL,
            "claimedAt" = NULL
-       WHERE "legislationGovUkId" = ANY($1::text[])
+       WHERE "docId" = ANY($1::text[])
          AND status = 'done'`,
       [batch]
     )
