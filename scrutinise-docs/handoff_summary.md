@@ -2,27 +2,36 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 7 Jun 2026 (V10 — FCA Handbook JSON API client)*
+*Last updated: 7 Jun 2026 (V10 post-session — all actions complete)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** V9 (2fa0083) + V10 (pending commit-all.sh)
-**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API client built; 63-module queue seeder; no Playwright on Railway
+**Last commit:** f66cf88 (playbook + corpus retirements + restart policy)
+**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API, staggered restart, monitor fixed, playbook created
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-**V10 — Actions required:**
+**V10 — All complete ✅**
 
 | Action | Status |
 |--------|--------|
-| `commit-all.sh` pushed | ⏳ pending |
-| Run `seed-fca-handbook-queue.ts` (seeds 63 queue rows) | ⏳ Railway DB not accessible locally — use Railway dashboard SQL tab (see below) |
-| corpus_targets `fca-handbook` entry on Neon | ✅ applied (8000 est_sections, unblocked) |
+| All commits pushed to Main | ✅ f66cf88 |
+| `fca-handbook` queue seeded (63 rows) | ✅ seeder ran directly; workers processing |
+| `corpus_targets` fca-handbook on Neon | ✅ 8000 est_sections, unblocked |
+| `fca-publications` + `fca-regulators` retired on Neon | ✅ retired + blocked V10 |
+| 20 workers + scheduler + monitor restarted (volume resize recovery) | ✅ all 22 SUCCESS |
+| `ingest-monitor` rootDirectory fixed to `scripts/ingest` | ✅ running stably |
+| `ingest-monitor` runtime bugs fixed (require/pg, legislationGovUkId→docId) | ✅ |
+| Railway restart policy ON_FAILURE/max-3 on all 22 services | ✅ |
+| `scheduler_lock` table verified intact | ✅ live lock held by re0w3ph5eim (13:01 UTC) |
+| `INGEST_PLAYBOOK.md` created | ✅ scrutinise-docs/INGEST_PLAYBOOK.md |
+
+**V9 carry-over:**
 | Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do (V9 carry-over) |
 
 **Queue seed SQL — paste into Railway dashboard → scrutinise-db → Query tab:**
@@ -117,7 +126,11 @@ ON CONFLICT (id) DO NOTHING;
 
 ## KEY ARCHITECTURE STATE (as of V10)
 
-- **FCA Handbook:** NEW (V10) — `fca-handbook` corpus; JSON API via `api-handbook.fca.org.uk`; 63 modules, ~700 chapters; no Playwright; queue seeder script ready; no new Railway service needed
+- **FCA Handbook:** ACTIVE (V10) — `fca-handbook` corpus; JSON API via `api-handbook.fca.org.uk`; 63 modules queued; workers processing (569 sections written in first 5 min); no Playwright on Railway
+- **Monitor:** RUNNING (fixed V10) — `rootDirectory: scripts/ingest` set; bugs fixed (require/pg → Pool; legislationGovUkId → docId); stable loop at 10:57 UTC deployment
+- **Restart policy:** ON_FAILURE / max 3 retries set on all 22 services (V10)
+- **Retired corpora (Neon):** `fca-publications`, `fca-regulators` retired=true (V10); `hansard-*-a/b` retired (V8)
+- **scheduler_lock:** 1 row, live lock by re0w3ph5eim (13:01 UTC) — not lost in volume resize
 - **Neon corpus_sections:** ~785,099 rows (as of 7 Jun 2026 ~00:45 UTC) — growing as pwdata/LDA corpora process
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
 - **Neon corpus_targets:** 46 rows — `retired` column added (V9); 4 hansard API corpora marked retired; 42 display labels updated to Excel names
