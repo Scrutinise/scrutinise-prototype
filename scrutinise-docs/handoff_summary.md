@@ -21,25 +21,77 @@
 | Action | Status |
 |--------|--------|
 | `commit-all.sh` pushed | ⏳ pending |
-| Run `seed-fca-handbook-queue.ts` (seeds 63 queue rows) | ⏳ after push |
-| Run corpus_targets SQL to add `fca-handbook` entry | ⏳ after push |
+| Run `seed-fca-handbook-queue.ts` (seeds 63 queue rows) | ⏳ Railway DB not accessible locally — use Railway dashboard SQL tab (see below) |
+| corpus_targets `fca-handbook` entry on Neon | ✅ applied (8000 est_sections, unblocked) |
 | Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do (V9 carry-over) |
 
-**Run seed script:**
-```
-NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-fca-handbook-queue.ts
-```
-
-**Run corpus_targets SQL (Neon):**
+**Queue seed SQL — paste into Railway dashboard → scrutinise-db → Query tab:**
 ```sql
-INSERT INTO corpus_targets (corpus_key, display_label, est_sections, est_is_confirmed, blocked, blocked_reason)
-VALUES ('fca-handbook', 'FCA Handbook', 8000, false, false, NULL)
-ON CONFLICT (corpus_key) DO UPDATE
-  SET display_label = 'FCA Handbook',
-      est_sections = 8000,
-      est_is_confirmed = false,
-      blocked = false,
-      blocked_reason = NULL;
+INSERT INTO ingest_queue (id, corpus, "docId", "sourceType", priority) VALUES
+('fca-handbook:prin', 'fca-handbook', 'prin', 'fca-handbook', 2),
+('fca-handbook:sysc', 'fca-handbook', 'sysc', 'fca-handbook', 2),
+('fca-handbook:cocon', 'fca-handbook', 'cocon', 'fca-handbook', 2),
+('fca-handbook:cond', 'fca-handbook', 'cond', 'fca-handbook', 2),
+('fca-handbook:aper', 'fca-handbook', 'aper', 'fca-handbook', 2),
+('fca-handbook:fit', 'fca-handbook', 'fit', 'fca-handbook', 2),
+('fca-handbook:finmar', 'fca-handbook', 'finmar', 'fca-handbook', 2),
+('fca-handbook:tc', 'fca-handbook', 'tc', 'fca-handbook', 2),
+('fca-handbook:gen', 'fca-handbook', 'gen', 'fca-handbook', 2),
+('fca-handbook:fees', 'fca-handbook', 'fees', 'fca-handbook', 2),
+('fca-handbook:genpru', 'fca-handbook', 'genpru', 'fca-handbook', 2),
+('fca-handbook:inspru', 'fca-handbook', 'inspru', 'fca-handbook', 2),
+('fca-handbook:mifidpru', 'fca-handbook', 'mifidpru', 'fca-handbook', 2),
+('fca-handbook:mipru', 'fca-handbook', 'mipru', 'fca-handbook', 2),
+('fca-handbook:iprufsoc', 'fca-handbook', 'iprufsoc', 'fca-handbook', 2),
+('fca-handbook:ipruins', 'fca-handbook', 'ipruins', 'fca-handbook', 2),
+('fca-handbook:ipruinv', 'fca-handbook', 'ipruinv', 'fca-handbook', 2),
+('fca-handbook:cobs', 'fca-handbook', 'cobs', 'fca-handbook', 2),
+('fca-handbook:icobs', 'fca-handbook', 'icobs', 'fca-handbook', 2),
+('fca-handbook:mcob', 'fca-handbook', 'mcob', 'fca-handbook', 2),
+('fca-handbook:bcobs', 'fca-handbook', 'bcobs', 'fca-handbook', 2),
+('fca-handbook:cmcob', 'fca-handbook', 'cmcob', 'fca-handbook', 2),
+('fca-handbook:fpcob', 'fca-handbook', 'fpcob', 'fca-handbook', 2),
+('fca-handbook:pdcob', 'fca-handbook', 'pdcob', 'fca-handbook', 2),
+('fca-handbook:cass', 'fca-handbook', 'cass', 'fca-handbook', 2),
+('fca-handbook:mar', 'fca-handbook', 'mar', 'fca-handbook', 2),
+('fca-handbook:prod', 'fca-handbook', 'prod', 'fca-handbook', 2),
+('fca-handbook:esg', 'fca-handbook', 'esg', 'fca-handbook', 2),
+('fca-handbook:sup', 'fca-handbook', 'sup', 'fca-handbook', 2),
+('fca-handbook:depp', 'fca-handbook', 'depp', 'fca-handbook', 2),
+('fca-handbook:disp', 'fca-handbook', 'disp', 'fca-handbook', 2),
+('fca-handbook:conred', 'fca-handbook', 'conred', 'fca-handbook', 2),
+('fca-handbook:comp', 'fca-handbook', 'comp', 'fca-handbook', 2),
+('fca-handbook:atcs', 'fca-handbook', 'atcs', 'fca-handbook', 2),
+('fca-handbook:coll', 'fca-handbook', 'coll', 'fca-handbook', 2),
+('fca-handbook:creds', 'fca-handbook', 'creds', 'fca-handbook', 2),
+('fca-handbook:conc', 'fca-handbook', 'conc', 'fca-handbook', 2),
+('fca-handbook:ctps', 'fca-handbook', 'ctps', 'fca-handbook', 2),
+('fca-handbook:fund', 'fca-handbook', 'fund', 'fca-handbook', 2),
+('fca-handbook:prof', 'fca-handbook', 'prof', 'fca-handbook', 2),
+('fca-handbook:rcb', 'fca-handbook', 'rcb', 'fca-handbook', 2),
+('fca-handbook:secn', 'fca-handbook', 'secn', 'fca-handbook', 2),
+('fca-handbook:rec', 'fca-handbook', 'rec', 'fca-handbook', 2),
+('fca-handbook:emirr', 'fca-handbook', 'emirr', 'fca-handbook', 2),
+('fca-handbook:uklr', 'fca-handbook', 'uklr', 'fca-handbook', 2),
+('fca-handbook:prm', 'fca-handbook', 'prm', 'fca-handbook', 2),
+('fca-handbook:dtr', 'fca-handbook', 'dtr', 'fca-handbook', 2),
+('fca-handbook:disc', 'fca-handbook', 'disc', 'fca-handbook', 2),
+('fca-handbook:emps', 'fca-handbook', 'emps', 'fca-handbook', 2),
+('fca-handbook:omps', 'fca-handbook', 'omps', 'fca-handbook', 2),
+('fca-handbook:serv', 'fca-handbook', 'serv', 'fca-handbook', 2),
+('fca-handbook:bench', 'fca-handbook', 'bench', 'fca-handbook', 2),
+('fca-handbook:bfsag', 'fca-handbook', 'bfsag', 'fca-handbook', 2),
+('fca-handbook:collg', 'fca-handbook', 'collg', 'fca-handbook', 2),
+('fca-handbook:enfg', 'fca-handbook', 'enfg', 'fca-handbook', 2),
+('fca-handbook:fcg', 'fca-handbook', 'fcg', 'fca-handbook', 2),
+('fca-handbook:fctr', 'fca-handbook', 'fctr', 'fca-handbook', 2),
+('fca-handbook:perg', 'fca-handbook', 'perg', 'fca-handbook', 2),
+('fca-handbook:rfccbs', 'fca-handbook', 'rfccbs', 'fca-handbook', 2),
+('fca-handbook:rppd', 'fca-handbook', 'rppd', 'fca-handbook', 2),
+('fca-handbook:unfcog', 'fca-handbook', 'unfcog', 'fca-handbook', 2),
+('fca-handbook:wdpg', 'fca-handbook', 'wdpg', 'fca-handbook', 2),
+('fca-handbook:m2g', 'fca-handbook', 'm2g', 'fca-handbook', 2)
+ON CONFLICT (id) DO NOTHING;
 ```
 
 **V9 carry-over:**
