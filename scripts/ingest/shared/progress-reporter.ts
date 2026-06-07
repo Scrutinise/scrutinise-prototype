@@ -534,6 +534,7 @@ async function queryWorkerThroughput(): Promise<WorkerThroughputRow[]> {
       : sk.startsWith('hansard') || sk.startsWith('committees') || sk.startsWith('written')
         ? 'hansard'
       : sk === 'fca-regulators' ? 'fca'
+      : sk === 'fca-handbook' ? 'fca-handbook'
       : sk.startsWith('hmrc') ? 'hmrc'
       : sk === 'echr-hudoc' ? 'echr'
       : sk === 'eur-lex' ? 'eurlex'

@@ -277,8 +277,8 @@ async function runNonTnaPhase1(workerId: number, cp: WorkerCheckpoint): Promise<
     cp.totalInCorpus = Math.max(cp.totalInCorpus, allFcaSections.length)
 
     for (const section of allFcaSections) {
-      const text = await fetchFcaText(section.url)
-      await processItem(section.id, () => Promise.resolve(text), section.url, corpus)
+      const text = await fetchFcaText(section.sourceUrl)
+      await processItem(section.sectionId, () => Promise.resolve(text), section.sourceUrl, corpus)
     }
   } else if (workerId === 8) {
     for await (const doc of listHmrcManuals()) {

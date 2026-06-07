@@ -39,7 +39,7 @@ import { enumerateSections, discoverFormats } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
 import { fetchDebateText, fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements } from '../sources/parliament-api'
 import { listDebatesForMonth } from '../sources/theyworkforyou'
-import { fetchSectionText as fetchFcaText, listFcaSections, listFcaSectionsForSourcebook } from '../sources/fca-handbook'
+import { getAllHandbookModules, listSectionsForModule } from '../sources/fca-handbook'
 import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
 import { fetchLdaPage } from '../sources/lda-parliament'
@@ -103,6 +103,7 @@ async function main(): Promise<void> {
                   'tna-caselaw': 'tna-caselaw',
                   'echr-hudoc': 'echr', 'eur-lex': 'eurlex',
                   'fca-regulators': 'fca',
+                  'fca-handbook': 'fca-handbook',
                   'hmrc-codes-guidance': 'hmrc', 'hmrc-tiins': 'gov-uk', 'ots-reports': 'gov-uk',
                   'nao-reports': 'gov-uk', 'fca-publications': 'fca-publications',
                   'sentencing-council': 'gov-uk', 'college-of-policing': 'gov-uk',
@@ -178,7 +179,8 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'tna-caselaw':     return processTnaCaselaw(row)
     case 'bailii':          return processBailii(row)
     case 'hansard':         return processHansard(row)
-    case 'fca':             return processFca(row)
+    case 'fca':             await markSkipped(row.id); return  // retired — old SPA scraper replaced by fca-handbook
+    case 'fca-handbook':    return processFcaHandbook(row)
     case 'echr':            return processEchr(row)
     case 'eurlex':          return processEurLex(row)
     case 'lda-parliament':  return processLda(row)
@@ -458,33 +460,46 @@ async function processHansard(row: QueueRow): Promise<void> {
 }
 
 // ── FCA Handbook ──────────────────────────────────────────────────────────────
-// docId = 'sourcebook:{CODE}' for per-sourcebook rows, or '__index' for full corpus.
+// docId = module entityId (lowercase), e.g. 'cobs', 'mar', 'sysc'.
+// Uses api-handbook.fca.org.uk JSON API — no browser required.
+// Each queue row covers all chapters within one module.
 
-async function processFca(row: QueueRow): Promise<void> {
-  const gen = row.docId.startsWith('sourcebook:')
-    ? listFcaSectionsForSourcebook(row.docId.replace('sourcebook:', ''))
-    : listFcaSections()
+async function processFcaHandbook(row: QueueRow): Promise<void> {
+  const moduleEntityId = row.docId
+
+  // Fetch full module map to get chapterIds for this module
+  const allModules = await getAllHandbookModules()
+  const module = allModules.find(m => m.entityId === moduleEntityId)
+  if (!module) {
+    await markFailed(row.id, `fca-handbook: module '${moduleEntityId}' not found in GetAllHandbook`)
+    return
+  }
 
   let written = 0
-  for await (const section of gen) {
-    const cKey = compiledKey('fca-regulators', section.id, '1')
+  for await (const section of listSectionsForModule(module)) {
+    const cKey = compiledKey('fca-handbook', section.moduleEntityId, section.sectionId)
     if (await r2Exists(cKey)) { written++; continue }
 
-    const text = await fetchFcaText(section.url)
-    if (!text) continue
-
-    const compiled = rawToText(text)
+    const compiled = rawToText(section.text)
     await r2Put(cKey, compiled)
-    const secId = sectionId('fca-regulators', section.id, '1')
-    await upsertSection({ id: secId, corpus: 'fca-regulators', sourceUrl: section.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
+    const secId = sectionId('fca-handbook', section.moduleEntityId, section.sectionId)
+    await upsertSection({
+      id:        secId,
+      corpus:    'fca-handbook',
+      sourceUrl: section.sourceUrl,
+      r2Key:     cKey,
+      wordCount: countWords(compiled),
+      status:    'compiled',
+      format:    'html',
+    })
     written++
   }
-  // 0 sections means scraping failed — handbook.fca.org.uk is a JS SPA, static HTML
-  // has no section links. Mark failed so we don't silently hide the gap.
+
   if (written === 0) {
-    await markFailed(row.id, 'FCA: 0 sections found — handbook is JS-rendered, HTML scraping ineffective')
+    await markFailed(row.id, `fca-handbook: ${moduleEntityId}: 0 sections written`)
   } else {
-    await markDone(row.id)
+    console.log(`[fca-handbook] ${moduleEntityId}: ${written} section(s) written`)
+    await markDone(row.id, 'html')
   }
 }
 

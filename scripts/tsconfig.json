@@ -13,6 +13,8 @@
       "@aws-sdk/client-s3/*": ["./node_modules/@aws-sdk/client-s3/*"],
       "@anthropic-ai/sdk": ["./node_modules/@anthropic-ai/sdk"],
       "@anthropic-ai/sdk/*": ["./node_modules/@anthropic-ai/sdk/*"],
+      "playwright": ["./node_modules/playwright"],
+      "playwright/*": ["./node_modules/playwright/*"],
       "pg": ["./node_modules/pg"],
       "pg/*": ["./node_modules/pg/*"],
       "@prisma/adapter-pg": ["./node_modules/@prisma/adapter-pg"],
