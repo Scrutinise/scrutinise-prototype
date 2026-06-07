@@ -79,12 +79,14 @@ interface CorpusTarget {
   priority: number
   blocked: boolean
   blocked_reason: string | null
+  retired: boolean
 }
 
 async function queryCorpusTargets(): Promise<CorpusTarget[]> {
   const res = await getNeonPool().query<CorpusTarget>(`
     SELECT corpus_key, display_label, est_sections, est_is_confirmed,
-           priority, blocked, blocked_reason
+           priority, blocked, blocked_reason,
+           COALESCE(retired, false) AS retired
     FROM corpus_targets
     ORDER BY priority, corpus_key
   `)
@@ -565,7 +567,7 @@ export async function queryStalledSources(): Promise<string[]> {
     // again as ⚠️ stalled creates duplicate noise and obscures real stalls.
     const [sectionsRes, blockedRes] = await Promise.all([
       neonPool.query<{ corpus: string }>('SELECT DISTINCT corpus FROM corpus_sections'),
-      neonPool.query<{ corpus_key: string }>('SELECT corpus_key FROM corpus_targets WHERE blocked = true'),
+      neonPool.query<{ corpus_key: string }>('SELECT corpus_key FROM corpus_targets WHERE blocked = true OR retired = true'),
     ])
     const compiledCorpora = new Set(sectionsRes.rows.map(r => r.corpus))
     const blockedSet = new Set(blockedRes.rows.map(r => r.corpus_key))
@@ -714,7 +716,7 @@ export async function sendProgressEmail(
   // ── TOTAL CORPUS ──────────────────────────────────────────────────────────
   parts.push('', SEP, 'TOTAL CORPUS', SEP)
   parts.push(`  ${overallBar}  ${overallPct.toFixed(1)}%`)
-  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections  (${neonCount.toLocaleString()} legacy + ${newPipelineCompiled.toLocaleString()} new pipeline)`)
+  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections ingested`)
   parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
   parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
   if (dbSize) {
@@ -725,7 +727,7 @@ export async function sendProgressEmail(
   }
 
   // ── ACTIVE CORPORA ────────────────────────────────────────────────────────
-  const activeTargets = targets.filter(t => activeCorpusKeys.has(t.corpus_key))
+  const activeTargets = targets.filter(t => !t.retired && activeCorpusKeys.has(t.corpus_key))
   if (activeTargets.length > 0) {
     parts.push('', SEP, `ACTIVE CORPORA  (workers assigned this hour)`, SEP)
     for (const target of activeTargets) {
@@ -800,7 +802,7 @@ export async function sendProgressEmail(
     issueLines.push(`  ${corpus}: stalled — done queue rows, 0 sections after 24h`)
   }
 
-  for (const target of targets.filter(t => t.blocked && t.blocked_reason)) {
+  for (const target of targets.filter(t => t.blocked && !t.retired && t.blocked_reason)) {
     issueLines.push(`  ${target.corpus_key}: blocked — ${target.blocked_reason}`)
   }
 
@@ -811,7 +813,7 @@ export async function sendProgressEmail(
 
   // ── ALL CORPORA STATUS ────────────────────────────────────────────────────
   parts.push('', SEP, 'ALL CORPORA STATUS', SEP)
-  for (const target of targets) {
+  for (const target of targets.filter(t => !t.retired)) {
     const compiled = corpusCounts[target.corpus_key]?.compiled ?? 0
     const est = target.est_sections
     const isActive = activeCorpusKeys.has(target.corpus_key)
