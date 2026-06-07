@@ -2,29 +2,49 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 7 Jun 2026 (V9 — Monitor service + email cleanup + partial reseeding + corpus labels)*
+*Last updated: 7 Jun 2026 (V10 — FCA Handbook JSON API client)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** 352ed7b (V8 post-deploy)
-**Last sprint:** V9 (7 Jun 2026) — Autonomous monitor service created; email cleanup; 42 corpus labels updated; Excel populated
+**Last commit:** V9 (2fa0083) + V10 (pending commit-all.sh)
+**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API client built; 63-module queue seeder; no Playwright on Railway
 
 ---
 
 ## IMMEDIATE ACTIONS REQUIRED
 
-**V9 — One action required:**
+**V10 — Actions required:**
 
 | Action | Status |
 |--------|--------|
 | `commit-all.sh` pushed | ⏳ pending |
-| Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do |
-| Trigger first deploy of `ingest-monitor` | ⏳ after GitHub connected |
+| Run `seed-fca-handbook-queue.ts` (seeds 63 queue rows) | ⏳ after push |
+| Run corpus_targets SQL to add `fca-handbook` entry | ⏳ after push |
+| Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do (V9 carry-over) |
 
-**Monitor service details:**
+**Run seed script:**
+```
+NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-fca-handbook-queue.ts
+```
+
+**Run corpus_targets SQL (Neon):**
+```sql
+INSERT INTO corpus_targets (corpus_key, display_label, est_sections, est_is_confirmed, blocked, blocked_reason)
+VALUES ('fca-handbook', 'FCA Handbook', 8000, false, false, NULL)
+ON CONFLICT (corpus_key) DO UPDATE
+  SET display_label = 'FCA Handbook',
+      est_sections = 8000,
+      est_is_confirmed = false,
+      blocked = false,
+      blocked_reason = NULL;
+```
+
+**V9 carry-over:**
+
+**V9 carry-over — Monitor service details:**
 - Service name: `ingest-monitor`
 - Service ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`
 - Start command: `npm run monitor`
@@ -43,8 +63,9 @@
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V9)
+## KEY ARCHITECTURE STATE (as of V10)
 
+- **FCA Handbook:** NEW (V10) — `fca-handbook` corpus; JSON API via `api-handbook.fca.org.uk`; 63 modules, ~700 chapters; no Playwright; queue seeder script ready; no new Railway service needed
 - **Neon corpus_sections:** ~785,099 rows (as of 7 Jun 2026 ~00:45 UTC) — growing as pwdata/LDA corpora process
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
 - **Neon corpus_targets:** 46 rows — `retired` column added (V9); 4 hansard API corpora marked retired; 42 display labels updated to Excel names

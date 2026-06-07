@@ -1,6 +1,67 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V9 — Monitor service + email cleanup + partial reseeding + corpus labels)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V10 — FCA Handbook API client)*
+
+---
+
+## SPRINT V10 — 7 Jun 2026 (FCA Handbook — JSON API ingest client)
+
+### Part 1 — Playwright investigation
+
+- Installed `playwright@^1.60.0` as devDependency in `scrutinise-web/package.json`
+- Wrote `scripts/ingest/test-fca-playwright.ts` — diagnostic script (not deployed)
+- Key finding: `handbook.fca.org.uk` SPA calls `api-handbook.fca.org.uk` backend
+- Intercepted endpoints: `GetAllHandbook` (full module hierarchy) + `GetAllHandBookProvisionsSortedOrderByChapter/{chapterId}` (provisions per chapter)
+- Both endpoints return clean JSON; `contentText` field contains plain rule text
+- No auth required; `Origin: https://handbook.fca.org.uk` header sufficient
+
+### Part 2 — Architecture decision: JSON API path
+
+- **No Playwright on Railway** — direct HTTP to `api-handbook.fca.org.uk` works
+- `GetAllHandbook` returns 63 sourcebook modules with chapter IDs (linked list)
+- `GetAllHandBookProvisionsSortedOrderByChapter/{chapterId}?IsDeleted=false` returns all provisions for a chapter grouped by `sectionId`
+- Provisions aggregate by `sectionId` → one `corpus_sections` row per section
+
+### Part 3 — FCA Handbook API client
+
+- Rewrote `scripts/ingest/sources/fca-handbook.ts` as pure HTTP API client
+- New exports: `getAllHandbookModules()`, `listSectionsForModule()`, `FcaHandbookModule`, `FcaSection`
+- Kept backward-compat exports: `FCA_KNOWN_SOURCEBOOKS`, `listFcaSections()`, `fetchSectionText()` (stub)
+- Added `processFcaHandbook()` to `worker-queue.ts` — sourceType `fca-handbook`, corpus `fca-handbook`
+- Retired old `processFca()` (was broken SPA scraper); `case 'fca':` now calls `markSkipped`
+- `scriptstsconfig.json` updated: added playwright to paths
+- `progress-reporter.ts` sourceType mapping updated for `fca-handbook`
+
+### Part 4 — Queue seeder and module list
+
+- Wrote `scripts/ingest/seed-fca-handbook-queue.ts` — one queue row per module (63 total)
+- 63 modules confirmed: PRIN, SYSC, COCON, COND, APER, FIT, FINMAR, TC, GEN, FEES, GENPRU, INSPRU, MIFIDPRU, MIPRU, IPRUFSOC, IPRUINS, IPRUINV, COBS, ICOBS, MCOB, BCOBS, CMCOB, FPCOB, PDCOB, CASS, MAR, PROD, ESG, SUP, DEPP, DISP, CONRED, COMP, ATCS, COLL, CREDS, CONC, CTPS, FUND, PROF, RCB, SECN, REC, EMIRR, UKLR, PRM, DTR, DISC, EMPS, OMPS, SERV, BENCH, BFSAG, COLLG, ENFG, FCG, FCTR, PERG, RFCCBS, RPPD, UNFCOG, WDPG, M2G
+- Corpus targets SQL (run after seeding):
+
+```sql
+INSERT INTO corpus_targets (corpus_key, display_label, est_sections, est_is_confirmed, blocked, blocked_reason)
+VALUES ('fca-handbook', 'FCA Handbook', 8000, false, false, NULL)
+ON CONFLICT (corpus_key) DO UPDATE
+  SET display_label = 'FCA Handbook',
+      est_sections = 8000,
+      est_is_confirmed = false,
+      blocked = false,
+      blocked_reason = NULL;
+```
+
+- No new Railway service needed — any existing worker can process `fca-handbook` queue rows
+- **Do NOT add Playwright** to Railway workers — ingest is pure HTTP
+
+### Files created/modified
+
+- `scripts/ingest/sources/fca-handbook.ts` (rewritten — new JSON API client)
+- `scripts/ingest/test-fca-playwright.ts` (new — diagnostic only, not deployed)
+- `scripts/ingest/seed-fca-handbook-queue.ts` (new — run once to seed 63 queue rows)
+- `scripts/ingest/workers/worker-queue.ts` (processFcaHandbook added, old processFca retired)
+- `scripts/ingest/workers/worker-main.ts` (updated FcaSection field names: .id→.sectionId, .url→.sourceUrl)
+- `scripts/ingest/shared/progress-reporter.ts` (fca-handbook sourceType mapping)
+- `scripts/tsconfig.json` (playwright paths added)
+- `scrutinise-web/package.json` (playwright ^1.60.0 devDependency)
 
 ---
 
