@@ -2,15 +2,15 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 7 Jun 2026 (V10 post-session — all actions complete)*
+*Last updated: 7 Jun 2026 (V10 final — all actions complete, est confirmed, playbook written)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** f66cf88 (playbook + corpus retirements + restart policy)
-**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API, staggered restart, monitor fixed, playbook created
+**Last commit:** d34f6fe (fca-handbook rate limit + diag scripts) — final pending commit below
+**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API complete; 3,661 sections confirmed; monitor fixed; volume resize recovery; playbook written
 
 ---
 
@@ -20,73 +20,23 @@
 
 | Action | Status |
 |--------|--------|
-| All commits pushed to Main | ✅ f66cf88 |
-| `fca-handbook` queue seeded (63 rows) | ✅ seeder ran directly; workers processing |
-| `corpus_targets` fca-handbook on Neon | ✅ 8000 est_sections, unblocked |
+| All commits pushed to Main | ✅ d34f6fe + final pending |
+| `fca-handbook` queue seeded (63 rows) | ✅ all 63 done; 3,661 sections in Neon |
+| `corpus_targets` fca-handbook on Neon | ✅ est_sections=3661, est_is_confirmed=true |
 | `fca-publications` + `fca-regulators` retired on Neon | ✅ retired + blocked V10 |
+| `fca-handbook` rate limit added to Railway DB | ✅ 500ms / 3 concurrent |
 | 20 workers + scheduler + monitor restarted (volume resize recovery) | ✅ all 22 SUCCESS |
-| `ingest-monitor` rootDirectory fixed to `scripts/ingest` | ✅ running stably |
+| `ingest-monitor` rootDirectory fixed to `scripts/ingest` | ✅ running stably since 10:57 UTC |
 | `ingest-monitor` runtime bugs fixed (require/pg, legislationGovUkId→docId) | ✅ |
 | Railway restart policy ON_FAILURE/max-3 on all 22 services | ✅ |
-| `scheduler_lock` table verified intact | ✅ live lock held by re0w3ph5eim (13:01 UTC) |
-| `INGEST_PLAYBOOK.md` created | ✅ scrutinise-docs/INGEST_PLAYBOOK.md |
+| `scheduler_lock` table verified intact | ✅ 1 row, live lock re0w3ph5eim 13:01 UTC |
+| `INGEST_PLAYBOOK.md` created + updated with session lessons | ✅ |
+| Duplicate email source check (Vercel/API routes) | ✅ clean — Railway-only issue |
 
-**V9 carry-over:**
-| Connect `ingest-monitor` to GitHub in Railway dashboard | ⏳ Charlie to do (V9 carry-over) |
+**V9 carry-over — one remaining manual step:**
+| Connect `ingest-monitor` to GitHub in Railway dashboard | ✅ already connected (deployed successfully) |
 
-**Queue seed SQL — paste into Railway dashboard → scrutinise-db → Query tab:**
-```sql
-INSERT INTO ingest_queue (id, corpus, "docId", "sourceType", priority) VALUES
-('fca-handbook:prin', 'fca-handbook', 'prin', 'fca-handbook', 2),
-('fca-handbook:sysc', 'fca-handbook', 'sysc', 'fca-handbook', 2),
-('fca-handbook:cocon', 'fca-handbook', 'cocon', 'fca-handbook', 2),
-('fca-handbook:cond', 'fca-handbook', 'cond', 'fca-handbook', 2),
-('fca-handbook:aper', 'fca-handbook', 'aper', 'fca-handbook', 2),
-('fca-handbook:fit', 'fca-handbook', 'fit', 'fca-handbook', 2),
-('fca-handbook:finmar', 'fca-handbook', 'finmar', 'fca-handbook', 2),
-('fca-handbook:tc', 'fca-handbook', 'tc', 'fca-handbook', 2),
-('fca-handbook:gen', 'fca-handbook', 'gen', 'fca-handbook', 2),
-('fca-handbook:fees', 'fca-handbook', 'fees', 'fca-handbook', 2),
-('fca-handbook:genpru', 'fca-handbook', 'genpru', 'fca-handbook', 2),
-('fca-handbook:inspru', 'fca-handbook', 'inspru', 'fca-handbook', 2),
-('fca-handbook:mifidpru', 'fca-handbook', 'mifidpru', 'fca-handbook', 2),
-('fca-handbook:mipru', 'fca-handbook', 'mipru', 'fca-handbook', 2),
-('fca-handbook:iprufsoc', 'fca-handbook', 'iprufsoc', 'fca-handbook', 2),
-('fca-handbook:ipruins', 'fca-handbook', 'ipruins', 'fca-handbook', 2),
-('fca-handbook:ipruinv', 'fca-handbook', 'ipruinv', 'fca-handbook', 2),
-('fca-handbook:cobs', 'fca-handbook', 'cobs', 'fca-handbook', 2),
-('fca-handbook:icobs', 'fca-handbook', 'icobs', 'fca-handbook', 2),
-('fca-handbook:mcob', 'fca-handbook', 'mcob', 'fca-handbook', 2),
-('fca-handbook:bcobs', 'fca-handbook', 'bcobs', 'fca-handbook', 2),
-('fca-handbook:cmcob', 'fca-handbook', 'cmcob', 'fca-handbook', 2),
-('fca-handbook:fpcob', 'fca-handbook', 'fpcob', 'fca-handbook', 2),
-('fca-handbook:pdcob', 'fca-handbook', 'pdcob', 'fca-handbook', 2),
-('fca-handbook:cass', 'fca-handbook', 'cass', 'fca-handbook', 2),
-('fca-handbook:mar', 'fca-handbook', 'mar', 'fca-handbook', 2),
-('fca-handbook:prod', 'fca-handbook', 'prod', 'fca-handbook', 2),
-('fca-handbook:esg', 'fca-handbook', 'esg', 'fca-handbook', 2),
-('fca-handbook:sup', 'fca-handbook', 'sup', 'fca-handbook', 2),
-('fca-handbook:depp', 'fca-handbook', 'depp', 'fca-handbook', 2),
-('fca-handbook:disp', 'fca-handbook', 'disp', 'fca-handbook', 2),
-('fca-handbook:conred', 'fca-handbook', 'conred', 'fca-handbook', 2),
-('fca-handbook:comp', 'fca-handbook', 'comp', 'fca-handbook', 2),
-('fca-handbook:atcs', 'fca-handbook', 'atcs', 'fca-handbook', 2),
-('fca-handbook:coll', 'fca-handbook', 'coll', 'fca-handbook', 2),
-('fca-handbook:creds', 'fca-handbook', 'creds', 'fca-handbook', 2),
-('fca-handbook:conc', 'fca-handbook', 'conc', 'fca-handbook', 2),
-('fca-handbook:ctps', 'fca-handbook', 'ctps', 'fca-handbook', 2),
-('fca-handbook:fund', 'fca-handbook', 'fund', 'fca-handbook', 2),
-('fca-handbook:prof', 'fca-handbook', 'prof', 'fca-handbook', 2),
-('fca-handbook:rcb', 'fca-handbook', 'rcb', 'fca-handbook', 2),
-('fca-handbook:secn', 'fca-handbook', 'secn', 'fca-handbook', 2),
-('fca-handbook:rec', 'fca-handbook', 'rec', 'fca-handbook', 2),
-('fca-handbook:emirr', 'fca-handbook', 'emirr', 'fca-handbook', 2),
-('fca-handbook:uklr', 'fca-handbook', 'uklr', 'fca-handbook', 2),
-('fca-handbook:prm', 'fca-handbook', 'prm', 'fca-handbook', 2),
-('fca-handbook:dtr', 'fca-handbook', 'dtr', 'fca-handbook', 2),
-('fca-handbook:disc', 'fca-handbook', 'disc', 'fca-handbook', 2),
-('fca-handbook:emps', 'fca-handbook', 'emps', 'fca-handbook', 2),
-('fca-handbook:omps', 'fca-handbook', 'omps', 'fca-handbook', 2),
+**No pending actions for next session.**
 ('fca-handbook:serv', 'fca-handbook', 'serv', 'fca-handbook', 2),
 ('fca-handbook:bench', 'fca-handbook', 'bench', 'fca-handbook', 2),
 ('fca-handbook:bfsag', 'fca-handbook', 'bfsag', 'fca-handbook', 2),
@@ -126,11 +76,12 @@ ON CONFLICT (id) DO NOTHING;
 
 ## KEY ARCHITECTURE STATE (as of V10)
 
-- **FCA Handbook:** ACTIVE (V10) — `fca-handbook` corpus; JSON API via `api-handbook.fca.org.uk`; 63 modules queued; workers processing (569 sections written in first 5 min); no Playwright on Railway
-- **Monitor:** RUNNING (fixed V10) — `rootDirectory: scripts/ingest` set; bugs fixed (require/pg → Pool; legislationGovUkId → docId); stable loop at 10:57 UTC deployment
-- **Restart policy:** ON_FAILURE / max 3 retries set on all 22 services (V10)
-- **Retired corpora (Neon):** `fca-publications`, `fca-regulators` retired=true (V10); `hansard-*-a/b` retired (V8)
-- **scheduler_lock:** 1 row, live lock by re0w3ph5eim (13:01 UTC) — not lost in volume resize
+- **FCA Handbook:** COMPLETE (V10) — `fca-handbook` corpus; 63 modules done; **3,661 sections** in Neon (est_is_confirmed=true); R2 keys at `fca-handbook/{module}/sections/{sectionId}/compiled.txt`; rate limit 500ms/3 concurrent in Railway DB
+- **Monitor:** RUNNING (fixed V10) — `rootDirectory: scripts/ingest`; stable since 10:57 UTC deployment `86c4c5b1`; loops every 15 min
+- **Restart policy:** ON_FAILURE / max 3 retries on all 22 services (V10)
+- **Retired corpora (Neon):** `fca-publications`, `fca-regulators` retired+blocked (V10); `hansard-*-a/b` retired (V8)
+- **scheduler_lock:** 1 row intact after volume resize; active lock re0w3ph5eim 13:01 UTC
+- **source_rate_limits actual columns:** `sourceKey`, `intervalMs`, `lastIssuedAt`, `suspended`, `suspendedUntil`, `updatedAt`, `isComplete`, `maxConcurrentWorkers` — no `note` column, no `minIntervalMs`
 - **Neon corpus_sections:** ~785,099 rows (as of 7 Jun 2026 ~00:45 UTC) — growing as pwdata/LDA corpora process
 - **Neon corpus_snapshots:** populated every hour since V4 deploy
 - **Neon corpus_targets:** 46 rows — `retired` column added (V9); 4 hansard API corpora marked retired; 42 display labels updated to Excel names

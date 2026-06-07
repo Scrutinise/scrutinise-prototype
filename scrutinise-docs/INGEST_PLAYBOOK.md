@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 7 Jun 2026 (V10). Maintained alongside handoff_summary.md.*
+*Last updated: 7 Jun 2026 (V10 final — post-session lessons added). Maintained alongside handoff_summary.md.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting workers, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -399,7 +399,7 @@ SELECT COUNT(*) FROM corpus_sections;
 | retained-eu | ✅ complete | 14,390 sections |
 | tna-caselaw | ✅ complete | ~74,950 judgments |
 | eur-lex | ✅ active | SPARQL-based; ~19k ingested |
-| fca-handbook | 🆕 active V10 | 63 modules queued; JSON API; workers processing |
+| fca-handbook | ✅ complete V10 | 3,661 sections confirmed; est_is_confirmed=true |
 | fca-publications | ⛔ retired V10 | Superseded by fca-handbook |
 | fca-regulators | ⛔ retired V10 | Old SPA scraper; never worked |
 | echr-hudoc | ⛔ blocked | HUDOC API endpoint changed Jun 2026; no fix |
@@ -415,3 +415,54 @@ SELECT COUNT(*) FROM corpus_sections;
 | uk-treaties | ✅ complete | 1,104 FCDO treaties |
 | oecd | ✅ complete | 462 open docs |
 | planning-policy / building-regs | ✅ complete | Small corpora |
+
+---
+
+## 11. LESSONS LEARNED — V10 SESSION (7 Jun 2026)
+
+These are non-obvious things discovered during the V10 session that aren't obvious from reading the code.
+
+### Railway API
+
+**`backboard.railway.com` vs `api.railway.app`**  
+Use `backboard.railway.com/graphql/v2`. The `api.railway.app` endpoint works for some mutations but returns stale deployment data in queries — caused misleading "all settled" poll results during staggered restart.
+
+**`serviceInstanceRedeploy` triggers a rebuild; `deploymentRedeploy` does not**  
+`serviceInstanceRedeploy(serviceId, environmentId)` creates a new deployment from source (full npm install + build, ~90s). `deploymentRedeploy(id: deploymentId)` restarts the existing container (~15–30s, no rebuild). Use `deploymentRedeploy` for crash recovery after a volume resize; use `serviceInstanceRedeploy` only when you need to pick up new code.
+
+**Staggered restart polling — wait 90s minimum before polling**  
+Polling too soon (< 60s after `serviceInstanceRedeploy`) returns the old CRASHED status because the new deployment hasn't registered yet. Workers that show an old pre-restart timestamp in their deployment `createdAt` field did NOT receive the trigger — re-trigger those specifically. Workers that show a new timestamp but CRASHED failed the new build.
+
+**`ServiceInstanceUpdateInput` — confirmed working fields**  
+`rootDirectory`, `startCommand`, `buildCommand`, `restartPolicyType` ("ON_FAILURE"/"NEVER"/"ALWAYS"), `restartPolicyMaxRetries`. The `source { ... on ServiceSourceRepo }` inline fragment does NOT exist — use the project services query to get source info.
+
+### Railway DB schema
+
+**`source_rate_limits` actual columns (7 Jun 2026):**  
+`sourceKey`, `intervalMs`, `lastIssuedAt`, `suspended`, `suspendedUntil`, `updatedAt`, `isComplete`, `maxConcurrentWorkers`  
+— NOT `minIntervalMs`, NOT `note`. Always verify column names before writing scripts against this table.
+
+**`ingest_queue` has no `legislationGovUkId` column**  
+The govUkId for TNA legislation rows is stored in `"docId"`. Any query that filters by govUkId against ingest_queue must use `WHERE "docId" = ANY(...)`.
+
+**`scheduler_lock` table survives volume resize**  
+The lock row is a regular DB row — it persists across volume resizes, container restarts, and redeployments. It is only lost if someone explicitly TRUNCATEs or DROPs the table. If the table is empty, insert: `INSERT INTO scheduler_lock (id, "lockedBy", "lockedAt") VALUES (1, NULL, NULL) ON CONFLICT DO NOTHING`. Check actual column names first — observed columns are `id`, `locked_at`, `process_id` (snake_case, not camelCase).
+
+### Monitor (`ingest-monitor`)
+
+**`rootDirectory: null` is silent death**  
+A service created via Railway API has `rootDirectory: null` by default. It builds from the repo root, installs the root `package.json` (only `dotenv`), then crashes at runtime on the first `import { Pool } from 'pg'`. There is no build error — the build succeeds, the runtime crashes. Always set `rootDirectory: "scripts/ingest"` for any new ingest service.
+
+**`require()` inside async functions is fragile**  
+Even with `"module": "commonjs"` in tsconfig, using `require('pg')` inside an async function can cause ambiguity errors depending on tsx version and Node.js version. Always use top-level ES imports. If a single-connection pattern is needed (like `pg.Client`), use `new Pool({ max: 1 })` with a checked-out client instead.
+
+**Monitor "SUCCESS" does not mean "running"**  
+Railway shows `SUCCESS` for a deployment that either (a) is still running healthy, or (b) has exited with code 0. To distinguish: query `deployments(last: 5)` — if the same deployment ID is still `SUCCESS` after 3+ minutes, the process is running its loop. If new deployment IDs appear at short intervals, the process is crash-cycling.
+
+### Corpus estimates
+
+**Always set `est_is_confirmed = true` after a corpus completes**  
+`est_is_confirmed = false` means the email denominator is an estimate. Once all queue rows are `done` and the Neon count is final, run: `UPDATE corpus_targets SET est_sections = <actual>, est_is_confirmed = true WHERE corpus_key = '<key>'`. For `fca-handbook`: 3,661 actual vs 8,000 estimated — a 54% overestimate. Estimates for JS-rendered SPAs are inherently unreliable until the first ingest completes.
+
+**FCA Handbook section count is lower than expected because provisions aggregate**  
+The `GetAllHandBookProvisionsSortedOrderByChapter` API returns individual provision paragraphs (often 10–20 per section). The ingest groups them by `sectionId`, so the final row count is per-section not per-provision. This is the correct design for Lex search purposes, but it means the raw provision count (potentially ~20k) does not map 1:1 to corpus_sections rows.

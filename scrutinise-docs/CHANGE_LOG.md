@@ -1,6 +1,66 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V10 — FCA Handbook API client)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V10 final — FCA Handbook complete + ops work + playbook)*
+
+---
+
+## SPRINT V10 — 7 Jun 2026 (FCA Handbook + volume resize recovery + monitor fix + playbook)
+
+### Post-sprint ops (same session)
+
+**Volume resize recovery:**
+- Railway PostgreSQL volume hit capacity; all 22 services CRASHED
+- Staggered restart: batches of 5, 20s gap via `restart-workers-staggered.ts`; 13/21 SUCCESS on first pass; 8 re-triggered via `retry-crashed-workers.ts`; all 22 SUCCESS confirmed
+- Root cause of slow first-pass: polling fired too early (< 60s); workers were mid-build not yet visible as DEPLOYING; re-trigger of old-timestamp services resolved it
+- Railway restart policy set ON_FAILURE/max-3 on all 22 services via `set-restart-policy.ts`
+
+**Monitor bugs fixed (first real deploy):**
+- Bug 1: `require('pg')` inside `reseedPartialItems()` async function — Node.js/tsx ambiguity between ESM and CJS; replaced with top-level `Pool` import (`new Pool({ max:1 })` used as single-connection client)
+- Bug 2: `"legislationGovUkId"` column referenced in UPDATE — does not exist on `ingest_queue`; correct column is `"docId"` (which holds the govUkId for TNA legislation rows)
+- Monitor stable since deployment `86c4c5b1` (10:57 UTC); loop confirmed by same deployment ID 3+ min later
+
+**Monitor rootDirectory fix:**
+- `ingest-monitor` had `rootDirectory: null` → npm installed from repo root (only `dotenv`) → `pg` not found at runtime
+- Fixed via `serviceInstanceUpdate` mutation: `rootDirectory: "scripts/ingest"`
+- Also added `"monitor": "exec tsx monitor.ts"` to `scripts/ingest/package.json` (was missing)
+- GitHub source was already connected (service deployed successfully despite V9 note saying it wasn't)
+
+**Corpus retirements:**
+- `fca-publications` and `fca-regulators` set `retired=true, blocked=true` on Neon corpus_targets
+- Reason: superseded by `fca-handbook` JSON API client (V10)
+
+**FCA Handbook confirmed complete:**
+- All 63 queue rows `done`; **3,661 sections** written to Neon
+- `corpus_targets`: `est_sections=3661`, `est_is_confirmed=true` (corrected from 8,000 estimate)
+- Rate limit added to Railway DB: `fca-handbook` 500ms / 3 concurrent
+- Actual `source_rate_limits` columns confirmed: no `note` column, column is `intervalMs` not `minIntervalMs`
+
+**INGEST_PLAYBOOK.md created** at `scrutinise-docs/INGEST_PLAYBOOK.md`:
+- 10 sections: system overview, Railway API (IDs + mutations), staggered restart, monitor diagnosis, queue seeding, service config requirements, R2 key scheme, known failure patterns V1–V10, DB size monitoring, corpus status table
+- Updated post-session with schema corrections and new failure patterns
+
+**Duplicate email check:**
+- Searched `vercel.json` and all `scrutinise-web/app/api/` routes for `sendProgressEmail` or cron config
+- Clean — no duplicate source in Vercel/Next.js; issue was Railway-only (resolved V6b)
+
+**scheduler_lock:**
+- `SELECT * FROM scheduler_lock` → 1 row, `locked_at: 2026-06-07T13:01:00`, `process_id: re0w3ph5eim` — intact after volume resize
+
+**Scripts added this session:**
+- `scripts/ingest/restart-workers-staggered.ts` — batch-5/20s restart of all 20 workers + scheduler
+- `scripts/ingest/check-railway-status.ts` — deployment status for all services
+- `scripts/ingest/check-service-config.ts` — rootDirectory + startCommand per service
+- `scripts/ingest/fix-monitor-root-dir.ts` — patch rootDirectory + redeploy for monitor
+- `scripts/ingest/retry-crashed-workers.ts` — re-trigger specific crashed workers
+- `scripts/ingest/set-restart-policy.ts` — set ON_FAILURE/max-3 on all 22 services
+- `scripts/ingest/check-monitor-deployments.ts` — last 5 deployments for monitor
+- `scripts/ingest/check-neon-recent.ts` — sections written in last 5 min by corpus
+- `scripts/ingest/retire-corpus-targets.ts` — retire corpora on Neon
+- `scripts/ingest/check-scheduler-lock.ts` — verify scheduler_lock table
+- `scripts/ingest/diag-queue-fca.ts` — queue status + rate limits for fca/tna corpora
+- `scripts/ingest/diag-fca-neon.ts` — fca-handbook section count + samples on Neon
+- `scripts/ingest/add-fca-rate-limit.ts` — insert fca-handbook rate limit to Railway DB
+- `scripts/ingest/update-fca-est.ts` — update corpus_targets est_sections on Neon
 
 ---
 
