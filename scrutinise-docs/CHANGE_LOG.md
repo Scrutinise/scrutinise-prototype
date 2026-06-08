@@ -1,6 +1,143 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 7 Jun 2026 (V10 final — FCA Handbook complete + ops work + playbook)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V12 — duplicate email found, corpus-aware thresholds, hmrc complete, LDA timeout fix)*
+
+---
+
+## SPRINT V12 — 8 Jun 2026 (throughput fixes + corpus completions + monitor improvements)
+
+### Part 1 — Duplicate email — definitive root cause found
+
+**Root cause:** A LOCAL `scheduler.ts` process (PIDs 22916/47892 on Charlie's machine, tsx parent + child) running the pre-`msUntilNextRun` version of scheduler.ts with a fixed interval timer. This fires at :23 every hour (the minute the process was originally started) and survives all Railway restarts because it's not on Railway.
+
+**Diagnosis steps taken:**
+- `vercel.json`: no crons section
+- JSON files: no cron patterns
+- GitHub: no `.github/workflows` directory
+- Railway API: all 23 services have correct startCommands (scheduler=`npm run scheduler`, monitor=`npm run monitor`, workers=`npm run worker`)
+- `Get-WmiObject Win32_Process`: found two node.exe processes running `--tsconfig tsconfig.json scheduler.ts` — local processes on Charlie's machine
+
+**Fix (Charlie's action):** Kill local scheduler processes: `Stop-Process -Id 22916` (or restart machine). The `scheduler_lock` table (last updated 23:01 7 Jun) confirms the Railway scheduler has been idle for 23+ hours — it should be redeployed after the local process is killed.
+
+### Part 2 — Corpus-aware partial-item reseed threshold
+
+**monitor.ts** — `PARTIAL_SECTION_THRESHOLD = 3` (global) replaced with `CORPUS_THRESHOLDS` record:
+- `primary-acts-pre-2000`: 1 (ancient Acts legitimately have 1 section)
+- `si-pre-2010`: 1
+- `primary-acts-2000plus`, `si-2010plus`: 2
+- `pwdata-debates`, `pwdata-lords`: 5
+- `pwdata-wrans`, `lda-commonswrittenquestions`: 3
+- default: 3
+
+`reseedPartialItems()` now queries Neon with `corpus` included in GROUP BY, applies per-corpus threshold in TypeScript.
+
+**DB action:** All 6,038 falsely-reseeded `primary-acts-pre-2000` rows verified as false positives (0 rows with 0 Neon sections) and reset to `done` via cross-DB script. 0 genuine gaps found.
+
+### Part 3 — hmrc-tiins confirmed complete
+
+Queue: 1 row done (the `__index` row). Neon: 791 sections. `corpus_targets` updated:
+```sql
+UPDATE corpus_targets SET est_sections = 791, est_is_confirmed = true WHERE corpus_key = 'hmrc-tiins';
+```
+
+### Part 4 — hmrc-codes-guidance diagnosis
+
+Queue: 1 row done. Neon: 14,067 sections. The 640,000 estimate was wrong by 45×.
+
+**Root cause:** `processHmrc()` uses GOV.UK search API → returns top-level document pages (not sub-pages). Each HMRC manual = 1 URL = 1 Neon section. The 640k estimate assumed per-sub-page enumeration, which was never built. 14,067 is complete coverage of GOV.UK-indexed HMRC content across 6 generators. `corpus_targets` updated:
+```sql
+UPDATE corpus_targets SET est_sections = 14067, est_is_confirmed = true WHERE corpus_key = 'hmrc-codes-guidance';
+```
+
+### Part 5 — pwdata V11 verification
+
+All 7 pwdata corpora fully processed. Queue:
+- `pwdata-debates`: 19,768 done + 236 skipped
+- `pwdata-lords`: 5,668 done
+- `pwdata-lordswms`: 3,672 done + 1 skipped
+- `pwdata-lordswrans`: 5,167 done
+- `pwdata-westminster`: 3,934 done
+- `pwdata-wms`: 4,463 done
+- `pwdata-wrans`: 6,859 done
+
+0 pending across all pwdata corpora. Auto-reseed via monitor (Part 6 below) will pick up daily new files.
+
+### Part 6 — Monitor auto-reseed for exhausted pwdata corpora
+
+**monitor.ts** additions:
+- `reseedExhaustedCorpora(pool)` — called from `checkQueueExhaustion()` after logging; iterates exhausted corpora, calls `seedPwdataCorpus()` for any `pwdata-*` corpus
+- `seedPwdataCorpus(pool, corpus)` — fetches TWFY directory via `listPwdataFiles()`, inserts new files with `ON CONFLICT DO NOTHING`; priority 2 for most, 3 for westminster
+- Import added: `listPwdataFiles, PWDATA_CORPUS_CONFIG` from `./sources/twfy-pwdata`
+
+TNA legislation and LDA corpora are explicitly excluded from auto-reseed (discovery cost and rate-limit risk respectively).
+
+### Part 7 — LDA timeout increase + failed row reset
+
+**lda-parliament.ts:** `LDA_FETCH_TIMEOUT_MS` 45,000 → 90,000. WHY: page 999+ of commonswrittenquestions consistently takes 60–80s.
+
+**DB resets (1,402 rows total):**
+- 1,199 rows with `%fetch timed out%` → pending
+- 169 rows with `%HTTP 502%` or `%HTTP 524%` → pending
+- 34 rows with `%HTTP 500%` or `%HTTP 503%` → pending
+
+Post-reset state: lda-commonswrittenquestions 1,232 pending; lda-lordswrittenquestions 132 pending.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `scripts/ingest/monitor.ts` | CORPUS_THRESHOLDS; corpus-aware reseedPartialItems; reseedExhaustedCorpora; seedPwdataCorpus; import twfy-pwdata |
+| `scripts/ingest/sources/lda-parliament.ts` | LDA_FETCH_TIMEOUT_MS 45s→90s |
+| `scrutinise-docs/INGEST_PLAYBOOK.md` | §8 new failure patterns; §10 corpus status updated; §13 V12 lessons |
+| `scrutinise-docs/CHANGE_LOG.md` | V12 sprint |
+| `scrutinise-docs/handoff_summary.md` | V12 current state |
+
+---
+
+## SPRINT V11 — 7 Jun 2026 (hasNoProvisions diagnosis + monitor alerts + throughput)
+
+### Part 1 — hasNoProvisions diagnosis + skip
+
+**Diagnostic result:** 74 of 100 sampled pending `si-pre-2010`/`si-2010plus` rows return `NumberOfProvisions="0"` (74%). Well above 40% threshold.
+
+**tna-legislation.ts change:** When `hasNoProvisions=true`, `enumerateSections` now pushes `{ format: 'unavailable', errorMsg: 'hasNoProvisions — no text content' }` immediately, skipping the HTML/PDF fallback chain. Saves 2 HTTP RTTs per item × 20,533 pending si-pre-2010 rows = significant throughput improvement.
+
+**New diagnostic script:** `scripts/ingest/diag-has-no-provisions.ts` — re-runnable to monitor rate over time.
+
+### Part 2 — pwdata queue audit
+
+**Finding:** All 7 pwdata corpora are 100% processed (0 pending). Queue exhausted after V2/V8 seeding runs. Re-running `seed-pwdata-queue.ts` confirms 0 new rows available (all directory files already seeded). pwdata-debates: 19,768 done + ~236 skipped (no-parliament days).
+
+**Queue state (7 Jun):** 38,012 pending (SI/regional/retained-eu/LDA corpora keeping workers busy). Workers are NOT idle — they have substantial TNA legislation work.
+
+**Action for Charlie:** Re-run `seed-pwdata-queue.ts` weekly to pick up new parliament files (added at ~1–5/week during term).
+
+### Part 3 — Rate limit increase
+
+**tna-legislation:** `maxConcurrentWorkers` increased 6 → 10 in `seed-rate-limits.ts`. Applied to Railway DB via re-run of seeder script. Rationale: `source_rate_limits.suspended = false` confirms no recent 429s; `AdaptiveThrottle` handles backoff if TNA rate-limits. twfy-pwdata already at 10 workers — no change.
+
+**Workers to redeploy:** Rate limit changes are read by workers on each claim cycle — no worker restart needed (rate limits are DB-backed).
+
+### Part 4 — Monitor alert emails
+
+**monitor.ts additions:**
+- `createMonitorAlertsTable()` — `CREATE TABLE IF NOT EXISTS monitor_alerts` in Neon on startup
+- `sendMonitorAlert(alertType, corpusKey, message)` — sends via Resend, rate-limited 1 per issue per 4h, always records to Neon
+- `checkCriticalConditions(pool)` — two conditions: `all_workers_idle` (pending > 0 + no snapshots in 1h) and `stalled_source` (sourceType pending > 100 + not claimed in 2h)
+
+**Required action (Charlie):** Add `RESEND_API_KEY` to `ingest-monitor` Railway service env vars so alert emails can send. Table will auto-create on next monitor run.
+
+**`monitor_alerts` table (Neon):**
+```sql
+CREATE TABLE IF NOT EXISTS monitor_alerts (
+  id BIGSERIAL PRIMARY KEY,
+  alert_type TEXT NOT NULL,
+  corpus_key TEXT,
+  message TEXT NOT NULL,
+  sent_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS monitor_alerts_type_time_idx ON monitor_alerts(alert_type, sent_at DESC);
+```
 
 ---
 

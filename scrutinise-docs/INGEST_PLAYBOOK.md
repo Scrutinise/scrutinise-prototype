@@ -340,6 +340,7 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 | `RangeError` in progressBar | `pct` > 100 when compiled > est_sections | Fixed V3: `progressBar()` clamps pct to [0, 100] |
 | Email showing old per-corpus format | Workers not yet redeployed after code change | Redeploy all workers; snapshots with `workerId` column start appearing |
 | No duplicate source in Vercel/Next.js | Checked `vercel.json` (no cron) and all API routes (no `sendProgressEmail`) — confirmed Railway-only |  |
+| Duplicate email at :23 surviving all Railway restarts+redeploys | LOCAL scheduler.ts process running on Charlie's machine (started when code used fixed `setInterval`; fires at original start minute) | Kill local node process: `Stop-Process -Id <PID>`; check via `Get-WmiObject Win32_Process -Filter "Name='node.exe'" \| Select CommandLine` |
 
 ### Source-specific
 
@@ -387,30 +388,33 @@ SELECT COUNT(*) FROM corpus_sections;
 
 ---
 
-## 10. QUICK REFERENCE — CORPUS STATUS (as of 7 Jun 2026)
+## 10. QUICK REFERENCE — CORPUS STATUS (as of 8 Jun 2026)
 
 | Corpus | Status | Notes |
 |--------|--------|-------|
-| primary-acts-pre-2000 | ✅ active | 6,038 partial items being reseeded by monitor |
+| primary-acts-pre-2000 | ✅ active | 6,038 false-positive pending rows reset to done (V12); 0 genuine gaps found |
 | primary-acts-2000plus | ✅ complete | 90,860 sections |
-| si-pre-2010 | ✅ complete | 174,507 sections |
-| si-2010plus | ✅ active | Growing |
-| regional | ✅ active | 123,058 / ~160,000 |
-| retained-eu | ✅ complete | 14,390 sections |
+| si-pre-2010 | ✅ active | 20,533 pending |
+| si-2010plus | ✅ active | 3,228 pending |
+| regional | ✅ active | 4,859 pending |
+| retained-eu | ✅ active | 2,452 pending |
 | tna-caselaw | ✅ complete | ~74,950 judgments |
 | eur-lex | ✅ active | SPARQL-based; ~19k ingested |
-| fca-handbook | ✅ complete V10 | 3,661 sections confirmed; est_is_confirmed=true |
+| fca-handbook | ✅ complete V10 | 3,661 sections; est_is_confirmed=true |
 | fca-publications | ⛔ retired V10 | Superseded by fca-handbook |
 | fca-regulators | ⛔ retired V10 | Old SPA scraper; never worked |
 | echr-hudoc | ⛔ blocked | HUDOC API endpoint changed Jun 2026; no fix |
 | hansard-commons-a/b | ⛔ retired V8 | Covered by pwdata-debates (1919–present) |
 | hansard-lords-a/b | ⛔ retired V8 | Covered by pwdata-lords (1999–present) |
-| pwdata-debates | ✅ complete | 20,004 files 1919–2026 |
-| pwdata-lords | ✅ complete | 5,668 files 1999–2026 |
-| pwdata-wrans / wms / lordswrans / lordswms | ✅ active | Processing |
+| pwdata-debates | ✅ complete | ~20k files 1919–2026; auto-reseeds daily via monitor |
+| pwdata-lords | ✅ complete | ~5.7k files 1999–2026 |
+| pwdata-wrans / wms / lordswrans / lordswms | ✅ complete | All done V11 |
+| pwdata-westminster | ✅ complete | ~3.9k files; all done |
 | lda-commonsoralquestions | ✅ complete | 65,806 sections |
-| lda-commonswrittenquestions | ⚠️ active | 618,599 records; 524 retry fix in place |
-| lda-lordswrittenquestions | ✅ active | 103,137 records |
+| lda-commonswrittenquestions | ⚠️ active | 1,232 pending (V12 reset); timeout 45s→90s |
+| lda-lordswrittenquestions | ⚠️ active | 132 pending (V12 reset) |
+| hmrc-tiins | ✅ complete V12 | 791 sections; est_is_confirmed=true |
+| hmrc-codes-guidance | ✅ complete V12 | 14,067 sections; est 640k→14,067 confirmed |
 | college-of-policing / sentencing-council / nao-reports | ✅ active | Gov.uk scraper |
 | uk-treaties | ✅ complete | 1,104 FCDO treaties |
 | oecd | ✅ complete | 462 open docs |
@@ -466,3 +470,96 @@ Railway shows `SUCCESS` for a deployment that either (a) is still running health
 
 **FCA Handbook section count is lower than expected because provisions aggregate**  
 The `GetAllHandBookProvisionsSortedOrderByChapter` API returns individual provision paragraphs (often 10–20 per section). The ingest groups them by `sectionId`, so the final row count is per-section not per-provision. This is the correct design for Lex search purposes, but it means the raw provision count (potentially ~20k) does not map 1:1 to corpus_sections rows.
+
+---
+
+## 12. LESSONS LEARNED — V11 SESSION (7 Jun 2026)
+
+### TNA Legislation — hasNoProvisions
+
+**74% of pending SI rows return NumberOfProvisions="0" (diagnostic V11)**  
+`enumerateSections` previously fell through to HTML/PDF fetchers when the CLML had `NumberOfProvisions="0"`. For SI corpora (commencement orders, amending SIs), these fallback fetches consistently return nothing — wasting 2 HTTP round-trips per item. `diag-has-no-provisions.ts` sampled 100 random pending `si-pre-2010`/`si-2010plus` rows: **74 of 100 (74%) had `NumberOfProvisions="0"`**. Fix: push unavailable section immediately, skip HTML/PDF. Saves ~2 RTTs per item × 20k pending SI rows = significant throughput gain.
+
+Run `scripts/ingest/diag-has-no-provisions.ts` periodically to check if the rate changes as newer SIs (with more structure) enter the queue.
+
+### pwdata queue — fully seeded, grows incrementally
+
+**All pwdata corpora are fully processed (V11 diagnosis)**  
+After the full seeding runs in V2/V8, all 7 pwdata corpora reached 0 pending rows by V11:
+- pwdata-debates: 19,768 done + ~236 skipped (empty parliament days)
+- All other corpora: 100% done
+
+Re-running `seed-pwdata-queue.ts` inserts 0 new rows because all directory files are already in the queue. New files are only added as Parliament sits (~1–5 files/week during term). To pick up new parliament days: re-run the seeder weekly. The ON CONFLICT DO NOTHING makes re-runs safe.
+
+**pwdata "millions of sections" was an overestimate**  
+Each daily XML file = 1 queue row = 1 section in Neon. 20k debate files = ~20k Neon sections, not millions. The "millions" figure in earlier briefs was based on individual speech counts, but the worker compiles each daily file into one combined text blob.
+
+### TNA rate limits — increased for legislation
+
+**tna-legislation: 6 → 10 concurrent workers (V11)**  
+Increased `maxConcurrentWorkers` from 6 to 10 in `seed-rate-limits.ts`. Applied via re-run of the script (7 Jun 2026). Safe because `AdaptiveThrottle` in `tna-legislation.ts` automatically suspends the source on 429s. Evidence of no recent 429s: `source_rate_limits.suspended = false` at time of change.
+
+Workers will now be able to maintain 10 parallel TNA XML fetches at 200ms interval instead of 6 — meaningful throughput increase for the 38k+ pending SI/regional/retained-eu rows.
+
+### Monitor alerts — added to monitor.ts
+
+**`monitor_alerts` table in Neon (V11)**  
+New table stores alert history for rate-limiting (max 1 per issue per 4 hours). Created by `createMonitorAlertsTable()` in `monitor.ts` — runs on every monitor startup (idempotent `CREATE TABLE IF NOT EXISTS`). No migration required.
+
+**Monitor alert requires RESEND_API_KEY on monitor service**  
+`ingest-monitor` Railway service does not yet have `RESEND_API_KEY` set. Add it to the service env vars in Railway dashboard (same key as scheduler uses). Without it, alerts are logged to Railway logs but not emailed. The alert table in Neon still records them either way.
+
+**Two alert conditions (V11):**
+- `all_workers_idle`: pending > 0 AND no worker snapshots in last 1 hour
+- `stalled_source`: a sourceType has > 100 pending rows, no claimed rows, and no snapshots in 2 hours
+
+---
+
+## 13. LESSONS LEARNED — V12 SESSION (8 Jun 2026)
+
+### Duplicate email — definitive root cause found
+
+**The duplicate email at :23 was a LOCAL scheduler.ts process on Charlie's machine, not Railway.**  
+After 38+ hours of Railway restarts and redeployments failing to kill the duplicate, the root cause was found via `Get-WmiObject Win32_Process` — two node.exe processes (tsx parent + child) running `scheduler.ts` in `scripts/ingest/`. The local process was started before the `msUntilNextRun()` clock-alignment was introduced. Old scheduler code used a fixed `setInterval` — so it fires at whatever minute it started, every hour. New code always aligns to :01.
+
+**Diagnosis checklist for future "duplicate email that survives Railway redeploy":**
+1. Check Railway service list — all services should have expected startCommands (`check-service-config.ts`)
+2. Check local processes: `Get-WmiObject Win32_Process -Filter "Name='node.exe'" | Select CommandLine`
+3. Check Windows Task Scheduler: `Get-ScheduledTask | Where TaskName -match "scrutinise|ingest|scheduler"`
+4. Kill any stale local process: `Stop-Process -Id <PID>`
+
+**Prevention:** Never start `scheduler.ts` as a local long-running process — it's for Railway only. For local monitoring use `cc-monitor.ts`.
+
+### Monitor partial-item threshold — corpus-aware (V12)
+
+**Single global threshold (3) caused false-positive reseeding of pre-2000 Acts.**  
+V9/V11 monitor used `PARTIAL_SECTION_THRESHOLD = 3` for all corpora. This caused 6,038 `primary-acts-pre-2000` rows to be re-queued — the entire backlog. Root cause: many pre-2000 Acts genuinely have 1–2 sections; the threshold flagged them as incomplete.
+
+**Fix (V12):** `CORPUS_THRESHOLDS` map in `monitor.ts` with per-corpus values. Pre-2000 legislation: threshold 1 (0 sections = incomplete, 1+ = legitimate). Modern parliamentary records (pwdata, LDA): threshold 3–5.
+
+**Finding from cross-DB verification (V12):**  
+ALL 6,038 falsely-reseeded `primary-acts-pre-2000` rows had ≥1 section in Neon — 0 genuine gaps. Reset all to `done` via cross-DB script. If future diagnostic finds genuine gaps, docIds have format `ukpga/{year}/{number}`.
+
+### HMRC corpora — completed, estimates confirmed (V12)
+
+**hmrc-tiins: 791 sections — complete (est_is_confirmed=true)**  
+800-section estimate was accurate. Queue: 1 row done. No reseeding needed.
+
+**hmrc-codes-guidance: 14,067 sections — complete (est_is_confirmed=true, was 640,000)**  
+The 640,000 estimate was wrong by 45×. Root cause: `processHmrc()` uses the GOV.UK search API which returns top-level document pages, not individual HMRC manual sub-pages. Each manual is one GOV.UK URL = one Neon section. 14,067 documents were found across 6 generators (manuals + NAO + HoCL + explanatory notes + impact assessments + consultations). The 640k figure assumed individual sub-page enumeration which was never built. The corpus is complete as-is.
+
+**Lesson:** For corpora using GOV.UK search API (`searchGovUk`, `searchGovUkByOrg`), the section count = number of search results (capped at `count` param), not number of sub-pages per result. Estimates based on sub-page counts are unreliable.
+
+### LDA timeout — increased to 90s (V12)
+
+**LDA API pages 999+ consistently take 60–80s for large result sets (commonswrittenquestions).**  
+Increased `LDA_FETCH_TIMEOUT_MS` from 45,000 to 90,000 in `lda-parliament.ts`. Previous failures: 1,199 timeout + 169 502/524 + 34 500/503 = 1,402 failed rows, all reset to pending after timeout increase.
+
+**LDA failure pattern:** Pages 0–200 are fast; pages 200+ slow down progressively. Only commonswrittenquestions (618k records, 1,238 pages) hits this at scale. lordswrittenquestions (103k, 207 pages) is borderline.
+
+### pwdata auto-reseed — added to monitor (V12)
+
+**Monitor now auto-reseeds exhausted pwdata corpora.**  
+`reseedExhaustedCorpora()` added to `checkQueueExhaustion()`. When a pwdata corpus hits 0 pending + 0 claimed, monitor fetches TWFY directory and inserts any new files (ON CONFLICT DO NOTHING). This handles the daily new parliament files without requiring manual `seed-pwdata-queue.ts` runs.
+
+**TNA legislation and LDA: no auto-reseed** — TNA discovery is expensive (sequential HTTP scans); LDA reseeding risks rate-limit overflow. Only pwdata uses incremental daily files that are safe to auto-discover.

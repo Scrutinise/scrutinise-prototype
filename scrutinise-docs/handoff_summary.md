@@ -2,41 +2,32 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 7 Jun 2026 (V10 final — all actions complete, est confirmed, playbook written)*
+*Last updated: 8 Jun 2026 (V12 — duplicate email found, corpus-aware thresholds, hmrc complete, LDA timeout fix, monitor auto-reseed)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** d34f6fe (fca-handbook rate limit + diag scripts) — final pending commit below
-**Last sprint:** V10 (7 Jun 2026) — FCA Handbook JSON API complete; 3,661 sections confirmed; monitor fixed; volume resize recovery; playbook written
+**Last commit:** pending (commit-all.sh generated — awaiting Charlie execution)
+**Last sprint:** V12 (8 Jun 2026) — duplicate email root cause found (local process); CORPUS_THRESHOLDS added to monitor; hmrc-tiins + hmrc-codes-guidance confirmed complete; LDA timeout 45s→90s; 1,402 LDA rows reset to pending; monitor auto-reseeds pwdata corpora
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED
+## IMMEDIATE ACTIONS REQUIRED — V12
 
-**V10 — All complete ✅**
+| Action | Status | Who |
+|--------|--------|-----|
+| Kill local scheduler.ts process: `Stop-Process -Id 22916` (and child 47892) | ⬜ URGENT | Charlie |
+| Run `commit-all.sh` | ⬜ pending | Charlie |
+| Redeploy `Ingest-scheduler` on Railway (it stopped 7 Jun 23:01 UTC — needs restart) | ⬜ after commit | Charlie |
+| Redeploy all 20 workers (to pick up LDA timeout + monitor changes) | ⬜ after commit | Charlie |
+| Add `RESEND_API_KEY` to `ingest-monitor` Railway service env (V11 carry-over) | ⬜ pending | Charlie |
+| Redeploy `ingest-monitor` after RESEND_API_KEY set | ⬜ after RESEND_API_KEY set | Charlie |
 
-| Action | Status |
-|--------|--------|
-| All commits pushed to Main | ✅ d34f6fe + final pending |
-| `fca-handbook` queue seeded (63 rows) | ✅ all 63 done; 3,661 sections in Neon |
-| `corpus_targets` fca-handbook on Neon | ✅ est_sections=3661, est_is_confirmed=true |
-| `fca-publications` + `fca-regulators` retired on Neon | ✅ retired + blocked V10 |
-| `fca-handbook` rate limit added to Railway DB | ✅ 500ms / 3 concurrent |
-| 20 workers + scheduler + monitor restarted (volume resize recovery) | ✅ all 22 SUCCESS |
-| `ingest-monitor` rootDirectory fixed to `scripts/ingest` | ✅ running stably since 10:57 UTC |
-| `ingest-monitor` runtime bugs fixed (require/pg, legislationGovUkId→docId) | ✅ |
-| Railway restart policy ON_FAILURE/max-3 on all 22 services | ✅ |
-| `scheduler_lock` table verified intact | ✅ 1 row, live lock re0w3ph5eim 13:01 UTC |
-| `INGEST_PLAYBOOK.md` created + updated with session lessons | ✅ |
-| Duplicate email source check (Vercel/API routes) | ✅ clean — Railway-only issue |
+**CRITICAL — local scheduler:** PIDs 22916 + 47892 on this machine are running an old version of `scheduler.ts` that fires at :23 every hour (fixed interval, pre-`msUntilNextRun` code). Kill these before starting Railway scheduler to avoid duplicate emails. The Railway scheduler's last run was 2026-06-07T23:01 UTC — it needs redeployment.
 
-**V9 carry-over — one remaining manual step:**
-| Connect `ingest-monitor` to GitHub in Railway dashboard | ✅ already connected (deployed successfully) |
-
-**No pending actions for next session.**
+**No other pending actions from V11 (except RESEND_API_KEY).**
 ('fca-handbook:serv', 'fca-handbook', 'serv', 'fca-handbook', 2),
 ('fca-handbook:bench', 'fca-handbook', 'bench', 'fca-handbook', 2),
 ('fca-handbook:bfsag', 'fca-handbook', 'bfsag', 'fca-handbook', 2),
@@ -74,28 +65,29 @@ ON CONFLICT (id) DO NOTHING;
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V10)
+## KEY ARCHITECTURE STATE (as of V12)
 
-- **FCA Handbook:** COMPLETE (V10) — `fca-handbook` corpus; 63 modules done; **3,661 sections** in Neon (est_is_confirmed=true); R2 keys at `fca-handbook/{module}/sections/{sectionId}/compiled.txt`; rate limit 500ms/3 concurrent in Railway DB
-- **Monitor:** RUNNING (fixed V10) — `rootDirectory: scripts/ingest`; stable since 10:57 UTC deployment `86c4c5b1`; loops every 15 min
+- **Duplicate email root cause (V12):** LOCAL scheduler.ts process (PIDs 22916/47892 on Charlie's machine) — kill before restarting Railway scheduler. See §IMMEDIATE ACTIONS.
+- **Railway scheduler:** DOWN since 2026-06-07T23:01 UTC (scheduler_lock confirms). Needs redeploy after commit.
+- **CORPUS_THRESHOLDS (V12):** Per-corpus partial-item reseed thresholds in `monitor.ts` — replaces single global threshold of 3. Prevents false-positive reseeding of short pre-2000 Acts.
+- **primary-acts-pre-2000 (V12):** 6,038 false-positive pending rows reset to done. 0 genuine gaps. Queue now: 0 pending.
+- **hmrc-tiins (V12):** COMPLETE — 791 sections; est_is_confirmed=true in corpus_targets.
+- **hmrc-codes-guidance (V12):** COMPLETE — 14,067 sections; est confirmed (was 640,000). GOV.UK search API returns document pages not sub-pages.
+- **LDA timeout (V12):** `LDA_FETCH_TIMEOUT_MS` 45s → 90s in `lda-parliament.ts`. 1,402 failed/timed-out rows reset to pending. lda-commonswrittenquestions: 1,232 pending; lda-lordswrittenquestions: 132 pending.
+- **Monitor auto-reseed (V12):** `reseedExhaustedCorpora()` + `seedPwdataCorpus()` added to monitor.ts — auto-seeds new TWFY pwdata files daily when corpus exhausts. No more manual weekly re-run needed for pwdata.
+- **hasNoProvisions skip:** ADDED (V11) — workers need redeploy to pick up.
+- **tna-legislation rate limit:** 10 concurrent workers (V11).
+- **Monitor alerts:** ADDED (V11) — requires `RESEND_API_KEY` on `ingest-monitor` service.
+- **pwdata corpora:** ALL COMPLETE (V11) — monitor auto-reseeds daily files now.
+- **Queue state (8 Jun 2026):** ~31,110 pending | 11 claimed | 92,111 done | 0 failed | 237 skipped
+- **Pending by corpus:** si-pre-2010: 20,533 | regional: 4,859 | retained-eu: 2,452 | si-2010plus: 3,228 | lda-commonswrittenquestions: 1,232 | lda-lordswrittenquestions: 132 | (primary-acts-pre-2000: 0)
+- **FCA Handbook:** COMPLETE (V10) — 3,661 sections; est_is_confirmed=true
+- **Monitor:** RUNNING — loops every 15 min; alert + auto-reseed functionality added V11/V12
 - **Restart policy:** ON_FAILURE / max 3 retries on all 22 services (V10)
 - **Retired corpora (Neon):** `fca-publications`, `fca-regulators` retired+blocked (V10); `hansard-*-a/b` retired (V8)
-- **scheduler_lock:** 1 row intact after volume resize; active lock re0w3ph5eim 13:01 UTC
-- **source_rate_limits actual columns:** `sourceKey`, `intervalMs`, `lastIssuedAt`, `suspended`, `suspendedUntil`, `updatedAt`, `isComplete`, `maxConcurrentWorkers` — no `note` column, no `minIntervalMs`
-- **Neon corpus_sections:** ~785,099 rows (as of 7 Jun 2026 ~00:45 UTC) — growing as pwdata/LDA corpora process
-- **Neon corpus_snapshots:** populated every hour since V4 deploy
-- **Neon corpus_targets:** 46 rows — `retired` column added (V9); 4 hansard API corpora marked retired; 42 display labels updated to Excel names
-- **Monitor service:** NEW (V9) — `ingest-monitor` (ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`); needs GitHub connect + deploy in Railway
-- **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
-- **Railway ingest_queue:** ~16,919+ pending / claimed / 111,908+ done (post-V8)
-- **Hansard API queue:** ALL RETIRED (V8); `retired=true` on corpus_targets (V9); suppressed from email entirely
-- **New pwdata corpora active:** pwdata-lordswrans (5,167 rows), pwdata-wms (4,463 rows), pwdata-lordswms (3,673 rows) — workers processing
-- **Email:** Legacy/new pipeline split removed (V9); retired corpora filtered from all sections
-- **primary-acts-pre-2000 gap:** 6,038 partial items detected; monitor will auto-reseed on first cycle
-- **Excel:** `scrutinise-docs/Legislation_Corpus_Current_Status.xlsx` columns H-N populated (V9)
+- **source_rate_limits actual columns:** `sourceKey`, `intervalMs`, `lastIssuedAt`, `suspended`, `suspendedUntil`, `updatedAt`, `isComplete`, `maxConcurrentWorkers`
+- **Neon corpus_sections:** ~785,099+ rows — growing as SI/regional/LDA process
 - **Railway DB:** ~2.0GB of 20GB
-- **Workers:** 20 active, writing to Neon
-- **Claim reaper:** active in both scheduler (hourly) AND monitor (every 15 min) after V9
 
 ---
 

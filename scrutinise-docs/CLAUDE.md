@@ -2,6 +2,9 @@
 
 *Read this first, every session, before touching any code.* *Last updated: 25 April 2026 — v4. Added Section 0 (verify before asserting), updated Section 1 boot checklist, current-state pointer, current sprint pointer.*
 
+## SESSION PERMISSIONS
+The .claude/settings.json in this project pre-approves Bash(*), Read(*), Write(*), Edit(*) for all operations. These permissions apply to this entire session. Do not pause for confirmation on bash commands, file reads/writes/edits, Railway API calls, SQL operations, or tsx script runs. Only pause for: permanently destructive schema changes (DROP TABLE), deleting Railway services, or actions explicitly marked STOP in the sprint brief.
+
 ## CONTENTS
 
 **Verify before asserting (READ FIRST)**
