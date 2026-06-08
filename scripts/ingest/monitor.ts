@@ -10,8 +10,188 @@ import { Pool } from 'pg'
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch {}
 
+import { listPwdataFiles, PWDATA_CORPUS_CONFIG } from './sources/twfy-pwdata'
+
+const RESEND_API = 'https://api.resend.com/emails'
+const ALERT_TO = 'cl@scrutinise.org'
 const STALE_CLAIM_MINUTES = 90
-const PARTIAL_SECTION_THRESHOLD = 3  // sections below this = likely incomplete ingest
+const ALERT_RATE_LIMIT_HOURS = 4     // max 1 alert per issue per 4 hours
+
+// WHY: threshold must vary by corpus type.
+// Ancient legislation (pre-2000 Acts, old SIs) routinely has 1-2 sections legitimately.
+// Modern parliamentary records (debates, written answers) always have many sections per file.
+// A single global threshold causes false-positive reseeding of complete short Acts.
+const CORPUS_THRESHOLDS: Record<string, number> = {
+  'primary-acts-pre-2000': 1,
+  'primary-acts-2000plus': 2,
+  'si-pre-2010':           1,
+  'si-2010plus':           2,
+  'pwdata-debates':        5,
+  'pwdata-lords':          5,
+  'pwdata-wrans':          3,
+  'lda-commonswrittenquestions': 3,
+  'default':               3,
+}
+
+// ── Alert table bootstrap ─────────────────────────────────────────────────────
+// Creates monitor_alerts in Neon on first monitor run (idempotent).
+async function createMonitorAlertsTable(): Promise<void> {
+  const neonPool = new Pool({
+    connectionString: process.env.NEON_DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 1,
+    statement_timeout: 30_000,
+  })
+  const client = await neonPool.connect()
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS monitor_alerts (
+        id BIGSERIAL PRIMARY KEY,
+        alert_type TEXT NOT NULL,
+        corpus_key TEXT,
+        message TEXT NOT NULL,
+        sent_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `)
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS monitor_alerts_type_time_idx
+      ON monitor_alerts(alert_type, sent_at DESC)
+    `)
+  } finally {
+    client.release()
+    await neonPool.end()
+  }
+}
+
+// ── Alert sender — rate-limited, stored in Neon ───────────────────────────────
+// WHY Neon: alert history belongs with corpus data, not with ephemeral queue.
+// Rate limit: max 1 alert per (alert_type, corpus_key) per ALERT_RATE_LIMIT_HOURS.
+async function sendMonitorAlert(
+  alertType: string,
+  corpusKey: string | null,
+  message: string
+): Promise<void> {
+  const neonPool = new Pool({
+    connectionString: process.env.NEON_DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 1,
+    statement_timeout: 15_000,
+  })
+
+  try {
+    // Rate-limit check
+    const recentRes = await neonPool.query<{ count: string }>(`
+      SELECT COUNT(*) AS count FROM monitor_alerts
+      WHERE alert_type = $1
+        AND ($2::text IS NULL AND corpus_key IS NULL OR corpus_key = $2)
+        AND sent_at > NOW() - INTERVAL '${ALERT_RATE_LIMIT_HOURS} hours'
+    `, [alertType, corpusKey])
+
+    const recentCount = parseInt(recentRes.rows[0]?.count ?? '0', 10)
+    if (recentCount > 0) {
+      console.log(`[monitor] alert suppressed (within ${ALERT_RATE_LIMIT_HOURS}h): ${alertType}${corpusKey ? ` / ${corpusKey}` : ''}`)
+      return
+    }
+
+    // Record alert regardless of whether email sends (prevents repeat on Resend failure)
+    await neonPool.query(
+      `INSERT INTO monitor_alerts (alert_type, corpus_key, message) VALUES ($1, $2, $3)`,
+      [alertType, corpusKey, message]
+    )
+
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.warn(`[monitor] RESEND_API_KEY not set — alert logged but not emailed: ${message}`)
+      return
+    }
+
+    const subject = corpusKey
+      ? `⚠️ Ingest alert: ${alertType} — ${corpusKey}`
+      : `⚠️ Ingest alert: ${alertType}`
+
+    const res = await fetch(RESEND_API, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Scrutinise Ingest <ingest@messages.scrutinise.org>',
+        to: [ALERT_TO],
+        subject,
+        text: `${message}\n\nSent: ${new Date().toISOString()}\nAlert type: ${alertType}${corpusKey ? `\nCorpus: ${corpusKey}` : ''}`,
+      }),
+    })
+
+    if (res.ok) {
+      console.log(`[monitor] ⚠️  alert emailed: ${subject}`)
+    } else {
+      console.error(`[monitor] Resend failed: ${res.status} — alert was logged to Neon`)
+    }
+  } catch (err) {
+    console.error('[monitor] sendMonitorAlert error:', err)
+  } finally {
+    await neonPool.end()
+  }
+}
+
+// ── 5. Critical condition alerts ──────────────────────────────────────────────
+// Two conditions monitored:
+//   A) All workers idle: pending rows exist but no worker has written a progress
+//      snapshot in the last 1 hour — workers may be crashed or stuck at rate-limit.
+//   B) Per-sourceType stall: a sourceType has pending rows but no worker claimed
+//      anything from it in the last 2 hours.
+async function checkCriticalConditions(pool: Pool): Promise<void> {
+  // Condition A: workers idle despite pending work
+  const [pendingRes, snapshotRes] = await Promise.all([
+    pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ingest_queue WHERE status = 'pending'`
+    ),
+    pool.query<{ count: string }>(`
+      SELECT COUNT(*)::text AS count FROM ingest_progress_snapshots
+      WHERE "capturedAt" > NOW() - INTERVAL '1 hour'
+        AND "workerId" IS NOT NULL
+    `),
+  ])
+
+  const pendingCount = parseInt(pendingRes.rows[0]?.count ?? '0', 10)
+  const recentSnapshots = parseInt(snapshotRes.rows[0]?.count ?? '0', 10)
+
+  if (pendingCount > 0 && recentSnapshots === 0) {
+    await sendMonitorAlert(
+      'all_workers_idle',
+      null,
+      `All workers idle: ${pendingCount.toLocaleString()} pending rows in queue but no worker progress snapshot in the last hour. Workers may be crashed or stuck. Check Railway dashboard.`
+    )
+  }
+
+  // Condition B: sourceType stall — pending work exists but nothing claimed in 2h
+  const stalledSources = await pool.query<{ sourceType: string; pending: string }>(`
+    SELECT q."sourceType", COUNT(*)::text AS pending
+    FROM ingest_queue q
+    WHERE q.status = 'pending'
+      AND NOT EXISTS (
+        SELECT 1 FROM ingest_queue q2
+        WHERE q2."sourceType" = q."sourceType"
+          AND q2.status = 'claimed'
+      )
+    GROUP BY q."sourceType"
+    HAVING COUNT(*) > 100
+  `)
+
+  for (const { sourceType, pending } of stalledSources.rows) {
+    // Only alert if no snapshot for this sourceType in last 2 hours
+    const activeRes = await pool.query<{ count: string }>(`
+      SELECT COUNT(*)::text AS count FROM ingest_progress_snapshots
+      WHERE "sourceKey" = $1 AND "capturedAt" > NOW() - INTERVAL '2 hours'
+    `, [sourceType])
+    const isActive = parseInt(activeRes.rows[0]?.count ?? '0', 10) > 0
+    if (!isActive) {
+      await sendMonitorAlert(
+        'stalled_source',
+        sourceType,
+        `Source ${sourceType} has ${pending} pending rows but no worker activity or claimed rows in 2 hours. Workers may not be picking up this sourceType.`
+      )
+    }
+  }
+}
 
 async function runMonitor(): Promise<void> {
   const railwayPool = new Pool({
@@ -23,10 +203,12 @@ async function runMonitor(): Promise<void> {
 
   console.log(`[monitor] ${new Date().toISOString()} — cycle start`)
 
+  await createMonitorAlertsTable()
   await reclaimStale(railwayPool)
   await reseedPartialItems(railwayPool)
   await checkQueueExhaustion(railwayPool)
   await resetRetryableFailures(railwayPool)
+  await checkCriticalConditions(railwayPool)
 
   await railwayPool.end()
   console.log(`[monitor] cycle complete`)
@@ -51,14 +233,12 @@ async function reclaimStale(pool: Pool): Promise<void> {
 // ── 2. Partial item reseeder ──────────────────────────────────────────────────
 // WHY: a worker can claim a queue row, write 1-2 sections, then crash.
 // The row gets marked done but the item is incomplete. Detect by comparing
-// section count per govUkId in Neon corpus_sections against PARTIAL_SECTION_THRESHOLD.
+// section count per govUkId in Neon corpus_sections against a corpus-specific threshold.
 // NOTE: corpus_sections has no legislationGovUkId column — we extract it from r2Key.
 // r2Key format: {corpus}/{govUkId}/sections/{N}.compiled.txt
 async function reseedPartialItems(pool: Pool): Promise<void> {
-  // Step 1: query Neon for govUkIds with too few sections (HAVING does the threshold filter).
-  // Limit to TNA legislation corpora — the only ones with govUkId-style docId in the queue.
-  // WHY Pool not Client: Client was removed to avoid require() inside a function.
-  // Pool used with max:1 is functionally identical to Client for single-shot queries.
+  // Step 1: query Neon for (corpus, govUkId) pairs with their section counts.
+  // Include corpus in GROUP BY so we can apply per-corpus thresholds in TypeScript.
   const neonPool = new Pool({
     connectionString: process.env.NEON_DATABASE_URL,
     ssl: { rejectUnauthorized: false },
@@ -68,23 +248,28 @@ async function reseedPartialItems(pool: Pool): Promise<void> {
   const neon = await neonPool.connect()
 
   const { rows } = await neon.query(`
-    SELECT substring("r2Key" from '^[^/]+/(.+)/sections/') AS gov_uk_id
+    SELECT corpus,
+           substring("r2Key" from '^[^/]+/(.+)/sections/') AS gov_uk_id,
+           COUNT(*) AS section_count
     FROM corpus_sections
     WHERE "r2Key" LIKE '%/sections/%'
       AND corpus IN (
         'primary-acts-pre-2000','primary-acts-2000plus',
         'si-pre-2010','si-2010plus','regional','retained-eu'
       )
-    GROUP BY 1
-    HAVING COUNT(*) < $1
-  `, [PARTIAL_SECTION_THRESHOLD])
+    GROUP BY corpus, 2
+  `)
   neon.release()
   await neonPool.end()
 
-  // partialIds = govUkIds that Neon considers partial (< threshold sections)
-  const partialIds = (rows as Array<{ gov_uk_id: string | null }>)
-    .map(r => r.gov_uk_id)
-    .filter((id): id is string => Boolean(id))
+  // Apply per-corpus threshold: only flag as partial if count < threshold for that corpus
+  const partialIds = (rows as Array<{ corpus: string; gov_uk_id: string | null; section_count: string }>)
+    .filter(r => {
+      if (!r.gov_uk_id) return false
+      const threshold = CORPUS_THRESHOLDS[r.corpus] ?? CORPUS_THRESHOLDS['default']
+      return parseInt(r.section_count, 10) < threshold
+    })
+    .map(r => r.gov_uk_id as string)
 
   if (partialIds.length === 0) return
 
@@ -111,7 +296,7 @@ async function reseedPartialItems(pool: Pool): Promise<void> {
   }
 }
 
-// ── 3. Queue exhaustion detection ─────────────────────────────────────────────
+// ── 3. Queue exhaustion detection + auto-reseed ───────────────────────────────
 async function checkQueueExhaustion(pool: Pool): Promise<void> {
   const { rows } = await pool.query(`
     SELECT corpus,
@@ -126,9 +311,59 @@ async function checkQueueExhaustion(pool: Pool): Promise<void> {
   `)
 
   for (const row of rows) {
-    // Log exhaustion — reseeding logic per-corpus is in discovery.ts.
-    // Future: auto-trigger reseed for corpora that support incremental discovery.
     console.log(`[monitor] ⚠️  corpus exhausted: ${row.corpus} (${row.done} done rows, 0 pending)`)
+  }
+
+  await reseedExhaustedCorpora(pool)
+}
+
+// ── 3a. Auto-reseed for exhausted pwdata corpora ──────────────────────────────
+// WHY: without auto-reseed, workers idle when pwdata queue exhausts.
+// TWFY adds new parliamentary records daily — monitor picks them up every 15 min.
+// TNA legislation: no auto-reseed — discovery is expensive.
+// LDA: no auto-reseed — rate limits make batch reseeding dangerous.
+async function reseedExhaustedCorpora(pool: Pool): Promise<void> {
+  const { rows } = await pool.query(`
+    SELECT corpus
+    FROM ingest_queue
+    GROUP BY corpus
+    HAVING COUNT(*) FILTER (WHERE status = 'pending') = 0
+       AND COUNT(*) FILTER (WHERE status = 'claimed') = 0
+       AND COUNT(*) FILTER (WHERE status = 'done') > 0
+  `)
+
+  for (const { corpus } of rows as Array<{ corpus: string }>) {
+    if (corpus.startsWith('pwdata-') && PWDATA_CORPUS_CONFIG[corpus]) {
+      await seedPwdataCorpus(pool, corpus)
+    }
+  }
+}
+
+// Fetch new TWFY files for a single corpus and insert any not yet in the queue.
+async function seedPwdataCorpus(pool: Pool, corpus: string): Promise<void> {
+  try {
+    const files = await listPwdataFiles(corpus)
+    if (files.length === 0) return
+
+    // Insert only rows not already in the queue — ON CONFLICT DO NOTHING pattern.
+    const priority = corpus === 'pwdata-westminster' ? 3 : 2
+    let inserted = 0
+    for (const f of files) {
+      const id = `${corpus}:${f.docId}`
+      const { rowCount } = await pool.query(
+        `INSERT INTO ingest_queue (id, corpus, "docId", "sourceType", priority, status)
+         VALUES ($1, $2, $3, 'twfy-pwdata', $4, 'pending')
+         ON CONFLICT (id) DO NOTHING`,
+        [id, corpus, f.docId, priority]
+      )
+      inserted += rowCount ?? 0
+    }
+
+    if (inserted > 0) {
+      console.log(`[monitor] auto-reseeded ${corpus}: ${inserted} new files inserted`)
+    }
+  } catch (err) {
+    console.error(`[monitor] seedPwdataCorpus error for ${corpus}:`, err)
   }
 }
 
