@@ -340,6 +340,32 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 | `RangeError` in progressBar | `pct` > 100 when compiled > est_sections | Fixed V3: `progressBar()` clamps pct to [0, 100] |
 | Email showing old per-corpus format | Workers not yet redeployed after code change | Redeploy all workers; snapshots with `workerId` column start appearing |
 | No duplicate source in Vercel/Next.js | Checked `vercel.json` (no cron) and all API routes (no `sendProgressEmail`) — confirmed Railway-only |  |
+
+### Railway DB connection storm on simultaneous worker restart
+
+Symptom: All workers crash with ECONNRESET within 30s of a deploy  
+Cause: 20 workers attempting DB connections simultaneously exceeds Railway Postgres pool limit  
+Fix (permanent): startup jitter in `worker-queue.ts` (random 0–20s delay before first DB call)  
+Fix (manual): staggered restart script — batches of 5, 20s gap, using `deploymentRedeploy(id)`  
+First seen: V8 sprint (6 Jun 2026). Recurred: V10, V12, V13.  
+Now automated: startup jitter added V13 — manual restart should no longer be needed.
+
+### Local scheduler process causing duplicate emails
+
+Symptom: Second email arriving at consistent :XX past the hour, different timestamp from Railway scheduler  
+Cause: `scheduler.ts` running locally on developer machine from a CC session that was left open  
+Diagnosis: `Get-WmiObject Win32_Process | Where-Object {$_.CommandLine -like "*scheduler*"}`  
+Fix: `Stop-Process -Id {PID} -Force` in PowerShell 7 (pwsh), not Command Prompt  
+Prevention: never run `scheduler.ts` locally; always let Railway manage the scheduler service  
+First seen: 6 Jun 2026 01:21 BST. Ran for 38+ hours before diagnosed.
+
+### Monitor partial-item reseed false positives
+
+Symptom: Thousands of complete short Acts reseeded as 'pending', workers spin on them producing nothing  
+Cause: `PARTIAL_SECTION_THRESHOLD` global value too high for ancient legislation (pre-2000 Acts  
+  legitimately have 1 section)  
+Fix: `CORPUS_THRESHOLDS` map in `monitor.ts` with per-corpus values (pre-2000: 1, modern records: 3–5)  
+First seen: V12 sprint. Fixed V12.
 | Duplicate email at :23 surviving all Railway restarts+redeploys | LOCAL scheduler.ts process running on Charlie's machine (started when code used fixed `setInterval`; fires at original start minute) | Kill local node process: `Stop-Process -Id <PID>`; check via `Get-WmiObject Win32_Process -Filter "Name='node.exe'" \| Select CommandLine` |
 
 ### Source-specific
