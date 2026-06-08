@@ -366,6 +366,30 @@ Cause: `PARTIAL_SECTION_THRESHOLD` global value too high for ancient legislation
   legitimately have 1 section)  
 Fix: `CORPUS_THRESHOLDS` map in `monitor.ts` with per-corpus values (pre-2000: 1, modern records: 3–5)  
 First seen: V12 sprint. Fixed V12.
+
+### Deploy of crash-fix causes the crash it is fixing
+
+Symptom: Startup jitter deployed to fix connection storm; deploy itself triggers connection storm  
+Cause: Railway auto-deploys all services simultaneously on push; jitter code not yet running  
+Fix: For any deploy changing worker startup behaviour, manually trigger staggered redeploy  
+  immediately after push rather than waiting for Railway auto-deploy  
+Prevention: Add to sprint brief checklist — if `worker-queue.ts` is modified, trigger manual  
+  staggered restart after push  
+First seen: V13 deploy, 8 Jun 2026
+
+### Workers claiming rows but producing 0 sections (silent throughput failure)
+
+Symptom: All workers show as active in Railway, queue claim rate normal, but corpus_sections  
+  write rate is 0 for hours  
+Cause: Workers claiming hasNoProvisions legislation rows at high priority — each claim takes  
+  ~500ms and marks the row unavailable, but writes nothing to corpus_sections  
+Detection gap: `monitor.ts` checks for idle workers via snapshot writes, but hasNoProvisions  
+  processing writes to `ingest_queue` (not `corpus_sections`) so appears healthy  
+Fix: Add monitor check — if queue claims > 100 in last 30min but corpus_sections writes = 0,  
+  fire `all_workers_idle` alert  
+Fix: Priority SQL must be run as part of any sprint that touches legislation queue rows —  
+  never leave as a manual carry-over step  
+First seen: 8 Jun 2026, 09:30–15:35 BST (6 hours, 0 sections)
 | Duplicate email at :23 surviving all Railway restarts+redeploys | LOCAL scheduler.ts process running on Charlie's machine (started when code used fixed `setInterval`; fires at original start minute) | Kill local node process: `Stop-Process -Id <PID>`; check via `Get-WmiObject Win32_Process -Filter "Name='node.exe'" \| Select CommandLine` |
 
 ### Source-specific
