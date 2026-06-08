@@ -62,6 +62,15 @@ async function main(): Promise<void> {
   // Accept any positive WORKER_ID — supports workers 11–20 and beyond
   const workerId = (isNaN(workerIdRaw) || workerIdRaw < 1) ? 1 : workerIdRaw
 
+  // WHY: 20 workers redeploying simultaneously saturate the Railway Postgres
+  // connection pool, causing all workers to crash with ECONNRESET on startup.
+  // A random 0–20s jitter staggers DB connections naturally on any redeploy,
+  // eliminating the need for manual staggered restart scripts.
+  // Range is 0–20s: with 20 workers, expected spacing is ~1s per worker on average.
+  const startupJitterMs = Math.floor(Math.random() * 20_000)
+  console.log(`[worker-${workerId}] startup jitter: ${startupJitterMs}ms`)
+  await new Promise(r => setTimeout(r, startupJitterMs))
+
   console.log(`[worker-${workerId}] starting queue-driven mode`)
   const cp = await readCheckpoint(workerId)
   let sinceCheckpoint = 0
