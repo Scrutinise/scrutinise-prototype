@@ -13,6 +13,8 @@ const throttle = new AdaptiveThrottle({
 
 export type SectionFormat = 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
 
+export type NoProvisionsClass = 'commencement' | 'revoked' | 'pdf-only' | 'metadata-only' | 'no-provisions'
+
 // One logical section from a TNA act.
 // clml:          a single known CLML element (P1/Article/Regulation/Rule/Paragraph/Section)
 // clml-unparsed: CLML returned but no known elements found — full XML stored as one blob
@@ -28,6 +30,32 @@ export interface TnaSection {
   xmlPreview?: string   // clml-unparsed: first 200 chars of raw XML for diagnostic email
   errorMsg?: string     // unavailable
   isEnactedOnly?: boolean // true when TNA only has enacted text (no consolidated version)
+  // Set when format === 'unavailable' and hasNoProvisions=true — result of classifyNoProvisionsItem()
+  classifiedAs?: NoProvisionsClass
+  legislationTitle?: string
+  legislationYear?: number
+}
+
+// User-facing notes for each availability status — Lex shows these to users.
+export const AVAILABILITY_NOTES: Record<NoProvisionsClass, string> = {
+  commencement:
+    'This is a commencement order that brought other legislation into force. ' +
+    'The full text exists on legislation.gov.uk but has not yet been extracted. ' +
+    'It is queued for processing by a specialist worker.',
+  revoked:
+    'This instrument was revoked or repealed. Metadata is held but the full text ' +
+    'has not been digitised. The original may be available in parliamentary archives ' +
+    'or the British Library. Case law may refer to this instrument.',
+  'pdf-only':
+    'The text of this instrument exists as a PDF on legislation.gov.uk but has not ' +
+    'yet been extracted. It is queued for PDF processing.',
+  'metadata-only':
+    'Only the title, number, and date of this instrument are held. No text has been ' +
+    'digitised. This is typically the case for instruments made before 1980 that were ' +
+    'not included in TNA\'s digitisation programme.',
+  'no-provisions':
+    'This instrument exists in the legislation database but contains no structured text. ' +
+    'It may be a very short instrument (a single sentence) or may require manual review.',
 }
 
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
@@ -46,6 +74,21 @@ async function fetchText(url: string): Promise<string | null> {
   } catch (err) {
     console.warn(`[tna] fetch error ${url}: ${err}`)
     return null
+  }
+}
+
+async function headRequest(url: string): Promise<boolean> {
+  await throttle.wait()
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
+    })
+    if (res.ok) { throttle.success(); return true }
+    if (res.status === 429 || res.status === 503) throttle.backoff()
+    return false
+  } catch {
+    return false
   }
 }
 
@@ -189,6 +232,58 @@ function hasNoProvisions(xml: string): boolean {
   return /\bNumberOfProvisions="0"/.test(rootAttrs(xml))
 }
 
+// ── hasNoProvisions classification ────────────────────────────────────────────
+// WHY: hasNoProvisions items are real legal instruments, not errors.
+// We classify them and record metadata rather than silently discarding.
+// This ensures Lex can tell users what exists and what's missing.
+
+function extractTitleFromXml(xml: string): string | undefined {
+  const m = /<ShortTitle>([^<]+)<\/ShortTitle>/.exec(xml)
+    ?? /<Title>([^<]+)<\/Title>/.exec(xml)
+  return m ? m[1].trim() : undefined
+}
+
+function extractYearFromDocId(docId: string): number | undefined {
+  const m = /\/(\d{4})\//.exec(docId)
+  return m ? parseInt(m[1], 10) : undefined
+}
+
+export async function classifyNoProvisionsItem(
+  docId: string,
+  fullXml: string,
+): Promise<NoProvisionsClass> {
+  const title = (extractTitleFromXml(fullXml) ?? '').toLowerCase()
+  const year = extractYearFromDocId(docId)
+
+  // Commencement/appointed day orders identifiable by title
+  if (
+    title.includes('commencement') ||
+    title.includes('appointed day') ||
+    title.includes('coming into force')
+  ) {
+    return 'commencement'
+  }
+
+  // Pre-digitisation threshold — pre-1980 items rarely have text
+  if (year !== undefined && year < 1980) return 'metadata-only'
+
+  // Check if PDF exists on TNA (lightweight HEAD request, no body fetch)
+  const hasPdf = await headRequest(`${TNA_BASE}/${docId}/data.pdf`)
+  if (hasPdf) return 'pdf-only'
+
+  return 'no-provisions'
+}
+
+export function extractSectionMetadata(
+  docId: string,
+  fullXml: string,
+): { title?: string; year?: number } {
+  return {
+    title: extractTitleFromXml(fullXml),
+    year: extractYearFromDocId(docId),
+  }
+}
+
 // ── Section extraction ─────────────────────────────────────────────────────────
 // Known CLML section element types that carry top-level numbered content.
 // If none are found in the downloaded XML, the full XML is stored as clml-unparsed.
@@ -242,11 +337,19 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
         ? clmlSections.map(s => ({ ...s, isEnactedOnly: true }))
         : clmlSections))
     } else if (hasNoProvisions(fullXml)) {
-      // NumberOfProvisions="0": commencement orders and amending SIs with no body structure.
-      // Diagnostic V11 confirmed >40% of pending SI rows hit this path and yield nothing
-      // from HTML/PDF either. Marking unavailable immediately saves 2 RTTs per item.
-      console.log(`[tna] ${actId}: hasNoProvisions=true — marking unavailable, skipping HTML/PDF`)
-      sections.push({ sectionRef: 'unavailable', format: 'unavailable', errorMsg: 'hasNoProvisions — no text content' })
+      // NumberOfProvisions="0": real legal instruments in a distinct state requiring
+      // different handling. Classify them so Lex can explain what exists to users.
+      const classifiedAs = await classifyNoProvisionsItem(actId, fullXml)
+      const { title, year } = extractSectionMetadata(actId, fullXml)
+      console.log(`[tna] ${actId}: hasNoProvisions — classified as ${classifiedAs}`)
+      sections.push({
+        sectionRef: 'unavailable',
+        format: 'unavailable',
+        errorMsg: `hasNoProvisions — classified as ${classifiedAs}`,
+        classifiedAs,
+        legislationTitle: title,
+        legislationYear: year,
+      })
     } else {
       // CLML present but no recognised element types — store as clml-unparsed
       // so the scheduler email can show the XML preview for regex diagnosis.

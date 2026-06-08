@@ -346,6 +346,35 @@ export async function releaseDiscoveryLock(workerId: string): Promise<void> {
 }
 
 // Bulk upsert — much faster than individual upserts for large populations
+export async function insertSpecialistQueueRow(row: {
+  id: string
+  corpus: string
+  docId: string
+  sourceType: string
+  specialistType: 'commencement' | 'revoked' | 'pdf-only' | 'metadata-only'
+  title?: string
+  legislationYear?: number
+  legislationType?: string
+  notes?: string
+}): Promise<void> {
+  await getPool().query(`
+    INSERT INTO specialist_queue
+      (id, corpus, "docId", "sourceType", specialist_type, title, "legislationYear", "legislationType", notes)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    ON CONFLICT (id) DO NOTHING
+  `, [
+    row.id,
+    row.corpus,
+    row.docId,
+    row.sourceType,
+    row.specialistType,
+    row.title ?? null,
+    row.legislationYear ?? null,
+    row.legislationType ?? null,
+    row.notes ?? null,
+  ])
+}
+
 export async function bulkUpsertQueueRows(rows: Array<{
   id: string
   corpus: string

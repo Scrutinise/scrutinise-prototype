@@ -16,7 +16,7 @@ import {
   claimNextChunk, markDone, markFailed, markSkipped,
   updateFormatsAvailable, disconnectQueue, getSleepDuration,
   countPendingRows, markSourceTypeComplete, bulkUpsertQueueRows, QueueRow,
-  acquireDiscoveryLock, releaseDiscoveryLock,
+  acquireDiscoveryLock, releaseDiscoveryLock, insertSpecialistQueueRow,
 } from '../shared/queue-client'
 import { discoverForCorpus, DISCOVERY_CORPUS_ORDER } from '../shared/discovery'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
@@ -35,7 +35,7 @@ async function upsertSection(data: Parameters<typeof _upsertSection>[0]): Promis
 
 // Source clients
 import { listJudgments, fetchJudgmentXml } from '../sources/tna-caselaw'
-import { enumerateSections, discoverFormats } from '../sources/tna-legislation'
+import { enumerateSections, discoverFormats, AVAILABILITY_NOTES } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
 import { fetchDebateText, fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements } from '../sources/parliament-api'
 import { listDebatesForMonth } from '../sources/theyworkforyou'
@@ -230,7 +230,31 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
     const cKey  = compiledKey(row.corpus, actId, section.sectionRef)
 
     if (section.format === 'unavailable') {
-      await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: `https://www.legislation.gov.uk/${actId}`, status: 'unavailable', errorMsg: section.errorMsg, format: 'unavailable' })
+      const availabilityStatus = section.classifiedAs ?? 'no-provisions'
+      const availabilityNote = section.classifiedAs ? AVAILABILITY_NOTES[section.classifiedAs] : undefined
+      await upsertSection({
+        id: secId,
+        corpus: row.corpus,
+        sourceUrl: `https://www.legislation.gov.uk/${actId}`,
+        status: 'unavailable',
+        errorMsg: section.errorMsg,
+        format: 'unavailable',
+        availabilityStatus,
+        availabilityNote,
+      })
+      // Queue for specialist processing where applicable
+      if (section.classifiedAs === 'commencement' || section.classifiedAs === 'pdf-only') {
+        await insertSpecialistQueueRow({
+          id: row.id,
+          corpus: row.corpus,
+          docId: actId,
+          sourceType: row.sourceType,
+          specialistType: section.classifiedAs,
+          title: section.legislationTitle,
+          legislationYear: section.legislationYear,
+          legislationType: actId.split('/')[0],
+        }).catch(err => console.warn(`[worker] specialist_queue insert failed for ${actId}: ${err}`))
+      }
       continue
     }
 

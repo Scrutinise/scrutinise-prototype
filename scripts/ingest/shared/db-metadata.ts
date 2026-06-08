@@ -48,6 +48,8 @@ export interface SectionMeta {
   format?: 'clml' | 'clml-unparsed' | 'html' | 'pdf' | 'unavailable' | 'effects'
   xmlPreview?: string
   notes?: string
+  availabilityStatus?: 'full' | 'commencement' | 'revoked' | 'pdf-only' | 'metadata-only' | 'no-provisions'
+  availabilityNote?: string
 }
 
 type CorpusSectionClient = {
@@ -67,18 +69,20 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
   await pool.query(`
     INSERT INTO corpus_sections
       (id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
-       format, "xmlPreview", notes, "compiledAt", "createdAt")
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW())
+       format, "xmlPreview", notes, availability_status, availability_note, "compiledAt", "createdAt")
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
     ON CONFLICT (id) DO UPDATE SET
-      "r2Key"      = EXCLUDED."r2Key",
-      "r2RawKey"   = EXCLUDED."r2RawKey",
-      "wordCount"  = EXCLUDED."wordCount",
-      status       = EXCLUDED.status,
-      "errorMsg"   = EXCLUDED."errorMsg",
-      format       = EXCLUDED.format,
-      "xmlPreview" = EXCLUDED."xmlPreview",
-      notes        = EXCLUDED.notes,
-      "compiledAt" = CASE WHEN EXCLUDED.status = 'compiled' THEN $12 ELSE corpus_sections."compiledAt" END
+      "r2Key"             = EXCLUDED."r2Key",
+      "r2RawKey"          = EXCLUDED."r2RawKey",
+      "wordCount"         = EXCLUDED."wordCount",
+      status              = EXCLUDED.status,
+      "errorMsg"          = EXCLUDED."errorMsg",
+      format              = EXCLUDED.format,
+      "xmlPreview"        = EXCLUDED."xmlPreview",
+      notes               = EXCLUDED.notes,
+      availability_status = EXCLUDED.availability_status,
+      availability_note   = EXCLUDED.availability_note,
+      "compiledAt"        = CASE WHEN EXCLUDED.status = 'compiled' THEN $14 ELSE corpus_sections."compiledAt" END
   `, [
     meta.id,
     meta.corpus,
@@ -91,6 +95,8 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
     meta.format ?? null,
     meta.xmlPreview ?? null,
     meta.notes ?? null,
+    meta.availabilityStatus ?? 'full',
+    meta.availabilityNote ?? null,
     meta.status === 'compiled' ? now : null,
   ])
 }
