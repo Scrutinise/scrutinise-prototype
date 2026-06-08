@@ -15,8 +15,8 @@ export interface LdaItem {
 
 // WHY: LDA API regularly takes 10–30s per page — no timeout means fetch can hang
 // indefinitely, eventually triggering Railway's 524 gateway timeout with no retry.
-// 45s covers slow responses; 500/524 are retried with exponential backoff.
-const LDA_FETCH_TIMEOUT_MS = 45_000
+// 90s covers page 999+ which consistently takes 60–80s for large result sets.
+const LDA_FETCH_TIMEOUT_MS = 90_000
 // Transient HTTP codes that warrant retry with backoff (Cloudflare/origin timeout/overload)
 const TRANSIENT_STATUS = new Set([500, 502, 503, 504, 524])
 
