@@ -242,9 +242,11 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
         ? clmlSections.map(s => ({ ...s, isEnactedOnly: true }))
         : clmlSections))
     } else if (hasNoProvisions(fullXml)) {
-      // NumberOfProvisions="0": metadata-only CLML, body content is PDF-only.
-      // Don't store as clml-unparsed — fall through to HTML/PDF fetchers below.
-      console.log(`[tna] ${actId}: hasNoProvisions=true, trying PDF`)
+      // NumberOfProvisions="0": commencement orders and amending SIs with no body structure.
+      // Diagnostic V11 confirmed >40% of pending SI rows hit this path and yield nothing
+      // from HTML/PDF either. Marking unavailable immediately saves 2 RTTs per item.
+      console.log(`[tna] ${actId}: hasNoProvisions=true — marking unavailable, skipping HTML/PDF`)
+      sections.push({ sectionRef: 'unavailable', format: 'unavailable', errorMsg: 'hasNoProvisions — no text content' })
     } else {
       // CLML present but no recognised element types — store as clml-unparsed
       // so the scheduler email can show the XML preview for regex diagnosis.
@@ -259,7 +261,7 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
     }
   }
 
-  // HTML/PDF fallback — runs when CLML was absent OR NumberOfProvisions=0
+  // HTML/PDF fallback — runs only when CLML was entirely absent (no XML returned)
   if (sections.length === 0) {
     const rawHtml = await fetchText(`${TNA_BASE}/${actId}/data.htm`)
     if (rawHtml && rawHtml.trim().length > 0) {
