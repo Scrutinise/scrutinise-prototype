@@ -449,7 +449,7 @@ SELECT COUNT(*) FROM corpus_sections;
 | regional | ✅ active | 4,859 pending |
 | retained-eu | ✅ active | 2,452 pending |
 | tna-caselaw | ✅ complete | ~74,950 judgments |
-| eur-lex | ✅ active | SPARQL-based; ~19k ingested |
+| eur-lex | ✅ complete V13 | 90,260 sections; est_is_confirmed=true |
 | fca-handbook | ✅ complete V10 | 3,661 sections; est_is_confirmed=true |
 | fca-publications | ⛔ retired V10 | Superseded by fca-handbook |
 | fca-regulators | ⛔ retired V10 | Old SPA scraper; never worked |
@@ -600,12 +600,24 @@ The 640,000 estimate was wrong by 45×. Root cause: `processHmrc()` uses the GOV
 
 **Lesson:** For corpora using GOV.UK search API (`searchGovUk`, `searchGovUkByOrg`), the section count = number of search results (capped at `count` param), not number of sub-pages per result. Estimates based on sub-page counts are unreliable.
 
-### LDA timeout — increased to 90s (V12)
+### LDA timeout — increased to 180s (V13, was 90s in V12)
 
-**LDA API pages 999+ consistently take 60–80s for large result sets (commonswrittenquestions).**  
-Increased `LDA_FETCH_TIMEOUT_MS` from 45,000 to 90,000 in `lda-parliament.ts`. Previous failures: 1,199 timeout + 169 502/524 + 34 500/503 = 1,402 failed rows, all reset to pending after timeout increase.
+**LDA API is erratically slow at ALL page numbers — pages 3 through 1089 all timed out at 90s (V13 diagnosis, 8 Jun 2026).**  
+This is NOT limited to high page numbers as previously believed. Increased `LDA_FETCH_TIMEOUT_MS` to 180,000 in `lda-parliament.ts`.
 
-**LDA failure pattern:** Pages 0–200 are fast; pages 200+ slow down progressively. Only commonswrittenquestions (618k records, 1,238 pages) hits this at scale. lordswrittenquestions (103k, 207 pages) is borderline.
+**Timeout history:** 45s (original) → 90s (V12, based on page 999+ observation) → 180s (V13, after finding page 3 also times out).
+
+**V12 note (now superseded):** "Pages 0–200 are fast; pages 200+ slow down progressively." — this was incorrect. Failures observed at page 3, page 10, page 100 in V13.
+
+**LDA failure reset procedure:**
+```sql
+UPDATE ingest_queue
+SET status = 'pending', "lastError" = NULL, "claimedBy" = NULL, "claimedAt" = NULL
+WHERE corpus = 'lda-commonswrittenquestions'
+  AND status = 'failed'
+  AND "lastError" LIKE '%fetch timed out%';
+```
+After any timeout increase, reset all timed-out rows and redeploy workers to pick up the new timeout value.
 
 ### pwdata auto-reseed — added to monitor (V12)
 
