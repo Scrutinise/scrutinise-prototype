@@ -19,7 +19,7 @@ const pool = new Pool({
 // intervalMs and maxConcurrentWorkers from corpus breakdown spreadsheet.
 // sourceKey must match ingest_queue."sourceType" values exactly.
 const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentWorkers: number; note: string }> = [
-  { sourceKey: 'tna-legislation', intervalMs: 200,  maxConcurrentWorkers: 6,  note: 'legislation.gov.uk' },
+  { sourceKey: 'tna-legislation', intervalMs: 200,  maxConcurrentWorkers: 10, note: 'legislation.gov.uk — increased 6→10 V11 (no 429s observed; adaptive throttle handles backoff)' },
   { sourceKey: 'tna-caselaw',     intervalMs: 200,  maxConcurrentWorkers: 4,  note: 'caselaw.nationalarchives.gov.uk — separate subdomain' },
   { sourceKey: 'hansard',         intervalMs: 500,  maxConcurrentWorkers: 3,  note: 'api.parliament.uk' },
   { sourceKey: 'fca',             intervalMs: 500,  maxConcurrentWorkers: 2,  note: 'FCA handbook scraper (retired — superseded by fca-handbook)' },
