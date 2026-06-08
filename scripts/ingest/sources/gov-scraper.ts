@@ -94,9 +94,34 @@ export async function* listFcaPublications(): AsyncGenerator<GovDocument> {
   yield* searchGovUkByOrg('financial-conduct-authority', 'fca-publications', 3000)
 }
 
+// WHY: GOV.UK search API returns 0 results for sentencing-council org (not indexed there).
+// The direct site at sentencingcouncil.org.uk embeds all guideline URLs as JSON in the
+// crown-court and magistrates listing pages, which we can parse without JavaScript rendering.
 export async function* listSentencingCouncilGuidelines(): AsyncGenerator<GovDocument> {
-  // Sentencing guidelines via GOV.UK (sentencing-council org) and direct site listing
-  yield* searchGovUkByOrg('sentencing-council', 'sentencing-council', 2000)
+  const BASE = 'https://sentencingcouncil.org.uk'
+  const listingPages = ['/guidelines/crown-court/', '/guidelines/magistrates/']
+  const seen = new Set<string>()
+
+  for (const listingPath of listingPages) {
+    const html = await fetchHtml(`${BASE}${listingPath}`)
+    if (!html) continue
+
+    // Guidelines are embedded as JSON: "url":"/guidelines/{slug}/?source=..."
+    const urlRx = /"url":"(\/guidelines\/[^"?]+?)(?:\?[^"]*)?"/g
+    let m: RegExpExecArray | null
+    while ((m = urlRx.exec(html)) !== null) {
+      const path = m[1].replace(/\/$/, '')
+      if (!path || seen.has(path) || path === '/guidelines/crown-court' || path === '/guidelines/magistrates') continue
+      seen.add(path)
+      const slug = path.replace('/guidelines/', '').replace(/\//g, '-')
+      yield {
+        id: slug,
+        title: slug.replace(/-/g, ' '),
+        url: `${BASE}${path}/`,
+        corpus: 'sentencing-council',
+      }
+    }
+  }
 }
 
 export async function* listCollegeOfPolicing(): AsyncGenerator<GovDocument> {
