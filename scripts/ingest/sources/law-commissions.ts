@@ -87,23 +87,55 @@ export async function* listScotLawComReports(): AsyncGenerator<LawCommissionRepo
 
 // ── Northern Ireland Law Commission ───────────────────────────────────────────
 // Non-operational since April 2015. ~18 historical reports at nilawcommission.gov.uk.
-// Simple index-page scrape — the org's homepage lists completed reports with PDF links.
+// WHY two-level crawl: homepage and completed_projects page link to individual report
+// announcement pages, which in turn link directly to PDFs. Homepage has no PDF links.
 
 const NILAWCOM_BASE = 'https://www.nilawcommission.gov.uk'
 
-export async function* listNiLawComReports(): AsyncGenerator<LawCommissionReport> {
-  const html = await fetchHtml(NILAWCOM_BASE)
-  if (!html) return
+// Nav pages that don't contain report content — skip during crawl.
+const NILAWCOM_NAV = new Set([
+  'about-us.htm', 'sitemap.htm', 'contact-us.htm', 'useful-links.htm',
+  'publications.htm', 'crown-copyright.htm', 'terms-and-conditions.htm',
+  'accesskeys.htm', 'privacy_and_cookies.htm', 'equality_and_diversity.htm',
+  'freedom-of-information.htm', 'programmes-of-law-reform.htm',
+  'current-projects.htm', 'completed_projects-2.htm',
+  'latest-news-and-events.htm', 'index-1.htm',
+])
 
-  const seen = new Set<string>()
-  const rx = /href="([^"]+\.pdf)"/gi
-  let m: RegExpExecArray | null
-  while ((m = rx.exec(html)) !== null) {
-    const href = m[1]
-    const pdfUrl = href.startsWith('http') ? href : `${NILAWCOM_BASE}/${href.replace(/^\//, '')}`
-    if (seen.has(pdfUrl)) continue
-    seen.add(pdfUrl)
-    const id = pdfUrl.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').slice(-80)
-    yield { id, title: id, pdfUrl, sourceUrl: NILAWCOM_BASE }
+export async function* listNiLawComReports(): AsyncGenerator<LawCommissionReport> {
+  const seenPages = new Set<string>()
+  const seenPdfs = new Set<string>()
+
+  // Seed with homepage and completed projects listing; BFS up to 60 pages.
+  const pageQueue = [`${NILAWCOM_BASE}/`, `${NILAWCOM_BASE}/completed_projects-2.htm`]
+
+  for (let i = 0; i < pageQueue.length && i < 60; i++) {
+    const pageUrl = pageQueue[i]
+    if (seenPages.has(pageUrl)) continue
+    seenPages.add(pageUrl)
+
+    const html = await fetchHtml(pageUrl)
+    if (!html) continue
+
+    // Collect PDFs on this page
+    const pdfRx = /href="([^"]+\.pdf)"/gi
+    let m: RegExpExecArray | null
+    while ((m = pdfRx.exec(html)) !== null) {
+      const href = m[1]
+      const pdfUrl = href.startsWith('http') ? href : `${NILAWCOM_BASE}/${href.replace(/^\//, '')}`
+      if (seenPdfs.has(pdfUrl)) continue
+      seenPdfs.add(pdfUrl)
+      const id = pdfUrl.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').slice(-80)
+      yield { id, title: id, pdfUrl, sourceUrl: pageUrl }
+    }
+
+    // Queue .htm sub-pages (relative, non-nav only)
+    const hrefRx = /href="([a-z0-9][a-z0-9_\-]+\.htm)"/gi
+    while ((m = hrefRx.exec(html)) !== null) {
+      const href = m[1]
+      if (NILAWCOM_NAV.has(href)) continue
+      const subUrl = `${NILAWCOM_BASE}/${href}`
+      if (!seenPages.has(subUrl)) pageQueue.push(subUrl)
+    }
   }
 }
