@@ -415,6 +415,34 @@ First seen: 8 Jun 2026, 09:30–15:35 BST (6 hours, 0 sections)
 | Scheduler running `worker-queue.ts` instead of `scheduler.ts` | `scripts/ingest/railway.json` had `startCommand: "npm run worker"` overriding service-level config | Removed `railway.json`; each service uses its own Railway dashboard start command |
 | Worker-2 build loop | Railway retrying old deployment (old commit + old Nixpacks path) | Trigger fresh "Deploy" from Main branch in Railway dashboard (not "Redeploy") |
 
+### TNA hasNoProvisions classification (V14)
+
+`NumberOfProvisions="0"` in the CLML root element means the document exists but has no structured provision nodes. These are real legal instruments, not errors. V11 stopped workers spinning on them. V14 adds proper classification and a specialist queue.
+
+**Classification types** (stored in `corpus_sections.availability_status`):
+
+| Type | Meaning | Action |
+|------|---------|--------|
+| `commencement` | Title includes "commencement", "appointed day", or "coming into force" | Queued in `specialist_queue` for future commencement worker |
+| `metadata-only` | Year < 1980 — pre-digitisation, no text available anywhere | Metadata-only record in `corpus_sections` |
+| `pdf-only` | HEAD request to `/data.pdf` succeeds | Queued in `specialist_queue` for future PDF extraction worker |
+| `no-provisions` | None of the above — catch-all | `corpus_sections` row with note; no specialist queue entry |
+
+**Architecture (V14):**
+- `tna-legislation.ts`: `classifyNoProvisionsItem(docId, fullXml)` performs classification using title regex + year heuristic + HEAD request for PDF
+- `worker-queue.ts`: calls classification in `processTnaLegislation()` when `section.format === 'unavailable'`; writes `availabilityStatus` + `availabilityNote` to Neon; inserts `specialist_queue` row for commencement/pdf-only
+- `corpus_sections.availability_status`: new column (`full` default for all existing rows)
+- `corpus_sections.availability_note`: user-facing explanation for non-full items (Lex displays this)
+- `specialist_queue` on Railway DB: holds commencement + pdf-only items for future specialist workers
+
+**Bulk classification script:** `scripts/ingest/classify-no-provisions.ts`
+- Targets existing done queue rows with `hasNoProvisions` in `lastError`
+- Checkpointed/resumable — kill and restart safely
+- 200ms delay between TNA requests; reports progress every 500 items
+- Run: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/classify-no-provisions.ts`
+
+**Part 7 SQL result (V14 session):** 0 rows affected — V11 already marks hasNoProvisions rows done inline (no `lastError` set). The SQL was targeting a pre-V11 failure state. Workers are processing correctly.
+
 ---
 
 ## 9. DB SIZE MONITORING

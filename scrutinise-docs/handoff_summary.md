@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 8 Jun 2026 (V13 — startup jitter added, sentencing-council fixed, nilawcom fixed, Railway ops docs added)*
+*Last updated: 8 Jun 2026 (V14 — hasNoProvisions classification system + specialist queue)*
 
 ---
 
@@ -10,24 +10,32 @@
 
 **Active branch:** Main
 **Last commit:** pending (commit-all.sh to be generated)
-**Last sprint:** V13 (8 Jun 2026) — startup jitter in worker-queue.ts; sentencing-council scraper fixed (direct site, embedded JSON); nilawcom BFS crawl fix; CLAUDE.md + INGEST_PLAYBOOK.md docs updated
+**Last sprint:** V14 (8 Jun 2026) — hasNoProvisions classification system; specialist_queue table; corpus_sections availability_status/note columns; bulk classify-no-provisions.ts script; INGEST_PLAYBOOK.md updated
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED — V13
+## IMMEDIATE ACTIONS REQUIRED — V14
 
 | Action | Status | Who |
 |--------|--------|-----|
 | Run `commit-all.sh` | ⬜ pending | Charlie |
-| Redeploy all 20 workers (to pick up startup jitter + sentencing-council + nilawcom fixes) | ⬜ after commit | Charlie |
+| Redeploy all 20 workers (to pick up V14 classification logic) | ⬜ after commit | Charlie |
+| Run `classify-no-provisions.ts` in background (overnight job — classifies existing done rows) | ⬜ after commit | Charlie |
+
+**V13 carry-over (still needed):**
 | Run priority SQL in Railway dashboard Query tab (de-prioritize completed legislation corpora) | ⬜ pending | Charlie |
 | Update sentencing-council corpus_targets: `UPDATE corpus_targets SET blocked=false, blocked_reason=NULL WHERE corpus_key='sentencing-council'` | ⬜ pending | Charlie |
-| Run `commit-all.sh` from V12 first if not yet done | ⬜ check | Charlie |
 
 **V12 carry-over (still needed):**
 | Kill local scheduler.ts process: `Stop-Process -Id 22916` (and child 47892) | ⬜ URGENT (if not done) | Charlie |
 | Redeploy `Ingest-scheduler` on Railway (stopped 7 Jun 23:01 UTC) | ⬜ after commit | Charlie |
 | Add `RESEND_API_KEY` to `ingest-monitor` Railway service env | ⬜ pending | Charlie |
+
+**Run classify-no-provisions.ts:**
+```
+NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/classify-no-provisions.ts
+```
+Runs overnight. Checkpoint at `scripts/ingest/classify-no-provisions-checkpoint.json`. Resume by re-running same command.
 
 **Priority SQL (run in Railway dashboard → scrutinise-db → Query tab):**
 ```sql
@@ -74,6 +82,14 @@ ON CONFLICT (id) DO NOTHING;
 - Monitor will auto-reseed these on first cycle once deployed
 
 ---
+
+## KEY ARCHITECTURE STATE (as of V14)
+
+- **hasNoProvisions classification (V14):** `classifyNoProvisionsItem()` in `tna-legislation.ts` classifies into: commencement | metadata-only | pdf-only | no-provisions. Uses title regex + year < 1980 heuristic + PDF HEAD check. Workers write classified rows to Neon `corpus_sections.availability_status` + `availability_note`.
+- **specialist_queue (V14):** New Railway DB table. Workers insert commencement + pdf-only items for future specialist worker processing. Indexed on `(specialist_type, status)` and `(corpus, status)`.
+- **corpus_sections new columns (V14):** `availability_status TEXT NOT NULL DEFAULT 'full'` and `availability_note TEXT`. Existing rows default to 'full'. Index on availability_status WHERE != 'full'.
+- **AVAILABILITY_NOTES (V14):** User-facing strings per classification type in `tna-legislation.ts`. Lex can display these when users search for unavailable items.
+- **bulk classify script (V14):** `scripts/ingest/classify-no-provisions.ts` — classifies existing done rows. Checkpointed, resumable, 200ms TNA rate limit.
 
 ## KEY ARCHITECTURE STATE (as of V13)
 

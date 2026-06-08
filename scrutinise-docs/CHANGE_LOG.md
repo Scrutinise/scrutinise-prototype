@@ -1,6 +1,62 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V13 — startup jitter, sentencing-council fix, nilawcom fix, CLAUDE.md Railway ops, INGEST_PLAYBOOK failure patterns)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V14 — hasNoProvisions classification system + specialist queue)*
+
+---
+
+## SPRINT V14 — 8 Jun 2026 (hasNoProvisions classification + specialist queue)
+
+### Part 7 — Immediate throughput fix (SQL)
+
+Railway DB query found **0 rows** matching the `lastError LIKE '%hasNoProvisions%'` filter. V11 already handles hasNoProvisions items inline — workers mark them `done` without setting `lastError`. The SQL was targeting a pre-V11 failure state. Workers are not spinning; they process these rows and call `markDone()` cleanly.
+
+### Part 1 — Neon schema: availability_status + availability_note
+
+Applied to Neon `corpus_sections`:
+- `availability_status TEXT NOT NULL DEFAULT 'full'` — classification value
+- `availability_note TEXT` — user-facing explanation for Lex to display
+- `idx_corpus_sections_availability` partial index on non-full rows
+
+### Part 2 — Railway schema: specialist_queue table
+
+New table `specialist_queue` on Railway DB:
+- Holds commencement orders and pdf-only items for future specialist workers
+- Columns: `id`, `corpus`, `docId`, `sourceType`, `specialist_type`, `title`, `legislationYear`, `legislationType`, `priority`, `status`, `notes`, `createdAt`, `updatedAt`
+- Indexes on `(specialist_type, status)` and `(corpus, status)`
+
+### Parts 3+4 — tna-legislation.ts classification logic
+
+Added to `scripts/ingest/sources/tna-legislation.ts`:
+- `NoProvisionsClass` type: `'commencement' | 'revoked' | 'pdf-only' | 'metadata-only' | 'no-provisions'`
+- `AVAILABILITY_NOTES` constant: user-facing strings for each classification type
+- `headRequest()`: lightweight HEAD-only HTTP check
+- `classifyNoProvisionsItem(docId, fullXml)`: classifies using title regex (commencement) → year heuristic (< 1980 = metadata-only) → PDF HEAD check → fallback
+- `extractSectionMetadata(docId, fullXml)`: extracts title + year from CLML XML
+- `TnaSection` extended with `classifiedAs`, `legislationTitle`, `legislationYear` fields
+- `enumerateSections()` updated to call `classifyNoProvisionsItem()` on hasNoProvisions path
+
+### Part 3 (worker) — worker-queue.ts uses classification
+
+`scripts/ingest/workers/worker-queue.ts`:
+- Imports `AVAILABILITY_NOTES` and `insertSpecialistQueueRow`
+- `processTnaLegislation()` writes `availabilityStatus`/`availabilityNote` to Neon corpus_sections
+- Inserts `specialist_queue` row for commencement/pdf-only items (non-fatal if fails)
+
+### Part 5 — classify-no-provisions.ts bulk script
+
+New script `scripts/ingest/classify-no-provisions.ts`:
+- Reads existing done queue rows with hasNoProvisions in lastError
+- Fetches TNA XML, classifies, writes corpus_sections row to Neon
+- Inserts specialist_queue row for commencement/pdf-only
+- Checkpointed/resumable — 200ms TNA request delay — reports progress every 500 items
+
+### Part 6 — corpus_targets notes
+
+Updated 5 corpus_targets rows (si-pre-2010, si-2010plus, regional, primary-acts-pre-2000, retained-eu): `notes = 'Section count includes fully-extracted + classified unavailable items'`
+
+### Part 8 — INGEST_PLAYBOOK.md updated
+
+Added full §8 entry: hasNoProvisions classification types, architecture summary, bulk script usage, Part 7 SQL result.
 
 ---
 
