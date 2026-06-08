@@ -2,30 +2,40 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 8 Jun 2026 (V12 — duplicate email found, corpus-aware thresholds, hmrc complete, LDA timeout fix, monitor auto-reseed)*
+*Last updated: 8 Jun 2026 (V13 — startup jitter added, sentencing-council fixed, nilawcom fixed, Railway ops docs added)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** pending (commit-all.sh generated — awaiting Charlie execution)
-**Last sprint:** V12 (8 Jun 2026) — duplicate email root cause found (local process); CORPUS_THRESHOLDS added to monitor; hmrc-tiins + hmrc-codes-guidance confirmed complete; LDA timeout 45s→90s; 1,402 LDA rows reset to pending; monitor auto-reseeds pwdata corpora
+**Last commit:** pending (commit-all.sh to be generated)
+**Last sprint:** V13 (8 Jun 2026) — startup jitter in worker-queue.ts; sentencing-council scraper fixed (direct site, embedded JSON); nilawcom BFS crawl fix; CLAUDE.md + INGEST_PLAYBOOK.md docs updated
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED — V12
+## IMMEDIATE ACTIONS REQUIRED — V13
 
 | Action | Status | Who |
 |--------|--------|-----|
-| Kill local scheduler.ts process: `Stop-Process -Id 22916` (and child 47892) | ⬜ URGENT | Charlie |
 | Run `commit-all.sh` | ⬜ pending | Charlie |
-| Redeploy `Ingest-scheduler` on Railway (it stopped 7 Jun 23:01 UTC — needs restart) | ⬜ after commit | Charlie |
-| Redeploy all 20 workers (to pick up LDA timeout + monitor changes) | ⬜ after commit | Charlie |
-| Add `RESEND_API_KEY` to `ingest-monitor` Railway service env (V11 carry-over) | ⬜ pending | Charlie |
-| Redeploy `ingest-monitor` after RESEND_API_KEY set | ⬜ after RESEND_API_KEY set | Charlie |
+| Redeploy all 20 workers (to pick up startup jitter + sentencing-council + nilawcom fixes) | ⬜ after commit | Charlie |
+| Run priority SQL in Railway dashboard Query tab (de-prioritize completed legislation corpora) | ⬜ pending | Charlie |
+| Update sentencing-council corpus_targets: `UPDATE corpus_targets SET blocked=false, blocked_reason=NULL WHERE corpus_key='sentencing-council'` | ⬜ pending | Charlie |
+| Run `commit-all.sh` from V12 first if not yet done | ⬜ check | Charlie |
 
-**CRITICAL — local scheduler:** PIDs 22916 + 47892 on this machine are running an old version of `scheduler.ts` that fires at :23 every hour (fixed interval, pre-`msUntilNextRun` code). Kill these before starting Railway scheduler to avoid duplicate emails. The Railway scheduler's last run was 2026-06-07T23:01 UTC — it needs redeployment.
+**V12 carry-over (still needed):**
+| Kill local scheduler.ts process: `Stop-Process -Id 22916` (and child 47892) | ⬜ URGENT (if not done) | Charlie |
+| Redeploy `Ingest-scheduler` on Railway (stopped 7 Jun 23:01 UTC) | ⬜ after commit | Charlie |
+| Add `RESEND_API_KEY` to `ingest-monitor` Railway service env | ⬜ pending | Charlie |
+
+**Priority SQL (run in Railway dashboard → scrutinise-db → Query tab):**
+```sql
+UPDATE ingest_queue
+SET priority = 5
+WHERE corpus IN ('si-pre-2010', 'si-2010plus', 'primary-acts-pre-2000', 'primary-acts-2000plus')
+  AND status = 'pending';
+```
 
 **No other pending actions from V11 (except RESEND_API_KEY).**
 ('fca-handbook:serv', 'fca-handbook', 'serv', 'fca-handbook', 2),
@@ -65,8 +75,13 @@ ON CONFLICT (id) DO NOTHING;
 
 ---
 
-## KEY ARCHITECTURE STATE (as of V12)
+## KEY ARCHITECTURE STATE (as of V13)
 
+- **Startup jitter (V13):** Random 0–20s delay added as first `await` in `worker-queue.ts main()` before any DB call. Prevents connection storm on simultaneous Railway redeploy. Jitter line: `scripts/ingest/workers/worker-queue.ts` line 65.
+- **sentencing-council (V13):** `listSentencingCouncilGuidelines()` now scrapes `sentencingcouncil.org.uk` directly (embedded JSON, ~381 guidelines across crown-court + magistrates pages). Was returning 0 results via GOV.UK search API.
+- **nilawcom (V13):** `listNiLawComReports()` now uses BFS crawl (homepage + completed_projects → individual report pages → PDFs). Was returning 0 PDFs from homepage (no direct PDF links there).
+- **Priority SQL pending (V13):** SQL to set si-pre-2010/si-2010plus/primary-acts rows to priority 5 pending Charlie running it in Railway dashboard.
+- **CLAUDE.md + INGEST_PLAYBOOK.md (V13):** Railway Operations section added to CLAUDE.md; 3 new failure patterns added to INGEST_PLAYBOOK §8.
 - **Duplicate email root cause (V12):** LOCAL scheduler.ts process (PIDs 22916/47892 on Charlie's machine) — kill before restarting Railway scheduler. See §IMMEDIATE ACTIONS.
 - **Railway scheduler:** DOWN since 2026-06-07T23:01 UTC (scheduler_lock confirms). Needs redeploy after commit.
 - **CORPUS_THRESHOLDS (V12):** Per-corpus partial-item reseed thresholds in `monitor.ts` — replaces single global threshold of 3. Prevents false-positive reseeding of short pre-2000 Acts.

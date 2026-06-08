@@ -1,6 +1,69 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V12 — duplicate email found, corpus-aware thresholds, hmrc complete, LDA timeout fix)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V13 — startup jitter, sentencing-council fix, nilawcom fix, CLAUDE.md Railway ops, INGEST_PLAYBOOK failure patterns)*
+
+---
+
+## SPRINT V13 — 8 Jun 2026 (startup jitter + queue priority + blocked corpus fixes)
+
+### Part 1 — Startup jitter added to worker-queue.ts
+
+**`scripts/ingest/workers/worker-queue.ts` line 65** — Random 0–20s delay added as the very first `await` in `main()`, before `readCheckpoint()` (first DB call).
+
+```typescript
+const startupJitterMs = Math.floor(Math.random() * 20_000)
+console.log(`[worker-${workerId}] startup jitter: ${startupJitterMs}ms`)
+await new Promise(r => setTimeout(r, startupJitterMs))
+```
+
+Root cause of connection storm: all 20 workers receive Railway redeploy trigger simultaneously and all hit the Postgres connection pool within <1s. Expected stagger with 20 workers at 0–20s range: ~1s per worker average.
+
+### Part 2 — pwdata file count (informational)
+
+TWFY website unreachable from local dev machine (connection timeout on `www.theyworkforyou.com`). File count curl commands could not be run locally. **All pwdata corpora were confirmed fully seeded in V11** (19,768 debates, 5,668 lords, etc.). V12 monitor auto-reseed (`reseedExhaustedCorpora()`) handles daily new parliament files automatically. No additional seeding action needed.
+
+### Part 3 — Priority routing SQL (for Charlie to run)
+
+Workers are claiming si-pre-2010 and si-2010plus rows (priority 1) that yield nothing — these are the partial-item false positives. SQL to de-prioritize:
+
+```sql
+-- De-prioritise the false-positive reseeded rows for completed corpora
+UPDATE ingest_queue
+SET priority = 5
+WHERE corpus IN ('si-pre-2010', 'si-2010plus', 'primary-acts-pre-2000', 'primary-acts-2000plus')
+  AND status = 'pending';
+
+-- Verify
+SELECT corpus, priority, COUNT(*) FROM ingest_queue
+WHERE status = 'pending' GROUP BY corpus, priority ORDER BY priority, corpus;
+```
+
+Run in Railway dashboard → `scrutinise-db` → Query tab.
+
+### Part 4 — Blocked corpora
+
+**4a — nilawcom (NI Law Commission):** Fixed. Bug: `listNiLawComReports()` was fetching the homepage which has no PDF links. PDFs are on individual report pages (news items from homepage → report announcement pages → PDF). Fixed with BFS crawl: seeds from homepage + `/completed_projects-2.htm`, follows non-nav `.htm` links, collects PDF links from each page (max 60 pages). Verified: `report_on_bail_in_criminal_proceedings_nilc_14__2012_-2.htm` has `href="32432_-_bail_report_nilc14__2012_.pdf"`.
+
+**4b — sentencing-council:** Fixed. Root cause: `searchGovUkByOrg('sentencing-council', ...)` returns 0 results — sentencing council is not indexed on GOV.UK search. Fix: `listSentencingCouncilGuidelines()` now fetches from `sentencingcouncil.org.uk/guidelines/crown-court/` and `/magistrates/`, extracts guideline URLs from embedded JSON (`"url":"/guidelines/{slug}/..."` pattern). Crown court page: ~161 URLs; magistrates page: ~220 URLs. Content accessible via `fetchDocumentText`. Update `corpus_targets`:
+```sql
+UPDATE corpus_targets SET blocked = false, blocked_reason = NULL WHERE corpus_key = 'sentencing-council';
+```
+
+**4c — uk-treaties:** Already complete per INGEST_PLAYBOOK §10 (1,104 FCDO treaties, URLSearchParams fix applied V2). No code changes needed.
+
+### Part 5 — CLAUDE.md Railway Operations section added
+
+Root CLAUDE.md updated with `## Railway Operations` section covering:
+- Worker restart procedure (staggered, never simultaneous)
+- `deploymentRedeploy` vs `serviceInstanceRedeploy` distinction
+- Correct Railway API endpoint (`backboard.railway.com`)
+
+### Part 6 — INGEST_PLAYBOOK.md failure patterns added
+
+Three new patterns added to §8:
+1. Railway DB connection storm on simultaneous worker restart
+2. Local scheduler process causing duplicate emails
+3. Monitor partial-item reseed false positives
 
 ---
 
