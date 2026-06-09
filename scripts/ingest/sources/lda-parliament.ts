@@ -17,6 +17,9 @@ export interface LdaItem {
 // 90s, not just high pages). 180s required to handle worst cases.
 // History: 45s (V12 initial) → 90s (V12 increase) → 180s (V13, failures on page 3+).
 const LDA_FETCH_TIMEOUT_MS = 180_000
+// WHY: some LDA pages consistently fail regardless of timeout/page size.
+// After this many attempts workers stop retrying and archive the row.
+export const MAX_524_RETRIES = 3
 // Transient HTTP codes that warrant retry with backoff (Cloudflare/origin timeout/overload)
 const TRANSIENT_STATUS = new Set([500, 502, 503, 504, 524])
 

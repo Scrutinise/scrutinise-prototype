@@ -32,6 +32,8 @@ const CORPUS_THRESHOLDS: Record<string, number> = {
   'pwdata-lords':          5,
   'pwdata-wrans':          3,
   'lda-commonswrittenquestions': 3,
+  'committees-reports':    1,
+  'committees-evidence':   1,
   'default':               3,
 }
 
@@ -199,7 +201,7 @@ async function runMonitor(): Promise<void> {
   const railwayPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    max: 3,
+    max: 2,
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 15_000,
     statement_timeout: 60_000,
@@ -402,6 +404,8 @@ async function seedPwdataCorpus(pool: Pool, corpus: string): Promise<void> {
 // HTTP 429 (TWFY quota) is not retryable until quota resets — leave as failed.
 // HTTP 403, 404 are permanent — leave as failed, surface in email ISSUES.
 // WHY 30-minute delay: gives the upstream API time to recover before retry.
+// WHY skip 'specialist-queue:' prefix: these rows have been retried MAX_524_RETRIES
+// times and consistently fail — archiving them stops the infinite 524 retry loop.
 async function resetRetryableFailures(pool: Pool): Promise<void> {
   const { rowCount } = await pool.query(`
     UPDATE ingest_queue
@@ -411,6 +415,7 @@ async function resetRetryableFailures(pool: Pool): Promise<void> {
         "claimedAt" = NULL
     WHERE status = 'failed'
       AND ("lastError" LIKE '%HTTP 502%' OR "lastError" LIKE '%HTTP 524%')
+      AND "lastError" NOT LIKE 'specialist-queue:%'
       AND "completedAt" < NOW() - INTERVAL '30 minutes'
   `)
   if ((rowCount ?? 0) > 0) {

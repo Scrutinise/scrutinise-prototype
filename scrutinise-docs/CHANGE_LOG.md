@@ -1,6 +1,38 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V14 post-session — fetch timeout fix + monitor reseed loop fix)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V15 — committees portal scraper + LDA pageSize fix + SOURCES email section)*
+
+---
+
+## SPRINT V15 — 9 Jun 2026 (committees portal + LDA fix + SOURCES email section)
+
+### Part 1 — reseed-deep.ts status
+`reseed-deep.ts` was still running when V15 session started. Log shows it reached retained-eu eudn enumeration (1,104 acts found) and was working through `eur` enumeration. Still in progress / interrupted — Charlie to check log for full results.
+
+### Part 3 — Parliamentary Committees portal scraper (NEW SOURCE)
+- `scripts/ingest/sources/committees-portal.ts` — portal scraper using browser User-Agent to bypass Cloudflare. Parses publication cards: title, committee, date, type, PDF URL, HTML URL. Prefers `publications.parliament.uk` HTML over PDF.
+- `scripts/ingest/seed-committees-queue.ts` — seeds one queue row per listing page. 498 pages for reports-responses, ~2,040 for other-publications. Safe to re-run.
+- `worker-queue.ts` — added `committees-portal` sourceType routing → `processCommittees()`
+- `discovery.ts` — `committees-reports` and `committees-evidence` added to SINGLE_PASS_CORPORA + DISCOVERY_CORPUS_ORDER
+- `seed-rate-limits.ts` — `committees-portal` entry (500ms, 3 concurrent)
+- SQL: `scripts/ingest/sql/v15-rate-limits-and-targets.sql` — rate limit INSERT + Neon corpus_targets
+
+### Part 4 — LDA 524 loop fix
+- `lda-parliament.ts`: exported `MAX_524_RETRIES = 3`
+- `worker-queue.ts processLda()`: passes `pageSize=100` for `writtenquestions` corpora (was 500 → 524 timeouts). After `MAX_524_RETRIES` 524 failures, marks row with `specialist-queue:` prefix error → monitor no longer resets these rows.
+- `monitor.ts resetRetryableFailures()`: added `AND "lastError" NOT LIKE 'specialist-queue:%'` exclusion
+- `monitor.ts CORPUS_THRESHOLDS`: added `committees-reports: 1` and `committees-evidence: 1`
+- SQL in `v15-rate-limits-and-targets.sql`: reset current LDA 524 failed rows (after deploy)
+
+### Part 5 — SOURCES section in hourly email
+- `progress-reporter.ts`: added `querySourceStatus()` — queries source_rate_limits + ingest_queue for per-source pending/active/cap
+- Added SOURCES section to `sendProgressEmail()` — shows active/pending sources with worker cap status. Suppresses fully-done sources. Flags `⚡cap-full` when active == cap with pending work.
+
+### Part 6 — INGEST_PLAYBOOK.md §8
+Three new failure patterns added:
+1. committees.parliament.uk portal as alternative to blocked api.parliament.uk (V15)
+2. LDA 524 permanent page failure — pageSize fix + specialist-queue archival (V15)
+3. Connection pool exhaustion signature — ECONNRESET 30s retry loop diagnosis (V15)
 
 ---
 

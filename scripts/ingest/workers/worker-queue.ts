@@ -42,7 +42,8 @@ import { listDebatesForMonth } from '../sources/theyworkforyou'
 import { getAllHandbookModules, listSectionsForModule } from '../sources/fca-handbook'
 import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
-import { fetchLdaPage } from '../sources/lda-parliament'
+import { fetchLdaPage, MAX_524_RETRIES } from '../sources/lda-parliament'
+import { listCommitteePublications, fetchPublicationHtml } from '../sources/committees-portal'
 import { fetchPwdataFile, parsePwdataXml, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
@@ -148,6 +149,8 @@ async function main(): Promise<void> {
                   'pwdata-lordswms': 'twfy-pwdata',
                   'planning-policy': 'gov-uk',
                   'building-regs': 'gov-uk',
+                  'committees-reports': 'committees-portal',
+                  'committees-evidence': 'committees-portal',
                 }
                 const sourceType = sourceTypeMap[corpus]
                 if (sourceType) await markSourceTypeComplete(sourceType).catch(() => {})
@@ -220,8 +223,9 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'oecd':              return processOecd(row)
     case 'gov-uk':            return processGovUk(row)
     case 'fca-publications':  return processGovUk(row)
-    case 'scotlawcom':      return processLawCommission(row)
-    case 'nilawcom':        return processLawCommission(row)
+    case 'scotlawcom':        return processLawCommission(row)
+    case 'nilawcom':          return processLawCommission(row)
+    case 'committees-portal': return processCommittees(row)
     default:
       await markSkipped(row.id)
       console.warn(`[worker] unknown sourceType ${row.sourceType} — skipped`)
@@ -618,12 +622,27 @@ async function processLda(row: QueueRow): Promise<void> {
   const slug = row.corpus.replace(/^lda-/, '')
   const page = parseInt(row.docId.replace('page:', ''), 10)
 
+  // WHY: LDA written questions have large result sets at high page numbers.
+  // pageSize=500 causes Parliament's DB to timeout (HTTP 524 via Cloudflare).
+  // pageSize=100 means 5x more requests but each completes within the timeout.
+  // Only applies to written questions — oral questions and divisions are fine at 500.
+  const pageSize = row.corpus.includes('writtenquestions') ? 100 : 500
+
   let items
   try {
-    const result = await fetchLdaPage(slug, page)
+    const result = await fetchLdaPage(slug, page, pageSize)
     items = result.items
   } catch (err) {
-    await markFailed(row.id, String(err))
+    const errMsg = String(err)
+    // WHY: some LDA pages consistently fail regardless of timeout/page size.
+    // After MAX_524_RETRIES attempts we accept the gap and record it for future
+    // investigation rather than burning worker time indefinitely.
+    // The monitor's resetRetryableFailures() skips rows with 'specialist-queue:' prefix.
+    if (errMsg.includes('524') && row.attempts >= MAX_524_RETRIES) {
+      await markFailed(row.id, `specialist-queue: LDA 524 after ${row.attempts} attempts — archived`)
+    } else {
+      await markFailed(row.id, errMsg)
+    }
     return
   }
 
@@ -809,6 +828,70 @@ async function processLawCommission(row: QueueRow): Promise<void> {
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.sourceUrl, r2Key: cKey, wordCount: countWords(text), status: 'compiled' })
   }
   await markDone(row.id)
+}
+
+// ── Parliamentary Committees portal ──────────────────────────────────────────
+// docId = 'page:{N}' for listing page rows.
+// Scrapes committees.parliament.uk/publications/{type}/?page=N
+// Prefers HTML content from publications.parliament.uk, falls back to title-only.
+
+async function processCommittees(row: QueueRow): Promise<void> {
+  const page = parseInt(row.docId.replace('page:', ''), 10)
+  const portalType = row.corpus === 'committees-evidence'
+    ? 'other-publications'
+    : 'reports-responses'
+
+  let publications
+  try {
+    publications = await listCommitteePublications(page, portalType)
+  } catch (err) {
+    await markFailed(row.id, String(err))
+    return
+  }
+
+  if (publications.length === 0) {
+    // Empty page — beyond total — mark done, not failed
+    await markDone(row.id, 'html')
+    return
+  }
+
+  for (const pub of publications) {
+    const docId = `${pub.pubId}-${pub.docId}`
+    const cKey = compiledKey(row.corpus, docId, '1')
+    if (await r2Exists(cKey)) continue
+
+    // Prefer HTML over PDF — HTML is searchable, PDF requires extraction
+    let text: string | null = null
+    if (pub.htmlUrl) {
+      text = await fetchPublicationHtml(pub.htmlUrl)
+    }
+
+    // Fallback: compose metadata text from structured fields
+    if (!text || !text.trim()) {
+      const parts = [pub.title]
+      if (pub.committeeNames.length > 0) parts.push(`Committee: ${pub.committeeNames.join(', ')}`)
+      if (pub.publishedDate) parts.push(`Published: ${pub.publishedDate}`)
+      if (pub.publicationType) parts.push(`Type: ${pub.publicationType}`)
+      if (pub.paperNumber) parts.push(`Paper: ${pub.paperNumber}`)
+      text = parts.join('\n')
+    }
+
+    const compiled = rawToText(text)
+    await r2Put(cKey, compiled)
+
+    const secId = sectionId(row.corpus, docId, '1')
+    await upsertSection({
+      id: secId,
+      corpus: row.corpus,
+      sourceUrl: pub.sourceUrl,
+      r2Key: cKey,
+      wordCount: countWords(compiled),
+      status: 'compiled',
+      format: 'html',
+    })
+  }
+
+  await markDone(row.id, 'html')
 }
 
 // ── Entry ─────────────────────────────────────────────────────────────────────

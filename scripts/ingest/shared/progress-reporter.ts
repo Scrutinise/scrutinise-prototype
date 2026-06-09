@@ -401,6 +401,55 @@ export async function queryDbSize(): Promise<DbSizeResult> {
   }
 }
 
+// ── Source rate limits + active worker query ─────────────────────────────────
+
+interface SourceStatusRow {
+  sourceKey: string
+  pending: number
+  active: number
+  cap: number
+  suspended: boolean
+  isComplete: boolean
+}
+
+async function querySourceStatus(): Promise<SourceStatusRow[]> {
+  const pool = getPool()
+  try {
+    const res = await pool.query<{
+      sourceKey: string
+      pending: string
+      active: string
+      cap: number
+      suspended: boolean
+      isComplete: boolean
+    }>(`
+      SELECT
+        r."sourceKey",
+        COALESCE(SUM(CASE WHEN q.status = 'pending' THEN 1 ELSE 0 END), 0)::text AS pending,
+        COALESCE(SUM(CASE WHEN q.status = 'claimed' THEN 1 ELSE 0 END), 0)::text AS active,
+        r."maxConcurrentWorkers" AS cap,
+        COALESCE(r.suspended, false) AS suspended,
+        COALESCE(r."isComplete", false) AS "isComplete"
+      FROM source_rate_limits r
+      LEFT JOIN ingest_queue q ON q."sourceType" = r."sourceKey"
+      GROUP BY r."sourceKey", r."maxConcurrentWorkers", r.suspended, r."isComplete"
+      ORDER BY SUM(CASE WHEN q.status = 'pending' THEN 1 ELSE 0 END) DESC NULLS LAST,
+               SUM(CASE WHEN q.status = 'claimed' THEN 1 ELSE 0 END) DESC NULLS LAST,
+               r."sourceKey"
+    `)
+    return res.rows.map(r => ({
+      sourceKey: r.sourceKey,
+      pending: parseInt(r.pending, 10),
+      active: parseInt(r.active, 10),
+      cap: r.cap ?? 1,
+      suspended: r.suspended,
+      isComplete: r.isComplete,
+    }))
+  } catch {
+    return []
+  }
+}
+
 // ── Claim reaper — reclaims rows left claimed by SIGTERM'd workers ────────────
 
 // WHY: workers SIGTERM'd during Railway deploys leave rows permanently claimed.
@@ -789,6 +838,31 @@ export async function sendProgressEmail(
       .filter(([k]) => pri12Keys.has(k))
       .reduce((s, [, v]) => s + v.pending, 0)
     parts.push(`  ⚠️  Queue exhausted — priority 1/2 pending: ${pri12Pending}`)
+  }
+
+  // ── SOURCES ───────────────────────────────────────────────────────────────
+  // Shows which sources have work remaining and whether worker caps are limiting throughput.
+  // Only shows sources with pending > 0 OR active > 0 OR a flag (suspended/issue).
+  let sourceRows: SourceStatusRow[] = []
+  try { sourceRows = await querySourceStatus() } catch { /* non-fatal */ }
+
+  const noteworthySources = sourceRows.filter(
+    s => s.pending > 0 || s.active > 0 || s.suspended
+  )
+
+  if (noteworthySources.length > 0) {
+    parts.push('', SEP, 'SOURCES', SEP)
+    for (const s of noteworthySources) {
+      const pendingStr = `pending:${s.pending.toLocaleString()}`
+      const workersStr = `workers:${s.active}/${s.cap}`
+      const statusStr = s.suspended ? '⛔suspended'
+        : s.isComplete ? '✅complete'
+        : s.active >= s.cap && s.pending > 0 ? '⚡cap-full'
+        : s.pending === 0 && s.active === 0 ? '○idle'
+        : ''
+      const line = `  ${s.sourceKey.padEnd(32)} ${pendingStr.padEnd(18)} ${workersStr.padEnd(14)} ${statusStr}`
+      parts.push(line.trimEnd())
+    }
   }
 
   // ── ISSUES ────────────────────────────────────────────────────────────────

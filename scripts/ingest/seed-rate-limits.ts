@@ -37,7 +37,8 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'lda-parliament',  intervalMs: 500,  maxConcurrentWorkers: 4,  note: 'lda.data.parliament.uk — 500ms floor (raised from 200ms V7; 524 timeouts indicate needs breathing room)' },
   { sourceKey: 'fca-publications',intervalMs: 300,  maxConcurrentWorkers: 2,  note: 'fca.org.uk/publications — Drupal CMS, PDFs via pdf-parse; client not yet built (V8)' },
   { sourceKey: 'twfy-pwdata',     intervalMs: 500,  maxConcurrentWorkers: 10, note: 'theyworkforyou.com/pwdata — polite rate; mySociety server, no stated limit (V2 4 Jun 2026)' },
-  { sourceKey: 'twfy-api',        intervalMs: 1500, maxConcurrentWorkers: 1,  note: 'theyworkforyou.com API — strict 1-worker cap; daily quota exhausted on free tier with >1 worker (V7 6 Jun 2026)' },
+  { sourceKey: 'twfy-api',          intervalMs: 1500, maxConcurrentWorkers: 1,  note: 'theyworkforyou.com API — strict 1-worker cap; daily quota exhausted on free tier with >1 worker (V7 6 Jun 2026)' },
+  { sourceKey: 'committees-portal', intervalMs: 500,  maxConcurrentWorkers: 3,  note: 'committees.parliament.uk portal — 500ms floor; Parliament shared infra same as blocked API (V15 9 Jun 2026)' },
 ]
 
 async function main(): Promise<void> {

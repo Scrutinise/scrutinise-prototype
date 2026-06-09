@@ -2,26 +2,34 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 9 Jun 2026 (V14 post-session — fetch timeout fix, monitor reseed loop fix, INGEST_PLAYBOOK updated)*
+*Last updated: 9 Jun 2026 (V15 — committees portal scraper, LDA pageSize fix, SOURCES email section)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** pending (commit-all.sh to be generated)
-**Last sprint:** V14 (8–9 Jun 2026) — hasNoProvisions classification system; specialist_queue; availability_status/note columns; fetch timeout fix (30s/10s AbortController); monitor reseed loop fix (CORPUS_THRESHOLDS + classified item exclusion); 36,983 false-positive pending rows cleared
+**Last commit:** pending (commit-all.sh to be run)
+**Last sprint:** V15 (9 Jun 2026) — committees portal scraper (9,959 reports + 40,794 other-publications); LDA pageSize=100 for writtenquestions + specialist-queue archival; SOURCES section in hourly email; INGEST_PLAYBOOK §8 updated with 3 new patterns
 
 ---
 
-## IMMEDIATE ACTIONS REQUIRED — V14
+## IMMEDIATE ACTIONS REQUIRED — V15
 
 | Action | Status | Who |
 |--------|--------|-----|
-| Run `commit-all.sh` | ✅ done | CC |
-| Redeploy all 20 workers + scheduler + monitor | ✅ done (3× during session) | CC |
-| Clear 36,983 false-positive pending rows | ✅ done | CC |
-| classify-no-provisions.ts | ✅ ran — 0 rows (none applicable, V11 rows already clean) | CC |
+| Run `commit-all.sh` | ⬜ pending | Charlie |
+| Redeploy all 20 workers + scheduler + monitor (pick up V15 code) | ⬜ after commit | Charlie |
+| Run SQL Part 2 in Railway dashboard (rate limit updates) | ⬜ pending | Charlie |
+| Run SQL Part 3d in Neon dashboard (corpus_targets INSERT) | ⬜ pending | Charlie |
+| Run `seed-committees-queue.ts` to seed queue | ⬜ after deploy | Charlie |
+| Run `seed-rate-limits.ts` to add committees-portal rate limit | ⬜ after deploy | Charlie |
+| Run SQL Part 4c (reset LDA 524 failed rows) | ⬜ after deploy | Charlie |
+| Verify reseed-deep.ts log for complete output | ⬜ check log | Charlie |
+
+**SQL file:** `scripts/ingest/sql/v15-rate-limits-and-targets.sql`
+
+**V14 actions still pending:**
 
 **V13 carry-over (still needed):**
 | Run priority SQL in Railway dashboard Query tab (de-prioritize completed legislation corpora) | ⬜ pending | Charlie |
@@ -83,6 +91,13 @@ ON CONFLICT (id) DO NOTHING;
 - Monitor will auto-reseed these on first cycle once deployed
 
 ---
+
+## KEY ARCHITECTURE STATE (as of V15)
+
+- **committees portal (V15):** `committees-portal.ts` scrapes `committees.parliament.uk/publications/` with browser User-Agent (Cloudflare bypass). 498 pages × ~20 pubs = 9,959 committee reports. 40,794 other-publications (evidence sessions, oral/written evidence). sourceType: `committees-portal`, max 3 concurrent, 500ms interval.
+- **LDA pageSize fix (V15):** `processLda()` in worker-queue.ts now passes `pageSize=100` for `writtenquestions` corpora at all times (not just 524 fallback). After 3 524 failures (MAX_524_RETRIES), row is marked `specialist-queue: LDA 524 after N attempts — archived`. Monitor no longer resets these rows.
+- **SOURCES email section (V15):** `sendProgressEmail()` now includes SOURCES section showing pending/active/cap per sourceKey. Flags `⚡cap-full` when active == cap with pending work.
+- **INGEST_PLAYBOOK §8 (V15):** Three new patterns: committees portal alternative, LDA 524 fix approach, connection pool exhaustion signature.
 
 ## KEY ARCHITECTURE STATE (as of V14)
 

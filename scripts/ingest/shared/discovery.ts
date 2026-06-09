@@ -310,6 +310,8 @@ const SINGLE_PASS_CORPORA = new Set([
   'lda-commonsdivisions', 'lda-lordsdivisions',
   // NPPF/PPG and Building Regs — single __index row, enumerates collection at run time
   'planning-policy', 'building-regs',
+  // Committees portal — all pages seeded upfront by seed-committees-queue.ts; no discovery needed
+  'committees-reports', 'committees-evidence',
   // pwdata removed from single-pass — discoverPwdata() handles daily new files
 ])
 
@@ -357,6 +359,9 @@ export const DISCOVERY_CORPUS_ORDER = [
   'echr-hudoc', 'eur-lex', 'uk-treaties', 'nilawcom', 'ots-reports',
   'lda-commonsdivisions', 'lda-lordsdivisions',
   'pwdata-westminster',
+  // Priority 3
+  'committees-reports',
   // Priority 4
   'oecd', 'planning-policy', 'building-regs',
+  'committees-evidence',
 ]
