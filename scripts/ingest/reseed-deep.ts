@@ -16,7 +16,7 @@ import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch {}
 
 import { listActIds } from './sources/tna-legislation'
-import { bulkUpsertQueueRows, getAllDocIdsForCorpus, disconnectQueue } from './shared/queue-client'
+import { bulkUpsertQueueRows, disconnectQueue } from './shared/queue-client'
 
 interface CorpusSpec {
   corpus: string
@@ -27,32 +27,24 @@ interface CorpusSpec {
   yearMax: number
 }
 
+// NOTE: si-2010plus confirmed fully seeded (TNA Atom feed = 5,811 items, queue = 5,838).
+// NOTE: si-pre-2010 confirmed fully processed (174,507 Neon sections vs est 174,555).
+// Focus: retained-eu and regional which have large gaps vs corpus_targets estimates.
 const SPECS: CorpusSpec[] = [
-  // si-2010plus: UKSI 2010–present. Queue has 5,838 rows, est 61,017 sections.
-  { corpus: 'si-2010plus', sourceType: 'tna-legislation', priority: 2,
-    types: ['uksi'], yearMin: 2010, yearMax: 2026 },
-
-  // retained-eu: EU instruments on TNA (eudn/eur/eudr).
-  // Queue has 3,390 rows. These cover retained EU law adopted in UK after Brexit.
+  // retained-eu: EU instruments on TNA (eudn/eur/eudr). est 140,000 sections, only 3,390 queue rows.
   { corpus: 'retained-eu', sourceType: 'tna-legislation', priority: 2,
     types: ['eudn', 'eur', 'eudr'], yearMin: 1900, yearMax: 2023 },
 
-  // regional: NI/Scottish/Welsh legislation (asp/anaw/nia/nisi/nisr).
-  // Queue has 9,434 done, 0 pending. May have more items.
+  // regional: NI/Scottish/Welsh legislation. est 160,000 sections, only 9,434 queue rows done.
   { corpus: 'regional', sourceType: 'tna-legislation', priority: 2,
     types: ['asp', 'anaw', 'nia', 'nisi', 'nisr'], yearMin: 1900, yearMax: 2026 },
-
-  // si-pre-2010: UKSI 1948-2009. Queue has 30,907 done. Check for any gaps.
-  { corpus: 'si-pre-2010', sourceType: 'tna-legislation', priority: 5,
-    types: ['uksi'], yearMin: 1948, yearMax: 2009 },
 ]
 
 async function reseedCorpus(spec: CorpusSpec): Promise<number> {
   console.log(`\n[deep-reseed] ${spec.corpus} (${spec.types.join(',')} ${spec.yearMin}–${spec.yearMax}) …`)
 
-  const existing = await getAllDocIdsForCorpus(spec.corpus)
-  console.log(`[deep-reseed]   existing queue rows: ${existing.size}`)
-
+  // WHY: skip getAllDocIdsForCorpus() — large Railway DB query that hits ECONNRESET.
+  // bulkUpsertQueueRows uses ON CONFLICT DO NOTHING so duplicates are safe to insert.
   let allIds: string[] = []
   for (const type of spec.types) {
     console.log(`[deep-reseed]   enumerating ${type} ${spec.yearMin}–${spec.yearMax} from TNA…`)
@@ -61,26 +53,38 @@ async function reseedCorpus(spec: CorpusSpec): Promise<number> {
     allIds = allIds.concat(ids)
   }
 
-  const missing = allIds
-    .filter(id => !existing.has(id))
-    .map(id => ({
-      id: `${spec.corpus}:${id}`,
-      corpus: spec.corpus,
-      docId: id,
-      sourceType: spec.sourceType,
-      priority: spec.priority,
-    }))
+  console.log(`[deep-reseed]   TNA total for ${spec.corpus}: ${allIds.length} acts`)
 
-  console.log(`[deep-reseed]   TNA total: ${allIds.length}  existing: ${existing.size}  missing: ${missing.length}`)
-
-  if (missing.length === 0) {
-    console.log(`[deep-reseed]   ${spec.corpus}: fully seeded — no gaps found`)
+  if (allIds.length === 0) {
+    console.log(`[deep-reseed]   ${spec.corpus}: 0 acts found — TNA may be empty for this range`)
     return 0
   }
 
-  const inserted = await bulkUpsertQueueRows(missing)
-  console.log(`[deep-reseed]   ${spec.corpus}: inserted ${inserted} new queue rows`)
-  return inserted
+  const rows = allIds.map(id => ({
+    id: `${spec.corpus}:${id}`,
+    corpus: spec.corpus,
+    docId: id,
+    sourceType: spec.sourceType,
+    priority: spec.priority,
+  }))
+
+  // Retry DB insert on transient errors
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const inserted = await bulkUpsertQueueRows(rows)
+      console.log(`[deep-reseed]   ${spec.corpus}: inserted ${inserted} new queue rows (ON CONFLICT ignored dupes)`)
+      return inserted
+    } catch (err: unknown) {
+      const msg = String(err)
+      if (attempt < 3 && (msg.includes('ECONNRESET') || msg.includes('ETIMEDOUT') || msg.includes('Connection terminated'))) {
+        console.warn(`[deep-reseed]   DB error attempt ${attempt}/3 — retrying in 10s: ${msg}`)
+        await new Promise(r => setTimeout(r, 10_000))
+      } else {
+        throw err
+      }
+    }
+  }
+  return 0
 }
 
 async function main(): Promise<void> {
