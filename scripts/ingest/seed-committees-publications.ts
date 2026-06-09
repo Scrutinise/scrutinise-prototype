@@ -37,32 +37,26 @@ const FLUSH_EVERY     = 200    // batch insert every 200 rows
 
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-// CF_CLEARANCE: Cloudflare issues a managed challenge after ~8 automated requests.
-// Without this cookie curl gets a JS challenge page it can't solve.
-// To get it: open committees.parliament.uk in Chrome, wait for full load, then
-// F12 → Application → Cookies → committees.parliament.uk → copy cf_clearance value.
-// Run with: CF_CLEARANCE=<value> NODE_PATH=... tsx seed-committees-publications.ts
-const CF_CLEARANCE = process.env.CF_CLEARANCE ?? ''
+// WHY cookie jar: Cloudflare tracks session continuity via parliament.uk session cookies.
+// Without a persistent cookie jar, each request looks like a fresh bot and CF challenges
+// after the first page. With -c/-b curl maintains the session cookie across all requests
+// and CF sees a continuous browser-like session. No CF_CLEARANCE or manual steps needed.
+const COOKIE_JAR = path.join(__dirname, 'seed-committees-cookies.txt')
 
 function curlFetch(url: string): string {
-  const args: string[] = [
+  const r = spawnSync('curl', [
     '-s', '--max-time', '20',
+    '-c', COOKIE_JAR, '-b', COOKIE_JAR,   // maintain session cookies across requests
     '-A', BROWSER_UA,
     '-H', 'Accept: text/html,application/xhtml+xml',
     '-H', 'Accept-Language: en-GB,en;q=0.9',
-  ]
-  if (CF_CLEARANCE) {
-    args.push('-H', `Cookie: cf_clearance=${CF_CLEARANCE}`)
-  }
-  args.push(url)
-
-  const r = spawnSync('curl', args, { encoding: 'utf8', timeout: 25_000, maxBuffer: 5 * 1024 * 1024 })
+    url,
+  ], { encoding: 'utf8', timeout: 25_000, maxBuffer: 5 * 1024 * 1024 })
   if (r.error) throw r.error
   if (r.status !== 0) throw new Error(`curl exited ${r.status} for ${url}`)
   if (r.stdout.length < 200) throw new Error(`curl response too short (${r.stdout.length}b) for ${url}`)
-  // Detect CF challenge page — means the cf_clearance cookie is missing or expired
   if (r.stdout.includes('Just a moment') || r.stdout.includes('Enable JavaScript and cookies')) {
-    throw new Error(`CF challenge page returned for ${url} — re-run with a fresh CF_CLEARANCE cookie`)
+    throw new Error(`CF challenge page returned for ${url} — try again after a short wait`)
   }
   return r.stdout
 }
@@ -169,19 +163,7 @@ async function seedType(type: CommitteePublicationType, cp: SeedCheckpoint): Pro
 }
 
 async function main() {
-  console.log('[seed-committees] Per-document seeder — curl + cf_clearance cookie required')
-  if (!CF_CLEARANCE) {
-    console.error('\n[seed-committees] CF_CLEARANCE env var not set.')
-    console.error('Cloudflare issues a JS challenge after ~8 requests without a valid session cookie.')
-    console.error('\nTo get the cookie:')
-    console.error('  1. Open https://committees.parliament.uk/publications/reports-responses/?page=1 in Chrome')
-    console.error('  2. Wait for the page to fully load (CF challenge completes silently)')
-    console.error('  3. F12 → Application → Storage → Cookies → committees.parliament.uk')
-    console.error('  4. Copy the value of the "cf_clearance" cookie')
-    console.error('  5. Re-run: CF_CLEARANCE=<value> NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-committees-publications.ts')
-    process.exit(1)
-  }
-  console.log(`[seed-committees] cf_clearance cookie: ${CF_CLEARANCE.slice(0, 20)}...`)
+  console.log('[seed-committees] Per-document seeder — curl session cookie bypass')
 
   // Verify curl is available
   const v = spawnSync('curl', ['--version'], { encoding: 'utf8', timeout: 5000 })
@@ -219,6 +201,7 @@ async function main() {
   console.log("    AND corpus IN ('committees-reports','committees-evidence');")
 
   try { fs.unlinkSync(CHECKPOINT_FILE) } catch {}
+  try { fs.unlinkSync(COOKIE_JAR) } catch {}
 }
 
 main().catch(e => { console.error('[seed-committees] fatal:', e); process.exit(1) })
