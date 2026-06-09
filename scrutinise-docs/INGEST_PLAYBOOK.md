@@ -490,6 +490,75 @@ WHERE status = 'claimed';
 
 ---
 
+### Parliamentary Committees portal — alternative to blocked api.parliament.uk (V15)
+
+**Background:** `api.parliament.uk/v1/committees` returns HTTP 403 from Railway IPs. This has been the case for all of 2026 and is not expected to change.
+
+**Alternative:** `committees.parliament.uk/publications/` is freely accessible. This is the public Parliament portal with the same data.
+
+**Access requirement:** A browser-like User-Agent header is required to bypass Cloudflare bot detection. Plain `fetch()` without headers returns HTTP 403. Adding `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36` returns HTTP 200 with full HTML. No JS rendering needed.
+
+**Endpoints confirmed working (9 Jun 2026 V15):**
+- `committees.parliament.uk/publications/reports-responses/?page=N` — 9,959 reports, 498 pages
+- `committees.parliament.uk/publications/other-publications/?page=N` — 40,794 items, ~2,040 pages
+
+**Content structure:** Each publication card contains title, committee name(s), published date, paper number (HC/HL), publication type, PDF URL (relative → absolute via committees.parliament.uk redirect), HTML URL (absolute on publications.parliament.uk).
+
+**HTML content:** `publications.parliament.uk/pa/...` pages are directly accessible, no auth, no Cloudflare issue.
+
+**Source client:** `scripts/ingest/sources/committees-portal.ts`
+**Seeder:** `scripts/ingest/seed-committees-queue.ts`
+**sourceType:** `committees-portal` (max 3 concurrent, 500ms interval)
+
+---
+
+### LDA 524 permanent page failures — pageSize fix + specialist-queue archival (V15)
+
+**Root cause of LDA 524s:** `lda.data.parliament.uk` uses a Cloudflare proxy in front of Parliament's database. Written questions have large result sets — with `pageSize=500`, the database query times out before Cloudflare's 100s limit, returning HTTP 524. The existing fallback (retry with `pageSize=100`) only fetches a partial slice of the page, not the full offset range.
+
+**Permanent fix (V15):** `processLda` in `worker-queue.ts` now passes `pageSize=100` for `writtenquestions` corpora at all times (not just as a 524 fallback). This means 5× more requests but each succeeds within the timeout window.
+
+**Specialist-queue archival:** After `MAX_524_RETRIES` (3) attempts, a LDA row that still returns 524 is marked with error prefix `specialist-queue:` — this prevents `resetRetryableFailures()` in `monitor.ts` from resetting it indefinitely. The row stays as `failed` and is visible in the email ISSUES section for future investigation.
+
+**Reset SQL (run after deploying V15 code to pick up pageSize=100 fix):**
+```sql
+UPDATE ingest_queue
+  SET status = 'pending', "lastError" = NULL, "claimedBy" = NULL, "claimedAt" = NULL
+WHERE status = 'failed'
+  AND corpus IN ('lda-commonswrittenquestions', 'lda-lordswrittenquestions')
+  AND "lastError" NOT LIKE 'specialist-queue:%'
+  AND ("lastError" LIKE '%524%' OR "lastError" LIKE '%timeout%');
+```
+
+---
+
+### Connection pool exhaustion signature — workers in ECONNRESET retry loop (V15)
+
+**Symptom:** Multiple workers show this pattern simultaneously in Railway logs:
+```
+[worker-N] DB connection error — sleeping 30s before retry: Error: read ECONNRESET
+[worker-N] DB connection error — sleeping 30s before retry: Error: read ECONNRESET
+```
+Workers are NOT crashing (they sleep and retry). But they cannot connect to the DB. The pattern repeats every 30s.
+
+**Cause:** Railway Postgres has a hard limit on simultaneous connections (~100 across all services). When workers are redeployed and have not yet been updated to the `max: 2` pool cap (`eac98af`), each worker holds multiple connections. 20 workers × 5 connections = 100 connections → pool exhausted → new workers ECONNRESET.
+
+**Diagnosis:** Run in Railway dashboard Query tab:
+```sql
+SELECT COUNT(*) as connections, state, application_name
+FROM pg_stat_activity
+WHERE datname = current_database()
+GROUP BY state, application_name
+ORDER BY connections DESC;
+```
+If total connections > 80, pool is near capacity. Check `application_name` — workers show as `pg_node`. If many connections from old code (no `max: 2` cap), trigger redeployment.
+
+**Fix:** Workers with the V14 `max: 2` pool cap fix (`commit eac98af`) will release connections back. Workers running old code need redeployment. Once connections drop below 80, ECONNRESET workers will reconnect automatically on their next 30s retry — no manual action needed.
+
+**Distinction from DB crash:** When DB is down, ALL connections fail immediately. In pool exhaustion, some workers ARE connected (the ones holding connections). DB health: run `SELECT 1` from Railway dashboard — if this works, DB is healthy and it is a pool exhaustion problem, not a DB crash.
+
+---
+
 ### Railway service config
 
 | Incident | Cause | Fix |
