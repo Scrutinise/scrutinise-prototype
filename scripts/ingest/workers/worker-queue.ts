@@ -78,22 +78,11 @@ async function main(): Promise<void> {
   let sinceCheckpoint = 0
 
   while (true) {
-    // WHY: claimNextChunk and other queue-client calls throw ECONNRESET on transient
-    // DB connection drops (Railway TCP proxy timeouts, brief Postgres restarts).
-    // Without this catch, the worker exits and Railway exhausts ON_FAILURE retries.
-    // Instead: sleep 30s and retry — the pool reconnects automatically on next query.
-    let row: Awaited<ReturnType<typeof claimNextChunk>>
-    try {
-      row = await claimNextChunk(workerId)
-    } catch (err: unknown) {
-      const msg = String(err)
-      if (msg.includes('ECONNRESET') || msg.includes('ECONNREFUSED') || msg.includes('ETIMEDOUT') || msg.includes('Connection terminated')) {
-        console.warn(`[worker-${workerId}] DB connection error — sleeping 30s before retry: ${msg}`)
-        await new Promise(r => setTimeout(r, 30_000))
-        continue
-      }
-      throw err  // re-throw non-transient errors
-    }
+    // WHY: queue is on Neon+PgBouncer — connection management is handled by the proxy,
+    // ECONNRESET from Railway TCP is no longer a concern. Any unhandled DB error from
+    // claimNextChunk propagates to main().catch → process.exit(1). Railway restarts
+    // the worker with the startup jitter, which staggers reconnections automatically.
+    const row = await claimNextChunk(workerId)
 
     if (!row) {
       // Distinguish: queue empty vs all sources rate-limited.

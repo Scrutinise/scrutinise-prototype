@@ -11,7 +11,7 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-we
 import { Pool } from 'pg'
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.NEON_DATABASE_URL,
   ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: 10_000,
 })

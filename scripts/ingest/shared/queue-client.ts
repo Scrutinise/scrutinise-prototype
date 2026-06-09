@@ -29,8 +29,8 @@ let _pool: Pool | null = null
 
 function getPool(): Pool {
   if (!_pool) {
-    const url = process.env.DATABASE_URL
-    if (!url) throw new Error('DATABASE_URL not set')
+    const url = process.env.NEON_DATABASE_URL
+    if (!url) throw new Error('NEON_DATABASE_URL not set')
     _pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false }, max: 2, idleTimeoutMillis: 10_000 })
   }
   return _pool

@@ -199,7 +199,7 @@ async function checkCriticalConditions(pool: Pool): Promise<void> {
 
 async function runMonitor(): Promise<void> {
   const railwayPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.NEON_DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     max: 2,
     idleTimeoutMillis: 10_000,
