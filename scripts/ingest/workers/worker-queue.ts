@@ -138,8 +138,8 @@ async function main(): Promise<void> {
                   'pwdata-lordswms': 'twfy-pwdata',
                   'planning-policy': 'gov-uk',
                   'building-regs': 'gov-uk',
-                  'committees-reports': 'committees-portal',
-                  'committees-evidence': 'committees-portal',
+                  'committees-reports': 'committees-document',
+                  'committees-evidence': 'committees-document',
                 }
                 const sourceType = sourceTypeMap[corpus]
                 if (sourceType) await markSourceTypeComplete(sourceType).catch(() => {})
@@ -214,7 +214,8 @@ async function processRow(row: QueueRow, workerId: number): Promise<void> {
     case 'fca-publications':  return processGovUk(row)
     case 'scotlawcom':        return processLawCommission(row)
     case 'nilawcom':          return processLawCommission(row)
-    case 'committees-portal': return processCommittees(row)
+    case 'committees-portal':  return processCommittees(row)
+    case 'committees-document': return processCommitteeDocument(row)
     default:
       await markSkipped(row.id)
       console.warn(`[worker] unknown sourceType ${row.sourceType} — skipped`)
@@ -817,6 +818,51 @@ async function processLawCommission(row: QueueRow): Promise<void> {
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl: report.sourceUrl, r2Key: cKey, wordCount: countWords(text), status: 'compiled' })
   }
   await markDone(row.id)
+}
+
+// ── Parliamentary Committees — per-document fetch ─────────────────────────────
+// docId = full publications.parliament.uk HTML URL (set by seed-committees-publications.ts).
+// Workers only touch publications.parliament.uk — committees.parliament.uk is NOT called here.
+// WHY: committees.parliament.uk is IP-blocked from Railway; publications.parliament.uk is not.
+
+async function processCommitteeDocument(row: QueueRow): Promise<void> {
+  const htmlUrl = row.docId
+
+  // Derive R2 key from the URL path: strip host + .htm extension
+  // e.g. https://publications.parliament.uk/pa/cm2023-24/cmselect/X/1/1.htm
+  //   → committees-reports/pa/cm2023-24/cmselect/X/1/1/sections/1.compiled.txt
+  const urlPath = htmlUrl
+    .replace(/^https?:\/\/publications\.parliament\.uk\//, '')
+    .replace(/[?#].*$/, '')
+    .replace(/\.html?$/i, '')
+  const cKey = compiledKey(row.corpus, urlPath, '1')
+
+  if (await r2Exists(cKey)) {
+    await markDone(row.id, 'html')
+    return
+  }
+
+  const text = await fetchPublicationHtml(htmlUrl)
+
+  if (!text || !text.trim()) {
+    // No extractable text (PDF-only redirect, empty page) — not a failure
+    await markDone(row.id)
+    return
+  }
+
+  const compiled = rawToText(text)
+  await r2Put(cKey, compiled)
+  const secId = sectionId(row.corpus, urlPath, '1')
+  await upsertSection({
+    id: secId,
+    corpus: row.corpus,
+    sourceUrl: htmlUrl,
+    r2Key: cKey,
+    wordCount: countWords(compiled),
+    status: 'compiled',
+    format: 'html',
+  })
+  await markDone(row.id, 'html')
 }
 
 // ── Parliamentary Committees portal ──────────────────────────────────────────

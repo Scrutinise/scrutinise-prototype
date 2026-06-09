@@ -76,7 +76,7 @@ export async function listCommitteePublications(
  *     <div class="indicator">HC {N}</div>
  *     <div class="indicator">Report</div>
  */
-function parsePublicationCards(html: string, type: CommitteePublicationType): CommitteePublication[] {
+export function parsePublicationCards(html: string, type: CommitteePublicationType): CommitteePublication[] {
   const publications: CommitteePublication[] = []
 
   // Extract individual card blocks
@@ -151,19 +151,27 @@ function parsePublicationCards(html: string, type: CommitteePublicationType): Co
 
 /**
  * Fetch the text content of an HTML publication from publications.parliament.uk.
- * Returns null if the page is inaccessible or contains no useful text.
+ * Uses curl subprocess — Node.js Undici is blocked by Cloudflare TLS fingerprinting
+ * on all parliament.uk hosts regardless of User-Agent headers. curl's TLS fingerprint
+ * is accepted. Railway Linux containers have curl installed by default.
  */
 export async function fetchPublicationHtml(htmlUrl: string): Promise<string | null> {
+  return fetchPublicationHtmlViaCurl(htmlUrl)
+}
+
+export async function fetchPublicationHtmlViaCurl(htmlUrl: string): Promise<string | null> {
+  const { execFile } = await import('child_process')
+  const { promisify } = await import('util')
+  const exec = promisify(execFile)
   try {
-    const res = await fetch(htmlUrl, {
-      headers: {
-        'User-Agent': BROWSER_UA,
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    })
-    if (!res.ok) return null
-    const html = await res.text()
-    return extractReportText(html)
+    const { stdout } = await exec('curl', [
+      '-sf', '--max-time', '30', '--retry', '1',
+      '-A', BROWSER_UA,
+      '-H', 'Accept: text/html,application/xhtml+xml',
+      '-H', 'Accept-Language: en-GB,en;q=0.9',
+      htmlUrl,
+    ], { timeout: 35_000, maxBuffer: 5 * 1024 * 1024 })
+    return extractReportText(stdout) ?? null
   } catch {
     return null
   }
