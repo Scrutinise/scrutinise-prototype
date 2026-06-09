@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 8 Jun 2026 (V14 — hasNoProvisions classification system + specialist queue)*
+*Last updated: 9 Jun 2026 (V14 post-session — fetch timeout fix, monitor reseed loop fix, INGEST_PLAYBOOK updated)*
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Active branch:** Main
 **Last commit:** pending (commit-all.sh to be generated)
-**Last sprint:** V14 (8 Jun 2026) — hasNoProvisions classification system; specialist_queue table; corpus_sections availability_status/note columns; bulk classify-no-provisions.ts script; INGEST_PLAYBOOK.md updated
+**Last sprint:** V14 (8–9 Jun 2026) — hasNoProvisions classification system; specialist_queue; availability_status/note columns; fetch timeout fix (30s/10s AbortController); monitor reseed loop fix (CORPUS_THRESHOLDS + classified item exclusion); 36,983 false-positive pending rows cleared
 
 ---
 
@@ -18,9 +18,10 @@
 
 | Action | Status | Who |
 |--------|--------|-----|
-| Run `commit-all.sh` | ⬜ pending | Charlie |
-| Redeploy all 20 workers (to pick up V14 classification logic) | ⬜ after commit | Charlie |
-| Run `classify-no-provisions.ts` in background (overnight job — classifies existing done rows) | ⬜ after commit | Charlie |
+| Run `commit-all.sh` | ✅ done | CC |
+| Redeploy all 20 workers + scheduler + monitor | ✅ done (3× during session) | CC |
+| Clear 36,983 false-positive pending rows | ✅ done | CC |
+| classify-no-provisions.ts | ✅ ran — 0 rows (none applicable, V11 rows already clean) | CC |
 
 **V13 carry-over (still needed):**
 | Run priority SQL in Railway dashboard Query tab (de-prioritize completed legislation corpora) | ⬜ pending | Charlie |
@@ -88,8 +89,9 @@ ON CONFLICT (id) DO NOTHING;
 - **hasNoProvisions classification (V14):** `classifyNoProvisionsItem()` in `tna-legislation.ts` classifies into: commencement | metadata-only | pdf-only | no-provisions. Uses title regex + year < 1980 heuristic + PDF HEAD check. Workers write classified rows to Neon `corpus_sections.availability_status` + `availability_note`.
 - **specialist_queue (V14):** New Railway DB table. Workers insert commencement + pdf-only items for future specialist worker processing. Indexed on `(specialist_type, status)` and `(corpus, status)`.
 - **corpus_sections new columns (V14):** `availability_status TEXT NOT NULL DEFAULT 'full'` and `availability_note TEXT`. Existing rows default to 'full'. Index on availability_status WHERE != 'full'.
-- **AVAILABILITY_NOTES (V14):** User-facing strings per classification type in `tna-legislation.ts`. Lex can display these when users search for unavailable items.
-- **bulk classify script (V14):** `scripts/ingest/classify-no-provisions.ts` — classifies existing done rows. Checkpointed, resumable, 200ms TNA rate limit.
+- **fetch() timeout fix (V14):** `withTimeout(ms)` helper added to `tna-legislation.ts`. All fetch calls use AbortController: 30s for text/binary, 10s for HEAD. Workers were hanging indefinitely on old NISR items with no timeout.
+- **Monitor reseed loop fix (V14):** `CORPUS_THRESHOLDS` now has `regional: 1` and `retained-eu: 1`. `reseedPartialItems()` excludes items with `availability_status != 'full'` via second Neon query. Root cause of 36,983 items stuck in false-positive pending state all day.
+- **Queue state after V14 fixes:** 162 pending (lda-lordswrittenquestions only). Workers in discovery mode after these complete.
 
 ## KEY ARCHITECTURE STATE (as of V13)
 

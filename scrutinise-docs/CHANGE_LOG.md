@@ -1,6 +1,41 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 8 Jun 2026 (V14 — hasNoProvisions classification system + specialist queue)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V14 post-session — fetch timeout fix + monitor reseed loop fix)*
+
+---
+
+## SPRINT V14 post-session — 9 Jun 2026 (fetch timeout fix + monitor reseed loop fix)
+
+### Bug 1 — fetch() no timeout (tna-legislation.ts)
+
+Workers hung indefinitely on old NISR items. TNA accepts TCP connection but never sends data; no AbortController meant workers blocked forever.
+
+- Added `withTimeout(ms)` helper returning `{ signal, clear }` to `tna-legislation.ts`
+- `fetchText()`: 30s AbortController timeout
+- `fetchBinary()`: 30s AbortController timeout
+- `headRequest()`: 10s AbortController timeout
+- All three call `clear()` in both success and catch paths
+- Committed `398ffbd`
+
+### Bug 2 — Monitor infinite reseed loop (monitor.ts)
+
+36,983 completed items stuck in false-positive pending state all day. Workers processed them, monitor reseeded them, repeat.
+
+Two triggers identified:
+- `regional` and `retained-eu` not in `CORPUS_THRESHOLDS` → defaulted to 3, flagging 1-section NI Acts as partial
+- hasNoProvisions items (availability_status != 'full') have 0 compiled r2Key sections → count=0 < any threshold → reseeded every 15 minutes
+
+Fixes:
+- Added `regional: 1` and `retained-eu: 1` to `CORPUS_THRESHOLDS`
+- Added `status != 'unavailable'` filter to Neon count query
+- Added second Neon query in `reseedPartialItems()` to fetch all classified-unavailable govUkIds and exclude them from reseed candidates
+- Cleared 36,983 false-positive pending rows → done
+- Committed `9c8d3cb`
+
+### INGEST_PLAYBOOK.md — two new §8 entries
+
+- "Monitor infinite reseed loop" — symptom, cause (both triggers), fix, diagnostic SQL, rule for new corpus onboarding
+- "fetch() with no timeout blocks workers indefinitely" — symptom, cause, fix pattern with code snippet, diagnostic SQL
 
 ---
 

@@ -407,6 +407,73 @@ First seen: 8 Jun 2026, 09:30–15:35 BST (6 hours, 0 sections)
 | TNA caselaw "7,489 pages" — empty beyond 1,499 | Feed reports inflated page count; pages 1,500+ return empty | Fixed V4: binary search for true last non-empty page |
 | LDA commonswrittenquestions 0 rows | 388 HTTP 524 failures when DB was near-full; inserts silently failed | Reset failed rows; retry once DB has space |
 
+### Monitor infinite reseed loop (V14 — 9 Jun 2026)
+
+**Symptom:** Workers processing rows but nothing appears in corpus_sections; pending count stays constant or rises despite workers being active and claimed.
+
+**Cause:** `reseedPartialItems()` in `monitor.ts` reseeds items where section_count < CORPUS_THRESHOLDS[corpus]. Two triggers:
+
+- **(a) Corpus missing from CORPUS_THRESHOLDS** — falls to `default: 3`, wrongly flags short 1-section Acts (e.g., NI regional Acts, retained-eu instruments) as partial. Every monitor cycle reseeds them.
+- **(b) hasNoProvisions items always have 0 compiled sections** — they have `availability_status != 'full'` and no r2Key, so the Neon count query returns 0 for them. 0 < any threshold → reseeded every 15 minutes forever.
+
+**Scale:** 36,983 completed items were in false-positive pending state, blocking all 20 workers for an entire day.
+
+**Fix applied (V14):**
+1. Added `regional: 1` and `retained-eu: 1` to `CORPUS_THRESHOLDS`.
+2. Added `availability_status != 'full'` exclusion to the Neon count query — classified unavailable items are never counted as partial.
+3. Added second Neon query in `reseedPartialItems()` that fetches all govUkIds with `availability_status != 'full'` and excludes them from the reseed candidate set.
+4. Cleared 36,983 false-positive pending rows via SQL.
+
+**Rule: when adding any new corpus to the ingest pipeline, always add it to `CORPUS_THRESHOLDS` before deploying.** If unsure of the right value, use 1 (only reseed items with 0 compiled sections — genuine crashes, not short Acts).
+
+**Diagnostic SQL (Railway):**
+```sql
+-- Check if pending rows are monitor-reseeded false positives
+SELECT COUNT(*) FROM ingest_queue
+WHERE status = 'pending'
+  AND "lastError" = 'reseeded by monitor — partial section count detected';
+
+-- Clear false positives (after fixing CORPUS_THRESHOLDS)
+UPDATE ingest_queue SET status = 'done', "lastError" = NULL
+WHERE "lastError" = 'reseeded by monitor — partial section count detected'
+  AND status = 'pending';
+```
+
+---
+
+### fetch() with no timeout blocks workers indefinitely (V14 — 9 Jun 2026)
+
+**Symptom:** Workers show as claimed in the queue; `claimedAt` age grows past 90 minutes. Railway CPU shows near-zero. No Neon section writes. Workers appear idle but are not.
+
+**Cause:** Node.js `fetch()` with no `AbortController` — a server that accepts the TCP connection but never sends a response will block the worker process indefinitely. There is no default timeout in Node.js `fetch`. This affected `fetchText()`, `fetchBinary()`, and `headRequest()` in `tna-legislation.ts`. Workers were blocked for hours on TNA requests for old NISR items (pre-1980).
+
+**Fix applied (V14):** Added `withTimeout(ms)` helper returning `{ signal, clear }`. All three fetch functions now pass `signal` to `fetch()` and call `clear()` in both success and catch paths. Timeouts: 30s for text/binary, 10s for HEAD requests.
+
+```typescript
+// Pattern — always use this for any new fetch in ingest scripts
+const { signal, clear } = withTimeout(30_000)
+try {
+  const res = await fetch(url, { signal, headers: { ... } })
+  clear()
+  // ... handle response
+} catch (err) {
+  clear()
+  // ... handle error (AbortError means timeout)
+}
+```
+
+**Rule: every `fetch()` call in any ingest script must use `AbortController` with an explicit timeout.** Never rely on TCP-level or OS-level timeouts — they are not guaranteed to fire.
+
+**Diagnostic:** If claimed age > 90 seconds for TNA legislation rows, workers are almost certainly hung on a fetch. Reset claimed rows to pending and redeploy with the timeout fix.
+
+```sql
+-- Reset all stale claimed rows
+UPDATE ingest_queue SET status = 'pending', "claimedBy" = NULL, "claimedAt" = NULL
+WHERE status = 'claimed';
+```
+
+---
+
 ### Railway service config
 
 | Incident | Cause | Fix |
