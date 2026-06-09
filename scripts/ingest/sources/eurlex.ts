@@ -14,15 +14,25 @@ export interface EurLexDoc {
   url: string
 }
 
+const FETCH_TIMEOUT_MS = 30_000
+
+function withTimeout(ms: number): { signal: AbortSignal; clear: () => void } {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ms)
+  return { signal: controller.signal, clear: () => clearTimeout(timer) }
+}
+
 async function fetchHtml(url: string): Promise<string | null> {
   await throttle.wait()
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Scrutinise-Ingest/1.0', 'Accept-Language': 'en' },
-  })
-  if (res.status === 429) { throttle.backoff(); return null }
-  if (!res.ok) return null
-  throttle.success()
-  return res.text()
+  const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { signal, headers: { 'User-Agent': 'Scrutinise-Ingest/1.0', 'Accept-Language': 'en' } })
+    clear()
+    if (res.status === 429) { throttle.backoff(); return null }
+    if (!res.ok) return null
+    throttle.success()
+    return res.text()
+  } catch (err) { clear(); return null }
 }
 
 interface SparqlResult {
@@ -44,12 +54,12 @@ async function fetchCelexIds(page: number, pageSize: number): Promise<string[]> 
     `} LIMIT ${pageSize} OFFSET ${offset}`
   const url =
     `${CELLAR_SPARQL}?query=${encodeURIComponent(query)}&format=application%2Fsparql-results%2Bjson`
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Scrutinise-Ingest/1.0',
-      Accept: 'application/sparql-results+json',
-    },
-  })
+  const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
+  let res: Response
+  try {
+    res = await fetch(url, { signal, headers: { 'User-Agent': 'Scrutinise-Ingest/1.0', Accept: 'application/sparql-results+json' } })
+  } catch { clear(); return [] }
+  clear()
   if (res.status === 429) { throttle.backoff(); return [] }
   if (!res.ok) return []
   throttle.success()

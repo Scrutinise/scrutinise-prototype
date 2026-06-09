@@ -56,6 +56,7 @@ import {
 } from '../sources/gov-scraper'
 
 const CHECKPOINT_EVERY = 50  // write worker progress checkpoint every N items
+const ROW_TIMEOUT_MS  = 5 * 60_000  // 5min hard ceiling per row — protects against any source hanging
 
 async function main(): Promise<void> {
   const workerIdRaw = parseInt(process.env.WORKER_ID ?? '1', 10)
@@ -175,7 +176,12 @@ async function main(): Promise<void> {
     console.log(`[worker-${workerId}] claimed ${row.id} (${row.sourceType} p${row.priority})`)
 
     try {
-      await processRow(row, workerId)
+      await Promise.race([
+        processRow(row, workerId),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`row timeout after ${ROW_TIMEOUT_MS / 1000}s`)), ROW_TIMEOUT_MS)
+        ),
+      ])
       cp.completed++
     } catch (err: unknown) {
       console.error(`[worker-${workerId}] error processing ${row.id}:`, err)
