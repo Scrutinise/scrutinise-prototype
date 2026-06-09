@@ -60,6 +60,12 @@ scripts/legislation/v276-bulk/phase3b-progress.json
 
 # V.3-A operational state (runtime artifacts)
 scripts/operational/hmrc-checkpoint.json
+
+# Ingest seeder runtime state (checkpoint/resume + cookies — not source code)
+scripts/ingest/seed-committees-checkpoint.json
+scripts/ingest/seed-committees-cookies.txt
+scripts/ingest/migrate-queue-checkpoint.json
+scripts/ingest/migrate-corpus-checkpoint.json
 scripts/operational/hmrc-pilot-log.csv
 
 # V.3-B UKSI — large manifest and intermediate data files (regenerable from scripts)
