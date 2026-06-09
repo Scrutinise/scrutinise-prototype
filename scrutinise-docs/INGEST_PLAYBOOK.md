@@ -598,7 +598,133 @@ If total connections > 80, pool is near capacity. Check `application_name` — w
 
 ---
 
-## 9. DB SIZE MONITORING
+## 9. SOURCE ACCESS PRIORITY ORDER
+
+For every new corpus, test access methods in this order before writing a client:
+
+### 1. Bulk download (always try first)
+Single file or directory of files (XML, CSV, JSON). Fastest, no rate limits, no connection
+pressure during download phase. Workers open a DB connection only when writing — not during fetch.
+
+Check: `sitemap.xml`, `/data`, `/bulk`, `/downloads`, `/open-data`, `/pwdata`
+
+Examples already in pipeline:
+- TWFY pwdata XML (`theyworkforyou.com/pwdata/scrapedxml/`) — wrans, debates, lords, WMS
+- TNA legislation XML (`legislation.gov.uk/ukpga/...`)
+- EUR-Lex CELLAR SPARQL export
+
+### 2. HTML scraping (second choice)
+Paginated HTML with predictable URL patterns. No API key, usually no rate limiting, simpler
+than API. Works when the public website has a search/browse page.
+
+Check: does the public website have a `/search`, `/browse`, or `/publications` page?
+
+Examples already in pipeline:
+- `committees.parliament.uk/publications/` (replaces blocked api.parliament.uk/v1/committees)
+- `sentencingcouncil.org.uk` (embedded JSON on HTML page)
+
+### 3. REST/GraphQL API (only when 1 and 2 are unavailable or incomplete)
+Use only for ad hoc queries or when bulk/HTML is genuinely unavailable. APIs are designed
+for individual record lookup, not bulk ingestion. Rate limited, key required, single-request
+oriented.
+
+Examples:
+- LDA Parliament API — **replaced by TWFY bulk XML for written questions (V16)**
+- FCA Handbook `api-handbook.fca.org.uk` — no bulk alternative found
+
+### When an API is blocked or failing
+
+Immediately search for a bulk download or HTML alternative before debugging the API.
+Most UK government data is published in bulk (GOV.UK open data, Parliament pwdata, TNA feeds).
+
+**Never use a paginated API for bulk historical data** if a bulk download covers the same
+content. A paginated API over 600,000+ records will always hit timeouts, rate limits, or
+memory issues. The LDA written questions experience is the canonical example: 618,599 records
+required 1,238 separate API pages at 100 records each; TWFY wrans XML covers the same data as
+flat daily files that each need a single HTTP fetch.
+
+### TWFY bulk XML written answers — coverage note (V16)
+
+`pwdata-wrans` (Commons written answers from 2001) and `pwdata-lordswrans` (Lords written
+answers) provide the same content as lda-commonswrittenquestions and lda-lordswrittenquestions.
+`pwdata-wrans` directory files confirmed at `theyworkforyou.com/pwdata/scrapedxml/wrans/`.
+LDA written questions corpora retired in V16 — see §10 corpus status table.
+
+---
+
+## 9a. QUEUE MIGRATION TO NEON (V16 — 9 Jun 2026)
+
+### Background
+
+Railway Postgres OOM crash (V15 diagnosis) was caused by 20 workers holding persistent
+connection pools simultaneously under peak write load. The fix is architectural: migrate
+`ingest_queue` and all operational tables to Neon (which uses PgBouncer for connection
+multiplexing), and switch workers to connection-per-transaction (open only when writing).
+
+### Tables migrated from Railway → Neon
+
+| Table | Purpose |
+|-------|---------|
+| `ingest_queue` | Queue rows — main worker work queue |
+| `source_rate_limits` | Per-source rate limit config and token bucket |
+| `specialist_queue` | Commencement/pdf-only items for future specialist workers |
+| `scheduler_lock` | Mutex preventing duplicate scheduler runs |
+| `ingest_progress_snapshots` | Per-worker throughput snapshots for email |
+
+After migration, **Railway Postgres holds only Prisma app tables** (LegislationSection,
+OperationalSection, User, Idea, etc.). Ingest workers and scheduler no longer connect
+to Railway DB at all.
+
+### Migration procedure (one-time, non-reversible)
+
+**STEP 1 — Stop all 20 workers** (Railway dashboard → each worker → stop, or via API).
+Workers must not be writing to Railway queue during migration. The migration script checks
+for active claimed rows and aborts if any are found within the last 5 minutes.
+
+**STEP 2 — Run migration script:**
+```
+NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx \
+  --tsconfig scripts/tsconfig.json scripts/ingest/migrate-queue-to-neon.ts
+```
+Script creates Neon tables if they don't exist, copies data in batches of 500 with
+ON CONFLICT DO NOTHING, checkpoints to `migrate-queue-checkpoint.json`.
+
+**STEP 3 — Verify row counts** match between Railway and Neon (reported by script).
+
+**STEP 4 — Redeploy all workers and scheduler** (staggered restart via
+`restart-workers-staggered.ts`). Workers now write to Neon queue automatically — the
+code change (queue-client.ts NEON_DATABASE_URL, V16) was deployed in this step.
+
+### Code changes in V16
+
+| File | Change |
+|------|--------|
+| `shared/queue-client.ts` | `DATABASE_URL` → `NEON_DATABASE_URL` in `getPool()` |
+| `shared/progress-reporter.ts` | `DATABASE_URL` → `NEON_DATABASE_URL` in `getPool()` |
+| `monitor.ts` | `DATABASE_URL` → `NEON_DATABASE_URL` in `runMonitor()` pool |
+| `seed-rate-limits.ts` | `DATABASE_URL` → `NEON_DATABASE_URL` |
+| `workers/worker-queue.ts` | Removed ECONNRESET retry loop — clean exit; Railway restarts with jitter |
+
+### ECONNRESET retry loop removal
+
+The V14 ECONNRESET catch in worker-queue.ts was added because Railway Postgres TCP proxy
+occasionally drops connections. With queue on Neon+PgBouncer, this is no longer relevant.
+Any unhandled DB error from `claimNextChunk` now propagates to `main().catch → process.exit(1)`.
+Railway restarts the worker; startup jitter staggers reconnections. Clean exit is safer than
+a 30s retry loop that keeps broken connections alive (was contributing to OOM).
+
+### Scripts that still use DATABASE_URL (Railway) directly
+
+These diagnostic/backfill scripts were not updated in V16 — they operate on Railway app tables
+(corpus_sections on Railway is fully gone since V3 TRUNCATE) or are one-off tools. Update them
+to NEON_DATABASE_URL before re-running if they need queue data:
+
+`classify-no-provisions.ts`, `check-scheduler-lock.ts`, `retry-failed.ts`, `run-cleanup.ts`,
+`diag-has-no-provisions.ts`, `census/live-census.ts` (has both URL patterns already).
+
+---
+
+## 10. DB SIZE MONITORING
 
 Railway PostgreSQL is on a 20GB volume (resized from 5GB after 4 Jun 2026 crash).
 
@@ -619,7 +745,7 @@ SELECT COUNT(*) FROM corpus_sections;
 
 ---
 
-## 10. QUICK REFERENCE — CORPUS STATUS (as of 8 Jun 2026)
+## 11. QUICK REFERENCE — CORPUS STATUS (as of 8 Jun 2026)
 
 | Corpus | Status | Notes |
 |--------|--------|-------|
@@ -653,7 +779,7 @@ SELECT COUNT(*) FROM corpus_sections;
 
 ---
 
-## 11. LESSONS LEARNED — V10 SESSION (7 Jun 2026)
+## 12. LESSONS LEARNED — V10 SESSION (7 Jun 2026)
 
 These are non-obvious things discovered during the V10 session that aren't obvious from reading the code.
 
@@ -704,7 +830,7 @@ The `GetAllHandBookProvisionsSortedOrderByChapter` API returns individual provis
 
 ---
 
-## 12. LESSONS LEARNED — V11 SESSION (7 Jun 2026)
+## 13. LESSONS LEARNED — V11 SESSION (7 Jun 2026)
 
 ### TNA Legislation — hasNoProvisions
 
@@ -746,7 +872,7 @@ New table stores alert history for rate-limiting (max 1 per issue per 4 hours). 
 
 ---
 
-## 13. LESSONS LEARNED — V12 SESSION (8 Jun 2026)
+## 14. LESSONS LEARNED — V12 SESSION (8 Jun 2026)
 
 ### Duplicate email — definitive root cause found
 
