@@ -32,7 +32,7 @@ import { parsePublicationCards, CommitteePublicationType } from './sources/commi
 import { bulkUpsertQueueRows } from './shared/queue-client'
 
 const CHECKPOINT_FILE = path.join(__dirname, 'seed-committees-checkpoint.json')
-const PAGE_DELAY_MS   = 600    // 600ms between listing page fetches
+const PAGE_DELAY_MS   = 1500   // 1.5s between listing page fetches — matches proven bash test pace
 const FLUSH_EVERY     = 200    // batch insert every 200 rows
 
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
@@ -114,9 +114,18 @@ async function seedType(type: CommitteePublicationType, cp: SeedCheckpoint): Pro
     try {
       html = curlFetch(url)
     } catch (err) {
-      console.warn(`[seed] ${type} p${page}: curl failed — ${err} — skipping`)
-      await new Promise(r => setTimeout(r, PAGE_DELAY_MS * 4))
-      continue
+      // Retry once after a longer wait before skipping — handles transient CF challenges
+      console.warn(`[seed] ${type} p${page}: curl failed (${err}) — retrying in 8s`)
+      await new Promise(r => setTimeout(r, 8_000))
+      try {
+        html = curlFetch(url)
+      } catch (err2) {
+        console.warn(`[seed] ${type} p${page}: retry also failed — skipping`)
+        cp[type].lastPage = page
+        saveCheckpoint(cp)
+        await new Promise(r => setTimeout(r, PAGE_DELAY_MS))
+        continue
+      }
     }
 
     const pubs = parsePublicationCards(html, type)
