@@ -60,18 +60,31 @@ export const AVAILABILITY_NOTES: Record<NoProvisionsClass, string> = {
 
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
 
+const FETCH_TIMEOUT_MS = 30_000
+const HEAD_TIMEOUT_MS  = 10_000
+
+function withTimeout(ms: number): { signal: AbortSignal; clear: () => void } {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ms)
+  return { signal: controller.signal, clear: () => clearTimeout(timer) }
+}
+
 async function fetchText(url: string): Promise<string | null> {
   await throttle.wait()
+  const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
   try {
     const res = await fetch(url, {
+      signal,
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
     })
+    clear()
     if (res.status === 404 || res.status === 410) return null
     if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
     if (!res.ok) return null
     throttle.success()
     return res.text()
   } catch (err) {
+    clear()
     console.warn(`[tna] fetch error ${url}: ${err}`)
     return null
   }
@@ -79,31 +92,39 @@ async function fetchText(url: string): Promise<string | null> {
 
 async function headRequest(url: string): Promise<boolean> {
   await throttle.wait()
+  const { signal, clear } = withTimeout(HEAD_TIMEOUT_MS)
   try {
     const res = await fetch(url, {
       method: 'HEAD',
+      signal,
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
     })
+    clear()
     if (res.ok) { throttle.success(); return true }
     if (res.status === 429 || res.status === 503) throttle.backoff()
     return false
   } catch {
+    clear()
     return false
   }
 }
 
 async function fetchBinary(url: string): Promise<Buffer | null> {
   await throttle.wait()
+  const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
   try {
     const res = await fetch(url, {
+      signal,
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
     })
+    clear()
     if (res.status === 404 || res.status === 410) return null
     if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
     if (!res.ok) return null
     throttle.success()
     return Buffer.from(await res.arrayBuffer())
   } catch (err) {
+    clear()
     console.warn(`[tna] fetch error ${url}: ${err}`)
     return null
   }
