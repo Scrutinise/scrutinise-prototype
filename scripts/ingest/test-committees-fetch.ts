@@ -15,8 +15,8 @@ import path from 'path'
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 const COOKIE_JAR = path.join(os.tmpdir(), 'test-committees-cookies.txt')
 
-function curlPage(url: string): { status: number; size: number; isChallenge: boolean; cardCount: number; error?: string } {
-  const r = spawnSync('curl', [
+function curlPage(url: string, bin = 'curl'): { status: number; size: number; isChallenge: boolean; cardCount: number; error?: string } {
+  const r = spawnSync(bin, [
     '-s', '--max-time', '30',
     '-L',                        // follow any redirects
     '-c', COOKIE_JAR,            // write cookies (session persistence across pages)
@@ -48,20 +48,41 @@ export async function runCommitteesTest(): Promise<void> {
   console.log(`[test-committees] Platform: ${process.platform} / Node: ${process.version}`)
   console.log(`[test-committees] Cookie jar: ${COOKIE_JAR}`)
 
-  // Verify curl
-  const cv = spawnSync('curl', ['--version'], { encoding: 'utf8', timeout: 5000 })
-  if (cv.error || cv.status !== 0) {
-    console.error('[test-committees] ERROR: curl not found')
+  // Diagnose PATH and curl availability
+  const envPath = process.env.PATH ?? '(not set)'
+  console.log(`[test-committees] PATH: ${envPath}`)
+
+  // Try to find curl in common locations
+  const curlCandidates = ['curl', '/usr/bin/curl', '/usr/local/bin/curl', '/bin/curl']
+  let curlBin: string | null = null
+  for (const candidate of curlCandidates) {
+    const probe = spawnSync(candidate, ['--version'], { encoding: 'utf8', timeout: 5000 })
+    if (!probe.error && probe.status === 0) {
+      curlBin = candidate
+      console.log(`[test-committees] curl found at: ${candidate}  ${(probe.stdout as string).split('\n')[0]}`)
+      break
+    } else {
+      console.log(`[test-committees] ${candidate}: ${probe.error?.code ?? `exit ${probe.status}`}`)
+    }
+  }
+
+  if (!curlBin) {
+    // Also try which
+    const w = spawnSync('which', ['curl'], { encoding: 'utf8', timeout: 3000 })
+    console.log(`[test-committees] which curl: ${w.error?.code ?? (w.stdout as string).trim() || 'not found'}`)
+    const ls = spawnSync('ls', ['/usr/bin/'], { encoding: 'utf8', timeout: 3000 })
+    const bins = (ls.stdout as string).split(/\s+/).filter(b => b.includes('curl') || b.includes('wget') || b.includes('http'))
+    console.log(`[test-committees] /usr/bin/ network tools: ${bins.join(', ') || '(none matching)'}`)
+    console.log('[test-committees] Cannot proceed — curl not available in worker container')
     return
   }
-  console.log('[test-committees] curl:', (cv.stdout as string).split('\n')[0])
 
   const baseUrl = 'https://committees.parliament.uk/publications/other-publications/?page='
 
   for (let page = 1; page <= 5; page++) {
     const url = baseUrl + page
     const t0 = Date.now()
-    const result = curlPage(url)
+    const result = curlPage(url, curlBin)
     const ms = Date.now() - t0
 
     if (result.error) {
