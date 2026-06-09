@@ -22,7 +22,7 @@
  * Safe to re-run — ON CONFLICT DO NOTHING + page checkpoint.
  * After completion, retire old committees-portal rows (SQL printed at end).
  */
-import { execFileSync } from 'child_process'
+import { spawnSync } from 'child_process'
 import { Pool } from 'pg'
 import path from 'path'
 import fs from 'fs'
@@ -38,13 +38,20 @@ const FLUSH_EVERY     = 200    // batch insert every 200 rows
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
 function curlFetch(url: string): string {
-  return execFileSync('curl', [
-    '-sf', '--max-time', '20', '--retry', '2', '--retry-delay', '3',
+  // WHY spawnSync not execFileSync: curl's -f flag (fail on HTTP error) causes
+  // execFileSync to throw even on valid redirects. spawnSync gives us the response
+  // body regardless of exit code, so we can check content ourselves.
+  const r = spawnSync('curl', [
+    '-s', '--max-time', '20',
     '-A', BROWSER_UA,
     '-H', 'Accept: text/html,application/xhtml+xml',
     '-H', 'Accept-Language: en-GB,en;q=0.9',
     url,
-  ], { encoding: 'utf8', timeout: 28_000, maxBuffer: 5 * 1024 * 1024 }) as string
+  ], { encoding: 'utf8', timeout: 25_000, maxBuffer: 5 * 1024 * 1024 })
+  if (r.error) throw r.error
+  if (r.status !== 0) throw new Error(`curl exited ${r.status} for ${url}`)
+  if (r.stdout.length < 200) throw new Error(`curl response too short (${r.stdout.length}b) for ${url}`)
+  return r.stdout
 }
 
 interface TypeCheckpoint { lastPage: number; inserted: number }
@@ -152,9 +159,8 @@ async function main() {
   console.log('[seed-committees] Per-document seeder — curl required (Cloudflare TLS bypass)')
 
   // Verify curl is available
-  try {
-    execFileSync('curl', ['--version'], { encoding: 'utf8', timeout: 5000 })
-  } catch {
+  const v = spawnSync('curl', ['--version'], { encoding: 'utf8', timeout: 5000 })
+  if (v.error || v.status !== 0) {
     console.error('[seed-committees] ERROR: curl not found in PATH — required for Cloudflare bypass')
     process.exit(1)
   }

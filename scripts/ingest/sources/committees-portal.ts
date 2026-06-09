@@ -160,21 +160,18 @@ export async function fetchPublicationHtml(htmlUrl: string): Promise<string | nu
 }
 
 export async function fetchPublicationHtmlViaCurl(htmlUrl: string): Promise<string | null> {
-  const { execFile } = await import('child_process')
-  const { promisify } = await import('util')
-  const exec = promisify(execFile)
-  try {
-    const { stdout } = await exec('curl', [
-      '-sf', '--max-time', '30', '--retry', '1',
-      '-A', BROWSER_UA,
-      '-H', 'Accept: text/html,application/xhtml+xml',
-      '-H', 'Accept-Language: en-GB,en;q=0.9',
-      htmlUrl,
-    ], { timeout: 35_000, maxBuffer: 5 * 1024 * 1024 })
-    return extractReportText(stdout) ?? null
-  } catch {
-    return null
-  }
+  // WHY spawnSync pattern: curl -f causes failures on valid redirects. We check the
+  // response content directly instead of relying on curl's exit code.
+  const { spawnSync } = await import('child_process')
+  const r = spawnSync('curl', [
+    '-s', '--max-time', '30',
+    '-A', BROWSER_UA,
+    '-H', 'Accept: text/html,application/xhtml+xml',
+    '-H', 'Accept-Language: en-GB,en;q=0.9',
+    htmlUrl,
+  ], { timeout: 35_000, maxBuffer: 5 * 1024 * 1024, encoding: 'utf8' })
+  if (r.error || r.status !== 0 || !r.stdout || r.stdout.length < 200) return null
+  return extractReportText(r.stdout as string) ?? null
 }
 
 /**
