@@ -407,6 +407,18 @@ First seen: 8 Jun 2026, 09:30–15:35 BST (6 hours, 0 sections)
 | TNA caselaw "7,489 pages" — empty beyond 1,499 | Feed reports inflated page count; pages 1,500+ return empty | Fixed V4: binary search for true last non-empty page |
 | LDA commonswrittenquestions 0 rows | 388 HTTP 524 failures when DB was near-full; inserts silently failed | Reset failed rows; retry once DB has space |
 
+### Worker crashes on transient DB error — ECONNRESET in main loop (V14 post-session)
+
+**Symptom:** All workers go to NO_DEPLOY simultaneously. DB appears to be "offline" but is actually healthy (connecting with 2 connections proves it). Workers crash and exhaust ON_FAILURE retries in minutes.
+
+**Cause:** `claimNextChunk(workerId)` in the main `while(true)` loop of `worker-queue.ts` was not in a try/catch. Any transient Railway TCP proxy drop (ECONNRESET/ETIMEDOUT) caused `main().catch → process.exit(1)`. All 20 workers exit simultaneously. Railway ON_FAILURE retries 3× each — all fail if the DB is still recovering — services go to NO_DEPLOY.
+
+**Fix (V14 post-session, `8d546f0`):** Catch `ECONNRESET`/`ECONNREFUSED`/`ETIMEDOUT`/`Connection terminated` from `claimNextChunk()`. Sleep 30s and retry — `pg.Pool` reconnects automatically on next query. Also `.catch()` on `markFailed()` and `writeCheckpoint()` so those can't exit either.
+
+**Important:** This was misdiagnosed as a "DB crash" because workers exiting abruptly causes all their connections to drop simultaneously, making Postgres appear down. Charlie was restarting the DB unnecessarily — the DB itself was healthy.
+
+---
+
 ### Monitor infinite reseed loop (V14 — 9 Jun 2026)
 
 **Symptom:** Workers processing rows but nothing appears in corpus_sections; pending count stays constant or rises despite workers being active and claimed.
@@ -464,7 +476,11 @@ try {
 
 **Rule: every `fetch()` call in any ingest script must use `AbortController` with an explicit timeout.** Never rely on TCP-level or OS-level timeouts — they are not guaranteed to fire.
 
-**Diagnostic:** If claimed age > 90 seconds for TNA legislation rows, workers are almost certainly hung on a fetch. Reset claimed rows to pending and redeploy with the timeout fix.
+**Files fixed so far:** `tna-legislation.ts` (V14), `eurlex.ts` (V14 post-session). Remaining files still need fixing: `bailii-scraper.ts`, `echr-hudoc.ts`, `fca-handbook.ts`, `gov-scraper.ts`, `law-commissions.ts`, `oecd-free.ts`, `parliament-api.ts`, `theyworkforyou.ts`, `tna-caselaw.ts`, `twfy-pwdata.ts`, `uk-treaties.ts`.
+
+**Per-row safety net (V14 post-session):** `worker-queue.ts` wraps every `processRow()` call in `Promise.race` with a 5-minute timeout. Any source file that hangs is capped at 5min — the row is marked failed and the worker moves on. This protects against all unfixed source files.
+
+**Diagnostic:** If claimed age > 90 seconds and completions = 0, workers are hanging on source HTTP calls. Reset claimed rows and redeploy.
 
 ```sql
 -- Reset all stale claimed rows
