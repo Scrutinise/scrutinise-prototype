@@ -76,7 +76,22 @@ async function main(): Promise<void> {
   let sinceCheckpoint = 0
 
   while (true) {
-    const row = await claimNextChunk(workerId)
+    // WHY: claimNextChunk and other queue-client calls throw ECONNRESET on transient
+    // DB connection drops (Railway TCP proxy timeouts, brief Postgres restarts).
+    // Without this catch, the worker exits and Railway exhausts ON_FAILURE retries.
+    // Instead: sleep 30s and retry — the pool reconnects automatically on next query.
+    let row: Awaited<ReturnType<typeof claimNextChunk>>
+    try {
+      row = await claimNextChunk(workerId)
+    } catch (err: unknown) {
+      const msg = String(err)
+      if (msg.includes('ECONNRESET') || msg.includes('ECONNREFUSED') || msg.includes('ETIMEDOUT') || msg.includes('Connection terminated')) {
+        console.warn(`[worker-${workerId}] DB connection error — sleeping 30s before retry: ${msg}`)
+        await new Promise(r => setTimeout(r, 30_000))
+        continue
+      }
+      throw err  // re-throw non-transient errors
+    }
 
     if (!row) {
       // Distinguish: queue empty vs all sources rate-limited.
@@ -164,13 +179,13 @@ async function main(): Promise<void> {
       cp.completed++
     } catch (err: unknown) {
       console.error(`[worker-${workerId}] error processing ${row.id}:`, err)
-      await markFailed(row.id, String(err))
+      await markFailed(row.id, String(err)).catch(e => console.warn(`[worker-${workerId}] markFailed error: ${e}`))
       cp.failed++
     }
 
     sinceCheckpoint++
     if (sinceCheckpoint % CHECKPOINT_EVERY === 0) {
-      await writeCheckpoint(cp)
+      await writeCheckpoint(cp).catch(e => console.warn(`[worker-${workerId}] checkpoint write error: ${e}`))
       console.log(`[worker-${workerId}] progress: ${cp.completed} done, ${cp.failed} failed`)
       // Write per-worker snapshot for throughput email (non-fatal if it fails)
       await writeWorkerSnapshot(workerId, row.corpus, sessionSectionsCompiled).catch(e =>
