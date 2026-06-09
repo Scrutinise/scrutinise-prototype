@@ -45,13 +45,13 @@ const COOKIE_JAR = path.join(__dirname, 'seed-committees-cookies.txt')
 
 function curlFetch(url: string): string {
   const r = spawnSync('curl', [
-    '-s', '--max-time', '20',
-    '-c', COOKIE_JAR, '-b', COOKIE_JAR,   // maintain session cookies across requests
+    '-s', '--max-time', '8',     // 250ms typical; 8s generous timeout makes retries cheap
+    '-c', COOKIE_JAR, '-b', COOKIE_JAR,
     '-A', BROWSER_UA,
     '-H', 'Accept: text/html,application/xhtml+xml',
     '-H', 'Accept-Language: en-GB,en;q=0.9',
     url,
-  ], { encoding: 'utf8', timeout: 25_000, maxBuffer: 5 * 1024 * 1024 })
+  ], { encoding: 'utf8', timeout: 12_000, maxBuffer: 5 * 1024 * 1024 })
   if (r.error) throw r.error
   if (r.status !== 0) throw new Error(`curl exited ${r.status} for ${url}`)
   if (r.stdout.length < 200) throw new Error(`curl response too short (${r.stdout.length}b) for ${url}`)
