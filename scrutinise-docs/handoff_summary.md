@@ -2,15 +2,50 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 9 Jun 2026 (V15 post-session — all actions complete; OOM diagnosis; reseed-deep moved to Railway)*
+*Last updated: 9 Jun 2026 (V16 session — queue to Neon, connection-per-tx, LDA written questions retired)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** `3019b0e` fix(rate-limits): eurlex 3→8, lda-parliament 4→2
-**Last sprint:** V15 (9 Jun 2026) — committees portal scraper (9,959 reports + 40,794 other-publications); LDA pageSize=100 for writtenquestions + specialist-queue archival; SOURCES section in hourly email; INGEST_PLAYBOOK §8 updated; Railway OOM diagnosis
+**Last commit:** `6cbf568` docs(ingest/V16): source access priority rule + queue migration playbook
+**Last sprint:** V16 (9 Jun 2026) — queue migrated to Neon; ECONNRESET retry loop removed; LDA written questions retired; 20/21 workers SUCCESS; Railway DB 0 ingest connections confirmed
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — V16
+
+| Action | Status | Who |
+|--------|--------|-----|
+| Execute commit-all.sh | ✅ done — `c0c9844`, `6cbf568` | CC |
+| Stop workers (Railway OOM crash did this) | ✅ done — all offline at migration time | — |
+| Run `migrate-queue-to-neon.ts` | ✅ done — 127,380 rows Railway = 127,380 Neon | CC |
+| LDA retirement SQL (Railway + Neon + corpus_targets) | ✅ done — 168 rows each + 2 targets retired | CC |
+| Staggered redeploy 20 workers + scheduler + monitor | ✅ done — 20/21 SUCCESS | CC |
+| Railway DB zero ingest connections verified | ✅ done — 0 pg_node, 9 total (web app only) | CC |
+| **Fix worker-18** — Railway dashboard → ingest-worker-18 → Deploy from Main | ⬜ pending | Charlie |
+| **Committees 403** — committees.parliament.uk blocking Railway IPs (see carry-over) | ⬜ future sprint | — |
+
+### V16 carry-over: committees.parliament.uk HTTP 403
+
+All 2,538 committees queue rows (reports + evidence) are returning HTTP 403 from Railway IPs.
+Same root cause as `api.parliament.uk` — Cloudflare blocking Railway's egress IP range, even with
+browser User-Agent header. Was working during V15 build/testing (non-Railway environment) but
+blocked in production. Rows reset to pending — workers will retry but will likely 403 again.
+
+**Next sprint action:** Check if Cloudflare block is IP-based or behavioural. Options:
+1. Add Retry-After + exponential backoff in `committees-portal.ts` (won't help for IP block)
+2. Route committees fetches through a residential proxy / Cloudflare Worker
+3. Find an alternative bulk data source for committee publications
+
+Until fixed: committees-reports and committees-evidence will accumulate failed rows.
+The monitor `resetRetryableFailures()` does not auto-reset 403s — will need manual reset each retry cycle.
+
+### V16 pwdata-wrans coverage confirmed
+- TWFY wrans: **2001-06-21 → 2026-06-08** (current, adds files daily)
+- TWFY lordswrans: **1999-11-18 → 2026-06-08** (current)
+- LDA written questions covers only from ~2009 (API launch) → TWFY has MORE coverage. Clean switch.
 
 ---
 
@@ -97,6 +132,14 @@ ON CONFLICT (id) DO NOTHING;
 - Monitor will auto-reseed these on first cycle once deployed
 
 ---
+
+## KEY ARCHITECTURE STATE (as of V16)
+
+- **Queue on Neon (V16):** `ingest_queue`, `source_rate_limits`, `specialist_queue`, `scheduler_lock`, `ingest_progress_snapshots` all migrated from Railway → Neon. `migrate-queue-to-neon.ts` handles table creation + data copy. After migration+redeploy, Railway Postgres holds only Prisma app tables (zero ingest connections).
+- **Connection-per-transaction (V16):** Workers no longer hold persistent DB pools during HTTP fetch phase. `claimNextChunk()` opens/closes a connection. `upsertSection()` opens/closes a Neon connection. ECONNRESET retry loop removed from `worker-queue.ts` — clean exit on DB error; Railway restarts with startup jitter.
+- **LDA written questions retired (V16):** `lda-commonswrittenquestions` and `lda-lordswrittenquestions` retired. Content covered by `pwdata-wrans` (2001–present) and `pwdata-lordswrans` (1999–present) which have MORE coverage than LDA (~2009–present). Retirement SQL in IMMEDIATE ACTIONS above.
+- **Source priority rule (V16):** INGEST_PLAYBOOK §9 — always try bulk download, then HTML scraping, then API. Never use paginated API for bulk historical data if bulk download exists.
+- **Code changes:** `queue-client.ts`, `progress-reporter.ts`, `monitor.ts`, `seed-rate-limits.ts` — all changed `DATABASE_URL` → `NEON_DATABASE_URL`. See INGEST_PLAYBOOK §9a for scripts still using Railway URL.
 
 ## KEY ARCHITECTURE STATE (as of V15)
 
