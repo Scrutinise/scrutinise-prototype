@@ -199,6 +199,8 @@ async function runMonitor(): Promise<void> {
   const railwayPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
+    max: 3,
+    idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 15_000,
     statement_timeout: 60_000,
   })

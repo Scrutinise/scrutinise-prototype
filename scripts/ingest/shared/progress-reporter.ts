@@ -15,6 +15,8 @@ function getPool(): Pool {
     _pool = new Pool({
       connectionString: url,
       ssl: { rejectUnauthorized: false },
+      max: 2,
+      idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
       statement_timeout: 30_000,
     })
@@ -32,6 +34,8 @@ function getNeonPool(): Pool {
     _neonPool = new Pool({
       connectionString: url,
       ssl: { rejectUnauthorized: false },
+      max: 2,
+      idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
       statement_timeout: 30_000,
     })
