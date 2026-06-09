@@ -2,15 +2,15 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 9 Jun 2026 (V15 — committees portal scraper, LDA pageSize fix, SOURCES email section)*
+*Last updated: 9 Jun 2026 (V15 post-session — all actions complete; OOM diagnosis; reseed-deep moved to Railway)*
 
 ---
 
 ## CURRENT STATE
 
 **Active branch:** Main
-**Last commit:** pending (commit-all.sh to be run)
-**Last sprint:** V15 (9 Jun 2026) — committees portal scraper (9,959 reports + 40,794 other-publications); LDA pageSize=100 for writtenquestions + specialist-queue archival; SOURCES section in hourly email; INGEST_PLAYBOOK §8 updated with 3 new patterns
+**Last commit:** `3019b0e` fix(rate-limits): eurlex 3→8, lda-parliament 4→2
+**Last sprint:** V15 (9 Jun 2026) — committees portal scraper (9,959 reports + 40,794 other-publications); LDA pageSize=100 for writtenquestions + specialist-queue archival; SOURCES section in hourly email; INGEST_PLAYBOOK §8 updated; Railway OOM diagnosis
 
 ---
 
@@ -18,16 +18,22 @@
 
 | Action | Status | Who |
 |--------|--------|-----|
-| Run `commit-all.sh` | ⬜ pending | Charlie |
-| Redeploy all 20 workers + scheduler + monitor (pick up V15 code) | ⬜ after commit | Charlie |
-| Run SQL Part 2 in Railway dashboard (rate limit updates) | ⬜ pending | Charlie |
-| Run SQL Part 3d in Neon dashboard (corpus_targets INSERT) | ⬜ pending | Charlie |
-| Run `seed-committees-queue.ts` to seed queue | ⬜ after deploy | Charlie |
-| Run `seed-rate-limits.ts` to add committees-portal rate limit | ⬜ after deploy | Charlie |
-| Run SQL Part 4c (reset LDA 524 failed rows) | ⬜ after deploy | Charlie |
-| Verify reseed-deep.ts log for complete output | ⬜ check log | Charlie |
+| Commit and push V15 code | ✅ done — `a0137b6`, `72da2d7`, `3019b0e` | CC |
+| Redeploy all 20 workers + scheduler on V15 | ✅ done — 20/21 SUCCESS (worker-18 retriggered) | CC |
+| Rate limits updated (eurlex→8, lda→2, committees-portal→3) | ✅ done via script | CC |
+| Neon corpus_targets: committees-reports + committees-evidence added | ✅ done; committees-a/b retired | CC |
+| Seed committees queue | ✅ 498 reports rows + 2,040 evidence rows inserted | CC |
+| Reset LDA 524 failed rows | ✅ done (0 rows matched — none outstanding) | CC |
+| Kill reseed-deep.ts local process | ✅ killed PIDs 58060 + 18264 | CC |
+| Verify reseed-deep.ts log | retained-eu: 0 new rows; regional: interrupted mid-nia | CC |
 
-**SQL file:** `scripts/ingest/sql/v15-rate-limits-and-targets.sql`
+**V15 Railway DB findings:**
+- `max_connections = 100` (not 25 — Starter plan has room)
+- Peak connections with 20 workers: ~46 (well under 100)
+- **Crash cause: OOM, not connection exhaustion.** Railway Postgres container memory-killed under peak concurrent write load.
+- Fix applied: monitor.ts Railway pool cap reduced `max: 3 → 2`
+- Longer-term: upgrade Railway Postgres plan (more RAM) OR migrate ingest queue to Neon
+- **Do NOT run reseed-deep.ts locally again.** Move it to Railway as a one-off service job.
 
 **V14 actions still pending:**
 

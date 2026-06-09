@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V15 — committees portal scraper + LDA pageSize fix + SOURCES email section)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V15 post-session — all actions complete, OOM diagnosis, reseed-deep killed)*
 
 ---
 
@@ -33,6 +33,25 @@ Three new failure patterns added:
 1. committees.parliament.uk portal as alternative to blocked api.parliament.uk (V15)
 2. LDA 524 permanent page failure — pageSize fix + specialist-queue archival (V15)
 3. Connection pool exhaustion signature — ECONNRESET 30s retry loop diagnosis (V15)
+
+### Post-session — Railway DB OOM diagnosis (9 Jun 2026)
+Railway DB crashed twice during session (10:28 and 11:34 BST). Root cause diagnosed:
+
+- **`SHOW max_connections` = 100** — not 25 as feared; Starter plan has room
+- **Peak connections at 46** (20 workers × 2 + scheduler + monitor) — well under limit
+- **Root cause: OOM kill**, not connection exhaustion. Railway Postgres container memory-killed under peak concurrent write load from 20 workers all active simultaneously
+- Contributing factor: `reseed-deep.ts` running locally — local long-lived connections to Railway DB compete for connection slots and create ambient pressure during bulk inserts
+- **Fix applied:** `monitor.ts` Railway pool `max: 3 → 2` (committed `a0137b6`)
+- **reseed-deep.ts killed** (PIDs 58060 + 18264). Must run as Railway service job, not locally.
+- **Longer-term recommendation for CCh:** upgrade Railway Postgres plan (more RAM) OR migrate ingest queue to Neon
+
+### Post-session — All V15 actions applied
+- 20/21 workers deployed on V15 (worker-18 retriggered)
+- Rate limits: eurlex 3→8, lda-parliament 4→2, committees-portal added at max:3
+- Neon corpus_targets: committees-reports (9,959) + committees-evidence (40,794) added; committees-a/b retired
+- Queue seeded: 498 committees-reports rows + 2,040 committees-evidence rows
+- LDA 524 reset: 0 rows matched (none outstanding)
+- seed-rate-limits.ts updated with correct V15 values and pushed (`3019b0e`)
 
 ---
 

@@ -322,6 +322,7 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 | All 20 workers CRASHED simultaneously | Railway PostgreSQL volume hit capacity limit (was 5GB, resized to 20GB) | Resize volume in Railway dashboard → wait for DB SUCCESS → staggered worker restart |
 | Workers CRASHED immediately after volume resize | DB container still recovering; workers reconnected before DB ready | Wait 2–3 min after `scrutinise-db` shows SUCCESS, then restart workers |
 | `compiledText` DB column bloat | 10KB compiledText per section × 750k+ rows = ~1.6GB | Column dropped in V3; now R2-only. Never re-add `compiledText` to schema. |
+| Railway DB crashes periodically — requires redeploy | **OOM kill**, not connection exhaustion. `max_connections=100`; 20 workers peak at ~46 connections (fine). Postgres container memory-killed under peak write load | Redeploy `scrutinise-db`; upgrade Railway Postgres plan for more RAM; OR migrate queue to Neon. Do NOT run local scripts (reseed-deep.ts etc.) against Railway DB — they add ambient connection pressure. Diagnosis: check Railway `scrutinise-db` Metrics tab for memory spike at crash time. |
 
 ### Worker crashes
 
