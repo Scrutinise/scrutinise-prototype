@@ -69,7 +69,8 @@ export async function runCommitteesTest(): Promise<void> {
   if (!curlBin) {
     // Also try which
     const w = spawnSync('which', ['curl'], { encoding: 'utf8', timeout: 3000 })
-    console.log(`[test-committees] which curl: ${w.error?.code ?? (w.stdout as string).trim() || 'not found'}`)
+    const whichResult = (w.error?.code ?? (w.stdout as string).trim()) || 'not found'
+    console.log(`[test-committees] which curl: ${whichResult}`)
     const ls = spawnSync('ls', ['/usr/bin/'], { encoding: 'utf8', timeout: 3000 })
     const bins = (ls.stdout as string).split(/\s+/).filter(b => b.includes('curl') || b.includes('wget') || b.includes('http'))
     console.log(`[test-committees] /usr/bin/ network tools: ${bins.join(', ') || '(none matching)'}`)
