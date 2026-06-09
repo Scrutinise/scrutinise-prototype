@@ -26,6 +26,8 @@ const CORPUS_THRESHOLDS: Record<string, number> = {
   'primary-acts-2000plus': 2,
   'si-pre-2010':           1,
   'si-2010plus':           2,
+  'regional':              1,  // NI Acts / NISR / NISI routinely have 1 section
+  'retained-eu':           1,  // EU instruments often very short
   'pwdata-debates':        5,
   'pwdata-lords':          5,
   'pwdata-wrans':          3,
@@ -247,25 +249,51 @@ async function reseedPartialItems(pool: Pool): Promise<void> {
   })
   const neon = await neonPool.connect()
 
+  // Fetch compiled section counts per govUkId (only rows with r2Key sections pattern)
   const { rows } = await neon.query(`
     SELECT corpus,
            substring("r2Key" from '^[^/]+/(.+)/sections/') AS gov_uk_id,
            COUNT(*) AS section_count
     FROM corpus_sections
     WHERE "r2Key" LIKE '%/sections/%'
+      AND status != 'unavailable'
       AND corpus IN (
         'primary-acts-pre-2000','primary-acts-2000plus',
         'si-pre-2010','si-2010plus','regional','retained-eu'
       )
     GROUP BY corpus, 2
   `)
+
+  // Fetch govUkIds already intentionally classified as unavailable (hasNoProvisions items).
+  // These items have availability_status != 'full' and no compiled sections — they appear as
+  // section_count=0 in the query above, which would wrongly trigger reseeding.
+  // Exclude them: the id column format is '{corpus}:{docId}:unavailable'.
+  const { rows: classifiedRows } = await neon.query(`
+    SELECT DISTINCT
+      corpus,
+      split_part(id, ':', 2) AS gov_uk_id
+    FROM corpus_sections
+    WHERE availability_status != 'full'
+      AND id LIKE '%:unavailable'
+      AND corpus IN (
+        'primary-acts-pre-2000','primary-acts-2000plus',
+        'si-pre-2010','si-2010plus','regional','retained-eu'
+      )
+  `)
+  const classifiedSet = new Set(
+    (classifiedRows as Array<{ corpus: string; gov_uk_id: string }>)
+      .map(r => `${r.corpus}:${r.gov_uk_id}`)
+  )
+
   neon.release()
   await neonPool.end()
 
-  // Apply per-corpus threshold: only flag as partial if count < threshold for that corpus
+  // Apply per-corpus threshold: only flag as partial if count < threshold for that corpus.
+  // Exclude classified unavailable items — they were intentionally processed as no-text.
   const partialIds = (rows as Array<{ corpus: string; gov_uk_id: string | null; section_count: string }>)
     .filter(r => {
       if (!r.gov_uk_id) return false
+      if (classifiedSet.has(`${r.corpus}:${r.gov_uk_id}`)) return false
       const threshold = CORPUS_THRESHOLDS[r.corpus] ?? CORPUS_THRESHOLDS['default']
       return parseInt(r.section_count, 10) < threshold
     })
