@@ -73,10 +73,24 @@ async function refreshPendingSources(): Promise<void> {
   if (Date.now() - sourcesFetchedAt < SOURCE_REFRESH_MS) return
   if (!sourceRefreshPromise) {
     sourceRefreshPromise = listPendingSourceTypes()
-      .then(s => { pendingSources = s; sourcesFetchedAt = Date.now() })
+      .then(s => {
+        if (s.join(',') !== pendingSources.join(',')) {
+          console.log(`[pool] pending sources now: [${s.join(', ') || 'none'}]`)
+        }
+        pendingSources = s
+        sourcesFetchedAt = Date.now()
+      })
+      .catch(err => { console.warn('[pool] source refresh failed:', String(err).slice(0, 120)); throw err })
       .finally(() => { sourceRefreshPromise = null })
   }
   await sourceRefreshPromise
+}
+
+// Per-loop phase tracking — dumped by the sweeper so a wedged loop is
+// diagnosable from logs alone (the first shakedown froze with zero output).
+const loopPhase = new Map<number, string>()
+function phase(loopId: number, p: string): void {
+  loopPhase.set(loopId, `${p} @${new Date().toISOString().slice(11, 19)}`)
 }
 
 function exitSummary(code: 0 | 1, reason: string): never {
@@ -121,6 +135,8 @@ async function emptySweeper(): Promise<void> {
     await new Promise(r => setTimeout(r, EMPTY_SWEEP_GAP_MS))
     await beat()
     const pending = await countPendingRows().catch(() => -1)
+    const phases = [...loopPhase.entries()].map(([id, p]) => `${id}:${p}`).join(' | ')
+    console.log(`[pool] sweep: pending=${pending} inFlight=${inFlight} sources=[${pendingSources.join(',')}] loops: ${phases}`)
     if (pending === 0 && inFlight === 0) {
       emptySweeps++
       console.log(`[pool] empty sweep ${emptySweeps}/${EMPTY_SWEEPS_TO_EXIT}`)
@@ -142,10 +158,12 @@ async function runLoop(loopId: number): Promise<void> {
   let dbErrors = 0
 
   while (!shuttingDown) {
+    phase(loopId, 'refresh')
     await refreshPendingSources().catch(() => { /* stale list is fine for one cycle */ })
 
     if (pendingSources.length === 0) {
       // Nothing pending at all — idle quietly; the emptySweeper owns exit.
+      phase(loopId, 'idle-no-sources')
       await new Promise(r => setTimeout(r, EMPTY_SWEEP_GAP_MS))
       continue
     }
@@ -153,6 +171,7 @@ async function runLoop(loopId: number): Promise<void> {
     const eligible = rateLimiter.eligible(pendingSources)
     if (eligible.length === 0) {
       // All pending sources are token- or concurrency-limited right now.
+      phase(loopId, `rate-limited(${pendingSources.join(',')})`)
       const wait = rateLimiter.msUntilNextToken(pendingSources)
       await new Promise(r => setTimeout(r, Math.min(wait ?? CLAIM_MISS_SLEEP_MS, 5_000)))
       continue
@@ -160,6 +179,7 @@ async function runLoop(loopId: number): Promise<void> {
 
     let row
     try {
+      phase(loopId, `claiming(${eligible.join(',')})`)
       row = await claimNextFromSources(loopId, eligible)
       dbErrors = 0
     } catch (err) {
@@ -173,6 +193,7 @@ async function runLoop(loopId: number): Promise<void> {
     if (!row) {
       // Eligible sources but no claimable row — another loop got there first
       // or those sources just drained. Force a source refresh soon.
+      phase(loopId, 'claim-miss')
       sourcesFetchedAt = 0
       await new Promise(r => setTimeout(r, CLAIM_MISS_SLEEP_MS))
       continue
@@ -181,6 +202,7 @@ async function runLoop(loopId: number): Promise<void> {
     rateLimiter.recordClaim(row.sourceType)
     inFlight++
     console.log(`${tag} claimed ${row.id} (${row.sourceType} p${row.priority})`)
+    phase(loopId, `processing(${row.id})`)
 
     let timeoutHandle: NodeJS.Timeout | undefined
     try {
@@ -213,6 +235,16 @@ async function runLoop(loopId: number): Promise<void> {
 
 async function main(): Promise<void> {
   console.log(`[pool] starting — concurrency ${CONCURRENCY}`)
+
+  // A swallowed async failure must never be silent — the first shakedown
+  // froze with zero log output.
+  process.on('unhandledRejection', (reason) => {
+    console.error('[pool] UNHANDLED REJECTION:', reason)
+  })
+  process.on('uncaughtException', (err) => {
+    console.error('[pool] UNCAUGHT EXCEPTION:', err)
+    exitSummary(1, 'uncaught exception')
+  })
 
   await ensureStateTable()
   await beat()
