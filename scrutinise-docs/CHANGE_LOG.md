@@ -1,6 +1,24 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 — INCIDENT SESSION. Railway DB crash caused by CC diagnostic session. See below.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 — V17 CONSOLIDATION & RENEWAL.*
+
+---
+
+## V17 — CONSOLIDATION & RENEWAL (10 Jun 2026)
+
+**Context:** the 8–10 Jun project-wide outages were a Railway workspace Compute Usage Limit pause (confirmed on Usage page), not crashes. Charlie deleted the 23-container fleet; its ~$3.6/day idle cost floor is the problem V17 removes. Design criterion: **system cost at zero work ≈ $0.**
+
+**Built:**
+
+1. **`Ingest` = single-process pool worker** (`workers/ingest-pool.ts` + `workers/process-row.ts`). `WORKER_CONCURRENCY` (default 20) concurrent claim loops on one Node runtime; per-source processors extracted verbatim from worker-queue.ts. Shared `pg.Pool` max 10 (`shared/neon-pool.ts`); in-process token-bucket rate limiter (`shared/rate-limiter.ts` — source_rate_limits is config-only now, no per-claim DB writes); per-loop error isolation; 5-min row timeout kept; **exit-on-empty** (3 sweeps × 30s → exit 0 → stopped service bills nothing); 30s heartbeat to `ingest_service_state`. Startup jitter removed (existed to stagger 20 containers). No Railway-DB code path (grep-proven).
+2. **`Ops` = merged scheduler + monitor** (`ops.ts`), Neon only. Hourly: stale-claim reaper, census, corpus snapshots, cleanup, pwdata daily reseed, progress email. Every 15 min: **circuit breakers** (failure: 5 consecutive; zero-output: ≥25 done rows with 0 section growth — the alarm the committees incident lacked) + **ingest liveness** (pending > 0 + stale heartbeat → `serviceInstanceRedeploy`, 15-min cooldown). On trip: pending rows parked `status='blocked'`, persistent email ISSUES line, no auto-retry ever; manual clear SQL in playbook §8. Breaker state in new `source_status` table (separate from human-edited rate-limit config by design). `queryFormatBreakdown`/`queryUnrecognisedFormats` and all Prisma/DATABASE_URL usage deleted (documented scheduler-hang cause).
+3. **Email additions:** INGEST SERVICE line (running/stopped, starts today), rows-completed vs sections-added divergence warning, 🔴 breaker ISSUES sourced from source_status (persist until cleared).
+4. **Latent bug fixed:** monitor-era pwdata reseed deduped against the queue; hourly cleanup deletes done rows after 7 days, so it would eventually re-seed the entire TWFY archive (~20k files) — under V17 that would keep Ingest alive forever and feed the zero-output breaker. Now dedupes against `corpus_sections` (the permanent record) and checks all configured pwdata corpora (the old "has done rows" condition went permanently blind after a recess).
+5. **Also fixed:** `census/live-census.ts` queue query had silently pointed at the stale pre-migration Railway `ingest_queue` copy since V16 — now Neon.
+6. **Cleanup:** retired to `scripts/attic/v17-fleet/`: worker-queue.ts, worker-main.ts, phase-router.ts, scheduler.ts, monitor.ts, restart-workers-staggered.ts, checkpoint.ts (R2 per-worker checkpoints), check-status.ts, cc-monitor.ts, retry-failed.ts, ingest prisma/ copy, DEPLOY.md. `scripts/ingest/package.json`: prisma deps + postinstall removed (lockfile regenerated); scripts repointed (`worker`→ingest-pool, `scheduler`→ops) so Railway service start commands needed no change.
+7. **Docs:** INGEST_PLAYBOOK §1 three-layer doctrine + §1a cost model + §8 usage-limit-pause first-check pattern + breaker clear procedure + §15 jurisdiction onboarding checklist; §3 staggered restarts marked retired. handoff_summary CURRENT STATE rewritten.
+
+**Session note:** the 6am session Charlie scheduled was killed ~6:11 by a laptop restart after writing neon-pool.ts, rate-limiter.ts and the queue-client refactor (all sound, kept). This session audited for partial state (none beyond running old deployments, which were stopped), and completed the sprint.
 
 ---
 

@@ -2,32 +2,46 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 10 Jun 2026 — SYSTEM DOWN. Railway DB crash caused by diagnostic session. Read §IMMEDIATE ACTIONS first.*
+*Last updated: 10 Jun 2026 — V17 CONSOLIDATION & RENEWAL built. Post-V17 architecture below.*
 
 ---
 
-## ⚠️ CURRENT STATE — SYSTEM DOWN
+## CURRENT STATE — POST-V17 ARCHITECTURE
 
 **Active branch:** Main
-**Last commit:** `176dbbe` chore: remove Railway CF test scaffolding
-**Website:** OFFLINE — Railway DB (`scrutinise-db`) crashing on restart
-**Ingest workers:** Unknown — last confirmed 19/20 SUCCESS at ~17:46 BST 9 Jun; not safe to assume still running
-**Scheduler:** No email since 17:01 BST 9 Jun — presumed dead or stuck
-**Neon DB:** Operational — queue + corpus_sections intact
+**Sprint:** V17 (SPRINT_V17_BRIEF.md) — consolidation built 10 Jun; verification protocol per brief §5
+**Root cause of 8–10 Jun outages:** Railway workspace **Compute Usage Limit ($30) hit** — pauses ALL deployments simultaneously. Limit raised. Not OOM, not connections, not worker code. (Playbook §8 now has this as a first-check pattern.)
 
----
+### The three layers (V17 doctrine)
+- **R2** = corpus text, permanent, zero egress.
+- **Neon** = metadata + search index + queue (`ingest_queue`, `corpus_sections`, `source_status` NEW, `ingest_service_state` NEW, etc).
+- **Railway** = transient compute only: `Ingest` + `Ops` (+ `scrutinise-db` for the web app — ingest never touches it).
 
-## IMMEDIATE ACTIONS REQUIRED — DB RECOVERY
+### Services (the fleet is gone — 23 containers deleted by Charlie 10 Jun)
+- **`Ingest`** (`a7f4d75f…`, start: `npm run worker` → `workers/ingest-pool.ts`): single process, `WORKER_CONCURRENCY` (default 20) claim loops, shared pg.Pool (max 10), in-process token-bucket rate limiting, per-loop error isolation, 5-min row timeout. **Exit-on-empty:** 3 empty sweeps × 30s → exit(0), service stays stopped, bills nothing. Heartbeat → `ingest_service_state.last_beat` every 30s. No DATABASE_URL anywhere in its import graph (grep-proven).
+- **`Ops`** (`f3397bee…`, start: `npm run scheduler` → `ops.ts`): merged scheduler+monitor, Neon only. Hourly: reaper, census, snapshots, cleanup, pwdata daily reseed, progress email (now with INGEST SERVICE state, sections-vs-rows divergence warning, persistent 🔴 breaker ISSUES). Every 15 min: circuit breakers + liveness (starts `Ingest` via `serviceInstanceRedeploy` when pending > 0 and heartbeat stale; 15-min cooldown).
 
-| Action | Status | Who |
-|--------|--------|-----|
-| Restart Railway `scrutinise-db` | ⬜ pending | Charlie |
-| Check connections immediately after restart: `SELECT count(*), state FROM pg_stat_activity GROUP BY state;` | ⬜ pending | Charlie |
-| If connections > 30: identify sources — see §CRASH DIAGNOSIS below | ⬜ pending | CC |
-| Check scheduler logs (Railway → Ingest-scheduler → Logs) | ⬜ pending | CC |
-| Once DB stable: staggered-restart only the workers that need it | ⬜ pending | CC |
-| **Fix `scheduler.ts` Railway DB connection** — see §ROOT CAUSE below | ⬜ next session | CC |
-| Fix worker-18 (pre-existing) — Railway dashboard → Deploy from Main | ⬜ pending | Charlie |
+### Circuit breakers (the V17 renewal — deterministic, no auto-retry ever)
+- Failure breaker: 5 consecutive failures → trip. Zero-output breaker: ≥25 done rows with 0 section growth → trip.
+- On trip: pending rows parked as `status='blocked'`, persistent email ISSUES line. Manual clear SQL in INGEST_PLAYBOOK §8.
+- `committees-portal` is already tripped (correctly — CF 403, known since V15/V16).
+
+### Queue state (10 Jun 2026, morning)
+- 0 pending | 80,499 done | 2,538 failed (all committees-portal, parked behind breaker) | 275 skipped
+- corpus_sections: 884,982. si-2010plus tail finished overnight 9–10 Jun before the fleet was deleted.
+- pwdata current through 2026-06-08/09 (latest TWFY files); ops reseeds new files hourly → liveness starts ingest automatically.
+
+### V17 code changes (key files)
+- NEW: `workers/ingest-pool.ts`, `workers/process-row.ts` (processors extracted verbatim from worker-queue), `ops.ts`, `shared/neon-pool.ts`, `shared/rate-limiter.ts`
+- REWRITTEN: `shared/queue-client.ts` (claim SQL without rate-limit writes), `shared/db-metadata.ts` (Prisma removed), `shared/progress-reporter.ts` (fleet relics removed), `census/live-census.ts` (Neon-only — its queue query had silently pointed at the stale Railway copy since V16)
+- FIXED (latent): pwdata reseed now dedupes against `corpus_sections`, not the queue — the monitor-era version would re-seed the whole archive once cleanup deleted done rows, which under V17 would have kept `Ingest` alive forever.
+- RETIRED to `scripts/attic/v17-fleet/`: worker-queue.ts, worker-main.ts, phase-router.ts, scheduler.ts, monitor.ts, restart-workers-staggered.ts, checkpoint.ts, check-status.ts, cc-monitor.ts, retry-failed.ts, prisma/ (ingest copy), DEPLOY.md
+- `scripts/ingest/package.json`: prisma deps + postinstall removed; `worker`→ingest-pool, `scheduler`→ops.
+
+### Still true / carry-overs
+- Railway curl absent → committees-document rows produce 0 sections until nixpacks curl (V18+ scope).
+- Blocked sources (HUDOC, NAO, uk-treaties, SSRN, BAILII) — out of V17 scope.
+- Railway-DB → Neon web-app migration — future scope.
 
 ---
 

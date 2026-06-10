@@ -1,25 +1,45 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 10 Jun 2026 — §1 corrected for V16 DB split; §8 new patterns added.*
+*Last updated: 10 Jun 2026 — V17 consolidation: §1 rewritten to three-layer doctrine, §1a cost model added, §8 usage-limit-pause pattern + circuit breakers added, §15 jurisdiction onboarding checklist added.*
 
-This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting workers, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
+This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting services, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
 ---
 
-## 1. SYSTEM OVERVIEW
+## 1. SYSTEM OVERVIEW — the three-layer doctrine (V17)
 
-| Component | Where | What it does |
-|-----------|-------|-------------|
-| 20 workers | Railway (`ingest-worker-1` … `ingest-worker-20`) | Claim queue rows, fetch content, write to R2 + Neon |
-| Scheduler | Railway (`Ingest-scheduler`) | Hourly: sends progress email, saves corpus snapshots, runs stale claim reaper |
-| Monitor | Railway (`ingest-monitor`) | Every 15 min: reseeds partial items, resets 502/524 failures, logs exhausted corpora |
-| Railway DB | Railway (`scrutinise-db`) | **Web app only** — holds Prisma app tables (ideas, users, etc). Since V16: does NOT hold ingest tables. ⚠️ Scheduler still opens a PrismaClient connection to Railway DB for `queryFormatBreakdown`/`queryUnrecognisedFormats` — see §8. |
-| Neon DB | Neon | `ingest_queue`, `source_rate_limits`, `scheduler_lock`, `ingest_progress_snapshots`, `corpus_sections`, `corpus_targets`, `corpus_snapshots` — everything ingest-related since V16 |
-| R2 | Cloudflare `scrutinise-legislation` | Raw XML + compiled text files per section |
+| Layer | Where | Role | Cost behaviour |
+|-------|-------|------|----------------|
+| **Corpus text** | Cloudflare R2 (`scrutinise-legislation`) | Permanent store: raw XML + compiled text per section | ~$0.015/GB-month, **zero egress** — effectively free at rest |
+| **Metadata + search index** | Neon (`corpus_sections`, `corpus_targets`, `ingest_queue`, `source_rate_limits`, `source_status`, `scheduler_lock`, `ingest_service_state`, `ingest_progress_snapshots`, `corpus_snapshots`, legacy `LegislationSection`) | Elastic Postgres; everything ingest-related since V16 | Scale-to-zero compute; storage $/GB-month |
+| **Transient compute** | Railway: `Ingest` + `Ops` services | `Ingest` = single-process pool worker (`workers/ingest-pool.ts`, `WORKER_CONCURRENCY` claim loops, default 20). **Exit-on-empty:** 3 empty sweeps × 30s → exit(0) → service stays stopped, bills nothing. `Ops` = merged scheduler+monitor (`ops.ts`): hourly email/census/reaper + 15-min breakers/liveness. Starts `Ingest` via `serviceInstanceRedeploy` when pending > 0. | Pay only while ingesting (plus the tiny always-on `Ops` footprint) |
+
+Railway also hosts `scrutinise-db` (web-app Postgres, Prisma app tables only — ideas, users, etc). **No ingest code path touches it since V17.**
+
+**Design rule: system cost at zero work must be ≈ $0.** Anything always-on must justify itself; the 23-container fleet had a ~$3.6/day floor regardless of output, which is why V17 exists.
+
+The 20-worker fleet, separate scheduler and monitor services, startup jitter, staggered restarts, per-worker R2 checkpoints, and per-worker snapshots are all **retired** (code in `scripts/attic/v17-fleet/`).
 
 ⚠️ **Railway container has no curl.** The Railway Node.js container (Railpack + mise) does not include curl. `spawnSync('curl', ...)` returns ENOENT. Any feature requiring curl must install it via Nixpacks config (`nixpacks.toml`). Confirmed 9 Jun 2026.
 
-**All workers are interchangeable.** Any worker can handle any corpus via the queue-claim model (`FOR UPDATE SKIP LOCKED`). Priority 1 > 2 > 3.
+**Claim loops are interchangeable.** Any loop handles any corpus via the queue-claim model (`FOR UPDATE SKIP LOCKED`). Priority 1 > 2 > 3. Rate limiting is in-process (token bucket per source, `shared/rate-limiter.ts`); `source_rate_limits` is configuration only — edit the table, restart `Ingest` to apply.
+
+---
+
+## 1a. COST MODEL (V17)
+
+| Resource | Rate | Notes |
+|----------|------|-------|
+| Railway memory | $0.000231/GB-min (~$10/GB-month) | Dominant fleet cost pre-V17 |
+| Railway CPU | $0.000463/vCPU-min | I/O-bound workers use little |
+| Railway egress | $0.05/GB | Worker → Neon/R2 writes |
+| Neon compute | ~$0.10/CU-hr, 0.25 CU minimum while active | Scales to zero when idle |
+| Neon storage | ~$0.35/GB-month | Keep big text out — pointers only |
+| R2 storage | ~$0.015/GB-month | **Zero egress fees** — corpus lives here |
+
+Steady-state cost while idle should be ≈ Railway `scrutinise-db` + the small always-on `Ops` process + storage. If the Usage page shows compute burn while the queue is empty, something is wrong — check whether `Ingest` failed to exit-on-empty (e.g. a perpetual reseed loop keeping pending > 0).
+
+⚠️ **Workspace Compute Usage Limit:** when the workspace usage limit is hit, Railway pauses ALL deployments simultaneously ("All deployments are paused" on the Usage page). See §8 — check this FIRST when everything is offline at once.
 
 ---
 
@@ -132,9 +152,11 @@ scripts/ingest/<script>.ts
 
 ---
 
-## 3. STAGGERED WORKER RESTART PROCEDURE
+## 3. STAGGERED WORKER RESTART PROCEDURE — ⚠️ RETIRED (V17)
 
-Use when: volume resize, DB restart, code push that needs container pickup, mass CRASHED status.
+**The worker fleet no longer exists** — staggered restarts are no longer a concept. `Ingest` is one service: deploy it with `serviceInstanceRedeploy`; `Ops` restarts it automatically when there is pending work. The procedure below is kept only as historical reference (script in `scripts/attic/v17-fleet/`).
+
+Use when (fleet era): volume resize, DB restart, code push that needs container pickup, mass CRASHED status.
 
 **Do NOT restart `scrutinise-db` itself** unless it's the specific DB service that failed — restarting the DB drops all worker connections simultaneously.
 
@@ -184,7 +206,7 @@ Step 3: Confirm Neon writes
 
 ## 5. QUEUE SEEDING
 
-### Railway DB queue (`ingest_queue`)
+### Neon queue (`ingest_queue` — on Neon since V16)
 
 One row per unit of work. Key columns: `id`, `corpus`, `"docId"`, `"sourceType"`, `priority`, `status`.
 
@@ -314,7 +336,46 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 
 ---
 
-## 8. KNOWN FAILURE PATTERNS (V1–V10 + post-V10 incidents)
+## 8. KNOWN FAILURE PATTERNS (V1–V17)
+
+### ⚠️ ALL services show "Service is offline" simultaneously → check Usage page FIRST
+
+Symptom: every Railway service (including `scrutinise-db`) is offline/paused at the same moment.
+Cause: the **workspace Compute Usage Limit** was hit — Railway pauses ALL workloads at once. This is not a crash, not OOM, not connections, not worker code.
+Check: Railway → Workspace → **Usage page** — look for "All deployments are paused".
+Fix: raise/remove the usage limit; deployments resume. Do NOT restart services, redeploy, or "fix" worker code first.
+History: this caused the 8–10 Jun 2026 project-wide outages and was misread as crashes through ~5 incident cycles. A simultaneous-everything outage has ONE cheap check before any other diagnosis.
+
+### Circuit breakers (V17) — deterministic failure containment
+
+`Ops` evaluates two breakers per source every 15 min (state in Neon `source_status`):
+
+- **Failure breaker:** last 5 completed attempts for a source all `failed` → trip.
+- **Zero-output breaker:** ≥25 rows marked `done` while `corpus_sections` grew by 0 for that source (cumulative streak across sweeps) → trip. This is the alarm the committees incident lacked (2,896 empty "done" rows, no signal).
+
+On trip: the source's `pending` rows are parked as `status='blocked'`, the reason is recorded, and a persistent 🔴 line appears in every hourly email until cleared. **Tripped sources are never auto-retried** — deterministic failures must not be retried (see Retry policy in §13 lessons).
+
+**Manual clear (after fixing the root cause):**
+```sql
+-- 1. clear the breaker
+UPDATE source_status
+SET state = 'ok', trip_reason = NULL, tripped_at = NULL, zero_output_streak = 0
+WHERE source_key = '<sourceKey>';
+
+-- 2. un-park the rows
+UPDATE ingest_queue
+SET status = 'pending', "lastError" = NULL
+WHERE "sourceType" = '<sourceKey>' AND status = 'blocked';
+```
+`Ops` liveness will start `Ingest` within 15 min of pending > 0.
+
+### Ingest liveness (V17)
+
+`Ingest` writes a heartbeat to `ingest_service_state.last_beat` every 30s. `Ops` treats it as stopped when the beat is >10 min old; if pending > 0 it triggers `serviceInstanceRedeploy` (NEVER `deploymentRedeploy` — see §2 and the 9 Jun incident), with a 15-min cooldown between triggers. `starts_count`/`starts_on` track starts per day for the email.
+
+## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
+
+Most patterns below concern the retired 20-worker fleet, the separate scheduler/monitor, or Railway-DB queue tables. The diagnostics remain instructive; the named files now live in `scripts/attic/v17-fleet/`.
 
 ### DB / Volume
 
@@ -937,3 +998,17 @@ After any timeout increase, reset all timed-out rows and redeploy workers to pic
 `reseedExhaustedCorpora()` added to `checkQueueExhaustion()`. When a pwdata corpus hits 0 pending + 0 claimed, monitor fetches TWFY directory and inserts any new files (ON CONFLICT DO NOTHING). This handles the daily new parliament files without requiring manual `seed-pwdata-queue.ts` runs.
 
 **TNA legislation and LDA: no auto-reseed** — TNA discovery is expensive (sequential HTTP scans); LDA reseeding risks rate-limit overflow. Only pwdata uses incremental daily files that are safe to auto-discover.
+
+---
+
+## 15. JURISDICTION ONBOARDING CHECKLIST (V17 skeleton)
+
+The repeatable path for adding a new jurisdiction/corpus. Each step gates the next; do not skip the shakedown.
+
+1. **Manifest** — add the corpus to `corpus_targets` (corpus_key, display_label, est_sections if known, priority). Unconfirmed estimates stay `est_is_confirmed = false`.
+2. **Source survey** — establish access in this priority order (see §9): bulk download → HTML scraping → REST/GraphQL API → PDF extraction. Verify from a Railway-like environment, not just a residential IP (Cloudflare TLS fingerprinting and IP blocks differ — see committees history).
+3. **Adapter** — source client in `scripts/ingest/sources/`, processor case in `workers/process-row.ts`, seeder script. Follow the R2 key scheme (§7) and `rawToText()` rule.
+4. **Rate limits** — add a `source_rate_limits` row (intervalMs + maxConcurrentWorkers). Unknown upstreams default to 500ms / 4 in-process.
+5. **Shakedown at low concurrency** — seed a small batch, run `Ingest` with `WORKER_CONCURRENCY=5`. Verify **sections, not statuses**: `corpus_sections` delta must match expectations. Include adversarial fixtures (curly quotes, em-dashes, accents, very long docs).
+6. **Breaker thresholds** — confirm the defaults (5 consecutive failures / 25 zero-output) suit the source; sources with many legitimately empty items may need a documented exception.
+7. **Playbook entry** — record the source's quirks (auth, pagination, error modes) in §8/§9 and update `corpus_targets` estimates to confirmed once the full run completes.
