@@ -174,7 +174,7 @@ export interface DbSizeResult {
   usedPct: number
 }
 
-const DB_LIMIT_GB = 10  // Neon Launch plan — update if on Scale plan (50GB)
+const DB_LIMIT_GB = 20  // V18: storage headroom raised to 20GB (display only — Neon bills per-GB; any hard limit is console-side)
 
 export async function queryDbSize(): Promise<DbSizeResult> {
   const pool = getNeonPool()
@@ -477,6 +477,10 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   parts.push('', SEP, 'TOTAL CORPUS', SEP)
   parts.push(`  ${overallBar}  ${overallPct.toFixed(1)}%`)
   parts.push(`  ${grandTotalCompiled.toLocaleString()} sections ingested`)
+  // V18: show the breakdown — this total is legacy LegislationSection + compiled-only
+  // corpus_sections, so it will never match a raw count(*) of corpus_sections
+  // (which also holds unavailable/failed classification rows).
+  parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
   parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
   parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
   if (dbSize) {

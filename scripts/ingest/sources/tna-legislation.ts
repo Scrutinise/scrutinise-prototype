@@ -179,16 +179,21 @@ function extractIdElements(xml: string, type: string, year: number, ids: string[
 }
 
 async function fetchAllPages(baseUrl: string, type: string, year: number, ids: string[], seen: Set<string>): Promise<void> {
-  let start = 1
-  while (true) {
-    const url = start === 1 ? baseUrl : `${baseUrl}?start=${start}`
+  // V18 fix: feeds paginate via <link rel="next" href="...?page=N">, not
+  // ?start=N. The old ?start= param was ignored by TNA, so page 2+ returned
+  // page 1 again and the ids.length guard stopped after 20 items. Years with
+  // range buckets (dense uksi years) were unaffected; bucket-less years —
+  // ALL eur/eudn/eudr years — were silently capped at 20 instruments each,
+  // which is why retained-eu was under-enumerated from V2 to V17.
+  let url: string | null = baseUrl
+  while (url) {
     const xml = await fetchText(url)
     if (!xml) break
     const before = ids.length
     extractIdElements(xml, type, year, ids, seen)
-    const moreMatch = /<leg:morePages>(\d+)<\/leg:morePages>/.exec(xml)
-    if (!moreMatch || parseInt(moreMatch[1], 10) === 0 || ids.length === before) break
-    start += 20
+    const next = /<link rel="next"[^>]*href="([^"]+)"/.exec(xml)
+    if (!next || ids.length === before) break
+    url = next[1].replace(/^http:/, 'https:')
   }
 }
 
