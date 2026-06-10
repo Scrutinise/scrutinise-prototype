@@ -2,15 +2,27 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 10 Jun 2026 — V17 CONSOLIDATION & RENEWAL built. Post-V17 architecture below.*
+*Last updated: 10 Jun 2026 (evening) — V18 built + piloted. Post-push seeding pending. Details below; V17 architecture section still authoritative for the platform itself.*
 
 ---
 
-## CURRENT STATE — POST-V17 ARCHITECTURE
+## CURRENT STATE — V18 (REFILL THE QUEUE → PWDATA PER-SPEECH MIGRATION)
 
-**Active branch:** Main
-**Sprint:** V17 (SPRINT_V17_BRIEF.md) — built AND verified end-to-end 10 Jun. The full autonomous loop is live: seed pending rows → ops detects (pending>0 + stale heartbeat) → starts Ingest → claims at concurrency 20 → drains → exit-on-empty → stopped, bills nothing. Breakers tripped on real failures: `echr` (HUDOC 404) and `committees-portal` (CF 403) — both show as persistent ISSUES in hourly emails until manually cleared (SQL in playbook §8). Two shakedown bugs found+fixed: bigint intervalMs string-poisoning the token bucket, and missing client-side query_timeout. Remaining check for Charlie: Usage page tomorrow ≈ scrutinise-db + Ops only.
-**Root cause of 8–10 Jun outages:** Railway workspace **Compute Usage Limit ($30) hit** — pauses ALL deployments simultaneously. Limit raised. Not OOM, not connections, not worker code. (Playbook §8 now has this as a first-check pattern.)
+**Active branch:** Main. **Sprint:** V18 (SPRINT_V18_BRIEF.md) — all build work done, committed via commit-all.sh at session end. Full detail in CHANGE_LOG V18 entry; the playbook §8 has five new V18 patterns.
+
+**THE BIG CHANGE — pwdata granularity migration (Charlie-approved):** the brief's "seed the full pwdata backlog" was a false premise — the archive was already 100% ingested at one-blob-per-day-file granularity. Charlie chose per-speech migration instead: `processPwdata` now writes one section per speech / Q&A exchange with `sectionTitle`/`speaker`/`itemDate`/`parentDocId` metadata (new corpus_sections columns, live; **entity_list_v5.md update pending — CCh**). Pilot of 235 files wrote 40,258 sections via the production path. **Prediction to score: ~9.8M sections from ~50k day-file rows, Neon +~4.9GB (→ ~9.6GB of 20GB), ~$45 one-off R2 PUTs, 1.5–4 days at concurrency 20.**
+
+**WHAT'S PENDING (post-push, Charlie's terminal — run order in CHANGE_LOG):**
+1. `seed-govuk-core-docs-v18.ts` — P1, PACE/Treasury books/white papers (new `govuk-content` source).
+2. `seed-hmrc-manuals-v18.ts` — P2, real universe 85,197 sections (brief's 626k was stale).
+3. `seed-pwdata-perspeech-v18.ts` — P3 floor, the migration itself.
+Then §8 verification over ~24h: liveness starts Ingest unaided; memory ≤~600MB at 20 loops; pwdata divergence ~0; sections/hour vs the 100–300k/hr band.
+
+**DECISIONS WAITING ON CHARLIE:**
+- **Committees: Railway IS blocked** — CF challenges all parliament committees domains from Railway's IP even with curl (now installed via `RAILPACK_DEPLOY_APT_PACKAGES=curl`, left in place). Residential IP passes. Options: local fetch / proxy egress / retire. 2,896 empty-done rows + breaker left untouched per brief §3.4.
+- **retained-eu:** TNA pagination bug (fixed) had capped enumeration at 20/year since V2 — true universe ~32,970 instruments, but 93% of the never-ingested ~29.6k are hasNoProvisions shells; real remaining ≈ 8,700 sections. Recommendation in CHANGE_LOG: one bounded completion pass, or retire at current coverage.
+
+**Other V18 facts:** count discrepancy resolved (email total = legacy 914,274 + compiled-only corpus_sections; email now prints the breakdown); caselaw current (74,874 — Atom feed is NEWEST-first, refresh = seed pages 1..N, playbook §8); echr test rows gone + breaker cleared; 20GB email denominator; the 2,520-empty-file reseed hole closed by unavailable markers.
 
 ### The three layers (V17 doctrine)
 - **R2** = corpus text, permanent, zero egress.

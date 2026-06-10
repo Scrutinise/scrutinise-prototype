@@ -1,8 +1,60 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 — V17 CONSOLIDATION & RENEWAL.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 (evening) — V18 REFILL THE QUEUE.*
 
 ---
+
+## V18 — REFILL THE QUEUE → PWDATA PER-SPEECH MIGRATION (10 Jun 2026)
+
+**Context:** brief said "seed the full pwdata backlog (~2M sections)". Verification showed the archive was ALREADY fully ingested at day-file granularity (queue done-counts matched TWFY directory counts exactly for all 7 corpora; the processor writes ONE section per day-file — the V11 lesson recurring at brief level). Charlie chose **per-speech migration**: the corpus exists to link debate to legislation; a day of Hansard as one section is not a retrieval unit, and re-chunking after search ships would cost strictly more. Refinements: per-section metadata (heading, speaker, date, parent day-file) so supersession is traceable, and **pilot before full reseed — predict, measure, commit.**
+
+### §1 carry-over verification
+
+1. **Count discrepancy RESOLVED — neither instrument was wrong.** Email 1,790,298 = 914,274 legacy `LegislationSection` + 876,024 *compiled-only* corpus_sections. V17's 884,982 = all corpus_sections rows (incl. 8,893 unavailable + 71 failed). Fix: the email TOTAL CORPUS section now prints the breakdown line so a raw `count(*)` can never look 2× off again.
+2. 8 echr-hudoc V17 test rows deleted; echr breaker cleared (trip was a verification artifact; corpus_targets.blocked still ⛔s the corpus). tna-legislation zero_output_streak (10, from verification re-processing) reset.
+3. **tna-caselaw:** queue cleanup had ALREADY deleted the page:7489 overhang — and with it the discovery cursor (discovery itself was retired in V17). Bonus finding: the Atom feed is **NEWEST-first**, so the first tail seed (pages 1495–1501) re-fetched old judgments and wrote 0 sections; the real gap was pages 1–7. Seeded those; ops liveness started Ingest unaided, +144 sections (74,874 total, current through 10 Jun). Refresh rule now in playbook §8.
+4. Email storage denominator 10GB → 20GB (`DB_LIMIT_GB`, display only).
+
+### §2 pwdata per-speech migration (built + piloted; full reseed is post-push)
+
+- `parsePwdataItems()`: one item per `<speech>` / `<ques>`+`<reply>` exchange, with major/minor heading context, speaker, per-item canonical URL. ISO-8859-1 declaration sniffing (pre-2006 files were silently mojibaked by `res.text()` since V2) + named-entity map (`&pound;` was being blanked).
+- `corpus_sections` columns added (live, nullable): `sectionTitle`, `speaker`, `itemDate`, `parentDocId` (+ partial index). **entity_list_v5.md needs the matching update — CCh.**
+- `processPwdata` rewritten: batched R2 puts + multi-row section upserts; `deleteStaleSections` keeps re-parses consistent; empty/404 files write `unavailable` markers — **closes the 2,520-empty-file perpetual-reseed hole** (they fell outside corpus_sections dedup; weekly cleanup + hourly reseed would have re-processed them forever and tripped the zero-output breaker ~14 Jun).
+- **Scrape versions:** TWFY publishes up to ~7 letter versions per sitting day and rewrites superseded files to `latest="no"` (verified). Superseded → marker + purge; latest → per-speech sections + purge of earlier letters. Files ≠ days: 20,010 debates files = 16,017 sitting days.
+- **Pilot (235 files: 2026-03 all 7 corpora + 1950-03/1985-03 debates): 40,258 sections written via the production path.** Sections/day: debates 475 (2026) / 414 (1985) / 328 (1950); lords 216; wrans 436; westminster 92; lordswrans 54; wms 8; lordswms 7. Avg section ~173 words; **Neon marginal cost ~495 bytes/section** (19.0 MB for 40,258).
+
+**PREDICTION TO SCORE (full reseed, ~50k day-file rows at P3):**
+| corpus | days | est sections |
+|---|---|---|
+| pwdata-debates | 16,017 | ~6.4M |
+| pwdata-wrans | 4,595 | ~2.0M |
+| pwdata-lords | 3,949 | ~853k |
+| pwdata-lordswrans | 4,629 | ~250k |
+| pwdata-westminster | 2,624 | ~241k |
+| pwdata-wms + lordswms | 6,509 | ~49k |
+| **TOTAL** | **42,323 days / ~50k rows** | **~9.8M (range 8–11M)** |
+
+The brief's ~2M for debates was LOW once measured — pre-2000 Hansard runs 328–414 speeches/day with no version splitting. Implied: Neon +~4.9GB → ~9.6GB total (48% of the 20GB headroom); R2 ~9.8M one-off Class-A PUTs ≈ **~$45** (the only non-trivial one-off cost) + ~12GB storage (+$0.18/mo); duration at 20 loops with twfy cap 10: **1.5–4 days**, Railway $1.5–2/day → $3–8 compute. Pilot local rate was ~35ms/section single-loop; §8 verification scores sections/hour against the 100–300k/hr band.
+
+### §3 committees — **Railway is BLOCKED; stopped per brief**
+
+curl 7.88.1 installed in `Ingest` (builder confirmed RAILPACK; service variable `RAILPACK_DEPLOY_APT_PACKAGES=curl` — left in place, harmless and useful). One-shot container test (temporary startCommand swap, no mid-sprint push; method in playbook §8): `committees.parliament.uk` (both listings) AND `publications.parliament.uk` all return the CF "Just a moment…" JS challenge from Railway's IP — the same curl passes from Charlie's residential IP. **Datacentre-IP reputation, not TLS fingerprinting — the V16.1 curl approach cannot work from Railway.** Untouched per §3.4: 2,896 empty-done rows, committees-portal breaker, retirement SQL. Fallback (local fetch / proxy egress / retire) is Charlie's decision.
+
+### §4 + §5 gov.uk corpora (built; seed post-push)
+
+- New generic `govuk-content` source (Content API JSON + PDF attachments via pdf-parse; deep search paging verified to 84k+; 404/410 → unavailable marker). Rate limit 150ms/10 — GOV.UK asks <10 rps sustained.
+- **hmrc-manuals: real universe is 85,197 `hmrc_manual_section` pages, not the brief's ~626k** (stale 640k-era estimate). Seeder ready, P2.
+- govuk-core-docs: PACE codes (live-extracted from the collection page), Green/Magenta/Aqua/Orange Books, Cabinet Manual, Civil Service + Ministerial Codes, ~629→title-confirmed white papers (gov.uk has no white_paper type — probed). Seeder ready, P1.
+
+### §6 retained-eu viability (REPORT ONLY — Charlie decides)
+
+- **Root-cause finding: TNA year-feed pagination was broken from V2→V17** (`?start=` ignored by TNA; only bucket-linked dense uksi years paginated). Every eur/eudn/eudr year was capped at 20 instruments. Fixed (follow `rel="next"`).
+- True universe ~**32,970** instruments (eur 14,031 / eudn 13,064 / eudr 5,875) vs 3,390 ever ingested. 200-sample of never-ingested: **93.0% hasNoProvisions** (avg 9.9 provisions when real). **Est real remaining ≈ 8,700 sections** vs the 140,000 denominator.
+- Recommendation: one bounded pass (~30k TNA fetches ≈ ~2h) to capture the ~8.7k real sections + classification markers, then `est_is_confirmed=true` at ~23k; alternative is retire at current coverage (EUR-Lex's 90,260 sections already carry EU-law text). **Nothing seeded or retired.**
+
+### Post-push run order (Charlie's terminal, any order after `git push`)
+
+1. `seed-govuk-core-docs-v18.ts` (P1, minutes) → 2. `seed-hmrc-manuals-v18.ts` (P2, ~3.5h of fetches) → 3. `seed-pwdata-perspeech-v18.ts` (P3 floor, days). Ops liveness starts Ingest unaided — that is §8.1. §8.2–8.4 (memory ≤600MB at concurrency 20, divergence ~0, 24h sections/hour vs prediction) are scored from the hourly emails + Railway metrics over the following day.
 
 ## V17 — CONSOLIDATION & RENEWAL (10 Jun 2026)
 

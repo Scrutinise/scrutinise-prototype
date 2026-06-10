@@ -386,6 +386,33 @@ Lesson: any numeric column read through pg must be coerced (`::int` in SQL, `Num
 
 Any push replaces running containers mid-work; variable changes also trigger redeploys. SIGTERM'd claim loops leave rows `claimed` until the 90-min reaper. Expect "extra" deployments you didn't request when verifying.
 
+### TNA caselaw Atom feed is NEWEST-first — refresh by seeding pages 1..N (V18)
+
+Page 1 of `caselaw.nationalarchives.gov.uk/atom.xml` holds the NEWEST judgments; the V4-era "discover pages beyond the last seeded page" logic therefore points at the oldest end and finds nothing. Refresh rule: `missing = getTotalJudgments() − corpus_sections count`; seed pages `1..ceil(missing/50)+1` (idempotent — re-fetched overlap upserts harmlessly). Note the queue is NOT a usable cursor: hourly cleanup deletes done rows after 7 days, which silently erased both the old `page:7489` overhang and the legitimate max-docId cursor. Discovery was retired in V17, so caselaw currency is a periodic manual tail seed (constants in `scripts/attic/v18-verification/cleanup-v18-carryover.ts`) until an ops job exists.
+
+### TNA year-feed pagination bug — eur/eudn/eudr years were capped at 20 items (V2→V17, fixed V18)
+
+`fetchAllPages()` in `tna-legislation.ts` paginated with `?start=N`, which TNA ignores — every request re-served page 1 and the no-new-ids guard stopped enumeration at 20 items/year. Dense `uksi` years were rescued by range-bucket links (`/0-99/data.feed`); **eur/eudn/eudr years have no buckets, so retained-eu was systematically under-enumerated for its entire history.** Fixed V18: follow `<link rel="next">`. Universe sizing without full enumeration: page 1's `<leg:morePages>` × 20. When a corpus looks "complete" suspiciously early, check whether its enumeration ever paginated.
+
+### Cloudflare blocks Railway IPs on parliament committees domains — even with curl (V18, 10 Jun 2026)
+
+curl 7.88.1 was installed in the `Ingest` container (Railpack builder → set service variable `RAILPACK_DEPLOY_APT_PACKAGES=curl`; verified live) and `committees.parliament.uk` AND `publications.parliament.uk` both return the CF "Just a moment…" JS challenge (403) from Railway's IP. The same curl requests pass from a residential IP, so this is **datacentre-IP reputation, not TLS fingerprinting** — the V16.1 curl-spawn approach cannot work from Railway. Options are Charlie-level decisions: local fetch from a residential connection, a proxy egress, or retiring the corpus. The 2,896 empty-done committees-document rows and the committees-portal breaker were deliberately left untouched.
+
+How to run a one-shot container test without pushing code: temporarily `serviceInstanceUpdate` the startCommand to an `sh -c '…curl…; sleep 120'` one-liner, read `deploymentLogs`, restore `npm run worker` (script: `v18-curl-test.ts`).
+
+### pwdata per-speech granularity (V18 migration)
+
+`processPwdata` writes one section per `<speech>` (debates/lords/westminhall/wms) or per `<ques>`+`<reply>` exchange (wrans), id `{corpus}:{docId}:{seq}`, with metadata columns `sectionTitle` (major — minor heading), `speaker`, `itemDate`, `parentDocId` (added V18, nullable, no entity_list update yet — CCh). Old day-blob rows are superseded in place (seq 1 overwrites `:1`; `deleteStaleSections` removes leftovers; blob-era rows are identifiable post-hoc as `corpus LIKE 'pwdata-%' AND "parentDocId" IS NULL`).
+
+- **Empty/404 day-files write an `unavailable` marker row** instead of nothing. Without it ~2,520 empty files fell out of the corpus_sections dedup, and weekly queue cleanup + hourly reseed would re-process them forever — exactly the zero-output-breaker food the V17 dedup fix was meant to stop.
+- **Encoding:** pre-~2006 pwdata files declare ISO-8859-1; `res.text()` always decodes UTF-8 and silently mojibakes £/accents. `fetchPwdataFile` now sniffs the XML declaration. Named entities (`&pound;` etc. from the pwdata DOCTYPE) are decoded by map, not blanked.
+- **Scrape versions — files ≠ sitting days.** TWFY publishes up to ~7 letter-suffixed versions per day (`debates2026-03-02a..f`, 20,010 debates files = 16,017 days) and rewrites superseded files to `latest="no"` on the root element (verified live). The processor writes superseded versions as `unavailable` markers, purges any sections previously ingested under them, and after processing a latest version purges compiled sections of earlier letters of the same day (`deleteSupersededVersionSections`). The blob era ignored this entirely — version duplicates were ingested as separate day-blobs. **Estimate denominators from distinct days × per-day rate, never from file counts.**
+- Re-seeding the archive deliberately skips corpus_sections dedup (`bulkInsertQueueRows(..., { resetExisting: true })`) — a granularity migration must re-process ingested files. The hourly ops reseed keeps its dedup.
+
+### GOV.UK Content API source (`govuk-content`, V18)
+
+Used by `hmrc-manuals` (85,197 `hmrc_manual_section` pages — the 626k brief estimate was stale) and `govuk-core-docs` (PACE codes, Treasury books, white papers). `https://www.gov.uk/api/search.json` enumerates (deep paging works ≥84k, verified); `https://www.gov.uk/api/content{path}` returns clean JSON (`details.body` HTML; publications carry `details.attachments` PDFs which are fetched + pdf-parsed, one section per attachment, capped at 20). Rate limit `govuk-content` 150ms / 10 concurrent — GOV.UK asks integrators to stay under ~10 rps; 6.7 rps leaves headroom. 404/410 → `unavailable` marker (gov.uk reorganises URLs; deterministic 404s must not retry). There is no `white_paper` document type — white papers are `policy_paper` filtered by title.
+
 ## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
 
 Most patterns below concern the retired 20-worker fleet, the separate scheduler/monitor, or Railway-DB queue tables. The diagnostics remain instructive; the named files now live in `scripts/attic/v17-fleet/`.
