@@ -60,12 +60,6 @@ const CHECKPOINT_EVERY = 50  // write worker progress checkpoint every N items
 const ROW_TIMEOUT_MS  = 5 * 60_000  // 5min hard ceiling per row — protects against any source hanging
 
 async function main(): Promise<void> {
-  if (process.env.TEST_COMMITTEES_FETCH === '1') {
-    const { runCommitteesTest } = await import('../test-committees-fetch')
-    await runCommitteesTest()
-    process.exit(0)
-  }
-
   const workerIdRaw = parseInt(process.env.WORKER_ID ?? '1', 10)
   // Accept any positive WORKER_ID — supports workers 11–20 and beyond
   const workerId = (isNaN(workerIdRaw) || workerIdRaw < 1) ? 1 : workerIdRaw
