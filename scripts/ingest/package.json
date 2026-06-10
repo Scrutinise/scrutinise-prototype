@@ -1,16 +1,12 @@
 {
   "name": "scrutinise-ingest",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "start": "exec tsx workers/worker-queue.ts",
-    "worker": "exec tsx workers/worker-queue.ts",
-    "worker-legacy": "tsx workers/worker-main.ts",
-    "scheduler": "exec tsx scheduler.ts",
-    "monitor": "exec tsx monitor.ts",
-    "check-status": "tsx check-status.ts",
-    "retry-failed": "tsx retry-failed.ts",
-    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
+    "start": "exec tsx workers/ingest-pool.ts",
+    "worker": "exec tsx workers/ingest-pool.ts",
+    "scheduler": "exec tsx ops.ts",
+    "ops": "exec tsx ops.ts"
   },
   "dependencies": {
     "@types/pdf-parse": "^1.1.4",
@@ -19,11 +15,9 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@aws-sdk/client-s3": "^3.600.0",
     "@google/generative-ai": "^0.21.0",
-    "@prisma/client": "^6.0.0",
     "dotenv": "^16.0.0",
     "node-fetch": "^3.3.2",
     "pdf-parse": "^1.1.1",
-    "prisma": "^6.0.0",
     "resend": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.0.0"
