@@ -25,6 +25,12 @@ export function getNeonPool(): Pool {
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 15_000,
       statement_timeout: 120_000,
+      // query_timeout is CLIENT-side: statement_timeout cannot fire on a
+      // black-holed socket, and a query that never settles froze every claim
+      // loop in the first V17 shakedown (they all await one shared refresh
+      // promise). keepAlive surfaces dead sockets to pg quickly.
+      query_timeout: 60_000,
+      keepAlive: true,
     })
   }
   return _pool

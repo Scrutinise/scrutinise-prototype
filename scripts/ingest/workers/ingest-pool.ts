@@ -182,12 +182,13 @@ async function runLoop(loopId: number): Promise<void> {
     inFlight++
     console.log(`${tag} claimed ${row.id} (${row.sourceType} p${row.priority})`)
 
+    let timeoutHandle: NodeJS.Timeout | undefined
     try {
       await Promise.race([
         processRow(row),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`row timeout after ${ROW_TIMEOUT_MS / 1000}s`)), ROW_TIMEOUT_MS)
-        ),
+        new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(() => reject(new Error(`row timeout after ${ROW_TIMEOUT_MS / 1000}s`)), ROW_TIMEOUT_MS)
+        }),
       ])
       stats.done++
     } catch (err: unknown) {
@@ -195,6 +196,9 @@ async function runLoop(loopId: number): Promise<void> {
       await markFailed(row.id, String(err)).catch(e => console.warn(`${tag} markFailed error: ${e}`))
       stats.failed++
     } finally {
+      // Without this the loser timer rejects 5 min later with no listener —
+      // an unhandled rejection after every successful row.
+      clearTimeout(timeoutHandle)
       rateLimiter.release(row.sourceType)
       inFlight--
     }

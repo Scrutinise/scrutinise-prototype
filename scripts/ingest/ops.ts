@@ -516,10 +516,13 @@ function msUntilNextQuarter(): number {
 }
 
 async function withTimeout(p: Promise<void>, label: string): Promise<void> {
-  const timeoutP = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(`${label} timed out after ${RUN_TIMEOUT_MS / 60_000} min`)), RUN_TIMEOUT_MS)
-  )
-  await Promise.race([p, timeoutP]).catch(err => console.error(`[ops] ${label} failed:`, err))
+  let handle: NodeJS.Timeout | undefined
+  const timeoutP = new Promise<never>((_, reject) => {
+    handle = setTimeout(() => reject(new Error(`${label} timed out after ${RUN_TIMEOUT_MS / 60_000} min`)), RUN_TIMEOUT_MS)
+  })
+  await Promise.race([p, timeoutP])
+    .catch(err => console.error(`[ops] ${label} failed:`, err))
+    .finally(() => clearTimeout(handle))
 }
 
 async function loop(): Promise<never> {
