@@ -20,5 +20,6 @@
       "@prisma/adapter-pg": ["./node_modules/@prisma/adapter-pg"],
       "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"]
     }
-  }
+  },
+  "exclude": ["attic", "**/node_modules"]
 }
