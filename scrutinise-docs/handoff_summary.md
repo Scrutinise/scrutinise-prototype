@@ -226,9 +226,11 @@ ON CONFLICT (id) DO NOTHING;
 - **Queue on Neon (V16):** `ingest_queue`, `source_rate_limits`, `specialist_queue`, `scheduler_lock`, `ingest_progress_snapshots` all on Neon. Railway Postgres holds only Prisma app tables.
 - **Connection-per-transaction (V16):** ECONNRESET retry loop removed. Clean exit on DB error → Railway restarts with jitter.
 - **LDA written questions retired (V16):** covered by `pwdata-wrans` (2001–present) and `pwdata-lordswrans` (1999–present).
-- **committees-document (V16.1) — BROKEN:** All 2,896 done rows produced 0 corpus_sections. Root cause: curl is NOT installed on Railway worker containers (confirmed 9 Jun 2026 via diagnostic deployment). `fetchPublicationHtml()` returns null silently on ENOENT; rows marked done with no content. V16.1 approach needs Nixpacks curl installation before it can work.
-- **committees-portal rows:** 498 reports + 2,040 evidence still in `failed` state. Do not retire — they are the only record of what needs to be processed.
-- **Cloudflare diagnosis (confirmed 9 Jun 2026):** `reports-responses` listing pages accessible directly via curl (no CF challenge). `other-publications` listing pages return CF JS challenge from Charlie's machine. Whether Railway IPs bypass the challenge is unknown (could not test — no curl on Railway). The CLAUDE.md claim "Railway Linux containers have curl by default" is incorrect.
+- **committees-document (V16.1) — BROKEN on Railway:** All 2,896 done rows from first seeder run produced 0 corpus_sections. Root cause: curl NOT installed on Railway containers. `fetchPublicationHtml()` returns null silently; rows marked done with no content. All tagged `lastError = 'empty — curl not available in Railway container (V16.1)'`. Needs Nixpacks curl installation before workers can produce content.
+- **Seeder completed (10 Jun 2026):** Final result: **1,132 reports + 54 evidence = 1,186 per-document rows seeded.** Checkpoint + cookie jar deleted. `other-publications` yielded only 54 rows (p115–p1175) — heavy curl exit 28 timeouts, listing ended at p1175 not p2040. The 54 evidence rows are genuine HTML URLs but workers will produce 0 content until curl installed.
+- **Retirement SQL** (run on Neon AFTER curl installed and workers processing): `UPDATE ingest_queue SET status='done', "lastError"='retired V16 — replaced by committees-document rows' WHERE "sourceType"='committees-portal' AND corpus IN ('committees-reports','committees-evidence');`
+- **committees-portal rows:** 498 reports + 2,040 evidence still `failed`. DO NOT retire until curl installed.
+- **Cloudflare diagnosis (confirmed 9/10 Jun 2026):** `reports-responses` accessible with curl, no CF challenge. `other-publications` mostly exit 28 timeouts from Charlie's residential IP (CF rate-limiting, not JS challenge). Railway IPs unknown. CLAUDE.md claim "Railway Linux containers have curl by default" is incorrect.
 
 ## KEY ARCHITECTURE STATE (as of V15)
 
