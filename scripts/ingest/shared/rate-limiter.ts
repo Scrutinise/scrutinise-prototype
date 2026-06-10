@@ -39,9 +39,13 @@ class RateLimiter {
   configure(configs: SourceRateConfig[]): void {
     for (const c of configs) {
       const existing = this.buckets.get(c.sourceKey)
+      // Defensive Number(): pg returns BIGINT columns as strings, and a string
+      // intervalMs turns nextAvailableAt arithmetic into concatenation.
+      const intervalMs = Number(c.intervalMs)
+      const maxConcurrent = Number(c.maxConcurrent)
       this.buckets.set(c.sourceKey, {
-        intervalMs: c.intervalMs,
-        maxConcurrent: c.maxConcurrent,
+        intervalMs: Number.isFinite(intervalMs) ? intervalMs : DEFAULT_INTERVAL_MS,
+        maxConcurrent: Number.isFinite(maxConcurrent) && maxConcurrent >= 1 ? maxConcurrent : DEFAULT_MAX_CONCURRENT,
         nextAvailableAt: existing?.nextAvailableAt ?? 0,
         inFlight: existing?.inFlight ?? 0,
         suspendedUntil: c.suspendedUntil ?? 0,

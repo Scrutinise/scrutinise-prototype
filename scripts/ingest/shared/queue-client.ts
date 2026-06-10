@@ -53,10 +53,14 @@ export async function loadRateLimitConfigs(): Promise<SourceRateConfig[]> {
     SELECT "sourceKey", "intervalMs", "maxConcurrentWorkers", suspended, "suspendedUntil"
     FROM source_rate_limits
   `)
+  // intervalMs is BIGINT — pg returns it as a STRING. Without Number() the
+  // token bucket computes Date.now() + "200" = string concat = a timestamp
+  // millennia away, permanently disabling the source after its first claim
+  // (the V17 shakedown freeze).
   return res.rows.map(r => ({
     sourceKey: r.sourceKey,
-    intervalMs: r.intervalMs,
-    maxConcurrent: r.maxConcurrentWorkers ?? 20,
+    intervalMs: Number(r.intervalMs),
+    maxConcurrent: Number(r.maxConcurrentWorkers ?? 20),
     suspendedUntil: r.suspended && r.suspendedUntil ? new Date(r.suspendedUntil).getTime() : null,
   }))
 }
