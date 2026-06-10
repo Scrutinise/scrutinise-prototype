@@ -373,6 +373,19 @@ WHERE "sourceType" = '<sourceKey>' AND status = 'blocked';
 
 `Ingest` writes a heartbeat to `ingest_service_state.last_beat` every 30s. `Ops` treats it as stopped when the beat is >10 min old; if pending > 0 it triggers `serviceInstanceRedeploy` (NEVER `deploymentRedeploy` — see §2 and the 9 Jun incident), with a 15-min cooldown between triggers. `starts_count`/`starts_on` track starts per day for the email.
 
+WHY a heartbeat and not deployment status: a deployment whose process exits 0 **still reports `SUCCESS`** via the Railway API (verified 10 Jun 2026) — status cannot distinguish running from cleanly stopped. Also `deploymentStop` silently no-ops; use `deploymentRemove` to stop a running deployment manually.
+
+### pg returns BIGINT columns as strings — coerce at every DB boundary (V17 shakedown)
+
+Symptom: pool worker claims one burst then never claims again; loops report `rate-limited` forever with no suspension set.
+Cause: `source_rate_limits.intervalMs` is BIGINT → node-pg returns `"200"` (string). `Date.now() + "200"` string-concatenates into a far-future timestamp, permanently disabling the token bucket after its first claim. TypeScript types said `number`; the runtime value was a string.
+Fix: `Number()` coercion in `loadRateLimitConfigs` + defensive guard in `rate-limiter.configure()`.
+Lesson: any numeric column read through pg must be coerced (`::int` in SQL, `Number()`/`parseInt` in JS) — TS types on `pool.query<T>` are assertions, not conversions. The local shakedown missed this because the workload (4 rows) was smaller than concurrency (5), so `eligible()` was never re-evaluated after a claim: **shakedown workloads must exceed concurrency**.
+
+### Push to Main auto-deploys `Ingest` and `Ops` (GitHub trigger)
+
+Any push replaces running containers mid-work; variable changes also trigger redeploys. SIGTERM'd claim loops leave rows `claimed` until the 90-min reaper. Expect "extra" deployments you didn't request when verifying.
+
 ## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
 
 Most patterns below concern the retired 20-worker fleet, the separate scheduler/monitor, or Railway-DB queue tables. The diagnostics remain instructive; the named files now live in `scripts/attic/v17-fleet/`.

@@ -9,7 +9,7 @@
 ## CURRENT STATE — POST-V17 ARCHITECTURE
 
 **Active branch:** Main
-**Sprint:** V17 (SPRINT_V17_BRIEF.md) — consolidation built 10 Jun; verification protocol per brief §5
+**Sprint:** V17 (SPRINT_V17_BRIEF.md) — built AND verified end-to-end 10 Jun. The full autonomous loop is live: seed pending rows → ops detects (pending>0 + stale heartbeat) → starts Ingest → claims at concurrency 20 → drains → exit-on-empty → stopped, bills nothing. Breakers tripped on real failures: `echr` (HUDOC 404) and `committees-portal` (CF 403) — both show as persistent ISSUES in hourly emails until manually cleared (SQL in playbook §8). Two shakedown bugs found+fixed: bigint intervalMs string-poisoning the token bucket, and missing client-side query_timeout. Remaining check for Charlie: Usage page tomorrow ≈ scrutinise-db + Ops only.
 **Root cause of 8–10 Jun outages:** Railway workspace **Compute Usage Limit ($30) hit** — pauses ALL deployments simultaneously. Limit raised. Not OOM, not connections, not worker code. (Playbook §8 now has this as a first-check pattern.)
 
 ### The three layers (V17 doctrine)

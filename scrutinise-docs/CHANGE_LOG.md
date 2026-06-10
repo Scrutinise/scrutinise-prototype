@@ -20,6 +20,15 @@
 
 **Session note:** the 6am session Charlie scheduled was killed ~6:11 by a laptop restart after writing neon-pool.ts, rate-limiter.ts and the queue-client refactor (all sound, kept). This session audited for partial state (none beyond running old deployments, which were stopped), and completed the sprint.
 
+**Verification (brief §5, adapted — the si-2010plus tail had finished overnight, so the shakedown used a small SI-refresh batch + deliberately failing echr rows):**
+1. ✅ Deployed at concurrency 5; two real bugs found and fixed during shakedown: (a) BIGINT `intervalMs` returned as string by pg → token bucket self-poisoned after first claim (froze all loops; fixed with Number() coercion — playbook §8 entry); (b) missing client-side `query_timeout`/keepAlive on the shared pool (added).
+2. ✅ Sections-not-statuses verified: SI-refresh rows are idempotent (0 new sections, expected); pdf-only classifications wrote real upserts; pool exit summary reports sections written.
+3. ✅ Concurrency 20 run: 20 loops, clean exit-on-empty, trivial footprint (workload too small for a meaningful 600MB check — first real backlog run will confirm).
+4. ✅ Exit-on-empty: 3 sweeps × 30s → exit(0) → Railway leaves service stopped (status stays SUCCESS — which is why liveness uses the heartbeat, not deployment status).
+5. ✅ Ops liveness: autonomously started Ingest via serviceInstanceRedeploy when pending > 0 with stale heartbeat.
+6. ✅ Breaker: echr tripped on 5 consecutive real failures (HUDOC 404) with persistent ISSUES line; committees-portal tripped on its genuine CF-403 history. No auto-retry.
+7. Steady-state idle cost = scrutinise-db + Ops only; Charlie to confirm on the Usage page tomorrow.
+
 ---
 
 ## INCIDENT — 9/10 Jun 2026 (Railway DB crash caused by CC)
