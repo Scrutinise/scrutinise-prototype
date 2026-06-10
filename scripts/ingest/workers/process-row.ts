@@ -12,7 +12,7 @@ import {
 } from '../shared/queue-client'
 import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
-import { upsertSection as _upsertSection, sectionId, countWords } from '../shared/db-metadata'
+import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSections, deleteStaleSections, deleteSupersededVersionSections, sectionId, countWords, SectionMeta } from '../shared/db-metadata'
 
 // Track sections written this process lifetime — the pool worker reports this
 // in its exit summary, and it is the ground truth for "sections, not statuses".
@@ -22,6 +22,12 @@ export function getSectionsWritten(): number { return _sectionsWritten }
 async function upsertSection(data: Parameters<typeof _upsertSection>[0]): Promise<void> {
   await _upsertSection(data)
   _sectionsWritten++
+}
+
+async function bulkUpsertSections(metas: SectionMeta[]): Promise<number> {
+  const written = await _bulkUpsertSections(metas)
+  _sectionsWritten += written
+  return written
 }
 
 // Source clients
@@ -35,7 +41,7 @@ import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '..
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
 import { fetchLdaPage, MAX_524_RETRIES } from '../sources/lda-parliament'
 import { listCommitteePublications, fetchPublicationHtml } from '../sources/committees-portal'
-import { fetchPwdataFile, parsePwdataXml, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
+import { fetchPwdataFile, parsePwdataItems, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
 import {
@@ -61,6 +67,7 @@ export async function processRow(row: QueueRow): Promise<void> {
     case 'eurlex':          return processEurLex(row)
     case 'lda-parliament':  return processLda(row)
     case 'twfy-pwdata':     return processPwdata(row)
+    case 'govuk-content':   return processGovukContent(row)
     case 'hmrc':            return processHmrc(row)
     case 'treaties':          return processTreaties(row)
     case 'oecd':              return processOecd(row)
@@ -607,6 +614,99 @@ async function processGovUk(row: QueueRow): Promise<void> {
 
 // ── TWFY pwdata (bulk Hansard XML) ────────────────────────────────────────────
 // docId = filename without .xml extension (e.g. "debates2026-06-03a", "answers2026-06-01")
+//
+// V18: one section per speech / question+answer exchange, with heading, speaker,
+// sitting date, and parentDocId metadata. The pre-V18 one-blob-per-day-file
+// sections are superseded in place: item 1 overwrites the old :1 row, higher
+// seqs are new rows, and deleteStaleSections clears anything a re-parse no
+// longer produces. Empty/404 files write an 'unavailable' marker row so the
+// corpus_sections-based reseed dedup sees them — without it, weekly queue
+// cleanup + hourly reseed re-process empty files forever and feed the
+// zero-output breaker.
+
+// Exported core so the V18 pilot can run the exact production path on chosen
+// day-files without touching the queue. Returns sections written.
+export async function processPwdataFile(corpus: string, docId: string): Promise<number> {
+  const dir = PWDATA_CORPUS_CONFIG[corpus].dir
+  const dayUrl = `https://www.theyworkforyou.com/pwdata/scrapedxml/${dir}/${docId}.xml`
+  const dateMatch = /(\d{4}-\d{2}-\d{2})/.exec(docId)
+  const itemDate = dateMatch ? dateMatch[1] : undefined
+
+  const xml = await fetchPwdataFile(corpus, docId)
+
+  // TWFY scrape versions: superseded files are rewritten upstream with
+  // latest="no" on the root element (verified 10 Jun 2026). Their content is a
+  // duplicate of a later letter — write a marker, purge anything previously
+  // ingested for this version, never re-process.
+  if (xml && /<publicwhip[^>]*latest="no"/.test(xml.slice(0, 4000))) {
+    const markerId = sectionId(corpus, docId, '1')
+    await upsertSection({
+      id: markerId,
+      corpus,
+      sourceUrl: dayUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'superseded scrapeversion — content lives under a later letter suffix',
+      itemDate,
+      parentDocId: docId,
+    })
+    await deleteStaleSections(corpus, docId, [markerId])
+    return 0
+  }
+
+  const items = xml ? parsePwdataItems(xml) : []
+
+  if (items.length === 0) {
+    await upsertSection({
+      id: sectionId(corpus, docId, '1'),
+      corpus,
+      sourceUrl: dayUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: xml ? 'day-file contains no extractable items' : 'day-file 404 — no sitting',
+      itemDate,
+      parentDocId: docId,
+    })
+    return 0
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const item of items) {
+    const compiled = rawToText(item.text)
+    if (!compiled) continue
+    const ref = String(item.seq)
+    metas.push({
+      id: sectionId(corpus, docId, ref),
+      corpus,
+      sourceUrl: item.url ?? dayUrl,
+      r2Key: compiledKey(corpus, docId, ref),
+      wordCount: countWords(compiled),
+      status: 'compiled',
+      sectionTitle: [item.heading, item.minorHeading].filter(Boolean).join(' — ') || undefined,
+      speaker: item.speaker ?? undefined,
+      itemDate,
+      parentDocId: docId,
+    })
+    texts.push(compiled)
+  }
+
+  // R2 first, then DB — a section row must never point at a missing R2 key.
+  const R2_BATCH = 8
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  const written = await bulkUpsertSections(metas)
+  await deleteStaleSections(corpus, docId, metas.map(m => m.id))
+
+  // Purge compiled sections of earlier scrape versions of the same sitting day
+  // (markers are kept so the reseed dedup still sees those files).
+  const dayStem = docId.replace(/[a-z]$/, '')
+  if (dayStem !== docId) {
+    await deleteSupersededVersionSections(corpus, dayStem, docId)
+  }
+  return written
+}
 
 async function processPwdata(row: QueueRow): Promise<void> {
   if (!PWDATA_CORPUS_CONFIG[row.corpus]) {
@@ -614,39 +714,90 @@ async function processPwdata(row: QueueRow): Promise<void> {
     console.warn(`[pool] unknown pwdata corpus ${row.corpus} — skipped`)
     return
   }
-
-  const xml = await fetchPwdataFile(row.corpus, row.docId)
-  if (!xml) {
-    // 404 means no sitting that day — treat as done (not an error)
-    await markDone(row.id)
-    return
-  }
-
-  const text = parsePwdataXml(xml)
-  if (!text.trim()) {
-    // File exists but contains no extractable text (rare)
-    await markDone(row.id)
-    return
-  }
-
-  const compiled = rawToText(text)
-  const cKey = compiledKey(row.corpus, row.docId, '1')
-
-  if (!await r2Exists(cKey)) {
-    await r2Put(cKey, compiled)
-  }
-
-  const sourceUrl = `https://www.theyworkforyou.com/pwdata/scrapedxml/${PWDATA_CORPUS_CONFIG[row.corpus].dir}/${row.docId}.xml`
-  const secId = sectionId(row.corpus, row.docId, '1')
-  await upsertSection({
-    id: secId,
-    corpus: row.corpus,
-    sourceUrl,
-    r2Key: cKey,
-    wordCount: countWords(compiled),
-    status: 'compiled',
-  })
+  await processPwdataFile(row.corpus, row.docId)
   await markDone(row.id, 'xml')
+}
+
+// ── GOV.UK Content API (V18 — hmrc-manuals full depth + govuk-core-docs) ─────
+// docId = gov.uk path without the leading slash
+// (e.g. "hmrc-internal-manuals/employment-income-manual/eim23151").
+// Section 1 = details.body; sections 2..N = PDF attachments (publications).
+// 404/410 writes an 'unavailable' marker so corpus_sections dedup remembers
+// the path — gov.uk reorganises URLs and a deterministic 404 must not retry.
+
+async function processGovukContent(row: QueueRow): Promise<void> {
+  const { fetchGovukContent, fetchPdfBuffer } = await import('../sources/govuk-content')
+  const pageUrl = `https://www.gov.uk/${row.docId}`
+  const content = await fetchGovukContent(row.docId)
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+  }
+
+  if (content.notFound) return marker('gov.uk content API 404/410 — page gone or moved')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  const baseTitle = content.sectionId ? `${content.sectionId} — ${content.title}` : content.title
+
+  const bodyText = content.bodyHtml ? rawToText(content.bodyHtml) : ''
+  if (bodyText.length > 50) {
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(bodyText),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: baseTitle || undefined,
+      itemDate: content.publicUpdatedAt ?? undefined,
+      parentDocId: row.docId,
+    })
+    texts.push(bodyText)
+  }
+
+  const MAX_ATTACHMENTS = 20
+  for (const att of content.attachments.slice(0, MAX_ATTACHMENTS)) {
+    const buf = await fetchPdfBuffer(att.url!)
+    if (!buf) continue
+    const text = await pdfToText(buf, att.url!)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: att.url!,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format: 'pdf',
+      sectionTitle: att.title ?? baseTitle ?? undefined,
+      itemDate: content.publicUpdatedAt ?? undefined,
+      parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker(`no extractable body or PDF text (document_type=${content.documentType})`)
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
 }
 
 // ── Law Commissions (Scottish + NI) ──────────────────────────────────────────

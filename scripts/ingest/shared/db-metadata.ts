@@ -31,16 +31,20 @@ export interface SectionMeta {
   notes?: string
   availabilityStatus?: 'full' | 'commencement' | 'revoked' | 'pdf-only' | 'metadata-only' | 'no-provisions'
   availabilityNote?: string
+  // V18 per-item metadata (pwdata granularity migration): heading, speaker,
+  // sitting date, and the parent day-file — so search can aggregate
+  // speech → debate → day, and day-blob supersession is traceable.
+  sectionTitle?: string
+  speaker?: string
+  itemDate?: string   // YYYY-MM-DD
+  parentDocId?: string
 }
 
-export async function upsertSection(meta: SectionMeta): Promise<void> {
-  const pool = getNeonPool()
-  const now = new Date()
-  await pool.query(`
-    INSERT INTO corpus_sections
-      (id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
-       format, "xmlPreview", notes, availability_status, availability_note, "compiledAt", "createdAt")
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
+const SECTION_COLS = `(id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
+       format, "xmlPreview", notes, availability_status, availability_note,
+       "sectionTitle", speaker, "itemDate", "parentDocId", "compiledAt", "createdAt")`
+
+const SECTION_CONFLICT = `
     ON CONFLICT (id) DO UPDATE SET
       "r2Key"             = EXCLUDED."r2Key",
       "r2RawKey"          = EXCLUDED."r2RawKey",
@@ -52,8 +56,14 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
       notes               = EXCLUDED.notes,
       availability_status = EXCLUDED.availability_status,
       availability_note   = EXCLUDED.availability_note,
-      "compiledAt"        = CASE WHEN EXCLUDED.status = 'compiled' THEN $14 ELSE corpus_sections."compiledAt" END
-  `, [
+      "sectionTitle"      = EXCLUDED."sectionTitle",
+      speaker             = EXCLUDED.speaker,
+      "itemDate"          = EXCLUDED."itemDate",
+      "parentDocId"       = EXCLUDED."parentDocId",
+      "compiledAt"        = CASE WHEN EXCLUDED.status = 'compiled' THEN EXCLUDED."compiledAt" ELSE corpus_sections."compiledAt" END`
+
+function sectionParams(meta: SectionMeta, now: Date): unknown[] {
+  return [
     meta.id,
     meta.corpus,
     meta.sourceUrl ?? null,
@@ -67,8 +77,74 @@ export async function upsertSection(meta: SectionMeta): Promise<void> {
     meta.notes ?? null,
     meta.availabilityStatus ?? 'full',
     meta.availabilityNote ?? null,
+    meta.sectionTitle ?? null,
+    meta.speaker ?? null,
+    meta.itemDate ?? null,
+    meta.parentDocId ?? null,
     meta.status === 'compiled' ? now : null,
-  ])
+  ]
+}
+
+const PARAMS_PER_ROW = 18
+
+export async function upsertSection(meta: SectionMeta): Promise<void> {
+  const pool = getNeonPool()
+  const placeholders = Array.from({ length: PARAMS_PER_ROW }, (_, i) => `$${i + 1}`).join(',')
+  await pool.query(
+    `INSERT INTO corpus_sections ${SECTION_COLS} VALUES (${placeholders},NOW()) ${SECTION_CONFLICT}`,
+    sectionParams(meta, new Date())
+  )
+}
+
+// Multi-row upsert for per-item processors (V18) — one round trip per chunk
+// instead of one per section. Returns rows written.
+export async function bulkUpsertSections(metas: SectionMeta[], chunkSize = 200): Promise<number> {
+  if (metas.length === 0) return 0
+  const pool = getNeonPool()
+  const now = new Date()
+  let written = 0
+  for (let i = 0; i < metas.length; i += chunkSize) {
+    const chunk = metas.slice(i, i + chunkSize)
+    const values: string[] = []
+    const params: unknown[] = []
+    for (let r = 0; r < chunk.length; r++) {
+      const base = r * PARAMS_PER_ROW
+      const ph = Array.from({ length: PARAMS_PER_ROW }, (_, c) => `$${base + c + 1}`).join(',')
+      values.push(`(${ph},NOW())`)
+      params.push(...sectionParams(chunk[r], now))
+    }
+    await pool.query(
+      `INSERT INTO corpus_sections ${SECTION_COLS} VALUES ${values.join(',')} ${SECTION_CONFLICT}`,
+      params
+    )
+    written += chunk.length
+  }
+  return written
+}
+
+// Remove sections of a parent doc that a re-parse no longer produced — keeps
+// re-processing consistent instead of leaving stale high-seq rows behind.
+export async function deleteStaleSections(corpus: string, parentDocId: string, keepIds: string[]): Promise<number> {
+  const pool = getNeonPool()
+  const res = await pool.query(
+    `DELETE FROM corpus_sections WHERE corpus = $1 AND "parentDocId" = $2 AND id <> ALL($3::text[])`,
+    [corpus, parentDocId, keepIds]
+  )
+  return res.rowCount ?? 0
+}
+
+// TWFY publishes multiple scrape versions per sitting day (debates2026-03-02a..f);
+// only the highest letter is current. After processing a latest version, purge
+// compiled sections of earlier versions of the same day. Unavailable marker rows
+// are kept — they are what stops the hourly reseed re-inserting those files.
+export async function deleteSupersededVersionSections(corpus: string, dayStem: string, currentDocId: string): Promise<number> {
+  const pool = getNeonPool()
+  const res = await pool.query(
+    `DELETE FROM corpus_sections
+     WHERE corpus = $1 AND "parentDocId" >= $2 AND "parentDocId" < $3 AND status = 'compiled'`,
+    [corpus, dayStem, currentDocId]
+  )
+  return res.rowCount ?? 0
 }
 
 export function sectionId(corpus: string, docId: string, sectionRef: string): string {

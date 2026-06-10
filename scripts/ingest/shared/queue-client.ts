@@ -198,6 +198,41 @@ export async function upsertQueueRow(row: {
   `, [row.id, row.corpus, row.docId, row.sourceType, row.priority])
 }
 
+// Batched queue insert (V18 seeders). With resetExisting, rows whose id already
+// exists in a terminal state (done/skipped/failed) are reset to pending — used
+// by the pwdata granularity migration, which deliberately re-processes the
+// whole archive. Without it, existing ids are left untouched.
+export async function bulkInsertQueueRows(
+  rows: Array<{ id: string; corpus: string; docId: string; sourceType: string; priority: number }>,
+  opts: { resetExisting?: boolean } = {},
+  chunkSize = 500,
+): Promise<{ affected: number }> {
+  let affected = 0
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize)
+    const values: string[] = []
+    const params: unknown[] = []
+    chunk.forEach((r, j) => {
+      const b = j * 5
+      values.push(`($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},'pending')`)
+      params.push(r.id, r.corpus, r.docId, r.sourceType, r.priority)
+    })
+    const conflict = opts.resetExisting
+      ? `ON CONFLICT (id) DO UPDATE SET
+           status = 'pending', priority = EXCLUDED.priority,
+           "lastError" = NULL, "claimedBy" = NULL, "claimedAt" = NULL
+         WHERE ingest_queue.status IN ('done', 'skipped', 'failed')`
+      : 'ON CONFLICT (id) DO NOTHING'
+    const res = await getPool().query(
+      `INSERT INTO ingest_queue (id, corpus, "docId", "sourceType", priority, status)
+       VALUES ${values.join(',')} ${conflict}`,
+      params
+    )
+    affected += res.rowCount ?? 0
+  }
+  return { affected }
+}
+
 // Returns count of all pending rows — used to distinguish empty queue from rate-limited.
 export async function countPendingRows(): Promise<number> {
   const res = await getPool().query<{ count: number }>(
