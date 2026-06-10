@@ -2,15 +2,74 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 9 Jun 2026 (V16 post-session — V16.1 committees-document approach, seeder partial, resume instructions)*
+*Last updated: 10 Jun 2026 — SYSTEM DOWN. Railway DB crash caused by diagnostic session. Read §IMMEDIATE ACTIONS first.*
 
 ---
 
-## CURRENT STATE
+## ⚠️ CURRENT STATE — SYSTEM DOWN
 
 **Active branch:** Main
-**Last commit:** `5cf2d6f` fix(ingest/V16.1): 1500ms page delay + retry-on-timeout for committees seeder
-**Last sprint:** V16 + V16.1 (9 Jun 2026) — queue migrated to Neon; ECONNRESET retry loop removed; LDA written questions retired; committees-document per-doc fetch via curl; seeder partially complete (1,176 reports rows seeded)
+**Last commit:** `176dbbe` chore: remove Railway CF test scaffolding
+**Website:** OFFLINE — Railway DB (`scrutinise-db`) crashing on restart
+**Ingest workers:** Unknown — last confirmed 19/20 SUCCESS at ~17:46 BST 9 Jun; not safe to assume still running
+**Scheduler:** No email since 17:01 BST 9 Jun — presumed dead or stuck
+**Neon DB:** Operational — queue + corpus_sections intact
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — DB RECOVERY
+
+| Action | Status | Who |
+|--------|--------|-----|
+| Restart Railway `scrutinise-db` | ⬜ pending | Charlie |
+| Check connections immediately after restart: `SELECT count(*), state FROM pg_stat_activity GROUP BY state;` | ⬜ pending | Charlie |
+| If connections > 30: identify sources — see §CRASH DIAGNOSIS below | ⬜ pending | CC |
+| Check scheduler logs (Railway → Ingest-scheduler → Logs) | ⬜ pending | CC |
+| Once DB stable: staggered-restart only the workers that need it | ⬜ pending | CC |
+| **Fix `scheduler.ts` Railway DB connection** — see §ROOT CAUSE below | ⬜ next session | CC |
+| Fix worker-18 (pre-existing) — Railway dashboard → Deploy from Main | ⬜ pending | Charlie |
+
+---
+
+## ⚠️ CRASH DIAGNOSIS — What CC did and why it matters
+
+### Timeline of CC's session (9 Jun 2026, ~17:00–18:00 BST)
+
+CC ran a diagnostic to test whether Railway workers have curl. During this session CC:
+
+1. **~17:23 BST** — Called `deploymentRedeploy(id: "63e9dbbf")` — accidentally redeployed a REMOVED June-4 deployment of worker-1. That old code (pre-Neon) tried to connect to Railway DB directly for queue operations, crash-looped repeatedly with ECONNRESET. This created sustained failed-connection activity against Railway DB.
+
+2. **~17:28–17:47 BST** — Called `serviceInstanceRedeploy` on worker-1 multiple times for the CF test. Each fresh build started a new process.
+
+3. **~17:40 BST** — Ran `restart-workers-staggered.ts` which triggered `serviceInstanceRedeploy` on **all 21 services** (20 workers + scheduler) in batches of 5. This created 21 fresh builds in ~3 minutes. On startup each worker process opens Neon connections. The scheduler additionally opens a Railway DB connection pool via `getPrisma()`.
+
+4. **~17:40–17:46 BST** — Syntax error in test-committees-fetch.ts caused worker-1 to crash-loop on esbuild parse failure (all other workers unaffected — tsx dynamic import not eagerly resolved for them). Cleaned up.
+
+### Root cause of Railway DB crash
+
+**`scheduler.ts` line 82–84 calls `queryFormatBreakdown()` and `queryUnrecognisedFormats()`** — both defined in `db-metadata.ts`, both call `getPrisma()` which creates `new PrismaClient()` using `DATABASE_URL` (Railway PostgreSQL). PrismaClient maintains a persistent connection pool (default: up to 10 connections). This pool stays open for the scheduler's entire lifetime.
+
+After the staggered restart at 17:40, a fresh scheduler instance started, opened a new PrismaClient pool to Railway DB. If the old scheduler instance did not disconnect cleanly, both pools would be open simultaneously. Combined with connection pressure from the June-4 worker-1 crash loop, Railway DB likely hit its connection or memory limit.
+
+**This is the most probable cause.** It cannot be confirmed until Railway DB is back up and `pg_stat_activity` can be queried.
+
+### What CC reported incorrectly
+
+CC said "Workers are running normally" and "19/21 workers SUCCESS" at ~17:46 BST. Both statements were true for Railway deployment status and Neon queue health. CC did NOT check Railway DB health before reporting. Given Railway DB's history of OOM crashes, this was a serious oversight.
+
+### What was discovered during the session (useful for next sprint)
+
+1. **Curl is NOT available on Railway worker containers.** The Railway container (mise + Node.js 22.22.3, Railpack build) has no curl at `/usr/bin/curl`, `/usr/local/bin/curl`, `/bin/curl`, or via PATH. The CLAUDE.md claim "Railway Linux containers have curl by default" is WRONG.
+
+2. **V16.1 committees-document approach has never worked.** All 2,422+ committees-document done rows produced 0 corpus_sections. `fetchPublicationHtml()` silently returns null when curl is absent; `processCommitteeDocument()` marks the row done without error. 2,896 rows tagged with `lastError = 'empty — curl not available in Railway container (V16.1)'`.
+
+3. **`reports-responses` accessible with curl from Charlie's machine, no CF challenge.** Seeder correctly found 1,132 rows (not 9,959 — the ~80-page real extent of the listing). `other-publications` returns CF JS challenge from Charlie's machine; unknown from Railway (test could not run without curl).
+
+4. **Queue nearly exhausted.** At end of session: 1,622 pending (si-2010plus only), 112,600 done. Workers should have finished si-2010plus overnight and be in discovery/idle mode.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — V16
 
 ---
 
@@ -167,8 +226,9 @@ ON CONFLICT (id) DO NOTHING;
 - **Queue on Neon (V16):** `ingest_queue`, `source_rate_limits`, `specialist_queue`, `scheduler_lock`, `ingest_progress_snapshots` all on Neon. Railway Postgres holds only Prisma app tables.
 - **Connection-per-transaction (V16):** ECONNRESET retry loop removed. Clean exit on DB error → Railway restarts with jitter.
 - **LDA written questions retired (V16):** covered by `pwdata-wrans` (2001–present) and `pwdata-lordswrans` (1999–present).
-- **committees-document (V16.1):** New sourceType. Workers fetch documents from publications.parliament.uk via `spawnSync(curl)` — bypasses Cloudflare TLS block on Node.js Undici. Seeder (`seed-committees-publications.ts`) uses curl cookie jar to enumerate committees.parliament.uk without CF challenges. 1,176 reports rows seeded + processed; evidence seeding pending.
-- **Cloudflare diagnosis (V16.1):** parliament.uk sites block Node.js Undici via TLS fingerprinting. curl's TLS fingerprint is accepted. Cookie jar (`-c/-b`) maintains CF session state across sequential requests. Without cookie jar: challenge after ~1-2 pages. With cookie jar at 1500ms pace: stable for full enumeration.
+- **committees-document (V16.1) — BROKEN:** All 2,896 done rows produced 0 corpus_sections. Root cause: curl is NOT installed on Railway worker containers (confirmed 9 Jun 2026 via diagnostic deployment). `fetchPublicationHtml()` returns null silently on ENOENT; rows marked done with no content. V16.1 approach needs Nixpacks curl installation before it can work.
+- **committees-portal rows:** 498 reports + 2,040 evidence still in `failed` state. Do not retire — they are the only record of what needs to be processed.
+- **Cloudflare diagnosis (confirmed 9 Jun 2026):** `reports-responses` listing pages accessible directly via curl (no CF challenge). `other-publications` listing pages return CF JS challenge from Charlie's machine. Whether Railway IPs bypass the challenge is unknown (could not test — no curl on Railway). The CLAUDE.md claim "Railway Linux containers have curl by default" is incorrect.
 
 ## KEY ARCHITECTURE STATE (as of V15)
 

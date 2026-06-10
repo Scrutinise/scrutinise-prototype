@@ -1,6 +1,53 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 9 Jun 2026 (V15 post-session — all actions complete, OOM diagnosis, reseed-deep killed)*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 — INCIDENT SESSION. Railway DB crash caused by CC diagnostic session. See below.*
+
+---
+
+## INCIDENT — 9/10 Jun 2026 (Railway DB crash caused by CC)
+
+### What CC did
+
+CC ran a diagnostic session to test whether Railway workers have curl access to committees.parliament.uk. The session caused or contributed to Railway DB crashing at ~17:47 BST on 9 Jun 2026. System has been down since.
+
+**Actions taken that may have caused the crash:**
+
+1. `deploymentRedeploy(id: "63e9dbbf")` called on a REMOVED June-4 deployment of worker-1. That old code predates V16 and connected to Railway DB for queue operations. It crash-looped repeatedly, creating sustained failed-connection pressure on Railway DB.
+
+2. `serviceInstanceRedeploy` called on worker-1 three times in rapid succession for the curl diagnostic test (~17:28, ~17:34, ~17:40).
+
+3. `serviceInstanceRedeploy` called on all 20 workers + scheduler simultaneously (staggered batches of 5, 20s gap, ~17:40). Scheduler fresh-build opened a new PrismaClient pool to Railway DB. Old scheduler instance may not have disconnected cleanly.
+
+4. A syntax error in test-committees-fetch.ts caused worker-1 to crash-loop via esbuild parse failure for ~6 minutes. Cleaned up.
+
+**Root cause hypothesis:** `scheduler.ts` calls `queryFormatBreakdown()` and `queryUnrecognisedFormats()` from `db-metadata.ts`. Both use `getPrisma()` → `new PrismaClient()` → Railway DB connection pool (10 connections, persistent for scheduler lifetime). After fresh redeploy, new PrismaClient instance opened while old instance may still have held connections. Combined with worker-1 crash-loop connection attempts against Railway DB, this likely exceeded Railway DB connection/memory limit.
+
+### Findings during the session
+
+1. **curl is NOT on Railway worker containers.** Confirmed by deploying a diagnostic to worker-1. `/usr/bin/curl`, `/usr/local/bin/curl`, `/bin/curl` all ENOENT. CLAUDE.md claim "Railway Linux containers have curl by default" is wrong.
+
+2. **V16.1 committees-document approach has never worked.** 2,896 done rows produced 0 corpus_sections. `fetchPublicationHtml()` silently returns null when curl absent; rows marked done with no content. All tagged `lastError = 'empty — curl not available in Railway container (V16.1)'`.
+
+3. **Queue drained overnight.** Was 31,110 pending at start of session; reached 1,622 (si-2010plus only) by end. Workers processed ~29,500 rows.
+
+4. **`reports-responses` has ~1,132 actual publications** (not 9,959 — estimate was wrong; listing ends at ~page 80). `other-publications` returns CF JS challenge from Charlie's machine.
+
+### Code changes during session (all committed, Main branch)
+
+- `5c70768` diag: committees fetch test on Railway worker (TEST_COMMITTEES_FETCH env var)
+- `36d2c1c` diag: improve curl PATH detection in Railway test
+- `3e87f30` fix: syntax error in test-committees-fetch (esbuild rejects ?? with ||)
+- `176dbbe` chore: remove Railway CF test scaffolding + fix seeder max-time ← **CURRENT HEAD**
+
+All diagnostic code removed in `176dbbe`. worker-queue.ts clean.
+
+### CC's error in reporting
+
+CC reported "Workers are running normally" and "19/21 workers SUCCESS" without checking Railway DB health. This was accurate for Neon queue and Railway deployment status but missed Railway DB health entirely. Given Railway DB's crash history, Railway DB should be checked explicitly after any mass redeploy.
+
+### Fix required before next ingest session
+
+**`scheduler.ts` Railway DB connection must be removed.** `queryFormatBreakdown()` and `queryUnrecognisedFormats()` connect to Railway DB via Prisma. After V16, `corpus_sections` is on Neon — these queries hit an empty Railway table and are useless. They should be removed from the scheduler or replaced with Neon equivalents. This is the safest fix to prevent recurrence.
 
 ---
 

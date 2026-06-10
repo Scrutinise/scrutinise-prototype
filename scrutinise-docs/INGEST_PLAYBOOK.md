@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 7 Jun 2026 (V10 final — post-session lessons added). Maintained alongside handoff_summary.md.*
+*Last updated: 10 Jun 2026 — §1 corrected for V16 DB split; §8 new patterns added.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting workers, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -13,9 +13,11 @@ This is the practical ops reference for the ingest pipeline. Read this when some
 | 20 workers | Railway (`ingest-worker-1` … `ingest-worker-20`) | Claim queue rows, fetch content, write to R2 + Neon |
 | Scheduler | Railway (`Ingest-scheduler`) | Hourly: sends progress email, saves corpus snapshots, runs stale claim reaper |
 | Monitor | Railway (`ingest-monitor`) | Every 15 min: reseeds partial items, resets 502/524 failures, logs exhausted corpora |
-| Railway DB | Railway (`scrutinise-db`) | Holds `ingest_queue`, `source_rate_limits`, `ingest_progress_snapshots` |
-| Neon DB | Neon | Holds `corpus_sections`, `corpus_targets`, `corpus_snapshots` |
+| Railway DB | Railway (`scrutinise-db`) | **Web app only** — holds Prisma app tables (ideas, users, etc). Since V16: does NOT hold ingest tables. ⚠️ Scheduler still opens a PrismaClient connection to Railway DB for `queryFormatBreakdown`/`queryUnrecognisedFormats` — see §8. |
+| Neon DB | Neon | `ingest_queue`, `source_rate_limits`, `scheduler_lock`, `ingest_progress_snapshots`, `corpus_sections`, `corpus_targets`, `corpus_snapshots` — everything ingest-related since V16 |
 | R2 | Cloudflare `scrutinise-legislation` | Raw XML + compiled text files per section |
+
+⚠️ **Railway container has no curl.** The Railway Node.js container (Railpack + mise) does not include curl. `spawnSync('curl', ...)` returns ENOENT. Any feature requiring curl must install it via Nixpacks config (`nixpacks.toml`). Confirmed 9 Jun 2026.
 
 **All workers are interchangeable.** Any worker can handle any corpus via the queue-claim model (`FOR UPDATE SKIP LOCKED`). Priority 1 > 2 > 3.
 
@@ -323,6 +325,8 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 | Workers CRASHED immediately after volume resize | DB container still recovering; workers reconnected before DB ready | Wait 2–3 min after `scrutinise-db` shows SUCCESS, then restart workers |
 | `compiledText` DB column bloat | 10KB compiledText per section × 750k+ rows = ~1.6GB | Column dropped in V3; now R2-only. Never re-add `compiledText` to schema. |
 | Railway DB crashes periodically — requires redeploy | **OOM kill**, not connection exhaustion. `max_connections=100`; 20 workers peak at ~46 connections (fine). Postgres container memory-killed under peak write load | Redeploy `scrutinise-db`; upgrade Railway Postgres plan for more RAM; OR migrate queue to Neon. Do NOT run local scripts (reseed-deep.ts etc.) against Railway DB — they add ambient connection pressure. Diagnosis: check Railway `scrutinise-db` Metrics tab for memory spike at crash time. |
+| Railway DB crash after mass `serviceInstanceRedeploy` | `serviceInstanceRedeploy` on all 21 services triggers fresh builds; new scheduler instance opens a new PrismaClient pool to Railway DB while old instance may not have disconnected cleanly; combined with any simultaneous crash-looping workers making stale Railway DB connections = connection/OOM spike | After mass redeploy: immediately check `SELECT count(*), state FROM pg_stat_activity GROUP BY state;` on Railway DB. If >30 connections: kill the scheduler (`serviceInstanceRedeploy` on `Ingest-scheduler` alone, wait for SUCCESS) to drain the PrismaClient pool. **Root fix: remove `queryFormatBreakdown`/`queryUnrecognisedFormats` from `scheduler.ts`** — these connect to Railway DB via `new PrismaClient()` but query an empty table (corpus_sections is on Neon since V16). |
+| `deploymentRedeploy(id)` runs old code, not latest Main | If called on a REMOVED or old deployment, Railway reuses that deployment's source — not the current Main branch commit | Always verify deployment `createdAt` timestamp before calling `deploymentRedeploy`. If you want latest Main code: use `serviceInstanceRedeploy`. Check the distinction in §2. |
 
 ### Worker crashes
 
@@ -337,6 +341,7 @@ bailiiKey(id)                           // → bailii/{id}.compiled.txt
 
 | Incident | Cause | Fix |
 |----------|-------|-----|
+| No progress emails — scheduler silent | Scheduler was redeployed and either: (a) crash-looping, (b) PrismaClient to Railway DB is hanging because Railway DB is down, (c) scheduler_lock held by dead instance | Check `Ingest-scheduler` Railway logs. If Railway DB is down, scheduler hangs at `queryFormatBreakdown()`/`queryUnrecognisedFormats()`. Fix: restart Railway DB first, then restart scheduler. Root fix: remove those two Railway DB queries from scheduler. |
 | Duplicate progress emails (every hour × 2) | Two Railway deployments of scheduler running simultaneously | Deploy fresh from Main branch (not "Redeploy" of old deployment); `scheduler_lock` table prevents duplicate runs |
 | `RangeError` in progressBar | `pct` > 100 when compiled > est_sections | Fixed V3: `progressBar()` clamps pct to [0, 100] |
 | Email showing old per-corpus format | Workers not yet redeployed after code change | Redeploy all workers; snapshots with `workerId` column start appearing |
