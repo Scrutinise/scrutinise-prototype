@@ -28,7 +28,9 @@ export interface GovukSearchHit {
 export async function* searchByFormat(format: string, pageSize = 1000): AsyncGenerator<GovukSearchHit[]> {
   let start = 0
   for (;;) {
-    const url = `${SEARCH}?filter_format=${encodeURIComponent(format)}&count=${pageSize}&start=${start}&fields=link,title&order=link`
+    // order must be a sortable field — `link` is not (HTTP 422, found on first
+    // seeder run). public_timestamp keeps deep paging deterministic.
+    const url = `${SEARCH}?filter_format=${encodeURIComponent(format)}&count=${pageSize}&start=${start}&fields=link,title&order=public_timestamp`
     const { signal, clear } = withTimeout(60_000)
     try {
       const res = await fetch(url, { headers: { 'User-Agent': UA }, signal })
