@@ -1,10 +1,11 @@
 /**
  * live-census.ts — real-time corpus coverage snapshot
  *
- * Queries:
+ * Queries (all Neon — V17 removed the stale Railway-DB pool, which had been
+ * querying the pre-V16-migration copy of ingest_queue):
  *   1. Neon corpus_sections counts by corpus + status
  *   2. Neon LegislationSection count (legacy pipeline)
- *   3. Railway ingest_queue state by corpus + status
+ *   3. Neon ingest_queue state by corpus + status
  *
  * Outputs: JSON to R2 as ingest-csv/census-{date}.json
  * Also returns CensusResult for use by the scheduler.
@@ -53,16 +54,6 @@ function getNeonPool(): Pool {
   return _neonPool
 }
 
-let _railwayPool: Pool | null = null
-function getRailwayPool(): Pool {
-  if (!_railwayPool) {
-    const url = process.env.DATABASE_URL
-    if (!url) throw new Error('DATABASE_URL not set')
-    _railwayPool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false }, statement_timeout: 60_000 })
-  }
-  return _railwayPool
-}
-
 export async function runCensus(): Promise<CensusResult> {
   const timestamp = new Date()
 
@@ -103,8 +94,8 @@ export async function runCensus(): Promise<CensusResult> {
     console.warn('[census] LegislationSection count failed:', err)
   }
 
-  // 3. Railway ingest_queue state
-  const queueRes = await getRailwayPool().query<{
+  // 3. Neon ingest_queue state
+  const queueRes = await getNeonPool().query<{
     corpus: string; status: string; rows: string; last_activity: Date | null
   }>(`
     SELECT corpus, status, COUNT(*)::text AS rows,
@@ -160,7 +151,6 @@ async function main() {
   printSummary(result)
   await saveToR2(result)
   await getNeonPool().end()
-  await getRailwayPool().end()
 }
 
 if (require.main === module) {
