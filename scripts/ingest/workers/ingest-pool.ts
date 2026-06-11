@@ -177,12 +177,25 @@ async function runLoop(loopId: number): Promise<void> {
       continue
     }
 
+    // V19: reserve the token BEFORE the async claim. The old order —
+    // eligible() → (await claim, 100–300ms) → recordClaim() — left a window in
+    // which every idle loop saw the same free token. Invisible when rows take
+    // seconds; catastrophic when rows fail instantly (HTTP 429 storm): all 20
+    // loops go idle, race every token, and the "rate-limited" source runs at
+    // 20×+ its configured rate, keeping the upstream penalty box alive
+    // (observed live 11 Jun 2026: govuk-content configured 300ms/5 ≈ 3.3 rows/s,
+    // measured 24 fails/s). Reserving up front means a token is occasionally
+    // burned on an empty claim — which only slows us down, the correct direction.
+    const source = eligible[Math.floor(Math.random() * eligible.length)]
+    rateLimiter.recordClaim(source)
+
     let row
     try {
-      phase(loopId, `claiming(${eligible.join(',')})`)
-      row = await claimNextFromSources(loopId, eligible)
+      phase(loopId, `claiming(${source})`)
+      row = await claimNextFromSources(loopId, [source])
       dbErrors = 0
     } catch (err) {
+      rateLimiter.release(source)
       dbErrors++
       console.error(`${tag} claim query failed (${dbErrors}/${FATAL_DB_ERRORS}):`, err)
       if (dbErrors >= FATAL_DB_ERRORS) exitSummary(1, 'Neon unreachable — fatal')
@@ -191,15 +204,16 @@ async function runLoop(loopId: number): Promise<void> {
     }
 
     if (!row) {
-      // Eligible sources but no claimable row — another loop got there first
-      // or those sources just drained. Force a source refresh soon.
+      // Token reserved but the source just drained (or another loop won the
+      // last row). Release the concurrency slot; the burned token delays this
+      // source by one interval, which is harmless. Force a source refresh soon.
+      rateLimiter.release(source)
       phase(loopId, 'claim-miss')
       sourcesFetchedAt = 0
       await new Promise(r => setTimeout(r, CLAIM_MISS_SLEEP_MS))
       continue
     }
 
-    rateLimiter.recordClaim(row.sourceType)
     inFlight++
     console.log(`${tag} claimed ${row.id} (${row.sourceType} p${row.priority})`)
     phase(loopId, `processing(${row.id})`)
@@ -215,7 +229,15 @@ async function runLoop(loopId: number): Promise<void> {
       stats.done++
     } catch (err: unknown) {
       console.error(`${tag} error processing ${row.id}:`, err)
-      await markFailed(row.id, String(err)).catch(e => console.warn(`${tag} markFailed error: ${e}`))
+      const errStr = String(err)
+      // V19 politeness budget: a 429/503 is a rate signal. Suspend the source
+      // in-process for 5 min so a storm stops immediately rather than burning
+      // the queue at the configured rate until the 15-min breaker sweep.
+      if (/HTTP (429|503)/.test(errStr)) {
+        rateLimiter.suspend(row.sourceType, 5 * 60_000)
+        console.warn(`${tag} ${row.sourceType}: upstream ${/429/.test(errStr) ? '429' : '503'} — source suspended 5 min`)
+      }
+      await markFailed(row.id, errStr).catch(e => console.warn(`${tag} markFailed error: ${e}`))
       stats.failed++
     } finally {
       // Without this the loser timer rejects 5 min later with no listener —
