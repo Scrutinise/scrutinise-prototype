@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 10 Jun 2026 — V17 consolidation: §1 rewritten to three-layer doctrine, §1a cost model added, §8 usage-limit-pause pattern + circuit breakers added, §15 jurisdiction onboarding checklist added.*
+*Last updated: 11 Jun 2026 — V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven new patterns (regnal ids, chrome-boilerplate HTML, FCL phantom rel=last, seed-after-push, rate-limiter race, SQL `\d` regex, enumeration logging), §16 tax-source map, §17 FCL court coverage.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting services, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -40,6 +40,30 @@ The 20-worker fleet, separate scheduler and monitor services, startup jitter, st
 Steady-state cost while idle should be ≈ Railway `scrutinise-db` + the small always-on `Ops` process + storage. If the Usage page shows compute burn while the queue is empty, something is wrong — check whether `Ingest` failed to exit-on-empty (e.g. a perpetual reseed loop keeping pending > 0).
 
 ⚠️ **Workspace Compute Usage Limit:** when the workspace usage limit is hit, Railway pauses ALL deployments simultaneously ("All deployments are paused" on the Usage page). See §8 — check this FIRST when everything is offline at once.
+
+---
+
+## 1b. SOURCE POLITENESS BUDGET (V19 doctrine)
+
+**A 5xx storm under load is a rate signal, not a retry signal; halve and document.** Sections/hour is not the KPI on small charitable/public hosts — completion without complaint is.
+
+- When any source returns a 429/503 storm during a run, the default response is to **halve the rate** (double `intervalMs`, halve `maxConcurrentWorkers`), record the old → new values and the incident in `seed-rate-limits.ts`'s note field and the CHANGE_LOG, then resume. Never resume at the old rate "because the queue is long".
+- Speed is no longer the scarce resource; **source goodwill is**. TWFY (a charity) 503'd under our V18 500ms/10 full-archive run → halved to 1000ms/5 (V19). GOV.UK 429'd within an hour of et-decisions seeding (each row adds a PDF asset fetch on top of the content call) → halved 150ms/10 → 300ms/5 (V19).
+- Per-row request count matters: a corpus whose processor makes 2-3 fetches per row effectively doubles the rate against the host. Budget on **requests/second at the host**, not rows/second.
+- The circuit breaker tripping on consecutive 429s is the system working. Procedure: fix the rate FIRST (config table), restart `Ingest` (config loads at startup), then clear the breaker and unpark rows (§8).
+- Applies to retries of previously-5xx'd sources too: retry at HALF the rate that triggered the storm, not the same rate.
+
+---
+
+## 1c. DENOMINATOR RE-BASELINING (✓ rules, V19)
+
+A corpus denominator (`corpus_targets.est_sections`) is **✓ confirmed** (`est_is_confirmed=true`) only when it equals a *measured* quantity:
+
+1. **At completion** (queue drained, zero unclassified failures): set `est_sections` = measured compiled-section count; `est_is_confirmed = true`. The email then shows 100.0%.
+2. **Classified residue does not block ✓**: rows/sections classified `unavailable` with a real `availability_status` (no-provisions, commencement, pdf-only, withdrawn…) are accounted-for non-text; they are excluded from the denominator (which counts *compiled* sections) and listed in the CHANGE_LOG as the corpus's classified residue. A corpus "ends at a ✓ denominator or a classified residue — no `~` estimates on completed corpora."
+3. **Never** leave an era-average or extrapolated estimate on a completed corpus — V18/V19 proved them wrong in both directions (pwdata-wrans est 2.0M vs measured 1.22M; ET decisions est ~72k vs measured 131,668).
+4. While a corpus is actively ingesting, `est_sections` may hold the enumerated doc/section universe with `est_is_confirmed=false`; re-baseline per rule 1 when it drains.
+5. Universe estimates derived from feed metadata (`morePages`, `rel="last"`) are **upper bounds at best, phantoms at worst** (FCL per-court rel=last claimed 80 pages for EAT; true extent 16). Only entry-counting enumeration or a drained queue measures a universe.
 
 ---
 
@@ -412,6 +436,34 @@ How to run a one-shot container test without pushing code: temporarily `serviceI
 ### GOV.UK Content API source (`govuk-content`, V18)
 
 Used by `hmrc-manuals` (85,197 `hmrc_manual_section` pages — the 626k brief estimate was stale) and `govuk-core-docs` (PACE codes, Treasury books, white papers). `https://www.gov.uk/api/search.json` enumerates (deep paging works ≥84k, verified); `https://www.gov.uk/api/content{path}` returns clean JSON (`details.body` HTML; publications carry `details.attachments` PDFs which are fetched + pdf-parsed, one section per attachment, capped at 20). Rate limit `govuk-content` 150ms / 10 concurrent — GOV.UK asks integrators to stay under ~10 rps; 6.7 rps leaves headroom. 404/410 → `unavailable` marker (gov.uk reorganises URLs; deterministic 404s must not retry). There is no `white_paper` document type — white papers are `policy_paper` filtered by title. `order=` only accepts sortable fields — `order=link` is HTTP 422 (found on first seeder run; use `public_timestamp` for deterministic deep paging).
+
+### Pre-1963 acts are regnal, not calendar — enumeration regex dropped them all (V2→V18, found V19)
+
+Pre-1963 ukpga feed `<id>`s are regnal-session URIs (`…/id/ukpga/Geo5/14-15/41`); the calendar identity lives in `<ukm:Year>`/`<ukm:Number>` entry attributes. `listActIds`' regex (`{type}/{year}/{number}`) silently dropped every regnal id, so pre-1963 acts were **never enumerable by discovery** — the only pre-1963 rows came from the Neon legacy seed in calendar form. A calendar id is not even addressable for many of them: `ukpga/1924/3` is HTTP **300 Multiple Choices** (two different acts are both "1924 chapter 3" under different sessions); others 301 to `/resources/data.xml` (a metadata page, not CLML). Use `listActEntries()` (V19) which returns `{docId (canonical/regnal), calendarId}` per entry, and seed regnal docIds. Regnal CLML works: `ukpga/Vict/24-25/100/data.xml` (OAPA 1861) returns the full revised act; textless old acts 307 to `/enacted/data.xml` shells that classify via hasNoProvisions.
+
+### TNA `data.htm` fallback captures site chrome as "compiled" content (V2→V18, found V19)
+
+For acts with no digitised text, `{actId}/data.htm` redirects to the act's **landing page** — ~834 words of pure site chrome, zero body text. 5,840 pre-1963 acts were silently ingested this way and marked `compiled` (uniform wordCount ~826–840 was the tell; real acts vary wildly). Real legislation HTML carries `LegRHS`/`LegP1ParaText` body markers; chrome pages carry none. `enumerateSections` (V19) rejects marker-less HTML so textless acts fall through to PDF → classified `unavailable`. **Detection heuristic for any HTML-scraped corpus: near-zero stddev on wordCount across thousands of docs = boilerplate capture, not content.**
+
+### FCL per-court feeds + phantom `rel="last"` (V19)
+
+Tribunal courts (eat, ukut/{tcc,iac,lc,aac}, ukftt/{tc,grc}, ukpc, ukiptrib) are only fully enumerable via `atom.xml?court=…` — the global feed carries just their newest entries. `rel="last"` is phantom on BOTH the global feed (claims 7,508 pages; pages >~1,500 are empty) and per-court feeds (eat claimed 80 pages; true extent 16). Binary-search the true last non-empty page (the V4 pattern) before seeding page rows, or you seed empty-page rows that feed the zero-output breaker. Queue row docId: `court:{code}:page:{N}` (V19 `processTnaCaselaw`).
+
+### Seed rows that need new processor code ONLY after the push (V19 recurrence)
+
+Push to Main auto-deploys `Ingest`; until then the running container has old code. V19 seeded 180 `court:…` caselaw rows before pushing — the old processor `markSkipped`'d all of them within minutes (exactly what the V18 seeder headers warn about: "RUN ONLY AFTER THE PUSH"). Recovery is cheap (reset skipped rows to pending post-push) but the rule stands: **config-only changes (rate limits) can be applied live; rows whose docId format or sourceType the deployed code doesn't know must wait for the deploy.**
+
+### Postgres regex `\d` silently matches nothing via the pg driver — use `[0-9]` (V19)
+
+`SELECT '1873' ~ '^\d+$'` returns **false** on Neon via node-pg (the `\d` reaches the server as a literal backslash-d in a standard-conforming string and POSIX regex treats it as an escaped `d`... empirically: it does not match). `[0-9]` works everywhere. Any corpus-audit SQL using `~ '\d'` classifies everything as non-numeric — V19's first primary-acts audit "found" 0 calendar docs because of this. Use `[0-9]` character classes in all SQL regexes.
+
+### Pool rate-limiter race: instant failures ran sources at 20× their configured rate (V17→V19, fixed V19)
+
+The V17 claim loop checked `eligible()` → awaited the claim query (100–300ms) → only then `recordClaim()` consumed the token. Every idle loop saw the same free token during that window. Invisible when rows take seconds (loops stay busy; concurrency caps bind); **catastrophic when rows fail instantly**: a 429 storm idles all 20 loops, they race every token, and the "rate-limited" source runs at 20×+ its configured rate — which keeps the upstream penalty box alive. Observed live 11 Jun 2026: govuk-content configured 300ms/5 ≈ 3.3 rows/s, measured **24 fails/s**, ~5k et-decisions rows burned in minutes; gov.uk never got relief. Also explains the V18 TWFY 503 storm's severity. Fixed V19 in `ingest-pool.ts`: (1) **reserve-then-claim** — pick one eligible source, `recordClaim()` BEFORE the async claim, release the slot on an empty claim; (2) **in-process 5-min source suspend on HTTP 429/503** so storms stop immediately instead of burning until the 15-min breaker sweep. Burned rows are `status='failed'` with HTTP 429 errors — reset to pending after the upstream cooloff and the fix deploy.
+
+### Long enumerations: log to a file per unit, checkpoint per unit (V19)
+
+The first retained-eu enumeration ran 2h with zero output: stdout was piped through `grep -v` (block-buffered, nothing visible until exit) and the only log line was scheduled for the END of a 68-year range. Rerun with per-year checkpoint + per-year log line showed ~2–40s/year and surfaced that dense eur years (1976: 3,195 instruments) far exceed the morePages-derived estimate. Rule: background enumeration scripts write progress per smallest natural unit directly to a file (`> x.log 2>&1`, no pipes), and checkpoint at the same granularity so reruns resume.
 
 ## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
 
@@ -1052,3 +1104,44 @@ The repeatable path for adding a new jurisdiction/corpus. Each step gates the ne
 5. **Shakedown at low concurrency** — seed a small batch, run `Ingest` with `WORKER_CONCURRENCY=5`. Verify **sections, not statuses**: `corpus_sections` delta must match expectations. Include adversarial fixtures (curly quotes, em-dashes, accents, very long docs).
 6. **Breaker thresholds** — confirm the defaults (5 consecutive failures / 25 zero-output) suit the source; sources with many legitimately empty items may need a documented exception.
 7. **Playbook entry** — record the source's quirks (auth, pagination, error modes) in §8/§9 and update `corpus_targets` estimates to confirmed once the full run completes.
+
+---
+
+## 16. TAX-SOURCE MAP (V19 — the IBFD-replication layer)
+
+IBFD's replicable layer is aggregated public primary sources; their commentary is proprietary and out of scope (Lex generates analysis; we never ingest IBFD content). Universe sizes measured live 11 Jun 2026.
+
+| Layer | Corpus | Source / route | Universe | Status |
+|---|---|---|---|---|
+| Tax statutes | primary-acts-*, si-* | TNA CLML | (in corpus) | ✓ long-standing |
+| HMRC manuals | `hmrc-manuals` | govuk-content, `filter_format=hmrc_manual_section` | 85,197 | ✓ complete (1:1 rows:sections verified V19 — the brief's "16,061 zero-section rows" was a stale mid-ingest snapshot) |
+| R&C Briefs | `hmrc-ancillary` | govuk-content: collection `revenue-and-customs-briefs` (63) + free-text `"Revenue and Customs Brief"` filtered to canonical links (+58 pre-collection briefs) | ~121 | seeded V19 |
+| Statements of Practice | `hmrc-ancillary` | collection `statements-of-practice` | 135 | seeded V19 |
+| Extra-Statutory Concessions | `hmrc-ancillary` | collection `extra-statutory-concessions` (consolidated docs) | 4 | seeded V19 |
+| VAT notices | `hmrc-ancillary` | collection `vat-notices-numerical-order` | 109 | seeded V19 |
+| Excise notices | `hmrc-ancillary` | collections `oils/alcohols/holdings-and-movement/tobacco/climate-change-levy/gambling-duty/aggregates-levy-notices` | 67 | seeded V19 |
+| DTAs | `tax-treaties-dta` | govuk-content: collection `tax-treaties` (per-country pages, DTA PDFs attached) | 172 | seeded V19 (P1) |
+| All UK treaties | `uk-treaties` | govuk-content: `filter_format=international_treaty`, minus DTA overlap (166 of 172 DTA pages are this format — confirmed "same documents") | 1,519 | re-pointed V19; FCO client retired to `scripts/attic/v19-fco-treaties/` |
+| Tax tribunals 2019+ | `tna-caselaw` | FCL court feeds ukftt/tc + ukut/tcc | (see §17) | seeded V19 |
+| Historic tax tribunals (pre-2009) | — | `financeandtax.decisions.tribunals.gov.uk` — ALIVE: ASP.NET WebForms search app; VAT & Duties Tribunal, Special Commissioners etc.; decisions from Apr 2003 only ("prior to April 2003 not available by search") | unknown | classification fetch done V19; **build needs Charlie's go-ahead** (postback scraping) |
+| OECD MTC / TPG | — | OECD: content published ≥1 Jul 2024 is CC BY 4.0; earlier content (incl. MTC 2017, TPG 2022) is CC **non-commercial** ("may not be sold but may be used in the context of commercial activities") | — | **NOT seeded** — licensing report delivered V19; Charlie's sign-off required |
+
+## 17. FCL COURT COVERAGE (V19)
+
+Find Case Law per-court feeds (`atom.xml?court=…`), true extents binary-searched 11 Jun 2026 (rel="last" is phantom — see §8):
+
+| Court | code | True pages (×50) | Previously in corpus via global feed |
+|---|---|---|---|
+| Employment Appeal Tribunal | `eat` | 16 (~800) | 787 |
+| UT (Tax & Chancery) | `ukut/tcc` | 7 (~350) | — |
+| UT (Immigration & Asylum) | `ukut/iac` | 21 (~1,050) | — |
+| UT (Lands Chamber) | `ukut/lc` | 11 (~550) | — |
+| UT (Admin Appeals) | `ukut/aac` | 25 (~1,250) | (ukut all: 2,686) |
+| FtT (Tax) | `ukftt/tc` | 29 (~1,450) | — |
+| FtT (General Regulatory) | `ukftt/grc` | 55 (~2,750) | (ukftt all: 4,325) |
+| Privy Council | `ukpc` | 15 (~750) | 700 |
+| Investigatory Powers Tribunal | `ukiptrib` | 1 (8 docs) | 8 |
+
+- FCL is **thin on tribunals** (backfill is recent-years only) — the first-instance Employment Tribunal record lives on gov.uk: corpus `et-decisions`, `filter_format=employment_tribunal_decision`, **131,668 docs** (2017+; the brief's ~72k was low). gov.uk's `employment_appeal_tribunal_decision` (2,560) is NOT seeded — FCL EAT is canonical.
+- Retired V19: `bailii-eat` → FCL eat; `bailii-tribunals` → FCL UT/FtT + et-decisions; `bailii-privy-ni` → FCL ukpc. **NI courts stay parked** (FCL excludes them; judiciaryni.uk is a future source; BAILII contact in progress).
+- Politeness: FCL kept its existing rate (tna-caselaw 200ms/4) — it took the 99.6% run happily.

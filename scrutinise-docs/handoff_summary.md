@@ -2,27 +2,36 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 10 Jun 2026 (evening) — V18 built + piloted. Post-push seeding pending. Details below; V17 architecture section still authoritative for the platform itself.*
+*Last updated: 11 Jun 2026 — V19 P1-to-100% sprint: build done, most corpora ✓; post-push completion passes in flight. Full narrative in CHANGE_LOG V19; playbook gained §1b/§1c doctrine + seven §8 patterns + §16/§17 source maps.*
 
 ---
 
-## CURRENT STATE — V18 (REFILL THE QUEUE → PWDATA PER-SPEECH MIGRATION)
+## CURRENT STATE — V19 (P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS)
 
-**Active branch:** Main. **Sprint:** V18 (SPRINT_V18_BRIEF.md) — all build work done, committed via commit-all.sh at session end. Full detail in CHANGE_LOG V18 entry; the playbook §8 has five new V18 patterns.
+**Active branch:** Main. **Sprint:** V19 (SPRINT_V19_BRIEF.md, archived at sprint close). Politeness doctrine now governs all rates: **a 5xx storm is a rate signal — halve and document** (playbook §1b). Three sources were halved this sprint: twfy-pwdata 1000ms/5, govuk-content 300ms/5, local TNA enumeration floor 500ms.
 
-**THE BIG CHANGE — pwdata granularity migration (Charlie-approved):** the brief's "seed the full pwdata backlog" was a false premise — the archive was already 100% ingested at one-blob-per-day-file granularity. Charlie chose per-speech migration instead: `processPwdata` now writes one section per speech / Q&A exchange with `sectionTitle`/`speaker`/`itemDate`/`parentDocId` metadata (new corpus_sections columns, live; **entity_list_v5.md update pending — CCh**). Pilot of 235 files wrote 40,258 sections via the production path. **Prediction to score: ~9.8M sections from ~50k day-file rows, Neon +~4.9GB (→ ~9.6GB of 20GB), ~$45 one-off R2 PUTs, 1.5–4 days at concurrency 20.**
+**DONE + ✓ (measured denominators):**
+- **Parliamentary record COMPLETE** — 297 failed pwdata rows retried clean at halved rate; all 7 denominators ✓ at measured: **8,800,253 compiled sections** (V18 prediction ~9.8M, range 8–11M: within range). wrans "60.9%" was estimate error.
+- **hmrc-manuals ✓** 69,136 + 16,061 classified residue (contents/index nodes — NOT missing content; brief's "zero-section rows" classified).
+- **hmrc-ancillary ✓ 457** (RCBs/SoPs/ESCs/VAT+excise notices, NEW P1) · **tax-treaties-dta ✓ 324** (NEW P1) · **uk-treaties unblocked** → gov.uk international_treaty (1,519 seeded P3; FCO client in attic).
+- **bailii-eat / bailii-tribunals / bailii-privy-ni retired** → FCL court feeds + et-decisions. NI stays parked.
+- **et-decisions (NEW P3):** 131,668 gov.uk ET decisions seeded (~12.6k sections in before the 429 storm parked it — see below).
 
-**WHAT'S PENDING (post-push, Charlie's terminal — run order in CHANGE_LOG):**
-1. `seed-govuk-core-docs-v18.ts` — P1, PACE/Treasury books/white papers (new `govuk-content` source).
-2. `seed-hmrc-manuals-v18.ts` — P2, real universe 85,197 sections (brief's 626k was stale).
-3. `seed-pwdata-perspeech-v18.ts` — P3 floor, the migration itself.
-Then §8 verification over ~24h: liveness starts Ingest unaided; memory ≤~600MB at 20 loops; pwdata divergence ~0; sections/hour vs the 100–300k/hr band.
+**IN FLIGHT / POST-PUSH CHECKLIST (next session or after Ingest redeploys):**
+1. **Deploy the V19 code** (commit-all.sh at session end pushes Main → auto-deploys Ingest+Ops). The pool now has the reserve-then-claim rate-limiter fix + 5-min 429/503 suspend — DO NOT unpark govuk rows before this is live.
+2. **After deploy + gov.uk cooloff (≥1h quiet):** clear govuk-content breaker, reset its ~7k `failed` HTTP-429 rows + unpark `blocked` rows (SQL in playbook §8 clear procedure; rows are et-decisions + uk-treaties).
+3. **Reset the 180 `tna-caselaw` rows** `docId LIKE 'court:%'` from `skipped` → `pending` (old code skipped them; new processor handles court pages).
+4. **Run `v19-seed-ukpga-regnal.ts`** (regnal enumeration ~30–45 min checkpointed + seed; REQUIRES deployed chrome-guard). Also requeue `si-pre-2010:uksi/1958/1156` (unclassified marker).
+5. **retained-eu:** `v19-seed-retained-eu-completion.ts` is enumerating in background (checkpoint `v19-retained-eu-enum.json`, log `v19-retained-eu-enum.log`, floor 500ms, retry-zero-years logic). If interrupted, rerun the same command — it resumes and seeds at the end. Universe will exceed V18's ~33k estimate (morePages undercounts dense years).
+6. **At each drain:** re-baseline ✓ (rules in playbook §1c) — primary-acts-pre-2000 (`v19-cleanup-ukpga-calendar.ts` deletes the 5,840 chrome-boilerplate rows + 1,057 dead calendar markers, then ✓), retained-eu (retire the 140k phantom → real ~23k), si-pre-2010, lda-commonsoralquestions (est 70,040), uk-treaties, et-decisions, tna-caselaw.
+7. **regional:** enumerate the 7-type universe with `listActEntries` (politeness backlog deferred it); re-baseline the ~160k estimate with evidence.
+
+**INCIDENT LOG (this sprint):** gov.uk 429 storm exposed a latent V17 race — idle loops raced un-consumed tokens; instant failures ran govuk-content at 24 fails/s against a configured 3.3/s, keeping the penalty box alive. Fixed (reserve-then-claim + suspend-on-429/503). The breaker contained it. Full account: CHANGE_LOG V19 + playbook §8.
 
 **DECISIONS WAITING ON CHARLIE:**
-- **Committees: Railway IS blocked** — CF challenges all parliament committees domains from Railway's IP even with curl (now installed via `RAILPACK_DEPLOY_APT_PACKAGES=curl`, left in place). Residential IP passes. Options: local fetch / proxy egress / retire. 2,896 empty-done rows + breaker left untouched per brief §3.4.
-- **retained-eu:** TNA pagination bug (fixed) had capped enumeration at 20/year since V2 — true universe ~32,970 instruments, but 93% of the never-ingested ~29.6k are hasNoProvisions shells; real remaining ≈ 8,700 sections. Recommendation in CHANGE_LOG: one bounded completion pass, or retire at current coverage.
-
-**Other V18 facts:** count discrepancy resolved (email total = legacy 914,274 + compiled-only corpus_sections; email now prints the breakdown); caselaw current (74,874 — Atom feed is NEWEST-first, refresh = seed pages 1..N, playbook §8); echr test rows gone + breaker cleared; 20GB email denominator; the 2,520-empty-file reseed hole closed by unavailable markers.
+- **OECD MTC/TPG:** pre-Jul-2024 content is CC non-commercial — plausibly fine for us, but seeding needs sign-off (CHANGE_LOG §3.4).
+- **Historic tax tribunals** (financeandtax.decisions.tribunals.gov.uk): alive, April 2003+, ASP.NET postback scraping — build go/no-go.
+- **Committees** (carried from V18): Railway IP CF-blocked; local fetch / proxy / retire.
 
 ### The three layers (V17 doctrine)
 - **R2** = corpus text, permanent, zero egress.

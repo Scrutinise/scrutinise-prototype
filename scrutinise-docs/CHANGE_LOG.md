@@ -1,8 +1,55 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 10 Jun 2026 (evening) — V18 REFILL THE QUEUE.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 11 Jun 2026 — V19 P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS.*
 
 ---
+
+## V19 — P1 TO 100% + PARLIAMENTARY RECORD COMPLETION + TAX COMPLETENESS (11 Jun 2026)
+
+**Context:** corpus at 83.7% / queue empty after V18. Directive: P1 corpora to verified 100%, parliamentary record to verified completion, tax universe (IBFD-replication) seeded, politeness doctrine throughout ("a 5xx storm under load is a rate signal, not a retry signal; halve and document" — now playbook §1b).
+
+### §1 Parliamentary record — COMPLETE ✓
+
+- twfy-pwdata rate **halved 500ms/10 → 1000ms/5** (the V18 503 storm was us overdriving a charity's server), then the 297 failed rows (192 debates / 55 lords / 49 lordswrans / 1 wrans R2-transient) reset. **All 297 retried clean at the halved rate — zero residual failures**, nothing for the specialist queue.
+- **All seven denominators re-baselined to measured actuals ✓:** debates 6,377,271 · wrans 1,219,934 · lords 748,072 · lordswrans 173,436 · westminster 237,135 · wms 23,676 · lordswms 20,729 = **8,800,253 compiled pwdata sections**. The wrans "60.9%" was pure estimate error (2.0M era-average vs 1.22M real).
+- **V18 prediction scored:** predicted ~9.8M (range 8–11M); actual 8.80M — within range, 10% under midpoint. Duration ~1 day at concurrency 20 (predicted 1.5–4 days — beat it).
+
+### §2 P1 legislation tails
+
+- **§2.1 primary-acts-pre-2000 — root cause found, fix built (completion runs post-push).** The 1,084 email gap = 1,057 `unavailable` + 27 `failed` section rows. Three-layer failure, V2-era:
+  1. **Pre-1963 acts are regnal** (`ukpga/Geo5/14-15/41`); the enumeration regex only matched calendar ids → pre-1963 acts were NEVER enumerable. The 6,897 pre-1963 rows came from the Neon legacy seed in calendar form.
+  2. **Calendar ids dead-end on TNA** (HTTP 300 when two acts share year+chapter — that's the 1,057; 301→`/resources/` otherwise), and the `data.htm` fallback then captured the act landing page: **5,840 acts ingested as ~834 words of site chrome each, marked compiled** (uniform wordCount was the tell). These are garbage and will be deleted post-regnal-reingest (`v19-cleanup-ukpga-calendar.ts` + new `r2Delete`).
+  3. The 27 failed sections are 3 post-1963 acts with **AI-compile-era Anthropic billing errors** (pre-V2L relics) — requeued.
+  - Fixes: `listActEntries()` (regnal + calendar identity per entry), chrome-guard on the HTML fallback (requires `LegRHS`/`LegP1ParaText` body markers), `v19-seed-ukpga-regnal.ts` (run AFTER push). Verified: in-force old acts serve full revised CLML via regnal ids (OAPA 1861: 69 provisions); textless ones classify via hasNoProvisions.
+- **§2.2 regional:** audited — no boilerplate disease (clml 120,370 sections, wordCount sd 197; html 3,271, sd 1298 = real content); 3,498 classified unavailable markers. The ~160k denominator remains UNCONFIRMED — universe enumeration queued behind the TNA politeness backlog (next session; same `listActEntries` machinery; note V15's reseed-deep was interrupted mid-nia).
+- **§2.3 retained-eu:** completion pass approved+running. Enumeration restarted twice (lessons in playbook §8: log-per-unit, and 0-id years during a 429 window must not checkpoint — eur/1986 was poisoned as empty). TNA 429'd the 200ms feed sweep → **local enumeration floor now 500ms** (`TNA_THROTTLE_FLOOR_MS`). Dense years far exceed V18's morePages estimate (eur/1976 alone = 3,195 instruments) — **the ~33k universe estimate will be re-measured by entry-count; prediction to score: ~8.7k real remaining sections (93% shells) regardless of universe size.** Seed fires automatically when enumeration completes.
+- **§2.4 tails:** si-pre-2010 — 7 failed sections = AI-billing-era relics across 4 instruments, requeued (+1 unclassified 1958 marker to requeue post-push); will close at ✓ on drain. lda-commonsoralquestions — live LDA total 70,040 (grows daily; pages are 0-indexed, 0–140); tail pages 120–141 reseeded idempotently (22 rows — deliberately under the 25-row zero-output breaker threshold); page 141 closed `skipped` (beyond extent); est → 70,040, ✓ on drain.
+
+### §3 Tax completeness (IBFD-replication) — universe sizes measured BEFORE seeding (per brief)
+
+- **`hmrc-ancillary` (P1, NEW):** 416 docs — RCB collection 63 + 58 free-text backfilled pre-2014 briefs, SoPs 135, ESCs 4 (consolidated), VAT notices 109, excise notices 67 across 7 collections. **DRAINED same session: ✓ 457 compiled, 7 classified residue.**
+- **`tax-treaties-dta` (P1, NEW):** gov.uk `tax-treaties` collection, 172 per-country DTA pages. **DRAINED: ✓ 324 compiled, 0 residue.**
+- **`uk-treaties` UNBLOCKED + re-pointed:** gov.uk `filter_format=international_treaty` = 1,685 docs; 166 of the 172 DTA pages carry that format — the brief's "same documents, working host" hypothesis CONFIRMED. Seeded 1,519 (DTA overlap excluded) at P3; FCO client retired to `scripts/attic/v19-fco-treaties/` (URLSearchParams 422 era over); `treaties` sourceType is a markDone stub; corpus_targets unblocked.
+- **§3.3 historic tax tribunals:** `financeandtax.decisions.tribunals.gov.uk` is **ALIVE** — ASP.NET WebForms search app (VAT & Duties, Special Commissioners, etc.), decisions April 2003+ only. Report only; build needs Charlie's go-ahead (postback scraping).
+- **§3.4 OECD licensing (report only, nothing seeded):** content published ≥1 Jul 2024 is **CC BY 4.0** (freely redistributable, attribution); earlier content — incl. Model Tax Convention 2017 + TP Guidelines 2022 — is CC **non-commercial** ("may not be sold but may be used in the context of commercial activities such as consulting or training"). Scrutinise's not-for-profit use plausibly qualifies; **Charlie's sign-off required before any seeding.**
+- **§3.5 hmrc-manuals 16,061 "zero-section done rows" — CLASSIFIED, nothing to fix:** they are `unavailable` marker sections for **manual contents/index nodes** (Content API returns `child_section_groups` with an empty body; the text lives in child leaf pages, all 69,136 of which are compiled). 100-sample + 8 live probes; notes updated; **✓ re-baselined at 69,136 compiled + 16,061 classified residue.** (First check wrongly tested queue-rows-without-sections = 0 — the markers ARE the sections; §0 verify-before-asserting cuts both ways.)
+
+### §4 Case law re-point (bailii → official sources)
+
+- **FCL per-court feeds** (`atom.xml?court=…`) are required for tribunals — the global feed only carries their newest entries. `rel="last"` is **phantom on per-court feeds too** (eat claimed 80 pages; true extent 16 — binary-searched, V4 pattern). True extents: eat 16 / ukut tcc 7, iac 21, lc 11, aac 25 / ukftt tc 29, grc 55 / ukpc 15 / ukiptrib 1 = **180 pages (~9k judgments, ~8.5k already held via the global feed)**. FCL is thin on tribunals; rate unchanged (it took the 99.6% run happily). `processTnaCaselaw` now handles `court:{code}:page:{N}` rows — **the 180 seeded rows were markSkipped'd by the old deployed code and need a reset post-push** (playbook §8: seed-after-push).
+- **`et-decisions` (P3, NEW):** gov.uk `employment_tribunal_decision` = **131,668 docs** (brief's ~72k was low) — the first-instance ET record FCL lacks. gov.uk's `employment_appeal_tribunal_decision` (2,560) NOT seeded — FCL EAT is canonical. **Prediction to score: ~140–200k sections (body+PDFs), ~11–14h of processing at 300ms/5.**
+- **Retired:** `bailii-eat` → FCL eat; `bailii-tribunals` → FCL UT/FtT + et-decisions; `bailii-privy-ni` → FCL ukpc. NI courts stay parked (FCL excludes them; BAILII contact in progress). Coverage table: playbook §17.
+
+### INCIDENT — gov.uk 429 storm exposed a V17 pool rate-limiter race (fixed)
+
+Within an hour of et-decisions seeding, gov.uk 429'd (each row = content fetch + PDF asset fetch; V18's 150ms/10 was too hot for 2-fetch rows). Politeness response: halved to 300ms/5 + Ingest restart. **Failures then accelerated: configured 3.3 rows/s, measured 24 fails/s.** Root cause — `eligible()` → *async claim (100–300ms)* → `recordClaim()`: every idle loop saw the same free token; instant 429 failures idled all 20 loops which then raced every token, keeping gov.uk's penalty box alive (also explains the V18 TWFY storm's severity). **Fixed in `ingest-pool.ts`: reserve-then-claim (token consumed BEFORE the async claim, single-source claims) + in-process 5-min source suspend on HTTP 429/503.** The zero-output/failure breaker contained the storm at 16:30 (working as designed); ~7k burned 429 rows + parked pending await reset after the fix deploys and gov.uk cools off. Playbook §8 entry.
+
+### Verification state at session close (§6)
+
+- ✓ at measured actuals: all 7 pwdata corpora, hmrc-manuals, hmrc-ancillary, tax-treaties-dta.
+- ✓ pending drain (post-push): primary-acts-pre-2000 (regnal pass), retained-eu (enum running), si-pre-2010, lda-commonsoralquestions, uk-treaties, et-decisions, tna-caselaw (court pages).
+- Unconfirmed by design: regional ~160k (enumeration next), et-decisions (in flight).
+- Post-push checklist in handoff (court-row reset, 429-row reset, ukpga seeder, cleanup at drain).
 
 ## V18 — REFILL THE QUEUE → PWDATA PER-SPEECH MIGRATION (10 Jun 2026)
 
