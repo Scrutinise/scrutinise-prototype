@@ -47,6 +47,28 @@ export async function* searchByFormat(format: string, pageSize = 1000): AsyncGen
   }
 }
 
+// Generic filtered enumeration (V19) — pass raw search-API params, e.g.
+// { filter_document_collections: 'tax-treaties' } or { q: '"Revenue and Customs Brief"' }.
+export async function* searchWhere(params: Record<string, string>, pageSize = 1000): AsyncGenerator<GovukSearchHit[]> {
+  let start = 0
+  for (;;) {
+    const qs = new URLSearchParams({ ...params, count: String(pageSize), start: String(start), fields: 'link,title', order: 'public_timestamp' })
+    const { signal, clear } = withTimeout(60_000)
+    try {
+      const res = await fetch(`${SEARCH}?${qs}`, { headers: { 'User-Agent': UA }, signal })
+      clear()
+      if (!res.ok) throw new Error(`govuk search ${JSON.stringify(params)} start=${start}: HTTP ${res.status}`)
+      const data = await res.json() as { results: GovukSearchHit[] }
+      if (!data.results?.length) return
+      yield data.results
+      start += pageSize
+    } catch (err) {
+      clear()
+      throw err
+    }
+  }
+}
+
 // Free-text search constrained to a document type (used for white papers).
 export async function* searchByQuery(q: string, documentType: string, pageSize = 200): AsyncGenerator<GovukSearchHit[]> {
   let start = 0

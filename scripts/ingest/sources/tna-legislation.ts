@@ -3,7 +3,9 @@ import { suspendSource } from '../shared/queue-client'
 
 const TNA_BASE = 'https://www.legislation.gov.uk'
 const throttle = new AdaptiveThrottle({
-  floor: 200,
+  // TNA_THROTTLE_FLOOR_MS: local enumeration runs raise this (V19: TNA 429'd a
+  // 200ms feed-pagination sweep; politeness budget says halve, so 500ms there).
+  floor: Number(process.env.TNA_THROTTLE_FLOOR_MS ?? 200),
   suspendThresholdMs: 60_000,
   onSuspend: (delayMs) => {
     suspendSource('tna-legislation', delayMs * 2)
@@ -195,6 +197,73 @@ async function fetchAllPages(baseUrl: string, type: string, year: number, ids: s
     if (!next || ids.length === before) break
     url = next[1].replace(/^http:/, 'https:')
   }
+}
+
+// ── Entry-level enumeration (V19) ─────────────────────────────────────────────
+// Pre-1963 acts are canonically identified by REGNAL session, not calendar year:
+// the feed <id> is e.g. .../id/ukpga/Geo5/14-15/41 and the calendar identity
+// lives in <ukm:Year>/<ukm:Number>. listActIds' regex (type/year/number) silently
+// dropped every regnal id, so pre-1963 acts were never enumerable — the V19
+// root cause of the primary-acts-pre-2000 "gap". A calendar id is not even
+// addressable for some of them: ukpga/1924/3 is HTTP 300 (two acts are chapter 3
+// of 1924 under different sessions). Use the regnal id as docId for those.
+export interface TnaActEntry {
+  docId: string        // canonical id from the feed (regnal for pre-1963)
+  calendarId: string | null  // `${type}/${year}/${number}` when both attrs present
+}
+
+function extractEntries(xml: string, type: string, out: TnaActEntry[], seen: Set<string>): void {
+  for (const chunk of xml.split('<entry>').slice(1)) {
+    const idm = /<id>https?:\/\/www\.legislation\.gov\.uk\/(?:id\/)?([^<]+)<\/id>/.exec(chunk)
+    if (!idm || !idm[1].startsWith(`${type}/`) || idm[1].includes('data.feed')) continue
+    const docId = idm[1]
+    if (seen.has(docId)) continue
+    seen.add(docId)
+    const ym = /<ukm:Year Value="(\d+)"/.exec(chunk)
+    const nm = /<ukm:Number Value="(\d+)"/.exec(chunk)
+    out.push({ docId, calendarId: ym && nm ? `${type}/${ym[1]}/${nm[1]}` : null })
+  }
+}
+
+async function fetchAllEntryPages(baseUrl: string, type: string, out: TnaActEntry[], seen: Set<string>): Promise<void> {
+  let url: string | null = baseUrl
+  while (url) {
+    const xml = await fetchText(url)
+    if (!xml) break
+    const before = out.length
+    extractEntries(xml, type, out, seen)
+    const next = /<link rel="next"[^>]*href="([^"]+)"/.exec(xml)
+    if (!next || out.length === before) break
+    url = next[1].replace(/^http:/, 'https:')
+  }
+}
+
+export async function listActEntries(type: string, yearMin: number, yearMax: number): Promise<TnaActEntry[]> {
+  const out: TnaActEntry[] = []
+  const seen = new Set<string>()
+  let yearsWithResults = 0
+
+  for (let year = yearMin; year <= yearMax; year++) {
+    const yearUrl = `${TNA_BASE}/${type}/${year}/data.feed`
+    const yearXml = await fetchText(yearUrl)
+    if (!yearXml) continue
+
+    const before = out.length
+    const bucketRx = /href="(https?:\/\/www\.legislation\.gov\.uk\/[^"]+\/\d+-\d+\/data\.feed)"/g
+    const bucketUrls: string[] = []
+    let bm: RegExpExecArray | null
+    while ((bm = bucketRx.exec(yearXml)) !== null) bucketUrls.push(bm[1])
+
+    if (bucketUrls.length > 0) {
+      for (const bucketUrl of bucketUrls) await fetchAllEntryPages(bucketUrl, type, out, seen)
+    } else {
+      await fetchAllEntryPages(yearUrl, type, out, seen)
+    }
+    if (out.length > before) yearsWithResults++
+  }
+
+  console.log(`[tna] listActEntries type=${type} years=${yearMin}-${yearMax}: ${out.length} acts across ${yearsWithResults} years`)
+  return out
 }
 
 export async function listActIds(type: string, yearMin: number, yearMax: number): Promise<string[]> {
@@ -393,10 +462,18 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
   // HTML/PDF fallback — runs only when CLML was entirely absent (no XML returned)
   if (sections.length === 0) {
     const rawHtml = await fetchText(`${TNA_BASE}/${actId}/data.htm`)
-    if (rawHtml && rawHtml.trim().length > 0) {
+    // V19 guard: data.htm on acts with no digitised text redirects to the act's
+    // landing page — site chrome with zero body text. 5,840 pre-1963 acts were
+    // silently ingested as ~834 words of boilerplate each (uniform wordCount was
+    // the tell). Real legislation HTML carries LegRHS/LegP1ParaText/LegSnippet
+    // body markers; chrome-only pages carry none. Reject chrome so genuinely
+    // textless acts fall through to PDF and then a classified unavailable marker.
+    const hasLegContent = !!rawHtml && /LegRHS|LegP1ParaText|LegP2ParaText|LegClearFix LegProv/.test(rawHtml)
+    if (rawHtml && rawHtml.trim().length > 0 && hasLegContent) {
       console.log(`[tna] ${actId}: HTML fallback (${rawHtml.length} chars)`)
       sections.push({ sectionRef: 'full-doc-html', format: 'html', rawHtml })
     } else {
+      if (rawHtml && !hasLegContent) console.log(`[tna] ${actId}: data.htm is chrome-only (no Leg* body markers) — trying PDF`)
       const pdfBuffer = await fetchBinary(`${TNA_BASE}/${actId}/data.pdf`)
       if (pdfBuffer && pdfBuffer.length > 0) {
         console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)

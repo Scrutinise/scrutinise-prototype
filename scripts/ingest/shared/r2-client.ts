@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  DeleteObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3'
 import path from 'path'
@@ -49,6 +50,12 @@ export async function r2Get(key: string): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+// V19 — used by cleanup scripts to remove superseded/garbage objects
+// (e.g. the pre-1963 chrome-boilerplate captures). Deletes are free on R2.
+export async function r2Delete(key: string): Promise<void> {
+  await getClient().send(new DeleteObjectCommand({ Bucket: getBucket(), Key: key }))
 }
 
 export async function r2Exists(key: string): Promise<boolean> {

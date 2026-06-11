@@ -43,7 +43,6 @@ import { fetchLdaPage, MAX_524_RETRIES } from '../sources/lda-parliament'
 import { listCommitteePublications, fetchPublicationHtml } from '../sources/committees-portal'
 import { fetchPwdataFile, parsePwdataItems, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
-import { fetchTreatyText, listUkTreaties } from '../sources/uk-treaties'
 import {
   listHmrcManuals, listNaoReports, listHoCLReports,
   listExplanatoryNotes, listImpactAssessments, listConsultations,
@@ -174,19 +173,27 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
 }
 
 // ── TNA Case Law ──────────────────────────────────────────────────────────────
-// Queue rows for caselaw have docId = "page:N" — we fetch that Atom feed page
-// and process all 50 entries in one row claim.
+// Queue rows for caselaw have docId = "page:N" (global feed) or
+// "court:{code}:page:N" (per-court feed, V19 — tribunal courts are only fully
+// enumerable via ?court=; the global feed carries just their newest entries).
+// We fetch that Atom feed page and process all 50 entries in one row claim.
 
 async function processTnaCaselaw(row: QueueRow): Promise<void> {
   const ATOM_BASE = 'https://caselaw.nationalarchives.gov.uk/atom.xml'
 
-  if (!row.docId.startsWith('page:')) {
+  let feedUrl: string
+  const courtM = /^court:(.+):page:(\d+)$/.exec(row.docId)
+  if (courtM) {
+    feedUrl = `${ATOM_BASE}?court=${encodeURIComponent(courtM[1])}&page=${courtM[2]}`
+  } else if (row.docId.startsWith('page:')) {
+    feedUrl = `${ATOM_BASE}?page=${parseInt(row.docId.replace('page:', ''), 10)}`
+  } else {
     await markSkipped(row.id)
     return
   }
 
-  const page = parseInt(row.docId.replace('page:', ''), 10)
-  const res = await fetch(`${ATOM_BASE}?page=${page}`, {
+  const page = courtM ? parseInt(courtM[2], 10) : parseInt(row.docId.replace('page:', ''), 10)
+  const res = await fetch(feedUrl, {
     headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (Open Justice; contact: cl@scrutinise.org)' },
   })
   if (!res.ok) {
@@ -546,21 +553,14 @@ async function processHmrc(row: QueueRow): Promise<void> {
 }
 
 // ── UK Treaties ───────────────────────────────────────────────────────────────
+// V19: FCO client retired (sources moved to scripts/attic/v19-fco-treaties/).
+// uk-treaties is now a govuk-content corpus: gov.uk filter_format=international_treaty
+// (1,685 docs incl. the tax-treaties DTA collection) — same documents, working host.
+// Residual sourceType='treaties' rows are marked done with a retirement note.
 
 async function processTreaties(row: QueueRow): Promise<void> {
-  for await (const t of listUkTreaties()) {
-    const cKey = compiledKey('uk-treaties', t.id, '1')
-    if (await r2Exists(cKey)) continue
-
-    const text = await fetchTreatyText(t.url)
-    if (!text) continue
-
-    const compiled = rawToText(text)
-    await r2Put(cKey, compiled)
-    const secId = sectionId('uk-treaties', t.id, '1')
-    await upsertSection({ id: secId, corpus: 'uk-treaties', sourceUrl: t.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
-  }
   await markDone(row.id)
+  console.log(`[pool] ${row.id}: sourceType 'treaties' retired V19 — uk-treaties is govuk-content now`)
 }
 
 // ── OECD ──────────────────────────────────────────────────────────────────────
