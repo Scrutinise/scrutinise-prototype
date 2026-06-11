@@ -22,7 +22,7 @@
   3. The 27 failed sections are 3 post-1963 acts with **AI-compile-era Anthropic billing errors** (pre-V2L relics) — requeued.
   - Fixes: `listActEntries()` (regnal + calendar identity per entry), chrome-guard on the HTML fallback (requires `LegRHS`/`LegP1ParaText` body markers), `v19-seed-ukpga-regnal.ts` (run AFTER push). Verified: in-force old acts serve full revised CLML via regnal ids (OAPA 1861: 69 provisions); textless ones classify via hasNoProvisions.
 - **§2.2 regional:** audited — no boilerplate disease (clml 120,370 sections, wordCount sd 197; html 3,271, sd 1298 = real content); 3,498 classified unavailable markers. The ~160k denominator remains UNCONFIRMED — universe enumeration queued behind the TNA politeness backlog (next session; same `listActEntries` machinery; note V15's reseed-deep was interrupted mid-nia).
-- **§2.3 retained-eu:** completion pass approved+running. Enumeration restarted twice (lessons in playbook §8: log-per-unit, and 0-id years during a 429 window must not checkpoint — eur/1986 was poisoned as empty). TNA 429'd the 200ms feed sweep → **local enumeration floor now 500ms** (`TNA_THROTTLE_FLOOR_MS`). Dense years far exceed V18's morePages estimate (eur/1976 alone = 3,195 instruments) — **the ~33k universe estimate will be re-measured by entry-count; prediction to score: ~8.7k real remaining sections (93% shells) regardless of universe size.** Seed fires automatically when enumeration completes.
+- **§2.3 retained-eu:** completion pass seeded and RUNNING — and the universe measurement rewrote the premise: **~153k instruments (eur ~95k+ / eudn ~27k / eudr ~3k), not V18's ~33k** (morePages undercounts dense years; TNA mirrors the complete EU corpus, mostly spent instruments). ~154k queue rows seeded (union of two enumerations — the "killed" first run survived as an orphaned node process and inserted 149,480 rows itself; playbook §8 has the Windows pipeline-kill lesson, and ON CONFLICT idempotency is what kept the union harmless). The approved "bounded ~2h" is really **~36h of TNA fetching** at the long-tolerated 200ms/10; left running. V18's 93%-shell sample implies the 140k phantom denominator may land accidentally close — **✓ re-baseline at drain** per playbook §1c. Lessons: TNA 429'd the 200ms local feed sweep (floor now 500ms via `TNA_THROTTLE_FLOOR_MS`); 0-id years during a 429 window must never checkpoint (eur/1986 was briefly poisoned as empty).
 - **§2.4 tails:** si-pre-2010 — 7 failed sections = AI-billing-era relics across 4 instruments, requeued (+1 unclassified 1958 marker to requeue post-push); will close at ✓ on drain. lda-commonsoralquestions — live LDA total 70,040 (grows daily; pages are 0-indexed, 0–140); tail pages 120–141 reseeded idempotently (22 rows — deliberately under the 25-row zero-output breaker threshold); page 141 closed `skipped` (beyond extent); est → 70,040, ✓ on drain.
 
 ### §3 Tax completeness (IBFD-replication) — universe sizes measured BEFORE seeding (per brief)
@@ -46,10 +46,13 @@ Within an hour of et-decisions seeding, gov.uk 429'd (each row = content fetch +
 
 ### Verification state at session close (§6)
 
-- ✓ at measured actuals: all 7 pwdata corpora, hmrc-manuals, hmrc-ancillary, tax-treaties-dta.
-- ✓ pending drain (post-push): primary-acts-pre-2000 (regnal pass), retained-eu (enum running), si-pre-2010, lda-commonsoralquestions, uk-treaties, et-decisions, tna-caselaw (court pages).
-- Unconfirmed by design: regional ~160k (enumeration next), et-decisions (in flight).
-- Post-push checklist in handoff (court-row reset, 429-row reset, ukpga seeder, cleanup at drain).
+**✓ at measured actuals (12 corpora):** all 7 pwdata · hmrc-manuals 69,136 (+16,061 classified index nodes) · hmrc-ancillary 457 (+7) · tax-treaties-dta 324 · **tna-caselaw 74,896** (court-page sweep verified: all 180 pages processed under V19 code, +22 sections — the global feed had already captured nearly all FCL tribunal holdings; per-court coverage now proven, not assumed) · **lda-commonsoralquestions 69,529** (closed: tail reseed of pages 120–141 yielded 0 new — the ~500-record delta vs LDA's claimed totalResults 70,040 is source-side phantom in a deprecated API; full text is in pwdata anyway) · **si-pre-2010 174,552 + 1 classified residue** (uksi/1958/1156 → metadata-only via requeue; 5 of 7 AI-era failed sections recompiled; 2 were stale sectionRefs absent from current CLML — deleted, acts have full modern coverage).
+
+**In flight (autonomous — Ops liveness + breakers guard):** retained-eu ~145k pending (~36h TNA), et-decisions ~125k + uk-treaties 205 pending (~11h gov.uk — resumed after 4.4h cooloff with ZERO new 429s; the rate-limiter fix + suspend verified live). ✓ re-baseline each at drain.
+
+**Deferred to next session (TNA penalty-boxed the local IP after three enumeration runs):** `v19-seed-ukpga-regnal.ts` (primary-acts-pre-2000 completion) and the regional universe enumeration. Both documented in handoff with run commands.
+
+**Post-push timeline note:** the 16:48 push's auto-deploy never visibly registered (Railway API began returning Not Authorized to the polling token — likely API rate-limit); the V19 code went live anyway at 18:46 via Ops liveness `serviceInstanceRedeploy` (builds from Main HEAD). Verified by heartbeat + behavior.
 
 ## V18 — REFILL THE QUEUE → PWDATA PER-SPEECH MIGRATION (10 Jun 2026)
 

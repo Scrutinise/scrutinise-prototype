@@ -15,15 +15,18 @@
 - **hmrc-manuals ✓** 69,136 + 16,061 classified residue (contents/index nodes — NOT missing content; brief's "zero-section rows" classified).
 - **hmrc-ancillary ✓ 457** (RCBs/SoPs/ESCs/VAT+excise notices, NEW P1) · **tax-treaties-dta ✓ 324** (NEW P1) · **uk-treaties unblocked** → gov.uk international_treaty (1,519 seeded P3; FCO client in attic).
 - **bailii-eat / bailii-tribunals / bailii-privy-ni retired** → FCL court feeds + et-decisions. NI stays parked.
-- **et-decisions (NEW P3):** 131,668 gov.uk ET decisions seeded (~12.6k sections in before the 429 storm parked it — see below).
+- **tna-caselaw ✓ 74,896** — all 180 FCL court pages processed under V19 code; per-court tribunal coverage proven (+22 sections; the global feed already had ~everything FCL holds).
+- **lda-commonsoralquestions ✓ 69,529** — closed; ~500 delta vs LDA totalResults is source-side phantom (deprecated API; full text in pwdata).
+- **si-pre-2010 ✓ 174,552 + 1 classified residue** — AI-era failed relics fixed/removed; 1958 SI classified metadata-only.
+- **et-decisions (NEW P3):** 131,668 gov.uk ET decisions seeded; resumed post-cooloff with zero new 429s (~125k pending, ~11h).
 
-**IN FLIGHT / POST-PUSH CHECKLIST (next session or after Ingest redeploys):**
-1. **Deploy the V19 code** (commit-all.sh at session end pushes Main → auto-deploys Ingest+Ops). The pool now has the reserve-then-claim rate-limiter fix + 5-min 429/503 suspend — DO NOT unpark govuk rows before this is live.
-2. **After deploy + gov.uk cooloff (≥1h quiet):** clear govuk-content breaker, reset its ~7k `failed` HTTP-429 rows + unpark `blocked` rows (SQL in playbook §8 clear procedure; rows are et-decisions + uk-treaties).
-3. **Reset the 180 `tna-caselaw` rows** `docId LIKE 'court:%'` from `skipped` → `pending` (old code skipped them; new processor handles court pages).
-4. **Run `v19-seed-ukpga-regnal.ts`** (regnal enumeration ~30–45 min checkpointed + seed; REQUIRES deployed chrome-guard). Also requeue `si-pre-2010:uksi/1958/1156` (unclassified marker).
-5. **retained-eu:** `v19-seed-retained-eu-completion.ts` is enumerating in background (checkpoint `v19-retained-eu-enum.json`, log `v19-retained-eu-enum.log`, floor 500ms, retry-zero-years logic). If interrupted, rerun the same command — it resumes and seeds at the end. Universe will exceed V18's ~33k estimate (morePages undercounts dense years).
-6. **At each drain:** re-baseline ✓ (rules in playbook §1c) — primary-acts-pre-2000 (`v19-cleanup-ukpga-calendar.ts` deletes the 5,840 chrome-boilerplate rows + 1,057 dead calendar markers, then ✓), retained-eu (retire the 140k phantom → real ~23k), si-pre-2010, lda-commonsoralquestions (est 70,040), uk-treaties, et-decisions, tna-caselaw.
+**IN FLIGHT / POST-PUSH CHECKLIST:**
+1. ✅ V19 code deployed (pushed 16:48; the 18:46 Ops-liveness `serviceInstanceRedeploy` built from post-push Main — running since ~18:48 with the rate-limiter fix + 429/503 suspend).
+2. ✅ gov.uk cooloff observed (4.4h quiet); breaker cleared, 117,781 blocked unparked + 8,554 429-failed reset (et-decisions + uk-treaties) — 11 Jun ~20:55.
+3. ✅ 180 court-page rows reset to pending; `si-pre-2010:uksi/1958/1156` requeued.
+4. ⏸ **`v19-seed-ukpga-regnal.ts` DEFERRED to next session** — TNA has penalty-boxed the LOCAL IP after three enumeration runs today (instant 429 backoff to 16s even at a 1000ms floor; process killed by PID, verified dead). Run tomorrow with `TNA_THROTTLE_FLOOR_MS=1000`; sanity-check the enumerated universe (~10k+ acts expected — a visibly small count means TNA was still throttling; the script is single-shot, rerun it). Also note the seeder requeued `si-pre-2010:uksi/1958/1156` already (done).
+5. **retained-eu: SEEDED + RUNNING** — true universe **~153k instruments** (not V18's ~33k; playbook §8). ~154k rows seeded (idempotent union of two enumeration runs — incl. an orphaned first run, see playbook's Windows pipeline-kill pattern); ~36h of TNA fetching at 200ms/10. ✓ re-baseline at drain (the 140k "phantom" may land close — 93% shells).
+6. **At each remaining drain:** re-baseline ✓ (playbook §1c) — **retained-eu** (~36h; re-measure, the 140k may land close), **et-decisions + uk-treaties** (~11h gov.uk), and after the deferred regnal pass: **primary-acts-pre-2000** (`v19-cleanup-ukpga-calendar.ts` deletes the 5,840 chrome-boilerplate rows + 1,057 dead calendar markers, then ✓). si-pre-2010 / lda-oral / tna-caselaw already ✓ (11 Jun evening).
 7. **regional:** enumerate the 7-type universe with `listActEntries` (politeness backlog deferred it); re-baseline the ~160k estimate with evidence.
 
 **INCIDENT LOG (this sprint):** gov.uk 429 storm exposed a latent V17 race — idle loops raced un-consumed tokens; instant failures ran govuk-content at 24 fails/s against a configured 3.3/s, keeping the penalty box alive. Fixed (reserve-then-claim + suspend-on-429/503). The breaker contained it. Full account: CHANGE_LOG V19 + playbook §8.

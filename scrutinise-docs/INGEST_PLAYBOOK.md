@@ -465,6 +465,14 @@ The V17 claim loop checked `eligible()` → awaited the claim query (100–300ms
 
 The first retained-eu enumeration ran 2h with zero output: stdout was piped through `grep -v` (block-buffered, nothing visible until exit) and the only log line was scheduled for the END of a 68-year range. Rerun with per-year checkpoint + per-year log line showed ~2–40s/year and surfaced that dense eur years (1976: 3,195 instruments) far exceed the morePages-derived estimate. Rule: background enumeration scripts write progress per smallest natural unit directly to a file (`> x.log 2>&1`, no pipes), and checkpoint at the same granularity so reruns resume.
 
+### Killing a `cmd | grep` background pipeline orphans the node process on Windows (V19)
+
+Stopping the "wedged" first retained-eu run killed the *grep* stage; the node process survived headless, finished its full 153k-instrument enumeration, and inserted 149,480 queue rows two hours later — while two replacement runs were assuming a clean slate. The inserts were idempotent so the union was harmless (and run 1's universe was actually the most complete — it enumerated before TNA started 429ing), but only by luck. Rules: (1) background long-runners must not be pipelines — redirect to a file; (2) after stopping a background task, verify the node PID is actually gone (`tasklist | findstr node` / `ps`); (3) design every seeder so a surviving orphan is idempotent — ON CONFLICT DO NOTHING is what made this incident a footnote instead of a corruption.
+
+### retained-eu true universe is ~153k instruments, not ~33k (V19 measurement)
+
+The V18 morePages-derived estimate (~32,970) undercounted dense years badly; full entry-count enumeration found **eur ~95k+ / eudn ~27k / eudr ~3k — union ~153k instruments** (TNA mirrors the complete EU corpus to IP-completion day, mostly spent/expired instruments). The approved "bounded ~2h" completion pass is really ~36h of TNA fetching at 200ms/10 (the long-tolerated rate) — left running V19; ~93% will classify as hasNoProvisions shells (V18 sample), so the **140k phantom denominator may land accidentally close**. Re-baseline ✓ at drain per §1c.
+
 ## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
 
 Most patterns below concern the retired 20-worker fleet, the separate scheduler/monitor, or Railway-DB queue tables. The diagnostics remain instructive; the named files now live in `scripts/attic/v17-fleet/`.
