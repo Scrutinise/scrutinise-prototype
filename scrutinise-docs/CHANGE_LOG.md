@@ -42,7 +42,7 @@ curl 7.88.1 installed in `Ingest` (builder confirmed RAILPACK; service variable 
 
 ### §4 + §5 gov.uk corpora (built; seed post-push)
 
-- New generic `govuk-content` source (Content API JSON + PDF attachments via pdf-parse; deep search paging verified to 84k+; 404/410 → unavailable marker). Rate limit 150ms/10 — GOV.UK asks <10 rps sustained.
+- New generic `govuk-content` source (Content API JSON + PDF attachments via pdf-parse; deep search paging verified to 84k+; 404/410 → unavailable marker). Rate limit 150ms/10 — GOV.UK asks <10 rps sustained. Post-sprint hotfix `6b52c36`: `order=link` 422s (not sortable) → `order=public_timestamp`; paging uniqueness re-verified.
 - **hmrc-manuals: real universe is 85,197 `hmrc_manual_section` pages, not the brief's ~626k** (stale 640k-era estimate). Seeder ready, P2.
 - govuk-core-docs: PACE codes (live-extracted from the collection page), Green/Magenta/Aqua/Orange Books, Cabinet Manual, Civil Service + Ministerial Codes, ~629→title-confirmed white papers (gov.uk has no white_paper type — probed). Seeder ready, P1.
 
