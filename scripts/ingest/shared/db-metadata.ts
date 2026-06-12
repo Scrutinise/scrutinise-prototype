@@ -7,6 +7,7 @@
  * here now runs on the single shared Neon pool (shared/neon-pool.ts).
  */
 import { getNeonPool, endNeonPool } from './neon-pool'
+import { licenceForCorpus } from './licence-map'
 import path from 'path'
 
 try {
@@ -38,11 +39,17 @@ export interface SectionMeta {
   speaker?: string
   itemDate?: string   // YYYY-MM-DD
   parentDocId?: string
+  // V20 licence metadata. licence defaults from shared/licence-map.ts by corpus;
+  // attribution is written ONLY when row-specific wording is required (e.g.
+  // sentencing-council source-document title, OECD CC-BY per-document credit) —
+  // uniform boilerplate lives in the map / INGEST_PLAYBOOK §18, not per row.
+  licence?: string
+  attribution?: string
 }
 
 const SECTION_COLS = `(id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
        format, "xmlPreview", notes, availability_status, availability_note,
-       "sectionTitle", speaker, "itemDate", "parentDocId", "compiledAt", "createdAt")`
+       "sectionTitle", speaker, "itemDate", "parentDocId", licence, attribution, "compiledAt", "createdAt")`
 
 const SECTION_CONFLICT = `
     ON CONFLICT (id) DO UPDATE SET
@@ -60,6 +67,8 @@ const SECTION_CONFLICT = `
       speaker             = EXCLUDED.speaker,
       "itemDate"          = EXCLUDED."itemDate",
       "parentDocId"       = EXCLUDED."parentDocId",
+      licence             = EXCLUDED.licence,
+      attribution         = EXCLUDED.attribution,
       "compiledAt"        = CASE WHEN EXCLUDED.status = 'compiled' THEN EXCLUDED."compiledAt" ELSE corpus_sections."compiledAt" END`
 
 function sectionParams(meta: SectionMeta, now: Date): unknown[] {
@@ -81,11 +90,13 @@ function sectionParams(meta: SectionMeta, now: Date): unknown[] {
     meta.speaker ?? null,
     meta.itemDate ?? null,
     meta.parentDocId ?? null,
+    meta.licence ?? licenceForCorpus(meta.corpus),
+    meta.attribution ?? null,
     meta.status === 'compiled' ? now : null,
   ]
 }
 
-const PARAMS_PER_ROW = 18
+const PARAMS_PER_ROW = 20
 
 export async function upsertSection(meta: SectionMeta): Promise<void> {
   const pool = getNeonPool()
