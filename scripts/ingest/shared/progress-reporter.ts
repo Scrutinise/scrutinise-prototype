@@ -483,6 +483,11 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
   parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
   parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
+  // V20 email honesty: the percentage is of the ENUMERATED universe only —
+  // never let the number quietly flatter us. Update this list as probes land.
+  parts.push(`  ⚠ ${overallPct.toFixed(1)}% is of the ENUMERATED universe. Major sources not yet enumerated/ingested:`)
+  parts.push(`    historic Hansard 1803-1918 (~1.1M est) · Scottish courts (blocked) · committees evidence backlog`)
+  parts.push(`    college-of-policing APP · quango universe (V21 scoping) · pre-redesign Law Commission papers · HUDOC (revival pending)`)
   if (dbSize) {
     const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
     const dbFlag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL'
