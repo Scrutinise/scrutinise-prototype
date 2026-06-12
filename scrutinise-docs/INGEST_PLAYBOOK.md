@@ -1153,3 +1153,30 @@ Find Case Law per-court feeds (`atom.xml?court=…`), true extents binary-search
 - FCL is **thin on tribunals** (backfill is recent-years only) — the first-instance Employment Tribunal record lives on gov.uk: corpus `et-decisions`, `filter_format=employment_tribunal_decision`, **131,668 docs** (2017+; the brief's ~72k was low). gov.uk's `employment_appeal_tribunal_decision` (2,560) is NOT seeded — FCL EAT is canonical.
 - Retired V19: `bailii-eat` → FCL eat; `bailii-tribunals` → FCL UT/FtT + et-decisions; `bailii-privy-ni` → FCL ukpc. **NI courts stay parked** (FCL excludes them; judiciaryni.uk is a future source; BAILII contact in progress).
 - Politeness: FCL kept its existing rate (tna-caselaw 200ms/4) — it took the 99.6% run happily.
+
+---
+
+## 18. PER-SOURCE LICENCE MAP (V20)
+
+Authoritative code copy: `scripts/ingest/shared/licence-map.ts` — applied per-row at ingest
+(`corpus_sections.licence`, default by corpus in `db-metadata.ts sectionParams`). The
+`attribution` column is written only where wording is row-specific; uniform boilerplate lives
+here and in the map. Backfill: `v20-licence-backfill.ts` (idempotent; pwdata-* deferred — see
+V20 CHANGE_LOG).
+
+| licence code | sources | verified | notes |
+|---|---|---|---|
+| `ogl-3.0` | TNA legislation (primary-acts, si-*, regional, EN/EMs), all gov.uk corpora (hmrc-*, et-decisions, uk-treaties, tax-treaties-dta, govuk-core-docs, building-regs, planning-policy, ots-reports), sentencing-council, lawcom | 12 Jun 2026 (legislation.gov.uk/contributors; gov.uk T&Cs; per-site pages) | Sentencing Council additionally requires the source-document title in the acknowledgment (row-specific attribution) |
+| `ogl-3.0+eu-2011-833` | retained-eu | 12 Jun 2026 | Dual attribution: OGL + Commission Decision 2011/833/EU — exact wording on legislation.gov.uk/contributors |
+| `eu-2011-833` | eur-lex | via legislation.gov.uk/contributors (EUR-Lex legal notice is JS-rendered) | © European Union; Commission Decision 2011/833/EU |
+| `opl-3.0` | pwdata-*, lda-*, written-answers/statements, committees-reports/evidence | NOT re-verified live (parliament.uk licence pages CF-block both local and fetcher IPs, 12 Jun 2026) | Long-standing published licence for parliamentary material |
+| `ojl-2.0` | tna-caselaw (Find Case Law) | 12 Jun 2026 | ⚠️ **Open Justice Licence v2.0 EXCLUDES computational analysis** (search indexing, bulk/automated processing, ML). Bulk ingest + FTS requires TNA's separate computational-analysis licence — caselawlicence@nationalarchives.gov.uk. CHARLIE ACTION (V20). Required attribution: "Contains information licensed under the Open Justice - Licence v2.0" |
+| `fca-restricted` | fca-handbook | 12 Jun 2026 (fca.org.uk/legal) | Reproduction/storage in any retrieval system requires prior written permission; Handbook reproduction requires a licence agreement. CHARLIE ACTION (V20) |
+| `nao-nc` | nao-reports | 12 Jun 2026 | Free re-use NON-COMMERCIAL with attribution; commercial needs express permission |
+| `cc-by-nc-4.0` | oecd (existing 505 rows, pre-Jul-2024 content) | V19 §3.4 | Non-commercial; link-only policy for new pre-2024 OECD content (V20 §2). Post-Jul-2024 OECD is `cc-by-4.0` — seedable with attribution |
+| `ogl` (unversioned) | scotlawcom | 12 Jun 2026 | Their copyright page names OGL without a version |
+| `pending-verification` | college-of-policing (CF-blocked T&Cs), nilawcom (site SSL-dead), tax-tribunals (no statement on HMCTS legacy site), ni-judgments (© Crown, no open licence stated) | — | Judgment sources treated cautiously given the FCL computational-analysis precedent |
+
+Rules:
+- Every NEW corpus gets a licence-map entry BEFORE its seeder runs (the map default is the only thing standing between a new corpus and NULL licence rows).
+- Restricted/NC sources (`fca-restricted`, `nao-nc`, `cc-by-nc-4.0`, `ojl-2.0`) are default-excluded from any future commercial surface.

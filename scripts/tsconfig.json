@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": false,
@@ -21,5 +22,5 @@
       "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"]
     }
   },
-  "exclude": ["attic", "**/node_modules"]
+  "exclude": ["attic", "**/node_modules", "legislation/v3opt"]
 }

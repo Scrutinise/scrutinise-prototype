@@ -10,7 +10,9 @@
  * unavailable. Regnal ids work: 307 → /enacted/data.xml or full revised CLML.
  *
  * This seeder:
- *  1. Enumerates ukpga 1267–1999 via listActEntries (checkpointed).
+ *  1. Enumerates ukpga 1267–1999 via enumerateActEntriesCheckpointed (V20:
+ *     per-year checkpoint, throttled years retried, throws on incomplete
+ *     universe — the V19 single-shot run silently dropped 429'd years).
  *  2. Seeds a regnal-id queue row for EVERY pre-1963 act (replacing the garbage
  *     coverage), and a canonical-id row for any post-1963 act with no sections.
  *  3. Re-queues the 3 acts holding the 27 status='failed' sections.
@@ -18,13 +20,12 @@
  * After the queue drains, run v19-cleanup-ukpga-calendar.ts to delete the
  * superseded calendar-form boilerplate/unavailable rows and re-baseline ✓.
  */
-import * as fs from 'fs'
 import * as path from 'path'
 import { getNeonPool, endNeonPool } from './shared/neon-pool'
 import { bulkInsertQueueRows } from './shared/queue-client'
-import { listActEntries, TnaActEntry } from './sources/tna-legislation'
+import { enumerateActEntriesCheckpointed, TnaActEntry } from './sources/tna-legislation'
 
-const CHECKPOINT = path.join(__dirname, 'v19-ukpga-enum.json')
+const CHECKPOINT = path.join(__dirname, 'v19-ukpga-enum-years.json')
 const FAILED_ACT_REQUEUE = ['ukpga/1996/58', 'ukpga/1996/59', 'ukpga/1988/52']
 
 function isRegnal(docId: string): boolean {
@@ -34,14 +35,8 @@ function isRegnal(docId: string): boolean {
 async function main() {
   const pool = getNeonPool()
 
-  let entries: TnaActEntry[]
-  if (fs.existsSync(CHECKPOINT)) {
-    entries = JSON.parse(fs.readFileSync(CHECKPOINT, 'utf8'))
-    console.log(`[enum] ${entries.length} entries from checkpoint`)
-  } else {
-    entries = await listActEntries('ukpga', 1267, 1999)
-    fs.writeFileSync(CHECKPOINT, JSON.stringify(entries))
-  }
+  // Throws if any year stays unfetchable — rerun resumes from the checkpoint.
+  const entries: TnaActEntry[] = await enumerateActEntriesCheckpointed('ukpga', 1267, 1999, CHECKPOINT)
 
   const regnal = entries.filter(e => isRegnal(e.docId))
   const calendar = entries.filter(e => !isRegnal(e.docId))

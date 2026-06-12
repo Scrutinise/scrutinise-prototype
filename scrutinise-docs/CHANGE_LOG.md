@@ -1,8 +1,69 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 12 Jun 2026 — SEARCH S0 readiness audit.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 12 Jun 2026 — V20 probe wave.*
 
 ---
+
+## V20 — THE PROBE WAVE (12 Jun 2026)
+
+**Context:** corpus ~91% of the enumerated universe; V20 opened every remaining front with bounded probes under the probe-with-auto-upgrade rule, plus licence metadata infrastructure and V19 closeout. All probes ran the same day; five sources were auto-upgraded to full builds, three classified, one parked.
+
+### §1 V19 closeout
+
+- **et-decisions ✓ 293,399 compiled + 4 classified residue.** PREDICTION SCORED: V19 predicted 140–200k sections; observed 293,399 — **1.5–2.1× over** (each gov.uk decision page carries body + PDF assets, ~2.2 sections/doc; the V19 range was extrapolated from doc counts alone). Drained clean ~10:00, zero failures, the V19 rate-limiter fix + 300ms/5 held (no new 429s).
+- **uk-treaties ✓ 3,250 compiled + 14 classified residue** (drained same morning).
+- **retained-eu still draining** (~93k pending at session close, ~1.1 rows/s — TNA shells process fast; the licence backfill caught 131k rows mid-flight). ✓ re-baseline at drain (next session).
+- **Pre-1963 regnal pass + regional enumeration: moved into the queue** (see §4 incident — TNA penalty-boxes the local IP for any sustained enumeration). `processTnaEnum` handles `enum:{type}:{year}` rows: enumerates the year feed from Railway IPs and seeds act rows for anything `corpus_sections` lacks (the V19 regnal-seeder skip-logic verbatim: regnal docIds seeded unless the calendar alias holds real non-html content). `seed-tna-enum-queue.ts` (post-push) seeds 733 ukpga years + **9 regional types × 1970–2026 — including `asc` and `mwa`, which discovery's 7-type regional list omitted entirely (V20 finding: Senedd Acts 2020+ and Welsh Measures 2008–11 were never enumerable)**. After drain: `v19-cleanup-ukpga-calendar.ts` (5,840 chrome rows + 1,057 dead calendar markers), then ✓ both corpora.
+
+### §2 Licence metadata (corpus_sections.licence + attribution)
+
+- Columns added (nullable, instant); per-corpus map in `shared/licence-map.ts`, applied per-row at ingest via `db-metadata.ts sectionParams` default; full map + verification status in **INGEST_PLAYBOOK §18**. Backfilled **1,065,505 rows** (all non-pwdata corpora; batched on a dedicated pg client — the shared pool's 60s query_timeout aborts migration batches because non-HOT updates re-insert relic caselaw tsvectors into the 266MB GIN).
+- **pwdata-\* backfill (8.8M rows) DEFERRED — Charlie decision:** a full-row MVCC rewrite would churn ~4–5GB of the 20GB Neon budget to stamp a value ('opl-3.0') that is uniform and derivable from the map. New pwdata rows get licence at ingest post-push.
+- Attribution column is written only where wording is row-specific (sentencing-council source-title requirement, OECD per-doc credit); uniform boilerplate lives in the map.
+- **⚠️ CHARLIE — Find Case Law:** the Open Justice Licence v2.0 (verified) **explicitly excludes computational analysis** — search indexing, bulk/automated processing, ML training. Our 74,896-judgment ingest + FTS plans sit squarely in that exclusion. TNA grants a separate computational-analysis licence: **caselawlicence@nationalarchives.gov.uk** — recommend applying (fits the BAILII-email errand).
+- **⚠️ CHARLIE — FCA Handbook:** fca.org.uk/legal (verified): reproduction/storage of site content in any retrieval system requires prior written permission, and Handbook reproduction requires a licence agreement. Our 3,661 ingested sections are flagged `fca-restricted`.
+- **OECD position logged per brief §2:** post-Jul-2024 CC-BY 4.0 content seedable with attribution; pre-Jul-2024 CC-BY-NC is link-only, NOT ingested; existing 505 rows flagged `cc-by-nc-4.0`; default-excluded from any commercial surface; free-tier question deferred until a commercial product exists.
+- Parliament licence pages (OPL) could not be re-verified live — CF blocks both local and fetcher IPs (12 Jun); mapping recorded as the long-standing published licence.
+
+### §3 Probe scorecards (route | universe | rate | sections verified | auto-upgraded | prediction)
+
+1. **Committees API — UPGRADED (build complete, seed post-push).** Route: `committees-api.parliament.uk` open JSON API (OpenAPI spec public); documents served from the API host as base64 JSON — CF-FREE locally, verified end-to-end (%PDF magic + native Html for evidence). Universe ✓ measured: **Publications 50,846 + OralEvidence 15,803 + WrittenEvidence 126,589 = 193,238** (~4× the portal-era ~50k estimate — flagged per the >2× rule; size impact trivial ~200MB). Rate: 1000ms/3 (2 fetches/row ≈ 2 rps at host). Built: `sources/committees-api.ts`, `processCommitteesApi`, `seed-committees-api-queue.ts --canary`. ⚠️ Railway egress unverified (the portal + old Hansard API both CF-block datacentre IPs) — **canary 25 rows post-push before the full seed**; breaker armed either way. On clean canary: full seed, clear committees-portal breaker, retire portal rows.
+2. **Historic tax tribunals — UPGRADED (build complete, seed post-push).** Route: `financeandtax.decisions.tribunals.gov.uk` — GET `view.aspx?id=N` works with the honest ingest UA (only the WebForms search POST is UA-fussy; never needed — the id space is dense). Universe ✓ binary-searched: **ids 1–13,037**, and the archive is CONTINUOUSLY UPDATED (id 13,037 = TC 09248, decided 11 Jun 2024) — far deeper FTT-Tax coverage than FCL's ukftt/tc (~1,450). `.doc` (OLE2) extraction via new `word-extractor` dep, verified; modern decisions are PDF. Rate: 1000ms/2. Licence: pending-verification (no statement on the HMCTS legacy site).
+3. **EN/EMs — UPGRADED (build complete, seed post-push).** Routes verified: EN pdf `/{actId}/pdfs/{type}en_{year}{nnnn}_en.pdf` + `/notes` HTML; EM pdf `…{type}em_…` + `/memorandum/contents`. Universe derives from held corpora (no enumeration): ukpga ≥1999 (`en:`) + uksi ≥2002 (`em:`) — EM rows are five figures. Rows ride sourceType `tna-legislation` (docId prefix) so the host keeps ONE politeness bucket (§1b); absent EN/EM → unavailable marker. P3, drains behind retained-eu. Regional-act EN/EMs (asp/anaw/nisr filename forms) deferred to V21.
+4. **Law Commission E&W — UPGRADED (build complete, seed post-push).** Route: open WordPress REST API (`/wp-json/wp/v2/publication`, X-WP-Total 240) + PDFs on the MoJ CDN (verified). Licence: OGL v3.0 (site footer, verified). Universe note: pre-redesign LC papers (400+ since 1965) exist only in the UK Gov Web Archive — out of universe, recorded here. Rate 500ms/2.
+5. **NI courts — UPGRADED (build complete, seed post-push); Scottish courts — BLOCKED.** judiciaryni.uk: Drupal listing pages 0–395 (~5,900 decisions incl. NICA/NIKB/NICC/NIFAM + summary judgments), PDFs under `/files/judiciaryni/` (verified via Node fetch; one URL-variant 404 was a different page's `_0` file). Rate 1000ms/2; licence pending-verification (© Crown footer, no open licence stated). **Scotland:** the new scotcourts.gov.uk judgment search is a Vue app calling `api.pa.web.scotcourts.gov.uk` (Azure) → **401 without a key that is not present in any static asset**; the old archive 404s; judiciary.scot holds only shallow recent lists (sentencing statements). Needs browser-devtools XHR inspection (Charlie, 5 min) or a headless browser — REPORTED.
+6. **HUDOC — CLASSIFIED: ALIVE AGAIN.** `/app/query/results` returns 200 JSON (browser UA + Referer): resultcount 106,188 ENG; GBR 4,471 docs / 584 judgments; document text via `/app/conversion/pdf/?library=ECHR&id={itemid}` (200, real PDF; docx variant 404s). The V-era "endpoint changed, 404" classification is stale. Revival = point the existing echr-hudoc client at these routes + Referer; V21.
+7. **NAO — ROUTED + UPGRADED (build complete, seed post-push); SSRN — PARKED.** NAO: open WP REST API (`report` type, **2,755**), PDFs under wp-content/uploads (main-region filter excludes the site-wide footer PDFs). Licence verified: free **non-commercial** re-use with attribution (`nao-nc`) — fine for the charity, default-excluded from commercial surfaces. SSRN: hard 403 (WAF) on UI search AND api.ssrn.com with both honest and browser UAs — failure mode named; also licence-hostile. Parked.
+8. **Partials audit — root causes found, fixed:** see §5.
+9. **Historic Hansard 1803–1918 — CLASSIFIED (route proven, build V21).** Bulk beats crawl: `www.hansard-archive.parliament.uk` serves per-volume zips of `hansard_v12` XML (1803–2004!). Universe 1803–1918 ≈ **763 volumes**; sample volume (S1V1) = 1,137 `membercontribution` + 282 sections, 527k words → est **~1.1M sections / ~400M words / ~2.4GB text / ~0.6GB Neon** (within the 16GB guard). NOT auto-upgraded: no v12 parser exists — parse quality unproven (the rule's ambiguity clause). V21: parser + pilot (predict-measure-commit). The api.parliament.uk/historic-hansard HTML crawl works as fallback but is ~300k fetches.
+
+### §4 INCIDENT — TNA penalty-boxes the local IP for sustained enumeration (all day)
+
+The V19 handoff's "run the regnal seeder tomorrow" failed twice: a 1000ms-floor run 429'd from year ~1300 onward (397 of 722 log lines were backoffs) and **silently dropped whole years** (1933–38 missing — `fetchText` returns null for both 404 and 429); a 2000ms-floor run hours later 429'd instantly. Single requests pass; sustained patterns re-trip within seconds. Fixes: (a) `fetchTextWithStatus` distinguishes deterministic 404 from retryable 429; (b) `enumerateActEntriesCheckpointed` — per-year checkpoint, throttled years retried across passes, **throws on a partial universe** (no silent gaps); (c) the real cure — **enumeration moved into the queue** (`enum:` rows, §1) so it runs from Railway IPs, which TNA serves happily at 200ms/10 all day. Local TNA enumeration is effectively dead as a technique; playbook updated.
+
+### §5 Partials audit — the V2 seed-before-push bug wrote one corpus's documents under three labels
+
+- **building-regs + planning-policy = 791/791 doc-for-doc duplicates of hmrc-tiins** (verified by INTERSECT). Root cause: V2-era rows were processed before `processGovUk`'s switch knew their corpora → the `default:` branch ran `listHmrcTiins()` and wrote TIIN docs under `row.corpus`. The seed-after-push lesson predates its V19 naming. **Deleted 1,582 rows + R2 objects; reseeded correct `__index` rows (current code dispatches correctly — live now, drains to ✓ at 21 / 64).**
+- **college-of-policing = 1,944 unfiltered junk** (`listCollegeOfPolicing` is a free-text gov.uk search, no org filter — samples: DVLA accounts, ET decisions, news updates). **Deleted rows + R2; corpus blocked** pending the real APP source (college.police.uk — CF-blocked, licence unverified).
+- **sentencing-council ✓ 253** — live re-enumeration returned exactly 253; the V13 "~381" was a pre-dedup count. Complete all along.
+- **nilawcom ✓ 17** — site SSL-dead (12 Jun); 17 of ~18 historical reports held.
+- **written-statements retired** (superseded by pwdata-wms/lordswms per-speech). written-answers has no corpus_targets row (never in the email). **CHARLIE:** propose deleting the 272 legacy month-blob rows (avg 306k words/row — they're also the tsvector-1MB offenders from SEARCH_AUDIT).
+
+### §6 Email honesty
+
+TOTAL block now prints "% is of the ENUMERATED universe" + a maintained list of major unenumerated sources (historic Hansard ~1.1M, Scottish courts, committees evidence backlog, college-of-policing APP, quango universe, pre-redesign LC papers, HUDOC).
+
+### §7 Post-push run order (this session, CC)
+
+1. `seed-committees-api-queue.ts --canary 25` → verify sections (Railway egress test) → full seed → clear committees-portal breaker + retire portal rows (handoff SQL).
+2. `seed-tax-tribunals-queue.ts --canary 25` → verify → full seed.
+3. `seed-lawcom-queue.ts`, `seed-nao-queue.ts`, `seed-judiciaryni-queue.ts --canary 2` → verify → full.
+4. `seed-explanatory-queue.ts` (P3, behind retained-eu).
+5. `seed-tna-enum-queue.ts` (733 ukpga + 513 regional enum rows).
+6. `seed-rate-limits.ts` (new sources) + restart Ingest to load config.
+7. Re-run `v20-licence-backfill.ts` (sweeps rows written by pre-V20 code today).
+
+**Deferred to next session:** retained-eu ✓ at drain; ukpga regnal drain → `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓; regional ✓ at enum drain; committees/tax-tribunals/EN-EM ✓ at drain; Hansard v12 parser (V21); HUDOC revival (V21); quango scoping (V21).
 
 ## SEARCH S0 — SEARCH-READINESS AUDIT (12 Jun 2026)
 

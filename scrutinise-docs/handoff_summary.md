@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 12 Jun 2026 — Search S0 readiness audit complete (`docs/SEARCH_AUDIT.md`, commit `ca38dd3`); V19 completion passes still in flight below.*
+*Last updated: 12 Jun 2026 (evening) — V20 probe wave complete; see V20 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
 
 ---
 
@@ -20,7 +20,36 @@ Read-only audit done; all measured numbers + extrapolation arithmetic in **`docs
 
 ---
 
-## CURRENT STATE — V19 (P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS)
+## CURRENT STATE — V20 (THE PROBE WAVE, 12 Jun 2026)
+
+**Sprint:** V20 (SPRINT_V20_BRIEF.md). Full account + per-probe scorecards: CHANGE_LOG V20. Everything below the V19 heading is historical.
+
+**DONE this sprint:**
+- **Licence metadata live:** `corpus_sections.licence`/`attribution` columns; map in `shared/licence-map.ts` + INGEST_PLAYBOOK §18; applied at ingest; 1.07M rows backfilled. **pwdata backfill deferred (Charlie: ~4–5GB MVCC churn for uniform OPL).**
+- **Five sources built + auto-upgraded** (seed post-push): committees-api (193,238 docs — CF-free API; Railway-egress canary first), tax-tribunals (13,037, continuously updated, .doc via word-extractor), explanatory-notes/-memoranda (EN/EM "intention layer", rides the tna-legislation budget), lawcom (240), nao-reports (2,755, nao-nc licence), ni-judgments (~5,900).
+- **Classified:** HUDOC alive again (routes in CHANGE_LOG V20 §3.6 — revival V21); historic Hansard 1803–1918 = 763 bulk XML volumes ≈ ~1.1M sections (v12 parser is V21); Scottish courts BLOCKED (authed Azure API — Charlie: 5-min browser devtools XHR inspection would unblock); SSRN parked (hard WAF 403).
+- **Partials audit:** building-regs/planning-policy were 791-doc duplicates of hmrc-tiins (V2 seed-before-push default-branch bug) — deleted + reseeded correctly; college-of-policing was 1,944 unfiltered-search junk — deleted + blocked; sentencing-council ✓ 253 (was complete; V13 ~381 was pre-dedup); nilawcom ✓ 17 (site dead); written-statements retired.
+- **V19 closeout:** et-decisions ✓ 293,399 (+4 residue) — prediction 140–200k overshot 1.5–2.1×; uk-treaties ✓ 3,250 (+14); regnal + regional enumeration moved into the QUEUE (`enum:{type}:{year}` rows → Railway IPs; TNA penalty-boxes the local IP for any sustained enumeration — incident in CHANGE_LOG V20 §4); **asc + mwa were missing from the regional type list since forever** (now seeded).
+- **Email honesty:** TOTAL % labelled "of ENUMERATED universe" + unenumerated-sources list.
+
+**IN FLIGHT / NEXT SESSION:**
+1. **retained-eu** still draining (~93k pending at close) → ✓ re-baseline at drain (playbook §1c).
+2. **ukpga regnal enum drain** → run `v19-cleanup-ukpga-calendar.ts` (5,840 chrome + 1,057 dead markers) → primary-acts-pre-2000 ✓.
+3. **regional enum drain** → ✓ re-baseline.
+4. New corpora ✓ at drain: committees-reports/evidence, tax-tribunals, lawcom, nao-reports, ni-judgments, explanatory-notes/-memoranda, building-regs (21), planning-policy (64).
+5. Re-run `v20-licence-backfill.ts` after the drains (sweeps any NULL stragglers).
+
+**DECISIONS WAITING ON CHARLIE (V20 additions):**
+- **FCL Open Justice Licence v2.0 EXCLUDES computational analysis** (indexing/bulk/ML). Apply for TNA's computational-analysis licence: caselawlicence@nationalarchives.gov.uk (pairs with the BAILII email errand).
+- **FCA Handbook**: reproduction requires an FCA licence agreement (fca.org.uk/legal) — 3,661 sections flagged `fca-restricted`.
+- **pwdata licence backfill** (8.8M rows ≈ 4–5GB churn) — run or leave to the map?
+- **Scottish courts**: open scotcourts.gov.uk/judgments/ with browser devtools → Network tab → copy one `api.pa.web.scotcourts.gov.uk` request's headers (the auth key) → unblocks the build.
+- **written-answers/-statements legacy month-blobs** (272 rows, the tsvector-1MB offenders): delete?
+- Carried from V19: OECD (position now logged in CHANGE_LOG V20 §2 — confirm), historic tax tribunals (now BUILT), committees local-fetch (MOOT if the API canary passes).
+
+---
+
+## PREVIOUS STATE — V19 (P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS)
 
 **Active branch:** Main. **Sprint:** V19 (SPRINT_V19_BRIEF.md, archived at sprint close). Politeness doctrine now governs all rates: **a 5xx storm is a rate signal — halve and document** (playbook §1b). Three sources were halved this sprint: twfy-pwdata 1000ms/5, govuk-content 300ms/5, local TNA enumeration floor 500ms.
 
