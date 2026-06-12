@@ -49,14 +49,17 @@ async function get(url: string): Promise<{ status: number; text: string | null }
   }
 }
 
-// Decision slugs on one listing page (taxonomy /type/ links excluded).
+// Decision slugs on one listing page. Real decision slugs contain NO slash —
+// anything with one is a filter facet (/type/, /judiciary/{id}, /date/{year})
+// that renders in the sidebar of EVERY page including the 404 page (found by
+// diffing page 0 vs a 404 page; the facets fed the canary 229 junk rows).
 // Returns null on fetch failure, [] when the page is past the end (Drupal 404).
 export async function listNiDecisionsPage(page: number): Promise<string[] | null> {
   const { status, text } = await get(`${BASE}/judicial-decisions?page=${page}`)
   if (status === 404) return []
   if (!text) return null
   const slugs = new Set<string>()
-  for (const m of text.matchAll(/href="\/judicial-decisions\/((?!type\/)[a-z0-9][^"?#]*)"/gi)) {
+  for (const m of text.matchAll(/href="\/judicial-decisions\/([a-z0-9][^"?#\/]*)"/gi)) {
     slugs.add(m[1])
   }
   return [...slugs]

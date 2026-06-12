@@ -45,9 +45,16 @@ async function main() {
     let total = Infinity
     let seeded = 0
     while (skip < total) {
-      const page = await listCommitteesApiPage(kind, skip, canary ? Math.min(canary, TAKE) : TAKE)
+      // The API rate-limits sustained listing walks — retry after cooling
+      // instead of aborting (V20: runs stalled on single transient failures).
+      let page = await listCommitteesApiPage(kind, skip, canary ? Math.min(canary, TAKE) : TAKE)
+      for (let attempt = 1; !page && attempt <= 3; attempt++) {
+        console.warn(`[seed] ${kind} skip=${skip}: fetch failed — cooling 60s (retry ${attempt}/3)`)
+        await new Promise(r => setTimeout(r, 60_000))
+        page = await listCommitteesApiPage(kind, skip, canary ? Math.min(canary, TAKE) : TAKE)
+      }
       if (!page) {
-        console.warn(`[seed] ${kind} skip=${skip}: page fetch failed — stopping (checkpoint saved, rerun to resume)`)
+        console.warn(`[seed] ${kind} skip=${skip}: still failing — stopping (checkpoint saved, rerun to resume)`)
         break
       }
       total = page.totalResults
@@ -77,13 +84,19 @@ async function main() {
   if (!canary) {
     // Re-baseline corpus_targets with the measured universes (item-level;
     // est_is_confirmed stays false until the queue drains — playbook §1c).
+    // Only update when the universe is FULLY known for the target — a stalled
+    // run must not clobber the est with a partial sum (V20 bug: an aborted
+    // WrittenEvidence walk wrote evidence est=15,809 instead of 142,397).
     const reports = universe['Publications'] ?? 0
-    const evidence = (universe['OralEvidence'] ?? 0) + (universe['WrittenEvidence'] ?? 0)
     if (reports > 0) await pool.query(
       `UPDATE corpus_targets SET est_sections=$1, est_is_confirmed=false, blocked=false, blocked_reason=NULL WHERE corpus_key='committees-reports'`, [reports])
-    if (evidence > 0) await pool.query(
-      `UPDATE corpus_targets SET est_sections=$1, est_is_confirmed=false, blocked=false, blocked_reason=NULL WHERE corpus_key='committees-evidence'`, [evidence])
-    console.log(`[targets] committees-reports est=${reports}, committees-evidence est=${evidence}`)
+    if (universe['OralEvidence'] && universe['WrittenEvidence']) {
+      const evidence = universe['OralEvidence'] + universe['WrittenEvidence']
+      await pool.query(
+        `UPDATE corpus_targets SET est_sections=$1, est_is_confirmed=false, blocked=false, blocked_reason=NULL WHERE corpus_key='committees-evidence'`, [evidence])
+      console.log(`[targets] committees-evidence est=${evidence}`)
+    }
+    if (reports > 0) console.log(`[targets] committees-reports est=${reports}`)
   }
 
   console.log(`[seed] total new rows: ${grandTotal}${canary ? ' (CANARY)' : ''}`)

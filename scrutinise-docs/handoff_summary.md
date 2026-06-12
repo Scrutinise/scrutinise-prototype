@@ -32,8 +32,11 @@ Read-only audit done; all measured numbers + extrapolation arithmetic in **`docs
 - **V19 closeout:** et-decisions ✓ 293,399 (+4 residue) — prediction 140–200k overshot 1.5–2.1×; uk-treaties ✓ 3,250 (+14); regnal + regional enumeration moved into the QUEUE (`enum:{type}:{year}` rows → Railway IPs; TNA penalty-boxes the local IP for any sustained enumeration — incident in CHANGE_LOG V20 §4); **asc + mwa were missing from the regional type list since forever** (now seeded).
 - **Email honesty:** TOTAL % labelled "of ENUMERATED universe" + unenumerated-sources list.
 
+**POST-PUSH (done same session):** canaries PASSED from Railway (committees-api CF-free — blocker dead); breaker cleared + 2,538 portal rows retired; seeded tax-tribunals 13,037 / lawcom 240 / nao 2,755 / EN 560 + EM 10,864 / tna-enum 1,246 (+ si-2010plus enum 17 — **NEW finding: si-2010plus holds only 5,899 distinct instruments; the V12 "2015–2026 reseed" never ran**); licence sweep re-run. Committees (~59k of 193k) + NI (~1.3k) seeders are checkpointed — rerun their seed scripts to resume if they stopped short.
+
 **IN FLIGHT / NEXT SESSION:**
 1. **retained-eu** still draining (~93k pending at close) → ✓ re-baseline at drain (playbook §1c).
+1b. **Resume committees + NI seeders if incomplete** (checkpointed; both now retry transient listing failures). **si-2010plus ✓ at enum drain, then re-run `seed-explanatory-queue.ts`** (idempotent — newly-found SIs need EM rows).
 2. **ukpga regnal enum drain** → run `v19-cleanup-ukpga-calendar.ts` (5,840 chrome + 1,057 dead markers) → primary-acts-pre-2000 ✓.
 3. **regional enum drain** → ✓ re-baseline.
 4. New corpora ✓ at drain: committees-reports/evidence, tax-tribunals, lawcom, nao-reports, ni-judgments, explanatory-notes/-memoranda, building-regs (21), planning-policy (64).

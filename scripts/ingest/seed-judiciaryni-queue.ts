@@ -27,9 +27,17 @@ async function main() {
   let emptyStreak = 0
   for (let page = ckpt.page; ; page++) {
     if (canary && page >= canary) break
-    const slugs = await listNiDecisionsPage(page)
+    // judiciaryni rate-limits sustained listing walks — retry a failed page
+    // after cooling instead of aborting the whole run (V20: two runs stalled
+    // at pages 30 and 66 on single transient failures).
+    let slugs = await listNiDecisionsPage(page)
+    for (let attempt = 1; slugs === null && attempt <= 3; attempt++) {
+      console.warn(`[seed] page ${page}: fetch failed — cooling 60s (retry ${attempt}/3)`)
+      await new Promise(r => setTimeout(r, 60_000))
+      slugs = await listNiDecisionsPage(page)
+    }
     if (slugs === null) {
-      console.warn(`[seed] page ${page}: fetch failed — stopping (checkpoint saved, rerun to resume)`)
+      console.warn(`[seed] page ${page}: still failing after retries — stopping (checkpoint saved, rerun to resume)`)
       break
     }
     if (slugs.length === 0) {

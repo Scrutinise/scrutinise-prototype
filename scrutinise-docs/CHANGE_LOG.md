@@ -65,6 +65,16 @@ TOTAL block now prints "% is of the ENUMERATED universe" + a maintained list of 
 
 **Deferred to next session:** retained-eu ✓ at drain; ukpga regnal drain → `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓; regional ✓ at enum drain; committees/tax-tribunals/EN-EM ✓ at drain; Hansard v12 parser (V21); HUDOC revival (V21); quango scoping (V21).
 
+### §8 Post-push execution (same session, evening)
+
+- **Canaries PASSED from Railway:** committees-api 73 sections compiled (+2 markers) — **the API host is CF-free from Railway IPs; the 9-month committees blocker is dead.** tax-tribunals 22 compiled + 3 id-gap markers; ni-judgments 29 compiled.
+- **Seeded:** tax-tribunals 13,037 ✓-pending · lawcom 240 · nao-reports 2,755 · explanatory-notes 560 + explanatory-memoranda 10,864 (from held docIds) · tna-enum 1,246 rows (733 ukpga + 513 regional) + 3 failed-act requeues · committees ~59k so far (see below) · ni-judgments ~1.3k so far.
+- **committees-portal breaker CLEARED; 2,538 portal/document rows retired** ("retired V20 — replaced by committees-api rows").
+- **NEW FINDING — si-2010plus was never completed:** only **5,899 distinct uksi instruments** behind its 63k sections — the V12-noted "needs reseeding for 2015–2026 gap" was never run and the corpus was never ✓'d. Seeded `enum:uksi:2010..2026` rows (17); si-2010plus est_is_confirmed → false; **re-baseline at enum drain, then re-run `seed-explanatory-queue.ts`** so newly-found SIs get EM rows (it's idempotent).
+- **Seeder lessons (fixed in code):** committees-api and judiciaryni both rate-limit sustained LISTING walks — single transient failures aborted three runs; both seeders now retry pages after 60s cooling (checkpointed either way). A stalled committees run also clobbered the evidence est with a partial universe — targets now update only from fully-known universes (est restored to 142,397). judiciaryni listing links include sidebar facets (`/judiciary/{id}` ×224, `/date/{year}`) on every page incl. 404s — real decision slugs contain no slash; 229 junk canary rows purged.
+- **Licence sweep re-run:** 7,180 pre-push retained-eu rows stamped; all post-push writes carry licence at ingest.
+- Committees + NI seeders were still walking their listings (checkpointed) at session close — rerun `seed-committees-api-queue.ts` / `seed-judiciaryni-queue.ts` to resume if they stopped short (they resume from checkpoint files in scripts/ingest/).
+
 ## SEARCH S0 — SEARCH-READINESS AUDIT (12 Jun 2026)
 
 **Context:** first sprint of the Search Project. Read-only audit of everything search-relevant — what exists in Neon, what the corpus weighs, what FTS/vector indexing costs at scale. Output: `docs/SEARCH_AUDIT.md` (commit `ca38dd3`) — measured numbers only, no recommendations; the architecture decision is the design doc's job, with Charlie.
