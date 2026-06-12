@@ -67,6 +67,19 @@ A corpus denominator (`corpus_targets.est_sections`) is **✓ confirmed** (`est_
 
 ---
 
+## 1d. HONEST DENOMINATOR (V21 doctrine)
+
+**A known source missing from the denominator is a lie of omission — placeholders with honest `~` beat absence.** Every source we know exists gets a `corpus_targets` row the moment we know about it, carrying the best current estimate and its provenance in `notes` (measured > probed > rough order-of-magnitude — say which). Unsized sources get a row with `est_sections = NULL` so they are at least visible in the email.
+
+Denominator membership rules (implemented in `progress-reporter.ts`, V21):
+
+1. **Blocked sources COUNT.** The universe does not shrink because we cannot fetch it yet (scottish-courts, college-of-policing, echr-hudoc).
+2. **Retired sources NEVER count.** Their content is covered by a successor corpus; counting both is double-counting (the retired LDA written-questions rows silently inflated the denominator by 722k next to their pwdata replacements until V21 fixed the filter).
+3. Expect the headline % to DROP when a new source is sized — that is the metric working, not a regression (V21 §3: 91.3% → 88.0%).
+4. Rough placeholders are replaced by measured universes per §1c when probed/unblocked, and ✓-confirmed at drain. Placeholder upsert script: `scripts/ingest/v21-honest-denominator.ts`.
+
+---
+
 ## 2. RAILWAY API
 
 ### Credentials (from `.env`)

@@ -414,8 +414,13 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const newPipelineCompiled = Object.values(corpusCounts).reduce((s, c) => s + c.compiled, 0)
+  // V21 honest denominator: BLOCKED sources count (they exist — being unable
+  // to fetch them does not shrink the universe); RETIRED sources do not (their
+  // content is covered by a successor corpus — counting both is double-counting;
+  // the retired LDA written-questions rows were silently inflating the
+  // denominator by 722k next to their pwdata replacements).
   const newPipelineEstimated = targets
-    .filter(t => !t.blocked && t.est_sections != null)
+    .filter(t => !t.retired && t.est_sections != null)
     .reduce((s, t) => s + (t.est_sections ?? 0), 0)
   const grandTotalCompiled = neonCount + newPipelineCompiled
   const grandTotalEstimated = neonCount + newPipelineEstimated
@@ -483,11 +488,14 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
   parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
   parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
-  // V20 email honesty: the percentage is of the ENUMERATED universe only —
-  // never let the number quietly flatter us. Update this list as probes land.
-  parts.push(`  ⚠ ${overallPct.toFixed(1)}% is of the ENUMERATED universe. Major sources not yet enumerated/ingested:`)
-  parts.push(`    historic Hansard 1803-1918 (~1.1M est) · Scottish courts (blocked) · committees evidence backlog`)
-  parts.push(`    college-of-policing APP · quango universe (V21 scoping) · pre-redesign Law Commission papers · HUDOC (revival pending)`)
+  // V20/V21 email honesty: the percentage is of the KNOWN universe — never let
+  // the number quietly flatter us. V21: every known-but-unenumerated source now
+  // carries a ~ placeholder row in corpus_targets (a known source missing from
+  // the denominator is a lie of omission), so the denominator includes blocked
+  // and not-yet-built sources. Update the residual list below as sizings land.
+  parts.push(`  ⚠ % is of the KNOWN universe incl. ~ placeholders for unenumerated sources (V21 honest-denominator rule).`)
+  parts.push(`    Still UNSIZED (no denominator): financial-corpus · quango external-site content (exempt orgs)`)
+  parts.push(`    · pre-redesign Law Commission papers · Lords Hansard 1919-1999 (bulk archive holds it; pwdata-lords starts 1999)`)
   if (dbSize) {
     const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
     const dbFlag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL'
