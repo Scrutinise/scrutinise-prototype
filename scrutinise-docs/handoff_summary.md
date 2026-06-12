@@ -36,7 +36,7 @@ Read-only audit done; all measured numbers + extrapolation arithmetic in **`docs
 
 **IN FLIGHT / NEXT SESSION:**
 1. **retained-eu** still draining (~93k pending at close) → ✓ re-baseline at drain (playbook §1c).
-1b. **Resume committees + NI seeders if incomplete** (checkpointed; both now retry transient listing failures). **si-2010plus ✓ at enum drain, then re-run `seed-explanatory-queue.ts`** (idempotent — newly-found SIs need EM rows).
+1b. **Committees fully seeded queue-driven** (Publications + Oral complete; WrittenEvidence via `list:` rows from Railway — commit `6e30c54`). **NI seeder resume** from checkpoint (judiciaryni hard-cut the local IP at page 66; 1,279 of ~5,900 seeded — give it the list-row treatment if it keeps failing). **si-2010plus ✓ at enum drain, then re-run `seed-explanatory-queue.ts`** (idempotent — newly-found SIs need EM rows).
 2. **ukpga regnal enum drain** → run `v19-cleanup-ukpga-calendar.ts` (5,840 chrome + 1,057 dead markers) → primary-acts-pre-2000 ✓.
 3. **regional enum drain** → ✓ re-baseline.
 4. New corpora ✓ at drain: committees-reports/evidence, tax-tribunals, lawcom, nao-reports, ni-judgments, explanatory-notes/-memoranda, building-regs (21), planning-policy (64).
