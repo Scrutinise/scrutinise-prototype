@@ -71,7 +71,11 @@ function withTimeout(ms: number): { signal: AbortSignal; clear: () => void } {
   return { signal: controller.signal, clear: () => clearTimeout(timer) }
 }
 
-async function fetchText(url: string): Promise<string | null> {
+// Status-aware fetch: callers that enumerate universes must distinguish a
+// deterministic miss (404/410 — the resource is absent) from a retryable
+// failure (429/503/network — V19's enumeration silently dropped 429'd years
+// because both came back as null).
+async function fetchTextWithStatus(url: string): Promise<{ text: string | null; retryable: boolean }> {
   await throttle.wait()
   const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
   try {
@@ -80,16 +84,20 @@ async function fetchText(url: string): Promise<string | null> {
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
     })
     clear()
-    if (res.status === 404 || res.status === 410) return null
-    if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
-    if (!res.ok) return null
+    if (res.status === 404 || res.status === 410) return { text: null, retryable: false }
+    if (res.status === 429 || res.status === 503) { throttle.backoff(); return { text: null, retryable: true } }
+    if (!res.ok) return { text: null, retryable: true }
     throttle.success()
-    return res.text()
+    return { text: await res.text(), retryable: false }
   } catch (err) {
     clear()
     console.warn(`[tna] fetch error ${url}: ${err}`)
-    return null
+    return { text: null, retryable: true }
   }
+}
+
+async function fetchText(url: string): Promise<string | null> {
+  return (await fetchTextWithStatus(url)).text
 }
 
 async function headRequest(url: string): Promise<boolean> {
@@ -225,44 +233,139 @@ function extractEntries(xml: string, type: string, out: TnaActEntry[], seen: Set
   }
 }
 
-async function fetchAllEntryPages(baseUrl: string, type: string, out: TnaActEntry[], seen: Set<string>): Promise<void> {
-  let url: string | null = baseUrl
-  while (url) {
-    const xml = await fetchText(url)
-    if (!xml) break
-    const before = out.length
-    extractEntries(xml, type, out, seen)
-    const next = /<link rel="next"[^>]*href="([^"]+)"/.exec(xml)
-    if (!next || out.length === before) break
-    url = next[1].replace(/^http:/, 'https:')
+// Enumerate ONE year. Returns null when the year could not be fetched cleanly
+// (429/503/network somewhere in the walk) so the caller can retry it — a 404'd
+// year feed is a deterministic empty year and returns []. Never silently
+// partial: any retryable failure mid-walk poisons the whole year.
+export async function listActEntriesYear(type: string, year: number): Promise<TnaActEntry[] | null> {
+  const out: TnaActEntry[] = []
+  const seen = new Set<string>()
+  const yearUrl = `${TNA_BASE}/${type}/${year}/data.feed`
+  const first = await fetchTextWithStatus(yearUrl)
+  if (!first.text) return first.retryable ? null : []
+
+  const bucketRx = /href="(https?:\/\/www\.legislation\.gov\.uk\/[^"]+\/\d+-\d+\/data\.feed)"/g
+  const bucketUrls: string[] = []
+  let bm: RegExpExecArray | null
+  while ((bm = bucketRx.exec(first.text)) !== null) bucketUrls.push(bm[1])
+
+  const startUrls = bucketUrls.length > 0 ? bucketUrls : [yearUrl]
+  for (const startUrl of startUrls) {
+    let url: string | null = startUrl
+    let xml = startUrl === yearUrl ? first.text : null
+    while (url) {
+      if (xml === null) {
+        const page = await fetchTextWithStatus(url)
+        if (!page.text) {
+          if (page.retryable) return null
+          break // deterministic miss on a continuation page — accept what we have
+        }
+        xml = page.text
+      }
+      const before = out.length
+      extractEntries(xml, type, out, seen)
+      const next = /<link rel="next"[^>]*href="([^"]+)"/.exec(xml)
+      if (!next || out.length === before) break
+      url = next[1].replace(/^http:/, 'https:')
+      xml = null
+    }
   }
+  return out
+}
+
+// Checkpointed year-range enumeration (V20). Playbook §8 rules baked in:
+// progress logged per year, checkpoint written per year so reruns resume,
+// throttled years retried across passes, and an EXPLICIT throw if any year
+// stays unfetchable — never a silently partial universe.
+export async function enumerateActEntriesCheckpointed(
+  type: string, yearMin: number, yearMax: number, checkpointPath: string, maxPasses = 5
+): Promise<TnaActEntry[]> {
+  const fs = await import('fs')
+  const done: Record<string, TnaActEntry[]> = fs.existsSync(checkpointPath)
+    ? JSON.parse(fs.readFileSync(checkpointPath, 'utf8'))
+    : {}
+
+  let pending: number[] = []
+  for (let y = yearMin; y <= yearMax; y++) if (!done[`${type}/${y}`]) pending.push(y)
+  console.log(`[tna-enum] ${type} ${yearMin}-${yearMax}: ${Object.keys(done).filter(k => k.startsWith(`${type}/`)).length} years from checkpoint, ${pending.length} to fetch`)
+
+  for (let pass = 1; pass <= maxPasses && pending.length > 0; pass++) {
+    const failed: number[] = []
+    for (const year of pending) {
+      const entries = await listActEntriesYear(type, year)
+      if (entries === null) {
+        console.warn(`[tna-enum] ${type}/${year}: throttled — will retry (pass ${pass})`)
+        failed.push(year)
+        continue
+      }
+      done[`${type}/${year}`] = entries
+      fs.writeFileSync(checkpointPath, JSON.stringify(done))
+      console.log(`[tna-enum] ${type}/${year}: ${entries.length}`)
+    }
+    pending = failed
+    if (pending.length > 0 && pass < maxPasses) {
+      console.warn(`[tna-enum] pass ${pass} left ${pending.length} throttled years — cooling 120s`)
+      await new Promise(r => setTimeout(r, 120_000))
+    }
+  }
+
+  if (pending.length > 0) {
+    throw new Error(`[tna-enum] ${type}: ${pending.length} years still unfetchable after ${maxPasses} passes (${pending.slice(0, 10).join(', ')}…) — universe INCOMPLETE, rerun when TNA cools`)
+  }
+
+  const out: TnaActEntry[] = []
+  const seen = new Set<string>()
+  for (let y = yearMin; y <= yearMax; y++) {
+    for (const e of done[`${type}/${y}`] ?? []) {
+      if (seen.has(e.docId)) continue
+      seen.add(e.docId)
+      out.push(e)
+    }
+  }
+  console.log(`[tna] enumerate type=${type} years=${yearMin}-${yearMax}: ${out.length} acts`)
+  return out
+}
+
+// ── Explanatory Notes / Memoranda (V20 probe 3) ──────────────────────────────
+// EN (Acts, 1999+): /{actId}/pdfs/{type}en_{year}{nnnn}_en.pdf, HTML at /{actId}/notes
+// EM (SIs, ~2002+): /{siId}/pdfs/{type}em_{year}{nnnn}_en.pdf, HTML at /{siId}/memorandum/contents
+// Routes verified 12 Jun 2026 (ukpga/2020/1 EN 1.6MB pdf; uksi/2020/100 EM 47KB pdf).
+// Uses the SAME adaptive throttle as everything else in this file — one
+// politeness budget per host (playbook §1b).
+
+export interface ExplanatoryDoc {
+  pdf?: Buffer
+  html?: string
+  absent: boolean
+}
+
+export async function fetchExplanatoryDocument(kind: 'en' | 'em', legId: string): Promise<ExplanatoryDoc | null> {
+  const m = /^([a-z]+)\/([0-9]{4})\/([0-9]+)$/.exec(legId)
+  if (!m) return { absent: true }
+  const [, type, year, num] = m
+  const pdfUrl = `${TNA_BASE}/${legId}/pdfs/${type}${kind}_${year}${num.padStart(4, '0')}_en.pdf`
+  const pdf = await fetchBinary(pdfUrl)
+  if (pdf && pdf.slice(0, 5).toString('ascii') === '%PDF-') return { pdf, absent: false }
+
+  const htmlUrl = kind === 'en' ? `${TNA_BASE}/${legId}/notes` : `${TNA_BASE}/${legId}/memorandum/contents`
+  const html = await fetchText(htmlUrl)
+  if (html) return { html, absent: false }
+  return { absent: true }
 }
 
 export async function listActEntries(type: string, yearMin: number, yearMax: number): Promise<TnaActEntry[]> {
   const out: TnaActEntry[] = []
   const seen = new Set<string>()
-  let yearsWithResults = 0
-
   for (let year = yearMin; year <= yearMax; year++) {
-    const yearUrl = `${TNA_BASE}/${type}/${year}/data.feed`
-    const yearXml = await fetchText(yearUrl)
-    if (!yearXml) continue
-
-    const before = out.length
-    const bucketRx = /href="(https?:\/\/www\.legislation\.gov\.uk\/[^"]+\/\d+-\d+\/data\.feed)"/g
-    const bucketUrls: string[] = []
-    let bm: RegExpExecArray | null
-    while ((bm = bucketRx.exec(yearXml)) !== null) bucketUrls.push(bm[1])
-
-    if (bucketUrls.length > 0) {
-      for (const bucketUrl of bucketUrls) await fetchAllEntryPages(bucketUrl, type, out, seen)
-    } else {
-      await fetchAllEntryPages(yearUrl, type, out, seen)
+    const entries = await listActEntriesYear(type, year)
+    if (entries === null) { console.warn(`[tna-enum] ${type}/${year}: SKIPPED (throttled) — universe may be partial; prefer enumerateActEntriesCheckpointed`); continue }
+    for (const e of entries) {
+      if (seen.has(e.docId)) continue
+      seen.add(e.docId)
+      out.push(e)
     }
-    if (out.length > before) yearsWithResults++
+    console.log(`[tna-enum] ${type}/${year}: +${entries.length} (total ${out.length})`)
   }
-
-  console.log(`[tna] listActEntries type=${type} years=${yearMin}-${yearMax}: ${out.length} acts across ${yearsWithResults} years`)
   return out
 }
 

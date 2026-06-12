@@ -41,6 +41,11 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'twfy-api',          intervalMs: 1500, maxConcurrentWorkers: 1,  note: 'theyworkforyou.com API — strict 1-worker cap; daily quota exhausted on free tier with >1 worker (V7 6 Jun 2026)' },
   { sourceKey: 'committees-portal',  intervalMs: 500,  maxConcurrentWorkers: 3,  note: 'committees.parliament.uk portal — 500ms floor; Parliament shared infra same as blocked API (V15 9 Jun 2026)' },
   { sourceKey: 'committees-document', intervalMs: 300, maxConcurrentWorkers: 5,  note: 'publications.parliament.uk — per-document fetch; accessible from Railway IPs (V16); separate from committees-portal listing which is IP-blocked' },
+  { sourceKey: 'committees-api',      intervalMs: 1000, maxConcurrentWorkers: 3, note: 'committees-api.parliament.uk JSON API (V20) — 2 fetches/row (detail + document), 1000ms/3 ≈ 2 rps at the host; Railway egress unverified until post-push canary' },
+  { sourceKey: 'tax-tribunals',       intervalMs: 1000, maxConcurrentWorkers: 2, note: 'financeandtax.decisions.tribunals.gov.uk (V20) — legacy HMCTS WebForms host; 2 fetches/row (view + judgment file), keep gentle at ~2 rps' },
+  { sourceKey: 'lawcom',              intervalMs: 500,  maxConcurrentWorkers: 2, note: 'lawcom.gov.uk WP REST API + MoJ CDN PDFs (V20) — small universe (240 pubs), OGL v3.0' },
+  { sourceKey: 'judiciaryni',         intervalMs: 1000, maxConcurrentWorkers: 2, note: 'judiciaryni.uk Drupal (V20) — 2 fetches/row (page + PDF), ~5,900 decisions; official NI record FCL lacks' },
+  { sourceKey: 'nao',                 intervalMs: 500,  maxConcurrentWorkers: 2, note: 'nao.org.uk WP REST API + uploads PDFs (V20) — 2,755 reports; licence nao-nc (non-commercial + attribution)' },
 ]
 
 async function main(): Promise<void> {

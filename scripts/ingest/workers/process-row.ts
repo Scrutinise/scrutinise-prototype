@@ -76,6 +76,11 @@ export async function processRow(row: QueueRow): Promise<void> {
     case 'nilawcom':          return processLawCommission(row)
     case 'committees-portal':  return processCommittees(row)
     case 'committees-document': return processCommitteeDocument(row)
+    case 'committees-api':      return processCommitteesApi(row)
+    case 'tax-tribunals':       return processTaxTribunals(row)
+    case 'lawcom':              return processLawcom(row)
+    case 'judiciaryni':         return processJudiciaryNi(row)
+    case 'nao':                 return processNao(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -85,6 +90,12 @@ export async function processRow(row: QueueRow): Promise<void> {
 // ── TNA Legislation ───────────────────────────────────────────────────────────
 
 async function processTnaLegislation(row: QueueRow): Promise<void> {
+  // V20: EN/EM rows ride the tna-legislation sourceType (single host budget,
+  // playbook §1b) and are distinguished by docId prefix `en:` / `em:`.
+  if (/^e[nm]:/.test(row.docId)) return processTnaExplanatory(row)
+  // V20: queue-driven year enumeration (enum:{type}:{year}) — runs from Railway
+  // IPs because TNA penalty-boxes the local IP for sustained enumeration.
+  if (row.docId.startsWith('enum:')) return processTnaEnum(row)
   const actId = row.docId
 
   // Format discovery: check what TNA actually holds before attempting fetches
@@ -798,6 +809,483 @@ async function processGovukContent(row: QueueRow): Promise<void> {
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
   await markDone(row.id, metas[0].format)
+}
+
+// ── TNA queue-driven year enumeration (V20) ───────────────────────────────────
+// One row per (type, year). Enumerates the year feed via listActEntriesYear and
+// seeds pending act rows for anything corpus_sections doesn't already hold —
+// the V19 regnal-seeder logic moved into the queue so it runs on Railway IPs.
+// A throttled year marks FAILED (reset-and-retry is manual/post-cooloff; never
+// silently partial). Inserted act rows interleave behind this row in the queue.
+
+async function processTnaEnum(row: QueueRow): Promise<void> {
+  const { listActEntriesYear } = await import('../sources/tna-legislation')
+  const { bulkInsertQueueRows } = await import('../shared/queue-client')
+  const { getNeonPool } = await import('../shared/neon-pool')
+  const m = /^enum:([a-z]+):([0-9]{4})$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad enum docId: ${row.docId}`); return }
+  const [, type, yearStr] = m
+
+  const entries = await listActEntriesYear(type, Number(yearStr))
+  if (entries === null) {
+    await markFailed(row.id, `enum ${type}/${yearStr}: throttled — reset after cooloff`)
+    return
+  }
+  if (entries.length === 0) { await markDone(row.id); return }
+
+  const pool = getNeonPool()
+  const docIds = entries.map(e => e.docId)
+  const calendarIds = entries.map(e => e.calendarId).filter((c): c is string => !!c)
+
+  const anyRes = await pool.query<{ d: string }>(
+    `SELECT DISTINCT split_part(id, ':', 2) AS d FROM corpus_sections
+     WHERE corpus = $1 AND split_part(id, ':', 2) = ANY($2::text[])`,
+    [row.corpus, docIds])
+  const hasAnyRow = new Set(anyRes.rows.map(r => r.d))
+  // A calendar alias with REAL (non-boilerplate-html) compiled content means the
+  // act is already held under its calendar id (V19 §2.1).
+  const realRes = calendarIds.length > 0 ? await pool.query<{ d: string }>(
+    `SELECT DISTINCT split_part(id, ':', 2) AS d FROM corpus_sections
+     WHERE corpus = $1 AND status = 'compiled' AND format IS DISTINCT FROM 'html'
+       AND split_part(id, ':', 2) = ANY($2::text[])`,
+    [row.corpus, calendarIds]) : { rows: [] as Array<{ d: string }> }
+  const hasRealContent = new Set(realRes.rows.map(r => r.d))
+
+  const newRows = entries
+    .filter(e => !hasAnyRow.has(e.docId) && !(e.calendarId && hasRealContent.has(e.calendarId)))
+    .map(e => ({
+      id: `${row.corpus}:${e.docId}`,
+      corpus: row.corpus,
+      docId: e.docId,
+      sourceType: 'tna-legislation',
+      priority: 2,
+    }))
+  if (newRows.length > 0) {
+    const { affected } = await bulkInsertQueueRows(newRows)
+    console.log(`[enum] ${type}/${yearStr}: ${entries.length} entries, ${affected} new act rows`)
+  }
+  await markDone(row.id)
+}
+
+// ── TNA Explanatory Notes / Memoranda (V20 probe 3 — the "intention layer") ───
+
+async function processTnaExplanatory(row: QueueRow): Promise<void> {
+  const { fetchExplanatoryDocument } = await import('../sources/tna-legislation')
+  const m = /^(en|em):(.+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad explanatory docId: ${row.docId}`); return }
+  const kind = m[1] as 'en' | 'em'
+  const legId = m[2]
+  const pageUrl = kind === 'en'
+    ? `https://www.legislation.gov.uk/${legId}/notes`
+    : `https://www.legislation.gov.uk/${legId}/memorandum/contents`
+
+  const doc = await fetchExplanatoryDocument(kind, legId)
+  if (!doc) { await markFailed(row.id, `explanatory ${row.docId}: fetch failed`); return }
+
+  if (doc.absent) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: kind === 'en'
+        ? 'No Explanatory Notes published for this Act on legislation.gov.uk.'
+        : 'No Explanatory Memorandum published for this instrument on legislation.gov.uk.',
+      parentDocId: legId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  let text: string | null = null
+  let format: SectionMeta['format'] = 'pdf'
+  if (doc.pdf) {
+    text = await pdfToText(doc.pdf, row.docId)
+    format = 'pdf'
+  } else if (doc.html) {
+    text = rawToText(doc.html)
+    format = 'html'
+  }
+  if (!text || text.length < 200) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'EN/EM document exists but no text could be extracted.',
+      parentDocId: legId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const cKey = compiledKey(row.corpus, row.docId, '1')
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, row.docId, '1'),
+    corpus: row.corpus,
+    sourceUrl: pageUrl,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format,
+    sectionTitle: `${kind === 'en' ? 'Explanatory Notes' : 'Explanatory Memorandum'}: ${legId}`,
+    parentDocId: legId,
+  })
+  await markDone(row.id, format)
+}
+
+// ── Committees API (V20 — replaces the CF-blocked portal scraper) ─────────────
+
+async function processCommitteesApi(row: QueueRow): Promise<void> {
+  const { getCommitteesApiItem, fetchCommitteesApiDocument } = await import('../sources/committees-api')
+  const m = /^(publication|oralevidence|writtenevidence):([0-9]+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad committees-api docId: ${row.docId}`); return }
+  const kind = m[1] === 'publication' ? 'Publications' as const
+    : m[1] === 'oralevidence' ? 'OralEvidence' as const : 'WrittenEvidence' as const
+  const itemId = Number(m[2])
+  const webPath = m[1] === 'publication' ? 'publications' : m[1]
+  const pageUrl = `https://committees.parliament.uk/${webPath}/${itemId}/`
+
+  const item = await getCommitteesApiItem(kind, itemId)
+  if (!item) { await markFailed(row.id, `committees-api ${kind}/${itemId}: detail fetch failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+  }
+
+  const docs = kind === 'Publications' ? (item.documents ?? []) : (item.document ? [item.document] : [])
+  if (docs.length === 0) return marker('committees-api item has no documents')
+
+  const title = kind === 'Publications'
+    ? [item.type?.name, item.description].filter(Boolean).join(': ')
+    : [item.committeeBusiness?.title, item.internalReference].filter(Boolean).join(' — ')
+  const itemDate = (item.publicationStartDate ?? item.publicationDate ?? '').slice(0, 10) || undefined
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const doc of docs) {
+    const fetched = await fetchCommitteesApiDocument(kind, itemId, doc.documentId, doc.files ?? [])
+    if (!fetched) continue
+    let text: string | null = null
+    let format: SectionMeta['format'] = 'html'
+    const name = fetched.fileName.toLowerCase()
+    if (fetched.servedFormat === 'Html' || name.endsWith('.html') || name.endsWith('.htm')) {
+      text = rawToText(fetched.buffer.toString('utf8'))
+      format = 'html'
+    } else if (fetched.servedFormat === 'Pdf' || name.endsWith('.pdf')) {
+      text = await pdfToText(fetched.buffer, fetched.fileName)
+      format = 'pdf'
+    }
+    // .doc/.docx originals with no Html/Pdf conversion: no parser — falls through
+    if (!text || text.length < 100) continue
+    const ref = String(doc.documentId)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format,
+      sectionTitle: title || undefined,
+      itemDate,
+      parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker('no extractable document text (original format unparseable, no Html/Pdf conversion)')
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m2, j) => r2Put(m2.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m2 => m2.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── Historic tax tribunals (V20 probe 2 — financeandtax archive) ──────────────
+
+async function processTaxTribunals(row: QueueRow): Promise<void> {
+  const { fetchTaxTribunalDecision, fetchTaxTribunalFile, docToText } = await import('../sources/tax-tribunals')
+  const numId = Number(row.docId)
+  if (!Number.isInteger(numId) || numId < 1) { await markFailed(row.id, `bad tax-tribunals docId: ${row.docId}`); return }
+  const pageUrl = `https://financeandtax.decisions.tribunals.gov.uk/Aspx/view.aspx?id=${numId}`
+
+  const decision = await fetchTaxTribunalDecision(numId)
+  if (!decision) { await markFailed(row.id, `tax-tribunals id=${numId}: view fetch failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+  }
+
+  if (decision.empty) return marker('gap in tax-tribunals id space — no decision at this id')
+  if (decision.fileUrls.length === 0) return marker('decision metadata exists but no judgment file linked')
+
+  const title = [decision.decisionNumber, [decision.appellant, decision.respondent].filter(Boolean).join(' v ')]
+    .filter(Boolean).join(': ')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  for (const url of decision.fileUrls) {
+    const buf = await fetchTaxTribunalFile(url)
+    if (!buf) continue
+    const lower = url.toLowerCase()
+    let text: string | null = null
+    let format: SectionMeta['format'] = 'pdf'
+    if (lower.endsWith('.pdf')) {
+      text = await pdfToText(buf, url)
+      format = 'pdf'
+    } else if (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.rtf')) {
+      text = await docToText(buf)
+      format = 'html' // closest existing format bucket for extracted word-processor text
+    } else if (lower.endsWith('.htm') || lower.endsWith('.html')) {
+      text = rawToText(buf.toString('utf8'))
+      format = 'html'
+    }
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format,
+      sectionTitle: title || undefined,
+      speaker: decision.chairmen ?? undefined,
+      itemDate: decision.decisionDate ?? undefined,
+      parentDocId: row.docId,
+      notes: [decision.category, decision.subcategory].filter(Boolean).join(' / ') || undefined,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker('judgment file(s) present but no extractable text')
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m2, j) => r2Put(m2.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m2 => m2.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── Law Commission England & Wales (V20 probe 4) ──────────────────────────────
+
+async function processLawcom(row: QueueRow): Promise<void> {
+  const { fetchLawcomDocumentUrls, fetchLawcomFile } = await import('../sources/lawcom')
+  // docId: publication slug; queue row notes carry "{wpId}|{date}|{title}" from the seeder
+  const pageUrl = `https://lawcom.gov.uk/publication/${row.docId}/`
+
+  const docUrls = await fetchLawcomDocumentUrls(pageUrl)
+  if (docUrls === null) { await markFailed(row.id, `lawcom ${row.docId}: page fetch failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+  }
+
+  if (docUrls.length === 0) return marker('lawcom publication page has no PDF/doc links')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  const MAX_DOCS = 20
+  for (const url of docUrls.slice(0, MAX_DOCS)) {
+    const buf = await fetchLawcomFile(url)
+    if (!buf) continue
+    let text: string | null = null
+    let format: SectionMeta['format'] = 'pdf'
+    if (/\.pdf(\?|$)/i.test(url)) {
+      text = await pdfToText(buf, url)
+      format = 'pdf'
+    } else {
+      const { docToText } = await import('../sources/tax-tribunals')
+      text = await docToText(buf)
+      format = 'html'
+    }
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: url,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format,
+      sectionTitle: row.docId.replace(/-/g, ' '),
+      parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker('lawcom documents present but no extractable text')
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m2, j) => r2Put(m2.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m2 => m2.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── Judiciary NI decisions (V20 probe 5) ──────────────────────────────────────
+
+async function processJudiciaryNi(row: QueueRow): Promise<void> {
+  const { fetchNiDecision, fetchNiFile } = await import('../sources/judiciaryni')
+  const { docToText } = await import('../sources/tax-tribunals')
+  const slug = row.docId
+  const pageUrl = `https://www.judiciaryni.uk/judicial-decisions/${slug}`
+
+  const decision = await fetchNiDecision(slug)
+  if (!decision) { await markFailed(row.id, `judiciaryni ${slug}: page fetch failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: slug,
+    })
+    await markDone(row.id)
+  }
+
+  if (decision.fileUrls.length === 0) return marker('NI decision page has no judgment file links')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  for (const url of decision.fileUrls.slice(0, 10)) {
+    const buf = await fetchNiFile(url)
+    if (!buf) continue
+    let text: string | null = null
+    let format: SectionMeta['format'] = 'pdf'
+    if (/\.pdf$/i.test(url)) {
+      text = await pdfToText(buf, url)
+      format = 'pdf'
+    } else {
+      text = await docToText(buf)
+      format = 'html'
+    }
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, slug, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, slug, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format,
+      sectionTitle: decision.title ?? slug,
+      itemDate: decision.date ?? undefined,
+      parentDocId: slug,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker('NI judgment file(s) present but no extractable text')
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m2, j) => r2Put(m2.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, slug, metas.map(m2 => m2.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────
+
+async function processNao(row: QueueRow): Promise<void> {
+  const { fetchNaoReportPdfUrls, fetchNaoFile } = await import('../sources/nao')
+  const slug = row.docId
+  const pageUrl = `https://www.nao.org.uk/reports/${slug}/`
+
+  const pdfUrls = await fetchNaoReportPdfUrls(pageUrl)
+  if (pdfUrls === null) { await markFailed(row.id, `nao ${slug}: page fetch failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      parentDocId: slug,
+    })
+    await markDone(row.id)
+  }
+
+  if (pdfUrls.length === 0) return marker('NAO report page has no PDF links in main content')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  for (const url of pdfUrls.slice(0, 10)) {
+    const buf = await fetchNaoFile(url)
+    if (!buf) continue
+    const text = await pdfToText(buf, url)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, slug, ref),
+      corpus: row.corpus,
+      sourceUrl: url,
+      r2Key: compiledKey(row.corpus, slug, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format: 'pdf',
+      sectionTitle: slug.replace(/-/g, ' '),
+      parentDocId: slug,
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) return marker('NAO PDFs present but no extractable text')
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m2, j) => r2Put(m2.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, slug, metas.map(m2 => m2.id))
+  await markDone(row.id, 'pdf')
 }
 
 // ── Law Commissions (Scottish + NI) ──────────────────────────────────────────
