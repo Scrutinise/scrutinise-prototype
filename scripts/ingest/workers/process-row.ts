@@ -940,6 +940,11 @@ async function processTnaExplanatory(row: QueueRow): Promise<void> {
 // ── Committees API (V20 — replaces the CF-blocked portal scraper) ─────────────
 
 async function processCommitteesApi(row: QueueRow): Promise<void> {
+  // V20: queue-driven listing (list:{kind}:{skip}) — the API rate-limits deep
+  // listing walks from a single local IP (WrittenEvidence cut off at ~2,700 of
+  // 126,589 across three runs); Railway claim loops walk it within the normal
+  // source budget instead.
+  if (row.docId.startsWith('list:')) return processCommitteesApiList(row)
   const { getCommitteesApiItem, fetchCommitteesApiDocument } = await import('../sources/committees-api')
   const m = /^(publication|oralevidence|writtenevidence):([0-9]+)$/.exec(row.docId)
   if (!m) { await markFailed(row.id, `bad committees-api docId: ${row.docId}`); return }
@@ -1014,6 +1019,32 @@ async function processCommitteesApi(row: QueueRow): Promise<void> {
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, row.docId, metas.map(m2 => m2.id))
   await markDone(row.id, metas[0].format)
+}
+
+async function processCommitteesApiList(row: QueueRow): Promise<void> {
+  const { listCommitteesApiPage } = await import('../sources/committees-api')
+  const { bulkInsertQueueRows } = await import('../shared/queue-client')
+  const m = /^list:(publication|oralevidence|writtenevidence):([0-9]+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad committees-api list docId: ${row.docId}`); return }
+  const key = m[1]
+  const kind = key === 'publication' ? 'Publications' as const
+    : key === 'oralevidence' ? 'OralEvidence' as const : 'WrittenEvidence' as const
+  const skip = Number(m[2])
+  const corpus = key === 'publication' ? 'committees-reports' : 'committees-evidence'
+
+  const page = await listCommitteesApiPage(kind, skip, 100)
+  if (!page) { await markFailed(row.id, `committees-api list ${kind} skip=${skip}: fetch failed`); return }
+  if (page.items.length > 0) {
+    const rows = page.items.map(it => ({
+      id: `${corpus}:${key}:${it.id}`,
+      corpus,
+      docId: `${key}:${it.id}`,
+      sourceType: 'committees-api',
+      priority: 2,
+    }))
+    await bulkInsertQueueRows(rows)
+  }
+  await markDone(row.id)
 }
 
 // ── Historic tax tribunals (V20 probe 2 — financeandtax archive) ──────────────
