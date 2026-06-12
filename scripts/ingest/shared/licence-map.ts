@@ -24,10 +24,11 @@
  *    EXPLICITLY EXCLUDED from the OJL — requires TNA's separate computational
  *    analysis licence (caselawlicence@nationalarchives.gov.uk). Flagged to
  *    Charlie in V20 CHANGE_LOG.
- *  - opl-3.0 (parliamentary material): NOT re-verified live — every
- *    parliament.uk licence page was CF-blocked from both local and fetcher IPs
- *    on 12 Jun 2026. Mapping is the long-standing published licence for
- *    Hansard/parliamentary data (TWFY republishes under it).
+ *  - opl-3.0 (parliamentary material): VERIFIED — the OPL page
+ *    (parliament.uk/site-information/copyright-parliament/open-parliament-
+ *    licence/) served its full terms on 12 Jun 2026 (V21 evening run; the
+ *    V20 morning CF-block was transient). Covers Hansard incl. the digitised
+ *    1803–2004 bulk archive (historic-hansard).
  *  - eu-2011-833 (eur-lex): EUR-Lex legal notice is JS-rendered; instrument
  *    confirmed via legislation.gov.uk/contributors wording.
  *  - fca-restricted (fca-handbook): VERIFIED — fca.org.uk/legal: reproduction/
@@ -84,6 +85,7 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
     attributionBoilerplate: 'Contains information licensed under the Open Justice - Licence v2.0.',
   },
   // Parliamentary material — Open Parliament Licence v3.0
+  'historic-hansard': OPL3, // bulk archive 1803–1918 (V21); OPL verified live 12 Jun 2026
   'pwdata-debates': OPL3,
   'pwdata-lords': OPL3,
   'pwdata-wrans': OPL3,

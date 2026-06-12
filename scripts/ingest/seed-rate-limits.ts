@@ -46,6 +46,7 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'lawcom',              intervalMs: 500,  maxConcurrentWorkers: 2, note: 'lawcom.gov.uk WP REST API + MoJ CDN PDFs (V20) — small universe (240 pubs), OGL v3.0' },
   { sourceKey: 'judiciaryni',         intervalMs: 1000, maxConcurrentWorkers: 2, note: 'judiciaryni.uk Drupal (V20) — 2 fetches/row (page + PDF), ~5,900 decisions; official NI record FCL lacks' },
   { sourceKey: 'nao',                 intervalMs: 500,  maxConcurrentWorkers: 2, note: 'nao.org.uk WP REST API + uploads PDFs (V20) — 2,755 reports; licence nao-nc (non-commercial + attribution)' },
+  { sourceKey: 'historic-hansard',    intervalMs: 5000, maxConcurrentWorkers: 2, note: 'hansard-archive.parliament.uk bulk volume zips (V21) — 1 fetch/row (~1-2MB zip) then minutes of local parse + R2 puts; 5000ms/2 is half of a reasonable 2500ms/4 per the politeness doctrine (Parliament static archive, CF-fronted)' },
 ]
 
 async function main(): Promise<void> {

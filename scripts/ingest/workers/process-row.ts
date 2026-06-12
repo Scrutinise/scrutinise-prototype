@@ -42,6 +42,7 @@ import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRe
 import { fetchLdaPage, MAX_524_RETRIES } from '../sources/lda-parliament'
 import { listCommitteePublications, fetchPublicationHtml } from '../sources/committees-portal'
 import { fetchPwdataFile, parsePwdataItems, PWDATA_CORPUS_CONFIG } from '../sources/twfy-pwdata'
+import { fetchVolumeXml, parseHansardV12Items, volumeZipUrl } from '../sources/historic-hansard'
 import { fetchDocText as fetchOecdText, listOecdOpenDocs } from '../sources/oecd-free'
 import {
   listHmrcManuals, listNaoReports, listHoCLReports,
@@ -66,6 +67,7 @@ export async function processRow(row: QueueRow): Promise<void> {
     case 'eurlex':          return processEurLex(row)
     case 'lda-parliament':  return processLda(row)
     case 'twfy-pwdata':     return processPwdata(row)
+    case 'historic-hansard': return processHistoricHansard(row)
     case 'govuk-content':   return processGovukContent(row)
     case 'hmrc':            return processHmrc(row)
     case 'treaties':          return processTreaties(row)
@@ -726,6 +728,80 @@ async function processPwdata(row: QueueRow): Promise<void> {
     return
   }
   await processPwdataFile(row.corpus, row.docId)
+  await markDone(row.id, 'xml')
+}
+
+// ── Historic Hansard 1803–1918 (V21) ─────────────────────────────────────────
+// docId = volume zip stem (e.g. "S1V0001P0", "S1V0009P0_a"). One row per zip;
+// per-speech items mirror the pwdata granularity model (heading/speaker/date/
+// parentDocId, items ≥ 1919-02-04 dropped — pwdata-debates takes over there).
+
+export async function processHistoricHansardVolume(corpus: string, docId: string): Promise<number> {
+  const zipUrl = volumeZipUrl(docId) ?? undefined
+  const xml = await fetchVolumeXml(docId)
+
+  if (!xml) {
+    // Soft-404 — listed at seed time but absent now. Marker keeps the docId
+    // remembered; static archive, so never retried.
+    await upsertSection({
+      id: sectionId(corpus, docId, '1'),
+      corpus,
+      sourceUrl: zipUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'volume zip absent from hansard-archive (soft-404 HTML response)',
+      parentDocId: docId,
+    })
+    return 0
+  }
+
+  const items = parseHansardV12Items(xml)
+  if (items.length === 0) {
+    await upsertSection({
+      id: sectionId(corpus, docId, '1'),
+      corpus,
+      sourceUrl: zipUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'volume contains no in-scope sitting items (chrome-only or post-cutoff)',
+      parentDocId: docId,
+    })
+    return 0
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const item of items) {
+    const ref = String(item.seq)
+    const headingChain = [item.heading, item.minorHeading].filter(Boolean).join(' — ')
+    const houseLabel = item.house === 'commons' ? 'Commons' : 'Lords'
+    metas.push({
+      id: sectionId(corpus, docId, ref),
+      corpus,
+      sourceUrl: zipUrl,
+      r2Key: compiledKey(corpus, docId, ref),
+      wordCount: countWords(item.text),
+      status: 'compiled',
+      sectionTitle: headingChain ? `${houseLabel}: ${headingChain}` : houseLabel,
+      speaker: item.speaker ?? undefined,
+      itemDate: item.itemDate ?? undefined,
+      parentDocId: docId,
+    })
+    texts.push(item.text)
+  }
+
+  // R2 first, then DB — a section row must never point at a missing R2 key.
+  const R2_BATCH = 8
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  const written = await bulkUpsertSections(metas)
+  await deleteStaleSections(corpus, docId, metas.map(m => m.id))
+  return written
+}
+
+async function processHistoricHansard(row: QueueRow): Promise<void> {
+  await processHistoricHansardVolume(row.corpus, row.docId)
   await markDone(row.id, 'xml')
 }
 
