@@ -1,8 +1,27 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 11 Jun 2026 — V19 P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 12 Jun 2026 — SEARCH S0 readiness audit.*
 
 ---
+
+## SEARCH S0 — SEARCH-READINESS AUDIT (12 Jun 2026)
+
+**Context:** first sprint of the Search Project. Read-only audit of everything search-relevant — what exists in Neon, what the corpus weighs, what FTS/vector indexing costs at scale. Output: `docs/SEARCH_AUDIT.md` (commit `ca38dd3`) — measured numbers only, no recommendations; the architecture decision is the design doc's job, with Charlie.
+
+### Key measured facts (full tables + arithmetic in SEARCH_AUDIT.md)
+
+- **§1 schema:** the brief's "legacy sections table" is `LegislationSection` (914,274 — there is no table named `sections`). It has live FTS (100% ftsVector, 153 MB GIN, `legislation_english` trigger) and an **unpopulated `vector(768)` embedding column (0 rows)**. `corpus_sections` (9,846,300 → 9,866,543 during the audit; ingest live) has **no functioning FTS**: trigger no-op'd by V3's compiledText drop, 6.8% relic vectors under a 266 MB GIN no live query uses. pgvector 0.8.0 INSTALLED (halfvec available); pg_trgm / pg_search BM25 0.15.26 / rum / unaccent available-not-installed.
+- **§2 storage:** Neon 9,485 MB of the 20 GB budget → **~10.5 GB headroom**. corpus_sections 7,480 MB (incl. 1,639 MB indexes). PG 17.10. Compute CU/autoscale range: needs console (no API key locally).
+- **§3 corpus weight (507-object stratified R2 HEAD sample):** **~17.4 GB total compiled text** (cross-check: 2.67B words × measured 6.1 B/word = 16.3 GB, agrees within 7%). pwdata-debates 6.22 GB + tna-caselaw 5.63 GB (avg 75 KB/section) dominate; ~18 GB at retained-eu/et-decisions drain.
+- **§4 FTS experiment (the core):** built `scratch_fts_sample`, 99,999 rows (50k acts/SIs, 40k pwdata, 10k caselaw), tsvector-only storage from R2 text. Measured: heap+TOAST 327 MB, **GIN 56.1 MB**, pkey 8.1 MB; per-corpus tsvector cost 610 B (acts) → 21.9 KB (caselaw); ratios heap=1.10×Σvec, GIN=0.198×Σvec. **Extrapolation: legislation+caselaw scope (~1.05M rows) ≈ 3.8 GB — fits; full corpus (10.5M) ≈ 15.2–15.8 GB — exceeds headroom by ~5 GB** (pwdata is ~11 GB of it). Latency at 100k = network floor (server-side 0–18 ms warm; RTT 25–26 ms) — floor only, 1M+ sample needed if FTS-in-Neon survives the size math. Backfill: 124 rows/s wall single-process → 5.4–23.5 h full corpus; GIN build 8–32 min.
+- **§5 vector math (paper):** cheapest full-corpus option (384d halfvec + HNSW@1.5×) = 19.0 GiB > headroom; at 1.2M-row scope everything except 1024d float32 fits (2.2–8.6 GiB).
+- **§6 query paths:** no web code reads corpus_sections at all. Three live paths on legacy tables: `/api/search` (Lex grounding, Neon GIN), `/api/ideas/[id]/legislation-search` (**LegislationPanel — live, un-indexed on-the-fly to_tsvector seq-scan on Railway**; its R2 hydration key populated for only 2.7% of rows), `/api/legislation/search` (title ILIKE). LegislationSection is duplicated in full on Railway AND Neon; OperationalSection populated only on Railway (61,315).
+- **tsvector 1 MB hard limit** bites written-answers (avg 1.77 MB/row, 143 day-aggregate rows).
+
+### Hygiene
+
+- Acceptance met: scratch_fts_sample dropped (0 scratch tables, query in §8); production untouched (corpus_sections delta +20,243 = live retained-eu/et-decisions ingest; session issued only SELECTs against production). Scratch scripts ran from `tmp-audit/` (deleted). Single-file commit per Section 12.
+- INGEST_PLAYBOOK unchanged — audit sprint, no ingest doctrine touched.
 
 ## V19 — P1 TO 100% + PARLIAMENTARY RECORD COMPLETION + TAX COMPLETENESS (11 Jun 2026)
 

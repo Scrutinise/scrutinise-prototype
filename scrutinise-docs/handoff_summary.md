@@ -2,7 +2,21 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 11 Jun 2026 — V19 P1-to-100% sprint: build done, most corpora ✓; post-push completion passes in flight. Full narrative in CHANGE_LOG V19; playbook gained §1b/§1c doctrine + seven §8 patterns + §16/§17 source maps.*
+*Last updated: 12 Jun 2026 — Search S0 readiness audit complete (`docs/SEARCH_AUDIT.md`, commit `ca38dd3`); V19 completion passes still in flight below.*
+
+---
+
+## SEARCH PROJECT — S0 AUDIT COMPLETE (12 Jun 2026)
+
+Read-only audit done; all measured numbers + extrapolation arithmetic in **`docs/SEARCH_AUDIT.md`**. CHANGE_LOG "SEARCH S0" entry has the digest. The headline facts the design doc must reckon with:
+
+- **Full-corpus FTS-in-Neon (10.5M tsvectors + GIN) ≈ 15.2–15.8 GB vs ~10.5 GB free headroom — over budget by ~5 GB** (pwdata ≈ 11 GB of it). The **legislation+caselaw scope (~1.05M rows) ≈ 3.8 GB — fits.**
+- corpus_sections has NO functioning FTS (no-op trigger since V3; 266 MB GIN over 6.8% relic vectors; no web code reads the table). Legacy `LegislationSection` (914k) carries the live search: Lex grounding via `/api/search` (Neon GIN) + LegislationPanel via an **un-indexed seq-scan path on Railway**; the legacy table is duplicated in full on both DBs; its embedding vector(768) column exists with 0 rows.
+- Corpus text ≈ 17.4 GB (debates 6.2 + caselaw 5.6 dominate). pgvector 0.8.0 installed (halfvec OK); pg_search BM25 available-not-installed. Full-corpus embeddings don't fit in Neon in any §5 configuration; the 1.2M scope mostly fits.
+- 100k-row latency is network-floor (server 0–18 ms warm) — a 1M+ sample is needed before trusting FTS-in-Neon latency at scale.
+- Needs Charlie: Neon compute CU/autoscale range from the console (no API key locally).
+
+**Next: search design doc — architecture decided WITH Charlie (S0 made no recommendations).** Scratch table dropped (0 remain); production untouched (evidence in SEARCH_AUDIT §8). INGEST_PLAYBOOK unchanged — no ingest doctrine touched.
 
 ---
 
