@@ -2,7 +2,32 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 12 Jun 2026 (evening) — V20 probe wave complete; see V20 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+*Last updated: 12 Jun 2026 (late evening) — V21 complete; see V21 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+
+---
+
+## CURRENT STATE — V21 (QUANGOS MEASURED + HISTORIC HANSARD + HONEST DENOMINATOR, 12 Jun 2026 evening)
+
+**Sprint:** V21 (SPRINT_V21_BRIEF.md). Full account: CHANGE_LOG V21. Everything below the V20 heading is historical.
+
+**DONE this sprint:**
+- **Quango universe MEASURED:** `scrutinise-docs/QUANGO_UNIVERSE.md` + `.csv` — 1,255 orgs, 904,989 total docs, **162,004 relevant-format docs** (AAIB 11,732 · HMRC 8,487 · EA 7,639 top the table). `quangos-govuk` placeholder in corpus_targets. **No content seeded — Charlie triages the table for V22.**
+- **Historic Hansard 1803–1918 BUILT + PROBED:** `sources/historic-hansard.ts` (bulk volume zips, hansard_v12 parser, per-speech pwdata-shaped items, exact 1919-02-04 cutoff = pwdata handoff), `processHistoricHansard`, `seed-historic-hansard-queue.ts` (--canary). Pilot S1V0001P0: 1,597 sections end-to-end in Neon+R2, OPL verified, 49s/volume. Universe ~763 volumes ≈ ~1.1M sections. Host soft-404s (listing = universe; PK magic checked). Rate 5000ms/2.
+- **Honest denominator (playbook §1d):** blocked targets now count, retired never (the retired LDA rows were double-counting 722k). Placeholders: scottish-courts ~20k, college-of-policing ~8k, echr-hudoc 4,471 (V20 measured, was 30,050), bills-api ~5k, financial-corpus NULL/unsized. **Headline 91.3% → 88.0% (denominator 12.61M).**
+- **SSRN re-classified:** api.ssrn.com serves 200 JSON unauthenticated now (V20 hard-403 was transient WAF state) — **stays PARKED on licence grounds** (author copyright).
+
+**POST-PUSH (this session):** seed-rate-limits → canary 3 historic-hansard volumes from Railway (CF egress test) → full seed → grind unattended.
+
+**IN FLIGHT / NEXT SESSION (V20 carry-overs unchanged):**
+1. retained-eu ✓ at drain; committees WrittenEvidence `list:` rows draining; NI seeder resume from checkpoint (page 66 hard-cut); si-2010plus ✓ at enum drain → re-run `seed-explanatory-queue.ts`.
+2. ukpga regnal enum drain → `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓; regional enum drain → ✓.
+3. New V20 corpora ✓ at drain; re-run `v20-licence-backfill.ts` after drains.
+4. **historic-hansard ✓ re-baseline at drain** (~10–20h grind from full seed).
+5. V22 candidates: quango triage (Charlie) · HUDOC revival (routes in V20 §3.6, measured universe 4,471) · **Lords Hansard 1919–1999** (bulk archive holds it; new named hole) · regional-act EN/EMs.
+
+**DECISIONS WAITING ON CHARLIE:** unchanged from V20 (FCL computational-analysis licence email; FCA Handbook licence; pwdata licence backfill; Scottish courts devtools XHR; written-answers month-blob deletion) **plus:** quango triage of QUANGO_UNIVERSE.md.
+
+---
 
 ---
 

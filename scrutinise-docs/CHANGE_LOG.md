@@ -4,6 +4,49 @@
 
 ---
 
+## V21 — QUANGO ENUMERATOR + HISTORIC HANSARD + HONEST DENOMINATOR (12 Jun 2026, evening)
+
+**Context:** SPRINT_V21_BRIEF.md (archived below this entry's session). Three fronts: convert the V21 quango scoping from opinion to measurement, open the largest enumerated hole (Historic Hansard 1803–1918), and make the denominator stop lying by omission. Everything running on Railway continued untouched.
+
+### §1 Quango universe enumerator — MEASURED ✓
+
+- `scripts/ingest/enumerate-quangos.ts` (read-only vs public APIs; checkpointed; 300ms ≈ 3.3 rps, one 503 → 60s cooling, zero 429s): gov.uk Organisations API full register (**1,255 orgs**, 63 pages) × one Search API `count=0&facet_format=200` call per org.
+- Output: **`scrutinise-docs/QUANGO_UNIVERSE.md`** (ranked table, body-type rollup, method) + **`QUANGO_UNIVERSE.csv`** (per-org format columns for the Corpus Status xls).
+- Headline: **904,989 total docs / 162,004 relevant-format docs** (135,284 from non-closed orgs) across the register. Top of table: AAIB 11,732 (custom `aaib_report` format), HMRC 8,487, Environment Agency 7,639, Defra 4,630, DfE 4,038. Relevance rule documented in the MD (substantive formats + `_report/_decision/_guidance/…` suffixes; `*_tribunal_decision`/`international_treaty`/`hmrc_manual*` excluded — already dedicated corpora).
+- `corpus_targets` placeholder: `quangos-govuk` est **162,004** (~, unenumerated-by-org; per-org sums double-count multi-org docs — caveat in notes). **No content seeded — the table is Charlie's V22 triage input.**
+
+### §2 Historic Hansard 1803–1918 — BUILT + PROBED ✓ (seed post-push)
+
+- **Source:** `sources/historic-hansard.ts` — per-volume `hansard_v12` XML zips from www.hansard-archive.parliament.uk. Listings are WebForms GridView pages (10/page) walked via `__doPostBack` + VIEWSTATE (plain Node fetch works). **The host soft-404s: every unknown path returns HTTP 200 text/html — so the LISTING is the universe** (unlisted volumes verified absent: real digitisation gaps, e.g. S1 vol 2) **and every zip fetch checks the PK magic**. Split volumes (`_a/_b`) and multi-part (`P0/P1`) are each their own docId. CF fronts the host (`__cf_bm`) but serves the honest UA locally — Railway egress needs the post-push canary (committees-api lesson).
+- **Scope cutoff is exact, not approximate:** items dated ≥ **1919-02-04** dropped — that is the first pwdata-debates file, and S5C vol 112 / S5L vol 33 both START that exact day (Parliament did not sit 21 Nov 1918 → 4 Feb 1919). Seed caps: S5C ≤ vol 111, S5L ≤ vol 32, S1–S4 whole. **NEW universe note: Lords 1919–1999 is a separate known hole** (bulk archive holds S5L to 2004; pwdata-lords starts 1999) — V22+ candidate, now named in the email's unsized list.
+- **Parser** (`parseHansardV12Items`): per-speech items mirroring the pwdata model — house container (`housecommons`/`houselords`) → sitting `<date format>` → nested `<section>` title stack → one item per `<p>` (speaker from `<member>`, procedural ps kept); titlepage/frontmatter/index self-exclude (items emitted only inside house containers); `<col>` page numbers and `<image>` stripped as content, not just tags.
+- **Pilot scored (predict-measure-commit):** predicted ~1,500–2,200 items / ~450–530k words for S1V0001P0; **measured 1,597 items, 1,137 with speaker (= exactly V20's membercontribution count), 512,541 words, 93.4% heading coverage, £/—/é fidelity** (§14 adversarial check). End-to-end probe wrote production rows: 1,597 sections in Neon, all `licence='opl-3.0'`, R2 round-trip verified, **49s/volume** (5-min row timeout safe). One source quirk: an OCR-era `1803-03-29` date that should be 1804 — harmless noise.
+- **Licence:** OPL v3.0 page served full terms live 12 Jun evening (the V20 CF-block was transient) — licence-map note upgraded to VERIFIED; `historic-hansard` → `opl-3.0`.
+- **Rate:** 5000ms/2 (half of a reasonable 2500/4, politeness doctrine) — processing time (~50s/volume) is the real throttle; the host sees ≲1 zip fetch/min/loop. ~763 volumes ≈ 10–20h grind at concurrency 2.
+- `seed-historic-hansard-queue.ts` (checkpointed per series, `--canary N`); `processHistoricHansard` in process-row.ts; new dep `adm-zip` (the §14 "TypeScript-native, no PowerShell" remediation path).
+
+### §3 Honest denominator — playbook §1d ✓
+
+- **Rule (playbook §1d): a known source missing from the denominator is a lie of omission — placeholders with honest `~` beat absence.**
+- **Reporter fix:** denominator now INCLUDES blocked targets (the universe doesn't shrink because we can't fetch it) and EXCLUDES retired ones — **the retired LDA written-questions rows had been silently double-counting 722k** next to their pwdata replacements since V16.
+- **Placeholder rows upserted** (`v21-honest-denominator.ts`, provenance in notes): historic-hansard ~1.1M (V20 probe + V21 pilot) · quangos-govuk 162,004 (§1 measured) · scottish-courts ~20k (ROUGH — API blocked) · college-of-policing ~8k (ROUGH) · **echr-hudoc 30,050 → 4,471 (V20 MEASURED GBR resultcount replaces the V-era guess — honesty cut this one UP)** · bills-api ~5k (ROUGH) · financial-corpus NULL (unsized, visible).
+- **Headline: 91.3% → 88.0%** (denominator 12.15M → 12.61M). The drop is the point.
+- Email TOTAL block reworded: "% is of the KNOWN universe incl. ~ placeholders"; residual unsized list = financial-corpus · quango external-site content · pre-redesign LC papers · Lords Hansard 1919–1999.
+
+### §4 SSRN — RE-CLASSIFIED, stays PARKED
+
+- One probe (12 Jun evening): `api.ssrn.com/content/v1/bindings/{id}/papers` returned **200 JSON unauthenticated with the honest UA** (total 58,288 for one binding) — **the V20 "hard 403 WAF" classification is stale/state-dependent**, failure mode = intermittent WAF, not a permanent block.
+- **Parked anyway on licence grounds** (author copyright, full texts login-gated; only metadata/abstracts exposed). corpus_targets row updated with the new classification. Recommendation: revisit only if an abstracts-level corpus is ever wanted.
+
+### §5 Post-push run order
+
+1. Wait for Railway auto-deploy (Ingest + Ops) on push.
+2. `seed-rate-limits.ts` (adds `historic-hansard` 5000ms/2; config loads at Ingest startup).
+3. `seed-historic-hansard-queue.ts --canary 3` → verify sections from Railway (CF egress test) → full seed (~763 rows) + corpus_targets est 1.1M.
+4. Hansard grinds unattended at P3; re-baseline ✓ at drain (playbook §1c).
+
+---
+
 ## V20 — THE PROBE WAVE (12 Jun 2026)
 
 **Context:** corpus ~91% of the enumerated universe; V20 opened every remaining front with bounded probes under the probe-with-auto-upgrade rule, plus licence metadata infrastructure and V19 closeout. All probes ran the same day; five sources were auto-upgraded to full builds, three classified, one parked.
