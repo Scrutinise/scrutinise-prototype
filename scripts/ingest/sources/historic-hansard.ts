@@ -86,6 +86,11 @@ function pagerTargets(html: string): Array<{ target: string; label: string }> {
 // Walks every listing page of a series via WebForms postbacks. The pager shows
 // a numbered window plus "..." continuation links; we always click the link
 // labelled with the next page number, falling back to the trailing "...".
+// CF rate-limits sustained listing walks (403 at S5C page 24 on the first full
+// run — the V20 committees/judiciaryni pattern), so page fetches retry after
+// 60s cooling; and a series with maxVol stops as soon as a page is entirely
+// past the cap (the listing is volume-ordered), which keeps S5C to ~12 pages
+// instead of ~100.
 export async function listHistoricHansardVolumes(
   seriesKey: string,
   opts: { gapMs?: number } = {},
@@ -95,14 +100,27 @@ export async function listHistoricHansardVolumes(
   const gapMs = opts.gapMs ?? 1000
   const url = `${BASE}/${config.dir}`
 
+  const fetchWithCooling = async (init?: RequestInit): Promise<string> => {
+    for (let attempt = 1; ; attempt++) {
+      const res = await fetch(url, { ...init, headers: { 'User-Agent': UA, ...(init?.headers ?? {}) } })
+      if (res.ok) return res.text()
+      if (attempt >= 4) throw new Error(`hansard-archive listing ${seriesKey}: HTTP ${res.status} after ${attempt} attempts`)
+      console.warn(`[hansard-archive] ${seriesKey}: HTTP ${res.status} — cooling 60s (attempt ${attempt})`)
+      await new Promise(r => setTimeout(r, 60_000))
+    }
+  }
+
   const stems: string[] = []
-  let res = await fetch(url, { headers: { 'User-Agent': UA } })
-  if (!res.ok) throw new Error(`hansard-archive listing ${seriesKey}: HTTP ${res.status}`)
-  let html = await res.text()
+  let html = await fetchWithCooling()
   stems.push(...zipStemsOf(html))
 
+  const pastCap = (pageStems: string[]) =>
+    config.maxVol != null &&
+    pageStems.length > 0 &&
+    pageStems.every(s => (parseVolumeStem(s)?.volume ?? 0) > config.maxVol!)
+
   let page = 1
-  for (;;) {
+  while (!pastCap(zipStemsOf(html))) {
     const links = pagerTargets(html)
     const nextNumbered = links.find(l => l.label === String(page + 1))
     // GridView windows: when the next page number is not visible, the trailing
@@ -118,13 +136,11 @@ export async function listHistoricHansardVolumes(
       __VIEWSTATEGENERATOR: hiddenField(html, '__VIEWSTATEGENERATOR'),
       __EVENTVALIDATION: hiddenField(html, '__EVENTVALIDATION'),
     })
-    res = await fetch(url, {
+    html = await fetchWithCooling({
       method: 'POST',
-      headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
     })
-    if (!res.ok) throw new Error(`hansard-archive listing ${seriesKey} page ${page + 1}: HTTP ${res.status}`)
-    html = await res.text()
     const pageStems = zipStemsOf(html)
     if (pageStems.length === 0) break
     // Postback loops back to an already-seen page → done (defensive).

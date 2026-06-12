@@ -38,12 +38,14 @@
 - One probe (12 Jun evening): `api.ssrn.com/content/v1/bindings/{id}/papers` returned **200 JSON unauthenticated with the honest UA** (total 58,288 for one binding) — **the V20 "hard 403 WAF" classification is stale/state-dependent**, failure mode = intermittent WAF, not a permanent block.
 - **Parked anyway on licence grounds** (author copyright, full texts login-gated; only metadata/abstracts exposed). corpus_targets row updated with the new classification. Recommendation: revisit only if an abstracts-level corpus is ever wanted.
 
-### §5 Post-push run order
+### §5 Post-push execution (same session)
 
-1. Wait for Railway auto-deploy (Ingest + Ops) on push.
-2. `seed-rate-limits.ts` (adds `historic-hansard` 5000ms/2; config loads at Ingest startup).
-3. `seed-historic-hansard-queue.ts --canary 3` → verify sections from Railway (CF egress test) → full seed (~763 rows) + corpus_targets est 1.1M.
-4. Hansard grinds unattended at P3; re-baseline ✓ at drain (playbook §1c).
+- Push `15f2c3c` auto-deployed Ingest + Ops; `seed-rate-limits.ts` run before the new container started (config loaded at startup).
+- **Canary PASSED from Railway:** 3 volumes → done; S1V0001P0 re-compiled to the IDENTICAL 1,597 sections (idempotency proven), S1V0003P0 937, S1V0004P0 1,150 — all `opl-3.0`. **Cloudflare serves Railway IPs on hansard-archive.parliament.uk.**
+- **INCIDENT + fix:** the first full listing walk drew **HTTP 403 at S5C page 24** — CF rate-limits sustained WebForms listing walks (the V20 committees/judiciaryni pattern; the V20 lesson should have been carried over at build time). Fixed in `listHistoricHansardVolumes`: page fetches retry after 60s cooling (≤4 attempts), AND series with a volume cap now stop as soon as a page is wholly past the cap — S5C needs ~12 pages for vols ≤111, not ~100 (the 403 page was pure waste). Checkpoint resume re-listed only S5C/S5L.
+- **Universe MEASURED: 595 volume zips** (S1 29 · S2 22 · S3 306 · S4 133 · S5C 78 · S5L 27) = **594 distinct volumes of the nominal 763** — the V20 "~763" was volume-number arithmetic; the bulk archive has real interior digitisation gaps (~22%; spot-checked absent: 4/4 random unlisted volumes soft-404). Every series spans vol 1 → its cap. **The 169 missing volumes exist on api.parliament.uk/historic-hansard (HTML crawl) — V22+ gap-fill candidate.**
+- **est re-baselined to ~850,000** (595 zips × ~1.2–1.6k sections/zip; canary avg 1,228, later series fatter); ✓ at drain.
+- **Seeded + grinding at session close:** 595 rows (4 done / 2 claimed / 589 pending within minutes of seeding; 4,952 sections from the first 4 volumes). ~10–20h unattended at 5000ms/2.
 
 ---
 

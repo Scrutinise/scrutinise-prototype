@@ -16,7 +16,7 @@
 - **Honest denominator (playbook §1d):** blocked targets now count, retired never (the retired LDA rows were double-counting 722k). Placeholders: scottish-courts ~20k, college-of-policing ~8k, echr-hudoc 4,471 (V20 measured, was 30,050), bills-api ~5k, financial-corpus NULL/unsized. **Headline 91.3% → 88.0% (denominator 12.61M).**
 - **SSRN re-classified:** api.ssrn.com serves 200 JSON unauthenticated now (V20 hard-403 was transient WAF state) — **stays PARKED on licence grounds** (author copyright).
 
-**POST-PUSH (this session):** seed-rate-limits → canary 3 historic-hansard volumes from Railway (CF egress test) → full seed → grind unattended.
+**POST-PUSH (done this session):** canary PASSED from Railway (CF serves Railway IPs on hansard-archive); **universe MEASURED 595 zips / 594 distinct vols** (not the nominal 763 — real digitisation gaps; HTML-crawl gap-fill of the 169 missing vols is a V22+ candidate); est re-baselined **~850k**; **full seed done, grinding** (4 done / 589 pending at close, ~10–20h). One incident: CF 403 on the S5C listing walk at page 24 → seeder fixed (60s-cooling retries + stop-at-volume-cap, committed post-push).
 
 **IN FLIGHT / NEXT SESSION (V20 carry-overs unchanged):**
 1. retained-eu ✓ at drain; committees WrittenEvidence `list:` rows draining; NI seeder resume from checkpoint (page 66 hard-cut); si-2010plus ✓ at enum drain → re-run `seed-explanatory-queue.ts`.
