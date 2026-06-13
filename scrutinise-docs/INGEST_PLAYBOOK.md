@@ -486,6 +486,30 @@ Stopping the "wedged" first retained-eu run killed the *grep* stage; the node pr
 
 The V18 morePages-derived estimate (~32,970) undercounted dense years badly; full entry-count enumeration found **eur ~95k+ / eudn ~27k / eudr ~3k — union ~153k instruments** (TNA mirrors the complete EU corpus to IP-completion day, mostly spent/expired instruments). The approved "bounded ~2h" completion pass is really ~36h of TNA fetching at 200ms/10 (the long-tolerated rate) — left running V19; ~93% will classify as hasNoProvisions shells (V18 sample), so the **140k phantom denominator may land accidentally close**. Re-baseline ✓ at drain per §1c.
 
+### Deep-pagination offset walks die server-side — window by date instead (V22, 13 Jun 2026)
+
+committees-api's WrittenEvidence walk (126,589 items, `Skip`/`Take`) failed from skip≈100,000 with socket-level "fetch failed"; probing showed **HTTP 500 after ~31s — a server-side query timeout that is LOAD-DEPENDENT** (skip=100000 failed 12 Jun; skip=50000 failed 13 Jun; skip=0 always fine). An offset walk over a big API table is fundamentally fragile past tens of thousands. Cure: **date-windowed listing** — the API takes `StartDate`/`EndDate`; within a month-sized window Skip stays shallow (~2k items max) and the same query answers in ~2s. One queue row per window (`list:{kind}:win:{YYYY-MM}`), inserts idempotent, 1-day window overlap harmless. Rule: when an API offers any date/range filter, never plan an unbounded offset walk deeper than ~10k.
+
+### AdaptiveThrottle suspend path was dead code — ceiling < suspendThreshold (V20→V22, found 13 Jun 2026)
+
+Sources constructed `AdaptiveThrottle({ suspendThresholdMs: 60_000 })` without raising the default 30s ceiling: `delay = min(ceiling, delay*2)` could never reach the threshold, so `onSuspend` (the `suspendSource` write) NEVER fired. This is why judiciaryni's 12 Jun IP-cut burned 332 rows at full configured speed instead of suspending. Fixed (ceiling 120s) in judiciaryni/committees-api/echr/hh-html clients; also: socket-level fetch failures and 403s now call `backoff()` — an IP cut does not announce itself as a 429.
+
+### judiciaryni listing budget is ~30 pages per IP session (V20→V22)
+
+Local walks cut at p66 (12 Jun) and p96 (13 Jun) even with 60s-cooling retries; the cut lifts after hours. Decision pages and PDFs are served normally at low rates — only sustained LISTING walks trip it. Cure: `list:page:{N}` queue rows drip one listing fetch per claim from Railway (V22; same pattern as committees `list:` and TNA `enum:` rows). Rate halved to 2000ms/1.
+
+### Seeders must not write corpus_targets ests from partial walks (V20 rule, V22 recurrence)
+
+The 13 Jun judiciaryni seeder resume clobbered est 5,900 → 1,879 when the host cut it at page 96 — the V20 committees lesson exactly. Fixed: est updates only on a COMPLETED walk (past-the-end detection), and from a queue-row count, not the run's incremental total. When writing any seeder: the est-update branch must be unreachable from the "stopped early" path.
+
+### HUDOC revival routes (V22)
+
+`/app/query/results` works with **browser UA + Referer** and the `contentsitename:ECHR AND respondent:"GBR" AND languageisocode:"ENG"` grammar (4,471 GBR ENG docs, 13 Jun 2026; the V-era `country:GBR` grammar 404s — a wrong FIELD name draws 404, not 400). Stable pagination needs `sort=kpdate Ascending`. Document text: **only the PDF conversion route works** (`/app/conversion/pdf/?library=ECHR&id={itemid}`); html/docx conversions 404. Licence echr-nc (verified: free reproduction with © ECHR-CEDH attribution for information/education; commercial needs permission).
+
+### Historic Hansard per-house cutoffs + HTML gap-fill (V22)
+
+The pwdata handoff is per-house and EXACT: Commons 1919-02-04 (S5C ≤ 111), Lords 1999-11-17 (S5L ≤ 606 — vol 607 starts that day; verified via api.parliament.uk volume indexes + TWFY lordspages first file). Bulk-archive gaps: 170 volumes missing for 1803–1918 caps, of which only **114 exist on api.parliament.uk/historic-hansard** (S1/S2 wholly unfillable — both stores share the same digitisation gaps; the V21 "169 exist on the HTML site" was unverified and wrong). Gap-fill = two-stage queue crawl (`gapvol:` → `gapday:` rows, sourceType `historic-hansard-html`, own host budget 500ms/2).
+
 ## 8b. PRE-V17 FAILURE PATTERNS (fleet era — kept for reference)
 
 Most patterns below concern the retired 20-worker fleet, the separate scheduler/monitor, or Railway-DB queue tables. The diagnostics remain instructive; the named files now live in `scripts/attic/v17-fleet/`.
@@ -1179,10 +1203,11 @@ V20 CHANGE_LOG).
 
 | licence code | sources | verified | notes |
 |---|---|---|---|
-| `ogl-3.0` | TNA legislation (primary-acts, si-*, regional, EN/EMs), all gov.uk corpora (hmrc-*, et-decisions, uk-treaties, tax-treaties-dta, govuk-core-docs, building-regs, planning-policy, ots-reports), sentencing-council, lawcom | 12 Jun 2026 (legislation.gov.uk/contributors; gov.uk T&Cs; per-site pages) | Sentencing Council additionally requires the source-document title in the acknowledgment (row-specific attribution) |
+| `ogl-3.0` | TNA legislation (primary-acts, si-*, regional, EN/EMs), all gov.uk corpora (hmrc-*, et-decisions, uk-treaties, tax-treaties-dta, govuk-core-docs, building-regs, planning-policy, ots-reports, quangos-govuk V22), sentencing-council, lawcom | 12 Jun 2026 (legislation.gov.uk/contributors; gov.uk T&Cs; per-site pages) | Sentencing Council additionally requires the source-document title in the acknowledgment (row-specific attribution) |
 | `ogl-3.0+eu-2011-833` | retained-eu | 12 Jun 2026 | Dual attribution: OGL + Commission Decision 2011/833/EU — exact wording on legislation.gov.uk/contributors |
 | `eu-2011-833` | eur-lex | via legislation.gov.uk/contributors (EUR-Lex legal notice is JS-rendered) | © European Union; Commission Decision 2011/833/EU |
-| `opl-3.0` | pwdata-*, lda-*, written-answers/statements, committees-reports/evidence | NOT re-verified live (parliament.uk licence pages CF-block both local and fetcher IPs, 12 Jun 2026) | Long-standing published licence for parliamentary material |
+| `opl-3.0` | pwdata-*, lda-*, written-answers/statements, committees-reports/evidence, historic-hansard (incl. V22 Lords tranche + HTML gap-fill) | OPL page served full terms 12 Jun 2026 evening (V21) | Long-standing published licence for parliamentary material |
+| `echr-nc` | echr-hudoc (V22 revival) | 13 Jun 2026 (echr.coe.int/copyright-and-disclaimer) | Free reproduction with source acknowledged (© ECHR-CEDH) for private/information/education purposes; commercial use requires prior written permission. Default-excluded from commercial surfaces |
 | `ojl-2.0` | tna-caselaw (Find Case Law) | 12 Jun 2026 | ⚠️ **Open Justice Licence v2.0 EXCLUDES computational analysis** (search indexing, bulk/automated processing, ML). Bulk ingest + FTS requires TNA's separate computational-analysis licence — caselawlicence@nationalarchives.gov.uk. CHARLIE ACTION (V20). Required attribution: "Contains information licensed under the Open Justice - Licence v2.0" |
 | `fca-restricted` | fca-handbook | 12 Jun 2026 (fca.org.uk/legal) | Reproduction/storage in any retrieval system requires prior written permission; Handbook reproduction requires a licence agreement. CHARLIE ACTION (V20) |
 | `nao-nc` | nao-reports | 12 Jun 2026 | Free re-use NON-COMMERCIAL with attribution; commercial needs express permission |

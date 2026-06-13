@@ -1,8 +1,56 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 12 Jun 2026 — V20 probe wave.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 13 Jun 2026 — V22.*
 
 ---
+
+## V22 — REPAIRS, THE SECOND HANSARD CENTURY, WORD COUNTS, QUANGO TRANCHE 1 (13 Jun 2026)
+
+**Context:** SPRINT_V22_BRIEF.md. Two breakers parked 58k+ rows; the V21 holes (HUDOC, Lords 1919–1999, Hansard gap volumes) all had named routes. Quango tiers not confirmed by Charlie → dry-run only.
+
+### §1 Repairs
+
+- **§1.1 committees-api breaker — root cause: deep-offset server timeout, NOT Cloudflare and NOT rate.** Probes (13 Jun): `WrittenEvidence?Skip=100000` → HTTP 500 after ~31s; **load-dependent** — skip=50000 also 500'd the next day, skip=0 always fine. An offset walk over 126,589 rows is fundamentally fragile. **Fix: date-windowed listing** — the API takes StartDate/EndDate; monthly windows are ≤ ~2k items (peak year 2025 = 16,393), shallow-skip, ~2s answers. `processCommitteesApiList` gains `list:writtenevidence:win:{YYYY-MM}` (+`win:pre2013`) handling, one in-row 60s-cooling retry; `v22-seed-writtenevidence-windows.ts` seeds pre2013 + 2013-01..now (~163 rows, full-range re-walk — idempotent inserts self-heal the aborted V20 walks). Executed same session: breaker cleared, **56,518 item rows unparked** (draining under deployed code — item processing was never broken: 12,732 done pre-trip), 1,239 offset list: rows retired. Playbook §8 pattern added per brief.
+- **§1.2 judiciaryni breaker + 332 failed — root cause: host IP-cut under sustained drain + a latent throttle bug.** All probed URLs serve 200 after cooloff (transient, not URL-pattern). The burn-through had a code cause: **every V20-era AdaptiveThrottle was constructed with suspendThresholdMs 60s but the default 30s ceiling — `onSuspend` could mathematically never fire** (dead code since V20). Fixed (ceiling 120s) + clients now `backoff()` on 403/socket-level failures (an IP cut does not announce itself as 429) in judiciaryni, committees-api, echr, hh-html. Rate halved 1000ms/2 → 2000ms/1 (§1b). Listing resume from checkpoint advanced p66→p96 (+600 rows) then the host cut again — **its listing budget is ~30 pages/session** → list-row treatment (`list:page:{N}` rows, `processJudiciaryNiList`, `v22-seed-judiciaryni-list.ts` for pages 96–396). Seeder est-clobber fixed (partial walk wrote est 1,879 — V20 rule recurrence; est now updates only on a completed walk, from queue counts) + est restore to ~5,900 in the V22 seeder. Breaker stays tripped until post-push (clearing under old code = same burn).
+- **§1.3 throttled enum rows reset** (88: regional 61 + ukpga 27) + priority-bumped to 1 (they were starving behind 74k retained-eu ids at equal priority — claim order is `priority, id`). **Drained within the session and the findings are big: si-2010plus enum seeded 11,852 missing instruments** (the V12 "2015–2026 reseed never ran" gap, now real rows) **and regional enum seeded 6,435** (incl. the V20 asc/mwa types). 7 dense uksi years (2012-14, 2023-26) re-throttled from Railway — reset after cooloff at session close. ukpga enum fully drained → `v19-cleanup-ukpga-calendar.ts` then primary-acts-pre-2000 ✓ remain next-session actions (behind the si/regional drain).
+- **§1.4 re-baselines:** all major drains (retained-eu ~74k, historic-hansard, committees, EN/EMs, tax-tribunals, NAO) still grinding at session close — ✓ re-baselines recorded as next-session actions in the handoff.
+
+### §2 HUDOC revival — BUILT + PROBED ✓ (seed post-push)
+
+- Routes (V20 probe, re-verified + refined 13 Jun): `/app/query/results` with **browser UA + Referer** and the `contentsitename:ECHR AND respondent:"GBR" AND languageisocode:"ENG"` grammar = **4,471 resultcount — exactly the V20 universe** (584 = the JUDGMENTS subset; the V-era `country:GBR` grammar draws 404). Stable pagination via `sort=kpdate Ascending` (oldest GBR doc: Greece v UK, 1956). Text: **PDF conversion only** (html/docx 404). Client rewritten (`echr-hudoc.ts`), `processEchr` rewritten for `doc:{itemid}` rows (legacy page:/__index forms markSkipped; discovery/populator generators stubbed), `v22-seed-echr-queue.ts` (--canary, checkpointed, est from enumerated resultcount on completion).
+- **One-judgment probe through the production path (HORA v UK, 001-244851): PASSED** — 350KB PDF → 19,283 words, §/"/—/é fidelity, R2 round-trip identical, Neon row `licence='echr-nc'` via the map default.
+- **Licence VERIFIED live** (echr.coe.int/copyright-and-disclaimer): reproduction free with source acknowledged (© ECHR-CEDH) for private/information/education; commercial needs written permission → `echr-nc` (nao-nc posture: fine for the charity, default-excluded commercially). Map + playbook §18 updated.
+- ⚠️ Railway egress to hudoc.echr.coe.int unverified — canary 5 post-push before the full seed.
+
+### §3 Lords Hansard 1919–1999 — BUILT + PILOTED ✓ (seed post-push)
+
+- **The handoff is exact on both ends:** pwdata-lords starts **1999-11-17** (daylord1999-11-17a.xml, verified at TWFY) and **S5L vol 607 starts that very day** (vol 606 ends 11 Nov at prorogation — verified via api.parliament.uk volume indexes). Mirrors the Commons S5C 111/112 boundary.
+- Code: per-house cutoffs (`HouseCutoffs`, Commons 1919-02-04 / Lords 1999-11-17) in `parseHansardV12Items`; S5L cap 32 → 606; zips spot-checked PK-real at vols 33/100/300/606. `v22-seed-lords-hansard.ts` re-lists S5L (drops the cap-32 checkpoint entry) and bumps est by zips × ~4k blended pilot rate.
+- **Pilot scored (predict-measure-commit):** S5LV0100P0 (1936) predicted 800–2,000 items / 150–500k words → **measured 2,408 items / 461,687 words** (items 1.2× over top of range — Lords sat more than predicted); S5LV0606P0 (1999, the cutoff volume) 7,076 items / 805,540 words, **0 items ≥ cutoff ✓**, fidelity ✓, heading coverage 96.9–99.6%.
+- **Row-timeout guard:** late-century volumes (~7k sections ≈ 3.6 min at V21's measured rate) ran too close to the 5-min row cap → `processHistoricHansardVolume` R2 batch 8 → 16 (R2 puts dominate wall time, don't touch the pg pool).
+- The parliamentary record will then have **no known gap 1803 → present in either House** (modulo §4's unfillable volumes).
+
+### §4 Hansard gap-fill — BUILT, premise corrected (seed post-push)
+
+- **V21's "the 169 missing volumes exist on api.parliament.uk" was wrong:** measured 13 Jun by diffing nominal vols vs the bulk listing vs the HTML site's series indexes — of **170** bulk-missing volumes, only **114 are fillable** (S3 40 · S4 57 · S5C 16 · S5L 1); 56 are absent from BOTH stores (S1 13/13 and S2 3/3 wholly unfillable — the two stores share one digitisation). The unfillable 56 are genuine, permanent gaps — recorded here, excluded from est.
+- Build: HTML-crawl functions in `historic-hansard.ts` (`listGapVolumeDays`, `listGapDaySections`, `fetchGapSectionItems` — hentry/blockquote speeches + sibling procedural `<p>`s, marker-bounded chunks so nested quotation blockquotes and page-tail scripts can't bleed into text; parse verified live on S3V53). Two-stage queue crawl: `gapvol:{series}:{vol}` → `gapday:{house}:{yyyy/mon/dd}` rows under NEW sourceType `historic-hansard-html` (own api.parliament.uk budget, 500ms/2; per-house cutoff guard kept explicit). `v22-seed-hansard-gapfill.ts` (re-derives fillable sets live; guards that the S5L checkpoint reflects the lifted cap — run order: after the Lords seeder).
+
+### §5 Word counts — already exact; email line added
+
+- **The brief's §5.1 was already true:** `corpus_sections."wordCount"` exists and is written at ingest by every processor. Coverage measured: **zero compiled rows lack it** — the 122,641 NULLs are all unavailable markers (no text; NULL correct) + 64 failed. **§5.2's backfill is therefore unnecessary** — no R2 walk, no ÷6.2 estimate; the counts are exact.
+- **Total corpus: 3,455,730,226 words** (3.46B) at measure time (13 Jun 2026 00:30, mid-drain). Largest: pwdata-debates 1.011B · tna-caselaw 680.7M · et-decisions 291.4M · historic-hansard 272.5M (growing) · pwdata-lords 210.3M. Full per-corpus table in the sprint report.
+- Email TOTAL block now prints `≈ N.NNB words` (one SUM over corpus_sections, V22); the unsized list drops "Lords Hansard 1919–1999" (now seeded/sized).
+
+### §6 Quango Tranche 1 — tiers NOT confirmed → seeder built, dry-run produced, NOTHING seeded
+
+- `v22-seed-quango-t1.ts`: T1 derived from QUANGO_UNIVERSE.csv (top 20 live, body type ≠ ministerial dept, HMRC excluded); default mode is a live facet re-measure dry-run; `--seed` (gated on Charlie + post-push) walks search.json per org, client-filters the relevant-format set **minus utaac_decision + fatality_notice** (brief §6), URL-dedupes against every gov.uk corpus in corpus_sections (not the queue — cleanup deletes done rows), seeds `quangos-govuk` govuk-content rows (OGL, map entry added).
+- **Dry-run (live, 13 Jun): T1 = 42,942 docs.** AAIB 11,733 · EA 7,639 · Company Names Tribunal 2,302 · Schools Adjudicator 2,217 · IPO 1,742 · TRA 1,663 · Certification Officer 1,587 · UKHSA 1,573 · UKVI 1,416 · HS2 1,380 · MAIB 1,320 · RPA 1,256 · MCA 1,220 · Natural England 1,189 · Traffic Commissioners 1,105 · Ofqual 1,059 · HMPPS 1,016 · SAGE 1,010 · **HMCTS 515 and UTAAC 0 — the V22 format exclusions gut both** (their CSV rank was utaac_decision-driven). ⚠️ CHARLIE: confirm whether HMCTS/UTAAC keep T1 slots or are replaced by the next two ALBs.
+- UTAAC overlap note (brief): gov.uk holds 2,019 utaac_decision docs vs FCL's ukut/aac ~1,250 (V19, 25 pages) — partial overlap, gov.uk likely deeper on older decisions; neither seeded.
+
+### §7 Incidental finds
+
+- pg BIGINT-as-string would have corrupted the words SUM — cast `::text` + `Number()` used (V17 lesson applied, not re-learned).
+- `v22-state-check.ts` / `v22-repairs.ts` added as sprint diagnostics; tmp-v22/ scratch deleted.
 
 ## V21 — QUANGO ENUMERATOR + HISTORIC HANSARD + HONEST DENOMINATOR (12 Jun 2026, evening)
 

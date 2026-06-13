@@ -2,11 +2,45 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 12 Jun 2026 (late evening) — V21 complete; see V21 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+*Last updated: 13 Jun 2026 — V22 complete; see V22 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
 
 ---
 
-## CURRENT STATE — V21 (QUANGOS MEASURED + HISTORIC HANSARD + HONEST DENOMINATOR, 12 Jun 2026 evening)
+## CURRENT STATE — V22 (REPAIRS + SECOND HANSARD CENTURY + WORD COUNTS + QUANGO DRY-RUN, 13 Jun 2026)
+
+**Sprint:** V22 (SPRINT_V22_BRIEF.md). Full account: CHANGE_LOG V22. Everything below the V21 heading is historical.
+
+**DONE this sprint:**
+- **committees-api repaired:** deep-offset server 500s (~31s timeout, load-dependent) killed the WrittenEvidence walk — replaced with date-windowed `list:…:win:{YYYY-MM}` rows. Breaker cleared, **56,518 item rows unparked + draining**, 1,239 offset list rows retired. Windows seeded post-push (`v22-seed-writtenevidence-windows.ts`).
+- **judiciaryni repaired:** transient IP-cut + the AdaptiveThrottle suspend path was DEAD CODE everywhere (ceiling 30s < threshold 60s — fixed, plus 403/socket backoff) — rate halved 2000ms/1; listing got the list-row treatment (`list:page:{N}`, pages 96–396). Breaker cleared + 332 failed reset POST-PUSH (`v22-seed-judiciaryni-list.ts` then the SQL).
+- **Enum repairs found real universe:** si-2010plus enum seeded **11,852 missing instruments** (the V12 never-run reseed); regional enum seeded 6,435 (incl. asc/mwa). 7 dense uksi years re-throttled — reset at close, verify drained next session.
+- **HUDOC revived:** working grammar (`contentsitename:ECHR AND respondent:"GBR" AND languageisocode:"ENG"` = ✓4,471, browser UA + Referer, kpdate sort), PDF-conversion text route, one-judgment probe PASSED end-to-end (19,283 words, licence `echr-nc` VERIFIED live). Seed post-push: `v22-seed-echr-queue.ts --canary 5` (Railway egress unverified!) → full.
+- **Lords Hansard 1919–1999:** per-house cutoffs — Lords cuts at **1999-11-17** (first pwdata-lords file; S5L vol 607 starts that exact day). S5L cap 32 → 606. Pilot scored: 1936 vol 2,408 items/462k words; 1999 vol 7,076/806k, 0 ≥ cutoff. R2 batch 16 (timeout headroom for fat volumes). Seed post-push: `v22-seed-lords-hansard.ts` (~574 vols ≈ +2.3M sections est).
+- **Hansard gap-fill:** V21's "169 exist on the HTML site" was WRONG — measured **114 fillable of 170 missing** (56 genuinely lost; S1/S2 wholly unfillable). Two-stage crawl built (`gapvol:`/`gapday:` rows, sourceType `historic-hansard-html` 500ms/2). Seed post-push AFTER the Lords seeder: `v22-seed-hansard-gapfill.ts`.
+- **Word counts:** already exact at ingest for every compiled section (the brief's backfill was unnecessary — NULLs are only unavailable markers). **Total 3.456B words.** Email TOTAL block now prints the words line.
+- **Quango T1:** tiers unconfirmed → seeder built (`v22-seed-quango-t1.ts`, --seed gated), live dry-run done: **T1 = 42,942 docs**. ⚠️ HMCTS (515) and UTAAC (0) are gutted by the utaac_decision/fatality_notice exclusions — Charlie to confirm slot replacement.
+
+**POST-PUSH RUN ORDER (this session if push lands, else next):**
+1. `seed-rate-limits.ts` (judiciaryni 2000/1, historic-hansard-html new).
+2. NI: clear breaker + reset 332 failed (playbook §8 SQL) → `v22-seed-judiciaryni-list.ts`.
+3. `v22-seed-echr-queue.ts --canary 5` → verify sections + Railway egress → full seed (unblocks echr-hudoc, est 4,471).
+4. `v22-seed-lords-hansard.ts` (S5L re-list + seed) → THEN `v22-seed-hansard-gapfill.ts` (asserts the lifted-cap checkpoint).
+5. `v22-seed-writtenevidence-windows.ts` (~163 window rows).
+6. Reset the 7 throttled uksi enum rows after cooloff.
+
+**IN FLIGHT / NEXT SESSION:**
+1. Drains → ✓ re-baseline per §1c: retained-eu (~74k), historic-hansard (1803–1918 tail + Lords tranche + gap-fill — single corpus, re-baseline when ALL drain), committees-reports/evidence (56k + windows), si-2010plus (11,852 + 7 enum years), regional (6,435), EN/EMs, tax-tribunals, nao, ni-judgments, echr-hudoc.
+2. ukpga enum drained → run `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓.
+3. si-2010plus enum drain → re-run `seed-explanatory-queue.ts` (idempotent; new SIs need EM rows).
+4. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers).
+5. Quango T1 seed once Charlie confirms tiers (`v22-seed-quango-t1.ts --seed`).
+6. Corpus unification + Railway-DB migration: structural-sprint readiness — no blocker found this sprint; the queue patterns (list:/enum:/win:/gap*) are stable and documented.
+
+**DECISIONS WAITING ON CHARLIE:** quango tier confirmation (incl. HMCTS/UTAAC slot question) · FCL computational-analysis licence email · FCA Handbook licence · pwdata licence backfill · Scottish-courts devtools XHR · written-answers month-blob deletion.
+
+---
+
+## PREVIOUS STATE — V21 (QUANGOS MEASURED + HISTORIC HANSARD + HONEST DENOMINATOR, 12 Jun 2026 evening)
 
 **Sprint:** V21 (SPRINT_V21_BRIEF.md). Full account: CHANGE_LOG V21. Everything below the V20 heading is historical.
 
