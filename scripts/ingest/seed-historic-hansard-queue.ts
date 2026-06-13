@@ -8,8 +8,10 @@
  *
  * Enumerates all six series listings (WebForms postback pagination, ~80 pages
  * at 1000ms — the host soft-404s unknown paths, so the LISTING is the
- * universe). S5 capped at Commons vol 111 / Lords vol 32: vols 112/33 start
- * 1919-02-04, the first pwdata-debates day. Checkpointed per series.
+ * universe). S5 capped per house at the pwdata handoff: S5C vol 111
+ * (pwdata-debates from 1919-02-04) / S5L vol 606 (pwdata-lords from
+ * 1999-11-17; V22 lifted the cap from 32 — see v22-seed-lords-hansard.ts).
+ * Checkpointed per series.
  *
  *   --canary N   seed only the first N volumes of S1 (no corpus_targets write)
  */
