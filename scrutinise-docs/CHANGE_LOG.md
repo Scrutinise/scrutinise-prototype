@@ -1,8 +1,51 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 13 Jun 2026 — V22.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 13 Jun 2026 — V23.*
 
 ---
+
+## V23 — V22 CLOSEOUT + ORAL EVIDENCE + QUANGO T1 SEED + DEVOLVED/INQUIRY SCOPING (13 Jun 2026)
+
+**Context:** SPRINT_V23_BRIEF.md. §1 closeout was the load-bearing work this sprint — a live breaker incident and the S5L listing block both needed fixing before the new-source probes. Mid-sprint the session switched models (Fable 5 → Opus 4.8); full transcript continuity preserved, no state lost. **TOTAL at close: 12,558,897 compiled sections / 4.05B words** (V22: ~9.87M / 3.46B — the jump is the historic-hansard 1803-1918 full drain landing ~2.0M not the predicted ~850k, the Lords tranche, quangos T1, and the retained-eu/si drains). Denominator 14.79M, 29/53 targets ✓ → headline ~84.9% (honest-lower: the three devolved placeholders + Lords/gap-fill est increments enlarged the known universe — §1d working as designed).
+
+### §1 V22 closeout
+
+- **S5L Lords listing walk was CF-blocked — switched from listing walk to enumeration.** Root cause (verified, not assumed): `www.hansard-archive.parliament.uk` CF penalty-boxes the WebForms listing path IP for *minutes* after even a small request burst; the box outlives a 4×60s cooloff, so every retry (undici AND curl alike) 403'd on page 1. Both curl builds present are Schannel (no TLS-fingerprint lever); isolated requests succeed only in the gaps. **The decisive insight: the ZIP path is CF-free** (V21 proved it — full seed + Railway canary ran on zip fetches). S5L docIds are deterministic `S5LV{NNNN}P0`; probed 13 Jun — vols 33/100/300/606 PK-real, NO split (`_a/_b`) or multi-part (`P1`) forms exist in the range (S5LV0100P1 + S5LV0040P0_a both soft-404). **`v22-seed-lords-hansard.ts` rewritten to enumerate P0 vols 1-606** and let the worker's `fetchVolumeXml` PK-check sort real zips from soft-404 gaps (absent → `no-provisions` marker, itself a section row, so a run of gaps can't trip the zero-output breaker). **Canary PASSED** (predict-measure-commit): seeded S5LV0100P0 → 2,408 compiled sections, max date 1936-05-29 — exactly the V22 pilot figure, AND a surviving 1936 Lords volume proves the DEPLOYED parser uses the Lords 1999-11-17 cutoff (not the old Commons-1919 one). Seeded 578 rows (574 above the old cap-32), est += 2,296,000. **Tranche grinding** (754 done at close, S5L at 110,441 sections, max date 1981 — climbing to 1999). The resumable-walk machinery (curl + per-page sidecar checkpoint, `listHistoricHansardVolumes` `resumeFile`) was built first and is kept for future series, but enumeration is the live path for S5L.
+- **Hansard gap-fill seeded — 113 gapvol rows** (S3 40 · S4 57 · S5C 16; S5L 0 — enumeration covers it). The 113-vs-V22-measured-114 difference is exactly the 1 S5L HTML-fillable volume, now absorbed as a bulk-archive soft-404 marker rather than HTML-crawled (acceptable 1-volume / ~4k-section loss; noted).
+- **uksi enum rows reset + DRAINED:** the 7 throttled `enum:uksi:{2012-14,2023-26}` rows reset to pending → all 17 si-2010plus enum rows now done.
+- **⚠️ INCIDENT — tna-legislation zero-output breaker FALSE-POSITIVE trip (root cause found, cleared).** Tripped 02:16 *"838 rows marked done with 0 corpus_sections written"*, parking **108,349 rows** (retained-eu 74,311 · si-2010plus 22,215 · EM 10,864 · EN 560 · regional 399). Verified, not assumed: the 838 rows (regional wsi/2017, ssi/2020) **already held their sections from a prior ingest** — idempotent re-processing UPSERTs identical rows, so `corpus_sections` COUNT does not grow even though output was produced. The zero-output breaker (`querySourceCounts` compares total per-source section count between sweeps) cannot distinguish "wrote nothing" from "re-wrote identical rows" → false trip on a contiguous run of idempotent re-runs (clustered by the `priority,id` claim order). Cleared per playbook §8 (breaker + streak reset + unpark 108,349); did NOT re-trip in-session. **Recommended fix (playbook §8 lesson added): the breaker should track genuinely-empty done rows at the worker, not infer emptiness from aggregate count growth** — otherwise any reseed of already-complete rows re-trips it.
+- **✓ re-baselines (4 drained corpora):** echr-hudoc 4,410 · tax-tribunals 12,089 · nao-reports 2,570 · lawcom 262 (`v23-rebaseline.ts`, guarded — refuses any corpus with open rows; classified residue excluded per §1c rule 2). Still grinding (✓ next session): retained-eu, si-2010plus, regional, EN/EM, committees-reports/evidence, ni-judgments, historic-hansard (Lords + gap-fill must ALL drain first). ukpga cleanup ran → **primary-acts-pre-2000 ✓ 165,438** (deleted 5,840 boilerplate + 1,057 dead markers).
+- **rawToText entity fidelity (V23):** `shared/compile.ts` `rawToText()` now decodes numeric (`&#xa0;`) and named HTML entities (the historic-hansard fidelity set) instead of blanking them — committees oral transcripts carried literal `&#xa0;`. Affects future ingests/re-compiles only.
+
+### §2 Committee oral evidence — COVERED (verified definitively)
+
+- **OralEvidence IS a distinct Committees-API publication type and IS already ingested** — 14,820 compiled `oralevidence:*` sections under corpus `committees-evidence` (avg 14,688 words, opl-3.0, 535 no-provisions markers). R2 spot-check (oralevidence:5193, Energy & Climate Change Committee 2016) = clean witness-session transcript with named witnesses + Q-numbered exchanges. The V20-22 committees-api build walked Publications + OralEvidence + WrittenEvidence; expert oral sessions are NOT a gap. WrittenEvidence (126,564) + reports (47,593) still draining.
+
+### §3 Quango Tranche 1 — SEEDED (Charlie-confirmed)
+
+- `v22-seed-quango-t1.ts --seed`: T1 live re-measure = **42,942 docs** across 20 ALBs; **41,321 new `quangos-govuk` rows seeded** (the gap = URL-dedup against 233,480 gov.uk URLs already held). Per-org tagging via docPath, OGL, govuk-content sourceType. Grinding — **76,461 sections at close**, 5,380 pending, 23 transient failures (0.05%, non-systemic). HMCTS (515) and UTAAC (0) confirmed gutted by the utaac_decision/fatality_notice exclusions (Charlie's tier decision stands).
+
+### §4 Devolved parliament records — PROBED + SIZED (build V24)
+
+- **NI Assembly — build-ready, cleanest route.** AIMS API `data.niassembly.gov.uk/hansard.asmx` (`GetAllHansardReports` + `GetHansardComponentsByReportId`), clean per-speech XML. MEASURED: **646 plenary reports 2012-09-10..2026-06-09**; sampled 539-1172 components/report, ~400 Spoken-Text speech sections each → **~250-300k**. Speaker via `Speaker(MlaName)`+`Spoken Text` pairs (pwdata-shaped). Pre-2012 not in AIMS (Assembly suspended 2002-07, 2017-20).
+- **Senedd Cofnod** — `record.senedd.wales` structured archive (English) + `cofnod.senedd.cymru` (Welsh) + `business.senedd.wales` ModernGov; `/Search/` live. ROUGH ~150-250k (bilingual, since 1999). Structure mapping needed.
+- **Scottish Parliament Official Report** — `parliament.scot` HTML (date-based + alphabetical-list + search); `data.parliament.scot` is the SpOpenData platform but its API base is NOT exposed in static HTML (path guesses 404 — needs JS-bundle/XHR inspection, same class as the blocked scottish-courts API). ROUGH ~250-400k. HARDEST — HTML-crawl fallback.
+- Placeholders upserted (`v23-devolved-placeholders.ts`, playbook §1d): niassembly-hansard ~270k · senedd-cofnod ~200k · scottish-parliament-or ~320k. Licences pending-verification (all expected OGL/own-OGL — footer grep was analytics-noisy; verify at V24 build). Licence-map entries added.
+
+### §5 Public inquiries — REGISTER BUILT + one probed (`INQUIRIES_UNIVERSE.md`)
+
+- Register from gov.uk org enumeration (22 concluded inquiry/review bodies — Iraq, Leveson, Shipman, Bloody Sunday, Mid Staffs, Baha Mousa…) + the major current/recent statutory inquiries (Covid-19, Grenfell, Post Office Horizon, Infected Blood, Manchester Arena, IICSA, Undercover Policing, Brook House) + the UK Gov Web Archive route for dark own-sites.
+- **Probe — Infected Blood Inquiry (concluded May 2024): route verified.** Reports = **9 PDF report volumes** on `gov.uk/government/publications/infected-blood-inquiry-reports` (MEASURED via content-API attachments), CF-free, OGL, pdfToText-extractable. **NOT seeded** — needs a small `inquiry-reports` sourceType (gov.uk publication-attachment route differs from the govuk-content content-page processor); turn-key for V24, recommended as the family's first seed. Reports-only universe ROUGH ~40-70k across ~35 inquiries; evidence bundles deferred. Licence-map `inquiry-reports` → OGL added.
+
+### §6 Small probes — SIZED
+
+- **ONS** 11,177 gov.uk docs (5,022 national_statistics + 4,845 official_statistics + 1,211 announcements); substantive datasets on `api.beta.ons.gov.uk` (live). Marginal legal-text relevance — sizing only, deferred.
+- **OBR** 61 gov.uk docs (23 independent_report + 13 policy_paper) — trivial, OGL; substantive EFO/fiscal-risks publications on obr.uk. Foldable into a future govuk-content org seed.
+- **Pre-2010 select-committee archive** — `publications.parliament.uk/pa/cm{session}/cmselect/` live (200) but CF-fronted (the V15/16 committees-portal blocker); ~10-20k reports, depth gap named (committees-api covers ~2012+). Sizing only.
+
+### §7 Readiness — unification + Railway-migration sprint
+
+- Flagged per brief §8: no new blocker found. Queue patterns (list:/enum:/win:/gap*/enumerated-stem) are stable and documented; the breaker false-positive class is the one ops-doctrine gap (idempotent reseed re-trips the zero-output breaker). Legacy 914k `LegislationSection` conversion + web-app table inventory remain the structural-sprint scope (SEARCH_AUDIT §1/§6).
 
 ## V22 — REPAIRS, THE SECOND HANSARD CENTURY, WORD COUNTS, QUANGO TRANCHE 1 (13 Jun 2026)
 

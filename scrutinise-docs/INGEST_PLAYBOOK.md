@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 11 Jun 2026 — V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven new patterns (regnal ids, chrome-boilerplate HTML, FCL phantom rel=last, seed-after-push, rate-limiter race, SQL `\d` regex, enumeration logging), §16 tax-source map, §17 FCL court coverage.*
+*Last updated: 13 Jun 2026 — V23: §8 four new patterns (zero-output breaker idempotent-reseed false-positive + verify-by-id-prefix, CF listing-walk penalty-box → enumerate deterministic path, public-inquiries register method). V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven patterns, §16 tax-source map, §17 FCL court coverage.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting services, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -405,6 +405,22 @@ SET status = 'pending', "lastError" = NULL
 WHERE "sourceType" = '<sourceKey>' AND status = 'blocked';
 ```
 `Ops` liveness will start `Ingest` within 15 min of pending > 0.
+
+### Zero-output breaker FALSE-POSITIVES on idempotent reseeds (V23)
+
+The zero-output breaker (`querySourceCounts` in ops.ts) compares **total per-source `corpus_sections` COUNT** between sweeps: if ≥25 rows go `done` while the count grows by 0, it trips *"N rows marked done with 0 corpus_sections written"*. This **cannot distinguish "wrote nothing" from "re-wrote identical rows"**. Re-processing a row whose sections already exist UPSERTs them → `bulkUpsertSections` adds 0 NEW rows → COUNT doesn't grow → the breaker reads it as zero output. A contiguous run of such idempotent re-runs (the `priority,id` claim order clusters them by corpus) trips it.
+
+- **V23 incident:** tna-legislation tripped on 838 already-ingested regional SIs (wsi/2017, ssi/2020) re-seeded by the V22 regional enum → parked 108,349 legitimate rows (incl. EN/EM that had never run). **Diagnosis discipline (CLAUDE.md §0/§13):** the breaker's claim was checked against the actual rows before clearing — they DID have sections (`id LIKE 'corpus:docId%'`; note legislation sections have `parentDocId=NULL`, so a parentDocId join falsely reports "no section"). Verified false-positive → cleared per the §8 SQL (incl. `zero_output_streak=0`) + unparked.
+- **Before clearing a zero-output trip, always verify**: query a sample of the source's recently-`done` rows for sections by **id-prefix** (not parentDocId). If they have sections, it's an idempotent-reseed false-positive — clear it. If they genuinely have none, it's the real committees-style empty-done bug — do NOT clear; fix the processor.
+- **Recommended fix (open):** the breaker should track genuinely-empty done rows reported by the worker (e.g. a per-row "0 sections AND 0 markers" signal), not infer emptiness from aggregate count growth. Until then, any reseed of already-complete rows risks a false trip.
+
+### CF penalty-boxes listing-walk IPs — enumerate the deterministic path instead (V23)
+
+`www.hansard-archive.parliament.uk` (and the publications.parliament.uk class) CF-penalty-box the **listing/WebForms path** IP for *minutes* after even a small request burst; the box outlives a 4×60s cooloff, so a sustained walk 403s partway and every retry 403s on page 1. **Both local curl builds are Schannel — no TLS-fingerprint lever** (unlike committees-portal where curl's fingerprint helped). The fix is not to fight the listing: the **file/zip path is a different CF surface and is served fine** (V21 proved zip fetches work from Railway). When docIds are deterministic and the host soft-404s absent paths (PK-magic check), **enumerate the docId space directly and let the worker classify soft-404s as markers** — no listing walk needed. S5L Lords (V23): enumerated `S5LV{0033..0606}P0` after confirming no `_a/_b`/`P1` splits exist in range. A resumable curl walk (`listHistoricHansardVolumes` `resumeFile`, per-page VIEWSTATE sidecar) is kept for series that genuinely need the listing as the universe.
+
+### Public inquiries register method (V23)
+
+Statutory/public inquiries are a source family, not a single source — see `scrutinise-docs/INQUIRIES_UNIVERSE.md`. To (re)build the register: (1) gov.uk org enumeration `filter_format=organisation&q=inquiry` then filter titles to inquiry/review (drops pay-review-bodies) — yields the concluded historic backbone (~22); (2) add the major current/recent Inquiries-Act-2005 inquiries by hand (each on its own `*.public-inquiry.uk` domain); (3) the UK Gov Web Archive (`webarchive.nationalarchives.gov.uk`) preserves dark own-sites whole (CF-free, TNA-hosted). **Reports-first, evidence-deferred** — report PDFs are OGL/Crown and modest (~40-70k sections total); evidence bundles are an order of magnitude larger and mixed-licence. Recent inquiries publish report PDFs as gov.uk publication attachments (`/api/content/...` `details.attachments`) — CF-free, the cleanest seed route (build an `inquiry-reports` sourceType with a gov.uk-attachment adapter + a Web-Archive-snapshot adapter).
 
 ### Ingest liveness (V17)
 

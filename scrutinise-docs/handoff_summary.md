@@ -2,11 +2,39 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 13 Jun 2026 — V22 complete; see V22 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+*Last updated: 13 Jun 2026 — V23 complete; see V23 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
 
 ---
 
-## CURRENT STATE — V22 (REPAIRS + SECOND HANSARD CENTURY + WORD COUNTS + QUANGO DRY-RUN, 13 Jun 2026)
+## CURRENT STATE — V23 (V22 CLOSEOUT + ORAL EVIDENCE + QUANGO T1 SEED + DEVOLVED/INQUIRY SCOPING, 13 Jun 2026)
+
+**Sprint:** V23 (SPRINT_V23_BRIEF.md). Full account: CHANGE_LOG V23. Everything below the V22 heading is historical. Session note: switched models mid-sprint (Fable 5 → Opus 4.8) with full transcript continuity — no state lost.
+
+**TOTAL at close:** 12,558,897 compiled sections / **4.05B words** (V22 ~9.87M / 3.46B). Denominator 14.79M, 29/53 ✓ → headline ~84.9% (honest-lower from new placeholders).
+
+**DONE this sprint:**
+- **S5L Lords listing walk was CF-blocked → switched to ENUMERATION.** The WebForms listing path IP-penalty-boxes for minutes after any burst (undici + curl both 403 on page 1, box outlives 4-min cooloff). The zip path is CF-free (V21-proven), docIds deterministic, no `_a/_b`/`P1` splits in range → `v22-seed-lords-hansard.ts` enumerates P0 vols 1-606; worker PK-checks soft-404 gaps to markers. **Canary PASSED** (S5LV0100P0 → 2,408 sections, 1936 date proves the deployed Lords-1999 cutoff). 578 rows seeded, **tranche grinding** (754 done, S5L 110,441 sections, at 1981 → 1999). Resumable curl walk built + kept for future series.
+- **Gap-fill seeded:** 113 gapvol rows (S3 40 · S4 57 · S5C 16). 1 S5L HTML gap volume absorbed as a marker (noted).
+- **⚠️ tna-legislation breaker FALSE-POSITIVE cleared:** tripped on 838 idempotent re-runs (already-held sections → 0 COUNT growth ≠ 0 output), parked 108,349 rows; root cause verified, cleared per §8, unparked, did not re-trip. **Recommend breaker fix** (track empty done-rows at the worker, not aggregate count growth).
+- **✓ re-baselines:** echr-hudoc 4,410 · tax-tribunals 12,089 · nao-reports 2,570 · lawcom 262 · primary-acts-pre-2000 165,438 (ukpga cleanup ran). uksi enum (7) reset + drained.
+- **Oral evidence COVERED (§2):** OralEvidence is a distinct committees-api type, already ingested — 14,820 `oralevidence:*` sections (committees-evidence, opl-3.0), R2-verified clean transcripts. Not a gap.
+- **Quango T1 SEEDED (§3):** 41,321 `quangos-govuk` rows (42,942 measured − URL-dedup), grinding (76,461 sections at close).
+- **Devolved (§4) PROBED+SIZED, build V24:** NI Assembly AIMS API build-ready (646 reports 2012-2026, ~250-300k, cleanest); Senedd record.senedd.wales (~150-250k); Scottish parliament.scot HTML + hidden SpOpenData API (~250-400k, hardest). Placeholders + licence-map entries added.
+- **Inquiries (§5):** `INQUIRIES_UNIVERSE.md` register built (~35 inquiries, ~40-70k reports-only). Infected Blood probe = 9 PDF report vols on gov.uk (CF-free OGL, route verified, NOT seeded — needs `inquiry-reports` sourceType, V24).
+- **Small probes (§6) SIZED:** ONS 11,177 gov.uk docs (marginal); OBR 61 (trivial/foldable); pre-2010 committees ~10-20k (CF-blocked, depth gap named).
+
+**IN FLIGHT / NEXT SESSION:**
+1. Drains → ✓ re-baseline (`v23-rebaseline.ts --confirm`, guarded): retained-eu, si-2010plus, regional, EN/EM (now unblocked, draining), committees-reports/evidence, ni-judgments, **historic-hansard (re-baseline only when 1803-1918 + Lords tranche + gap-fill ALL drain — single corpus)**.
+2. EN/EM (11,424) were never processed (blocked behind retained-eu since V20) — verify they produce content now that they're unparked.
+3. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers).
+4. **V24 candidates:** NI Assembly Hansard build (turn-key); inquiry-reports sourceType (Infected Blood first); Senedd/Scottish builds; quango T2/T3.
+5. **Breaker fix:** zero-output breaker false-trips on idempotent reseeds — track genuinely-empty done rows at the worker.
+
+**DECISIONS WAITING ON CHARLIE:** devolved licences (3, expected OGL — verify) · FCL computational-analysis email · FCA Handbook · pwdata licence backfill · Scottish-courts + Scottish-parliament SpOpenData devtools XHR (same technique unblocks both) · written-answers month-blob deletion · BAILII email.
+
+---
+
+## PREVIOUS STATE — V22 (REPAIRS + SECOND HANSARD CENTURY + WORD COUNTS + QUANGO DRY-RUN, 13 Jun 2026)
 
 **Sprint:** V22 (SPRINT_V22_BRIEF.md). Full account: CHANGE_LOG V22. Everything below the V21 heading is historical.
 
