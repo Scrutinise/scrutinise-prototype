@@ -44,9 +44,10 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'committees-api',      intervalMs: 1000, maxConcurrentWorkers: 3, note: 'committees-api.parliament.uk JSON API (V20) — 2 fetches/row (detail + document), 1000ms/3 ≈ 2 rps at the host; Railway egress unverified until post-push canary' },
   { sourceKey: 'tax-tribunals',       intervalMs: 1000, maxConcurrentWorkers: 2, note: 'financeandtax.decisions.tribunals.gov.uk (V20) — legacy HMCTS WebForms host; 2 fetches/row (view + judgment file), keep gentle at ~2 rps' },
   { sourceKey: 'lawcom',              intervalMs: 500,  maxConcurrentWorkers: 2, note: 'lawcom.gov.uk WP REST API + MoJ CDN PDFs (V20) — small universe (240 pubs), OGL v3.0' },
-  { sourceKey: 'judiciaryni',         intervalMs: 1000, maxConcurrentWorkers: 2, note: 'judiciaryni.uk Drupal (V20) — 2 fetches/row (page + PDF), ~5,900 decisions; official NI record FCL lacks' },
+  { sourceKey: 'judiciaryni',         intervalMs: 2000, maxConcurrentWorkers: 1, note: 'judiciaryni.uk Drupal (V20) — 2 fetches/row (page + PDF), ~5,900 decisions; official NI record FCL lacks. V22: HALVED from 1000ms/2 — host IP-cut the Railway drain at ~428 rows on 12 Jun (politeness §1b); client now backs off on 403/socket failures too' },
   { sourceKey: 'nao',                 intervalMs: 500,  maxConcurrentWorkers: 2, note: 'nao.org.uk WP REST API + uploads PDFs (V20) — 2,755 reports; licence nao-nc (non-commercial + attribution)' },
   { sourceKey: 'historic-hansard',    intervalMs: 5000, maxConcurrentWorkers: 2, note: 'hansard-archive.parliament.uk bulk volume zips (V21) — 1 fetch/row (~1-2MB zip) then minutes of local parse + R2 puts; 5000ms/2 is half of a reasonable 2500ms/4 per the politeness doctrine (Parliament static archive, CF-fronted)' },
+  { sourceKey: 'historic-hansard-html', intervalMs: 500, maxConcurrentWorkers: 2, note: 'api.parliament.uk/historic-hansard HTML gap-fill (V22) — gapday rows make ~5-40 page fetches each; client throttle floors 500ms within the row, so the host sees ≲2 rps total' },
 ]
 
 async function main(): Promise<void> {

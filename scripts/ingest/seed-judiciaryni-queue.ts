@@ -25,6 +25,7 @@ async function main() {
     ? JSON.parse(fs.readFileSync(CHECKPOINT, 'utf8')) : { page: 0, total: 0 }
 
   let emptyStreak = 0
+  let complete = false
   for (let page = ckpt.page; ; page++) {
     if (canary && page >= canary) break
     // judiciaryni rate-limits sustained listing walks — retry a failed page
@@ -42,7 +43,7 @@ async function main() {
     }
     if (slugs.length === 0) {
       emptyStreak++
-      if (emptyStreak >= 2) { console.log(`[seed] page ${page}: past the end`); break }
+      if (emptyStreak >= 2) { console.log(`[seed] page ${page}: past the end`); complete = true; break }
       continue
     }
     emptyStreak = 0
@@ -61,13 +62,20 @@ async function main() {
   }
 
   console.log(`[seed] ni-judgments: ${ckpt.total} new rows`)
-  if (!canary && ckpt.total > 0) {
+  // V22: est updates only from a FULLY-walked universe (V20 lesson — a stalled
+  // run must never clobber the est with a partial count), and from the actual
+  // queue-row count, not this run's incremental total.
+  if (!canary && complete) {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM ingest_queue WHERE corpus = $1 AND "docId" NOT LIKE 'list:%'`, [CORPUS])
     await pool.query(`
       INSERT INTO corpus_targets (corpus_key, display_label, est_sections, est_is_confirmed, blocked, blocked_reason)
       VALUES ($1, 'NI Judgments (Judiciary NI)', $2, false, false, NULL)
       ON CONFLICT (corpus_key) DO UPDATE SET est_sections = EXCLUDED.est_sections, blocked = false, blocked_reason = NULL
-    `, [CORPUS, ckpt.total])
-    console.log(`[targets] ${CORPUS} est=${ckpt.total}`)
+    `, [CORPUS, rows[0].n])
+    console.log(`[targets] ${CORPUS} est=${rows[0].n} (complete walk)`)
+  } else if (!canary) {
+    console.log('[targets] walk incomplete — est NOT updated (V20 partial-universe rule)')
   }
   await endNeonPool()
 }

@@ -31,6 +31,9 @@ const FETCH_TIMEOUT_MS = 60_000
 
 const throttle = new AdaptiveThrottle({
   floor: 500,
+  // V22: ceiling must exceed suspendThresholdMs or onSuspend can never fire
+  // (default ceiling 30s < 60s threshold made the suspend path dead code)
+  ceiling: 120_000,
   suspendThresholdMs: 60_000,
   onSuspend: (delayMs) => {
     suspendSource('committees-api', delayMs * 2)
@@ -82,14 +85,23 @@ async function apiGet(path: string): Promise<{ status: number; json: unknown | n
     return { status: res.status, json: await res.json() }
   } catch (err) {
     clear()
+    // V22: socket-level failure is a rate signal (the API rate-limits sustained
+    // walks); deterministic HTTP errors (e.g. deep-offset 500s) do NOT back off
+    throttle.backoff()
     console.warn(`[committees-api] fetch error ${path}: ${err}`)
     return { status: 0, json: null }
   }
 }
 
-export async function listCommitteesApiPage(kind: CommitteesApiKind, skip: number, take = 100):
+// window: optional StartDate/EndDate (YYYY-MM-DD, inclusive) — V22. Deep global
+// offsets die server-side (HTTP 500 after ~31s, load-dependent: skip=100000
+// failed on 12 Jun, skip=50000 on 13 Jun); within a date window Skip stays
+// shallow and the same query answers in ~2s.
+export async function listCommitteesApiPage(kind: CommitteesApiKind, skip: number, take = 100,
+  window?: { start: string; end: string }):
   Promise<{ totalResults: number; items: CommitteesApiListItem[] } | null> {
-  const { json } = await apiGet(`/${kind}?Skip=${skip}&Take=${take}`)
+  const win = window ? `&StartDate=${window.start}&EndDate=${window.end}` : ''
+  const { json } = await apiGet(`/${kind}?Skip=${skip}&Take=${take}${win}`)
   if (!json || typeof json !== 'object') return null
   const obj = json as { totalResults?: number; items?: CommitteesApiListItem[] }
   if (typeof obj.totalResults !== 'number' || !Array.isArray(obj.items)) return null

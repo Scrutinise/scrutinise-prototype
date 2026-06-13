@@ -18,7 +18,11 @@ const UA = 'Scrutinise-Ingest/1.0 (legal corpus research)'
 const FETCH_TIMEOUT_MS = 60_000
 
 const throttle = new AdaptiveThrottle({
-  floor: 1000,
+  floor: 2000, // V22: halved from 1000 — host cut the fetching IP mid-drain on 12 Jun (politeness §1b)
+  // V22: ceiling must exceed suspendThresholdMs or onSuspend can never fire
+  // (default ceiling 30s < 60s threshold made the suspend path dead code —
+  // why the 12 Jun IP cut burned 332 rows instead of suspending the source)
+  ceiling: 120_000,
   suspendThresholdMs: 60_000,
   onSuspend: (delayMs) => {
     suspendSource('judiciaryni', delayMs * 2)
@@ -38,12 +42,16 @@ async function get(url: string): Promise<{ status: number; text: string | null }
   try {
     const res = await fetch(url, { signal, headers: { 'User-Agent': UA } })
     clear()
-    if (res.status === 429 || res.status === 503) { throttle.backoff(); return { status: res.status, text: null } }
+    // V22: 403 added — the host's IP cut serves 403/hangups, not 429 (12 Jun burn)
+    if (res.status === 429 || res.status === 503 || res.status === 403) { throttle.backoff(); return { status: res.status, text: null } }
     if (!res.ok) return { status: res.status, text: null }
     throttle.success()
     return { status: res.status, text: await res.text() }
   } catch (err) {
     clear()
+    // V22: socket-level failure (timeout/reset) is a rate signal here too —
+    // sustained cuts must escalate to suspend, not burn rows at full speed
+    throttle.backoff()
     console.warn(`[judiciaryni] fetch error ${url}: ${err}`)
     return { status: 0, text: null }
   }
@@ -90,12 +98,13 @@ export async function fetchNiFile(url: string): Promise<Buffer | null> {
   try {
     const res = await fetch(url, { signal, headers: { 'User-Agent': UA } })
     clear()
-    if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
+    if (res.status === 429 || res.status === 503 || res.status === 403) { throttle.backoff(); return null }
     if (!res.ok) return null
     throttle.success()
     return Buffer.from(await res.arrayBuffer())
   } catch (err) {
     clear()
+    throttle.backoff()
     console.warn(`[judiciaryni] file fetch error ${url}: ${err}`)
     return null
   }
