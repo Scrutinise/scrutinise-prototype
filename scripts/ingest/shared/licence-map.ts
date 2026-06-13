@@ -139,6 +139,18 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // written permission. Same posture as nao-nc: fine for the charity,
   // default-excluded from commercial surfaces.
   'echr-hudoc': { licence: 'echr-nc', attributionBoilerplate: '© ECHR-CEDH. Reproduced for information/education purposes per the Court’s copyright statement; commercial use requires permission.' },
+  // Devolved-legislature debate records (V23 §4 probes — none seeded yet; build
+  // V24). Each body publishes under its own open licence; the exact statement
+  // was not re-verified live this sprint (analytics-noise on the footer grep) —
+  // pending-verification, but all three are expected to be OGL v3.0 / own-OGL.
+  'niassembly-hansard': { licence: 'pending-verification', attributionBoilerplate: 'NI Assembly Hansard — © NI Assembly Commission; licence to verify (expected OGL).' },
+  'senedd-cofnod': { licence: 'pending-verification', attributionBoilerplate: 'Senedd Cymru Cofnod / Record of Proceedings — licence to verify (expected OGL).' },
+  'scottish-parliament-or': { licence: 'pending-verification', attributionBoilerplate: 'Scottish Parliament Official Report — © Scottish Parliamentary Corporate Body; licence to verify (expected OGL/SPCB licence).' },
+  // Public inquiry reports (V23 §5 probe — Infected Blood route verified, not
+  // seeded; build V24). Crown copyright under OGL v3.0 when gov.uk-published or
+  // per the inquiry's own OGL statement. Evidence bundles are mixed-licence and
+  // deferred.
+  'inquiry-reports': OGL3,
 }
 
 export function licenceForCorpus(corpus: string): string | null {

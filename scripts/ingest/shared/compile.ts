@@ -117,10 +117,23 @@ export async function compileGeneral(_rawContent: string): Promise<string> {
 
 // ── Tag-stripping compiler (no LLM — used by ingest workers) ─────────────────
 
+// Entity fidelity set mirrors historic-hansard's parser (V23): decode what has
+// a real character, drop unknown named entities as whitespace. Pre-V23 rows
+// carry literal numeric entities (&#xa0; seen in committees oral transcripts).
+const HTML_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+  pound: '£', euro: '€', sect: '§', copy: '©', reg: '®', deg: '°', middot: '·',
+  nbsp: ' ', ndash: '–', mdash: '—', hellip: '…',
+  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”',
+  frac12: '½', frac14: '¼', frac34: '¾',
+}
+
 export function rawToText(input: string): string {
   return input
     .replace(/<[^>]+>/g, ' ')   // remove all XML/HTML tags
-    .replace(/&[a-z]+;/gi, ' ') // remove HTML entities (&amp; &lt; etc)
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+    .replace(/&([a-zA-Z]+);/g, (_, name) => HTML_ENTITIES[name.toLowerCase()] ?? ' ')
     .replace(/\s+/g, ' ')       // collapse whitespace
     .trim()
 }

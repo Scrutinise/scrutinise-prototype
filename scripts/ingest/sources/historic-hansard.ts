@@ -31,6 +31,10 @@
  * Items are emitted ONLY inside house containers, so chrome self-excludes.
  */
 import AdmZip from 'adm-zip'
+import { spawnSync } from 'child_process'
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
 import { AdaptiveThrottle } from '../shared/adaptive-throttle'
 import { suspendSource } from '../shared/queue-client'
 
@@ -97,6 +101,32 @@ function pagerTargets(html: string): Array<{ target: string; label: string }> {
     .map(m => ({ target: m[1], label: m[2].trim() }))
 }
 
+// Listing fetches go through curl, not Node fetch (V23). CF JA3-blocks undici
+// on the listing path with a near-zero budget — once a walk trips it, every
+// undici request 403s for hours while curl is served 200 at the same moment
+// (verified 13 Jun 2026; the committees-portal V16 fingerprint pattern). The
+// cookie jar keeps CF's session continuity across postbacks (V16: jar sessions
+// stay valid 100+ pages). spawnSync is fine here — the walk is a local seeder,
+// never a Railway worker (no curl in Railway containers).
+const LISTING_COOKIE_JAR = path.join(os.tmpdir(), 'hansard-archive-cookies.txt')
+
+function curlFetch(url: string, post?: { body: string }): { status: number; text: string } {
+  const args = [
+    '-s', '-S', '--max-time', '60', '-w', '\n%{http_code}',
+    '-A', UA, '-c', LISTING_COOKIE_JAR, '-b', LISTING_COOKIE_JAR,
+  ]
+  if (post) args.push('--data-raw', post.body, '-H', 'Content-Type: application/x-www-form-urlencoded')
+  args.push(url)
+  const res = spawnSync('curl', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  if (res.error) throw res.error
+  if (res.status !== 0) throw new Error(`curl exit ${res.status}: ${(res.stderr ?? '').trim()}`)
+  const out = res.stdout
+  const nl = out.lastIndexOf('\n')
+  return { status: parseInt(out.slice(nl + 1).trim(), 10), text: out.slice(0, nl) }
+}
+
+interface WalkProgress { page: number; stems: string[]; html: string }
+
 // Walks every listing page of a series via WebForms postbacks. The pager shows
 // a numbered window plus "..." continuation links; we always click the link
 // labelled with the next page number, falling back to the trailing "...".
@@ -105,35 +135,55 @@ function pagerTargets(html: string): Array<{ target: string; label: string }> {
 // 60s cooling; and a series with maxVol stops as soon as a page is entirely
 // past the cap (the listing is volume-ordered), which keeps S5C to ~12 pages
 // instead of ~100.
+//
+// V23 — resumable walk: S5L at cap 606 is ~61 pages, well past CF's sustained-
+// walk budget, so it WILL trip mid-walk. With `opts.resumeFile`, after every
+// page we persist {page, stems, html} (html carries the VIEWSTATE needed to
+// re-issue the next postback). A 403 after the in-fetch cooloff throws, but the
+// sidecar holds every page crawled so far; the next run loads it and continues
+// from the last good page. Once the walk completes the sidecar is deleted.
 export async function listHistoricHansardVolumes(
   seriesKey: string,
-  opts: { gapMs?: number } = {},
+  opts: { gapMs?: number; resumeFile?: string } = {},
 ): Promise<string[]> {
   const config = HANSARD_SERIES[seriesKey]
   if (!config) throw new Error(`Unknown Hansard series: ${seriesKey}`)
   const gapMs = opts.gapMs ?? 1000
   const url = `${BASE}/${config.dir}`
 
-  const fetchWithCooling = async (init?: RequestInit): Promise<string> => {
+  const fetchWithCooling = async (post?: { body: string }): Promise<string> => {
     for (let attempt = 1; ; attempt++) {
-      const res = await fetch(url, { ...init, headers: { 'User-Agent': UA, ...(init?.headers ?? {}) } })
-      if (res.ok) return res.text()
-      if (attempt >= 4) throw new Error(`hansard-archive listing ${seriesKey}: HTTP ${res.status} after ${attempt} attempts`)
-      console.warn(`[hansard-archive] ${seriesKey}: HTTP ${res.status} — cooling 60s (attempt ${attempt})`)
+      const { status, text } = curlFetch(url, post)
+      if (status === 200) return text
+      if (attempt >= 4) throw new Error(`hansard-archive listing ${seriesKey}: HTTP ${status} after ${attempt} attempts`)
+      console.warn(`[hansard-archive] ${seriesKey}: HTTP ${status} — cooling 60s (attempt ${attempt})`)
       await new Promise(r => setTimeout(r, 60_000))
     }
   }
 
-  const stems: string[] = []
-  let html = await fetchWithCooling()
-  stems.push(...zipStemsOf(html))
+  const save = (p: WalkProgress) => { if (opts.resumeFile) fs.writeFileSync(opts.resumeFile, JSON.stringify(p), 'utf8') }
+
+  let stems: string[]
+  let html: string
+  let page: number
+  const resumed = opts.resumeFile && fs.existsSync(opts.resumeFile)
+    ? JSON.parse(fs.readFileSync(opts.resumeFile, 'utf8')) as WalkProgress
+    : null
+  if (resumed) {
+    ({ page, stems, html } = resumed)
+    console.log(`[hansard-archive] ${seriesKey}: resuming walk from page ${page} (${stems.length} stems so far)`)
+  } else {
+    html = await fetchWithCooling()
+    stems = [...zipStemsOf(html)]
+    page = 1
+    save({ page, stems, html })
+  }
 
   const pastCap = (pageStems: string[]) =>
     config.maxVol != null &&
     pageStems.length > 0 &&
     pageStems.every(s => (parseVolumeStem(s)?.volume ?? 0) > config.maxVol!)
 
-  let page = 1
   while (!pastCap(zipStemsOf(html))) {
     const links = pagerTargets(html)
     const nextNumbered = links.find(l => l.label === String(page + 1))
@@ -150,19 +200,17 @@ export async function listHistoricHansardVolumes(
       __VIEWSTATEGENERATOR: hiddenField(html, '__VIEWSTATEGENERATOR'),
       __EVENTVALIDATION: hiddenField(html, '__EVENTVALIDATION'),
     })
-    html = await fetchWithCooling({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    })
+    html = await fetchWithCooling({ body: body.toString() })
     const pageStems = zipStemsOf(html)
     if (pageStems.length === 0) break
     // Postback loops back to an already-seen page → done (defensive).
     if (pageStems.every(s => stems.includes(s))) break
     stems.push(...pageStems.filter(s => !stems.includes(s)))
     page++
+    save({ page, stems, html })
   }
 
+  if (opts.resumeFile && fs.existsSync(opts.resumeFile)) fs.unlinkSync(opts.resumeFile)
   const filtered = stems.filter(s => {
     const stem = parseVolumeStem(s)
     if (!stem || stem.series !== seriesKey) return false
