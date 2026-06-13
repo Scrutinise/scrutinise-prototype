@@ -138,28 +138,13 @@ async function discoverTnaCaselaw(): Promise<DiscoveredRow[]> {
 }
 
 // ── ECHR HUDOC ───────────────────────────────────────────────────────────────
-// Discovers new paginated pages beyond the last seeded offset.
-// Makes one API call to get current total UK case count.
+// V22: the page:{start} row form is retired (the V-era routes died; the
+// revived client seeds per-doc doc:{itemid} rows via v22-seed-echr-queue.ts).
+// Discovery (itself dead since V17 exit-on-empty) must not regenerate the old
+// form — processEchr markSkips it.
 
 async function discoverEchr(): Promise<DiscoveredRow[]> {
-  const maxDocId = await getMaxDocIdForCorpus('echr-hudoc')
-  // docId format: "page:{start}" where start is HUDOC offset (0, 50, 100, ...)
-  const lastStart = maxDocId ? parseInt(maxDocId.replace('page:', ''), 10) : -50
-
-  let total = 0
-  try {
-    const { countUkCases } = await import('../sources/echr-hudoc')
-    total = await countUkCases()
-  } catch {
-    return []
-  }
-
-  if (total === 0) return []
-  const rows: DiscoveredRow[] = []
-  for (let start = lastStart + 50; start < total; start += 50) {
-    rows.push({ id: `echr-hudoc:page:${start}`, corpus: 'echr-hudoc', docId: `page:${start}`, sourceType: 'echr', priority: 3 })
-  }
-  return rows
+  return []
 }
 
 // ── EUR-Lex ───────────────────────────────────────────────────────────────────

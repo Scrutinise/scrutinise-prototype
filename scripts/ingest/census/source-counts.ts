@@ -3,7 +3,7 @@ import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.env') }) } catch { /* ok */ }
 
 import { getTotalJudgments } from '../sources/tna-caselaw'
-import { countUkCases } from '../sources/echr-hudoc'
+import { countGbrDocs } from '../sources/echr-hudoc'
 import { countHansardDebates } from '../sources/parliament-api'
 import { FCA_KNOWN_SOURCEBOOKS } from '../sources/fca-handbook'
 
@@ -45,7 +45,7 @@ async function run() {
 
   const [caselaw, echr, commons, lords, writtenStatements, writtenAnswers] = await Promise.allSettled([
     getTotalJudgments(),
-    countUkCases(),
+    countGbrDocs().then(n => n ?? 0),
     countHansardDebates('Commons', '2000-01-01', new Date().toISOString().slice(0, 10)),
     countHansardDebates('Lords', '2000-01-01', new Date().toISOString().slice(0, 10)),
     getWrittenStatementsTotal(),

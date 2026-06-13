@@ -18,7 +18,6 @@ import { getTotalJudgments } from './sources/tna-caselaw'
 import { HANSARD_PARTITIONS } from './sources/parliament-api'
 import { WORKER_DB_SUBSETS } from './sources/bailii-scraper'
 import { FCA_KNOWN_SOURCEBOOKS } from './sources/fca-handbook'
-import { countUkCases } from './sources/echr-hudoc'
 import { AdaptiveThrottle } from './shared/adaptive-throttle'
 
 type QueueRowInput = { id: string; corpus: string; docId: string; sourceType: string; priority: number }
@@ -272,33 +271,13 @@ async function populateFcaSourcebooks(): Promise<number> {
 }
 
 // ── C4 — ECHR HUDOC paginated rows ───────────────────────────────────────────
+// V22: the page:{start} form is retired (V-era routes dead; processEchr
+// markSkips it). The revived corpus seeds per-doc rows via
+// v22-seed-echr-queue.ts — this legacy populator must not regenerate them.
 
 async function populateEchrPages(): Promise<number> {
-  let totalCases = 0
-  try {
-    totalCases = await countUkCases()
-    console.log(`[populator] echr-hudoc: total UK cases from API = ${totalCases}`)
-  } catch (err) {
-    console.warn('[populator] echr-hudoc: could not query total — using 30,000 default:', err)
-    totalCases = 30_000
-  }
-
-  const pageSize = 50
-  const totalPages = Math.max(Math.ceil(totalCases / pageSize), 600)
-  const rows = []
-  for (let start = 0; start < totalPages * pageSize; start += pageSize) {
-    rows.push({
-      id: `echr-hudoc:page:${start}`,
-      corpus: 'echr-hudoc',
-      docId: `page:${start}`,
-      sourceType: 'echr',
-      priority: 3,
-    })
-  }
-
-  const inserted = await bulkUpsertQueueRows(rows)
-  console.log(`[populator] echr-hudoc: ${rows.length} page rows → ${inserted} new rows inserted`)
-  return inserted
+  console.log('[populator] echr-hudoc: retired here — use v22-seed-echr-queue.ts (per-doc rows, V22 revival)')
+  return 0
 }
 
 // ── C5 — EUR-Lex paginated rows ───────────────────────────────────────────────
