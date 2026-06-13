@@ -37,7 +37,6 @@ import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
 import { fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements, fetchDebateText } from '../sources/parliament-api'
 import { listDebatesForMonth } from '../sources/theyworkforyou'
 import { getAllHandbookModules, listSectionsForModule } from '../sources/fca-handbook'
-import { fetchCaseText as fetchEchrText, listUkCases, listUkCasesPage } from '../sources/echr-hudoc'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
 import { fetchLdaPage, MAX_524_RETRIES } from '../sources/lda-parliament'
 import { listCommitteePublications, fetchPublicationHtml } from '../sources/committees-portal'
@@ -68,6 +67,7 @@ export async function processRow(row: QueueRow): Promise<void> {
     case 'lda-parliament':  return processLda(row)
     case 'twfy-pwdata':     return processPwdata(row)
     case 'historic-hansard': return processHistoricHansard(row)
+    case 'historic-hansard-html': return processHistoricHansardHtml(row)
     case 'govuk-content':   return processGovukContent(row)
     case 'hmrc':            return processHmrc(row)
     case 'treaties':          return processTreaties(row)
@@ -432,35 +432,57 @@ async function processFcaHandbook(row: QueueRow): Promise<void> {
   }
 }
 
-// ── ECHR HUDOC ────────────────────────────────────────────────────────────────
-// docId = 'page:{start}' for per-page rows (start is HUDOC offset), or '__index'.
+// ── ECHR HUDOC (V22 revival — V20 probe routes) ──────────────────────────────
+// docId = 'doc:{itemid}' (one HUDOC document, PDF conversion → text).
+// Legacy 'page:{start}' / '__index' rows rode the dead V-era routes — skipped.
 
 async function processEchr(row: QueueRow): Promise<void> {
-  const gen = row.docId.startsWith('page:')
-    ? listUkCasesPage(parseInt(row.docId.replace('page:', ''), 10))
-    : listUkCases()
-
-  let written = 0
-  for await (const c of gen) {
-    const cKey = compiledKey('echr-hudoc', c.itemId, '1')
-    if (await r2Exists(cKey)) { written++; continue }
-
-    const text = await fetchEchrText(c.itemId, c.docName)
-    if (!text) continue
-
-    const compiled = rawToText(text)
-    await r2Put(cKey, compiled)
-    const secId = sectionId('echr-hudoc', c.itemId, '1')
-    await upsertSection({ id: secId, corpus: 'echr-hudoc', sourceUrl: c.url, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
-    written++
+  if (!row.docId.startsWith('doc:')) {
+    await markSkipped(row.id)
+    console.warn(`[echr] legacy docId ${row.docId} skipped (retired V-era route form)`)
+    return
   }
-  // 0 cases means API failure — HUDOC /app/query/results returns 404 as of Jun 2026.
-  // Mark failed so we don't silently hide the gap. Can retry once API is restored.
-  if (written === 0) {
-    await markFailed(row.id, 'ECHR: 0 cases returned — HUDOC query API returning 404 (endpoint changed Jun 2026)')
-  } else {
+  const { getDocMeta, fetchDocPdf } = await import('../sources/echr-hudoc')
+  const itemId = row.docId.slice(4)
+  const pageUrl = `https://hudoc.echr.coe.int/eng#{"itemid":["${itemId}"]}`
+
+  const meta = await getDocMeta(itemId)
+  if (!meta) { await markFailed(row.id, `echr ${itemId}: metadata query failed`); return }
+
+  const marker = async (note: string) => {
+    await upsertSection({
+      id: sectionId(row.corpus, itemId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: note,
+      sectionTitle: meta.docName || undefined,
+      parentDocId: itemId,
+    })
     await markDone(row.id)
   }
+
+  const pdf = await fetchDocPdf(itemId)
+  if (!pdf) return marker('HUDOC pdf conversion unavailable for this document')
+  const text = await pdfToText(pdf, `${itemId}.pdf`)
+  if (!text || text.length < 100) return marker('HUDOC pdf served but no extractable text')
+
+  const cKey = compiledKey(row.corpus, itemId, '1')
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, itemId, '1'),
+    corpus: row.corpus,
+    sourceUrl: pageUrl,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'pdf',
+    sectionTitle: meta.docName || undefined,
+    itemDate: meta.date ? meta.date.slice(0, 10) : undefined,
+    parentDocId: itemId,
+  })
+  await markDone(row.id, 'pdf')
 }
 
 // ── EUR-Lex ───────────────────────────────────────────────────────────────────
@@ -791,7 +813,11 @@ export async function processHistoricHansardVolume(corpus: string, docId: string
   }
 
   // R2 first, then DB — a section row must never point at a missing R2 key.
-  const R2_BATCH = 8
+  // V22: batch 8 → 16. Late-century Lords volumes run ~7k items (S5LV0606P0
+  // pilot); at V21's measured ~49s/1,597 sections (batch 8) they'd land ~3.6
+  // min — too close to the 5-min row timeout. R2 puts dominate wall time and
+  // don't touch the pg pool, so doubling the batch is safe.
+  const R2_BATCH = 16
   for (let i = 0; i < metas.length; i += R2_BATCH) {
     await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
   }
@@ -803,6 +829,132 @@ export async function processHistoricHansardVolume(corpus: string, docId: string
 async function processHistoricHansard(row: QueueRow): Promise<void> {
   await processHistoricHansardVolume(row.corpus, row.docId)
   await markDone(row.id, 'xml')
+}
+
+// ── Historic Hansard HTML gap-fill (V22 §4) ───────────────────────────────────
+// Fills bulk-archive gaps from api.parliament.uk/historic-hansard (114 of the
+// 170 missing volumes exist there — measured 13 Jun 2026). Two-stage
+// queue-driven crawl under its own host budget (sourceType
+// historic-hansard-html):
+//   gapvol:{series}:{vol}            → enumerate sitting days, insert gapday rows
+//   gapday:{house}:{yyyy/mon/dd}     → parse the day's section pages per-speech
+
+async function processHistoricHansardHtml(row: QueueRow): Promise<void> {
+  const src = await import('../sources/historic-hansard')
+
+  const gv = /^gapvol:(S5C|S5L|S[1-4]):([0-9]+)$/.exec(row.docId)
+  if (gv) {
+    const days = await src.listGapVolumeDays(gv[1], Number(gv[2]))
+    if (days === null) { await markFailed(row.id, `hh-html gapvol ${gv[1]} v${gv[2]}: fetch failed`); return }
+    if (days.length === 0) {
+      await upsertSection({
+        id: sectionId(row.corpus, row.docId, '1'),
+        corpus: row.corpus,
+        status: 'unavailable',
+        availabilityStatus: 'no-provisions',
+        availabilityNote: 'volume absent from the HTML site too (genuine digitisation gap)',
+        parentDocId: row.docId,
+      })
+      await markDone(row.id)
+      return
+    }
+    const { bulkInsertQueueRows } = await import('../shared/queue-client')
+    await bulkInsertQueueRows(days.map(d => ({
+      id: `${row.corpus}:gapday:${d.house}:${d.datePath}`,
+      corpus: row.corpus,
+      docId: `gapday:${d.house}:${d.datePath}`,
+      sourceType: 'historic-hansard-html',
+      priority: 3,
+    })))
+    await markDone(row.id)
+    return
+  }
+
+  const gd = /^gapday:(commons|lords):(\d{4}\/[a-z]{3}\/\d{1,2})$/.exec(row.docId)
+  if (!gd) { await markFailed(row.id, `bad historic-hansard-html docId: ${row.docId}`); return }
+  const house = gd[1] as 'commons' | 'lords'
+  const datePath = gd[2]
+  const itemDate = src.gapDateToIso(datePath) ?? undefined
+  const houseLabel = house === 'commons' ? 'Commons' : 'Lords'
+
+  // per-house pwdata handoff guard — gap volumes all predate the cutoffs, but
+  // keep the invariant explicit
+  if (itemDate && itemDate >= src.DEFAULT_CUTOFFS[house]) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: `sitting date ${itemDate} is past the ${house} pwdata handoff`,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const slugs = await src.listGapDaySections(house, datePath)
+  if (slugs === null) { await markFailed(row.id, `hh-html gapday ${house} ${datePath}: day index fetch failed`); return }
+  if (slugs.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: `https://api.parliament.uk/historic-hansard/${house}/${datePath}`,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'sitting-day page lists no sections',
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  for (const slug of slugs) {
+    const sec = await src.fetchGapSectionItems(house, datePath, slug)
+    // a mid-row fetch failure aborts the whole row — reruns are idempotent
+    if (sec === null) { await markFailed(row.id, `hh-html gapday ${house} ${datePath}/${slug}: section fetch failed`); return }
+    for (const item of sec.items) {
+      const ref = String(++seq)
+      metas.push({
+        id: sectionId(row.corpus, row.docId, ref),
+        corpus: row.corpus,
+        sourceUrl: `https://api.parliament.uk/historic-hansard/${house}/${datePath}/${slug}`,
+        r2Key: compiledKey(row.corpus, row.docId, ref),
+        wordCount: countWords(item.text),
+        status: 'compiled',
+        format: 'html',
+        sectionTitle: sec.heading ? `${houseLabel}: ${sec.heading}` : houseLabel,
+        speaker: item.speaker ?? undefined,
+        itemDate,
+        parentDocId: row.docId,
+      })
+      texts.push(item.text)
+    }
+  }
+
+  if (metas.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: `https://api.parliament.uk/historic-hansard/${house}/${datePath}`,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'section pages held no extractable items',
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const R2_BATCH = 16
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, 'html')
 }
 
 // ── GOV.UK Content API (V18 — hmrc-manuals full depth + govuk-core-docs) ─────
@@ -1100,6 +1252,57 @@ async function processCommitteesApi(row: QueueRow): Promise<void> {
 async function processCommitteesApiList(row: QueueRow): Promise<void> {
   const { listCommitteesApiPage } = await import('../sources/committees-api')
   const { bulkInsertQueueRows } = await import('../shared/queue-client')
+
+  // V22 windowed form: list:{key}:win:{YYYY-MM} (one calendar month) or
+  // list:{key}:win:pre{YYYY} (everything before 1 Jan YYYY). Deep global
+  // offsets 500 server-side at load-dependent depths (12-13 Jun probes), so
+  // each row walks ONE date window where Skip stays shallow (max month ~2k
+  // items = ~20 pages). Window boundaries use inclusive StartDate/EndDate
+  // with first-of-next-month EndDate — the 1-day overlap is harmless, item
+  // inserts are ON CONFLICT DO NOTHING.
+  const wm = /^list:(publication|oralevidence|writtenevidence):win:(pre([0-9]{4})|([0-9]{4})-([0-9]{2}))$/.exec(row.docId)
+  if (wm) {
+    const key = wm[1]
+    const kind = key === 'publication' ? 'Publications' as const
+      : key === 'oralevidence' ? 'OralEvidence' as const : 'WrittenEvidence' as const
+    const corpus = key === 'publication' ? 'committees-reports' : 'committees-evidence'
+    let window: { start: string; end: string }
+    if (wm[3]) {
+      window = { start: '2000-01-01', end: `${wm[3]}-01-01` }
+    } else {
+      const y = Number(wm[4]); const mo = Number(wm[5])
+      const next = mo === 12 ? `${y + 1}-01-01` : `${y}-${String(mo + 1).padStart(2, '0')}-01`
+      window = { start: `${wm[4]}-${wm[5]}-01`, end: next }
+    }
+    let inserted = 0
+    for (let skip = 0; ; skip += 100) {
+      let page = await listCommitteesApiPage(kind, skip, 100, window)
+      if (!page) {
+        // one in-row retry after cooling — transient listing failures burned
+        // three V20 walks; a window row is cheap enough to retry once
+        await new Promise(r => setTimeout(r, 60_000))
+        page = await listCommitteesApiPage(kind, skip, 100, window)
+      }
+      if (!page) { await markFailed(row.id, `committees-api list ${kind} win=${wm[2]} skip=${skip}: fetch failed`); return }
+      if (page.items.length > 0) {
+        const rows = page.items.map(it => ({
+          id: `${corpus}:${key}:${it.id}`,
+          corpus,
+          docId: `${key}:${it.id}`,
+          sourceType: 'committees-api',
+          priority: 2,
+        }))
+        const { affected } = await bulkInsertQueueRows(rows)
+        inserted += affected
+      }
+      if (skip + 100 >= page.totalResults || page.items.length === 0) break
+    }
+    console.log(`[committees-api] list window ${kind} ${wm[2]}: +${inserted} new item rows`)
+    await markDone(row.id)
+    return
+  }
+
+  // legacy offset form (V20) — retained for any straggler rows
   const m = /^list:(publication|oralevidence|writtenevidence):([0-9]+)$/.exec(row.docId)
   if (!m) { await markFailed(row.id, `bad committees-api list docId: ${row.docId}`); return }
   const key = m[1]
@@ -1271,7 +1474,31 @@ async function processLawcom(row: QueueRow): Promise<void> {
 
 // ── Judiciary NI decisions (V20 probe 5) ──────────────────────────────────────
 
+// V22: queue-driven listing — the host's per-IP listing budget is ~30 pages per
+// session (local walk cut at p66 on 12 Jun and p96 on 13 Jun despite 60s-cooling
+// retries). list:page:{N} rows drip one listing fetch per claim from Railway
+// within the source budget instead.
+async function processJudiciaryNiList(row: QueueRow): Promise<void> {
+  const { listNiDecisionsPage } = await import('../sources/judiciaryni')
+  const { bulkInsertQueueRows } = await import('../shared/queue-client')
+  const page = Number(/^list:page:([0-9]+)$/.exec(row.docId)?.[1])
+  if (!Number.isInteger(page)) { await markFailed(row.id, `bad judiciaryni list docId: ${row.docId}`); return }
+  const slugs = await listNiDecisionsPage(page)
+  if (slugs === null) { await markFailed(row.id, `judiciaryni list page=${page}: fetch failed`); return }
+  if (slugs.length > 0) {
+    await bulkInsertQueueRows(slugs.map(s => ({
+      id: `${row.corpus}:${s}`,
+      corpus: row.corpus,
+      docId: s,
+      sourceType: 'judiciaryni',
+      priority: 2,
+    })))
+  }
+  await markDone(row.id)
+}
+
 async function processJudiciaryNi(row: QueueRow): Promise<void> {
+  if (row.docId.startsWith('list:')) return processJudiciaryNiList(row)
   const { fetchNiDecision, fetchNiFile } = await import('../sources/judiciaryni')
   const { docToText } = await import('../sources/tax-tribunals')
   const slug = row.docId

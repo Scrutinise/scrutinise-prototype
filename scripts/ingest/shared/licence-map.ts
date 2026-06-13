@@ -111,6 +111,7 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   'uk-treaties': OGL3,
   'et-decisions': OGL3,
   'govuk-core-docs': OGL3,
+  'quangos-govuk': OGL3, // gov.uk-published ALB content rides gov.uk terms (V22 T1)
   'building-regs': OGL3,
   'planning-policy': OGL3,
   'ots-reports': OGL3,
@@ -132,6 +133,12 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // NAO copyright statement (verified 12 Jun 2026): free NON-COMMERCIAL re-use
   // with attribution; commercial use needs express permission.
   'nao-reports': { licence: 'nao-nc', attributionBoilerplate: 'Reproduced from National Audit Office material. Non-commercial re-use with attribution per NAO copyright statement.' },
+  // ECHR/HUDOC (verified 13 Jun 2026, echr.coe.int/copyright-and-disclaimer):
+  // texts reproducible free of charge with source acknowledged (© ECHR-CEDH)
+  // for private/information/education purposes; commercial use requires prior
+  // written permission. Same posture as nao-nc: fine for the charity,
+  // default-excluded from commercial surfaces.
+  'echr-hudoc': { licence: 'echr-nc', attributionBoilerplate: '© ECHR-CEDH. Reproduced for information/education purposes per the Court’s copyright statement; commercial use requires permission.' },
 }
 
 export function licenceForCorpus(corpus: string): string | null {

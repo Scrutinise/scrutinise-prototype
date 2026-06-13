@@ -397,6 +397,17 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
     }
   } catch { /* non-fatal */ }
 
+  // Total corpus words (V22 — Charlie-requested). wordCount is exact and
+  // populated at ingest for every compiled section (verified 13 Jun 2026:
+  // the only NULLs are unavailable markers, which have no text); one SUM is
+  // the whole calculation.
+  let totalWords: number | null = null
+  try {
+    const wRes = await getNeonPool().query<{ words: string }>(
+      `SELECT COALESCE(SUM("wordCount"), 0)::text AS words FROM corpus_sections`)
+    totalWords = Number(wRes.rows[0].words)
+  } catch { /* non-fatal */ }
+
   // Last error per corpus (for ISSUES section)
   interface FailedRow { corpus: string; n: number; last_error: string | null }
   let failedByCorpus: FailedRow[] = []
@@ -486,6 +497,7 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   // corpus_sections, so it will never match a raw count(*) of corpus_sections
   // (which also holds unavailable/failed classification rows).
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
+  if (totalWords != null) parts.push(`  ≈ ${(totalWords / 1e9).toFixed(2)}B words (${totalWords.toLocaleString()}, new pipeline exact at ingest)`)
   parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
   parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
   // V20/V21 email honesty: the percentage is of the KNOWN universe — never let
@@ -495,7 +507,7 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   // and not-yet-built sources. Update the residual list below as sizings land.
   parts.push(`  ⚠ % is of the KNOWN universe incl. ~ placeholders for unenumerated sources (V21 honest-denominator rule).`)
   parts.push(`    Still UNSIZED (no denominator): financial-corpus · quango external-site content (exempt orgs)`)
-  parts.push(`    · pre-redesign Law Commission papers · Lords Hansard 1919-1999 (bulk archive holds it; pwdata-lords starts 1999)`)
+  parts.push(`    · pre-redesign Law Commission papers`)
   if (dbSize) {
     const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
     const dbFlag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL'
