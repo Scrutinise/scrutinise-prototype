@@ -119,7 +119,16 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   'sentencing-council': OGL3, // attribution must also name the source document title (row-specific)
   'scotlawcom': { licence: 'ogl', attributionBoilerplate: 'Re-used under the terms of the Open Government Licence (Scottish Law Commission).' },
   'lawcom': OGL3, // lawcom.gov.uk footer: OGL v3.0 (verified 12 Jun 2026)
-  'college-of-policing': { licence: 'pending-verification', attributionBoilerplate: null },
+  // V24 §4b: VERIFIED via the UK Gov Web Archive (snapshot 2026-02-03,
+  // CF-free TNA infra). The college.police.uk footer states APP content
+  // "is available under the Non-Commercial College Licence except where
+  // otherwise stated" (photographs excluded). NOT OGL — non-commercial, the
+  // same posture as nao-nc / echr-nc: fine for the charity, default-excluded
+  // from commercial surfaces.
+  'college-of-policing': {
+    licence: 'college-nc',
+    attributionBoilerplate: 'College of Policing Authorised Professional Practice, reproduced under the Non-Commercial College Licence; commercial use requires permission. Photographs excluded.',
+  },
   'nilawcom': { licence: 'pending-verification', attributionBoilerplate: null },
   // HMCTS legacy decisions archive — no licence statement on the site; court
   // decisions are public records but the re-use position needs verification
@@ -143,7 +152,13 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // V24). Each body publishes under its own open licence; the exact statement
   // was not re-verified live this sprint (analytics-noise on the footer grep) —
   // pending-verification, but all three are expected to be OGL v3.0 / own-OGL.
-  'niassembly-hansard': { licence: 'pending-verification', attributionBoilerplate: 'NI Assembly Hansard — © NI Assembly Commission; licence to verify (expected OGL).' },
+  // V24: VERIFIED live 14 Jun 2026 — data.niassembly.gov.uk footer states
+  // "Contains Parliamentary information licensed under the Open Government
+  // Licence v3.0". OGL v3.0, same posture as the rest of the gov.uk family.
+  'niassembly-hansard': {
+    licence: 'ogl-3.0',
+    attributionBoilerplate: 'Contains Parliamentary information from the Northern Ireland Assembly licensed under the Open Government Licence v3.0.',
+  },
   'senedd-cofnod': { licence: 'pending-verification', attributionBoilerplate: 'Senedd Cymru Cofnod / Record of Proceedings — licence to verify (expected OGL).' },
   'scottish-parliament-or': { licence: 'pending-verification', attributionBoilerplate: 'Scottish Parliament Official Report — © Scottish Parliamentary Corporate Body; licence to verify (expected OGL/SPCB licence).' },
   // Public inquiry reports (V23 §5 probe — Infected Blood route verified, not

@@ -99,6 +99,8 @@ export async function ensureTables(): Promise<void> {
       starts_count int NOT NULL DEFAULT 0
     )
   `)
+  // V24: per-row zero-output verdict written by the worker (see markDone).
+  await pool.query(`ALTER TABLE ingest_queue ADD COLUMN IF NOT EXISTS produced_output boolean`)
 }
 
 // ── Railway API (start action only — liveness detection is heartbeat-based) ──
@@ -260,30 +262,50 @@ export async function evaluateBreakers(): Promise<void> {
     tripped.add(r.sourceType)
   }
 
-  // 2. Zero-output breaker: cumulative streak of done rows with no section
-  //    growth, tracked in source_status across sweeps.
-  const counts = await querySourceCounts()
-  interface PrevStatusRow { source_key: string; done_count: string; section_count: string; zero_output_streak: number; state: string }
-  const prevRes = await pool.query<PrevStatusRow>(
-    `SELECT source_key, done_count::text, section_count::text, zero_output_streak, state FROM source_status`
+  // 2. Zero-output breaker (V24): the worker records ingest_queue.produced_output
+  //    per done row — false only when the row wrote no compiled section, confirmed
+  //    no existing R2 file, and wrote no marker (process-row.ts markDone). We trip
+  //    when the TRAILING run of most-recent done rows for a sourceType is all-empty
+  //    and reaches the threshold. This replaces the V23 logic, which inferred
+  //    emptiness from corpus-level section_count deltas and so false-tripped on
+  //    idempotent reseeds (already-complete rows re-run write 0 NEW sections →
+  //    0 delta ≠ 0 output) — it parked 108,349 legitimate rows. Counting the
+  //    r2Exists confirmation at the worker removes that false signal.
+  //
+  //    Window: rows completed in the last 24h with a non-null verdict. A genuinely
+  //    broken source racks up empties fast; bounding the scan keeps the sweep cheap
+  //    and prevents an old, since-fixed empty tail from lingering as a trip.
+  const streakRes = await pool.query<{ sourceType: string; trailing_empty: string }>(`
+    WITH ranked AS (
+      SELECT "sourceType", produced_output,
+             ROW_NUMBER() OVER (PARTITION BY "sourceType" ORDER BY "completedAt" DESC, id DESC) AS rn
+      FROM ingest_queue
+      WHERE status = 'done' AND produced_output IS NOT NULL
+        AND "completedAt" > NOW() - INTERVAL '24 hours'
+    ),
+    agg AS (
+      SELECT "sourceType",
+             MIN(rn) FILTER (WHERE produced_output = true) AS first_true,
+             COUNT(*) AS considered
+      FROM ranked GROUP BY "sourceType"
+    )
+    SELECT "sourceType", COALESCE(first_true - 1, considered)::text AS trailing_empty FROM agg
+  `)
+  const streakBySource = new Map<string, number>(
+    streakRes.rows.map(r => [r.sourceType, parseInt(r.trailing_empty, 10)])
   )
-  const prev = new Map<string, PrevStatusRow>(prevRes.rows.map(r => [r.source_key, r]))
+
+  // Keep done_count/section_count fresh for the progress email, and surface the
+  // measured trailing-empty run in zero_output_streak (informational only now —
+  // the trip decision is the produced_output query above, not a cross-sweep delta).
+  const counts = await querySourceCounts()
+  const prevRes = await pool.query<{ source_key: string; state: string }>(
+    `SELECT source_key, state FROM source_status`
+  )
+  const prevState = new Map<string, string>(prevRes.rows.map(r => [r.source_key, r.state]))
 
   for (const [sourceKey, cur] of counts) {
-    const p = prev.get(sourceKey)
-    let streak = p?.zero_output_streak ?? 0
-
-    if (p) {
-      const prevDone = parseInt(p.done_count, 10)
-      const prevSections = parseInt(p.section_count, 10)
-      // done counts can shrink (hourly cleanup deletes old done rows) —
-      // treat a shrink as a baseline reset, not progress.
-      const doneDelta = Math.max(0, cur.done - prevDone)
-      const sectionsDelta = Math.max(0, cur.sections - prevSections)
-      if (sectionsDelta > 0) streak = 0
-      else streak += doneDelta
-    }
-
+    const streak = streakBySource.get(sourceKey) ?? 0
     await pool.query(`
       INSERT INTO source_status (source_key, done_count, section_count, zero_output_streak, updated_at)
       VALUES ($1, $2, $3, $4, NOW())
@@ -291,8 +313,8 @@ export async function evaluateBreakers(): Promise<void> {
         done_count = $2, section_count = $3, zero_output_streak = $4, updated_at = NOW()
     `, [sourceKey, cur.done, cur.sections, streak])
 
-    if (streak >= ZERO_OUTPUT_THRESHOLD && !tripped.has(sourceKey) && p?.state !== 'tripped') {
-      await tripBreaker(sourceKey, `${streak} rows marked done with 0 corpus_sections written`)
+    if (streak >= ZERO_OUTPUT_THRESHOLD && !tripped.has(sourceKey) && prevState.get(sourceKey) !== 'tripped') {
+      await tripBreaker(sourceKey, `${streak} consecutive done rows produced zero output (no section written, no existing-content confirmed, no marker)`)
       tripped.add(sourceKey)
     }
   }

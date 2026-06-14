@@ -125,12 +125,17 @@ export async function clearExpiredSuspensions(): Promise<void> {
   }
 }
 
-export async function markDone(id: string, formatFound?: string): Promise<void> {
+// producedOutput (V24): the worker's per-row verdict for the zero-output breaker
+// — true if the row wrote a compiled section, confirmed an existing R2 file
+// (idempotent reseed), wrote a no-content marker, or is a structural seeder;
+// false if it genuinely produced nothing; null when the caller doesn't track it
+// (legacy/maintenance callers — excluded from the breaker window).
+export async function markDone(id: string, formatFound?: string, producedOutput?: boolean | null): Promise<void> {
   await getPool().query(`
     UPDATE ingest_queue
-    SET status = 'done', "completedAt" = NOW(), "formatFound" = $2
+    SET status = 'done', "completedAt" = NOW(), "formatFound" = $2, produced_output = $3
     WHERE id = $1
-  `, [id, formatFound ?? null])
+  `, [id, formatFound ?? null, producedOutput ?? null])
 }
 
 export async function markFailed(id: string, error: string): Promise<void> {

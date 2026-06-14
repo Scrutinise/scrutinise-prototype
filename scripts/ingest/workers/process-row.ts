@@ -6,11 +6,12 @@
  * R2 key scheme and per-source behaviour are identical to the fleet era.
  * Only the orchestration around processRow() changed in V17.
  */
+import { AsyncLocalStorage } from 'async_hooks'
 import {
-  markDone, markFailed, markSkipped,
+  markDone as _markDone, markFailed, markSkipped,
   updateFormatsAvailable, insertSpecialistQueueRow, QueueRow,
 } from '../shared/queue-client'
-import { r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
+import { r2Exists as _r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
 import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSections, deleteStaleSections, deleteSupersededVersionSections, sectionId, countWords, SectionMeta } from '../shared/db-metadata'
 
@@ -19,15 +20,62 @@ import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSecti
 let _sectionsWritten = 0
 export function getSectionsWritten(): number { return _sectionsWritten }
 
+// ── Per-row outcome tracking (V24 zero-output breaker fix) ────────────────────
+// The pool runs ≤20 rows concurrently in one process, so per-row counters cannot
+// be module globals — they would interleave. AsyncLocalStorage scopes them to
+// the row's async call tree. processRow() establishes the store; the wrapped
+// upsertSection / bulkUpsertSections / r2Exists below update it transparently,
+// so no processor body changes.
+//
+// At markDone the worker records ingest_queue.produced_output: a row "produced"
+// output if it wrote a compiled section, CONFIRMED an existing R2 file (the
+// r2Exists-skip path of an idempotent reseed), or wrote a no-content marker.
+// Only a done row that did NONE of these AND is not a structural seeder/no-op is
+// a GENUINE zero-output row. The V23 breaker inferred emptiness from corpus-level
+// section-count deltas, so idempotent reseeds (no new rows, but every row
+// satisfied) read as empty and parked 108,349 legitimate rows. Counting the
+// r2Exists confirmation fixes that at source.
+interface RowOutcome { compiled: number; confirmed: number; markers: number; structural: boolean }
+const rowCtx = new AsyncLocalStorage<RowOutcome>()
+
+// Structural rows never produce sections by design: queue-seeding enumerators
+// (enum:/list:/gapvol:) and retirement no-ops. They must not count as empty.
+function isStructuralRow(row: QueueRow): boolean {
+  if (row.sourceType === 'treaties') return true
+  const d = row.docId
+  return d.startsWith('enum:') || d.startsWith('list:') || d.startsWith('gapvol:')
+}
+
 async function upsertSection(data: Parameters<typeof _upsertSection>[0]): Promise<void> {
   await _upsertSection(data)
   _sectionsWritten++
+  const o = rowCtx.getStore()
+  if (o) { if (data.status === 'compiled') o.compiled++; else o.markers++ }
 }
 
 async function bulkUpsertSections(metas: SectionMeta[]): Promise<number> {
   const written = await _bulkUpsertSections(metas)
   _sectionsWritten += written
+  const o = rowCtx.getStore()
+  // bulkUpsertSections is only ever called with status:'compiled' metas.
+  if (o) o.compiled += written
   return written
+}
+
+// Counting wrapper: an r2Exists hit means this row's content is already present
+// (idempotent reseed) — that is real, confirmed output, not emptiness.
+async function r2Exists(key: string): Promise<boolean> {
+  const exists = await _r2Exists(key)
+  if (exists) { const o = rowCtx.getStore(); if (o) o.confirmed++ }
+  return exists
+}
+
+// markDone wrapper: stamps produced_output from the row's accumulated outcome.
+async function markDone(id: string, formatFound?: string): Promise<void> {
+  const o = rowCtx.getStore()
+  const produced = o == null ? null
+    : (o.structural || o.compiled > 0 || o.confirmed > 0 || o.markers > 0)
+  await _markDone(id, formatFound, produced)
 }
 
 // Source clients
@@ -55,6 +103,11 @@ import {
 // ── Row dispatcher ────────────────────────────────────────────────────────────
 
 export async function processRow(row: QueueRow): Promise<void> {
+  const outcome: RowOutcome = { compiled: 0, confirmed: 0, markers: 0, structural: isStructuralRow(row) }
+  return rowCtx.run(outcome, () => dispatchRow(row))
+}
+
+async function dispatchRow(row: QueueRow): Promise<void> {
   switch (row.sourceType) {
     case 'tna-legislation': return processTnaLegislation(row)
     case 'tna-caselaw':     return processTnaCaselaw(row)
@@ -83,6 +136,8 @@ export async function processRow(row: QueueRow): Promise<void> {
     case 'lawcom':              return processLawcom(row)
     case 'judiciaryni':         return processJudiciaryNi(row)
     case 'nao':                 return processNao(row)
+    case 'niassembly-hansard':  return processNiAssemblyHansard(row)
+    case 'inquiry-reports':     return processInquiryReports(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -1562,6 +1617,114 @@ async function processJudiciaryNi(row: QueueRow): Promise<void> {
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, slug, metas.map(m2 => m2.id))
   await markDone(row.id, metas[0].format)
+}
+
+// ── NI Assembly plenary Hansard (V24 §4 — AIMS Open Data, OGL v3.0) ───────────
+// docId = "{reportId}:{YYYY-MM-DD}" (the sitting date is carried so the worker
+// needs no list call). One section per speaker-turn (pwdata-shaped).
+
+async function processNiAssemblyHansard(row: QueueRow): Promise<void> {
+  const { fetchReportSpeeches } = await import('../sources/niassembly-hansard')
+  const colon = row.docId.indexOf(':')
+  const reportId = colon >= 0 ? row.docId.slice(0, colon) : row.docId
+  const date = colon >= 0 ? row.docId.slice(colon + 1) : ''
+  const pageUrl = `http://data.niassembly.gov.uk/hansard.asmx/GetHansardComponentsByReportId?reportId=${reportId}`
+
+  const items = await fetchReportSpeeches(reportId, date)
+  if (items === null) { await markFailed(row.id, `niassembly ${reportId}: components fetch failed`); return }
+
+  if (items.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, reportId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'NI Assembly report has no extractable speaker-turn components',
+      itemDate: date || undefined,
+      parentDocId: reportId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const item of items) {
+    const ref = String(item.seq)
+    metas.push({
+      id: sectionId(row.corpus, reportId, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, reportId, ref),
+      wordCount: countWords(item.text),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: item.heading ? `NI Assembly: ${item.heading}` : 'NI Assembly',
+      speaker: item.speaker ?? undefined,
+      itemDate: item.itemDate || undefined,
+      parentDocId: reportId,
+    })
+    texts.push(item.text)
+  }
+
+  const R2_BATCH = 16
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, reportId, metas.map(m => m.id))
+  await markDone(row.id, 'html')
+}
+
+// ── Public inquiry reports (V24 §5 — gov.uk publication-attachment PDFs) ───────
+// One report PDF per row (12-volume inquiries are too large to extract in a
+// single row under the 5-min cap). docId = "{key}#{seq}|{pdfUrl}".
+
+async function processInquiryReports(row: QueueRow): Promise<void> {
+  const { fetchPdfBuffer } = await import('../sources/inquiry-reports')
+  const bar = row.docId.indexOf('|')
+  const meta = bar >= 0 ? row.docId.slice(0, bar) : row.docId   // "{key}#{seq}"
+  const pdfUrl = bar >= 0 ? row.docId.slice(bar + 1) : ''
+  const hash = meta.indexOf('#')
+  const key = hash >= 0 ? meta.slice(0, hash) : meta
+  const seq = hash >= 0 ? meta.slice(hash + 1) : '1'
+  if (!pdfUrl) { await markFailed(row.id, `bad inquiry-reports docId: ${row.docId}`); return }
+
+  const cKey = compiledKey(row.corpus, key, seq)
+  if (await r2Exists(cKey)) { await markDone(row.id, 'pdf'); return }
+
+  const buf = await fetchPdfBuffer(pdfUrl)
+  if (!buf) { await markFailed(row.id, `inquiry-reports ${key}#${seq}: PDF fetch failed`); return }
+
+  const text = await pdfToText(buf, pdfUrl)
+  if (!text || text.length < 100) {
+    await upsertSection({
+      id: sectionId(row.corpus, key, seq),
+      corpus: row.corpus,
+      sourceUrl: pdfUrl,
+      status: 'unavailable',
+      availabilityStatus: 'pdf-only',
+      availabilityNote: 'inquiry report PDF served but no extractable text (scanned — OCR pass needed)',
+      parentDocId: key,
+    })
+    await markDone(row.id, 'pdf')
+    return
+  }
+
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, key, seq),
+    corpus: row.corpus,
+    sourceUrl: pdfUrl,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'pdf',
+    sectionTitle: `${key.replace(/-/g, ' ')} — vol ${seq}`,
+    parentDocId: key,
+  })
+  await markDone(row.id, 'pdf')
 }
 
 // ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────

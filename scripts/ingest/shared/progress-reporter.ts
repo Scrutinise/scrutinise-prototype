@@ -435,8 +435,22 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
     .reduce((s, t) => s + (t.est_sections ?? 0), 0)
   const grandTotalCompiled = neonCount + newPipelineCompiled
   const grandTotalEstimated = neonCount + newPipelineEstimated
-  const overallPct = grandTotalEstimated > 0 ? (grandTotalCompiled / grandTotalEstimated) * 100 : 0
-  const overallBar = progressBar(overallPct)
+  // V24 (Charlie-directed): NO headline percentage. Exact numerators against
+  // still-estimated denominators pushed the old overall % past 100. The honest
+  // headline is the two exact hard numbers (sections + words); the eventual total
+  // is shown as a labelled projection, never as a ratio that can exceed 100%.
+  // Completion is reported as a count of corpora in each state.
+  const liveTargets = targets.filter(t => !t.retired)
+  let completeCount = 0, confirmedCount = 0, inProgressCount = 0, notStartedCount = 0, blockedCount = 0, unsizedCount = 0
+  for (const t of liveTargets) {
+    const compiled = corpusCounts[t.corpus_key]?.compiled ?? 0
+    if (t.est_sections == null) unsizedCount++
+    if (t.blocked) { blockedCount++; continue }
+    if (t.est_sections != null && compiled >= t.est_sections) { completeCount++; if (t.est_is_confirmed) confirmedCount++; continue }
+    if (compiled === 0) { notStartedCount++; continue }
+    inProgressCount++
+  }
+  const totalWordsB = totalWords != null ? (totalWords / 1e9).toFixed(2) : null
 
   // ── This-hour delta ───────────────────────────────────────────────────────
   const hasDelta = hourlyDelta.size > 0
@@ -453,7 +467,8 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   const deltaStr = totalDelta != null ? `+${totalDelta.toLocaleString()}` : '--'
   const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
   const breakerWarn = breakerIssues.length > 0 ? ` | 🔴 ${breakerIssues.length} breaker` : ''
-  const subject = `Ingest ${bstTime} | ${deltaStr} this hour | ${grandTotalCompiled.toLocaleString()} total | ${overallPct.toFixed(1)}%${dbWarn}${breakerWarn}`
+  const wordsSubj = totalWordsB != null ? ` | ${totalWordsB}B words` : ''
+  const subject = `Ingest ${bstTime} | ${deltaStr} this hour | ${grandTotalCompiled.toLocaleString()} sections${wordsSubj}${dbWarn}${breakerWarn}`
 
   const SEP = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
   const parts: string[] = [SEP, `SCRUTINISE INGEST — ${bst} BST`, SEP]
@@ -490,23 +505,26 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   }
 
   // ── TOTAL CORPUS ──────────────────────────────────────────────────────────
+  // V24: two exact hard numbers up top (sections + words). No headline % — see
+  // the comment at the completion-count computation above for why.
   parts.push('', SEP, 'TOTAL CORPUS', SEP)
-  parts.push(`  ${overallBar}  ${overallPct.toFixed(1)}%`)
-  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections ingested`)
+  parts.push(`  ${grandTotalCompiled.toLocaleString()} sections ingested   (exact)`)
+  if (totalWords != null) parts.push(`  ${totalWordsB}B words   (${totalWords.toLocaleString()}, exact at ingest)`)
   // V18: show the breakdown — this total is legacy LegislationSection + compiled-only
   // corpus_sections, so it will never match a raw count(*) of corpus_sections
   // (which also holds unavailable/failed classification rows).
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
-  if (totalWords != null) parts.push(`  ≈ ${(totalWords / 1e9).toFixed(2)}B words (${totalWords.toLocaleString()}, new pipeline exact at ingest)`)
-  parts.push(`  Est. total: ~${grandTotalEstimated.toLocaleString()}`)
-  parts.push(`  (denominators marked ~ are estimates; ✓ = confirmed from source)`)
-  // V20/V21 email honesty: the percentage is of the KNOWN universe — never let
-  // the number quietly flatter us. V21: every known-but-unenumerated source now
-  // carries a ~ placeholder row in corpus_targets (a known source missing from
-  // the denominator is a lie of omission), so the denominator includes blocked
-  // and not-yet-built sources. Update the residual list below as sizings land.
-  parts.push(`  ⚠ % is of the KNOWN universe incl. ~ placeholders for unenumerated sources (V21 honest-denominator rule).`)
-  parts.push(`    Still UNSIZED (no denominator): financial-corpus · quango external-site content (exempt orgs)`)
+  parts.push('')
+  parts.push(`  COMPLETION  (${liveTargets.length} corpora, excl. retired):`)
+  parts.push(`    ✅ complete: ${completeCount}  (✓ source-confirmed: ${confirmedCount})   ▶ in progress: ${inProgressCount}   ○ not started: ${notStartedCount}   ⛔ blocked: ${blockedCount}`)
+  parts.push(`    unsized (no denominator yet): ${unsizedCount}  — see list below`)
+  // Labelled PROJECTION, never a percentage that can exceed 100 (Charlie-directed V24).
+  parts.push(`  Eventual total ≈ ${grandTotalEstimated.toLocaleString()} est. when the open corpora land — a projection, NOT a % (numerators exact, denominators still estimates).`)
+  parts.push(`  (per-corpus detail in ALL CORPORA STATUS below; ✓ = confirmed from source, ~ = estimate)`)
+  // V21 honest-denominator rule retained: every known-but-unenumerated source
+  // carries a ~ placeholder in corpus_targets so the projection isn't a lie of
+  // omission. These sources have no denominator at all yet:
+  parts.push(`  Still UNSIZED (no denominator): financial-corpus · quango external-site content (exempt orgs)`)
   parts.push(`    · pre-redesign Law Commission papers`)
   if (dbSize) {
     const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
@@ -638,6 +656,6 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   if (!res.ok) {
     console.error(`[reporter] Resend failed: ${res.status} ${await res.text()}`)
   } else {
-    console.log(`[reporter] Email sent to ${TO} — ${overallPct.toFixed(1)}% overall, delta ${deltaStr}`)
+    console.log(`[reporter] Email sent to ${TO} — ${grandTotalCompiled.toLocaleString()} sections, delta ${deltaStr}`)
   }
 }

@@ -48,6 +48,8 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'nao',                 intervalMs: 500,  maxConcurrentWorkers: 2, note: 'nao.org.uk WP REST API + uploads PDFs (V20) — 2,755 reports; licence nao-nc (non-commercial + attribution)' },
   { sourceKey: 'historic-hansard',    intervalMs: 5000, maxConcurrentWorkers: 2, note: 'hansard-archive.parliament.uk bulk volume zips (V21) — 1 fetch/row (~1-2MB zip) then minutes of local parse + R2 puts; 5000ms/2 is half of a reasonable 2500ms/4 per the politeness doctrine (Parliament static archive, CF-fronted)' },
   { sourceKey: 'historic-hansard-html', intervalMs: 500, maxConcurrentWorkers: 2, note: 'api.parliament.uk/historic-hansard HTML gap-fill (V22) — gapday rows make ~5-40 page fetches each; client throttle floors 500ms within the row, so the host sees ≲2 rps total' },
+  { sourceKey: 'niassembly-hansard',  intervalMs: 1000, maxConcurrentWorkers: 2, note: 'data.niassembly.gov.uk AIMS Open Data (V24) — Microsoft-IIS, no Cloudflare; 1 fetch/row (~0.7MB component list) then local parse + R2 puts. 646 plenary reports 2012-. OGL v3.0.' },
+  { sourceKey: 'inquiry-reports',     intervalMs: 500,  maxConcurrentWorkers: 3, note: 'gov.uk content API publication-attachment PDFs + UK Gov Web Archive (V24) — public inquiry final reports, OGL v3.0; PDF text via pdf-parse.' },
 ]
 
 async function main(): Promise<void> {
