@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 13 Jun 2026 — V23: §8 four new patterns (zero-output breaker idempotent-reseed false-positive + verify-by-id-prefix, CF listing-walk penalty-box → enumerate deterministic path, public-inquiries register method). V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven patterns, §16 tax-source map, §17 FCL court coverage.*
+*Last updated: 15 Jun 2026 — V24: zero-output breaker FIXED (per-row `produced_output`, not aggregate count deltas — counts the r2Exists reseed-confirmation); three new patterns (NEW sourceType must seed POST-PUSH or the live worker markSkips it; verify a licence at the licence page not a footer grep; Web Archive snapshots can be JS-SPA shells). V23: §8 four new patterns (zero-output breaker idempotent-reseed false-positive + verify-by-id-prefix, CF listing-walk penalty-box → enumerate deterministic path, public-inquiries register method). V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven patterns, §16 tax-source map, §17 FCL court coverage.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting services, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -388,7 +388,7 @@ History: this caused the 8–10 Jun 2026 project-wide outages and was misread as
 `Ops` evaluates two breakers per source every 15 min (state in Neon `source_status`):
 
 - **Failure breaker:** last 5 completed attempts for a source all `failed` → trip.
-- **Zero-output breaker:** ≥25 rows marked `done` while `corpus_sections` grew by 0 for that source (cumulative streak across sweeps) → trip. This is the alarm the committees incident lacked (2,896 empty "done" rows, no signal).
+- **Zero-output breaker (V24 — per-row, NOT aggregate):** trips when the **trailing run of most-recent `done` rows** for a source (24h window) is all `produced_output=false` and reaches 25. `ingest_queue.produced_output` is the worker's per-row verdict — `false` only when the row wrote no compiled section, confirmed no existing R2 file, and wrote no marker, and is not a structural seeder (enum:/list:/gapvol:/treaties). This is the alarm the committees incident lacked (2,896 empty "done" rows, no signal) — but it no longer false-trips on idempotent reseeds (the V23 bug below).
 
 On trip: the source's `pending` rows are parked as `status='blocked'`, the reason is recorded, and a persistent 🔴 line appears in every hourly email until cleared. **Tripped sources are never auto-retried** — deterministic failures must not be retried (see Retry policy in §13 lessons).
 
@@ -406,13 +406,12 @@ WHERE "sourceType" = '<sourceKey>' AND status = 'blocked';
 ```
 `Ops` liveness will start `Ingest` within 15 min of pending > 0.
 
-### Zero-output breaker FALSE-POSITIVES on idempotent reseeds (V23)
+### Zero-output breaker FALSE-POSITIVES on idempotent reseeds — FIXED V24
 
-The zero-output breaker (`querySourceCounts` in ops.ts) compares **total per-source `corpus_sections` COUNT** between sweeps: if ≥25 rows go `done` while the count grows by 0, it trips *"N rows marked done with 0 corpus_sections written"*. This **cannot distinguish "wrote nothing" from "re-wrote identical rows"**. Re-processing a row whose sections already exist UPSERTs them → `bulkUpsertSections` adds 0 NEW rows → COUNT doesn't grow → the breaker reads it as zero output. A contiguous run of such idempotent re-runs (the `priority,id` claim order clusters them by corpus) trips it.
+The V23 breaker compared **total per-source `corpus_sections` COUNT** between sweeps: if ≥25 rows went `done` while the count grew by 0, it tripped. This **could not distinguish "wrote nothing" from "re-wrote identical rows"** — re-processing a row whose sections already exist UPSERTs them (0 NEW rows, COUNT unchanged) → read as zero output. A contiguous run of idempotent re-runs (the `priority,id` claim order clusters them by corpus) tripped it. **V23 incident:** tna-legislation tripped on 838 already-ingested regional SIs → parked 108,349 legitimate rows.
 
-- **V23 incident:** tna-legislation tripped on 838 already-ingested regional SIs (wsi/2017, ssi/2020) re-seeded by the V22 regional enum → parked 108,349 legitimate rows (incl. EN/EM that had never run). **Diagnosis discipline (CLAUDE.md §0/§13):** the breaker's claim was checked against the actual rows before clearing — they DID have sections (`id LIKE 'corpus:docId%'`; note legislation sections have `parentDocId=NULL`, so a parentDocId join falsely reports "no section"). Verified false-positive → cleared per the §8 SQL (incl. `zero_output_streak=0`) + unparked.
-- **Before clearing a zero-output trip, always verify**: query a sample of the source's recently-`done` rows for sections by **id-prefix** (not parentDocId). If they have sections, it's an idempotent-reseed false-positive — clear it. If they genuinely have none, it's the real committees-style empty-done bug — do NOT clear; fix the processor.
-- **Recommended fix (open):** the breaker should track genuinely-empty done rows reported by the worker (e.g. a per-row "0 sections AND 0 markers" signal), not infer emptiness from aggregate count growth. Until then, any reseed of already-complete rows risks a false trip.
+- **The V24 fix (`process-row.ts` + `ops.ts`):** the worker records a per-row verdict in `ingest_queue.produced_output`. `produced_output=true` when the row wrote a compiled section OR **confirmed an existing R2 file via `r2Exists`** (the idempotent-reseed skip path — *this* is the bit the aggregate logic missed) OR wrote a no-content marker OR is a structural seeder. `ops.evaluateBreakers` trips on the trailing all-`false` run (24h window, threshold 25). An idempotent reseed now scores `true` (its `r2Exists` hits are counted) → no trip; the curl-broken empty-done case still scores `false` → trips. Implemented with `AsyncLocalStorage` so the per-row counters are safe across the 20 concurrent claim loops, with **no processor-body changes** (only the `upsertSection`/`bulkUpsertSections`/`r2Exists`/`markDone` wrappers). Verified with `v24-verify-breaker.ts` (TEMP-table; production untouched).
+- **Still verify before clearing any FUTURE trip** (CLAUDE.md §0): query the source's recently-`done` rows for sections by **id-prefix** (legislation sections have `parentDocId=NULL`, so a parentDocId join falsely reports "no section"). With the V24 fix a trip should now mean a genuine empty-done bug — fix the processor, don't just clear.
 
 ### CF penalty-boxes listing-walk IPs — enumerate the deterministic path instead (V23)
 
@@ -421,6 +420,16 @@ The zero-output breaker (`querySourceCounts` in ops.ts) compares **total per-sou
 ### Public inquiries register method (V23)
 
 Statutory/public inquiries are a source family, not a single source — see `scrutinise-docs/INQUIRIES_UNIVERSE.md`. To (re)build the register: (1) gov.uk org enumeration `filter_format=organisation&q=inquiry` then filter titles to inquiry/review (drops pay-review-bodies) — yields the concluded historic backbone (~22); (2) add the major current/recent Inquiries-Act-2005 inquiries by hand (each on its own `*.public-inquiry.uk` domain); (3) the UK Gov Web Archive (`webarchive.nationalarchives.gov.uk`) preserves dark own-sites whole (CF-free, TNA-hosted). **Reports-first, evidence-deferred** — report PDFs are OGL/Crown and modest (~40-70k sections total); evidence bundles are an order of magnitude larger and mixed-licence. Recent inquiries publish report PDFs as gov.uk publication attachments (`/api/content/...` `details.attachments`) — CF-free, the cleanest seed route (build an `inquiry-reports` sourceType with a gov.uk-attachment adapter + a Web-Archive-snapshot adapter).
+
+### A NEW sourceType must be seeded POST-PUSH, never before (V24)
+
+The live `Ingest` process has the **currently-deployed** `process-row.ts`. Seed rows for a sourceType that only exists in your working tree and the live worker claims them (the rate-limiter gives any unconfigured source a default 500ms/4 bucket, so it IS eligible) and hits `dispatchRow`'s `default` → **`markSkipped`** — the rows are burned to a terminal state before your code ever deploys. **V24:** seeding 646 `niassembly-hansard` rows mid-sprint had the old worker markSkipped 95 in ~2 min; deleted all 646 and moved the seed to the post-push run order. **Rule:** build the source client + processor + seeder this sprint, run a LOCAL pilot (the seeder's `--pilot`/`--dry-run` measures without touching the queue), and list the `--seed` step in the handoff POST-PUSH RUN ORDER. Only seed once `commit-all.sh` has deployed the new dispatch case. (Reusing an already-deployed sourceType — e.g. `govuk-content` for a new corpus — is exempt and can seed immediately.)
+
+### Verify a licence at the licence page, not a footer grep — and watch for JS-SPA archives (V24)
+
+Two verify-before-asserting traps bit the devolved/College work:
+- **Footer grep false-positives:** grepping a homepage for `ogl` matched **"g`oogl`e"** (googleapis/googletagmanager) and nearly stamped Senedd OGL-verified — its copyright actually reads "Welsh Parliament 2026", licence unverified. Confirm a licence on the source's **dedicated licence/copyright page** with the full statement, not a substring match on chrome. (NI Assembly verified cleanly: footer literally states "licensed under the Open Government Licence v3.0".)
+- **Web Archive snapshots can be JS-SPA shells:** `webarchive.nationalarchives.gov.uk` is CF-free and reliable, but it captures whatever the page served — a modern Drupal/React SPA archives as a shell whose body is "Sorry, you need to enable JavaScript" with no static text. **College of Policing APP:** the fresh 2026 snapshots are JS shells; only pre-redesign 2022 snapshots carry extractable body (~4k words/page, ~4yr stale). Before building a web-archive crawler, fetch one content page and check the **stripped body word count** — an empty body means you need the pre-redesign snapshot generation, a rendered fetch (Playwright), or a JSON API, not a static crawl.
 
 ### Ingest liveness (V17)
 

@@ -2,7 +2,39 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 13 Jun 2026 — V23 complete; see V23 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+*Last updated: 15 Jun 2026 — V24 complete; see V24 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+
+---
+
+## CURRENT STATE — V24 (REBASELINE + BREAKER FIX + EMAIL HONESTY + NI ASSEMBLY + INQUIRIES + UNIFICATION SPEC, 14–15 Jun 2026)
+
+**Sprint:** V24 (SPRINT_V24_BRIEF.md). Full account: CHANGE_LOG V24. Everything below the V23 heading is historical.
+
+**TOTAL at close:** 15,577,221 compiled sections / **4.82B words** (15,770,435 incl. classified residue; V23: 12.56M / 4.05B). Per-corpus table → `CORPUS_STATUS_V24.csv` (R2 ~27.4 GB est, Neon heap 6.76 GB). **The email no longer shows a % (Charlie-directed §3)** — two hard numbers + a completion count + a labelled projection.
+
+**DONE this sprint:**
+- **§1 — 7 corpora ✓ re-baselined** (`v24-rebaseline.ts --confirm`): retained-eu 186,371 · si-2010plus 270,339 · explanatory-notes 410 · explanatory-memoranda 5,420 · historic-hansard 4,641,085 · ni-judgments 7,772 · quangos-govuk 86,547. Transient failures reset+drained; 2 deterministic historic-hansard gapday misses classified `skipped`. **committees-reports (47.6k pending) + committees-evidence (~4.9k pending + 83 failed) still draining → ✓ next session.**
+- **§2 — zero-output breaker FIXED at the worker.** New `ingest_queue.produced_output` (per-row verdict via `AsyncLocalStorage` in `process-row.ts`; counts compiled writes, r2Exists confirmations, and markers — so idempotent reseeds no longer read as empty). `ops.evaluateBreakers` trips on the trailing all-empty run (24h window, threshold 25), not cross-sweep deltas. Verified against tna-legislation + committees reseeds (no false trip) and the curl-broken case (still trips) — `v24-verify-breaker.ts`, production untouched. Column migrated live (`v24-migrate-produced-output.ts`).
+- **§3 — email >100% headline retired** (`progress-reporter.ts`): subject + TOTAL block now exact sections + words + completion counts + labelled projection.
+- **§4.1 NI Assembly Hansard — BUILT + piloted, seed-ready (POST-PUSH).** Licence VERIFIED OGL v3.0; IIS host (no CF, Railway-safe). Pilot: 646 reports, ~482 sections/report → **PREDICTION ≈311,157 sections / ≈48.4M words**. `sources/niassembly-hansard.ts` + `processNiAssemblyHansard` + seeder. **Seed deferred POST-PUSH** (new sourceType — the live old worker markSkipped 95 of a premature seed before I deleted all 646; lesson logged).
+- **§4b College of Policing:** licence RESOLVED = **Non-Commercial College Licence** (`college-nc`, verified via 2026-02-03 web-archive snapshot). Content route BLOCKED — fresh archive snapshots are Drupal JS-SPA shells; only 2022 snapshots have static text (~4yr stale). **No seed; recommend Playwright/JSON-API or a direct permission email.**
+- **§4.2 Senedd/Scottish:** neither meets the seed condition — Senedd route confirmed but **licence unverified** (the "ogl" footer match was "g**oogl**e"); Scottish API still needs Charlie's XHR. No seed.
+- **§5 Public inquiries — `inquiry-reports` sourceType BUILT, seed-ready (POST-PUSH).** Per-PDF rows (timeout-safe). Dry-run: **8 concluded inquiries → 53 report-volume PDFs**, OGL v3.0 via gov.uk attachments. Grenfell/dark-site adapter = follow-up.
+- **§6 `UNIFICATION_PLAN.md` DELIVERED** (spec only): legacy LegislationSection inventory, 71.5% measured overlap with corpus_sections, conversion (A) + app-DB Railway→Neon (B), <15 min downtime, minutes rollback.
+
+**POST-PUSH RUN ORDER (this session if commit-all.sh lands + redeploys, else next — these are NEW sourceTypes the live worker would markSkipped):**
+1. `seed-rate-limits.ts` (adds niassembly-hansard 1000ms/2, inquiry-reports 500ms/3).
+2. `v24-seed-niassembly-hansard.ts --seed` (646 reports; optionally `--canary 3` first to verify Railway egress on the IIS host, then full).
+3. `v24-seed-inquiry-reports.ts --seed` (53 report PDFs + upserts the inquiry-reports corpus_target).
+4. Verify both produce sections (Railway egress); re-baseline when drained (future sprint).
+
+**IN FLIGHT / NEXT SESSION:**
+1. committees-reports + committees-evidence drain → ✓ (clear the 83 committees-api AggregateError failures first); then re-run `v24-rebaseline.ts --confirm`.
+2. Post-push NI Assembly + inquiry seeds drain → ✓ re-baseline (niassembly-hansard est currently the V23 placeholder 270k; pilot says ~311k).
+3. Devolved follow-ups: Senedd licence verification (Welsh Parliament licence page, not the homepage footer) → build; Scottish needs Charlie's SpOpenData XHR; College needs a rendered/API content route.
+4. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers; new corpora niassembly/inquiry licences applied at ingest via the map).
+
+**DECISIONS WAITING ON CHARLIE:** Scottish-courts + Scottish-parliament SpOpenData devtools XHR (same technique unblocks both) · Senedd licence (verify the Welsh Parliament licence page) · College of Policing content route (Playwright/API or direct permission email) · FCL computational-analysis email · FCA Handbook · pwdata licence backfill · BAILII email · written-answers month-blob deletion.
 
 ---
 
