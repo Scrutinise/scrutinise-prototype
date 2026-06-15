@@ -6,7 +6,7 @@
 
 ## V24 — REBASELINE + BREAKER FIX + EMAIL HONESTY + NI ASSEMBLY + INQUIRIES + UNIFICATION SPEC (14–15 Jun 2026)
 
-**Context:** SPRINT_V24_BRIEF.md. **TOTAL at close: 15,577,221 compiled sections / 4.82B words** (15,770,435 incl. classified residue; V23: 12,558,897 / 4.05B — the jump is the Lords 1919-1999 tranche fully drained (historic-hansard 4.64M), quangos T1 + committees draining, and the si-2010plus/retained-eu enum drains landing). Per-corpus table → `CORPUS_STATUS_V24.csv` (R2 ~27.4 GB est, Neon heap 6.76 GB). Two new source families built (NI Assembly Hansard, public inquiry reports) — both seed POST-PUSH (new sourceTypes; the live worker would `markSkipped` them — see the skip-race note in §4).
+**Context:** SPRINT_V24_BRIEF.md. **TOTAL at close: 15,577,221 compiled sections / 4.82B words** (15,770,435 incl. classified residue; V23: 12,558,897 / 4.05B — the jump is the Lords 1919-1999 tranche fully drained (historic-hansard 4.64M), quangos T1 + committees draining, and the si-2010plus/retained-eu enum drains landing). Per-corpus table → `CORPUS_STATUS_V24.csv` (R2 ~27.4 GB est, Neon heap 6.76 GB). Two new source families built, then **seeded + verified live the same session after the push** (NI Assembly Hansard, public inquiry reports — see the POST-PUSH subsection at the end).
 
 ### §1 Rebaseline — 7 corpora ✓ confirmed
 
@@ -40,6 +40,14 @@ New `inquiry-reports` sourceType — **one queue row per report PDF** (a 12-volu
 ### §6 Unification readiness — `UNIFICATION_PLAN.md` DELIVERED (spec only, no migration)
 
 Measured inventory (live 14 Jun + S0 SEARCH_AUDIT): legacy `LegislationSection` 914,274 rows (135,531 items), duplicated on BOTH Railway + Neon; `originalText` 100% (0.86 GB in Postgres) but `compiledTextKey` only 2.7% (R2 backfill needed for the rest); `embedding` 0 rows; `ftsVector` 100% = the live search index (3 web paths read it, none touch `corpus_sections`). **Overlap measured: 96,960/135,531 (71.5%) legacy items already in `corpus_sections` by exact `legislationGovUkId`; 28.5% need normalization-or-gap-fill.** New pipeline holds 356,634 distinct legislation docs (2.6× the legacy item count) — it is the coverage superset; legacy is the compilation/summary/amendment-layer superset (mostly unbuilt). Plan: (A) gap-fill the additive 28.5% via the tna-legislation queue (R2-backed) rather than copy the Postgres column; defer/sidecar the compilation layer; (B) move ~60 app tables Railway→Neon pooled endpoint, repoint all three search paths + `DATABASE_URL`. **Predicted downtime < 15 min (one write-freeze); rollback in minutes; no data loss possible before the final `DROP` (gated on soak + verified backup).** Corpus FTS-on-`corpus_sections` is a search-thread dependency (full corpus over the 20 GB budget; legislation+caselaw scope fits — SEARCH_AUDIT §7).
+
+### POST-PUSH (done same session)
+
+After `commit-all.sh` pushed (`fe4d15f` feat + `623d386` docs), the Railway Ingest deployment of `623d386` was confirmed **SUCCESS via the deployments API** before seeding (so the new dispatch cases were live — no skip-race repeat). Then:
+- `seed-rate-limits.ts` (30 entries incl. the two new sources).
+- **NI Assembly: canary then full.** `--canary 3` → **1,445 compiled sections / 224,732 words** (≈482/report — matches the pilot exactly; Railway egress on the IIS host confirmed). Then `--seed` → 646 rows total, grinding toward ~311k.
+- **Inquiries: full seed.** 53 report PDFs → **51 compiled sections / 6.55M words** (2 markers; Iraq/Chilcot volumes are huge). inquiry-reports corpus_target est=53.
+- **Verified:** 0 tripped breakers; the new per-row zero-output breaker is live and recording `produced_output` verdicts on the fresh done rows (the deployed fix functioning, not just unit-tested). TOTAL crossed **15.58M compiled / 4.83B words**.
 
 ### §8 Artifacts
 
