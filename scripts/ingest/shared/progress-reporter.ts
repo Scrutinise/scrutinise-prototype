@@ -283,14 +283,22 @@ export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows:
 
 // ── Rows completed in the last hour (divergence check input) ──────────────────
 
-export async function queryRowsCompletedLastHour(): Promise<number> {
+// Returns both the total done-this-hour and the genuinely-EMPTY subset
+// (produced_output=false: wrote no section, confirmed no existing R2 file, wrote
+// no marker, not a structural seeder — V24). The divergence warning fires on the
+// empty count, NOT on compiled-section delta: a marker-heavy or idempotent-reseed
+// hour completes rows without growing the compiled count, which is legitimate and
+// must not raise a false alarm. produced_output=NULL (pre-V24 rows) is excluded.
+export async function queryRowsCompletedLastHour(): Promise<{ total: number; empty: number }> {
   try {
-    const res = await getNeonPool().query<{ n: number }>(`
-      SELECT COUNT(*)::int AS n FROM ingest_queue
+    const res = await getNeonPool().query<{ total: number; empty: number }>(`
+      SELECT COUNT(*)::int AS total,
+             COUNT(*) FILTER (WHERE produced_output = false)::int AS empty
+      FROM ingest_queue
       WHERE status = 'done' AND "completedAt" > NOW() - INTERVAL '1 hour'
     `)
-    return res.rows[0]?.n ?? 0
-  } catch { return 0 }
+    return { total: res.rows[0]?.total ?? 0, empty: res.rows[0]?.empty ?? 0 }
+  } catch { return { total: 0, empty: 0 } }
 }
 
 // ── Format helpers ────────────────────────────────────────────────────────────
@@ -345,6 +353,7 @@ export interface ProgressEmailInput {
   hourlyDelta?: Map<string, number>
   reclaimedCount?: number
   rowsCompletedThisHour?: number
+  emptyRowsThisHour?: number
   ingestService?: IngestServiceState
   breakerIssues?: string[]
 }
@@ -353,7 +362,7 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   const {
     timestamp, corpusCounts, neonCount, dbSize,
     stalledSources = [], hourlyDelta = new Map(), reclaimedCount = 0,
-    rowsCompletedThisHour = 0, ingestService, breakerIssues = [],
+    rowsCompletedThisHour = 0, emptyRowsThisHour = 0, ingestService, breakerIssues = [],
   } = input
 
   const apiKey = process.env.RESEND_API_KEY
@@ -497,11 +506,14 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
     }
     if (activeDelta.length === 0) parts.push('  (no corpora added sections this hour)')
   }
-  // Divergence: rows completing without producing sections is the silent
-  // failure mode that hid the committees incident for days.
-  parts.push(`  Rows completed: ${rowsCompletedThisHour.toLocaleString()}`)
-  if (rowsCompletedThisHour > 0 && (totalDelta ?? 0) === 0) {
-    parts.push(`  ⚠️  DIVERGENCE: ${rowsCompletedThisHour} rows done but 0 sections written — investigate before this trips the zero-output breaker`)
+  // Divergence (V24): the silent-failure signal is the per-row produced_output
+  // verdict, NOT compiled-section delta. A marker-heavy hour (e.g. committees
+  // metadata-only publications) or an idempotent reseed completes rows without
+  // growing the compiled count — both are legitimate output and must not warn.
+  // We warn only on rows that genuinely produced nothing (the breaker's input).
+  parts.push(`  Rows completed: ${rowsCompletedThisHour.toLocaleString()}${emptyRowsThisHour > 0 ? ` (${emptyRowsThisHour.toLocaleString()} produced zero output)` : ''}`)
+  if (emptyRowsThisHour > 0) {
+    parts.push(`  ⚠️  DIVERGENCE: ${emptyRowsThisHour.toLocaleString()} rows done with ZERO output (no section, no existing-content confirm, no marker) — the genuine zero-output signal; investigate before the breaker trips`)
   }
 
   // ── TOTAL CORPUS ──────────────────────────────────────────────────────────

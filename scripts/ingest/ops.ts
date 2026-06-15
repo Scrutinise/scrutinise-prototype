@@ -482,7 +482,7 @@ async function runHourly(): Promise<void> {
     hourlyDelta = await getHourlyDelta(currentCounts, currentHour)
   } catch (err) { console.warn('[ops] hourly delta failed:', err) }
 
-  const [rowsCompletedThisHour, ingestService, breakerIssues] = await Promise.all([
+  const [completedLastHour, ingestService, breakerIssues] = await Promise.all([
     queryRowsCompletedLastHour(),
     getIngestState().catch(() => undefined),
     queryBreakerIssues(),
@@ -497,7 +497,8 @@ async function runHourly(): Promise<void> {
     stalledSources,
     hourlyDelta,
     reclaimedCount,
-    rowsCompletedThisHour,
+    rowsCompletedThisHour: completedLastHour.total,
+    emptyRowsThisHour: completedLastHour.empty,
     ingestService,
     breakerIssues,
   })

@@ -54,7 +54,10 @@ async function main() {
     console.log(`| ${row.corpus} | ${Number(row.compiled_sections).toLocaleString()} / ${Number(row.total_sections).toLocaleString()} | ${Number(words).toLocaleString()} | ${gb(r2)} | ${gb(row.neon_bytes)} |`)
   }
   console.log(`| **TOTAL** | **${Number(tC).toLocaleString()} / ${Number(tS).toLocaleString()}** | **${Number(tW).toLocaleString()}** | **${gb(tR)}** | **${gb(tN)}** |`)
-  lines.push(`TOTAL,${tS},${tC},${tW},${tR},${tN}`)
+  // TOTAL is printed to the console only — NOT written to the CSV. A trailing
+  // TOTAL row makes a naive SUM(column) over the whole file double-count (the
+  // per-corpus rows + the TOTAL row = 2×). Per-corpus rows only; sum them in the
+  // workbook.
   fs.writeFileSync(OUT_CSV, lines.join('\n') + '\n', 'utf8')
   console.log(`\n[status] CSV written: ${OUT_CSV}`)
   console.log('[status] R2 bytes = words × 6.1 (SEARCH_AUDIT measured avg) — estimate; Neon bytes = heap incl. TOAST, excl. indexes.')
