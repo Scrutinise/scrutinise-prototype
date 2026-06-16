@@ -826,6 +826,47 @@ If total connections > 80, pool is near capacity. Check `application_name` — w
 
 ---
 
+### V25 patterns (16 Jun 2026)
+
+**Redirect-classified id-space enumeration (Senedd).** When a site's only listing is a
+JS-driven search that won't return a bulk list (record.senedd.wales), enumerate by walking
+the numeric id space and classifying each id by its redirect target. `/Meeting/{id}` 302s to
+`/Plenary/{id}` (plenary) or `/Committee/{id}` (committee); a `redirect:'manual'` fetch reads
+the `Location` header without pulling the body. Keep the ids whose target matches the type you
+want. Cheap on a no-CF host; concurrency-limited. The "recent" end of the id space can hold
+FUTURE scheduled-but-empty meetings (0 contributions) — skip empties in pilots; the processor
+writes a no-content marker for them.
+
+**Bilingual transcripts — take one language deterministically.** Senedd contributions carry
+`verbatim` (as spoken, Welsh or English) + `translation` (English, present only when spoken in
+Welsh). For an English FTS corpus: prefer `translation`, fall back to `verbatim`. Picking one
+keeps section counts honest (don't emit both).
+
+**UK Gov Web Archive route (College APP).** CF-free, TNA-hosted — Railway-safe. Two pieces:
+- **CDX enumeration:** `…/ukgwa/cdx?url={host}/{path}*&output=text&filter=statuscode:200&filter=mimetype:text/html&from=YYYYMMDD&to=YYYYMMDD&limit=50000`. `collapse=urlkey` does NOT reliably dedupe here — dedupe yourself by normalised original URL, keeping the LATEST timestamp. Drop `?`-query variants.
+- **Raw-capture fetch:** `…/ukgwa/{timestamp}id_/{originalUrl}` — the `id_` modifier returns the ORIGINAL bytes (no archive banner / link-rewriting), so text extraction is clean. Record the snapshot date as `itemDate` so staleness is visible. Use this when a live site is CF-blocked or has gone JS-SPA (College: 2022 = last static-HTML snapshots; 2023+ = JS shells).
+
+**Parliament JSON APIs — use `files[]` (API-hosted Download), not `links[]` (Bills).** The Bills
+API publication objects carry both `files[]` (download via `/Publications/{pubId}/Documents/{docId}/Download`,
+reliable) and `links[]` (external parliament.uk / data.parliament.uk URLs — HTML index pages
+mislabelled application/pdf, dead URLs, scanned image PDFs with no text). Only `files[]` is
+dependable. Older bills with only `links[]` yield 0 sections — acceptable, their enacted text is
+already held via legislation.gov.uk.
+
+**Two-stage list→per-item for fan-out rows (Bills, reuse of committees-api).** A single bill can
+carry hundreds of publication PDFs (bill 3774 = 267) — far too many to extract within one row's
+5-min budget. Seed `list:{billId}` rows; the worker enumerates that bill's PDFs into per-PDF
+content rows (`{billId}#{seq}|{url}`); each content row extracts ONE PDF → one section. Same shape
+as the inquiry-reports per-PDF rows and the committees-api `list:` windows.
+
+**gov.uk publication slugs — search, don't guess (inquiries).** To find a concluded inquiry's
+report publication page, query the gov.uk search API (`https://www.gov.uk/api/search.json?q=…&fields=link`)
+and verify the slug resolves (content API `details.attachments` → PDFs). Slug-guessing hit ~5/23;
+the search API found the rest. The publication-attachments route gives REPORTS-ONLY for free
+(the page lists only the official report volumes, not the separate evidence bundles).
+
+---
+
 ## 9. SOURCE ACCESS PRIORITY ORDER
 
 For every new corpus, test access methods in this order before writing a client:

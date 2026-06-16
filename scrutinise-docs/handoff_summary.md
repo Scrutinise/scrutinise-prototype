@@ -2,7 +2,37 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 15 Jun 2026 — V24 complete; see V24 CURRENT STATE below. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+*Last updated: 16 Jun 2026 — V25 BUILD complete (Senedd/College/Bills built+piloted, inquiry register 8→21, licence compliance recorded); seeds + rebaseline are POST-PUSH. Search S0 audit (`docs/SEARCH_AUDIT.md`) unchanged.*
+
+---
+
+## CURRENT STATE — V25 (FEED THE MACHINE: Senedd · College · Bills · inquiry expansion · licence compliance, 16 Jun 2026)
+
+**Sprint:** V25 (SPRINT_V25_FEED_BRIEF.md). Full account: CHANGE_LOG V25. Pure additive ingest — zero structural-DB risk (structural unification is now V26, gated on the FTS decision + production gates). Queue ran dry ~14 Jun (0 pending at open). Everything below the V24 heading is historical.
+
+**BUILT + LOCALLY PILOTED this session (predict-measure-commit); NEW sourceTypes seed POST-PUSH:**
+- **§2 Senedd Cofnod ✓ built+piloted+licence-VERIFIED.** `record.senedd.wales/Plenary/{id}` (custom .NET, no CF), enumerated by redirect-classified meeting-id scan; one section per English speaker-turn (bilingual — prefer `translation`). Licence OGL v3.0 (Charlie verified the Senedd copyright page; supersedes the V24 "g**oogl**e" false positive). PILOT: 254–259 sections/plenary, ~847 plenaries → **PREDICTION ≈217k sections / ~30M words**. `sources/senedd-cofnod.ts` + `processSeneddCofnod` + `v25-seed-senedd-cofnod.ts`.
+- **§3 College of Policing ✓ built+piloted.** UK Gov Web Archive 2022 snapshots (live site CF-blocked, fresh snapshots are JS shells). CDX enumerates `app-content*`, content via the `id_` raw-capture route. **332 distinct APP pages** (the ~8k placeholder was a rough overestimate), avg ~2,431 words/page → **PREDICTION ≈332 sections / ~0.81M words**. Licence `college-nc` → **commercial-surface excluded**. `sources/college-policing-archive.ts` + `processCollegePolicing`.
+- **§4 Bills API ✓ built+piloted.** `bills-api.parliament.uk` (3,914 bills). Two-stage `list:{billId}` → per-PDF rows (bill 3774 alone = 267 PDFs); **files[] Download route only** (links[] are unreliable). Licence OPL v3.0. PILOT: avg 3.3 files-PDFs/bill, 100% extract → **PREDICTION ≈13k sections / ~9.4M words** (the ~5k placeholder undershoots — amendment papers dominate). `sources/bills-parliament.ts` + `processBills`.
+- **§5 Public inquiries — register 8 → 21 inquiries / 53 → 146 report PDFs.** 13 verified concluded inquiries added to `INQUIRY_REGISTRY` (Saville 11, Al-Sweady 50, Grenfell P2 12, Mid Staffs, IICSA, Litvinenko, Baha Mousa, Zahid Mubarek, Hillsborough, Victoria Climbié, Azelle Rodney, Rosemary Nelson, Equitable Life). Re-run `v24-seed-inquiry-reports.ts --seed` POST-PUSH (idempotent, +93 rows).
+- **§6 Scottish — built to the gate, SEEDS NOTHING.** HTML route live; SpOpenData API key still not captured (none in session prompt). `sources/scottish-parliament.ts` + `v25-seed-scottish.ts` report the blocker. Did NOT guess the key.
+- **§7 LICENCE_COMPLIANCE.md created** — Find Case Law serving-layer hard requirements (auth-only judgment text, noindex/robots, no open/3rd-party API over judgment text or extracts, no open-web publication of derived extracts) + the NC commercial-exclusion set + fca-restricted. Recorded, not enforced (ingest only).
+- **§1 carry-over:** divergence fix (§1.1) + CSV TOTAL-row drop (§1.3) were already in HEAD `96d150f`; §1.2 rebaseline is POST-PUSH (`v25-rebaseline.ts --classify-failed --confirm`).
+
+**POST-PUSH RUN ORDER (this session if the push lands + Railway Ingest deploy confirms SUCCESS, else next):**
+1. `seed-rate-limits.ts` (senedd-cofnod 500/3, bills-api 500/3, college-policing-archive 1000/2, scottish placeholder).
+2. `v25-seed-college-policing.ts --seed` (332 rows — fastest web-archive-route canary) → verify a section in Neon+R2.
+3. `v25-seed-bills.ts --seed` (3,914 list rows) → watch per-PDF rows expand.
+4. `v25-seed-senedd-cofnod.ts --seed` (full id scan → ~847 plenary rows).
+5. `v24-seed-inquiry-reports.ts --seed` (+93 inquiry report rows).
+6. Verify 0 tripped breakers; `v25-rebaseline.ts --classify-failed` then `--confirm` at drains; re-run `v20-licence-backfill.ts`; regenerate `v25-corpus-status-table.ts`.
+
+**IN FLIGHT / NEXT SESSION:**
+1. New corpora drain → `v25-rebaseline.ts --confirm` (senedd-cofnod ~217k, bills-api ~13k, college-of-policing 332; + the §1.2 four).
+2. Scottish (parliament + courts) waits on Charlie's SpOpenData XHR capture; College follow-up = a rendered/API content route fresher than 2022; inquiry dark-site report-PDF Web Archive adapter (Manchester Arena/Undercover/Shipman own domains).
+3. V26 = structural unification + Railway decommission (gated on the FTS-scope decision + the two production gates).
+
+**DECISIONS WAITING ON CHARLIE:** Scottish-parliament + Scottish-courts SpOpenData devtools XHR (same technique unblocks both) · College of Policing fresher content route · FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email · written-answers month-blob deletion · V26 FTS-scope decision.
 
 ---
 

@@ -1,6 +1,63 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 15 Jun 2026 — V24.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 16 Jun 2026 — V25.*
+
+---
+
+## V25 — FEED THE MACHINE (Senedd · College · Bills · inquiry register expansion · licence compliance) (16 Jun 2026)
+
+**Context:** SPRINT_V25_FEED_BRIEF.md — pure additive `corpus_sections` ingest of newly-unblocked sources; zero structural-DB risk (the structural-unification brief is now V26, gated on the FTS decision). Queue had run dry since ~14 Jun (0 pending at sprint open). Three new source families BUILT + LOCALLY PILOTED (predict-measure-commit); the public-inquiry register expanded 8→21 inquiries. **New sourceTypes seed POST-PUSH** (the live worker markSkips an unknown sourceType) — see the POST-PUSH run order at the end.
+
+### §1 Carry-over
+
+- **§1.1 divergence-check fix — already in HEAD (`96d150f`).** `progress-reporter.ts` `queryRowsCompletedLastHour()` returns `{ total, empty }` where `empty` = rows with `produced_output=false`; the hourly email warns on that, NOT on compiled-section delta — a marker-heavy or idempotent-reseed hour no longer cries wolf. Verified present this sprint.
+- **§1.3 CORPUS_STATUS CSV TOTAL row — already dropped in HEAD (`96d150f`).** `v24/v25-corpus-status-table.ts` prints TOTAL to the console only; the CSV holds per-corpus rows only (a trailing TOTAL row double-counts on a naive workbook SUM). `v25-corpus-status-table.ts` writes `CORPUS_STATUS_V25.csv`.
+- **§1.2 rebaseline (4 corpora) → POST-PUSH.** committees-reports/-evidence + niassembly-hansard + inquiry-reports all drained except a tiny deterministic FAILED residue (committees-api 18 detail-fetch + 83 AggregateError; niassembly 14 components-fetch misses). `v25-rebaseline.ts --classify-failed` marks those skipped (≤200, no pending/claimed → the "✓-or-classified" rule), then `--confirm` stamps ✓ at the measured compiled count. Runs after the new worker deploys.
+
+### §2 Senedd Cofnod — BUILT + PILOTED (licence VERIFIED OGL v3.0)
+
+- **Licence VERIFIED** (Charlie, brief §2): Senedd content is Crown copyright, reproducible under OGL v3.0 with source acknowledgement (senedd.wales copyright page). `licence-map` `senedd-cofnod` → `ogl-3.0` (supersedes the V24 "g**oogl**e" false positive).
+- **Route:** `record.senedd.wales/Plenary/{meetingId}` (custom .NET, NO Cloudflare). Enumeration walks the meeting-id space classified by redirect (`/Meeting/{id}` → `/Plenary/{id}` = plenary; the on-site search is JS-driven and useless for bulk listing). Granularity = one section per English speaker-turn (bilingual page: prefer `translation`, fall back to `verbatim`).
+- **PILOT (predict-measure):** Plenary/16073 (2026-06-10) = 254 sections / 32,096 words / 51 speakers; Plenary/5000 (2018-07-17) = 259 / 47,510. Density sample 16/304 ids plenary → **~847 plenaries**. **PREDICTION ≈ 217,000 sections / ~30M words** (matches the V23 ~200k placeholder).
+- Files: `sources/senedd-cofnod.ts`, `processSeneddCofnod`, `v25-seed-senedd-cofnod.ts` (--pilot/--seed), rate-limit 500ms/3.
+
+### §3 College of Policing — BUILT + PILOTED (college-nc, commercial-excluded)
+
+- **Route:** UK Gov Web Archive 2022 snapshots (live site CF-blocked; fresh snapshots are JS shells — V24). CDX enumerates `app.college.police.uk/app-content*` (200/html/2022, deduped to the latest capture per URL); content fetched via the `…{ts}id_/…` raw-capture route (no archive banner) and sliced from `<div id="content" role="main">`. One section per APP page; snapshot date carried as `itemDate` so the ~4yr staleness is visible.
+- **Licence college-nc** (Non-Commercial College Licence, verified V24) → flagged for **commercial-surface exclusion** (LICENCE_COMPLIANCE.md §2).
+- **PILOT:** **332 distinct APP pages** (2022 snapshot; the V21 ~8k placeholder was a rough overestimate), avg ~2,431 words/page (8,568 for the deep armed-deployment guidance). **PREDICTION ≈ 332 sections / ~0.81M words.**
+- Files: `sources/college-policing-archive.ts`, `processCollegePolicing`, `v25-seed-college-policing.ts`, sourceType `college-policing-archive` rate 1000ms/2. Seeder `--seed` clears the corpus_target block.
+
+### §4 Bills API — BUILT + PILOTED (OPL v3.0)
+
+- **Route:** `bills-api.parliament.uk` JSON API (3,914 bills). Two-stage queue (committees pattern) — a single bill carries up to hundreds of publication PDFs (bill 3774 = 267), too many for one row's 5-min budget: `list:{billId}` enumerates a bill's PDFs into per-PDF content rows; each content row extracts ONE PDF → one section. **Only the API-hosted `files[]` Download route is used** — the legacy `links[]` (external parliament.uk / data.parliament.uk URLs) are unreliable (HTML index pages mislabelled PDF, dead URLs, scanned image PDFs; verified across sampled bills 986/2071).
+- **Licence opl-3.0** (parliamentary material — Open Parliament Licence; same family as Hansard/committees).
+- **PILOT:** 16 bills sampled across the id range → avg 3.3 files-PDFs/bill, 100% extract-rate (5/5 downloads), 729 words/section. **PREDICTION ≈ 12,965 sections / ~9.4M words** (the V21 ~5k placeholder is an underestimate — amendment papers/EN/memoranda dominate; rebaseline at drain).
+- Files: `sources/bills-parliament.ts`, `processBills`, `v25-seed-bills.ts`, rate 500ms/3, P2.
+
+### §5 Public inquiries — register expanded 8 → 21 (reports-only)
+
+- `INQUIRY_REGISTRY` extended with 13 verified concluded inquiries whose final reports are gov.uk publication pages (each confirmed → PDFs at build via the gov.uk content API `details.attachments`): Bloody Sunday/Saville (11), Mid Staffs/Francis (4), Al-Sweady (50), Grenfell Phase 2 (12), Baha Mousa (3), Zahid Mubarek (3), IICSA (3), Litvinenko (2), + Victoria Climbié / Azelle Rodney / Rosemary Nelson / Equitable Life / Hillsborough Panel (1 each).
+- **21 inquiries → 146 report PDFs** (was 8 / 53). Slugs found via the gov.uk search API (guessing was unreliable). Re-run `v24-seed-inquiry-reports.ts --seed` POST-PUSH (idempotent — adds the 93 new rows); rebaseline `inquiry-reports` from what seeds. Dark-site-only inquiries (some Manchester Arena / Undercover Policing / Shipman own-domain reports) still need a Web Archive report-PDF adapter — documented follow-up.
+
+### §6 Scottish — BUILT to the gate, SEEDS NOTHING
+
+- HTML Official Report route live (`parliament.scot/chamber-and-committees/official-report` → 200); the structured SpOpenData API base is still not exposed in static assets (`data.parliament.scot/api/` → 404) — the auth key lives in the site's XHR calls. `sources/scottish-parliament.ts` carries the integration seam + an HTML liveness probe; `v25-seed-scottish.ts` confirms the route and reports the blocker. **No XHR capture was supplied in the session prompt → no seed.** Did NOT brute-force the key (brief §6). Waits on Charlie's devtools Network-tab capture (same technique unblocks scottish-courts).
+
+### §7 Case-law licence compliance — RECORDED
+
+- `scrutinise-docs/LICENCE_COMPLIANCE.md` created: the Find Case Law commitments as HARD serving-layer build requirements — (a) judgment text auth-only/no public URL; (b) noindex/robots/no crawlable route; (c) no open or third-party API over judgment text or derived data; (d) no open-web publication of citation/entity/statistical extracts. Plus the NC commercial-exclusion set (college-nc/oecd/nao-nc/echr-nc) and fca-restricted. NOT enforced this sprint (ingest only) — flagged to the search thread.
+
+### POST-PUSH RUN ORDER (after `commit-all.sh` push + Railway Ingest deploy confirmed SUCCESS)
+
+1. `seed-rate-limits.ts` (adds senedd-cofnod, bills-api, college-policing-archive, scottish-parliament-or).
+2. `v25-seed-college-policing.ts --seed` (332 rows; smallest, fastest canary of the web-archive route).
+3. `v25-seed-bills.ts --seed` (3,914 list rows → per-PDF rows expand on the worker).
+4. `v25-seed-senedd-cofnod.ts --seed` (full id scan → ~847 plenary rows).
+5. `v24-seed-inquiry-reports.ts --seed` (idempotent; +93 new report rows for the expanded register).
+6. `v25-seed-scottish.ts` — confirms gated, seeds nothing.
+7. Verify breakers 0 tripped; spot-check one section per new corpus in Neon + R2.
+8. At drains: `v25-rebaseline.ts --classify-failed --confirm` (the §1.2 four + new corpora) and re-run `v20-licence-backfill.ts`.
 
 ---
 
