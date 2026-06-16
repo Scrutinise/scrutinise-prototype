@@ -27,7 +27,7 @@ import { classifyMeeting, fetchPlenary } from './sources/senedd-cofnod'
 const CORPUS = 'senedd-cofnod'
 const SRC = 'senedd-cofnod'
 const DEFAULT_MAX = 16100      // 10/06/2026 = id 16073; small headroom
-const SCAN_CONC = 6
+const SCAN_CONC = 3            // politeness — conc 6 provoked host throttling (V25 first run)
 
 function arg(name: string): string | null {
   const i = process.argv.indexOf(name)
@@ -35,21 +35,49 @@ function arg(name: string): string | null {
 }
 
 // Concurrency-limited classify over [lo, hi]. onPlenary(id) per plenary found.
+// Any id that returns 'error' (transient, after classifyMeeting's own retries) is
+// collected and re-scanned serially at the end — never dropped, so throttling
+// can't false-negative a real plenary (the V25 first-run failure mode).
 async function scanRange(lo: number, hi: number, onPlenary: (id: number) => void, onProgress?: (done: number, found: number) => void) {
   const ids: number[] = []
   for (let i = hi; i >= lo; i--) ids.push(i)  // newest first
   let done = 0, found = 0, cursor = 0
+  const errors: number[] = []
   async function worker() {
     while (cursor < ids.length) {
       const id = ids[cursor++]
       const kind = await classifyMeeting(id)
       done++
       if (kind === 'plenary') { found++; onPlenary(id) }
+      else if (kind === 'error') errors.push(id)
       if (onProgress && done % 250 === 0) onProgress(done, found)
     }
   }
   await Promise.all(Array.from({ length: SCAN_CONC }, () => worker()))
-  return { scanned: done, found }
+
+  // serial retry pass for transient errors
+  if (errors.length) {
+    console.log(`[senedd] retrying ${errors.length} transient-error ids serially…`)
+    let stillErr = 0
+    for (const id of errors) {
+      const kind = await classifyMeeting(id, 5)
+      if (kind === 'plenary') { found++; onPlenary(id) }
+      else if (kind === 'error') stillErr++
+    }
+    if (stillErr) console.log(`[senedd] WARNING: ${stillErr} ids still erroring after retry — re-run --seed (idempotent) to fill`)
+  }
+  return { scanned: done, found, errors: errors.length }
+}
+
+async function withInsertRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; ; i++) {
+    try { return await fn() }
+    catch (e) {
+      if (i >= 4) throw e
+      console.log(`[senedd] insert attempt ${i + 1} failed (${String(e).slice(0, 60)}) — retrying…`)
+      await new Promise(r => setTimeout(r, 3000 * (i + 1)))
+    }
+  }
 }
 
 async function measure(ids: number[]) {
@@ -126,17 +154,18 @@ async function main() {
   const { scanned } = await scanRange(1, maxId, id => found.push(id),
     (d, f) => console.log(`  scanned ${d}, plenaries ${f}`))
   console.log(`[senedd] scanned ${scanned}, found ${found.length} plenaries`)
+  found.sort((a, b) => a - b)
   const rows = found.map(id => ({
     id: `${CORPUS}:${id}`, corpus: CORPUS, docId: String(id), sourceType: SRC, priority: 3,
   }))
-  const { affected } = await bulkInsertQueueRows(rows)
+  const { affected } = await withInsertRetry(() => bulkInsertQueueRows(rows))
   const pool = getNeonPool()
-  await pool.query(`
+  await withInsertRetry(() => pool.query(`
     INSERT INTO corpus_targets (corpus_key, est_sections, est_is_confirmed, blocked, retired, display_label, notes)
     VALUES ($1, $2, false, false, false, $3, $4)
     ON CONFLICT (corpus_key) DO UPDATE SET est_sections=EXCLUDED.est_sections, blocked=false, notes=EXCLUDED.notes`,
     [CORPUS, found.length, 'Senedd Cymru Plenary Cofnod (Record of Proceedings)',
-     `V25 §2: ${found.length} plenary meetings via record.senedd.wales, one section per English speaker-turn. OGL v3.0 (Crown copyright, Senedd copyright page verified). est=plenary count; rebaseline at drain.`])
+     `V25 §2: ${found.length} plenary meetings via record.senedd.wales, one section per English speaker-turn. OGL v3.0 (Crown copyright, Senedd copyright page verified). est=plenary count; rebaseline at drain.`]))
   console.log(`[senedd] seeded ${affected} new plenary rows (of ${found.length})`)
   await endNeonPool()
 }

@@ -52,22 +52,29 @@ function htmlToText(frag: string): string {
   return t.trim()
 }
 
-// Returns 'plenary' (id redirects to /Plenary/), 'other' (committee/200 page), or
-// 'gap' (404). Uses a redirect-only request — no body fetched.
-export async function classifyMeeting(meetingId: number): Promise<'plenary' | 'other' | 'gap'> {
-  let res: Response
-  try {
-    res = await fetch(`${BASE}/Meeting/${meetingId}`, {
-      headers: { 'User-Agent': UA }, redirect: 'manual',
-    })
-  } catch { return 'gap' }
-  if (res.status >= 300 && res.status < 400) {
-    const loc = res.headers.get('location') ?? ''
-    if (/\/Plenary\//i.test(loc)) return 'plenary'
-    return 'other'
+// Returns 'plenary' (id redirects to /Plenary/), 'other' (committee/200 page),
+// 'gap' (genuine 404), or 'error' (transient failure after retries — the caller
+// MUST retry these, never treat as not-a-plenary). Uses a redirect-only request
+// — no body fetched. WHY the retry: a high-throughput id scan provokes host
+// throttling (timeouts / 429 / 5xx); conflating those with 'gap' silently
+// false-negatives real plenaries (the V25 first run missed id 5000 this way).
+export async function classifyMeeting(meetingId: number, retries = 3): Promise<'plenary' | 'other' | 'gap' | 'error'> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`${BASE}/Meeting/${meetingId}`, {
+        headers: { 'User-Agent': UA }, redirect: 'manual',
+      })
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location') ?? ''
+        return /\/Plenary\//i.test(loc) ? 'plenary' : 'other'
+      }
+      if (res.status === 404) return 'gap'
+      if (res.status === 200 || (res.status >= 300 && res.status < 400)) return 'other'
+      // 429/5xx → transient; back off and retry
+    } catch { /* network error → transient; retry */ }
+    if (attempt < retries) await new Promise(r => setTimeout(r, 800 * (attempt + 1)))
   }
-  if (res.status === 404) return 'gap'
-  return 'other'
+  return 'error'
 }
 
 // Pull the English text from a contributionText fragment: prefer the translation
