@@ -1288,3 +1288,16 @@ V20 CHANGE_LOG).
 Rules:
 - Every NEW corpus gets a licence-map entry BEFORE its seeder runs (the map default is the only thing standing between a new corpus and NULL licence rows).
 - Restricted/NC sources (`fca-restricted`, `nao-nc`, `cc-by-nc-4.0`, `ojl-2.0`) are default-excluded from any future commercial surface.
+
+---
+
+## 19. DATABASE TOPOLOGY DOCTRINE (V26 — unification)
+
+V26 folds the legacy `LegislationSection` store into `corpus_sections` and moves the web-app DB off Railway. The end-state, post-cutover:
+
+- **One app DB on Neon (pooled).** `DATABASE_URL` points at the Neon **pooled** (`-pooler`) endpoint with `pgbouncer=true&connection_limit=1` (mandatory for Vercel's serverless fan-out — PgBouncer transaction mode). `DIRECT_URL` (non-pooled Neon) is kept for `prisma migrate` only (wired in `prisma.config.ts`). Railway = **compute only** (`Ingest` + `Ops`); its Postgres is decommissioned after the soak.
+- **One Prisma client.** The historical `prisma` (Railway) / `prismaSearch` (Neon) split is collapsed — `lib/prisma-search.ts` re-exports `prisma`. All reads + writes + search go through the single client. Do NOT reintroduce a second client; if a future need arises, justify it against this doctrine.
+- **Three layers unchanged** (V17): R2 = corpus text; Neon = metadata + search index + queue + **now the app DB**; Railway = transient compute.
+- **Legacy compilation value lives in `legislation_compilation_enrichment`** (Neon), keyed by (legislationGovUkId, sectionNumber), pointer-only. When the legacy `Legislation*` tables are dropped (§6), this table + R2 carry the only non-duplicated derived value (compiled-text / lex-summary keys, unapplied-amendment JSON). `corpus_sections` remains pointer-only — never copy section text into a DB column (the V3 rule).
+- **Coverage gap-fill, not column copy.** Legacy legislation absent from `corpus_sections` is re-seeded through the `tna-legislation` queue (R2-backed, first-class), never by copying the legacy Postgres `originalText` column. The normalization pass (calendar↔regnal, eudr/eudn↔CELEX, uksi↔regional sub-type) must run before declaring a gid a genuine gap — most "missing" gids are form variants already held.
+- **Neon cannot `SET session_replication_role`** (`neondb_owner` lacks it) — cross-DB bulk copies into Neon must order inserts by FK topology (parents first), with self-referencing tables inserted in a single statement.

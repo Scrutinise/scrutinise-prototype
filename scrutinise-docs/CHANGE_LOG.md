@@ -4,6 +4,35 @@
 
 ---
 
+## V26 — UNIFICATION + RAILWAY DECOMMISSION (structural) (16 Jun 2026)
+
+**Context:** SPRINT_V26_BRIEF.md, build input `UNIFICATION_PLAN.md` §4. Fold legacy `LegislationSection`/`Item` into `corpus_sections` (Migration A) + move the web-app tables Railway→Neon (Migration B). Public site access is closed pending the new Search/Lex build, so the cutover needs no user write-freeze. **Two human gates only — the cutover flip (§3.5) and the eventual DROP (§6); both deferred to Charlie. Everything else ran unattended.** As-built detail: UNIFICATION_PLAN "AS-BUILT (V26)"; operational steps: `V26_CUTOVER_RUNBOOK.md`.
+
+### §1 Precondition — corpus settled
+- V25 drained corpora rebaselined ✓ (`v25-rebaseline.ts --classify-failed --confirm`): committees-reports 24,876 · committees-evidence 140,567 · niassembly-hansard 196,348 · inquiry-reports 140 · college-of-policing 332 (small deterministic failed residues classified skipped). **bills-api + senedd-cofnod were still draining** at sprint start (senedd since drained, bills ~900 pending) — per brief §1, proceeded with the migration anyway (independent legislation data) and noted it; rebaseline those + the gap-filled corpora at drain.
+
+### §2 Migration A — corpus unification (additive, reversible, online)
+- **A.1 normalization (read-only):** 38,571 non-matching legacy gids → **24,247 genuine gaps** + 14,324 docId-form differences already covered (ukpga calendar↔regnal 8,514 · uksi regional 4,041 · eur→eudr/eudn/CELEX 1,769). Genuine gaps verified real: 99.6% carry legacy `originalText`; 25/25 stratified live-TNA `data.feed` probe fetchable. Scratch: `v26_cs_gids`, `v26_nonmatch` (categorized). Scripts `v26-normalize-explore/-hypotheses/-build-gaplist/-gap-probe.ts`.
+- **A.2 gap-fill:** 24,246 `tna-legislation` rows seeded (priority 5, `ON CONFLICT DO NOTHING`), corpus-mapped (si-pre-2010 23,510 · primary-acts-2000plus 394 · retained-eu 339 · si-2010plus 3 · regional 1). Draining online. `v26-seed-gapfill.ts`.
+- **A.3 compilation layer preserved:** `legislation_compilation_enrichment` (Neon) — 26,126 rows keyed by (legislationGovUkId, sectionNumber): 24,579 compiled-text R2 keys / 1,142 lex-summary keys / 5,635 unapplied-amendment JSON + metadata. Pointer-only (V3 rule). `LegislationAmendment/Correction/CrossRef` all empty → nothing else to carry. `v26-build-enrichment.ts`.
+
+### §3 Migration B — app tables Railway → Neon (prep done; flip gated)
+- **B.1:** the plan's assumption was stale — **all app tables already existed on Neon**. So B.1 = column-parity verify (clean) + `_prisma_migrations` baseline on Neon (ledger table created, 13 rows copied). `v26-schema-parity.ts`, `v26-db-inventory.ts`.
+- **B.2 app-data copy:** 24 tables / 62,394 rows Railway→Neon, exact parity (OperationalSection 61,315 the only bulk; rest dozens — pre-launch site). Neon forbids `session_replication_role`, so copied in FK-topological order (self-refs single-statement). `v26-copy-appdata.ts`, `v26-fk-graph.ts`.
+- **B.3/B.4 code repoint:** Neon legacy `ftsVector` confirmed intact (both tables 100% populated + GIN-indexed; OperationalSection index re-populated by the BEFORE-INSERT trigger during the copy). Dual client collapsed — `lib/prisma-search.ts` now re-exports `prisma`; `lib/search.ts` unified onto one client (operational FTS off Railway); `/api/ideas/[id]/legislation-search` moved off the per-query seq-scan onto the `ftsVector` GIN index (EXPLAIN → Bitmap Index Scan); `prisma.config.ts` gained `directUrl`. `tsc --noEmit` clean.
+- **B.5 cutover flip — GATED** (Vercel `DATABASE_URL`→Neon pooled `&pgbouncer=true&connection_limit=1`, `DIRECT_URL`→non-pooled, redeploy, smoke-test auth/idea-create/Lex/LegislationPanel). Runbook + rollback in `V26_CUTOVER_RUNBOOK.md`.
+
+### §4 Railway — confirmed compute + idle DB
+- Railway project holds exactly `scrutinise-db`, `Ingest`, `Ops`. Post-flip the DB serves nothing; left intact + running through the soak. Decommission is §6 (gated).
+
+### §6 soak + DROP — documented, NOT executed
+- Checklist in the runbook: soak ≥1 week → search verified (+ new corpus_sections FTS when search thread lands) → verified Neon backup → THEN drop legacy `Legislation*` (both DBs) + decommission Railway Postgres. The one irreversible step.
+
+### Reversibility
+- Migration A: gap-fill rollback = delete the priority-5 rows + the corpus_sections for `v26_nonmatch` gap gids; enrichment = drop the table. Migration B: Railway intact → flip `DATABASE_URL` back + redeploy. No legacy data deleted before §6.
+
+---
+
 ## V25 — FEED THE MACHINE (Senedd · College · Bills · inquiry register expansion · licence compliance) (16 Jun 2026)
 
 **Context:** SPRINT_V25_FEED_BRIEF.md — pure additive `corpus_sections` ingest of newly-unblocked sources; zero structural-DB risk (the structural-unification brief is now V26, gated on the FTS decision). Queue had run dry since ~14 Jun (0 pending at sprint open). Three new source families BUILT + LOCALLY PILOTED (predict-measure-commit); the public-inquiry register expanded 8→21 inquiries. **New sourceTypes seed POST-PUSH** (the live worker markSkips an unknown sourceType) — see the POST-PUSH run order at the end.

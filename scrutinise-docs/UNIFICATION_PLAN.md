@@ -126,3 +126,25 @@ Neon `max_connections = 901` (SEARCH_AUDIT §2.2); the pooled endpoint is mandat
 ---
 
 *Open dependency (Charlie): Neon plan/autoscale headroom — SEARCH_AUDIT flags full-corpus FTS as over-budget; the unified search scope (legislation+caselaw) fits. The app-DB move (B) is independent of that and can proceed first.*
+
+---
+
+## AS-BUILT (V26, 16 Jun 2026)
+
+The plan above is the design; this section records what was actually built, where reality differed, and what remains gated. Full operational detail: `V26_CUTOVER_RUNBOOK.md`.
+
+### Migration A — as built
+- **Normalization (§4.1):** the 38,571 non-matching gids split (measured, not estimated) into **24,247 genuine gaps** + **14,324 docId-form differences already covered** — ukpga calendar↔regnal **8,514**, uksi regional sub-type (nisr/ssi/wsi/nisi) **4,041**, eur→eudr/eudn/CELEX **1,769**. The "investigation surface" the plan flagged resolved cleanly: every non-matching item is either a known form variant present under another docId, or a genuine gap. Tooling: `v26-normalize-explore/-hypotheses.ts`, `v26-build-gaplist.ts` (materializes `v26_nonmatch`, categorized).
+- **Genuine gaps reality-checked:** 99.6% (24,153/24,247) carry legacy `originalText`; a 25/25 stratified live-TNA `data.feed` probe confirmed all fetchable today. So the gaps are real, current, ingestable content — not metadata relics. By type: UKSI 23,513 (mostly 1980–2009), UKPGA 394 (all ≥2000), EUR 339, ASP 1.
+- **Gap-fill (§4.2):** seeded as 24,246 `tna-legislation` queue rows (priority 5, behind the live V25 drains), corpus-mapped (si-pre-2010 23,510 · primary-acts-2000plus 394 · retained-eu 339 · si-2010plus 3 · regional 1). Additive `ON CONFLICT DO NOTHING`. Draining online; rebaseline the affected legislation corpora at drain. Tooling: `v26-seed-gapfill.ts`.
+- **Compilation layer (§2.1.2):** built `legislation_compilation_enrichment` (Neon) — **26,126 rows** keyed by (legislationGovUkId, sectionNumber): 24,579 compiled-text R2 keys, 1,142 lex-summary R2 keys, 5,635 unapplied-amendment JSON, + compilation metadata. **Pointer-only** (V3 rule honoured; no text copied). `LegislationAmendment/Correction/CrossRef` were **all empty** — no relational amendment layer existed, so the join table fully captures the derived value. Tooling: `v26-build-enrichment.ts`.
+
+### Migration B — as built (the plan's §3.1/§3.2 assumptions had moved on)
+- **Schema parity was already done.** The plan said "User/Idea/… are NOT on Neon yet"; by 16 Jun **all app tables already existed on Neon** (empty). So `prisma migrate deploy` to *create* them was unnecessary. B.1 became: verify column parity (clean for every copied table) + **baseline `_prisma_migrations` on Neon** (created the standard ledger table, copied the 13 Railway rows).
+- **App-data copy (§3.2.2):** Neon forbids `session_replication_role` for `neondb_owner`, so the copy runs in **FK-topological order** (parents first, delete in reverse), self-referencing tables (User/Comment/RootCause) inserted single-statement. 24 tables, 62,394 rows, exact parity. Railway app data is tiny (the site is pre-launch: User 29, Idea 54, …) except OperationalSection 61,315. Tooling: `v26-copy-appdata.ts`.
+- **Search repoint (§1.3/§3.2.4):** Neon's legacy `ftsVector` confirmed intact (both tables 100% populated, both GIN-indexed; OperationalSection's index re-populated automatically by the BEFORE-INSERT trigger during the copy). Code: dual client collapsed (`prismaSearch` is now an alias of `prisma`); `lib/search.ts` operational query moved off Railway onto the single client; `/api/ideas/[id]/legislation-search` moved off its per-query sequential `to_tsvector` onto the `ftsVector` GIN index (EXPLAIN → Bitmap Index Scan); `prisma.config.ts` gained `directUrl` for pooled-endpoint migrations. The legacy `ftsVector` is built from `sectionTitle(A)||originalText(B)` — the seq-scan repoint drops only `policyArea` (negligible/null).
+- **Downtime model:** the plan's "one write-freeze" is moot — site access is closed, so the flip is a plain maintenance switch with no user-facing freeze.
+
+### Still gated (not done this sprint, by design)
+- **§3.5 cutover flip** (production `DATABASE_URL` → Neon pooled + Vercel redeploy + smoke-test) — Charlie's go. Runbook + smoke-test + rollback in `V26_CUTOVER_RUNBOOK.md`.
+- **§6 soak ≥1 week → DROP legacy `Legislation*` + decommission Railway Postgres** — separate Charlie go. The new `corpus_sections` FTS / Lex re-grounding is the search thread's, and gates retiring the legacy `ftsVector`.
