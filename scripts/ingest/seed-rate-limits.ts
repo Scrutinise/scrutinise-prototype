@@ -50,6 +50,10 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'historic-hansard-html', intervalMs: 500, maxConcurrentWorkers: 2, note: 'api.parliament.uk/historic-hansard HTML gap-fill (V22) — gapday rows make ~5-40 page fetches each; client throttle floors 500ms within the row, so the host sees ≲2 rps total' },
   { sourceKey: 'niassembly-hansard',  intervalMs: 1000, maxConcurrentWorkers: 2, note: 'data.niassembly.gov.uk AIMS Open Data (V24) — Microsoft-IIS, no Cloudflare; 1 fetch/row (~0.7MB component list) then local parse + R2 puts. 646 plenary reports 2012-. OGL v3.0.' },
   { sourceKey: 'inquiry-reports',     intervalMs: 500,  maxConcurrentWorkers: 3, note: 'gov.uk content API publication-attachment PDFs + UK Gov Web Archive (V24) — public inquiry final reports, OGL v3.0; PDF text via pdf-parse.' },
+  { sourceKey: 'senedd-cofnod',       intervalMs: 500,  maxConcurrentWorkers: 3, note: 'record.senedd.wales (V25 §2) — custom .NET host, NO Cloudflare. 1 fetch/row (~1.5MB plenary transcript) then local parse + R2 puts. Welsh Parliament Plenary Cofnod, one section per English speaker-turn. OGL v3.0.' },
+  { sourceKey: 'bills-api',           intervalMs: 500,  maxConcurrentWorkers: 3, note: 'bills-api.parliament.uk (V25 §4) — JSON API + API-hosted PDF downloads; list:{billId} row = 1 JSON call, content row = 1 PDF. OPL v3.0.' },
+  { sourceKey: 'college-policing-archive', intervalMs: 1000, maxConcurrentWorkers: 2, note: 'webarchive.nationalarchives.gov.uk (V25 §3) — TNA infra, CF-free; 1 archived-capture fetch/row (id_ raw HTML). College APP 2022 snapshots, licence college-nc (commercial-surface excluded). Archive can be slow — keep gentle.' },
+  { sourceKey: 'scottish-parliament-or', intervalMs: 1000, maxConcurrentWorkers: 2, note: 'parliament.scot / SpOpenData (V25 §6) — PLACEHOLDER, gated on Charlie’s devtools XHR capture (auth key in the site’s API calls). Do NOT seed until the captured request URL+headers are supplied.' },
 ]
 
 async function main(): Promise<void> {

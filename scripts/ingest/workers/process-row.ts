@@ -138,6 +138,9 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'nao':                 return processNao(row)
     case 'niassembly-hansard':  return processNiAssemblyHansard(row)
     case 'inquiry-reports':     return processInquiryReports(row)
+    case 'senedd-cofnod':       return processSeneddCofnod(row)
+    case 'bills-api':           return processBills(row)
+    case 'college-policing-archive': return processCollegePolicing(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -1725,6 +1728,180 @@ async function processInquiryReports(row: QueueRow): Promise<void> {
     parentDocId: key,
   })
   await markDone(row.id, 'pdf')
+}
+
+// ── Senedd Plenary Cofnod (V25 §2 — record.senedd.wales, OGL v3.0) ────────────
+// docId = "{meetingId}". One section per English speaker-turn (pwdata-shaped).
+
+async function processSeneddCofnod(row: QueueRow): Promise<void> {
+  const { fetchPlenary } = await import('../sources/senedd-cofnod')
+  const meetingId = Number(row.docId)
+  if (!Number.isInteger(meetingId)) { await markFailed(row.id, `bad senedd-cofnod docId: ${row.docId}`); return }
+  const pageUrl = `https://record.senedd.wales/Plenary/${meetingId}`
+
+  const plenary = await fetchPlenary(meetingId)
+  if (!plenary) { await markFailed(row.id, `senedd ${meetingId}: plenary fetch failed`); return }
+
+  if (plenary.items.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, String(meetingId), '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'Senedd plenary has no extractable contributions (future/empty sitting)',
+      itemDate: plenary.date || undefined,
+      parentDocId: String(meetingId),
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const it of plenary.items) {
+    const ref = String(it.seq)
+    metas.push({
+      id: sectionId(row.corpus, String(meetingId), ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, String(meetingId), ref),
+      wordCount: countWords(it.text),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: it.heading ? `Senedd Plenary: ${it.heading}` : 'Senedd Plenary',
+      speaker: it.speaker ?? undefined,
+      itemDate: plenary.date || undefined,
+      parentDocId: String(meetingId),
+    })
+    texts.push(it.text)
+  }
+
+  const R2_BATCH = 16
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, String(meetingId), metas.map(m => m.id))
+  await markDone(row.id, 'html')
+}
+
+// ── UK Parliament Bills (V25 §4 — bills-api.parliament.uk, OPL v3.0) ──────────
+// Two-stage: list:{billId} enumerates a bill's publication PDFs into per-PDF
+// content rows ("{billId}#{seq}|{url}"); a content row extracts ONE PDF → one
+// section. A bill can carry hundreds of PDFs, too many for one row's 5-min budget.
+
+async function processBills(row: QueueRow): Promise<void> {
+  const { listBillPdfs, fetchBillPdf } = await import('../sources/bills-parliament')
+
+  if (row.docId.startsWith('list:')) {
+    const { bulkInsertQueueRows } = await import('../shared/queue-client')
+    const billId = Number(row.docId.slice(5))
+    if (!Number.isInteger(billId)) { await markFailed(row.id, `bad bills list docId: ${row.docId}`); return }
+    const pdfs = await listBillPdfs(billId)
+    if (pdfs === null) { await markFailed(row.id, `bills ${billId}: publications fetch failed`); return }
+    if (pdfs.length > 0) {
+      await bulkInsertQueueRows(pdfs.map((p, i) => ({
+        id: `${row.corpus}:${billId}#${i + 1}`,
+        corpus: row.corpus,
+        docId: `${billId}#${i + 1}|${p.url}`,
+        sourceType: 'bills-api',
+        priority: 2,
+      })))
+    }
+    await markDone(row.id)
+    return
+  }
+
+  const bar = row.docId.indexOf('|')
+  const meta = bar >= 0 ? row.docId.slice(0, bar) : row.docId  // "{billId}#{seq}"
+  const url = bar >= 0 ? row.docId.slice(bar + 1) : ''
+  const hash = meta.indexOf('#')
+  const billId = hash >= 0 ? meta.slice(0, hash) : meta
+  const seq = hash >= 0 ? meta.slice(hash + 1) : '1'
+  if (!url) { await markFailed(row.id, `bad bills content docId: ${row.docId}`); return }
+
+  const cKey = compiledKey(row.corpus, billId, seq)
+  if (await r2Exists(cKey)) { await markDone(row.id, 'pdf'); return }
+
+  const buf = await fetchBillPdf(url)
+  if (!buf) { await markFailed(row.id, `bills ${billId}#${seq}: PDF fetch failed`); return }
+  const text = await pdfToText(buf, url)
+  if (!text || text.length < 100) {
+    await upsertSection({
+      id: sectionId(row.corpus, billId, seq),
+      corpus: row.corpus,
+      sourceUrl: url,
+      status: 'unavailable',
+      availabilityStatus: 'pdf-only',
+      availabilityNote: 'bill publication PDF served but no extractable text',
+      parentDocId: billId,
+    })
+    await markDone(row.id, 'pdf')
+    return
+  }
+
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, billId, seq),
+    corpus: row.corpus,
+    sourceUrl: url,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'pdf',
+    sectionTitle: `Bill ${billId} — publication ${seq}`,
+    parentDocId: billId,
+  })
+  await markDone(row.id, 'pdf')
+}
+
+// ── College of Policing APP (V25 §3 — UK Gov Web Archive 2022, college-nc) ─────
+// docId = "{timestamp}|{archivedUrl}". One section per APP page; snapshot date as
+// itemDate so the ~4yr staleness is visible. COMMERCIAL-SURFACE EXCLUDED.
+
+async function processCollegePolicing(row: QueueRow): Promise<void> {
+  const { fetchArchivedAppPage, snapshotIsoDate } = await import('../sources/college-policing-archive')
+  const bar = row.docId.indexOf('|')
+  const ts = bar >= 0 ? row.docId.slice(0, bar) : ''
+  const url = bar >= 0 ? row.docId.slice(bar + 1) : ''
+  if (!ts || !url) { await markFailed(row.id, `bad college docId: ${row.docId}`); return }
+  const slug = url.replace(/^https?:\/\/www\.app\.college\.police\.uk\//, '').replace(/\/$/, '') || 'app-content'
+  const itemDate = snapshotIsoDate(ts)
+
+  const res = await fetchArchivedAppPage(ts, url)
+  if (!res) { await markFailed(row.id, `college ${slug}: archive fetch failed`); return }
+
+  if (res.text.length < 100) {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'),
+      corpus: row.corpus,
+      sourceUrl: url,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'archived APP page had no extractable content',
+      itemDate,
+      parentDocId: slug,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const cKey = compiledKey(row.corpus, slug, '1')
+  await r2Put(cKey, res.text)
+  await upsertSection({
+    id: sectionId(row.corpus, slug, '1'),
+    corpus: row.corpus,
+    sourceUrl: url,
+    r2Key: cKey,
+    wordCount: countWords(res.text),
+    status: 'compiled',
+    format: 'html',
+    sectionTitle: res.title || slug,
+    itemDate,
+    parentDocId: slug,
+  })
+  await markDone(row.id, 'html')
 }
 
 // ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────

@@ -159,7 +159,18 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
     licence: 'ogl-3.0',
     attributionBoilerplate: 'Contains Parliamentary information from the Northern Ireland Assembly licensed under the Open Government Licence v3.0.',
   },
-  'senedd-cofnod': { licence: 'pending-verification', attributionBoilerplate: 'Senedd Cymru Cofnod / Record of Proceedings — licence to verify (expected OGL).' },
+  // V25 §2: VERIFIED — Charlie confirmed the Senedd copyright page
+  // (senedd.wales/commission/access-to-information/copyright/): Senedd content is
+  // Crown copyright, reproducible under the Open Government Licence v3.0 with
+  // source acknowledgement and non-misleading context. (Supersedes the V24
+  // "ogl" false positive from "g**oogl**e"/googletagmanager.)
+  'senedd-cofnod': {
+    licence: 'ogl-3.0',
+    attributionBoilerplate: 'Contains information from Senedd Cymru / Welsh Parliament licensed under the Open Government Licence v3.0.',
+  },
+  // V25 §4: UK Parliament Bills — parliamentary material under the Open
+  // Parliament Licence v3.0 (same family as Hansard/committees).
+  'bills-api': OPL3,
   'scottish-parliament-or': { licence: 'pending-verification', attributionBoilerplate: 'Scottish Parliament Official Report — © Scottish Parliamentary Corporate Body; licence to verify (expected OGL/SPCB licence).' },
   // Public inquiry reports (V23 §5 probe — Infected Blood route verified, not
   // seeded; build V24). Crown copyright under OGL v3.0 when gov.uk-published or
