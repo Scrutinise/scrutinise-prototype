@@ -28,6 +28,7 @@ Site access is closed, so there is **no user write-freeze to coordinate** — th
 1. Confirm app-data copy is current. Because the site is closed there are no writes, so the V26 copy is already the final state. If any write happened since, re-run the (idempotent) copy:
    `tsx scripts/ingest/v26-copy-appdata.ts --apply`
 2. Confirm Neon FTS intact: `tsx scripts/ingest/v26-fts-state.ts` (both tables 100% populated, both GIN indexes, live @@ hits).
+3. Confirm the **pooled** endpoint serves the app end-to-end via the real Prisma client (PgBouncer): `tsx scripts/ingest/v26-pooled-smoke.ts` — auth/User, Idea, and both ftsVector search paths. (Ran green 16 Jun: User.count=29, both searches return hits.) This is the exact data path the flip switches to.
 
 ### The flip (Vercel env, then redeploy)
 3. Set the production env vars on Vercel (and local `.env` for parity):
