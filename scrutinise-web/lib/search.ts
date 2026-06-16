@@ -1,5 +1,7 @@
-import { prisma }       from '@/lib/prisma'
-import { prismaSearch } from '@/lib/prisma-search'
+// V26 unification: app DB + search tables now share one Neon instance, so a
+// single client serves both legislation and operational FTS (previously split
+// across prismaSearch=Neon / prisma=Railway).
+import { prisma } from '@/lib/prisma'
 
 export type SearchResult = {
   type:          string        // legislationType lowercase or 'operational'
@@ -201,8 +203,8 @@ export async function searchLegislation(opts: {
 
     // statement_timeout is a stall-guard: normal queries complete in <2s;
     // 8s only trips on a genuinely stuck DB or pathological query.
-    // Legislation data lives on Neon (V.4-FTS-3 migration) — use prismaSearch.
-    const rows = await prismaSearch.$transaction(async (tx) => {
+    // Legislation + operational both on Neon (V26 unification) — single client.
+    const rows = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
       return tx.$queryRawUnsafe<LegRow[]>(sql, ...params)
     })

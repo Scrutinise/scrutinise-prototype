@@ -9,6 +9,12 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
+    // Runtime/pooled connection. Post-V26 cutover DATABASE_URL points at the Neon
+    // pooled (-pooler) endpoint with pgbouncer=true&connection_limit=1.
     url: process.env["DATABASE_URL"],
+    // Migrations need a direct (non-pooled) connection — PgBouncer transaction mode
+    // can't run prisma migrate. Set DIRECT_URL to the Neon non-pooled endpoint;
+    // falls back to DATABASE_URL when unset (pre-cutover Railway behaviour unchanged).
+    directUrl: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

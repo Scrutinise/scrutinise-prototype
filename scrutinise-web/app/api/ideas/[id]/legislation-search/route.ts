@@ -39,9 +39,11 @@ export async function POST(req: Request, { params }: Params) {
     tags: string[]
   }
 
-  // FTS using originalText (in Railway) — compiledText lives in R2
-  // compilationStatus filter removed: all Railway rows are PENDING/PRINT_ONLY (cb0166b established this).
-  // compiledTextKey may be null for non-compiled rows; R2 fetch below handles null gracefully.
+  // FTS over the GIN-indexed ftsVector column (V26: previously a per-query
+  // sequential scan that recomputed to_tsvector on every row). The ftsVector
+  // trigger builds from sectionTitle(A) || originalText(B) — same source text as
+  // the old expression, minus policyArea (negligible, ~null). Now Neon-backed and
+  // index-served. compiledText lives in R2; compiledTextKey may be null.
   const results = await prisma.$queryRaw<RawResult[]>`
     SELECT
       ls.id,
@@ -58,18 +60,9 @@ export async function POST(req: Request, { params }: Params) {
       ls.tags
     FROM "LegislationSection" ls
     JOIN "LegislationItem" li ON ls."legislationItemId" = li.id
-    WHERE to_tsvector('english',
-          coalesce(ls."originalText", '') || ' ' ||
-          coalesce(ls."sectionTitle", '') || ' ' ||
-          coalesce(ls."policyArea", ''))
-        @@ plainto_tsquery('english', ${query})
+    WHERE ls."ftsVector" @@ plainto_tsquery('english', ${query})
     ORDER BY
-      ts_rank(
-        to_tsvector('english',
-          coalesce(ls."originalText", '') || ' ' ||
-          coalesce(ls."sectionTitle", '')),
-        plainto_tsquery('english', ${query})
-      ) DESC,
+      ts_rank(ls."ftsVector", plainto_tsquery('english', ${query})) DESC,
       ls."amendmentCount" ASC
     LIMIT ${limit}
   `
