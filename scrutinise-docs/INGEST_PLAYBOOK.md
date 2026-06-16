@@ -859,6 +859,10 @@ carry hundreds of publication PDFs (bill 3774 = 267) — far too many to extract
 content rows (`{billId}#{seq}|{url}`); each content row extracts ONE PDF → one section. Same shape
 as the inquiry-reports per-PDF rows and the committees-api `list:` windows.
 
+**Railway-egress blocks → local one-shot ingest (College / web archive).** `webarchive.nationalarchives.gov.uk` blocks/challenges Railway egress IPs: the worker got 257/332 "archive fetch failed" while the identical `id_` capture returned 200 from a residential IP (burst-tested) — same class as committees.parliament.uk's CF block. For a SMALL, STATIC blocked corpus the fix is a **local one-shot ingest** that does the worker's job from a reachable IP — fetch + extract + `r2Put` + `upsertSection` + `markDone(id, fmt, true)` — idempotent via an `r2Exists` skip. Template: `scripts/ingest/v25-ingest-college-local.ts`. Rule of thumb: CF-fronted or nationalarchives hosts often block cloud egress; CF-free custom gov hosts (record.senedd.wales, niassembly IIS) are typically Railway-reachable — but VERIFY with a small canary before assuming, and never let a fetch-failure path silently classify "blocked" as "empty/not-found".
+
+**High-throughput id/redirect scans throttle hosts — be polite + retry (Senedd).** Enumerating a 16k id space at concurrency 6 provoked record.senedd.wales into timeouts/5xx; the classifier's `catch→'gap'` then false-negatived real plenaries (found 396 vs the true 713). Fix: concurrency 2–3, the classifier RETRIES transient failures and returns a distinct `'error'` (never a false negative), the seeder re-scans error ids serially, and the final bulk insert is wrapped in a retry (a transient Neon DNS blip otherwise discards the whole scan). Always separate "transient failure" from "genuinely not the thing you want".
+
 **gov.uk publication slugs — search, don't guess (inquiries).** To find a concluded inquiry's
 report publication page, query the gov.uk search API (`https://www.gov.uk/api/search.json?q=…&fields=link`)
 and verify the slug resolves (content API `details.attachments` → PDFs). Slug-guessing hit ~5/23;

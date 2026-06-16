@@ -59,6 +59,18 @@
 7. Verify breakers 0 tripped; spot-check one section per new corpus in Neon + R2.
 8. At drains: `v25-rebaseline.ts --classify-failed --confirm` (the §1.2 four + new corpora) and re-run `v20-licence-backfill.ts`.
 
+### POST-PUSH — DONE this session (deploy confirmed SUCCESS; Ops auto-started the Ingest worker)
+
+- **rate-limits** upserted (senedd-cofnod / bills-api / college-policing-archive / scottish-parliament-or).
+- **inquiry-reports ✓ seeded + drained:** +93 rows → **146 rows, 140 compiled / 14.56M words** (6 markers — scanned/huge Iraq-Chilcot vols). The expanded register works end-to-end on the worker.
+- **college-of-policing — Railway-egress BLOCK discovered → ingested LOCALLY.** The worker got **257/332 "archive fetch failed"** while the identical `id_` capture returns 200 from a residential IP (burst-tested) — `webarchive.nationalarchives.gov.uk` blocks/challenges Railway egress (same class as committees.parliament.uk CF). Bypassed with `v25-ingest-college-local.ts` (local fetch+extract+R2+Neon, idempotent r2Exists-skip): **332 compiled / 840,308 words — exactly the pilot.** Future College re-seeds MUST use the local path; the worker `processCollegePolicing` stays wired but is inert behind the IP block.
+- **senedd-cofnod — enumeration bug found + fixed; seeded.** The first `--seed` ran the scan at conc 6, which provoked host throttling; `classifyMeeting`'s `catch→'gap'` turned the resulting fetch failures into false "not-a-plenary" (found only 396, missed real plenaries e.g. id 5000), and then a transient Neon DNS blip lost even those at insert. Hardened: `classifyMeeting` retries (3×, backoff) and returns a distinct `'error'` (never a false gap); the seeder scans at conc 3, re-scans transient-error ids serially, and wraps the insert in a retry. Re-run found **713 plenaries** (seeded). Worker reachability of record.senedd.wales (no CF) being canaried.
+- **bills-api seeded + grinding:** 3,919 `list:{billId}` rows on the worker. Done list rows so far are low billIds (old bills, legacy `links[]` only → 0 `files[]` PDFs → 0 child rows, by design); per-PDF child rows + sections appear as the worker reaches modern (high-billId) file-rich bills.
+- **scottish — gated, seeds nothing** (HTML route 200, SpOpenData key not supplied).
+- **Rebaseline** (`v25-rebaseline.ts`) runs at drains — pending bills/senedd completion.
+
+**Railway-reachability note (NEW doctrine input):** `webarchive.nationalarchives.gov.uk` joins the Railway-egress-blocked list. The fix pattern for a small/static blocked corpus is a **local one-shot ingest** that writes R2+Neon+queue directly (`v25-ingest-college-local.ts` is the template). CF-free custom gov hosts (record.senedd.wales, niassembly IIS) are typically reachable from Railway.
+
 ---
 
 ## V24 — REBASELINE + BREAKER FIX + EMAIL HONESTY + NI ASSEMBLY + INQUIRIES + UNIFICATION SPEC (14–15 Jun 2026)

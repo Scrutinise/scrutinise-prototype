@@ -19,16 +19,16 @@
 - **§7 LICENCE_COMPLIANCE.md created** — Find Case Law serving-layer hard requirements (auth-only judgment text, noindex/robots, no open/3rd-party API over judgment text or extracts, no open-web publication of derived extracts) + the NC commercial-exclusion set + fca-restricted. Recorded, not enforced (ingest only).
 - **§1 carry-over:** divergence fix (§1.1) + CSV TOTAL-row drop (§1.3) were already in HEAD `96d150f`; §1.2 rebaseline is POST-PUSH (`v25-rebaseline.ts --classify-failed --confirm`).
 
-**POST-PUSH RUN ORDER (this session if the push lands + Railway Ingest deploy confirms SUCCESS, else next):**
-1. `seed-rate-limits.ts` (senedd-cofnod 500/3, bills-api 500/3, college-policing-archive 1000/2, scottish placeholder).
-2. `v25-seed-college-policing.ts --seed` (332 rows — fastest web-archive-route canary) → verify a section in Neon+R2.
-3. `v25-seed-bills.ts --seed` (3,914 list rows) → watch per-PDF rows expand.
-4. `v25-seed-senedd-cofnod.ts --seed` (full id scan → ~847 plenary rows).
-5. `v24-seed-inquiry-reports.ts --seed` (+93 inquiry report rows).
-6. Verify 0 tripped breakers; `v25-rebaseline.ts --classify-failed` then `--confirm` at drains; re-run `v20-licence-backfill.ts`; regenerate `v25-corpus-status-table.ts`.
+**POST-PUSH — DONE this session (deploy confirmed; Ops auto-started the worker):**
+- rate-limits upserted (4 new sourceTypes).
+- **inquiry-reports ✓ drained:** 146 rows → 140 compiled / 14.56M words (6 markers).
+- **college-of-policing ✓ via LOCAL ingest:** the worker hit a Railway-egress BLOCK on `webarchive.nationalarchives.gov.uk` (257/332 "archive fetch failed"; 200 from a residential IP). `v25-ingest-college-local.ts` ingested all **332 / 840,308 words** locally. Future re-seeds use the local path. **NEW Railway-blocked host recorded.**
+- **senedd-cofnod ✓ seeded + processing on the worker:** enumeration bug fixed (conc-6 throttling → false gaps + a Neon DNS blip; first run found only 396). Re-run at conc 3 with retries + insert-retry found **713 plenaries**, all seeded. record.senedd.wales IS Railway-reachable (no CF) — worker grinding (27 meetings → 6,849 sections at check, ~254/meeting, 0 fails).
+- **bills-api seeded + grinding:** 3,919 `list:{billId}` rows; per-PDF child rows + sections appear as the worker reaches modern (high-billId) file-rich bills (early low-billId bills are legacy links[]-only → 0 files).
+- **scottish:** gated, seeds nothing.
 
 **IN FLIGHT / NEXT SESSION:**
-1. New corpora drain → `v25-rebaseline.ts --confirm` (senedd-cofnod ~217k, bills-api ~13k, college-of-policing 332; + the §1.2 four).
+1. bills-api + senedd-cofnod finish draining → `v25-rebaseline.ts --classify-failed --confirm` (the §1.2 four + new corpora; senedd ~713 plenaries × ~254 ≈ ~180k, bills TBD, college 332); re-run `v20-licence-backfill.ts`; regenerate `v25-corpus-status-table.ts`.
 2. Scottish (parliament + courts) waits on Charlie's SpOpenData XHR capture; College follow-up = a rendered/API content route fresher than 2022; inquiry dark-site report-PDF Web Archive adapter (Manchester Arena/Undercover/Shipman own domains).
 3. V26 = structural unification + Railway decommission (gated on the FTS-scope decision + the two production gates).
 
