@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 16 Jun 2026 — V26 STRUCTURAL (Unification + Railway decommission prep) complete to the gates: Migration A done (gap-fill draining), Migration B prep done, cutover flip + DROP await Charlie. See `V26_CUTOVER_RUNBOOK.md`.*
+*Last updated: 17 Jun 2026 — V26 STRUCTURAL complete to the gates: Migration A done + gap-fill DRAINED & rebaselined ✓, Migration B prep done, workbook table emitted (`CORPUS_STATUS_V26.csv`). Cutover flip + DROP await Charlie. See `V26_CUTOVER_RUNBOOK.md`.*
 
 ---
 
@@ -11,8 +11,8 @@
 **Sprint:** V26 (SPRINT_V26_BRIEF.md), build input `UNIFICATION_PLAN.md` §4. Full account: CHANGE_LOG V26 + UNIFICATION_PLAN "AS-BUILT (V26)". Operational steps: **`V26_CUTOVER_RUNBOOK.md`**. Site access is closed, so the cutover needs no user write-freeze. Everything below the V25 heading is historical.
 
 **DONE this sprint (ran unattended; two human gates remain):**
-- **§1 precondition:** V25 drained corpora rebaselined ✓ (committees-reports 24,876 · committees-evidence 140,567 · niassembly-hansard 196,348 · inquiry-reports 140 · college 332). bills-api + senedd-cofnod were still draining → proceeded per brief §1 (independent data). **senedd since drained; bills ~900 pending.**
-- **Migration A (corpus unification) — DONE, reversible.** 38,571 non-matching legacy gids → **24,247 genuine gaps** + 14,324 docId-form diffs already covered (ukpga calendar↔regnal 8,514 · uksi regional 4,041 · eur→eudr/eudn/CELEX 1,769). Gaps verified real (99.6% hold legacy text; 25/25 live-TNA fetchable). **Gap-fill seeded** (24,246 tna-legislation rows, priority 5 — draining online behind bills). **Compilation layer preserved** in `legislation_compilation_enrichment` (26,126 rows, pointer-only; amendment tables were empty).
+- **§1 precondition:** V25 drained corpora rebaselined ✓ (committees-reports 24,876 · committees-evidence 140,567 · niassembly-hansard 196,348 · inquiry-reports 140 · college 332). bills-api + senedd-cofnod were still draining → proceeded per brief §1 (independent data); **both since drained + rebaselined ✓ (bills-api 6,535 · senedd-cofnod 191,730).**
+- **Migration A (corpus unification) — DONE + DRAINED + REBASELINED ✓, reversible.** 38,571 non-matching legacy gids → **24,247 genuine gaps** + 14,324 docId-form diffs already covered (ukpga calendar↔regnal 8,514 · uksi regional 4,041 · eur→eudr/eudn/CELEX 1,769). Gaps verified real (99.6% hold legacy text; 25/25 live-TNA fetchable). **Gap-fill (24,246 tna-legislation rows) fully drained → rebaselined ✓:** si-pre-2010 174,552→**419,250** · primary-acts-2000plus 90,838→**145,704** · retained-eu→187,555 · si-2010plus 270,339 · regional→331,124. Licence backfill swept (85 stragglers; new sections got OGL at ingest). **Compilation layer preserved** in `legislation_compilation_enrichment` (26,126 rows, pointer-only; amendment tables were empty).
 - **Migration B (app DB Railway→Neon) — PREP DONE.** All app tables already existed on Neon → B.1 = parity verify (clean) + `_prisma_migrations` baseline. **App data copied** (24 tables / 62,394 rows, exact parity; OperationalSection 61,315 the only bulk; FK-topological order — Neon forbids session_replication_role). **Search repointed in code** onto Neon's intact legacy `ftsVector` (both tables 100% populated + GIN-indexed); dual client collapsed (`prismaSearch`→alias of `prisma`); `/legislation-search` moved onto the GIN index (EXPLAIN-confirmed); `directUrl` added. `tsc --noEmit` clean.
 - **§4 Railway** holds only `scrutinise-db` + `Ingest` + `Ops` (confirmed via API).
 
@@ -20,10 +20,13 @@
 1. **B.5 cutover flip** — set Vercel `DATABASE_URL`→Neon **pooled** (`-pooler` host + `&pgbouncer=true&connection_limit=1`) + `DIRECT_URL`→non-pooled NEON_DATABASE_URL, redeploy, smoke-test (auth / idea-create / Lex grounding / LegislationPanel). Steps + rollback in the runbook. The deployed code already works on either DB (both hold the legacy search data), so the flip is a clean switch; rollback = flip env back + redeploy.
 2. **§6 soak ≥1 week → DROP legacy `Legislation*` (both DBs) + decommission Railway Postgres** — the one irreversible step; separate go. Gated also on the search thread's new `corpus_sections` FTS (to retire the legacy `ftsVector`).
 
+**TOTAL at V26 post-drain close:** 16,302,498 compiled / 16,521,390 total sections · **5.06B words** · ~28.75 GB R2 (est) · 7.00 GB Neon heap (was V24 15.58M / 4.83B). Per-corpus table → `CORPUS_STATUS_V26.csv`.
+
 **IN FLIGHT / NEXT SESSION:**
-1. Gap-fill (24k, mostly si-pre-2010) + bills-api finish draining → rebaseline the affected legislation corpora + re-run `v20-licence-backfill.ts`; emit the per-corpus status table for the workbook (deferred until gap-fill drains for a clean count).
-2. Execute the B.5 flip when Charlie gives the go (then the §6 soak clock starts).
-3. Scottish XHR capture still outstanding (ingest, not migration).
+1. ✅ Gap-fill drained + rebaselined ✓ + licence-backfilled + workbook table emitted (this session, 17 Jun).
+2. Execute the B.5 flip when Charlie gives the go (then the §6 soak clock starts) — cutover is NOT "done" until login is confirmed on the new connection strings.
+3. §6 DROP still waits its ≥1-week soak AND the Lex-grounding repoint onto the new search infrastructure (search thread).
+4. Scottish XHR capture still outstanding (ingest, not migration).
 
 **DECISIONS WAITING ON CHARLIE:** B.5 cutover go · §6 DROP go · Scottish SpOpenData XHR · Railway Hobby downgrade 28 Jun · (carried) College fresher route · FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email · V26 search-thread FTS-scope decision.
 

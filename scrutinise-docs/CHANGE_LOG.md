@@ -31,6 +31,10 @@
 ### Reversibility
 - Migration A: gap-fill rollback = delete the priority-5 rows + the corpus_sections for `v26_nonmatch` gap gids; enrichment = drop the table. Migration B: Railway intact → flip `DATABASE_URL` back + redeploy. No legacy data deleted before §6.
 
+### Post-drain rebaseline + workbook (17 Jun 2026)
+- Gap-fill (24,246 rows) + bills-api + senedd-cofnod all drained (queue 806,382 done, 0 open). `v26-rebaseline.ts --confirm` stamped ✓: **si-pre-2010 174,552→419,250 · primary-acts-2000plus 90,838→145,704 · retained-eu→187,555 · si-2010plus 270,339 · regional→331,124 · bills-api→6,535 · senedd-cofnod→191,730**. `v20-licence-backfill.ts` swept 85 NULL stragglers (new sections got OGL/OPL at ingest; only pwdata-* deferred remain, by design).
+- **Per-corpus workbook table** → `CORPUS_STATUS_V26.csv` (`v26-corpus-status-table.ts`). **TOTAL 16,302,498 compiled / 16,521,390 sections · 5.06B words · ~28.75 GB R2 est · 7.00 GB Neon heap** (V24 close was 15.58M / 4.83B — the delta is the gap-fill +~300k legislation sections, bills/senedd, and the regional/retained-eu reconfirms). Pooled-endpoint Prisma smoke test (`v26-pooled-smoke.ts`) green — the B.5 flip target is verified through PgBouncer; the flip + login confirmation remain Charlie's.
+
 ---
 
 ## V25 — FEED THE MACHINE (Senedd · College · Bills · inquiry register expansion · licence compliance) (16 Jun 2026)
