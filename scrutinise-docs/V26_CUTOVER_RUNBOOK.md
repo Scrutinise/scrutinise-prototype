@@ -20,7 +20,9 @@
 
 ---
 
-## §3 GATE — THE CUTOVER FLIP (B.5)   ← needs Charlie's go
+> **STATUS: EXECUTED + VERIFIED 18 Jun 2026.** Charlie moved the Vercel env to Neon; `v26-cutover-verify.ts` confirmed prod `GET /api/legislation/search` → HTTP 200 / 20 items from Neon, Railway scrutinise-db shows 0 app connections, Neon serves via pgbouncer. Soak clock started 18 Jun → §6 DROP earliest ~25 Jun. The steps below are retained as the as-run record + rollback reference.
+
+## §3 GATE — THE CUTOVER FLIP (B.5)   ← DONE 18 Jun (was: needs Charlie's go)
 
 Site access is closed, so there is **no user write-freeze to coordinate** — this is a plain maintenance switch.
 

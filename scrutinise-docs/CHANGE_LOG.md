@@ -33,7 +33,11 @@
 
 ### Post-drain rebaseline + workbook (17 Jun 2026)
 - Gap-fill (24,246 rows) + bills-api + senedd-cofnod all drained (queue 806,382 done, 0 open). `v26-rebaseline.ts --confirm` stamped ✓: **si-pre-2010 174,552→419,250 · primary-acts-2000plus 90,838→145,704 · retained-eu→187,555 · si-2010plus 270,339 · regional→331,124 · bills-api→6,535 · senedd-cofnod→191,730**. `v20-licence-backfill.ts` swept 85 NULL stragglers (new sections got OGL/OPL at ingest; only pwdata-* deferred remain, by design).
-- **Per-corpus workbook table** → `CORPUS_STATUS_V26.csv` (`v26-corpus-status-table.ts`). **TOTAL 16,302,498 compiled / 16,521,390 sections · 5.06B words · ~28.75 GB R2 est · 7.00 GB Neon heap** (V24 close was 15.58M / 4.83B — the delta is the gap-fill +~300k legislation sections, bills/senedd, and the regional/retained-eu reconfirms). Pooled-endpoint Prisma smoke test (`v26-pooled-smoke.ts`) green — the B.5 flip target is verified through PgBouncer; the flip + login confirmation remain Charlie's.
+- **Per-corpus workbook table** → `CORPUS_STATUS_V26.csv` (`v26-corpus-status-table.ts`). **TOTAL 16,302,498 compiled / 16,521,390 sections · 5.06B words · ~28.75 GB R2 est · 7.00 GB Neon heap** (V24 close was 15.58M / 4.83B — the delta is the gap-fill +~300k legislation sections, bills/senedd, and the regional/retained-eu reconfirms). Pooled-endpoint Prisma smoke test (`v26-pooled-smoke.ts`) green.
+
+### B.5 cutover EXECUTED + verified (18 Jun 2026)
+- Charlie moved the Vercel env to Neon (`DATABASE_URL`→pooled `&pgbouncer=true&connection_limit=1`, `DIRECT_URL`→non-pooled). **Verified live** (`v26-cutover-verify.ts`): prod `GET /api/legislation/search` → HTTP 200, 20 items served from Neon (4.1s cold / 315ms warm); **Railway scrutinise-db: 0 app connections** (web app fully detached); Neon serves via the pgbouncer pooler. Clerk login is DB-independent + `prisma.user.count()` on Neon pooled already verified — Charlie's own final eyeball.
+- Railway now = `Ingest` + `Ops` + **idle** `scrutinise-db`. Soak clock started 18 Jun. **§6 DROP (legacy `Legislation*` both DBs + Railway PG decommission) remains gated** on ≥1-week clean soak (earliest ~25 Jun) + the search thread's new `corpus_sections` FTS / Lex-grounding repoint (to retire the legacy `ftsVector` first). The one irreversible step.
 
 ---
 

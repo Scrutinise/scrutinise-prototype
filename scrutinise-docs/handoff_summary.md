@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 17 Jun 2026 — V26 STRUCTURAL complete to the gates: Migration A done + gap-fill DRAINED & rebaselined ✓, Migration B prep done, workbook table emitted (`CORPUS_STATUS_V26.csv`). Cutover flip + DROP await Charlie. See `V26_CUTOVER_RUNBOOK.md`.*
+*Last updated: 18 Jun 2026 — V26 STRUCTURAL: Migration A done + rebaselined ✓; **Migration B CUTOVER EXECUTED + verified live** (prod reads Neon, Railway DB detached). Only §6 soak+DROP remains (gated: ≥1wk + Lex-grounding repoint). See `V26_CUTOVER_RUNBOOK.md`.*
 
 ---
 
@@ -16,16 +16,17 @@
 - **Migration B (app DB Railway→Neon) — PREP DONE.** All app tables already existed on Neon → B.1 = parity verify (clean) + `_prisma_migrations` baseline. **App data copied** (24 tables / 62,394 rows, exact parity; OperationalSection 61,315 the only bulk; FK-topological order — Neon forbids session_replication_role). **Search repointed in code** onto Neon's intact legacy `ftsVector` (both tables 100% populated + GIN-indexed); dual client collapsed (`prismaSearch`→alias of `prisma`); `/legislation-search` moved onto the GIN index (EXPLAIN-confirmed); `directUrl` added. `tsc --noEmit` clean.
 - **§4 Railway** holds only `scrutinise-db` + `Ingest` + `Ops` (confirmed via API).
 
-**GATED — WAITING ON CHARLIE:**
-1. **B.5 cutover flip** — set Vercel `DATABASE_URL`→Neon **pooled** (`-pooler` host + `&pgbouncer=true&connection_limit=1`) + `DIRECT_URL`→non-pooled NEON_DATABASE_URL, redeploy, smoke-test (auth / idea-create / Lex grounding / LegislationPanel). Steps + rollback in the runbook. The deployed code already works on either DB (both hold the legacy search data), so the flip is a clean switch; rollback = flip env back + redeploy.
-2. **§6 soak ≥1 week → DROP legacy `Legislation*` (both DBs) + decommission Railway Postgres** — the one irreversible step; separate go. Gated also on the search thread's new `corpus_sections` FTS (to retire the legacy `ftsVector`).
+**CUTOVER — DONE + VERIFIED (18 Jun):** Charlie moved the Vercel env to Neon (`DATABASE_URL`→pooled `&pgbouncer=true&connection_limit=1`, `DIRECT_URL`→non-pooled). Verified live (`v26-cutover-verify.ts`): prod `GET /api/legislation/search` → HTTP 200 / 20 items from Neon; **Railway scrutinise-db now shows 0 app connections** (web app fully detached); Neon serves via the pgbouncer pooler. Login (Clerk auth) is Charlie's own final eyeball — DB-independent, and `prisma.user.count()` on Neon pooled already verified. Rollback (if ever needed pre-DROP) = flip env back + redeploy; Railway DB left intact through the soak.
+
+**STILL GATED:**
+1. **§6 soak ≥1 week → DROP legacy `Legislation*` (both DBs) + decommission Railway Postgres** — the one irreversible step; separate Charlie go. **Soak clock started 18 Jun → earliest DROP ~25 Jun.** Gated ALSO on the search thread delivering the new `corpus_sections` FTS + the Lex-grounding repoint onto it (so the legacy `ftsVector` can be retired first). Checklist in `V26_CUTOVER_RUNBOOK.md` §6.
 
 **TOTAL at V26 post-drain close:** 16,302,498 compiled / 16,521,390 total sections · **5.06B words** · ~28.75 GB R2 (est) · 7.00 GB Neon heap (was V24 15.58M / 4.83B). Per-corpus table → `CORPUS_STATUS_V26.csv`.
 
 **IN FLIGHT / NEXT SESSION:**
-1. ✅ Gap-fill drained + rebaselined ✓ + licence-backfilled + workbook table emitted (this session, 17 Jun).
-2. Execute the B.5 flip when Charlie gives the go (then the §6 soak clock starts) — cutover is NOT "done" until login is confirmed on the new connection strings.
-3. §6 DROP still waits its ≥1-week soak AND the Lex-grounding repoint onto the new search infrastructure (search thread).
+1. ✅ Gap-fill drained + rebaselined ✓ + licence-backfilled + workbook table emitted (17 Jun); ✅ cutover executed + verified live (18 Jun).
+2. **Soak watch (→ ~25 Jun):** keep an eye on prod for any DB-move regressions; Railway DB stays intact + running as the rollback path until the DROP.
+3. **§6 DROP (after soak):** needs the search thread's new `corpus_sections` FTS + Lex-grounding repoint first (retire legacy `ftsVector`), then verified Neon backup → drop legacy `Legislation*` (both DBs) + decommission Railway Postgres. Charlie's separate go.
 4. Scottish XHR capture still outstanding (ingest, not migration).
 
 **DECISIONS WAITING ON CHARLIE:** B.5 cutover go · §6 DROP go · Scottish SpOpenData XHR · Railway Hobby downgrade 28 Jun · (carried) College fresher route · FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email · V26 search-thread FTS-scope decision.
