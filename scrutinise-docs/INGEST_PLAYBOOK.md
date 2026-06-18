@@ -1293,7 +1293,7 @@ Rules:
 
 ## 19. DATABASE TOPOLOGY DOCTRINE (V26 — unification)
 
-V26 folds the legacy `LegislationSection` store into `corpus_sections` and moves the web-app DB off Railway. The end-state, post-cutover:
+V26 folded the legacy `LegislationSection` store into `corpus_sections` and moved the web-app DB off Railway. **Cutover executed + verified live 18 Jun 2026** (prod reads Neon; Railway scrutinise-db detached, 0 app connections — now idle awaiting the §6 DROP after soak). The current topology:
 
 - **One app DB on Neon (pooled).** `DATABASE_URL` points at the Neon **pooled** (`-pooler`) endpoint with `pgbouncer=true&connection_limit=1` (mandatory for Vercel's serverless fan-out — PgBouncer transaction mode). `DIRECT_URL` (non-pooled Neon) is kept for `prisma migrate` only (wired in `prisma.config.ts`). Railway = **compute only** (`Ingest` + `Ops`); its Postgres is decommissioned after the soak.
 - **One Prisma client.** The historical `prisma` (Railway) / `prismaSearch` (Neon) split is collapsed — `lib/prisma-search.ts` re-exports `prisma`. All reads + writes + search go through the single client. Do NOT reintroduce a second client; if a future need arises, justify it against this doctrine.
