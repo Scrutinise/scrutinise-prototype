@@ -8,6 +8,7 @@
  */
 import { getNeonPool, endNeonPool } from './neon-pool'
 import { licenceForCorpus } from './licence-map'
+import { jurisdictionForCorpus } from './jurisdiction-map'
 import path from 'path'
 
 try {
@@ -45,11 +46,14 @@ export interface SectionMeta {
   // uniform boilerplate lives in the map / INGEST_PLAYBOOK §18, not per row.
   licence?: string
   attribution?: string
+  // V28 §1.2: per-section jurisdiction. Defaults corpus-level from
+  // jurisdictionForCorpus(); a processor may override per-section later.
+  jurisdiction?: string
 }
 
 const SECTION_COLS = `(id, corpus, "sourceUrl", "r2Key", "r2RawKey", "wordCount", status, "errorMsg",
        format, "xmlPreview", notes, availability_status, availability_note,
-       "sectionTitle", speaker, "itemDate", "parentDocId", licence, attribution, "compiledAt", "createdAt")`
+       "sectionTitle", speaker, "itemDate", "parentDocId", licence, attribution, jurisdiction, "compiledAt", "createdAt")`
 
 const SECTION_CONFLICT = `
     ON CONFLICT (id) DO UPDATE SET
@@ -69,6 +73,7 @@ const SECTION_CONFLICT = `
       "parentDocId"       = EXCLUDED."parentDocId",
       licence             = EXCLUDED.licence,
       attribution         = EXCLUDED.attribution,
+      jurisdiction        = EXCLUDED.jurisdiction,
       "compiledAt"        = CASE WHEN EXCLUDED.status = 'compiled' THEN EXCLUDED."compiledAt" ELSE corpus_sections."compiledAt" END`
 
 function sectionParams(meta: SectionMeta, now: Date): unknown[] {
@@ -92,11 +97,12 @@ function sectionParams(meta: SectionMeta, now: Date): unknown[] {
     meta.parentDocId ?? null,
     meta.licence ?? licenceForCorpus(meta.corpus),
     meta.attribution ?? null,
+    meta.jurisdiction ?? jurisdictionForCorpus(meta.corpus),
     meta.status === 'compiled' ? now : null,
   ]
 }
 
-const PARAMS_PER_ROW = 20
+const PARAMS_PER_ROW = 21
 
 export async function upsertSection(meta: SectionMeta): Promise<void> {
   const pool = getNeonPool()
