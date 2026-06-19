@@ -172,6 +172,22 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // Parliament Licence v3.0 (same family as Hansard/committees).
   'bills-api': OPL3,
   'scottish-parliament-or': { licence: 'pending-verification', attributionBoilerplate: 'Scottish Parliament Official Report — © Scottish Parliamentary Corporate Body; licence to verify (expected OGL/SPCB licence).' },
+  // V27 §2: VERIFIED — judiciary.scot/crown-copyright (19 Jun 2026): the Scottish
+  // judiciary's published material (excluding logos/photographs) may be re-used
+  // "free of charge in any format or medium, under the terms of the Open
+  // Government Licence". Crown copyright, same posture as the gov.uk/devolved
+  // family. (Page does not pin a version number; OGL current is v3.0.)
+  'scottish-courts': {
+    licence: 'ogl-3.0',
+    attributionBoilerplate: 'Contains Scottish court judgments (© Crown copyright) licensed under the Open Government Licence v3.0; logos and photographs excluded.',
+  },
+  // V27 §4: VERIFIED — ico.org.uk/global/privacy-cookies-and-legal/legal/ (19 Jun
+  // 2026): "All text content is available under the Open Government Licence v3.0,
+  // except where otherwise stated." Exempt org (own domain, not in gov.uk API).
+  'ico': {
+    licence: 'ogl-3.0',
+    attributionBoilerplate: 'Contains public sector information from the Information Commissioner’s Office licensed under the Open Government Licence v3.0.',
+  },
   // Public inquiry reports (V23 §5 probe — Infected Blood route verified, not
   // seeded; build V24). Crown copyright under OGL v3.0 when gov.uk-published or
   // per the inquiry's own OGL statement. Evidence bundles are mixed-licence and

@@ -141,6 +141,8 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'senedd-cofnod':       return processSeneddCofnod(row)
     case 'bills-api':           return processBills(row)
     case 'college-policing-archive': return processCollegePolicing(row)
+    case 'scottish-courts':     return processScottishCourts(row)
+    case 'ico':                 return processIco(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -1902,6 +1904,137 @@ async function processCollegePolicing(row: QueueRow): Promise<void> {
     parentDocId: slug,
   })
   await markDone(row.id, 'html')
+}
+
+// ── Scottish Courts judgments (V27 §2 — scotcourts.gov.uk, OGL) ───────────────
+// One PDF judgment per row. docId = "{key}|{date}|{court}" where key is the
+// reversible media path (no leading slash, no .pdf) and date/court ride along so
+// the worker needs no per-row search call.
+
+async function processScottishCourts(row: QueueRow): Promise<void> {
+  const { fetchJudgmentPdf, keyToPdfUrl } = await import('../sources/scottish-courts')
+  const parts = row.docId.split('|')
+  const key = parts[0]
+  const date = parts[1] || undefined
+  const court = parts.slice(2).join('|') || undefined
+  if (!key) { await markFailed(row.id, `bad scottish-courts docId: ${row.docId}`); return }
+  const pdfUrl = keyToPdfUrl(key)
+
+  const cKey = compiledKey(row.corpus, key, '1')
+  if (await r2Exists(cKey)) { await markDone(row.id, 'pdf'); return }
+
+  const buf = await fetchJudgmentPdf(key)
+  if (!buf) { await markFailed(row.id, `scottish-courts ${key}: PDF fetch failed`); return }
+
+  const text = await pdfToText(buf, pdfUrl)
+  const stem = (key.split('/').pop() ?? key).replace(/-/g, ' ')
+  if (!text || text.length < 100) {
+    await upsertSection({
+      id: sectionId(row.corpus, key, '1'),
+      corpus: row.corpus,
+      sourceUrl: pdfUrl,
+      status: 'unavailable',
+      availabilityStatus: 'pdf-only',
+      availabilityNote: 'judgment PDF served but no extractable text (scanned — OCR pass needed)',
+      itemDate: date,
+      parentDocId: key,
+    })
+    await markDone(row.id, 'pdf')
+    return
+  }
+
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, key, '1'),
+    corpus: row.corpus,
+    sourceUrl: pdfUrl,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'pdf',
+    sectionTitle: court ? `${court}: ${stem}` : stem,
+    itemDate: date,
+    parentDocId: key,
+  })
+  await markDone(row.id, 'pdf')
+}
+
+// ── ICO decisions & enforcement (V27 §4 — ico.org.uk, OGL v3.0) ───────────────
+// Exempt org. docId = leaf path (e.g. "action-weve-taken/decision-notices/2026/
+// 06/ic-406308-d2s8"). Prefer the linked decision/penalty PDF(s) → one section
+// each; fall back to the page's <main> HTML text.
+
+async function processIco(row: QueueRow): Promise<void> {
+  const { fetchIcoPage, fetchIcoPdf } = await import('../sources/ico')
+  const pageUrl = `https://ico.org.uk/${row.docId}/`
+
+  const page = await fetchIcoPage(row.docId)
+  if (!page) { await markFailed(row.id, `ico ${row.docId}: page fetch failed`); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  const MAX_PDFS = 6
+  for (const url of page.pdfUrls.slice(0, MAX_PDFS)) {
+    const buf = await fetchIcoPdf(url)
+    if (!buf) continue
+    const text = await pdfToText(buf, url)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: url,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format: 'pdf',
+      sectionTitle: page.title || row.docId,
+      itemDate: page.itemDate,
+      parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+
+  // No extractable PDF — use the page's main HTML text if it has substance.
+  if (metas.length === 0 && page.mainText.length >= 200) {
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(page.mainText),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: page.title || row.docId,
+      itemDate: page.itemDate,
+      parentDocId: row.docId,
+    })
+    texts.push(page.mainText)
+  }
+
+  if (metas.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'ICO page has no extractable PDF or main-content text',
+      itemDate: page.itemDate,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
 }
 
 // ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────
