@@ -1,7 +1,7 @@
 <#
   V.3-B dedup sanity scan across all 61,179 UKSI in manifest-uksi.json.
   Single-pass ZIP read. No DB, no R2, no network.
-  Output: scrutinise-docs/v3b_uksi_dedup_scan.md
+  Output: docs/v3b_uksi_dedup_scan.md
 #>
 param()
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -10,7 +10,7 @@ $DIR           = Split-Path -Parent $MyInvocation.MyCommand.Path
 $REPO          = Resolve-Path (Join-Path $DIR '../../..')
 $ZIP_PATH      = Join-Path $REPO 'scripts\legislation\v276-bulk\best-collection-xml.zip'
 $MANIFEST_PATH = Join-Path $DIR 'manifest-uksi.json'
-$REPORT_PATH   = Join-Path $REPO 'scrutinise-docs\v3b_uksi_dedup_scan.md'
+$REPORT_PATH   = Join-Path $REPO 'docs\v3b_uksi_dedup_scan.md'
 
 Write-Host "Loading manifest..." -NoNewline
 $manifestText = [System.IO.File]::ReadAllText($MANIFEST_PATH).TrimStart([char]0xFEFF)

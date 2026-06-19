@@ -1,0 +1,969 @@
+# SCRUTINISE — HANDOFF SUMMARY
+
+*Read this first every session. Top section is authoritative.*
+
+*Last updated: 19 Jun 2026 — SEARCH S1b + housekeeping: FTS indexer/query-service/scoring-harness BUILT inert under `scripts/ingest/search/` (index run gated on Charlie; execution path confirmed = dedicated Railway `fts-build` service, driver `fts-railway-run.ts`; **commit-all.sh run/pushed**); `scrutinise-docs/` consolidated into `docs/` (all refs + both boot files rewritten; gold→`docs/GOLD_QUERIES.md`); Railway `LegislationSection` renamed `_DEPRECATED_2026-06-19` (reversible canary — panel confirmed on Neon GIN, exact parity, nothing reads Railway). Prior: V27 ingest BUILT + piloted, seed POST-PUSH. V26 soak continues (DROP gated, earliest ~25 Jun).*
+
+---
+
+## CURRENT STATE — SEARCH S1b + DOCS CONSOLIDATION + RAILWAY LEGSECTION RETIRE (19 Jun 2026)
+
+Three separate workstreams this session, each its own commit (kept OUT of the V27 ingest changes). `tsc --noEmit` on `scripts/ingest` clean (only 4 pre-existing errors in unrelated files: `diag-db`/`run-cleanup` missing `@prisma/adapter-pg`, `test-fca-playwright` missing `playwright`, `v26-pooled-smoke` rootDir — none new).
+
+**1. FTS BUILD (Search S1b) — BUILT, INERT. Charlie triggers the index run.** Full-corpus BM25 on R2 via LanceDB native inverted index. New `scripts/ingest/search/`: `lance.ts` (R2 connect), `corpus-map.ts` (tier + jurisdiction, pure), `build-fts-index.ts` (indexer), `fts-core.ts` (BM25 + query-time title-boost), `fts-query-service.ts` (HTTP), `score-fts.ts` + `gold-queries.ts` (30 gold queries + citation matchers). `@lancedb/lancedb@^0.30.0` + `apache-arrow@^18.1.0` added to `scripts/ingest/package.json`. Reads `NEON_DATABASE_URL` (not `DATABASE_URL`). Brief additions all in: title-boost query-side ~2.5× untuned (no pseudo-titles); jurisdiction map (senedd→wales, ni*, scottish*/scotlawcom→scotland, else uk); **resumable+idempotent indexer** (mergeInsert on PK `id` = no dupes; R2 checkpoint `_search/corpus_fts.checkpoint.json` cursor = resume not restart; phase loading→indexing→done); citation-matcher scoring + eyeball top-20 dump; archetype-D `[GRAPH]` + A/C/D `[INFORCE]` reported as engine-floor, `[BILLS]` scores for real. As-built + run order in `docs/FTS_BUILD_S1b.md` §2A. Dataset `s3://{bucket}/_search/corpus_fts.lance` does NOT exist until the run. **Execution path confirmed (post-build): runs ON RAILWAY** (datacenter→R2 bandwidth; ~124 rows/s on a home connection ≈ 36h) on a **dedicated, isolated `fts-build` service** — NOT the Ingest worker (busy draining + bounced by Ops liveness on `pending>0`) and NOT local `tsx`. Ingest is git-connected to `Main` (RAILPACK, root `scripts/ingest`), so **commit-all.sh precedes the canary**. Driver `scripts/ingest/search/fts-railway-run.ts` (`setup`/`canary`/`full`/`logs`/`teardown`; needs only Neon+R2 creds — the indexer never calls Railway). **Run order:** `commit-all.sh` → `fts-railway-run.ts setup` → `…canary` (report → Charlie decides) → `…full` (resumable; re-run to resume from R2 checkpoint) → `score-fts.ts` (reads finished dataset; local OK) → `…teardown`.
+
+**2. DOCS CONSOLIDATION — DONE.** `scrutinise-docs/*` moved into `docs/` (git mv where tracked; plain mv for the 2 untracked: `GOLD_QUERIES_2.md`→`docs/GOLD_QUERIES.md`, `SPRINT_V27_BRIEF.md`). `scrutinise-docs/` removed. All 144 `scrutinise-docs/` refs across 43 files rewritten → `docs/` (incl. BOTH boot files: root `CLAUDE.md` + `docs/CLAUDE.md`; handoff; briefs; INGEST_PLAYBOOK; CHANGE_LOG; the corpus-status-table + quango scripts that WRITE into the folder; `.ths`; `.ps1`). Gold deduped per Charlie: canonical `docs/GOLD_QUERIES.md` (was `GOLD_QUERIES_2.md`); `GOLD_QUERIES_1.md` stays in `docs/Archive/`. Zero stray `scrutinise-docs`/`GOLD_QUERIES_2` refs remain.
+
+**3. RAILWAY LegislationSection RETIRE — reversible canary DONE; DROP still Charlie's.** All clean (report: `docs/RAILWAY_LEGSECTION_RETIRE_REPORT.md`): S1a EXPLAIN shows the panel on Neon's `LegislationSection_ftsVector_idx` GIN (no Seq Scan); no web runtime path reads Railway (`prisma`/`prismaSearch`→`DATABASE_URL`→Neon; `getRailwayPool` dead in-app, offline scripts only); exact parity (LegislationSection 914,274 / LegislationItem 135,531 on BOTH DBs → nothing lives only on Railway). Executed `railway-legsection-retire.ts --rename` (host-guarded, Railway-only): `LegislationSection` → `LegislationSection_DEPRECATED_2026-06-19`; Neon untouched. Reverse with `--rename-back` (one command). **Rollback-during-soak note:** this mutates the V26 rollback path — a full env-flip rollback would need `--rename-back` first (rest of app DB unaffected). Charlie drops it deliberately after one clean cycle (folds into V26 §6).
+
+**COMMIT PLAN (commit-all.sh, 3 separate commits — NOT entangled with the uncommitted V27 ingest changes, which Charlie sequences separately):** (a) FTS build [now incl. `fts-railway-run.ts` + the corrected §2A run order]; (b) docs consolidation [now sweeps in these handoff/CHANGE_LOG/playbook updates]; (c) Railway-legsection retire. **commit-all.sh APPROVED + run (19 Jun)** — pushed to `Main`; Ingest+Ops auto-redeploy (harmless; FTS code inert). FTS index run still gated: Charlie triggers `setup`→`canary`→(report)→`full` separately.
+
+---
+
+## CURRENT STATE — V27 (BREAKER FIX · SCOTTISH COURTS · QUANGO T2 · EXEMPT-ORG PROBES, 19 Jun 2026)
+
+**Sprint:** V27 (SPRINT_V27_BRIEF.md). Full account: CHANGE_LOG V27. Pure additive ingest during the V26 soak — writes only to `corpus_sections` on Neon (legacy `Legislation*` rollback path untouched; §6 DROP still gated). **Everything BUILT + LOCALLY PILOTED; nothing seeded yet — the new corpora seed POST-PUSH** (new sourceTypes are markSkipped by the live worker until their processors deploy). `tsc --noEmit` clean.
+
+**DONE this session:**
+- **§1 breaker-eval FIXED + verified.** Live Ops was throwing `Query read timeout` every 15-min tick since the 18 Jun 21:44 redeploy — `querySourceCounts`'s `corpus_sections GROUP BY` over 17.2M rows exceeds the 60s client timeout (diagnosed from the **Ops deploy logs**, not the misleading `source_status`/lock timestamps). That GROUP BY fed only the unread informational `section_count` column → moved it to read the hourly `corpus_snapshots` (PK-indexed) in a try/catch so the trip evaluation always completes. `v27-breaker-verify.ts`: deliberate failure-trip→clear+recover + zero-output-trip all PASS against the live DB. **Goes live at push.** Also reported (not fixed): `reseedExhaustedPwdata` hits the same timeout class (~8.8M-id pull) → pwdata auto-reseed failing → V28 dedup rework.
+- **§2 Scottish Courts BUILT + piloted.** Captured API works server-side with Origin/Referer only (no token); `POST /web/search` (1-indexed, limit 200), `documentLink` → PDF at www.scotcourts.gov.uk. **13,066 judgments**, OGL v3.0 (judiciary.scot/crown-copyright, VERIFIED). Pilot 5/5, avg 6,185 w → **≈13,066 sections / ~80.8M words**. `sources/scottish-courts.ts` + `processScottishCourts` + `v27-seed-scottish-courts.ts` (seeder clears the blocked corpus_target).
+- **§3 Quango T2 BUILT + measured.** 40 ALBs (ranks 21–60, broad set) + 24 ministerial depts (narrow `{statutory_guidance,regulation,manual,manual_section}`). Measured **18,320 + 1,788 = ≈20,108 docs**; 0 orgs >5× guard. `v27-seed-quango-t2.ts` (govuk-content, OGL, URL-dedup, utaac/fatality excluded).
+- **§4 Exempt-org probes → `EXEMPT_ORGS_PROBE.md`.** Sized ICO/Ofgem/Ofwat/Ofcom/BoE. **ICO the only clear open licence (OGL v3.0)** → BUILT: 26,576 action-weve-taken leaves (mostly FOI decision-notices + PDFs), pilot 5/5 avg 3,090 w → **≈26,576 sections / ~82.1M words**. `sources/ico.ts` + `processIco` + `v27-seed-ico.ts`. Others = ranked V28 list, each gated on a licence check.
+- **§5 Scottish Parliament OR — built to the gate.** Recon confirms no open API in static assets; capture-ready seam + `v27-seed-scottish-parliament.ts` dry-run; **waits on Charlie's XHR capture** (~320k est).
+
+**POST-PUSH run order:** (1) `seed-rate-limits.ts`; (2) confirm Ingest deploy SUCCESS before seeding new sourceTypes; (3) `v27-seed-scottish-courts.ts --seed` (canary + Railway PDF-egress check); (4) `v27-seed-ico.ts --seed` (canary + egress); (5) `v27-seed-quango-t2.ts --seed`; (6) at drain `v27-corpus-status-table.ts` + re-baseline + `v20-licence-backfill.ts`.
+
+**DECISIONS WAITING ON CHARLIE:** Scottish Parliament OR XHR capture (unblocks §5) · exempt-org licence verification for Ofgem/Ofwat/Ofcom/BoE (V28) · §6 DROP go (soak, ~25 Jun) · Railway Hobby downgrade 28 Jun · search-thread FTS-scope decision · (carried) FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email.
+
+---
+
+## CURRENT STATE — V26 (UNIFICATION + RAILWAY DECOMMISSION — structural, 16 Jun 2026)
+
+**Sprint:** V26 (SPRINT_V26_BRIEF.md), build input `UNIFICATION_PLAN.md` §4. Full account: CHANGE_LOG V26 + UNIFICATION_PLAN "AS-BUILT (V26)". Operational steps: **`V26_CUTOVER_RUNBOOK.md`**. Site access is closed, so the cutover needs no user write-freeze. Everything below the V25 heading is historical.
+
+**DONE this sprint (ran unattended; two human gates remain):**
+- **§1 precondition:** V25 drained corpora rebaselined ✓ (committees-reports 24,876 · committees-evidence 140,567 · niassembly-hansard 196,348 · inquiry-reports 140 · college 332). bills-api + senedd-cofnod were still draining → proceeded per brief §1 (independent data); **both since drained + rebaselined ✓ (bills-api 6,535 · senedd-cofnod 191,730).**
+- **Migration A (corpus unification) — DONE + DRAINED + REBASELINED ✓, reversible.** 38,571 non-matching legacy gids → **24,247 genuine gaps** + 14,324 docId-form diffs already covered (ukpga calendar↔regnal 8,514 · uksi regional 4,041 · eur→eudr/eudn/CELEX 1,769). Gaps verified real (99.6% hold legacy text; 25/25 live-TNA fetchable). **Gap-fill (24,246 tna-legislation rows) fully drained → rebaselined ✓:** si-pre-2010 174,552→**419,250** · primary-acts-2000plus 90,838→**145,704** · retained-eu→187,555 · si-2010plus 270,339 · regional→331,124. Licence backfill swept (85 stragglers; new sections got OGL at ingest). **Compilation layer preserved** in `legislation_compilation_enrichment` (26,126 rows, pointer-only; amendment tables were empty).
+- **Migration B (app DB Railway→Neon) — PREP DONE.** All app tables already existed on Neon → B.1 = parity verify (clean) + `_prisma_migrations` baseline. **App data copied** (24 tables / 62,394 rows, exact parity; OperationalSection 61,315 the only bulk; FK-topological order — Neon forbids session_replication_role). **Search repointed in code** onto Neon's intact legacy `ftsVector` (both tables 100% populated + GIN-indexed); dual client collapsed (`prismaSearch`→alias of `prisma`); `/legislation-search` moved onto the GIN index (EXPLAIN-confirmed); `directUrl` added. `tsc --noEmit` clean.
+- **§4 Railway** holds only `scrutinise-db` + `Ingest` + `Ops` (confirmed via API).
+
+**CUTOVER — DONE + VERIFIED (18 Jun):** Charlie moved the Vercel env to Neon (`DATABASE_URL`→pooled `&pgbouncer=true&connection_limit=1`, `DIRECT_URL`→non-pooled). Verified live (`v26-cutover-verify.ts`): prod `GET /api/legislation/search` → HTTP 200 / 20 items from Neon; **Railway scrutinise-db now shows 0 app connections** (web app fully detached); Neon serves via the pgbouncer pooler. Login (Clerk auth) is Charlie's own final eyeball — DB-independent, and `prisma.user.count()` on Neon pooled already verified. Rollback (if ever needed pre-DROP) = flip env back + redeploy; Railway DB left intact through the soak.
+
+**STILL GATED:**
+1. **§6 soak ≥1 week → DROP legacy `Legislation*` (both DBs) + decommission Railway Postgres** — the one irreversible step; separate Charlie go. **Soak clock started 18 Jun → earliest DROP ~25 Jun.** Gated ALSO on the search thread delivering the new `corpus_sections` FTS + the Lex-grounding repoint onto it (so the legacy `ftsVector` can be retired first). Checklist in `V26_CUTOVER_RUNBOOK.md` §6.
+
+**TOTAL at V26 post-drain close:** 16,302,498 compiled / 16,521,390 total sections · **5.06B words** · ~28.75 GB R2 (est) · 7.00 GB Neon heap (was V24 15.58M / 4.83B). Per-corpus table → `CORPUS_STATUS_V26.csv`.
+
+**IN FLIGHT / NEXT SESSION:**
+1. ✅ Gap-fill drained + rebaselined ✓ + licence-backfilled + workbook table emitted (17 Jun); ✅ cutover executed + verified live (18 Jun).
+2. **Soak watch (→ ~25 Jun):** keep an eye on prod for any DB-move regressions; Railway DB stays intact + running as the rollback path until the DROP.
+3. **§6 DROP (after soak):** needs the search thread's new `corpus_sections` FTS + Lex-grounding repoint first (retire legacy `ftsVector`), then verified Neon backup → drop legacy `Legislation*` (both DBs) + decommission Railway Postgres. Charlie's separate go.
+4. Scottish XHR capture still outstanding (ingest, not migration).
+
+**DECISIONS WAITING ON CHARLIE:** B.5 cutover go · §6 DROP go · Scottish SpOpenData XHR · Railway Hobby downgrade 28 Jun · (carried) College fresher route · FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email · V26 search-thread FTS-scope decision.
+
+---
+
+## CURRENT STATE — V25 (FEED THE MACHINE: Senedd · College · Bills · inquiry expansion · licence compliance, 16 Jun 2026)
+
+**Sprint:** V25 (SPRINT_V25_FEED_BRIEF.md). Full account: CHANGE_LOG V25. Pure additive ingest — zero structural-DB risk (structural unification is now V26, gated on the FTS decision + production gates). Queue ran dry ~14 Jun (0 pending at open). Everything below the V24 heading is historical.
+
+**BUILT + LOCALLY PILOTED this session (predict-measure-commit); NEW sourceTypes seed POST-PUSH:**
+- **§2 Senedd Cofnod ✓ built+piloted+licence-VERIFIED.** `record.senedd.wales/Plenary/{id}` (custom .NET, no CF), enumerated by redirect-classified meeting-id scan; one section per English speaker-turn (bilingual — prefer `translation`). Licence OGL v3.0 (Charlie verified the Senedd copyright page; supersedes the V24 "g**oogl**e" false positive). PILOT: 254–259 sections/plenary, ~847 plenaries → **PREDICTION ≈217k sections / ~30M words**. `sources/senedd-cofnod.ts` + `processSeneddCofnod` + `v25-seed-senedd-cofnod.ts`.
+- **§3 College of Policing ✓ built+piloted.** UK Gov Web Archive 2022 snapshots (live site CF-blocked, fresh snapshots are JS shells). CDX enumerates `app-content*`, content via the `id_` raw-capture route. **332 distinct APP pages** (the ~8k placeholder was a rough overestimate), avg ~2,431 words/page → **PREDICTION ≈332 sections / ~0.81M words**. Licence `college-nc` → **commercial-surface excluded**. `sources/college-policing-archive.ts` + `processCollegePolicing`.
+- **§4 Bills API ✓ built+piloted.** `bills-api.parliament.uk` (3,914 bills). Two-stage `list:{billId}` → per-PDF rows (bill 3774 alone = 267 PDFs); **files[] Download route only** (links[] are unreliable). Licence OPL v3.0. PILOT: avg 3.3 files-PDFs/bill, 100% extract → **PREDICTION ≈13k sections / ~9.4M words** (the ~5k placeholder undershoots — amendment papers dominate). `sources/bills-parliament.ts` + `processBills`.
+- **§5 Public inquiries — register 8 → 21 inquiries / 53 → 146 report PDFs.** 13 verified concluded inquiries added to `INQUIRY_REGISTRY` (Saville 11, Al-Sweady 50, Grenfell P2 12, Mid Staffs, IICSA, Litvinenko, Baha Mousa, Zahid Mubarek, Hillsborough, Victoria Climbié, Azelle Rodney, Rosemary Nelson, Equitable Life). Re-run `v24-seed-inquiry-reports.ts --seed` POST-PUSH (idempotent, +93 rows).
+- **§6 Scottish — built to the gate, SEEDS NOTHING.** HTML route live; SpOpenData API key still not captured (none in session prompt). `sources/scottish-parliament.ts` + `v25-seed-scottish.ts` report the blocker. Did NOT guess the key.
+- **§7 LICENCE_COMPLIANCE.md created** — Find Case Law serving-layer hard requirements (auth-only judgment text, noindex/robots, no open/3rd-party API over judgment text or extracts, no open-web publication of derived extracts) + the NC commercial-exclusion set + fca-restricted. Recorded, not enforced (ingest only).
+- **§1 carry-over:** divergence fix (§1.1) + CSV TOTAL-row drop (§1.3) were already in HEAD `96d150f`; §1.2 rebaseline is POST-PUSH (`v25-rebaseline.ts --classify-failed --confirm`).
+
+**POST-PUSH — DONE this session (deploy confirmed; Ops auto-started the worker):**
+- rate-limits upserted (4 new sourceTypes).
+- **inquiry-reports ✓ drained:** 146 rows → 140 compiled / 14.56M words (6 markers).
+- **college-of-policing ✓ via LOCAL ingest:** the worker hit a Railway-egress BLOCK on `webarchive.nationalarchives.gov.uk` (257/332 "archive fetch failed"; 200 from a residential IP). `v25-ingest-college-local.ts` ingested all **332 / 840,308 words** locally. Future re-seeds use the local path. **NEW Railway-blocked host recorded.**
+- **senedd-cofnod ✓ seeded + processing on the worker:** enumeration bug fixed (conc-6 throttling → false gaps + a Neon DNS blip; first run found only 396). Re-run at conc 3 with retries + insert-retry found **713 plenaries**, all seeded. record.senedd.wales IS Railway-reachable (no CF) — worker grinding (27 meetings → 6,849 sections at check, ~254/meeting, 0 fails).
+- **bills-api seeded + grinding:** 3,919 `list:{billId}` rows; per-PDF child rows + sections appear as the worker reaches modern (high-billId) file-rich bills (early low-billId bills are legacy links[]-only → 0 files).
+- **scottish:** gated, seeds nothing.
+
+**IN FLIGHT / NEXT SESSION:**
+1. bills-api + senedd-cofnod finish draining → `v25-rebaseline.ts --classify-failed --confirm` (the §1.2 four + new corpora; senedd ~713 plenaries × ~254 ≈ ~180k, bills TBD, college 332); re-run `v20-licence-backfill.ts`; regenerate `v25-corpus-status-table.ts`.
+2. Scottish (parliament + courts) waits on Charlie's SpOpenData XHR capture; College follow-up = a rendered/API content route fresher than 2022; inquiry dark-site report-PDF Web Archive adapter (Manchester Arena/Undercover/Shipman own domains).
+3. V26 = structural unification + Railway decommission (gated on the FTS-scope decision + the two production gates).
+
+**DECISIONS WAITING ON CHARLIE:** Scottish-parliament + Scottish-courts SpOpenData devtools XHR (same technique unblocks both) · College of Policing fresher content route · FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email · written-answers month-blob deletion · V26 FTS-scope decision.
+
+---
+
+## CURRENT STATE — V24 (REBASELINE + BREAKER FIX + EMAIL HONESTY + NI ASSEMBLY + INQUIRIES + UNIFICATION SPEC, 14–15 Jun 2026)
+
+**Sprint:** V24 (SPRINT_V24_BRIEF.md). Full account: CHANGE_LOG V24. Everything below the V23 heading is historical.
+
+**TOTAL at close:** 15,577,221 compiled sections / **4.82B words** (15,770,435 incl. classified residue; V23: 12.56M / 4.05B). Per-corpus table → `CORPUS_STATUS_V24.csv` (R2 ~27.4 GB est, Neon heap 6.76 GB). **The email no longer shows a % (Charlie-directed §3)** — two hard numbers + a completion count + a labelled projection.
+
+**DONE this sprint:**
+- **§1 — 7 corpora ✓ re-baselined** (`v24-rebaseline.ts --confirm`): retained-eu 186,371 · si-2010plus 270,339 · explanatory-notes 410 · explanatory-memoranda 5,420 · historic-hansard 4,641,085 · ni-judgments 7,772 · quangos-govuk 86,547. Transient failures reset+drained; 2 deterministic historic-hansard gapday misses classified `skipped`. **committees-reports (47.6k pending) + committees-evidence (~4.9k pending + 83 failed) still draining → ✓ next session.**
+- **§2 — zero-output breaker FIXED at the worker.** New `ingest_queue.produced_output` (per-row verdict via `AsyncLocalStorage` in `process-row.ts`; counts compiled writes, r2Exists confirmations, and markers — so idempotent reseeds no longer read as empty). `ops.evaluateBreakers` trips on the trailing all-empty run (24h window, threshold 25), not cross-sweep deltas. Verified against tna-legislation + committees reseeds (no false trip) and the curl-broken case (still trips) — `v24-verify-breaker.ts`, production untouched. Column migrated live (`v24-migrate-produced-output.ts`).
+- **§3 — email >100% headline retired** (`progress-reporter.ts`): subject + TOTAL block now exact sections + words + completion counts + labelled projection.
+- **§4.1 NI Assembly Hansard — BUILT + piloted + SEEDED + verified live.** Licence VERIFIED OGL v3.0; IIS host (no CF, Railway-safe). Pilot: 646 reports, ~482 sections/report → **PREDICTION ≈311,157 sections / ≈48.4M words**; canary CONFIRMED post-deploy (3 reports → 1,445 sections / 224,732 words). `sources/niassembly-hansard.ts` + `processNiAssemblyHansard` + seeder; all 646 rows seeded post-deploy, grinding. (A premature mid-sprint seed had the OLD worker markSkipped 95 rows in ~2 min → deleted all 646, re-seeded only after the new deployment was confirmed SUCCESS; lesson logged in playbook.)
+- **§4b College of Policing:** licence RESOLVED = **Non-Commercial College Licence** (`college-nc`, verified via 2026-02-03 web-archive snapshot). Content route BLOCKED — fresh archive snapshots are Drupal JS-SPA shells; only 2022 snapshots have static text (~4yr stale). **No seed; recommend Playwright/JSON-API or a direct permission email.**
+- **§4.2 Senedd/Scottish:** neither meets the seed condition — Senedd route confirmed but **licence unverified** (the "ogl" footer match was "g**oogl**e"); Scottish API still needs Charlie's XHR. No seed.
+- **§5 Public inquiries — `inquiry-reports` sourceType BUILT + SEEDED + verified live.** Per-PDF rows (timeout-safe). **8 concluded inquiries → 53 report-volume PDFs seeded → 51 compiled sections / 6.55M words** (2 markers; Iraq/Chilcot vols huge), OGL v3.0 via gov.uk attachments. Grenfell/dark-site adapter = follow-up.
+- **§6 `UNIFICATION_PLAN.md` DELIVERED** (spec only): legacy LegislationSection inventory, 71.5% measured overlap with corpus_sections, conversion (A) + app-DB Railway→Neon (B), <15 min downtime, minutes rollback.
+
+**POST-PUSH — DONE this session** (commit `fe4d15f`+`623d386` pushed; Railway Ingest deployment `623d386` confirmed SUCCESS via the deployments API before seeding, so no skip-race):
+1. ✅ `seed-rate-limits.ts` — niassembly-hansard 1000ms/2, inquiry-reports 500ms/3 added (30 entries).
+2. ✅ `v24-seed-niassembly-hansard.ts --canary 3` then `--seed` — **canary verified live: 3 reports → 1,445 compiled sections / 224,732 words** (≈482/report, matches the pilot exactly; Railway egress on the IIS host confirmed). Full 646 rows seeded — grinding toward ~311k.
+3. ✅ `v24-seed-inquiry-reports.ts --seed` — 53 report PDFs seeded → **51 compiled sections / 6.55M words** (2 markers; Iraq/Chilcot volumes are huge), inquiry-reports corpus_target upserted est=53.
+4. ✅ Verified: 0 tripped breakers; the new per-row breaker is live and recording `produced_output` verdicts. Re-baseline niassembly/inquiry when drained (next session).
+
+**IN FLIGHT / NEXT SESSION:**
+1. committees-reports + committees-evidence drain → ✓ (clear the 83 committees-api AggregateError failures first); then re-run `v24-rebaseline.ts --confirm`.
+2. Post-push NI Assembly + inquiry seeds drain → ✓ re-baseline (niassembly-hansard est currently the V23 placeholder 270k; pilot says ~311k).
+3. Devolved follow-ups: Senedd licence verification (Welsh Parliament licence page, not the homepage footer) → build; Scottish needs Charlie's SpOpenData XHR; College needs a rendered/API content route.
+4. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers; new corpora niassembly/inquiry licences applied at ingest via the map).
+
+**DECISIONS WAITING ON CHARLIE:** Scottish-courts + Scottish-parliament SpOpenData devtools XHR (same technique unblocks both) · Senedd licence (verify the Welsh Parliament licence page) · College of Policing content route (Playwright/API or direct permission email) · FCL computational-analysis email · FCA Handbook · pwdata licence backfill · BAILII email · written-answers month-blob deletion.
+
+---
+
+## CURRENT STATE — V23 (V22 CLOSEOUT + ORAL EVIDENCE + QUANGO T1 SEED + DEVOLVED/INQUIRY SCOPING, 13 Jun 2026)
+
+**Sprint:** V23 (SPRINT_V23_BRIEF.md). Full account: CHANGE_LOG V23. Everything below the V22 heading is historical. Session note: switched models mid-sprint (Fable 5 → Opus 4.8) with full transcript continuity — no state lost.
+
+**TOTAL at close:** 12,558,897 compiled sections / **4.05B words** (V22 ~9.87M / 3.46B). Denominator 14.79M, 29/53 ✓ → headline ~84.9% (honest-lower from new placeholders).
+
+**DONE this sprint:**
+- **S5L Lords listing walk was CF-blocked → switched to ENUMERATION.** The WebForms listing path IP-penalty-boxes for minutes after any burst (undici + curl both 403 on page 1, box outlives 4-min cooloff). The zip path is CF-free (V21-proven), docIds deterministic, no `_a/_b`/`P1` splits in range → `v22-seed-lords-hansard.ts` enumerates P0 vols 1-606; worker PK-checks soft-404 gaps to markers. **Canary PASSED** (S5LV0100P0 → 2,408 sections, 1936 date proves the deployed Lords-1999 cutoff). 578 rows seeded, **tranche grinding** (754 done, S5L 110,441 sections, at 1981 → 1999). Resumable curl walk built + kept for future series.
+- **Gap-fill seeded:** 113 gapvol rows (S3 40 · S4 57 · S5C 16). 1 S5L HTML gap volume absorbed as a marker (noted).
+- **⚠️ tna-legislation breaker FALSE-POSITIVE cleared:** tripped on 838 idempotent re-runs (already-held sections → 0 COUNT growth ≠ 0 output), parked 108,349 rows; root cause verified, cleared per §8, unparked, did not re-trip. **Recommend breaker fix** (track empty done-rows at the worker, not aggregate count growth).
+- **✓ re-baselines:** echr-hudoc 4,410 · tax-tribunals 12,089 · nao-reports 2,570 · lawcom 262 · primary-acts-pre-2000 165,438 (ukpga cleanup ran). uksi enum (7) reset + drained.
+- **Oral evidence COVERED (§2):** OralEvidence is a distinct committees-api type, already ingested — 14,820 `oralevidence:*` sections (committees-evidence, opl-3.0), R2-verified clean transcripts. Not a gap.
+- **Quango T1 SEEDED (§3):** 41,321 `quangos-govuk` rows (42,942 measured − URL-dedup), grinding (76,461 sections at close).
+- **Devolved (§4) PROBED+SIZED, build V24:** NI Assembly AIMS API build-ready (646 reports 2012-2026, ~250-300k, cleanest); Senedd record.senedd.wales (~150-250k); Scottish parliament.scot HTML + hidden SpOpenData API (~250-400k, hardest). Placeholders + licence-map entries added.
+- **Inquiries (§5):** `INQUIRIES_UNIVERSE.md` register built (~35 inquiries, ~40-70k reports-only). Infected Blood probe = 9 PDF report vols on gov.uk (CF-free OGL, route verified, NOT seeded — needs `inquiry-reports` sourceType, V24).
+- **Small probes (§6) SIZED:** ONS 11,177 gov.uk docs (marginal); OBR 61 (trivial/foldable); pre-2010 committees ~10-20k (CF-blocked, depth gap named).
+
+**IN FLIGHT / NEXT SESSION:**
+1. Drains → ✓ re-baseline (`v23-rebaseline.ts --confirm`, guarded): retained-eu, si-2010plus, regional, EN/EM (now unblocked, draining), committees-reports/evidence, ni-judgments, **historic-hansard (re-baseline only when 1803-1918 + Lords tranche + gap-fill ALL drain — single corpus)**.
+2. EN/EM (11,424) were never processed (blocked behind retained-eu since V20) — verify they produce content now that they're unparked.
+3. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers).
+4. **V24 candidates:** NI Assembly Hansard build (turn-key); inquiry-reports sourceType (Infected Blood first); Senedd/Scottish builds; quango T2/T3.
+5. **Breaker fix:** zero-output breaker false-trips on idempotent reseeds — track genuinely-empty done rows at the worker.
+
+**DECISIONS WAITING ON CHARLIE:** devolved licences (3, expected OGL — verify) · FCL computational-analysis email · FCA Handbook · pwdata licence backfill · Scottish-courts + Scottish-parliament SpOpenData devtools XHR (same technique unblocks both) · written-answers month-blob deletion · BAILII email.
+
+---
+
+## PREVIOUS STATE — V22 (REPAIRS + SECOND HANSARD CENTURY + WORD COUNTS + QUANGO DRY-RUN, 13 Jun 2026)
+
+**Sprint:** V22 (SPRINT_V22_BRIEF.md). Full account: CHANGE_LOG V22. Everything below the V21 heading is historical.
+
+**DONE this sprint:**
+- **committees-api repaired:** deep-offset server 500s (~31s timeout, load-dependent) killed the WrittenEvidence walk — replaced with date-windowed `list:…:win:{YYYY-MM}` rows. Breaker cleared, **56,518 item rows unparked + draining**, 1,239 offset list rows retired. Windows seeded post-push (`v22-seed-writtenevidence-windows.ts`).
+- **judiciaryni repaired:** transient IP-cut + the AdaptiveThrottle suspend path was DEAD CODE everywhere (ceiling 30s < threshold 60s — fixed, plus 403/socket backoff) — rate halved 2000ms/1; listing got the list-row treatment (`list:page:{N}`, pages 96–396). Breaker cleared + 332 failed reset POST-PUSH (`v22-seed-judiciaryni-list.ts` then the SQL).
+- **Enum repairs found real universe:** si-2010plus enum seeded **11,852 missing instruments** (the V12 never-run reseed); regional enum seeded 6,435 (incl. asc/mwa). 7 dense uksi years re-throttled — reset at close, verify drained next session.
+- **HUDOC revived:** working grammar (`contentsitename:ECHR AND respondent:"GBR" AND languageisocode:"ENG"` = ✓4,471, browser UA + Referer, kpdate sort), PDF-conversion text route, one-judgment probe PASSED end-to-end (19,283 words, licence `echr-nc` VERIFIED live). Seed post-push: `v22-seed-echr-queue.ts --canary 5` (Railway egress unverified!) → full.
+- **Lords Hansard 1919–1999:** per-house cutoffs — Lords cuts at **1999-11-17** (first pwdata-lords file; S5L vol 607 starts that exact day). S5L cap 32 → 606. Pilot scored: 1936 vol 2,408 items/462k words; 1999 vol 7,076/806k, 0 ≥ cutoff. R2 batch 16 (timeout headroom for fat volumes). Seed post-push: `v22-seed-lords-hansard.ts` (~574 vols ≈ +2.3M sections est).
+- **Hansard gap-fill:** V21's "169 exist on the HTML site" was WRONG — measured **114 fillable of 170 missing** (56 genuinely lost; S1/S2 wholly unfillable). Two-stage crawl built (`gapvol:`/`gapday:` rows, sourceType `historic-hansard-html` 500ms/2). Seed post-push AFTER the Lords seeder: `v22-seed-hansard-gapfill.ts`.
+- **Word counts:** already exact at ingest for every compiled section (the brief's backfill was unnecessary — NULLs are only unavailable markers). **Total 3.456B words.** Email TOTAL block now prints the words line.
+- **Quango T1:** tiers unconfirmed → seeder built (`v22-seed-quango-t1.ts`, --seed gated), live dry-run done: **T1 = 42,942 docs**. ⚠️ HMCTS (515) and UTAAC (0) are gutted by the utaac_decision/fatality_notice exclusions — Charlie to confirm slot replacement.
+
+**POST-PUSH RUN ORDER (this session if push lands, else next):**
+1. `seed-rate-limits.ts` (judiciaryni 2000/1, historic-hansard-html new).
+2. NI: clear breaker + reset 332 failed (playbook §8 SQL) → `v22-seed-judiciaryni-list.ts`.
+3. `v22-seed-echr-queue.ts --canary 5` → verify sections + Railway egress → full seed (unblocks echr-hudoc, est 4,471).
+4. `v22-seed-lords-hansard.ts` (S5L re-list + seed) → THEN `v22-seed-hansard-gapfill.ts` (asserts the lifted-cap checkpoint).
+5. `v22-seed-writtenevidence-windows.ts` (~163 window rows).
+6. Reset the 7 throttled uksi enum rows after cooloff.
+
+**IN FLIGHT / NEXT SESSION:**
+1. Drains → ✓ re-baseline per §1c: retained-eu (~74k), historic-hansard (1803–1918 tail + Lords tranche + gap-fill — single corpus, re-baseline when ALL drain), committees-reports/evidence (56k + windows), si-2010plus (11,852 + 7 enum years), regional (6,435), EN/EMs, tax-tribunals, nao, ni-judgments, echr-hudoc.
+2. ukpga enum drained → run `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓.
+3. si-2010plus enum drain → re-run `seed-explanatory-queue.ts` (idempotent; new SIs need EM rows).
+4. Re-run `v20-licence-backfill.ts` after drains (NULL stragglers).
+5. Quango T1 seed once Charlie confirms tiers (`v22-seed-quango-t1.ts --seed`).
+6. Corpus unification + Railway-DB migration: structural-sprint readiness — no blocker found this sprint; the queue patterns (list:/enum:/win:/gap*) are stable and documented.
+
+**DECISIONS WAITING ON CHARLIE:** quango tier confirmation (incl. HMCTS/UTAAC slot question) · FCL computational-analysis licence email · FCA Handbook licence · pwdata licence backfill · Scottish-courts devtools XHR · written-answers month-blob deletion.
+
+---
+
+## PREVIOUS STATE — V21 (QUANGOS MEASURED + HISTORIC HANSARD + HONEST DENOMINATOR, 12 Jun 2026 evening)
+
+**Sprint:** V21 (SPRINT_V21_BRIEF.md). Full account: CHANGE_LOG V21. Everything below the V20 heading is historical.
+
+**DONE this sprint:**
+- **Quango universe MEASURED:** `docs/QUANGO_UNIVERSE.md` + `.csv` — 1,255 orgs, 904,989 total docs, **162,004 relevant-format docs** (AAIB 11,732 · HMRC 8,487 · EA 7,639 top the table). `quangos-govuk` placeholder in corpus_targets. **No content seeded — Charlie triages the table for V22.**
+- **Historic Hansard 1803–1918 BUILT + PROBED:** `sources/historic-hansard.ts` (bulk volume zips, hansard_v12 parser, per-speech pwdata-shaped items, exact 1919-02-04 cutoff = pwdata handoff), `processHistoricHansard`, `seed-historic-hansard-queue.ts` (--canary). Pilot S1V0001P0: 1,597 sections end-to-end in Neon+R2, OPL verified, 49s/volume. Universe ~763 volumes ≈ ~1.1M sections. Host soft-404s (listing = universe; PK magic checked). Rate 5000ms/2.
+- **Honest denominator (playbook §1d):** blocked targets now count, retired never (the retired LDA rows were double-counting 722k). Placeholders: scottish-courts ~20k, college-of-policing ~8k, echr-hudoc 4,471 (V20 measured, was 30,050), bills-api ~5k, financial-corpus NULL/unsized. **Headline 91.3% → 88.0% (denominator 12.61M).**
+- **SSRN re-classified:** api.ssrn.com serves 200 JSON unauthenticated now (V20 hard-403 was transient WAF state) — **stays PARKED on licence grounds** (author copyright).
+
+**POST-PUSH (done this session):** canary PASSED from Railway (CF serves Railway IPs on hansard-archive); **universe MEASURED 595 zips / 594 distinct vols** (not the nominal 763 — real digitisation gaps; HTML-crawl gap-fill of the 169 missing vols is a V22+ candidate); est re-baselined **~850k**; **full seed done, grinding** (4 done / 589 pending at close, ~10–20h). One incident: CF 403 on the S5C listing walk at page 24 → seeder fixed (60s-cooling retries + stop-at-volume-cap, committed post-push).
+
+**IN FLIGHT / NEXT SESSION (V20 carry-overs unchanged):**
+1. retained-eu ✓ at drain; committees WrittenEvidence `list:` rows draining; NI seeder resume from checkpoint (page 66 hard-cut); si-2010plus ✓ at enum drain → re-run `seed-explanatory-queue.ts`.
+2. ukpga regnal enum drain → `v19-cleanup-ukpga-calendar.ts` → primary-acts-pre-2000 ✓; regional enum drain → ✓.
+3. New V20 corpora ✓ at drain; re-run `v20-licence-backfill.ts` after drains.
+4. **historic-hansard ✓ re-baseline at drain** (~10–20h grind from full seed).
+5. V22 candidates: quango triage (Charlie) · HUDOC revival (routes in V20 §3.6, measured universe 4,471) · **Lords Hansard 1919–1999** (bulk archive holds it; new named hole) · regional-act EN/EMs.
+
+**DECISIONS WAITING ON CHARLIE:** unchanged from V20 (FCL computational-analysis licence email; FCA Handbook licence; pwdata licence backfill; Scottish courts devtools XHR; written-answers month-blob deletion) **plus:** quango triage of QUANGO_UNIVERSE.md.
+
+---
+
+---
+
+## SEARCH PROJECT — S0 AUDIT COMPLETE (12 Jun 2026)
+
+Read-only audit done; all measured numbers + extrapolation arithmetic in **`docs/SEARCH_AUDIT.md`**. CHANGE_LOG "SEARCH S0" entry has the digest. The headline facts the design doc must reckon with:
+
+- **Full-corpus FTS-in-Neon (10.5M tsvectors + GIN) ≈ 15.2–15.8 GB vs ~10.5 GB free headroom — over budget by ~5 GB** (pwdata ≈ 11 GB of it). The **legislation+caselaw scope (~1.05M rows) ≈ 3.8 GB — fits.**
+- corpus_sections has NO functioning FTS (no-op trigger since V3; 266 MB GIN over 6.8% relic vectors; no web code reads the table). Legacy `LegislationSection` (914k) carries the live search: Lex grounding via `/api/search` (Neon GIN) + LegislationPanel via an **un-indexed seq-scan path on Railway**; the legacy table is duplicated in full on both DBs; its embedding vector(768) column exists with 0 rows.
+- Corpus text ≈ 17.4 GB (debates 6.2 + caselaw 5.6 dominate). pgvector 0.8.0 installed (halfvec OK); pg_search BM25 available-not-installed. Full-corpus embeddings don't fit in Neon in any §5 configuration; the 1.2M scope mostly fits.
+- 100k-row latency is network-floor (server 0–18 ms warm) — a 1M+ sample is needed before trusting FTS-in-Neon latency at scale.
+- Needs Charlie: Neon compute CU/autoscale range from the console (no API key locally).
+
+**Next: search design doc — architecture decided WITH Charlie (S0 made no recommendations).** Scratch table dropped (0 remain); production untouched (evidence in SEARCH_AUDIT §8). INGEST_PLAYBOOK unchanged — no ingest doctrine touched.
+
+---
+
+## CURRENT STATE — V20 (THE PROBE WAVE, 12 Jun 2026)
+
+**Sprint:** V20 (SPRINT_V20_BRIEF.md). Full account + per-probe scorecards: CHANGE_LOG V20. Everything below the V19 heading is historical.
+
+**DONE this sprint:**
+- **Licence metadata live:** `corpus_sections.licence`/`attribution` columns; map in `shared/licence-map.ts` + INGEST_PLAYBOOK §18; applied at ingest; 1.07M rows backfilled. **pwdata backfill deferred (Charlie: ~4–5GB MVCC churn for uniform OPL).**
+- **Five sources built + auto-upgraded** (seed post-push): committees-api (193,238 docs — CF-free API; Railway-egress canary first), tax-tribunals (13,037, continuously updated, .doc via word-extractor), explanatory-notes/-memoranda (EN/EM "intention layer", rides the tna-legislation budget), lawcom (240), nao-reports (2,755, nao-nc licence), ni-judgments (~5,900).
+- **Classified:** HUDOC alive again (routes in CHANGE_LOG V20 §3.6 — revival V21); historic Hansard 1803–1918 = 763 bulk XML volumes ≈ ~1.1M sections (v12 parser is V21); Scottish courts BLOCKED (authed Azure API — Charlie: 5-min browser devtools XHR inspection would unblock); SSRN parked (hard WAF 403).
+- **Partials audit:** building-regs/planning-policy were 791-doc duplicates of hmrc-tiins (V2 seed-before-push default-branch bug) — deleted + reseeded correctly; college-of-policing was 1,944 unfiltered-search junk — deleted + blocked; sentencing-council ✓ 253 (was complete; V13 ~381 was pre-dedup); nilawcom ✓ 17 (site dead); written-statements retired.
+- **V19 closeout:** et-decisions ✓ 293,399 (+4 residue) — prediction 140–200k overshot 1.5–2.1×; uk-treaties ✓ 3,250 (+14); regnal + regional enumeration moved into the QUEUE (`enum:{type}:{year}` rows → Railway IPs; TNA penalty-boxes the local IP for any sustained enumeration — incident in CHANGE_LOG V20 §4); **asc + mwa were missing from the regional type list since forever** (now seeded).
+- **Email honesty:** TOTAL % labelled "of ENUMERATED universe" + unenumerated-sources list.
+
+**POST-PUSH (done same session):** canaries PASSED from Railway (committees-api CF-free — blocker dead); breaker cleared + 2,538 portal rows retired; seeded tax-tribunals 13,037 / lawcom 240 / nao 2,755 / EN 560 + EM 10,864 / tna-enum 1,246 (+ si-2010plus enum 17 — **NEW finding: si-2010plus holds only 5,899 distinct instruments; the V12 "2015–2026 reseed" never ran**); licence sweep re-run. Committees (~59k of 193k) + NI (~1.3k) seeders are checkpointed — rerun their seed scripts to resume if they stopped short.
+
+**IN FLIGHT / NEXT SESSION:**
+1. **retained-eu** still draining (~93k pending at close) → ✓ re-baseline at drain (playbook §1c).
+1b. **Committees fully seeded queue-driven** (Publications + Oral complete; WrittenEvidence via `list:` rows from Railway — commit `6e30c54`). **NI seeder resume** from checkpoint (judiciaryni hard-cut the local IP at page 66; 1,279 of ~5,900 seeded — give it the list-row treatment if it keeps failing). **si-2010plus ✓ at enum drain, then re-run `seed-explanatory-queue.ts`** (idempotent — newly-found SIs need EM rows).
+2. **ukpga regnal enum drain** → run `v19-cleanup-ukpga-calendar.ts` (5,840 chrome + 1,057 dead markers) → primary-acts-pre-2000 ✓.
+3. **regional enum drain** → ✓ re-baseline.
+4. New corpora ✓ at drain: committees-reports/evidence, tax-tribunals, lawcom, nao-reports, ni-judgments, explanatory-notes/-memoranda, building-regs (21), planning-policy (64).
+5. Re-run `v20-licence-backfill.ts` after the drains (sweeps any NULL stragglers).
+
+**DECISIONS WAITING ON CHARLIE (V20 additions):**
+- **FCL Open Justice Licence v2.0 EXCLUDES computational analysis** (indexing/bulk/ML). Apply for TNA's computational-analysis licence: caselawlicence@nationalarchives.gov.uk (pairs with the BAILII email errand).
+- **FCA Handbook**: reproduction requires an FCA licence agreement (fca.org.uk/legal) — 3,661 sections flagged `fca-restricted`.
+- **pwdata licence backfill** (8.8M rows ≈ 4–5GB churn) — run or leave to the map?
+- **Scottish courts**: open scotcourts.gov.uk/judgments/ with browser devtools → Network tab → copy one `api.pa.web.scotcourts.gov.uk` request's headers (the auth key) → unblocks the build.
+- **written-answers/-statements legacy month-blobs** (272 rows, the tsvector-1MB offenders): delete?
+- Carried from V19: OECD (position now logged in CHANGE_LOG V20 §2 — confirm), historic tax tribunals (now BUILT), committees local-fetch (MOOT if the API canary passes).
+
+---
+
+## PREVIOUS STATE — V19 (P1 TO 100% + PARLIAMENTARY RECORD + TAX COMPLETENESS)
+
+**Active branch:** Main. **Sprint:** V19 (SPRINT_V19_BRIEF.md, archived at sprint close). Politeness doctrine now governs all rates: **a 5xx storm is a rate signal — halve and document** (playbook §1b). Three sources were halved this sprint: twfy-pwdata 1000ms/5, govuk-content 300ms/5, local TNA enumeration floor 500ms.
+
+**DONE + ✓ (measured denominators):**
+- **Parliamentary record COMPLETE** — 297 failed pwdata rows retried clean at halved rate; all 7 denominators ✓ at measured: **8,800,253 compiled sections** (V18 prediction ~9.8M, range 8–11M: within range). wrans "60.9%" was estimate error.
+- **hmrc-manuals ✓** 69,136 + 16,061 classified residue (contents/index nodes — NOT missing content; brief's "zero-section rows" classified).
+- **hmrc-ancillary ✓ 457** (RCBs/SoPs/ESCs/VAT+excise notices, NEW P1) · **tax-treaties-dta ✓ 324** (NEW P1) · **uk-treaties unblocked** → gov.uk international_treaty (1,519 seeded P3; FCO client in attic).
+- **bailii-eat / bailii-tribunals / bailii-privy-ni retired** → FCL court feeds + et-decisions. NI stays parked.
+- **tna-caselaw ✓ 74,896** — all 180 FCL court pages processed under V19 code; per-court tribunal coverage proven (+22 sections; the global feed already had ~everything FCL holds).
+- **lda-commonsoralquestions ✓ 69,529** — closed; ~500 delta vs LDA totalResults is source-side phantom (deprecated API; full text in pwdata).
+- **si-pre-2010 ✓ 174,552 + 1 classified residue** — AI-era failed relics fixed/removed; 1958 SI classified metadata-only.
+- **et-decisions (NEW P3):** 131,668 gov.uk ET decisions seeded; resumed post-cooloff with zero new 429s (~125k pending, ~11h).
+
+**IN FLIGHT / POST-PUSH CHECKLIST:**
+1. ✅ V19 code deployed (pushed 16:48; the 18:46 Ops-liveness `serviceInstanceRedeploy` built from post-push Main — running since ~18:48 with the rate-limiter fix + 429/503 suspend).
+2. ✅ gov.uk cooloff observed (4.4h quiet); breaker cleared, 117,781 blocked unparked + 8,554 429-failed reset (et-decisions + uk-treaties) — 11 Jun ~20:55.
+3. ✅ 180 court-page rows reset to pending; `si-pre-2010:uksi/1958/1156` requeued.
+4. ⏸ **`v19-seed-ukpga-regnal.ts` DEFERRED to next session** — TNA has penalty-boxed the LOCAL IP after three enumeration runs today (instant 429 backoff to 16s even at a 1000ms floor; process killed by PID, verified dead). Run tomorrow with `TNA_THROTTLE_FLOOR_MS=1000`; sanity-check the enumerated universe (~10k+ acts expected — a visibly small count means TNA was still throttling; the script is single-shot, rerun it). Also note the seeder requeued `si-pre-2010:uksi/1958/1156` already (done).
+5. **retained-eu: SEEDED + RUNNING** — true universe **~153k instruments** (not V18's ~33k; playbook §8). ~154k rows seeded (idempotent union of two enumeration runs — incl. an orphaned first run, see playbook's Windows pipeline-kill pattern); ~36h of TNA fetching at 200ms/10. ✓ re-baseline at drain (the 140k "phantom" may land close — 93% shells).
+6. **At each remaining drain:** re-baseline ✓ (playbook §1c) — **retained-eu** (~36h; re-measure, the 140k may land close), **et-decisions + uk-treaties** (~11h gov.uk), and after the deferred regnal pass: **primary-acts-pre-2000** (`v19-cleanup-ukpga-calendar.ts` deletes the 5,840 chrome-boilerplate rows + 1,057 dead calendar markers, then ✓). si-pre-2010 / lda-oral / tna-caselaw already ✓ (11 Jun evening).
+7. **regional:** enumerate the 7-type universe with `listActEntries` (politeness backlog deferred it); re-baseline the ~160k estimate with evidence.
+
+**INCIDENT LOG (this sprint):** gov.uk 429 storm exposed a latent V17 race — idle loops raced un-consumed tokens; instant failures ran govuk-content at 24 fails/s against a configured 3.3/s, keeping the penalty box alive. Fixed (reserve-then-claim + suspend-on-429/503). The breaker contained it. Full account: CHANGE_LOG V19 + playbook §8.
+
+**DECISIONS WAITING ON CHARLIE:**
+- **OECD MTC/TPG:** pre-Jul-2024 content is CC non-commercial — plausibly fine for us, but seeding needs sign-off (CHANGE_LOG §3.4).
+- **Historic tax tribunals** (financeandtax.decisions.tribunals.gov.uk): alive, April 2003+, ASP.NET postback scraping — build go/no-go.
+- **Committees** (carried from V18): Railway IP CF-blocked; local fetch / proxy / retire.
+
+### The three layers (V17 doctrine)
+- **R2** = corpus text, permanent, zero egress.
+- **Neon** = metadata + search index + queue (`ingest_queue`, `corpus_sections`, `source_status` NEW, `ingest_service_state` NEW, etc).
+- **Railway** = transient compute only: `Ingest` + `Ops` (+ `scrutinise-db` for the web app — ingest never touches it).
+
+### Services (the fleet is gone — 23 containers deleted by Charlie 10 Jun)
+- **`Ingest`** (`a7f4d75f…`, start: `npm run worker` → `workers/ingest-pool.ts`): single process, `WORKER_CONCURRENCY` (default 20) claim loops, shared pg.Pool (max 10), in-process token-bucket rate limiting, per-loop error isolation, 5-min row timeout. **Exit-on-empty:** 3 empty sweeps × 30s → exit(0), service stays stopped, bills nothing. Heartbeat → `ingest_service_state.last_beat` every 30s. No DATABASE_URL anywhere in its import graph (grep-proven).
+- **`Ops`** (`f3397bee…`, start: `npm run scheduler` → `ops.ts`): merged scheduler+monitor, Neon only. Hourly: reaper, census, snapshots, cleanup, pwdata daily reseed, progress email (now with INGEST SERVICE state, sections-vs-rows divergence warning, persistent 🔴 breaker ISSUES). Every 15 min: circuit breakers + liveness (starts `Ingest` via `serviceInstanceRedeploy` when pending > 0 and heartbeat stale; 15-min cooldown).
+
+### Circuit breakers (the V17 renewal — deterministic, no auto-retry ever)
+- Failure breaker: 5 consecutive failures → trip. Zero-output breaker: ≥25 done rows with 0 section growth → trip.
+- On trip: pending rows parked as `status='blocked'`, persistent email ISSUES line. Manual clear SQL in INGEST_PLAYBOOK §8.
+- `committees-portal` is already tripped (correctly — CF 403, known since V15/V16).
+
+### Queue state (10 Jun 2026, morning)
+- 0 pending | 80,499 done | 2,538 failed (all committees-portal, parked behind breaker) | 275 skipped
+- corpus_sections: 884,982. si-2010plus tail finished overnight 9–10 Jun before the fleet was deleted.
+- pwdata current through 2026-06-08/09 (latest TWFY files); ops reseeds new files hourly → liveness starts ingest automatically.
+
+### V17 code changes (key files)
+- NEW: `workers/ingest-pool.ts`, `workers/process-row.ts` (processors extracted verbatim from worker-queue), `ops.ts`, `shared/neon-pool.ts`, `shared/rate-limiter.ts`
+- REWRITTEN: `shared/queue-client.ts` (claim SQL without rate-limit writes), `shared/db-metadata.ts` (Prisma removed), `shared/progress-reporter.ts` (fleet relics removed), `census/live-census.ts` (Neon-only — its queue query had silently pointed at the stale Railway copy since V16)
+- FIXED (latent): pwdata reseed now dedupes against `corpus_sections`, not the queue — the monitor-era version would re-seed the whole archive once cleanup deleted done rows, which under V17 would have kept `Ingest` alive forever.
+- RETIRED to `scripts/attic/v17-fleet/`: worker-queue.ts, worker-main.ts, phase-router.ts, scheduler.ts, monitor.ts, restart-workers-staggered.ts, checkpoint.ts, check-status.ts, cc-monitor.ts, retry-failed.ts, prisma/ (ingest copy), DEPLOY.md
+- `scripts/ingest/package.json`: prisma deps + postinstall removed; `worker`→ingest-pool, `scheduler`→ops.
+
+### Still true / carry-overs
+- Railway curl absent → committees-document rows produce 0 sections until nixpacks curl (V18+ scope).
+- Blocked sources (HUDOC, NAO, uk-treaties, SSRN, BAILII) — out of V17 scope.
+- Railway-DB → Neon web-app migration — future scope.
+
+---
+
+## ⚠️ CRASH DIAGNOSIS — What CC did and why it matters
+
+### Timeline of CC's session (9 Jun 2026, ~17:00–18:00 BST)
+
+CC ran a diagnostic to test whether Railway workers have curl. During this session CC:
+
+1. **~17:23 BST** — Called `deploymentRedeploy(id: "63e9dbbf")` — accidentally redeployed a REMOVED June-4 deployment of worker-1. That old code (pre-Neon) tried to connect to Railway DB directly for queue operations, crash-looped repeatedly with ECONNRESET. This created sustained failed-connection activity against Railway DB.
+
+2. **~17:28–17:47 BST** — Called `serviceInstanceRedeploy` on worker-1 multiple times for the CF test. Each fresh build started a new process.
+
+3. **~17:40 BST** — Ran `restart-workers-staggered.ts` which triggered `serviceInstanceRedeploy` on **all 21 services** (20 workers + scheduler) in batches of 5. This created 21 fresh builds in ~3 minutes. On startup each worker process opens Neon connections. The scheduler additionally opens a Railway DB connection pool via `getPrisma()`.
+
+4. **~17:40–17:46 BST** — Syntax error in test-committees-fetch.ts caused worker-1 to crash-loop on esbuild parse failure (all other workers unaffected — tsx dynamic import not eagerly resolved for them). Cleaned up.
+
+### Root cause of Railway DB crash
+
+**`scheduler.ts` line 82–84 calls `queryFormatBreakdown()` and `queryUnrecognisedFormats()`** — both defined in `db-metadata.ts`, both call `getPrisma()` which creates `new PrismaClient()` using `DATABASE_URL` (Railway PostgreSQL). PrismaClient maintains a persistent connection pool (default: up to 10 connections). This pool stays open for the scheduler's entire lifetime.
+
+After the staggered restart at 17:40, a fresh scheduler instance started, opened a new PrismaClient pool to Railway DB. If the old scheduler instance did not disconnect cleanly, both pools would be open simultaneously. Combined with connection pressure from the June-4 worker-1 crash loop, Railway DB likely hit its connection or memory limit.
+
+**This is the most probable cause.** It cannot be confirmed until Railway DB is back up and `pg_stat_activity` can be queried.
+
+### What CC reported incorrectly
+
+CC said "Workers are running normally" and "19/21 workers SUCCESS" at ~17:46 BST. Both statements were true for Railway deployment status and Neon queue health. CC did NOT check Railway DB health before reporting. Given Railway DB's history of OOM crashes, this was a serious oversight.
+
+### What was discovered during the session (useful for next sprint)
+
+1. **Curl is NOT available on Railway worker containers.** The Railway container (mise + Node.js 22.22.3, Railpack build) has no curl at `/usr/bin/curl`, `/usr/local/bin/curl`, `/bin/curl`, or via PATH. The CLAUDE.md claim "Railway Linux containers have curl by default" is WRONG.
+
+2. **V16.1 committees-document approach has never worked.** All 2,422+ committees-document done rows produced 0 corpus_sections. `fetchPublicationHtml()` silently returns null when curl is absent; `processCommitteeDocument()` marks the row done without error. 2,896 rows tagged with `lastError = 'empty — curl not available in Railway container (V16.1)'`.
+
+3. **`reports-responses` accessible with curl from Charlie's machine, no CF challenge.** Seeder correctly found 1,132 rows (not 9,959 — the ~80-page real extent of the listing). `other-publications` returns CF JS challenge from Charlie's machine; unknown from Railway (test could not run without curl).
+
+4. **Queue nearly exhausted.** At end of session: 1,622 pending (si-2010plus only), 112,600 done. Workers should have finished si-2010plus overnight and be in discovery/idle mode.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — V16
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — V16
+
+| Action | Status | Who |
+|--------|--------|-----|
+| Execute commit-all.sh | ✅ done — `c0c9844`, `6cbf568` | CC |
+| Stop workers (Railway OOM crash did this) | ✅ done — all offline at migration time | — |
+| Run `migrate-queue-to-neon.ts` | ✅ done — 127,380 rows Railway = 127,380 Neon | CC |
+| LDA retirement SQL (Railway + Neon + corpus_targets) | ✅ done — 168 rows each + 2 targets retired | CC |
+| Staggered redeploy 20 workers + scheduler + monitor | ✅ done — 20/21 SUCCESS | CC |
+| Railway DB zero ingest connections verified | ✅ done — 0 pg_node, 9 total (web app only) | CC |
+| **Fix worker-18** — Railway dashboard → ingest-worker-18 → Deploy from Main | ⬜ pending | Charlie |
+| **Resume committees seeder** — see instructions below | ⬜ next session | CC |
+| **Retire old committees-portal rows** — SQL below, run AFTER seeder completes | ⬜ after seeder | CC |
+
+### V16.1 — committees-document approach (9 Jun 2026)
+
+**Root cause diagnosis:** committees.parliament.uk and publications.parliament.uk both block Node.js
+Undici via Cloudflare TLS fingerprinting (JA3), regardless of headers or IP. curl's TLS fingerprint
+IS accepted. Fix: `fetchPublicationHtml()` in committees-portal.ts now uses `spawnSync(curl)`.
+Railway Linux containers have curl by default — workers can fetch from publications.parliament.uk.
+
+**Seeder approach:** `seed-committees-publications.ts` uses curl with a cookie jar (`-c/-b` flags).
+CF tracks session continuity via parliament.uk session cookies. Without a cookie jar, CF challenges
+after 1-2 pages. With cookie jar, sessions stay valid for 100+ pages at 1.5s pace.
+
+**Seeder state (9 Jun 2026 end of session):**
+- committees-reports document rows seeded: **~1,176** (pages 1–~80 of 498)
+- committees-evidence document rows seeded: **0** (not yet started)
+- All 1,176 seeded rows: **done** (workers processed them immediately)
+- Seeder checkpoint: `scripts/ingest/seed-committees-checkpoint.json` — survives session clear
+- Old committees-portal rows: still `failed` — DO NOT retire until seeder completes all pages
+
+**Resume seeder in next session:**
+```
+NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx \
+  --tsconfig scripts/tsconfig.json \
+  scripts/ingest/seed-committees-publications.ts
+```
+The checkpoint resumes automatically. Expect ~25–30 min for remaining reports + ~50 min for evidence.
+Total expected: ~9,959 reports + ~40,794 evidence = ~50,753 per-document rows.
+
+**Retire old committees-portal rows AFTER seeder completes (run on Neon):**
+```sql
+UPDATE ingest_queue
+SET status = 'done', "lastError" = 'retired V16 — replaced by committees-document rows'
+WHERE "sourceType" = 'committees-portal'
+  AND corpus IN ('committees-reports', 'committees-evidence');
+```
+
+### V16 cutover — all done
+
+- Queue migration: 127,380 rows Railway → Neon (exact match)
+- LDA retirement: 168 rows done each DB, 2 corpus_targets retired
+- Workers: 20/21 SUCCESS on Neon queue
+- Railway DB: 0 ingest connections (web app only)
+- Worker-18: stale Railway deploy issue — Charlie: Railway dashboard → ingest-worker-18 → Deploy from Main
+
+### V16 pwdata-wrans coverage confirmed
+- TWFY wrans: **2001-06-21 → 2026-06-08** (current, adds files daily)
+- TWFY lordswrans: **1999-11-18 → 2026-06-08** (current)
+- LDA written questions covers only from ~2009 (API launch) → TWFY has MORE coverage. Clean switch.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED — V15
+
+| Action | Status | Who |
+|--------|--------|-----|
+| Commit and push V15 code | ✅ done — `a0137b6`, `72da2d7`, `3019b0e` | CC |
+| Redeploy all 20 workers + scheduler on V15 | ✅ done — 20/21 SUCCESS (worker-18 retriggered) | CC |
+| Rate limits updated (eurlex→8, lda→2, committees-portal→3) | ✅ done via script | CC |
+| Neon corpus_targets: committees-reports + committees-evidence added | ✅ done; committees-a/b retired | CC |
+| Seed committees queue | ✅ 498 reports rows + 2,040 evidence rows inserted | CC |
+| Reset LDA 524 failed rows | ✅ done (0 rows matched — none outstanding) | CC |
+| Kill reseed-deep.ts local process | ✅ killed PIDs 58060 + 18264 | CC |
+| Verify reseed-deep.ts log | retained-eu: 0 new rows; regional: interrupted mid-nia | CC |
+
+**V15 Railway DB findings:**
+- `max_connections = 100` (not 25 — Starter plan has room)
+- Peak connections with 20 workers: ~46 (well under 100)
+- **Crash cause: OOM, not connection exhaustion.** Railway Postgres container memory-killed under peak concurrent write load.
+- Fix applied: monitor.ts Railway pool cap reduced `max: 3 → 2`
+- Longer-term: upgrade Railway Postgres plan (more RAM) OR migrate ingest queue to Neon
+- **Do NOT run reseed-deep.ts locally again.** Move it to Railway as a one-off service job.
+
+**V14 actions still pending:**
+
+**V13 carry-over (still needed):**
+| Run priority SQL in Railway dashboard Query tab (de-prioritize completed legislation corpora) | ⬜ pending | Charlie |
+| Update sentencing-council corpus_targets: `UPDATE corpus_targets SET blocked=false, blocked_reason=NULL WHERE corpus_key='sentencing-council'` | ⬜ pending | Charlie |
+
+**V12 carry-over (still needed):**
+| Kill local scheduler.ts process: `Stop-Process -Id 22916` (and child 47892) | ⬜ URGENT (if not done) | Charlie |
+| Redeploy `Ingest-scheduler` on Railway (stopped 7 Jun 23:01 UTC) | ⬜ after commit | Charlie |
+| Add `RESEND_API_KEY` to `ingest-monitor` Railway service env | ⬜ pending | Charlie |
+
+**Run classify-no-provisions.ts:**
+```
+NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/classify-no-provisions.ts
+```
+Runs overnight. Checkpoint at `scripts/ingest/classify-no-provisions-checkpoint.json`. Resume by re-running same command.
+
+**Priority SQL (run in Railway dashboard → scrutinise-db → Query tab):**
+```sql
+UPDATE ingest_queue
+SET priority = 5
+WHERE corpus IN ('si-pre-2010', 'si-2010plus', 'primary-acts-pre-2000', 'primary-acts-2000plus')
+  AND status = 'pending';
+```
+
+**No other pending actions from V11 (except RESEND_API_KEY).**
+('fca-handbook:serv', 'fca-handbook', 'serv', 'fca-handbook', 2),
+('fca-handbook:bench', 'fca-handbook', 'bench', 'fca-handbook', 2),
+('fca-handbook:bfsag', 'fca-handbook', 'bfsag', 'fca-handbook', 2),
+('fca-handbook:collg', 'fca-handbook', 'collg', 'fca-handbook', 2),
+('fca-handbook:enfg', 'fca-handbook', 'enfg', 'fca-handbook', 2),
+('fca-handbook:fcg', 'fca-handbook', 'fcg', 'fca-handbook', 2),
+('fca-handbook:fctr', 'fca-handbook', 'fctr', 'fca-handbook', 2),
+('fca-handbook:perg', 'fca-handbook', 'perg', 'fca-handbook', 2),
+('fca-handbook:rfccbs', 'fca-handbook', 'rfccbs', 'fca-handbook', 2),
+('fca-handbook:rppd', 'fca-handbook', 'rppd', 'fca-handbook', 2),
+('fca-handbook:unfcog', 'fca-handbook', 'unfcog', 'fca-handbook', 2),
+('fca-handbook:wdpg', 'fca-handbook', 'wdpg', 'fca-handbook', 2),
+('fca-handbook:m2g', 'fca-handbook', 'm2g', 'fca-handbook', 2)
+ON CONFLICT (id) DO NOTHING;
+```
+
+**V9 carry-over:**
+
+**V9 carry-over — Monitor service details:**
+- Service name: `ingest-monitor`
+- Service ID: `d4945e0c-207a-46ca-aceb-bdc010183cc5`
+- Start command: `npm run monitor`
+- DATABASE_URL + NEON_DATABASE_URL already set via API
+- Repo: Scrutinise/scrutinise-prototype, branch: Main
+- Steps: Railway dashboard → Projects → scrutinise-prototype → ingest-monitor → Settings → Source → connect GitHub → Deploy
+
+**V9 SQL already applied to Neon:**
+- `retired` column added to corpus_targets
+- 4 hansard API corpora marked retired (won't appear in emails)
+- 42 corpus_targets display_labels updated to match Excel
+
+**V9 partial reseeding:**
+- 6,038 primary-acts-pre-2000 items detected with < 3 sections (covers the 1,084 section gap)
+- Monitor will auto-reseed these on first cycle once deployed
+
+---
+
+## KEY ARCHITECTURE STATE (as of V16 + V16.1)
+
+- **Queue on Neon (V16):** `ingest_queue`, `source_rate_limits`, `specialist_queue`, `scheduler_lock`, `ingest_progress_snapshots` all on Neon. Railway Postgres holds only Prisma app tables.
+- **Connection-per-transaction (V16):** ECONNRESET retry loop removed. Clean exit on DB error → Railway restarts with jitter.
+- **LDA written questions retired (V16):** covered by `pwdata-wrans` (2001–present) and `pwdata-lordswrans` (1999–present).
+- **committees-document (V16.1) — BROKEN on Railway:** All 2,896 done rows from first seeder run produced 0 corpus_sections. Root cause: curl NOT installed on Railway containers. `fetchPublicationHtml()` returns null silently; rows marked done with no content. All tagged `lastError = 'empty — curl not available in Railway container (V16.1)'`. Needs Nixpacks curl installation before workers can produce content.
+- **Seeder completed (10 Jun 2026 — multiple runs):** Best run (with retry-on-timeout): **~1,633 reports + ~55 evidence total rows in Neon** (idempotent; subsequent runs added 0 new). The retry path is essential — ~30% of pages fail first attempt but succeed after 8s retry; without retries only ~89 rows found. `other-publications` listing ends consistently at p1175; ~55 rows is the real accessible extent from residential IP. All rows will produce 0 corpus_sections until curl installed on Railway.
+- **Retirement SQL** (run on Neon AFTER curl installed and workers processing): `UPDATE ingest_queue SET status='done', "lastError"='retired V16 — replaced by committees-document rows' WHERE "sourceType"='committees-portal' AND corpus IN ('committees-reports','committees-evidence');`
+- **committees-portal rows:** 498 reports + 2,040 evidence still `failed`. DO NOT retire until curl installed.
+- **Cloudflare diagnosis (confirmed 9/10 Jun 2026):** `reports-responses` accessible with curl, no CF challenge. `other-publications` mostly exit 28 timeouts from Charlie's residential IP (CF rate-limiting, not JS challenge). Railway IPs unknown. CLAUDE.md claim "Railway Linux containers have curl by default" is incorrect.
+
+## KEY ARCHITECTURE STATE (as of V15)
+
+- **committees portal (V15):** `committees-portal.ts` scrapes `committees.parliament.uk/publications/` with browser User-Agent (Cloudflare bypass). 498 pages × ~20 pubs = 9,959 committee reports. 40,794 other-publications (evidence sessions, oral/written evidence). sourceType: `committees-portal`, max 3 concurrent, 500ms interval.
+- **LDA pageSize fix (V15):** `processLda()` in worker-queue.ts now passes `pageSize=100` for `writtenquestions` corpora at all times (not just 524 fallback). After 3 524 failures (MAX_524_RETRIES), row is marked `specialist-queue: LDA 524 after N attempts — archived`. Monitor no longer resets these rows.
+- **SOURCES email section (V15):** `sendProgressEmail()` now includes SOURCES section showing pending/active/cap per sourceKey. Flags `⚡cap-full` when active == cap with pending work.
+- **INGEST_PLAYBOOK §8 (V15):** Three new patterns: committees portal alternative, LDA 524 fix approach, connection pool exhaustion signature.
+
+## KEY ARCHITECTURE STATE (as of V14)
+
+- **hasNoProvisions classification (V14):** `classifyNoProvisionsItem()` in `tna-legislation.ts` classifies into: commencement | metadata-only | pdf-only | no-provisions. Uses title regex + year < 1980 heuristic + PDF HEAD check. Workers write classified rows to Neon `corpus_sections.availability_status` + `availability_note`.
+- **specialist_queue (V14):** New Railway DB table. Workers insert commencement + pdf-only items for future specialist worker processing. Indexed on `(specialist_type, status)` and `(corpus, status)`.
+- **corpus_sections new columns (V14):** `availability_status TEXT NOT NULL DEFAULT 'full'` and `availability_note TEXT`. Existing rows default to 'full'. Index on availability_status WHERE != 'full'.
+- **fetch() timeout fix (V14):** `withTimeout(ms)` helper added to `tna-legislation.ts`. All fetch calls use AbortController: 30s for text/binary, 10s for HEAD. Workers were hanging indefinitely on old NISR items with no timeout.
+- **Monitor reseed loop fix (V14):** `CORPUS_THRESHOLDS` now has `regional: 1` and `retained-eu: 1`. `reseedPartialItems()` excludes items with `availability_status != 'full'` via second Neon query. Root cause of 36,983 items stuck in false-positive pending state all day.
+- **Queue state after V14 fixes:** 162 pending (lda-lordswrittenquestions only). Workers in discovery mode after these complete.
+
+## KEY ARCHITECTURE STATE (as of V13)
+
+- **Startup jitter (V13):** Random 0–20s delay added as first `await` in `worker-queue.ts main()` before any DB call. Prevents connection storm on simultaneous Railway redeploy. Jitter line: `scripts/ingest/workers/worker-queue.ts` line 65.
+- **sentencing-council (V13):** `listSentencingCouncilGuidelines()` now scrapes `sentencingcouncil.org.uk` directly (embedded JSON, ~381 guidelines across crown-court + magistrates pages). Was returning 0 results via GOV.UK search API.
+- **nilawcom (V13):** `listNiLawComReports()` now uses BFS crawl (homepage + completed_projects → individual report pages → PDFs). Was returning 0 PDFs from homepage (no direct PDF links there).
+- **Priority SQL pending (V13):** SQL to set si-pre-2010/si-2010plus/primary-acts rows to priority 5 pending Charlie running it in Railway dashboard.
+- **CLAUDE.md + INGEST_PLAYBOOK.md (V13):** Railway Operations section added to CLAUDE.md; 3 new failure patterns added to INGEST_PLAYBOOK §8.
+- **Duplicate email root cause (V12):** LOCAL scheduler.ts process (PIDs 22916/47892 on Charlie's machine) — kill before restarting Railway scheduler. See §IMMEDIATE ACTIONS.
+- **Railway scheduler:** DOWN since 2026-06-07T23:01 UTC (scheduler_lock confirms). Needs redeploy after commit.
+- **CORPUS_THRESHOLDS (V12):** Per-corpus partial-item reseed thresholds in `monitor.ts` — replaces single global threshold of 3. Prevents false-positive reseeding of short pre-2000 Acts.
+- **primary-acts-pre-2000 (V12):** 6,038 false-positive pending rows reset to done. 0 genuine gaps. Queue now: 0 pending.
+- **hmrc-tiins (V12):** COMPLETE — 791 sections; est_is_confirmed=true in corpus_targets.
+- **hmrc-codes-guidance (V12):** COMPLETE — 14,067 sections; est confirmed (was 640,000). GOV.UK search API returns document pages not sub-pages.
+- **LDA timeout (V12):** `LDA_FETCH_TIMEOUT_MS` 45s → 90s in `lda-parliament.ts`. 1,402 failed/timed-out rows reset to pending. lda-commonswrittenquestions: 1,232 pending; lda-lordswrittenquestions: 132 pending.
+- **Monitor auto-reseed (V12):** `reseedExhaustedCorpora()` + `seedPwdataCorpus()` added to monitor.ts — auto-seeds new TWFY pwdata files daily when corpus exhausts. No more manual weekly re-run needed for pwdata.
+- **hasNoProvisions skip:** ADDED (V11) — workers need redeploy to pick up.
+- **tna-legislation rate limit:** 10 concurrent workers (V11).
+- **Monitor alerts:** ADDED (V11) — requires `RESEND_API_KEY` on `ingest-monitor` service.
+- **pwdata corpora:** ALL COMPLETE (V11) — monitor auto-reseeds daily files now.
+- **Queue state (8 Jun 2026):** ~31,110 pending | 11 claimed | 92,111 done | 0 failed | 237 skipped
+- **Pending by corpus:** si-pre-2010: 20,533 | regional: 4,859 | retained-eu: 2,452 | si-2010plus: 3,228 | lda-commonswrittenquestions: 1,232 | lda-lordswrittenquestions: 132 | (primary-acts-pre-2000: 0)
+- **FCA Handbook:** COMPLETE (V10) — 3,661 sections; est_is_confirmed=true
+- **Monitor:** RUNNING — loops every 15 min; alert + auto-reseed functionality added V11/V12
+- **Restart policy:** ON_FAILURE / max 3 retries on all 22 services (V10)
+- **Retired corpora (Neon):** `fca-publications`, `fca-regulators` retired+blocked (V10); `hansard-*-a/b` retired (V8)
+- **source_rate_limits actual columns:** `sourceKey`, `intervalMs`, `lastIssuedAt`, `suspended`, `suspendedUntil`, `updatedAt`, `isComplete`, `maxConcurrentWorkers`
+- **Neon corpus_sections:** ~785,099+ rows — growing as SI/regional/LDA process
+- **Railway DB:** ~2.0GB of 20GB
+
+---
+
+## KEY ARCHITECTURE STATE (as of V3)
+
+- **Neon corpus_sections:** 751,949 rows — no compiledText column (dropped V3)
+- **Neon corpus_targets:** 39 rows — email denominators; edit via SQL to update estimates
+- **Railway corpus_sections:** 0 rows (TRUNCATEd V3)
+- **Railway DB:** ~0.8GB of 20GB — target maintained
+- **R2 compiled text:** 100% coverage verified — all compiledText is in R2 at r2Key paths
+- **Workers:** 20 active, on pwdata-* (priority 3) — priorities 1/2 fully done
+- **Neon DB limit:** `DB_LIMIT_GB = 10` in progress-reporter.ts — update if on Scale plan (50GB)
+
+---
+
+## DIAGNOSTIC SNAPSHOT — 5 Jun 2026 (run ~01:00 UTC)
+
+### DB state (Railway corpus_sections)
+
+**Total rows: 732,942 — DB: 4,824 MB (4.7 GB of 20 GB) — table: 581 MB**
+
+compiledText column: 665,707 rows populated, ~1,617 MB raw text. This is the primary volume driver — by design for FTS (schema: "First 10,000 chars; full text in R2"), but at 732k rows it dominates the DB.
+
+| corpus | rows |
+|--------|-----:|
+| si-pre-2010 | 174,507 |
+| regional | 109,695 |
+| primary-acts-2000plus | 90,860 |
+| tna-caselaw | 74,730 |
+| primary-acts-pre-2000 | 69,501 |
+| lda-commonsoralquestions | 65,806 |
+| si-2010plus | 60,485 |
+| eur-lex | 18,973 |
+| pwdata-debates | 18,937 |
+| retained-eu | 14,390 |
+| hmrc-codes-guidance | 13,425 |
+| pwdata-wrans | 6,429 |
+| pwdata-lords | 5,448 |
+| pwdata-westminster | 3,860 |
+| college-of-policing | 1,944 |
+| building-regs / hmrc-tiins / planning-policy | 791 each |
+| ots-reports | 497 |
+| oecd | 462 |
+| scotlawcom | 350 |
+| written-answers | 142 |
+| written-statements | 128 |
+
+**Zero rows for:** lda-lordswrittenquestions, lda-commonswrittenquestions, lda-commonsdivisions, lda-lordsdivisions, uk-treaties, echr-hudoc, fca-regulators, sentencing-council, nao-reports.
+
+### Queue state (ingest_queue)
+
+**pending: 0 — claimed: 409 (stale from crash) — done: 106,945**
+
+Queue is **fully exhausted**. Workers processed all remaining pending rows in the ~1.5h they ran after recovery (20:43–21:11 UTC on 4 Jun). 409 claimed rows are stale locks — will expire. No new ingest can happen until the queue is reseeded.
+
+**Open question:** `lda-commonswrittenquestions` (expected ~619k records across 1,238 queue pages) shows 0 DB rows and 0 R2 keys. Was it processed when DB was full (inserts silently failed)? Or was it never seeded? Needs investigation before next seed run.
+
+### R2 state (scrutinise-legislation bucket — 41 top-level prefixes)
+
+Legislation corpora (CLML) store 2 keys per section (raw.xml + compiled.txt), hence ~2× ratio. Text-only corpora (pwdata, LDA, etc.) store 1 key per section.
+
+| prefix | R2 keys | DB rows | ratio |
+|--------|--------:|--------:|------:|
+| si-pre-2010/ | 331,925 | 174,507 | ~1.9× |
+| regional/ | 216,179 | 109,695 | ~2.0× |
+| primary-acts-2000plus/ | 174,079 | 90,860 | ~1.9× |
+| caselaw/ | 149,702 | 74,730 | ~2.0× |
+| si-2010plus/ | 118,782 | 60,485 | ~2.0× |
+| lda-commonsoralquestions/ | 65,813 | 65,806 | 1.0× |
+| retained-eu/ | 26,704 | 14,390 | ~1.9× |
+| hmrc-codes-guidance/ | 26,659 | 13,425 | ~2.0× |
+| eur-lex/ | 18,973 | 18,973 | 1.0× |
+| pwdata-debates/ | 18,945 | 18,937 | 1.0× |
+| pwdata-wrans/ | 6,429 | 6,429 | 1.0× |
+| pwdata-lords/ | 5,448 | 5,448 | 1.0× |
+| pwdata-westminster/ | 3,860 | 3,860 | 1.0× |
+
+Key naming: caselaw is stored under `caselaw/` (not `tna-caselaw/`). LDA, pwdata, eur-lex: compiled.txt only. Legislation: raw.xml + compiled.txt per section.
+
+Legacy R2 prefixes from old Neon pipeline (not in Railway DB): `ukpga/`, `uksi/`, `eudn/`, `eudr/`, `eur/`, `anaw/`, `asp/`, `asc/`, `nia/`, `nisi/`, `nisr/`, `ssi/`, `wsi/`, `operational/` — these correspond to the 914,274 Neon legacy sections.
+
+### Root cause of volume fill (confirmed)
+
+`processPwdata` (and all other source clients) calls both `r2Put()` AND `upsertSection({ compiledText: compiled.slice(0, 10_000) })`. The `compiledText` field stores up to 10KB per row in Railway DB by design — intentional for FTS. At ~730k rows this is 1.6GB of text in Postgres.
+
+**This is an architectural decision to discuss with CCh.** Options:
+1. Remove compiledText from corpus_sections entirely — rely on R2 for full text, FTS via tsvector trigger only (already maintained)
+2. Reduce slice to 2,000 chars (enough for FTS lexemes, less storage)
+3. Accept it and plan for larger Railway volume as corpus grows
+
+Hourly cleanup (added V3) handles snapshot + done-row accumulation but does NOT address compiledText growth. That requires a schema/code decision.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
+
+### V2 Part 1 — TWFY pwdata client (4 Jun 2026)
+
+**Directory probe verified before building.** Three mismatches from brief:
+- `lords/` → actual path `lordspages/`, prefix `daylord{date}{a/b}.xml`
+- `westminster/` → actual path `westminhall/`, prefix `westminster{date}{a/b}.xml`
+- `wrans/` → filename prefix is `answers` not `wrans`
+
+| Corpus | Dir | Files | Coverage |
+|--------|-----|-------|----------|
+| pwdata-debates | `debates/` | 19,999 | 1919–present |
+| pwdata-lords | `lordspages/` | 5,663 | 1999–present |
+| pwdata-wrans | `wrans/` | 6,857 | 2001–present |
+| pwdata-westminster | `westminhall/` | 3,932 | 2000–present |
+
+All directories return HTTP 200. Files current through 2026-06-03. XML parseable — speech format for debates, ques/reply format for written answers.
+
+**Files created/modified:**
+- `scripts/ingest/sources/twfy-pwdata.ts` (new — source client)
+- `scripts/ingest/seed-pwdata-queue.ts` (new — seeder, ~36k rows)
+- `scripts/ingest/workers/worker-queue.ts` (processPwdata added)
+- `scripts/ingest/shared/progress-reporter.ts` (CORPUS_MANIFEST updated — Hansard/WA entries now point to pwdata corpora)
+- `scripts/ingest/seed-rate-limits.ts` (twfy-pwdata 500ms added)
+- `scripts/ingest/shared/discovery.ts` (pwdata corpora added to SINGLE_PASS_CORPORA + ORDER)
+
+**Post-deploy actions needed:** ~~Run `seed-pwdata-queue.ts`~~ ✅ done | ~~Run `seed-rate-limits.ts`~~ ✅ done | Redeploy workers (Charlie).
+
+---
+
+### V2 Part 2 — LDA 524 fallback + UK Treaties fix (4 Jun 2026)
+
+**LDA 524 fallback:** `fetchLdaPage` now retries with `pageSize 100` on HTTP 524 when original size > 100. Prevents permanent failure; accepts partial page coverage over zero. 1,416 LDA failed rows reset to pending.
+
+**UK Treaties silent failure:** Root cause was `filter_organisations[]=` sent as literal `[]` in URL — gov.uk API returns 422. Fix: `URLSearchParams` encodes as `%5B%5D`. Query now returns 1,104 FCDO treaty results. 2 done rows reset to pending.
+
+**LDA Divisions content:** Each record = title + date + UIN only (no narrative). Low text volume but descriptive titles retained; already priority 3.
+
+**Queue state after all V2 post-deploy actions:** 37,869 pending | 270 claimed | 70,730 done | 0 failed
+
+**V2 Part 3 — NPPF/PPG + Building Regs (4 Jun 2026)**
+- `listPlanningPolicyNppf()`: enumerates PPG collection 63 HTML chapters (~60KB text each) + NPPF page
+- `listBuildingRegs()`: enumerates 21 Approved Documents (description text; PDFs future work)
+- V1 blocked: Erskine May, Bill Pages, HoC Library all CF 403 — not built
+- Seed rows inserted: `planning-policy:__index`, `building-regs:__index`
+
+**All post-deploy actions complete:**
+- ~~`commit-all.sh`~~ ✅ pushed (commits `a526de9..3b0b676`)
+- ~~Redeploy workers~~ ✅ all 20 redeployed via Railway API
+- **Redeploy scheduler** — Charlie to do manually (or CC can trigger via API if needed)
+
+---
+
+### Post-sprint monitoring (4 Jun 2026 ~02:00 BST)
+
+Queried Railway DB directly after push. **All V1 post-deploy actions still pending** — Charlie has not yet run migration or redeployed.
+
+| Check | Result |
+|-------|--------|
+| `scheduler_lock` table | Does not exist — `prisma migrate deploy` not yet run |
+| Per-worker snapshots | 0 rows — workers not yet redeployed (still running pre-V7 code) |
+| Last scheduler run | 2026-06-03T23:56 UTC (corpus-level snapshots only, no per-worker breakdown) |
+| Queue state | 955 pending / 257 claimed / 70,709 done / **491 failed** (LDA 524s accumulating — reset SQL still needed) |
+| `acquireSchedulerLock()` fallback | Working correctly — returns `true` (proceeds without lock) when table missing |
+
+Next hourly email will still show the old per-corpus format (no per-worker rows) until Charlie redeployes.
+
+---
+
+### What just happened (4 Jun 2026 V1)
+
+1. **Scheduler email deduplication (PART 2)** — Added `scheduler_lock` table + `acquireSchedulerLock()`. Scheduler acquires a DB-based mutex at the start of each `run()`. If another instance holds the lock (set within last 50 minutes), the run is skipped. Uses random per-startup ID (not process.pid — all Railway containers are PID 1). Migration: `20260604010000_scheduler_lock`.
+
+2. **Source audit (PART 3)** — 50 sources tested live. Full results in CHANGE_LOG. Key: **FCA Publications accessible** (162KB HTML), Sentencing Council, College of Policing, Ofcom/Ofgem/Ofsted all accessible. FCA Handbook (JS SPA), ECHR, SSRN, HoC Library, Erskine May all blocked.
+
+3. **Stalled source diagnoses (PART 4)**:
+   - *HMRC*: Single `__index` row stuck claimed for 26h (worker 8). Root cause: `processHmrc` runs 6 generators (~17k items) in one claim — killed by Railway SIGTERM. **Reset SQL in post-deploy actions.**
+   - *LDA commonswrittenquestions*: 388 failures with HTTP 524 (Cloudflare timeout). Fix applied: retry logic added to `fetchLdaPage`. **Reset SQL in post-deploy actions.**
+   - *SI 2010+*: Queue exhausted (5,813/5,824 done). Not stalling — needs reseeding for 2015–2026 gap.
+
+4. **Worker-2 build failure (PART 1)** — Root cause: Railway retrying an old deployment (commit `4f9cc389`) with Nixpacks + old postinstall path. Worker-2 IS running (SUCCESS at 22:47). Fix: Charlie triggers fresh "Deploy" from Main in Railway (NOT "Redeploy"). Stops hourly spam.
+
+5. **New source clients (PART 5)** — Added `listFcaPublications()`, `listSentencingCouncilGuidelines()`, `listCollegeOfPolicing()` to gov-scraper.ts (GOV.UK search API by org). Wired into processGovUk switch + processRow dispatcher. Queue seeds added to queue-populator.ts.
+
+6. **LDA retry fix (PART 4 fix)** — `fetchLdaPage` now retries on HTTP 524/502/503/504 (up to 3 retries, 3s×attempt backoff). 388 failed rows need reset to pending (SQL in post-deploy actions).
+
+7. **TWFY pwdata discovery (PART 6)** — `theyworkforyou.com/pwdata/scrapedxml/` is freely accessible. `debates/` has Commons Hansard XML from 1919 to present (~431KB/day, daily files). `wrans/` has Written Answers from 2001+ (3,259 files). This supersedes all other Hansard ingest approaches. **Do not build yet — awaiting CCh review.** See CHANGE_LOG for full findings.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
+
+### V3 — all complete ✅
+
+| Action | Status |
+|--------|--------|
+| Railway PostgreSQL restarted | ✅ CC via Railway API |
+| All 20 workers redeployed | ✅ all SUCCESS by ~20:43 UTC 4 Jun |
+| Scheduler redeployed with DB size + hourly cleanup | ✅ commit b0a7a7d live |
+| Hourly cleanup running | ✅ scheduler deletes old snapshots + done rows every cycle |
+| DB size in email | ✅ every hourly email now shows %, warns at 80%/90% |
+
+**Remaining decision for CCh:** What to do about `compiledText` (see diagnostic snapshot above). This is the root cause of volume fill — not a code bug, an architectural choice.
+
+**Open investigation:** `lda-commonswrittenquestions` — 0 rows in DB and R2 despite being seeded. Determine if queue rows exist (check failed count), and whether inserts failed silently when DB was at capacity.
+
+### V1 post-deploy (all required before workers pick up new sources)
+
+1. **`npx prisma migrate deploy`** — Apply `20260604010000_scheduler_lock` migration
+2. **Reset stuck HMRC row:**
+   ```sql
+   UPDATE ingest_queue SET status='pending', "claimedBy"=NULL, "claimedAt"=NULL 
+   WHERE corpus='hmrc-codes-guidance' AND status='claimed';
+   ```
+3. **Reset LDA 524 failures:**
+   ```sql
+   UPDATE ingest_queue SET status='pending', "lastError"=NULL, "claimedBy"=NULL 
+   WHERE corpus='lda-commonswrittenquestions' AND status='failed';
+   ```
+4. **Fix worker-2 build loop** — Railway dashboard → ingest-worker-2 → Settings → trigger a new "Deploy" from Main branch (not "Redeploy" of existing deployment). This uses fresh commit + empty railway.json → RAILPACK builder → succeeds.
+5. **Redeploy workers + scheduler** — So LDA retry fix and scheduler lock go live.
+6. **Seed new source rows** — Run `tsx scripts/ingest/queue-populator.ts` (adds nao-reports, fca-publications, sentencing-council, college-of-policing seed rows — safe to re-run, ON CONFLICT DO NOTHING).
+
+### V7 (still pending)
+- **Manually redeploy workers + scheduler** in Railway dashboard — so containers pick up `writeWorkerSnapshot()` call.
+
+### V5 (still pending)
+- **Register TWFY API key** at theyworkforyou.com/api/key. Add `TWFY_API_KEY` to Railway env.
+- **Run `seed-twfy-queue.ts`** after key is added.
+- **Review data access request drafts** in `docs/data-access-requests/`.
+
+---
+
+## ARCHITECTURE SNAPSHOT (4 Jun 2026 — post V1)
+
+### What just happened (3 Jun 2026 V7 post-deploy — all seeding and SQL actions complete)
+
+All V6/V7 pending actions now done:
+- **`prisma migrate deploy`** ✅ — `workerId` column live on Railway DB
+- **`seed-rate-limits.ts`** ✅ — 16 entries, including `lda-parliament` (200ms) and `fca-publications` (300ms)
+- **`seed-lda-queue.ts`** ✅ — 1,602 LDA queue rows inserted (5 datasets seeded)
+- **EUR-Lex queue reset** ✅ — 50 done rows → pending (workers will retry with SPARQL API)
+- **Format backfill** ✅ — 688 null `formatFound` rows fixed (echr-hudoc/eur-lex/fca → html); 695 → 7 remaining nulls
+- **Queue health:** 1,652 pending / 200 claimed / 70,560 done — workers actively picking up LDA + EUR-Lex
+- **ONE remaining action (Charlie):** Manually redeploy workers + scheduler in Railway dashboard so `writeWorkerSnapshot()` is active and next email shows per-worker throughput
+
+### What just happened (3 Jun 2026 V7 — Worker-ID throughput + FCA status)
+
+1. **Worker throughput now by worker ID** — Workers write their own snapshots to `ingest_progress_snapshots` (with `workerId` column, new migration). Every 50 rows processed, each worker records `sectionsCompiled` (actual upsertSection calls). Email now shows "Worker 1  si-2010plus  4,230 /hr  ████  87% eff" — sorted numerically. Workers with no recent activity don't appear.
+
+2. **FCA status corrected** — `blocked: true` removed from FCA Handbook entry. Since queue rows exist (failed status), it auto-shows `⚠️ failing` rather than `⛔ blocked`. FCA Publications placeholder added (shows "not started" — V8 build scope).
+
+3. **Duplicate scheduler confirmed resolved** — Railway API: one `Ingest-scheduler` service, one `loop()` call. All 20 workers + scheduler SUCCESS at 22:07 post-V6b.
+
+4. **ACTION NEEDED (Charlie):** `npx prisma migrate deploy` in `scrutinise-web/` after push (adds `workerId` column). Then redeploy workers and scheduler.
+
+5. **SQL backfill (informational):**
+   ```sql
+   UPDATE ingest_queue SET format = 'clml' WHERE format IS NULL AND status = 'done'
+     AND (corpus LIKE '%primary-acts%' OR corpus LIKE '%si-%' OR corpus LIKE '%regional%');
+   UPDATE ingest_queue SET format = 'html' WHERE format IS NULL AND status = 'done' AND corpus = 'tna-caselaw';
+   ```
+
+### What just happened (3 Jun 2026 V6b — Worker crash-loop fix)
+
+Workers 6, 9 (and others) were crash-looping via self-discovery: when their primary corpus was exhausted, they walked `DISCOVERY_CORPUS_ORDER` and hit TNA legislation corpora. `discoverTnaLegislation` triggered a full historical scan (`listActIds('ukpga', 1267, 1999)` = 733 sequential TNA HTTP calls). Railway SIGTERM'd the container at ~10 min. Worker restarted. Loop repeated.
+
+**Fix:** `discoverTnaLegislation` now:
+- Returns [] immediately for historical-only corpora (`yearMax < currentYear - 1`)
+- For ongoing corpora, checks only the last 2 years inline (`checkFrom = max(yearMin, currentYear - 1)`)
+- Warns in logs if queue is genuinely empty (don't trigger full scan inline — use `reseed-si-gaps.ts`)
+
+`UNDER_SEEDED_THRESHOLD` logic and `needsFullScan` path removed entirely.
+
+### What just happened (3 Jun 2026 V6 — EUR-Lex SPARQL fix + LDA Parliament)
+
+1. **EUR-Lex unblocked via CELLAR SPARQL** — `search.html?format=json` now returns HTML (SPA redesign). Fixed: use `publications.europa.eu/webapi/rdf/sparql` (no auth). Confirmed: 232,988 series-3 CELEX IDs enumerable; `fetchDocumentText` returns full text (GDPR: 350KB). EstSections updated 80k→232k.
+   - **ACTION NEEDED (Charlie):** Reset existing EUR-Lex done rows: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
+
+2. **FCA Handbook confirmed truly blocked** — Every URL (including /sitemap.xml) returns same JS SPA shell. Explicit "JavaScript disabled" message. No rule text in initial HTML. FCA Publications (fca.org.uk/publications) is a viable V7 corpus but requires scraper build.
+
+3. **LDA Parliament integrated** — 5 datasets confirmed, 799K records across 1,602 queue pages:
+   - Commons Oral Questions: 69,852 records (140 pages)
+   - Lords Written Questions: 103,137 records (207 pages)
+   - Commons Written Questions: 618,599 records (1,238 pages)
+   - Commons Divisions: 5,553 records (12 pages)
+   - Lords Divisions: 2,089 records (5 pages)
+   - `lda-parliament.ts` source client built; `processLda()` added to worker-queue.ts; seeder written.
+   - **ACTION NEEDED (Charlie):** Run `seed-lda-queue.ts` after deploy to seed 1,602 queue rows.
+   - **ACTION NEEDED (Charlie):** Run `seed-rate-limits.ts` to register `lda-parliament` rate limit (200ms).
+
+4. **CORPUS_MANIFEST updated** — EUR-Lex unblocked (blocked→not blocked), estSections 80k→232k. 5 new LDA entries added at correct priorities. FCA comment updated with V6 confirmation.
+
+### What just happened (3 Jun 2026 V5 — Hansard alternative + blocked sources)
+
+1. **TWFY client built** (`theyworkforyou.ts`): TheyWorkForYou API confirmed accessible from Railway (status 200, needs API key only). Source client + worker route + queue seeder all built. **ACTION NEEDED:** Register for TWFY API key at theyworkforyou.com/api/key, add `TWFY_API_KEY` to Railway env, then run `seed-twfy-queue.ts` (~4,700 monthly rows for Commons+Lords+Westminster Hall).
+
+2. **FCA, ECHR, EUR-Lex blocked in manifest**: All APIs confirmed non-functional from Railway environment. Marked `blocked: true` — will show ⛔ blocked in email instead of ⚠️ failing.
+
+3. **⚠️ failing state added to email**: Sources with queue rows but 0 corpus_sections now show `⚠️ failing` — visible signal that something is broken rather than appearing at 0%.
+
+4. **Scheduler duplicate**: Not a code bug — two Railway deployments running simultaneously. Fix: manually redeploy `ingest-scheduler` in Railway dashboard to kill old instance.
+
+5. **Data access request drafts**: `docs/data-access-requests/bailii-request.md` and `parliament-hansard-request.md` ready to send.
+
+6. **corpus-census.md §8**: 19 sources with "client needed" added, with URLs for future build sprints.
+
+### What just happened (3 Jun 2026 V4 — caselaw diagnosis + silent failure fixes)
+
+1. **Caselaw `getTotalJudgments()` fixed** — TNA feed reports 7,489 pages but pages 1,500+ are empty. Binary-search now finds true last non-empty page (~1,499). We've ingested all ~74,950 available TNA caselaw judgments. `estSections` updated to 75,000.
+
+2. **Silent failures now surfaced** — `processHansard`, `processFca`, `processEchr` now mark 'failed' (not 'done') when 0 items are yielded. Root causes confirmed:
+   - FCA: `handbook.fca.org.uk` is a JS SPA — HTML scraping never works. Needs Playwright.
+   - ECHR: `/app/query/results` returns 404 — API endpoint changed Jun 2026. Needs new endpoint.
+   - Hansard: `api.parliament.uk/v1/hansard` returns 403 from Railway IPs. Written Answers/Statements use a different API that works fine.
+
+3. **Reseed running:** UKPGA pre-1963 (6,897 rows) inserted; UKSI 2010-2026 completed; SSI/WSI enumeration rate-limited at 30s/request — still running.
+
+4. **Queue state:** 5,307 primary-acts-pre-2000 pending rows, workers actively processing. Grand total corpus_sections: 587,128.
+
+### What just happened (3 Jun 2026 Sprint 2 — queue gap seeding)
+
+1. **Queue reset (Part 2):** 6,185 rows reset to pending for corpora with 0 corpus_sections (Hansard, FCA, ECHR, Treaties). Root cause: `api.parliament.uk/v1/hansard` returns 403 from Railway IPs — workers looped over 0 debates and marked rows done. FCA/ECHR similar pattern. Workers will retry on next claim cycle; Hansard API access needs Railway investigation.
+
+2. **Queue reseed (Part 1):** `reseed-si-gaps.ts` run: (A) UKSI 2010–2026 enumeration from TNA (adds ~5k–8k new rows for 2015–2026 gap); (B) UKPGA pre-1963: 6,897 new rows inserted from Neon items with 0 sections; (C) SSI+WSI added to regional corpus. Workers now have 13,082+ pending rows — queue is no longer empty.
+
+3. **Worker efficiency email (Part 3):** `queryWorkerThroughput` extended with sourceKey, efficiency %, and ⚡low/🔴critical flags. Each source has theoretical max adjusted by number of workers sharing the token bucket.
+
+4. **Discovery fix (Part 4):** `TNA_CORPUS_META.regional` now includes ssi+wsi. `discoverTnaLegislation` detects under-seeded corpora dynamically (threshold 400 rows/yr) and triggers full historical scan when needed.
+
+### What just happened (3 Jun 2026 late evening — corpus census sprint)
+
+1. **Census scripts created** (`scripts/ingest/census/`): neon-counts.ts, railway-counts.ts, tna-counts.ts, source-counts.ts. Reusable — re-run quarterly.
+
+2. **Census report written** (`docs/corpus-census.md`): Full findings with Neon vs. new pipeline comparison, gap analysis, source API counts.
+
+3. **CORPUS_MANIFEST estSections updated** (`progress-reporter.ts`): Revised 8 estimates based on confirmed data. Most significant: SI-2010+ 300k→120k, Written Statements 50k→17,487. Total corpus estimate revised from ~7M to ~5.3M sections.
+
+4. **Key action items (status):**
+   - ~~SI-2010plus reseed~~ — Done V3 (TNA feed confirms counts were accurate, not a gap).
+   - ~~Hansard/ECHR/FCA R2 backfill~~ — V2–V5: confirmed no R2 content. Workers marked done due to API failures (403/404). Hansard addressed via TWFY (V5). FCA/ECHR blocked.
+
+### What just happened (3 Jun 2026 evening sprint)
+
+1. **RangeError fix (Part 1):** `progressBar()` in `progress-reporter.ts` now clamps `pct` to `[0,100]` and `filled` to `[0,barWidth]`. Email sends were crashing every hour since compiled > estSections for some corpora.
+
+2. **Worker throughput in email (Part 2):** Added `queryWorkerThroughput()` and a new "WORKER THROUGHPUT" section in `sendProgressEmail()`. Shows per-corpus sections/hr rate with mini bar, ⚠️ stalled / ℹ️ idle flags, total rate, stalled list. Uses 3-snapshot pivot to distinguish stalled vs idle.
+
+3. **Diagnostics (Part 3):** Queue is exhausted (0 pending, 120 claimed, 61,829 done). Self-discovery is working — just trickle-rate new items now. Snapshot doubling bug (×2 SUM at 11:54 BST) is a one-time Railway restart overlap, not a systematic code bug.
+
+4. **Sprint workflow (Part 4):** Created `docs/SPRINT.md` as the canonical home for CCh sprint briefs. Added sprint brief protocol to `CLAUDE.md` §12.
+
+5. **Part 5 (read-only):** Confirmed Hansard/ECHR/FCA/Treaties have the R2 backfill gap. See CHANGE_LOG for exact counts and key patterns.
+
+---
+
+## IMMEDIATE ACTIONS REQUIRED (for Charlie)
+
+### ONE REMAINING ACTION (Charlie)
+- **Manually redeploy workers + scheduler** in Railway dashboard — so running containers pick up the `writeWorkerSnapshot()` call added to worker-queue.ts. Auto-redeploy only fires on new pushes; current containers are still running pre-V7 code. After redeploy, next hourly email will show per-worker throughput.
+
+### V7 (all done ✅)
+1. ~~Run `commit-all.sh`~~ — Done (`f912b3a`)
+2. ~~`npx prisma migrate deploy`~~ — Done (workerId column applied)
+3. Redeploy workers + scheduler — **Charlie to do** (see above)
+4. ~~`seed-rate-limits.ts`~~ — Done (16 entries including fca-publications)
+5. ~~Format backfill SQL~~ — Done (688 rows fixed)
+6. ~~Verification SQL~~ — Done (1,652 pending, 200 claimed, workers active)
+
+### V6b (resolved)
+1. ~~Run `commit-all.sh`~~ — Done (`8cc89d9`). Workers stable since 22:07.
+2. **Confirm workers stable** — check Railway logs after redeploy. Workers should no longer SIGTERM. Look for `[worker-N] all sources exhausted — sleeping 5min` instead of crash.
+3. **Reset EUR-Lex queue rows** after redeploy: `UPDATE ingest_queue SET status='pending', "lastError"=NULL, claimed_by=NULL, claimed_at=NULL WHERE corpus='eur-lex' AND status='done';`
+4. **Run `seed-lda-queue.ts`** — seeds 1,602 LDA Parliament queue rows: `NODE_PATH=scrutinise-web/node_modules scrutinise-web/node_modules/.bin/tsx --tsconfig scripts/tsconfig.json scripts/ingest/seed-lda-queue.ts`
+5. **Run `seed-rate-limits.ts`** — adds `lda-parliament` rate limit: same tsx command, `scripts/ingest/seed-rate-limits.ts`
+
+### V5 (still pending)
+5. **Redeploy `ingest-scheduler` on Railway** — kills duplicate deployment causing alternating email formats. Settings → Deployments → Redeploy.
+6. **Register TWFY API key** at theyworkforyou.com/api/key (free for civic use). Add `TWFY_API_KEY` to Railway env vars for all workers + scheduler.
+7. **Run `seed-twfy-queue.ts`** after key is added — seeds ~4,700 monthly Hansard rows for Commons (1988–), Lords (1988–), Westminster Hall (1999–).
+8. **Review data access request drafts** in `docs/data-access-requests/` — BAILII and Parliament Hansard bulk data.
+
+---
+
+## ARCHITECTURE SNAPSHOT (4 Jun 2026 — post V1)
+
+- **20 Railway workers** ingesting via `worker-queue.ts` — queue-claim model with `FOR UPDATE SKIP LOCKED`
+- **Scheduler** (`scheduler.ts`) — hourly loop, sends progress email, saves snapshots. **DB-based mutex added (V1)** — duplicate email sends now prevented without needing Railway redeploy.
+- **Self-discovery** working — detects under-seeded corpora and triggers full historical scan
+- **Corpus coverage:** ~587,128 Railway sections + 914,274 Neon legacy = ~1.5M total (approximately)
+- **Hansard:** TWFY client built (needs API key). **MAJOR FIND: `theyworkforyou.com/pwdata/scrapedxml/` has free bulk Hansard XML from 1919 — awaiting CCh review before building client.**
+- **LDA Parliament:** 5 datasets integrated, workers processing. `lda-commonswrittenquestions` had 388 HTTP 524 failures — retry fix applied (V1), rows need reset to pending.
+- **EUR-Lex:** UNBLOCKED — SPARQL-based enumeration. Workers processing.
+- **FCA Handbook:** Confirmed blocked (pure JS SPA). **FCA Publications confirmed accessible (V1 audit)** — source client added (GOV.UK search approach), seed row added.
+- **ECHR:** Both APIs dead (api.echr.coe.int connect error, /app/query path 404). No accessible alternative found.
+- **TNA Caselaw:** Complete (~74,950 available judgments all ingested).
+- **New V1 sources:** nao-reports, fca-publications, sentencing-council, college-of-policing added — seeded and ready.
+- **HMRC:** Stuck claimed row (26h) — reset needed (SQL above). Long-term: needs per-source queue split.
+
+## DEPLOYMENT
+
+- Ingest workers: Railway (20 services)
+- Scheduler: Railway (1 always-on service — currently 2 running, needs redeploy)
+- DB: Railway PostgreSQL (`switchback.proxy.rlwy.net:16156`)
+- R2: Cloudflare `scrutinise-legislation` bucket
+- Web app: Vercel (scrutinise.org)

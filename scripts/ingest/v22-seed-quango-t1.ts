@@ -7,7 +7,7 @@
  * already dedicated corpora).
  *
  * Modes:
- *   default (--dry-run): derive T1 from scrutinise-docs/QUANGO_UNIVERSE.csv,
+ *   default (--dry-run): derive T1 from docs/QUANGO_UNIVERSE.csv,
  *     re-measure each T1 org's live format facets (20 cheap count=0 queries),
  *     print the per-org/per-format table. NOTHING is written.
  *   --seed: ⚠️ ONLY after Charlie confirms tiers AND after the V22 push.
@@ -28,7 +28,7 @@ import path from 'path'
 import { getNeonPool, endNeonPool } from './shared/neon-pool'
 import { bulkInsertQueueRows } from './shared/queue-client'
 
-const CSV = path.join(__dirname, '../../scrutinise-docs/QUANGO_UNIVERSE.csv')
+const CSV = path.join(__dirname, '../../docs/QUANGO_UNIVERSE.csv')
 const UA = 'Scrutinise/1.0 (civic-tech; contact@scrutinise.org)'
 const CORPUS = 'quangos-govuk'
 const T1_SIZE = 20

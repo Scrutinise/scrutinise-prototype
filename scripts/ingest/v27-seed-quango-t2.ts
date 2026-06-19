@@ -30,7 +30,7 @@ import path from 'path'
 import { getNeonPool, endNeonPool } from './shared/neon-pool'
 import { bulkInsertQueueRows } from './shared/queue-client'
 
-const CSV = path.join(__dirname, '../../scrutinise-docs/QUANGO_UNIVERSE.csv')
+const CSV = path.join(__dirname, '../../docs/QUANGO_UNIVERSE.csv')
 const UA = 'Scrutinise/1.0 (civic-tech; contact@scrutinise.org)'
 const CORPUS = 'quangos-govuk'
 const T1_SIZE = 20

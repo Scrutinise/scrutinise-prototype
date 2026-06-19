@@ -11,7 +11,7 @@
  *    ~1,255 orgs / 63 pages — verified 12 Jun 2026).
  * 2. Per organisation, one Search API call with count=0 + facet_format
  *    returns total docs + per-format counts.
- * 3. Output: scrutinise-docs/QUANGO_UNIVERSE.md (ranked table) + .csv
+ * 3. Output: docs/QUANGO_UNIVERSE.md (ranked table) + .csv
  *    (for the Corpus Status xls), and the corpus_targets placeholder.
  *
  * Rate: sequential, 300ms gap ≈ 3.3 rps — matches the govuk-content Railway
@@ -30,7 +30,7 @@ import { getNeonPool, endNeonPool } from './shared/neon-pool'
 const UA = 'Scrutinise/1.0 (civic-tech; contact@scrutinise.org)'
 const GAP_MS = 300
 const CHECKPOINT = path.join(__dirname, 'enumerate-quangos-checkpoint.json')
-const DOCS_DIR = path.join(__dirname, '../../scrutinise-docs')
+const DOCS_DIR = path.join(__dirname, '../../docs')
 
 // ── Relevance rule (documented in QUANGO_UNIVERSE.md §method) ────────────────
 // Substantive policy/legal/guidance content only — news, speeches, forms,

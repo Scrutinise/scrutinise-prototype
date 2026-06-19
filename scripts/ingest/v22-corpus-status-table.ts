@@ -12,7 +12,7 @@
  *    excl. indexes. Runs on a dedicated pg client (the shared pool's 60s
  *    query_timeout would abort the 11.7M-row scan).
  *
- * Outputs: markdown table to stdout + scrutinise-docs/CORPUS_STATUS_V22.csv.
+ * Outputs: markdown table to stdout + docs/CORPUS_STATUS_V22.csv.
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -20,7 +20,7 @@ import { Client } from 'pg'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
 
 const R2_BYTES_PER_WORD = 6.1 // SEARCH_AUDIT §3: 2.67B words × 6.1 B/word ≈ measured 17.4GB ±7%
-const OUT_CSV = path.join(__dirname, '../../scrutinise-docs/CORPUS_STATUS_V22.csv')
+const OUT_CSV = path.join(__dirname, '../../docs/CORPUS_STATUS_V22.csv')
 
 async function main() {
   const client = new Client({

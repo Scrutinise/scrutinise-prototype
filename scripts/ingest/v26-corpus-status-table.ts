@@ -10,7 +10,7 @@
  *  - R2 bytes: words × 6.1 B/word (SEARCH_AUDIT §3 measured avg) — ESTIMATE
  *  - Neon bytes: SUM(pg_column_size(row)) per corpus — heap incl. TOAST, excl. idx
  *
- * Outputs: markdown table to stdout + scrutinise-docs/CORPUS_STATUS_V26.csv
+ * Outputs: markdown table to stdout + docs/CORPUS_STATUS_V26.csv
  * (per-corpus rows only; TOTAL printed to console, NOT written — a trailing TOTAL
  * row double-counts a naive workbook SUM).
  */
@@ -20,7 +20,7 @@ import { Client } from 'pg'
 try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-web/.env') }) } catch { /* ok */ }
 
 const R2_BYTES_PER_WORD = 6.1
-const OUT_CSV = path.join(__dirname, '../../scrutinise-docs/CORPUS_STATUS_V26.csv')
+const OUT_CSV = path.join(__dirname, '../../docs/CORPUS_STATUS_V26.csv')
 
 async function main() {
   const client = new Client({ connectionString: process.env.NEON_DATABASE_URL, ssl: { rejectUnauthorized: false } })

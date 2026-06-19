@@ -11,7 +11,7 @@
  * Licence: Non-Commercial College Licence (licence='college-nc', verified V24).
  * This corpus is flagged for COMMERCIAL-SURFACE EXCLUSION (same default-exclude
  * posture as nao-nc / oecd BY-NC) — see shared/licence-map.ts and
- * scrutinise-docs/LICENCE_COMPLIANCE.md.
+ * docs/LICENCE_COMPLIANCE.md.
  *
  * Host: webarchive.nationalarchives.gov.uk — TNA infra, CF-free, Railway-safe.
  *   CDX enumeration:  /ukgwa/cdx?url=app.college.police.uk/app-content*&output=text…

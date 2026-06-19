@@ -12,7 +12,7 @@
 # server filesystem — use application-layer synonym expansion in lib/search.ts.
 #
 # NOTE: This file must be re-applied to any new database instance.
-# See: scrutinise-docs/CLAUDE.md § "PostgreSQL thesaurus dictionary"
+# See: docs/CLAUDE.md § "PostgreSQL thesaurus dictionary"
 #
 # ─────────────────────────────────────────────────────────────────────────────
 # Data protection / privacy
