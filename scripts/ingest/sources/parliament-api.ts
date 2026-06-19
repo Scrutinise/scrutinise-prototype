@@ -160,6 +160,75 @@ export async function fetchWrittenAnswers(fromDate: string, toDate: string, maxI
   return parts.join('\n\n---\n\n')
 }
 
+// V28 §1.1: per-item written Q&A (one record per question+answer) — replaces the
+// date-range blob. The questions-statements API is already per-item; we carry the
+// stable item id + question metadata so each becomes its own corpus_sections row.
+export interface WrittenQaItem {
+  id: string
+  uin: string | null
+  heading: string
+  question: string
+  answer: string
+  dateAnswered: string | null   // YYYY-MM-DD
+  askingMember: string | null
+  answeringMember: string | null
+  answeringBody: string | null
+}
+
+const stripHtml = (s: string | undefined | null) => (s ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+export async function fetchWrittenAnswerItems(fromDate: string, toDate: string, maxItems = 20000): Promise<WrittenQaItem[]> {
+  let skip = 0
+  const take = 100
+  const out: WrittenQaItem[] = []
+  while (out.length < maxItems) {
+    const url = `${WQS_BASE}/api/writtenquestions/questions`
+      + `?answeredWhenFrom=${fromDate}&answeredWhenTo=${toDate}&take=${take}&skip=${skip}`
+    const data = await fetchJson(url) as {
+      results?: Array<{ value?: {
+        id?: number; uin?: string; heading?: string; questionText?: string; answerText?: string
+        dateAnswered?: string; askingMember?: { name?: string } | null; answeringMember?: { name?: string } | null
+        answeringBodyName?: string
+      } }>
+    } | null
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) break
+    for (const r of data.results) {
+      const v = r.value
+      if (!v || v.id == null) continue
+      const question = stripHtml(v.questionText)
+      const answer = stripHtml(v.answerText)
+      if (!question && !answer) continue
+      out.push({
+        id: String(v.id),
+        uin: v.uin ?? null,
+        heading: (v.heading ?? '').trim(),
+        question, answer,
+        dateAnswered: v.dateAnswered ? String(v.dateAnswered).slice(0, 10) : null,
+        askingMember: v.askingMember?.name ?? null,
+        answeringMember: v.answeringMember?.name ?? null,
+        answeringBody: v.answeringBodyName ?? null,
+      })
+    }
+    if (data.results.length < take) break
+    skip += take
+  }
+  return out
+}
+
+// Render one Q&A to searchable text (heading + asking/answering members + Q + A).
+export function compileWrittenQa(item: WrittenQaItem): string {
+  const parts: string[] = []
+  if (item.heading) parts.push(item.heading)
+  const meta = [item.askingMember && `Asked by ${item.askingMember}`,
+    item.answeringBody && `Answering body: ${item.answeringBody}`,
+    item.answeringMember && `Answered by ${item.answeringMember}`,
+    item.dateAnswered && `Answered: ${item.dateAnswered}`].filter(Boolean).join(' · ')
+  if (meta) parts.push(meta)
+  if (item.question) parts.push(`Question${item.uin ? ` (UIN ${item.uin})` : ''}: ${item.question}`)
+  if (item.answer) parts.push(`Answer: ${item.answer}`)
+  return parts.join('\n')
+}
+
 // Returns combined plain text of all written ministerial statements in the date range.
 export async function fetchWrittenStatements(fromDate: string, toDate: string, maxItems = 2000): Promise<string> {
   let skip = 0

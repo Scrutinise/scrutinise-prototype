@@ -171,7 +171,26 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // V25 §4: UK Parliament Bills — parliamentary material under the Open
   // Parliament Licence v3.0 (same family as Hansard/committees).
   'bills-api': OPL3,
-  'scottish-parliament-or': { licence: 'pending-verification', attributionBoilerplate: 'Scottish Parliament Official Report — © Scottish Parliamentary Corporate Body; licence to verify (expected OGL/SPCB licence).' },
+  // V28 §3: per-member division voting records (Commons Votes + Lords Votes
+  // APIs). Parliamentary material under the Open Parliament Licence v3.0.
+  'commons-divisions-votes': OPL3,
+  'lords-divisions-votes': OPL3,
+  // V28 §5: Commons/Lords Library research briefings — BUILT TO THE GATE
+  // (Cloudflare managed-challenge on the content endpoints; seeds nothing yet).
+  // Expected Open Parliament Licence v3.0 (the T&Cs page could not be loaded
+  // through CF to verify live) — pending-verification until the capture lands.
+  'commons-library-briefings': { licence: 'pending-verification', attributionBoilerplate: 'House of Commons Library research briefing — expected Open Parliament Licence v3.0 (verify on capture).' },
+  'lords-library-briefings': { licence: 'pending-verification', attributionBoilerplate: 'House of Lords Library research briefing — expected Open Parliament Licence v3.0 (verify on capture).' },
+  // V28 §7: VERIFIED — parliament.scot/about/copyright (19 Jun 2026): published
+  // material "may be reproduced without formal permission subject to the
+  // conditions of the Scottish Parliament Copyright Licence" with attribution
+  // ("Contains information licensed under the Scottish Parliament Copyright
+  // Licence"). NOT OGL — the SPCB's own open licence. Excludes party-political /
+  // advertising-endorsement use (a serving-layer note, not an ingest blocker).
+  'scottish-parliament-or': {
+    licence: 'spcb',
+    attributionBoilerplate: 'Contains information licensed under the Scottish Parliament Copyright Licence.',
+  },
   // V27 §2: VERIFIED — judiciary.scot/crown-copyright (19 Jun 2026): the Scottish
   // judiciary's published material (excluding logos/photographs) may be re-used
   // "free of charge in any format or medium, under the terms of the Open

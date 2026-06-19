@@ -77,3 +77,33 @@ permission. Lowest priority of the five.
   England** — none publish under an explicit OGL statement, so none could be
   built this sprint under the project's licence discipline. ICO was the only
   clear open-licence build.
+
+---
+
+## V28 §8 UPDATE — licence re-check (19 Jun 2026): CORRECTION
+
+Re-checked the four copyright pages directly (verify-before-asserting). Two of
+the V27 "own-copyright" verdicts were WRONG — the pages were not loaded to the
+licence statement last time:
+
+- **Ofgem — OGL v3.0, CLEAN ✓.** ofgem.gov.uk/copyright states Crown copyright
+  material (excluding logos) "free of charge in any format or medium, under the
+  terms of the **Open Government Licence**." Ofgem is a non-ministerial dept →
+  Crown copyright → OGL. **Buildable.** Now the TOP exempt-org V29 build.
+- **Ofcom — own open re-use terms, effectively clean ✓.** ofcom.org.uk terms:
+  material "may be reproduced free of charge in any format or medium provided
+  that it is reproduced accurately and not used in a misleading context… must be
+  acknowledged as Ofcom copyright and the title specified." OGL-equivalent
+  (free + attribution; logo excluded). **Buildable** under an `ofcom-open` code.
+- **Ofwat — © Ofwat (own copyright).** No clear open re-use statement found;
+  leave for a re-use email. NOT built.
+- **Bank of England — no clear open statement** captured on the copyright page;
+  restrictive posture stands. NOT built.
+
+**V28 decision:** §8 is the lowest-priority section (below §5–§7) and building
+Ofgem/Ofcom needs a from-scratch own-domain enumerator (ofgem.gov.uk /
+ofcom.org.uk are NOT in the gov.uk Content API — like ICO's bespoke sitemap
+build in V27). The licence blocker is now cleared for Ofgem (OGL) and Ofcom
+(own-open); the build itself is deferred to V29 as a deliberate source build.
+**Ranked V29 exempt-org build list (licence-cleared first): Ofgem (OGL) >
+Ofcom (own-open) > Ofwat (email) > BoE (email).**

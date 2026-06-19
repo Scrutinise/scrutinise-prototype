@@ -2,7 +2,33 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 19 Jun 2026 — SEARCH S1b + housekeeping: FTS indexer/query-service/scoring-harness BUILT inert under `scripts/ingest/search/` (index run gated on Charlie; execution path confirmed = dedicated Railway `fts-build` service, driver `fts-railway-run.ts`; **commit-all.sh run/pushed**); `scrutinise-docs/` consolidated into `docs/` (all refs + both boot files rewritten; gold→`docs/GOLD_QUERIES.md`); Railway `LegislationSection` renamed `_DEPRECATED_2026-06-19` (reversible canary — panel confirmed on Neon GIN, exact parity, nothing reads Railway). Prior: V27 ingest BUILT + piloted, seed POST-PUSH. V26 soak continues (DROP gated, earliest ~25 Jun).*
+*Last updated: 19 Jun 2026 — V28: search-relay (jurisdiction column LIVE + §1.3 title/date extraction LIVE → DROP title-gate CLEAR; written-answers split BUILT) · ops reseed timeout FIXED · division votes + Scottish OR + inquiry-register BUILT/PILOTED (seed POST-PUSH) · library briefings gated (CF) · reviews/exempt-orgs scoped. See the V28 section below. Prior: SEARCH S1b + housekeeping: FTS indexer/query-service/scoring-harness BUILT inert under `scripts/ingest/search/` (index run gated on Charlie; execution path confirmed = dedicated Railway `fts-build` service, driver `fts-railway-run.ts`; **commit-all.sh run/pushed**); `scrutinise-docs/` consolidated into `docs/` (all refs + both boot files rewritten; gold→`docs/GOLD_QUERIES.md`); Railway `LegislationSection` renamed `_DEPRECATED_2026-06-19` (reversible canary — panel confirmed on Neon GIN, exact parity, nothing reads Railway). Prior: V27 ingest BUILT + piloted, seed POST-PUSH. V26 soak continues (DROP gated, earliest ~25 Jun).*
+
+---
+
+## CURRENT STATE — V28 (SEARCH-RELAY · VOTING · INQUIRIES · SCOTTISH OR · LIBRARY/REVIEWS, 19 Jun 2026)
+
+**Sprint:** V28 (SPRINT_V28_BRIEF.md). Full account: CHANGE_LOG V28. Pure-additive + the search-thread relay during the V26 soak (legacy `Legislation*` rollback path untouched). `scripts/ingest` `tsc --noEmit` clean (only the 4 documented pre-existing unrelated errors — none new).
+
+**DONE + LIVE this session (Neon data ops, no deploy needed):**
+- **§1.2 jurisdiction column** on `corpus_sections` (NOT NULL DEFAULT 'uk', metadata-only add + ~399k devolved UPDATE; labels match search `jurisdictionFor()`: ni 204,292 · wales 191,756 · scotland 3,234 · uk 16.15M). Wired into the ingest write path too. **Search thread can switch off its stopgap map.**
+- **§1.3 TIME-CRITICAL title/date extraction — COMPLETE + VERIFIED.** 335,595 sectionTitles carried from legacy `LegislationSection` (18.4% of leg+caselaw — the high-signal section/article heading rows; schedule/paragraph sub-units have no legacy equivalent) + 1,708,117 itemDates (gid-year for legislation, `[YYYY]` citation-year for tna-caselaw; `enactmentDate` was 0-populated so gid-year used). **The V26 §6 DROP's title-extraction precondition is now CLEAR.**
+- **§2 ops `reseedExhaustedPwdata` FIXED** (index-friendly PK existence check, not a 6.4M-row pull). Verified: pwdata-debates dedup 15.2s (was >60s timeout); 18 backlogged TWFY files recovered automatically post-deploy. Sweep: that was the ONLY broken cron query (census aggregates measured fast, 1.3–3.2s). Goes live at push.
+
+**BUILT + PILOTED — seed POST-PUSH:**
+- **§3 division votes** — `division-votes` sourceType, corpora `commons-/lords-divisions-votes` (OPL3). One section per division w/ full member roll-call. Universe 5,603 (Commons 2,333 + Lords 3,270). Both houses piloted end-to-end.
+- **§4 inquiry register completed** 21→58 inquiries / 146→197 report PDFs (all PDF-verified). Re-seed = `v24-seed-inquiry-reports.ts --seed` (idempotent +51).
+- **§7 Scottish Parliament OR** — `scottish-parliament-or` sourceType. Sitemap enumeration = 5,131 reports (2016–). Per-contribution parser (base + iob pages) PILOTED (337 & 218 contributions). Licence VERIFIED = **SPCB** (`spcb`), not OGL. ~300–500k sections est.
+- **§1.1 written-answers split** — `hansard` processor `answers` branch rewritten to one section per Q&A (was ~306k-word date-range blobs). Pilot: 1 window → 1,046 items, max 116 w/item. Re-seed = `v28-reseed-written-answers.ts --seed`. pwdata-wrans untouched.
+
+**SCOPED / GATED:**
+- **§5 library briefings — BUILT TO THE GATE.** Commons/Lords Library are WordPress behind a Cloudflare managed-challenge (content endpoints 403; `/wp-json/` root edge-cached only); LDA API dead; no `*-api` host; no web-archive. Capture-ready seam + probe seeder. **Needs Charlie: a `cf_clearance` cookie + the research-briefing WP REST endpoint** (devtools, same as V27 Scottish Courts).
+- **§6 independent reviews — SCOPED** (`INDEPENDENT_REVIEWS_UNIVERSE.md`); Casey 2025 probed CLEAN (72,663 words). Build `independent-reviews` V29.
+- **§8 exempt orgs — CORRECTION:** **Ofgem = OGL (clean), Ofcom = own-open (clean)** — V27 wrongly marked them own-copyright. Build V29 (own-domain enumerator); ranked Ofgem > Ofcom > Ofwat > BoE.
+
+**POST-PUSH run order:** (1) `seed-rate-limits.ts`; (2) confirm Ingest deploy SUCCESS; (3) `v28-reseed-written-answers.ts --seed`; (4) `v24-seed-inquiry-reports.ts --seed`; (5) `v28-seed-division-votes.ts --seed`; (6) `v28-seed-scottish-parliament-or.ts --seed`; (7) at drain re-baseline + `v28-corpus-status-table.ts` + `v20-licence-backfill.ts`.
+
+**DECISIONS WAITING ON CHARLIE:** library-briefings cf_clearance + CPT-slug capture (unblocks §5) · V26 §6 DROP go (soak ~25 Jun; §1.3 title-gate now CLEAR; still needs search-thread Lex-grounding repoint) · Railway Hobby downgrade 28 Jun · search-thread FTS-scope · V29 builds (independent-reviews, Ofgem/Ofcom exempt-orgs, Scottish OR pre-2016 archive, eur-lex/uk-treaties/inquiry chapter-splits) · (carried) FCL computational-analysis email · FCA Handbook · pwdata licence backfill · BAILII email · Scottish-courts/ICO/quango-T2 V27 seeds still POST-PUSH.
 
 ---
 

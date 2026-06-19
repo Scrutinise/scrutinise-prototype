@@ -50,6 +50,53 @@ export const INQUIRY_REGISTRY: InquiryDef[] = [
   { key: 'zahid-mubarek',       name: 'Zahid Mubarek Inquiry',           govukPath: 'government/publications/report-of-the-zahid-mubarek-inquiry', status: 'concluded' },
   { key: 'iicsa-final',         name: 'Independent Inquiry into Child Sexual Abuse (IICSA)', govukPath: 'government/publications/iicsa-report-of-the-independent-inquiry-into-child-sexual-abuse', status: 'concluded' },
   { key: 'grenfell-phase-2',    name: 'Grenfell Tower Inquiry Phase 2',   govukPath: 'government/publications/publication-of-the-grenfell-tower-inquiry-phase-2-report', status: 'concluded' },
+  // V28 §4 register completion — concluded statutory/public-inquiry FINAL or
+  // substantive (phase/tranche) reports discovered via the gov.uk Search API and
+  // PDF-verified (v28-discover-inquiries.ts). Reports-only: government responses,
+  // terms of reference, cost returns, panel-appointment notices and inquiry
+  // case-statistics were all excluded. Some live inquiries' interim/phase reports
+  // are included (status 'ongoing') because the published report is itself the
+  // unit of value. Dark-site-only reports (BSE/Phillips, Bristol Royal Infirmary
+  // full report, Morecambe Bay, Gosport, Daniel Morgan, Hutton, Scott, Penrose-
+  // Scotland, Vale of Leven, Telford CSE) still need a Web Archive adapter —
+  // documented follow-up, not built this sprint.
+  { key: 'stephen-lawrence',    name: 'Stephen Lawrence Inquiry (Macpherson)', govukPath: 'government/publications/the-stephen-lawrence-inquiry', status: 'concluded' },
+  { key: 'shipman-2',           name: 'Shipman Inquiry Second Report',     govukPath: 'government/publications/the-shipman-inquiry-second-report-the-police-investigation-of-march-1988', status: 'concluded' },
+  { key: 'shipman-3',           name: 'Shipman Inquiry Third Report',      govukPath: 'government/publications/the-shipman-inquiry-third-report-death-certification-and-the-investigation-of-deaths-by-coroners', status: 'concluded' },
+  { key: 'detainee-gibson',     name: 'Detainee Inquiry (Gibson)',         govukPath: 'government/publications/report-of-the-detainee-inquiry', status: 'concluded' },
+  { key: 'paterson',            name: 'Paterson Inquiry',                  govukPath: 'government/publications/paterson-inquiry-report', status: 'concluded' },
+  { key: 'angiolini-1',         name: 'Angiolini Inquiry Part 1',          govukPath: 'government/publications/angiolini-inquiry-part-1-report', status: 'concluded' },
+  { key: 'david-fuller-1',      name: 'David Fuller Inquiry Phase 1',      govukPath: 'government/publications/david-fuller-inquiry-phase-1-report', status: 'concluded' },
+  { key: 'david-fuller-2',      name: 'David Fuller Inquiry Phase 2',      govukPath: 'government/publications/david-fuller-inquiry-phase-2-report', status: 'concluded' },
+  { key: 'southport-1',         name: 'Southport Inquiry Phase 1',         govukPath: 'government/publications/the-southport-inquiry-phase-1-report', status: 'ongoing' },
+  { key: 'wass-st-helena',      name: 'Wass Inquiry (St Helena/Ascension)', govukPath: 'government/publications/the-wass-inquiry-report-into-allegations-surrounding-child-safeguarding-issues-on-st-helena-and-ascension-island-redacted-version', status: 'concluded' },
+  { key: 'laidlaw',             name: 'Laidlaw Inquiry (West Coast rail franchise)', govukPath: 'government/publications/report-of-the-laidlaw-inquiry', status: 'concluded' },
+  { key: 'magnox',              name: 'Magnox Inquiry',                    govukPath: 'government/publications/magnox-inquiry-final-report', status: 'concluded' },
+  { key: 'kerr-haslam',         name: 'Kerr/Haslam Inquiry',               govukPath: 'government/publications/the-kerrhaslam-inquiry-report', status: 'concluded' },
+  { key: 'billy-wright',        name: 'Billy Wright Inquiry',              govukPath: 'government/publications/the-billy-wright-inquiry-report', status: 'concluded' },
+  { key: 'cranston',            name: 'Cranston Inquiry (Western Jet Foil/Manston)', govukPath: 'government/publications/the-report-of-the-cranston-inquiry', status: 'concluded' },
+  { key: 'royal-liverpool-children', name: 'Royal Liverpool Children’s Inquiry (Alder Hey/Redfern)', govukPath: 'government/publications/the-royal-liverpool-childrens-inquiry-report', status: 'concluded' },
+  { key: 'confait',             name: 'Inquiry into the death of Maxwell Confait (Fisher)', govukPath: 'government/publications/report-of-an-inquiry-into-the-death-of-maxwell-confait', status: 'concluded' },
+  { key: 'sonny-lodge',         name: 'Inquiry into the death of Bernard (Sonny) Lodge', govukPath: 'government/publications/report-of-the-inquiry-into-the-death-of-bernard-sonny-lodge', status: 'concluded' },
+  { key: 'ashworth',            name: 'Ashworth Special Hospital Committee of Inquiry', govukPath: 'government/publications/ashworth-special-hospital-report-of-the-committee-of-inquiry', status: 'concluded' },
+  { key: 'hunting-with-dogs-burns', name: 'Committee of Inquiry into Hunting with Dogs (Burns)', govukPath: 'government/publications/report-of-committee-of-inquiry-into-hunting-with-dogs-in-england-wales', status: 'concluded' },
+  { key: 'anthony-grainger',    name: 'Anthony Grainger Inquiry',          govukPath: 'government/publications/anthony-grainger-inquiry-report-into-the-death-of-anthony-grainger', status: 'concluded' },
+  { key: 'bvi-coi',             name: 'British Virgin Islands Commission of Inquiry', govukPath: 'government/publications/british-virgin-islands-commission-of-inquiry-report', status: 'concluded' },
+  { key: 'sheehy',              name: 'Inquiry into Police Responsibilities and Rewards (Sheehy)', govukPath: 'government/publications/inquiry-into-police-responsibilities-and-rewards-vol-1-report', status: 'concluded' },
+  { key: 'fife-child-care',     name: 'Inquiry into Child Care Policies in Fife (Kearney)', govukPath: 'government/publications/the-report-of-the-inquiry-into-child-care-policies-in-fife-1992', status: 'concluded' },
+  { key: 'may-guildford-final', name: 'May Inquiry — Guildford & Woolwich convictions (final)', govukPath: 'government/publications/final-report-of-the-inquiry-into-the-convictions-arising-from-bomb-attacks-in-guildford-and-woolwich', status: 'concluded' },
+  { key: 'icl-stockline',       name: 'ICL/Stockline Inquiry (Glasgow explosion)', govukPath: 'government/publications/the-icl-inquiry-report-explosion-at-grovepark-mills-maryhill-glasgow-11-may-2004', status: 'concluded' },
+  { key: 'jermaine-baker',      name: 'Jermaine Baker Inquiry',            govukPath: 'government/publications/jermaine-baker-public-inquiry', status: 'concluded' },
+  { key: 'dawn-sturgess',       name: 'Dawn Sturgess Inquiry',             govukPath: 'government/publications/dawn-sturgess-inquiry-report', status: 'concluded' },
+  { key: 'jalal-uddin',         name: 'Inquiry into the death of Jalal Uddin', govukPath: 'government/publications/inquiry-report-into-the-death-of-jalal-uddin', status: 'concluded' },
+  { key: 'ucpi-tranche-1',      name: 'Undercover Policing Inquiry Tranche 1 (interim)', govukPath: 'government/publications/undercover-policing-inquiry-tranche-1-interim-report', status: 'ongoing' },
+  { key: 'redfern-nuclear',     name: 'Redfern Inquiry (human tissue, nuclear facilities) Vol 1', govukPath: 'government/publications/the-redfern-inquiry-into-human-tissue-analysis-in-uk-nuclear-facilities-volume-1', status: 'concluded' },
+  { key: 'orkney',              name: 'Inquiry into the Removal of Children from Orkney (Clyde)', govukPath: 'government/publications/inquiry-into-the-removal-of-children-from-orkney-in-february-1991', status: 'concluded' },
+  { key: 'crown-agents-fay',    name: 'Crown Agents Inquiry (Fay)',        govukPath: 'government/publications/inquiry-into-the-circumstances-which-led-to-the-crown-agents-requesting-financial-assistance-1974', status: 'concluded' },
+  { key: 'acheson-health',      name: 'Independent Inquiry into Inequalities in Health (Acheson)', govukPath: 'government/publications/independent-inquiry-into-inequalities-in-health-report', status: 'concluded' },
+  { key: 'turks-caicos-coi',    name: 'Turks and Caicos Islands Commission of Inquiry', govukPath: 'government/publications/turks-and-caicos-islands-commission-of-inquiry-2008-2009', status: 'concluded' },
+  { key: 'cps-deaths-custody',  name: 'Inquiry into CPS Decision-Making re Deaths in Custody (Butler)', govukPath: 'government/publications/inquiry-into-crown-prosecution-service-decision-making-in-relation-to-deaths-in-custody-and-related-matters', status: 'concluded' },
+  { key: 'sutherland-sats',     name: 'Sutherland Inquiry (2008 National Curriculum tests)', govukPath: 'government/publications/the-sutherland-inquiry-an-independent-inquiry-into-the-delivery-of-national-curriculum-tests-in-2008', status: 'concluded' },
 ]
 
 export interface InquiryPdf { seq: number; url: string; title: string }

@@ -82,7 +82,7 @@ async function markDone(id: string, formatFound?: string): Promise<void> {
 import { fetchJudgmentXml } from '../sources/tna-caselaw'
 import { enumerateSections, discoverFormats, AVAILABILITY_NOTES } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
-import { fetchReportContent, fetchWrittenAnswers, fetchWrittenStatements, fetchDebateText } from '../sources/parliament-api'
+import { fetchReportContent, fetchWrittenStatements, fetchDebateText } from '../sources/parliament-api'
 import { listDebatesForMonth } from '../sources/theyworkforyou'
 import { getAllHandbookModules, listSectionsForModule } from '../sources/fca-handbook'
 import { fetchDocumentText as fetchEurLexText, listRetainedEuInstruments, listRetainedEuPage } from '../sources/eurlex'
@@ -143,6 +143,8 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'college-policing-archive': return processCollegePolicing(row)
     case 'scottish-courts':     return processScottishCourts(row)
     case 'ico':                 return processIco(row)
+    case 'division-votes':      return processDivisionVotes(row)
+    case 'scottish-parliament-or': return processScottishParliamentOr(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -374,25 +376,65 @@ async function processHansard(row: QueueRow): Promise<void> {
     return
   }
 
-  if (parts[0] === 'answers' || parts[0] === 'statements') {
-    const [prefix, startDate, endDate] = parts
+  // V28 §1.1: written answers re-ingested as ONE section per question-and-answer
+  // (was a single date-range blob — up to ~390k words/section, wrong retrieval
+  // unit). The questions API is per-item; we key each section on the stable
+  // question id (globally unique, dedup-safe across windows) and carry heading +
+  // members + date as metadata. parentDocId = the date window so a re-parse's
+  // deleteStaleSections keeps the window consistent; the legacy blob row
+  // ({corpus}:{from}:{to}:1) is removed by v28-reseed-written-answers.ts.
+  if (parts[0] === 'answers') {
+    const { fetchWrittenAnswerItems, compileWrittenQa } = await import('../sources/parliament-api')
+    const [, startDate, endDate] = parts
     if (!startDate || !endDate) { await markSkipped(row.id); return }
+    const windowTag = `${startDate}:${endDate}`
+    const items = await fetchWrittenAnswerItems(startDate, endDate)
+    if (items.length === 0) {
+      await upsertSection({
+        id: sectionId(row.corpus, windowTag, '1'), corpus: row.corpus,
+        sourceUrl: `https://questions-statements-api.parliament.uk/api/writtenquestions/questions?answeredWhenFrom=${startDate}&answeredWhenTo=${endDate}`,
+        status: 'unavailable', availabilityStatus: 'no-provisions',
+        availabilityNote: 'no written answers in this window', parentDocId: windowTag,
+      })
+      await markDone(row.id, 'html'); return
+    }
+    const metas: SectionMeta[] = []
+    const texts: string[] = []
+    for (const it of items) {
+      const text = compileWrittenQa(it)
+      metas.push({
+        id: sectionId(row.corpus, it.id, '1'),
+        corpus: row.corpus,
+        sourceUrl: `https://questions-statements-api.parliament.uk/api/writtenquestions/questions/${it.id}`,
+        r2Key: compiledKey(row.corpus, it.id, '1'),
+        wordCount: countWords(text), status: 'compiled', format: 'html',
+        sectionTitle: it.heading || undefined,
+        speaker: it.answeringMember ?? it.answeringBody ?? undefined,
+        itemDate: it.dateAnswered ?? undefined,
+        parentDocId: windowTag,
+      })
+      texts.push(text)
+    }
+    for (let i = 0; i < metas.length; i += 8) {
+      await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+    }
+    await bulkUpsertSections(metas)
+    await deleteStaleSections(row.corpus, windowTag, metas.map(m => m.id))
+    await markDone(row.id, 'html')
+    return
+  }
 
-    const text = prefix === 'answers'
-      ? await fetchWrittenAnswers(startDate, endDate)
-      : await fetchWrittenStatements(startDate, endDate)
-
+  if (parts[0] === 'statements') {
+    const [, startDate, endDate] = parts
+    if (!startDate || !endDate) { await markSkipped(row.id); return }
+    const text = await fetchWrittenStatements(startDate, endDate)
     if (!text) { await markDone(row.id, 'html'); return }
-
     const cKey = compiledKey(row.corpus, `${startDate}:${endDate}`, '1')
     if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
-
     const compiled = rawToText(text)
     await r2Put(cKey, compiled)
     const secId = sectionId(row.corpus, `${startDate}:${endDate}`, '1')
-    const sourceUrl = prefix === 'answers'
-      ? `https://questions-statements-api.parliament.uk/api/writtenquestions/questions?answeredWhenFrom=${startDate}&answeredWhenTo=${endDate}`
-      : `https://questions-statements-api.parliament.uk/api/writtenstatements/statements?madeWhenFrom=${startDate}&madeWhenTo=${endDate}`
+    const sourceUrl = `https://questions-statements-api.parliament.uk/api/writtenstatements/statements?madeWhenFrom=${startDate}&madeWhenTo=${endDate}`
     await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, wordCount: countWords(compiled), status: 'compiled' })
     await markDone(row.id, 'html')
     return
@@ -2035,6 +2077,121 @@ async function processIco(row: QueueRow): Promise<void> {
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
   await markDone(row.id, metas[0].format)
+}
+
+// ── Per-member division voting records (V28 §3 — Commons/Lords Votes, OPL) ────
+// docId = "{house}:{divisionId}" (house = commons|lords). One section per
+// division carrying the full roll-call (aye/no member lists with party +
+// constituency) as searchable text. Divisions are immutable once recorded, so
+// an existing R2 object short-circuits (idempotent reseed).
+
+async function processDivisionVotes(row: QueueRow): Promise<void> {
+  const { fetchDivisionDetail, compileDivisionText } = await import('../sources/division-votes')
+  const colon = row.docId.indexOf(':')
+  const house = row.docId.slice(0, colon)
+  const id = Number(row.docId.slice(colon + 1))
+  if ((house !== 'commons' && house !== 'lords') || !Number.isInteger(id)) {
+    await markFailed(row.id, `bad division-votes docId: ${row.docId}`); return
+  }
+
+  const cKey = compiledKey(row.corpus, String(id), '1')
+  if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+
+  const detail = await fetchDivisionDetail(house, id)
+  if (!detail) { await markFailed(row.id, `division-votes ${row.docId}: detail fetch failed`); return }
+  if (detail.members.length === 0) {
+    // A recorded division with no member list is a real gap — marker, never retry.
+    await upsertSection({
+      id: sectionId(row.corpus, String(id), '1'),
+      corpus: row.corpus,
+      sourceUrl: `https://votes.parliament.uk/Votes/${house === 'commons' ? 'Commons' : 'Lords'}/Division/${id}`,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'division has no recorded member votes',
+      sectionTitle: detail.title || undefined,
+      itemDate: detail.date ?? undefined,
+      parentDocId: String(id),
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const text = compileDivisionText(detail)
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, String(id), '1'),
+    corpus: row.corpus,
+    sourceUrl: `https://votes.parliament.uk/Votes/${house === 'commons' ? 'Commons' : 'Lords'}/Division/${id}`,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'html',
+    sectionTitle: detail.title || `Division ${detail.number ?? id}`,
+    itemDate: detail.date ?? undefined,
+    parentDocId: String(id),
+  })
+  await markDone(row.id, 'html')
+}
+
+// ── Scottish Parliament Official Report (V28 §7 — parliament.scot HTML, SPCB) ──
+// docId = "{meetingId}|{slug}". One section per speaker-turn (pwdata-shaped).
+// The worker fetches the base report page + each agenda item's ?iob= page
+// (the site renders agenda items lazily per-iob) and aggregates — all within the
+// 5-min row budget for a single sitting day.
+
+async function processScottishParliamentOr(row: QueueRow): Promise<void> {
+  const { fetchReport, reportUrl } = await import('../sources/scottish-parliament-or')
+  const bar = row.docId.indexOf('|')
+  const meetingId = Number(bar >= 0 ? row.docId.slice(0, bar) : row.docId)
+  const slug = bar >= 0 ? row.docId.slice(bar + 1) : ''
+  if (!Number.isInteger(meetingId) || !slug) { await markFailed(row.id, `bad scottish-parliament-or docId: ${row.docId}`); return }
+  const date = (/(\d{2})-(\d{2})-(\d{4})$/.exec(slug)) ? slug.replace(/.*?(\d{2})-(\d{2})-(\d{4})$/, '$3-$2-$1') : null
+
+  const report = await fetchReport({ meetingId, slug, date, title: '' })
+  if (!report) { await markFailed(row.id, `scottish-parliament-or ${meetingId}: report fetch failed`); return }
+
+  if (report.items.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, String(meetingId), '1'),
+      corpus: row.corpus,
+      sourceUrl: reportUrl(slug, meetingId),
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: 'OR report page has no extractable contributions (future/empty sitting or non-text minute)',
+      itemDate: report.date ?? undefined,
+      parentDocId: String(meetingId),
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const it of report.items) {
+    const ref = String(it.seq)
+    metas.push({
+      id: sectionId(row.corpus, String(meetingId), ref),
+      corpus: row.corpus,
+      sourceUrl: reportUrl(slug, meetingId),
+      r2Key: compiledKey(row.corpus, String(meetingId), ref),
+      wordCount: countWords(it.text),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: it.heading ? `Scottish Parliament: ${it.heading}` : 'Scottish Parliament Official Report',
+      speaker: it.speaker ?? undefined,
+      itemDate: report.date ?? undefined,
+      parentDocId: String(meetingId),
+    })
+    texts.push(it.text)
+  }
+
+  const R2_BATCH = 16
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, String(meetingId), metas.map(m => m.id))
+  await markDone(row.id, 'html')
 }
 
 // ── NAO reports (V20 probe 7 — WP REST API route) ─────────────────────────────
