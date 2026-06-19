@@ -1,6 +1,45 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 16 Jun 2026 — V25.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 19 Jun 2026 — V27.*
+
+---
+
+## V27 — BREAKER FIX · SCOTTISH COURTS · QUANGO T2 · EXEMPT-ORG PROBES (19 Jun 2026)
+
+**Context:** SPRINT_V27_BRIEF.md. HEAD = V26 close (58f2e76). Ingestion safe during the Railway→Neon soak — new ingest writes only to `corpus_sections` on Neon, orthogonal to the legacy `Legislation*` rollback path (untouched). **BUILT + LOCALLY PILOTED this session; the four NEW/expanded corpora seed POST-PUSH** (new sourceTypes `scottish-courts`/`ico` would be `markSkipped` by the live worker until the processors deploy — V24 lesson). All `tsc --noEmit` clean.
+
+### §1 — Ops breaker EVALUATION un-stalled (safety mechanism; done first)
+- **Diagnosed from the Ops deploy logs** (the verify-before-asserting win): the symptom looked like "liveness runs but breakers don't" and `source_status` stale — but the real error was `[ops] breaker evaluation failed: Error: Query read timeout … querySourceCounts (ops.ts:192) … Promise.all (index 2)`. The third query — `SELECT corpus, COUNT(*) FROM corpus_sections GROUP BY corpus` over **17.2M rows** — exceeds the pool's 60s client `query_timeout` on the prod Railway→Neon link (ran ~1.8s locally vs warm Neon, which masked it). Every 15-min tick threw → **no breaker tripped/cleared since the 18 Jun 21:44 redeploy**; the lighter liveness/retry queries after it still ran.
+- **Fix (`ops.ts`):** that GROUP BY only fed the **informational** `source_status.section_count`/`done_count` (written here, read NOWHERE — the email uses the census + `corpus_snapshots`). `querySourceCounts` now sources per-corpus counts from the **latest `corpus_snapshots` hour** (census-computed hourly, PK-indexed) in its own try/catch; a miss returns `null` → UPSERT keeps the prior value (`COALESCE`), and the trip evaluation + `updated_at` refresh ALWAYS complete. Breaker decisions never used it (failure breaker = top-5 window; zero-output = 24h `produced_output` streak — both fast).
+- **Verified** `v27-breaker-verify.ts` (synthetic isolated sourceType, self-cleaning): evaluateBreakers completes vs the live 17M DB in ~3s + refreshes `source_status`; deliberate failure-breaker trip → clear+recover (no re-trip) → zero-output trip all PASS. Snapshot-derived `section_count` matches the old GROUP BY exactly (twfy-pwdata 8,816,376 · tna-legislation 1,685,853 · niassembly-hansard 196,348). Goes live at push. Diagnostics `v27-breaker-diag.ts` + `v27-railway-ops-logs.ts`. Playbook §breakers updated.
+- **Related (NOT fixed, reported):** `reseedExhaustedPwdata` hits the same class of timeout — its `SELECT id FROM corpus_sections WHERE corpus='pwdata-debates'` pulls ~8.8M ids and times out; pwdata auto-reseed of new TWFY files is currently failing. Out of §1 scope (reseed, not safety) — recommend a V28 dedup rework (keyset/`NOT EXISTS`, not a full id pull).
+
+### §2 — Scottish Courts judgments BUILT + piloted (auto-upgrade ready; corpus unblocked)
+- Charlie's captured API works server-side with just Origin/Referer (no token): `POST api.pa.web.scotcourts.gov.uk/web/search` (1-INDEXED `page`; `limit:200` accepted) returns `results[]` with a direct `documentLink` PDF path + `pagination.count.total`. No `/web/definition/{id}` needed. **Universe measured = 13,066 judgments.** PDF served at `www.scotcourts.gov.uk{documentLink}`.
+- **Licence VERIFIED OGL v3.0** — judiciary.scot/crown-copyright: judiciary material (ex logos/photos) re-usable "free of charge in any format or medium, under the terms of the Open Government Licence". licence-map `scottish-courts`→ogl-3.0.
+- **PILOT 5/5 end-to-end** (real worker path: search → PDF → pdfToText → countWords): avg **6,185 words/judgment** (1,386–17,813). **PREDICTION ≈13,066 sections / ~80.8M words** (~0.5 GB R2; negligible Neon). `sources/scottish-courts.ts` + `processScottishCourts` (sourceType `scottish-courts`) + `v27-seed-scottish-courts.ts` (--pilot/--measure/--seed) + rate-limit 1000ms/2. The seeder enumerates all judgments and clears the blocked `scottish-courts` corpus_target. **Seed POST-PUSH** (Railway PDF-egress canary first).
+
+### §3 — Quango Tranche 2 BUILT + measured (seed POST-PUSH)
+- T2 = (A) the **next 40 live non-ministerial ALBs by relevant-format weight** (ranks 21–60, T1 took 1–20; same broad statute-adjacent set, HMRC excluded) **+ (B) the 24 ministerial departments RESTRICTED to the narrow statute-adjacent set** `{statutory_guidance, regulation, manual, manual_section}` (brief §3) to drop policy/press noise. Same machinery as T1: `govuk-content` rows under corpus `quangos-govuk` (OGL), URL-dedup vs every gov.uk URL in `corpus_sections`, `utaac_decision`+`fatality_notice` excluded.
+- **Measured (dry-run):** ALBs **18,320** relevant docs (every measured ≈ register estimate; **0 orgs tripped the 5× guard**); ministerial narrow set **1,788** (MoD 611 · DfE 261 · MHCLG 170 · Home Office 149 · Defra 142 · DfT 116 · DHSC 105 …). **T2 GRAND TOTAL ≈ 20,108 docs to seed.** `v27-seed-quango-t2.ts` (--dry-run/--seed; guard pauses+reports any org >5× est). Processor already deployed (govuk-content) — **seed POST-PUSH** for atomicity with the ops fix.
+
+### §4 — Exempt-org probes (sized 5; built the cleanest) → `EXEMPT_ORGS_PROBE.md`
+- Sized ICO · Ofgem · Ofwat · Ofcom · Bank of England/PRA (route · size · licence · effort). **ICO is the only one with a clear open licence** (OGL v3.0, verified) — the others all assert own-org copyright (© Ofgem/© Ofwat/© BoE/Ofcom terms), so under the project's licence discipline none could be built this sprint; they become a ranked V28 list (Ofgem > Ofwat > Ofcom > BoE), each gated on a licence check.
+- **ICO BUILT + piloted:** flat sitemap → **26,576** `action-weve-taken` leaves (25,979 FOI/EIR decision-notices · 326 FOI-reg · 210 GDPR enforcement · 61 audits); each leaf = HTML summary + a full decision/penalty PDF. Adapter prefers the PDF, falls back to `<main>` HTML. **PILOT 5/5** avg **3,090 words/leaf** → **PREDICTION ≈26,576 sections / ~82.1M words** (~0.4 GB R2). `sources/ico.ts` + `processIco` (sourceType `ico`, corpus `ico`) + `v27-seed-ico.ts` + licence-map `ico`→ogl-3.0 + rate-limit 500ms/2. **Seed POST-PUSH** (egress canary first); seeder upserts the new `ico` corpus_target.
+
+### §5 — Scottish Parliament Official Report — built to the gate (seeds nothing)
+- Recon (19 Jun): the OR landing page exposes NO api/data host in static HTML (`data.parliament.scot/api/` + `www.parliament.scot/api/` → 404) — search loads via a runtime XHR whose URL+key aren't in any asset, confirming the V25 gate. Did NOT brute-force. Added a capture-ready seam (`sources/scottish-parliament.ts`: `ScottishApiConfig`/`ScottishReportEntry`/`listOfficialReports`) + `v27-seed-scottish-parliament.ts` dry-run that states the exact capture needed (devtools XHR on the OR search), pointing at the §2 courts API as the working template. **Still WAITS ON CHARLIE'S CAPTURE** (~320k est).
+
+### Verification & docs
+- Per-source scorecards above (predictions recorded for scoring at drain). licence-map: `scottish-courts`+`ico` added (both OGL v3.0, verified). Breaker fix trip+recover proven. `EXEMPT_ORGS_PROBE.md` delivered. Playbook §breakers + header updated. `v27-corpus-status-table.ts` ready (run POST-DRAIN → `CORPUS_STATUS_V27.csv`). No git mid-sprint — single `commit-all.sh`.
+
+### POST-PUSH run order (after Charlie's commit-all.sh deploys Ingest+Ops)
+1. `seed-rate-limits.ts` (adds `scottish-courts`, `ico`).
+2. Confirm the Ingest deployment is SUCCESS (deployments API) BEFORE seeding new sourceTypes — else the old worker markSkips them.
+3. `v27-seed-scottish-courts.ts --seed` → canary a few rows, verify sections + Railway PDF-egress, then it's grinding (~13k).
+4. `v27-seed-ico.ts --seed` → canary, verify egress, grind (~26.6k).
+5. `v27-seed-quango-t2.ts --seed` (govuk-content already live — can seed once ops fix is deployed; ~20k docs after URL-dedup).
+6. At drain: `v27-corpus-status-table.ts`; re-baseline the new corpora to confirmed; re-run `v20-licence-backfill.ts` for any NULL stragglers (new corpora get licences at ingest via the map).
 
 ---
 

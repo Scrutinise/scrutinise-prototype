@@ -2,7 +2,24 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 18 Jun 2026 — V26 STRUCTURAL: Migration A done + rebaselined ✓; **Migration B CUTOVER EXECUTED + verified live** (prod reads Neon, Railway DB detached). Only §6 soak+DROP remains (gated: ≥1wk + Lex-grounding repoint). See `V26_CUTOVER_RUNBOOK.md`.*
+*Last updated: 19 Jun 2026 — V27: Ops breaker-eval un-stalled (17M-row GROUP BY timeout → read from corpus_snapshots; verified trip+recover); Scottish Courts (13,066) + ICO (26,576) + Quango T2 (~20,108) BUILT + piloted, **seed POST-PUSH**; Scottish Parliament OR still gated on Charlie's capture; `EXEMPT_ORGS_PROBE.md` delivered. V26 soak continues (DROP gated, earliest ~25 Jun).*
+
+---
+
+## CURRENT STATE — V27 (BREAKER FIX · SCOTTISH COURTS · QUANGO T2 · EXEMPT-ORG PROBES, 19 Jun 2026)
+
+**Sprint:** V27 (SPRINT_V27_BRIEF.md). Full account: CHANGE_LOG V27. Pure additive ingest during the V26 soak — writes only to `corpus_sections` on Neon (legacy `Legislation*` rollback path untouched; §6 DROP still gated). **Everything BUILT + LOCALLY PILOTED; nothing seeded yet — the new corpora seed POST-PUSH** (new sourceTypes are markSkipped by the live worker until their processors deploy). `tsc --noEmit` clean.
+
+**DONE this session:**
+- **§1 breaker-eval FIXED + verified.** Live Ops was throwing `Query read timeout` every 15-min tick since the 18 Jun 21:44 redeploy — `querySourceCounts`'s `corpus_sections GROUP BY` over 17.2M rows exceeds the 60s client timeout (diagnosed from the **Ops deploy logs**, not the misleading `source_status`/lock timestamps). That GROUP BY fed only the unread informational `section_count` column → moved it to read the hourly `corpus_snapshots` (PK-indexed) in a try/catch so the trip evaluation always completes. `v27-breaker-verify.ts`: deliberate failure-trip→clear+recover + zero-output-trip all PASS against the live DB. **Goes live at push.** Also reported (not fixed): `reseedExhaustedPwdata` hits the same timeout class (~8.8M-id pull) → pwdata auto-reseed failing → V28 dedup rework.
+- **§2 Scottish Courts BUILT + piloted.** Captured API works server-side with Origin/Referer only (no token); `POST /web/search` (1-indexed, limit 200), `documentLink` → PDF at www.scotcourts.gov.uk. **13,066 judgments**, OGL v3.0 (judiciary.scot/crown-copyright, VERIFIED). Pilot 5/5, avg 6,185 w → **≈13,066 sections / ~80.8M words**. `sources/scottish-courts.ts` + `processScottishCourts` + `v27-seed-scottish-courts.ts` (seeder clears the blocked corpus_target).
+- **§3 Quango T2 BUILT + measured.** 40 ALBs (ranks 21–60, broad set) + 24 ministerial depts (narrow `{statutory_guidance,regulation,manual,manual_section}`). Measured **18,320 + 1,788 = ≈20,108 docs**; 0 orgs >5× guard. `v27-seed-quango-t2.ts` (govuk-content, OGL, URL-dedup, utaac/fatality excluded).
+- **§4 Exempt-org probes → `EXEMPT_ORGS_PROBE.md`.** Sized ICO/Ofgem/Ofwat/Ofcom/BoE. **ICO the only clear open licence (OGL v3.0)** → BUILT: 26,576 action-weve-taken leaves (mostly FOI decision-notices + PDFs), pilot 5/5 avg 3,090 w → **≈26,576 sections / ~82.1M words**. `sources/ico.ts` + `processIco` + `v27-seed-ico.ts`. Others = ranked V28 list, each gated on a licence check.
+- **§5 Scottish Parliament OR — built to the gate.** Recon confirms no open API in static assets; capture-ready seam + `v27-seed-scottish-parliament.ts` dry-run; **waits on Charlie's XHR capture** (~320k est).
+
+**POST-PUSH run order:** (1) `seed-rate-limits.ts`; (2) confirm Ingest deploy SUCCESS before seeding new sourceTypes; (3) `v27-seed-scottish-courts.ts --seed` (canary + Railway PDF-egress check); (4) `v27-seed-ico.ts --seed` (canary + egress); (5) `v27-seed-quango-t2.ts --seed`; (6) at drain `v27-corpus-status-table.ts` + re-baseline + `v20-licence-backfill.ts`.
+
+**DECISIONS WAITING ON CHARLIE:** Scottish Parliament OR XHR capture (unblocks §5) · exempt-org licence verification for Ofgem/Ofwat/Ofcom/BoE (V28) · §6 DROP go (soak, ~25 Jun) · Railway Hobby downgrade 28 Jun · search-thread FTS-scope decision · (carried) FCL computational-analysis email · FCA Handbook licence · pwdata licence backfill · BAILII email.
 
 ---
 
