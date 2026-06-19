@@ -37,8 +37,27 @@ export async function probeHtmlRoute(): Promise<number> {
   } catch { return 0 }
 }
 
-// Once Charlie supplies the SpOpenData request, this lists Official Report
-// meetings. Left as the integration seam — NOT called until a config is provided.
-export async function listOfficialReports(_cfg: ScottishApiConfig): Promise<never> {
-  throw new Error('scottish-parliament: SpOpenData config not supplied — gated on Charlie’s XHR capture (V25 §6).')
+// V27 §5 recon (19 Jun 2026): the OR landing page (200, 160KB) exposes NO api/
+// data host in its static HTML; data.parliament.scot/api/ and
+// www.parliament.scot/api/ both 404. The search results load via a runtime XHR
+// whose URL + key are not in any static asset — confirming the gate. We do NOT
+// guess the key.
+//
+// CAPTURE TEMPLATE (what Charlie supplies): the Scottish COURTS API cracked in
+// V27 §2 is the model — a server-side fetch works with just Origin + Referer
+// headers (no token), CORS being browser-only. On the OR search at
+// parliament.scot, open devtools → Network → run a search → copy the one XHR
+// request's full URL + request headers into ScottishApiConfig below. The build
+// then pages it exactly like sources/scottish-courts.ts.
+export interface ScottishReportEntry {
+  id: string
+  title: string
+  date: string | null
+  url: string
+}
+
+// Once Charlie supplies the captured request, this pages Official Report
+// meetings. Integration seam — NOT called until a config is provided.
+export async function listOfficialReports(_cfg: ScottishApiConfig): Promise<ScottishReportEntry[]> {
+  throw new Error('scottish-parliament: SpOpenData config not supplied — gated on Charlie’s XHR capture (V25 §6 / V27 §5).')
 }
