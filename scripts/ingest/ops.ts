@@ -183,13 +183,25 @@ async function checkIngestLiveness(): Promise<void> {
 
 // ── Circuit breakers ──────────────────────────────────────────────────────────
 
-interface SourceCounts { done: number; sections: number }
+interface SourceCounts { done: number; sections: number | null }
 
 // Current done-row count per sourceType, and section count per sourceType via
 // the queue's corpus→sourceType mapping (corpus_sections has corpus only).
+//
+// V27 §1 fix: the per-corpus section count is read from corpus_snapshots (the
+// hourly census already computes it; PK-indexed, tiny) rather than a live
+// `GROUP BY corpus` over corpus_sections. At 17M+ rows that full scan exceeded
+// the pool's 60s client query_timeout on the production Neon link and threw
+// "Query read timeout" EVERY 15-min tick — aborting evaluateBreakers before it
+// could refresh source_status or trip/clear any breaker (the safety mechanism
+// was silently dead since ~14 Jun). section_count is an informational column
+// (written here, read nowhere — the email uses the census directly), so it must
+// never be on the breaker-critical path. The snapshot read is wrapped: on any
+// failure section counts come back null and the caller keeps the prior value,
+// but the breaker evaluation still completes.
 async function querySourceCounts(): Promise<Map<string, SourceCounts>> {
   const pool = getNeonPool()
-  const [doneRes, mapRes, secRes] = await Promise.all([
+  const [doneRes, mapRes] = await Promise.all([
     pool.query<{ sourceType: string; n: string }>(`
       SELECT "sourceType", COUNT(*)::text AS n FROM ingest_queue
       WHERE status = 'done' GROUP BY "sourceType"
@@ -197,19 +209,30 @@ async function querySourceCounts(): Promise<Map<string, SourceCounts>> {
     pool.query<{ sourceType: string; corpus: string }>(`
       SELECT DISTINCT "sourceType", corpus FROM ingest_queue
     `),
-    pool.query<{ corpus: string; n: string }>(`
-      SELECT corpus, COUNT(*)::text AS n FROM corpus_sections GROUP BY corpus
-    `),
   ])
 
-  const sectionsByCorpus = new Map<string, number>(secRes.rows.map(r => [r.corpus, parseInt(r.n, 10)]))
+  // Per-corpus section counts from the latest census snapshot (not a 17M-row
+  // live scan). null map ⇒ snapshots unavailable ⇒ leave section_count untouched.
+  let sectionsByCorpus: Map<string, number> | null = null
+  try {
+    const secRes = await pool.query<{ corpus_key: string; n: string }>(`
+      SELECT corpus_key, section_count::text AS n FROM corpus_snapshots
+      WHERE hour = (SELECT MAX(hour) FROM corpus_snapshots)
+    `)
+    if (secRes.rows.length > 0) {
+      sectionsByCorpus = new Map(secRes.rows.map(r => [r.corpus_key, parseInt(r.n, 10)]))
+    }
+  } catch (err) {
+    console.warn('[ops] section-count snapshot read failed (non-fatal):', err instanceof Error ? err.message : err)
+  }
+
   const out = new Map<string, SourceCounts>()
   for (const r of doneRes.rows) {
-    out.set(r.sourceType, { done: parseInt(r.n, 10), sections: 0 })
+    out.set(r.sourceType, { done: parseInt(r.n, 10), sections: sectionsByCorpus ? 0 : null })
   }
   for (const r of mapRes.rows) {
-    if (!out.has(r.sourceType)) out.set(r.sourceType, { done: 0, sections: 0 })
-    out.get(r.sourceType)!.sections += sectionsByCorpus.get(r.corpus) ?? 0
+    if (!out.has(r.sourceType)) out.set(r.sourceType, { done: 0, sections: sectionsByCorpus ? 0 : null })
+    if (sectionsByCorpus) out.get(r.sourceType)!.sections! += sectionsByCorpus.get(r.corpus) ?? 0
   }
   return out
 }
@@ -308,9 +331,11 @@ export async function evaluateBreakers(): Promise<void> {
     const streak = streakBySource.get(sourceKey) ?? 0
     await pool.query(`
       INSERT INTO source_status (source_key, done_count, section_count, zero_output_streak, updated_at)
-      VALUES ($1, $2, $3, $4, NOW())
+      VALUES ($1, $2, COALESCE($3, 0), $4, NOW())
       ON CONFLICT (source_key) DO UPDATE SET
-        done_count = $2, section_count = $3, zero_output_streak = $4, updated_at = NOW()
+        done_count = $2,
+        section_count = COALESCE($3, source_status.section_count),
+        zero_output_streak = $4, updated_at = NOW()
     `, [sourceKey, cur.done, cur.sections, streak])
 
     if (streak >= ZERO_OUTPUT_THRESHOLD && !tripped.has(sourceKey) && prevState.get(sourceKey) !== 'tripped') {
