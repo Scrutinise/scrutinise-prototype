@@ -391,11 +391,27 @@ export async function reseedExhaustedPwdata(): Promise<void> {
       const files = await listPwdataFiles(corpus)
       if (files.length === 0) continue
 
-      const ingestedRes = await pool.query<{ id: string }>(
-        `SELECT id FROM corpus_sections WHERE corpus = $1`, [corpus]
-      )
-      // id format: {corpus}:{docId}:{sectionRef}
-      const ingested = new Set(ingestedRes.rows.map(r => r.id.split(':')[1]))
+      // V28 §2: dedup via an index-friendly PK existence check, NOT a full id
+      // pull. The previous `SELECT id FROM corpus_sections WHERE corpus=$1`
+      // returned up to ~8.8M rows for pwdata-debates — a huge client-side
+      // transfer that reliably exceeded the pool's 60s query_timeout, so pwdata
+      // auto-reseed of new TWFY files was silently failing (V27 §1 flagged it).
+      // Every processed file writes at least id "{corpus}:{docId}:1" (seq is
+      // 1-based; empty/superseded files write a marker at :1 — see
+      // process-row.ts processPwdataFile), so a PK lookup on those exact ids
+      // tells us which files are already ingested. id = ANY(...) uses the
+      // corpus_sections PK btree; chunked to keep each array param bounded.
+      const firstIds = files.map(f => `${corpus}:${f.docId}:1`)
+      const ingested = new Set<string>()
+      const CHUNK = 10_000
+      for (let i = 0; i < firstIds.length; i += CHUNK) {
+        const slice = firstIds.slice(i, i + CHUNK)
+        const r = await pool.query<{ docid: string }>(
+          `SELECT split_part(id, ':', 2) AS docid FROM corpus_sections WHERE id = ANY($1::text[])`,
+          [slice]
+        )
+        for (const row of r.rows) ingested.add(row.docid)
+      }
 
       const priority = corpus === 'pwdata-westminster' ? 3 : 2
       let inserted = 0
