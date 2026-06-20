@@ -39,19 +39,17 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   // Resume an existing idea session if ideaId param provided
   let initialIdeaId: string | undefined
   let initialMessages: unknown[] | undefined
-  let initialStage: string | undefined
 
   if (params.ideaId && dbUser) {
     const existingIdea = await prisma.idea.findUnique({
       where: { id: params.ideaId, creatorId: dbUser.id },
-      select: { id: true, aiChatHistory: true, stage: true },
+      select: { id: true, aiChatHistory: true },
     })
     if (existingIdea) {
       initialIdeaId = existingIdea.id
       initialMessages = Array.isArray(existingIdea.aiChatHistory)
         ? (existingIdea.aiChatHistory as unknown[])
         : undefined
-      initialStage = existingIdea.stage
     }
   }
 
@@ -81,7 +79,6 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
       openingMessage={openingMessage}
       initialIdeaId={initialIdeaId}
       initialMessages={initialMessages}
-      initialStage={initialStage}
       isFirstIdea={isFirstIdea}
     />
   )
