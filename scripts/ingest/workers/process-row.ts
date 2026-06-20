@@ -145,6 +145,16 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'ico':                 return processIco(row)
     case 'division-votes':      return processDivisionVotes(row)
     case 'scottish-parliament-or': return processScottishParliamentOr(row)
+    case 'erskine-may':         return processErskineMay(row)
+    case 'early-day-motions':   return processEarlyDayMotions(row)
+    case 'petitions':           return processPetitions(row)
+    case 'members-interests':   return processMembersInterests(row)
+    case 'cps-guidance':        return processCpsGuidance(row)
+    case 'independent-reviews': return processInquiryReports(row)  // V29 §5 — identical per-PDF mechanics
+    case 'ofgem':               return processOfgem(row)
+    case 'ofcom':               return processOfcom(row)
+    case 'lgsco':               return processLgsco(row)
+    case 'library-briefings':   return processLibraryBriefings(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -2383,5 +2393,341 @@ async function processCommittees(row: QueueRow): Promise<void> {
     })
   }
 
+  await markDone(row.id, 'html')
+}
+
+// ── Erskine May (V29 §3.1 — erskinemay-api.parliament.uk, OPL v3.0) ────────────
+// docId = "sec:{sectionId}". One section per Erskine May Section node.
+
+async function processErskineMay(row: QueueRow): Promise<void> {
+  const { fetchErskineSection } = await import('../sources/erskine-may')
+  const m = /^sec:(\d+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad erskine-may docId: ${row.docId}`); return }
+  const id = Number(m[1])
+  const pageUrl = `https://erskinemay.parliament.uk/section/${id}/`
+
+  const cKey = compiledKey(row.corpus, String(id), '1')
+  if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+
+  const sec = await fetchErskineSection(id)
+  if (!sec) {
+    await upsertSection({
+      id: sectionId(row.corpus, String(id), '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'Erskine May section has no extractable content', parentDocId: String(id),
+    })
+    await markDone(row.id); return
+  }
+  await r2Put(cKey, sec.text)
+  await upsertSection({
+    id: sectionId(row.corpus, String(id), '1'), corpus: row.corpus, sourceUrl: pageUrl,
+    r2Key: cKey, wordCount: countWords(sec.text), status: 'compiled', format: 'html',
+    sectionTitle: `Erskine May: ${sec.title}`, parentDocId: String(id),
+  })
+  await markDone(row.id, 'html')
+}
+
+// ── Early Day Motions (V29 §3.2 — Oral Questions & Motions API, OPL v3.0) ──────
+// docId = "list:{skip}". One section per motion (keyed on motion Id).
+
+async function processEarlyDayMotions(row: QueueRow): Promise<void> {
+  const { fetchEdmPage, compileEdm } = await import('../sources/early-day-motions')
+  const m = /^list:(\d+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad early-day-motions docId: ${row.docId}`); return }
+  const skip = Number(m[1])
+  const TAKE = 100
+  const motions = await fetchEdmPage(skip, TAKE)
+  if (motions === null) { await markFailed(row.id, `early-day-motions list skip=${skip}: fetch failed`); return }
+  if (motions.length === 0) { await markDone(row.id, 'html'); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const mo of motions) {
+    const text = compileEdm(mo)
+    if (!text.trim()) continue
+    metas.push({
+      id: sectionId(row.corpus, String(mo.id), '1'), corpus: row.corpus,
+      sourceUrl: `https://edm.parliament.uk/early-day-motion/${mo.id}`,
+      r2Key: compiledKey(row.corpus, String(mo.id), '1'),
+      wordCount: countWords(text), status: 'compiled', format: 'html',
+      sectionTitle: mo.title || `EDM ${mo.uin ?? mo.id}`,
+      speaker: mo.primarySponsor ?? undefined, itemDate: mo.dateTabled ?? undefined,
+      parentDocId: String(mo.id),
+    })
+    texts.push(text)
+  }
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((mm, j) => r2Put(mm.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await markDone(row.id, 'html')
+}
+
+// ── CPS prosecution guidance (V29 §4 — cps.gov.uk own domain, OGL v3.0) ────────
+// docId = the CPS path (e.g. "prosecution-guidance/abuse-process"). One section
+// per guidance document from its <main> HTML.
+
+async function processCpsGuidance(row: QueueRow): Promise<void> {
+  const { fetchCpsPage } = await import('../sources/cps-guidance')
+  const pageUrl = `https://www.cps.gov.uk/${row.docId}`
+
+  const page = await fetchCpsPage(row.docId)
+  if (!page) { await markFailed(row.id, `cps-guidance ${row.docId}: page fetch failed`); return }
+  if (page.mainText.length < 200) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'CPS page has no extractable main-content text', parentDocId: row.docId,
+    })
+    await markDone(row.id); return
+  }
+
+  const cKey = compiledKey(row.corpus, row.docId, '1')
+  await r2Put(cKey, page.mainText)
+  await upsertSection({
+    id: sectionId(row.corpus, row.docId, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+    r2Key: cKey, wordCount: countWords(page.mainText), status: 'compiled', format: 'html',
+    sectionTitle: page.title || row.docId, itemDate: page.itemDate, parentDocId: row.docId,
+  })
+  await markDone(row.id, 'html')
+}
+
+// ── Ofgem publications (V29 §6 — ofgem.gov.uk own domain, OGL v3.0) ────────────
+// docId = "publications/{slug}". PDF-heavy: prefer linked PDF(s), fall back to
+// the page's <main> text (ICO pattern).
+
+async function processOfgem(row: QueueRow): Promise<void> {
+  const { fetchOfgemPage, fetchOfgemPdf } = await import('../sources/ofgem')
+  return processHtmlPlusPdfs(row, fetchOfgemPage, fetchOfgemPdf, `https://www.ofgem.gov.uk/${row.docId}`)
+}
+
+// ── Ofcom publications (V29 §6 — ofcom.org.uk own domain, ofcom-open) ──────────
+// docId = the Ofcom path. HTML-led with optional document PDFs.
+
+async function processOfcom(row: QueueRow): Promise<void> {
+  const { fetchOfcomPage, fetchOfcomPdf } = await import('../sources/ofcom')
+  return processHtmlPlusPdfs(row, fetchOfcomPage, fetchOfcomPdf, `https://www.ofcom.org.uk/${row.docId}`)
+}
+
+// Shared own-domain handler: fetch the page, extract up to 6 linked PDFs (one
+// section each), else the page's <main> text. One marker if neither yields text.
+async function processHtmlPlusPdfs(
+  row: QueueRow,
+  fetchPage: (path: string) => Promise<{ mainText: string; pdfUrls: string[]; title: string; itemDate?: string } | null>,
+  fetchPdf: (url: string) => Promise<Buffer | null>,
+  pageUrl: string,
+): Promise<void> {
+  const page = await fetchPage(row.docId)
+  if (!page) { await markFailed(row.id, `${row.sourceType} ${row.docId}: page fetch failed`); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  for (const url of page.pdfUrls.slice(0, 6)) {
+    const buf = await fetchPdf(url)
+    if (!buf) continue
+    const text = await pdfToText(buf, url)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref), corpus: row.corpus, sourceUrl: url,
+      r2Key: compiledKey(row.corpus, row.docId, ref), wordCount: countWords(text),
+      status: 'compiled', format: 'pdf', sectionTitle: page.title || row.docId,
+      itemDate: page.itemDate, parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+  if (metas.length === 0 && page.mainText.length >= 200) {
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref), corpus: row.corpus, sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref), wordCount: countWords(page.mainText),
+      status: 'compiled', format: 'html', sectionTitle: page.title || row.docId,
+      itemDate: page.itemDate, parentDocId: row.docId,
+    })
+    texts.push(page.mainText)
+  }
+  if (metas.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'page has no extractable PDF or main-content text', parentDocId: row.docId,
+    })
+    await markDone(row.id); return
+  }
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── Library briefings + POSTnotes (V28 §5 / V29 §9 — capture-gated, OPL v3.0) ──
+// docId = "{house}:{wpId}" (house = commons|lords|post). Turn-key once a
+// cf_clearance + research-briefing CPT slug capture is wired (the rows are only
+// ever seeded post-capture, so an unready fetch here means a stale capture).
+
+async function processLibraryBriefings(row: QueueRow): Promise<void> {
+  const { fetchBriefingById } = await import('../sources/library-briefings')
+  const colon = row.docId.indexOf(':')
+  const house = row.docId.slice(0, colon) as 'commons' | 'lords' | 'post'
+  const id = row.docId.slice(colon + 1)
+  if (!['commons', 'lords', 'post'].includes(house) || !id) { await markFailed(row.id, `bad library-briefings docId: ${row.docId}`); return }
+
+  const brief = await fetchBriefingById(house, id)
+  if (!brief) { await markFailed(row.id, `library-briefings ${row.docId}: fetch failed (capture stale / challenged?)`); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  const body = brief.bodyHtml ? rawToText(brief.bodyHtml) : ''
+  if (body.length > 50) {
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, id, ref), corpus: row.corpus, sourceUrl: brief.url,
+      r2Key: compiledKey(row.corpus, id, ref), wordCount: countWords(body), status: 'compiled', format: 'html',
+      sectionTitle: brief.title || undefined, itemDate: brief.date ?? undefined, parentDocId: id,
+    })
+    texts.push(body)
+  }
+  for (const url of brief.pdfUrls.slice(0, 10)) {
+    const buf = await (await import('../sources/govuk-content')).fetchPdfBuffer(url)
+    if (!buf) continue
+    const text = await pdfToText(buf, url)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, id, ref), corpus: row.corpus, sourceUrl: url,
+      r2Key: compiledKey(row.corpus, id, ref), wordCount: countWords(text), status: 'compiled', format: 'pdf',
+      sectionTitle: brief.title || undefined, itemDate: brief.date ?? undefined, parentDocId: id,
+    })
+    texts.push(text)
+  }
+  if (metas.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, id, '1'), corpus: row.corpus, sourceUrl: brief.url,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'briefing has no extractable body or PDF text', parentDocId: id,
+    })
+    await markDone(row.id); return
+  }
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, id, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── LGSCO decisions (V29 §7 — lgo.org.uk, lgsco-open OGL-equivalent) ───────────
+// Self-propagating paged walk. docId = "list:{category}:{page}" enumerates one
+// listing page into per-decision content rows + the next list page (if full);
+// docId = "decisions/{cat}/{subcat}/{ref}" extracts ONE decision → one section.
+
+async function processLgsco(row: QueueRow): Promise<void> {
+  const { fetchLgscoListPage, fetchLgscoDecision } = await import('../sources/lgsco')
+
+  const lm = /^list:([a-z0-9-]+):(\d+)$/.exec(row.docId)
+  if (lm) {
+    const { bulkInsertQueueRows } = await import('../shared/queue-client')
+    const category = lm[1]
+    const page = Number(lm[2])
+    const res = await fetchLgscoListPage(category, page)
+    if (res === null) { await markFailed(row.id, `lgsco list ${category} p${page}: fetch failed`); return }
+    const rows = res.paths.map(p => ({ id: `${row.corpus}:${p}`, corpus: row.corpus, docId: p, sourceType: 'lgsco', priority: 4 }))
+    if (res.full) rows.push({ id: `${row.corpus}:list:${category}:${page + 1}`, corpus: row.corpus, docId: `list:${category}:${page + 1}`, sourceType: 'lgsco', priority: 4 })
+    if (rows.length) await bulkInsertQueueRows(rows)
+    await markDone(row.id)
+    return
+  }
+
+  const pageUrl = `https://www.lgo.org.uk/${row.docId}`
+  const dec = await fetchLgscoDecision(row.docId)
+  if (!dec) { await markFailed(row.id, `lgsco ${row.docId}: fetch failed`); return }
+  if (dec.mainText.length < 150) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'LGSCO decision page has no extractable main-content text', parentDocId: row.docId,
+    })
+    await markDone(row.id); return
+  }
+  const cKey = compiledKey(row.corpus, row.docId, '1')
+  await r2Put(cKey, dec.mainText)
+  await upsertSection({
+    id: sectionId(row.corpus, row.docId, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+    r2Key: cKey, wordCount: countWords(dec.mainText), status: 'compiled', format: 'html',
+    sectionTitle: dec.title || row.docId, itemDate: dec.itemDate, parentDocId: row.docId,
+  })
+  await markDone(row.id, 'html')
+}
+
+// ── E-Petitions (V29 §3.3 — petition.parliament.uk, OPL v3.0) ─────────────────
+// docId = "list:{kind}:{page}" (kind = open|archived). One section per petition.
+
+async function processPetitions(row: QueueRow): Promise<void> {
+  const { fetchPetitionPage } = await import('../sources/petitions')
+  const m = /^list:(open|archived):(\d+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad petitions docId: ${row.docId}`); return }
+  const kind = m[1] as 'open' | 'archived'
+  const page = Number(m[2])
+  const items = await fetchPetitionPage(kind, page)
+  if (items === null) { await markFailed(row.id, `petitions ${kind} page=${page}: fetch failed`); return }
+  if (items.length === 0) { await markDone(row.id, 'html'); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const p of items) {
+    if (!p.text.trim()) continue
+    const base = kind === 'archived' ? `https://petition.parliament.uk/archived/petitions/${p.id}` : `https://petition.parliament.uk/petitions/${p.id}`
+    metas.push({
+      id: sectionId(row.corpus, String(p.id), '1'), corpus: row.corpus, sourceUrl: base,
+      r2Key: compiledKey(row.corpus, String(p.id), '1'),
+      wordCount: countWords(p.text), status: 'compiled', format: 'html',
+      sectionTitle: p.action || `Petition ${p.id}`, itemDate: p.createdAt ?? undefined,
+      notes: p.parliament ? `parliament ${p.parliament}` : undefined, parentDocId: String(p.id),
+    })
+    texts.push(p.text)
+  }
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((mm, j) => r2Put(mm.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await markDone(row.id, 'html')
+}
+
+// ── Register of Members' Financial Interests (V29 §3.4 — interests-api, OPL) ───
+// docId = "list:{skip}". One section per interest (keyed on interest id).
+
+async function processMembersInterests(row: QueueRow): Promise<void> {
+  const { fetchInterestsPage } = await import('../sources/members-interests')
+  const m = /^list:(\d+)$/.exec(row.docId)
+  if (!m) { await markFailed(row.id, `bad members-interests docId: ${row.docId}`); return }
+  const skip = Number(m[1])
+  const TAKE = 100
+  const items = await fetchInterestsPage(skip, TAKE)
+  if (items === null) { await markFailed(row.id, `members-interests list skip=${skip}: fetch failed`); return }
+  if (items.length === 0) { await markDone(row.id, 'html'); return }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const it of items) {
+    if (!it.text.trim()) continue
+    metas.push({
+      id: sectionId(row.corpus, String(it.id), '1'), corpus: row.corpus,
+      sourceUrl: `https://interests-api.parliament.uk/api/v1/Interests/${it.id}`,
+      r2Key: compiledKey(row.corpus, String(it.id), '1'),
+      wordCount: countWords(it.text), status: 'compiled', format: 'html',
+      sectionTitle: [it.member, it.category].filter(Boolean).join(' — ') || `Interest ${it.id}`,
+      speaker: it.member ?? undefined, itemDate: it.registrationDate ?? undefined,
+      parentDocId: String(it.id),
+    })
+    texts.push(it.text)
+  }
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((mm, j) => r2Put(mm.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
   await markDone(row.id, 'html')
 }

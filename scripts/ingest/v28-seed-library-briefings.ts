@@ -17,7 +17,9 @@ import { BRIEFING_CONFIG, isReady, probe, listBriefingsPage, type LibraryHouse }
 async function main() {
   const mode = process.argv.find(a => ['--probe', '--measure', '--seed'].includes(a)) ?? '--probe'
 
-  for (const house of ['commons', 'lords'] as LibraryHouse[]) {
+  // V29 §9: 'post' (POSTnotes) wired into the same seam — separate CF host + capture.
+  const corpusFor = (h: LibraryHouse) => h === 'post' ? 'postnotes' : `${h}-library-briefings`
+  for (const house of ['commons', 'lords', 'post'] as LibraryHouse[]) {
     if (mode === '--probe') { console.log(await probe(house)); continue }
 
     if (!isReady(house)) {
@@ -34,7 +36,7 @@ async function main() {
       process.stdout.write(`  ${house} page ${page}/${totalPages} (+${res.entries.length})\r`)
       if (mode === '--seed') {
         const { bulkInsertQueueRows } = await import('./shared/queue-client')
-        const corpus = `${house}-library-briefings`
+        const corpus = corpusFor(house)
         await bulkInsertQueueRows(res.entries.map(e => ({
           id: `${corpus}:${e.id}`, corpus, docId: `${house}:${e.id}`,
           sourceType: 'library-briefings', priority: 3,

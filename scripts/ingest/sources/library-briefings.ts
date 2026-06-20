@@ -37,7 +37,17 @@
  * T&Cs page could not be loaded through CF to verify — pending-verification).
  */
 
-export type LibraryHouse = 'commons' | 'lords'
+// V29 §9: POSTnotes (post.parliament.uk) re-probed 20 Jun 2026 — every endpoint
+// (home, /wp-json/, the research-briefing CPT, sitemap, an individual POSTnote
+// page) returns Cloudflare's managed-challenge (HTTP 403 "Just a moment…") from a
+// server context, identical to the two Library hosts. It is NOT less gated. It
+// is a SEPARATE WordPress install on a SEPARATE CF hostname, so cf_clearance
+// (host-bound) is per-host: a Commons-Library capture does NOT unblock POST's
+// listing endpoint. The shared briefing-PDF host
+// (researchbriefings.files.parliament.uk) is also CF-gated — one capture there
+// covers PDF fetching for all three. So POST is wired into the same seam here as
+// a third 'house'; it needs its own cf_clearance + CPT slug capture.
+export type LibraryHouse = 'commons' | 'lords' | 'post'
 
 export interface BriefingConfig {
   host: string
@@ -51,6 +61,8 @@ export interface BriefingConfig {
 export const BRIEFING_CONFIG: Record<LibraryHouse, BriefingConfig> = {
   commons: { host: 'https://commonslibrary.parliament.uk', postTypeSlug: null, cfClearanceEnv: 'COMMONS_LIB_CF_CLEARANCE', uaEnv: 'COMMONS_LIB_UA' },
   lords:   { host: 'https://lordslibrary.parliament.uk',   postTypeSlug: null, cfClearanceEnv: 'LORDS_LIB_CF_CLEARANCE',   uaEnv: 'LORDS_LIB_UA' },
+  // V29 §9: POSTnotes — same seam, own CF host + capture. Licence OPL v3.0.
+  post:    { host: 'https://post.parliament.uk',           postTypeSlug: null, cfClearanceEnv: 'POST_CF_CLEARANCE',        uaEnv: 'POST_UA' },
 }
 
 export interface BriefingEntry {
@@ -123,6 +135,24 @@ export async function listBriefingsPage(house: LibraryHouse, page: number, perPa
     pdfUrls: extractPdfUrls(p),
   }))
   return { entries, totalPages }
+}
+
+// Single-briefing fetch by WP post id — the worker's per-row path once a capture
+// is wired. Returns null if not ready or challenged.
+export async function fetchBriefingById(house: LibraryHouse, id: string): Promise<BriefingEntry | null> {
+  const cfg = BRIEFING_CONFIG[house]
+  if (!cfg.postTypeSlug) return null
+  const res = await fetch(`${cfg.host}/wp-json/wp/v2/${cfg.postTypeSlug}/${id}?_embed=1`, { headers: headers(cfg) })
+  if (!res.ok) return null
+  const p = await res.json() as any
+  if (!p || !p.id) return null
+  return {
+    id: String(p.id), slug: p.slug ?? String(p.id),
+    title: (p.title?.rendered ?? '').replace(/<[^>]+>/g, '').trim(),
+    date: p.date ? String(p.date).slice(0, 10) : null,
+    url: p.link ?? `${cfg.host}/research-briefings/${p.slug}/`,
+    bodyHtml: p.content?.rendered ?? '', pdfUrls: extractPdfUrls(p),
+  }
 }
 
 function extractPdfUrls(post: any): string[] {
