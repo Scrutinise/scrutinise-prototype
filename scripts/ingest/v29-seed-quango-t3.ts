@@ -52,7 +52,16 @@ function isRelevant(format: string): boolean {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function fetchJson(url: string, attempt = 1): Promise<any> {
-  const res = await fetch(url, { headers: { 'User-Agent': UA } })
+  let res: Response
+  try {
+    res = await fetch(url, { headers: { 'User-Agent': UA } })
+  } catch (e) {
+    // transient network throw (ECONNRESET etc.) — retry, don't kill the walk
+    if (attempt > 4) throw e
+    console.warn(`  network throw — retry ${attempt} in ${5 * attempt}s`)
+    await sleep(5_000 * attempt)
+    return fetchJson(url, attempt + 1)
+  }
   if (res.status === 429 || res.status >= 500) {
     if (attempt > 3) throw new Error(`${url}: HTTP ${res.status} after ${attempt} attempts`)
     console.warn(`  HTTP ${res.status} — cooling 60s (attempt ${attempt})`)
