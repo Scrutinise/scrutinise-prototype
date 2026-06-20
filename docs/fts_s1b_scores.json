@@ -1,0 +1,659 @@
+{
+  "generatedAt": "2026-06-20T17:46:20.160Z",
+  "overall": {
+    "recall": 0.5777777777777777,
+    "mrr": 0.5689814814814814
+  },
+  "exFloor": {
+    "recall": 0.56,
+    "mrr": 0.5694444444444444,
+    "n": 25
+  },
+  "byArch": [
+    {
+      "archetype": "A",
+      "n": 5,
+      "recall": 0,
+      "mrr": 0
+    },
+    {
+      "archetype": "B",
+      "n": 5,
+      "recall": 0.4,
+      "mrr": 0.32222222222222224
+    },
+    {
+      "archetype": "C",
+      "n": 5,
+      "recall": 0.6,
+      "mrr": 0.625
+    },
+    {
+      "archetype": "D",
+      "n": 5,
+      "recall": 0.6666666666666667,
+      "mrr": 0.5666666666666667
+    },
+    {
+      "archetype": "E",
+      "n": 5,
+      "recall": 0.9,
+      "mrr": 0.9
+    },
+    {
+      "archetype": "F",
+      "n": 5,
+      "recall": 0.9,
+      "mrr": 1
+    }
+  ],
+  "queries": [
+    {
+      "id": "A1",
+      "archetype": "A",
+      "flags": [
+        "INFORCE"
+      ],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "HA 1988 s.21 text",
+          "rank": null
+        },
+        {
+          "label": "HA 1988 prospective abolition (Renters’ Rights Act 2025) [INFORCE]",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "archetype": "A",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "TA 1968 s.1",
+          "rank": null
+        },
+        {
+          "label": "TA 1968 ss.2–6 (dishonesty/appropriation defs)",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "archetype": "A",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "SI 1998/1833",
+          "rank": null
+        },
+        {
+          "label": "reg 4 / regs 13–13A",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "archetype": "A",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "EqA 2010 s.149 (PSED)",
+          "rank": null
+        },
+        {
+          "label": "Sch 18 exceptions",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "archetype": "A",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "RTA 1988 ss.14–15",
+          "rank": null
+        },
+        {
+          "label": "Motor Vehicles (Wearing of Seat Belts) Regs 1993",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "archetype": "B",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "HA 1988 s.21",
+          "rank": null
+        },
+        {
+          "label": "HA 1988 s.8 / Sch 2",
+          "rank": null
+        },
+        {
+          "label": "Renters’ Rights Act 2025",
+          "rank": null
+        },
+        {
+          "label": "Deregulation Act 2015 ss.33–41 (retaliatory eviction)",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "archetype": "B",
+      "flags": [],
+      "floor": false,
+      "recall": 0.3333333333333333,
+      "mrr": 0.1111111111111111,
+      "matched": [
+        {
+          "label": "Levelling-up and Regeneration Act 2023 (short-term lets)",
+          "rank": null
+        },
+        {
+          "label": "Use Classes Order",
+          "rank": 9
+        },
+        {
+          "label": "Deregulation Act 2015 s.44 (London 90-night)",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "B3",
+      "archetype": "B",
+      "flags": [],
+      "floor": false,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "Sexual Offences Act 2003 ss.67–67A (voyeurism)",
+          "rank": null
+        },
+        {
+          "label": "Protection from Harassment Act 1997",
+          "rank": null
+        },
+        {
+          "label": "UK GDPR / DPA 2018",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "B4",
+      "archetype": "B",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "HSCA 2008 (Regulated Activities) Regs 2014 reg 20",
+          "rank": 1
+        },
+        {
+          "label": "Public Office (Accountability) Bill / Hillsborough Law [BILLS]",
+          "rank": 9
+        }
+      ]
+    },
+    {
+      "id": "B5",
+      "archetype": "B",
+      "flags": [],
+      "floor": false,
+      "recall": 0.6666666666666666,
+      "mrr": 0.5,
+      "matched": [
+        {
+          "label": "EPA 1990 Part III (statutory nuisance)",
+          "rank": 2
+        },
+        {
+          "label": "Noise Act 1996",
+          "rank": 8
+        },
+        {
+          "label": "Control of Pollution Act 1974 s.60",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "C1",
+      "archetype": "C",
+      "flags": [],
+      "floor": false,
+      "recall": 0.3333333333333333,
+      "mrr": 0.0625,
+      "matched": [
+        {
+          "label": "Levelling-up and Regeneration Act 2023",
+          "rank": null
+        },
+        {
+          "label": "Deregulation Act 2015 s.44 (London 90-night)",
+          "rank": null
+        },
+        {
+          "label": "FHL tax treatment (Finance Act)",
+          "rank": 16
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "archetype": "C",
+      "flags": [],
+      "floor": false,
+      "recall": 0.6666666666666666,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "RTA 1988 (motor vehicle classification)",
+          "rank": 3
+        },
+        {
+          "label": "Electrically Assisted Pedal Cycles Regs 1983",
+          "rank": null
+        },
+        {
+          "label": "e-scooter trial SIs (2020–)",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "archetype": "C",
+      "flags": [
+        "INFORCE"
+      ],
+      "floor": false,
+      "recall": 0.3333333333333333,
+      "mrr": 0.0625,
+      "matched": [
+        {
+          "label": "Care Act 2014 Part 1 (ss.14–18)",
+          "rank": null
+        },
+        {
+          "label": "Care and Support (Charging) Regs 2014",
+          "rank": null
+        },
+        {
+          "label": "cap provisions / commencement [INFORCE]",
+          "rank": 16
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "archetype": "C",
+      "flags": [],
+      "floor": false,
+      "recall": 0.6666666666666666,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Water Industry Act 1991 (s.94 etc.)",
+          "rank": 9
+        },
+        {
+          "label": "Environment Act 2021 storm overflow duties",
+          "rank": 1
+        },
+        {
+          "label": "Urban Waste Water Treatment Regs 1994",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "archetype": "C",
+      "flags": [],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Mobile Homes Act 1983",
+          "rank": 4
+        },
+        {
+          "label": "Mobile Homes Act 2013",
+          "rank": 1
+        },
+        {
+          "label": "Caravan Sites Act 1968",
+          "rank": 14
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "archetype": "D",
+      "flags": [
+        "GRAPH"
+      ],
+      "floor": true,
+      "recall": 0,
+      "mrr": 0,
+      "matched": [
+        {
+          "label": "Deregulation Act 2015 ss.33–41",
+          "rank": null
+        },
+        {
+          "label": "Renters’ Rights Act 2025 (prospective repeal)",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "archetype": "D",
+      "flags": [
+        "GRAPH"
+      ],
+      "floor": true,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Building Safety Act 2022",
+          "rank": 1
+        },
+        {
+          "label": "Higher-Risk Buildings regs",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "archetype": "D",
+      "flags": [
+        "GRAPH",
+        "INFORCE"
+      ],
+      "floor": true,
+      "recall": 1,
+      "mrr": 0.3333333333333333,
+      "matched": [
+        {
+          "label": "Environment Act 2021",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "archetype": "D",
+      "flags": [
+        "GRAPH"
+      ],
+      "floor": true,
+      "recall": 0.3333333333333333,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Dangerous Dogs Act 1991",
+          "rank": 1
+        },
+        {
+          "label": "ABCPA 2014 s.106",
+          "rank": null
+        },
+        {
+          "label": "XL Bully designation order 2023",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "archetype": "D",
+      "flags": [
+        "GRAPH"
+      ],
+      "floor": true,
+      "recall": 1,
+      "mrr": 0.5,
+      "matched": [
+        {
+          "label": "Grainger plc v Nicholson",
+          "rank": 2
+        },
+        {
+          "label": "Forstater v CGD Europe",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "id": "E1",
+      "archetype": "E",
+      "flags": [],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Welfare Reform Act 2012",
+          "rank": 1
+        },
+        {
+          "label": "Hansard 2011–12 (under-occupancy / bedroom tax)",
+          "rank": 18
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "archetype": "E",
+      "flags": [],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Finance Act 2017 Part 2 (Soft Drinks Industry Levy)",
+          "rank": 5
+        },
+        {
+          "label": "Budget 2016 / Finance Bill 2017 debate",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "archetype": "E",
+      "flags": [],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Investigatory Powers Act 2016",
+          "rank": 1
+        },
+        {
+          "label": "Hansard double-lock / IPC oversight",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "archetype": "E",
+      "flags": [],
+      "floor": false,
+      "recall": 0.5,
+      "mrr": 0.5,
+      "matched": [
+        {
+          "label": "Health Act 2006 Part 1",
+          "rank": null
+        },
+        {
+          "label": "2005–06 debate on scope/exemptions",
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "archetype": "E",
+      "flags": [],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Hunting Act 2004 ss.1–6",
+          "rank": 1
+        },
+        {
+          "label": "Hansard 2003–04 enforcement passages",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "id": "F1",
+      "archetype": "F",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Plastics / Wet Wipes PMBs",
+          "rank": 1
+        },
+        {
+          "label": "EPA 1990 s.140 SIs (straws/stirrers/plates)",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "archetype": "F",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Repeated Fireworks Bills",
+          "rank": 1
+        },
+        {
+          "label": "Fireworks Act 2003",
+          "rank": 8
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "archetype": "F",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Dogs and Domestic Animals (Accommodation) Bill",
+          "rank": 1
+        },
+        {
+          "label": "Renters (Reform) Bill 2023 / Renters’ Rights Act 2025 pets",
+          "rank": 5
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "archetype": "F",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 0.5,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "PR / PMB attempts",
+          "rank": 1
+        },
+        {
+          "label": "Parliamentary Voting System and Constituencies Act 2011",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "archetype": "F",
+      "flags": [
+        "BILLS"
+      ],
+      "floor": false,
+      "recall": 1,
+      "mrr": 1,
+      "matched": [
+        {
+          "label": "Emergency First Aid Education Bill 2015",
+          "rank": 1
+        },
+        {
+          "label": "Children and Social Work Act 2017 s.34 (statutory RSHE)",
+          "rank": 7
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,8 @@ The `createIndex` over 16.5M docs **with positions** OOM-crash-looped the 24 GB 
 
 Both tracks run in parallel on Railway; deliverables = the v1 gold score (`docs/FTS_S1b_SCORING.md`) + the pilot's per-merge memory trend.
 
+**RESULT — TRACK 1 done (2026-06-20 17:47 UTC):** no-positions index built over 16,509,051 rows in **339 s**, no OOM. First real query surfaced + fixed a bug in `fts-core.ts` — `table.search(query, 'fulltext')` is not a valid query type and silently fell through to vector search ("No embedding functions are defined"); corrected to `search(query, 'fts', 'body')`. **v1 gold baseline: recall@20 57.8% / MRR 0.569** (56.0% excl. [GRAPH] floor) — `docs/FTS_S1b_SCORING.md`. By archetype: E 90% · F 90% · D 67%(floor) · C 60% · B 40% · **A 0%**. The A=0% is a real **ranking** finding, not a missing index: for legislation-citation lookups ("Section 21 Housing Act 1988") the top-20 is dominated by parliamentary debates/written-answers *about* the section, and the query-time title-boost amplifies that chatter, out-ranking the actual legislation section → legislation-lookup needs tier-aware boosting/filtering (plus the matcher key is CCh-unvalidated). TRACK 2 pilot still running on `fts-pilot`.
+
 ---
 
 ## LEX REBUILD — Sprint 1: canonical state layer + Page 1 + 3 panels (2026-06-20 15:57 UTC)

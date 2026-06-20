@@ -28,7 +28,9 @@ export async function rankedSearch(
 ): Promise<Hit[]> {
   const limit = opts.limit ?? 20
   const k = Math.max(limit * OVERSCAN, 100)
-  let q = table.search(query, 'fulltext').limit(k)
+  // queryType MUST be 'fts' (+ the indexed column) — a string query with the wrong
+  // type falls through to vector search ("No embedding functions are defined").
+  let q = table.search(query, 'fts', 'body').limit(k)
   if (opts.tier) q = (q as any).where(`tier = '${opts.tier.replace(/'/g, "''")}'`)
   const rows = await q.toArray()
 
