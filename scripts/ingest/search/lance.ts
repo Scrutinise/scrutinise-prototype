@@ -15,8 +15,11 @@ import * as lancedb from '@lancedb/lancedb'
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.env') }) } catch { /* ok */ }
 
-export const FTS_TABLE = 'corpus_fts'
-export const CHECKPOINT_KEY = '_search/corpus_fts.checkpoint.json'
+// Table is env-overridable so an isolated canary (FTS_TABLE_NAME=corpus_fts_canary)
+// can validate the full load+index path without touching the real corpus_fts build.
+// Default unchanged → real build + checkpoint keys are identical to before.
+export const FTS_TABLE = process.env.FTS_TABLE_NAME ?? 'corpus_fts'
+export const CHECKPOINT_KEY = `_search/${FTS_TABLE}.checkpoint.json`
 
 export function bucket(): string {
   return process.env.CLOUDFLARE_R2_BUCKET_NAME ?? 'scrutinise-legislation'

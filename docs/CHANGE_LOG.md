@@ -4,6 +4,19 @@
 
 ---
 
+## SEARCH S1b — FTS write-path fix: mergeInsert → append (2026-06-20 06:14 BST)
+
+**Why:** the first Railway canary (load path, committed code) measured **~123 rows/s ≈ the home-connection rate** → the build is **write-bound, not bandwidth-bound**: `mergeInsert` (idempotent upsert) was the bottleneck and degrades as the table grows, so running on Railway bought ~nothing. (That canary also ran *committed* code, so the working-tree `--canary`/isolation edits had no effect — Railway builds from `Main`; the fix is inert until pushed.)
+
+**Change (`scripts/ingest/search/`):**
+- **`build-fts-index.ts`:** load phase now **appends** (`tbl.add`) instead of `mergeInsert`. Idempotency preserved by the cursor: on resume it **deletes rows `WHERE id > lastId`** (clears any appended-but-un-checkpointed tail from a crash) then appends `WHERE id > lastId` — no duplicates. New `--reset-only` (drop+recreate empty table, write fresh checkpoint, exit) keeps reset a **discrete** step, never in the Railway start command (ON_FAILURE re-runs it on crash → a `--reset` there would wipe progress). Kept `--canary` (isolated `corpus_fts_canary` load+index) + timing logs; progress line now prints live rows/s.
+- **`lance.ts`:** table name env-overridable (`FTS_TABLE_NAME`); default `corpus_fts` unchanged.
+- **`fts-railway-run.ts`:** split deploy from tail; added `idle` (park service `true`/NEVER before a push so the watch-pattern auto-redeploy doesn't re-run a stale build); `full` now launches + monitors only the first ~7 min (reads steady-state rows/s) instead of blocking for hours.
+
+**Run:** `idle` → push → local `--reset-only` (wipe the 5k partial bills-api rows) → `full` (clean append build) → monitor first-minutes rows/s; STOP if not materially > 123/s. Index-build seconds reported at completion (never yet run).
+
+---
+
 ## V29 — UK COMPLETION WAVE (20 Jun 2026)
 
 **Context:** SPRINT_V29_BRIEF.md. HEAD = V28 close. Pure-additive + orthogonal to the V26 DROP path. **§0 DROP state confirmed: the legacy `Legislation*` tables ARE STILL PRESENT on Neon (LegislationSection/Item/Amendment/Correction/CrossRef + legislation_compilation_enrichment) — the V26 §6 DROP has NOT fired; untouched this sprint.** `scripts/ingest` `tsc --noEmit` **fully clean (0 errors)**. **11 new corpora across 9 new sourceTypes — all SEED POST-PUSH** (the live worker markSkips a new sourceType until its processor deploys). Category-completeness summary at the end.
