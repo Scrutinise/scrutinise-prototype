@@ -6,6 +6,8 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3'
+import { NodeHttpHandler } from '@smithy/node-http-handler'
+import { Agent as HttpsAgent } from 'node:https'
 import path from 'path'
 
 // Load .env for local dev; Railway injects env vars directly
@@ -20,10 +22,23 @@ function buildClient(): S3Client {
   if (!accountId || !accessKey || !secretKey) {
     throw new Error('R2 credentials not set: CLOUDFLARE_R2_ACCOUNT_ID, CLOUDFLARE_R2_ACCESS_KEY_ID, CLOUDFLARE_R2_SECRET_ACCESS_KEY required')
   }
+  // Connection pool + per-request timeout are env-tunable. DEFAULT maxSockets (50)
+  // matches the AWS SDK's NodeHttpHandler default, so the live ingest worker behaves
+  // identically unless R2_MAX_SOCKETS is set — the FTS bulk build sets R2_MAX_SOCKETS=256
+  // to lift the per-row fetch ceiling. requestTimeout bounds a single request so a
+  // stuck socket can't silently wedge a whole batch (the failure mode behind the
+  // earlier false 'hang'); 120s is well above any legit R2 op, so it only fires on a
+  // genuine stall.
+  const maxSockets = parseInt(process.env.R2_MAX_SOCKETS ?? '50', 10)
+  const requestTimeout = parseInt(process.env.R2_REQUEST_TIMEOUT_MS ?? '120000', 10)
   return new S3Client({
     region: 'auto',
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
     credentials: { accessKeyId: accessKey, secretAccessKey: secretKey },
+    requestHandler: new NodeHttpHandler({
+      httpsAgent: new HttpsAgent({ keepAlive: true, maxSockets }),
+      requestTimeout,
+    }),
   })
 }
 

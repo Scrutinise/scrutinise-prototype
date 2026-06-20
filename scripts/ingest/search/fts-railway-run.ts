@@ -43,7 +43,12 @@ const STATE_KEY = path.join(__dirname, '.fts-build-service-id')
 // touching the real corpus_fts build. --canary implies --reset + proceeds to the index
 // build after the 5k load. The full run uses the default table, untouched.
 const CANARY_CMD = "sh -c 'FTS_TABLE_NAME=corpus_fts_canary npx tsx search/build-fts-index.ts --limit 5000 --canary'"
-const FULL_CMD = 'npx tsx search/build-fts-index.ts'
+// Tuned for the R2-GET-latency bottleneck: lift the S3 socket cap (R2_MAX_SOCKETS, else
+// the SDK's 50 default throttles us) AND request 256-way fetch concurrency + 5000-row
+// batches (fewer checkpoint PUTs / fewer, larger Lance fragments → also faster index
+// build). Inline env so an ON_FAILURE resume keeps the same tuning. Only the build
+// uses the higher cap; the worker keeps the 50 default.
+const FULL_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 FTS_BATCH=5000 npx tsx search/build-fts-index.ts'"
 
 // Env vars the indexer needs (NEON + R2). Names match what lance.ts / r2-client read.
 const NEEDED = [

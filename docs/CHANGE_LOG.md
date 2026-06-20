@@ -4,6 +4,19 @@
 
 ---
 
+## SEARCH S1b — lift the R2 socket cap + UTC timestamp convention (2026-06-20 10:00 UTC)
+
+**Why:** with the append fix, the build ran flat at **~290 rows/s across every corpus** (et-decisions, eur-lex, historic-hansard all ~278–333/s) → request-latency-bound, not CPU/write-bound. Root cause: the shared S3/R2 client uses the AWS SDK default **`maxSockets=50`**, so `FTS_R2_CONCURRENCY=256` only ran ~50 effective sockets (`@smithy` "socket at capacity" warnings).
+
+**Change:**
+- **`scripts/ingest/shared/r2-client.ts`:** the S3 client now takes a `NodeHttpHandler` with `maxSockets` from `R2_MAX_SOCKETS` (**default 50 = unchanged**, so the live worker is identical unless set) + a `requestTimeout` from `R2_REQUEST_TIMEOUT_MS` (default 120 s) so a stuck socket can't silently wedge a batch (the failure mode behind the earlier false "hang").
+- **`fts-railway-run.ts` `FULL_CMD`:** sets `R2_MAX_SOCKETS=256` (with `FTS_R2_CONCURRENCY=256`, `FTS_BATCH=5000`) — only the build lifts the cap.
+- **Timestamp convention → UTC.** Both boot files updated: commit `Date:` trailers, CHANGE_LOG headings, and all log comparisons use **UTC** (`[DateTime]::UtcNow…`). A BST↔UTC mixup earlier caused a false "build hung" diagnosis (the build was healthy at 230k); UTC-only removes that error class.
+
+**Run:** stop build (continuous to ~3.69M rows at ~290/s, no data lost) → push → resume `full` from the 3.69M checkpoint with 256 real sockets. Tripwire: expect ≫320/s (target ~1000+/s → ~3–5 h total); if it plateaus near ~320/s despite 256 sockets, the limiter is CPU/writer → shard. Index-build seconds reported at completion.
+
+---
+
 ## SEARCH S1b — FTS write-path fix: mergeInsert → append (2026-06-20 06:14 BST)
 
 **Why:** the first Railway canary (load path, committed code) measured **~123 rows/s ≈ the home-connection rate** → the build is **write-bound, not bandwidth-bound**: `mergeInsert` (idempotent upsert) was the bottleneck and degrades as the table grows, so running on Railway bought ~nothing. (That canary also ran *committed* code, so the working-tree `--canary`/isolation edits had no effect — Railway builds from `Main`; the fix is inert until pushed.)

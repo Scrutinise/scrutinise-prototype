@@ -17,23 +17,28 @@ The active sprint brief is referenced in `handoff_summary.md` — check there fo
 happened (e.g. to line up a CHANGE_LOG entry with the commit active when an error occurred).
 Two places, the same stamp:
 
-1. **Every commit message** carries a `Date:` trailer in `YYYY-MM-DD HH:MM` 24-hour UK local
-   time (BST/GMT), on its own line in the body alongside `Co-Authored-By:`:
+**Use UTC for every timestamp** — commit trailers, CHANGE_LOG headings, and any log
+times you compare. (A BST↔UTC mixup once caused a false "build hung" diagnosis; UTC-only
+removes that whole class of error.)
+
+1. **Every commit message** carries a `Date:` trailer in `YYYY-MM-DD HH:MM` 24-hour **UTC**,
+   on its own line in the body alongside `Co-Authored-By:`:
 
    ```
-   Date: 2026-06-20 04:29 BST
+   Date: 2026-06-20 09:58 UTC
    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
    ```
 
-2. **Every `CHANGE_LOG.md` entry** leads with that same `YYYY-MM-DD HH:MM` stamp in its
+2. **Every `CHANGE_LOG.md` entry** leads with that same `YYYY-MM-DD HH:MM UTC` stamp in its
    heading, so scanning the file shows which change shipped when.
 
-Get the stamp from the **actual system clock** at commit time — run `Get-Date -Format
-"yyyy-MM-dd HH:mm"` (the session `currentDate` gives only the date, not the time, and the
-date can roll over mid-session). Never guess or copy a stamp forward. This applies to every
-commit, including each one inside `commit-all.sh` (give each its own real stamp). See
-`docs/CLAUDE.md` §12 for the rest of the git policy (single end-of-sprint `commit-all.sh`,
-no git mid-sprint).
+Get the stamp from the **actual system clock in UTC** at commit time — run
+`[DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm")` (the session `currentDate` gives only the
+date, not the time, and the date can roll over mid-session). Never guess or copy a stamp
+forward, and never use local-time `Get-Date` for a stamp or a log comparison. This applies
+to every commit, including each one inside `commit-all.sh` (give each its own real stamp).
+See `docs/CLAUDE.md` §12 for the rest of the git policy (single end-of-sprint
+`commit-all.sh`, no git mid-sprint).
 
 **Carve-out — build-breaking fixes ship immediately.** A fix for a broken build/deploy
 (e.g. a type error failing the Vercel build) is the exception to no-mid-sprint-git: commit

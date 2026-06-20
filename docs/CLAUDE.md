@@ -336,7 +336,7 @@ Never remove a field, entity, or section without Charlie's explicit instruction.
 
 One logical unit of work per commit. Descriptive commit messages matching sprint naming conventions.
 
-**Always date *and time* stamp** in `YYYY-MM-DD HH:MM` UK local time (BST/GMT), from the actual system clock (`Get-Date -Format "yyyy-MM-dd HH:mm"`), in BOTH (a) the commit message as a `Date:` trailer alongside `Co-Authored-By:`, and (b) the heading of the matching `CHANGE_LOG.md` entry — so the history can be lined up with when a commit/error occurred. Applies to every commit, including each one inside `commit-all.sh`. See root `CLAUDE.md` → "Git — commit & CHANGE_LOG timestamping".
+**Always date *and time* stamp in UTC** (`YYYY-MM-DD HH:MM UTC`), from the actual system clock (`[DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm")`), in BOTH (a) the commit message as a `Date:` trailer alongside `Co-Authored-By:`, and (b) the heading of the matching `CHANGE_LOG.md` entry — so the history lines up with when a commit/error occurred. **Use UTC for all log timestamps/comparisons too** (a BST↔UTC mixup once caused a false "build hung" call). Applies to every commit, including each one inside `commit-all.sh`. See root `CLAUDE.md` → "Git — commit & CHANGE_LOG timestamping".
 
 **Exception — build-breaking fixes ship immediately.** A fix for a broken build/deploy (e.g. a type error failing the Vercel build) is NOT batched into the next `commit-all.sh`: commit it on its own and push to `Main` at once (still with the `Date:` trailer). This is the one sanctioned mid-sprint git action.
 
