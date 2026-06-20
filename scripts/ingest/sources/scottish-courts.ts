@@ -129,15 +129,26 @@ export function keyToPdfUrl(key: string): string {
   return `${JUDGMENT_BASE}/${key}.pdf`
 }
 
+// V29 §1: 8 of the 9 V27-drain "PDF fetch failed" rows re-fetch HTTP 200 valid
+// PDFs on a calm retry (only 1 is a genuine 404) — transient under load. A single
+// polite retry on a throw / 429 / 5xx (NOT a deterministic 404/410) recovers
+// them; 404 returns null so the worker classifies it as a dead document.
 export async function fetchJudgmentPdf(key: string): Promise<Buffer | null> {
-  try {
-    const res = await fetch(keyToPdfUrl(key), {
-      headers: { 'Referer': 'https://www.scotcourts.gov.uk/', 'User-Agent': UA, 'Accept': 'application/pdf' },
-    })
-    if (!res.ok) return null
-    const buf = Buffer.from(await res.arrayBuffer())
-    // Reject a JSON error body masquerading as 200 (the API host does this on 404)
-    if (buf.length < 5 || buf.toString('latin1', 0, 4) !== '%PDF') return null
-    return buf
-  } catch { return null }
+  const url = keyToPdfUrl(key)
+  const headers = { 'Referer': 'https://www.scotcourts.gov.uk/', 'User-Agent': UA, 'Accept': 'application/pdf' }
+  for (let i = 0; i < 3; i++) {
+    try {
+      const res = await fetch(url, { headers })
+      if (res.status === 404 || res.status === 410) return null // deterministic — no retry
+      if (res.ok) {
+        const buf = Buffer.from(await res.arrayBuffer())
+        // Reject a JSON error body masquerading as 200 (the API host does this on 404)
+        if (buf.length < 5 || buf.toString('latin1', 0, 4) !== '%PDF') return null
+        return buf
+      }
+      // 429 / 5xx / other transient: fall through to backoff
+    } catch { /* network throw: fall through to backoff */ }
+    if (i < 2) await new Promise(r => setTimeout(r, 1500 * (i + 1)))
+  }
+  return null
 }

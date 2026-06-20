@@ -23,6 +23,26 @@ const BASE = 'https://ico.org.uk'
 const SITEMAP = 'https://ico.org.uk/sitemap.xml'
 const UA = 'Mozilla/5.0 (compatible; Scrutinise-Ingest/1.0; +https://scrutinise.org)'
 
+// V29 §1: each ICO row fans out to 1 HTML + up to 6 PDF requests; the V27 full
+// drain transient-failed ~12% (3,226/26,576) — all of which re-fetch HTTP 200 on
+// a calm retry, i.e. host-side throttling under the per-row burst, not dead
+// pages. A single polite retry on a throw / 429 / 5xx (NOT on a deterministic
+// 404/410) converts those into successes. Per the politeness doctrine (§1b) a
+// connection storm under load is a rate signal answered with backoff, not a hard
+// fail. 404/410 returns immediately so a genuinely-gone page is still classified.
+async function fetchRetry(url: string, headers: Record<string, string>, attempts = 3): Promise<Response | null> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, { headers })
+      if (res.ok) return res
+      if (res.status === 404 || res.status === 410) return res // deterministic — no retry
+      // 429 / 5xx / other transient: fall through to backoff
+    } catch { /* network throw: fall through to backoff */ }
+    if (i < attempts - 1) await new Promise(r => setTimeout(r, 1500 * (i + 1)))
+  }
+  return null
+}
+
 // Leaf legal pages: /action-weve-taken/{category}/{yyyy}/{mm}/{slug}/
 const LEAF_RX = /^https:\/\/ico\.org\.uk\/action-weve-taken\/[a-z0-9-]+\/\d{4}\/\d{1,2}\/[a-z0-9-]+\/?$/
 
@@ -67,10 +87,8 @@ const MONTHS: Record<string, string> = {
 export interface IcoPage { mainText: string; pdfUrls: string[]; title: string; itemDate?: string }
 
 export async function fetchIcoPage(path: string): Promise<IcoPage | null> {
-  let res: Response
-  try { res = await fetch(`${BASE}/${path}/`, { headers: { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' } }) }
-  catch { return null }
-  if (!res.ok) return null
+  const res = await fetchRetry(`${BASE}/${path}/`, { 'User-Agent': UA, 'Accept-Encoding': 'gzip, deflate' })
+  if (!res || !res.ok) return null
   const html = await res.text()
 
   const mainM = /<main[^>]*>([\s\S]*?)<\/main>/i.exec(html)
@@ -100,9 +118,9 @@ export async function fetchIcoPage(path: string): Promise<IcoPage | null> {
 }
 
 export async function fetchIcoPdf(url: string): Promise<Buffer | null> {
+  const res = await fetchRetry(url, { 'User-Agent': UA, 'Referer': 'https://ico.org.uk/', 'Accept': 'application/pdf' })
+  if (!res || !res.ok) return null
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': UA, 'Referer': 'https://ico.org.uk/', 'Accept': 'application/pdf' } })
-    if (!res.ok) return null
     const buf = Buffer.from(await res.arrayBuffer())
     if (buf.length < 5 || buf.toString('latin1', 0, 4) !== '%PDF') return null
     return buf
