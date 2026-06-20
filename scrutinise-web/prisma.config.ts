@@ -8,13 +8,10 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
+  // Prisma 7 removed datasource.directUrl; the CLI uses datasource.url for
+  // migrations, so point url at the DIRECT (non-pooled) endpoint and fall back to
+  // DATABASE_URL. (This unknown property broke every build from v26 onward.)
   datasource: {
-    // Runtime/pooled connection. Post-V26 cutover DATABASE_URL points at the Neon
-    // pooled (-pooler) endpoint with pgbouncer=true&connection_limit=1.
-    url: process.env["DATABASE_URL"],
-    // Migrations need a direct (non-pooled) connection — PgBouncer transaction mode
-    // can't run prisma migrate. Set DIRECT_URL to the Neon non-pooled endpoint;
-    // falls back to DATABASE_URL when unset (pre-cutover Railway behaviour unchanged).
-    directUrl: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
