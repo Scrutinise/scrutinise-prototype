@@ -453,6 +453,9 @@ model User {
   aiUsageTotal              Decimal             @default(0)
   aiPreferredStyle          String?             // COLLABORATIVE | SOCRATIC | DIRECT — default COLLABORATIVE
   experienceLevel           ExperienceLevelEnum?
+  // Lex rebuild (Page 1, Box 3 "About you") — profile, reused across every idea the user creates
+  aboutYouNarrative         String?             // raw Box 3 free text
+  profileSlots              Json?               // { career, resources, legislativeKnowledge, politicalLevel, whatTheyWant }
   // Historical / seed accounts
   isHistoricalAccount       Boolean             @default(false)
   // Credibility override (admin only)
@@ -598,6 +601,13 @@ model Idea {
   bannerText                String?         // Override banner text; null = use default for origin
   // User profiling (V2K-D1)
   userAdditionalNotes       String?         // Lex-synthesised notes about user background, expertise, motivations
+  // Lex rebuild — Page 1 (Orientation): 3 input boxes + generated outputs (see docs/LEX_REBUILD_DESIGN.md §6)
+  ideaNarrative             String?         // Box 1 "The idea" raw free text
+  youAndIdeaNarrative       String?         // Box 2 "You + The Idea" raw free text
+  ideaSlots                 Json?           // { problemNarrative, currentFraming, motivation, priorWork, ideaGoal }
+  keywords                  String[]        @default([])  // accepted search keywords (government area inferred among them)
+  ideaContext               String?         // §9 migration sink — removed-field content, tagged [migrated: <field>]
+  legislationRefs           Json?           // SearchResult[] stub, populated by the search trigger on keywords accept
   // Referral
   referralLinkActive        Boolean         @default(false)
   // Ownership transfer
@@ -640,6 +650,8 @@ model Idea {
   disputedLogicFlags        DisputedLogicFlag[]
   contentReports            ContentReport[]     @relation("ReportedIdea")
   legislationLinks          IdeaLegislation[]
+  fieldStates               IdeaFieldState[]
+  documents                 Document[]
 
   @@index([creatorId])
   @@index([stage])
@@ -1264,6 +1276,54 @@ model GeneratedOutput {
   updatedAt     DateTime              @updatedAt
 
   @@unique([ideaId, documentType])
+  @@index([ideaId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 7B — LEX REBUILD: CANONICAL STATE (see docs/LEX_REBUILD_DESIGN.md)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Per-field state machine (§3.2). Server-authoritative — the single source of
+// truth for "where we are". The confirmation card renders iff status is
+// AWAITING_CONFIRMATION; Lex and the frontend NEVER write this table.
+enum FieldStatus {
+  EMPTY
+  AWAITING_CONFIRMATION
+  ACCEPTED
+  SKIPPED
+}
+
+model IdeaFieldState {
+  id        String      @id @default(uuid())
+  ideaId    String
+  idea      Idea        @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  fieldKey  String      // canonical field key, e.g. "ideaNarrative", "title", "keywords"
+  status    FieldStatus @default(EMPTY)
+  value     String?     // accepted value (plain text, or JSON-encoded for structured fields)
+  proposal  Json?       // { value, rationale } — present only while AWAITING_CONFIRMATION
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([ideaId, fieldKey])
+  @@index([ideaId])
+}
+
+// The "Initial Background" briefing (§8.2): a generated document on the idea,
+// rendered in the legislation panel and (later) the Documents/Exports tab.
+model Document {
+  id        String   @id @default(uuid())
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  kind      String   // "INITIAL_BACKGROUND"
+  status    String   @default("pending") // pending | ready
+  summary   String?  // short preview text surfaced in the canonical state object
+  body      String?  // full prose briefing (stub for now; Word/PDF render later)
+  docxUrl   String?
+  pdfUrl    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ideaId, kind])
   @@index([ideaId])
 }
 
