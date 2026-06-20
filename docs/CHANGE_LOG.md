@@ -4,6 +4,28 @@
 
 ---
 
+## LEX REBUILD — Sprint 1: canonical state layer + Page 1 + 3 panels (2026-06-20 15:57 UTC)
+
+**Why:** the old conversation layer let three sources of state (frontend, DB, Lex's parsed prose) disagree — the root cause of every Stage-1 UX bug (card revert, sidebar miscount, early stage advance, Lex looping). This sprint removes the possibility of collision: one server-authoritative canonical state, Lex taken out of the control loop, panels as pure renderers. Build input: `docs/LEX_REBUILD_DESIGN.md` §12. **Replaced the live `/ideas/create` flow in place** (Charlie's call).
+
+**Schema (additive, applied to Neon only — Railway untouched; `prisma/lex_rebuild_page1.sql`, idempotent):**
+- `enum FieldStatus {EMPTY, AWAITING_CONFIRMATION, ACCEPTED, SKIPPED}`; `IdeaFieldState` (per-field state machine, server-authoritative, `@@unique([ideaId,fieldKey])`); `Document(kind:INITIAL_BACKGROUND)`.
+- `Idea`: `ideaNarrative`, `youAndIdeaNarrative`, `ideaSlots` Json, `keywords` String[], `ideaContext` (§9 migration sink), `legislationRefs` Json. `User`: `aboutYouNarrative`, `profileSlots` Json (Box 3, reused across ideas).
+
+**State layer (`lib/lex/`):** `page1-config.ts` (field SoT: 3 boxes + title/keywords + behind-box slots + canonical-state types + the §8.3 `SearchResult` interface), `field-machine.ts` (EMPTY→AWAITING→ACCEPTED/SKIPPED + reopen; mirrors accepted values onto canonical columns per §3.4; `fireSearchTrigger`), `state.ts` (`computeCanonicalState` §3.3; `currentField` = first non-terminal; page complete when all fields terminal), `lex-client.ts` (Gemini **structured output** via `responseSchema` → `{chatText, proposal, extracted}`; validate + 1 retry; Lex never writes sequence/stage), `proposal-schema.ts` (per-field zod), `search-stub.ts` (stub shaped exactly as `SearchResult[]`, grouped ≤3/type ≤20; Initial Background prose).
+
+**API:** `GET /api/ideas/[id]/state`; `POST /api/ideas/[id]/lex` (one Lex turn → AWAITING on valid proposal, else discard proposal + keep chatText); `POST /api/ideas/[id]/fields` (`submitBox|accept|skip|reopen`; keywords-accept deterministically fires the stub search + posts Lex's one-line pointer). Old `/api/ai/[ideaId]` left for Stage 2 (untouched).
+
+**Frontend:** `CreateIdeaClient.tsx` rebuilt to hold **no progress state** — only server canonical state, the chat transcript, and an in-flight spinner. `components/lex/`: `ChatPanel` (accept card renders **iff** `currentField.status===AWAITING_CONFIRMATION` — kills the 20s revert bug), `FieldsPanel` ("X of Y" derived from the fields array, never stored), `BackgroundPanel` (Initial Background + grouped source cards), `AcceptCard`.
+
+**Migration (§9):** `scripts/migrate-lex-fields.ts` copies legacy idea fields (summaryDescription/Diagnosis/backgroundResearch/initialThoughts) into `ideaContext` tagged `[migrated: <field>]`; idempotent; dry-run default, `--apply` to write. Dry-run on Neon: would migrate 42/55 ideas. **`--apply` POST-MERGE.**
+
+**Verify:** `tsc --noEmit` clean (whole web app). 19/19 state-machine assertions pass end-to-end against Neon (boot → box submit → skips → propose/accept title → propose/accept keywords → search fires → Initial Background ready → mirrored columns → reopen; test idea cleaned up). Live HTTP + Gemini wiring is the Vercel-preview gate.
+
+**Run order (POST-MERGE):** (1) Vercel build picks up the new schema via `prisma generate` (schema already on Neon); (2) eyeball `/ideas/create` on the preview; (3) `npx tsx scripts/migrate-lex-fields.ts --apply` (against Neon).
+
+---
+
 ## SEARCH S1b — lift the R2 socket cap + UTC timestamp convention (2026-06-20 10:00 UTC)
 
 **Why:** with the append fix, the build ran flat at **~290 rows/s across every corpus** (et-decisions, eur-lex, historic-hansard all ~278–333/s) → request-latency-bound, not CPU/write-bound. Root cause: the shared S3/R2 client uses the AWS SDK default **`maxSockets=50`**, so `FTS_R2_CONCURRENCY=256` only ran ~50 effective sockets (`@smithy` "socket at capacity" warnings).

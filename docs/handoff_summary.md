@@ -6,6 +6,16 @@
 
 ---
 
+## CURRENT STATE — LEX REBUILD Sprint 1 (web app, 20 Jun 2026)
+
+**Separate workstream from ingest.** Built `LEX_REBUILD_DESIGN.md` §12 — the server-authoritative canonical-state layer + Page 1 (Orientation) + 3 pure-renderer panels, **replacing the live `/ideas/create` flow in place**. Full account: CHANGE_LOG "LEX REBUILD — Sprint 1" (2026-06-20 15:57 UTC). `tsc --noEmit` clean; 19/19 state-machine assertions pass end-to-end on Neon.
+
+- **Schema applied to Neon** (additive, idempotent `scrutinise-web/prisma/lex_rebuild_page1.sql`): `FieldStatus` enum, `IdeaFieldState`, `Document`, + Page-1 columns on `Idea`/`User`. **Railway untouched** (V26 DROP path safe). Local `.env` still points `DATABASE_URL`→Railway; production/Vercel = Neon (so the schema lives where the app reads).
+- **New:** `lib/lex/*`, `components/lex/*`, `app/api/ideas/[id]/{state,lex,fields}`, rewritten `CreateIdeaClient`. Lex switched to Gemini **structured output**. Old `/api/ai/[ideaId]` left intact for Stage 2.
+- **GATED ON CHARLIE:** approve the single `commit-all.sh` execution on the Vercel preview (per §12); then `npx tsx scripts/migrate-lex-fields.ts --apply` (§9, dry-run = 42/55 ideas). Sprints 2–4 (Diagnosis loop, real FTS wire-in, Pages 3–4) are later per §11.
+
+---
+
 ## CURRENT STATE — V29 (UK COMPLETION WAVE, 20 Jun 2026)
 
 **Sprint:** V29 (SPRINT_V29_BRIEF.md). Full account: CHANGE_LOG V29. Pure-additive, orthogonal to the V26 DROP. **§0: legacy `Legislation*` STILL PRESENT on Neon — DROP not fired; untouched.** `scripts/ingest` `tsc --noEmit` **clean (0 errors)**. **11 new corpora / 9 new sourceTypes — all seed POST-PUSH.**
