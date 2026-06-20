@@ -4,6 +4,18 @@
 
 ---
 
+## SEARCH S1b — FTS index OOM: no-positions v1 + positions memory pilot (2026-06-20 17:25 UTC)
+
+The `createIndex` over 16.5M docs **with positions** OOM-crash-looped the 24 GB Pro-ceiling container (silent SIGKILL during the native build). v0.30 `FtsOptions`/`createIndex` expose **no** memory/thread/buffer knob, and `train:false` (empty-index seeding) is scalar-only — so a single full-table positions build cannot be made to fit. Two tracks:
+
+- **TRACK 1 — no-positions v1 (`build-fts-index.ts`):** new `FTS_WITH_POSITIONS` env (default true); `false` builds the smaller no-position inverted index over the already-loaded 16.5M **in place** (resumes at `phase=indexing`, no reload) — fits memory, gives a working full-corpus BM25 search to score the gold set this week. Loses exact-phrase ranking (terms still match). If TRACK 2 passes, the positions build replaces it as v2 (repoint, nothing discarded).
+- **TRACK 2 — positions memory pilot (`build-fts-pilot.ts`, new):** incremental build into isolated `corpus_fts_pilot` — `createIndex` on chunk 1 then append-chunk + `optimize()` per chunk (Lance's documented "add new data to existing indices" = merge-to-ONE-index), logging **peak container memory** (cgroup `memory.current`, RSS fallback) measured during each merge across ~9 chunks to ~3.6M rows. Answers the real question: is per-merge peak **FLAT** (→ chunking fits 16.5M in 24 GB; report safe chunk size) or **CLIMBING** (→ chunking only delays the OOM; report slope + 24 GB crossover).
+- **Tooling:** `fts-railway-run.ts` gains `FTS_SERVICE` selector (parallel `fts-build` + `fts-pilot` services) + `v1`/`pilot` modes. `fts-watch.ts` fixed: detects **CRASHED/FAILED deployments + index restart-loops during `phase=indexing`** (the blind spot that let the earlier OOM loop run unnoticed); `FTS_SERVICE`/`FTS_CHECKPOINT_KEY`-parameterised to watch either track.
+
+Both tracks run in parallel on Railway; deliverables = the v1 gold score (`docs/FTS_S1b_SCORING.md`) + the pilot's per-merge memory trend.
+
+---
+
 ## LEX REBUILD — Sprint 1: canonical state layer + Page 1 + 3 panels (2026-06-20 15:57 UTC)
 
 **Why:** the old conversation layer let three sources of state (frontend, DB, Lex's parsed prose) disagree — the root cause of every Stage-1 UX bug (card revert, sidebar miscount, early stage advance, Lex looping). This sprint removes the possibility of collision: one server-authoritative canonical state, Lex taken out of the control loop, panels as pure renderers. Build input: `docs/LEX_REBUILD_DESIGN.md` §12. **Replaced the live `/ideas/create` flow in place** (Charlie's call).

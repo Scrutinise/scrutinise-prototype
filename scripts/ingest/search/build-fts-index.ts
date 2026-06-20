@@ -50,6 +50,11 @@ import { r2Get, r2Put } from '../shared/r2-client'
 
 const BATCH = parseInt(process.env.FTS_BATCH ?? '1000', 10)
 const R2_CONCURRENCY = parseInt(process.env.FTS_R2_CONCURRENCY ?? '32', 10)
+// withPosition stores token positions for phrase queries — but it's the dominant
+// memory cost of the index build (createIndex OOM'd the 24GB container at 16.5M docs
+// WITH positions). FTS_WITH_POSITIONS=false builds the smaller no-position v1 index
+// that fits in place (terms still match; loses exact-phrase ranking). Default true.
+const WITH_POSITION = (process.env.FTS_WITH_POSITIONS ?? 'true') !== 'false'
 // --canary: isolated end-to-end validation. Implies --reset, and (unlike a plain
 // --limit) PROCEEDS to build the FTS index over the loaded subset so createIndex is
 // exercised. Point it at a throwaway table via FTS_TABLE_NAME=corpus_fts_canary.
@@ -251,11 +256,11 @@ async function main() {
       console.log('[fts-index] optimize:', JSON.stringify(stats?.compaction ?? stats))
     } catch (e) { console.warn('[fts-index] optimize warning (continuing):', (e as Error).message) }
 
-    console.log('[fts-index] building native FTS inverted index on `body`…')
+    console.log(`[fts-index] building native FTS inverted index on \`body\` (withPosition=${WITH_POSITION})…`)
     const tIdx0 = Date.now()
     await tbl.createIndex('body', {
       config: lancedb.Index.fts({
-        withPosition: true,       // phrase queries e.g. "income tax relief"
+        withPosition: WITH_POSITION,  // positions = phrase queries, but the memory driver
         baseTokenizer: 'simple',
         stem: true,
         language: 'English',

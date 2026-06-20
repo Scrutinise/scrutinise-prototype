@@ -13,8 +13,11 @@ const fs = require('fs') as typeof import('fs')
 import { r2Get } from './shared/r2-client'
 
 const RAILWAY_API = 'https://backboard.railway.com/graphql/v2'
-const SERVICE_ID = fs.readFileSync(path.join(__dirname, 'search/.fts-build-service-id'), 'utf8').trim()
-const CHECKPOINT = '_search/corpus_fts.checkpoint.json'
+// FTS_SERVICE selects which track to watch: fts-build (real index, corpus_fts) or
+// fts-pilot (positions pilot, corpus_fts_pilot). Checkpoint key overridable to match.
+const FTS_SERVICE = process.env.FTS_SERVICE ?? 'fts-build'
+const SERVICE_ID = fs.readFileSync(path.join(__dirname, `search/.${FTS_SERVICE}-service-id`), 'utf8').trim()
+const CHECKPOINT = process.env.FTS_CHECKPOINT_KEY ?? '_search/corpus_fts.checkpoint.json'
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
@@ -27,14 +30,16 @@ async function gql<T>(query: string, variables: Record<string, unknown>): Promis
   return d.data as T
 }
 
-async function indexLogs(): Promise<string[]> {
-  const dep = await gql<{ deployments: { edges: Array<{ node: { id: string } }> } }>(
-    `query($s:String!){ deployments(first:1,input:{serviceId:$s}){ edges{ node{ id } } } }`, { s: SERVICE_ID })
-  const id = dep.deployments.edges[0]?.node.id
-  if (!id) return []
+async function latestDeployment(): Promise<{ id: string; status: string } | null> {
+  const d = await gql<{ deployments: { edges: Array<{ node: { id: string; status: string } }> } }>(
+    `query($s:String!){ deployments(first:1,input:{serviceId:$s}){ edges{ node{ id status } } } }`, { s: SERVICE_ID })
+  return d.deployments.edges[0]?.node ?? null
+}
+
+async function depLogs(id: string): Promise<string[]> {
   const l = await gql<{ deploymentLogs: Array<{ message: string }> }>(
-    `query($d:String!,$n:Int!){ deploymentLogs(deploymentId:$d,limit:$n){ message } }`, { d: id, n: 100 })
-  return l.deploymentLogs.map(r => r.message).filter(m => m.includes('[fts-index]'))
+    `query($d:String!,$n:Int!){ deploymentLogs(deploymentId:$d,limit:$n){ message } }`, { d: id, n: 150 })
+  return l.deploymentLogs.map(r => r.message)
 }
 
 async function main() {
@@ -42,26 +47,44 @@ async function main() {
   let prevRows = 0, prevT = Date.now()
   for (let i = 0; Date.now() - t0 < 16 * 3600_000; i++) {
     const raw = await r2Get(CHECKPOINT)
+    const dep = await latestDeployment()
     if (raw) {
       const cp = JSON.parse(raw) as { phase: string; rowsWritten: number; updatedAt: string; lastId: string }
       const ageMin = (Date.now() - new Date(cp.updatedAt).getTime()) / 60000
       const dt = (Date.now() - prevT) / 1000
       const rate = i === 0 ? 0 : (cp.rowsWritten - prevRows) / Math.max(dt, 1)
-      console.log(`[watch ${new Date().toISOString().slice(11, 19)}Z] phase=${cp.phase} rows=${cp.rowsWritten} ~${rate.toFixed(0)}/s cpAge=${ageMin.toFixed(1)}m last=${cp.lastId.slice(0, 60)}`)
+      console.log(`[watch ${new Date().toISOString().slice(11, 19)}Z] phase=${cp.phase} rows=${cp.rowsWritten} ~${rate.toFixed(0)}/s cpAge=${ageMin.toFixed(1)}m dep=${dep?.status ?? '?'} last=${cp.lastId.slice(0, 56)}`)
       prevRows = cp.rowsWritten; prevT = Date.now()
 
       if (cp.phase === 'done') {
         console.log('\n>>> BUILD DONE. fts-index log tail:')
-        ;(await indexLogs()).slice(-12).forEach(m => console.log('  ' + m))
+        if (dep) (await depLogs(dep.id)).filter(m => m.includes('[fts-index]')).slice(-12).forEach(m => console.log('  ' + m))
         process.exit(0)
       }
-      if (ageMin > 12 && cp.phase !== 'indexing') {
-        console.log(`\n>>> STALL: checkpoint not advanced for ${ageMin.toFixed(1)} min (phase=${cp.phase}). Investigate.`)
-        ;(await indexLogs()).slice(-8).forEach(m => console.log('  ' + m))
+      // CRASH detection — works in ANY phase, incl. indexing (which writes no
+      // checkpoint, so the cpAge stall check alone is blind to an OOM there).
+      if (dep && (dep.status === 'CRASHED' || dep.status === 'FAILED')) {
+        console.log(`\n>>> CRASH: deployment ${dep.id.slice(0, 8)} status=${dep.status} (phase=${cp.phase}, rows=${cp.rowsWritten}). Likely OOM at the index build — investigate.`)
+        ;(await depLogs(dep.id)).slice(-15).forEach(m => console.log('  ' + m))
+        process.exit(2)
+      }
+      // INDEX RESTART-LOOP detection: during indexing the checkpoint is frozen, but a
+      // repeating "building … index" banner means it is OOM-restart-looping.
+      if (cp.phase === 'indexing' && dep) {
+        const banners = (await depLogs(dep.id)).filter(m => m.includes('building native FTS inverted index')).length
+        if (banners >= 2) {
+          console.log(`\n>>> INDEX RESTART-LOOP: "building … index" seen ${banners}× on one deployment — OOM loop. Investigate.`)
+          process.exit(2)
+        }
+      }
+      // Loading-phase stall (indexing legitimately freezes the checkpoint, so exclude it).
+      if (ageMin > 12 && cp.phase === 'loading') {
+        console.log(`\n>>> STALL: checkpoint not advanced for ${ageMin.toFixed(1)} min (phase=loading). Investigate.`)
+        if (dep) (await depLogs(dep.id)).slice(-8).forEach(m => console.log('  ' + m))
         process.exit(2)
       }
     } else {
-      console.log(`[watch] checkpoint absent`)
+      console.log(`[watch] checkpoint absent (dep=${dep?.status ?? '?'})`)
     }
     await sleep(180_000)
   }

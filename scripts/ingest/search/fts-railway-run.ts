@@ -35,8 +35,11 @@ const RAILWAY_API = 'https://backboard.railway.com/graphql/v2'
 const PROJECT_ID = process.env.RAILWAY_PROJECT_ID!
 const ENV_ID = process.env.ENV_ID ?? '991f733c-719c-4217-a6d6-1dbe80642bbe'
 const REPO = 'Scrutinise/scrutinise-prototype'
-const SERVICE_NAME = 'fts-build'
-const STATE_KEY = path.join(__dirname, '.fts-build-service-id')
+// Service is selectable so two tracks run in parallel on separate services:
+//   FTS_SERVICE=fts-build (default) — the real index build (corpus_fts)
+//   FTS_SERVICE=fts-pilot           — the positions memory pilot (corpus_fts_pilot)
+const SERVICE_NAME = process.env.FTS_SERVICE ?? 'fts-build'
+const STATE_KEY = path.join(__dirname, `.${SERVICE_NAME}-service-id`)
 
 // Isolated canary: a throwaway table+checkpoint (FTS_TABLE_NAME) so it validates the
 // FULL path — Neon read → R2 body → Lance write → compact → FTS index on R2 — WITHOUT
@@ -49,6 +52,12 @@ const CANARY_CMD = "sh -c 'FTS_TABLE_NAME=corpus_fts_canary npx tsx search/build
 // build). Inline env so an ON_FAILURE resume keeps the same tuning. Only the build
 // uses the higher cap; the worker keeps the 50 default.
 const FULL_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 FTS_BATCH=5000 npx tsx search/build-fts-index.ts'"
+// TRACK 1 v1: build the no-positions index over the already-loaded 16.5M in place
+// (resumes at phase=indexing, no reset) — fits memory, working search this week.
+const V1_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_WITH_POSITIONS=false npx tsx search/build-fts-index.ts'"
+// TRACK 2 pilot: incremental positions build into corpus_fts_pilot, logging peak
+// memory per optimize() merge (flat vs climbing). Runs on the fts-pilot service.
+const PILOT_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 npx tsx search/build-fts-pilot.ts'"
 
 // Env vars the indexer needs (NEON + R2). Names match what lance.ts / r2-client read.
 const NEEDED = [
@@ -234,8 +243,10 @@ const fn = mode === 'setup' ? setup
   : mode === 'idle' ? idle
   : mode === 'canary' ? async () => { await tailLogs(await deployWith(CANARY_CMD)) }
   : mode === 'full' ? async () => { await monitorStartup(await deployWith(FULL_CMD), 7) }
+  : mode === 'v1' ? async () => { await monitorStartup(await deployWith(V1_CMD), 7) }
+  : mode === 'pilot' ? async () => { await monitorStartup(await deployWith(PILOT_CMD), 7) }
   : mode === 'logs' ? logs
   : mode === 'teardown' ? teardown
   : null
-if (!fn) { console.error('usage: fts-railway-run.ts setup|idle|canary|full|logs|teardown'); process.exit(1) }
+if (!fn) { console.error('usage: FTS_SERVICE=<svc> fts-railway-run.ts setup|idle|canary|full|v1|pilot|logs|teardown'); process.exit(1) }
 fn().catch(e => { console.error(e); process.exit(1) })
