@@ -212,6 +212,45 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // per the inquiry's own OGL statement. Evidence bundles are mixed-licence and
   // deferred.
   'inquiry-reports': OGL3,
+  // ── V29 ────────────────────────────────────────────────────────────────────
+  // §3 Parliament remainder — Open Parliament Licence v3.0 (verified family;
+  // the OPL page served full terms 12 Jun 2026, see header).
+  'erskine-may': OPL3,
+  'early-day-motions': OPL3,
+  'petitions': OPL3,
+  'members-interests': OPL3,
+  // §4 CPS prosecution guidance — VERIFIED OGL v3.0 at
+  // cps.gov.uk/crown-copyright-and-disclaimer (20 Jun 2026): CPS Crown-copyright
+  // material re-usable under the Open Government Licence (v3 stated). Confirmed
+  // at the copyright page, not a footer.
+  'cps-guidance': OGL3,
+  // §5 commissioned independent reviews — gov.uk-published OGL v3.0 (same posture
+  // as inquiry-reports; per-PDF rows). Own-domain reviews (Cass) deferred.
+  'independent-reviews': OGL3,
+  // §6 exempt orgs. Ofgem = OGL v3.0 (VERIFIED ofgem.gov.uk/copyright, 20 Jun
+  // 2026 — non-ministerial dept, Crown copyright). Ofcom = own open re-use terms
+  // (VERIFIED ofcom.org.uk/about-ofcom/website/terms-of-use, 20 Jun 2026:
+  // "reproduced free of charge … accurately and not misleading … acknowledged as
+  // Ofcom copyright"). OGL-equivalent (free + attribution; logos excluded) but
+  // NOT OGL — recorded as the regulator's own open licence 'ofcom-open'.
+  'ofgem': OGL3,
+  'ofcom': {
+    licence: 'ofcom-open',
+    attributionBoilerplate: 'Ofcom © material reproduced under Ofcom’s own open re-use terms (free of charge with attribution; logos excluded).',
+  },
+  // §7 LGSCO decisions — own open re-use, OGL-EQUIVALENT (VERIFIED
+  // lgo.org.uk/copyright, 20 Jun 2026: "re-use the information on this website
+  // free of charge in any format … copying, issuing copies to the public,
+  // publishing, broadcasting and translating … acknowledge the source and our
+  // copyright; reproduce accurately; not misleading; not for advertising"). The
+  // standard OGL permission wording on a bespoke statement; code 'lgsco-open'.
+  'lgsco': {
+    licence: 'lgsco-open',
+    attributionBoilerplate: 'Contains Local Government & Social Care Ombudsman decisions re-used under the LGSCO’s open re-use terms (free of charge with attribution).',
+  },
+  // §9 POSTnotes — Parliamentary material, Open Parliament Licence v3.0 (same
+  // family as Library briefings; capture-gated, seeds nothing until a capture).
+  'postnotes': OPL3,
 }
 
 export function licenceForCorpus(corpus: string): string | null {

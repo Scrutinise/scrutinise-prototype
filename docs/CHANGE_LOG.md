@@ -1,6 +1,60 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 19 Jun 2026 — V28 search-relay (jurisdiction + title extraction) · ops sweep · division votes · inquiry register · Scottish OR · library/reviews scoping.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 20 Jun 2026 — V29 UK Completion Wave: ICO/Scottish-courts triage · quango T3 tail · 4 Parliament APIs · CPS guidance · independent reviews · Ofgem/Ofcom · LGSCO · HMRC soft-law audit · POSTnotes seam.*
+
+---
+
+## V29 — UK COMPLETION WAVE (20 Jun 2026)
+
+**Context:** SPRINT_V29_BRIEF.md. HEAD = V28 close. Pure-additive + orthogonal to the V26 DROP path. **§0 DROP state confirmed: the legacy `Legislation*` tables ARE STILL PRESENT on Neon (LegislationSection/Item/Amendment/Correction/CrossRef + legislation_compilation_enrichment) — the V26 §6 DROP has NOT fired; untouched this sprint.** `scripts/ingest` `tsc --noEmit` **fully clean (0 errors)**. **11 new corpora across 9 new sourceTypes — all SEED POST-PUSH** (the live worker markSkips a new sourceType until its processor deploys). Category-completeness summary at the end.
+
+### §1 ICO + SCOTTISH-COURTS FAILED-ROWS TRIAGE — DIAGNOSED + FIXED (recovery POST-PUSH)
+- **Diagnosis (verify-before-asserting, live re-fetch):** the 3,226 `ico` "page fetch failed" rows and 9 `scottish-courts` "PDF fetch failed" rows are **transient host-side throttling under load, NOT dead pages**. 14/14 sampled ICO rows re-fetch HTTP 200 (full ~30KB HTML); 8/9 scottish-courts re-fetch valid 200 PDFs — exactly ONE scottish-courts row is a genuine 404. ICO's ~12% failure rate during the V27 drain is the per-row fan-out (1 HTML + up to 6 PDF requests) tripping the host's edge throttle (politeness §1b — a connection storm under load is a rate signal).
+- **Adapter fix:** `sources/ico.ts` (`fetchIcoPage`/`fetchIcoPdf`) + `sources/scottish-courts.ts` (`fetchJudgmentPdf`) hardened with a polite retry (up to 3 attempts, 1.5s×n backoff on throw / 429 / 5xx; deterministic 404/410 returns immediately so a genuinely-gone page is still classified).
+- **Recovery:** `v29-triage-fix.ts --apply` (POST-PUSH, after the hardened adapters deploy): bulk-resets the 3,226 ICO failures to `pending` (the unanimous re-fetch sample makes a per-row recheck unnecessary); per-classifies the 9 scottish-courts (8 → `pending`, the 1 confirmed-404 → an `unavailable` pdf-only marker + queue row `skipped`, honest known-unknown §1d). Dry-run verified (8 recoverable + 1 dead).
+
+### §2 QUANGO TRANCHE 3 — THE TAIL — BUILT + MEASURED (seed POST-PUSH)
+- Closes the org universe from the T1+T2 60 ALBs + all ministerial depts (115 covered) to **100%**. `v29-seed-quango-t3.ts` derives the tail = every QUANGO_UNIVERSE.csv org with relevant-format docs not already seeded. **Measured live: 968 tail orgs → 25,366 relevant docs, 0 guard-paused** (no org exceeded the 5× register estimate). Same machinery as T1/T2: `govuk-content` rows under `quangos-govuk` (OGL), broad statute-adjacent format set, URL-dedup against every held gov.uk URL, utaac/fatality excluded. Diminishing returns per org as expected (the tail is dominated by est=1 orgs). Re-baseline `quangos-govuk` at drain.
+
+### §3 PARLIAMENT REMAINDER — 4 NEW CORPORA BUILT + PILOTED (all OPL v3.0; seed POST-PUSH)
+All JSON APIs, robust pattern. The list/section endpoints already carry full content → efficient list-page rows (one queue row per page → many sections), no per-item detail fetches.
+- **§3.1 Erskine May** (`erskine-may`) — `erskinemay-api.parliament.uk`. Walk chapters 1..46, flatten the section tree → **2,038 sections**; one row per Section (`sec:{id}`) → `/api/Section/{id}` contentHtml + footnotes. Pilot §5616 → 375 words clean. The procedural rulebook for how legislation moves.
+- **§3.2 Early Day Motions** (`early-day-motions`) — `oralquestionsandmotions-api.parliament.uk/EarlyDayMotions/list`. **60,737 motions**; `list:{skip}` page rows (take=100) → one section per motion (title + full motion text + primary sponsor + signature count + date), keyed on motion Id. Backbench-opinion signal absent from Hansard.
+- **§3.3 E-Petitions** (`petitions`) — `petition.parliament.uk` open (561 pages) + archived (2,082 pages) → **~66,075 petitions**; `list:{open|archived}:{page}` rows → one section per petition (action + background + details + government response + debate + signature count + state), keyed on petition id. Pilot: "Call a General Election" 3.08M sigs / 346 words.
+- **§3.4 Register of Members' Financial Interests** (`members-interests`) — `interests-api.parliament.uk`. **3,341 interests** (ExpandChildInterests). DECISION: **one section per interest** (the natural self-contained unit — member + category + fields — vs concatenating a member's whole register); `list:{skip}` rows (Take=100), keyed on interest id.
+
+### §4 CPS PROSECUTION GUIDANCE — BUILT + PILOTED (seed POST-PUSH)
+- `cps-guidance` sourceType/corpus. **Licence VERIFIED OGL v3.0 at cps.gov.uk/crown-copyright-and-disclaimer** (the copyright page, not a footer; "Open Government Licence" + v3 stated). Own domain → own enumerator: Drupal sitemap index (`/sitemap.xml?page=1..5`, 4,272 urls) → the `/prosecution-guidance/{slug}` library (271, minus the search index) + the Code for Crown Prosecutors publication = **270 docs**. Each is server-rendered HTML in `<main>`. Pilot 3/3, avg 3,703 words → ~1.0M words. The prosecutorial interpretation of criminal law.
+
+### §5 INDEPENDENT REVIEWS — BUILT + PDF-VERIFIED + PILOTED (seed POST-PUSH)
+- `independent-reviews` sourceType/corpus, reusing the inquiry-reports per-PDF machinery (dispatch routes to `processInquiryReports`). Universe = a curated registry (`INDEPENDENT_REVIEWS_UNIVERSE.md`) ∪ a gov.uk Search discovery pass (`document_type=independent_report`, title ~ review/audit, reports-only filter excluding ToRs / government responses / consultations), **each PDF-verified live → 345 reviews / 675 report PDFs** (5 stale registry slugs self-healed/dropped). Pilot: Casey lead PDF → 72,663 words (matches the V28 probe). Own-domain reviews (Cass on cass.independent-review.uk) deferred to a Web Archive adapter (documented follow-up). OGL v3.0.
+
+### §6 EXEMPT ORGS — OFGEM + OFCOM — BOTH BUILT + PILOTED (seed POST-PUSH)
+- **Ofgem** (`ofgem`) — **OGL v3.0 VERIFIED at ofgem.gov.uk/copyright** (non-ministerial dept, Crown copyright under OGL). Drupal sitemap (10 sub-pages, 49,518 urls) → **12,899 English `/publications/` leaves** (Welsh /cy/ excluded). PDF-heavy (like ICO): prefer the linked PDF(s), fall back to `<main>`. Pilot 4/4, avg 3,897 words → ~50.3M words.
+- **Ofcom** (`ofcom`, `ofcom-open`) — **own open re-use terms VERIFIED at ofcom.org.uk/about-ofcom/website/terms-of-use** ("reproduced free of charge … accurately and not misleading … acknowledged as Ofcom copyright"; OGL-equivalent, logos excluded). CORRECTION to V27/V28: Ofcom DOES have a server-side sitemap index → 8 en topic sitemaps → **4,093 regulatory pages** (data-download/interactive pages filtered out). HTML-led + optional PDFs. Pilot 4/4, avg 791 words → ~3.2M words.
+- Ofwat (© Ofwat) and BoE (no clear open statement) stay a V30 email item — not built.
+
+### §7 OMBUDSMEN PROBE WAVE — 5 PROBED; 1 BUILT (`OMBUDSMEN_PROBE.md`)
+- All five sized + licence-checked at source. **LGSCO is the clean win** (`lgsco`, `lgsco-open`): lgo.org.uk/copyright carries the verbatim OGL permission wording on a bespoke statement (free re-use in any format, with attribution/accuracy/non-misleading/non-advertising). BUILT: self-propagating `list:{category}:{page}` rows over 10 categories → per-decision HTML (`<main>`). Pilot: decision 25-009-294 → 1,024 words clean; 9/10 categories populated. Large DB (decisions since 2013) → re-baseline at drain.
+- Ranked V30 (licence-gated): **Housing Ombudsman** (165,524 decisions — the biggest prize, licence UNVERIFIED, chase a re-use statement) > **PHSO** (Crown-ish, licence unverified, route re-resolve) > **Pensions Ombudsman** (conditional grant, email to confirm) > **FOS** (restrictive — prior permission required; 100k+ decisions). Findings in OMBUDSMEN_PROBE.md.
+
+### §8 HMRC SOFT-LAW AUDIT — COVERAGE NEAR-COMPLETE (`v29-hmrc-audit.ts`)
+- Precise title-matched coverage vs `corpus_sections`: **Revenue & Customs Briefs 120/120 (100%) · Statements of Practice 182/184 · Extra-Statutory Concessions 31/35 · VAT Notices 104/106 → only 8 genuinely-missing leaves** (the families are already carried by hmrc-ancillary 464 + hmrc-codes-guidance 14,067 + hmrc-manuals 85,197). "Likely small" confirmed; seed the 8 missing as `govuk-content` rows under `hmrc-ancillary` POST-PUSH (`--seed`).
+
+### §9 POSTNOTES RE-PROBE + LIBRARY-BRIEFINGS SEAM — GATED, NOW TURN-KEY
+- **POST re-probed (verify-before-asserting): post.parliament.uk is FULLY Cloudflare-challenged server-side** (403 "Just a moment…" on home, /wp-json/, the research-briefing CPT, sitemap, an individual POSTnote page) — it is NOT less gated than the Library hosts. CORRECTION to the brief's optimism: post.parliament.uk, commonslibrary, lordslibrary and researchbriefings.files are **distinct CF hostnames**, and cf_clearance is host-bound — so a single capture does NOT unblock all listing endpoints; the shared briefing-PDF host needs its own capture too. POST wired into the V28 §5 seam as a third `house` (corpus `postnotes`, OPL v3.0). Added `fetchBriefingById` + a turn-key `processLibraryBriefings` processor (handles commons/lords/post; body + PDFs) so the seam is genuinely capture-ready end-to-end. **The single capture that unblocks each family: a per-host `cf_clearance` cookie + the research-briefing CPT slug** (devtools, V27 Scottish-Courts technique).
+
+### §10 VERIFICATION & DOCS
+- licence-map: erskine-may/early-day-motions/petitions/members-interests/postnotes → OPL3; cps-guidance/independent-reviews/ofgem → OGL3; ofcom → `ofcom-open`; lgsco → `lgsco-open`. seed-rate-limits: 10 new sourceTypes added. jurisdiction-map: all new corpora default `uk` (correct — no devolved). `v29-corpus-status-table.ts` (run POST-DRAIN → CORPUS_STATUS_V29.csv). `OMBUDSMEN_PROBE.md` delivered. `tsc --noEmit` clean.
+
+### CATEGORY-COMPLETENESS SUMMARY (per family)
+- **DONE (data fix, live POST-PUSH):** ICO/Scottish-courts triage (§1) · HMRC soft-law (§8 — already ~98% covered, 8 to seed).
+- **BUILT-POST-PUSH (built + piloted, seed after deploy):** Quango T3 tail (§2, 968 orgs/25,366 docs) · Erskine May · Early Day Motions · E-Petitions · Members' Interests (§3) · CPS guidance (§4, 270) · Independent reviews (§5, 345/675 PDFs) · Ofgem (§6, 12,899) · Ofcom (§6, 4,093) · LGSCO (§7, large).
+- **PROBED-V30 (licence/route gated):** Housing Ombudsman (165k — licence) · PHSO · Pensions Ombudsman · FOS (§7) · Ofwat · BoE (§6).
+- **GATED-ON-CAPTURE:** POSTnotes + Commons/Lords Library briefings (§9 — per-host cf_clearance + CPT slug).
+
+### POST-PUSH RUN ORDER (after commit-all.sh deploys Ingest+Ops)
+1. `seed-rate-limits.ts` (all new sourceTypes). 2. Confirm Ingest deploy SUCCESS. 3. `v29-triage-fix.ts --apply` (§1 recovery). 4. Seed with a canary + egress check on each new host: `v29-seed-quango-t3.ts --seed` → `v29-seed-parliament.ts --seed` (all four) → `v29-seed-cps.ts --seed` → `v29-seed-independent-reviews.ts --seed` → `v29-seed-exempt-orgs.ts --seed` (ofgem+ofcom; Railway egress canary first) → `v29-seed-lgsco.ts --seed` (egress canary) → `v29-hmrc-audit.ts --seed` (8 missing). 5. At drain: re-baseline new/changed corpora; `v29-corpus-status-table.ts`; `v20-licence-backfill.ts` for NULL stragglers (ofcom-open/lgsco-open are new codes — confirm the map applies them).
 
 ---
 

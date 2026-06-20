@@ -2,7 +2,33 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 19 Jun 2026 — V28: search-relay (jurisdiction column LIVE + §1.3 title/date extraction LIVE → DROP title-gate CLEAR; written-answers split BUILT) · ops reseed timeout FIXED · division votes + Scottish OR + inquiry-register BUILT/PILOTED (seed POST-PUSH) · library briefings gated (CF) · reviews/exempt-orgs scoped. See the V28 section below. Prior: SEARCH S1b + housekeeping: FTS indexer/query-service/scoring-harness BUILT inert under `scripts/ingest/search/` (index run gated on Charlie; execution path confirmed = dedicated Railway `fts-build` service, driver `fts-railway-run.ts`; **commit-all.sh run/pushed**); `scrutinise-docs/` consolidated into `docs/` (all refs + both boot files rewritten; gold→`docs/GOLD_QUERIES.md`); Railway `LegislationSection` renamed `_DEPRECATED_2026-06-19` (reversible canary — panel confirmed on Neon GIN, exact parity, nothing reads Railway). Prior: V27 ingest BUILT + piloted, seed POST-PUSH. V26 soak continues (DROP gated, earliest ~25 Jun).*
+*Last updated: 20 Jun 2026 — V29 UK COMPLETION WAVE: 11 new corpora / 9 sourceTypes BUILT + PILOTED (seed POST-PUSH) — quango T3 tail, Erskine May, EDMs, e-petitions, members' interests, CPS guidance, independent reviews, Ofgem, Ofcom, LGSCO; ICO/Scottish-courts triage diagnosed + adapters hardened (recovery POST-PUSH); HMRC soft-law ~98% covered (8 to seed); POSTnotes re-probed (CF-gated) + seam made turn-key. `tsc --noEmit` clean. See the V29 section below. Prior V28: search-relay (jurisdiction + §1.3 title/date LIVE → DROP title-gate CLEAR; written-answers split) · ops reseed FIXED · division votes + Scottish OR + inquiry-register BUILT (seed POST-PUSH) · library briefings gated. V26 soak continues (DROP gated, earliest ~25 Jun; legacy `Legislation*` confirmed STILL PRESENT 20 Jun).*
+
+---
+
+## CURRENT STATE — V29 (UK COMPLETION WAVE, 20 Jun 2026)
+
+**Sprint:** V29 (SPRINT_V29_BRIEF.md). Full account: CHANGE_LOG V29. Pure-additive, orthogonal to the V26 DROP. **§0: legacy `Legislation*` STILL PRESENT on Neon — DROP not fired; untouched.** `scripts/ingest` `tsc --noEmit` **clean (0 errors)**. **11 new corpora / 9 new sourceTypes — all seed POST-PUSH.**
+
+**DONE this session (live data ops POST-PUSH):**
+- **§1 ICO/Scottish-courts triage.** The V27-drain failures are transient throttling, NOT dead pages (14/14 ICO + 8/9 scottish-courts re-fetch 200; 1 genuine 404). Adapters hardened with a polite retry (`ico.ts`, `scottish-courts.ts`). Recovery = `v29-triage-fix.ts --apply` POST-PUSH (resets 3,226 ICO + 8 SC to pending; 1 SC 404 → unavailable marker). Dry-run verified.
+- **§8 HMRC soft-law audit.** Coverage already ~98% (RCBs 120/120, SoP 182/184, ESC 31/35, VAT Notices 104/106) → only **8 missing leaves**; seed via `v29-hmrc-audit.ts --seed` POST-PUSH.
+
+**BUILT + PILOTED — seed POST-PUSH:**
+- **§2 Quango T3 tail** — `v29-seed-quango-t3.ts`; 968 orgs / 25,366 docs measured, 0 guard-paused; closes the org universe to 100% (`quangos-govuk`, OGL).
+- **§3 Parliament remainder (4, all OPL3):** `erskine-may` (2,038 sections) · `early-day-motions` (60,737) · `petitions` (~66,075 open+archived) · `members-interests` (3,341, one section/interest). `v29-seed-parliament.ts`.
+- **§4 CPS guidance** — `cps-guidance` (270 docs, OGL VERIFIED at /crown-copyright-and-disclaimer). `v29-seed-cps.ts`.
+- **§5 Independent reviews** — `independent-reviews` (345 reviews / 675 PDFs, registry ∪ gov.uk discovery, PDF-verified; reuses inquiry-reports machinery). Casey pilot 72,663 words. `v29-seed-independent-reviews.ts`.
+- **§6 Exempt orgs:** `ofgem` (12,899 publications, OGL VERIFIED /copyright) · `ofcom` (4,093 pages, `ofcom-open` VERIFIED /about-ofcom/website/terms-of-use). `v29-seed-exempt-orgs.ts` (Railway egress canary first).
+- **§7 LGSCO** — `lgsco` (`lgsco-open`, OGL-equivalent VERIFIED /copyright); self-propagating list rows over 10 categories. `v29-seed-lgsco.ts` (egress canary). The clean ombudsman; re-baseline at drain.
+
+**PROBED-V30 (licence/route gated, in OMBUDSMEN_PROBE.md + EXEMPT_ORGS_PROBE.md):** Housing Ombudsman (165,524 decisions — licence unverified, biggest prize) · PHSO (route re-resolve) · Pensions Ombudsman (conditional grant — email) · FOS (restrictive) · Ofwat/BoE (email).
+
+**GATED-ON-CAPTURE:** **§9 POSTnotes** re-probed = FULLY CF-challenged server-side (not less gated than Library). Wired into the V28 §5 seam as a 3rd host (corpus `postnotes`, OPL3) + turn-key `processLibraryBriefings` processor added. post.parliament.uk / commonslibrary / lordslibrary / researchbriefings.files are DISTINCT CF hosts → each needs its OWN `cf_clearance` + research-briefing CPT slug (cf_clearance is host-bound; the brief's "one capture unblocks both" was optimistic).
+
+**POST-PUSH run order:** (1) `seed-rate-limits.ts`; (2) confirm Ingest deploy SUCCESS; (3) `v29-triage-fix.ts --apply`; (4) seed (canary+egress each new host): quango-t3 → parliament(×4) → cps → independent-reviews → exempt-orgs(ofgem/ofcom) → lgsco → hmrc-audit(8 missing); (5) at drain re-baseline + `v29-corpus-status-table.ts` + `v20-licence-backfill.ts` (confirm `ofcom-open`/`lgsco-open` apply).
+
+**DECISIONS WAITING ON CHARLIE:** per-host cf_clearance + CPT-slug captures for POSTnotes/Commons/Lords Library (§9) · Housing-Ombudsman/Pensions/FOS re-use emails (§7) · Ofwat/BoE re-use emails · V26 §6 DROP go (soak; still needs search-thread Lex-grounding repoint) · Railway Hobby downgrade 28 Jun · plus the carried V28 list below.
 
 ---
 
