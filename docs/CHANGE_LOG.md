@@ -4,6 +4,26 @@
 
 ---
 
+## LEX REBUILD — Sprint 1.1: wire Lex to the field machine (orchestration fix) (2026-06-21 01:58 UTC)
+
+**Why:** Sprint 1 built the state foundation and the conversation, but never wired them — the conductor ("whose turn, what next") was missing, so the flow stalled. Build input: `LEX_REBUILD_DESIGN v.1.md` §13 (revises §3.2/§5 to the revised accept-surface model). **Un-promoted preview fix — do NOT promote to production or run the §9 migration until acceptance passes.**
+
+**Task 1 — diagnosis (bytes-before-hypotheses):** Fault 1 = **no `proposal` in Lex's output** (a prompt problem + a wiring guard). The Sprint-1 system prompt told Lex *not* to propose for box fields, `RESPONSE_SCHEMA.proposal.fieldKey` was `enum:['title','keywords']` (narratives inexpressible), and `/lex` only persisted proposals when `origin==='proposed'`. So chat answers never reached the boxes.
+
+**Revised accept-surface model (§3.2/§5):** narrative boxes have two input paths, both writing through the server to `IdeaFieldState`: **Form** (type + Save → ACCEPTED) and **Chat** (Lex tidies the answer into a `proposal` → box AWAITING → box renders the proposed text marked "proposed" → Save accepts). **The box is the single accept surface for narratives** — no chat accept-card for them. Title/Keywords keep the inline confirm in chat.
+
+**Task 2 — chat → box (`lex-client.ts`, `lex/route.ts`, `proposal-schema.ts`):** `RESPONSE_SCHEMA.proposal.fieldKey` now includes the three narratives; box instruction rewritten so Lex returns a tidied `proposal.valueText` for the current box; narrative value schemas added; `/lex` proposal guard dropped (acts on a valid proposal for the current field, box or output). Verified live: Gemini now emits `{proposal:{fieldKey:'ideaNarrative', valueText:…}, extracted:…}`.
+
+**Task 3+4 — the conductor (`lib/lex/orchestrator.ts`, new):** `orchestrateAfterWrite` runs after every field write and makes Lex speak the next step — EMPTY box → ack + its question; boxes done → propose Title; Title done → propose Keywords; keywords-accept → search + pointer + stage `DIAGNOSIS`. **Deterministic fallbacks** (platform-authored `question` per field; `fallbackTitle`/`fallbackKeywords`) guarantee no path stalls even if a Lex turn fails. `fields` route now returns `{state, messages}`; form Save produces a one-line Lex ack + next question.
+
+**Task 5 — frontend + copy:** `FieldsPanel` narrative box renders Lex's proposed text (marked "proposed", blue) with **Save & accept**; chat accept-card restricted to Title/Keywords; `CreateIdeaClient` appends server-conducted `messages`; `state.ts` advances `stage`→`DIAGNOSIS` and unlocks the Diagnosis page (`active`) on completion. First-idea intro is now the verbatim §13 intro **+ a separate first-question bubble**; name fixed to the user's **actual first name** (`firstName`, not `preferredName` which rendered "Charles").
+
+**Verify:** `tsc --noEmit` clean. 13/13 orchestration assertions pass end-to-end on Neon via the **fallback** path (boxes → ack/question → Title → Keywords → search → stage DIAGNOSIS → Diagnosis unlocked; chat-path box shows proposed text). Live Gemini structured-output emits a box proposal. **Acceptance criteria (§13) all exercised.** No schema change this sprint (Sprint-1 additive Neon schema already applied).
+
+**Shipped 21 Jun:** `commit-all.sh` pushed to `Main`; `scripts/migrate-lex-fields.ts --apply` run on Neon — **42/56 ideas migrated** (idempotent, legacy fields → `ideaContext`); `docs/LEX_PLAYBOOK.md` (as-built operational reference, the Lex companion to `INGEST_PLAYBOOK.md`) added. Remaining: validate `/ideas/create` on the preview, then promote to production.
+
+---
+
 ## SEARCH S1b — FTS index OOM: no-positions v1 + positions memory pilot (2026-06-20 17:25 UTC)
 
 The `createIndex` over 16.5M docs **with positions** OOM-crash-looped the 24 GB Pro-ceiling container (silent SIGKILL during the native build). v0.30 `FtsOptions`/`createIndex` expose **no** memory/thread/buffer knob, and `train:false` (empty-index seeding) is scalar-only — so a single full-table positions build cannot be made to fit. Two tracks:

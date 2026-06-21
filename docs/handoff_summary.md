@@ -6,13 +6,13 @@
 
 ---
 
-## CURRENT STATE — LEX REBUILD Sprint 1 (web app, 20 Jun 2026)
+## CURRENT STATE — LEX REBUILD Sprint 1.1 (web app, 21 Jun 2026)
 
-**Separate workstream from ingest.** Built `LEX_REBUILD_DESIGN.md` §12 — the server-authoritative canonical-state layer + Page 1 (Orientation) + 3 pure-renderer panels, **replacing the live `/ideas/create` flow in place**. Full account: CHANGE_LOG "LEX REBUILD — Sprint 1" (2026-06-20 15:57 UTC). `tsc --noEmit` clean; 19/19 state-machine assertions pass end-to-end on Neon.
+**Separate workstream from ingest.** Built `LEX_REBUILD_DESIGN v.1.md` §13 — the **orchestration fix** that wires Lex's conversation to the field machine (Sprint 1 built both but never connected them, so the flow stalled). Full account: CHANGE_LOG "LEX REBUILD — Sprint 1.1" (2026-06-21 01:58 UTC). `tsc --noEmit` clean; 13/13 orchestration assertions pass end-to-end on Neon (fallback path); live Gemini emits a box proposal.
 
-- **Schema applied to Neon** (additive, idempotent `scrutinise-web/prisma/lex_rebuild_page1.sql`): `FieldStatus` enum, `IdeaFieldState`, `Document`, + Page-1 columns on `Idea`/`User`. **Railway untouched** (V26 DROP path safe). Local `.env` still points `DATABASE_URL`→Railway; production/Vercel = Neon (so the schema lives where the app reads).
-- **New:** `lib/lex/*`, `components/lex/*`, `app/api/ideas/[id]/{state,lex,fields}`, rewritten `CreateIdeaClient`. Lex switched to Gemini **structured output**. Old `/api/ai/[ideaId]` left intact for Stage 2.
-- **GATED ON CHARLIE:** approve the single `commit-all.sh` execution on the Vercel preview (per §12); then `npx tsx scripts/migrate-lex-fields.ts --apply` (§9, dry-run = 42/55 ideas). Sprints 2–4 (Diagnosis loop, real FTS wire-in, Pages 3–4) are later per §11.
+- **Revised accept-surface model (§3.2/§5):** narrative boxes are now proposable from chat — Lex tidies a chat answer into a `proposal`, the **box** renders it ("proposed") and Save accepts. The box is the single accept surface for narratives; Title/Keywords keep the chat inline confirm.
+- **New/changed:** `lib/lex/orchestrator.ts` (the conductor — runs after every write, makes Lex speak the next step, deterministic fallbacks so no stalls); `lex-client`/`proposal-schema`/`lex` route (narratives proposable); `fields` route returns `{state, messages}`; `state.ts` advances stage→DIAGNOSIS + unlocks Diagnosis; `FieldsPanel`/`CreateIdeaClient`/`page.tsx` (proposed-in-box, server messages, verbatim first-idea intro + separate question bubble, name→firstName). **No schema change** (Sprint-1 additive Neon schema already applied).
+- **SHIPPED 21 Jun:** pushed to `Main`; `migrate-lex-fields.ts --apply` run on Neon (**42/56 ideas** migrated, idempotent); **`docs/LEX_PLAYBOOK.md`** added (as-built operational reference — read this + `LEX_REBUILD_DESIGN v.1.md` before any Lex work). **Remaining gate:** validate `/ideas/create` on the preview, then promote to production. Sprints 2–4 (Diagnosis loop, real FTS, Pages 3–4) later per §11.
 
 ---
 
