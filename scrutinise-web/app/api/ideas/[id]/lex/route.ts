@@ -67,9 +67,11 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Lex unavailable', errorType: 'api_error' }, { status: 502 })
   }
 
-  // Proposal handling (§4): act only when the active field is one Lex proposes,
-  // and only when valid. Otherwise discard — chatText still shown, no advance.
-  if (current && current.origin === 'proposed' && lex.proposal && lex.proposal.fieldKey === current.key) {
+  // Proposal handling (§4 + §13): act only on a proposal for the CURRENT field
+  // (narrative box or Title/Keywords) and only when valid. Otherwise discard —
+  // chatText is still shown, state never half-advances. On a valid box proposal
+  // the field goes AWAITING_CONFIRMATION and the box renders the tidied text.
+  if (current && lex.proposal && lex.proposal.fieldKey === current.key) {
     const rawValue = current.key === 'keywords' ? lex.proposal.valueList : lex.proposal.valueText
     const valid = validateProposal({ fieldKey: current.key, value: rawValue, rationale: lex.proposal.rationale })
     if (valid) {

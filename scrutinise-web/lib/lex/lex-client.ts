@@ -39,7 +39,10 @@ const RESPONSE_SCHEMA = {
       type: 'object',
       nullable: true,
       properties: {
-        fieldKey: { type: 'string', enum: ['title', 'keywords'] },
+        fieldKey: {
+          type: 'string',
+          enum: ['ideaNarrative', 'youAndIdeaNarrative', 'aboutYou', 'title', 'keywords'],
+        },
         valueText: { type: 'string' },
         valueList: { type: 'array', items: { type: 'string' } },
         rationale: { type: 'string' },
@@ -77,7 +80,7 @@ export function buildLexSystemPrompt(ctx: LexTurnContext): string {
 
 ${
   field.origin === 'box'
-    ? `This is a free-text box the user fills in themselves. Talk with them about it, and if the box looks thin against the "helps to cover" list, nudge GENTLY — at most twice, then move on. Do NOT emit a proposal for a box field. Quietly capture any slots you can in "extracted".`
+    ? `This box can be filled two ways: the user types it in themselves, or they answer you here in chat and you tidy their words into it. When the user's message contains enough to fill this box, RETURN A PROPOSAL — proposal.fieldKey "${field.key}", proposal.valueText = a tidied version of what they said for THIS field, in their own voice (first person), concise, no preamble or quotes. Also reply briefly in chatText. If they haven't answered this yet, just ask the question and nudge obvious gaps GENTLY (at most twice), with no proposal. The user confirms by SAVING the box — never tell them to "accept a card". Quietly capture any slots in "extracted".`
     : field.key === 'title'
       ? `Propose a working title from what the user has told you. It should name the problem OR the solution, not both. Plain English. Put it in proposal.valueText with proposal.fieldKey "title".`
       : `Propose 4–8 search keywords drawn from everything the user has said. INCLUDE the likely government department as one keyword among the others — do not ask which department. Put them in proposal.valueList with proposal.fieldKey "keywords".`

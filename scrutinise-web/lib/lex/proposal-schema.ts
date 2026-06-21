@@ -11,8 +11,15 @@ const keywordsSchema = z
   .min(1)
   .max(12)
 
+// Narrative boxes are now proposable too: Lex tidies a chat answer into the
+// box's content (§13). Any non-trivial string is valid.
+const narrativeSchema = z.string().trim().min(1).max(10000)
+
 // Map of fieldKey → zod schema for the proposal's `value`.
 const FIELD_VALUE_SCHEMAS: Record<string, z.ZodTypeAny> = {
+  ideaNarrative: narrativeSchema,
+  youAndIdeaNarrative: narrativeSchema,
+  aboutYou: narrativeSchema,
   title: titleSchema,
   keywords: keywordsSchema,
 }
