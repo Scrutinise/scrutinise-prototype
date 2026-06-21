@@ -12,6 +12,7 @@ import {
   reopenField,
   fireSearchTrigger,
 } from '@/lib/lex/field-machine'
+import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -61,11 +62,6 @@ export async function POST(req: Request, { params }: Params) {
           }
         }
         await acceptField(id, idea.creatorId, fieldKey, edited)
-        // Deterministic, platform-owned search trigger (§8.4).
-        if (fieldKey === 'keywords') {
-          await fireSearchTrigger(id)
-          await postSearchPointer(id, idea.aiChatHistory)
-        }
         break
       }
       case 'skip':
@@ -80,18 +76,30 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Write failed' }, { status: 500 })
   }
 
+  // Post-write conducting (§13 Task 3): every write produces a next step.
+  let messages: string[] = []
+  if (action === 'accept' && fieldKey === 'keywords') {
+    // Deterministic, platform-owned search trigger (§8.4) + Lex's one-line pointer.
+    // Stage advance to DIAGNOSIS is derived in computeCanonicalState once complete.
+    await fireSearchTrigger(id)
+    const pointer =
+      "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right. Next we'll move on to the diagnosis."
+    await postLexPointer(id, pointer)
+    messages = [pointer]
+  } else {
+    messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages
+  }
+
   const state = await computeCanonicalState(id)
-  return NextResponse.json({ state })
+  return NextResponse.json({ state, messages })
 }
 
-// Lex's one-line pointer into the chat after the briefing lands (§8.1).
-async function postSearchPointer(ideaId: string, history: unknown) {
-  const msg: ChatMsg = {
-    role: 'lex',
-    content:
-      "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right.",
-    timestamp: new Date().toISOString(),
-  }
-  const updated: ChatMsg[] = [...(Array.isArray(history) ? (history as ChatMsg[]) : []), msg].slice(-60)
+// Append a Lex message to the chat history.
+async function postLexPointer(ideaId: string, content: string) {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { aiChatHistory: true } })
+  const updated: ChatMsg[] = [
+    ...(Array.isArray(idea?.aiChatHistory) ? (idea!.aiChatHistory as ChatMsg[]) : []),
+    { role: 'lex', content, timestamp: new Date().toISOString() },
+  ].slice(-60)
   await prisma.idea.update({ where: { id: ideaId }, data: { aiChatHistory: updated } })
 }

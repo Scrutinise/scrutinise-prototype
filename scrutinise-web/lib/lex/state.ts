@@ -78,10 +78,12 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     fields,
   }
 
-  const lockedPages: CanonicalPage[] = LOCKED_PAGES.map((p) => ({
+  // When Orientation completes, the next page (Diagnosis) unlocks to 'active'
+  // (its fields are built in Sprint 2); the rest stay locked.
+  const lockedPages: CanonicalPage[] = LOCKED_PAGES.map((p, i) => ({
     key: p.key,
     label: p.label,
-    status: 'locked',
+    status: orientationComplete && i === 0 ? 'active' : 'locked',
     fields: [],
   }))
 
@@ -95,7 +97,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
 
   return {
     ideaId: idea.id,
-    stage: 'ORIENTATION',
+    stage: orientationComplete ? 'DIAGNOSIS' : 'ORIENTATION',
     currentField: current ? { key: current.key, status: current.status } : null,
     pages: [orientationPage, ...lockedPages],
     userProfile: {

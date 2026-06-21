@@ -32,6 +32,9 @@ export interface FieldDef {
   hints?: string[]
   /** Required fields are highlighted in the UI; everything may still be skipped. */
   required?: boolean
+  /** Platform-authored question/prompt — the deterministic fallback Lex elaborates
+   *  on. Guarantees the flow never stalls even if a Lex turn fails (§13 Task 3). */
+  question?: string
 }
 
 export interface PageDef {
@@ -51,6 +54,7 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
     scope: 'idea',
     origin: 'box',
     required: true,
+    question: "What's the problem or challenge you want to address?",
     hints: [
       'what you want to change',
       'the problem as you see it',
@@ -65,6 +69,7 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
     type: 'narrative',
     scope: 'idea',
     origin: 'box',
+    question: 'Why does this matter to you, and what would success look like?',
     hints: [
       'why it matters to you',
       "anything you've already done, written, or researched (you can upload it)",
@@ -77,6 +82,8 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
     type: 'narrative',
     scope: 'user',
     origin: 'box',
+    question:
+      "Tell me a bit about you — your experience in this area and in politics, and what you're hoping Scrutinise can do for you.",
     hints: [
       'who you are',
       'your experience in this area',
