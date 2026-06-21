@@ -37,22 +37,30 @@ function BoxField({
   onSubmitBox: (key: string, value: string) => void
   onSkip: (key: string) => void
 }) {
-  const [draft, setDraft] = useState(typeof field.value === 'string' ? field.value : '')
-  // Re-sync when the server value changes (e.g. accepted elsewhere).
-  useEffect(() => {
-    setDraft(typeof field.value === 'string' ? field.value : '')
-  }, [field.value])
+  // The BOX is the accept surface (§5/§13): when AWAITING_CONFIRMATION the box is
+  // pre-filled with Lex's proposed text (marked "proposed") and Save confirms it.
+  const proposed =
+    field.status === 'AWAITING_CONFIRMATION' && typeof field.proposal?.value === 'string'
+      ? (field.proposal!.value as string)
+      : null
+  const baseline = proposed ?? (typeof field.value === 'string' ? field.value : '')
+  const [draft, setDraft] = useState(baseline)
+  // Re-sync when the server hands us a new value or proposal (only happens on a
+  // transition — never mid-keystroke — so a user's in-progress text isn't clobbered).
+  useEffect(() => { setDraft(baseline) }, [field.value, proposed]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const dirty = draft.trim() !== (typeof field.value === 'string' ? field.value : '')
   const hints = hintsFor(field.key)
 
   return (
-    <div className="rounded-lg border border-zinc-200 p-3">
+    <div className={`rounded-lg border p-3 ${proposed ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
       <div className="flex items-center gap-2 mb-1.5">
         <StatusDot status={field.status} />
-        <span className="text-sm font-medium text-zinc-800">{field.label}</span>
+        <span className="text-sm font-medium text-zinc-800 flex-1">{field.label}</span>
+        {proposed && (
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex</span>
+        )}
       </div>
-      {hints.length > 0 && (
+      {hints.length > 0 && !proposed && (
         <p className="text-[11px] text-zinc-400 mb-2 leading-snug">{hints.join(' · ')}</p>
       )}
       <textarea
@@ -65,10 +73,10 @@ function BoxField({
       <div className="flex gap-2 mt-1.5">
         <button
           onClick={() => onSubmitBox(field.key, draft.trim())}
-          disabled={busy || !draft.trim() || !dirty}
+          disabled={busy || !draft.trim()}
           className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
         >
-          Save
+          {proposed ? 'Save & accept' : 'Save'}
         </button>
         {field.status !== 'ACCEPTED' && field.status !== 'SKIPPED' && (
           <button

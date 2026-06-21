@@ -53,30 +53,37 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     }
   }
 
-  let openingMessage: string
+  // §13 Task 5 — first idea: the full intro, then the first question as a SEPARATE
+  // bubble immediately after. Verbatim. Returning users keep a short greeting.
+  const FIRST_IDEA_INTRO =
+    "I'm here to help you develop and build support for a credible proposal for your idea, ready for " +
+    'Parliamentary colleagues. There are three panels here: this is the chat, where you can use me to help you ' +
+    'develop your proposal; next to it is the proposal itself as you build it; and last is the legislative panel, ' +
+    "where we'll place relevant legislation for review once we have enough information to source data that's " +
+    'helpful. You can answer the questions here in the chat, or type directly into the form in the second panel ' +
+    "if you don't need my help."
+  const FIRST_QUESTION = "What's the problem or challenge you want to address?"
+
+  let openingBubbles: string[]
   let isFirstIdea = false
 
-  if (!dbUser) {
-    // JIT sync not yet run — fall back to default
-    openingMessage = "I'm Lex, your researcher and guide. Before we start, would you like a quick guide to how this works, or do you want to dive straight in?"
-    isFirstIdea = true
-  } else {
-    const ideaCount = await prisma.idea.count({ where: { creatorId: dbUser.id } })
-    const name = dbUser.preferredName ?? dbUser.firstName ?? ''
-    const hour = new Date().getUTCHours()
-    const timeOfDay = getTimeOfDay(hour)
+  // Use the user's actual first name (not preferredName, which rendered "Charles").
+  const firstName = dbUser?.firstName ?? ''
+  const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id } }) : 0
 
-    if (ideaCount === 0) {
-      isFirstIdea = true
-      openingMessage = `Welcome ${name}, I'm Lex, your researcher and guide. Before we start, would you like a quick guide to how this works, or do you want to dive straight in?`
-    } else {
-      openingMessage = `Good ${timeOfDay} ${name}, I assume you know what you're doing, but just in case, the button below takes you on a short guided tour. What's the problem or challenge you want to address?`
-    }
+  if (!dbUser || ideaCount === 0) {
+    isFirstIdea = true
+    openingBubbles = [FIRST_IDEA_INTRO, FIRST_QUESTION]
+  } else {
+    const timeOfDay = getTimeOfDay(new Date().getUTCHours())
+    openingBubbles = [
+      `Good ${timeOfDay}${firstName ? ' ' + firstName : ''}, I assume you know what you're doing, but just in case, the button below takes you on a short guided tour. ${FIRST_QUESTION}`,
+    ]
   }
 
   return (
     <CreateIdeaClient
-      openingMessage={openingMessage}
+      openingBubbles={openingBubbles}
       initialIdeaId={initialIdeaId}
       initialMessages={initialMessages}
       isFirstIdea={isFirstIdea}

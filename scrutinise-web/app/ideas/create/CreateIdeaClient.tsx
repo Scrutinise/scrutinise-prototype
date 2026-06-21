@@ -17,18 +17,18 @@ import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import type { CanonicalState, CanonicalField } from '@/lib/lex/page1-config'
 
 interface Props {
-  openingMessage?: string
+  openingBubbles?: string[]
   initialIdeaId?: string
   initialMessages?: unknown[]
   isFirstIdea?: boolean
 }
 
-const DEFAULT_OPENING = "I'm Lex, your researcher and guide. What's the challenge you want to fix?"
+const DEFAULT_OPENING = ["I'm Lex, your researcher and guide. What's the challenge you want to fix?"]
 
 type Tab = 'chat' | 'fields' | 'background'
 
-export default function CreateIdeaClient({ openingMessage, initialIdeaId, initialMessages }: Props) {
-  const opening = openingMessage ?? DEFAULT_OPENING
+export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages }: Props) {
+  const opening = openingBubbles?.length ? openingBubbles : DEFAULT_OPENING
 
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
   const [state, setState] = useState<CanonicalState | null>(null)
@@ -36,7 +36,9 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     const seeded = (initialMessages as ChatMessage[] | undefined)?.filter(
       (m) => m && (m.role === 'user' || m.role === 'lex'),
     )
-    return seeded && seeded.length ? seeded : [{ role: 'lex', content: opening }]
+    return seeded && seeded.length
+      ? seeded
+      : opening.map((content) => ({ role: 'lex' as const, content }))
   })
   const [busy, setBusy] = useState(false)
   const [booting, setBooting] = useState(true)
@@ -106,7 +108,6 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
   const transition = useCallback(
     async (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen', value?: string | string[]) => {
       if (!ideaId) return
-      const wasKeywordsAccept = action === 'accept' && fieldKey === 'keywords'
       setBusy(true)
       setError(null)
       try {
@@ -117,20 +118,14 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
         })
         if (!res.ok) throw new Error('field transition failed')
         const data = await res.json()
-        if (data.state) {
-          applyState(data.state)
-          // Mirror Lex's persisted one-line pointer into the live transcript.
-          if (wasKeywordsAccept && data.state.initialBackground?.status === 'ready') {
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: 'lex',
-                content:
-                  "I've pulled an initial background briefing together — it's in the legislation panel on the right.",
-              },
-            ])
-          }
+        // The server conducts the next step and returns any new Lex bubbles.
+        if (Array.isArray(data.messages) && data.messages.length) {
+          setMessages((prev) => [
+            ...prev,
+            ...data.messages.map((c: string) => ({ role: 'lex' as const, content: c })),
+          ])
         }
+        if (data.state) applyState(data.state)
       } catch {
         setError('That didn’t save — please try again.')
       } finally {
@@ -140,10 +135,13 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
     [ideaId, applyState],
   )
 
+  // The accept card lives in chat ONLY for Title/Keywords (the narrative boxes are
+  // their own accept surface — §5/§13).
   const awaitingField: CanonicalField | null =
     state?.currentField?.status === 'AWAITING_CONFIRMATION'
       ? state.pages[0]?.fields.find((f) => f.key === state.currentField!.key) ?? null
       : null
+  const chatAwaitingField = awaitingField && awaitingField.type !== 'narrative' ? awaitingField : null
 
   return (
     <div className="flex flex-col h-screen bg-white">
@@ -179,11 +177,11 @@ export default function CreateIdeaClient({ openingMessage, initialIdeaId, initia
             <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'chat' ? 'block' : 'hidden'} lg:block`}>
               <ChatPanel
                 messages={messages}
-                awaitingField={awaitingField}
+                awaitingField={chatAwaitingField}
                 busy={busy}
                 onSend={sendMessage}
-                onAccept={(value) => awaitingField && transition(awaitingField.key, 'accept', value)}
-                onDecline={() => awaitingField && transition(awaitingField.key, 'skip')}
+                onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
+                onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
               />
             </div>
 
