@@ -18,6 +18,12 @@
 
 ---
 
+## CURRENT STATE — LEX REBUILD Sprint 1.2 (web app, 23 Jun 2026)
+
+**Polish (23 Jun, preview only — NOT promoted):** (1) Background panel now renders the Initial Background **markdown** via `react-markdown@10` (no prior renderer; Tailwind v4 has no `prose` plugin → `Components` map); (2) returning-user intro reworded to drop the non-existent "guided tour button"; (3) failed Lex turn now **logs cause per attempt** (kind/status/body, or raw bytes on schema-validation) and the client **retries once** before the fallback. `tsc` clean. CHANGE_LOG "LEX REBUILD — Sprint 1.2" (2026-06-23 17:42 UTC); recorded in `LEX_PLAYBOOK.md`. Below = Sprint 1.1 (still current architecture).
+
+---
+
 ## CURRENT STATE — LEX REBUILD Sprint 1.1 (web app, 21 Jun 2026)
 
 **Separate workstream from ingest.** Built `LEX_REBUILD_DESIGN v.1.md` §13 — the **orchestration fix** that wires Lex's conversation to the field machine (Sprint 1 built both but never connected them, so the flow stalled). Full account: CHANGE_LOG "LEX REBUILD — Sprint 1.1" (2026-06-21 01:58 UTC). `tsc --noEmit` clean; 13/13 orchestration assertions pass end-to-end on Neon (fallback path); live Gemini emits a box proposal.

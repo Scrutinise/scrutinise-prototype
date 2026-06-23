@@ -77,6 +77,14 @@ narratives/title, `valueList` for keywords.
 Editing the Lex prompt (`lib/lex/lex-client.ts → buildLexSystemPrompt`) changes only `chatText`/proposal
 quality — never the mechanics. (Known prompt nit to tidy whenever: Lex sometimes thanks the user.)
 
+**Failure handling (Sprint 1.2 — bytes before hypotheses).** A failed Lex turn is usually transient
+(it self-recovered on resend). `runLexTurn` logs the **cause per attempt** before anything else —
+`[lex] gemini call failed` with `{kind, status, bodySnippet}` (kind ∈ `rate_limit` 429 / `upstream_5xx` /
+`http_error` / `timeout` / `network` / `empty_response`), and `[lex] structured-output validation failed`
+with the raw bytes when the output fails our shape check. The `/lex` route logs a summary and returns
+`errorType=kind`. The **client retries the whole turn once** (700 ms) before showing "I lost the
+connection". Diagnose from the server logs first; don't tune timeouts/temperature blind.
+
 ---
 
 ## 5. Search trigger + Initial Background (design §8)
@@ -85,6 +93,12 @@ Deterministic, platform-owned: on **keywords accept**, `fireSearchTrigger` runs 
 `Idea.legislationRefs` (`SearchResult[]`) + a `Document(kind:'INITIAL_BACKGROUND')`, then Lex posts a
 one-line pointer. **Stubbed now** (`lib/lex/search-stub.ts`) shaped *exactly* as the §8.3 `SearchResult`
 interface — wiring real FTS in Sprint 3 is a one-line source swap. Grouped ≤3 per type, capped ~20.
+
+The Initial Background **body is markdown** (the stub emits headings/bold/lists; Lex-generated briefings
+later may be richer). `BackgroundPanel` renders it with **`react-markdown`** (added Sprint 1.2 — there was
+no existing markdown renderer; checked first to avoid a duplicate). Tailwind v4 has **no typography plugin**
+(no `prose` class), so element styling is supplied via a `Components` map (`MD_COMPONENTS`) with `node`
+stripped off each element. Don't render Lex/stub markdown as raw text; don't reach for a second markdown lib.
 
 ---
 

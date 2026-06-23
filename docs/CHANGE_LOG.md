@@ -4,6 +4,16 @@
 
 ---
 
+## LEX REBUILD — Sprint 1.2: polish (markdown · intro copy · Lex retry) (2026-06-23 17:42 UTC)
+
+Three polish items on the un-promoted preview (`LEX_REBUILD_DESIGN v.1.md`). `tsc --noEmit` clean. **Do NOT promote to production.**
+
+- **Markdown in the Background panel.** The Initial Background body rendered as raw markdown (`##`, `**`). No existing markdown renderer (checked, to avoid a duplicate) → added **`react-markdown@10`** (React-19-compatible). `BackgroundPanel` renders the body via a `Components` map (`MD_COMPONENTS`, `node` stripped); Tailwind v4 has no typography plugin so styling is per-element. Verified: `## / **` → `<h2>/<strong>/<li>`. Recorded in `LEX_PLAYBOOK.md` §5.
+- **Returning-user intro fixed.** Dropped the "the button below takes you on a short guided tour" promise (no such button exists; the tour is a future feature). Now: "Good {afternoon} {name}. What's the problem or challenge you want to address? (Say the word if you'd like me to explain how this works.)" (`app/ideas/create/page.tsx`).
+- **Lex turn: log-then-retry (bytes before hypotheses).** `runLexTurn` now logs the **cause per attempt** before anything else — `kind` ∈ rate_limit(429)/upstream_5xx/http_error/timeout/network/empty_response with `status` + `bodySnippet`, and the raw bytes when structured output fails the shape check; `/lex` returns `errorType=kind`. The client **retries the whole turn once** (700 ms) before showing "I lost the connection" (the failure self-recovered on resend → likely transient). No tuning — diagnose from the server logs first.
+
+---
+
 ## SEARCH S1b — archetype-A fix: citation resolver + citation backfill; positions pilot stood down (2026-06-23 11:24 UTC)
 
 **Why:** v1 is the win (57.8% recall@20) but archetype A (known-item / citation lookup) scored **0%** — a core use case. This sprint diagnoses it before building, then fixes it and re-scores.
