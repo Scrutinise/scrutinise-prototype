@@ -2,7 +2,19 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 20 Jun 2026 — V29 UK COMPLETION WAVE: 11 new corpora / 9 sourceTypes BUILT + PILOTED (seed POST-PUSH) — quango T3 tail, Erskine May, EDMs, e-petitions, members' interests, CPS guidance, independent reviews, Ofgem, Ofcom, LGSCO; ICO/Scottish-courts triage diagnosed + adapters hardened (recovery POST-PUSH); HMRC soft-law ~98% covered (8 to seed); POSTnotes re-probed (CF-gated) + seam made turn-key. `tsc --noEmit` clean. See the V29 section below. Prior V28: search-relay (jurisdiction + §1.3 title/date LIVE → DROP title-gate CLEAR; written-answers split) · ops reseed FIXED · division votes + Scottish OR + inquiry-register BUILT (seed POST-PUSH) · library briefings gated. V26 soak continues (DROP gated, earliest ~25 Jun; legacy `Legislation*` confirmed STILL PRESENT 20 Jun).*
+*Last updated: 23 Jun 2026 — Search S1b archetype-A FIX: citation resolver + body backfill (A 0%→60%, overall 57.8%→69.4%, no regressions); positions pilot stood down. See the Search S1b archetype-A section below. Prior 20 Jun V29 UK COMPLETION WAVE: 11 new corpora / 9 sourceTypes BUILT + PILOTED (seed POST-PUSH); ICO/Scottish-courts triage; HMRC soft-law ~98%; POSTnotes seam. V28: search-relay (jurisdiction + §1.3 title/date LIVE → DROP title-gate CLEAR). V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — SEARCH S1b: archetype-A fix (citation resolver + backfill), positions pilot stood down (23 Jun 2026)
+
+**Search workstream.** v1's one serious hole — archetype A (citation lookup) at **0%** — is fixed. Full account: CHANGE_LOG "SEARCH S1b — archetype-A fix" (2026-06-23 11:24 UTC); diagnosis + deltas in `docs/FTS_ARCHETYPE_A_DIAG.md`. `scripts/ingest` `tsc --noEmit` clean (only the 4 documented pre-existing unrelated errors).
+
+- **Diagnosis:** legislation section rows never carry the parent act's title ("Housing Act 1988") — it lives only in legacy `LegislationItem.title` (gid-keyed), never carried onto `corpus_sections`. So citation queries surface parliamentary chatter, not the section (A1/A5 absent from retrieval; A2/A3/A4 present but out-ranked).
+- **Fix (applied):** (1) **query-time citation resolver** (`search/citation-resolver.ts` + `fts-core.ts`) — parse citation → resolve act→gid → fetch exact section by id → inject at #1; legislation-tier favour on the BM25 remainder; **no reindex**. Wired into `fts-query-service.ts` + `score-fts.ts`. (2) **body/title citation backfill** (`citation.ts` + `build-fts-index.ts` + `backfill-citations.ts`) — complementary BM25 retrieval gain, **lands on the gated Railway rebuild** (local 16GB can't reindex 16.5M).
+- **Re-score (resolver, full 16.5M):** A **0%→60%** (MRR 0.800; exact section #1 for A1–A4), overall **57.8%→69.4%**, D 67%→77%, no regressions. A5 stays 0% (concept query, no citation — out of scope). v1 baseline preserved at `docs/FTS_S1b_SCORING_v1_baseline.md`.
+- **Positions parked; pilot stood down:** dropped `corpus_fts_pilot` table + checkpoint + `build-fts-pilot.ts` + wiring. `corpus_fts` restored to pristine (exploratory in-place mutations rolled back via Lance version restore).
+- **GATED ON CHARLIE:** (1) Railway full rebuild to land the body backfill in production (`build-fts-index.ts` bakes it); (2) delete the empty `fts-pilot` Railway shell (`serviceDelete fdd32248-1bd5-4264-8ab0-54de78545151`).
 
 ---
 

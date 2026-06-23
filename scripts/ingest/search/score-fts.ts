@@ -20,8 +20,10 @@
  */
 import fs from 'fs'
 import path from 'path'
+import { Pool } from 'pg'
 import { connectLance, FTS_TABLE } from './lance'
 import { rankedSearch, Hit } from './fts-core'
+import { loadActIndex } from './citation-resolver'
 import { GOLD, GoldQuery } from './gold-queries'
 
 const OUT_MD = path.join(__dirname, '../../../docs/FTS_S1b_SCORING.md')
@@ -73,7 +75,7 @@ function dumpQuery(s: QueryScore): string {
   lines.push('')
   lines.push('Top-20 retrieved:')
   s.hits.forEach((h, i) => {
-    lines.push(`${(i + 1).toString().padStart(2)}. [${h.tier}/${h.corpus}] score=${h.score.toFixed(3)}${h.titleBoosted ? '↑T' : ''} \`${h.id}\``)
+    lines.push(`${(i + 1).toString().padStart(2)}. [${h.tier}/${h.corpus}] score=${h.score.toFixed(3)}${h.resolved ? '↑R' : ''}${h.titleBoosted ? '↑T' : ''} \`${h.id}\``)
     lines.push(`    ${h.sectionTitle ? `**${h.sectionTitle.slice(0, 100)}** — ` : ''}${h.snippet.slice(0, 160)}`)
   })
   lines.push('')
@@ -86,9 +88,15 @@ async function main() {
   const table = await conn.openTable(FTS_TABLE)
   console.log(`[score] rows=${await table.countRows()} — scoring ${GOLD.length} gold queries`)
 
+  // Citation resolver index (archetype-A known-item fix). Reads NEON.
+  const pool = new Pool({ connectionString: process.env.NEON_DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 2, statement_timeout: 120_000 })
+  const actIndex = await loadActIndex(pool)
+  await pool.end()
+  console.log(`[score] act index: ${actIndex.byTitle.size} titles`)
+
   const scores: QueryScore[] = []
   for (const q of GOLD) {
-    const hits = await rankedSearch(table, q.query, { limit: 20 })
+    const hits = await rankedSearch(table, q.query, { limit: 20, actIndex })
     const s = scoreQuery(q, hits)
     scores.push(s)
     console.log(`  ${q.id} ${q.archetype} recall@20=${pctStr(s.recall)} mrr=${s.mrr.toFixed(3)}${q.floor ? ' (floor)' : ''}`)

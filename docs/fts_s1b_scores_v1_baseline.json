@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-06-23T11:22:17.387Z",
+  "generatedAt": "2026-06-20T17:46:20.160Z",
   "overall": {
-    "recall": 0.6944444444444445,
-    "mrr": 0.6931878306878306
+    "recall": 0.5777777777777777,
+    "mrr": 0.5689814814814814
   },
   "exFloor": {
-    "recall": 0.68,
-    "mrr": 0.7294444444444445,
+    "recall": 0.56,
+    "mrr": 0.5694444444444444,
     "n": 25
   },
   "byArch": [
     {
       "archetype": "A",
       "n": 5,
-      "recall": 0.6,
-      "mrr": 0.8
+      "recall": 0,
+      "mrr": 0
     },
     {
       "archetype": "B",
@@ -31,8 +31,8 @@
     {
       "archetype": "D",
       "n": 5,
-      "recall": 0.7666666666666667,
-      "mrr": 0.5119047619047619
+      "recall": 0.6666666666666667,
+      "mrr": 0.5666666666666667
     },
     {
       "archetype": "E",
@@ -55,16 +55,16 @@
         "INFORCE"
       ],
       "floor": false,
-      "recall": 1,
-      "mrr": 1,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
           "label": "HA 1988 s.21 text",
-          "rank": 1
+          "rank": null
         },
         {
           "label": "HA 1988 prospective abolition (Renters’ Rights Act 2025) [INFORCE]",
-          "rank": 3
+          "rank": null
         }
       ]
     },
@@ -73,12 +73,12 @@
       "archetype": "A",
       "flags": [],
       "floor": false,
-      "recall": 0.5,
-      "mrr": 1,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
           "label": "TA 1968 s.1",
-          "rank": 1
+          "rank": null
         },
         {
           "label": "TA 1968 ss.2–6 (dishonesty/appropriation defs)",
@@ -91,16 +91,16 @@
       "archetype": "A",
       "flags": [],
       "floor": false,
-      "recall": 1,
-      "mrr": 1,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
           "label": "SI 1998/1833",
-          "rank": 1
+          "rank": null
         },
         {
           "label": "reg 4 / regs 13–13A",
-          "rank": 5
+          "rank": null
         }
       ]
     },
@@ -109,12 +109,12 @@
       "archetype": "A",
       "flags": [],
       "floor": false,
-      "recall": 0.5,
-      "mrr": 1,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
           "label": "EqA 2010 s.149 (PSED)",
-          "rank": 1
+          "rank": null
         },
         {
           "label": "Sch 18 exceptions",
@@ -371,8 +371,8 @@
         "GRAPH"
       ],
       "floor": true,
-      "recall": 0.5,
-      "mrr": 0.16666666666666666,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
           "label": "Deregulation Act 2015 ss.33–41",
@@ -380,7 +380,7 @@
         },
         {
           "label": "Renters’ Rights Act 2025 (prospective repeal)",
-          "rank": 6
+          "rank": null
         }
       ]
     },
@@ -413,11 +413,11 @@
       ],
       "floor": true,
       "recall": 1,
-      "mrr": 0.14285714285714285,
+      "mrr": 0.3333333333333333,
       "matched": [
         {
           "label": "Environment Act 2021",
-          "rank": 7
+          "rank": 3
         }
       ]
     },
@@ -453,15 +453,15 @@
       ],
       "floor": true,
       "recall": 1,
-      "mrr": 0.25,
+      "mrr": 0.5,
       "matched": [
         {
           "label": "Grainger plc v Nicholson",
-          "rank": 4
+          "rank": 2
         },
         {
           "label": "Forstater v CGD Europe",
-          "rank": 4
+          "rank": 2
         }
       ]
     },
@@ -479,7 +479,7 @@
         },
         {
           "label": "Hansard 2011–12 (under-occupancy / bedroom tax)",
-          "rank": 20
+          "rank": 18
         }
       ]
     },
@@ -515,7 +515,7 @@
         },
         {
           "label": "Hansard double-lock / IPC oversight",
-          "rank": 1
+          "rank": 3
         }
       ]
     },

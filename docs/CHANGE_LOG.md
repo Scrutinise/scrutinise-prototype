@@ -1,6 +1,28 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 20 Jun 2026 — V29 UK Completion Wave: ICO/Scottish-courts triage · quango T3 tail · 4 Parliament APIs · CPS guidance · independent reviews · Ofgem/Ofcom · LGSCO · HMRC soft-law audit · POSTnotes seam.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 23 Jun 2026 — Search S1b archetype-A fix: citation resolver + body backfill (A 0%→60%, overall 57.8%→69.4%); positions pilot stood down.*
+
+---
+
+## SEARCH S1b — archetype-A fix: citation resolver + citation backfill; positions pilot stood down (2026-06-23 11:24 UTC)
+
+**Why:** v1 is the win (57.8% recall@20) but archetype A (known-item / citation lookup) scored **0%** — a core use case. This sprint diagnoses it before building, then fixes it and re-scores.
+
+**Diagnosis (`docs/FTS_ARCHETYPE_A_DIAG.md`, diagnostic `search/diag-archetype-a.ts`).** One root cause, two symptoms. A legislation section's indexed text carries only its operative `body` + its section heading; the **parent act's title/citation ("Housing Act 1988") is on no row** — it lives only in legacy `LegislationItem.title` (135,531 rows, 100% populated, keyed by the gid embedded in every `corpus_sections.id`) and was never carried across (`sectionTitle` is NULL for 62–88% of legislation rows, and even the populated ones omit the act name). So a citation query's discriminating tokens (act + year) are absent from the target row but present in thousands of parliamentary rows that mention the act in passing. Per-A measured against the FULL BM25 list: **ABSENT from retrieval** (A1 HA1988 s.21, A5 RTA1988 ss.14–15 — confirmed in corpus, beyond rank 50,000) vs **PRESENT but out-ranked** (A2 #1,789 · A3 #29 · A4 #3,319 — buried under parliamentary chatter, and the existing title-boost made it worse because parliamentary rows carry the act name in their *title* and the legislation row's section-heading title does not).
+
+**Fix — two complementary parts:**
+- **Query-time known-item resolver (headline; `search/citation-resolver.ts` + `fts-core.ts`).** Parse the citation, resolve act title → gid (from `LegislationItem`), fetch the EXACT section by id (`…ukpga/1988/50:section-21`) and inject at rank 1; act-level queries surface the act's leaves. BM25 remainder gets a legislation-tier favour for citation queries. **No reindex** (resolves by id). Wired into `fts-query-service.ts` (loads the act index at boot; plain BM25 if NEON unset) and `score-fts.ts`.
+- **Body/title citation backfill (complementary; `search/citation.ts`, `build-fts-index.ts`, `backfill-citations.ts`).** Derives the citation from id+title and prepends it to the indexed `body` + folds it into `sectionTitle` (helps BM25 for concept/partial-citation queries). Baked into the canonical indexer for the next from-scratch rebuild; `backfill-citations.ts` is the in-place variant. **Lands on the gated Railway rebuild** (local 16GB can't reindex 16.5M — v1 was built on Railway's 24GB box). Not reflected in the re-score below (which isolates the resolver on the pristine index).
+
+**Re-score (resolver, full 16.5M `corpus_fts`; v1 baseline preserved at `docs/FTS_S1b_SCORING_v1_baseline.md`):** **archetype A 0% → 60.0%** (MRR 0.000 → 0.800 — exact cited section is #1 for A1–A4), **overall 57.8% → 69.4%** (excl-floor 56.0% → 68.0%), **D 66.7% → 76.7%**, **no regressions** (B 40% · C 60% · E 90% · F 90% unchanged). Residual: A2/A4 = 50% (primary section #1; the secondary gold source isn't citation-resolvable → expected to lift on the backfilled rebuild); A5 = 0% (concept query, no citation; "seatbelt" ≠ "seat belt" — a vocabulary gap, out of scope).
+
+**Positions parked / pilot stood down (per brief).** Did NOT pursue the optimize()/LargeUtf8 incremental-merge path. **Dropped the `corpus_fts_pilot` Lance table + checkpoint**; removed `build-fts-pilot.ts` and its `fts-railway-run.ts` wiring (`pilot` mode + `PILOT_CMD`) and the `.fts-pilot-service-id`; `fts-watch.ts` de-pilot'd. The Railway **`fts-pilot` service is an empty shell (no deployments, 0 compute) — deleting the shell is GATED ON CHARLIE** (`serviceDelete fdd32248-1bd5-4264-8ab0-54de78545151`, per CLAUDE.md "deleting Railway services"). Positions stay a single-shot `createIndex(withPosition:true)` v2 on a Hetzner box, later.
+
+**Index hygiene:** `corpus_fts` was restored to its pristine pre-session version (16,509,051 rows; an exploratory partial in-place backfill + a throughput probe were rolled back via Lance version restore) so the re-score is apples-to-apples with v1. The exploratory `corpus_fts_archeA` validation table was dropped.
+
+**Verify:** `scripts/ingest` `tsc --noEmit` clean (only the 4 documented pre-existing unrelated errors — `diag-db`/`run-cleanup` adapter-pg, `test-fca-playwright` playwright, `v26-pooled-smoke` rootDir). Resolver parse/resolve/fetch verified on all 5 A queries.
+
+**GATED ON CHARLIE:** (1) the Railway full rebuild to land the body-citation backfill into the production index (`build-fts-index.ts` now bakes it); (2) `serviceDelete` of the empty `fts-pilot` shell.
 
 ---
 

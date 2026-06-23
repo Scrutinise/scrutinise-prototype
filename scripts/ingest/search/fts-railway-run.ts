@@ -35,9 +35,10 @@ const RAILWAY_API = 'https://backboard.railway.com/graphql/v2'
 const PROJECT_ID = process.env.RAILWAY_PROJECT_ID!
 const ENV_ID = process.env.ENV_ID ?? '991f733c-719c-4217-a6d6-1dbe80642bbe'
 const REPO = 'Scrutinise/scrutinise-prototype'
-// Service is selectable so two tracks run in parallel on separate services:
+// Service selector. The positions memory pilot (FTS_SERVICE=fts-pilot, TRACK 2)
+// was STOOD DOWN — positions are parked for a single-shot v2 build on Hetzner, so
+// the incremental-merge pilot is obsolete (see CHANGE_LOG 2026-06-21).
 //   FTS_SERVICE=fts-build (default) — the real index build (corpus_fts)
-//   FTS_SERVICE=fts-pilot           — the positions memory pilot (corpus_fts_pilot)
 const SERVICE_NAME = process.env.FTS_SERVICE ?? 'fts-build'
 const STATE_KEY = path.join(__dirname, `.${SERVICE_NAME}-service-id`)
 
@@ -55,9 +56,6 @@ const FULL_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 FTS_BATCH=500
 // TRACK 1 v1: build the no-positions index over the already-loaded 16.5M in place
 // (resumes at phase=indexing, no reset) — fits memory, working search this week.
 const V1_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_WITH_POSITIONS=false npx tsx search/build-fts-index.ts'"
-// TRACK 2 pilot: incremental positions build into corpus_fts_pilot, logging peak
-// memory per optimize() merge (flat vs climbing). Runs on the fts-pilot service.
-const PILOT_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 npx tsx search/build-fts-pilot.ts'"
 
 // Env vars the indexer needs (NEON + R2). Names match what lance.ts / r2-client read.
 const NEEDED = [
@@ -244,9 +242,8 @@ const fn = mode === 'setup' ? setup
   : mode === 'canary' ? async () => { await tailLogs(await deployWith(CANARY_CMD)) }
   : mode === 'full' ? async () => { await monitorStartup(await deployWith(FULL_CMD), 7) }
   : mode === 'v1' ? async () => { await monitorStartup(await deployWith(V1_CMD), 7) }
-  : mode === 'pilot' ? async () => { await monitorStartup(await deployWith(PILOT_CMD), 7) }
   : mode === 'logs' ? logs
   : mode === 'teardown' ? teardown
   : null
-if (!fn) { console.error('usage: FTS_SERVICE=<svc> fts-railway-run.ts setup|idle|canary|full|v1|pilot|logs|teardown'); process.exit(1) }
+if (!fn) { console.error('usage: FTS_SERVICE=<svc> fts-railway-run.ts setup|idle|canary|full|v1|logs|teardown'); process.exit(1) }
 fn().catch(e => { console.error(e); process.exit(1) })

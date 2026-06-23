@@ -6,14 +6,24 @@
  * Title-boost rationale: see fts-query-service.ts header / FTS_BUILD_S1b §1.1.
  */
 import { lancedb } from './lance'
+import { ActIndex, parseCitation, resolveCitation, idPatternsFor } from './citation-resolver'
 
 export const TITLE_BOOST = parseFloat(process.env.FTS_TITLE_BOOST ?? '2.5')
 export const OVERSCAN = parseInt(process.env.FTS_OVERSCAN ?? '5', 10)
+// Citation queries favour the legislation tier in the BM25 remainder (the brief's
+// "favour the legislation tier for citation-style queries"). The exact section is
+// pinned by the resolver; this lifts the SECONDARY legislation sources (e.g. the
+// other regs of the cited act) above parliamentary chatter.
+export const CITATION_TIER_BOOST = parseFloat(process.env.FTS_CITATION_TIER_BOOST ?? '1.6')
+// How many exact / act-level rows the resolver may inject at the top.
+const RESOLVE_EXACT_MAX = 4
+const RESOLVE_ACTLEVEL_MAX = 12
 
 export type Hit = {
   id: string; corpus: string; tier: string; jurisdiction: string
   sectionTitle: string | null; itemDate: string | null; speaker: string | null
   parentDocId: string | null; score: number; bodyScore: number; titleBoosted: boolean
+  resolved: boolean
   body: string; snippet: string
 }
 
@@ -21,10 +31,50 @@ export function queryTerms(q: string): string[] {
   return q.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3)
 }
 
+function toHit(r: any, score: number, bodyScore: number, titleBoosted: boolean, resolved: boolean): Hit {
+  const body = (r.body ?? '') as string
+  return {
+    id: r.id, corpus: r.corpus, tier: r.tier, jurisdiction: r.jurisdiction,
+    sectionTitle: (r.sectionTitle ?? null) as string | null,
+    itemDate: r.itemDate ?? null, speaker: r.speaker ?? null, parentDocId: r.parentDocId ?? null,
+    score, bodyScore, titleBoosted, resolved,
+    body, snippet: body.slice(0, 300).replace(/\s+/g, ' ').trim(),
+  }
+}
+
+/** Known-item citation resolver: parse the query, resolve the act → gid, fetch the
+ *  exact section (and a few act-level leaves) by id. Returns [] when the query is
+ *  not a citation or the act doesn't resolve. */
+async function resolveInjections(table: lancedb.Table, query: string, actIndex?: ActIndex): Promise<Hit[]> {
+  if (!actIndex) return []
+  const parsed = parseCitation(query)
+  if (!parsed) return []
+  const r = resolveCitation(parsed, actIndex)
+  if (!r) return []
+  const pats = idPatternsFor(r)
+  const out: Hit[] = []
+  const seen = new Set<string>()
+  const fetch = async (like: string, max: number) => {
+    const rows = (await table.query().where(`id LIKE '${like}'`).limit(max).toArray()) as any[]
+    for (const row of rows) { if (!seen.has(row.id)) { seen.add(row.id); out.push(toHit(row, 0, 0, false, true)) } }
+  }
+  if (pats.exact) {
+    // Exact ref given (e.g. "section 149"): inject ONLY that section and let BM25
+    // fill the rest — flooding the top with arbitrary same-act leaves would just
+    // displace the genuinely-relevant secondary sources.
+    await fetch(pats.exact, RESOLVE_EXACT_MAX)
+  } else {
+    // Act-level query ("Working Time Regulations 1998"): surface the act's leaves
+    // (capped) so at least some of it lands in the top-20.
+    await fetch(pats.actLevel, RESOLVE_ACTLEVEL_MAX)
+  }
+  return out
+}
+
 export async function rankedSearch(
   table: lancedb.Table,
   query: string,
-  opts: { tier?: string; limit?: number } = {},
+  opts: { tier?: string; limit?: number; actIndex?: ActIndex } = {},
 ): Promise<Hit[]> {
   const limit = opts.limit ?? 20
   const k = Math.max(limit * OVERSCAN, 100)
@@ -35,22 +85,25 @@ export async function rankedSearch(
   const rows = await q.toArray()
 
   const terms = queryTerms(query)
-  const hits: Hit[] = rows.map((r: any) => {
+  const isCitation = !!opts.actIndex && !!parseCitation(query)
+  const bm25: Hit[] = rows.map((r: any) => {
     const bodyScore = typeof r._score === 'number' ? r._score : 0
     const title = (r.sectionTitle ?? null) as string | null
     const titleBoosted = !!title && terms.some((t) => title.toLowerCase().includes(t))
-    const body = (r.body ?? '') as string
-    return {
-      id: r.id, corpus: r.corpus, tier: r.tier, jurisdiction: r.jurisdiction,
-      sectionTitle: title, itemDate: r.itemDate ?? null, speaker: r.speaker ?? null,
-      parentDocId: r.parentDocId ?? null,
-      bodyScore,
-      score: bodyScore * (titleBoosted ? TITLE_BOOST : 1),
-      titleBoosted,
-      body,
-      snippet: body.slice(0, 300).replace(/\s+/g, ' ').trim(),
-    }
+    const tierBoost = isCitation && r.tier === 'legislation' ? CITATION_TIER_BOOST : 1
+    return toHit(r, bodyScore * (titleBoosted ? TITLE_BOOST : 1) * tierBoost, bodyScore, titleBoosted, false)
   })
-  hits.sort((a, b) => b.score - a.score)
-  return hits.slice(0, limit)
+  bm25.sort((a, b) => b.score - a.score)
+
+  // Known-item resolver: inject exact-citation rows ABOVE the BM25 list. Scored
+  // just above the top BM25 hit, preserving the resolver's own order (exact first).
+  const injected = await resolveInjections(table, query, opts.actIndex)
+  if (injected.length) {
+    const topScore = bm25.length ? bm25[0].score : 1
+    injected.forEach((h, i) => { h.score = topScore + (injected.length - i) })
+    const injectedIds = new Set(injected.map((h) => h.id))
+    const merged = [...injected, ...bm25.filter((h) => !injectedIds.has(h.id))]
+    return merged.slice(0, limit)
+  }
+  return bm25.slice(0, limit)
 }

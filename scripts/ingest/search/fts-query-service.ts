@@ -12,12 +12,15 @@
  * (parliamentary/guidance); it is inert for legislation & caselaw (NULL titles).
  */
 import http from 'http'
+import { Pool } from 'pg'
 import { connectLance, FTS_TABLE, lanceDbUri, lancedb } from './lance'
 import { rankedSearch, TITLE_BOOST, OVERSCAN } from './fts-core'
+import { ActIndex, loadActIndex } from './citation-resolver'
 
 const PORT = parseInt(process.env.FTS_PORT ?? '8080', 10)
 
 let table: lancedb.Table
+let actIndex: ActIndex | undefined
 
 // latency bookkeeping (cold = first request after boot; warm = the rest)
 const cold: number[] = []
@@ -52,7 +55,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
         const t0 = Date.now()
-        const results = await rankedSearch(table, query, { tier, limit: lim })
+        const results = await rankedSearch(table, query, { tier, limit: lim, actIndex })
         const ms = Date.now() - t0
         ;(served === 0 ? cold : warm).push(ms)
         served++
@@ -71,6 +74,13 @@ async function main() {
   console.log(`[fts-query] opening ${lanceDbUri()}/${FTS_TABLE} …`)
   const conn = await connectLance()
   table = await conn.openTable(FTS_TABLE)
+  // Citation resolver index (archetype-A known-item lookups). Built once at boot
+  // from LegislationItem; if NEON is unset the service still serves plain BM25.
+  if (process.env.NEON_DATABASE_URL) {
+    const pool = new Pool({ connectionString: process.env.NEON_DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 2, statement_timeout: 120_000 })
+    try { actIndex = await loadActIndex(pool); console.log(`[fts-query] act index: ${actIndex.byTitle.size} titles`) }
+    finally { await pool.end() }
+  } else { console.warn('[fts-query] NEON_DATABASE_URL unset — citation resolver disabled (plain BM25)') }
   console.log(`[fts-query] open. rows=${await table.countRows()}. title_boost=${TITLE_BOOST} overscan=${OVERSCAN}`)
   http.createServer(handle).listen(PORT, () => console.log(`[fts-query] listening on :${PORT}`))
 }

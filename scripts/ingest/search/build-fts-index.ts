@@ -46,6 +46,7 @@ import { Pool } from 'pg'
 import { Schema, Field, Utf8, Int32 } from 'apache-arrow'
 import { connectLance, FTS_TABLE, CHECKPOINT_KEY, lanceDbUri, lancedb } from './lance'
 import { tierFor, jurisdictionFor } from './corpus-map'
+import { gidFromId, buildCitation, applyCitationToBody } from './citation'
 import { r2Get, r2Put } from '../shared/r2-client'
 
 const BATCH = parseInt(process.env.FTS_BATCH ?? '1000', 10)
@@ -173,6 +174,19 @@ async function main() {
   const pool = neonPool()
   await pool.query('SELECT 1') // wake cold Neon compute
 
+  // Archetype-A retrieval fix (citation.ts): legislation section bodies lack the
+  // parent act's title/citation ("Housing Act 1988") — it lives only in legacy
+  // LegislationItem.title, keyed by the gid in each id. Load that map once and
+  // prepend a citation header to legislation bodies at index time so the act
+  // name + section ref are BM25-searchable. See docs/FTS_ARCHETYPE_A_DIAG.md.
+  const titleMap = new Map<string, string>()
+  {
+    const { rows: items } = await pool.query<{ gid: string; title: string }>(
+      `SELECT "legislationGovUkId" AS gid, title FROM "LegislationItem" WHERE "legislationGovUkId" IS NOT NULL AND title IS NOT NULL`)
+    for (const it of items) titleMap.set(it.gid, it.title)
+    console.log(`[fts-index] citation title map: ${titleMap.size} gid→title entries`)
+  }
+
   // ── Phase 1: load + write (resumable cursor) ──────────────────────────────
   if (cp.phase === 'loading') {
     // Append path: clear any appended-but-un-checkpointed tail (id > lastId) from a
@@ -210,15 +224,27 @@ async function main() {
       })
 
       const records = rows.map((r, i) => {
-        const body = bodies[i]
-        if (body == null) cp.bodyMisses++
+        const rawBody = bodies[i]
+        if (rawBody == null) cp.bodyMisses++
+        const tier = tierFor(r.corpus)
+        let sectionTitle = r.sectionTitle
+        let body = rawBody ?? ''
+        // Citation backfill for legislation rows (archetype-A retrieval fix).
+        if (tier === 'legislation') {
+          const gid = gidFromId(r.id)
+          const cit = buildCitation(r.id, gid ? titleMap.get(gid) ?? null : null, r.sectionTitle)
+          if (cit) {
+            sectionTitle = cit.sectionTitle
+            body = applyCitationToBody(cit.bodyHeader, body)
+          }
+        }
         return {
           id: r.id,
           corpus: r.corpus,
-          tier: tierFor(r.corpus),
+          tier,
           jurisdiction: jurisdictionFor(r.corpus),
-          sectionTitle: r.sectionTitle,
-          body: body ?? '',
+          sectionTitle,
+          body,
           itemDate: r.itemDate,
           speaker: r.speaker,
           parentDocId: r.parentDocId,

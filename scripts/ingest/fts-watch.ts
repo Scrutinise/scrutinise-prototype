@@ -13,11 +13,16 @@ const fs = require('fs') as typeof import('fs')
 import { r2Get } from './shared/r2-client'
 
 const RAILWAY_API = 'https://backboard.railway.com/graphql/v2'
-// FTS_SERVICE selects which track to watch: fts-build (real index, corpus_fts) or
-// fts-pilot (positions pilot, corpus_fts_pilot). Checkpoint key overridable to match.
+// FTS_SERVICE selects which service to watch (default fts-build, the real
+// corpus_fts index build). The fts-pilot positions track was stood down
+// (2026-06-21); checkpoint key is overridable via FTS_CHECKPOINT_KEY.
 const FTS_SERVICE = process.env.FTS_SERVICE ?? 'fts-build'
 const SERVICE_ID = fs.readFileSync(path.join(__dirname, `search/.${FTS_SERVICE}-service-id`), 'utf8').trim()
 const CHECKPOINT = process.env.FTS_CHECKPOINT_KEY ?? '_search/corpus_fts.checkpoint.json'
+// Loading-stall threshold. The real index build checkpoints every batch (12 min is
+// plenty), but the pilot checkpoints only ONCE PER MERGE (a 400k chunk load + optimize
+// can exceed 12 min, and grows), so set FTS_STALL_MIN higher when watching the pilot.
+const STALL_MIN = parseInt(process.env.FTS_STALL_MIN ?? '12', 10)
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
@@ -78,8 +83,8 @@ async function main() {
         }
       }
       // Loading-phase stall (indexing legitimately freezes the checkpoint, so exclude it).
-      if (ageMin > 12 && cp.phase === 'loading') {
-        console.log(`\n>>> STALL: checkpoint not advanced for ${ageMin.toFixed(1)} min (phase=loading). Investigate.`)
+      if (ageMin > STALL_MIN && cp.phase === 'loading') {
+        console.log(`\n>>> STALL: checkpoint not advanced for ${ageMin.toFixed(1)} min (phase=loading, threshold ${STALL_MIN}m). Investigate.`)
         if (dep) (await depLogs(dep.id)).slice(-8).forEach(m => console.log('  ' + m))
         process.exit(2)
       }

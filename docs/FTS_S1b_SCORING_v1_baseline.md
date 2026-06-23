@@ -1,29 +1,22 @@
 # FTS S1b — scoring report
 
-> **AFTER ARCHETYPE-A FIX (2026-06-23):** this run has the query-time citation
-> resolver active (`search/citation-resolver.ts`) against the pristine 16.5M
-> `corpus_fts`. Archetype A 0% → 60%, overall 57.8% → 69.4%. The v1 baseline is
-> preserved at `docs/FTS_S1b_SCORING_v1_baseline.md`; diagnosis + deltas in
-> `docs/FTS_ARCHETYPE_A_DIAG.md`. The complementary body-citation backfill lands on
-> the gated Railway rebuild and is NOT reflected here.
-
-*Generated 2026-06-23T11:22:17.381Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
+*Generated 2026-06-20T17:46:20.107Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
 
 ## Headline
 
 | scope | recall@20 | MRR | n |
 |---|---|---|---|
-| overall (all 30) | 69.4% | 0.693 | 30 |
-| **overall excl. [GRAPH] floor** | **68.0%** | **0.729** | 25 |
+| overall (all 30) | 57.8% | 0.569 | 30 |
+| **overall excl. [GRAPH] floor** | **56.0%** | **0.569** | 25 |
 
 ## By archetype
 
 | archetype | recall@20 | MRR | n | note |
 |---|---|---|---|---|
-| A | 60.0% | 0.800 | 5 | [INFORCE] aspects are floors |
+| A | 0.0% | 0.000 | 5 | [INFORCE] aspects are floors |
 | B | 40.0% | 0.322 | 5 |  |
 | C | 60.0% | 0.625 | 5 |  |
-| D | 76.7% | 0.512 | 5 | ALL [GRAPH] — engine floor |
+| D | 66.7% | 0.567 | 5 | ALL [GRAPH] — engine floor |
 | E | 90.0% | 0.900 | 5 |  |
 | F | 90.0% | 1.000 | 5 | [BILLS] scores for real |
 
@@ -31,203 +24,203 @@
 
 ### A1 (A/H1) [INFORCE]
 *Query:* Section 21 Housing Act 1988
-*recall@20:* 100.0% · *MRR:* 1.000
+*recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
-- ✓ @1 — HA 1988 s.21 text
-- ✓ @3 — HA 1988 prospective abolition (Renters’ Rights Act 2025) [INFORCE]
+- ✗ MISS — HA 1988 s.21 text
+- ✗ MISS — HA 1988 prospective abolition (Renters’ Rights Act 2025) [INFORCE]
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-pre-2000] score=99.288↑R `primary-acts-pre-2000:ukpga/1988/50:section-21`
-    **Recovery of possession on expiry or termination of assured shorthold tenancy.** — 21 1 Without prejudice to any right of the landlord under an assured shorthold tenancy to recover possession of the dwelling-house let on the tenancy in accorda
- 2. [legislation/primary-acts-2000plus] score=98.288↑T `primary-acts-2000plus:ukpga/2004/34:section-215C`
-    **Sections 215A and 215B: transitional provisions** — 215C 1 Sections 215A and 215B are treated as having had effect since 6 April 2007, subject to the following provisions of this section. 2 Sections 215A and 215B
- 3. [legislation/primary-acts-2000plus] score=95.279↑T `primary-acts-2000plus:ukpga/2025/26:section-134`
-    **Use by local housing authority of certain information** — 134 1 Section 212A of the Housing Act 2004 (tenancy deposit schemes: provision of information to local authorities) is amended in accordance with subsections (2
- 4. [legislation/primary-acts-2000plus] score=94.807↑T `primary-acts-2000plus:ukpga/2011/20:section-156`
-    **Creation of tenancies of social housing** — 156 1 In section 52 of the Law of Property Act 1925 (requirement that conveyances of land and interests in land be made by deed) in subsection (2) (exceptions) 
- 5. [parliamentary/pwdata-wrans] score=65.950↑T `pwdata-wrans:answers2019-07-24:105`
+ 1. [parliamentary/pwdata-wrans] score=65.950↑T `pwdata-wrans:answers2019-07-24:105`
     **Ministry of Housing, Communities and Local Government — Evictions** — Q (Andrew Rosindell): To ask the Secretary of State for Housing, Communities and Local Government, what his Department's definition is of eviction at short noti
- 6. [parliamentary/pwdata-wrans] score=65.268↑T `pwdata-wrans:answers2006-07-18d:118`
+ 2. [parliamentary/pwdata-wrans] score=65.268↑T `pwdata-wrans:answers2006-07-18d:118`
     **COMMUNITIES AND LOCAL GOVERNMENT — Housing Act** — Q (David Taylor): To ask the Secretary of State for Communities and Local Government when she next plans to discuss the operation of section 21 (4a) of the Hous
- 7. [parliamentary/pwdata-wrans] score=64.291↑T `pwdata-wrans:answers2019-11-04:160`
+ 3. [parliamentary/pwdata-wrans] score=64.291↑T `pwdata-wrans:answers2019-11-04:160`
     **Ministry of Housing, Communities and Local Government — Social Rented Housing: Wycombe** — Q (Mr Steve Baker): To ask the Secretary of State for Housing, Communities and Local Government, if he will meet Wycombe social housing providers to discuss the
- 8. [parliamentary/pwdata-debates] score=63.862↑T `pwdata-debates:debates1988-06-13a:500`
+ 4. [parliamentary/pwdata-debates] score=63.862↑T `pwdata-debates:debates1988-06-13a:500`
     **Clause 38 — PART I AMENDMENTS OF PART I WITH RESPECT TO THE HOUSING CORPORATION, HOUSING FOR WALES A** — 21.—(1) In section 31 (exercise of powers in relation to registered charities), in subsection (1) immediately before the entry relating to section 41 of the 198
- 9. [parliamentary/historic-hansard] score=63.526↑T `historic-hansard:S5LV0574P0:3728`
+ 5. [parliamentary/historic-hansard] score=63.526↑T `historic-hansard:S5LV0574P0:3728`
     **Lords: Housing Bill** — Lord Lucas moved Amendment No. 95: Page 134, leave out lines 3 to 10 and insert— ("(a) amendments or repeals of provisions of the Housing Associations Act 1985,
-10. [parliamentary/historic-hansard] score=63.080↑T `historic-hansard:S5LV0511P0:3219`
+ 6. [parliamentary/historic-hansard] score=63.080↑T `historic-hansard:S5LV0511P0:3219`
     **Lords: Local Government and Housing Bill** — Lord Hesketh moved Amendment No. 188CA: Page 216, line 2, leave out ("21 of the Housing Act 1988") and insert ("7 of the Housing Act 1988 (orders for possession
-11. [parliamentary/pwdata-wrans] score=62.227↑T `pwdata-wrans:answers2007-06-20b:201`
+ 7. [parliamentary/pwdata-wrans] score=62.227↑T `pwdata-wrans:answers2007-06-20b:201`
     **COMMUNITIES AND LOCAL GOVERNMENT — Housing: Standards** — Q (Dai Davies): To ask the Secretary of State for Communities and Local Government what representations (a) she and (b) her predecessor responsible for housing 
-12. [parliamentary/pwdata-wrans] score=62.127↑T `pwdata-wrans:answers2019-04-23:174`
+ 8. [parliamentary/pwdata-wrans] score=62.127↑T `pwdata-wrans:answers2019-04-23:174`
     **Ministry of Housing, Communities and Local Government — Rented Housing: Older People** — Q (Stephen Timms): To ask the Secretary of State for Housing, Communities and Local Government, what steps his Department is taking to help local authorities im
-13. [parliamentary/historic-hansard] score=62.070↑T `historic-hansard:S5LV0572P0:4887`
+ 9. [parliamentary/historic-hansard] score=62.070↑T `historic-hansard:S5LV0572P0:4887`
     **Lords: Housing Bill** — Clause 91 [ Form of notices under section 21 of the Housing Act 1988 ]:
-14. [parliamentary/pwdata-wrans] score=61.432↑T `pwdata-wrans:answers2023-03-30:12`
+10. [parliamentary/pwdata-wrans] score=61.432↑T `pwdata-wrans:answers2023-03-30:12`
     **Department for Levelling Up, Housing and Communities — Evictions** — Q (Kerry McCarthy): To ask the Secretary of State for Levelling Up, Housing and Communities, what plans he has to abolish section 21 of the Housing Act 1988.
-15. [parliamentary/historic-hansard] score=61.152↑T `historic-hansard:S5LV0511P0:2889`
+11. [legislation/primary-acts-2000plus] score=61.430↑T `primary-acts-2000plus:ukpga/2004/34:section-215C`
+    **Sections 215A and 215B: transitional provisions** — 215C 1 Sections 215A and 215B are treated as having had effect since 6 April 2007, subject to the following provisions of this section. 2 Sections 215A and 215B
+12. [parliamentary/historic-hansard] score=61.152↑T `historic-hansard:S5LV0511P0:2889`
     **Lords: Local Government and Housing Bill** — .In section 21 of the Housing Act 1988, in subsection (1)(b) after the word "months" there shall be inserted "written").
-16. [parliamentary/pwdata-wrans] score=61.082↑T `pwdata-wrans:answers2019-04-15:165`
+13. [parliamentary/pwdata-wrans] score=61.082↑T `pwdata-wrans:answers2019-04-15:165`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Evictions** — Q (Ellie Reeves): To ask the Secretary of State for Housing, Communities and Local Government, what recent assessment he has made of the adequacy of Section 21 
-17. [other/petitions] score=60.852↑T `petitions:729348:1`
+14. [other/petitions] score=60.852↑T `petitions:729348:1`
     **Abolish Section 21 'no-fault' evictions with immediate effect** — Abolish Section 21 'no-fault' evictions with immediate effect State: closed · Signatures: 51 · Opened: 2025-06-24 · Departments: Ministry of Housing, Communitie
-18. [parliamentary/pwdata-debates] score=60.815↑T `pwdata-debates:debates1996-04-30a:354`
+15. [parliamentary/pwdata-debates] score=60.815↑T `pwdata-debates:debates1996-04-30a:354`
     **Orders of the Day — Housing Bill — FORM OF NOTICES UNDER SECTION 21 OF THE HOUSING ACT 1988** — '.—(1) Section 21 of the Housing Act 1988 (recovery of possession on expiry or termination of assured shorthold tenancy) shall be amended as follows.
-19. [parliamentary/pwdata-wrans] score=60.742↑T `pwdata-wrans:answers2022-11-11:151`
+16. [parliamentary/pwdata-wrans] score=60.742↑T `pwdata-wrans:answers2022-11-11:151`
     **Department for Levelling Up, Housing and Communities — Private Rented Housing: Unemployment** — Q (Christopher Pincher): To ask the Secretary of State for Levelling Up, Housing and Communities, if he will make an assessment of the potential impact of repea
-20. [parliamentary/senedd-cofnod] score=60.703↑T `senedd-cofnod:4651:160`
+17. [parliamentary/senedd-cofnod] score=60.703↑T `senedd-cofnod:4651:160`
     **Senedd Plenary: Notices under Section 21 of the Housing Act 1988** — 8. Will the Cabinet Secretary make a statement on the use of notices served under section 21 of the Housing Act 1988 in Wales? (OAQ51195)
+18. [parliamentary/pwdata-debates] score=60.603↑T `pwdata-debates:debates1988-10-26a:541`
+    **Clause 66 — RENT OFFICERS: ADDITIONAL FUNCTIONS RELATING TO HOUSING BENEFIT ETC** — Lords amendment: No. 52, in page 40, line 10, at end insert— ( ) At the end of section 21(6) of the Social Security Act 1986 (regulations prescribing maximum fa
+19. [parliamentary/pwdata-wrans] score=60.529↑T `pwdata-wrans:answers2014-11-05:121`
+    **Department for Communities and Local Government — Private Rented Housing: Evictions** — Q (Oliver Colvile): To ask the Secretary of State for Communities and Local Government, how many section 21 notices were served in each of the last (a) 12 month
+20. [parliamentary/historic-hansard] score=60.444↑T `historic-hansard:S5LV0500P0:7853`
+    **Lords: Housing Bill** — Page 87, line 42, at end insert— ("(8) At the end of section 21(6) of the Social Security Act 1986 (regulations prescribing maximum family credit and maximum ho
 
 ### A2 (A/H2)
 *Query:* What does section 1 of the Theft Act 1968 actually say?
-*recall@20:* 50.0% · *MRR:* 1.000
+*recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
-- ✓ @1 — TA 1968 s.1
+- ✗ MISS — TA 1968 s.1
 - ✗ MISS — TA 1968 ss.2–6 (dishonesty/appropriation defs)
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-pre-2000] score=148.869↑R `primary-acts-pre-2000:ukpga/1968/60:section-1`
-    1 1 A person is guilty of theft if he dishonestly appropriates property belonging to another with the intention of permanently depriving the other of it; and “ 
- 2. [legislation/si-pre-2010] score=147.869↑T `si-pre-2010:uksi/2009/2610:article-24`
-    **Amendments to the Safeguarding Vulnerable Groups Act 2006 (Prescribed Criteria and Miscellaneous Pro** — 24 1 The Safeguarding Vulnerable Groups Act 2006 (Prescribed Criteria and Miscellaneous Provisions) Regulations 2009 are amended as follows. 2 In Part 1 of the 
- 3. [legislation/primary-acts-pre-2000] score=133.005↑T `primary-acts-pre-2000:ukpga/1968/60:section-36`
-    **Short title, and general provisions as to Scotland and Northern Ireland.** — 36 1 This Act may be cited as the Theft Act 1968. 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3 This Act does not extend to Scotland or, .
- 4. [legislation/si-pre-2010] score=131.970↑T `si-pre-2010:uksi/2007/2171:article-2`
-    **Amendment of the Criminal Justice and Court Services Act 2000** — 2 1 Schedule 6 to the Criminal Justice and Court Services Act 2000 (which specifies trigger offences for the purposes of section 70 of that Act) shall be amende
- 5. [legislation/si-pre-2010] score=131.824↑T `si-pre-2010:uksi/2004/1892:article-2`
-    **Amendment of the Criminal Justice and Court Services Act 2000** — 2 1 Schedule 6 to the Criminal Justice and Court Services Act 2000 (which specifies trigger offences for the purposes of section 70 of the Act) shall be amended
- 6. [legislation/primary-acts-pre-2000] score=129.099↑T `primary-acts-pre-2000:ukpga/1980/43:section-33`
-    **Maximum penalties on summary conviction in pursuance of section 22.** — 33 1 Where in pursuance of subsection (2) of section 22 above a magistrates’ court proceeds to the summary trial of an information, then, if the accused is summ
- 7. [legislation/si-pre-2010] score=127.705↑T `si-pre-2010:uksi/2007/296:article-3`
-    **Amendment of Schedule 5 to the Sexual Offences Act 2003** — 3 1 Schedule 5 to the Act is amended as follows. 2 After paragraph 4 insert – 4A Outraging public decency. . 3 After paragraph 31 insert – 31A An offence under 
- 8. [legislation/primary-acts-pre-2000] score=126.251↑T `primary-acts-pre-2000:ukpga/1996/62:section-3`
-    **The new offences: jurisdiction.** — 3 (1) In section 1(2) of the Criminal Justice Act 1993 (Group A offences for the purposes of the jurisdictional provisions) paragraph (a) (list of offences unde
- 9. [legislation/primary-acts-pre-2000] score=126.190↑T `primary-acts-pre-2000:ukpga/1980/58:section-4`
-    **Special time limit in case of theft.** — 4 1 The right of any person from whom a chattel is stolen to bring an action in respect of the theft shall not be subject to the time limits under sections 2 an
-10. [legislation/si-2010plus] score=124.973↑T `si-2010plus:uksi/2014/1229:article-2`
-    **Amendment of the Prosecution of Offences Act 1985 (Specified Proceedings) Order 1999** — 2 1 The Prosecution of Offences Act 1985 (Specified Proceedings) Order 1999 is amended as follows. 2 In Part 1 of the Schedule, after paragraph 16 insert— 16A T
-11. [legislation/primary-acts-2000plus] score=124.123↑T `primary-acts-2000plus:ukpga/2006/52:section-77`
-    **Sections 75 and 76: definitions** — 77 1 Subsections (2) to (6) apply for the purposes of sections 75 and 76. 2 “ Controlled drug ” has the meaning given by section 2 of the Misuse of Drugs Act 19
-12. [parliamentary/pwdata-debates] score=93.004↑T `pwdata-debates:debates1991-02-20a:320`
+ 1. [parliamentary/pwdata-debates] score=93.004↑T `pwdata-debates:debates1991-02-20a:320`
     **Orders of the Day — Criminal Justice Bill — MINIMUM SENTENCES** — '(1) That the minimum sentence for any offender convicted under— (a) Section 37 Schedule 2 part 1 to the Sexual Offences Act 1956 shall be 10 years. (b) Section
-13. [parliamentary/historic-hansard] score=90.918↑T `historic-hansard:S5LV0582P0:5246`
+ 2. [legislation/si-pre-2010] score=92.418↑T `si-pre-2010:uksi/2009/2610:article-24`
+    **Amendments to the Safeguarding Vulnerable Groups Act 2006 (Prescribed Criteria and Miscellaneous Pro** — 24 1 The Safeguarding Vulnerable Groups Act 2006 (Prescribed Criteria and Miscellaneous Provisions) Regulations 2009 are amended as follows. 2 In Part 1 of the 
+ 3. [parliamentary/historic-hansard] score=90.918↑T `historic-hansard:S5LV0582P0:5246`
     **Lords: Thefts from Mail** — Lord Williams of Mostyn : Information collected centrally for England and Wales under Section 1 of the Theft Act 1968 and Post Office Act 1953, Section 53 as am
-14. [parliamentary/pwdata-wrans] score=87.418↑T `pwdata-wrans:answers2022-04-20:4`
+ 4. [parliamentary/pwdata-wrans] score=87.418↑T `pwdata-wrans:answers2022-04-20:4`
     **Attorney General — Distributive Trade: Theft** — Q (Emily Thornberry): To ask the Attorney General, how many CPS prosecutions there have been to date for the theft of goods by customers from retail and wholesa
-15. [parliamentary/pwdata-debates] score=87.393↑T `pwdata-debates:debates2005-12-02b:289`
+ 5. [parliamentary/pwdata-debates] score=87.393↑T `pwdata-debates:debates2005-12-02b:289`
     **Orders of the Day — Criminal Law (Amendment) (Protection of Property) Bill** — Of course I intend to do that. It is a little way down my list of subjects, but I hope there will be time to get to the Human Rights Act and the implications of
-16. [parliamentary/pwdata-lordswrans] score=87.145↑T `pwdata-lordswrans:lordswrans2011-12-13a:17`
+ 6. [parliamentary/pwdata-lordswrans] score=87.145↑T `pwdata-lordswrans:lordswrans2011-12-13a:17`
     **Crime: Metal Theft** — Q (Lord Kennedy of Southwark): To ask Her Majesty's Government, further to the Written Answer by Lord Henley on 21 November ( WA 184 ), where and in what format
-17. [parliamentary/pwdata-debates] score=80.930↑T `pwdata-debates:debates2025-06-18e:349`
+ 7. [legislation/primary-acts-pre-2000] score=83.128↑T `primary-acts-pre-2000:ukpga/1968/60:section-36`
+    **Short title, and general provisions as to Scotland and Northern Ireland.** — 36 1 This Act may be cited as the Theft Act 1968. 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3 This Act does not extend to Scotland or, .
+ 8. [legislation/si-pre-2010] score=82.481↑T `si-pre-2010:uksi/2007/2171:article-2`
+    **Amendment of the Criminal Justice and Court Services Act 2000** — 2 1 Schedule 6 to the Criminal Justice and Court Services Act 2000 (which specifies trigger offences for the purposes of section 70 of that Act) shall be amende
+ 9. [legislation/si-pre-2010] score=82.390↑T `si-pre-2010:uksi/2004/1892:article-2`
+    **Amendment of the Criminal Justice and Court Services Act 2000** — 2 1 Schedule 6 to the Criminal Justice and Court Services Act 2000 (which specifies trigger offences for the purposes of section 70 of the Act) shall be amended
+10. [parliamentary/pwdata-debates] score=80.930↑T `pwdata-debates:debates2025-06-18e:349`
     **Crime and Policing Bill — New Clause 130 - Theft of tools: prevention of re-sale and prosecution of ** — (1) The Equipment Theft Act 2023 is amended as follows. (2) In section 3 (Enforcement), subsection (2) at end insert “equal to— (a) the replacement cost of the 
-18. [parliamentary/historic-hansard] score=80.324↑T `historic-hansard:S5LV0582P0:5248`
+11. [legislation/primary-acts-pre-2000] score=80.687↑T `primary-acts-pre-2000:ukpga/1980/43:section-33`
+    **Maximum penalties on summary conviction in pursuance of section 22.** — 33 1 Where in pursuance of subsection (2) of section 22 above a magistrates’ court proceeds to the summary trial of an information, then, if the accused is summ
+12. [parliamentary/historic-hansard] score=80.324↑T `historic-hansard:S5LV0582P0:5248`
     **Lords: Thefts from Mail** — Number of recorded offences and defendants prosecuted at magistrates' courts and convicted at all courts for the offence of theft or unauthorised taking from ma
-19. [parliamentary/historic-hansard] score=78.248↑T `historic-hansard:S5LV0388P0:1358`
+13. [legislation/si-pre-2010] score=79.815↑T `si-pre-2010:uksi/2007/296:article-3`
+    **Amendment of Schedule 5 to the Sexual Offences Act 2003** — 3 1 Schedule 5 to the Act is amended as follows. 2 After paragraph 4 insert – 4A Outraging public decency. . 3 After paragraph 31 insert – 31A An offence under 
+14. [legislation/primary-acts-pre-2000] score=78.907↑T `primary-acts-pre-2000:ukpga/1996/62:section-3`
+    **The new offences: jurisdiction.** — 3 (1) In section 1(2) of the Criminal Justice Act 1993 (Group A offences for the purposes of the jurisdictional provisions) paragraph (a) (list of offences unde
+15. [legislation/primary-acts-pre-2000] score=78.869↑T `primary-acts-pre-2000:ukpga/1980/58:section-4`
+    **Special time limit in case of theft.** — 4 1 The right of any person from whom a chattel is stolen to bring an action in respect of the theft shall not be subject to the time limits under sections 2 an
+16. [parliamentary/historic-hansard] score=78.248↑T `historic-hansard:S5LV0388P0:1358`
     **Lords: THEFT BILL [H.L.]** — Lord HARRIS of GREENWICH : I am grateful to my noble friend Lord Hale for having explained this Amendment. I fear that I cannot recommend the House to accept it
-20. [parliamentary/pwdata-debates] score=78.135↑T `pwdata-debates:debates1988-06-28a:721`
+17. [parliamentary/pwdata-debates] score=78.135↑T `pwdata-debates:debates1988-06-28a:721`
     **Clause 34 — Extradition under Part I of the Criminal Justice Act 1988.** — No. 177, in line 25, leave out from beginning to '(intimate' and insert— '79A. The Police and Criminal Evidence Act 1984 shall be amended as follows. 79B. At th
+18. [legislation/si-2010plus] score=78.108↑T `si-2010plus:uksi/2014/1229:article-2`
+    **Amendment of the Prosecution of Offences Act 1985 (Specified Proceedings) Order 1999** — 2 1 The Prosecution of Offences Act 1985 (Specified Proceedings) Order 1999 is amended as follows. 2 In Part 1 of the Schedule, after paragraph 16 insert— 16A T
+19. [parliamentary/pwdata-wrans] score=77.843↑T `pwdata-wrans:answers2025-11-03:242`
+    **Ministry of Justice — Motor Vehicles: Theft** — Q (Melanie Onn): To ask the Secretary of State for Justice, what discussions he has had with the Sentencing Council on introducing tougher sentences for repeat 
+20. [legislation/primary-acts-2000plus] score=77.577↑T `primary-acts-2000plus:ukpga/2006/52:section-77`
+    **Sections 75 and 76: definitions** — 77 1 Subsections (2) to (6) apply for the purposes of sections 75 and 76. 2 “ Controlled drug ” has the meaning given by section 2 of the Misuse of Drugs Act 19
 
 ### A3 (A/H1)
 *Query:* Working Time Regulations 1998
-*recall@20:* 100.0% · *MRR:* 1.000
+*recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
-- ✓ @1 — SI 1998/1833
-- ✓ @5 — reg 4 / regs 13–13A
+- ✗ MISS — SI 1998/1833
+- ✗ MISS — reg 4 / regs 13–13A
 
 Top-20 retrieved:
- 1. [legislation/si-pre-2010] score=88.985↑R `si-pre-2010:uksi/1998/1833:regulation-1`
-    1 1 These Regulations may be cited as the Working Time Regulations 1998 and shall come into force on 1st October 1998. 2 These Regulations extend to Great Brita
- 2. [legislation/si-pre-2010] score=87.985↑R `si-pre-2010:uksi/1998/1833:regulation-10`
-    10 1 A worker is entitled to a rest period of not less than eleven consecutive hours in each 24-hour period during which he works for his employer. 2 Subject to
- 3. [legislation/si-pre-2010] score=86.985↑R `si-pre-2010:uksi/1998/1833:regulation-11`
-    11 1 Subject to paragraph (2), a worker is entitled to an uninterrupted rest period of not less than 24 hours in each seven-day period during which he works for
- 4. [legislation/si-pre-2010] score=85.985↑R `si-pre-2010:uksi/1998/1833:regulation-12`
-    12 1 Where a worker's daily working time is more than six hours, he is entitled to a rest break. 2 The details of the rest break to which a worker is entitled u
- 5. [legislation/si-pre-2010] score=84.985↑R `si-pre-2010:uksi/1998/1833:regulation-13`
-    13 A1 This regulation applies to— a a worker in respect of any leave years beginning before 1st April 2024, and b a worker to whom regulation 15B does not apply
- 6. [legislation/si-pre-2010] score=83.985↑R `si-pre-2010:uksi/1998/1833:regulation-13A`
-    13A A1 This regulation applies to— a a worker in respect of any leave years beginning before 1st April 2024, and b a worker to whom regulation 15B does not appl
- 7. [legislation/si-pre-2010] score=82.985↑R `si-pre-2010:uksi/1998/1833:regulation-14`
-    14 1 Paragraphs (1) to (4) of this regulation apply where— a a worker’s employment is terminated during the course of his leave year, and b on the date on which
- 8. [legislation/si-pre-2010] score=81.985↑R `si-pre-2010:uksi/1998/1833:regulation-15`
-    15 1 A worker may take leave to which he is entitled under regulations 13, 13A and 15B on such days as he may elect by giving notice to his employer in accordan
- 9. [legislation/si-pre-2010] score=80.985↑R `si-pre-2010:uksi/1998/1833:regulation-15A`
-    15A 1 During the first year of his employment, the amount of leave a worker may take at any time in exercise of his entitlement under regulation 13 or regulatio
-10. [legislation/si-pre-2010] score=79.985↑R `si-pre-2010:uksi/1998/1833:regulation-15B`
-    15B 1 This regulation applies to an irregular hours worker, or a part-year worker, to whom the Agricultural Wages (Scotland) Act 1949 (as that Act had effect on
-11. [legislation/si-pre-2010] score=78.985↑R `si-pre-2010:uksi/1998/1833:regulation-15C`
-    15C 1 This regulation applies for the purposes of determining the amount of annual leave which a worker to whom regulation 15B applies, accrues in a pay period 
-12. [legislation/si-pre-2010] score=77.985↑R `si-pre-2010:uksi/1998/1833:regulation-15D`
-    15D 1 Leave to which a worker is entitled under regulation 15B may be taken in instalments but, subject to the exceptions in paragraphs (2), (3), (4) and (6), i
-13. [legislation/primary-acts-pre-2000] score=76.985↑T `primary-acts-pre-2000:ukpga/1996/18:section-101A`
-    **Working time cases.** — 101A 1 An employee who is dismissed shall be regarded for the purposes of this Part as unfairly dismissed if the reason (or, if more than one, the principal rea
-14. [parliamentary/pwdata-wrans] score=50.810↑T `pwdata-wrans:answers2021-12-02:121`
+ 1. [parliamentary/pwdata-wrans] score=50.810↑T `pwdata-wrans:answers2021-12-02:121`
     **Ministry of Justice — Ministry of Justice: Working Hours** — Q (Rachel Hopkins): To ask the Secretary of State for Justice, what records relating to staff working times are kept by his Department under Regulation 9 of the
-15. [parliamentary/pwdata-wrans] score=50.339↑T `pwdata-wrans:answers2021-12-02:175`
+ 2. [parliamentary/pwdata-wrans] score=50.339↑T `pwdata-wrans:answers2021-12-02:175`
     **Department for Work and Pensions — Department for Work and Pensions: Working Hours** — Q (Rachel Hopkins): To ask the Secretary of State for Work and Pensions, what records relating to staff working times are kept by her Department under Regulatio
-16. [parliamentary/pwdata-wrans] score=50.334↑T `pwdata-wrans:answers2022-01-17:219`
+ 3. [parliamentary/pwdata-wrans] score=50.334↑T `pwdata-wrans:answers2022-01-17:219`
     **Department for Environment, Food and Rural Affairs — Department for Environment, Food and Rural Affa** — Q (Grahame Morris): To ask the Secretary of State for Environment, Food and Rural Affairs, what assessment he has made of the compliance of his Department's sta
-17. [parliamentary/pwdata-wrans] score=50.206↑T `pwdata-wrans:answers2021-12-02:137`
+ 4. [parliamentary/pwdata-wrans] score=50.206↑T `pwdata-wrans:answers2021-12-02:137`
     **Treasury — Treasury: Working Hours** — Q (Rachel Hopkins): To ask the Chancellor of the Exchequer, what records relating to staff working times are kept by his Department under Regulation 9 of the Wo
-18. [parliamentary/niassembly-hansard] score=49.993↑T `niassembly-hansard:259251:20`
+ 5. [parliamentary/niassembly-hansard] score=49.993↑T `niassembly-hansard:259251:20`
     **NI Assembly: Executive Committee Business — Working Time Regulations (Northern Ireland) 2016** — Thank you Mr Speaker. I welcome the opportunity to outline the views of the Committee for Employment and Learning on the statutory rules relating to the working
-19. [parliamentary/pwdata-wrans] score=49.586↑T `pwdata-wrans:answers2003-12-11:123`
+ 6. [parliamentary/pwdata-wrans] score=49.586↑T `pwdata-wrans:answers2003-12-11:123`
     **NORTHERN IRELAND — Working Time Directive** — Q (Lady Hermon): To ask the Secretary of State for Northern Ireland if he will make a statement on the implementation of the European Union Working Time Directi
-20. [parliamentary/pwdata-wrans] score=49.420↑T `pwdata-wrans:answers2019-01-14:172`
+ 7. [parliamentary/pwdata-wrans] score=49.420↑T `pwdata-wrans:answers2019-01-14:172`
     **Treasury — Revenue and Customs: Working Hours** — Q (Chris Law): To ask the Chancellor of the Exchequer, what processes HMRC has in place to ensure compliance with Regulation 5 of the Working Time Regulations 1
+ 8. [parliamentary/pwdata-wrans] score=49.061↑T `pwdata-wrans:answers2022-01-26:161`
+    **Treasury — Revenue and Customs: Working Hours** — Q (Chris Stephens): To ask the Chancellor of the Exchequer, pursuant to the Answer of 2 December 2021 to Question 81163 on Treasury: Working Hours, whether reco
+ 9. [parliamentary/pwdata-wrans] score=49.037↑T `pwdata-wrans:answers2022-01-21:276`
+    **Department for Digital, Culture, Media and Sport — Department for Digital, Culture, Media and Sport:** — Q (Chris Stephens): To ask the Secretary of State for Digital, Culture, Media and Sport, what records her Department keeps relating to staff working times under
+10. [parliamentary/pwdata-wrans] score=49.008↑T `pwdata-wrans:answers2003-12-03:142`
+    **MINISTER FOR WOMEN — Working Time Directive** — Q (Anne McIntosh): To ask the Minister for Women what recent assessment she has made of the implications of the Working Time Directive for women's employment. A
+11. [parliamentary/pwdata-wrans] score=48.916↑T `pwdata-wrans:answers2021-12-02:120`
+    **Ministry of Justice — Ministry of Justice: Working Hours** — Q (Rachel Hopkins): To ask the Secretary of State for Justice, what assessment he has made of the compliance of his Department's staff working from home with th
+12. [parliamentary/pwdata-lordswrans] score=48.746↑T `pwdata-lordswrans:lordswrans2000-04-17a:11`
+    **Northern Ireland Health and Social Services Trusts: Working Time Regulation 16** — Q (Lord Laird): asked Her Majesty's Government: Which Health and Social Services Trusts in Northern Ireland have not implemented Regulation 16 of the Working Ti
+13. [parliamentary/pwdata-wrans] score=48.570↑T `pwdata-wrans:answers2023-05-18:11`
+    **Department for Business and Trade — Health: Working Hours** — Q (Kirsten Oswald): To ask the Secretary of State for Business and Trade, pursuant to the Answer on 24 April 2023 to Question 180639 on Health: Working Hours, w
+14. [parliamentary/pwdata-wrans] score=48.506↑T `pwdata-wrans:answers2022-01-17:13`
+    **Department for Business, Energy and Industrial Strategy — Department for Business, Energy and Indust** — Q (Grahame Morris): To ask the Secretary of State for Business, Energy and Industrial Strategy, what assessment he has made of the compliance of his Department'
+15. [parliamentary/historic-hansard] score=48.397↑T `historic-hansard:S5LV0600P0:5104`
+    **Lords: Working Time Legislation** — The Parliamentary Under-Secretary of State, Department of Trade and Industry (Lord Sainsbury of Turville) : The Government's Working Time Regulations (S. I.1998
+16. [parliamentary/pwdata-wrans] score=48.351↑T `pwdata-wrans:answers2002-01-14:89`
+    **TRADE AND INDUSTRY — Working Time Directive** — Q (David Drew): To ask the Secretary of State for Trade and Industry if she will make a statement on how the Working Time Directive is functioning; and how many
+17. [parliamentary/pwdata-lordswrans] score=48.254↑T `pwdata-lordswrans:lordswrans2006-04-25b:25`
+    **Working Time Regulations** — Q (Lord Hodgson of Astley Abbotts): asked Her Majesty's Government: Why paragraph (2) of Regulation 20 of the Working Time Regulations 1998 has been revoked. A 
+18. [parliamentary/pwdata-wrans] score=48.155↑T `pwdata-wrans:answers2003-01-08:70`
+    **ENVIRONMENT FOOD AND RURAL AFFAIRS — Working Time Directive** — Q (Anne McIntosh): To ask the Secretary of State for Environment, Food and Rural Affairs what assessment she has made of the impact of a Working Time Directive 
+19. [legislation/primary-acts-pre-2000] score=48.115↑T `primary-acts-pre-2000:ukpga/1996/18:section-101A`
+    **Working time cases.** — 101A 1 An employee who is dismissed shall be regarded for the purposes of this Part as unfairly dismissed if the reason (or, if more than one, the principal rea
+20. [parliamentary/pwdata-wrans] score=48.061↑T `pwdata-wrans:answers2022-01-17:277`
+    **Department for Digital, Culture, Media and Sport — Department for Digital, Culture, Media and Sport:** — Q (Grahame Morris): To ask the Secretary of State for Digital, Culture, Media and Sport, what assessment she has made of the compliance of her Department's staf
 
 ### A4 (A/H1)
 *Query:* Equality Act 2010 section 149
-*recall@20:* 50.0% · *MRR:* 1.000
+*recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
-- ✓ @1 — EqA 2010 s.149 (PSED)
+- ✗ MISS — EqA 2010 s.149 (PSED)
 - ✗ MISS — Sch 18 exceptions
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-2000plus] score=83.077↑R `primary-acts-2000plus:ukpga/2010/15:section-149`
-    **Public sector equality duty** — 149 1 A public authority must, in the exercise of its functions, have due regard to the need to— a eliminate discrimination, harassment, victimisation and any o
- 2. [parliamentary/pwdata-lordswrans] score=82.077↑T `pwdata-lordswrans:lordswrans2010-11-01a:28`
+ 1. [parliamentary/pwdata-lordswrans] score=82.077↑T `pwdata-lordswrans:lordswrans2010-11-01a:28`
     **Equality Act 2010** — Q (Lord Laird): To ask Her Majesty's Government when they plan to table commencement orders for sections 1-3, 64-80, 127-135, and 149-159 of the Equality Act 20
- 3. [guidance/quangos-govuk] score=77.197↑T `quangos-govuk:government/publications/equality-diversity-and-inclusion-statement-early-career-framework-and-national-professional-qualification-inspection-framework-and-handbook:1`
+ 2. [guidance/quangos-govuk] score=77.197↑T `quangos-govuk:government/publications/equality-diversity-and-inclusion-statement-early-career-framework-and-national-professional-qualification-inspection-framework-and-handbook:1`
     **Equality, diversity and inclusion statement: early career framework and national professional qualif** — This statement sets out Ofsted’s consideration of how the new early career framework (ECF) and national professional qualification (NPQ) inspection framework an
- 4. [parliamentary/pwdata-wrans] score=76.201↑T `pwdata-wrans:answers2016-11-03:123`
+ 3. [parliamentary/pwdata-wrans] score=76.201↑T `pwdata-wrans:answers2016-11-03:123`
     **Department for Education — Government Departments: Equality** — Q (Dawn Butler): To ask the Secretary of State for Education, pursuant to the Answer of 20 October 2016 to Question 48637, how the Government Equalities Office 
- 5. [parliamentary/pwdata-lordswrans] score=76.034↑T `pwdata-lordswrans:lordswrans2014-01-30a:12`
+ 4. [parliamentary/pwdata-lordswrans] score=76.034↑T `pwdata-lordswrans:lordswrans2014-01-30a:12`
     **Equality Act 2010** — Q (Lord Moynihan): To ask Her Majesty’s Government whether it is their intention to add Sport England, by statutory instrument, as a named public body in the Eq
- 6. [guidance/quangos-govuk] score=75.701↑T `quangos-govuk:government/publications/equality-act-2010-the-public-sector-equality-duty-reducing-bureaucracy-policy-review-paper:1`
+ 5. [guidance/quangos-govuk] score=75.701↑T `quangos-govuk:government/publications/equality-act-2010-the-public-sector-equality-duty-reducing-bureaucracy-policy-review-paper:1`
     **Equality Act 2010:  The public sector Equality Duty:  reducing bureaucracy.  Policy review paper** — In addition to the general Equality Duty at section 149 of the Equality Act 2010, section 153 the Act gives the Government a power to impose specific duties on 
- 7. [parliamentary/pwdata-lordswrans] score=75.236↑T `pwdata-lordswrans:lordswrans2011-04-26a:94`
+ 6. [parliamentary/pwdata-lordswrans] score=75.236↑T `pwdata-lordswrans:lordswrans2011-04-26a:94`
     **Equality Act 2010** — Q (Lord Ouseley): To ask Her Majesty's Government when the Public Sector Equality Duty under the Equality Act 2010 will come into force, following their decisio
- 8. [guidance/quangos-govuk] score=72.597↑T `quangos-govuk:government/publications/draft-the-equality-act-2010-specific-duties-regulations-2011:1`
+ 7. [guidance/quangos-govuk] score=72.597↑T `quangos-govuk:government/publications/draft-the-equality-act-2010-specific-duties-regulations-2011:1`
     **Draft The Equality Act 2010 (Specific Duties) Regulations 2011** — Draft specific duties regulations were laid before Parliament on 27 June 2011 and are expected to come into force in September 2011, subject to parliamentary ap
- 9. [guidance/quangos-govuk] score=72.015↑T `quangos-govuk:government/publications/equality-act-2010-schedule-19-consolidated-april-2011:1`
+ 8. [guidance/quangos-govuk] score=72.015↑T `quangos-govuk:government/publications/equality-act-2010-schedule-19-consolidated-april-2011:1`
     **Equality Act 2010: Schedule 19 (consolidated) - April 2011** — Section 149 of the Equality Act 2010, the public sector Equality Duty, applies to the public bodies listed in Schedule 19. Being listed in the Schedule also mea
-10. [parliamentary/pwdata-debates] score=71.976↑T `pwdata-debates:debates2019-01-08b:383`
+ 9. [parliamentary/pwdata-debates] score=71.976↑T `pwdata-debates:debates2019-01-08b:383`
     **FINANCE (NO. 3) BILL — Impact of provisions of section 5 on child poverty and equality** — ‘(1) The Chancellor of the Exchequer must review the impact of the provisions of section 5 and lay a report of that review before the House of Commons within si
-11. [parliamentary/pwdata-debates] score=71.786↑T `pwdata-debates:debates2018-11-19c:439`
+10. [parliamentary/pwdata-debates] score=71.786↑T `pwdata-debates:debates2018-11-19c:439`
     **FINANCE (NO. 3) BILL — Impact of provisions of section 5 on child poverty and equality** — ‘(1) The Chancellor of the Exchequer must review the impact of the provisions of section 5 and lay a report of that review before the House of Commons within si
-12. [parliamentary/pwdata-lordswrans] score=70.983↑T `pwdata-lordswrans:lordswrans2025-09-18:7`
+11. [parliamentary/pwdata-lordswrans] score=70.983↑T `pwdata-lordswrans:lordswrans2025-09-18:7`
     **Home Office — Home Office: Equality** — Q (Baroness Jenkin of Kennington): To ask His Majesty's Government, further to the Written Answer by the Minister of State for Policing, Fire and Crime Preventi
-13. [parliamentary/pwdata-lordswrans] score=70.541↑T `pwdata-lordswrans:lordswrans2011-09-05a:10`
+12. [parliamentary/pwdata-lordswrans] score=70.541↑T `pwdata-lordswrans:lordswrans2011-09-05a:10`
     **Equality** — Q (Lord Laird): To ask Her Majesty's Government, further to the Written Answer by Baroness Verma on 15 June ( WA 192-2 ), whether they will pilot a cost assessm
-14. [parliamentary/pwdata-wrans] score=70.346↑T `pwdata-wrans:answers2022-05-30:64`
+13. [parliamentary/pwdata-wrans] score=70.346↑T `pwdata-wrans:answers2022-05-30:64`
     **Department for Work and Pensions — Universal Credit: Impact Assessments** — Q (Dawn Butler): To ask the Secretary of State for Work and Pensions, whether her Department undertook an equality impact assessment on the migration of claiman
-15. [parliamentary/pwdata-wrans] score=69.734↑T `pwdata-wrans:answers2016-11-24:95`
+14. [parliamentary/pwdata-wrans] score=69.734↑T `pwdata-wrans:answers2016-11-24:95`
     **Department for Education — Schools: Equality** — Q (Dawn Butler): To ask the Secretary of State for Education, if she will undertake an impact assessment on the compatibility of the Schools that Work for Every
-16. [parliamentary/pwdata-lordswrans] score=69.724↑T `pwdata-lordswrans:lordswrans2010-11-29a:13`
+15. [parliamentary/pwdata-lordswrans] score=69.724↑T `pwdata-lordswrans:lordswrans2010-11-29a:13`
     **Equality Act 2010** — Q (Lord Laird): To ask Her Majesty's Government which sections or subsections of the Equality Act 2010 have not been commenced; of those, which ones they intend
-17. [parliamentary/pwdata-wrans] score=69.600↑T `pwdata-wrans:answers2024-01-24:193`
+16. [parliamentary/pwdata-wrans] score=69.600↑T `pwdata-wrans:answers2024-01-24:193`
     **Northern Ireland Office — Northern Ireland Office: Equality** — Q (Neil O'Brien): To ask the Secretary of State for Northern Ireland, how many equalities impact assessments his Department completed in each of the last five y
-18. [parliamentary/pwdata-wrans] score=69.230↑T `pwdata-wrans:answers2016-12-07:183`
+17. [parliamentary/pwdata-wrans] score=69.230↑T `pwdata-wrans:answers2016-12-07:183`
     **Women and Equalities — Local Government: Equality** — Q (Caroline Lucas): To ask the Minister for Women and Equalities, with reference to the report, Acting on equalities: are local authorities in England meeting t
-19. [parliamentary/pwdata-debates] score=69.222↑T `pwdata-debates:debates2021-04-19d:279`
+18. [parliamentary/pwdata-debates] score=69.222↑T `pwdata-debates:debates2021-04-19d:279`
     **Finance (No. 2) Bill — New Clause 23 - EQUALITY IMPACT ANALYSIS** — ‘(1) The Chancellor of the Exchequer must review the equality impact of sections 1 to 5, 24 to 26, 28, 31 to 33, 40 and 86 of this Act and lay a report of that 
-20. [guidance/quangos-govuk] score=69.020↑T `quangos-govuk:government/publications/mhra-public-sector-equality-duty-report-2025-2026:1`
+19. [guidance/quangos-govuk] score=69.020↑T `quangos-govuk:government/publications/mhra-public-sector-equality-duty-report-2025-2026:1`
     **MHRA Public Sector Equality Duty Report 2025-2026** — This report outlines how the Medicines and Healthcare products Regulatory Agency (MHRA) meets our obligations under the Public Sector Equality Duty (PSED), as s
+20. [parliamentary/pwdata-debates] score=68.916↑T `pwdata-debates:debates2018-02-21a:261`
+    **FINANCE (NO. 2) BILL — Equality impact analyses of certain provisions of this Act** — ‘(1) The Chancellor of the Exchequer must review the equality impact of the provisions of this Act specified in subsection (3) in accordance with this section a
 
 ### A5 (A/H2)
 *Query:* Find me the law that says you have to wear a seatbelt
@@ -791,53 +784,53 @@ Top-20 retrieved:
 
 ### D1 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* What has amended section 21 of the Housing Act 1988 since 2015?
-*recall@20:* 50.0% · *MRR:* 0.167
+*recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
 - ✗ MISS — Deregulation Act 2015 ss.33–41
-- ✓ @6 — Renters’ Rights Act 2025 (prospective repeal)
+- ✗ MISS — Renters’ Rights Act 2025 (prospective repeal)
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-pre-2000] score=133.981↑R `primary-acts-pre-2000:ukpga/1988/50:section-21`
-    **Recovery of possession on expiry or termination of assured shorthold tenancy.** — 21 1 Without prejudice to any right of the landlord under an assured shorthold tenancy to recover possession of the dwelling-house let on the tenancy in accorda
- 2. [legislation/primary-acts-2000plus] score=132.981↑T `primary-acts-2000plus:ukpga/2004/34:section-215C`
+ 1. [legislation/primary-acts-2000plus] score=83.113↑T `primary-acts-2000plus:ukpga/2004/34:section-215C`
     **Sections 215A and 215B: transitional provisions** — 215C 1 Sections 215A and 215B are treated as having had effect since 6 April 2007, subject to the following provisions of this section. 2 Sections 215A and 215B
- 3. [legislation/primary-acts-2000plus] score=114.535↑T `primary-acts-2000plus:ukpga/2004/34:section-98`
-    **Other consequences of operating unlicensed houses: restriction on terminating tenancies (England)** — 98 1 No section 21 notice may be given in relation to a shorthold tenancy of the whole or part of an unlicensed house so long as it remains such a house. 2 In t
- 4. [legislation/primary-acts-2000plus] score=111.242↑T `primary-acts-2000plus:ukpga/2004/34:section-75`
-    **Other consequences of operating unlicensed HMOs: restriction on terminating tenancies (England)** — 75 1 No section 21 notice may be given in relation to a shorthold tenancy of a part of an unlicensed HMO so long as it remains such an HMO. 2 In this section— a
- 5. [legislation/explanatory-notes] score=110.014↑T `explanatory-notes:en:ukpga/2015/20:1`
-    **Explanatory Notes: ukpga/2015/20** — EXPLANATORY NOTES Deregulation Act 2015 Chapter 20 £23.25 These notes refer to the Deregulation Act 2015 (c. 20) which received Royal Assent on 26 March 2015 1 
- 6. [legislation/primary-acts-2000plus] score=109.372↑T `primary-acts-2000plus:ukpga/2025/26:section-134`
-    **Use by local housing authority of certain information** — 134 1 Section 212A of the Housing Act 2004 (tenancy deposit schemes: provision of information to local authorities) is amended in accordance with subsections (2
- 7. [parliamentary/pwdata-wrans] score=79.439↑T `pwdata-wrans:answers2019-05-08:165`
+ 2. [parliamentary/pwdata-wrans] score=79.439↑T `pwdata-wrans:answers2019-05-08:165`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Evictions** — Q (Sir David Evennett): To ask the Secretary of State for Housing, Communities and Local Government, what deterrents are in place to stop rogue landlords illega
- 8. [parliamentary/pwdata-wrans] score=78.997↑T `pwdata-wrans:answers2019-04-02:181`
+ 3. [parliamentary/pwdata-wrans] score=78.997↑T `pwdata-wrans:answers2019-04-02:181`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Safety** — Q (Mr Clive Betts): To ask the Secretary of State for Housing, Communities and Local Government, what assessment his Department has made of the potential merits
- 9. [parliamentary/pwdata-wrans] score=78.894↑T `pwdata-wrans:answers2017-10-25:15`
+ 4. [parliamentary/pwdata-wrans] score=78.894↑T `pwdata-wrans:answers2017-10-25:15`
     **Department for Communities and Local Government — Private Rented Housing: Evictions** — Q (Andrew Gwynne): To ask the Secretary of State for Communities and Local Government, what protections exist for (a) vulnerable tenants and (b) people in recei
-10. [parliamentary/pwdata-wrans] score=78.753↑T `pwdata-wrans:answers2017-03-23:144`
+ 5. [parliamentary/pwdata-wrans] score=78.753↑T `pwdata-wrans:answers2017-03-23:144`
     **Department for Communities and Local Government — Private Rented Housing** — Q (Richard Burden): To ask the Secretary of State for Communities and Local Government, what steps his Department is taking to protect tenants in the private re
-11. [parliamentary/pwdata-wrans] score=77.846↑T `pwdata-wrans:answers2019-07-24:105`
+ 6. [parliamentary/pwdata-wrans] score=77.846↑T `pwdata-wrans:answers2019-07-24:105`
     **Ministry of Housing, Communities and Local Government — Evictions** — Q (Andrew Rosindell): To ask the Secretary of State for Housing, Communities and Local Government, what his Department's definition is of eviction at short noti
-12. [parliamentary/pwdata-wrans] score=77.526↑T `pwdata-wrans:answers2020-10-20:272`
+ 7. [parliamentary/pwdata-wrans] score=77.526↑T `pwdata-wrans:answers2020-10-20:272`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Evictions** — Q (Tim Farron): To ask the Secretary of State for Housing, Communities and Local Government, what estimate he has made of the number of Section 21 eviction noti
-13. [parliamentary/pwdata-lordswrans] score=77.394↑T `pwdata-lordswrans:lordswrans2019-04-04:19`
+ 8. [parliamentary/pwdata-lordswrans] score=77.394↑T `pwdata-lordswrans:lordswrans2019-04-04:19`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Safety** — Q (lord tope): To ask Her Majesty's Government what assessment they have made of whether landlords and letting agents should be prevented from renting propertie
-14. [parliamentary/senedd-cofnod] score=75.673↑T `senedd-cofnod:5572:121`
+ 9. [parliamentary/senedd-cofnod] score=75.673↑T `senedd-cofnod:5572:121`
     **Senedd Plenary: Amending Section 21 of the Housing Act 1988** — 4. What plans does the Welsh Government have to amend Section 21 of the Housing Act 1988 to give people who privately rent homes more secure tenancies? OAQ53675
-15. [parliamentary/historic-hansard] score=74.977↑T `historic-hansard:S5LV0574P0:3728`
+10. [parliamentary/historic-hansard] score=74.977↑T `historic-hansard:S5LV0574P0:3728`
     **Lords: Housing Bill** — Lord Lucas moved Amendment No. 95: Page 134, leave out lines 3 to 10 and insert— ("(a) amendments or repeals of provisions of the Housing Associations Act 1985,
-16. [parliamentary/pwdata-lords] score=74.227↑T `pwdata-lords:daylord2004-10-20a:368`
+11. [parliamentary/pwdata-lords] score=74.227↑T `pwdata-lords:daylord2004-10-20a:368`
     **Housing Bill** — My Lords, the problem with housing Bills not coming along very often is that people take the opportunity to raise issues that are of the day and need dealing wi
-17. [parliamentary/pwdata-wrans] score=73.601↑T `pwdata-wrans:answers2023-03-30:12`
+12. [parliamentary/pwdata-wrans] score=73.601↑T `pwdata-wrans:answers2023-03-30:12`
     **Department for Levelling Up, Housing and Communities — Evictions** — Q (Kerry McCarthy): To ask the Secretary of State for Levelling Up, Housing and Communities, what plans he has to abolish section 21 of the Housing Act 1988.
-18. [parliamentary/pwdata-debates] score=73.428↑T `pwdata-debates:debates2014-05-14d:269`
+13. [parliamentary/pwdata-debates] score=73.428↑T `pwdata-debates:debates2014-05-14d:269`
     **DEREGULATION BILL (PROGRAMME) (NO. 2) — Schedule 18 — Legislation no longer of practical use** — Amendments made: 75, page 159, line 32, at end insert— ‘Merchant Shipping Act 1988 (c. 12) The Merchant Shipping Act 1988 is repealed.’. This amendment repeals 
-19. [parliamentary/pwdata-lordswrans] score=73.079↑T `pwdata-lordswrans:lordswrans2020-09-21:42`
+14. [parliamentary/pwdata-lordswrans] score=73.079↑T `pwdata-lordswrans:lordswrans2020-09-21:42`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Coronavirus** — Q (Baroness Grender): To ask Her Majesty's Government what estimate they have made of the number of private rented sector tenants who are in arrears due to the 
-20. [parliamentary/pwdata-lordswrans] score=73.068↑T `pwdata-lordswrans:lordswrans2019-10-02:13`
+15. [parliamentary/pwdata-lordswrans] score=73.068↑T `pwdata-lordswrans:lordswrans2019-10-02:13`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Older People** — Q (the marquess of lothian): To ask Her Majesty's Government how many tenants over the age of 60 currently live in private rental accommodation; whether this pr
+16. [parliamentary/pwdata-debates] score=72.896↑T `pwdata-debates:debates2015-11-09a:492`
+    **Scotland Bill (Programme) (No.2) — Clause 11 — Scope to modify the Scotland Act 1998** — It is not for the Chair to decide what the SNP does; it is up to the SNP to decide what it moves or does not move. As I said, I knew that it was not a point of 
+17. [parliamentary/historic-hansard] score=72.886↑T `historic-hansard:S5LV0502P0:3623`
+    **Lords: Merchant Shipping (Safety at Work) Regulations (Non-UK Ships) Regulations 1988** — The regulations we are discussing today are made by the affirmative procedure since, under Section 49(3) of the Merchant Shipping Act 1979, as amended in 1986 a
+18. [parliamentary/pwdata-wrans] score=72.515↑T `pwdata-wrans:answers2007-06-20b:201`
+    **COMMUNITIES AND LOCAL GOVERNMENT — Housing: Standards** — Q (Dai Davies): To ask the Secretary of State for Communities and Local Government what representations (a) she and (b) her predecessor responsible for housing 
+19. [guidance/quangos-govuk] score=72.424↑T `quangos-govuk:government/consultations/a-new-deal-for-renting-resetting-the-balance-of-rights-and-responsibilities-between-landlords-and-tenants:1`
+    **A new deal for renting: resetting the balance of rights and responsibilities between landlords and t** — The government is committed to modernising the rented sector, and intends to introduce a new, fairer deal for both landlords and tenants. On 15 April 2019, the 
+20. [legislation/primary-acts-2000plus] score=71.585↑T `primary-acts-2000plus:ukpga/2004/34:section-98`
+    **Other consequences of operating unlicensed houses: restriction on terminating tenancies (England)** — 98 1 No section 21 notice may be given in relation to a shorthold tenancy of the whole or part of an unlicensed house so long as it remains such a house. 2 In t
 
 ### D2 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* List the statutory instruments made under the Building Safety Act 2022
@@ -848,95 +841,95 @@ Expected sources:
 - ✓ @1 — Higher-Risk Buildings regs
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-pre-2000] score=159.738↑T `primary-acts-pre-2000:ukpga/1985/70:section-20F`
+ 1. [legislation/primary-acts-pre-2000] score=99.836↑T `primary-acts-pre-2000:ukpga/1985/70:section-20F`
     **Limitation of service charges: excluded costs for higher-risk buildings** — 20F 1 This section applies in relation to a lease to which section 30D (higher-risk buildings: building safety costs) applies. 2 Excluded costs are not to be re
- 2. [legislation/primary-acts-pre-2000] score=137.837↑T `primary-acts-pre-2000:ukpga/1985/70:section-30D`
-    **Liability for building safety costs** — 30D 1 This section applies to a relevant lease of premises which consist of or include a dwelling in a higher-risk building. 2 In this section “relevant lease”—
- 3. [legislation/explanatory-memoranda] score=132.801↑T `explanatory-memoranda:em:uksi/2022/1181:1`
-    **Explanatory Memorandum: uksi/2022/1181** — 1 CO/EM/2022.3 EXPLANATORY MEMORANDUM TO EMPLOYMENT TRIBUNALS ACT 1996 (APPLICATION OF CONCILIATION PROVISIONS) ORDER 2022 2022 No. 1181 1. Introduction 1.1 Thi
- 4. [legislation/primary-acts-2000plus] score=130.364↑T `primary-acts-2000plus:ukpga/2023/55:section-130`
-    **Regulations and orders under the Planning Acts** — 130 1 In section 333 of TCPA 1990 (regulations and orders)— a after subsection (2A) insert— 2B Regulations made under this Act may make consequential, supplemen
- 5. [legislation/primary-acts-2000plus] score=127.321↑T `primary-acts-2000plus:ukpga/2022/30:section-110`
-    **Managers appointed under Part 2 of the Landlord and Tenant Act 1987** — 110 1 Section 24 of the Landlord and Tenant Act 1987 (appointment of a manager by a tribunal) is amended as follows. 2 After subsection (2ZA) insert— 2ZB Subsec
- 6. [legislation/explanatory-memoranda] score=125.416↑T `explanatory-memoranda:em:uksi/2022/1393:1`
-    **Explanatory Memorandum: uksi/2022/1393** — 1 CO/EM/2022.3 EXPLANATORY MEMORANDUM TO THE PRODUCT SAFETY AND METROLOGY (AMENDMENT AND TRANSITIONAL PROVISIONS) REGULATIONS 2022 2022 No. 1393 1. Introduction
- 7. [legislation/primary-acts-pre-2000] score=124.824↑T `primary-acts-pre-2000:ukpga/1997/9:section-73F`
-    **Applications for listed building or conservation area consent by Crown** — 73F 1 This section applies to an application for— a listed building consent, or b conservation area consent, made by or on behalf of the Crown. 2 The Scottish M
- 8. [legislation/explanatory-memoranda] score=123.234↑T `explanatory-memoranda:em:uksi/2022/1182:1`
-    **Explanatory Memorandum: uksi/2022/1182** — 1 CO/EM/2022.3 EXPLANATORY MEMORANDUM TO THE AMMONIUM NITRATE MATERIALS (HIGH NITROGEN CONTENT) SAFETY (AMENDMENT) (NO. 2) REGULATIONS 2022 2022 No. 1182 1. Int
- 9. [legislation/explanatory-memoranda] score=123.142↑T `explanatory-memoranda:em:uksi/2022/1403:1`
-    **Explanatory Memorandum: uksi/2022/1403** — 1 CO/EM/2022.3 EXPLANATORY MEMORANDUM TO THE NON-DOMESTIC RATING (CHARGEABLE AMOUNTS) (ENGLAND) REGULATIONS 2022 2022 No. 1403 1. Introduction 1.1 This explanat
-10. [parliamentary/committees-reports] score=90.227↑T `committees-reports:publication:39125:192317`
+ 2. [parliamentary/committees-reports] score=90.227↑T `committees-reports:publication:39125:192317`
     **Report: Thirty-Third Report of Session 2022–23 - 4 Statutory Instruments Reported** — House of Lords House of Commons Joint Committee on Statutory Instruments Thirty-Third Report of Session 2022–23 Drawing special attention to: Building Safety Ac
-11. [parliamentary/committees-reports] score=85.056↑T `committees-reports:publication:22608:166326`
+ 3. [legislation/primary-acts-pre-2000] score=86.148↑T `primary-acts-pre-2000:ukpga/1985/70:section-30D`
+    **Liability for building safety costs** — 30D 1 This section applies to a relevant lease of premises which consist of or include a dwelling in a higher-risk building. 2 In this section “relevant lease”—
+ 4. [parliamentary/committees-reports] score=85.056↑T `committees-reports:publication:22608:166326`
     **Correspondence: Letter from the Minister for Building Safety and Fire to the Chair dated 1 June 2022** — Clive Betts MP Chair of the Levelling Up Housing & Communities Select Committee. House of Commons London SW1A 0AA Dear Clive, STRENGTHENING BUILDING REGULATIONS
-12. [parliamentary/committees-reports] score=85.008↑T `committees-reports:publication:23086:169097`
+ 5. [parliamentary/committees-reports] score=85.008↑T `committees-reports:publication:23086:169097`
     **Report: Ninth Report of Session 2022–23 - 3 Statutory Instrument reported** — House of Lords House of Commons Joint Committee on Statutory Instruments Ninth Report of Session 2022–23 Drawing special attention to: Building Safety (Leasehol
-13. [parliamentary/pwdata-lords] score=84.038↑T `pwdata-lords:daylord2022-03-29c:226`
+ 6. [parliamentary/pwdata-lords] score=84.038↑T `pwdata-lords:daylord2022-03-29c:226`
     **Building Safety Bill - Report (Continued) — Amendments 87 to 99** — Moved by Lord Greenhalgh 87: Clause 115, page 119, line 37, leave out “section 30C or 30D” and insert “sections 30C to 30DA”Member’s explanatory statementThis a
-14. [parliamentary/committees-reports] score=83.603↑T `committees-reports:publication:23001:168495`
+ 7. [parliamentary/committees-reports] score=83.603↑T `committees-reports:publication:23001:168495`
     **Report: Eighth Report of Session 2022-23 - No Statutory Instruments reported** — House of Lords House of Commons Joint Committee on Statutory Instruments Eighth Report of Session 2022–23 Ordered by the House of Lords to be printed 6 July 202
-15. [parliamentary/committees-reports] score=83.497↑T `committees-reports:publication:40677:198257`
+ 8. [parliamentary/committees-reports] score=83.497↑T `committees-reports:publication:40677:198257`
     **Report: 45th Report - Includes information paragraphs on: Draft Building Safety (Leaseholder Protect** — HOUSE OF LORDS Secondary Legislation Scrutiny Committee 45th Report of Session 2022–23 Includes information paragraphs on: Draft Building Safety (Leaseholder Pr
-16. [parliamentary/pwdata-lords] score=82.870↑T `pwdata-lords:daylord2022-07-12b:211`
+ 9. [legislation/explanatory-memoranda] score=83.001↑T `explanatory-memoranda:em:uksi/2022/1181:1`
+    **Explanatory Memorandum: uksi/2022/1181** — 1 CO/EM/2022.3 EXPLANATORY MEMORANDUM TO EMPLOYMENT TRIBUNALS ACT 1996 (APPLICATION OF CONCILIATION PROVISIONS) ORDER 2022 2022 No. 1181 1. Introduction 1.1 Thi
+10. [parliamentary/pwdata-lords] score=82.870↑T `pwdata-lords:daylord2022-07-12b:211`
     **Building etc. (Amendment) (England) Regulations 2022 - Motion to Regret** — My Lords, I thank the noble Baroness, Lady Hayman of Ullock, for securing this important debate—I know that not many people have spoken, but it is quality and n
-17. [parliamentary/committees-reports] score=82.607↑T `committees-reports:publication:40896:199134`
+11. [parliamentary/committees-reports] score=82.607↑T `committees-reports:publication:40896:199134`
     **Report: Forty-Fourth Report of Session 2022–23 - 2 Statutory Instruments Reported** — House of Lords House of Commons Joint Committee on Statutory Instruments Forty-Fourth Report of Session 2022–23 Ordered by the House of Lords to be printed 12 J
-18. [parliamentary/pwdata-wms] score=82.112↑T `pwdata-wms:ministerial2021-12-14:3`
+12. [parliamentary/pwdata-wms] score=82.112↑T `pwdata-wms:ministerial2021-12-14:3`
     **Department of Health and Social Care — The Food and Feed Safety (Miscellaneous Amendments and Transi** — Following the end of the Transition Period, the Government continues to regard food and feed safety and standards a top priority. This Statutory Instrument corr
-19. [parliamentary/pwdata-lords] score=82.060↑T `pwdata-lords:daylord2022-03-29c:223`
+13. [parliamentary/pwdata-lords] score=82.060↑T `pwdata-lords:daylord2022-03-29c:223`
     **Building Safety Bill - Report (Continued) — Amendments 74 to 84** — Moved by Lord Greenhalgh 74: Clause 115, page 117, line 4, leave out “(6)” and insert “(5)”Member’s explanatory statementThis amendment is consequential on othe
-20. [parliamentary/pwdata-lordswms] score=81.765↑T `pwdata-lordswms:lordswms2021-12-14:2`
+14. [parliamentary/pwdata-lordswms] score=81.765↑T `pwdata-lordswms:lordswms2021-12-14:2`
     **Department of Health and Social Care — The Food and Feed Safety (Miscellaneous Amendments and Transi** — My Honourable Friend the Minister of State (Minister of State for Health) (Ed Argar) has made the following written statement: Following the end of the Transiti
+15. [guidance/quangos-govuk] score=81.757↑T `quangos-govuk:guidance/national-regulation-enforcement-services:8`
+    **Summary of non-qualifying regulatory provisions 17 December 2021 to 16 December 2022** — Department for Business, Energy & Industrial Strategy BUSINESS IMPACT TARGET: SUMMARY REPORT Non-qualifying Regulatory Provisions (NQRP) summary report 1
+16. [legislation/primary-acts-2000plus] score=81.478↑T `primary-acts-2000plus:ukpga/2023/55:section-130`
+    **Regulations and orders under the Planning Acts** — 130 1 In section 333 of TCPA 1990 (regulations and orders)— a after subsection (2A) insert— 2B Regulations made under this Act may make consequential, supplemen
+17. [parliamentary/committees-reports] score=81.094↑T `committees-reports:publication:8471:85796`
+    **Report: 25th Report - Instruments under the European Union (Withdrawal) Act 2018: Published Draft In** — HOUSE OF LORDS Secondary Legislation Scrutiny Committee 25th Report of Session 2021–22 Instruments under the European Union (Withdrawal) Act 2018: Published Dra
+18. [guidance/quangos-govuk] score=80.036↑T `quangos-govuk:government/publications/regulations-for-bulk-carrier-safety:2`
+    ** Notification to Parliament: The Merchant Shipping (Additional Safety Measures for Bulk Carriers) Re** — Notification to Parliament of a published draft instrument pursuant to paragraph 14 of Schedule 8 to the European Union (Withdrawal) Act 2018 Draft Statutory In
+19. [parliamentary/committees-reports] score=79.974↑T `committees-reports:publication:22674:166629`
+    **Report: 4th Report - Drawn to the special attention of the House: Building etc. (Amendment) (England** — HOUSE OF LORDS Secondary Legislation Scrutiny Committee 4th Report of Session 2022–23 Drawn to the special attention of the House: Building etc. (Amendment) (En
+20. [parliamentary/committees-reports] score=79.899↑T `committees-reports:publication:31824:178859`
+    **Report: 20th Report - Includes information paragraphs on: One instrument related to COVID-19: Greenh** — HOUSE OF LORDS Secondary Legislation Scrutiny Committee 20th Report of Session 2022–23 Includes information paragraphs on: One instrument related to COVID-19: G
 
 ### D3 (D/H1) [GRAPH][INFORCE] — ENGINE FLOOR
 *Query:* Which provisions of the Environment Act 2021 are not yet in force?
-*recall@20:* 100.0% · *MRR:* 0.143
+*recall@20:* 100.0% · *MRR:* 0.333
 
 Expected sources:
-- ✓ @7 — Environment Act 2021
+- ✓ @3 — Environment Act 2021
 
 Top-20 retrieved:
- 1. [legislation/regional] score=110.435↑T `regional:wsi/2021/297:article-2`
-    **Provisions coming into force on 1 April 2021** — 2 The following provisions of the 2021 Act come into force on 1 April 2021, so far as those provisions are not already in force— a sections 89 to 91; b sections
- 2. [legislation/explanatory-memoranda] score=104.318↑T `explanatory-memoranda:em:uksi/2021/289:1`
-    **Explanatory Memorandum: uksi/2021/289** — DExEU/EM/7-2018.2 1 EXPLANATORY MEMORANDUM TO THE ARMED FORCES ACT (CONTINUATION) ORDER 2021 2021 No. 289 1. Introduction 1.1 This explanatory memorandum has be
- 3. [legislation/si-2010plus] score=102.801↑T `si-2010plus:uksi/2015/1376:article-3`
-    **Transfer of concurrently exercisable functions of the Lord President to the Chancellor of the Duchy** — 3 1 The functions of the Secretary of State under— a an Act, or a provision of an Act or instrument, listed in Schedule 1, or b an instrument having effect unde
- 4. [legislation/si-2010plus] score=102.500↑T `si-2010plus:uksi/2016/997:article-3`
-    **Transfer of concurrently exercisable functions of the Chancellor of the Duchy to the Minister for th** — 3. (1) The functions of the Secretary of State under— (a) an Act, or a provision of an Act or instrument, listed in Schedule 1, or (b) an instrument having effe
- 5. [legislation/explanatory-notes] score=100.838↑T `explanatory-notes:en:ukpga/2021/21:1`
-    **Explanatory Notes: ukpga/2021/21** — c. 21–EN ANIMAL WELFARE (SENTENCING) ACT 2021 EXPLANATORY NOTES What these notes do These Explanatory Notes relate to the Animal Welfare (Sentencing) Act 2021 w
- 6. [legislation/regional] score=100.822↑T `regional:wsi/2021/354:article-2`
-    **Provisions coming into force on 1 May 2021** — 2 The following provisions of the 2021 Act come into force on 1 May 2021 so far as those provisions are not already in force— a section 47; b section 49; c Sche
- 7. [legislation/primary-acts-2000plus] score=100.059↑T `primary-acts-2000plus:ukpga/2023/55:section-152`
-    **Power to specify environmental outcomes** — 152 1 Regulations made by an appropriate authority under this Part (“ EOR regulations ”) may specify outcomes relating to environmental protection in the United
- 8. [legislation/explanatory-notes] score=99.225↑T `explanatory-notes:en:ukpga/2021/30:1`
-    **Explanatory Notes: ukpga/2021/30** — Published by TSO (The Stationery Off ice), a Williams Lea company, and available f rom: Online www.tsoshop.co.uk Mail, Telephone, Fax & E-mail TSO PO Box 29, No
- 9. [legislation/explanatory-notes] score=98.589↑T `explanatory-notes:en:ukpga/2021/35:1`
-    **Explanatory Notes: ukpga/2021/35** — EXPLANATORY NOTES Armed Forces Act 2021 Chapter 35 £11.50 c. 35–EN ARMED FORCES ACT 2021 EXPLANATORY NOTES What these notes do These Explanatory Notes relate to
-10. [parliamentary/pwdata-wrans] score=74.547↑T `pwdata-wrans:answers2008-06-05c:66`
+ 1. [parliamentary/pwdata-wrans] score=74.547↑T `pwdata-wrans:answers2008-06-05c:66`
     **ENVIRONMENT FOOD AND RURAL AFFAIRS — Departmental Legislation** — Q (James Paice): To ask the Secretary of State for Environment, Food and Rural Affairs which Acts for which his Department has policy responsibility received Ro
-11. [parliamentary/pwdata-wrans] score=71.731↑T `pwdata-wrans:answers2009-05-18c:46`
+ 2. [parliamentary/pwdata-wrans] score=71.731↑T `pwdata-wrans:answers2009-05-18c:46`
     **ENVIRONMENT FOOD AND RURAL AFFAIRS — Animal Welfare Act 2006** — Q (David Amess): To ask the Secretary of State for Environment, Food and Rural Affairs when he expects to bring forward those provisions of the Animal Welfare A
-12. [parliamentary/pwdata-debates] score=70.688↑T `pwdata-debates:debates2026-02-12c:298`
+ 3. [parliamentary/pwdata-debates] score=70.688↑T `pwdata-debates:debates2026-02-12c:298`
     **Business of the House** — May I begin by thanking my right hon. Friend the Leader of the House for his remarks about Kingsbury school, which for 27 years was in my constituency before it
-13. [parliamentary/pwdata-wrans] score=69.825↑T `pwdata-wrans:answers2007-09-03c:467`
+ 4. [parliamentary/pwdata-wrans] score=69.825↑T `pwdata-wrans:answers2007-09-03c:467`
     **ENVIRONMENT FOOD AND RURAL AFFAIRS — Departments: Legislation** — Q (Nicholas Clegg): To ask the Secretary of State for Environment, Food and Rural Affairs what legislative provisions introduced by his Department and its prede
-14. [parliamentary/pwdata-wrans] score=68.036↑T `pwdata-wrans:answers2007-07-24b:88`
+ 5. [legislation/regional] score=69.022↑T `regional:wsi/2021/297:article-2`
+    **Provisions coming into force on 1 April 2021** — 2 The following provisions of the 2021 Act come into force on 1 April 2021, so far as those provisions are not already in force— a sections 89 to 91; b sections
+ 6. [parliamentary/pwdata-wrans] score=68.036↑T `pwdata-wrans:answers2007-07-24b:88`
     **ENVIRONMENT FOOD AND RURAL AFFAIRS — Rights of Way** — Q (Christopher Chope): To ask the Secretary of State for Environment, Food and Rural Affairs if he will make it the policy of the Government to exclude built-up
-15. [parliamentary/pwdata-wrans] score=67.581↑T `pwdata-wrans:answers2004-11-18:953`
+ 7. [parliamentary/pwdata-wrans] score=67.581↑T `pwdata-wrans:answers2004-11-18:953`
     **ENVIRONMENT FOOD AND RURAL AFFAIRS — Commencement of Legislation** — Q (Brian White): To ask the Secretary of State for Environment, Food and Rural Affairs what pieces of legislation passed in the last 30 years that the Departmen
-16. [parliamentary/pwdata-debates] score=67.163↑T `pwdata-debates:debates2025-03-20c:61`
+ 8. [parliamentary/pwdata-debates] score=67.163↑T `pwdata-debates:debates2025-03-20c:61`
     **Environment, Food and Rural Affairs — Environment Act 2021: Deforestation Due Diligence** — I thank the Minister for her answer. Tomorrow is the International Day of Forests. The Environment Act 2021 was passed over three years ago, with strong public 
-17. [caselaw/et-decisions] score=65.212↑T `et-decisions:employment-tribunal-decisions/mr-g-cue-v-ministry-of-defence-2304997-slash-2021-and-others:2`
+ 9. [caselaw/et-decisions] score=65.212↑T `et-decisions:employment-tribunal-decisions/mr-g-cue-v-ministry-of-defence-2304997-slash-2021-and-others:2`
     **Mr G Cue v Ministry of Defence: 2304997/2021 and others - Judgment with Reasons** — : Case No: 2304997/2021, 2301970/2022 and 2302699/2022 EMPLOYMENT TRIBUNALS Claimant: Mr G Cue Respondent: Ministry of Defence Heard at: London South (by video)
-18. [parliamentary/pwdata-wrans] score=65.113↑T `pwdata-wrans:answers2021-07-07:133`
+10. [legislation/explanatory-memoranda] score=65.199↑T `explanatory-memoranda:em:uksi/2021/289:1`
+    **Explanatory Memorandum: uksi/2021/289** — DExEU/EM/7-2018.2 1 EXPLANATORY MEMORANDUM TO THE ARMED FORCES ACT (CONTINUATION) ORDER 2021 2021 No. 289 1. Introduction 1.1 This explanatory memorandum has be
+11. [parliamentary/pwdata-wrans] score=65.113↑T `pwdata-wrans:answers2021-07-07:133`
     **Department for Environment, Food and Rural Affairs — Dogs: Animal Welfare** — Q (Andrew Rosindell): To ask the Secretary of State for Environment, Food and Rural Affairs, where and how protection dogs are covered by the provisions of (a) 
-19. [parliamentary/committees-reports] score=64.983↑T `committees-reports:publication:43472:216182`
+12. [parliamentary/committees-reports] score=64.983↑T `committees-reports:publication:43472:216182`
     **Correspondence: Letter on deforestation from Baroness Sheehan to the Secretary of State for DEFRA 14** — Baroness Sheehan Chair of the Environment and Climate Change Committee House of Lords London SW1A 0PW The Rt Hon Steve Barclay MP Secretary of State for the Dep
-20. [parliamentary/pwdata-wrans] score=64.874↑T `pwdata-wrans:answers2023-11-20:342`
+13. [parliamentary/pwdata-wrans] score=64.874↑T `pwdata-wrans:answers2023-11-20:342`
     **Department for Environment, Food and Rural Affairs — Forests** — Q (Steve Reed): To ask the Secretary of State for Environment, Food and Rural Affairs, whether his Department plans to bring forward secondary legislation under
+14. [legislation/si-2010plus] score=64.250↑T `si-2010plus:uksi/2015/1376:article-3`
+    **Transfer of concurrently exercisable functions of the Lord President to the Chancellor of the Duchy** — 3 1 The functions of the Secretary of State under— a an Act, or a provision of an Act or instrument, listed in Schedule 1, or b an instrument having effect unde
+15. [parliamentary/historic-hansard] score=64.211↑T `historic-hansard:S5LV0326P0:1085`
+    **Lords: REPAIRS NOTICES AND COMPULSORY PURCHASE ORDERS** — LORD SANDFORD : The answer to the first part of this Question is that the number is not known, because local authorities arc not required to inform Departments 
+16. [parliamentary/niassembly-hansard] score=64.133↑T `niassembly-hansard:368499:308`
+    **NI Assembly: Executive Committee Business — The draft Environment (2021 Act) (Commencement and Savin** — I welcome the opportunity to outline the views of the Committee on the commencement order, which will bring into effect a number of provisions of the Environmen
+17. [legislation/si-2010plus] score=64.062↑T `si-2010plus:uksi/2016/997:article-3`
+    **Transfer of concurrently exercisable functions of the Chancellor of the Duchy to the Minister for th** — 3. (1) The functions of the Secretary of State under— (a) an Act, or a provision of an Act or instrument, listed in Schedule 1, or (b) an instrument having effe
+18. [parliamentary/committees-reports] score=63.515↑T `committees-reports:publication:7177:75708`
+    **Correspondence: Correspondence from The Rt Hon Elizabeth Truss MP,  Secretary of State for Internati** — The Rt Hon Elizabeth Truss MP Secretary of State for International Trade Department for International Trade Old Admiralty Building Whitehall London SW1A 2DY T E
+19. [parliamentary/pwdata-wrans] score=63.410↑T `pwdata-wrans:answers2019-07-11:124`
+    **Department for Environment, Food and Rural Affairs — Bovine Tuberculosis: Testing** — Q (Mr Gregory Campbell): To ask the Secretary of State for Environment, Food and Rural Affairs, what representations he has made to his EU counterparts on the E
+20. [parliamentary/committees-reports] score=63.410↑T `committees-reports:publication:7337:76682`
+    **Correspondence: Letter from the Secretary of State to the Chair on the New Trade and Agriculture Com** — The Rt Hon Elizabeth Truss MP Secretary of State for International Trade Department for International Trade Old Admiralty Building Whitehall London SW1A 2DY T E
 
 ### D4 (D/H2) [GRAPH] — ENGINE FLOOR
 *Query:* Has the Dangerous Dogs Act 1991 been changed since it was passed — what changed and why?
@@ -991,53 +984,53 @@ Top-20 retrieved:
 
 ### D5 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* What case law has considered 'philosophical belief' under section 10 of the Equality Act 2010?
-*recall@20:* 100.0% · *MRR:* 0.250
+*recall@20:* 100.0% · *MRR:* 0.500
 
 Expected sources:
-- ✓ @4 — Grainger plc v Nicholson
-- ✓ @4 — Forstater v CGD Europe
+- ✓ @2 — Grainger plc v Nicholson
+- ✓ @2 — Forstater v CGD Europe
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-2000plus] score=155.678↑R `primary-acts-2000plus:ukpga/2010/15:section-10`
-    **Religion or belief** — 10 1 Religion means any religion and a reference to religion includes a reference to a lack of religion. 2 Belief means any religious or philosophical belief an
- 2. [legislation/explanatory-memoranda] score=154.678↑T `explanatory-memoranda:em:uksi/2010/2192:1`
-    **Explanatory Memorandum: uksi/2010/2192** — EXPLANATORY MEMORANDUM TO THE EQUALITY ACT 2010 (QUALIFYING COMPROMISE CONTRACT SPECIFIED PERSON) ORDER 2010 2010 No. 2192 1. This explanatory memorandum has be
- 3. [caselaw/et-decisions] score=128.066↑T `et-decisions:employment-tribunal-decisions/mr-j-barker-v-the-chief-constable-of-warwickshire-police-1306859-slash-2020:3`
+ 1. [caselaw/et-decisions] score=128.066↑T `et-decisions:employment-tribunal-decisions/mr-j-barker-v-the-chief-constable-of-warwickshire-police-1306859-slash-2020:3`
     **Mr J Barker v The Chief Constable of Warwickshire Police: 1306859/2020 - Preliminary** — Case No: 1306859/2020 EMPLOYMENT TRIBUNALS Claimant: Mr J Barker Respondent: The Chief Constable of Warwickshire Police Heard at: Birmingham On: 4 th and 5 th J
- 4. [caselaw/et-decisions] score=121.143↑T `et-decisions:employment-tribunal-decisions/ms-m-kilburn-v-sensient-flavors-llc-and-others-3302208-slash-2024:2`
+ 2. [caselaw/et-decisions] score=121.143↑T `et-decisions:employment-tribunal-decisions/ms-m-kilburn-v-sensient-flavors-llc-and-others-3302208-slash-2024:2`
     **Ms M Kilburn v Sensient Flavors LLC and Others: 3302208/2024 - Preliminary** — Case Number: 3302208/2024 1 EMPLOYMENT TRIBUNALS Claimant: Ms Misti Kilburn Respondent: 1. Sensient Flavors LLC 2. Sensient Technologies Corporation 3. Sensient
- 5. [caselaw/et-decisions] score=120.761↑T `et-decisions:employment-tribunal-decisions/mr-e-mcclung-v-doosan-babcock-ltd-and-others-4110538-slash-2019:4`
+ 3. [caselaw/et-decisions] score=120.761↑T `et-decisions:employment-tribunal-decisions/mr-e-mcclung-v-doosan-babcock-ltd-and-others-4110538-slash-2019:4`
     **Mr E McClung v Doosan Babcock Ltd and others: 4110538/2019 - Preliminary** — EMPLOYMENT TRIBUNALS (SCOTLAND) Case No: 4110538/2019 Held in Glasgow on 1 June 2022 Employment Judge L Wiseman Mr E McClung Claimant In Person Doosan Babcock L
- 6. [caselaw/et-decisions] score=116.746↑T `et-decisions:employment-tribunal-decisions/mr-m-pollard-v-aquinas-church-of-england-education-trust-and-others-2303117-slash-2019:2`
+ 4. [caselaw/et-decisions] score=116.746↑T `et-decisions:employment-tribunal-decisions/mr-m-pollard-v-aquinas-church-of-england-education-trust-and-others-2303117-slash-2019:2`
     **Mr M Pollard v Aquinas Church of England Education Trust and Others: 2303117/2019 - Preliminary** — Case No: 2303117/2019 (V) 10.5 Reserved judgment with reasons – rule 62 March 2017 EMPLOYMENT TRIBUNALS Claimant: Mr M Pollard Respondents: (1) Aquinas Church o
- 7. [caselaw/et-decisions] score=108.457↑T `et-decisions:employment-tribunal-decisions/mrs-h-bannerman-v-the-land-restoration-trust-3306483-slash-2024:3`
+ 5. [caselaw/et-decisions] score=108.457↑T `et-decisions:employment-tribunal-decisions/mrs-h-bannerman-v-the-land-restoration-trust-3306483-slash-2024:3`
     **Mrs H Bannerman v The Land Restoration Trust: 3306483/2024 and 3311035/2024 - Reserved Judgment** — Case Number: 3311035/2024 3306483/2024 1 EMPLOYMENT TRIBUNALS Claimant Respondent Mrs H Bannerman v The Land Restoration Trust Heard at: Bury St Edmunds (by CVP
- 8. [caselaw/et-decisions] score=108.079↑T `et-decisions:employment-tribunal-decisions/mr-j-casamitjana-costa-v-the-league-against-cruel-sports-3331129-2018:2`
+ 6. [caselaw/et-decisions] score=108.079↑T `et-decisions:employment-tribunal-decisions/mr-j-casamitjana-costa-v-the-league-against-cruel-sports-3331129-2018:2`
     **Mr J Casamitjana Costa v The League Against Cruel Sports: 3331129/2018 - Preliminary** — Case Number: 3331129/2018 1 EMPLOYMENT TRIBUNALS Claimant Respondent Mr J Casamitjana Costa v The League Against Cruel Sports RECORD of a PUBLIC PRELIMINARY HEA
- 9. [caselaw/et-decisions] score=106.348↑T `et-decisions:employment-tribunal-decisions/mr-q-hawkins-v-the-chief-constable-of-northumbria-police-2502640-2019:2`
+ 7. [caselaw/et-decisions] score=106.348↑T `et-decisions:employment-tribunal-decisions/mr-q-hawkins-v-the-chief-constable-of-northumbria-police-2502640-2019:2`
     **Mr Q Hawkins v The Chief Constable of Northumbria Police: 2502640/2019 - Dissmissal** — Case No: 2502640/2019 EMPLOYMENT TRIBUNALS Claimant: Mr Q Hawkins Respondent: The Chief Constable of Northumbria Police PUBLIC PRELIMINARY HEARING Heard at: Nor
-10. [parliamentary/pwdata-lords] score=105.691↑T `pwdata-lords:daylord2010-03-23a:111`
+ 8. [parliamentary/pwdata-lords] score=105.691↑T `pwdata-lords:daylord2010-03-23a:111`
     **Equality Bill — Third Reading** — The noble Lord is exactly right: it is clarifying. I had a note, which of course I do not have in front of me now, that explained why the amendment is in front 
-11. [guidance/quangos-govuk] score=105.606↑T `quangos-govuk:government/publications/post-legislative-memorandum-the-equality-act-2010:3`
+ 9. [guidance/quangos-govuk] score=105.606↑T `quangos-govuk:government/publications/post-legislative-memorandum-the-equality-act-2010:3`
     **Memorandum to the Women and Equalities Select Committee on the Post-Legislative Assessment of the Eq** — M Le CM 91 Memo an Co egisl 01 oran nd E omm ativ Eq u ndum Equa mittee e As ualit m to alitie e on sses ty Ac o the es S n the ssm ct 20 e Wo Sele e Po ment 01
-12. [guidance/quangos-govuk] score=105.606↑T `quangos-govuk:government/publications/post-legislative-memorandum-the-equality-act-2010:2`
+10. [guidance/quangos-govuk] score=105.606↑T `quangos-govuk:government/publications/post-legislative-memorandum-the-equality-act-2010:2`
     **Memorandum to the Women and Equalities Select Committee on the Post-Legislative Assessment of the Eq** — M Le CM 91 Memo an Co egisl 01 oran nd E omm ativ Eq u ndum Equa mittee e As ualit m to alitie e on sses ty Ac o the es S n the ssm ct 20 e Wo Sele e Po ment 01
-13. [caselaw/et-decisions] score=103.439↑T `et-decisions:employment-tribunal-decisions/mr-g-conisbee-v-crossley-farms-ltd-and-others-3335357-2018:2`
+11. [caselaw/et-decisions] score=103.439↑T `et-decisions:employment-tribunal-decisions/mr-g-conisbee-v-crossley-farms-ltd-and-others-3335357-2018:2`
     **Mr G Conisbee v Crossley Farms Ltd and others: 3335357/2018 - Reserved Judgment** — Case Number: 3335357/2018 1 EMPLOYMENT TRIBUNALS Claimant Respondents Mr G Conisbee v (1) Crossley Farms Limited; (2) Shane Foulger; (3) William Durrant; (4) Ja
-14. [parliamentary/pwdata-lords] score=102.898↑T `pwdata-lords:daylord2010-01-13a:78`
+12. [parliamentary/pwdata-lords] score=102.898↑T `pwdata-lords:daylord2010-01-13a:78`
     **Equality Bill — Committee (2nd Day)** — The amendment concerns matters of religion or belief and would prevent beliefs of a philosophical nature being protected under domestic legislation. There are s
-15. [caselaw/et-decisions] score=101.899↑T `et-decisions:employment-tribunal-decisions/dr-m-grigorova-v-the-university-of-leeds-1801041-slash-2022:2`
+13. [caselaw/et-decisions] score=101.899↑T `et-decisions:employment-tribunal-decisions/dr-m-grigorova-v-the-university-of-leeds-1801041-slash-2022:2`
     **Dr M Grigorova v The University of Leeds: 1801041/2022 - Preliminary** — Case No. 1801041/2022 1 EMPLOYMENT TRIBUNALS BETWEEN: Dr M Grigorova and The University of Leeds Claimant Respondent Heard at: Leeds on: 5 and 6 October 2022 Be
-16. [caselaw/et-decisions] score=101.425↑T `et-decisions:employment-tribunal-decisions/n-n-khair-v-the-chief-constable-of-leicestershire-police-and-mr-g-jacques-2601576-slash-2021:2`
+14. [caselaw/et-decisions] score=101.425↑T `et-decisions:employment-tribunal-decisions/n-n-khair-v-the-chief-constable-of-leicestershire-police-and-mr-g-jacques-2601576-slash-2021:2`
     **N N Khair v The Chief Constable of Leicestershire Police and Mr G Jacques: 2601576/2021 - Judgment** — CASE NO: 2601576/2021 1 EMPLOYMENT TRIBUNALS Claimant: Nurun Nahar Khair Respondents: R1) The Ch
-17. [caselaw/et-decisions] score=100.945↑T `et-decisions:employment-tribunal-decisions/professor-j-mccambridge-v-the-university-of-york-6001997-slash-2023:2`
+15. [caselaw/et-decisions] score=100.945↑T `et-decisions:employment-tribunal-decisions/professor-j-mccambridge-v-the-university-of-york-6001997-slash-2023:2`
     **Professor J McCambridge v The University of York: 6001997/2023 - Reserved Judgment** — Case No: 6001997/2023 10.5 Reserved judgment with reasons – rule 62 March 2017 EMPLOYMENT TRIBUNALS Claimant: Professor J McCambridge Respondent: The University
-18. [caselaw/et-decisions] score=100.890↑T `et-decisions:employment-tribunal-decisions/mr-a-cave-v-the-open-university-3313198-slash-2020:2`
+16. [caselaw/et-decisions] score=100.890↑T `et-decisions:employment-tribunal-decisions/mr-a-cave-v-the-open-university-3313198-slash-2020:2`
     **Mr A Cave v The Open University: 3313198/2020 - Reserved Preliminary Judgment** — Case Number: 3313198/2020 1 EMPLOYMENT TRIBUNALS Claimant Respondent Mr A Cave The Open University Heard at Cambridge On: 17 April 2023 and 18 April 2023 (in ch
-19. [parliamentary/pwdata-debates] score=100.112↑T `pwdata-debates:debates2013-05-20b:393`
+17. [parliamentary/pwdata-debates] score=100.112↑T `pwdata-debates:debates2013-05-20b:393`
     **WORK AND PENSIONS — New Clause 1 — Education Act 1996** — That example shows the danger of trying to make law on the basis of one individual case, particularly when—as in that case—the litigant failed to apply and foll
-20. [parliamentary/pwdata-lords] score=99.500↑T `pwdata-lords:daylord2010-03-23a:101`
+18. [parliamentary/pwdata-lords] score=99.500↑T `pwdata-lords:daylord2010-03-23a:101`
     **Equality Bill — Third Reading** — My Lords, in Committee in your Lordships' House we had a debate that centred around exactly what was included by the protected characteristic "religion or belie
+19. [parliamentary/pwdata-westminster] score=98.817↑T `pwdata-westminster:westminster2025-03-11a:101`
+    **Gender Critical Beliefs: Equality Act 2010** — It is a real pleasure to serve under your chairmanship, Mr Twigg. I start by thanking the hon. Member for raising the issues that she has raised this afternoon.
+20. [parliamentary/committees-reports] score=98.601↑T `committees-reports:publication:47707:249310`
+    **Correspondence: Correspondence from the Parliamentary Under-Secretary of State for Business and Trad** — Baroness Jones of Whitchurch Parliamentary Under-Secretary of State Department for Business and Trade Old Admiralty Building Admiralty Place Whitehall London SW
 
 ### E1 (E/H1)
 *Query:* What did ministers say the under-occupancy provisions of the Welfare Reform Act 2012 were intended to achieve?
@@ -1045,49 +1038,49 @@ Top-20 retrieved:
 
 Expected sources:
 - ✓ @1 — Welfare Reform Act 2012
-- ✓ @20 — Hansard 2011–12 (under-occupancy / bedroom tax)
+- ✓ @18 — Hansard 2011–12 (under-occupancy / bedroom tax)
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-2000plus] score=138.820↑T `primary-acts-2000plus:ukpga/2001/11:section-10`
-    **Power to supplement and mitigate loss of benefit provisions** — 10 1 The Secretary of State may by regulations provide for any social security benefit to be treated for the purposes of sections 6A to 9 — a as a disqualifying
- 2. [legislation/regional] score=136.741↑T `regional:nia/2001/17:section-9`
-    **Power to supplement and mitigate loss of benefit provisions** — 9 1 The Department may by regulations provide for any social security benefit to be treated for the purposes of sections 5A to 8 — a as a disqualifying benefit 
- 3. [legislation/si-2010plus] score=134.937↑T `si-2010plus:uksi/2019/167:article-5`
-    **Amendment of the No. 9, No. 21 and No. 23 Orders** — 5 1 With effect from 1st February 2019, the No. 9, No. 21 and No. 23 Orders are amended as follows. 2 In the No. 9 Order— a in article 5A(1) , after “disability
- 4. [legislation/primary-acts-pre-2000] score=131.544↑T `primary-acts-pre-2000:ukpga/1992/5:section-170`
-    **The Social Advisory Committee** — 170 1 The Social Security Advisory Committee (in this Act referred to as “ the Committee ”) constituted under section 9 of the Social Security Act 1980 shall co
- 5. [legislation/si-2010plus] score=131.114↑T `si-2010plus:uksi/2018/138:article-5`
-    **Modifications of the No. 11 Order, the No. 13 Order, the No. 17 Order, the No. 19 Order, the No. 22 ** — 5 1 This article applies in respect of claims in relation to which provisions of the No. 11 Order, the No. 13 Order, the No. 17 Order, the No. 19 Order, the No.
- 6. [parliamentary/pwdata-wrans] score=103.041↑T `pwdata-wrans:answers2012-03-21a:12`
+ 1. [parliamentary/pwdata-wrans] score=103.041↑T `pwdata-wrans:answers2012-03-21a:12`
     **NORTHERN IRELAND — Welfare Reform Act 2012** — Q (Vernon Coaker): To ask the Secretary of State for Northern Ireland what assessment he has made of the effect of the Welfare Reform Act on (a) child poverty, 
- 7. [parliamentary/pwdata-debates] score=98.484↑T `pwdata-debates:debates2015-12-16c:455`
+ 2. [parliamentary/pwdata-debates] score=98.484↑T `pwdata-debates:debates2015-12-16c:455`
     **Representation of the People (Proportional Representation) (House of Commons) — Welfare Cap** — As someone who voted against the welfare cap when it was introduced and whenever it was reset, I am happy that the Government are trying to relax the original l
- 8. [parliamentary/pwdata-lordswrans] score=98.210↑T `pwdata-lordswrans:lordswrans2013-01-28a:77`
+ 3. [parliamentary/pwdata-lordswrans] score=98.210↑T `pwdata-lordswrans:lordswrans2013-01-28a:77`
     **Welfare Reform Act 2012** — Q (Baroness Kinnock of Holyhead): To ask Her Majesty's Government what is their assessment of the impact of the Welfare Reform Act 2012 on refuges in the United
- 9. [guidance/hmrc-manuals] score=96.220↑T `hmrc-manuals:hmrc-internal-manuals/vat-government-and-public-bodies/vatgpb11170:1`
+ 4. [guidance/hmrc-manuals] score=96.220↑T `hmrc-manuals:hmrc-internal-manuals/vat-government-and-public-bodies/vatgpb11170:1`
     **VATGPB11170 — Government departments and health authorities: Contracted Out Services (COS) Headings:** — The full heading reads: Services supplied solely for the purpose of duties imposed by, or powers provided pursuant to, welfare legislation enacted by Parliament
-10. [parliamentary/pwdata-debates] score=90.951↑T `pwdata-debates:debates1998-03-26a:120`
+ 5. [parliamentary/pwdata-debates] score=90.951↑T `pwdata-debates:debates1998-03-26a:120`
     **Welfare Reform** — Today's statement is a significant milestone for the Government, as much as for the House, and it deserves some scrutiny. I welcome the fact that the Minister f
-11. [parliamentary/pwdata-wrans] score=89.069↑T `pwdata-wrans:answers2012-05-22c:331`
+ 6. [parliamentary/pwdata-wrans] score=89.069↑T `pwdata-wrans:answers2012-05-22c:331`
     **WORK AND PENSIONS — Welfare Reform Act 2012** — Q (Kate Green): To ask the Secretary of State for Work and Pensions what recent progress he has made in preparing regulations to support the implementation of t
-12. [parliamentary/pwdata-wms] score=84.839↑T `pwdata-wms:ministerial2012-12-10b:11`
+ 7. [legislation/primary-acts-2000plus] score=86.763↑T `primary-acts-2000plus:ukpga/2001/11:section-10`
+    **Power to supplement and mitigate loss of benefit provisions** — 10 1 The Secretary of State may by regulations provide for any social security benefit to be treated for the purposes of sections 6A to 9 — a as a disqualifying
+ 8. [legislation/regional] score=85.463↑T `regional:nia/2001/17:section-9`
+    **Power to supplement and mitigate loss of benefit provisions** — 9 1 The Department may by regulations provide for any social security benefit to be treated for the purposes of sections 5A to 8 — a as a disqualifying benefit 
+ 9. [parliamentary/pwdata-wms] score=84.839↑T `pwdata-wms:ministerial2012-12-10b:11`
     **WORK AND PENSIONS — Welfare Reform Regulations** — I am pleased to announce that later today the Department intends to lay and publish the following draft affirmative regulations: The Universal Credit Regulation
-13. [parliamentary/niassembly-hansard] score=84.642↑T `niassembly-hansard:249944:172`
+10. [parliamentary/niassembly-hansard] score=84.642↑T `niassembly-hansard:249944:172`
     **NI Assembly: Executive Committee Business — Welfare Reform: Legislative Consent Motion** — We do not wash our hands of political responsibility for how we have addressed and tried to manage the issue of welfare reform arising from the 2012 legislation
-14. [parliamentary/pwdata-lordswms] score=84.472↑T `pwdata-lordswms:lordswms2012-12-10a:11`
+11. [parliamentary/pwdata-lordswms] score=84.472↑T `pwdata-lordswms:lordswms2012-12-10a:11`
     **Welfare Reform Regulations** — My right honourable friend the Secretary of State for Work and Pensions (Iain Duncan Smith) has made the following Written Ministerial Statement. I am pleased t
-15. [parliamentary/pwdata-debates] score=84.331↑T `pwdata-debates:debates1983-07-05a:295`
+12. [legislation/si-2010plus] score=84.335↑T `si-2010plus:uksi/2019/167:article-5`
+    **Amendment of the No. 9, No. 21 and No. 23 Orders** — 5 1 With effect from 1st February 2019, the No. 9, No. 21 and No. 23 Orders are amended as follows. 2 In the No. 9 Order— a in article 5A(1) , after “disability
+13. [parliamentary/pwdata-debates] score=84.331↑T `pwdata-debates:debates1983-07-05a:295`
     **Orders of the Day — Housing and Building Control Bill** — Yes, for home ownership. We did that by introducing a mortgage option scheme and the Leasehold Reform Act 1967 described by Conservative Members as Rachmanism i
-16. [parliamentary/pwdata-westminster] score=83.872↑T `pwdata-westminster:westminster2012-03-14a:84`
+14. [parliamentary/pwdata-westminster] score=83.872↑T `pwdata-westminster:westminster2012-03-14a:84`
     **Women’s Aid — [Dr William McCrea in the Chair]** — What my hon. Friend says echoes what I said at the beginning of my speech about how the benefits system relates to specialised individual needs. I hope that the
-17. [parliamentary/pwdata-westminster] score=83.129↑T `pwdata-westminster:westminster2016-02-09b:82`
+15. [parliamentary/pwdata-westminster] score=83.129↑T `pwdata-westminster:westminster2016-02-09b:82`
     **Work Capability Assessments — [Mrs Madeleine Moon in the Chair]** — I would not put it in quite those words, perhaps, but I know exactly what my hon. Friend is getting at. The Government’s own data show that the people involved 
-18. [parliamentary/pwdata-westminster] score=82.895↑T `pwdata-westminster:westminster2012-03-14a:80`
+16. [parliamentary/pwdata-westminster] score=82.895↑T `pwdata-westminster:westminster2012-03-14a:80`
     **Women’s Aid — [Dr William McCrea in the Chair]** — I appreciate that. I may not have explained myself properly. I was saying that there are men who find themselves on the receiving end of domestic violence. Howe
-19. [guidance/nao-reports] score=82.730↑T `nao-reports:local-welfare-provision:2`
+17. [guidance/nao-reports] score=82.730↑T `nao-reports:local-welfare-provision:2`
     **local welfare provision** — JANUARY 2016 Local government report by the Comptroller and Auditor General Local government Local welfare provision 4 Key facts Local welfare provision Key fac
-20. [parliamentary/committees-evidence] score=82.457↑T `committees-evidence:writtenevidence:45887:90997`
+18. [parliamentary/committees-evidence] score=82.457↑T `committees-evidence:writtenevidence:45887:90997`
     **Support for housing costs in the reformed welfare system — HCT0049** — HCT0049 - Evidence on Support for housing costs in the reformed welfare system Written evidence submitted by The Scottish Federation of Housing Associations 1 W
+19. [parliamentary/pwdata-lords] score=82.363↑T `pwdata-lords:daylord2015-11-24a:191`
+    **Northern Ireland (Welfare Reform) Bill — Second Reading (and remaining stages)** — My Lords, I very much welcome the Bill, which I regard as one of the most important components of the Stormont fresh start agreement. Welfare undoubtedly repres
+20. [legislation/primary-acts-pre-2000] score=82.215↑T `primary-acts-pre-2000:ukpga/1992/5:section-170`
+    **The Social Advisory Committee** — 170 1 The Social Security Advisory Committee (in this Act referred to as “ the Committee ”) constituted under section 9 of the Social Security Act 1980 shall co
 
 ### E2 (E/H2)
 *Query:* Why was the sugar tax designed as a levy on manufacturers instead of a tax at the till?
@@ -1145,49 +1138,49 @@ Top-20 retrieved:
 
 Expected sources:
 - ✓ @1 — Investigatory Powers Act 2016
-- ✓ @1 — Hansard double-lock / IPC oversight
+- ✓ @3 — Hansard double-lock / IPC oversight
 
 Top-20 retrieved:
- 1. [legislation/primary-acts-2000plus] score=159.741↑T `primary-acts-2000plus:ukpga/2024/9:section-27`
-    **Bulk equipment interference: safeguards for confidential journalistic material etc** — Section 27 1. The Investigatory Powers Act 2016 is amended as follows. 2. For section 195 (additional safeguard for confidential journalistic material) substitu
- 2. [legislation/explanatory-notes] score=155.519↑T `explanatory-notes:en:ukpga/2016/25:1`
-    **Explanatory Notes: ukpga/2016/25** — EXPLANATORY NOTES Investigatory Powers Act 2016 Chapter 25 £19.00 c. 25–EN INVESTIGATORY POWERS ACT 2016 EXPLANATORY NOTES What these notes do These Explanatory
- 3. [legislation/primary-acts-2000plus] score=154.316↑T `primary-acts-2000plus:ukpga/2016/25:section-243`
-    **Functions of Tribunal in relation to this Act etc.** — Section 243 1. In section 65 of the Regulation of Investigatory Powers Act 2000 (the Investigatory Powers Tribunal)— a. in subsection (2)(c) (jurisdiction of th
- 4. [legislation/si-2010plus] score=153.514↑T `si-2010plus:uksi/2024/514:article-2`
-    **Substitution of section 154 of the Investigatory Powers Act 2016** — 2 For section 154 of the Investigatory Powers Act 2016, substitute— Additional safeguards for confidential journalistic material etc 154 1 Subsection (2) applie
- 5. [parliamentary/committees-reports] score=140.593↑T `committees-reports:publication:42310:210397`
+ 1. [parliamentary/committees-reports] score=140.593↑T `committees-reports:publication:42310:210397`
     **Correspondence: Letter from Baroness Drake, Chair of the Constitution Committee, to Lord Sharpe of E** — Select Committee on the Constitution House of Lords London SW1A 0PW Tel: 020 7219 1228 constitution@parliament.uk www.parliament.uk/lords Lord Sharpe of Epsom 2
- 6. [caselaw/echr-hudoc] score=115.848↑T `echr-hudoc:001-249612:1`
+ 2. [caselaw/echr-hudoc] score=115.848↑T `echr-hudoc:001-249612:1`
     **THE NATIONAL COUNCIL FOR CIVIL LIBERTIES v. THE UNITED KINGDOM** — Published on 30 March 2026 SECOND SECTION Application no. 15250/24 THE NATIONAL COUNCIL FOR CIVIL LIBERTIES against the United Kingdom lodged on 28 May 2024 com
- 7. [parliamentary/committees-reports] score=112.601↑T `committees-reports:publication:42869:213120`
+ 3. [parliamentary/committees-reports] score=112.601↑T `committees-reports:publication:42869:213120`
     **Report: First Report - Draft Investigatory Powers Act 2016 (Remedial) Order 2023: Second Report** — House of Commons House of Lords Joint Committee on Human Rights Draft Investigatory Powers Act 2016 (Remedial) Order 2023: Second Report First Report of Session
- 8. [parliamentary/committees-reports] score=111.257↑T `committees-reports:publication:40304:196874`
+ 4. [parliamentary/committees-reports] score=111.257↑T `committees-reports:publication:40304:196874`
     **Report: Thirteenth Report - Proposal for a Draft Investigatory Powers Act 2016 (Remedial) Order 2023** — House of Commons House of Lords Joint Committee on Human Rights Proposal for a Draft Investigatory Powers Act 2016 (Remedial) Order 2023 Thirteenth Report of Se
- 9. [parliamentary/pwdata-debates] score=110.248↑T `pwdata-debates:debates2016-03-15a:322`
+ 5. [parliamentary/pwdata-debates] score=110.248↑T `pwdata-debates:debates2016-03-15a:322`
     **Investigatory Powers Bill** — I am grateful for the opportunity to participate in this debate. I want to summarise the views of the Intelligence and Security Committee on the Bill. The Commi
-10. [parliamentary/pwdata-lords] score=109.790↑T `pwdata-lords:daylord2016-06-27b:151`
+ 6. [parliamentary/pwdata-lords] score=109.790↑T `pwdata-lords:daylord2016-06-27b:151`
     **Investigatory Powers Bill - Second Reading (Continued)** — My Lords, I am sure the whole House is relieved to hear of this newfound friendship between their two noble Lordships. It is always a pleasure to follow the nob
-11. [parliamentary/committees-evidence] score=107.611↑T `committees-evidence:writtenevidence:62259:107678`
+ 7. [parliamentary/committees-evidence] score=107.611↑T `committees-evidence:writtenevidence:62259:107678`
     **Draft Investigatory Powers Bill Joint Committee - publications — IPB0015** — IPB0015 - Evidence on Draft Investigatory Powers Bill Amberhawk Training Limited —written evidence (IPB0015) 12 December 2015 Introduction This submission is pr
-12. [parliamentary/committees-evidence] score=107.174↑T `committees-evidence:writtenevidence:62889:108354`
+ 8. [parliamentary/committees-evidence] score=107.174↑T `committees-evidence:writtenevidence:62889:108354`
     **Draft Investigatory Powers Bill Joint Committee - publications — IPB0159** — IPB0159 - Evidence on Draft Investigatory Powers Bill Home Office—further supplementary written evidence (IPB0159) The draft Investigatory Powers Bill: Further 
-13. [parliamentary/pwdata-wrans] score=106.682↑T `pwdata-wrans:answers2017-04-27:47`
+ 9. [parliamentary/pwdata-wrans] score=106.682↑T `pwdata-wrans:answers2017-04-27:47`
     **Home Office — Investigatory Powers Act 2016: Codes of Practice** — Q (Sarah Olney): To ask the Secretary of State for the Home Department, how many responses her Department received to its consultation on codes of practice in r
-14. [parliamentary/pwdata-wms] score=105.186↑T `pwdata-wms:ministerial2017-02-23:8`
+10. [parliamentary/pwdata-wms] score=105.186↑T `pwdata-wms:ministerial2017-02-23:8`
     **Home Office — Consultation on draft codes of practice under the Investigatory Powers Act 2016** — I am today announcing the publication of the Government’s consultation on five new codes of practice under the Investigatory Powers Act 2016. The Investigatory 
-15. [parliamentary/pwdata-lordswms] score=103.925↑T `pwdata-lordswms:lordswms2017-02-23:6`
+11. [parliamentary/pwdata-lordswms] score=103.925↑T `pwdata-lordswms:lordswms2017-02-23:6`
     **Home Office — Consultation on draft codes of practice under the Investigatory Powers Act 2016** — My hon Friend the Minister of State for Security (Ben Wallace) has today made the following Written Ministerial Statement: I am today announcing the publication
-16. [parliamentary/pwdata-lords] score=103.359↑T `pwdata-lords:daylord2024-01-23c:127`
+12. [parliamentary/pwdata-lords] score=103.359↑T `pwdata-lords:daylord2024-01-23c:127`
     **Investigatory Powers (Amendment) Bill [HL] - Report — Amendment 39** — Yes. The noble Lord, Lord Fox, says, “Don’t get too excited”, and he is right. I now turn to the government amendment in this group, Amendment 46. This proposed
-17. [parliamentary/pwdata-lords] score=102.258↑T `pwdata-lords:daylord2023-12-11a:86`
+13. [parliamentary/pwdata-lords] score=102.258↑T `pwdata-lords:daylord2023-12-11a:86`
     **Investigatory Powers (Amendment) Bill [HL] - Committee (1st Day) — Amendment 1** — My Lords, if I suddenly fall over, it is not excitement over my amendments but that I have a brand new starboard knee, which is still slightly wobbly, so I migh
-18. [parliamentary/pwdata-lords] score=101.725↑T `pwdata-lords:daylord2024-01-23c:131`
+14. [parliamentary/pwdata-lords] score=101.725↑T `pwdata-lords:daylord2024-01-23c:131`
     **Investigatory Powers (Amendment) Bill [HL] - Report — Amendment 46** — Moved by Lord Sharpe of Epsom 46: After Clause 25 insert the following new Clause—“Bulk equipment interference: safeguards for confidential journalistic materia
-19. [parliamentary/pwdata-lords] score=101.671↑T `pwdata-lords:daylord2016-10-19a:128`
+15. [parliamentary/pwdata-lords] score=101.671↑T `pwdata-lords:daylord2016-10-19a:128`
     **Investigatory Powers Bill - Report (3rd Day)** — My Lords, these amendments would remove the bulk equipment interference provisions from the Bill. Before I address the amendments specifically, it is worth paus
-20. [parliamentary/pwdata-lords] score=101.603↑T `pwdata-lords:daylord2018-02-01a:60`
+16. [parliamentary/pwdata-lords] score=101.603↑T `pwdata-lords:daylord2018-02-01a:60`
     **Investigatory Powers (Codes of Practice) Regulations 2018 - Motions to Approve** — My Lords, if the House will allow me, I should like to make a few comments about what happened during Oral Questions yesterday. Perhaps I may say that the decis
+17. [parliamentary/pwdata-lords] score=101.442↑T `pwdata-lords:daylord2016-10-31b:85`
+    **Investigatory Powers Bill - Third Reading** — I am obliged to the noble Lord, Lord Rooker, for making his point at this stage. This is an important Bill. It will update the framework for the use of investig
+18. [parliamentary/pwdata-lordswrans] score=101.146↑T `pwdata-lordswrans:lordswrans2017-03-07:23`
+    **Home Office — Technical Advisory Board (Investigatory Powers)** — Q (lord paddick): To ask Her Majesty’s Government how many times the Technical Advisory Board has met since the Investigatory Powers Act 2016 received Royal Ass
+19. [parliamentary/pwdata-lords] score=100.652↑T `pwdata-lords:daylord2018-02-01a:58`
+    **Investigatory Powers (Codes of Practice) Regulations 2018 - Motions to Approve** — My Lords, I am pleased to be given the opportunity today to debate these important regulations, which are all being made under the Investigatory Powers Act 2016
+20. [legislation/primary-acts-2000plus] score=99.838↑T `primary-acts-2000plus:ukpga/2024/9:section-27`
+    **Bulk equipment interference: safeguards for confidential journalistic material etc** — Section 27 1. The Investigatory Powers Act 2016 is amended as follows. 2. For section 195 (additional safeguard for confidential journalistic material) substitu
 
 ### E4 (E/H2)
 *Query:* Why does the indoor smoking ban not apply to private homes? What was said when it was passed?
