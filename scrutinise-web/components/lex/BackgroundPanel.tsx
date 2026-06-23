@@ -1,7 +1,26 @@
 'use client'
 
 import { useState } from 'react'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import type { CanonicalState, SearchResult, SearchResultType } from '@/lib/lex/page1-config'
+
+// The Initial Background body is markdown (stub now, Lex-generated later). Render
+// it with react-markdown, styled via this map — Tailwind v4 has no typography
+// plugin, so no `prose` class. `node` is stripped so it never hits the DOM.
+const MD_COMPONENTS: Components = {
+  h1: ({ node, ...p }) => <h2 className="text-sm font-semibold text-zinc-800 mt-3 mb-1" {...p} />,
+  h2: ({ node, ...p }) => <h2 className="text-sm font-semibold text-zinc-800 mt-3 mb-1" {...p} />,
+  h3: ({ node, ...p }) => <h3 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mt-3 mb-1" {...p} />,
+  p: ({ node, ...p }) => <p className="text-sm text-zinc-700 leading-relaxed mb-2" {...p} />,
+  ul: ({ node, ...p }) => <ul className="list-disc pl-5 space-y-1 mb-2" {...p} />,
+  ol: ({ node, ...p }) => <ol className="list-decimal pl-5 space-y-1 mb-2" {...p} />,
+  li: ({ node, ...p }) => <li className="text-sm text-zinc-700 leading-relaxed" {...p} />,
+  strong: ({ node, ...p }) => <strong className="font-semibold text-zinc-900" {...p} />,
+  em: ({ node, ...p }) => <em className="italic" {...p} />,
+  a: ({ node, ...p }) => <a className="text-blue-600 underline hover:text-blue-700" target="_blank" rel="noopener noreferrer" {...p} />,
+  hr: ({ node, ...p }) => <hr className="my-2 border-zinc-100" {...p} />,
+  code: ({ node, ...p }) => <code className="text-xs bg-zinc-100 rounded px-1 py-0.5" {...p} />,
+}
 
 const TYPE_LABELS: Record<SearchResultType, string> = {
   PRIMARY_LEGISLATION: 'Primary legislation',
@@ -57,8 +76,8 @@ export default function BackgroundPanel({
             <p className="px-3 py-2 text-xs text-zinc-500 border-t border-zinc-100">{initialBackground.summary}</p>
           )}
           {open && initialBackground.body && (
-            <div className="px-3 py-3 text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap border-t border-zinc-100">
-              {initialBackground.body}
+            <div className="px-3 py-3 border-t border-zinc-100">
+              <ReactMarkdown components={MD_COMPONENTS}>{initialBackground.body}</ReactMarkdown>
             </div>
           )}
         </div>
