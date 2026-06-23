@@ -77,7 +77,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   } else {
     const timeOfDay = getTimeOfDay(new Date().getUTCHours())
     openingBubbles = [
-      `Good ${timeOfDay}${firstName ? ' ' + firstName : ''}, I assume you know what you're doing, but just in case, the button below takes you on a short guided tour. ${FIRST_QUESTION}`,
+      `Good ${timeOfDay}${firstName ? ' ' + firstName : ''}. ${FIRST_QUESTION} (Say the word if you'd like me to explain how this works.)`,
     ]
   }
 
