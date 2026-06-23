@@ -63,8 +63,10 @@ export async function POST(req: Request, { params }: Params) {
   try {
     lex = await runLexTurn(systemPrompt, message, history)
   } catch (err) {
-    console.error('[lex] turn failed:', err)
-    return NextResponse.json({ error: 'Lex unavailable', errorType: 'api_error' }, { status: 502 })
+    // Per-attempt status/body already logged in runLexTurn; this is the summary.
+    const e = err as { kind?: string; status?: number; message?: string }
+    console.error('[lex] turn failed (after retries)', { kind: e.kind ?? null, status: e.status ?? null, message: e.message })
+    return NextResponse.json({ error: 'Lex unavailable', errorType: e.kind ?? 'api_error' }, { status: 502 })
   }
 
   // Proposal handling (§4 + §13): act only on a proposal for the CURRENT field

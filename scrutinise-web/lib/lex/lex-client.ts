@@ -135,12 +135,26 @@ async function callGemini(systemPrompt: string, userMessage: string, history: { 
       }),
     },
   )
-  if (!res.ok) throw new Error(`Gemini error ${res.status}: ${await res.text().catch(() => '')}`)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    const e = new Error(`Gemini HTTP ${res.status}`) as LexError
+    e.status = res.status
+    e.body = body
+    e.kind = res.status === 429 ? 'rate_limit' : res.status >= 500 ? 'upstream_5xx' : 'http_error'
+    throw e
+  }
   const data = await res.json()
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-  if (typeof text !== 'string') throw new Error('Gemini returned no text part')
+  if (typeof text !== 'string') {
+    const e = new Error('Gemini returned no text part') as LexError
+    e.kind = 'empty_response'
+    throw e
+  }
   return text
 }
+
+/** Error carrying the diagnostic cause of a failed Lex turn (logged, never tuned blindly). */
+export type LexError = Error & { status?: number; body?: string; kind?: string }
 
 function parseLexOutput(raw: string): LexRawOutput | null {
   let obj: unknown
@@ -182,16 +196,32 @@ export async function runLexTurn(
   userMessage: string,
   history: { role: string; content: string }[],
 ): Promise<LexRawOutput> {
-  let lastErr: unknown
+  let lastErr: LexError | undefined
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const raw = await callGemini(systemPrompt, userMessage, history)
       const parsed = parseLexOutput(raw)
       if (parsed) return parsed
-      lastErr = new Error('Unparseable Lex output')
+      // Structured output returned but failed our shape/schema check. Log the raw
+      // bytes — bytes before hypotheses; don't tune until the cause is visible.
+      console.error('[lex] structured-output validation failed', {
+        attempt: attempt + 1,
+        rawSnippet: raw.slice(0, 800),
+      })
+      const e = new Error('lex output failed validation') as LexError
+      e.kind = 'schema_validation'
+      lastErr = e
     } catch (err) {
-      lastErr = err
+      const e = err as LexError
+      console.error('[lex] gemini call failed', {
+        attempt: attempt + 1,
+        kind: e.kind ?? (e.name === 'AbortError' ? 'timeout' : 'network'),
+        status: e.status ?? null,
+        message: e.message,
+        bodySnippet: typeof e.body === 'string' ? e.body.slice(0, 800) : undefined,
+      })
+      lastErr = e
     }
   }
-  throw lastErr instanceof Error ? lastErr : new Error('Lex turn failed')
+  throw lastErr ?? new Error('Lex turn failed')
 }

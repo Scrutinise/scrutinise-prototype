@@ -83,17 +83,33 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       setMessages((prev) => [...prev, { role: 'user', content: text }])
       setBusy(true)
       setError(null)
-      try {
+
+      const postOnce = async () => {
         const res = await fetch(`/api/ideas/${ideaId}/lex`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text }),
         })
-        if (!res.ok) throw new Error('lex failed')
-        const data = await res.json()
+        if (!res.ok) throw new Error(`lex ${res.status}`)
+        return res.json()
+      }
+
+      try {
+        let data
+        try {
+          data = await postOnce()
+        } catch (err1) {
+          // The failure self-recovered on resend, so it's likely transient. Retry
+          // once before surfacing the fallback. The underlying cause (Gemini
+          // status/body or schema validation) is logged server-side.
+          console.warn('[lex] turn failed, retrying once:', err1)
+          await new Promise((r) => setTimeout(r, 700))
+          data = await postOnce()
+        }
         setMessages((prev) => [...prev, { role: 'lex', content: data.chatText }])
         if (data.state) applyState(data.state)
-      } catch {
+      } catch (err) {
+        console.error('[lex] turn failed after retry:', err)
         setMessages((prev) => [
           ...prev,
           { role: 'lex', content: 'I lost the connection there — could you say that again?' },
