@@ -4,6 +4,22 @@
 
 ---
 
+## V30 — UK DEPTH COMPLETION (financial corpus · own-domain reviews · inquiry evidence · pre-2016 Scottish OR) (2026-06-24 00:00 UTC)
+
+Closes the four deferred-tail items into scope. Build-only (no git until `commit-all.sh`; new sourceTypes seed POST-PUSH). `tsc --noEmit` clean. Full report + scorecards: `docs/SPRINT_V30_REPORT.md`. Governance: `docs/SENSITIVE_EVIDENCE_POLICY.md`.
+
+- **§1 Financial & competition corpus DEFINED + partly built.** The bodies that make/interpret financial/competition/economic law.
+  - **§1.1 CMA / OIM / SAU cases — BUILT (`cma-cases`, OGL v3.0 verified).** gov.uk `cma_case` finder (2,562 cases) → body-overview section + per-PDF decision-doc rows (assets.publishing.service.gov.uk). Measured **~12,511 sections** (60-case sample, avg 3.9 PDFs/case); pilot ✓ (body 925 w + lead PDF 5,199 w). Dedup-clean vs `quangos-govuk`. `sources/cma-cases.ts` + `processCmaCases` + `v30-seed-cma-cases.ts`.
+  - **§1.2 CAT — PROBED, NOT BUILT (V31 email).** catribunal.org.uk `/judgments` route clean (~1,100 judgments) but `/copyright-notice` = CAT/Competition Service own copyright, private-study-only, other use by application — **not open**. Not in Find Case Law (no OJL route). licence code `cat-restricted`; email the Competition Service.
+  - **§1.3 FCA enforcement — PROBED, NOT BUILT (V31 email).** fca.org.uk/legal verified: FCA own copyright, OGL only for expressly-stated statistical outputs → final/decision notices not open. `fca-restricted`; email with BoE/PRA.
+- **§2 Own-domain reviews (Cass) — BUILT, PDF-ROUTE-BLOCKED.** `sources/own-domain-reviews.ts` (Wayback-CDX PDF enumerator + pinned-PDF support) + registry + `v30-seed-own-domain-reviews.ts` (ingests into `independent-reviews` via the deployed per-PDF processor). The flagship microsites (Cass, Children's Social Care, IMMDS) are **JS-SPA shells**: 0 Wayback PDF captures; Cass UKGWA-only (no CDX). 0/3 enumerable — listed for Charlie (capture/pin the report PDFs to unblock).
+- **§3 Inquiry evidence — PIPELINE BUILT + PILOTED + §0 GOVERNED.** New corpus `inquiry-evidence`; `sources/inquiry-evidence.ts` + `processInquiryEvidence` + `v30-seed-inquiry-evidence.ts`. **§0 structural sensitive-exclusion** (`classifyEvidence` keep/exclude/flag on the inquiry's own evidence-type/witness-category/restriction structure — never per-paragraph; enforced at ingest, excluded → `sensitive-excluded` marker; **6/6 unit assertions pass**). `SENSITIVE_EVIDENCE_POLICY.md` written. **Pilot: Post Office Horizon** (OGL v3.0 verified, **~19,605 items**; §0 12/12 keep; 2 PDFs extracted ✓). Infected Blood + Grenfell probed (own-site `/evidence`+`/hearings`) → sequenced (POH → IB kept-only → Grenfell, measure each).
+- **§4 Pre-2016 Scottish OR — BUILT (`scottish-parliament-or` extended, SPCB).** Sessions 1–4 (1999–2016) from the **Internet Archive Wayback** of the legacy `report.aspx?r={id}` site (membership = capture < 2016-05; fetch = multi-capture fallback to the `or_speaker`-era rendering). **2,322 reports**; old-format parser ✓ (sitting date = most-frequent in-content date — the `DC.date` meta is a constant template value); pilot content reports avg 157 turns / 22k words; sparse ones → `archive-miss` markers. `sources/scottish-or-archive.ts` + `processScottishOrArchive` (`arch:{r}` docId branch) + `v30-seed-scottish-or-pre2016.ts`.
+- **§5 Docs/code:** `licence-map.ts` +4 (`cma-cases` OGL3, `inquiry-evidence` OGL3, `cat-restricted`, `fca-enforcement`→`fca-restricted`); `seed-rate-limits.ts` +2 (`cma-cases` 300/5, `inquiry-evidence` 1000/2); `db-metadata.ts` availabilityStatus +5 (`sensitive-excluded`/`-flagged`/`no-pdf`/`archive-miss`/`superseded`); `CORPUS_CLOSURE_REGISTER.md` updated; `INGEST_PLAYBOOK.md` §8 V30 patterns; handoff updated.
+- **⚠️ Verify-before-asserting catch:** `scottish-parliament-or` has **0 sections / 0 queue rows** — the V28 2016+ seed was never run. POST-PUSH order seeds both 2016+ (V28) and pre-2016 (V30).
+
+---
+
 ## LEX REBUILD — Sprint 1.2: polish (markdown · intro copy · Lex retry) (2026-06-23 17:42 UTC)
 
 Three polish items on the un-promoted preview (`LEX_REBUILD_DESIGN v.1.md`). `tsc --noEmit` clean. **Do NOT promote to production.**

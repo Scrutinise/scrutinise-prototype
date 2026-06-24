@@ -2,7 +2,27 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 23 Jun 2026 — Search S1b archetype-A FIX: citation resolver + body backfill (A 0%→60%, overall 57.8%→69.4%, no regressions); positions pilot stood down. See the Search S1b archetype-A section below. Prior 20 Jun V29 UK COMPLETION WAVE: 11 new corpora / 9 sourceTypes BUILT + PILOTED (seed POST-PUSH); ICO/Scottish-courts triage; HMRC soft-law ~98%; POSTnotes seam. V28: search-relay (jurisdiction + §1.3 title/date LIVE → DROP title-gate CLEAR). V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 24 Jun 2026 — V30 UK DEPTH COMPLETION: CMA cases BUILT (`cma-cases`, ~12.5k sections); CAT + FCA-enforcement PROBED→V31 email-gate (own copyright); own-domain reviews (Cass) BUILT but PDF-route-blocked (SPA); inquiry-evidence pipeline + §0 sensitive-exclusion BUILT + Post Office Horizon PILOTED (~19.6k items); pre-2016 Scottish OR (1999–2016) BUILT (Wayback archive, 2,322 reports). All seed POST-PUSH. `SENSITIVE_EVIDENCE_POLICY.md` written. Prior 23 Jun Search S1b archetype-A FIX (A 0%→60%); V29 UK COMPLETION WAVE. V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — V30 (UK DEPTH COMPLETION: financial corpus · own-domain reviews · inquiry evidence · pre-2016 Scottish OR, 24 Jun 2026)
+
+**Sprint:** V30 (`SPRINT_V30_BRIEF.md`). Full account + per-source scorecards + category-completeness table: **`docs/SPRINT_V30_REPORT.md`**. CHANGE_LOG "V30". Governance: **`docs/SENSITIVE_EVIDENCE_POLICY.md`**. Build-only; `scripts/ingest` `tsc --noEmit` **clean (0 errors)**. Baseline at open: 16,785,723 sections / 5.84B words / Neon 14 GB (3.5 GB headroom to 17.5 GB — V30 adds <1 GB).
+
+**Category-completeness (read the report's table for detail):**
+- **§1.1 CMA/OIM/SAU — BUILT-POST-PUSH** (`cma-cases`, OGL v3.0 ✓, ~12,511 sections measured; pilot ✓).
+- **§1.2 CAT — PROBED-V31** (route clean ~1,100 judgments; own copyright/private-study-only; not in Find Case Law → email Competition Service). `cat-restricted`.
+- **§1.3 FCA enforcement — PROBED-V31** (FCA own copyright; email with BoE/PRA). `fca-restricted`.
+- **§2 Own-domain reviews — BUILT, PDF-ROUTE-BLOCKED** (Cass/Children's-Social-Care/IMMDS = SPA shells, 0 archive-enumerable PDFs; adapter+registry+seeder ready for pinned PDFs; listed for Charlie).
+- **§3 Inquiry evidence — PILOTED-SEQUENCED** (`inquiry-evidence` + §0 exclusion built + 6/6 unit-tested; Post Office Horizon piloted OGL v3.0 ~19,605 items; Infected Blood + Grenfell probed → sequence POH→IB(kept-only)→Grenfell).
+- **§4 Pre-2016 Scottish OR — BUILT-POST-PUSH** (`scottish-parliament-or` extended to 1999 via Wayback; 2,322 reports; old-format parser ✓; pilot avg 157 turns/22k words).
+
+**⚠️ CARRIED CATCH:** `scottish-parliament-or` has **0 sections / 0 queue rows** — the **V28 sessions-5–6 seed was never run**. The POST-PUSH order below seeds BOTH 2016+ (V28) and pre-2016 (V30).
+
+**POST-PUSH RUN ORDER:** (1) `seed-rate-limits.ts` (+`cma-cases`,`inquiry-evidence`); (2) confirm Ingest deploy SUCCESS (commit hash) before seeding new sourceTypes; (3) `v30-seed-cma-cases.ts --seed`; (4) `v28-seed-scottish-parliament-or.ts --seed` THEN `v30-seed-scottish-or-pre2016.ts --seed`; (5) `v30-seed-inquiry-evidence.ts --seed` (Post Office Horizon; `--max-pages` to tranche); (6) if own-domain PDFs pinned, `v30-seed-own-domain-reviews.ts --seed`; (7) at drain re-baseline + `v20-licence-backfill.ts`.
+
+**DECISIONS WAITING ON CHARLIE (V30):** V31 emails — Competition Appeal Tribunal (Competition Service) · FCA enforcement (+BoE/PRA) · capture/pin own-domain review PDFs (Cass et al.) · approve POH evidence seed + IB/Grenfell sequence · (carried) the never-run scottish-parliament-or 2016+ seed (now folded above) · plus the full carried V29/V26 list below.
 
 ---
 
