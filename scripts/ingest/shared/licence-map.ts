@@ -251,6 +251,30 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // §9 POSTnotes — Parliamentary material, Open Parliament Licence v3.0 (same
   // family as Library briefings; capture-gated, seeds nothing until a capture).
   'postnotes': OPL3,
+  // ── V30 ────────────────────────────────────────────────────────────────────
+  // §1.1 CMA / OIM / SAU cases & decisions — VERIFIED OGL v3.0. The CMA is a
+  // non-ministerial department (Crown copyright); its gov.uk-published case
+  // material + assets.publishing.service.gov.uk decision PDFs ride gov.uk's terms
+  // (gov.uk/help/terms-conditions: OGL v3.0).
+  'cma-cases': OGL3,
+  // §1.2 Competition Appeal Tribunal — NOT OPEN (verified at
+  // catribunal.org.uk/copyright-notice, 24 Jun 2026): copyright held by the CAT
+  // and/or the Competition Service; material "may be freely downloaded … for
+  // private reference, research and study", all OTHER use by written application.
+  // Not in Find Case Law (no OJL route). NOT BUILT — V31 email to the Competition
+  // Service Information Centre. Code recorded for the denominator/closure register.
+  'cat-judgments': { licence: 'cat-restricted', attributionBoilerplate: null },
+  // §1.3 FCA enforcement / final notices — NOT OPEN (verified at fca.org.uk/legal,
+  // 24 Jun 2026): FCA asserts its own copyright; OGL applies only to "some
+  // statistical outputs … where the UKOGL is expressly stated" — final/decision
+  // notices are not. Same posture as fca-handbook. NOT BUILT — V31 email
+  // (alongside BoE/PRA).
+  'fca-enforcement': { licence: 'fca-restricted', attributionBoilerplate: null },
+  // §3 Public-inquiry evidence — per-inquiry licence (licence-at-the-licence-page).
+  // Post Office Horizon VERIFIED OGL v3.0 (postofficehorizoninquiry.org.uk/
+  // terms-and-conditions, 24 Jun 2026: "© Crown copyright. Licensed under the
+  // Open Government Licence v3.0"). Other inquiries verified per inquiry at seed.
+  'inquiry-evidence': OGL3,
 }
 
 export function licenceForCorpus(corpus: string): string | null {

@@ -151,6 +151,8 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'members-interests':   return processMembersInterests(row)
     case 'cps-guidance':        return processCpsGuidance(row)
     case 'independent-reviews': return processInquiryReports(row)  // V29 §5 — identical per-PDF mechanics
+    case 'cma-cases':           return processCmaCases(row)
+    case 'inquiry-evidence':    return processInquiryEvidence(row)
     case 'ofgem':               return processOfgem(row)
     case 'ofcom':               return processOfcom(row)
     case 'lgsco':               return processLgsco(row)
@@ -1784,6 +1786,140 @@ async function processInquiryReports(row: QueueRow): Promise<void> {
   await markDone(row.id, 'pdf')
 }
 
+// ── CMA cases & decisions (V30 §1.1 — gov.uk cma_case finder, OGL v3.0) ───────
+// Two row shapes (set at seed time):
+//   "{slug}#overview"        → the case body (HTML) → one OVERVIEW section.
+//   "{slug}#{seq}|{pdfUrl}"  → one decision-document PDF → one section (per-PDF
+//                              budget; a merger case can carry ~30 PDFs).
+// All sections of a case share parentDocId = slug.
+async function processCmaCases(row: QueueRow): Promise<void> {
+  const bar = row.docId.indexOf('|')
+  if (bar >= 0) {
+    // Decision-document PDF (inquiry-reports mechanics — per-PDF claim budget).
+    const { fetchPdfBuffer } = await import('../sources/cma-cases')
+    const meta = row.docId.slice(0, bar)            // "{slug}#{seq}"
+    const pdfUrl = row.docId.slice(bar + 1)
+    const hash = meta.indexOf('#')
+    const slug = hash >= 0 ? meta.slice(0, hash) : meta
+    const seq = hash >= 0 ? meta.slice(hash + 1) : '1'
+    if (!pdfUrl || !slug) { await markFailed(row.id, `bad cma-cases docId: ${row.docId}`); return }
+
+    const cKey = compiledKey(row.corpus, slug, seq)
+    if (await r2Exists(cKey)) { await markDone(row.id, 'pdf'); return }
+    const buf = await fetchPdfBuffer(pdfUrl)
+    if (!buf) { await markFailed(row.id, `cma-cases ${slug}#${seq}: PDF fetch failed`); return }
+    const text = await pdfToText(buf, pdfUrl)
+    if (!text || text.length < 100) {
+      await upsertSection({
+        id: sectionId(row.corpus, slug, seq), corpus: row.corpus, sourceUrl: pdfUrl,
+        status: 'unavailable', availabilityStatus: 'pdf-only',
+        availabilityNote: 'CMA decision PDF served but no extractable text (scanned — OCR pass needed)',
+        parentDocId: slug,
+      })
+      await markDone(row.id, 'pdf'); return
+    }
+    await r2Put(cKey, text)
+    await upsertSection({
+      id: sectionId(row.corpus, slug, seq), corpus: row.corpus, sourceUrl: pdfUrl,
+      r2Key: cKey, wordCount: countWords(text), status: 'compiled', format: 'pdf',
+      sectionTitle: `${slug.replace(/-/g, ' ')} — decision doc ${seq}`, parentDocId: slug,
+    })
+    await markDone(row.id, 'pdf'); return
+  }
+
+  // Case OVERVIEW (the body page) — docId "{slug}#overview".
+  const { fetchCmaCase } = await import('../sources/cma-cases')
+  const slug = row.docId.replace(/#overview$/, '')
+  const pageUrl = `https://www.gov.uk/cma-cases/${slug}`
+  const c = await fetchCmaCase(slug)
+  if (!c) { await markFailed(row.id, `cma-cases ${slug}: case fetch failed`); return }
+  if (c.body.length < 200) {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, 'overview'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: 'CMA case page has no extractable overview text',
+      itemDate: c.date || undefined, parentDocId: slug,
+    })
+    await markDone(row.id); return
+  }
+  const cKey = compiledKey(row.corpus, slug, 'overview')
+  await r2Put(cKey, c.body)
+  await upsertSection({
+    id: sectionId(row.corpus, slug, 'overview'), corpus: row.corpus, sourceUrl: pageUrl,
+    r2Key: cKey, wordCount: countWords(c.body), status: 'compiled', format: 'html',
+    sectionTitle: c.title, itemDate: c.date || undefined, parentDocId: slug,
+  })
+  await markDone(row.id, 'html')
+}
+
+// ── Public-inquiry evidence (V30 §3 — §0-governed; token PDFs resolved live) ───
+// docId = "{inquiryKey}#{slug}". The §0 sensitive-category exclusion is applied
+// at SEED time (excluded items get no row), so the worker only ingests kept
+// items. Detail page is fetched fresh to resolve the current /file download
+// token (tokens are not stable across a deferred drain). parentDocId = inquiryKey.
+async function processInquiryEvidence(row: QueueRow): Promise<void> {
+  const { INQUIRY_EVIDENCE_SOURCES, pohFetchItem, classifyEvidence, fetchPdfBuffer } = await import('../sources/inquiry-evidence')
+  const hash = row.docId.indexOf('#')
+  const key = hash >= 0 ? row.docId.slice(0, hash) : row.docId
+  const slug = hash >= 0 ? row.docId.slice(hash + 1) : ''
+  const src = INQUIRY_EVIDENCE_SOURCES.find(s => s.key === key)
+  if (!src || !slug) { await markFailed(row.id, `bad inquiry-evidence docId: ${row.docId}`); return }
+  const pageUrl = `${src.base}/evidence/${slug}`
+
+  const item = await pohFetchItem(src.base, slug)
+  if (!item) { await markFailed(row.id, `inquiry-evidence ${key}/${slug}: detail fetch failed`); return }
+
+  // §0 STRUCTURAL EXCLUSION — enforced at ingest. Excluded/flagged items get an
+  // accounted-for marker (no content), never the document text.
+  const cls = classifyEvidence({
+    sensitivity: src.sensitivity, refPrefix: item.refPrefix, evidenceType: item.evidenceType,
+    witnessCategory: item.witnessCategory, witness: item.witness, title: item.title,
+  })
+  if (cls.decision !== 'keep') {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable',
+      availabilityStatus: cls.decision === 'exclude' ? 'sensitive-excluded' : 'sensitive-flagged',
+      availabilityNote: `§0 ${cls.decision}: ${cls.reason} (${item.ref})`,
+      itemDate: item.date ?? undefined, parentDocId: key,
+    })
+    await markDone(row.id); return
+  }
+
+  if (!item.pdfUrl) {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'no-pdf',
+      availabilityNote: `inquiry-evidence ${item.ref}: no downloadable document on the detail page`,
+      itemDate: item.date ?? undefined, parentDocId: key,
+    })
+    await markDone(row.id); return
+  }
+
+  const cKey = compiledKey(row.corpus, slug, '1')
+  if (await r2Exists(cKey)) { await markDone(row.id, 'pdf'); return }
+  const buf = await fetchPdfBuffer(item.pdfUrl)
+  if (!buf) { await markFailed(row.id, `inquiry-evidence ${item.ref}: PDF fetch failed`); return }
+  const text = await pdfToText(buf, item.pdfUrl)
+  if (!text || text.length < 100) {
+    await upsertSection({
+      id: sectionId(row.corpus, slug, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+      status: 'unavailable', availabilityStatus: 'pdf-only',
+      availabilityNote: `inquiry-evidence ${item.ref}: PDF served but no extractable text (scanned/native image — OCR pass)`,
+      itemDate: item.date ?? undefined, parentDocId: key,
+    })
+    await markDone(row.id, 'pdf'); return
+  }
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, slug, '1'), corpus: row.corpus, sourceUrl: pageUrl,
+    r2Key: cKey, wordCount: countWords(text), status: 'compiled', format: 'pdf',
+    sectionTitle: `${item.ref} — ${item.title}`.slice(0, 180),
+    itemDate: item.date ?? undefined, parentDocId: key,
+  })
+  await markDone(row.id, 'pdf')
+}
+
 // ── Senedd Plenary Cofnod (V25 §2 — record.senedd.wales, OGL v3.0) ────────────
 // docId = "{meetingId}". One section per English speaker-turn (pwdata-shaped).
 
@@ -2150,6 +2286,8 @@ async function processDivisionVotes(row: QueueRow): Promise<void> {
 // 5-min row budget for a single sitting day.
 
 async function processScottishParliamentOr(row: QueueRow): Promise<void> {
+  // V30 §4: pre-2016 reports from the Wayback archive. docId = "arch:{r}|{wbUrl}".
+  if (row.docId.startsWith('arch:')) { await processScottishOrArchive(row); return }
   const { fetchReport, reportUrl } = await import('../sources/scottish-parliament-or')
   const bar = row.docId.indexOf('|')
   const meetingId = Number(bar >= 0 ? row.docId.slice(0, bar) : row.docId)
@@ -2201,6 +2339,73 @@ async function processScottishParliamentOr(row: QueueRow): Promise<void> {
   }
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, String(meetingId), metas.map(m => m.id))
+  await markDone(row.id, 'html')
+}
+
+// ── Pre-2016 Scottish OR (V30 §4 — Wayback archive of the legacy report.aspx) ──
+// docId = "arch:{r}|{waybackId_Url}". One section per speaker-turn; the parsed
+// DC.date is the authoritative pre-2016 gate (defensive: anything ≥ 2016-05 is
+// covered by the modern build → superseded marker).
+async function processScottishOrArchive(row: QueueRow): Promise<void> {
+  const { fetchBestLegacyReport } = await import('../sources/scottish-or-archive')
+  // docId = "arch:{r}" (a bar-suffixed legacy form is tolerated).
+  const bar = row.docId.indexOf('|')
+  const r = Number(row.docId.slice('arch:'.length, bar >= 0 ? bar : undefined))
+  if (!Number.isInteger(r)) { await markFailed(row.id, `bad scottish-or-archive docId: ${row.docId}`); return }
+  const docId = `arch-${r}`
+  const origUrl = `https://www.parliament.scot/parliamentarybusiness/report.aspx?r=${r}`
+
+  const report = await fetchBestLegacyReport(r)
+  if (!report) {
+    // No usable capture across hosts (only interstitials / sparse archive) — a
+    // classified residue, not a failure (keeps the failure breaker honest).
+    await upsertSection({
+      id: sectionId(row.corpus, docId, '1'), corpus: row.corpus, sourceUrl: origUrl,
+      status: 'unavailable', availabilityStatus: 'archive-miss',
+      availabilityNote: `legacy OR r=${r} has no usable Wayback capture (interstitial/sparse archive)`,
+      parentDocId: docId,
+    })
+    await markDone(row.id); return
+  }
+
+  if (report.date && report.date >= '2016-05-01') {
+    await upsertSection({
+      id: sectionId(row.corpus, docId, '1'), corpus: row.corpus, sourceUrl: origUrl,
+      status: 'unavailable', availabilityStatus: 'superseded',
+      availabilityNote: `legacy OR r=${r} dated ${report.date} — session 5+, covered by the modern build`,
+      itemDate: report.date, parentDocId: docId,
+    })
+    await markDone(row.id); return
+  }
+  if (report.items.length === 0) {
+    await upsertSection({
+      id: sectionId(row.corpus, docId, '1'), corpus: row.corpus, sourceUrl: origUrl,
+      status: 'unavailable', availabilityStatus: 'no-provisions',
+      availabilityNote: `legacy OR r=${r} has no extractable contributions`,
+      itemDate: report.date ?? undefined, parentDocId: docId,
+    })
+    await markDone(row.id); return
+  }
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  for (const it of report.items) {
+    const ref = String(it.seq)
+    metas.push({
+      id: sectionId(row.corpus, docId, ref), corpus: row.corpus, sourceUrl: origUrl,
+      r2Key: compiledKey(row.corpus, docId, ref), wordCount: countWords(it.text),
+      status: 'compiled', format: 'html',
+      sectionTitle: it.heading ? `Scottish Parliament: ${it.heading}` : 'Scottish Parliament Official Report',
+      speaker: it.speaker ?? undefined, itemDate: report.date ?? undefined, parentDocId: docId,
+    })
+    texts.push(it.text)
+  }
+  const R2_BATCH = 16
+  for (let i = 0; i < metas.length; i += R2_BATCH) {
+    await Promise.all(metas.slice(i, i + R2_BATCH).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, docId, metas.map(m => m.id))
   await markDone(row.id, 'html')
 }
 

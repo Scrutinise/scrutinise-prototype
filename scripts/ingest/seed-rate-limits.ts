@@ -69,6 +69,11 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'ofcom',               intervalMs: 1000, maxConcurrentWorkers: 2, note: 'ofcom.org.uk (V29 §6, exempt org) — topic-sitemap enumeration; per row 1 HTML + optional PDFs. ~4,093 regulatory pages, ofcom-open (verified /about-ofcom/website/terms-of-use). Railway egress canary first.' },
   { sourceKey: 'lgsco',               intervalMs: 1000, maxConcurrentWorkers: 2, note: 'lgo.org.uk (V29 §7, ombudsman) — self-propagating paged listing (list:{category}:{page}) + per-decision HTML; 1 fetch/row. Large DB (decisions since 2013). lgsco-open OGL-equivalent (verified /copyright). The clean-licence ombudsman build.' },
   { sourceKey: 'library-briefings',   intervalMs: 1000, maxConcurrentWorkers: 2, note: 'commons/lords/post research-briefings WP REST (V28 §5 / V29 §9) — CAPTURE-GATED (Cloudflare managed-challenge); seeds nothing until a per-host cf_clearance + CPT slug is captured. 1 fetch/row. OPL v3.0.' },
+  // ── V30 ──────────────────────────────────────────────────────────────────────
+  { sourceKey: 'cma-cases',           intervalMs: 300,  maxConcurrentWorkers: 5, note: 'gov.uk cma_case finder + assets.publishing.service.gov.uk PDFs (V30 §1.1) — body overview row (gov.uk content API) + per-PDF decision-doc rows. ~2,562 cases, ~12.5k sections est. OGL v3.0 (CMA non-ministerial dept). Mixed gov.uk + CDN, 300ms/5 ≈ 16 rps headroom under gov.uk’s ~10rps ask.' },
+  { sourceKey: 'inquiry-evidence',    intervalMs: 1000, maxConcurrentWorkers: 2, note: 'public-inquiry evidence sites (V30 §3) — §0-governed. Pilot: postofficehorizoninquiry.org.uk Drupal evidence library; per row 1 detail page (resolves the live /file download token + §0 metadata) + 1 PDF. ~19,605 items. OGL v3.0 (verified /terms-and-conditions). Charity/inquiry host — keep gentle, ≲2 rps.' },
+  // scottish-parliament-or (V30 §4 pre-2016 archive) reuses the existing entry
+  // above; independent-reviews (V30 §2 own-domain) reuses its V29 entry.
 ]
 
 async function main(): Promise<void> {

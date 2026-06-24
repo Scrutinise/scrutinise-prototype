@@ -32,6 +32,8 @@ export interface SectionMeta {
   xmlPreview?: string
   notes?: string
   availabilityStatus?: 'full' | 'commencement' | 'revoked' | 'pdf-only' | 'metadata-only' | 'no-provisions'
+    // V30: §3 §0-governed evidence exclusions; §4 pre-2016 Scottish-OR archive residue.
+    | 'sensitive-excluded' | 'sensitive-flagged' | 'no-pdf' | 'archive-miss' | 'superseded'
   availabilityNote?: string
   // V18 per-item metadata (pwdata granularity migration): heading, speaker,
   // sitting date, and the parent day-file — so search can aggregate
