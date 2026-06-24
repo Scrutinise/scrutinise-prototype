@@ -80,3 +80,9 @@ commit-all.sh
 # V.3-C-2c College of Policing APP browser crawl — 45 MB source data, local-only
 # Ingest is reproducible from cop-app-ingest.ts; crawl conducted 25 May 2026
 scripts/operational/cop-app-crawl.json
+
+# Build-runner transient state. The cloud-init preview embeds Neon + R2 creds — NEVER
+# commit. The *-service-id / *-server-id files are throwaway box/service handles.
+scripts/ingest/search/.hetzner-cloud-init.preview.sh
+scripts/ingest/search/.hetzner-build-server-id
+scripts/ingest/search/.*-service-id

@@ -4,6 +4,23 @@
 
 ---
 
+## BUILD — Hetzner build-runner tooling (INERT, no box created) (2026-06-24 06:57 UTC)
+
+Reusable runner to drive a transient Hetzner build box for heavy single-shot builds
+(first use: the vector layer), mirroring `fts-railway-run`. INERT — box creation is the
+spend event, Charlie-triggered; nothing is created here.
+
+- `scripts/ingest/search/hetzner-build-run.ts` — `setup` (INERT preflight: validates
+  HETZNER_API_TOKEN + Neon/R2 creds and CCX43 / fsn1 / ubuntu-24.04 against the live API,
+  renders cloud-init, creates nothing) / `run` (the spend: create a CCX43 16 vCPU/64 GB
+  Falkenstein box; cloud-init clones Main, installs Node 20 + deps, injects Neon + R2 —
+  NOT the Hetzner token, the build never calls Hetzner) / `logs` (stdout tail via R2) /
+  `teardown` (DELETE via API). Progress checkpoints to R2 so the existing `fts-watch`
+  monitors it unchanged.
+- `scripts/ingest/search/hetzner-logtail.ts` — on-box stdout → R2 tailer.
+- `.gitignore` — guards the cred-bearing cloud-init preview, the server-id, and the
+  `.*-service-id` state files (the glob also covers the FTS-serve runner). tsc clean.
+
 ## V30 — UK DEPTH COMPLETION (financial corpus · own-domain reviews · inquiry evidence · pre-2016 Scottish OR) (2026-06-24 00:00 UTC)
 
 Closes the four deferred-tail items into scope. Build-only (no git until `commit-all.sh`; new sourceTypes seed POST-PUSH). `tsc --noEmit` clean. Full report + scorecards: `docs/SPRINT_V30_REPORT.md`. Governance: `docs/SENSITIVE_EVIDENCE_POLICY.md`.
