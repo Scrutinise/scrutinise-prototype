@@ -4,6 +4,30 @@
 
 ---
 
+## SEARCH/LEX — FTS serving endpoint + platform adapter (wire Lex to real search) (2026-06-24 06:57 UTC)
+
+Stand up the permanent FTS query service and the platform-side adapter that maps native
+FTS results → the Lex `SearchResult` contract. The platform calls FTS; Lex never does.
+
+- **Serving:** `scripts/ingest/search/fts-serve-run.ts` — creates the always-on Railway
+  `fts-serve` (POST `/fts-search`; opens `corpus_fts` on R2 once + loads the 135k-row
+  ActIndex so the citation resolver is active; restart=ALWAYS; public domain). Small
+  instance, inside the 8 GB Hobby cap. LIVE: https://fts-serve-production.up.railway.app
+  (16,509,051 rows; /health + sample query verified).
+- **Adapter:** `scrutinise-web/lib/lex/fts-search.ts` (`runFtsSearch`) — keywords[] →
+  query, calls `/fts-search`, maps id/snippet/score direct; `type` via the corpus map;
+  `title`/`citation` from gid → `LegislationItem.title` (legislation) else `sectionTitle`;
+  `url`/`date` via one batched `WHERE id IN` over `corpus_sections` (legislation url
+  derivable from the gid). Falls back to the stub on any failure.
+- **Type map:** `scrutinise-web/lib/lex/corpus-type-map.ts` — corpus/tier/gid-doctype →
+  `SearchResultType`.
+- **Enum extension (Charlie, 24 Jun):** `page1-config.ts` `SearchResultType` +GUIDANCE /
+  EU_LEGISLATION / BILL / TREATY so every corpus family maps; `BackgroundPanel.tsx` labels
+  + order updated for the four new types.
+- **Swap:** `field-machine.ts` `fireSearchTrigger` — `runStubSearch` → `await
+  runFtsSearch` (one line). Dormant (stub fallback) until `FTS_SEARCH_URL` is set on the
+  web deploy. tsc clean both sides.
+
 ## BUILD — Hetzner build-runner tooling (INERT, no box created) (2026-06-24 06:57 UTC)
 
 Reusable runner to drive a transient Hetzner build box for heavy single-shot builds

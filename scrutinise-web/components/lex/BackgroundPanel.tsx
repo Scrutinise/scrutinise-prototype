@@ -25,12 +25,17 @@ const MD_COMPONENTS: Components = {
 const TYPE_LABELS: Record<SearchResultType, string> = {
   PRIMARY_LEGISLATION: 'Primary legislation',
   STATUTORY_INSTRUMENT: 'Statutory instruments',
+  EU_LEGISLATION: 'Retained EU law',
   DEBATE: 'Debates',
   COMMITTEE: 'Committee reports',
   CASE_LAW: 'Case law',
+  BILL: 'Bills',
+  TREATY: 'Treaties',
+  GUIDANCE: 'Guidance & regulators',
 }
 const TYPE_ORDER: SearchResultType[] = [
-  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'DEBATE', 'COMMITTEE', 'CASE_LAW',
+  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION',
+  'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 
 // Panel 3 — Legislation. Pure renderer of initialBackground + legislationRefs[].

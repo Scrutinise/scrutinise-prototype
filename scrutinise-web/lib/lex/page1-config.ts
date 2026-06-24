@@ -211,6 +211,14 @@ export type SearchResultType =
   | 'DEBATE'
   | 'COMMITTEE'
   | 'CASE_LAW'
+  // Extended for the real FTS corpus (Charlie, 24 Jun 2026). The FTS corpus spans
+  // families with no home in the original 5. Lex-side rendering (groupForPanel caps
+  // per type generically; buildInitialBackground only narrates the original 4) should
+  // be extended to surface these in the briefing prose.
+  | 'GUIDANCE'       // regulator + soft-law (FCA/ICO/HMRC/Ofgem/Ofcom/law-coms/NAO/inquiries/sentencing/CPS/CoP)
+  | 'EU_LEGISLATION' // retained-eu + eur-lex (operative law, neither Act nor SI)
+  | 'BILL'           // bills-api (pre-enactment)
+  | 'TREATY'         // uk-treaties + tax-treaties-dta
 
 export interface SearchResult {
   id: string

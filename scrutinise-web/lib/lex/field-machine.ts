@@ -15,7 +15,8 @@ import {
   fieldDef,
   type FieldStatus,
 } from './page1-config'
-import { runStubSearch, groupForPanel, buildInitialBackground } from './search-stub'
+import { groupForPanel, buildInitialBackground } from './search-stub'
+import { runFtsSearch } from './fts-search'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -213,7 +214,7 @@ export async function fireSearchTrigger(ideaId: string): Promise<void> {
     select: { keywords: true },
   })
   const keywords = idea?.keywords ?? []
-  const { results } = runStubSearch(keywords, 12)
+  const { results } = await runFtsSearch(keywords, 12)
   const refs = groupForPanel(results)
   const { summary, body } = buildInitialBackground(keywords, refs)
 
