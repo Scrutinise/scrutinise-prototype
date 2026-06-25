@@ -4,8 +4,10 @@
 **why** and **what**; this says **how it is wired and how to work on it**. The Lex equivalent of
 `INGEST_PLAYBOOK.md`. Update this whenever the conversation layer changes.*
 
-**Status:** Page 1 (Orientation) shipped — Sprint 1 (state layer + panels) + Sprint 1.1 (orchestration).
-Pages 2–4 (Diagnosis / Guiding Policy / Coherent Actions) and real FTS are later sprints (design §11).
+**Status:** Page 1 (Orientation) shipped — Sprint 1 (state layer + panels) + Sprint 1.1 (orchestration)
++ Sprint 1.2 (markdown background, intro reword, failure logging) + **Sprint 1.3** (save-before-advance
+guards §3a, "How this works" tour §3b, `preferredName ?? firstName`). Pages 2–4 (Diagnosis / Guiding
+Policy / Coherent Actions) and real FTS are later sprints (design §11).
 
 ---
 
@@ -63,6 +65,43 @@ makes Lex speak the next step. It owns sequence. Rules:
 can't stall: each field carries a platform-authored `question` (page1-config), and Title/Keywords fall
 back to `fallbackTitle`/`fallbackKeywords` (so the inline confirm always appears). The `fields` route
 returns `{ state, messages }`; the client appends `messages` to the transcript.
+
+### 3a. Save-before-advance — one box finished before the next (Sprint 1.3)
+
+The non-negotiable rule the create flow exists to keep: **`currentField` advances only when the
+current box is Saved (`ACCEPTED`) or Skipped — never on a `/lex` turn.** Three guards, all server-side:
+
+1. **State.** `computeCanonicalState.currentField` = the *first non-terminal* field (`state.ts`). An
+   `AWAITING_CONFIRMATION` box is non-terminal, so it stays current until the user Saves/Skips it. This
+   is the structural guarantee — nothing else can move the pointer.
+2. **Orchestrator.** `orchestrateAfterWrite` only speaks for a freshly-`EMPTY` field; it **returns early
+   (and never advances)** when the current field is `AWAITING_CONFIRMATION`. It runs from the `fields`
+   route only — *not* from `/lex`.
+3. **`/lex` route + prompt.** A turn may set a proposal **only for the current field** (`fieldKey ===
+   current.key`; off-field proposals are discarded and logged). When the current box is already
+   `AWAITING_CONFIRMATION`, the prompt is built with **`awaiting: true`** → Lex refines *that box only*,
+   must not ask the next question or propose another field, and points the user to **Save** in the panel.
+   On a fresh box proposal the prompt requires Lex's `chatText` to point to the panel and ask the user to
+   review and **Save** ("I've drafted that in the panel on the right — have a read, edit it directly… then
+   Save it"). So Lex never *reads* as advancing even though it structurally cannot.
+
+**Diagnostics (`[lex-diag]`).** Every `/lex` turn logs `{currentField, status, awaiting, proposalApplied}`
+and warns on any `off-field proposal discarded`; the orchestrator logs `advancing` / `holding`; the
+`fields` route logs `{action, fieldKey, nextField, nextStatus}`. If the "two proposals / box advanced
+unsaved" symptom ever recurs, these show *which* layer moved the pointer — read them before hypothesising.
+Editing the box prompt (`lex-client.ts buildLexSystemPrompt`, the `origin === 'box'` branch) changes only
+chat wording — never the mechanics.
+
+### 3b. "How this works" tour + FAQ modal (Sprint 1.3)
+
+`components/lex/HowItWorksModal.tsx` is the create-view walkthrough — a **persistent "How this works"
+button** (top bar in `CreateIdeaClient`) opens it; it explains the three panels (verbatim tour copy) and
+has a **Read the FAQs** button that switches to the existing FAQ content (`lib/faq-content.ts`, incl. the
+Strategic-Kernel / Guiding-Policy explanation), rendered with `react-markdown`. The intros offer it
+("…say the word…"); a conservative `HELP_INTENT` regex in `CreateIdeaClient.sendMessage` opens the modal
+on a plain "how does this work / give me a tour" message instead of a Lex round-trip (it deliberately does
+**not** match a bare "yes please" or "explain how this *policy* works"). Keep the regex and the modal copy
+in step; the button must always exist (don't silently remove the reference again).
 
 ---
 

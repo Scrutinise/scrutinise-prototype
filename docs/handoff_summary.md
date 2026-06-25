@@ -2,7 +2,7 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 24 Jun 2026 — V30 UK DEPTH COMPLETION: CMA cases BUILT (`cma-cases`, ~12.5k sections); CAT + FCA-enforcement PROBED→V31 email-gate (own copyright); own-domain reviews (Cass) BUILT but PDF-route-blocked (SPA); inquiry-evidence pipeline + §0 sensitive-exclusion BUILT + Post Office Horizon PILOTED (~19.6k items); pre-2016 Scottish OR (1999–2016) BUILT (Wayback archive, 2,322 reports). All seed POST-PUSH. `SENSITIVE_EVIDENCE_POLICY.md` written. Prior 23 Jun Search S1b archetype-A FIX (A 0%→60%); V29 UK COMPLETION WAVE. V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 25 Jun 2026 — LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced (prompt `awaiting` guard + `[lex-diag]` logging), "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ Earlier same-session ingest: V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. Prior (interrupted) session had run steps 1–3; this session resumed 4–5. ▼ Earlier 24 Jun V30 build: CMA cases BUILT (`cma-cases`, ~12.5k sections); CAT + FCA-enforcement PROBED→V31 email-gate (own copyright); own-domain reviews (Cass) BUILT but PDF-route-blocked (SPA); inquiry-evidence pipeline + §0 sensitive-exclusion BUILT + Post Office Horizon PILOTED (~19.6k items); pre-2016 Scottish OR (1999–2016) BUILT (Wayback archive, 2,322 reports). All seed POST-PUSH. `SENSITIVE_EVIDENCE_POLICY.md` written. Prior 23 Jun Search S1b archetype-A FIX (A 0%→60%); V29 UK COMPLETION WAVE. V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
 
 ---
 
@@ -11,18 +11,26 @@
 **Sprint:** V30 (`SPRINT_V30_BRIEF.md`). Full account + per-source scorecards + category-completeness table: **`docs/SPRINT_V30_REPORT.md`**. CHANGE_LOG "V30". Governance: **`docs/SENSITIVE_EVIDENCE_POLICY.md`**. Build-only; `scripts/ingest` `tsc --noEmit` **clean (0 errors)**. Baseline at open: 16,785,723 sections / 5.84B words / Neon 14 GB (3.5 GB headroom to 17.5 GB — V30 adds <1 GB).
 
 **Category-completeness (read the report's table for detail):**
-- **§1.1 CMA/OIM/SAU — BUILT-POST-PUSH** (`cma-cases`, OGL v3.0 ✓, ~12,511 sections measured; pilot ✓).
+- **§1.1 CMA/OIM/SAU — SEEDED + DRAINED ✓** (`cma-cases`, OGL v3.0 ✓; **22,890 sections live** / 8 transient PDF-fetch fails; seeded+drained 24 Jun 12:15–14:18 UTC by the interrupted session). Measure undershot (sample 4.1 PDFs/case → full 20,336 decision PDFs + 2,562 overviews).
 - **§1.2 CAT — PROBED-V31** (route clean ~1,100 judgments; own copyright/private-study-only; not in Find Case Law → email Competition Service). `cat-restricted`.
 - **§1.3 FCA enforcement — PROBED-V31** (FCA own copyright; email with BoE/PRA). `fca-restricted`.
 - **§2 Own-domain reviews — BUILT, PDF-ROUTE-BLOCKED** (Cass/Children's-Social-Care/IMMDS = SPA shells, 0 archive-enumerable PDFs; adapter+registry+seeder ready for pinned PDFs; listed for Charlie).
-- **§3 Inquiry evidence — PILOTED-SEQUENCED** (`inquiry-evidence` + §0 exclusion built + 6/6 unit-tested; Post Office Horizon piloted OGL v3.0 ~19,605 items; Infected Blood + Grenfell probed → sequence POH→IB(kept-only)→Grenfell).
-- **§4 Pre-2016 Scottish OR — BUILT-POST-PUSH** (`scottish-parliament-or` extended to 1999 via Wayback; 2,322 reports; old-format parser ✓; pilot avg 157 turns/22k words).
+- **§3 Inquiry evidence — BOUNDED TRANCHE SEEDED ✓, full seed AWAITING GO** (`inquiry-evidence` + §0; POH `--max-pages 5` = 90 rows → **90 sections** (89 `av=full`, real text 132–218,448 w; 1 `av=pdf-only` graceful marker), **§0 keep-path + extraction canary PASS**, 0 skipped/failed. POH §0 sample all-keep so no `sensitive-excluded` observed — exclude path stays unit-tested-only until IB/Grenfell). Charlie chose bounded-first → **full ~19,425-item POH seed is the live ask.** Then IB(kept-only)→Grenfell.
+- **§4 Pre-2016 Scottish OR — SEEDED + DRAINING ✓** (`scottish-parliament-or` extended to 1999 via Wayback; 2,322 rows seeded; `arch:` branch canary PASS — producing ~83–130 sections/report; sparse captures → `archive-miss` markers).
 
-**⚠️ CARRIED CATCH:** `scottish-parliament-or` has **0 sections / 0 queue rows** — the **V28 sessions-5–6 seed was never run**. The POST-PUSH order below seeds BOTH 2016+ (V28) and pre-2016 (V30).
+**✅ CARRIED CATCH RESOLVED:** `scottish-parliament-or` now seeded BOTH 2016+ (V28, **5,130 rows**) and pre-2016 (V30, **2,322 rows**) = **7,452 rows, canary PASS (skipped=0, failed=0), DRAINING** (modern 5,130 still queued behind pre-2016 — full drain is hours; re-baseline at drain per step 7).
 
 **POST-PUSH RUN ORDER:** (1) `seed-rate-limits.ts` (+`cma-cases`,`inquiry-evidence`); (2) confirm Ingest deploy SUCCESS (commit hash) before seeding new sourceTypes; (3) `v30-seed-cma-cases.ts --seed`; (4) `v28-seed-scottish-parliament-or.ts --seed` THEN `v30-seed-scottish-or-pre2016.ts --seed`; (5) `v30-seed-inquiry-evidence.ts --seed` (Post Office Horizon; `--max-pages` to tranche); (6) if own-domain PDFs pinned, `v30-seed-own-domain-reviews.ts --seed`; (7) at drain re-baseline + `v20-licence-backfill.ts`.
 
-**DECISIONS WAITING ON CHARLIE (V30):** V31 emails — Competition Appeal Tribunal (Competition Service) · FCA enforcement (+BoE/PRA) · capture/pin own-domain review PDFs (Cass et al.) · approve POH evidence seed + IB/Grenfell sequence · (carried) the never-run scottish-parliament-or 2016+ seed (now folded above) · plus the full carried V29/V26 list below.
+**▶ POST-PUSH STATUS (executed 24–25 Jun; the interrupted session got through 1–3, this session resumed 4–5):**
+- **(1) rate-limits ✓** (`cma-cases` 300/5, `inquiry-evidence` 1000/2 live). **(2) Ingest deploy SUCCESS** confirmed (Railway 24 Jun 12:15 UTC; canary = worker produces sections not markSkipped → processors deployed).
+- **(3) cma-cases ✓ SEEDED + DRAINED** — 22,890 sections (see §1.1).
+- **(4) scottish-parliament-or ✓ SEEDED (7,452 rows) + DRAINING** — both branches canary PASS, skipped=0 failed=0 (see §4 / catch-resolved).
+- **(5) inquiry-evidence ✓ BOUNDED TRANCHE (90 rows) SEEDED + DRAINED, canary PASS** — full POH seed awaiting Charlie go (see §3).
+- **(6) own-domain reviews — SKIPPED** (no pinned PDFs; still gated on Charlie capturing Cass/CSC/IMMDS report PDFs).
+- **(7) re-baseline + licence-backfill — PENDING at drain** (scottish modern 5,130 still draining; run `v30-corpus-status-table.ts` + re-baseline + `v20-licence-backfill.ts` once scottish drains).
+
+**DECISIONS WAITING ON CHARLIE (V30):** **GO on the full ~19,425-item POH inquiry-evidence seed** (bounded tranche canary PASSED — drop `--max-pages` to run it all) · V31 emails — Competition Appeal Tribunal (Competition Service) · FCA enforcement (+BoE/PRA) · capture/pin own-domain review PDFs (Cass et al.) · IB(kept-only)→Grenfell evidence sequence after POH · plus the full carried V29/V26 list below. *(RESOLVED this session: scottish-parliament-or 2016+ seed — now run; cma-cases post-push seed — now drained.)*
 
 ---
 
@@ -38,9 +46,17 @@
 
 ---
 
+## CURRENT STATE — LEX REBUILD Sprint 1.3 (web app, 25 Jun 2026)
+
+**Preview only — NOT promoted.** Full account: CHANGE_LOG "LEX REBUILD — Sprint 1.3" (2026-06-25 01:12 UTC); rules in `LEX_PLAYBOOK.md` §3a/§3b. `scrutinise-web` `tsc --noEmit` clean.
+- **Task 1 save-before-advance.** Diagnosed: the state machine already keeps a box current until Saved/Skipped (`currentField` = first non-terminal); the regression was the **prompt** reading as advancing. Enforced: `/lex` builds the prompt with **`awaiting`** so while a box is `AWAITING_CONFIRMATION` Lex refines THAT box only + points to **Save** (no next-field ask/propose); fresh proposals tell the user to review & Save in the panel; tightened RULES. Added `[lex-diag]` logging across `/lex` + orchestrator + `fields` route (the brief's "log/inspect").
+- **Task 2 tour.** New `components/lex/HowItWorksModal.tsx` — **persistent "How this works"** button in the create view → tour (3 panels, verbatim copy) → **Read the FAQs** (wired to `lib/faq-content.ts`, incl. Guiding-Policy/Strategic-Kernel). Intro "say the word" opens it via a conservative `HELP_INTENT` regex.
+- **Task 3 name.** `preferredName ?? firstName` in intro + orchestrator prompt; **Neon data fix** — `cl@scrutinise.org` + `scalablefinance@gmail.com` `preferredName` `Charles`→`Charlie` (applied; the deliberate "Boss" account untouched).
+- **REMAINING GATE:** Charlie validates `/ideas/create` on the preview, then promote. **Note:** uncommitted FTS "Finding B" changes (`scripts/ingest/search/fts-core.ts`, `fts-query-service.ts`, `scrutinise-web/lib/lex/fts-search.ts`) are from the prior session's search workstream (CHANGE_LOG "Finding B", 2026-06-25 01:08 UTC) — **left uncommitted; NOT part of the Sprint 1.3 commit**.
+
 ## CURRENT STATE — LEX REBUILD Sprint 1.2 (web app, 23 Jun 2026)
 
-**Polish (23 Jun, preview only — NOT promoted):** (1) Background panel now renders the Initial Background **markdown** via `react-markdown@10` (no prior renderer; Tailwind v4 has no `prose` plugin → `Components` map); (2) returning-user intro reworded to drop the non-existent "guided tour button"; (3) failed Lex turn now **logs cause per attempt** (kind/status/body, or raw bytes on schema-validation) and the client **retries once** before the fallback. `tsc` clean. CHANGE_LOG "LEX REBUILD — Sprint 1.2" (2026-06-23 17:42 UTC); recorded in `LEX_PLAYBOOK.md`. Below = Sprint 1.1 (still current architecture).
+**Polish (23 Jun, preview only — NOT promoted):** (1) Background panel now renders the Initial Background **markdown** via `react-markdown@10` (no prior renderer; Tailwind v4 has no `prose` plugin → `Components` map); (2) returning-user intro reworded to drop the non-existent "guided tour button" (Sprint 1.3 restores a real one); (3) failed Lex turn now **logs cause per attempt** (kind/status/body, or raw bytes on schema-validation) and the client **retries once** before the fallback. `tsc` clean. CHANGE_LOG "LEX REBUILD — Sprint 1.2" (2026-06-23 17:42 UTC); recorded in `LEX_PLAYBOOK.md`. Below = Sprint 1.1 (still current architecture).
 
 ---
 

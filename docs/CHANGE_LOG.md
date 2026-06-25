@@ -4,6 +4,46 @@
 
 ---
 
+## LEX REBUILD — Sprint 1.3 (save-before-advance + guided tour + name) (2026-06-25 01:12 UTC)
+
+Un-promoted preview (no promote). `scrutinise-web` `tsc --noEmit` clean. Behavioural rules recorded in
+`LEX_PLAYBOOK.md` §3a/§3b. Touches only the create flow; the Stage-2 `/api/ai` path is untouched.
+
+- **Task 1 — save-before-advance (diagnosed first, then enforced).** Diagnosis (reading every byte of
+  the state path): `currentField` = the *first non-terminal* field, so an `AWAITING_CONFIRMATION` box
+  stays current by construction — the structural guarantee was already correct, and the orchestrator
+  runs only from the `fields` route (never `/lex`). The live regression was at the **conversation/prompt**
+  layer: when a box already held an unsaved proposal, the `/lex` prompt still treated the turn generically,
+  so Lex's `chatText` read as moving to the next box and didn't direct the user to **Save**. Enforced on
+  three layers: (1) `/lex` now builds the prompt with **`awaiting`** = `currentField` is
+  `AWAITING_CONFIRMATION` → Lex refines *that box only*, must not ask/propose the next field, and points
+  to the panel to Save; (2) on a fresh box proposal the prompt requires `chatText` to point to the panel
+  and ask the user to review and Save (suggested copy); (3) tightened RULES ("finish the CURRENT field…
+  the platform moves on only when the user Saves or Skips"). Kept the existing structural guards (proposal
+  applied only when `fieldKey === current.key`; orchestrator early-returns on non-`EMPTY`). **Added
+  `[lex-diag]` logging** across the `/lex` route (`{currentField,status,awaiting,proposalApplied}` +
+  `off-field proposal discarded` warning), the orchestrator (`advancing`/`holding`), and the `fields`
+  route (`{action,fieldKey,nextField,nextStatus}`) so the symptom is visible if it recurs.
+  Files: `lib/lex/lex-client.ts`, `app/api/ideas/[id]/lex/route.ts`, `lib/lex/orchestrator.ts`,
+  `app/api/ideas/[id]/fields/route.ts`.
+- **Task 2 — guided tour + FAQ modal restored.** New `components/lex/HowItWorksModal.tsx`: a **persistent
+  "How this works"** button in the create view (always rendered) opens a tour explaining the three panels
+  (verbatim brief copy) with a **Read the FAQs** button that switches to the existing FAQ content
+  (`lib/faq-content.ts`, incl. the Strategic-Kernel / Guiding-Policy explanation), rendered with
+  `react-markdown`. The first-idea intro now offers it ("…say the word…"); a conservative `HELP_INTENT`
+  regex in `CreateIdeaClient` opens the modal on a plain "how does this work / give me a tour" message
+  (does **not** match a bare "yes please" or "explain how this *policy* works"). Files:
+  `components/lex/HowItWorksModal.tsx` (new), `app/ideas/create/CreateIdeaClient.tsx`,
+  `app/ideas/create/page.tsx`.
+- **Task 3 — name.** Intro + orchestrator prompt now use **`preferredName ?? firstName`** (was bare
+  `firstName` in the page after the earlier "Charles" workaround; the orchestrator had the fallback order
+  reversed). **Data fix on Neon:** the two Charlie accounts (`cl@scrutinise.org`,
+  `scalablefinance@gmail.com`) had `firstName`=`preferredName`=`Charles` → `preferredName` set to
+  `Charlie` (the deliberate "Boss"/historical accounts left untouched). Files:
+  `app/ideas/create/page.tsx`, `lib/lex/orchestrator.ts`.
+- **Verification:** `tsc --noEmit` clean; deterministic smoke (deleted) asserted the `awaiting` vs
+  fresh-box prompt branches and the `HELP_INTENT` match/non-match set. Charlie validates on the preview.
+
 ## SEARCH/LEX — Finding B: concept→legislation diagnosis + legislation-tier boost (2026-06-25 01:08 UTC)
 
 Diagnosed why broad **concept** queries under-surfaced the legislation tier (the briefing's
@@ -84,6 +124,23 @@ spend event, Charlie-triggered; nothing is created here.
 - `scripts/ingest/search/hetzner-logtail.ts` — on-box stdout → R2 tailer.
 - `.gitignore` — guards the cred-bearing cloud-init preview, the server-id, and the
   `.*-service-id` state files (the glob also covers the FTS-serve runner). tsc clean.
+
+## V30 POST-PUSH — seed execution (cma-cases · scottish OR 2016+∪pre-2016 · POH evidence tranche) (2026-06-25 01:12 UTC)
+
+*(Grouped with the V30 build entry below; sits chronologically alongside the concurrent 25 Jun SEARCH/LEX entries near the top of this file — separate workstream.)*
+
+Executed the V30 POST-PUSH run order. The prior session (interrupted by a VSCode shutdown) had completed steps 1–3 but never recorded them; this session verified that, resumed at step 4, and seeded with per-corpus canaries. Live data ops only — no code/schema change. Deploy confirmed SUCCESS (Railway Ingest 24 Jun 12:15 UTC); each new sourceType canaried (worker produces sections, not markSkipped) before trusting the seed.
+
+- **(1) rate-limits ✓** — `cma-cases` 300ms/5, `inquiry-evidence` 1000ms/2 upserted (idempotent re-run).
+- **(3) cma-cases ✓ SEEDED + DRAINED** — found already drained by the interrupted session (queue rows created 24 Jun 11:53, sections 12:15–14:18 UTC): **22,890 done / 22,890 sections / 8 transient `PDF fetch failed`**. Re-running the seed was a harmless idempotent no-op (0 processed in the last 90 min). Full enumeration = 20,336 decision PDFs + 2,562 case-overview rows = 22,898 (the `--measure` 4.1-PDFs/case sample undershot; actual >5).
+- **(4) scottish-parliament-or ✓ SEEDED (7,452) + DRAINING** — pilot re-confirmed live (366 contributions / 38,014 w on a 24 Jun report). `v28-seed-…` enumerated **5,130** modern rows (sitemap); `v30-seed-…-pre2016` enumerated **2,322** legacy rows (Wayback CDX; 6/10 sample with content, 4 → expected `archive-miss`). Ops woke the idle worker ~4 min after seed; **canary PASS: both branches produce sections, skipped=0 failed=0** (pre-2016 `arch:` branch ~83–130 sections/report). Modern 5,130 still queued behind pre-2016 → re-baseline at drain.
+- **(5) inquiry-evidence ✓ BOUNDED TRANCHE SEEDED + DRAINED (canary PASS)** — Charlie chose bounded-first. `--max-pages 5` = **90 rows → 90 sections** (89 `av=full`, real extracted text 132–218,448 words; 1 `av=pdf-only` graceful marker on a likely-scanned witness statement; 0 skipped/failed). **§0 keep-path + PDF extraction confirmed live**; POH's §0 sample is all-keep so the exclude→`sensitive-excluded` path stays unit-tested-only (matters for IB/Grenfell, not POH). **Full ~19,425-item POH seed is the live ask** (drop `--max-pages`).
+- **(6) own-domain reviews — SKIPPED** (no pinned PDFs; gated on Charlie capturing Cass/CSC/IMMDS report PDFs).
+- **(7) re-baseline + `v20-licence-backfill.ts` — PENDING at drain** (scottish modern still draining).
+
+**Tidy-up note:** the interrupted session left the handoff/CHANGE_LOG describing cma-cases as "seed POST-PUSH" when it had in fact shipped; both are now corrected to as-built. No uncommitted code was left (V30 code committed in `0305905`+`de87942`; the 3 untracked `docs/` files — `OUTREACH_EMAILS.md`, `LEX_REBUILD_DESIGN*.md` — are pre-existing other-workstream drafts, not V30).
+
+---
 
 ## V30 — UK DEPTH COMPLETION (financial corpus · own-domain reviews · inquiry evidence · pre-2016 Scottish OR) (2026-06-24 00:00 UTC)
 
