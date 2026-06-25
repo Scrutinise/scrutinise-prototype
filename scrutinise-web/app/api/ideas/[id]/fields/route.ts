@@ -91,6 +91,14 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const state = await computeCanonicalState(id)
+  // Diagnostic (Sprint 1.3 Task 1): currentField advances ONLY here, on a Save
+  // (ACCEPTED) or Skip — never on a /lex turn. Logs the resulting current field.
+  console.log('[lex-diag] field write', {
+    action,
+    fieldKey,
+    nextField: state?.currentField?.key ?? null,
+    nextStatus: state?.currentField?.status ?? null,
+  })
   return NextResponse.json({ state, messages })
 }
 

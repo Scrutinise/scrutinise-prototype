@@ -15,6 +15,10 @@ export interface LexTurnContext {
   ideaTitle: string | null
   isFirstIdea: boolean
   currentField: FieldDef | null
+  /** True when the current field already holds a Lex proposal the user has not yet
+   *  Saved (status AWAITING_CONFIRMATION). In this state Lex refines THIS field only
+   *  and points the user to the panel to Save — it never moves on (§13 / Sprint 1.3). */
+  awaiting?: boolean
   /** A compact summary of what's already accepted, for grounding. */
   acceptedSummary: string
 }
@@ -80,7 +84,9 @@ export function buildLexSystemPrompt(ctx: LexTurnContext): string {
 
 ${
   field.origin === 'box'
-    ? `This box can be filled two ways: the user types it in themselves, or they answer you here in chat and you tidy their words into it. When the user's message contains enough to fill this box, RETURN A PROPOSAL — proposal.fieldKey "${field.key}", proposal.valueText = a tidied version of what they said for THIS field, in their own voice (first person), concise, no preamble or quotes. Also reply briefly in chatText. If they haven't answered this yet, just ask the question and nudge obvious gaps GENTLY (at most twice), with no proposal. The user confirms by SAVING the box — never tell them to "accept a card". Quietly capture any slots in "extracted".`
+    ? (ctx.awaiting
+        ? `You have ALREADY drafted this box — it is showing in the proposal panel on the right, waiting for the user to review and Save it. Do NOT move on, do NOT ask the next question, and do NOT propose any other field. The platform only advances once the user Saves or Skips. If the user asks for a change, RETURN A FRESH PROPOSAL for THIS field (proposal.fieldKey "${field.key}", proposal.valueText = the improved version in their own voice, first person, concise) and in chatText say briefly what you changed and ask them to Save it in the panel. If they seem happy, emit no proposal and in chatText simply invite them to Save it (or edit it in the panel). Quietly capture any slots in "extracted".`
+        : `This box can be filled two ways: the user types it in themselves, or they answer you here in chat and you tidy their words into it. When the user's message contains enough to fill this box, RETURN A PROPOSAL — proposal.fieldKey "${field.key}", proposal.valueText = a tidied version of what they said for THIS field, in their own voice (first person), concise, no preamble or quotes. When you return a proposal your chatText must point them to the panel and ask them to review and Save — for example: "I've drafted that in the panel on the right — have a read, edit it directly if you'd change anything, then Save it. Or tell me here how to sharpen it." Do NOT ask the next question in the same turn. If they haven't answered this yet, just ask the question and nudge obvious gaps GENTLY (at most twice), with no proposal. The user confirms by SAVING the box — never tell them to "accept a card". Quietly capture any slots in "extracted".`)
     : field.key === 'title'
       ? `Propose a working title from what the user has told you. It should name the problem OR the solution, not both. Plain English. Put it in proposal.valueText with proposal.fieldKey "title".`
       : `Propose 4–8 search keywords drawn from everything the user has said. INCLUDE the likely government department as one keyword among the others — do not ask which department. Put them in proposal.valueList with proposal.fieldKey "keywords".`
@@ -102,9 +108,10 @@ CONTEXT
 ${fieldBlock}
 
 RULES
-- One thing at a time. React to what the user just said before moving on.
+- One thing at a time. Finish the CURRENT field before the next one. Never ask about, hint at, or propose the next field — the platform moves on only when the user Saves or Skips, and it tells you the new current field then.
+- React to what the user just said before anything else.
 - chatText is always 1–4 sentences. Never put JSON or field names in chatText.
-- Only ever propose for the CURRENT field, and only when origin is "propose".
+- Only ever propose for the CURRENT field shown above (never another field).
 - "extracted" is optional; include only slots you are confident about.`
 }
 

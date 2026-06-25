@@ -61,14 +61,16 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     'develop your proposal; next to it is the proposal itself as you build it; and last is the legislative panel, ' +
     "where we'll place relevant legislation for review once we have enough information to source data that's " +
     'helpful. You can answer the questions here in the chat, or type directly into the form in the second panel ' +
-    "if you don't need my help."
+    "if you don't need my help. If you'd like a quick walkthrough, just say the word — or tap “How this works” at " +
+    'the top — any time.'
   const FIRST_QUESTION = "What's the problem or challenge you want to address?"
 
   let openingBubbles: string[]
   let isFirstIdea = false
 
-  // Use the user's actual first name (not preferredName, which rendered "Charles").
-  const firstName = dbUser?.firstName ?? ''
+  // Address the user by what they go by: preferredName, falling back to firstName.
+  // (The preferred name is now seeded correctly per user, so "Charles" → "Charlie".)
+  const displayName = dbUser?.preferredName?.trim() || dbUser?.firstName?.trim() || ''
   const ideaCount = dbUser ? await prisma.idea.count({ where: { creatorId: dbUser.id } }) : 0
 
   if (!dbUser || ideaCount === 0) {
@@ -77,7 +79,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   } else {
     const timeOfDay = getTimeOfDay(new Date().getUTCHours())
     openingBubbles = [
-      `Good ${timeOfDay}${firstName ? ' ' + firstName : ''}. ${FIRST_QUESTION} (Say the word if you'd like me to explain how this works.)`,
+      `Good ${timeOfDay}${displayName ? ' ' + displayName : ''}. ${FIRST_QUESTION} (Say the word if you'd like me to explain how this works.)`,
     ]
   }
 

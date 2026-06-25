@@ -52,12 +52,15 @@ async function buildPrompt(ideaId: string, userId: string, state: CanonicalState
   })
   const ideaCount = await prisma.idea.count({ where: { creatorId: userId } })
   return buildLexSystemPrompt({
-    preferredName: user?.firstName ?? user?.preferredName ?? 'there',
+    preferredName: user?.preferredName ?? user?.firstName ?? 'there',
     lexMode: user?.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE',
     experienceLevel: state.userProfile.experienceLevel,
     ideaTitle: (state.pages[0].fields.find((f) => f.key === 'title')?.value as string | null) ?? null,
     isFirstIdea: ideaCount <= 1,
     currentField: def,
+    // The conductor only ever speaks for a freshly-EMPTY field (it returns early
+    // on AWAITING_CONFIRMATION), so it is never in the awaiting-refine state.
+    awaiting: false,
     acceptedSummary: acceptedSummary(state),
   })
 }
@@ -146,8 +149,16 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
   const def = fieldDef(state.currentField.key)
   if (!def) return { messages: [] }
   // Only speak when the current field is freshly EMPTY (needs a prompt). If it is
-  // AWAITING_CONFIRMATION the user is mid-decision — don't talk over them.
-  if (state.currentField.status !== 'EMPTY') return { messages: [] }
+  // AWAITING_CONFIRMATION the user is mid-decision — don't talk over them, and do
+  // NOT advance (the box stays current until Saved/Skipped — §13 / Sprint 1.3).
+  if (state.currentField.status !== 'EMPTY') {
+    console.log('[lex-diag] orchestrator holding (current field not yet saved)', {
+      currentField: state.currentField.key,
+      status: state.currentField.status,
+    })
+    return { messages: [] }
+  }
+  console.log('[lex-diag] orchestrator advancing', { currentField: def.key, type: def.type })
 
   const text =
     def.type === 'narrative'

@@ -37,6 +37,9 @@ export async function POST(req: Request, { params }: Params) {
   const pre = await computeCanonicalState(id)
   if (!pre) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const current = pre.currentField ? fieldDef(pre.currentField.key) ?? null : null
+  // While the current box already holds an unsaved proposal, Lex refines THAT box
+  // only and points the user to Save — it must not advance (§13 / Sprint 1.3).
+  const awaiting = pre.currentField?.status === 'AWAITING_CONFIRMATION'
 
   const acceptedSummary = pre.pages[0].fields
     .filter((f) => f.status === 'ACCEPTED' && f.value)
@@ -51,6 +54,7 @@ export async function POST(req: Request, { params }: Params) {
     ideaTitle: pre.pages[0].fields.find((f) => f.key === 'title')?.value as string | null ?? idea.title,
     isFirstIdea: ideaCount <= 1,
     currentField: current,
+    awaiting,
     acceptedSummary,
   })
 
@@ -73,13 +77,32 @@ export async function POST(req: Request, { params }: Params) {
   // (narrative box or Title/Keywords) and only when valid. Otherwise discard —
   // chatText is still shown, state never half-advances. On a valid box proposal
   // the field goes AWAITING_CONFIRMATION and the box renders the tidied text.
+  let proposalApplied = false
   if (current && lex.proposal && lex.proposal.fieldKey === current.key) {
     const rawValue = current.key === 'keywords' ? lex.proposal.valueList : lex.proposal.valueText
     const valid = validateProposal({ fieldKey: current.key, value: rawValue, rationale: lex.proposal.rationale })
     if (valid) {
       await setProposal(id, current.key, { value: valid.value, rationale: valid.rationale })
+      proposalApplied = true
     }
   }
+  // Diagnostic (Sprint 1.3 Task 1 — log/inspect, bytes before hypotheses). The
+  // platform NEVER advances currentField on a /lex turn and only ever sets a
+  // proposal for the current field; this records any turn where Lex tried to
+  // propose for a different field (so the symptom is visible if it recurs).
+  if (lex.proposal && lex.proposal.fieldKey !== current?.key) {
+    console.warn('[lex-diag] off-field proposal discarded', {
+      currentField: current?.key ?? null,
+      currentStatus: pre.currentField?.status ?? null,
+      proposedFor: lex.proposal.fieldKey,
+    })
+  }
+  console.log('[lex-diag] lex turn', {
+    currentField: current?.key ?? null,
+    status: pre.currentField?.status ?? null,
+    awaiting,
+    proposalApplied,
+  })
 
   // Extracted slots are stored, never carded (§4 extracted).
   if (Object.keys(lex.extracted).length) {

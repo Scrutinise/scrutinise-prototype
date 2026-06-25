@@ -14,7 +14,13 @@ import PublicNav from '@/components/PublicNav'
 import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
+import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import type { CanonicalState, CanonicalField } from '@/lib/lex/page1-config'
+
+// "Say the word" — a conservative match for a user asking to be shown how the
+// platform works, so the intro's offer opens the tour rather than a Lex round-trip.
+const HELP_INTENT =
+  /^(?:\s*(?:yes|sure|ok(?:ay)?|please|go on|yes please)[ ,.!]*)*(?:can|could)?\s*(?:you\s+)?(?:please\s+)?(?:show me (?:how (?:this|it) works|around|the ropes)|how (?:do|does) (?:this|it|i) (?:work|use this)|how (?:this|it) works|explain how (?:this|it) works|give me (?:a|the) tour|guided tour|walk me through (?:this|it))[ ?.!]*$/i
 
 interface Props {
   openingBubbles?: string[]
@@ -44,6 +50,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const [booting, setBooting] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('chat')
+  const [showHelp, setShowHelp] = useState(false)
   const bootedRef = useRef(false)
 
   // ── Boot: ensure an idea exists, then load canonical state ─────────────────
@@ -80,6 +87,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const sendMessage = useCallback(
     async (text: string) => {
       if (!ideaId) return
+      // "Say the word" — open the walkthrough instead of a Lex round-trip when the
+      // user is plainly asking how this works (the intro offers exactly this).
+      if (HELP_INTENT.test(text.trim())) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'user', content: text },
+          { role: 'lex', content: "Of course — here's a quick walkthrough. I've opened it for you." },
+        ])
+        setShowHelp(true)
+        return
+      }
       setMessages((prev) => [...prev, { role: 'user', content: text }])
       setBusy(true)
       setError(null)
@@ -168,6 +186,19 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           {error}
         </div>
       )}
+
+      {/* Persistent help affordance — the tour always reachable from the create view. */}
+      <div className="flex items-center justify-end border-b border-zinc-100 px-4 py-1.5">
+        <button
+          onClick={() => setShowHelp(true)}
+          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700"
+        >
+          <span aria-hidden className="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] font-bold">?</span>
+          How this works
+        </button>
+      </div>
+
+      {showHelp && <HowItWorksModal onClose={() => setShowHelp(false)} />}
 
       {/* Mobile tab bar */}
       <div className="lg:hidden flex border-b border-zinc-200 text-xs font-medium">
