@@ -43,6 +43,8 @@ Un-promoted preview (no promote). `scrutinise-web` `tsc --noEmit` clean. Behavio
   `app/ideas/create/page.tsx`, `lib/lex/orchestrator.ts`.
 - **Verification:** `tsc --noEmit` clean; deterministic smoke (deleted) asserted the `awaiting` vs
   fresh-box prompt branches and the `HELP_INTENT` match/non-match set. Charlie validates on the preview.
+- **Separation note:** the prior session's FTS "Finding B" search changes landed as their own commit
+  `d55e118` (below the two Sprint 1.3 commits) — kept out of this Lex work, not bundled in.
 
 ## SEARCH/LEX — Finding B: concept→legislation diagnosis + legislation-tier boost (2026-06-25 01:08 UTC)
 
