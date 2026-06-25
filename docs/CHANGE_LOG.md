@@ -4,6 +4,46 @@
 
 ---
 
+## SEARCH/LEX — Finding B: concept→legislation diagnosis + legislation-tier boost (2026-06-25 01:08 UTC)
+
+Diagnosed why broad **concept** queries under-surfaced the legislation tier (the briefing's
+"legal framework" fell back to "no primary legislation matched"), then fixed the half that
+ranking can fix. Full diagnosis + boost sweep: `docs/FTS_FINDING_B_DIAG.md` (companion to the
+archetype-A diag). Deep candidate-set probe (k=800) against live `corpus_fts` (16,509,051 rows).
+
+- **Two causes, one symptom.** *Term-of-art* concepts (MiFID) → **RETRIEVED-but-low**: the
+  anchors (FSMA 2000, the 2017 MiFID SIs, retained MiFIR/MiFID II) ARE in the BM25 candidate
+  set (retained MiFIR at cand#1 on one phrasing) but only 1 legislation row reached the
+  pre-boost top-20 — legislation bodies have NULL `sectionTitle`, so they miss the ~2.5×
+  title-boost that lifts parliamentary/guidance rows. *Lay-phrased* concepts (data protection,
+  road safety) → **ABSENT**: the DPA 2018 Act never enters candidates; RTA 1988 appears only as
+  `section-12E`. Vocabulary mismatch — hard evidence the **vector layer** (next build) is the
+  fix there; re-ranking can't reach rows retrieval never returned.
+- **Fix (`search/fts-core.ts`):** `LEX_LEG_TIER_BOOST` (`FTS_LEX_LEG_TIER_BOOST`, default
+  **1.8**) on the legislation tier for NON-citation queries (citation path keeps
+  `CITATION_TIER_BOOST` 1.6). Multiplicative on the BM25 body score → re-ranks only what BM25
+  retrieved; a boost, NOT a reserved slot, so it never injects an irrelevant Act.
+- **Re-test (top-20 legislation):** MiFID set A **1→4 (FSMA 2000 at #1)**, set B **4→4 (#1–4)**;
+  controls (data protection, road safety) stay at **0** at every boost — proof it's inert when
+  the anchor isn't in candidates. 2.5 over-corrects (11–15/20, EM filler) → 1.8 chosen.
+- Query-time only — **no reindex**. Takes effect on **fts-serve redeploy** (boost lives in
+  `fts-core`, shared by the serving service + scoring harness).
+
+## SEARCH/LEX — Finding A: FTS cold-start fix (adapter timeout + serve warm-up) (2026-06-25 01:08 UTC)
+
+The FIRST query after an fts-serve (re)deploy is cold — LanceDB fetches the FTS index files
+from R2 on first touch (~15s observed), which blew the platform adapter's 8s budget and made it
+silently fall back to the **stub** (caught when the FTS path was first validated, 24 Jun).
+
+- **`scrutinise-web/lib/lex/fts-search.ts`:** `FTS_TIMEOUT_MS` default `8000 → 25000` (still
+  env-overridable) — covers the cold-redeploy window.
+- **`scripts/ingest/search/fts-query-service.ts`:** boot **warm-up self-query**
+  (`rankedSearch(table,'legislation',{limit:1})`) after the table + ActIndex open, before
+  `listen()`, so the cold R2 index fetch happens at boot, not on a user query. Non-fatal:
+  a warm-up failure is logged and the service still serves (next real query pays the cold cost).
+- Net: the first real user query is warm AND the adapter no longer trips into the stub on the
+  rare cold path. Takes effect on **fts-serve redeploy** + the web deploy picking up the adapter.
+
 ## SEARCH/LEX — FTS serving endpoint + platform adapter (wire Lex to real search) (2026-06-24 06:57 UTC)
 
 Stand up the permanent FTS query service and the platform-side adapter that maps native

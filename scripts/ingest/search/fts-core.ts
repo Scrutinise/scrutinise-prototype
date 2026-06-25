@@ -15,6 +15,17 @@ export const OVERSCAN = parseInt(process.env.FTS_OVERSCAN ?? '5', 10)
 // pinned by the resolver; this lifts the SECONDARY legislation sources (e.g. the
 // other regs of the cited act) above parliamentary chatter.
 export const CITATION_TIER_BOOST = parseFloat(process.env.FTS_CITATION_TIER_BOOST ?? '1.6')
+// Concept/keyword (NON-citation) queries under-surface the legislation tier: legislation
+// section bodies usually have NULL sectionTitles, so they miss the ~2.5× title-boost that
+// lifts titled parliamentary/guidance rows — pushing genuine anchor Acts/SIs out of the
+// top-20 EVEN WHEN BM25 retrieved them (Finding B diag, 2026-06-24: for the MiFID concept
+// query, FSMA 2000 / the 2017 MiFID SIs / retained MiFIR were all in the candidate set —
+// MiFIR at cand#1 — yet only 1 legislation row reached the top-20). A modest legislation
+// boost on the keyword path re-ranks them up. It is MULTIPLICATIVE on the BM25 body score,
+// so it only moves rows BM25 ALREADY retrieved — it can never inject an irrelevant Act
+// (a boost, not a reserved slot). Inert on lay-phrased queries whose anchor Act never
+// entered the candidate set (vocabulary mismatch — that's the vector layer's job).
+export const LEX_LEG_TIER_BOOST = parseFloat(process.env.FTS_LEX_LEG_TIER_BOOST ?? '1.8')
 // How many exact / act-level rows the resolver may inject at the top.
 const RESOLVE_EXACT_MAX = 4
 const RESOLVE_ACTLEVEL_MAX = 12
@@ -90,7 +101,9 @@ export async function rankedSearch(
     const bodyScore = typeof r._score === 'number' ? r._score : 0
     const title = (r.sectionTitle ?? null) as string | null
     const titleBoosted = !!title && terms.some((t) => title.toLowerCase().includes(t))
-    const tierBoost = isCitation && r.tier === 'legislation' ? CITATION_TIER_BOOST : 1
+    const tierBoost = r.tier === 'legislation'
+      ? (isCitation ? CITATION_TIER_BOOST : LEX_LEG_TIER_BOOST)
+      : 1
     return toHit(r, bodyScore * (titleBoosted ? TITLE_BOOST : 1) * tierBoost, bodyScore, titleBoosted, false)
   })
   bm25.sort((a, b) => b.score - a.score)
