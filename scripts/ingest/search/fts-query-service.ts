@@ -82,6 +82,21 @@ async function main() {
     finally { await pool.end() }
   } else { console.warn('[fts-query] NEON_DATABASE_URL unset — citation resolver disabled (plain BM25)') }
   console.log(`[fts-query] open. rows=${await table.countRows()}. title_boost=${TITLE_BOOST} overscan=${OVERSCAN}`)
+
+  // Boot warm-up: the FIRST BM25 search after boot is cold — LanceDB pulls the FTS
+  // index files from R2 on first touch (~15s), which used to land on a real user
+  // query AND blow the platform adapter's timeout (→ silent stub fallback). Run a
+  // throwaway self-query now so the index is hot before we accept traffic; the
+  // first real query is then warm. Non-fatal: a warm-up failure must not stop us
+  // serving (the next real query just pays the cold cost as before).
+  try {
+    const t0 = Date.now()
+    const warm = await rankedSearch(table, 'legislation', { limit: 1, actIndex })
+    console.log(`[fts-query] warm-up ok in ${Date.now() - t0}ms (index hot, ${warm.length} row)`)
+  } catch (e) {
+    console.warn(`[fts-query] warm-up failed (non-fatal, first real query pays cold cost): ${(e as Error).message}`)
+  }
+
   http.createServer(handle).listen(PORT, () => console.log(`[fts-query] listening on :${PORT}`))
 }
 

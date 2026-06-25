@@ -38,7 +38,11 @@ interface FtsHit {
 }
 
 const FTS_URL = process.env.FTS_SEARCH_URL // e.g. https://fts-serve-production-xxxx.up.railway.app
-const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? '8000', 10)
+// 25s default: the FIRST query after a serve-service (re)deploy is cold — LanceDB
+// fetches the FTS index files from R2 on first touch (~15s observed), which blew the
+// old 8s budget and silently fell back to the stub. The service now self-warms at
+// boot (fts-query-service.ts) so this is belt-and-braces for the redeploy window.
+const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? '25000', 10)
 
 // ── citation/url derivation for legislation (mirrors scripts/ingest/search/citation.ts) ──
 
