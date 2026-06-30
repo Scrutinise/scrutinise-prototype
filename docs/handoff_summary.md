@@ -2,7 +2,19 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 25 Jun 2026 — LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced (prompt `awaiting` guard + `[lex-diag]` logging), "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ Earlier same-session ingest: V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. Prior (interrupted) session had run steps 1–3; this session resumed 4–5. ▼ Earlier 24 Jun V30 build: CMA cases BUILT (`cma-cases`, ~12.5k sections); CAT + FCA-enforcement PROBED→V31 email-gate (own copyright); own-domain reviews (Cass) BUILT but PDF-route-blocked (SPA); inquiry-evidence pipeline + §0 sensitive-exclusion BUILT + Post Office Horizon PILOTED (~19.6k items); pre-2016 Scottish OR (1999–2016) BUILT (Wayback archive, 2,322 reports). All seed POST-PUSH. `SENSITIVE_EVIDENCE_POLICY.md` written. Prior 23 Jun Search S1b archetype-A FIX (A 0%→60%); V29 UK COMPLETION WAVE. V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 30 Jun 2026 — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — SEARCH Stage 3: LLM query expansion (30 Jun 2026)
+
+**Sprint complete.** CHANGE_LOG "SEARCH — Stage 3" (2026-06-30 10:32 UTC). `scrutinise-web` `tsc --noEmit` clean (pre-existing `react-markdown` module-not-found only — not installed locally, installs on Vercel).
+
+- **Built:** `lib/lex/query-expansion.ts` (new) — `expandQuery(keywords, ideaContext)` → `{ anchors, termsOfArt, rephrasings }`. Gemini 2.5 Flash structured JSON, temperature 0.2, 10s timeout, resilient (returns EMPTY on any failure).
+- **Wired:** `lib/lex/field-machine.ts` `fireSearchTrigger` now fetches `ideaNarrative + youAndIdeaNarrative`, calls `expandQuery`, merges expanded terms via `Set`, passes enriched keyword set to `runFtsSearch`. Briefing prose (`buildInitialBackground`) still receives original keywords only — grounding guardrail enforced.
+- **Flag:** `LEX_QUERY_EXPANSION=true` in Vercel env enables it (default off). `QUERY_EXPANSION_MODEL` overrides model (default `gemini-2.5-flash`).
+- **Observability:** `[query-expansion] terms added` log per trigger — original/added/anchors/termsOfArt/rephrasings breakdown.
+- **GATE:** Set `LEX_QUERY_EXPANSION=true` in Vercel env (staging first) → run gold-set queries → verify lay-concept archetypes (data protection, road safety, Revoke MiFID II) now surface anchor Acts. Citation queries (archetype A) should be unaffected.
 
 ---
 

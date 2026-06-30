@@ -17,6 +17,7 @@ import {
 } from './page1-config'
 import { groupForPanel, buildInitialBackground } from './search-stub'
 import { runFtsSearch } from './fts-search'
+import { expandQuery } from './query-expansion'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -207,15 +208,38 @@ export async function storeExtracted(
 }
 
 // ── Search trigger (§8.4): deterministic, platform-owned ─────────────────────
-/** Fire the (stub) search and write legislationRefs + the Initial Background. */
+/** Fire the search (with optional LLM query expansion) and write legislationRefs + Initial Background. */
 export async function fireSearchTrigger(ideaId: string): Promise<void> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
-    select: { keywords: true },
+    select: { keywords: true, ideaNarrative: true, youAndIdeaNarrative: true },
   })
   const keywords = idea?.keywords ?? []
-  const { results } = await runFtsSearch(keywords, 12)
+
+  // LLM query expansion (LEX_QUERY_EXPANSION=true to enable; off by default in prod).
+  // Inserts anchor Act names + statutory terms-of-art + rephrasings into the query so
+  // lay-vocabulary ideas surface the anchor legislation in the BM25 candidate set.
+  // Feeds the FTS query ONLY — never the briefing text (grounding guardrail §3).
+  const ideaContext = [idea?.ideaNarrative, idea?.youAndIdeaNarrative]
+    .filter(Boolean).join(' ').slice(0, 500)
+  const expansion = await expandQuery(keywords, ideaContext)
+  const expandedKeywords = [
+    ...new Set([...keywords, ...expansion.anchors, ...expansion.termsOfArt, ...expansion.rephrasings]),
+  ]
+  const addedTerms = expandedKeywords.filter((k) => !keywords.includes(k))
+  if (addedTerms.length) {
+    console.log('[query-expansion] terms added', {
+      original: keywords,
+      added: addedTerms,
+      anchors: expansion.anchors,
+      termsOfArt: expansion.termsOfArt,
+      rephrasings: expansion.rephrasings,
+    })
+  }
+
+  const { results } = await runFtsSearch(expandedKeywords, 12)
   const refs = groupForPanel(results)
+  // Briefing prose uses the user's original keywords (not the expanded set) — ground truth only.
   const { summary, body } = buildInitialBackground(keywords, refs)
 
   await prisma.idea.update({

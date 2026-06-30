@@ -1,6 +1,43 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 23 Jun 2026 — Search S1b archetype-A fix: citation resolver + body backfill (A 0%→60%, overall 57.8%→69.4%); positions pilot stood down.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 30 Jun 2026 — Search Stage 3: LLM query expansion (concept→legislation bridging, flag-gated, off by default).*
+
+---
+
+## SEARCH — Stage 3: LLM query expansion (concept→legislation bridging) (2026-06-30 12:14 UTC)
+
+Bridges the lay-vocabulary gap proven in Finding B. Before the background search runs, a Gemini call
+expands the user's concept keywords with likely anchor Acts/SIs, statutory terms-of-art, and alternative
+phrasings — so anchor legislation enters the BM25 candidate set even when the user's words are lay terms.
+
+- **Scope:** Page 1 background search only (the keywords-accept trigger in `fireSearchTrigger`). Other
+  callers unchanged. Widen after measuring.
+- **Single enriched query:** one expansion call per trigger, merged into the keyword set passed to
+  `runFtsSearch`. Not fan-out.
+- **Parametric only:** Gemini's own UK law knowledge. No web grounding.
+- **Audit:** traced the full path — `fields/route.ts` keywords-accept trigger → `fireSearchTrigger`
+  → `runFtsSearch`. Expansion inserts at the exact point where the keyword set is assembled (line 217),
+  platform-side. The FTS service itself is unchanged.
+- **New file `lib/lex/query-expansion.ts`:** `expandQuery(keywords, ideaContext)` → `{ anchors,
+  termsOfArt, rephrasings }`. Uses Gemini 2.5 Flash structured JSON (responseSchema, temperature 0.2).
+  Returns `EMPTY` on any failure so `fireSearchTrigger` always runs (resilient). Config-driven:
+  `QUERY_EXPANSION_MODEL` (default `gemini-2.5-flash`), `QUERY_EXPANSION_TIMEOUT_MS` (default 10s).
+- **Modified `lib/lex/field-machine.ts` → `fireSearchTrigger`:** fetches `ideaNarrative` +
+  `youAndIdeaNarrative` alongside `keywords`; calls `expandQuery`; merges via `Set` (deduplication);
+  passes expanded set to `runFtsSearch`; briefing prose (`buildInitialBackground`) still receives only
+  the user's original keywords — grounding guardrail enforced.
+- **Grounding guardrail (critical):** expansion feeds ONLY the FTS query. Nothing the LLM proposes
+  enters briefing text. A hallucinated Act scores zero in BM25 and causes no harm.
+- **Feature flag:** `LEX_QUERY_EXPANSION=true` (default off in prod — A/B scoreable on gold set). Set
+  in Vercel env to enable. Off means zero expansion call, zero added latency.
+- **Observability:** `[query-expansion] terms added` log per trigger (original keywords, added terms,
+  anchors/termsOfArt/rephrasings breakdown) so each expansion is inspectable.
+- **Predict/measure:** lay-concept queries (data protection, road safety, "Revoke MiFID II") should rise
+  when expansion ON (anchor Act enters BM25 candidates). Citation queries (archetype A) should be
+  unaffected. Verify on gold set once `LEX_QUERY_EXPANSION=true` in staging.
+- **`tsc --noEmit`:** only pre-existing `react-markdown` module-not-found errors (package in package.json,
+  not locally installed — installs at Vercel build time). Zero new errors from this sprint.
+- Files: `lib/lex/query-expansion.ts` (new), `lib/lex/field-machine.ts`.
 
 ---
 
