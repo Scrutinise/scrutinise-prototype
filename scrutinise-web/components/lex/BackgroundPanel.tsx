@@ -38,13 +38,22 @@ const TYPE_ORDER: SearchResultType[] = [
   'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 
-// Panel 3 — Legislation. Pure renderer of initialBackground + legislationRefs[].
+// Panel 3 — Legislation. Pure renderer of initialBackground + legislationRefs[] (+ the
+// page-transition CTA once the briefing is ready).
 export default function BackgroundPanel({
   initialBackground,
   legislationRefs,
+  nextPage,
+  busy,
+  onContinue,
+  onAskLex,
 }: {
   initialBackground: CanonicalState['initialBackground']
   legislationRefs: SearchResult[]
+  nextPage: CanonicalState['nextPage']
+  busy: boolean
+  onContinue: () => void
+  onAskLex: () => void
 }) {
   const [open, setOpen] = useState(true)
 
@@ -54,6 +63,8 @@ export default function BackgroundPanel({
   })).filter((g) => g.items.length > 0)
 
   const hasAnything = !!initialBackground || legislationRefs.length > 0
+  // The Continue CTA appears once the current page is complete AND the briefing is ready.
+  const showCta = !!nextPage && initialBackground?.status === 'ready'
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
@@ -63,6 +74,30 @@ export default function BackgroundPanel({
         <p className="text-sm text-zinc-400">
           Once you’ve confirmed keywords, Lex pulls an initial background briefing from the corpus and it appears here.
         </p>
+      )}
+
+      {/* Page-transition CTA (design §14 / Sprint 2 Task 4). */}
+      {showCta && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
+          <p className="text-sm text-zinc-700 mb-2">
+            The briefing’s ready. When you are, move on to the <span className="font-medium">{nextPage!.label}</span> —
+            naming the root cause and the pivotal obstacle.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={onContinue} disabled={busy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+              Continue to {nextPage!.label}
+            </button>
+            <button onClick={onAskLex} disabled={busy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
+              Ask Lex about this
+            </button>
+            <button disabled title="Coming soon"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-300 cursor-not-allowed">
+              Give feedback
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Initial Background briefing */}

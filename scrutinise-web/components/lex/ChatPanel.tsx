@@ -16,6 +16,7 @@ export default function ChatPanel({
   messages,
   awaitingField,
   busy,
+  focusNonce,
   onSend,
   onAccept,
   onDecline,
@@ -23,6 +24,8 @@ export default function ChatPanel({
   messages: ChatMessage[]
   awaitingField: CanonicalField | null
   busy: boolean
+  /** Bumped by the parent ("Ask Lex about this") to pull focus into the input. */
+  focusNonce?: number
   onSend: (text: string) => void
   onAccept: (value: string | string[]) => void
   onDecline: () => void
@@ -36,7 +39,7 @@ export default function ChatPanel({
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, busy, awaitingField])
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => { inputRef.current?.focus() }, [focusNonce])
 
   function send() {
     const text = input.trim()

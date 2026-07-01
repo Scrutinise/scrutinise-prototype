@@ -15,7 +15,8 @@ import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
-import type { CanonicalState, CanonicalField } from '@/lib/lex/page1-config'
+import type { CausesApi } from '@/components/lex/FieldsPanel'
+import { acceptSurfaceOf, fieldDef, type CanonicalState, type CanonicalField } from '@/lib/lex/page1-config'
 
 // "Say the word" — a conservative match for a user asking to be shown how the
 // platform works, so the intro's offer opens the tour rather than a Lex round-trip.
@@ -139,26 +140,27 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     [ideaId, applyState],
   )
 
-  const transition = useCallback(
-    async (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen', value?: string | string[]) => {
+  const appendLex = useCallback((msgs: unknown) => {
+    if (Array.isArray(msgs) && msgs.length) {
+      setMessages((prev) => [...prev, ...msgs.map((c: string) => ({ role: 'lex' as const, content: c }))])
+    }
+  }, [])
+
+  // POST to a server endpoint that returns { state, messages } and apply both.
+  const post = useCallback(
+    async (path: string, body: unknown) => {
       if (!ideaId) return
       setBusy(true)
       setError(null)
       try {
-        const res = await fetch(`/api/ideas/${ideaId}/fields`, {
+        const res = await fetch(`/api/ideas/${ideaId}${path}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fieldKey, action, value }),
+          body: JSON.stringify(body),
         })
-        if (!res.ok) throw new Error('field transition failed')
+        if (!res.ok) throw new Error(`${path} failed`)
         const data = await res.json()
-        // The server conducts the next step and returns any new Lex bubbles.
-        if (Array.isArray(data.messages) && data.messages.length) {
-          setMessages((prev) => [
-            ...prev,
-            ...data.messages.map((c: string) => ({ role: 'lex' as const, content: c })),
-          ])
-        }
+        appendLex(data.messages)
         if (data.state) applyState(data.state)
       } catch {
         setError('That didn’t save — please try again.')
@@ -166,16 +168,43 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         setBusy(false)
       }
     },
-    [ideaId, applyState],
+    [ideaId, applyState, appendLex],
   )
 
-  // The accept card lives in chat ONLY for Title/Keywords (the narrative boxes are
-  // their own accept surface — §5/§13).
+  const transition = useCallback(
+    (fieldKey: string, action: 'submitBox' | 'accept' | 'skip' | 'reopen', value?: string | string[] | Record<string, string>) =>
+      post('/fields', { fieldKey, action, value }),
+    [post],
+  )
+
+  // Page 2 causes-loop + root-cause handlers (→ /causes).
+  const causesApi: CausesApi = {
+    add: (input) => post('/causes', { action: 'add', ...input }),
+    update: (causeId, patch) => post('/causes', { action: 'update', causeId, ...patch }),
+    remove: (causeId) => post('/causes', { action: 'remove', causeId }),
+    confirm: () => post('/causes', { action: 'confirm' }),
+    skip: () => post('/causes', { action: 'skip' }),
+    setRoot: (causeId) => post('/causes', { action: 'setRoot', causeId }),
+    skipRoot: () => post('/causes', { action: 'skipRoot' }),
+  }
+
+  // "Continue to Diagnosis" — advance the Lex page (→ /page).
+  const advancePage = useCallback(() => post('/page', { action: 'advance' }), [post])
+
+  // "Ask Lex about this" — bring the chat forward and focus it.
+  const [focusNonce, setFocusNonce] = useState(0)
+  const askLex = useCallback(() => { setTab('chat'); setFocusNonce((n) => n + 1) }, [])
+
+  // The accept CARD lives in chat for Lex-PROPOSED scalars (title/keywords/challenge/
+  // pivotalObstacle/summaryDiagnosis). Box-authored fields (narrative/structured/loop/
+  // reference) are their own accept surface in the Fields panel (§5/§13 + §7).
+  const cf = state?.currentField
   const awaitingField: CanonicalField | null =
-    state?.currentField?.status === 'AWAITING_CONFIRMATION'
-      ? state.pages[0]?.fields.find((f) => f.key === state.currentField!.key) ?? null
+    cf?.status === 'AWAITING_CONFIRMATION'
+      ? state!.pages.flatMap((p) => p.fields).find((f) => f.key === cf.key) ?? null
       : null
-  const chatAwaitingField = awaitingField && awaitingField.type !== 'narrative' ? awaitingField : null
+  const awaitingDef = awaitingField ? fieldDef(awaitingField.key) : null
+  const chatAwaitingField = awaitingField && awaitingDef && acceptSurfaceOf(awaitingDef) === 'chat' ? awaitingField : null
 
   return (
     <div className="flex flex-col h-screen bg-white">
@@ -226,6 +255,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 messages={messages}
                 awaitingField={chatAwaitingField}
                 busy={busy}
+                focusNonce={focusNonce}
                 onSend={sendMessage}
                 onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
                 onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
@@ -236,10 +266,13 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             <div className={`h-full min-h-0 border-r border-zinc-200 ${tab === 'fields' ? 'block' : 'hidden'} lg:block`}>
               <FieldsPanel
                 pages={state.pages}
+                causes={state.diagnosisCauses}
                 busy={busy}
                 onSubmitBox={(key, value) => transition(key, 'submitBox', value)}
+                onAcceptStructured={(key, value) => transition(key, 'accept', value)}
                 onSkip={(key) => transition(key, 'skip')}
                 onReopen={(key) => transition(key, 'reopen')}
+                causesApi={causesApi}
               />
             </div>
 
@@ -248,6 +281,10 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               <BackgroundPanel
                 initialBackground={state.initialBackground}
                 legislationRefs={state.legislationRefs}
+                nextPage={state.nextPage}
+                busy={busy}
+                onContinue={advancePage}
+                onAskLex={askLex}
               />
             </div>
           </div>
