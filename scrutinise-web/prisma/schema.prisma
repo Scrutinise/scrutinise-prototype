@@ -608,6 +608,16 @@ model Idea {
   keywords                  String[]        @default([])  // accepted search keywords (government area inferred among them)
   ideaContext               String?         // §9 migration sink — removed-field content, tagged [migrated: <field>]
   legislationRefs           Json?           // SearchResult[] stub, populated by the search trigger on keywords accept
+  // Lex rebuild — the current Lex PAGE the user has advanced into (§14 / Sprint 2).
+  // Distinct from the 5-stage lifecycle `stage`. Advanced explicitly ("Continue to Diagnosis").
+  lexPage                   String?         @default("ORIENTATION") // ORIENTATION | DIAGNOSIS | …
+  // Lex rebuild — Page 2 (Diagnosis) fields (design §7.1). challenge/pivotalObstacle text;
+  // whoAffectedImpactCost/legalLandscape are structured slot objects. rootCause +
+  // summaryDiagnosis reuse the existing legacy Idea columns above.
+  challenge                 String?         // one-sentence problem statement
+  whoAffectedImpactCost     Json?           // { affectedGroups[], impact, cost, evidence }
+  legalLandscape            Json?           // { currentLaw, whereItFails }
+  pivotalObstacle           String?         // the critical thing blocking a solution (Rumelt)
   // Referral
   referralLinkActive        Boolean         @default(false)
   // Ownership transfer
@@ -652,6 +662,7 @@ model Idea {
   legislationLinks          IdeaLegislation[]
   fieldStates               IdeaFieldState[]
   documents                 Document[]
+  diagnosisCauses           DiagnosisCause[]
 
   @@index([creatorId])
   @@index([stage])
@@ -1293,6 +1304,13 @@ enum FieldStatus {
   SKIPPED
 }
 
+// Provenance of a diagnosis cause (design §7.2): user-authored vs seeded from the
+// corpus by Lex ("identified in past debates") via the CAUSE_SEEDING search intent.
+enum DiagnosisCauseSource {
+  USER
+  LEX_CORPUS
+}
+
 model IdeaFieldState {
   id        String      @id @default(uuid())
   ideaId    String
@@ -1324,6 +1342,24 @@ model Document {
   updatedAt DateTime @updatedAt
 
   @@unique([ideaId, kind])
+  @@index([ideaId])
+}
+
+// Page 2 (Diagnosis) causes loop (design §7.2). Mirrors the CoherentActions
+// per-row child pattern. Exactly one row per idea should carry isRootCause = true.
+model DiagnosisCause {
+  id           String               @id @default(uuid())
+  ideaId       String
+  idea         Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  cause        String               // the cause statement
+  whyPersisted String?              // why it has resisted solution
+  evidence     String?              // summary line (upgrades to a richer Evidence record later)
+  isRootCause  Boolean              @default(false)
+  source       DiagnosisCauseSource @default(USER)
+  orderIndex   Int                  @default(0) // stable display order
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
   @@index([ideaId])
 }
 
