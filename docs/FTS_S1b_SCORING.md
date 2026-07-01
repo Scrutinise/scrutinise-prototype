@@ -1,22 +1,22 @@
 # FTS S1b — scoring report
 
-*Generated 2026-07-01T13:56:32.218Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
+*Generated 2026-07-01T15:59:47.419Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
 
 ## Headline
 
-*Headline = SCOREABLE recall@20 queries only (the v1 specific set, 30 queries). Principle streams G–I (0–2 lesson, rubric not calibrated) and new SPECIFIC queries with TODO expected-sources (B6, J1, K1, K2) are PRESENT but EXCLUDED until their answer-keys land — see the two tables below.*
+*Headline = SCOREABLE recall@20 queries only (the v1 specific set, 31 queries). Principle streams G–I (0–2 lesson, rubric not calibrated) and new SPECIFIC queries with TODO expected-sources (B6, J1, K1, K2) are PRESENT but EXCLUDED until their answer-keys land — see the two tables below.*
 
 | scope | recall@20 | MRR | n |
 |---|---|---|---|
-| overall (scoreable v1 set) | 69.4% | 0.693 | 30 |
-| **overall excl. [GRAPH] floor** | **68.0%** | **0.729** | 25 |
+| overall (scoreable v1 set) | 67.2% | 0.671 | 31 |
+| **overall excl. [GRAPH] floor** | **65.4%** | **0.701** | 26 |
 
 ## By archetype (scoreable recall streams)
 
 | archetype | stream | recall@20 | MRR | n | note |
 |---|---|---|---|---|---|
 | A | legislation | 60.0% | 0.800 | 5 | [INFORCE] aspects are floors |
-| B | legislation | 40.0% | 0.322 | 5 |  |
+| B | legislation | 33.3% | 0.269 | 6 |  |
 | C | legislation + guidance | 60.0% | 0.625 | 5 |  |
 | D | citation graph | 76.7% | 0.512 | 5 | ALL [GRAPH] — engine floor |
 | E | debates | 90.0% | 0.900 | 5 |  |
@@ -44,7 +44,6 @@
 
 | id | archetype | persona | stream | query |
 |---|---|---|---|---|
-| B6 | B | H2 | legislation | I want to revoke MiFID II |
 | J1 | J | H1 | web + foreign corpus | How do other countries regulate short-term lets — and what worked? |
 | K1 | K | H2 | legislation (section-level) | I want to remove the no-fault eviction route — which exact provision do I amend? |
 | K2 | K | H1 | legislation (section-level) | To add a statutory duty of candour for public bodies, where would it slot in? |
@@ -1591,16 +1590,18 @@ Top-20 retrieved:
 20. [parliamentary/pwdata-westminster] score=80.098↑T `pwdata-westminster:westminster2015-03-10a:58`
     **First Aid Techniques: National Curriculum — [Sir David Amess intheChair]** — I congratulate my hon. Friend the Member for Bolton West (Julie Hilling) on securing the debate. She has been assiduous in ensuring that the rest of us are held
 
-### B6 (B/H2) — PENDING VALIDATION
+### B6 (B/H2)
 *Query:* I want to revoke MiFID II
 *stream:* legislation · *kind:* specific · *metric:* recall@20
-*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.
+*recall@20:* 0.0% · *MRR:* 0.000
 
-Expected sources (TODO):
-- ⋯ TODO — TODO (validate): FCA Handbook COBS & SYSC
-- ⋯ TODO — TODO (validate): FSMA 2023 (post-Brexit framework)
-- ⋯ TODO — TODO (validate): retained MiFIR / MiFID Org Reg
-- ⋯ TODO — TODO (validate): post-Brexit onshoring SIs
+Expected sources:
+- ✗ MISS — FSMA 2023 — revocation framework (ukpga/2023/29; s.1+Sch 1, Sch 2 UK MiFID amendments)
+- ✗ MISS — FSMA 2000 (Markets in Financial Instruments) Regs 2017 (uksi/2017/701)
+- ✗ MISS — Retained/assimilated MiFIR — Reg (EU) 600/2014 (eur/2014/600)
+- ✗ MISS — FCA Handbook COBS + SYSC (fca-handbook)
+- ✗ MISS — FSMA 2000 — framework Act (ukpga/2000/8)
+- ✗ MISS — Post-Brexit onshoring SIs (uksi/2019/1390; uksi/2021/1388)
 
 Top-20 retrieved:
  1. [guidance/hmrc-manuals] score=65.095↑T `hmrc-manuals:hmrc-internal-manuals/vat-finance-manual/vatfin7550:1`

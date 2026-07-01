@@ -350,14 +350,20 @@ const RAW: RawQuery[] = [
   // principle streams (metric 'lesson', scoreable:false) — scaffold only.
 
   // ── B6 — validated MiFID lay-vocabulary test · legislation · recall@20 ─────
+  //    Answer-key filled + verified present in corpus_sections (2026-07-01). NO
+  //    coverage gaps — all 6 sources are ingested (incl. fca-handbook). NOTE:
+  //    FSMA 2023 uses enacted-CLML paragraph refs (ukpga/2023/29:pNNNNN), not
+  //    :section-N, so the pin is on the act gid (recall@20 counts any leaf).
   {
-    id: 'B6', archetype: 'B', persona: 'H2', flags: [], floor: false, scoreable: false, todo: true,
+    id: 'B6', archetype: 'B', persona: 'H2', flags: [], floor: false, scoreable: true,
     query: 'I want to revoke MiFID II',
     expected: [
-      { label: 'TODO (validate): FCA Handbook COBS & SYSC', patterns: [] },
-      { label: 'TODO (validate): FSMA 2023 (post-Brexit framework)', patterns: [] },
-      { label: 'TODO (validate): retained MiFIR / MiFID Org Reg', patterns: [] },
-      { label: 'TODO (validate): post-Brexit onshoring SIs', patterns: [] },
+      { label: 'FSMA 2023 — revocation framework (ukpga/2023/29; s.1+Sch 1, Sch 2 UK MiFID amendments)', patterns: ci('ukpga/2023/29:') },
+      { label: 'FSMA 2000 (Markets in Financial Instruments) Regs 2017 (uksi/2017/701)', patterns: ci('uksi/2017/701:') },
+      { label: 'Retained/assimilated MiFIR — Reg (EU) 600/2014 (eur/2014/600)', patterns: ci('eur/2014/600:') },
+      { label: 'FCA Handbook COBS + SYSC (fca-handbook)', patterns: ci('fca-handbook:cobs', 'fca-handbook:sysc') },
+      { label: 'FSMA 2000 — framework Act (ukpga/2000/8)', patterns: ci('ukpga/2000/8:') },
+      { label: 'Post-Brexit onshoring SIs (uksi/2019/1390; uksi/2021/1388)', patterns: ci('uksi/2019/1390:', 'uksi/2021/1388:') },
     ],
   },
 

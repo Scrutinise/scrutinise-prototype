@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-07-01T13:56:32.222Z",
+  "generatedAt": "2026-07-01T15:59:47.431Z",
   "headline": {
     "note": "over scoreable recall@20 queries (v1 set); principle G–I + TODO B6/J1/K1/K2 excluded",
     "overall": {
-      "recall": 0.6944444444444445,
-      "mrr": 0.6931878306878306
+      "recall": 0.6720430107526882,
+      "mrr": 0.670826932923707
     },
     "exFloor": {
-      "recall": 0.68,
-      "mrr": 0.7294444444444445,
-      "n": 25
+      "recall": 0.6538461538461539,
+      "mrr": 0.7013888888888888,
+      "n": 26
     }
   },
   "overall": {
-    "recall": 0.6944444444444445,
-    "mrr": 0.6931878306878306
+    "recall": 0.6720430107526882,
+    "mrr": 0.670826932923707
   },
   "exFloor": {
-    "recall": 0.68,
-    "mrr": 0.7294444444444445,
-    "n": 25
+    "recall": 0.6538461538461539,
+    "mrr": 0.7013888888888888,
+    "n": 26
   },
   "byArch": [
     {
@@ -30,9 +30,9 @@
     },
     {
       "archetype": "B",
-      "n": 5,
-      "recall": 0.4,
-      "mrr": 0.32222222222222224
+      "n": 6,
+      "recall": 0.3333333333333333,
+      "mrr": 0.26851851851851855
     },
     {
       "archetype": "C",
@@ -72,7 +72,6 @@
       "I3"
     ],
     "pending": [
-      "B6",
       "J1",
       "K1",
       "K2"
@@ -873,27 +872,35 @@
       "stream": "legislation",
       "kind": "specific",
       "metric": "recall@20",
-      "scoreable": false,
-      "todo": true,
+      "scoreable": true,
+      "todo": false,
       "flags": [],
       "floor": false,
-      "recall": null,
-      "mrr": null,
+      "recall": 0,
+      "mrr": 0,
       "matched": [
         {
-          "label": "TODO (validate): FCA Handbook COBS & SYSC",
+          "label": "FSMA 2023 — revocation framework (ukpga/2023/29; s.1+Sch 1, Sch 2 UK MiFID amendments)",
           "rank": null
         },
         {
-          "label": "TODO (validate): FSMA 2023 (post-Brexit framework)",
+          "label": "FSMA 2000 (Markets in Financial Instruments) Regs 2017 (uksi/2017/701)",
           "rank": null
         },
         {
-          "label": "TODO (validate): retained MiFIR / MiFID Org Reg",
+          "label": "Retained/assimilated MiFIR — Reg (EU) 600/2014 (eur/2014/600)",
           "rank": null
         },
         {
-          "label": "TODO (validate): post-Brexit onshoring SIs",
+          "label": "FCA Handbook COBS + SYSC (fca-handbook)",
+          "rank": null
+        },
+        {
+          "label": "FSMA 2000 — framework Act (ukpga/2000/8)",
+          "rank": null
+        },
+        {
+          "label": "Post-Brexit onshoring SIs (uksi/2019/1390; uksi/2021/1388)",
           "rank": null
         }
       ]

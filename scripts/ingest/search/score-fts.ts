@@ -16,7 +16,13 @@
  * in-force expectations are floors too. [BILLS] (F + B4) scores for real
  * (bills-api landed). Overall is reported BOTH including and excluding floors.
  *
- * Usage:  tsx search/score-fts.ts   (writes docs/FTS_S1b_SCORING.md + .json)
+ * Usage:
+ *   tsx search/score-fts.ts        baseline (expansion OFF) → docs/FTS_S1b_SCORING.md + .json
+ *   tsx search/score-fts.ts --ab   ALSO measure the Stage-3 payoff: for each recall@20
+ *                                   query, run rankedSearch on the BARE query AND on the
+ *                                   expandQuery-enriched set, and write the A/B delta →
+ *                                   docs/FTS_STAGE3_AB.md + .json. Without --ab the harness
+ *                                   is byte-identical to the baseline (expansion never runs).
  */
 import fs from 'fs'
 import path from 'path'
@@ -26,8 +32,35 @@ import { rankedSearch, Hit } from './fts-core'
 import { loadActIndex } from './citation-resolver'
 import { GOLD, GoldQuery, ARCHETYPE_META } from './gold-queries'
 
+// Stage-3 query expansion — the SAME platform function fireSearchTrigger uses.
+// Loaded via runtime require with a computed path: the web file lives outside this
+// package's tsconfig rootDir, so a static import would trip TS6059 (as v26-pooled-smoke
+// does). tsc doesn't resolve computed-path require() → clean; tsx resolves the .ts.
+type Expansion = { anchors: string[]; termsOfArt: string[]; rephrasings: string[] }
+const { expandQuery } = require(path.join(__dirname, '../../../scrutinise-web/lib/lex/query-expansion')) as {
+  expandQuery: (keywords: string[], ideaContext: string) => Promise<Expansion>
+}
+
 const OUT_MD = path.join(__dirname, '../../../docs/FTS_S1b_SCORING.md')
 const OUT_JSON = path.join(__dirname, '../../../docs/fts_s1b_scores.json')
+const OUT_AB_MD = path.join(__dirname, '../../../docs/FTS_STAGE3_AB.md')
+const OUT_AB_JSON = path.join(__dirname, '../../../docs/fts_stage3_ab.json')
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/** Retry expandQuery over transient Gemini 503/overload (measurement only — in prod
+ *  expandQuery degrades to EMPTY and the trigger falls back to the original keywords). */
+async function expandWithRetry(keywords: string[], tries = 4) {
+  let last = { anchors: [] as string[], termsOfArt: [] as string[], rephrasings: [] as string[] }
+  for (let i = 0; i < tries; i++) {
+    last = await expandQuery(keywords, '')
+    if (last.anchors.length || last.termsOfArt.length || last.rephrasings.length) return last
+    if (i < tries - 1) await sleep(2500)
+  }
+  return last
+}
+
+function ppDelta(d: number): string { const p = d * 100; return `${p > 0 ? '+' : ''}${p.toFixed(1)}pp` }
 
 function haystack(h: Hit): string {
   return `${h.id}\n${h.sectionTitle ?? ''}\n${h.body}`
@@ -109,17 +142,42 @@ async function main() {
   await pool.end()
   console.log(`[score] act index: ${actIndex.byTitle.size} titles`)
 
+  // A/B mode: --ab measures the Stage-3 payoff (expansion OFF vs ON). Enabling
+  // expansion here is scoped to this process; the baseline outputs are unaffected.
+  const AB = process.argv.includes('--ab')
+  if (AB) {
+    process.env.LEX_QUERY_EXPANSION = 'true'
+    console.log('[score] A/B MODE — expansion ON variant computed for every recall@20 query')
+  }
+
+  type AbResult = { terms: string[]; anchors: string[]; on: QueryScore }
   const scores: QueryScore[] = []
+  const ab: (AbResult | null)[] = [] // parallel to scores; null when not computed
+
   for (const q of GOLD) {
-    // Retrieval runs for every query — for principle/pending queries the top-20
-    // dump is the calibration/validation artefact (§C), even though it is not scored.
+    // OFF (baseline): retrieval runs for every query — for principle/pending queries
+    // the top-20 dump is the calibration/validation artefact (§C), even if not scored.
     const hits = await rankedSearch(table, q.query, { limit: 20, actIndex })
     const s = scoreQuery(q, hits)
     scores.push(s)
+
+    // ON (expansion): only for recall@20 queries (lesson queries aren't recall-scored).
+    let abRes: AbResult | null = null
+    if (AB && q.metric === 'recall@20') {
+      const exp = await expandWithRetry([q.query])
+      const added = [...new Set([...exp.anchors, ...exp.termsOfArt, ...exp.rephrasings])]
+      // mirror fireSearchTrigger: Set-merge the original keywords with the expansion
+      const merged = [...new Set([q.query, ...added])].map((k) => k.trim()).filter(Boolean).join(' ')
+      const expHits = await rankedSearch(table, merged, { limit: 20, actIndex })
+      abRes = { terms: added, anchors: exp.anchors, on: scoreQuery(q, expHits) }
+    }
+    ab.push(abRes)
+
     const status = q.metric === 'lesson' ? 'principle(0–2 uncalibrated)'
       : !q.scoreable ? 'pending(TODO)' : (q.floor ? '(floor)' : '')
     const num = q.metric === 'recall@20' && q.scoreable ? `recall@20=${pctStr(s.recall)} mrr=${s.mrr.toFixed(3)}` : ''
-    console.log(`  ${q.id} ${q.archetype} ${num} ${status}`.trimEnd())
+    const abStr = abRes ? ` | ON=${pctStr(abRes.on.recall)} (${ppDelta(abRes.on.recall - s.recall)}, +${abRes.terms.length} terms)` : ''
+    console.log(`  ${q.id} ${q.archetype} ${num} ${status}${abStr}`.trimEnd())
   }
 
   // ── aggregates ──────────────────────────────────────────────────────────────
@@ -191,6 +249,61 @@ async function main() {
   console.log(`[score] excl floor recall@20=${pctStr(exFloor.recall)} mrr=${exFloor.mrr.toFixed(3)} (n=${exFloor.n})`)
   console.log(`[score] excluded from headline: ${principle.length} principle (${principle.map((s) => s.q.id).join(',')}) + ${pending.length} pending (${pending.map((s) => s.q.id).join(',')})`)
   console.log(`[score] wrote ${OUT_MD} + ${OUT_JSON}`)
+
+  // ── A/B report (Stage-3 payoff: recall@20 OFF vs ON) ─────────────────────────
+  if (AB) {
+    const pairs = scores
+      .map((s, i) => ({ s, ab: ab[i] }))
+      .filter((x): x is { s: QueryScore; ab: AbResult } => x.ab !== null)
+    const offR = (a: string) => pairs.filter((x) => x.s.q.archetype === a).map((x) => x.s.recall)
+    const onR  = (a: string) => pairs.filter((x) => x.s.q.archetype === a).map((x) => x.ab.on.recall)
+    const archOf = Array.from(new Set(pairs.map((x) => x.s.q.archetype)))
+
+    const md2: string[] = []
+    md2.push('# FTS Stage 3 — expansion A/B (recall@20 OFF vs ON)', '')
+    md2.push(`*Generated ${new Date().toISOString()} against the Lance FTS dataset (${await table.countRows()} rows). For each recall@20 query: \`rankedSearch\` on the BARE query (OFF) vs the \`expandQuery\`-enriched keyword set (ON) — the same platform \`expandQuery\` \`fireSearchTrigger\` uses (Gemini 2.5 Flash). The concept query is modelled as a single lay keyword. Expansion feeds ONLY the FTS query (grounding guardrail).*`, '')
+    md2.push('## Headline — archetype B (payoff) and A (flat check)', '')
+    md2.push('| archetype | stream | recall@20 OFF | recall@20 ON | delta | n |', '|---|---|---|---|---|---|')
+    for (const a of ['B', 'A'] as const) {
+      md2.push(`| ${a} | ${ARCHETYPE_META[a].stream} | ${pctStr(mean(offR(a)))} | ${pctStr(mean(onR(a)))} | **${ppDelta(mean(onR(a)) - mean(offR(a)))}** | ${offR(a).length} |`)
+    }
+    md2.push('')
+    md2.push('## All recall@20 archetypes', '')
+    md2.push('| archetype | recall@20 OFF | recall@20 ON | delta | n |', '|---|---|---|---|---|')
+    for (const a of archOf) md2.push(`| ${a} | ${pctStr(mean(offR(a)))} | ${pctStr(mean(onR(a)))} | ${ppDelta(mean(onR(a)) - mean(offR(a)))} | ${offR(a).length} |`)
+    md2.push('')
+    md2.push('## Per-query recall@20 OFF vs ON', '')
+    md2.push('| id | arch | OFF | ON | delta | anchors named by expansion |', '|---|---|---|---|---|---|')
+    for (const x of pairs) md2.push(`| ${x.s.q.id} | ${x.s.q.archetype} | ${pctStr(x.s.recall)} | ${pctStr(x.ab.on.recall)} | ${ppDelta(x.ab.on.recall - x.s.recall)} | ${x.ab.anchors.join('; ') || '—'} |`)
+    md2.push('')
+    md2.push('## Archetype B — per-source OFF vs ON (which sources the expansion pulled in)', '')
+    for (const x of pairs.filter((p) => p.s.q.archetype === 'B')) {
+      md2.push(`### ${x.s.q.id} — ${x.s.q.query}`)
+      md2.push(`OFF ${pctStr(x.s.recall)} → ON ${pctStr(x.ab.on.recall)} (${ppDelta(x.ab.on.recall - x.s.recall)}) · anchors: ${x.ab.anchors.join('; ') || '—'}`, '')
+      md2.push('| expected source | OFF | ON |', '|---|---|---|')
+      x.s.matched.forEach((mOff, si) => {
+        const mOn = x.ab.on.matched[si]
+        const f = (m: { rank: number | null }) => (m.rank ? `✓ @${m.rank}` : '✗')
+        md2.push(`| ${mOff.label} | ${f(mOff)} | ${f(mOn)} |`)
+      })
+      md2.push('')
+    }
+    fs.writeFileSync(OUT_AB_MD, md2.join('\n'))
+    fs.writeFileSync(OUT_AB_JSON, JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      byArchetype: archOf.map((a) => ({ archetype: a, n: offR(a).length, off: mean(offR(a)), on: mean(onR(a)), delta: mean(onR(a)) - mean(offR(a)) })),
+      queries: pairs.map((x) => ({
+        id: x.s.q.id, archetype: x.s.q.archetype, scoreable: x.s.q.scoreable,
+        off: x.s.recall, on: x.ab.on.recall, delta: x.ab.on.recall - x.s.recall,
+        anchors: x.ab.anchors, termsAdded: x.ab.terms.length,
+        offMatched: x.s.matched, onMatched: x.ab.on.matched,
+      })),
+    }, null, 2))
+    console.log('')
+    console.log(`[score][A/B] archetype B (payoff): OFF ${pctStr(mean(offR('B')))} → ON ${pctStr(mean(onR('B')))} (${ppDelta(mean(onR('B')) - mean(offR('B')))})`)
+    console.log(`[score][A/B] archetype A (flat?):  OFF ${pctStr(mean(offR('A')))} → ON ${pctStr(mean(onR('A')))} (${ppDelta(mean(onR('A')) - mean(offR('A')))})`)
+    console.log(`[score][A/B] wrote ${OUT_AB_MD} + ${OUT_AB_JSON}`)
+  }
 }
 
 main().catch((e) => { console.error('[score] FATAL', e); process.exit(1) })

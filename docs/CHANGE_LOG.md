@@ -1,6 +1,26 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — SEARCH Stage 3 payoff A/B (recall@20): B +15.3pp; A not flat (bidirectional); B6 filled+scoreable; B6 low ON = ranking, not coverage.*
+
+---
+
+## SEARCH — Stage 3 payoff A/B (recall@20 OFF vs ON) (2026-07-01 16:03 UTC)
+
+Measures whether query expansion surfaces more of the RIGHT (validated) legislation, not just more legislation — as a recall@20 delta. Search thread (separate from the LEX REBUILD entry below). Builds on the 13:57 smoke test.
+
+**B6 answer-key filled + verified (Task 1).** All 6 MiFID sources confirmed PRESENT in `corpus_sections` (Neon prefix-LIKE on the id PK): FSMA 2023 (`ukpga/2023/29`, enacted-CLML `pNNNNN` refs — pinned on the act gid), FSMA 2000 (Markets in Financial Instruments) Regs 2017 (`uksi/2017/701`), retained MiFIR (`retained-eu:eur/2014/600`), **FCA Handbook COBS + SYSC (`fca-handbook:cobs`/`:sysc` — it IS ingested**, contra the assumption the licence gate meant no data), FSMA 2000 framework (`ukpga/2000/8`), onshoring SIs (`uksi/2019/1390`, `uksi/2021/1388`). **No coverage gaps.** B6 set `scoreable:true`.
+
+**Expansion A/B mode (Task 2).** `score-fts.ts --ab`: for every recall@20 query, `rankedSearch` on the BARE query (OFF) vs the `expandQuery`-enriched keyword set (ON), recall@20 both ways. Without `--ab` the harness is byte-identical to the baseline (expansion never runs). `expandQuery` is the SAME platform function `fireSearchTrigger` uses, loaded via runtime `require` (computed path) so the cross-rootDir web import stays tsc-clean. Writes `docs/FTS_STAGE3_AB.md` + `docs/fts_stage3_ab.json`.
+
+**Results (Task 3).**
+- **Archetype B (payoff): OFF 33.3% → ON 48.6% = +15.3pp.** ✅ B RISES as predicted. Biggest wins where lay words miss the statute: B3 photo-privacy 0→66.7 (DPA 2018 @1 + PfHA 1997), B1 no-fault eviction 0→25 (HA 1988 s.21 @1), B2 short-lets 33.3→66.7 (LURA 2023 surfaced).
+- **Archetype A: OFF 60.0% → ON 70.0% = +10.0pp — NOT flat**, and bidirectional: A5 ("law that says wear a seatbelt", a concept query filed under A) 0→100, but **A1 ("Section 21 Housing Act 1988", precise citation) 100→50** — expansion diluted the query and displaced the secondary source (exact-pin on s.21 preserved by the resolver). So expansion is NOT neutral on citation queries: it helps concept-bridge queries and HURTS precise ones. The prediction ("A flat") is too simple.
+- **Dilution regressions:** B4 100→50 (Public Office/Hillsborough Bill crowded out by HSCA/Care-Act terms), D1 −50, D3 −100, B5 ranks pushed toward the tail. Pattern: when a query already retrieves the precise item, adding ~15 broad terms dilutes BM25 and pushes precise/secondary sources out of the top-20. → **Keep expansion scoped to concept queries** (production already does — Page-1 keywords, not citation lookups).
+- **B6 (MiFID) only 0→16.7pp** — the diagnostic the brief asked for. Expansion named plausible anchors (FSMA 2000, MiFID Directive, UK MiFID, Investment Firms Reg/Directive) but NOT the validated key (FSMA 2023, MiFIR, MiFI Regs 2017, FCA Handbook); only an onshoring SI matched (@9). Probed the cause: the key sources ARE present + indexed in Lance (a targeted "FCA Handbook COBS best execution" query returns 15/20 fca-handbook rows; FSMA 2023 sections exist) — but even a near-exact "Financial Services and Markets Act 2023" query surfaces committee/HMRC/parliamentary chatter ABOVE the Act's own sections. **B6 is a RANKING problem, not coverage:** for a broad financial-regulation concept, BM25 buries the legislation beneath denser non-legislative mentions, and the 1.8× legislation-tier boost + expansion aren't enough. The flagship case for the vector layer / stronger legislation-tier ranking (GOLD_QUERIES §A: B is "the core target").
+- **Caveat:** transient Gemini 503/aborts left C1/C2/F2/F4/K2/J1 with `+0 terms` (expansion failed → ON=OFF), so C's +6.7pp understates; **every A and B query got a full expansion**, so the payoff (B) and flat-check (A) conclusions are clean.
+- **Baseline headline shifted 69.4%→67.2% (n 30→31)** solely because B6 (now scoreable, OFF 0%) joined the scored set — the 30 v1 per-query numbers are unchanged.
+- **`tsc --noEmit` (scripts/ingest):** only the 4 documented pre-existing errors.
+- Files: `scripts/ingest/search/gold-queries.ts` (B6 filled), `scripts/ingest/search/score-fts.ts` (A/B mode), `docs/FTS_STAGE3_AB.md` + `docs/fts_stage3_ab.json` (new), `docs/FTS_S1b_SCORING.md` + `docs/fts_s1b_scores.json` (regenerated, B6 scoreable).
 
 ---
 
