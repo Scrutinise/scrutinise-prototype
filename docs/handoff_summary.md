@@ -2,7 +2,36 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 1 Jul 2026 — SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 1 Jul 2026 — LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — LEX REBUILD Sprint 2 (Diagnosis / Page 2, 1 Jul 2026)
+
+**Preview only — NOT promoted.** Built `LEX_DESIGN_ADDENDUM_14-15.md §15` (design §7, §14). Full account:
+CHANGE_LOG "LEX REBUILD — Sprint 2" (2026-07-01 15:26 UTC); as-built rules in `LEX_PLAYBOOK.md` §10.
+`scrutinise-web` `tsc --noEmit` clean (only the two pre-existing `react-markdown` module-not-found errors —
+installs on Vercel). Page 1→Diagnosis chain smoke-tested end-to-end on Neon on the deterministic no-Lex
+fallback path (22 assertions pass; throwaway script deleted).
+
+- **Task 1 — search gateway.** New `lib/lex/search-gateway.ts` = the ONE search seam. `runSearch({keywords,
+  intent, ideaContext?, limit?})`; intents `BACKGROUND_BRIEFING`/`CAUSE_SEEDING`; capability flags
+  (`expansion`/`webOrientation`/`vector`/`reranker`/`graph`) env-gated, **default OFF**. `fireSearchTrigger`
+  routes through it — no behaviour change.
+- **Tasks 2/3 — Diagnosis fields + causes loop.** `lib/lex/page2-config.ts` (challenge, whoAffectedImpactCost,
+  causes, rootCause, legalLandscape, pivotalObstacle, summaryDiagnosis). New `DiagnosisCause` table + enum +
+  additive Idea columns (`lexPage`, `challenge`, `whoAffectedImpactCost` Json, `legalLandscape` Json,
+  `pivotalObstacle`), **applied to Neon** via `prisma/lex_rebuild_page2.sql` (`prisma db execute` + generate).
+  Causes CRUD + `POST /api/ideas/[id]/causes`; Lex pre-seeds candidates via gateway `CAUSE_SEEDING`. The
+  field machine + conductor + panels were **generalised from Page-1-only to multi-page**.
+- **Task 4 — transition.** `Idea.lexPage` pointer; `POST /api/ideas/[id]/page` advance (guarded); Background
+  panel CTA row (**Continue to Diagnosis** + **Ask Lex about this** + disabled Give-feedback placeholder).
+- **Task 5/6 — conductor + panels.** `orchestrateAfterWrite` dispatches by field kind (propose / seed
+  structured / seed causes / ask reference / generate summary), same save-before-advance rule. `FieldsPanel`
+  renders the new kinds; `BackgroundPanel` CTA; `ChatPanel` `focusNonce`.
+- **REMAINING GATE:** Charlie validates `/ideas/create` through Diagnosis on the preview, then promote.
+  The Page-1-Box-1 carry-forward into `whoAffectedImpactCost` is thin today (only legacy `whoAffected` — see
+  playbook §10); widen when a structured Page-1 impact/cost source exists.
 
 ---
 

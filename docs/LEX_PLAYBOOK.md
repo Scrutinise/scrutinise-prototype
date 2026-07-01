@@ -4,10 +4,11 @@
 **why** and **what**; this says **how it is wired and how to work on it**. The Lex equivalent of
 `INGEST_PLAYBOOK.md`. Update this whenever the conversation layer changes.*
 
-**Status:** Page 1 (Orientation) shipped — Sprint 1 (state layer + panels) + Sprint 1.1 (orchestration)
-+ Sprint 1.2 (markdown background, intro reword, failure logging) + **Sprint 1.3** (save-before-advance
-guards §3a, "How this works" tour §3b, `preferredName ?? firstName`). Pages 2–4 (Diagnosis / Guiding
-Policy / Coherent Actions) and real FTS are later sprints (design §11).
+**Status:** Page 1 (Orientation) + Page 2 (Diagnosis) built. Sprint 1 (state layer + panels) + Sprint 1.1
+(orchestration) + Sprint 1.2 (markdown background, intro reword, failure logging) + Sprint 1.3
+(save-before-advance guards §3a, "How this works" tour §3b, `preferredName ?? firstName`) + **Sprint 2**
+(Diagnosis / Page 2 + the search gateway + the Page 1→2 transition — §10 below; preview, NOT promoted).
+Pages 3–4 (Guiding Policy / Coherent Actions) and real FTS are later sprints (design §11).
 
 ---
 
@@ -145,19 +146,23 @@ stripped off each element. Don't render Lex/stub markdown as raw text; don't rea
 
 ```
 lib/lex/
-  page1-config.ts    field SoT (keys, type, scope, origin, hints, fallback question) + canonical-state types + SearchResult interface
-  state.ts           computeCanonicalState (§3.3); currentField = first non-terminal; stage→DIAGNOSIS + unlock on complete
-  field-machine.ts   transitions (submitBox/setProposal/acceptField/skipField/reopenField), mirrors, storeExtracted, fireSearchTrigger, initializeFieldStates
-  lex-client.ts      Gemini structured output (responseSchema) + buildLexSystemPrompt + runLexTurn (validate+retry)
-  proposal-schema.ts per-field zod validation
-  orchestrator.ts    orchestrateAfterWrite — the conductor (§13)
-  search-stub.ts     stub SearchResult[] + Initial Background prose
+  page1-config.ts    field SoT + AGGREGATOR: PAGE_SEQUENCE/ALL_FIELDS/fieldDef/keys span all pages; canonical-state types; acceptSurfaceOf; SearchResult interface
+  page2-config.ts    Page 2 (Diagnosis) fields (§7.1) + structured slot labels
+  state.ts           computeCanonicalState (§3.3); currentField scoped to the active lexPage page; nextPage; diagnosisCauses
+  field-machine.ts   transitions + mirrors (both pages) + storeExtracted + fireSearchTrigger + initializeFieldStates + advanceLexPage + causes CRUD + buildWhoAffectedSeed
+  search-gateway.ts  runSearch — the ONE search seam (intent + capability flags); §14
+  lex-client.ts      Gemini structured output + buildLexSystemPrompt (fieldGuidance per kind) + runLexTurn + generateCauseCandidates
+  proposal-schema.ts per-field zod validation (both pages; structured objects)
+  orchestrator.ts    orchestrateAfterWrite — the conductor (§13), dispatch by field kind
+  search-stub.ts     stub SearchResult[] + groupForPanel + Initial Background prose
   authz.ts           owner/collaborator auth for an idea
 app/api/ideas/[id]/
   state/route.ts     GET canonical state
   lex/route.ts       POST one Lex turn (sets proposal for the current field)
-  fields/route.ts    POST transition (submitBox|accept|skip|reopen) → conduct → {state, messages}
-components/lex/       ChatPanel, AcceptCard (Title/Keywords only), FieldsPanel (boxes + proposed-in-box), BackgroundPanel
+  fields/route.ts    POST scalar/structured transition (submitBox|accept|skip|reopen) → conduct → {state, messages}
+  causes/route.ts    POST causes-loop + root-cause (add|update|remove|confirm|skip|setRoot) → {state, messages}
+  page/route.ts      POST {action:'advance'} — advance lexPage → seed next page → {state, messages}
+components/lex/       ChatPanel (focusNonce), AcceptCard (chat-surface scalars), FieldsPanel (all field kinds), BackgroundPanel (+ Continue CTA)
 app/ideas/create/     CreateIdeaClient (orchestrator client), page.tsx (intro bubbles + firstName)
 ```
 
@@ -202,12 +207,51 @@ Charlie validates on the preview; commit to `Main`; delete the script after.
 
 ---
 
-## 9. Extending to Sprint 2 (Diagnosis) — the pattern to copy
+## 9. Extending to a new page — the pattern to copy
 
-1. Add the page's fields to a page config (mirror `page1-config.ts`); give each a `type`, `scope`,
-   `origin`, and a fallback `question`.
-2. Add child entities where the design calls for a loop (`DiagnosisCause`) — mirror the CoherentActions
-   per-row pattern; reuse `IdeaFieldState` for scalar fields.
-3. Reuse the field machine + `orchestrateAfterWrite` conductor unchanged — just teach the conductor the
-   new page's "what next" rules (one branch per terminal/empty transition).
-4. Render from canonical state; never add a counter or a sequence decision to the frontend or Lex.
+1. Add the page's fields to a page config (mirror `page2-config.ts`); give each a `type`, `scope`,
+   `origin`, `slots?` (structured), and a fallback `question`. Register the page in `page1-config`'s
+   `PAGE_SEQUENCE` (it aggregates all pages; imports are type-only so there's no cycle).
+2. Add child entities where the design calls for a loop — mirror `DiagnosisCause` / CoherentActions
+   (its own route under `/api/ideas/[id]/<loop>`); reuse `IdeaFieldState` for scalar/structured fields.
+3. Add mirror-column writes in `field-machine.mirrorValue`, and a validator per field in `proposal-schema`.
+   Add proposed scalars to the `lex-client` `RESPONSE_SCHEMA` fieldKey enum + a `fieldGuidance` branch.
+4. Teach the conductor the new "what next" by field kind (it already dispatches proposed/structured/loop/
+   reference/narrative). Render from canonical state; never add a counter or a sequence decision.
+
+---
+
+## 10. Sprint 2 (Diagnosis / Page 2) — as built
+
+**The search gateway (design §14) — `lib/lex/search-gateway.ts`.** The SINGLE point of contact with search.
+`runSearch({ keywords, intent, ideaContext?, limit? })` = build → expansion (flag) → web orientation (flag)
+→ `runFtsSearch` → `groupForPanel`. **Intent** vocabulary is owned here (`BACKGROUND_BRIEFING`,
+`CAUSE_SEEDING`; more reserved). **Capability flags** (`expansion`/`webOrientation`/`vector`/`reranker`/
+`graph`) come from env, default OFF; `expansion` is the existing `LEX_QUERY_EXPANSION`. Every caller goes
+through it (`fireSearchTrigger` for the briefing, the conductor's `seedCauses` for cause seeding). **When
+search grows, only this file changes** — don't call `runFtsSearch`/`runStubSearch` directly again.
+
+**Multi-page state.** `Idea.lexPage` (`ORIENTATION`|`DIAGNOSIS`|…) is the explicit current-page pointer,
+**distinct from the 5-stage lifecycle `Idea.stage`**. `computeCanonicalState` scopes `currentField` to the
+active page's fields, and sets `nextPage` when the active page is complete and a further built page exists.
+Advancing is explicit: `POST /api/ideas/[id]/page {action:'advance'}` → `advanceLexPage` (forward-only, from
+a complete page) → conductor seeds the next page's first field. Page 1 no longer dead-ends.
+
+**Accept surfaces by field kind** (`acceptSurfaceOf(def)`): box-authored fields (narrative/structured/loop/
+reference) accept **in the Fields panel**; Lex-proposed scalars (title/keywords/challenge/pivotalObstacle/
+summaryDiagnosis) accept **inline in chat** (the `AcceptCard`). The conductor **seeds** structured + loop
+fields to `AWAITING_CONFIRMATION` (structured = carry-forward/empty slots; loop = corpus candidates) — this
+both keeps them current and stops re-seeding on the next write.
+
+**Causes loop (§7.2).** `DiagnosisCause` child rows (source `USER`|`LEX_CORPUS`), CRUD in `field-machine`,
+mutated via `POST /api/ideas/[id]/causes` (add/update/remove/confirm/skip/setRoot) — **not** the `/fields`
+endpoint (which 422s `causes`/`rootCause`). `confirm` requires ≥1 cause; `setRoot` marks exactly one
+`isRootCause` and mirrors the text to `Idea.rootCause`. Seeding = gateway `CAUSE_SEEDING` +
+`generateCauseCandidates` (structured Gemini call; resilient → `[]`, so the flow never blocks on it).
+
+**Carry-forward (§7.1).** `buildWhoAffectedSeed` seeds `whoAffectedImpactCost.affectedGroups` from the legacy
+`Idea.whoAffected` if present (the only structured Page-1 source today); impact/cost/evidence start blank for
+the user. When a structured Page-1 impact/cost source exists later, widen this seed.
+
+**Schema apply.** `prisma/lex_rebuild_page2.sql` (additive, idempotent) via `DIRECT_URL=<NEON> npx prisma db
+execute --file …` then `npx prisma generate`. Same rule as §7 — **never `db push`** (targets Railway).

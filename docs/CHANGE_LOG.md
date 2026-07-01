@@ -1,6 +1,69 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — Stage 3 smoke-tested (verified) + v2 gold structure encoded in the scoring harness.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted.*
+
+---
+
+## LEX REBUILD — Sprint 2: Diagnosis (Page 2) + search gateway + Page 1→2 transition (2026-07-01 15:26 UTC)
+
+**Preview only — NOT promoted.** Built `LEX_DESIGN_ADDENDUM_14-15.md §15` (design §7, §14). `scrutinise-web`
+`tsc --noEmit` clean (only the two pre-existing `react-markdown` module-not-found errors — not installed
+locally, installs on Vercel). Full Page 1→Diagnosis chain smoke-tested end-to-end on Neon on the
+deterministic fallback path (no-Lex): 22 assertions pass, throwaway script deleted.
+
+**Task 1 — the search gateway (§14).** New `lib/lex/search-gateway.ts` — the SINGLE point of contact with
+search. `runSearch({ keywords, intent, ideaContext?, limit? })` owns: build query → Stage-3 expansion
+(capability flag) → web orientation (capability flag) → retrieval (`runFtsSearch`) → map + group by display
+type (`groupForPanel`). **Intent vocabulary owned here** (`BACKGROUND_BRIEFING`, `CAUSE_SEEDING`; reserved
+`AMENDABLE_SECTION`/`POLICY_ALTERNATIVES`/`COMPARATIVE_LAW`). **Capability flags** (`expansion`,
+`webOrientation`, `vector`, `reranker`, `graph`) read from env, **default OFF** (`expansion` = existing
+`LEX_QUERY_EXPANSION` for back-compat). `fireSearchTrigger` now routes through the gateway with intent
+`BACKGROUND_BRIEFING` — **no behaviour change** (expansion still gated + query-only, briefing prose still
+uses original keywords). `// Single seam — when search grows, only this file changes.`
+
+**Task 2 — Diagnosis fields (§7.1).** New `lib/lex/page2-config.ts` (7 fields): `challenge` (text,
+Lex-proposed), `whoAffectedImpactCost` (structured — slots affectedGroups/impact/cost/evidence; **carried
+forward** from Page 1's `whoAffected`, not re-asked), `causes` (loop), `rootCause` (reference — pick one
+cause), `legalLandscape` (structured — currentLaw/whereItFails, placed **before** the obstacle), 
+`pivotalObstacle` (text, Lex-proposed, distinct from root cause), `summaryDiagnosis` (Lex-generated, names
+**both** root cause and pivotal obstacle). The whole field machine was **generalised from Page-1-only to
+multi-page**: `page1-config` now aggregates `PAGE_SEQUENCE = [ORIENTATION, DIAGNOSIS]`, `ALL_FIELDS`,
+`fieldDef`/`PROPOSABLE_KEYS`/`BOX_KEYS`/`STRUCTURED_KEYS` span all pages; `acceptSurfaceOf(def)` (box→panel,
+proposed→chat) routes the accept surface; canonical state gains `stage` (=lexPage), `nextPage`,
+`diagnosisCauses`. `state.ts` scopes `currentField` to the active `lexPage` page.
+
+**Task 3 — the causes loop (§7.2).** New `DiagnosisCause` child table (mirror of CoherentActions) +
+`DiagnosisCauseSource` enum; additive Idea columns (`lexPage`, `challenge`, `whoAffectedImpactCost` Json,
+`legalLandscape` Json, `pivotalObstacle`; `rootCause`/`summaryDiagnosis` reuse legacy columns). Applied to
+Neon via idempotent `prisma/lex_rebuild_page2.sql` (`prisma db execute`, **not** `db push` — playbook §7).
+CRUD in `field-machine.ts` (add/update/remove/list/setRootCause/createCauses); Lex pre-seeds candidates via
+the gateway `CAUSE_SEEDING` + `generateCauseCandidates` (structured Gemini call, resilient → [] on failure).
+New `POST /api/ideas/[id]/causes` route (add/update/remove/confirm/skip/setRoot).
+
+**Task 4 — the Page 1→Diagnosis transition.** `Idea.lexPage` is the explicit current-page pointer (distinct
+from the 5-stage lifecycle). Page 1 no longer dead-ends: on Orientation complete + briefing **ready**, the
+Background panel shows a CTA row — **Continue to Diagnosis** (`POST /api/ideas/[id]/page` → `advanceLexPage`,
+guarded: forward-only, current page must be complete → then the conductor seeds the first Diagnosis field) +
+**Ask Lex about this** (focuses the chat) + a disabled **Give feedback** placeholder (flow is Sprint 2.5).
+
+**Task 5 — conductor extension (§13).** `orchestrateAfterWrite` generalised to the active page and dispatches
+by field kind: narrative box → ask; proposed scalar → propose (deterministic fallback so the confirm always
+appears); structured panel box → **seed** a proposal (carry-forward / empty slots) → AWAITING; loop → seed
+corpus candidates → AWAITING; reference → ask which cause; `summaryDiagnosis` generated when the prior fields
+are terminal. **Same save-before-advance rule** — it only speaks for a freshly-EMPTY field and never advances
+an AWAITING one. Seeding structured/loop fields to AWAITING both holds them current and prevents re-seeding.
+
+**Task 6 — panels.** `FieldsPanel` renders the new field kinds (StructuredField editor, CausesField loop with
+per-row edit/remove + "these are my causes"/skip, RootCauseField selector) alongside the Page-1 renderers,
+purely from canonical state. `BackgroundPanel` gained the CTA row. `ChatPanel` gained a `focusNonce` for
+"Ask Lex about this". `lex-client` proposable-key enum + prompt extended for the Page-2 proposed scalars and
+the panel-box (no-proposal) fields; `proposal-schema` gained validators for the Page-2 fields.
+
+**Files:** new `lib/lex/{search-gateway,page2-config}.ts`, `app/api/ideas/[id]/{causes,page}/route.ts`,
+`prisma/lex_rebuild_page2.sql`; changed `lib/lex/{page1-config,field-machine,state,orchestrator,lex-client,
+proposal-schema}.ts`, `app/api/ideas/[id]/{fields,lex}/route.ts`, `components/lex/{FieldsPanel,BackgroundPanel,
+ChatPanel}.tsx`, `app/ideas/create/CreateIdeaClient.tsx`, `prisma/schema.prisma`. **GATE:** Charlie validates
+`/ideas/create` through Diagnosis on the preview, then promote.
 
 ---
 
