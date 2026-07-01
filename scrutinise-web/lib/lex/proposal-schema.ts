@@ -15,13 +15,44 @@ const keywordsSchema = z
 // box's content (§13). Any non-trivial string is valid.
 const narrativeSchema = z.string().trim().min(1).max(10000)
 
+// ── Page 2 (Diagnosis) ───────────────────────────────────────────────────────
+// Short Lex-proposed statements (inline confirm in chat).
+const sentenceSchema = z.string().trim().min(3).max(2000)
+const summarySchema = z.string().trim().min(3).max(6000)
+
+// Structured slot objects (edited in the panel). Every slot is an optional trimmed
+// string; unknown keys are stripped. An all-empty object is still allowed (the user
+// may Skip instead), but at least the shape is enforced.
+const whoAffectedImpactCostSchema = z
+  .object({
+    affectedGroups: z.string().trim().max(4000).optional(),
+    impact: z.string().trim().max(4000).optional(),
+    cost: z.string().trim().max(4000).optional(),
+    evidence: z.string().trim().max(4000).optional(),
+  })
+  .strip()
+const legalLandscapeSchema = z
+  .object({
+    currentLaw: z.string().trim().max(4000).optional(),
+    whereItFails: z.string().trim().max(4000).optional(),
+  })
+  .strip()
+
 // Map of fieldKey → zod schema for the proposal's `value`.
+// (causes = loop and rootCause = reference are handled by dedicated route actions,
+//  not through this generic proposal/accept validator.)
 const FIELD_VALUE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   ideaNarrative: narrativeSchema,
   youAndIdeaNarrative: narrativeSchema,
   aboutYou: narrativeSchema,
   title: titleSchema,
   keywords: keywordsSchema,
+  // Page 2
+  challenge: sentenceSchema,
+  pivotalObstacle: sentenceSchema,
+  summaryDiagnosis: summarySchema,
+  whoAffectedImpactCost: whoAffectedImpactCostSchema,
+  legalLandscape: legalLandscapeSchema,
 }
 
 export interface ValidatedProposal {

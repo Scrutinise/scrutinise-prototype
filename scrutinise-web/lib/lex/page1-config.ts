@@ -9,7 +9,7 @@
 // See docs/LEX_REBUILD_DESIGN.md §3, §6.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type FieldType = 'narrative' | 'text' | 'structured' | 'loop' | 'inferred'
+export type FieldType = 'narrative' | 'text' | 'structured' | 'loop' | 'inferred' | 'reference'
 
 /** Where the accepted value is persisted. `idea` → on the Idea; `user` → on the
  *  User profile (reused across every idea — Box 3). */
@@ -35,6 +35,19 @@ export interface FieldDef {
   /** Platform-authored question/prompt — the deterministic fallback Lex elaborates
    *  on. Guarantees the flow never stalls even if a Lex turn fails (§13 Task 3). */
   question?: string
+  /** Where the accept surface renders. Defaults from origin (box → panel, proposed →
+   *  chat) via acceptSurfaceOf; set explicitly only to override. */
+  acceptSurface?: 'chat' | 'panel'
+  /** Slot keys for a `structured` field (e.g. whoAffectedImpactCost). The value is a
+   *  JSON object keyed by these; the panel renders one labelled input per slot. */
+  slots?: string[]
+}
+
+/** Where a field's accept surface lives. Box-authored fields (narrative/structured/
+ *  loop/reference) are their own accept surface in the Fields panel; Lex-proposed
+ *  scalars (title/keywords/challenge/…) confirm inline in chat (the AcceptCard). */
+export function acceptSurfaceOf(def: FieldDef): 'chat' | 'panel' {
+  return def.acceptSurface ?? (def.origin === 'box' ? 'panel' : 'chat')
 }
 
 export interface PageDef {
@@ -117,27 +130,42 @@ export const ORIENTATION_PAGE: PageDef = {
   fields: ORIENTATION_FIELDS,
 }
 
-// Later pages are built in subsequent sprints (§11). They render in Panel 2 as
-// locked placeholders so the user can see the road ahead, but carry no fields yet.
+// Page 2 (Diagnosis) is built in Sprint 2 — imported here so page1-config stays the
+// single aggregation point every caller already imports from (no churn to importers).
+// page2-config imports only TYPES from here, so there is no runtime import cycle.
+import { DIAGNOSIS_PAGE } from './page2-config'
+
+// The ordered Lex pages that carry fields today.
+export const PAGE_SEQUENCE: PageDef[] = [ORIENTATION_PAGE, DIAGNOSIS_PAGE]
+
+// Later pages (§11) render in Panel 2 as locked placeholders so the user can see the
+// road ahead, but carry no fields yet.
 export const LOCKED_PAGES: { key: string; label: string }[] = [
-  { key: 'DIAGNOSIS', label: 'Diagnosis' },
   { key: 'GUIDING_POLICY', label: 'Guiding policy' },
   { key: 'COHERENT_ACTIONS', label: 'Coherent actions' },
 ]
 
-export const PAGE_SEQUENCE = [ORIENTATION_PAGE]
+/** Every field across all built pages, in page/field order. */
+export const ALL_FIELDS: FieldDef[] = PAGE_SEQUENCE.flatMap((p) => p.fields)
 
-/** The field whose status decides whether the page (and Page 1 overall) is done. */
+/** Look up a field def by key across ALL pages (not just Page 1). */
 export function fieldDef(key: string): FieldDef | undefined {
-  return ORIENTATION_FIELDS.find((f) => f.key === key)
+  return ALL_FIELDS.find((f) => f.key === key)
 }
 
-export const PROPOSABLE_KEYS = new Set(
-  ORIENTATION_FIELDS.filter((f) => f.origin === 'proposed').map((f) => f.key),
-)
-export const BOX_KEYS = new Set(
-  ORIENTATION_FIELDS.filter((f) => f.origin === 'box').map((f) => f.key),
-)
+/** The page a field belongs to (or undefined). */
+export function pageOf(key: string): PageDef | undefined {
+  return PAGE_SEQUENCE.find((p) => p.fields.some((f) => f.key === key))
+}
+
+/** Index of a page key within PAGE_SEQUENCE (-1 if unknown / a locked page). */
+export function pageSeqIndex(pageKey: string): number {
+  return PAGE_SEQUENCE.findIndex((p) => p.key === pageKey)
+}
+
+export const PROPOSABLE_KEYS = new Set(ALL_FIELDS.filter((f) => f.origin === 'proposed').map((f) => f.key))
+export const BOX_KEYS = new Set(ALL_FIELDS.filter((f) => f.origin === 'box').map((f) => f.key))
+export const STRUCTURED_KEYS = new Set(ALL_FIELDS.filter((f) => f.type === 'structured').map((f) => f.key))
 
 // ── Behind-the-box slots Lex extracts (§6.1). Stored, not carded. ────────────
 // Idea-scoped slots seed Page 2 and calibrate Lex; user-scoped slots are reused.
@@ -185,11 +213,27 @@ export interface CanonicalPage {
   fields: CanonicalField[]
 }
 
+/** A Page 2 causes-loop child record (§7.2), as the panel renders it. */
+export interface CanonicalCause {
+  id: string
+  cause: string
+  whyPersisted: string | null
+  evidence: string | null
+  isRootCause: boolean
+  source: 'USER' | 'LEX_CORPUS'
+}
+
 export interface CanonicalState {
   ideaId: string
+  /** The current Lex page the user is on (ORIENTATION | DIAGNOSIS | …). */
   stage: string
+  /** Whether the current page is complete and the NEXT page is reachable but the user
+   *  has not advanced yet — drives the "Continue to …" CTA. null when not applicable. */
+  nextPage: { key: string; label: string } | null
   currentField: { key: string; status: FieldStatus } | null
   pages: CanonicalPage[]
+  /** Page 2 causes-loop records (empty until Diagnosis). */
+  diagnosisCauses: CanonicalCause[]
   userProfile: {
     aboutYou: string | null
     experienceLevel: string | null

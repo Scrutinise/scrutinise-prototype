@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { computeCanonicalState } from '@/lib/lex/state'
-import { fieldDef, BOX_KEYS } from '@/lib/lex/page1-config'
+import { fieldDef } from '@/lib/lex/page1-config'
 import { validateFieldValue } from '@/lib/lex/proposal-schema'
 import {
   submitBox,
@@ -16,11 +16,16 @@ import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 
 type Params = { params: Promise<{ id: string }> }
 
+// causes (loop) + rootCause (reference) are mutated via /causes, not here.
+const CAUSES_ENDPOINT_FIELDS = new Set(['causes', 'rootCause'])
+
 const BodySchema = z.object({
   fieldKey: z.string().min(1),
   action: z.enum(['submitBox', 'accept', 'skip', 'reopen']),
-  // value: a string (box / title) or string[] (keywords). Optional for accept-as-proposed / skip / reopen.
-  value: z.union([z.string(), z.array(z.string())]).optional(),
+  // value: a string (narrative/title/challenge), string[] (keywords), or an object
+  // (structured fields — whoAffectedImpactCost/legalLandscape). Optional for
+  // accept-as-proposed / skip / reopen.
+  value: z.union([z.string(), z.array(z.string()), z.record(z.string(), z.string())]).optional(),
 })
 
 type ChatMsg = { role: string; content: string; timestamp?: string }
@@ -40,12 +45,16 @@ export async function POST(req: Request, { params }: Params) {
 
   const def = fieldDef(fieldKey)
   if (!def) return NextResponse.json({ error: `Unknown fieldKey: ${fieldKey}` }, { status: 422 })
+  if (CAUSES_ENDPOINT_FIELDS.has(fieldKey)) {
+    return NextResponse.json({ error: `${fieldKey} is managed via the /causes endpoint` }, { status: 422 })
+  }
 
   try {
     switch (action) {
       case 'submitBox': {
-        if (!BOX_KEYS.has(fieldKey)) {
-          return NextResponse.json({ error: `${fieldKey} is not a box field` }, { status: 422 })
+        // submitBox is for narrative boxes only (the user authored plain text directly).
+        if (def.type !== 'narrative') {
+          return NextResponse.json({ error: `${fieldKey} is not a narrative box` }, { status: 422 })
         }
         if (typeof value !== 'string' || !value.trim()) {
           return NextResponse.json({ error: 'value (non-empty string) required' }, { status: 422 })

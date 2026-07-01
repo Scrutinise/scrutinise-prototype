@@ -41,9 +41,10 @@ export async function POST(req: Request, { params }: Params) {
   // only and points the user to Save — it must not advance (§13 / Sprint 1.3).
   const awaiting = pre.currentField?.status === 'AWAITING_CONFIRMATION'
 
-  const acceptedSummary = pre.pages[0].fields
+  const allAcceptedFields = pre.pages.flatMap((p) => p.fields)
+  const acceptedSummary = allAcceptedFields
     .filter((f) => f.status === 'ACCEPTED' && f.value)
-    .map((f) => `${f.label}: ${typeof f.value === 'string' ? f.value.slice(0, 80) : JSON.stringify(f.value)}`)
+    .map((f) => `${f.label}: ${typeof f.value === 'string' ? f.value.slice(0, 80) : JSON.stringify(f.value).slice(0, 120)}`)
     .join(' · ')
 
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
@@ -51,7 +52,7 @@ export async function POST(req: Request, { params }: Params) {
     preferredName: user.preferredName ?? user.firstName,
     lexMode: user.aiPreferredStyle?.toUpperCase() ?? 'COLLABORATIVE',
     experienceLevel: pre.userProfile.experienceLevel,
-    ideaTitle: pre.pages[0].fields.find((f) => f.key === 'title')?.value as string | null ?? idea.title,
+    ideaTitle: (allAcceptedFields.find((f) => f.key === 'title')?.value as string | null) ?? idea.title,
     isFirstIdea: ideaCount <= 1,
     currentField: current,
     awaiting,

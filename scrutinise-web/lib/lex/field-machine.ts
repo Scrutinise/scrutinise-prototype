@@ -8,16 +8,18 @@
 
 import { prisma } from '@/lib/prisma'
 import {
-  ORIENTATION_FIELDS,
+  ALL_FIELDS,
   EXPERIENCE_LEVEL_MAP,
   IDEA_SLOT_KEYS,
   USER_SLOT_KEYS,
+  STRUCTURED_KEYS,
   fieldDef,
+  pageSeqIndex,
+  PAGE_SEQUENCE,
   type FieldStatus,
 } from './page1-config'
-import { groupForPanel, buildInitialBackground } from './search-stub'
-import { runFtsSearch } from './fts-search'
-import { expandQuery } from './query-expansion'
+import { buildInitialBackground } from './search-stub'
+import { runSearch } from './search-gateway'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -35,7 +37,10 @@ export async function initializeFieldStates(ideaId: string, userId: string): Pro
   })
   const have = new Set(existing.map((r) => r.fieldKey))
 
-  const toCreate = ORIENTATION_FIELDS.filter((f) => !have.has(f.key)).map((f) => {
+  // Create rows for every field across all built pages (idempotent). Diagnosis rows
+  // sit EMPTY until the user advances into that page; currentField is scoped to the
+  // active (lexPage) page in computeCanonicalState, so they don't surface early.
+  const toCreate = ALL_FIELDS.filter((f) => !have.has(f.key)).map((f) => {
     const isProfileCheckBack = f.key === 'aboutYou' && !!user?.aboutYouNarrative
     return {
       ideaId,
@@ -65,6 +70,7 @@ async function mirrorValue(ideaId: string, userId: string, fieldKey: string, val
   }
   // idea-scoped
   switch (fieldKey) {
+    // ── Page 1 ──
     case 'ideaNarrative':
       await prisma.idea.update({ where: { id: ideaId }, data: { ideaNarrative: String(value) } })
       break
@@ -79,7 +85,46 @@ async function mirrorValue(ideaId: string, userId: string, fieldKey: string, val
       await prisma.idea.update({ where: { id: ideaId }, data: { keywords: arr } })
       break
     }
+    // ── Page 2 (Diagnosis) ──
+    case 'challenge':
+      await prisma.idea.update({ where: { id: ideaId }, data: { challenge: String(value) } })
+      break
+    case 'pivotalObstacle':
+      await prisma.idea.update({ where: { id: ideaId }, data: { pivotalObstacle: String(value) } })
+      break
+    case 'summaryDiagnosis':
+      await prisma.idea.update({ where: { id: ideaId }, data: { summaryDiagnosis: String(value) } })
+      break
+    case 'whoAffectedImpactCost':
+      await prisma.idea.update({
+        where: { id: ideaId },
+        data: { whoAffectedImpactCost: asJson(value) as never },
+      })
+      break
+    case 'legalLandscape':
+      await prisma.idea.update({
+        where: { id: ideaId },
+        data: { legalLandscape: asJson(value) as never },
+      })
+      break
+    case 'rootCause':
+      // value is the chosen cause text; the DiagnosisCause.isRootCause flag is set in
+      // setRootCause (the route). Here we mirror the text onto the legacy column.
+      await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: String(value) } })
+      break
   }
+}
+
+/** Coerce an accepted structured value (object, or JSON string) into a plain object. */
+function asJson(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed
+    } catch { /* fall through */ }
+  }
+  return {}
 }
 
 /** Serialise a field value for storage in IdeaFieldState.value (TEXT). */
@@ -208,7 +253,7 @@ export async function storeExtracted(
 }
 
 // ── Search trigger (§8.4): deterministic, platform-owned ─────────────────────
-/** Fire the search (with optional LLM query expansion) and write legislationRefs + Initial Background. */
+/** Fire the search through the gateway (§14) and write legislationRefs + Initial Background. */
 export async function fireSearchTrigger(ideaId: string): Promise<void> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
@@ -216,29 +261,18 @@ export async function fireSearchTrigger(ideaId: string): Promise<void> {
   })
   const keywords = idea?.keywords ?? []
 
-  // LLM query expansion (LEX_QUERY_EXPANSION=true to enable; off by default in prod).
-  // Inserts anchor Act names + statutory terms-of-art + rephrasings into the query so
-  // lay-vocabulary ideas surface the anchor legislation in the BM25 candidate set.
-  // Feeds the FTS query ONLY — never the briefing text (grounding guardrail §3).
+  // All search goes through the ONE gateway. Intent BACKGROUND_BRIEFING gets stage-3
+  // expansion (capability flag) applied to the FTS query only; ideaContext steers
+  // that expansion but never enters the briefing text (grounding guardrail §3).
   const ideaContext = [idea?.ideaNarrative, idea?.youAndIdeaNarrative]
     .filter(Boolean).join(' ').slice(0, 500)
-  const expansion = await expandQuery(keywords, ideaContext)
-  const expandedKeywords = [
-    ...new Set([...keywords, ...expansion.anchors, ...expansion.termsOfArt, ...expansion.rephrasings]),
-  ]
-  const addedTerms = expandedKeywords.filter((k) => !keywords.includes(k))
-  if (addedTerms.length) {
-    console.log('[query-expansion] terms added', {
-      original: keywords,
-      added: addedTerms,
-      anchors: expansion.anchors,
-      termsOfArt: expansion.termsOfArt,
-      rephrasings: expansion.rephrasings,
-    })
-  }
+  const { grouped: refs } = await runSearch({
+    keywords,
+    intent: 'BACKGROUND_BRIEFING',
+    ideaContext,
+    limit: 12,
+  })
 
-  const { results } = await runFtsSearch(expandedKeywords, 12)
-  const refs = groupForPanel(results)
   // Briefing prose uses the user's original keywords (not the expanded set) — ground truth only.
   const { summary, body } = buildInitialBackground(keywords, refs)
 
@@ -252,5 +286,140 @@ export async function fireSearchTrigger(ideaId: string): Promise<void> {
     update: { status: 'ready', summary, body },
   })
 }
+
+// ── Page advance (§14 / Sprint 2 Task 4): explicit forward move between Lex pages ──
+/** Advance the Lex page pointer forward by one, but only from a COMPLETE page to the
+ *  immediately-next built page. Returns the new page key, or null if not allowed. */
+export async function advanceLexPage(ideaId: string): Promise<string | null> {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { lexPage: true } })
+  const currentKey = idea?.lexPage ?? 'ORIENTATION'
+  const idx = pageSeqIndex(currentKey)
+  if (idx < 0 || idx + 1 >= PAGE_SEQUENCE.length) return null
+
+  // Guard: the current page must be complete (all its fields terminal).
+  const currentPage = PAGE_SEQUENCE[idx]
+  const rows = await prisma.ideaFieldState.findMany({
+    where: { ideaId, fieldKey: { in: currentPage.fields.map((f) => f.key) } },
+    select: { fieldKey: true, status: true },
+  })
+  const byKey = new Map(rows.map((r) => [r.fieldKey, r.status as DbStatus]))
+  const allTerminal = currentPage.fields.every((f) => {
+    const s = byKey.get(f.key) ?? 'EMPTY'
+    return s === 'ACCEPTED' || s === 'SKIPPED'
+  })
+  if (!allTerminal) return null
+
+  const next = PAGE_SEQUENCE[idx + 1].key
+  await prisma.idea.update({ where: { id: ideaId }, data: { lexPage: next } })
+  return next
+}
+
+// ── Page 2 carry-forward (§7.1): seed whoAffectedImpactCost from Page 1, don't re-ask ──
+/** Build a whoAffectedImpactCost seed object from Page 1's volunteered impact/cost. */
+export async function buildWhoAffectedSeed(ideaId: string): Promise<Record<string, string>> {
+  const idea = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: { whoAffected: true },
+  })
+  // Page 1 Box 1 volunteers rough who/impact/cost; only `whoAffected` has a canonical
+  // home so far — carry it into affectedGroups. The rest start blank for the user.
+  return {
+    affectedGroups: (typeof idea?.whoAffected === 'string' && idea.whoAffected) || '',
+    impact: '',
+    cost: '',
+    evidence: '',
+  }
+}
+
+// ── Causes loop (§7.2) — DiagnosisCause child records ─────────────────────────
+export interface CauseInput {
+  cause: string
+  whyPersisted?: string | null
+  evidence?: string | null
+  source?: 'USER' | 'LEX_CORPUS'
+}
+
+export async function listCauses(ideaId: string) {
+  return prisma.diagnosisCause.findMany({
+    where: { ideaId },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+  })
+}
+
+/** Bulk-create candidate causes (e.g. from the CAUSE_SEEDING corpus search). */
+export async function createCauses(ideaId: string, causes: CauseInput[], source: 'USER' | 'LEX_CORPUS') {
+  if (!causes.length) return
+  const base = await prisma.diagnosisCause.count({ where: { ideaId } })
+  await prisma.diagnosisCause.createMany({
+    data: causes
+      .filter((c) => c.cause?.trim())
+      .map((c, i) => ({
+        ideaId,
+        cause: c.cause.trim(),
+        whyPersisted: c.whyPersisted?.trim() || null,
+        evidence: c.evidence?.trim() || null,
+        source: (c.source ?? source) as never,
+        orderIndex: base + i,
+      })),
+  })
+}
+
+export async function addCause(ideaId: string, input: CauseInput) {
+  const base = await prisma.diagnosisCause.count({ where: { ideaId } })
+  return prisma.diagnosisCause.create({
+    data: {
+      ideaId,
+      cause: input.cause.trim(),
+      whyPersisted: input.whyPersisted?.trim() || null,
+      evidence: input.evidence?.trim() || null,
+      source: (input.source ?? 'USER') as never,
+      orderIndex: base,
+    },
+  })
+}
+
+export async function updateCause(
+  ideaId: string,
+  causeId: string,
+  patch: { cause?: string; whyPersisted?: string | null; evidence?: string | null },
+) {
+  // Scope by ideaId so a caller can't edit another idea's cause.
+  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true } })
+  if (!row) return null
+  return prisma.diagnosisCause.update({
+    where: { id: causeId },
+    data: {
+      ...(patch.cause !== undefined ? { cause: patch.cause.trim() } : {}),
+      ...(patch.whyPersisted !== undefined ? { whyPersisted: patch.whyPersisted?.trim() || null } : {}),
+      ...(patch.evidence !== undefined ? { evidence: patch.evidence?.trim() || null } : {}),
+    },
+  })
+}
+
+export async function removeCause(ideaId: string, causeId: string) {
+  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true, isRootCause: true } })
+  if (!row) return
+  await prisma.diagnosisCause.delete({ where: { id: causeId } })
+  // If the deleted cause was the chosen root cause, clear the rootCause field back to EMPTY.
+  if (row.isRootCause) {
+    await setStatus(ideaId, 'rootCause', 'EMPTY', { value: null, proposal: null })
+    await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: null } })
+  }
+}
+
+/** Mark exactly one cause as the root cause (§7.1 field 4) and accept the rootCause field. */
+export async function setRootCause(ideaId: string, causeId: string): Promise<boolean> {
+  const chosen = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true, cause: true } })
+  if (!chosen) return false
+  await prisma.$transaction([
+    prisma.diagnosisCause.updateMany({ where: { ideaId }, data: { isRootCause: false } }),
+    prisma.diagnosisCause.update({ where: { id: causeId }, data: { isRootCause: true } }),
+  ])
+  await setStatus(ideaId, 'rootCause', 'ACCEPTED', { value: chosen.cause, proposal: null })
+  await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: chosen.cause } })
+  return true
+}
+
+export { setStatus }
 
 export type { FieldStatus }

@@ -2,16 +2,23 @@
 // Canonical state assembler (§3.3). Reads the server-authoritative stores and
 // returns the ONE object the panels render. `completedCount`/`total` are NOT
 // here — they are derived on the client from the fields array (never stored).
+//
+// Multi-page (Sprint 2): the active page is the Idea.lexPage pointer. `currentField`
+// is the first non-terminal field OF THE ACTIVE PAGE — so Diagnosis fields don't
+// surface until the user advances into Page 2 ("Continue to Diagnosis").
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
 import { initializeFieldStates } from './field-machine'
 import {
-  ORIENTATION_FIELDS,
+  PAGE_SEQUENCE,
   LOCKED_PAGES,
+  pageSeqIndex,
+  fieldDef,
   type CanonicalState,
   type CanonicalField,
   type CanonicalPage,
+  type CanonicalCause,
   type FieldStatus,
   type SearchResult,
 } from './page1-config'
@@ -20,7 +27,7 @@ const TERMINAL: FieldStatus[] = ['ACCEPTED', 'SKIPPED']
 
 function decodeValue(fieldKey: string, raw: string | null): unknown {
   if (raw == null) return null
-  const def = ORIENTATION_FIELDS.find((f) => f.key === fieldKey)
+  const def = fieldDef(fieldKey)
   if (def?.type === 'structured') {
     try { return JSON.parse(raw) } catch { return raw }
   }
@@ -33,6 +40,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     select: {
       id: true,
       creatorId: true,
+      lexPage: true,
       legislationRefs: true,
       creator: {
         select: { aboutYouNarrative: true, experienceLevel: true, profileSlots: true },
@@ -50,7 +58,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   })
   const byKey = new Map(rows.map((r) => [r.fieldKey, r]))
 
-  const fields: CanonicalField[] = ORIENTATION_FIELDS.map((def) => {
+  const toCanonicalField = (def: (typeof PAGE_SEQUENCE)[number]['fields'][number]): CanonicalField => {
     const row = byKey.get(def.key)
     const status = (row?.status ?? 'EMPTY') as FieldStatus
     const proposal =
@@ -65,26 +73,59 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       value: decodeValue(def.key, row?.value ?? null),
       proposal: proposal ? { value: proposal.value, rationale: proposal.rationale ?? undefined } : null,
     }
-  })
-
-  // currentField = first non-terminal field in sequence.
-  const current = fields.find((f) => !TERMINAL.includes(f.status)) ?? null
-  const orientationComplete = current === null
-
-  const orientationPage: CanonicalPage = {
-    key: 'ORIENTATION',
-    label: 'Getting started',
-    status: orientationComplete ? 'complete' : 'active',
-    fields,
   }
 
-  // When Orientation completes, the next page (Diagnosis) unlocks to 'active'
-  // (its fields are built in Sprint 2); the rest stay locked.
-  const lockedPages: CanonicalPage[] = LOCKED_PAGES.map((p, i) => ({
+  const isTerminal = (key: string) => TERMINAL.includes((byKey.get(key)?.status ?? 'EMPTY') as FieldStatus)
+
+  // The active page = the lexPage pointer (default ORIENTATION).
+  const lexPage = idea.lexPage ?? 'ORIENTATION'
+  const activeIndex = Math.max(0, pageSeqIndex(lexPage))
+
+  const pages: CanonicalPage[] = PAGE_SEQUENCE.map((page, i) => {
+    const fields = page.fields.map(toCanonicalField)
+    const allTerminal = fields.every((f) => TERMINAL.includes(f.status))
+    const status: CanonicalPage['status'] =
+      i < activeIndex ? 'complete' : i === activeIndex ? (allTerminal ? 'complete' : 'active') : 'locked'
+    return { key: page.key, label: page.label, status, fields }
+  })
+
+  // currentField = first non-terminal field of the ACTIVE page (or null when complete).
+  const activePage = PAGE_SEQUENCE[activeIndex]
+  const currentDef = activePage.fields.find((f) => !isTerminal(f.key)) ?? null
+  const current = currentDef
+    ? { key: currentDef.key, status: (byKey.get(currentDef.key)?.status ?? 'EMPTY') as FieldStatus }
+    : null
+
+  // nextPage drives the "Continue to …" CTA: the active page is complete AND there is
+  // a further BUILT page the user hasn't advanced into yet.
+  const activeComplete = current === null
+  const hasNextBuilt = activeIndex + 1 < PAGE_SEQUENCE.length
+  const nextPage =
+    activeComplete && hasNextBuilt
+      ? { key: PAGE_SEQUENCE[activeIndex + 1].key, label: PAGE_SEQUENCE[activeIndex + 1].label }
+      : null
+
+  // Locked placeholder pages (not yet built) so the user can see the road ahead.
+  const lockedPages: CanonicalPage[] = LOCKED_PAGES.map((p) => ({
     key: p.key,
     label: p.label,
-    status: orientationComplete && i === 0 ? 'active' : 'locked',
+    status: 'locked' as const,
     fields: [],
+  }))
+
+  // Page 2 causes-loop records.
+  const causeRows = await prisma.diagnosisCause.findMany({
+    where: { ideaId },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, cause: true, whyPersisted: true, evidence: true, isRootCause: true, source: true },
+  })
+  const diagnosisCauses: CanonicalCause[] = causeRows.map((c) => ({
+    id: c.id,
+    cause: c.cause,
+    whyPersisted: c.whyPersisted,
+    evidence: c.evidence,
+    isRootCause: c.isRootCause,
+    source: c.source as 'USER' | 'LEX_CORPUS',
   }))
 
   // Initial Background document
@@ -97,9 +138,11 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
 
   return {
     ideaId: idea.id,
-    stage: orientationComplete ? 'DIAGNOSIS' : 'ORIENTATION',
-    currentField: current ? { key: current.key, status: current.status } : null,
-    pages: [orientationPage, ...lockedPages],
+    stage: lexPage,
+    nextPage,
+    currentField: current,
+    pages: [...pages, ...lockedPages],
+    diagnosisCauses,
     userProfile: {
       aboutYou: idea.creator.aboutYouNarrative ?? null,
       experienceLevel: idea.creator.experienceLevel ?? null,
