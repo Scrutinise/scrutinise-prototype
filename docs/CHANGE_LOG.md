@@ -1,6 +1,61 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 30 Jun 2026 — Search Stage 3: LLM query expansion (concept→legislation bridging, flag-gated, off by default).*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — Stage 3 smoke-tested (verified) + v2 gold structure encoded in the scoring harness.*
+
+---
+
+## SEARCH — Stage 3 smoke-test + v2 gold harness (2026-07-01 13:57 UTC)
+
+Two independent tasks; neither depended on the archetype-B answer-key being finalised.
+
+**Task 1 — Stage 3 smoke-test (VERIFIED, throwaway script deleted).** Confirmed the query-expansion
+plumbing works and the model names real anchors, before investing in formal scoring. A throwaway
+`scripts/ingest/search/smoke-stage3.ts` drove the REAL path: `expandQuery(keywords, '')` (with
+`LEX_QUERY_EXPANSION=true`) then `rankedSearch` (bare keywords vs expanded set) against the live
+16.5M-row `corpus_fts` LanceDB-on-R2 index.
+- **Note on plumbing:** the platform entry point `runFtsSearch` is a thin HTTP+hydrate wrapper over the
+  Railway `fts-serve` endpoint and is DORMANT locally (`FTS_SEARCH_URL` unset → silent stub fallback,
+  tests nothing). So the test exercised `rankedSearch` directly — the exact BM25 + title/legislation-tier
+  boost path both the query service (behind `runFtsSearch`) and `score-fts.ts` use. `expandQuery` + the
+  Set-merge mirrored `fireSearchTrigger` line-for-line.
+- **Result (acceptance MET):** for **"Revoke MiFID II"** the LLM named sensible anchors — **FSMA 2000,
+  FSMA 2023, MiFID Directive, retained MiFIR, UK MiFID** — and the expanded query surfaced **6 new
+  legislation rows** the bare query missed (the 2006 MiFID-implementing SIs + 2019/2021 onshoring SIs),
+  lifting the top legislation score 44→378. **"data protection"** → anchors DPA 2018 / UK GDPR / GDPR;
+  expansion surfaced DPA 2018 (leg@20 0→1). **"seatbelt law"** → anchors RTA 1988 + Wearing of Seat Belts
+  Regs; expansion surfaced **RTA 1988 s.15** (the actual provision, leg@20 0→5).
+- **Observed:** Gemini returned transient **HTTP 503** on 2 of the first calls (overloaded); `expandQuery`
+  degraded to EMPTY exactly as designed (resilient). A short retry in the test harness rode over it. In
+  prod this means an occasional trigger gets no expansion and falls back to the original keywords — the
+  intended graceful degradation.
+- **Caveat on the leg@20 count metric:** it can *fall* (MiFID 11→10) even as relevance rises sharply —
+  the composition shifts toward MiFID-specific instruments and scores jump ~8×. The "new legislation
+  surfaced" set + score lift tell the real story, not the raw count.
+
+**Task 2 — v2 gold structure encoded in the scoring harness (`GOLD_QUERIES.md` v2).**
+- **`gold-queries.ts`:** added `Archetype` G–K, `ARCHETYPE_META` (per-archetype stream/kind/metric from
+  §A), and per-query `stream` / `kind` / `metric` (`recall@20` | `lesson`) / `scoreable` / `lessonTarget`
+  / `todo`. New entries: **B6** (validated MiFID lay test), **G1–G3 · H1–H3 · I1–I3** (principle streams,
+  `[PRINCIPLE-STREAM]`), **J1** (`[FOREIGN]`, deferred), **K1–K2** (exact-pin). The 30 v1 entries are
+  untouched — stream/kind/metric are grafted on at export; `scoreable` defaults to
+  `metric === 'recall@20'`, so all 30 stay `scoreable:true` and their patterns/scores are unchanged.
+- **Expected-sources for the new SPECIFIC queries (B6, K1, K2) + J1 are TODO placeholders** (empty
+  patterns, `todo:true`) — to be filled from the validated answer-key (§C). Marked `scoreable:false` so
+  they are present but excluded from the headline until then.
+- **`score-fts.ts`:** headline recall@20 now aggregates over **scoreable recall@20 queries only** (== the
+  v1 set) → numbers byte-identical to v1. Added the **0–2 lesson scaffold** (principle G–I reported as
+  NOT CALIBRATED — rubric set by example once a principle-stream result exists, §C.3) and a **pending-
+  validation** section (B6/J1/K1/K2). Both groups get a top-20 eyeball dump (the calibration/validation
+  artefact) but never enter the headline. JSON gains stream/kind/metric/scoreable/todo + `excluded` lists.
+- **Verified (harness runs, EXIT 0, 43 queries):** headline **overall recall@20 = 69.4% / MRR 0.693**,
+  **excl. [GRAPH] floor = 68.0% / 0.729 (n=25)** — identical to the 27 Jun v1 baseline; per-archetype
+  A=60 B=40 C=60 D=76.7 E=90 F=90 unchanged. New queries present; **9 principle + 4 pending cleanly
+  excluded** from the headline. Regenerated `docs/FTS_S1b_SCORING.md` + `docs/fts_s1b_scores.json`.
+- **`tsc --noEmit` (scripts/ingest):** only the 4 documented pre-existing errors (diag-db / run-cleanup
+  missing `@prisma/adapter-pg`, test-fca-playwright missing `playwright`, v26-pooled-smoke rootDir) —
+  zero new.
+- Files: `scripts/ingest/search/gold-queries.ts`, `scripts/ingest/search/score-fts.ts`,
+  `docs/GOLD_QUERIES.md` (v2), `docs/FTS_S1b_SCORING.md` + `docs/fts_s1b_scores.json` (regenerated).
 
 ---
 

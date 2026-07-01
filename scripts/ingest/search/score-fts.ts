@@ -24,7 +24,7 @@ import { Pool } from 'pg'
 import { connectLance, FTS_TABLE } from './lance'
 import { rankedSearch, Hit } from './fts-core'
 import { loadActIndex } from './citation-resolver'
-import { GOLD, GoldQuery } from './gold-queries'
+import { GOLD, GoldQuery, ARCHETYPE_META } from './gold-queries'
 
 const OUT_MD = path.join(__dirname, '../../../docs/FTS_S1b_SCORING.md')
 const OUT_JSON = path.join(__dirname, '../../../docs/fts_s1b_scores.json')
@@ -66,12 +66,27 @@ function pctStr(x: number): string { return `${(x * 100).toFixed(1)}%` }
 function dumpQuery(s: QueryScore): string {
   const q = s.q
   const lines: string[] = []
-  lines.push(`### ${q.id} (${q.archetype}/${q.persona})${q.flags.length ? ' [' + q.flags.join('][') + ']' : ''}${q.floor ? ' — ENGINE FLOOR' : ''}`)
+  const tag = q.metric === 'lesson'
+    ? ' — PRINCIPLE (0–2, uncalibrated)'
+    : q.floor ? ' — ENGINE FLOOR' : (!q.scoreable ? ' — PENDING VALIDATION' : '')
+  lines.push(`### ${q.id} (${q.archetype}/${q.persona})${q.flags.length ? ' [' + q.flags.join('][') + ']' : ''}${tag}`)
   lines.push(`*Query:* ${q.query}`)
-  lines.push(`*recall@20:* ${pctStr(s.recall)} · *MRR:* ${s.mrr.toFixed(3)}`)
-  lines.push('')
-  lines.push('Expected sources:')
-  for (const m of s.matched) lines.push(`- ${m.rank ? `✓ @${m.rank}` : '✗ MISS'} — ${m.label}`)
+  lines.push(`*stream:* ${q.stream} · *kind:* ${q.kind} · *metric:* ${q.metric}`)
+  if (q.metric === 'lesson') {
+    lines.push(`*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.`)
+    lines.push('')
+    lines.push(`Lesson target: ${q.lessonTarget ?? '(tbd)'}`)
+  } else if (!q.scoreable) {
+    lines.push(`*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.`)
+    lines.push('')
+    lines.push('Expected sources (TODO):')
+    for (const m of s.matched) lines.push(`- ⋯ TODO — ${m.label}`)
+  } else {
+    lines.push(`*recall@20:* ${pctStr(s.recall)} · *MRR:* ${s.mrr.toFixed(3)}`)
+    lines.push('')
+    lines.push('Expected sources:')
+    for (const m of s.matched) lines.push(`- ${m.rank ? `✓ @${m.rank}` : '✗ MISS'} — ${m.label}`)
+  }
   lines.push('')
   lines.push('Top-20 retrieved:')
   s.hits.forEach((h, i) => {
@@ -96,48 +111,85 @@ async function main() {
 
   const scores: QueryScore[] = []
   for (const q of GOLD) {
+    // Retrieval runs for every query — for principle/pending queries the top-20
+    // dump is the calibration/validation artefact (§C), even though it is not scored.
     const hits = await rankedSearch(table, q.query, { limit: 20, actIndex })
     const s = scoreQuery(q, hits)
     scores.push(s)
-    console.log(`  ${q.id} ${q.archetype} recall@20=${pctStr(s.recall)} mrr=${s.mrr.toFixed(3)}${q.floor ? ' (floor)' : ''}`)
+    const status = q.metric === 'lesson' ? 'principle(0–2 uncalibrated)'
+      : !q.scoreable ? 'pending(TODO)' : (q.floor ? '(floor)' : '')
+    const num = q.metric === 'recall@20' && q.scoreable ? `recall@20=${pctStr(s.recall)} mrr=${s.mrr.toFixed(3)}` : ''
+    console.log(`  ${q.id} ${q.archetype} ${num} ${status}`.trimEnd())
   }
 
-  // aggregates
-  const archetypes = ['A', 'B', 'C', 'D', 'E', 'F'] as const
+  // ── aggregates ──────────────────────────────────────────────────────────────
+  // The recall HEADLINE is over SCOREABLE recall@20 queries only (== the v1 set:
+  // the new principle G–I and TODO B6/J1/K1/K2 queries are scoreable:false), so
+  // these numbers are byte-identical to v1.
+  const recallScores = scores.filter((s) => s.q.metric === 'recall@20' && s.q.scoreable)
+  const archetypes = ['A', 'B', 'C', 'D', 'E', 'F'] as const // the scoreable recall archetypes
   const byArch = archetypes.map((a) => {
-    const ss = scores.filter((s) => s.q.archetype === a)
+    const ss = recallScores.filter((s) => s.q.archetype === a)
     return { archetype: a, n: ss.length, recall: mean(ss.map((s) => s.recall)), mrr: mean(ss.map((s) => s.mrr)) }
   })
-  const overall = { recall: mean(scores.map((s) => s.recall)), mrr: mean(scores.map((s) => s.mrr)) }
-  const nonFloor = scores.filter((s) => !s.q.floor)
+  const overall = { recall: mean(recallScores.map((s) => s.recall)), mrr: mean(recallScores.map((s) => s.mrr)) }
+  const nonFloor = recallScores.filter((s) => !s.q.floor)
   const exFloor = { recall: mean(nonFloor.map((s) => s.recall)), mrr: mean(nonFloor.map((s) => s.mrr)), n: nonFloor.length }
+
+  // Present-but-excluded groups (reported separately, never in the headline):
+  const principle = scores.filter((s) => s.q.metric === 'lesson')                         // G–I — 0–2 scaffold
+  const pending   = scores.filter((s) => s.q.metric === 'recall@20' && !s.q.scoreable)    // B6/J1/K1/K2 — TODO
 
   // markdown report
   const md: string[] = []
   md.push('# FTS S1b — scoring report', '')
   md.push(`*Generated ${new Date().toISOString()} against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*`, '')
   md.push('## Headline', '')
+  md.push(`*Headline = SCOREABLE recall@20 queries only (the v1 specific set, ${recallScores.length} queries). Principle streams G–I (0–2 lesson, rubric not calibrated) and new SPECIFIC queries with TODO expected-sources (B6, J1, K1, K2) are PRESENT but EXCLUDED until their answer-keys land — see the two tables below.*`, '')
   md.push('| scope | recall@20 | MRR | n |', '|---|---|---|---|')
-  md.push(`| overall (all 30) | ${pctStr(overall.recall)} | ${overall.mrr.toFixed(3)} | 30 |`)
+  md.push(`| overall (scoreable v1 set) | ${pctStr(overall.recall)} | ${overall.mrr.toFixed(3)} | ${recallScores.length} |`)
   md.push(`| **overall excl. [GRAPH] floor** | **${pctStr(exFloor.recall)}** | **${exFloor.mrr.toFixed(3)}** | ${exFloor.n} |`)
   md.push('')
-  md.push('## By archetype', '')
-  md.push('| archetype | recall@20 | MRR | n | note |', '|---|---|---|---|---|')
+  md.push('## By archetype (scoreable recall streams)', '')
+  md.push('| archetype | stream | recall@20 | MRR | n | note |', '|---|---|---|---|---|---|')
   const note: Record<string, string> = { A: '[INFORCE] aspects are floors', D: 'ALL [GRAPH] — engine floor', F: '[BILLS] scores for real' }
-  for (const b of byArch) md.push(`| ${b.archetype} | ${pctStr(b.recall)} | ${b.mrr.toFixed(3)} | ${b.n} | ${note[b.archetype] ?? ''} |`)
+  for (const b of byArch) md.push(`| ${b.archetype} | ${ARCHETYPE_META[b.archetype].stream} | ${pctStr(b.recall)} | ${b.mrr.toFixed(3)} | ${b.n} | ${note[b.archetype] ?? ''} |`)
+  md.push('')
+  md.push('## Principle streams (G–I) — 0–2 lesson · SCAFFOLD, excluded from headline', '')
+  md.push('*Metric is a 0–2 transferable-lesson judgement, not recall@20. The rubric is set by example once a principle-stream result exists (§C.3); the principle-retrieval method is not built. Scored NOT CALIBRATED for now. Top-20 dumps below exist so the rubric can later be calibrated against real output.*', '')
+  md.push('| id | persona | stream | lesson target |', '|---|---|---|---|')
+  for (const s of principle) md.push(`| ${s.q.id} | ${s.q.persona} | ${s.q.stream} | ${s.q.lessonTarget ?? ''} |`)
+  md.push('')
+  md.push('## Pending validation (specific, expected-sources TODO) — excluded from headline', '')
+  md.push('*These are scoreable-in-principle recall@20 queries, but their expected-sources are TODO placeholders pending the validated answer-key (§C). Excluded from the headline until filled. B6 is the validated MiFID lay-vocabulary test; J1 is deferred (no foreign corpus).*', '')
+  md.push('| id | archetype | persona | stream | query |', '|---|---|---|---|---|')
+  for (const s of pending) md.push(`| ${s.q.id} | ${s.q.archetype} | ${s.q.persona} | ${s.q.stream} | ${s.q.query} |`)
   md.push('')
   md.push('## Per-query detail + top-20 eyeball dump', '')
   for (const s of scores) md.push(dumpQuery(s))
 
   fs.writeFileSync(OUT_MD, md.join('\n'))
   fs.writeFileSync(OUT_JSON, JSON.stringify({
-    generatedAt: new Date().toISOString(), overall, exFloor, byArch,
-    queries: scores.map((s) => ({ id: s.q.id, archetype: s.q.archetype, flags: s.q.flags, floor: s.q.floor, recall: s.recall, mrr: s.mrr, matched: s.matched })),
+    generatedAt: new Date().toISOString(),
+    headline: { note: 'over scoreable recall@20 queries (v1 set); principle G–I + TODO B6/J1/K1/K2 excluded', overall, exFloor },
+    overall, exFloor, byArch,
+    excluded: { principle: principle.map((s) => s.q.id), pending: pending.map((s) => s.q.id) },
+    queries: scores.map((s) => ({
+      id: s.q.id, archetype: s.q.archetype, persona: s.q.persona,
+      stream: s.q.stream, kind: s.q.kind, metric: s.q.metric,
+      scoreable: s.q.scoreable, todo: s.q.todo ?? false,
+      flags: s.q.flags, floor: s.q.floor,
+      // recall/mrr are meaningful only for scoreable recall@20 queries; null otherwise
+      recall: s.q.metric === 'recall@20' && s.q.scoreable ? s.recall : null,
+      mrr: s.q.metric === 'recall@20' && s.q.scoreable ? s.mrr : null,
+      matched: s.matched,
+    })),
   }, null, 2))
 
   console.log('')
-  console.log(`[score] overall recall@20=${pctStr(overall.recall)} mrr=${overall.mrr.toFixed(3)}`)
-  console.log(`[score] excl floor recall@20=${pctStr(exFloor.recall)} mrr=${exFloor.mrr.toFixed(3)}`)
+  console.log(`[score] HEADLINE (scoreable v1 set, n=${recallScores.length}) overall recall@20=${pctStr(overall.recall)} mrr=${overall.mrr.toFixed(3)}`)
+  console.log(`[score] excl floor recall@20=${pctStr(exFloor.recall)} mrr=${exFloor.mrr.toFixed(3)} (n=${exFloor.n})`)
+  console.log(`[score] excluded from headline: ${principle.length} principle (${principle.map((s) => s.q.id).join(',')}) + ${pending.length} pending (${pending.map((s) => s.q.id).join(',')})`)
   console.log(`[score] wrote ${OUT_MD} + ${OUT_JSON}`)
 }
 

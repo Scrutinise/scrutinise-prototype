@@ -1,230 +1,161 @@
-# GOLD QUERY SET v1 — Search Project
+# GOLD QUERY SET v2 — Search Project
 
-*Drafted 12 Jun 2026 (CCh). Status: UNTESTED HYPOTHESES throughout — query realism rests
-on persona hypotheses H1/H2 (below), and every "expected sources" line is CCh's best guess
-awaiting Charlie's correction. A gold set with unverified expected answers measures nothing:
-validation (step 1 below) is part of the artefact, not optional polish.*
+*Revised 2026-06-30 (CCh). Builds on v1 (12 Jun) — every v1 query is retained; v2 adds the* **stream map** *(§A), a* **second metric** *for principle streams (§B), three new archetypes for the principle streams (G–I), two new caller archetypes (J–K), and the validated "Revoke MiFID II" query (B6).*
 
----
+>   **Status: provisional throughout.** Expected-sources are CCh's best guess; principle success- criteria are deliberately left to be set **by example** (see §B). A gold set with unverified answers measures nothing — validation is part of the artefact, not polish. See §C for the *tractable* validation method (review a generated answer-key; don't hand-write 30 lists).
+
+***
 
 ## Purpose
 
-This set is the fixed yardstick for every retrieval decision in the search project: engine
-bake-offs (Neon+pg_search vs LanceDB-on-R2), embedding model choice (voyage-law-2 vs
-general flagship), reranker on/off, archetype-layer boosts, enrichment value. Nothing gets
-adopted because it sounds good; it gets adopted because it moves these numbers.
+The fixed yardstick for every retrieval decision: engine choice, embedding-model bake-off, reranker on/off, boosts, stage-3 expansion on/off, graph layers. Nothing is adopted because it sounds good; it is adopted because it moves these numbers.
 
 ## Personas (hypotheses)
 
-- **H1** — MP / parliamentary researcher, experienced with Private Members' Bills. Precise
-  vocabulary, wants exhaustiveness and citations, low tolerance for wrong answers.
-- **H2** — capable, educated member of the public with a serious policy idea and no
-  knowledge of legislative process or statutory vocabulary. Plain-language queries; the
-  vocabulary bridge must do the work.
+-   **H1** — MP / parliamentary researcher. Precise vocabulary, wants exhaustiveness + citations, low tolerance for wrong answers.
+-   **H2** — capable member of the public with a serious idea and no statutory vocabulary. Plain language; the vocabulary bridge must do the work.
 
-## Scoring protocol
+***
 
-1. **Validate** (Charlie, ~2–3 hrs): for each query, correct/extend the expected-sources
-   list. A source is "expected" if a competent parliamentary researcher would consider the
-   answer incomplete without it. 2–8 expected sources per query is the target.
-2. **Retrieval metric — recall@20**: of the expected sources, what fraction appears in the
-   top 20 results handed to Lex? This is the primary number. Lex can rescue a mediocre
-   ordering; it cannot cite what was never retrieved. Secondary: MRR (mean reciprocal
-   rank — 1/rank of the first relevant result, rewards putting a right answer at the top).
-3. **Answer metric** (later, once synthesis is wired): side-by-side judgment of Lex's
-   answers per query — correct / complete / cited / would-impress (the "how did you find
-   that?" test). Rubric to be written with the design doc.
-4. **Versioning**: this file is append-only per version. Queries are never silently edited
-   once scoring has begun (that would make scores incomparable across runs). Corrections
-   before first scoring run = v1 edits; after = v2 additions.
+## §A. Stream map — what each archetype tests, and how it is scored
+
+Search is now specialised by stream (SEARCH_STRATEGY.md §3). Each archetype targets a stream and is scored by that stream's metric. The load-bearing split is **specific-retrieval** (want the exact item → recall@20) vs **principle-retrieval** (want a transferable lesson → 0–2 judgement).
+
+| Archetype                              | Stream(s)                      | Kind           | Metric                | Stage-3 / vector target?  |
+|----------------------------------------|--------------------------------|----------------|-----------------------|---------------------------|
+| A — citation lookup                    | legislation                    | specific       | recall@20 + exact-pin | no (citation resolver)    |
+| B — concept / vocabulary bridge        | legislation                    | specific       | recall@20             | **YES — the core target** |
+| C — policy-area sweep                  | legislation + guidance         | specific       | recall@20 (breadth)   | partial                   |
+| D — graph (amendments/powers/in-force) | citation graph                 | specific+graph | recall@20             | no (graph layer)          |
+| E — legislative intent (Hansard)       | debates                        | specific       | recall@20             | partial (vector helps)    |
+| F — precedent / prior attempts         | bills + debates                | specific       | recall@20             | partial                   |
+| **G — implementation pattern**         | **codes / guidance**           | **principle**  | **0–2 lesson**        | YES (failure-mode vocab)  |
+| **H — institutional behaviour**        | **investigations / inquiries** | **principle**  | **0–2 lesson**        | YES (failure-mode vocab)  |
+| **I — evaluation / what works**        | **parliamentary evaluations**  | **principle**  | **0–2 lesson**        | YES (failure-mode vocab)  |
+| J — comparative / foreign law          | web + foreign corpus           | specific       | recall@20             | deferred                  |
+| K — precise amendable section          | legislation (section-level)    | specific       | exact-pin             | no (citation + graph)     |
+
+## §B. The two metrics
+
+1.  **recall@20** (specific streams). Of the validated expected sources, what fraction appears in the top 20 handed to Lex. Secondary: **MRR** (1/rank of first relevant result). For A and K also record **exact-pin**: did the precise cited/target section land at rank 1.
+2.  **0–2 transferable-lesson judgement** (principle streams G–I). recall@20 does **not** apply — "good" is not a document ID but whether a *relevant, transferable* lesson surfaced. Per query:
+    -   **0** — nothing relevant, or only off-topic noise.
+    -   **1** — topical hits only (it found documents *about the subject* but no transferable lesson).
+    -   **2** — a genuine transferable lesson surfaced (a pattern usable even though it came from a different domain — the actual aim of these streams). Scored by a human rater (Charlie) or an LLM-as-judge against the rubric. **The rubric is set by example (§C), not in the abstract.**
+
+## §C. Scoring protocol — and the *tractable* way to validate
+
+1.  **Build an independent answer-key, then score against it.** The expected-sources list is the answer-key. It must be generated **independently of our own search** (otherwise we grade our search against its own output — circular). The MiFID query (B6) is the model: Charlie's external Google comparison produced the targets, independent of our FTS.
+2.  **Validation = review, not generate.** CCh (or a strong LLM + web) drafts the candidate expected-sources per query; Charlie **reviews and corrects** — applying real scrutiny in domains he knows, sanity-checking the web-sourced key elsewhere. Reviewing a proposed key is far more tractable than hand-writing 30 lists from memory. CC can additionally dump *what our current search returns* per query, so the key and our output sit side by side.
+3.  **Principle criteria are set by example.** For G–I, Charlie cannot define "good" in the abstract — he sees a real result and critiques it ("transferable lesson" vs "topical only"), and those critiques *become* the 0/1/2 rubric. This is correctly **deferred** until a principle-stream result exists to react to (the principle retrieval is not built yet).
+4.  **Versioning.** Append-only per version. Queries are not silently edited once scoring on a version has begun (that breaks comparability). Corrections before first scoring = v2 edits.
 
 ## Corpus-dependency flags
 
-- `[BILLS]` — needs the Bills corpus. LANDED 17 Jun (bills-api, 6,535 sections), so these
-  queries now score for real, not as deliberate failures. The flag is retained only to
-  mark which queries depend on that corpus.
-- `[INFORCE]` — needs commencement/in-force metadata (TNA changes data; not yet extracted).
-- `[GRAPH]` — needs the citation/amendment edge table (planned, not built).
-- Unflagged queries are answerable from corpus already in R2.
+-   `[BILLS]` landed 17 Jun. `[INFORCE]` needs commencement metadata (TNA changes; not extracted).
+-   `[GRAPH]` needs the citation/amendment edge table (planned). `[MECHANISM]` needs the mechanism graph (SEARCH_STRATEGY §9, later).
+-   `[PRINCIPLE-STREAM]` — G–I assume the principle corpora (codes/guidance, inquiries, evaluations) are ingested **and** the principle-retrieval method exists. Until then these score as deliberate failures (and can't yet be rubric-calibrated).
+-   `[FOREIGN]` — J needs foreign-law corpus / web orientation.
 
----
+***
 
-## Archetype A — Known-item / citation lookup
-*Tests: citation parser, direct lookup path, current-as-amended awareness. Should be
-near-instant and exact; any miss here is a severe failure.*
+## Archetype A — Known-item / citation lookup · *legislation · recall@20 + exact-pin*
 
-**A1 (H1)** — "Section 21 Housing Act 1988"
-Expected: HA 1988 s.21 text as amended; flag of its prospective abolition (Renters' Rights
-Act 2025) and current in-force status. `[INFORCE]` for the flag; bare text unflagged.
+-   **A1 (H1)** "Section 21 Housing Act 1988" → HA 1988 s.21 as amended; prospective abolition (Renters' Rights Act 2025); in-force status. `[INFORCE]` for the flag.
+-   **A2 (H2)** "What does section 1 of the Theft Act 1968 actually say?" → s.1 TA 1968; ss.2–6 as context.
+-   **A3 (H1)** "Working Time Regulations 1998" → SI 1998/1833; reg 4, regs 13–13A; amendment status.
+-   **A4 (H1)** "Equality Act 2010 section 149" → s.149 PSED; Sch 18; commencement SI.
+-   **A5 (H2)** "Find me the law that says you have to wear a seatbelt" → RTA 1988 ss.14–15; Seat Belts Regs 1993. (Bridges A↔B: a known item described, not cited.)
 
-**A2 (H2)** — "What does section 1 of the Theft Act 1968 actually say?"
-Expected: s.1 TA 1968; ss.2–6 (the definitions of dishonesty, appropriation etc.) offered
-as context.
+## Archetype B — Concept search (vocabulary bridge) · *legislation · recall@20 ·* **stage-3/vector core target**
 
-**A3 (H1)** — "Working Time Regulations 1998"
-Expected: SI 1998/1833, key provisions (reg 4 48-hour week, regs 13–13A leave), amendment
-status post-Employment Rights/retained-EU changes.
+*The user's words appear nowhere in the statute. This is the archetype stage 3 and the vector layer exist to fix.*
 
-**A4 (H1)** — "Equality Act 2010 section 149"
-Expected: s.149 (public sector equality duty), Sch 18 exceptions, the commencement SI
-bringing it into force.
+-   **B1 (H2)** "Can my landlord kick me out without giving a reason?" → HA 1988 s.21, s.8/Sch 2; Renters' Rights Act 2025; Deregulation Act 2015 ss.33–41.
+-   **B2 (H2)** "I want to stop people renting out whole houses as Airbnbs all year round" → Levelling-up and Regeneration Act 2023 short-let provisions; Use Classes Order; London 90-night rule (Deregulation Act 2015 s.44).
+-   **B3 (H2)** "Is it illegal to take a photo of someone in public without their permission?" → honest "no general prohibition": SOA 2003 ss.67–67A; PfHA 1997; UK GDPR/DPA 2018. (Tests retrieving *adjacent* law rather than hallucinating an on-point statute.)
+-   **B4 (H1)** "Statutory duty of candour — who does it bind and where is it heading?" → HSCA 2008 (Regulated Activities) Regs 2014 reg 20; Public Office (Accountability) Bill `[BILLS]` + debates.
+-   **B5 (H2)** "Rules about how much noise my neighbours can make at night?" → EPA 1990 Part III; Noise Act 1996; Control of Pollution Act 1974 s.60.
+-   **B6 (H2)** "I want to revoke MiFID II" → **FCA Handbook COBS & SYSC; FSMA 2023 (post-Brexit framework); retained MiFIR / MiFID Org Reg; post-Brexit onshoring SIs.** *(VALIDATED via external Google comparison — the canonical lay-vocabulary test for stage 3.)*
 
-**A5 (H2)** — "Find me the law that says you have to wear a seatbelt"
-Expected: Road Traffic Act 1988 ss.14–15; Motor Vehicles (Wearing of Seat Belts)
-Regulations 1993. Deliberately bridges A and B: a known item described, not cited.
+## Archetype C — Policy-area sweep · *legislation + guidance · recall@20 (breadth)*
 
-## Archetype B — Concept search (vocabulary bridge)
-*Tests: embeddings + query rewriting. The user's words appear nowhere in the statute.*
+-   **C1 (H1)** "Everything currently regulating short-term holiday lets in England" → B2's set + tax treatment (FHL abolition) + council-tax/rates SIs + fire-safety guidance.
+-   **C2 (H2)** "What laws govern e-scooters?" → RTA 1988; EAPC Regs 1983; e-scooter trial SIs; written answers on legalisation timetable.
+-   **C3 (H1)** "Statutory framework for adult social care funding in England" → Care Act 2014 Part 1; Charging & Assessment Regs 2014; postponed cap provisions `[INFORCE]`.
+-   **C4 (H1)** "Duties of water companies on sewage discharges, and where they come from" → Water Industry Act 1991; Environment Act 2021 ss.141A–; UWWT Regs 1994; EA enforcement powers.
+-   **C5 (H2)** "Protections for people who live in park homes / mobile homes" → Mobile Homes Acts 1983 & 2013; Caravan Sites Act 1968. (Long-tail coverage.)
 
-**B1 (H2)** — "Can my landlord kick me out without giving a reason?"
-Expected: HA 1988 s.21 and s.8/Sch 2; Renters' Rights Act 2025 abolition provisions;
-Deregulation Act 2015 ss.33–41 (retaliatory eviction limits).
+## Archetype D — Graph (amendments, powers, applications) · *citation graph · recall@20* `[GRAPH]`
 
-**B2 (H2)** — "I want to stop people renting out whole houses as Airbnbs all year round"
-Expected: Levelling-up and Regeneration Act 2023 short-term lets provisions (registration
-scheme, planning use class change powers); Town and Country Planning (Use Classes) Order;
-the Greater London 90-night rule (Deregulation Act 2015 s.44).
+-   **D1 (H1)** "What has amended section 21 of the Housing Act 1988 since 2015?" → Deregulation Act 2015 ss.33–41; form-prescribing SIs; Renters' Rights Act 2025.
+-   **D2 (H1)** "List the statutory instruments made under the Building Safety Act 2022" → the made-under set; scored vs TNA enabling-power data.
+-   **D3 (H1)** "Which provisions of the Environment Act 2021 are not yet in force?" `[INFORCE]` → accurate not-yet-commenced list. The flagship in-force test.
+-   **D4 (H2)** "Has the Dangerous Dogs Act 1991 been changed — what changed and why?" → 1997 Amendment Act; ABCPA 2014 s.106; XL Bully Order 2023 under s.1; 2023 intent material.
+-   **D5 (H1)** "Case law on 'philosophical belief' under section 10 of the Equality Act 2010" → Grainger v Nicholson; Forstater v CGD Europe; EAT applications. (case→section edge.)
 
-**B3 (H2)** — "Is it illegal to take a photo of someone in public without their permission?"
-Expected: an honest "no general prohibition" answer grounded in: Sexual Offences Act 2003
-ss.67–67A (voyeurism/upskirting); Protection from Harassment Act 1997; UK GDPR/DPA 2018
-boundaries. Tests whether the system can retrieve the *adjacent* law when no on-point
-statute exists, rather than hallucinating one.
+## Archetype E — Legislative intent (Hansard) · *debates · recall@20*
 
-**B4 (H1)** — "Statutory duty of candour — who does it bind and where is it heading?"
-Expected: Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 reg 20;
-current Public Office (Accountability) Bill ("Hillsborough Law") material `[BILLS]` and
-related debates.
+-   **E1 (H1)** "What did ministers say the under-occupancy provisions of the Welfare Reform Act 2012 were intended to achieve?" → Commons/Lords 2nd-reading + committee 2011–12; IA if ingested.
+-   **E2 (H2)** "Why was the sugar tax a levy on manufacturers, not a tax at the till?" → Finance Act 2017 Part 2; Budget 2016 / Finance Bill 2017 debate on reformulation incentive.
+-   **E3 (H1)** "Assurances on safeguards for bulk powers during the Investigatory Powers Act 2016?" → committee/report-stage Hansard (double-lock, IPC); Parts 6–7.
+-   **E4 (H2)** "Why does the indoor smoking ban not apply to private homes — what was said?" → Health Act 2006 Part 1; 2005–06 debates on scope/exemptions.
+-   **E5 (H1)** "When the Hunting Act 2004 was passed, what did ministers say about enforcement?" → 2003–04 Hansard on enforcement/policing; ss.1–6.
 
-**B5 (H2)** — "What are the rules about how much noise my neighbours can make at night?"
-Expected: Environmental Protection Act 1990 Part III (statutory nuisance); Noise Act 1996;
-Control of Pollution Act 1974 s.60 (construction).
+## Archetype F — Precedent / prior attempts · *bills + debates · recall@20* `[BILLS]`
 
-## Archetype C — Policy-area sweep
-*Tests: recall breadth, multi-query decomposition, corpus coverage of guidance + SIs.*
+-   **F1 (H2)** "Has anyone tried to ban single-use plastics completely? What happened?" → wet-wipes & similar PMBs; EPA 1990 s.140 SIs (straws 2020, cutlery 2023); debates on piecemeal-vs-ban.
+-   **F2 (H1)** "Previous PMBs to restrict fireworks sales, and why they failed" → repeated Fireworks Bills; Fireworks Act 2003; petitions debates; ministerial enforcement objections.
+-   **F3 (H2)** "A law making landlords accept tenants with pets — has this been tried?" → Dogs and Domestic Animals Bill (Rosindell); Renters (Reform) Bill 2023 pet clauses; Renters' Rights Act 2025 outcome. (failed PMB → absorbed into gov bill → enacted.)
+-   **F4 (H1)** "Attempts since 2010 to introduce PR for Westminster elections" → TMR/PMB attempts; Parliamentary Voting System and Constituencies Act 2011; relevant divisions.
+-   **F5 (H2)** "Has Parliament tried to make first aid training compulsory in schools?" → Emergency First Aid Education Bill 2015 (talked out); statutory RSHE 2020 under Children and Social Work Act 2017 s.34. (tried→failed-in-form-X→succeeded-in-form-Y.)
 
-**C1 (H1)** — "Everything currently regulating short-term holiday lets in England"
-Expected: union of B2's sources plus tax treatment (FHL abolition, Finance Act 2025?),
-council tax/business rates SIs, fire safety guidance. Sweep completeness is the score.
+***
 
-**C2 (H2)** — "What laws govern e-scooters?"
-Expected: RTA 1988 (motor vehicle classification); Electrically Assisted Pedal Cycles
-Regulations 1983 (why e-scooters fall outside them); the e-scooter trial SIs (2020–);
-relevant written answers on legalisation timetable.
+## Archetype G — Implementation pattern · *codes / guidance · 0–2 lesson* `[PRINCIPLE-STREAM]`
 
-**C3 (H1)** — "The statutory framework for adult social care funding in England"
-Expected: Care Act 2014 Part 1 (ss.14–17 charging, s.18 duty to meet needs); Care and
-Support (Charging and Assessment of Resources) Regulations 2014; the postponed cap
-provisions and their commencement history `[INFORCE]`.
+*How legislation is implemented in practice — transferable even from unrelated law. Score: did a transferable implementation lesson surface (not topical hits). Rubric by example (§C).*
 
-**C4 (H1)** — "What duties do water companies have about sewage discharges, and where do
-they come from?"
-Expected: Water Industry Act 1991 (s.94 etc.); Environment Act 2021 ss.141A–141 (storm
-overflow duties, monitoring); Urban Waste Water Treatment Regulations 1994 (retained EU);
-Environment Agency enforcement powers.
+-   **G1 (H1)** "A regulator is handed a new statutory duty with no extra budget — how has that gone before?" → under-resourced-duty patterns drawn from *across domains* (the lesson, not the topic).
+-   **G2 (H2)** "If we make companies report something, how do we make sure they actually do it?" → enforcement/compliance patterns from duty-to-report regimes (financial, safeguarding, environmental). `[MECHANISM]`
+-   **G3 (H1)** "How is a 'fit and proper person' test typically operated by regulators in practice?" → cross-domain implementation of a recurring mechanism. `[MECHANISM]`
 
-**C5 (H2)** — "What protections do people who live in park homes / mobile homes have?"
-Expected: Mobile Homes Act 1983; Mobile Homes Act 2013 (site licensing, pitch-fee rules);
-Caravan Sites Act 1968. Deliberately niche — tests long-tail coverage.
+## Archetype H — Institutional behaviour · *investigations / inquiries · 0–2 lesson* `[PRINCIPLE-STREAM]`
 
-## Archetype D — Graph (amendments, powers, applications)
-*Tests: citation-edge table + in-force metadata. Text search alone cannot answer these.*
+*How the civil service and public bodies actually behave — incentives, failure modes. Score: a transferable institutional insight, not a topical match.*
 
-**D1 (H1)** — "What has amended section 21 of the Housing Act 1988 since 2015?" `[GRAPH]`
-Expected: Deregulation Act 2015 ss.33–41; subsequent form-prescribing SIs; Renters' Rights
-Act 2025 (prospective repeal).
+-   **H1 (H1)** "When an arms-length body fails, how do departments typically respond, and how fast?" → patterns across inquiries (e.g. Horizon and others) — the behavioural regularity.
+-   **H2 (H2)** "What usually goes wrong when government runs a big IT programme?" → cross-inquiry IT-failure patterns (not one named project).
+-   **H3 (H1)** "Where inquiries have examined regulatory capture, what mechanisms recur?" → transferable capture patterns. `[MECHANISM]`
 
-**D2 (H1)** — "List the statutory instruments made under the Building Safety Act 2022"
-`[GRAPH]`
-Expected: the made-under edge set — Higher-Risk Buildings regs, leaseholder protection
-regs, commencement orders. Completeness scored against TNA's enabling-power data.
+## Archetype I — Evaluation / what works · *parliamentary evaluations · 0–2 lesson* `[PRINCIPLE-STREAM]`
 
-**D3 (H1)** — "Which provisions of the Environment Act 2021 are not yet in force?"
-`[GRAPH]` `[INFORCE]`
-Expected: accurate not-yet-commenced list as at query date. The flagship in-force-awareness
-test.
+*Where laws succeed and fail — general principles of effective law. Score: a general principle surfaced.*
 
-**D4 (H2)** — "Has the Dangerous Dogs Act 1991 been changed since it was passed — what
-changed and why?" `[GRAPH]`
-Expected: 1997 Amendment Act; ABCPA 2014 s.106 (private-property extension, sentencing);
-Dangerous Dogs (Designated Types) Order 2023 (XL Bully) made under s.1; intent material
-from the 2023 statements (crosses into E deliberately).
+-   **I1 (H1)** "What distinguishes regulatory-enforcement laws that worked from ones that didn't?" → PAC/NAO/post-legislative-scrutiny patterns.
+-   **I2 (H2)** "Do sunset clauses actually work — do laws get reviewed when they're meant to?" → cross-domain evaluation of a *mechanism*. `[MECHANISM]`
+-   **I3 (H1)** "When has post-legislative scrutiny found a law had significant unintended consequences, and of what kind?" → transferable unintended-consequence patterns.
 
-**D5 (H1)** — "What case law has considered 'philosophical belief' under section 10 of the
-Equality Act 2010?" `[GRAPH]`
-Expected: Grainger plc v Nicholson (the criteria); Forstater v CGD Europe; subsequent EAT
-applications in tna-caselaw. Tests the case→section edge direction.
+***
 
-## Archetype E — Legislative intent (Hansard)
-*Tests: the parliamentary tier + section↔debate linkage (the Pepper v Hart feature).
-Justifies Hansard-from-day-one.*
+## Archetype J — Comparative / foreign law · *web + foreign corpus · recall@20* `[FOREIGN]` (deferred)
 
-**E1 (H1)** — "What did ministers say the under-occupancy provisions of the Welfare Reform
-Act 2012 were intended to achieve?"
-Expected: Commons/Lords second reading and committee passages from Hansard 2011–12
-(Freud/Grayling statements); the relevant impact assessment if ingested.
+*Anticipates the Page-3 comparative caller. Deferred until foreign corpus / web orientation.*
 
-**E2 (H2)** — "Why was the sugar tax designed as a levy on manufacturers instead of a tax
-at the till?"
-Expected: Finance Act 2017 Part 2 (Soft Drinks Industry Levy); Budget 2016 and Finance
-Bill 2017 debate passages explaining the reformulation-incentive design.
+-   **J1 (H1)** "How do other countries regulate short-term lets — and what worked?" → comparator regimes (e.g. EU registration models, US city caps); included now only to mark the gap.
 
-**E3 (H1)** — "What assurances were given during the passage of the Investigatory Powers
-Act 2016 about safeguards on bulk powers?"
-Expected: committee/report stage Hansard passages (double-lock, IPC oversight); the Act's
-Parts 6–7.
+## Archetype K — Precise amendable section · *legislation (section-level) · exact-pin*
 
-**E4 (H2)** — "Why does the indoor smoking ban not apply to private homes? What was said
-when it was passed?"
-Expected: Health Act 2006 Part 1; 2005–06 debate passages on scope, the free-vote context,
-and exemptions reasoning.
+*The Page-4 coherent-actions caller: given a stated policy change, return the exact provision(s) to amend, with citation.*
 
-**E5 (H1)** — "When the Hunting Act 2004 was passed, what did ministers say about how it
-would be enforced?"
-Expected: Hansard passages on enforcement/policing from 2003–04 stages (incl. Parliament
-Acts context); Act ss.1–6.
+-   **K1 (H2)** "I want to remove the no-fault eviction route — which exact provision do I amend?" → HA 1988 s.21 (+ the Renters' Rights Act 2025 repealing provision). Exact-pin on s.21.
+-   **K2 (H1)** "To add a statutory duty of candour for public bodies, where would it slot in?" → the candour framework (HSCA 2008 Regs reg 20) + the Public Office (Accountability) Bill as the live vehicle. `[BILLS]`
 
-## Archetype F — Precedent / prior attempts
-*Tests: the prior-attempts detector — the core "how did you find that?" feature. The Bills
-corpus landed 17 Jun, so these now score for real (no longer deliberate failures).*
+***
 
-**F1 (H2)** — "Has anyone tried to ban single-use plastics completely? What happened?"
-`[BILLS]`
-Expected: Plastics (Wet Wipes) Bill and similar PMBs; the route actually taken instead
-(EPA 1990 s.140 SIs — straws/stirrers 2020, plates/cutlery 2023); debate passages on why
-piecemeal SIs over a general ban.
+## Coverage notes (v2 gaps, deliberate)
 
-**F2 (H1)** — "Previous Private Members' Bills attempting to restrict fireworks sales, and
-why they failed" `[BILLS]`
-Expected: the repeated Fireworks Bills (multiple sessions, 2010s–20s); Fireworks Act 2003
-as the partial success; petitions-committee debates; ministerial objections on enforcement
-grounds.
-
-**F3 (H2)** — "I want a law making landlords accept tenants with pets. Has this been
-tried?" `[BILLS]`
-Expected: Dogs and Domestic Animals (Accommodation and Protection) Bill (Rosindell);
-Renters (Reform) Bill 2023 pet provisions and that Bill's fall; Renters' Rights Act 2025
-outcome. The model arc: failed PMB → absorbed into government bill → enacted.
-
-**F4 (H1)** — "Attempts since 2010 to introduce proportional representation for Westminster
-elections" `[BILLS]`
-Expected: ten-minute-rule and PMB attempts; the 2011 AV referendum legislation
-(Parliamentary Voting System and Constituencies Act 2011) as context; relevant divisions.
-
-**F5 (H2)** — "Has Parliament ever tried to make first aid training compulsory in schools?"
-`[BILLS]`
-Expected: Emergency First Aid Education Bill 2015 (talked out — the debate is the gold
-nugget); subsequent success by another route (statutory RSHE from 2020 under Children and
-Social Work Act 2017 s.34). The exemplar "your idea was tried, failed in form X, succeeded
-in form Y" answer.
-
----
-
-## Coverage notes (v1 gaps, deliberate)
-
-- Devolved-jurisdiction queries are thin (one Scots/Welsh/NI sweep should join in v2 once
-  regional corpus passes its V19 audit).
-- No tax-manual or FCA-handbook archetype yet — add when those corpora are quality-checked.
-- No cross-jurisdiction comparison queries — V3+ (international expansion).
-- Telemetry replaces guesswork: once real users exist, their actual queries feed v2/v3 and
-  the persona hypotheses get tested against reality.
+-   **Principle archetypes (G–I) are unscored until** the principle corpora are ingested and the principle-retrieval method exists; their 0–2 rubric is then calibrated by example (§C.3).
+-   Devolved-jurisdiction queries still thin — add one Scots/Welsh/NI sweep when regional corpus passes audit.
+-   J (comparative) and the mechanism-tagged queries (`[MECHANISM]`) depend on later layers.
+-   Telemetry replaces guesswork: once real users + the feedback feature produce observed queries, those feed v3 and test the H1/H2 persona hypotheses against reality.

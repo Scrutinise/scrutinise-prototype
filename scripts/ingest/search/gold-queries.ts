@@ -21,21 +21,67 @@
  */
 
 export type GoldSource = { label: string; patterns: RegExp[] }
+
+// ── v2 stream map (GOLD_QUERIES.md §A) ───────────────────────────────────────
+// Every query targets a stream and is scored by that stream's metric. The
+// load-bearing split is SPECIFIC-retrieval (want the exact item → recall@20) vs
+// PRINCIPLE-retrieval (want a transferable lesson → 0–2 judgement).
+export type Archetype = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K'
+export type Persona = 'H1' | 'H2'
+export type Kind = 'specific' | 'principle'
+export type Metric = 'recall@20' | 'lesson' // the two scoring paths (recall@20 vs 0–2 lesson)
+export type Flag = 'BILLS' | 'INFORCE' | 'GRAPH' | 'PRINCIPLE-STREAM' | 'FOREIGN' | 'MECHANISM'
+
+/** Per-archetype stream/kind/metric, straight from GOLD_QUERIES.md §A. */
+export const ARCHETYPE_META: Record<Archetype, { stream: string; kind: Kind; metric: Metric }> = {
+  A: { stream: 'legislation',                 kind: 'specific',  metric: 'recall@20' }, // + exact-pin
+  B: { stream: 'legislation',                 kind: 'specific',  metric: 'recall@20' }, // stage-3/vector core target
+  C: { stream: 'legislation + guidance',      kind: 'specific',  metric: 'recall@20' }, // breadth
+  D: { stream: 'citation graph',              kind: 'specific',  metric: 'recall@20' },
+  E: { stream: 'debates',                     kind: 'specific',  metric: 'recall@20' },
+  F: { stream: 'bills + debates',             kind: 'specific',  metric: 'recall@20' },
+  G: { stream: 'codes / guidance',            kind: 'principle', metric: 'lesson' },
+  H: { stream: 'investigations / inquiries',  kind: 'principle', metric: 'lesson' },
+  I: { stream: 'parliamentary evaluations',   kind: 'principle', metric: 'lesson' },
+  J: { stream: 'web + foreign corpus',        kind: 'specific',  metric: 'recall@20' },
+  K: { stream: 'legislation (section-level)', kind: 'specific',  metric: 'recall@20' }, // exact-pin
+}
+
 export type GoldQuery = {
   id: string
-  archetype: 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
-  persona: 'H1' | 'H2'
+  archetype: Archetype
+  persona: Persona
   query: string
-  flags: ('BILLS' | 'INFORCE' | 'GRAPH')[]
+  flags: Flag[]
   /** true = a known v1 engine floor (text search alone cannot answer) — report
    *  as floor, not failure. All archetype D ([GRAPH]); see brief addition #5. */
   floor: boolean
+  // ── derived from ARCHETYPE_META at export (see below) ──
+  stream: string
+  kind: Kind
+  metric: Metric
+  /** true = counts toward the recall@20 HEADLINE now. false for: principle streams
+   *  (G–I, metric 'lesson' — rubric not calibrated), and new SPECIFIC queries whose
+   *  expected-sources are still TODO (B6, J1, K1, K2) — present but excluded until
+   *  the validated answer-key lands (GOLD_QUERIES.md §C). Defaults to true for the
+   *  v1 recall queries, so their numbers are unchanged. */
+  scoreable: boolean
+  /** principle streams (G–I): the transferable-lesson target the 0–2 rater judges
+   *  against. Set by example once a principle-stream result exists (§C.3). */
+  lessonTarget?: string
+  /** expected-sources are placeholders pending the validated answer-key (§C). */
+  todo?: boolean
   expected: GoldSource[]
 }
 
+// RAW carries everything except the ARCHETYPE_META-derived stream/kind/metric,
+// which are grafted on in the GOLD export so each query need not repeat them.
+// `scoreable` defaults to (metric === 'recall@20') unless a query overrides it.
+type RawQuery = Omit<GoldQuery, 'stream' | 'kind' | 'metric' | 'scoreable'> & { scoreable?: boolean }
+
 const ci = (...s: string[]) => s.map((x) => new RegExp(x, 'i'))
 
-export const GOLD: GoldQuery[] = [
+const RAW: RawQuery[] = [
   // ── Archetype A — known-item / citation lookup ───────────────────────────
   {
     id: 'A1', archetype: 'A', persona: 'H1', flags: ['INFORCE'], floor: false,
@@ -297,4 +343,115 @@ export const GOLD: GoldQuery[] = [
       { label: 'Children and Social Work Act 2017 s.34 (statutory RSHE)', patterns: ci('ukpga/2017/16:section-34\\b', 'relationships.{0,10}sex.{0,10}education', 'RSHE') },
     ],
   },
+
+  // ══ v2 additions (GOLD_QUERIES.md v2, 2026-06-30) ═══════════════════════════
+  // B6 + J/K carry TODO expected-sources (scoreable:false) → present but excluded
+  // from the headline until the validated answer-key lands (§C). G–I are the
+  // principle streams (metric 'lesson', scoreable:false) — scaffold only.
+
+  // ── B6 — validated MiFID lay-vocabulary test · legislation · recall@20 ─────
+  {
+    id: 'B6', archetype: 'B', persona: 'H2', flags: [], floor: false, scoreable: false, todo: true,
+    query: 'I want to revoke MiFID II',
+    expected: [
+      { label: 'TODO (validate): FCA Handbook COBS & SYSC', patterns: [] },
+      { label: 'TODO (validate): FSMA 2023 (post-Brexit framework)', patterns: [] },
+      { label: 'TODO (validate): retained MiFIR / MiFID Org Reg', patterns: [] },
+      { label: 'TODO (validate): post-Brexit onshoring SIs', patterns: [] },
+    ],
+  },
+
+  // ── Archetype G — implementation pattern · codes/guidance · 0–2 lesson [PRINCIPLE-STREAM]
+  {
+    id: 'G1', archetype: 'G', persona: 'H1', flags: ['PRINCIPLE-STREAM'], floor: false,
+    query: 'A regulator is handed a new statutory duty with no extra budget — how has that gone before?',
+    lessonTarget: 'Under-resourced-duty patterns drawn from across domains (the transferable lesson, not the topic).',
+    expected: [],
+  },
+  {
+    id: 'G2', archetype: 'G', persona: 'H2', flags: ['PRINCIPLE-STREAM', 'MECHANISM'], floor: false,
+    query: 'If we make companies report something, how do we make sure they actually do it?',
+    lessonTarget: 'Enforcement/compliance patterns from duty-to-report regimes (financial, safeguarding, environmental).',
+    expected: [],
+  },
+  {
+    id: 'G3', archetype: 'G', persona: 'H1', flags: ['PRINCIPLE-STREAM', 'MECHANISM'], floor: false,
+    query: "How is a 'fit and proper person' test typically operated by regulators in practice?",
+    lessonTarget: 'Cross-domain implementation of a recurring mechanism.',
+    expected: [],
+  },
+
+  // ── Archetype H — institutional behaviour · investigations/inquiries · 0–2 lesson [PRINCIPLE-STREAM]
+  {
+    id: 'H1', archetype: 'H', persona: 'H1', flags: ['PRINCIPLE-STREAM'], floor: false,
+    query: 'When an arms-length body fails, how do departments typically respond, and how fast?',
+    lessonTarget: 'Behavioural regularity across inquiries (e.g. Horizon and others) — the pattern, not one case.',
+    expected: [],
+  },
+  {
+    id: 'H2', archetype: 'H', persona: 'H2', flags: ['PRINCIPLE-STREAM'], floor: false,
+    query: 'What usually goes wrong when government runs a big IT programme?',
+    lessonTarget: 'Cross-inquiry IT-failure patterns (not one named project).',
+    expected: [],
+  },
+  {
+    id: 'H3', archetype: 'H', persona: 'H1', flags: ['PRINCIPLE-STREAM', 'MECHANISM'], floor: false,
+    query: 'Where inquiries have examined regulatory capture, what mechanisms recur?',
+    lessonTarget: 'Transferable regulatory-capture patterns.',
+    expected: [],
+  },
+
+  // ── Archetype I — evaluation / what works · parliamentary evaluations · 0–2 lesson [PRINCIPLE-STREAM]
+  {
+    id: 'I1', archetype: 'I', persona: 'H1', flags: ['PRINCIPLE-STREAM'], floor: false,
+    query: "What distinguishes regulatory-enforcement laws that worked from ones that didn't?",
+    lessonTarget: 'PAC/NAO/post-legislative-scrutiny patterns of effective vs ineffective enforcement law.',
+    expected: [],
+  },
+  {
+    id: 'I2', archetype: 'I', persona: 'H2', flags: ['PRINCIPLE-STREAM', 'MECHANISM'], floor: false,
+    query: 'Do sunset clauses actually work — do laws get reviewed when they are meant to?',
+    lessonTarget: 'Cross-domain evaluation of a mechanism (sunset/review clauses).',
+    expected: [],
+  },
+  {
+    id: 'I3', archetype: 'I', persona: 'H1', flags: ['PRINCIPLE-STREAM'], floor: false,
+    query: 'When has post-legislative scrutiny found a law had significant unintended consequences, and of what kind?',
+    lessonTarget: 'Transferable unintended-consequence patterns.',
+    expected: [],
+  },
+
+  // ── Archetype J — comparative / foreign law · web + foreign corpus · recall@20 [FOREIGN] (deferred)
+  {
+    id: 'J1', archetype: 'J', persona: 'H1', flags: ['FOREIGN'], floor: false, scoreable: false, todo: true,
+    query: 'How do other countries regulate short-term lets — and what worked?',
+    expected: [
+      { label: 'TODO (deferred): comparator regimes — EU registration models, US city caps', patterns: [] },
+    ],
+  },
+
+  // ── Archetype K — precise amendable section · legislation (section-level) · exact-pin
+  {
+    id: 'K1', archetype: 'K', persona: 'H2', flags: [], floor: false, scoreable: false, todo: true,
+    query: 'I want to remove the no-fault eviction route — which exact provision do I amend?',
+    expected: [
+      { label: 'TODO (validate): HA 1988 s.21 (exact-pin) + Renters’ Rights Act 2025 repealing provision', patterns: [] },
+    ],
+  },
+  {
+    id: 'K2', archetype: 'K', persona: 'H1', flags: ['BILLS'], floor: false, scoreable: false, todo: true,
+    query: 'To add a statutory duty of candour for public bodies, where would it slot in?',
+    expected: [
+      { label: 'TODO (validate): HSCA 2008 (Regulated Activities) Regs reg 20 + Public Office (Accountability) Bill', patterns: [] },
+    ],
+  },
 ]
+
+/** GOLD = RAW with per-archetype stream/kind/metric grafted on, and `scoreable`
+ *  defaulted to (metric === 'recall@20') unless the query overrides it. The v1
+ *  recall queries thus keep scoreable=true, so their scores are unchanged; the new
+ *  principle (G–I) and TODO (B6/J1/K1/K2) queries land scoreable=false. */
+export const GOLD: GoldQuery[] = RAW.map((q) => {
+  const meta = ARCHETYPE_META[q.archetype]
+  return { ...q, ...meta, scoreable: q.scoreable ?? (meta.metric === 'recall@20') }
+})

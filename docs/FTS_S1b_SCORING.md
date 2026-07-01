@@ -1,36 +1,59 @@
 # FTS S1b — scoring report
 
-> **AFTER ARCHETYPE-A FIX (2026-06-23):** this run has the query-time citation
-> resolver active (`search/citation-resolver.ts`) against the pristine 16.5M
-> `corpus_fts`. Archetype A 0% → 60%, overall 57.8% → 69.4%. The v1 baseline is
-> preserved at `docs/FTS_S1b_SCORING_v1_baseline.md`; diagnosis + deltas in
-> `docs/FTS_ARCHETYPE_A_DIAG.md`. The complementary body-citation backfill lands on
-> the gated Railway rebuild and is NOT reflected here.
-
-*Generated 2026-06-23T11:22:17.381Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
+*Generated 2026-07-01T13:56:32.218Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
 
 ## Headline
 
+*Headline = SCOREABLE recall@20 queries only (the v1 specific set, 30 queries). Principle streams G–I (0–2 lesson, rubric not calibrated) and new SPECIFIC queries with TODO expected-sources (B6, J1, K1, K2) are PRESENT but EXCLUDED until their answer-keys land — see the two tables below.*
+
 | scope | recall@20 | MRR | n |
 |---|---|---|---|
-| overall (all 30) | 69.4% | 0.693 | 30 |
+| overall (scoreable v1 set) | 69.4% | 0.693 | 30 |
 | **overall excl. [GRAPH] floor** | **68.0%** | **0.729** | 25 |
 
-## By archetype
+## By archetype (scoreable recall streams)
 
-| archetype | recall@20 | MRR | n | note |
+| archetype | stream | recall@20 | MRR | n | note |
+|---|---|---|---|---|---|
+| A | legislation | 60.0% | 0.800 | 5 | [INFORCE] aspects are floors |
+| B | legislation | 40.0% | 0.322 | 5 |  |
+| C | legislation + guidance | 60.0% | 0.625 | 5 |  |
+| D | citation graph | 76.7% | 0.512 | 5 | ALL [GRAPH] — engine floor |
+| E | debates | 90.0% | 0.900 | 5 |  |
+| F | bills + debates | 90.0% | 1.000 | 5 | [BILLS] scores for real |
+
+## Principle streams (G–I) — 0–2 lesson · SCAFFOLD, excluded from headline
+
+*Metric is a 0–2 transferable-lesson judgement, not recall@20. The rubric is set by example once a principle-stream result exists (§C.3); the principle-retrieval method is not built. Scored NOT CALIBRATED for now. Top-20 dumps below exist so the rubric can later be calibrated against real output.*
+
+| id | persona | stream | lesson target |
+|---|---|---|---|
+| G1 | H1 | codes / guidance | Under-resourced-duty patterns drawn from across domains (the transferable lesson, not the topic). |
+| G2 | H2 | codes / guidance | Enforcement/compliance patterns from duty-to-report regimes (financial, safeguarding, environmental). |
+| G3 | H1 | codes / guidance | Cross-domain implementation of a recurring mechanism. |
+| H1 | H1 | investigations / inquiries | Behavioural regularity across inquiries (e.g. Horizon and others) — the pattern, not one case. |
+| H2 | H2 | investigations / inquiries | Cross-inquiry IT-failure patterns (not one named project). |
+| H3 | H1 | investigations / inquiries | Transferable regulatory-capture patterns. |
+| I1 | H1 | parliamentary evaluations | PAC/NAO/post-legislative-scrutiny patterns of effective vs ineffective enforcement law. |
+| I2 | H2 | parliamentary evaluations | Cross-domain evaluation of a mechanism (sunset/review clauses). |
+| I3 | H1 | parliamentary evaluations | Transferable unintended-consequence patterns. |
+
+## Pending validation (specific, expected-sources TODO) — excluded from headline
+
+*These are scoreable-in-principle recall@20 queries, but their expected-sources are TODO placeholders pending the validated answer-key (§C). Excluded from the headline until filled. B6 is the validated MiFID lay-vocabulary test; J1 is deferred (no foreign corpus).*
+
+| id | archetype | persona | stream | query |
 |---|---|---|---|---|
-| A | 60.0% | 0.800 | 5 | [INFORCE] aspects are floors |
-| B | 40.0% | 0.322 | 5 |  |
-| C | 60.0% | 0.625 | 5 |  |
-| D | 76.7% | 0.512 | 5 | ALL [GRAPH] — engine floor |
-| E | 90.0% | 0.900 | 5 |  |
-| F | 90.0% | 1.000 | 5 | [BILLS] scores for real |
+| B6 | B | H2 | legislation | I want to revoke MiFID II |
+| J1 | J | H1 | web + foreign corpus | How do other countries regulate short-term lets — and what worked? |
+| K1 | K | H2 | legislation (section-level) | I want to remove the no-fault eviction route — which exact provision do I amend? |
+| K2 | K | H1 | legislation (section-level) | To add a statutory duty of candour for public bodies, where would it slot in? |
 
 ## Per-query detail + top-20 eyeball dump
 
 ### A1 (A/H1) [INFORCE]
 *Query:* Section 21 Housing Act 1988
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -81,6 +104,7 @@ Top-20 retrieved:
 
 ### A2 (A/H2)
 *Query:* What does section 1 of the Theft Act 1968 actually say?
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 50.0% · *MRR:* 1.000
 
 Expected sources:
@@ -131,6 +155,7 @@ Top-20 retrieved:
 
 ### A3 (A/H1)
 *Query:* Working Time Regulations 1998
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -181,6 +206,7 @@ Top-20 retrieved:
 
 ### A4 (A/H1)
 *Query:* Equality Act 2010 section 149
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 50.0% · *MRR:* 1.000
 
 Expected sources:
@@ -231,6 +257,7 @@ Top-20 retrieved:
 
 ### A5 (A/H2)
 *Query:* Find me the law that says you have to wear a seatbelt
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
@@ -281,6 +308,7 @@ Top-20 retrieved:
 
 ### B1 (B/H2)
 *Query:* Can my landlord kick me out without giving a reason?
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
@@ -333,6 +361,7 @@ Top-20 retrieved:
 
 ### B2 (B/H2)
 *Query:* I want to stop people renting out whole houses as Airbnbs all year round
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 33.3% · *MRR:* 0.111
 
 Expected sources:
@@ -384,6 +413,7 @@ Top-20 retrieved:
 
 ### B3 (B/H2)
 *Query:* Is it illegal to take a photo of someone in public without their permission?
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 0.0% · *MRR:* 0.000
 
 Expected sources:
@@ -435,6 +465,7 @@ Top-20 retrieved:
 
 ### B4 (B/H1) [BILLS]
 *Query:* Statutory duty of candour — who does it bind and where is it heading?
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -485,6 +516,7 @@ Top-20 retrieved:
 
 ### B5 (B/H2)
 *Query:* What are the rules about how much noise my neighbours can make at night?
+*stream:* legislation · *kind:* specific · *metric:* recall@20
 *recall@20:* 66.7% · *MRR:* 0.500
 
 Expected sources:
@@ -536,6 +568,7 @@ Top-20 retrieved:
 
 ### C1 (C/H1)
 *Query:* Everything currently regulating short-term holiday lets in England
+*stream:* legislation + guidance · *kind:* specific · *metric:* recall@20
 *recall@20:* 33.3% · *MRR:* 0.063
 
 Expected sources:
@@ -587,6 +620,7 @@ Top-20 retrieved:
 
 ### C2 (C/H2)
 *Query:* What laws govern e-scooters?
+*stream:* legislation + guidance · *kind:* specific · *metric:* recall@20
 *recall@20:* 66.7% · *MRR:* 1.000
 
 Expected sources:
@@ -638,6 +672,7 @@ Top-20 retrieved:
 
 ### C3 (C/H1) [INFORCE]
 *Query:* The statutory framework for adult social care funding in England
+*stream:* legislation + guidance · *kind:* specific · *metric:* recall@20
 *recall@20:* 33.3% · *MRR:* 0.063
 
 Expected sources:
@@ -689,6 +724,7 @@ Top-20 retrieved:
 
 ### C4 (C/H1)
 *Query:* What duties do water companies have about sewage discharges, and where do they come from?
+*stream:* legislation + guidance · *kind:* specific · *metric:* recall@20
 *recall@20:* 66.7% · *MRR:* 1.000
 
 Expected sources:
@@ -740,57 +776,59 @@ Top-20 retrieved:
 
 ### C5 (C/H2)
 *Query:* What protections do people who live in park homes / mobile homes have?
+*stream:* legislation + guidance · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
-- ✓ @4 — Mobile Homes Act 1983
-- ✓ @1 — Mobile Homes Act 2013
-- ✓ @14 — Caravan Sites Act 1968
+- ✓ @1 — Mobile Homes Act 1983
+- ✓ @2 — Mobile Homes Act 2013
+- ✓ @15 — Caravan Sites Act 1968
 
 Top-20 retrieved:
- 1. [parliamentary/pwdata-westminster] score=95.565↑T `pwdata-westminster:westminster2019-02-27a:126`
+ 1. [legislation/si-2010plus] score=147.313↑T `si-2010plus:uksi/2012/2466:article-7`
+    **Residential mobile homes** — 7 In Part 7 of Schedule 3 to the Act, after paragraph 30C insert— Residential mobile homes 30D 1 A person (A) who is the owner of a protected site does not cont
+ 2. [parliamentary/pwdata-westminster] score=95.565↑T `pwdata-westminster:westminster2019-02-27a:126`
     **Residents of Leisure Park Homes** — It is a pleasure to serve under your chairmanship, Mr Austin. I congratulate my hon. Friend the Member for Faversham and Mid Kent (Helen Whately) on securing th
- 2. [parliamentary/pwdata-debates] score=93.204↑T `pwdata-debates:debates2012-07-02c:79`
+ 3. [parliamentary/pwdata-debates] score=93.204↑T `pwdata-debates:debates2012-07-02c:79`
     **COMMUNITIES AND LOCAL GOVERNMENT — Park Homes** — I belong to the all-party mobile homes group, and we have been campaigning for years to strengthen the hand of local authorities to enforce properly the licence
- 3. [parliamentary/pwdata-westminster] score=90.903↑T `pwdata-westminster:westminster2026-04-28b:35`
+ 4. [parliamentary/pwdata-westminster] score=90.903↑T `pwdata-westminster:westminster2026-04-28b:35`
     **Park Home Owners — [Sir Alec Shelbrooke in the Chair]** — It is a pleasure to serve under your chairmanship, Sir Alec. I have been involved with the park homes issue for the best part of 30 years; I have 2,000 people i
- 4. [parliamentary/pwdata-debates] score=90.857↑T `pwdata-debates:debates1983-05-05a:244`
+ 5. [parliamentary/pwdata-debates] score=90.857↑T `pwdata-debates:debates1983-05-05a:244`
     **Orders of the Day — Mobile Homes Bill [Lords] — PARTICULARS OF AGREEMENTS** — My hon. Friend is right. Any reference to legislation will have to mention the Mobile Homes Act 1975 or 1983. None the less, the designation of the site, which 
- 5. [parliamentary/pwdata-debates] score=90.583↑T `pwdata-debates:debates2010-12-16b:349`
+ 6. [parliamentary/pwdata-debates] score=90.583↑T `pwdata-debates:debates2010-12-16b:349`
     **Backbench Business — [14(th) Allotted Day] — Park Homes** — I thank you, Madam Deputy Speaker, for giving me the opportunity to speak in this debate, and I congratulate my hon. Friend the Member for Mid Dorset and North 
- 6. [parliamentary/pwdata-westminster] score=90.368↑T `pwdata-westminster:westminster2026-04-28b:9`
+ 7. [parliamentary/pwdata-westminster] score=90.368↑T `pwdata-westminster:westminster2026-04-28b:9`
     **Park Home Owners — [Sir Alec Shelbrooke in the Chair]** — I trust that the Minister and his team will do exactly that. This is not just about the 10% sales commission; there are broader issues impacting park home resid
- 7. [other/petitions] score=88.984↑T `petitions:701798:1`
+ 8. [other/petitions] score=88.984↑T `petitions:701798:1`
     **Review the enforcement policy guidance for LAs to protect mobile home owners.** — Review the enforcement policy guidance for LAs to protect mobile home owners. State: closed · Signatures: 1634 · Opened: 2024-12-18 · Departments: Ministry of H
- 8. [parliamentary/pwdata-debates] score=88.342↑T `pwdata-debates:debates1982-07-09a:202`
+ 9. [parliamentary/pwdata-debates] score=88.342↑T `pwdata-debates:debates1982-07-09a:202`
     **Copyright Act 1956 (Amendment) Bill [Lords] — Mobile Home Owners** — I am extremely grateful to my hon. and learned Friend the Member for Hemel Hempstead (Mr. Lyell) for allowing me to contribute briefly to the debate because, li
- 9. [parliamentary/pwdata-debates] score=88.206↑T `pwdata-debates:debates1975-02-28a:83`
+10. [parliamentary/pwdata-debates] score=88.206↑T `pwdata-debates:debates1975-02-28a:83`
     **Orders of the Day — MOBILE HOMES BILL** — I point out to the hon. Member for Chester-le-Street (Mr. Radice) that for many hon. Members the Bill is a measure of the utmost importance. My hon. Friend the 
-10. [parliamentary/pwdata-westminster] score=88.057↑T `pwdata-westminster:westminster2026-04-28b:3`
+11. [parliamentary/pwdata-westminster] score=88.057↑T `pwdata-westminster:westminster2026-04-28b:3`
     **Park Home Owners — [Sir Alec Shelbrooke in the Chair]** — Absolutely. I am sure that we will talk a lot about the 10% sales commission, but the hon. Member is right to raise it early on. I am pleased that the Minister 
-11. [parliamentary/pwdata-lords] score=87.943↑T `pwdata-lords:daylord2013-02-01a:35`
+12. [parliamentary/pwdata-lords] score=87.943↑T `pwdata-lords:daylord2013-02-01a:35`
     **Mobile Homes Bill — Second Reading** — My Lords, I follow the noble Lord, Lord Best, with great pleasure. I endorse all that he said. We are very much in his debt for piloting this Bill through your 
-12. [parliamentary/pwdata-debates] score=87.206↑T `pwdata-debates:debates1999-04-21a:27`
+13. [parliamentary/pwdata-debates] score=87.206↑T `pwdata-debates:debates1999-04-21a:27`
     **Park Homes** — I commend the hon. Gentleman for raising that issue, and I share his concern. Personally, I feel that the issues relating to holiday parks are even more complex
-13. [parliamentary/pwdata-lords] score=86.326↑T `pwdata-lords:daylord2000-10-04a:276`
+14. [parliamentary/pwdata-lords] score=86.326↑T `pwdata-lords:daylord2000-10-04a:276`
     **Park Home Owners** — My Lords, I am grateful to the noble Lord, Lord Graham of Edmonton, for the opportunity to debate the Report of the Park Homes Working Party on the welfare of p
-14. [parliamentary/pwdata-debates] score=86.001↑T `pwdata-debates:debates1999-04-21a:32`
+15. [parliamentary/pwdata-debates] score=86.001↑T `pwdata-debates:debates1999-04-21a:32`
     **Park Homes** — I congratulate the hon. Member for Lancaster and Wyre (Mr. Dawson) on securing today's Adjournment debate and dealing comprehensively with some of the problems 
-15. [parliamentary/pwdata-westminster] score=85.919↑T `pwdata-westminster:westminster2019-02-27a:135`
+16. [parliamentary/pwdata-westminster] score=85.919↑T `pwdata-westminster:westminster2019-02-27a:135`
     **Residents of Leisure Park Homes** — I agree with that completely. The poor form tarnishes the whole industry, and people who are doing things well do not, on the whole, object to changes to regula
-16. [parliamentary/historic-hansard] score=85.179↑T `historic-hansard:S5LV0437P0:116`
+17. [parliamentary/historic-hansard] score=85.179↑T `historic-hansard:S5LV0437P0:116`
     **Lords: Mobile Homes Bill [H.L.]** — Lord Avebury : I do not want to prolong this discussion. However, one point that has not been mentioned is the reluctance of the local authorities to grant plan
-17. [parliamentary/pwdata-debates] score=84.745↑T `pwdata-debates:debates1983-05-05a:234`
+18. [parliamentary/pwdata-debates] score=84.745↑T `pwdata-debates:debates1983-05-05a:234`
     **Orders of the Day — Mobile Homes Bill [Lords] — PARTICULARS OF AGREEMENTS** — Like you, Mr. Deputy Speaker, I have recently participated in two very late night sittings on the Police and Criminal Evidence Bill, and I am conscious that Mem
-18. [parliamentary/pwdata-debates] score=84.380↑T `pwdata-debates:debates2012-10-19b:18`
+19. [parliamentary/pwdata-debates] score=84.380↑T `pwdata-debates:debates2012-10-19b:18`
     **Mobile Homes Bill** — I am absolutely delighted to follow the hon. Member for Waveney (Peter Aldous) . I am very pleased that he has chosen this subject for his Bill, and I hope that
-19. [parliamentary/pwdata-debates] score=84.102↑T `pwdata-debates:debates2010-12-16b:379`
+20. [parliamentary/pwdata-debates] score=84.102↑T `pwdata-debates:debates2010-12-16b:379`
     **Backbench Business — [14(th) Allotted Day] — Park Homes** — I pay tribute to the hon. Member for Mid Dorset and North Poole (Annette Brooke) , who has been an indefatigable champion of park home residents for a number of
-20. [parliamentary/pwdata-debates] score=83.447↑T `pwdata-debates:debates1999-04-21a:34`
-    **Park Homes** — I congratulate my hon. Friend the Member for Lancaster and Wyre (Mr. Dawson) on securing a debate on this important subject, and on the clear and comprehensive 
 
 ### D1 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* What has amended section 21 of the Housing Act 1988 since 2015?
+*stream:* citation graph · *kind:* specific · *metric:* recall@20
 *recall@20:* 50.0% · *MRR:* 0.167
 
 Expected sources:
@@ -841,6 +879,7 @@ Top-20 retrieved:
 
 ### D2 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* List the statutory instruments made under the Building Safety Act 2022
+*stream:* citation graph · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -891,6 +930,7 @@ Top-20 retrieved:
 
 ### D3 (D/H1) [GRAPH][INFORCE] — ENGINE FLOOR
 *Query:* Which provisions of the Environment Act 2021 are not yet in force?
+*stream:* citation graph · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 0.143
 
 Expected sources:
@@ -940,6 +980,7 @@ Top-20 retrieved:
 
 ### D4 (D/H2) [GRAPH] — ENGINE FLOOR
 *Query:* Has the Dangerous Dogs Act 1991 been changed since it was passed — what changed and why?
+*stream:* citation graph · *kind:* specific · *metric:* recall@20
 *recall@20:* 33.3% · *MRR:* 1.000
 
 Expected sources:
@@ -991,6 +1032,7 @@ Top-20 retrieved:
 
 ### D5 (D/H1) [GRAPH] — ENGINE FLOOR
 *Query:* What case law has considered 'philosophical belief' under section 10 of the Equality Act 2010?
+*stream:* citation graph · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 0.250
 
 Expected sources:
@@ -1041,6 +1083,7 @@ Top-20 retrieved:
 
 ### E1 (E/H1)
 *Query:* What did ministers say the under-occupancy provisions of the Welfare Reform Act 2012 were intended to achieve?
+*stream:* debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1091,6 +1134,7 @@ Top-20 retrieved:
 
 ### E2 (E/H2)
 *Query:* Why was the sugar tax designed as a levy on manufacturers instead of a tax at the till?
+*stream:* debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1141,6 +1185,7 @@ Top-20 retrieved:
 
 ### E3 (E/H1)
 *Query:* What assurances were given during the passage of the Investigatory Powers Act 2016 about safeguards on bulk powers?
+*stream:* debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1191,6 +1236,7 @@ Top-20 retrieved:
 
 ### E4 (E/H2)
 *Query:* Why does the indoor smoking ban not apply to private homes? What was said when it was passed?
+*stream:* debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 50.0% · *MRR:* 0.500
 
 Expected sources:
@@ -1241,6 +1287,7 @@ Top-20 retrieved:
 
 ### E5 (E/H1)
 *Query:* When the Hunting Act 2004 was passed, what did ministers say about how it would be enforced?
+*stream:* debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1291,6 +1338,7 @@ Top-20 retrieved:
 
 ### F1 (F/H2) [BILLS]
 *Query:* Has anyone tried to ban single-use plastics completely? What happened?
+*stream:* bills + debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1341,6 +1389,7 @@ Top-20 retrieved:
 
 ### F2 (F/H1) [BILLS]
 *Query:* Previous Private Members’ Bills attempting to restrict fireworks sales, and why they failed
+*stream:* bills + debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1391,6 +1440,7 @@ Top-20 retrieved:
 
 ### F3 (F/H2) [BILLS]
 *Query:* I want a law making landlords accept tenants with pets. Has this been tried?
+*stream:* bills + debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1430,17 +1480,18 @@ Top-20 retrieved:
     **Department for Levelling Up, Housing and Communities — Private Rented Housing: Pets** — Q (Margaret Ferrier): To ask the Secretary of State for Levelling Up, Housing and Communities, what assessment he has made of the potential merits of ensuring t
 16. [parliamentary/pwdata-wrans] score=95.002↑T `pwdata-wrans:answers2021-02-25:250`
     **Ministry of Housing, Communities and Local Government — Private Rented Housing: Pets** — Q (Bill Esterson): To ask the Secretary of State for Housing, Communities and Local Government, what steps he is taking to support pet owners in the private ren
-17. [parliamentary/pwdata-debates] score=50.025 `pwdata-debates:debates2021-03-18e:177`
+17. [legislation/regional] score=69.777 `regional:asp/2025/13:section-35`
+    35 1 The 2016 Act is modified as follows. 2 After Part 5 (termination) insert— Part 5A keeping pets and making changes to let property Chapter 1 Keeping pets Te
+18. [parliamentary/pwdata-debates] score=50.025 `pwdata-debates:debates2021-03-18e:177`
     **Business of the House** — Indeed, allegedly, some people even keep tarantulas, though I do not believe that that particular right hon. Friend of mine is resident or has been resident in 
-18. [parliamentary/committees-evidence] score=48.538 `committees-evidence:writtenevidence:110752:172168`
+19. [parliamentary/committees-evidence] score=48.538 `committees-evidence:writtenevidence:110752:172168`
     **Reforming the Private Rented Sector — RRS0209** — Written evidence submitted by Platinum Property Partners [RRS 209] Do you want to hurt the vulnerable and help the bully? Would you be happy for your daughter t
-19. [parliamentary/pwdata-lords] score=47.085 `pwdata-lords:daylord2025-10-14c:96`
+20. [parliamentary/pwdata-lords] score=47.085 `pwdata-lords:daylord2025-10-14c:96`
     **Renters’ Rights Bill - Commons Reasons and Amendments — Motion A1 (as an amendment to Motion A)** — I thank your Lordships for your thoughts and speeches. I am pleased about, and support, the amendment from the noble Baroness, Lady Grender, being accepted by t
-20. [parliamentary/pwdata-lords] score=46.956 `pwdata-lords:daylord2025-05-06a:179`
-    **Renters’ Rights Bill - Committee (4th Day) — Amendment 127** — I understand those concerns. As I have already mentioned, the department is talking to insurers all the time. We are looking at the messages from them that they
 
 ### F4 (F/H1) [BILLS]
 *Query:* Attempts since 2010 to introduce proportional representation for Westminster elections
+*stream:* bills + debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 50.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1491,6 +1542,7 @@ Top-20 retrieved:
 
 ### F5 (F/H2) [BILLS]
 *Query:* Has Parliament ever tried to make first aid training compulsory in schools?
+*stream:* bills + debates · *kind:* specific · *metric:* recall@20
 *recall@20:* 100.0% · *MRR:* 1.000
 
 Expected sources:
@@ -1538,3 +1590,647 @@ Top-20 retrieved:
     **First Aid Techniques: National Curriculum — [Sir David Amess intheChair]** — The hon. and learned Gentleman clearly caught sight of my speech before he raised his point. I was about to go on to say that Mandy Hobbs was really lucky, too.
 20. [parliamentary/pwdata-westminster] score=80.098↑T `pwdata-westminster:westminster2015-03-10a:58`
     **First Aid Techniques: National Curriculum — [Sir David Amess intheChair]** — I congratulate my hon. Friend the Member for Bolton West (Julie Hilling) on securing the debate. She has been assiduous in ensuring that the rest of us are held
+
+### B6 (B/H2) — PENDING VALIDATION
+*Query:* I want to revoke MiFID II
+*stream:* legislation · *kind:* specific · *metric:* recall@20
+*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.
+
+Expected sources (TODO):
+- ⋯ TODO — TODO (validate): FCA Handbook COBS & SYSC
+- ⋯ TODO — TODO (validate): FSMA 2023 (post-Brexit framework)
+- ⋯ TODO — TODO (validate): retained MiFIR / MiFID Org Reg
+- ⋯ TODO — TODO (validate): post-Brexit onshoring SIs
+
+Top-20 retrieved:
+ 1. [guidance/hmrc-manuals] score=65.095↑T `hmrc-manuals:hmrc-internal-manuals/vat-finance-manual/vatfin7550:1`
+    **VATFIN7550 — Intermediaries: Brokers: MiFID II research** — MiFID II (Market in Financial Instruments Directive) originates from the European Commission and seeks to provide a European-wide legislative framework for regu
+ 2. [guidance/hmrc-manuals] score=64.561↑T `hmrc-manuals:hmrc-internal-manuals/stamp-taxes-shares-manual/stsm121050:1`
+    **STSM121050 — Financial markets: background: Markets in Financial Instruments Directive II (MiFID II)** — MiFID II (Directive 2014/65/EU) originates from the European Commission and seeks to provide a European-wide legislative framework for regulating the operation 
+ 3. [guidance/quangos-govuk] score=60.477↑T `quangos-govuk:government/publications/mifid-ii-rpc-opinion:2`
+    **RPC Opinion: MiFID II** — Date of issue: 26/06/18 www.gov.uk/rpc 1 Opinion: EANDCB validation O rigin : d omestic RPC reference number: RPC - 4261/4262/4263/4264/4265/4267/4268/4269/4270
+ 4. [guidance/quangos-govuk] score=60.312↑T `quangos-govuk:government/publications/extension-of-mifid-ii-product-governance-provisions-rpc-opinion:1`
+    **Extension of MiFID II product governance provisions: RPC Opinion** — This is the RPC’s opinion on FCA’s EANDCB validation impact assessment for the MiFID II product governance provisions to non-MiFID firms.
+ 5. [guidance/quangos-govuk] score=56.699↑T `quangos-govuk:government/publications/extension-of-mifid-ii-product-governance-provisions-rpc-opinion:2`
+    **RPC Opinion: Extension of MiFID II product governance provisions to non-MiFID firms** — Opinion: EANDCB validation Origin: domestic RPC reference number: RPC-4273(1)-HMT-FCA Date of implementation: January 2018 Date of issue:1 st August 2018 www.go
+ 6. [guidance/quangos-govuk] score=52.699↑T `quangos-govuk:government/publications/mifid-ii-rpc-opinion:1`
+    **MiFID II: RPC Opinion** — This is the RPC’s opinion on FCA’s validation impact assessments for the MiFID II: inducements; research and inducement; taping; best-execution; client categori
+ 7. [guidance/quangos-govuk] score=50.059↑T `quangos-govuk:government/publications/future-of-computer-trading-in-financial-markets-mifid-ii-working-paper:1`
+    **Future of computer trading in financial markets: MiFID II - working paper** — This report presents interim findings of the Foresight project on computer trading. In particular, it considers the costs, risks and benefits of 6 possible regu
+ 8. [guidance/quangos-govuk] score=49.292↑T `quangos-govuk:government/publications/computer-trading-economic-impact-of-mifid-ii-proposals-on-computer-trading:1`
+    **Computer trading: economic impact of MiFID II proposals on computer trading** — This report provides an evidence-based analysis of a number of measures targeted at computer trading. Some of these measures were included in the European Commi
+ 9. [guidance/hmrc-manuals] score=47.587↑T `hmrc-manuals:hmrc-internal-manuals/stamp-taxes-shares-manual/stsm121030:1`
+    **STSM121030 — Financial markets: background: Markets in Financial Instruments Directive (MiFID)** — There were further major changes to how the European financial markets operate with the introduction in 2007 of the Markets in Financial Instruments Directive (
+10. [legislation/explanatory-memoranda] score=47.150 `explanatory-memoranda:em:uksi/2017/488:1`
+    **Explanatory Memorandum: uksi/2017/488** — TNA/EM/10-2015.1 1 EXPLANATORY MEMORANDUM TO THE FINANCIAL SERVICES AND MARKETS ACT 2000 (REGULATED ACTIVITIES) (AMENDMENT) ORDER 2017 2017 No. 488 1. Introduct
+11. [legislation/explanatory-memoranda] score=45.552 `explanatory-memoranda:em:uksi/2017/699:1`
+    **Explanatory Memorandum: uksi/2017/699** — TNA/EM/10-2015.1 1 EXPLANATORY MEMORANDUM TO THE DATA REPORTING SERVICES REGULATIONS 2017 2017 No. 699 1. Introduction 1.1 This explanatory memorandum has been 
+12. [legislation/explanatory-memoranda] score=45.530 `explanatory-memoranda:em:uksi/2018/786:1`
+    **Explanatory Memorandum: uksi/2018/786** — TNA/EM/10-2015.1 1 EXPLANATORY MEMORANDUM TO THE FINANCIAL SERVICES AND MARKETS ACT 2000 (PROSPECTUS AND MARKETS IN FINANCIAL INSTRUMENTS) REGULATIONS 2018 2018
+13. [legislation/si-2010plus] score=42.164 `si-2010plus:uksi/2014/2444:article-2`
+    **Appointed day** — 2 1st November 2014 is the day appointed for the coming into force of the following provisions of the Gambling (Licensing and Advertising) Act 2014— a section 1
+14. [legislation/explanatory-memoranda] score=39.742 `explanatory-memoranda:em:uksi/2018/1403:1`
+    **Explanatory Memorandum: uksi/2018/1403** — DExEU/EM/7-2018.2 1 EXPLANATORY MEMORANDUM TO THE MARKETS IN FINANCIAL INSTRUMENTS (AMENDMENT) (EU EXIT) REGULATIONS 2018 2018 No. 1403 1. Introduction 1.1 This
+15. [legislation/si-2010plus] score=37.424 `si-2010plus:uksi/2019/145:schedule-2-paragraph-17`
+    17 In section 474(1) (minor definitions) — a in the definition of “MiFID investment firm”— i in the opening words, for “Article 4.1.1 of Directive 2014/65/EU” s
+16. [legislation/si-2010plus] score=37.081 `si-2010plus:uksi/2021/849:article-10`
+    10 In Part 31 (Behaviour orders)— a in rule 31.1 (When this Part applies), in paragraph (1) for “make, vary or revoke” substitute “make, vary, renew, discharge 
+17. [legislation/si-2010plus] score=37.014 `si-2010plus:uksi/2025/909:rule-32.2`
+    32.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
+18. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2012/1726:article-44.2`
+    **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
+19. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2014/1610:article-44.2`
+    **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
+20. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2013/1554:article-44.2`
+    **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
+
+### G1 (G/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* A regulator is handed a new statutory duty with no extra budget — how has that gone before?
+*stream:* codes / guidance · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Under-resourced-duty patterns drawn from across domains (the transferable lesson, not the topic).
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-debates] score=86.697↑T `pwdata-debates:debates2008-07-02c:150`
+    **Orders of the Day — New Clause 3 — Vehicle excise duty: variation of graduated rates for light passe** — With this it will be convenient to discuss the following: New clause 7— Vehicle mileage costs— 'The Treasury shall publish annually alongside the Pre-Budget rep
+ 2. [parliamentary/pwdata-debates] score=83.751↑T `pwdata-debates:debates2000-07-18a:274`
+    **Orders of the Day — Finance Bill — RATES OF DUTY, ETC.: REFERENCE TO RETAIL PRICE INDEX** — New clause 7 relates to the timing of the announcement of the increase in income tax allowances. It is a modest new clause, but it would provide real benefits t
+ 3. [parliamentary/pwdata-debates] score=81.674↑T `pwdata-debates:debates2001-03-12a:147`
+    **Budget Resolutions and Economic Situation** — The figure from the National Institute of Economic and Social Research is 13,000 new jobs from the new deal. The report showed that hundreds and millions of pou
+ 4. [parliamentary/historic-hansard] score=81.596↑T `historic-hansard:S5LV0001P0:1291`
+    **Lords: THE NEW SPIRIT AND TOBACCO DUTIES.** — LORD MUSKERRY : My Lords, I rise to ask His Majesty's Government if it is a fact that the Excise are charging all traders taking spirits and tobacco out of bond
+ 5. [parliamentary/pwdata-debates] score=81.508↑T `pwdata-debates:debates2003-03-05:162`
+    **Local Government Bill — [1st Allotted Day] — New Clause 10 — Local Retention of Rates** — The new clause puts me in a bit of a quandary. I want local authorities to have extra autonomy for their spending and local taxation, so allowing local authorit
+ 6. [parliamentary/pwdata-debates] score=80.199↑T `pwdata-debates:debates2000-03-27a:310`
+    **Orders of the Day — Budget Resolutions and Economic Situation** — I begin by welcoming the right hon. Member for Ashton-under-Lyne (Mr. Sheldon) back to the House. I congratulate the Chancellor of the Exchequer. There is no de
+ 7. [parliamentary/pwdata-debates] score=79.521↑T `pwdata-debates:debates2012-03-23b:203`
+    **AMENDMENT OF THE LAW — Budget Resolutions and Economic Situation** — Well, what a Budget! People were hoping for a Robin Hood tax, but instead they got a Sheriff of Nottingham Budget—a Budget where the poor pay for tax cuts for t
+ 8. [parliamentary/pwdata-debates] score=79.363↑T `pwdata-debates:debates1984-07-11a:460`
+    **Orders of the Day — Finance (No. 2) Bill — PARLIAMENTARY CONTROL OF EXTRA-STATUTORY CONCESSIONS** — I beg to move, That the clause be read a Second time. It should be common ground between both sides of the House that control over taxation has been one of the 
+ 9. [parliamentary/pwdata-westminster] score=79.001↑T `pwdata-westminster:westminster2025-12-02a:64`
+    **Gambling: Regulatory Reform — [Sir Desmond Swayne in the Chair]** — We talk to the gambling industry about that constantly. My noble Friend Baroness Twycross, the gambling Minister, is taking some of those discussions forward. W
+10. [parliamentary/committees-reports] score=78.124↑T `committees-reports:publication:43965:217840`
+    **Scrutiny evidence: Submission on the Economic Growth (Regulatory Functions) (Amendment) Order 2024 a** — Submission on the Economic Growth (Regulatory Functions) (Amendment) Order 2024 Submission from Wildlife & Countryside Link - p 2 Response and further informati
+11. [parliamentary/pwdata-debates] score=77.968↑T `pwdata-debates:debates1971-03-31a:371`
+    **BUDGET RESOLUTIONS AND ECONOMIC SITUATION** — My right hon. Friend the Member for Thirsk and Malton (Mr. Turton) said how much he welcomed the extra provision for the very old, and I share that view. There 
+12. [parliamentary/pwdata-debates] score=77.701↑T `pwdata-debates:debates2001-03-19a:444`
+    **Orders of the Day — Regulatory Reform Bill [Lords]** — No, I shall not give way. The desirability test—a new test—was inserted into the Bill as a result of an amendment in the Lords. In the case of the imposition of
+13. [parliamentary/pwdata-debates] score=76.243↑T `pwdata-debates:debates1999-03-09a:451`
+    **Budget Resolutions and Economic Situation — AMENDMENT OF THE LAW** — One Minister leaking to the Financial Times over the weekend promised a "substantial, surprising and important" Budget. What is substantial is the amount of rev
+14. [parliamentary/pwdata-debates] score=76.140↑T `pwdata-debates:debates2008-07-02c:296`
+    **Orders of the Day — New Clause 3 — Vehicle excise duty: variation of graduated rates for light passe** — We have had a fascinating debate with many interesting and thoughtful contributions, for which I commend Members. The Government recognise the impact that high 
+15. [parliamentary/pwdata-debates] score=75.509↑T `pwdata-debates:debates2000-03-27a:238`
+    **Orders of the Day — Budget Resolutions and Economic Situation** — As could be expected from this Chancellor, we have had a Budget with a high degree of spin. He naturally claimed how well the economy was doing and, on that, he
+16. [parliamentary/pwdata-debates] score=75.157↑T `pwdata-debates:debates1971-03-31a:353`
+    **BUDGET RESOLUTIONS AND ECONOMIC SITUATION** — This is a depressing day for hon. Gentlemen opposite. For six years, in Budget after Budget they have been able to revel in the Socialist joys of increasing tax
+17. [parliamentary/pwdata-debates] score=74.932↑T `pwdata-debates:debates2005-03-16a:113`
+    **Budget Resolutions — AMENDMENT OF THE LAW** — May I begin by welcoming the return of the Chancellor to the general election campaign, not that I am entirely sure that it was worth waiting for? Earlier this 
+18. [parliamentary/pwdata-debates] score=74.433↑T `pwdata-debates:debates2007-10-15b:173`
+    **Orders of the Day — New Clause 2 — Appeal against public censure** — I am pleased to hear the opening remarks from across the House about how we have reached this stage in the Bill as a result of a great deal of healthy discussio
+19. [parliamentary/pwdata-debates] score=74.337↑T `pwdata-debates:debates2000-03-21a:137`
+    **Budget Resolutions and Economic Situation — AMENDMENT OF THE LAW** — I should be happy to change the custom, if the Chancellor would give way during his Budget statement in future. We could then correct him as he goes along, inst
+20. [parliamentary/pwdata-debates] score=74.135↑T `pwdata-debates:debates1995-01-23a:310`
+    **Orders of the Day — Finance Bill — RATES OF DUTY** — As a result of new clause 3—the increases in excise duty on hydrocarbons—the Chancellor has imposed an extra tax of £51 a year on a typical car owner. This is t
+
+### G2 (G/H2) [PRINCIPLE-STREAM][MECHANISM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* If we make companies report something, how do we make sure they actually do it?
+*stream:* codes / guidance · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Enforcement/compliance patterns from duty-to-report regimes (financial, safeguarding, environmental).
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-debates] score=75.459↑T `pwdata-debates:debates2004-03-26:186`
+    **Performance of Companies and Government Departments (Reporting) Bill** — It is important that the Government put their money where their mouth is. The Prime Minister issued a challenge to the top 350 companies in October 2000: to iss
+ 2. [parliamentary/pwdata-lords] score=74.627↑T `pwdata-lords:daylord2023-12-06a:179`
+    **Hillsborough Families Report: Government Response - Statement** — My Lords, I thank the Minister for repeating the Statement. This was one occasion when it was actually needed. Can he convey my thanks to those on the Governmen
+ 3. [parliamentary/pwdata-lords] score=73.360↑T `pwdata-lords:daylord2012-11-13a:166`
+    **EU Report: Women on Boards — Question for Short Debate** — My Lords, I thank the noble Baroness, Lady O'Cathain for securing this incredibly topical debate. In the 1980s, she was the Chief Executive of the Milk Marketin
+ 4. [parliamentary/pwdata-lords] score=72.885↑T `pwdata-lords:daylord2015-03-03a:108`
+    **Small Business, Enterprise and Employment Bill — Report (1st Day)** — My Lords, I rise to speak against these amendments. I must first declare an interest because I run a large public company, TalkTalk, which would clearly be subj
+ 5. [parliamentary/pwdata-lords] score=71.597↑T `pwdata-lords:daylord2025-04-25a:73`
+    **Public Inquiries: Enchancing Public Trust (Statutory Inquiries Committee Report) - Motion to Take No** — My Lords, I thank the noble Lord, Lord Norton, for chairing the committee. I was one of its members who did not have a legal background, and I was not made to f
+ 6. [parliamentary/pwdata-debates] score=71.587↑T `pwdata-debates:debates1935-12-16a:418`
+    **Orders of the Day — RAILWAYS (AGREEMENT) BILL. — NEW CLAUSE.—(Report and accounts of finance company** — I would like to make a suggestion with regard to the new Clause. I see the point that as the company is a statutory company it would, of course, make an annual 
+ 7. [parliamentary/pwdata-lords] score=71.411↑T `pwdata-lords:daylord2024-09-09b:136`
+    **Watchdogs (Industry and Regulators Committee Report) - Motion to Take Note** — My Lords, when I put my name down for this debate, I suspected I would learn more than I imparted to the House. What dragged me towards this debate—that moment 
+ 8. [parliamentary/pwdata-westminster] score=70.927↑T `pwdata-westminster:westminster2017-11-22a:192`
+    **PUBLIC COUNTRY-BY-COUNTRY REPORTING** — That might be slightly above my pay grade, but I am grateful for the hon. Gentleman’s questioning of that situation. That is the challenge we put to the Ministe
+ 9. [parliamentary/pwdata-debates] score=70.826↑T `pwdata-debates:debates1976-05-19a:534`
+    **NATIONALISATION — COMPANIES (No. 2) BILL [Lords]** — They may be maxima, but £400 and £40 per day is a hefty penalty. Although they are the maximum, perhaps we should consider whether they should be varied a littl
+10. [parliamentary/pwdata-debates] score=70.757↑T `pwdata-debates:debates1967-01-23a:554`
+    **BILL PRESENTED — Clause 7.—(VESTING IN THE CORPORA- TION OF SECURITIES OF SCHEDULED COMPANIES.)** — As far as I can see, if we draw the line at 475,000 tons we automatically, and without being able to help it, include 14 companies in the Schedule. If we drew i
+11. [parliamentary/historic-hansard] score=70.654↑T `historic-hansard:S5LV0398P0:637`
+    **Lords: FOREIGN BOYCOTTS BILL: SELECT COMMITTEE'S REPORT** — Lord AYLESTONE : My Lords, the House is grateful to the noble Lord, Lord Byers, for initiating this debate which gives those of us who had the honour and privil
+12. [parliamentary/pwdata-debates] score=70.336↑T `pwdata-debates:debates1963-05-06a:361`
+    **Orders of the Day — FORT WILLIAM PULP AND PAPER MILLS BILL — Clause 1.—(POWER OF BOARD TO MAKE ADVAN** — I should like to ask one or two questions. First, what guarantee have the Government after they have advanced the funds mentioned in the Bill? If the company do
+13. [parliamentary/pwdata-lords] score=70.275↑T `pwdata-lords:daylord2011-05-18a:59`
+    **Weightman Report — Statement** — My Lords, I have a little familiarity with the Fukushima event but I have not yet had the privilege of reading Dr Weightman's report. However, it is worth makin
+14. [parliamentary/pwdata-lords] score=70.213↑T `pwdata-lords:daylord2023-12-08d:5`
+    **Love Matters (Archbishops’ Commission on Families and Households Report) - Motion to Take Note** — My Lords, I am pleased to rise broadly to support what I consider to be the main thrust of the report commissioned by the most reverend Primates. I am not a goo
+15. [parliamentary/pwdata-lords] score=32.749 `pwdata-lords:daylord2023-05-16a:90`
+    **Online Safety Bill - Committee (7th Day) — Amendment 56** — My Lords, I also put my name to Amendments 250A and 250B, but the noble Baronesses, Lady Newlove and Lady Kidron, have done such a good job that I shall be very
+16. [parliamentary/pwdata-lords] score=31.068 `pwdata-lords:daylord2023-04-27a:148`
+    **Online Safety Bill - Committee (3rd Day) (Continued) — Amendment 16** — My Lords, this group of amendments concerns terms of service. All the amendments either have the phrase “terms of service” in them or imply that we wish to see 
+17. [parliamentary/committees-evidence] score=30.926 `committees-evidence:oralevidence:8265:157472`
+    Oral evidence - Regulation of the water industry - 11 Jul 2018 &#xa0; Environment, Food and Rural Affairs Committee &#xa0; Oral evidence: Regulation of the w at
+18. [parliamentary/pwdata-debates] score=30.539 `pwdata-debates:debates2009-01-14b:114`
+    **PRIME MINISTER — Businesses (Financial Support)** — As a Government, we are always prepared to see proper parliamentary scrutiny of Government decisions and I have no doubt that, subject to issues of commercial c
+19. [parliamentary/pwdata-westminster] score=30.409 `pwdata-westminster:westminster2026-04-16b:6`
+    **Science, Innovation and Technology Committee** — I welcome the Chair of the Select Committee’s launch of a new inquiry on digital childhoods. Like her, I sit on the Science, Innovation and Technology Committee
+20. [parliamentary/pwdata-debates] score=30.314 `pwdata-debates:debates2014-06-23b:29`
+    **WORK AND PENSIONS — Personal Independence Payments** — It is interesting that yet again a Labour Member uses the word “fiasco”, and I know the Public Accounts Committee Chairman, the right hon. Member for Barking (M
+
+### G3 (G/H1) [PRINCIPLE-STREAM][MECHANISM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* How is a 'fit and proper person' test typically operated by regulators in practice?
+*stream:* codes / guidance · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Cross-domain implementation of a recurring mechanism.
+
+Top-20 retrieved:
+ 1. [legislation/primary-acts-pre-2000] score=134.228↑T `primary-acts-pre-2000:ukpga/1988/52:section-132`
+    **Examinations and tests of ability to give driving instruction.** — 132 1 Regulations may make provision with respect to— a the nature of examinations of the ability of persons to give instruction in the driving of motor cars an
+ 2. [parliamentary/pwdata-wrans] score=95.907↑T `pwdata-wrans:answers2026-03-02:138`
+    **Ministry of Housing, Communities and Local Government — Park Homes: Managers** — Q (Sarah Gibson): To ask the Secretary of State for Housing, Communities and Local Government, how many applications for Fit and Proper Person status have been 
+ 3. [parliamentary/committees-reports] score=85.979↑T `committees-reports:publication:5914:67380`
+    **Correspondence: Correspondence from Ian Trenholm, Chief Executive CareQuality Commission, re Respons** — Chairman: Peter Wyman CBE DL Chief Executive: Ian Trenholm September 2017 Meg Hillier MP Chair of the Public Accounts Committee By email: pubaccom@parliament.uk
+ 4. [guidance/quangos-govuk] score=85.906↑T `quangos-govuk:government/publications/mgn-578-m-amendment-3-use-of-overside-working-systems-on-vessels:2`
+    **MGN 578 (M) Amd 3 Use of overside working systems on commercial yachts small commercial vessels and ** — 1 MARINE GUIDANCE NOTE MGN 578 (M) Amendment 3 Use of overside working systems on commercial yachts, small commercial vessels and loadline vessels Notice to all
+ 5. [caselaw/scottish-courts] score=84.510↑T `scottish-courts:media/wnhlnmsm/upper-tribunal-decision-2022ut08-anu-sharma-against-renfrewshire-council:1`
+    **Upper Tribunal - Housing and Property Chamber: upper tribunal decision 2022ut08 anu sharma against r** — 1 [2022]UT08 Ref: UTS/AP/19/0046 Sheriff Tony Kelly IN APPEAL FROM DECISION OF FIRST-TIER TRIBUNAL FOR SCOTLAND (HOUSING AND PROPERTY CHAMBER) IN THE CASE OF Mr
+ 6. [parliamentary/pwdata-wrans] score=82.556↑T `pwdata-wrans:answers2018-03-19:88`
+    **Department of Health and Social Care — NHS: Reviews** — Q (Rosie Cooper): To ask the Secretary of State for Health and Social Care, if the (a) Government's fit and proper person test and (b) NHS duty of candour is su
+ 7. [guidance/hmrc-manuals] score=82.239↑T `hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh51250:1`
+    **ECSH51250 — Principals and agent networks** — Money service businesses (MSBs) frequently enter into arrangements with other parties to enable the MSB to provide its services to customers. This is known as a
+ 8. [parliamentary/pwdata-wrans] score=82.105↑T `pwdata-wrans:answers2025-07-21:477`
+    **Ministry of Housing, Communities and Local Government — Health Services and Social Services: Directo** — Q (Sarah Gibson): To ask the Secretary of State for Housing, Communities and Local Government, what mechanisms exist for residents to report breaches of the fit
+ 9. [parliamentary/pwdata-wrans] score=80.585↑T `pwdata-wrans:answers2018-02-27:202`
+    **Department of Health and Social Care — NHS: Managers** — Q (Diana Johnson): To ask the Secretary of State for Health and Social Care, on how many occasions have NHS Trusts received concerns about alleged unfitness to 
+10. [guidance/quangos-govuk] score=80.395↑T `quangos-govuk:government/publications/safety-alerts-2010:5`
+    **SA 04/10: fuel and other chemical storage: TAV level switches manufactured by Cynergy3 Components Li** — SAFETY ALERT Fuel & Other Chemical Storage - TAV level switches manufactured by Cynergy3 Components Limited Number: SA 04/10 Strategy & Policy Directorate Spons
+11. [guidance/hmrc-manuals] score=80.366↑T `hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh45030:1`
+    **ECSH45030 — The fit and proper test** — The fit and proper test (F P) is applied to money service businesses (MSBs) and trust or company service providers (TCPSs) and the beneficial owners, officers a
+12. [parliamentary/pwdata-wrans] score=79.485↑T `pwdata-wrans:answers2021-03-26:177`
+    **Ministry of Housing, Communities and Local Government — Park Homes** — Q (Sir Christopher Chope): To ask the Secretary of State for Housing, Communities and Local Government, when the draft guidance on fit and proper person licensi
+13. [parliamentary/pwdata-wms] score=79.452↑T `pwdata-wms:ministerial2020-07-08:2`
+    **Ministry of Housing, Communities and Local Government — Park Homes** — I am today publishing the Government response to our consultation “Mobile Homes –a fit and proper person test for park home sites”. I am placing copies of the r
+14. [parliamentary/historic-hansard] score=78.783↑T `historic-hansard:S5LV0588P0:70`
+    **Lords: Bank of England Bill** — Lord Eatwell moved Amendment No. 2: After Clause 22, insert the following new clause— LISTED MONEY MARKET INSTITUTIONS: INCLUSION ON THE LIST (". In section 43 
+15. [parliamentary/pwdata-lordswrans] score=78.643↑T `pwdata-lordswrans:lordswrans2018-05-17:17`
+    **Department of Health and Social Care — Health Services: Directors** — Q (lord hunt of kings heath): To ask Her Majesty's Government when they will announce the details of the review into the use of the fit and proper persons test 
+16. [parliamentary/pwdata-lordswms] score=78.590↑T `pwdata-lordswms:lordswms2020-07-08:2`
+    **Ministry of Housing, Communities and Local Government — Park Homes** — My Hon. Friend, the Minister for Rough Sleeping and Housing (Luke Hall) has today made the following Written Ministerial Statement: I am today publishing the Go
+17. [parliamentary/pwdata-wrans] score=77.457↑T `pwdata-wrans:answers2026-03-31:98`
+    **Ministry of Housing, Communities and Local Government — Park Homes: Ownership** — Q (Mary Kelly Foy): To ask the Secretary of State for Housing, Communities and Local Government what assessment he has made of the effectiveness of the Fit and 
+18. [guidance/quangos-govuk] score=77.449↑T `quangos-govuk:government/consultations/dsa-and-vosa-legislative-amendments-proposed-as-a-consequence-of-the-merger:2`
+    **Legislative amendments proposed as a consequence of the merger of DSA and VOSA: consultation documen** — Consultation on the legislative amendments proposed as a consequence of the merger of the Driving Standards Agency and the Vehicle & Operator Services Agency De
+19. [guidance/quangos-govuk] score=77.020↑T `quangos-govuk:government/publications/mobile-homes-fit-and-proper-person-test-guidance-for-local-authorities:1`
+    **Mobile homes fit and proper person test: guidance for local authorities** — Guidance for local authorities on the implementation of the fit and proper person test From 1 July and by 1 October 2021, all park home site owners must apply t
+20. [parliamentary/pwdata-wrans] score=76.727↑T `pwdata-wrans:answers2025-03-03:448`
+    **Ministry of Housing, Communities and Local Government — Park Homes** — Q (Jack Rankin): To ask the Secretary of State for Housing, Communities and Local Government, what steps she is taking to enhance the fit and proper person test
+
+### H1 (H/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* When an arms-length body fails, how do departments typically respond, and how fast?
+*stream:* investigations / inquiries · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Behavioural regularity across inquiries (e.g. Horizon and others) — the pattern, not one case.
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-lordswrans] score=93.255↑T `pwdata-lordswrans:lordswrans2025-06-03:33`
+    **Cabinet Office — Arms Length Bodies** — Q (Lord Agnew of Oulton): To ask His Majesty's Government how many arm’s-length bodies are sponsored by more than one department; and for each such body, what i
+ 2. [parliamentary/niassembly-hansard] score=89.403↑T `niassembly-hansard:476718:400`
+    **NI Assembly: Private Members' Business — Waste and Inefficiency in Government** — No. Let me make some progress. A culture of efficiency must be led from the top. That is why we have called on the Minister of Finance to take the lead. I point
+ 3. [parliamentary/pwdata-westminster] score=87.386↑T `pwdata-westminster:westminster2025-11-12a:74`
+    **Public Bodies: Governance and Accountability** — My hon. Friend raises an interesting and important issue. Far too often there have been departmental silos, and silos within other public bodies, and they are n
+ 4. [parliamentary/pwdata-wrans] score=83.224↑T `pwdata-wrans:answers2023-07-26:58`
+    **Department of Health and Social Care — Department of Health and Social Care: Staff** — Q (Sir Jacob Rees-Mogg): To ask the Secretary of State for Health and Social Care, how many officials were working in his Department on (a) the date of the appo
+ 5. [parliamentary/pwdata-wrans] score=82.492↑T `pwdata-wrans:answers2026-03-25:327`
+    **Cabinet Office — Arms Length Bodies** — Q (Gregory Stafford): To ask the Minister for the Cabinet Office, to whom Arm's Length Bodies report annually. A (Anna Turley): Arm’s Length Bodies (ALBs) are a
+ 6. [parliamentary/pwdata-wrans] score=82.130↑T `pwdata-wrans:answers2018-05-14:60`
+    **Department of Health and Social Care — Department of Health and Social Care: Training** — Q (Hywel Williams): To ask the Secretary of State for Health and Social Care, what training his Department has provided to (a) general civil servants, (b) fast 
+ 7. [guidance/nao-reports] score=80.993↑T `nao-reports:central-oversight-of-arms-length-bodies:2`
+    **central oversight of arms length bodies** — A picture of the National Audit Office logo SESSION 2021-22 23 JUNE 2021 HC 297 REPORT by the Comptroller and Auditor General Central oversight of arm’s‑length 
+ 8. [parliamentary/pwdata-wrans] score=80.656↑T `pwdata-wrans:answers2018-01-18:54`
+    **Department of Health and Social Care — Eating Disorders** — Q (Barbara Keeley): To ask the Secretary of State for Health and Social Care, with reference to the Parliamentary and Health Ombudsman’s report, Ignoring the al
+ 9. [parliamentary/pwdata-wrans] score=80.603↑T `pwdata-wrans:answers2025-05-07:1`
+    **Foreign, Commonwealth and Development Office — Foreign, Commonwealth and Development Office: Public ** — Q (Priti Patel): To ask the Secretary of State for Foreign, Commonwealth and Development Affairs, how much his Department spent on on (a) business hospitality, 
+10. [guidance/nao-reports] score=80.365↑T `nao-reports:central-oversight-of-arms-length-bodies:1`
+    **central oversight of arms length bodies** — A picture of the National Audit Office logo SESSION 2021-22 23 JUNE 2021 HC 297 REPORT by the Comptroller and Auditor General Central oversight of arm’s‑length 
+11. [parliamentary/pwdata-debates] score=80.283↑T `pwdata-debates:debates2025-03-14b:85`
+    **Arm’s-Length Bodies (Review) Bill** — I do not think my Bill would make any of that harder. What I am saying is that if the Government wish to abolish these arm’s length bodies, or some of them, and
+12. [parliamentary/pwdata-wrans] score=80.082↑T `pwdata-wrans:answers2013-09-02d:32`
+    **CULTURE MEDIA AND SPORT — Apprentices** — Q (Andrew Gwynne): To ask the Secretary of State for Culture, Media and Sport how many apprenticeships her Department offered to people aged (a) 16 to 18, (b) 1
+13. [guidance/nao-reports] score=80.036↑T `nao-reports:department-for-environment-food-and-rural-affairs-managing-front-line-delivery-costs:1`
+    **department for environment food and rural affairs managing front line delivery costs** — Department for Environment, Food and Rural Affairs Managing front line delivery costs REpoRt by thE ComptRollER AnD AuDitoR GEnERAl hC 1279 SESSion 2010–2012 22
+14. [parliamentary/pwdata-wrans] score=79.789↑T `pwdata-wrans:answers2024-04-25:203`
+    **Department for Culture, Media and Sport — Public Buildings: Concrete** — Q (Rachael Maskell): To ask the Secretary of State for Culture, Media and Sport, how many (a) museums, (b) theatres, (c) art galleries, (d) sports venues and (e
+15. [parliamentary/pwdata-lords] score=79.728↑T `pwdata-lords:daylord2007-07-23b:291`
+    **Local Government and Public Involvement in Health Bill** — The Minister made a valiant attempt to tell us that all will be well. She told us how all the local authorities were finding hosts and how CSCI and everybody el
+16. [parliamentary/pwdata-wrans] score=79.618↑T `pwdata-wrans:answers2026-03-11:191`
+    **Department of Health and Social Care — Department of Health and Social Care: Tyres** — Q (Mr Richard Holden): To ask the Secretary of State for Health and Social Care, pursuant to the Answer of 2 March 2026 to Question 114110, what information his
+17. [parliamentary/pwdata-wrans] score=79.284↑T `pwdata-wrans:answers2013-11-18c:48`
+    **SCOTLAND — Conditions of Employment** — Q (John McDonnell): To ask the Secretary of State for Scotland how many direct employees and contracted workers of his Department and its arms lengths bodies ar
+18. [parliamentary/pwdata-wrans] score=79.067↑T `pwdata-wrans:answers2013-02-12a:36`
+    **COMMUNITIES AND LOCAL GOVERNMENT — Travel and Subsistence Payments** — Q (Chi Onwurah): To ask the Secretary of State for Communities and Local Government (1) how many senior officials in his Department's arm's length bodies (a) ha
+19. [guidance/nao-reports] score=79.029↑T `nao-reports:department-for-environment-food-and-rural-affairs-geographic-information-strategy:1`
+    **department for environment food and rural affairs geographic information strategy** — Department for Environment, Food and Rural Affairs Geographic information strategy REpoRt by thE ComptRollER AnD AuDitoR GEnERAl hC 1274 SESSion 2010–2012 13 ju
+20. [parliamentary/pwdata-wrans] score=78.873↑T `pwdata-wrans:answers2013-02-04a:168`
+    **ATTORNEY-GENERAL — Travel and Subsistence Payments** — Q (Chi Onwurah): To ask the Attorney-General (1) how many senior officials in the Law Officers' Departments arm's-length bodies (a) have and (b) have had during
+
+### H2 (H/H2) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* What usually goes wrong when government runs a big IT programme?
+*stream:* investigations / inquiries · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Cross-inquiry IT-failure patterns (not one named project).
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-lordswrans] score=67.233↑T `pwdata-lordswrans:lordswrans2011-05-10a:24`
+    **Government: Big Society** — Q (Lord Hennessy of Nympsfield): To ask Her Majesty's Government what are the specific responsibilities of each individual minister for aspects of the big socie
+ 2. [parliamentary/pwdata-debates] score=63.603↑T `pwdata-debates:debates1989-12-06a:496`
+    **Local Government (Sports and Leisure)** — What we have heard from Opposition Members tonight makes it abundantly clear that the Labour party is interested only in who runs sports facilities, not what go
+ 3. [other/petitions] score=60.344↑T `petitions:306407:1`
+    **We call the UK Government to tell shops to stop overpricing essential products** — We call the UK Government to tell shops to stop overpricing essential products State: rejected · Signatures: 7 We want the UK Government to tell all shops not t
+ 4. [parliamentary/pwdata-debates] score=60.094↑T `pwdata-debates:debates2013-02-26b:186`
+    **Regulation of the Private Rented Sector — Groceries Code Adjudicator Bill [Lords] (Programme) (No. 3** — It is a great pleasure to follow my hon. Friend the Member for Christchurch (Mr Chope) . I want to query a couple of things that my hon. Friend the Minister sai
+ 5. [parliamentary/pwdata-debates] score=59.834↑T `pwdata-debates:debates2008-07-01b:53`
+    **COMMUNITIES AND LOCAL GOVERNMENT — Social Housing** — Sixty years ago, Aneurin Bevan came up with his other big idea—a national housing service that was publicly owned and run, and a massive house building programm
+ 6. [parliamentary/pwdata-wrans] score=59.468↑T `pwdata-wrans:answers2011-03-08f:112`
+    **COMMUNITIES AND LOCAL GOVERNMENT — Local Government Services: Third Sector** — Q (Peter Bone): To ask the Secretary of State for Communities and Local Government what role he expects the big society to play in providing services previously
+ 7. [parliamentary/pwdata-debates] score=59.449↑T `pwdata-debates:debates2013-02-26b:194`
+    **Regulation of the Private Rented Sector — Groceries Code Adjudicator Bill [Lords] (Programme) (No. 3** — No. That is exactly the wrong reason. We want to discuss the issues and argue about them. The hon. Gentleman’s amendments might be very good and when I listen t
+ 8. [parliamentary/pwdata-debates] score=59.093↑T `pwdata-debates:debates2025-02-05b:549`
+    **Local Government Finance** — I will in just a second, but I want to make a really important point to the Minister about why all this matters. Why does it matter? If we do not have a set of 
+ 9. [parliamentary/pwdata-debates] score=58.641↑T `pwdata-debates:debates1959-02-04a:298`
+    **Orders of the Day — Clause 1.—(APPROVAL OF BUILDING SOCIETIES FOR INVESTMENT BY TRUSTEES AND GOVERNM** — I have listened with very great care and attention to what has been said, because, unlike most hon. Members who have taken part in the discussion, I have no con
+10. [parliamentary/pwdata-debates] score=58.447↑T `pwdata-debates:debates1953-12-15a:403`
+    **Orders of the Day — TELEVISION DEVELOPMENT (GOVERNMENT POLICY)** — At the same time the hon. Member, who is a fair man, would be the first to admit that it was not a coincidence that the first application for a licence was for 
+11. [parliamentary/historic-hansard] score=29.540 `historic-hansard:S5LV0263P0:1259`
+    **Lords: FORESTRY** — My Lords, I have made more speeches than I care to remember about this in the last 35 years, both in the House of Commons and here, and I have always been criti
+12. [parliamentary/pwdata-lords] score=28.805 `pwdata-lords:daylord2010-06-23a:139`
+    **Academies Bill [HL] — Committee (2nd Day)** — I shall also speak to Amendment 58. In doing so I am conscious that we are about two and three-quarter hours into day 2 and still on page 1 of the Bill. I shall
+13. [parliamentary/pwdata-debates] score=28.091 `pwdata-debates:debates2002-07-04:331`
+    **Orders of the Day — Finance Bill — [2nd Allotted Day] — Schedule 37 — Aggregates levy amendments** — When the Government imposed their big windfall licence fee on the telecommunications industry—a very big one-off tax—I warned that it would lead to job losses a
+14. [parliamentary/pwdata-debates] score=27.883 `pwdata-debates:debates2000-10-26a:295`
+    **Defence Procurement** — How will the United States transfer the key technologies that are relevant to that programme, as BAE will tell them time and again that stealth technologies are
+15. [parliamentary/pwdata-debates] score=27.571 `pwdata-debates:debates2004-05-24:150`
+    **Deepcut Barracks** — I recognise that, but we should not take one given set of circumstances and say that, when something goes wrong anywhere within government, we should automatica
+16. [parliamentary/pwdata-debates] score=27.153 `pwdata-debates:debates1975-03-13a:340`
+    **Orders of the Day — SMALL BUSINESSES AND THE SELF-EMPLOYED** — I wish merely to say a few words about the position of small businesses, which are a vital part of our industrial sector. From that sector will come the entrepr
+17. [parliamentary/pwdata-lords] score=26.984 `pwdata-lords:daylord2008-01-29b:134`
+    **Dormant Bank and Building Society Accounts Bill [HL]** — My Lords, we on this side appreciate and admire the noble Lord's spirited attempt to ensure that the investment of dormant account funds in communities across t
+18. [parliamentary/pwdata-lords] score=26.850 `pwdata-lords:daylord2022-02-28c:43`
+    **Crypto Currencies - Question** — My Lords, the FCA advice to customers, last updated on 18 June 2021, says: “Before you invest in cryptoassets you should be aware of the following … cryptoasset
+19. [parliamentary/pwdata-debates] score=26.525 `pwdata-debates:debates1972-11-01a:81`
+    **Orders of the Day — INDUSTRIAL RELATIONS** — I do not know whether dinosaurs were cannibals. When these large companies have eaten up everything, what will be left of our economic system? An enormous perce
+20. [parliamentary/pwdata-debates] score=26.477 `pwdata-debates:debates2001-04-09a:331`
+    **Committee** — The programme motion has two deficiencies: it is the wrong motion, and it is wrong to have it in the first place: otherwise, it is perfect. What is wrong with t
+
+### H3 (H/H1) [PRINCIPLE-STREAM][MECHANISM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* Where inquiries have examined regulatory capture, what mechanisms recur?
+*stream:* investigations / inquiries · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Transferable regulatory-capture patterns.
+
+Top-20 retrieved:
+ 1. [parliamentary/committees-evidence] score=65.782↑T `committees-evidence:writtenevidence:138581:242020`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0012** — Written evidence submitted by the Vistry Group [HLV 012] Introduction – Vistry Group Vistry Group is the UK’s leading provider of affordable homes. At Vistry, w
+ 2. [parliamentary/committees-evidence] score=64.649↑T `committees-evidence:writtenevidence:88054:133840`
+    **Land value capture inquiry — LVC0087** — LVC0087 - Evidence on Land Value Capture Written evidence submitted by Network Rail [LVC 087] Introduction 1.1. Network rail is owns, operates and develops Brit
+ 3. [parliamentary/committees-evidence] score=64.539↑T `committees-evidence:writtenevidence:138196:241558`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0008** — Written evidence submitted by the Housing Forum [HLV 008] About The Housing Forum The Housing Forum is the UK’s cross-sector, industry-wide organisation that re
+ 4. [parliamentary/committees-evidence] score=63.231↑T `committees-evidence:writtenevidence:138960:244662`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0047** — Written evidence submitted by RICS [HLV 047] Our responses below are based on the ability of suggested measures to contribute to delivering 1.5 million dwelling
+ 5. [parliamentary/committees-evidence] score=60.420↑T `committees-evidence:writtenevidence:138680:244654`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0042** — Written evidence submitted by the Home Builders Federation [HLV 042] Introduction The Home Builders Federation (HBF) is the representative body of the home buil
+ 6. [parliamentary/pwdata-wrans] score=58.051↑T `pwdata-wrans:answers2025-11-07:75`
+    **Cabinet Office — Government: Inquiries** — Q (Max Wilkinson): To ask the Minister for the Cabinet Office, what assessment his Department made of the potential impact of a legal duty to implement public e
+ 7. [parliamentary/pwdata-wrans] score=57.860↑T `pwdata-wrans:answers2008-03-13b:229`
+    **BUSINESS, ENTERPRISE AND REGULATORY REFORM — Coal Fired Power Stations: Kingsnorth** — Q (Colin Challen): To ask the Secretary of State for Business, Enterprise and Regulatory Reform if he will require the implementation of heat capture mechanisms
+ 8. [parliamentary/committees-evidence] score=57.797↑T `committees-evidence:writtenevidence:87795:133813`
+    **Land value capture inquiry — LVC0068** — LVC0068 - Evidence on Land Value Capture Written e vidence submitted by CPRE [LVC 068] Introduction CPRE campaigns for a beautiful and living countryside. We wo
+ 9. [parliamentary/pwdata-lords] score=57.719↑T `pwdata-lords:daylord2025-04-25a:69`
+    **Public Inquiries: Enchancing Public Trust (Statutory Inquiries Committee Report) - Motion to Take No** — My Lords, I too had the pleasure of serving on this committee and add my tribute to the noble Lord, Lord Norton, chair of the committee, and Andrea Dowsett, cle
+10. [parliamentary/committees-evidence] score=57.675↑T `committees-evidence:writtenevidence:138165:241556`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0007** — Written evidence submitted by Dr Thomas Aubrey [HLV 007] Background I have been working on land value capture for more than 30 years following research I undert
+11. [parliamentary/committees-evidence] score=57.271↑T `committees-evidence:writtenevidence:138606:242886`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0019** — Written evidence submitted by the Chartered Institute of Housing [HLV 019] Introduction The Chartered Institute of Housing (CIH) is the professional body for pe
+12. [parliamentary/committees-evidence] score=57.107↑T `committees-evidence:writtenevidence:139013:244665`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0050** — Written e vidence submitted by the Ministry for Housing, Communities and Local Government [HLV 050] The Ministry of Housing, Communities and Local Government su
+13. [parliamentary/committees-evidence] score=56.548↑T `committees-evidence:writtenevidence:138672:243770`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0038** — Written evidence submitted by WSP [HLV 038] WSP is a world-leading multi-disciplinary professional services consultancy which supports significant projects in b
+14. [parliamentary/pwdata-lords] score=56.039↑T `pwdata-lords:daylord2004-12-02a:74`
+    **Regulatory State** — My Lords, I have pleasure in moving the Motion standing in my name on the Order Paper. The inquiry by the Constitution Committee into the accountability of gove
+15. [parliamentary/committees-evidence] score=55.386↑T `committees-evidence:writtenevidence:138665:243128`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0034** — Written evidence submitted by the Land, Planning and Development Federation [HLV 034] Introduction The L and, Planning and Development Federation (LPDF) welcome
+16. [parliamentary/pwdata-wrans] score=55.285↑T `pwdata-wrans:answers2008-01-15b:305`
+    **BUSINESS, ENTERPRISE AND REGULATORY REFORM — Carbon Sequestration** — Q (Gregory Barker): To ask the Secretary of State for Business, Enterprise and Regulatory Reform how carbon capture and storage technology will be considered in
+17. [parliamentary/committees-evidence] score=55.165↑T `committees-evidence:writtenevidence:138667:243129`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0035** — Written evidence submitted by Keepmoat Homes [HLV 035] Keepmoat Homes Keepmoat Homes is a leading partnership homebuilder delivering c.4,000 homes per year. As 
+18. [parliamentary/pwdata-debates] score=54.835↑T `pwdata-debates:debates2001-04-05a:218`
+    **Regulatory Reform Bill [Lords] — REVIEW OF ORDERS** — I do not agree with the hon. Gentleman's first point, because, as I understand it, the review that the Deregulation Committee proposes would not allow a detaile
+19. [parliamentary/committees-evidence] score=54.817↑T `committees-evidence:writtenevidence:87625:133726`
+    **Land value capture inquiry — LVC0027** — LVC0027 - Evidence on Land Value Capture Written e vidence submitted by Staffordshire County Council [LVC 027] Re: Inquiry: Land value capture, Communities and 
+20. [parliamentary/committees-evidence] score=54.801↑T `committees-evidence:writtenevidence:135321:241546`
+    **Delivering 1.5 million new homes: Land Value Capture — HLV0001** — Written evidence submitted by Mike Lake [HLV 001] Response to: “Delivering 1.5 million new homes: Land Value Capture” How effective and efficient are current me
+
+### I1 (I/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* What distinguishes regulatory-enforcement laws that worked from ones that didn't?
+*stream:* parliamentary evaluations · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: PAC/NAO/post-legislative-scrutiny patterns of effective vs ineffective enforcement law.
+
+Top-20 retrieved:
+ 1. [guidance/quangos-govuk] score=73.077↑T `quangos-govuk:guidance/general-regulatory-chamber-tribunal-hearings-and-decisions:1`
+    **General Regulatory Chamber tribunal hearings and decisions** — After you appeal to the tribunal The regulator has 28 days to respond to your appeal. They will send you a copy of their response. If you wish, you can write ba
+ 2. [parliamentary/committees-evidence] score=65.428↑T `committees-evidence:writtenevidence:99772:145191`
+    **Bailiffs: Enforcement of debt inquiry — BFF0004** — BFF0004 - Evidence on Bailiffs: Enforcement of debt Written evidence from Association of Civil Enforcement Agents (BFF0004) I am Stephen Wood (Steve) I am the P
+ 3. [guidance/quangos-govuk] score=64.935↑T `quangos-govuk:government/publications/local-regulation-retail-enforcement-pilot:3`
+    **Assessment of methodology in the retail enforcement pilot** — REVIEW AND ASSESSMENT OF THE METHODOLOGY OF THE RETAIL ENFORCEMENT PILOT (REP) IN A BUSINESS ENVIRONMENT May 2009: Report submitted to the Local Better Regulati
+ 4. [parliamentary/pwdata-debates] score=64.894↑T `pwdata-debates:debates2017-12-12b:382`
+    **EUROPEAN UNION (WITHDRAWAL) BILL — Regulations to deal with deficiencies arising from withdrawal - I** — My hon. Friend raises an excellent point, which has also been raised by the European Chemicals Agency. Those registrations, which will have cost our businesses 
+ 5. [parliamentary/committees-evidence] score=64.328↑T `committees-evidence:writtenevidence:86114:132404`
+    **Brexit: enforcement and dispute resolution inquiry — BED0009** — BED0009 - Evidence on Brexit: enforcement and dispute resolution TheCityUK – Written Evidence (BED0009) Summary TheCityUK believes that in any context – and par
+ 6. [parliamentary/committees-evidence] score=63.572↑T `committees-evidence:writtenevidence:102707:148725`
+    **Domestic Threat of Drones inquiry — DTD0010** — DTD0010 - Evidence on Domestic Threat of Drones (DTD0010) Written evidence submitted by the UK Civil Aviation Authority &#xa0; Introduction &#xa0; 1. &#xa0;&#xa
+ 7. [guidance/quangos-govuk] score=63.175↑T `quangos-govuk:government/publications/immigration-bill-part-3-enforcement:2`
+    **Enforcement officer powers: factsheet** — Immigration Act 2016 Factsheet – Enforcement Officer Powers (Sections 46-58, 62) What are we going to do?  Tackle illegal immigration and minimise its impact o
+ 8. [guidance/quangos-govuk] score=62.822↑T `quangos-govuk:government/publications/business-regulation-business-views:2`
+    **From the business end of the telescope** — 2 Purpose Local regulation and enforcement can play a major part in either increasing or alleviating the regulatory burden on business. Different businesses and
+ 9. [parliamentary/pwdata-debates] score=62.699↑T `pwdata-debates:debates2008-05-21c:125`
+    **Orders of the Day — Regulatory Enforcement and Sanctions Bill [ Lords]** — As I said, the Bill does not alter the fundamental relationship between UK law and European law. We recently debated the European treaty at length, and the Bill
+10. [parliamentary/committees-evidence] score=31.000 `committees-evidence:writtenevidence:95838:139974`
+    **Enforcing the Equality Act: the law and the role of the EHRC inquiry — EEA0205** — EEA0205 - Evidence on Enforcing the Equality Act: the law and the role of the Equality and Human Rights Commission Written submission from Mr Peter Hanley (EEA0
+11. [guidance/quangos-govuk] score=30.900 `quangos-govuk:government/publications/response-to-the-ai-growth-lab-call-for-evidence:2`
+    **The Biometrics and Surveillance Camera Commissioner's response to the AI Growth Lab call for evidenc** — AI Growth Lab Consultation - Call for evidence questions Response from the Biometrics and Surveillance Camera Commissioner, Professor William Webster About you 
+12. [parliamentary/committees-evidence] score=30.885 `committees-evidence:writtenevidence:95856:141912`
+    **Enforcing the Equality Act: the law and the role of the EHRC inquiry — EEA0220** — EEA0220 - Evidence on Enforcing the Equality Act: the law and the role of the Equality and Human Rights Commission Written submission from a member of the publi
+13. [guidance/ico] score=30.151 `ico:action-weve-taken/decision-notices/2025/05/ic-351751-n1j8:1`
+    **NHS England** — Reference: IC-351751-N1J8 1 Freedom of Information Act 2000 (FOIA) Decision notice Date: 15 May 2025 Public Authority: NHS England Address: Quarry House Quarry 
+14. [parliamentary/committees-evidence] score=29.882 `committees-evidence:writtenevidence:43018:161944`
+    **Regulation of private renting — RPR0003** — PRP0003 Written evidence submitted by ACORN Introduction ACORN is a community and renters union operating across England and Wales. We support tenants to resolv
+15. [parliamentary/committees-evidence] score=29.564 `committees-evidence:writtenevidence:161758:284701`
+    **Regulating for growth — RFG0008** — Written evidence submitted by PRICI C.I.C ( RFG0008 ) 1. Who I Am and Why I'm Qualified I am not an economist. I am a logistics professional with budget ownersh
+16. [guidance/ico] score=28.557 `ico:action-weve-taken/decision-notices/2026/02/ic-399995-p9z7:1`
+    **Independent Parliamentary Standards Authority** — Reference: IC-399995-P9Z7 1 Freedom of Information Act 2000 (FOIA) Decision notice Date: 23 February 2026 Public Authority: Independent Parliamentary Standards 
+17. [parliamentary/committees-evidence] score=27.987 `committees-evidence:writtenevidence:103792:149831`
+    **English language tests for overseas students inquiry — ELT0062** — ELT0062 - Evidence on English language tests for overseas students ELT0062 Written evidence submitted by Shammi Akka’s Akter (ELT0062) &#xa0; My name is Shammi 
+18. [guidance/ico] score=27.880 `ico:action-weve-taken/decision-notices/2026/02/ic-400553-k1y7:1`
+    **Independent Parliamentary Standards Authority** — Reference: IC-400553-K1Y7 1 Freedom of Information Act 2000 (FOIA) Decision notice Date: 23 February 2026 Public Authority: Independent Parliamentary Standards 
+19. [parliamentary/pwdata-debates] score=27.867 `pwdata-debates:debates2025-11-12f:491`
+    **Energy** — My hon. Friend references Scotland. I was at COP26 in Glasgow the last time we had a Conservative Prime Minister who showed real climate leadership on the globa
+20. [parliamentary/committees-evidence] score=27.654 `committees-evidence:writtenevidence:126664:210156`
+    **Fraud — FRA0096** — FRA0096 Written evidence submitted by t he National Trading Standards Scams Team (updated) The National Trading Standards (NTS) Scams Team helps tackle mass mar
+
+### I2 (I/H2) [PRINCIPLE-STREAM][MECHANISM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* Do sunset clauses actually work — do laws get reviewed when they are meant to?
+*stream:* parliamentary evaluations · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Cross-domain evaluation of a mechanism (sunset/review clauses).
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-lords] score=87.880↑T `pwdata-lords:daylord2013-12-18a:248`
+    **Transparency of Lobbying, Non-Party Campaigning and Trade Union Administration Bill — Committee (4th** — My Lords, I rise briefly to support what has been said by the noble and right reverend Lord and to make two precise points. The first is that the original amend
+ 2. [parliamentary/pwdata-lords] score=85.963↑T `pwdata-lords:daylord2013-12-18a:247`
+    **Transparency of Lobbying, Non-Party Campaigning and Trade Union Administration Bill — Committee (4th** — My Lords, I wish to speak to Amendments 181A, 181B and 181C, which all move in the same direction as the noble Lord, Lord Hodgson, on reviewing the Act. We made
+ 3. [guidance/quangos-govuk] score=80.614↑T `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:2`
+    **Updated guidance on sunset clauses in market investigation remedies: consultation document** — Updated guidance on ‘sunset clauses’ in market investigation remedies Consultation document 27 May 2015 © Crown copyright 2015 You may reuse this information (n
+ 4. [parliamentary/committees-reports] score=75.192↑T `committees-reports:publication:134:885`
+    **Report: 7th Report - Correspondence: Lapsed sunset clauses** — Dear House of Lords Secondary Legislation Scrutiny Committee The Merchant Shipping (Ship-to-Ship Transfers) Regulations 2020 (SI 2020/94, “the new Regulations”)
+ 5. [parliamentary/pwdata-lords] score=36.943 `pwdata-lords:daylord2023-02-23c:223`
+    **Retained EU Law (Revocation and Reform) Bill - Committee (1st Day) (Continued) — Amendment 3** — One of the more entertaining bits of the Minister’s elegant reply was the opening bit, in which she gave us a new rationale for the sunset clause: it was necess
+ 6. [parliamentary/pwdata-lords] score=36.159 `pwdata-lords:daylord2021-06-22c:180`
+    **Professional Qualifications Bill [HL] - Committee (3rd Day) — Amendment 59** — My Lords, I support the amendment of the noble Lord, Lord Hunt of Kings Heath, which would insert a sunset clause into the Bill. Why do I say that? Because many
+ 7. [parliamentary/pwdata-lords] score=36.019 `pwdata-lords:daylord2023-02-28a:320`
+    **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — No, I do not accept that, because the vast majority of the rule that would be allowed to sunset is now legally inoperable and not working. My noble friend Lord 
+ 8. [parliamentary/bills-api] score=35.820 `bills-api:3340:98`
+    **Bill 3340 — publication 98** — WRITTEN EVIDENCE SUBMITTED BY LEWIS SILKIN LLP (REULB14) CALL FOR WRITTEN EVIDENCE: RETAINED EU LAW (REVOCATION AND REFORM) BILL This evidence is submitted by L
+ 9. [guidance/quangos-govuk] score=35.775 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:7`
+    **Law Society of Scotland** — © The Law Society of Scotland 2015
+10. [parliamentary/pwdata-debates] score=35.647 `pwdata-debates:debates2005-03-09a:411`
+    **Orders of the Day — Prevention of Terrorism Bill — Clause 1 — Power to Make Control Orders** — I am trying to recognise the dilemma in which the Government find themselves, as they try to find a way between the requirements of security and our traditions 
+11. [parliamentary/pwdata-lords] score=35.132 `pwdata-lords:daylord2023-02-28a:301`
+    **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — I support the amendment in the name of the noble and learned Lord, Lord Hope, and Amendment 26. The point about consultation is extremely important, especially 
+12. [parliamentary/pwdata-debates] score=35.036 `pwdata-debates:debates2020-02-12c:314`
+    **Terrorist Offenders (Restriction of Early Release) Bill — Clause 1 - Eligibility for release on lice** — I am not seeking to press new clause 3, but I am seeking reassurances from the Minister relating to the purpose behind it and a commitment to post-legislative s
+13. [parliamentary/pwdata-debates] score=34.491 `pwdata-debates:debates2023-01-18e:346`
+    **Retained EU Law (Revocation and Reform) Bill — New Clause 1 - “Assimilated law”** — I rise to speak in support of amendments 18, 19, 21, 24 and 36. What is clear from the Government is that this Bill is ideologically driven, lacks common sense,
+14. [parliamentary/pwdata-lords] score=34.227 `pwdata-lords:daylord2015-01-19a:344`
+    **Recall of MPs Bill — Committee (2nd Day) (Continued)** — I am grateful to the Minister. I said in my opening remarks that the alternative was a review system and I think that the Government ought to think about that. 
+15. [parliamentary/pwdata-lords] score=34.177 `pwdata-lords:daylord2023-02-28a:318`
+    **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — I will address the noble Lord’s point at the end of my remarks, after I have moved the government amendments. I think I had got to the new clause tabled as Amen
+16. [guidance/quangos-govuk] score=34.100 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:5`
+    **Elcena Jeffers Foundation ** — ELCENA JEFFERS FOUNDATION (EJF) PO BOX 63057, LONDON NW9 1LQ UNITED KINGDOM Registered Charity Number: 1072333 Company Registration Number: 3601958 Alice Cole R
+17. [parliamentary/pwdata-lords] score=34.074 `pwdata-lords:daylord2015-01-20a:88`
+    **Counter-Terrorism and Security Bill — Committee (1st Day)** — My Lords, we have had a very good, short debate on this, with a lot of contributions that in many ways highlight the difficulties that there are in this area wh
+18. [parliamentary/pwdata-lords] score=34.018 `pwdata-lords:daylord2023-03-02b:81`
+    **Retained EU Law (Revocation and Reform) Bill - Committee (3rd Day) — Amendment 29** — My Lords, this has been a very full and comprehensive debate—I did not expect anything less, given the subject matter. Amendments 29, 33, 34, 35, 36, 49, 55 and
+19. [parliamentary/pwdata-lords] score=33.810 `pwdata-lords:daylord2025-02-26a:149`
+    **Product Regulation and Metrology Bill [HL] - Report (1st Day) — Amendment 5** — My Lords, I rise to speak in favour of my Amendments 21 and 59, and to support the amendments, to which I have added my name, from the noble Lord, Lord Frost. A
+20. [parliamentary/pwdata-lords] score=33.795 `pwdata-lords:daylord2015-01-20a:75`
+    **Counter-Terrorism and Security Bill — Committee (1st Day)** — My Lords, I do not understand the two-year period contained in these amendments. The issue which we are dealing with and which is covered in this clause is, unf
+
+### I3 (I/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
+*Query:* When has post-legislative scrutiny found a law had significant unintended consequences, and of what kind?
+*stream:* parliamentary evaluations · *kind:* principle · *metric:* lesson
+*0–2 lesson:* NOT CALIBRATED — scaffold only (rubric set by example once a principle-stream result exists, §C.3). Excluded from the headline.
+
+Lesson target: Transferable unintended-consequence patterns.
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-lords] score=107.910↑T `pwdata-lords:daylord2026-02-03d:115`
+    **Children’s Wellbeing and Schools Bill - Report (5th Day) — Amendment 205** — My Lords, this is a big Bill. The noble Baroness, Lady Smith, has spent many hours at the Dispatch Box justifying its provisions. This amendment enables her to 
+ 2. [parliamentary/pwdata-debates] score=105.987↑T `pwdata-debates:debates2007-07-25b:253`
+    **Orders of the Day — Temporary restriction on the purchase of annuiities** — As the Minister has explained, the Government amendments are, in effect, a compromise arising from the Lords debates, and on behalf of the official Opposition, 
+ 3. [parliamentary/pwdata-lords] score=105.677↑T `pwdata-lords:daylord2011-12-21a:121`
+    **Health and Social Care Bill — Committee (15th Day)** — My Lords, I rise to move the amendment in my name and that of my noble friend Lord Patel, who sends his apologies to the Committee. He is strongly enthusiastic 
+ 4. [parliamentary/pwdata-debates] score=97.952↑T `pwdata-debates:debates2020-02-12c:314`
+    **Terrorist Offenders (Restriction of Early Release) Bill — Clause 1 - Eligibility for release on lice** — I am not seeking to press new clause 3, but I am seeking reassurances from the Minister relating to the purpose behind it and a commitment to post-legislative s
+ 5. [parliamentary/pwdata-westminster] score=96.997↑T `pwdata-westminster:westminster2004-02-24:38`
+    **Pre-legislative Scrutiny** — I apologise. My Lancastrian ignorance of the south-west is coming to the fore. As the hon. Member for Somerton and Frome (Mr. Heath) said, programming, or timet
+ 6. [guidance/quangos-govuk] score=92.361↑T `quangos-govuk:government/publications/post-legislative-scrutiny:2`
+    **Post-legislative scrutiny** — Law Com No 302 Post-Legislative Scrutiny The Law Commission (LAW COM No 302) POST-LEGISLATIVE SCRUTINY Presented to the Parliament of the United Kingdom by the 
+ 7. [parliamentary/pwdata-debates] score=91.169↑T `pwdata-debates:debates2023-06-21c:199`
+    **Retained EU Law (Revocation and Reform) Bill — After Clause 16 - Environmental protection** — I am grateful to my hon. Friend. Knowing him, he will develop those points in due course. He agrees with what my noble Friend Lord Callanan said in the other pl
+ 8. [parliamentary/pwdata-lords] score=89.634↑T `pwdata-lords:daylord2013-10-22a:83`
+    **Transparency of Lobbying, Non-Party Campaigning and Trade Union Administration Bill — Second Reading** — My Lords, it is important that we retain some clarity about why there were calls for a Bill to regulate lobbying. It was to deal with the damage to our democrac
+ 9. [parliamentary/committees-evidence] score=89.443↑T `committees-evidence:writtenevidence:73846:119480`
+    **Legislative Process inquiry — LEG0019** — LEG0019 - Evidence on Legislative process Dr Edgar A. Whitley, Associate Professor (Reader) in Information Systems, London School of Economics and Political Sci
+10. [parliamentary/niassembly-hansard] score=89.111↑T `niassembly-hansard:351845:19`
+    **NI Assembly: Executive Committee Business — Adoption and Children Bill: Second Stage** — I, too, want to express my solidarity with the Minister of Health in the face of the abhorrent threats that he has had to endure in recent days. My party and I 
+11. [parliamentary/pwdata-lords] score=88.976↑T `pwdata-lords:daylord2009-07-09a:110`
+    **Coroners and Justice Bill — Committee (6th Day)** — I have been somewhat intimidated by the Bill. It has tremendous scope, covering many emotive issues. I am not a policeman or a lawyer; I am not interested in po
+12. [parliamentary/pwdata-lords] score=86.021↑T `pwdata-lords:daylord2012-01-10b:87`
+    **Legal Aid, Sentencing and Punishment of Offenders Bill — Committee (2nd Day)** — My Lords, I, too, support the amendment, which is about unintended consequences. The Government should be grateful that it has been raised at this stage of deba
+13. [parliamentary/pwdata-lords] score=85.216↑T `pwdata-lords:daylord2026-04-13d:279`
+    **English Devolution and Community Empowerment Bill - Report (3rd Day) — Amendment 318B** — My Lords, as I mentioned earlier, good law is a public good. It is essential that Acts deliver what they are expected to deliver, and not all do so, as the nobl
+14. [parliamentary/pwdata-lords] score=85.184↑T `pwdata-lords:daylord2023-02-06b:246`
+    **Retained EU Law (Revocation and Reform) Bill - Second Reading (Continued)** — My Lords, setting out on a journey when you do not know where you are going seems somewhat unwise. Politicians sometimes have to pursue careers without certaint
+15. [parliamentary/pwdata-debates] score=85.143↑T `pwdata-debates:debates2025-03-26b:330`
+    **Tobacco and Vapes Bill — New Clause 11 - Age verification in relation to tobacco and vaping products** — In our post-spiritual or at least post-religious age, two phenomena are evident. When God is forgotten and faith declines, people do not believe in nothing but,
+16. [other/erskine-may] score=84.522↑T `erskine-may:4989:1`
+    **Erskine May: Preliminary view of public bills: Pre- and post-legislative scrutiny** — 26.18 The Modernisation Committee, 1 the Constitution Committee of the House of Lords 2 and the Law Commission 3 have also drawn attention to the desirability o
+17. [parliamentary/committees-reports] score=84.511↑T `committees-reports:publication:52418:290924`
+    **Correspondence: Correspondence from Dr Jo Farrar CB OBE, Ministry of Justice Permanent Secretary, da** — Andy Slaughter MP Chair Justice Committee House of Commons London SW1A 0AA By email only Dr Jo Farrar CB OBE Permanent Secretary Ministry of Justice 102 Petty F
+18. [parliamentary/pwdata-lords] score=84.219↑T `pwdata-lords:daylord2008-07-16a:187`
+    **Pre-legislative Scrutiny** — My Lords, I congratulate my noble friend Lord Goodlad on raising this important question. The Constitution Committee's report on pre-legislative scrutiny follow
+19. [parliamentary/pwdata-lords] score=83.732↑T `pwdata-lords:daylord2011-12-21a:126`
+    **Health and Social Care Bill — Committee (15th Day)** — My Lords, I thank the noble Earl for his response, which I think recognises the fact that there will be a need continually to provide reassurance that the purpo
+20. [parliamentary/pwdata-lords] score=83.290↑T `pwdata-lords:daylord2021-01-20c:137`
+    **Overseas Operations (Service Personnel and Veterans) Bill - Second Reading** — My Lords, this is an important Bill, but it has to be examined closely so that it does not create more problems than it sets out to solve. Ordinarily, I would a
+
+### J1 (J/H1) [FOREIGN] — PENDING VALIDATION
+*Query:* How do other countries regulate short-term lets — and what worked?
+*stream:* web + foreign corpus · *kind:* specific · *metric:* recall@20
+*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.
+
+Expected sources (TODO):
+- ⋯ TODO — TODO (deferred): comparator regimes — EU registration models, US city caps
+
+Top-20 retrieved:
+ 1. [legislation/primary-acts-pre-2000] score=118.651↑T `primary-acts-pre-2000:ukpga/1997/8:section-26B`
+    **Material change of use: short-term lets** — 26B 1 A planning authority may designate all or part of its area as a short-term let control area for the purposes of this section. 2 In a short-term let contro
+ 2. [parliamentary/pwdata-debates] score=78.142↑T `pwdata-debates:debates2026-02-11b:153`
+    **Short-term Let Accommodation (Data Sharing Requirements)** — I beg to move, That leave be given to bring in a Bill to require certain persons or organisations to share specified data relating to the short-term letting of 
+ 3. [parliamentary/pwdata-debates] score=75.986↑T `pwdata-debates:debates2022-06-16a:366`
+    **Sharing Economy: Short-term Letting** — My hon. Friend is absolutely right. With the explosion in the number of short-term lettings, a whole host of problems associated with such lettings have become 
+ 4. [parliamentary/pwdata-lordswrans] score=75.175↑T `pwdata-lordswrans:lordswrans2019-01-07:28`
+    **Ministry of Housing, Communities and Local Government — Holiday Accommodation: Registration** — Q (baroness gardner of parkes): To ask Her Majesty's Government what assessment they have made of steps taken in other countries requiring home owners to offer 
+ 5. [parliamentary/pwdata-wrans] score=71.854↑T `pwdata-wrans:answers2024-02-22:136`
+    **Department for Culture, Media and Sport — Holiday Accommodation: Registration** — Q (Rachael Maskell): To ask the Secretary of State for Culture, Media and Sport, whether the proposed register for short-term lets will be shared with HMRC to e
+ 6. [parliamentary/pwdata-westminster] score=71.261↑T `pwdata-westminster:westminster2023-05-23a:18`
+    **Short-term Holiday Lets: Planning — [Dame Caroline Dinenage in the Chair]** — It is a pleasure to speak in this debate, and to support my neighbour, my hon. Friend the Member for Torbay (Kevin Foster) . Across south Devon, we have been de
+ 7. [parliamentary/pwdata-westminster] score=71.187↑T `pwdata-westminster:westminster2024-09-12a:42`
+    **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — It has been a real honour to hear the stories of different places across our country. It has been a real privilege to serve under your chairship, Mrs Harris; to
+ 8. [parliamentary/pwdata-westminster] score=70.751↑T `pwdata-westminster:westminster2024-09-12a:10`
+    **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — I thank the hon. Gentleman for that helpful intervention and for elaborating on that point. I definitely believe in the politics of justice over the politics of
+ 9. [parliamentary/pwdata-lordswms] score=70.506↑T `pwdata-lordswms:lordswms2024-02-19:1`
+    **Department for Culture, Media and Sport — Delivery Update** — Following consultation on a registration scheme for short-term lets in England, today the Government sets out further details on how the scheme will operate. Sh
+10. [parliamentary/pwdata-wms] score=70.426↑T `pwdata-wms:ministerial2024-02-19:2`
+    **Department for Culture, Media and Sport — Delivery Update** — Following consultation on a registration scheme for short-term lets in England, today the Government sets out further details on how the scheme will operate. Sh
+11. [parliamentary/pwdata-debates] score=70.421↑T `pwdata-debates:debates2015-03-10a:282`
+    **DEREGULATION BILL (PROGRAMME) (NO.3) — Clause 1 — Health and safety at work: general duty of self-em** — The honest answer is that we do not yet have such details, but they will be set out in regulations. I assume that a local authority would have to provide exampl
+12. [parliamentary/pwdata-westminster] score=70.247↑T `pwdata-westminster:westminster2015-01-07a:93`
+    **Short Let Deregulation (London)** — I suspect, therefore, that the hon. Gentleman will be pleased to support the Government’s proposals. If he looks back at my opening remarks, I think that that w
+13. [parliamentary/pwdata-lords] score=69.873↑T `pwdata-lords:daylord2023-03-22a:132`
+    **Levelling-up and Regeneration Bill - Committee (7th Day) — Amendment 180** — I will be coming to that in a moment. Finally, I turn to Amendments 445, 445A, 445B and 447, tabled by the noble Lord, Lord Foster of Bath. These amendments con
+14. [parliamentary/pwdata-wrans] score=68.996↑T `pwdata-wrans:answers2020-06-30:374`
+    **Department for Digital, Culture, Media and Sport — Holiday Accommodation: Bristol** — Q (Thangam Debbonaire): To ask the Secretary of State for Digital, Culture, Media and Sport, what assessment his Department has made of the effect of the covid-
+15. [parliamentary/pwdata-westminster] score=68.873↑T `pwdata-westminster:westminster2023-05-23a:30`
+    **Short-term Holiday Lets: Planning — [Dame Caroline Dinenage in the Chair]** — It is a great pleasure to see you in the Chair, Dame Caroline, and I thank my hon. Friend the Member for Torbay (Kevin Foster) for introducing this vital debate
+16. [parliamentary/pwdata-westminster] score=68.797↑T `pwdata-westminster:westminster2024-09-12a:1`
+    **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — I beg to move, That this House has considered the regulation of short-term lets. It is an honour and a genuine privilege to serve under your chairship, Mrs Harr
+17. [parliamentary/pwdata-wrans] score=68.787↑T `pwdata-wrans:answers2022-04-25:654`
+    **Department for Digital, Culture, Media and Sport — Holiday Accommodation** — Q (Rachael Maskell): To ask the Secretary of State for Digital, Culture, Media and Sport, whether she has made an assessment of the potential merits of (a) the 
+18. [parliamentary/pwdata-debates] score=68.737↑T `pwdata-debates:debates2022-06-16a:379`
+    **Sharing Economy: Short-term Letting** — The hon. Lady makes an important point. I will come on to registration, but clearly we do need to look at the options. We have heard about the problems caused, 
+19. [parliamentary/pwdata-lords] score=68.649↑T `pwdata-lords:daylord2023-03-22a:126`
+    **Levelling-up and Regeneration Bill - Committee (7th Day) — Amendment 180** — My Lords, I am speaking as a former member of the Built Environment Committee; I was a member when the committee’s report was drawn up. I thank the chairman, th
+20. [parliamentary/pwdata-debates] score=68.492↑T `pwdata-debates:debates2022-03-23c:332`
+    **Short and Holiday-Let Accommodation (Registration) Bill** — I beg to move, That leave be given to bring in a Bill to establish a national register of short and holiday-let accommodation; to give local authorities powers 
+
+### K1 (K/H2) — PENDING VALIDATION
+*Query:* I want to remove the no-fault eviction route — which exact provision do I amend?
+*stream:* legislation (section-level) · *kind:* specific · *metric:* recall@20
+*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.
+
+Expected sources (TODO):
+- ⋯ TODO — TODO (validate): HA 1988 s.21 (exact-pin) + Renters’ Rights Act 2025 repealing provision
+
+Top-20 retrieved:
+ 1. [parliamentary/pwdata-lords] score=81.082↑T `pwdata-lords:daylord2025-10-14c:109`
+    **Renters’ Rights Bill - Commons Reasons and Amendments — Motion B** — My Lords, I congratulate the noble Lord, Lord Young of Cookham, on the compromise he has achieved on this important amendment. I must declare a family interest:
+ 2. [parliamentary/pwdata-westminster] score=80.555↑T `pwdata-westminster:westminster2018-12-06a:59`
+    **SELECT COMMITTEE ON EDUCATION — Section 21 Evictions** — The Minister highlights important and hard-won preconditions for taking eviction proceedings, but that does not alter the fact that, in the generality of cases,
+ 3. [parliamentary/niassembly-hansard] score=80.210↑T `niassembly-hansard:396690:283`
+    **NI Assembly: Opposition Business — No-fault Evictions: Ban** — I have three minutes, so I will try to fly through this as quickly as possible. As the Alliance Party's housing spokesperson, I can say that we will support the
+ 4. [parliamentary/pwdata-lords] score=78.695↑T `pwdata-lords:daylord2025-07-01b:213`
+    **Renters’ Rights Bill - Report (1st Day) (Continued) — Amendment 41** — My Lords, I thank my noble friend Lord Hacking and the noble Lords, Lord Cromwell and Lord Young, for their amendments and their engagement on these issues. I a
+ 5. [parliamentary/pwdata-wrans] score=77.649↑T `pwdata-wrans:answers2021-11-15:239`
+    **Department for Levelling Up, Housing and Communities — Evictions** — Q (Fabian Hamilton): To ask the Secretary of State for Levelling Up, Housing and Communities, whether he is taking steps to (a) end Section 21 evictions and (b)
+ 6. [parliamentary/pwdata-lords] score=77.234↑T `pwdata-lords:daylord2019-05-15a:2`
+    **Housing: No-fault Evictions - Question** — My Lords, there was no widespread support for a fixed-term tenancy model. We concluded that the best way to introduce greater security was to remove Section 21 
+ 7. [parliamentary/pwdata-wrans] score=77.046↑T `pwdata-wrans:answers2019-05-08:165`
+    **Ministry of Housing, Communities and Local Government — Private Rented Housing: Evictions** — Q (Sir David Evennett): To ask the Secretary of State for Housing, Communities and Local Government, what deterrents are in place to stop rogue landlords illega
+ 8. [parliamentary/pwdata-debates] score=75.803↑T `pwdata-debates:debates1920-07-01a:592`
+    **Orders of the Day — SUPPLY [15TH ALLOTTED DAY]. — CLAUSE 13.—(Application to business premises.)** — I wish to offer objection to the way we have been treated in connection with this matter. The right hon. Gentleman in speaking to this Amendment offered no argu
+ 9. [parliamentary/niassembly-hansard] score=75.438↑T `niassembly-hansard:428904:266`
+    **NI Assembly: Private Members' Business — New Deal for Private Renters in Northern Ireland** — I start by thanking Members for tabling the motion, and by saying that I own a private property from which I gain a rental income. Sinn Féin believes that housi
+10. [parliamentary/pwdata-wrans] score=74.527↑T `pwdata-wrans:answers2021-10-18:221`
+    **Department for Levelling Up, Housing and Communities — Evictions** — Q (Dr Rupa Huq): To ask the Secretary of State for Levelling Up, Housing and Communities, what assessment he has made of the potential merits of abolishing sect
+11. [parliamentary/pwdata-lords] score=74.399↑T `pwdata-lords:daylord2025-04-28a:180`
+    **Renters’ Rights Bill - Committee (3rd Day) — Amendment 76** — My Lords, as colleagues have already said, the Liberal Democrats have long campaigned to abolish no-fault evictions. We support the measures in this Bill, parti
+12. [parliamentary/pwdata-lords] score=73.613↑T `pwdata-lords:daylord2021-01-27b:31`
+    **No-fault Evictions - Question** — I will have to write on that specific point. It is important that this is seen as a balance of strengthening the rights for eviction while removing the no-fault
+13. [parliamentary/niassembly-hansard] score=73.437↑T `niassembly-hansard:418424:114`
+    **NI Assembly: Oral Answers to Questions — No-fault Evictions** — The Member is right to raise the situation in Scotland. Scotland tried to put in place what is, in theory, a no-fault eviction ban, but, in practice, it has bee
+14. [parliamentary/pwdata-westminster] score=73.022↑T `pwdata-westminster:westminster2022-10-25b:84`
+    **Section 21 Evictions — [Caroline Nokes in the Chair]** — It is a pleasure to serve under your chairmanship this afternoon, Ms Nokes. I congratulate my hon. Friend the Member for Liverpool, Walton (Dan Carden) on secur
+15. [parliamentary/pwdata-wrans] score=72.740↑T `pwdata-wrans:answers2021-12-02:250`
+    **Department for Levelling Up, Housing and Communities — Evictions** — Q (Lloyd Russell-Moyle): To ask the Secretary of State for Levelling Up, Housing and Communities, what assessment he has made of the potential effect of abolish
+16. [parliamentary/pwdata-debates] score=72.577↑T `pwdata-debates:debates2025-10-22b:230`
+    **Renters’ Rights Bill — Clause 15 - Other duties** — I will be brief, because this is a time-limited debate. I welcome the Bill, although it has deficiencies, because it does not regulate the amount of rent that i
+17. [parliamentary/pwdata-debates] score=72.087↑T `pwdata-debates:debates2024-03-14d:166`
+    **Business of the House** — First, I pay tribute to Tommy McAvoy, the former Member for Rutherglen. Tommy was a legend of the Labour Whips Office, and the longest ever serving Government W
+18. [parliamentary/pwdata-lords] score=71.886↑T `pwdata-lords:daylord2025-07-01b:128`
+    **Renters’ Rights Bill - Report (1st Day) — Amendment 8** — My Lords, I thank the noble Lord, Lord Carrington, for these considered amendments, which reflect the debate we had around his similar suggestions in Committee,
+19. [parliamentary/pwdata-lords] score=71.799↑T `pwdata-lords:daylord2025-04-22a:168`
+    **Renters’ Rights Bill - Committee (1st Day) (Continued) — Amendment 15** — My Lords, this is my first speech today, so I will take the opportunity to thank the Minister and her team for all the discussions so far. I support the fundame
+20. [parliamentary/pwdata-debates] score=71.496↑T `pwdata-debates:debates1952-10-16a:386`
+    **Orders of the Day — HOUSING (SCOTLAND) BILL — Clause 3.—(SCHEMES FOR THE PROVISION, OTHERWISE THAN B** — I had thought that there might have been more discussion on this Amendment, but I shall try not to keep the Committee long, although there are one or two points
+
+### K2 (K/H1) [BILLS] — PENDING VALIDATION
+*Query:* To add a statutory duty of candour for public bodies, where would it slot in?
+*stream:* legislation (section-level) · *kind:* specific · *metric:* recall@20
+*recall@20:* pending — expected-sources are TODO placeholders (§C); excluded from the headline until the validated answer-key lands.
+
+Expected sources (TODO):
+- ⋯ TODO — TODO (validate): HSCA 2008 (Regulated Activities) Regs reg 20 + Public Office (Accountability) Bill
+
+Top-20 retrieved:
+ 1. [parliamentary/bills-api] score=99.837↑T `bills-api:4019:8`
+    **Bill 4019 — publication 8** — Written evidence submitted by Independent Public Advocate for the Public Office (Accountability) Bill Committee (POAB13) IPA Background 1. The Independent Publi
+ 2. [parliamentary/committees-reports] score=92.867↑T `committees-reports:publication:49802:266912`
+    **Correspondence: Correspondence from the Minister for Victims and Violence Against Women and Girls to** — T +4420 3334 3555 F +44870 761 7753 E https://contact-moj.service.justice.gov.uk/ www.gov.uk/moj 102 Petty France London SW1H 9AJ Alex Davies-Jones MP Parliamen
+ 3. [parliamentary/committees-reports] score=92.711↑T `committees-reports:publication:49610:264286`
+    **Correspondence: Correspondence from Alex Davies-Jones MP, Minister for Victims and Violence Against ** — T +4420 3334 3555 F +44870 761 7753 E https://contact-moj.service.justice.gov.uk/ www.gov.uk/moj 102 Petty France London SW1H 9AJ Alex Davies-Jones MP Parliamen
+ 4. [parliamentary/committees-reports] score=90.254↑T `committees-reports:publication:42532:211487`
+    **Correspondence: Letter from Alex Chalk KC MP, Lord Chancellor and Secretary of State for Justice, da** — T 020 3334 3555 F 0870 761 7753 E https://contact-moj.service.justice.gov.uk/ www.gov.uk/moj 102 Petty France London SW1H 9AJ The Right Honourable Alex Chalk KC
+ 5. [parliamentary/committees-evidence] score=89.999↑T `committees-evidence:writtenevidence:128905:220302`
+    **Statutory Inquiries — STI0006** — Written submission from Steffan Groch ( STI0006 ) My submission below is largely to address Questions numbers 1[a] and 2, but it also has relevance to Questions
+ 6. [parliamentary/pwdata-westminster] score=89.521↑T `pwdata-westminster:westminster2010-12-01b:16`
+    **[Mr James Gray in the Chair] — Candour in Health Care** — In this particular case, interviews were conducted with the two qualified nurses. The trust did not read both transcripts together and did not see that both nur
+ 7. [parliamentary/pwdata-lords] score=88.106↑T `pwdata-lords:daylord2025-04-25a:61`
+    **Public Inquiries: Enchancing Public Trust (Statutory Inquiries Committee Report) - Motion to Take No** — My Lords, I thank the noble Lord, Lord Norton of Louth, for his introductory remarks and his clear, disciplined leadership of the committee. With no experience 
+ 8. [parliamentary/pwdata-westminster] score=87.410↑T `pwdata-westminster:westminster2010-12-01b:6`
+    **[Mr James Gray in the Chair] — Candour in Health Care** — I am sure that Mr Powell will be listening carefully to what is said and reading the remarks in Hansard later. That family have played a major role in bringing 
+ 9. [parliamentary/pwdata-westminster] score=87.397↑T `pwdata-westminster:westminster2025-09-03a:88`
+    **Duty of Candour for Public Authorities and Legal Representation for Bereaved Families — [Wera Hobhou** — It is a pleasure to serve under your chairmanship, Mrs Hobhouse. I thank the hon. Member for Liverpool West Derby (Ian Byrne) for securing this important debate
+10. [parliamentary/pwdata-wrans] score=86.189↑T `pwdata-wrans:answers2025-10-09:6`
+    **Department of Health and Social Care — Mental Health Services: Disclosure of Information** — Q (Cameron Thomas): To ask the Secretary of State for Health and Social Care, whether his Department plans to hold discussions with leaders of mental health ser
+11. [parliamentary/niassembly-hansard] score=85.728↑T `niassembly-hansard:416633:414`
+    **NI Assembly: Private Members' Business — Statutory Duty of Candour** — I give my party's support to the motion and the amendment. The report into hyponatraemia-related deaths was published in January 2018, 14 years after the inquir
+12. [parliamentary/bills-api] score=85.424↑T `bills-api:4019:5`
+    **Bill 4019 — publication 5** — 1 Written evidence submitted by Centre for People’s Justice for the Public Office (Accountability) Bill Committee (POAB05) Lead Author: Professor Lydia Hayes, S
+13. [parliamentary/pwdata-debates] score=85.199↑T `pwdata-debates:debates2022-02-28a:514`
+    **Police, Crime, Sentencing and Courts Bill — After Clause 54 - Accountability of public authorities: ** — Lords amendment 71 would introduce a duty of candour for the police workforce. I am sure that hon. Members know that the Government take police integrity and ac
+14. [parliamentary/pwdata-debates] score=84.913↑T `pwdata-debates:debates2026-04-27e:467`
+    **Public Office (Accountability) Bill (Carry-over)** — I could not agree more with the hon. Gentleman. He is fundamentally correct that the Bill is about much more than just the duty of candour. This is about rebuil
+15. [parliamentary/bills-api] score=83.549↑T `bills-api:4019:6`
+    **Bill 4019 — publication 6** — 1 Public Office (Accountability) Bill 2025 Briefing for Committee Stage, House of Commons, November 2025 1. Hillsborough Law Now (HLN) has worked closely with t
+16. [parliamentary/bills-api] score=83.300↑T `bills-api:4019:7`
+    **Bill 4019 — publication 7** — Campaign Group Statement – The Chinook Justice Campaign Submitted by: The Chinook Justice Campaign Bill: Public Office (Accountability) Bill Stage: House of Com
+17. [parliamentary/committees-evidence] score=82.644↑T `committees-evidence:writtenevidence:128967:220290`
+    **Statutory Inquiries — STI0014** — Written Evidence from Pete Weatherby KC and Anna Morris KC (STI0014) Pete Weatherby KC I have been a barrister for 32 years, 12 of them in silk. A significant p
+18. [parliamentary/committees-reports] score=82.569↑T `committees-reports:publication:44986:223253`
+    **Report: Third Report - Human rights and the proposal for a “Hillsborough Law”** — House of Lords House of Commons Joint Committee on Human Rights Human rights and the proposal for a “Hillsborough Law” Third Report of Session 2023–24 Report, t
+19. [parliamentary/pwdata-westminster] score=82.548↑T `pwdata-westminster:westminster2025-09-03a:77`
+    **Duty of Candour for Public Authorities and Legal Representation for Bereaved Families — [Wera Hobhou** — It is a pleasure to speak in this debate. I congratulate my hon. Friend the Member for Liverpool West Derby (Ian Byrne) on securing it. The Government committed
+20. [parliamentary/niassembly-hansard] score=82.380↑T `niassembly-hansard:416633:415`
+    **NI Assembly: Private Members' Business — Statutory Duty of Candour** — A statutory and legally enforceable duty of candour in our health and social care system is urgently needed on both an organisational and individual basis. Alth
