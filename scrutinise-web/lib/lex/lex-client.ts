@@ -7,6 +7,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { FieldDef } from './page1-config'
+import { pageOf } from './page1-config'
+import { methodForStage, methodBlocksFor } from './method'
 
 export interface LexTurnContext {
   preferredName: string
@@ -50,6 +52,10 @@ const RESPONSE_SCHEMA = {
             'ideaNarrative', 'youAndIdeaNarrative', 'aboutYou', 'title', 'keywords',
             // Page 2 (Diagnosis) — Lex-proposed scalars (structured/loop fields are panel-filled)
             'challenge', 'pivotalObstacle', 'summaryDiagnosis',
+            // Page 3 (Guiding Policy)
+            'whatItRulesOut', 'leverage', 'conditionsForSuccess', 'summaryGuidingPolicy',
+            // Page 4 (Coherent Actions)
+            'coherenceCheck', 'costSummary', 'summaryCoherentActions',
           ],
         },
         valueText: { type: 'string' },
@@ -66,6 +72,7 @@ const RESPONSE_SCHEMA = {
         motivation: { type: 'string' },
         priorWork: { type: 'string' },
         ideaGoal: { type: 'string' },
+        beneficiariesOfStatusQuo: { type: 'string' },
         experienceLevel: { type: 'string', enum: ['novice', 'some', 'expert'] },
         career: { type: 'string' },
         resources: { type: 'string' },
@@ -96,12 +103,20 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
       field.key === 'whoAffectedImpactCost'
         ? `They are describing who is affected, the impact, the cost, and any evidence. Help them be concrete and keep the affected groups specific (it is the constituency/MP hook). Some of this was carried over from earlier — they only need to sharpen it.`
         : field.key === 'causes'
-          ? `They are building a list of the causes of the problem — for each, the cause and why it has persisted. Some candidate causes have been seeded from past debates and committee work; help them weigh those and add their own. They add, edit and remove causes in the panel.`
+          ? `They are building the causes of the problem as a TREE — for each, the cause and why it has persisted. Some candidates have been seeded from past debates and committee work; help them weigh those and add their own. Press every cause to a classification: MATERIAL (remove it and the problem largely goes away — decisive) or CONTRIBUTORY (worsens it, not decisive) — ask "is this THE thing, or A thing?" and do not accept vagueness. Where one cause drives another, encourage them to nest it beneath its parent ("X because Y because Z") rather than a flat list. They add, edit, classify, nest and remove causes in the panel; keep it clear, not exhaustive.`
           : field.key === 'rootCause'
             ? `They are choosing which single cause is the main driver of the problem — the root cause. Help them reason about which is upstream of the others. They select it in the panel.`
             : field.key === 'legalLandscape'
               ? `They are setting out what law currently governs this and where it falls short. If a relevant Act or regulator came up in the background briefing, point to it. They write this in the panel.`
-              : `Help the user complete this in the panel.`
+              : field.key === 'policyOptions'
+                ? `They are weighing CANDIDATE APPROACHES to the pivotal obstacle. A guiding policy is an approach, not a goal or an action list, and it is DESIGNED not picked — so help them argue each option genuinely FOR and AGAINST, seeded per material cause from the toolkit (incentives, rules, transparency, market design, institutional restructuring). Some candidates are seeded; push them to add, edit and stress-test. They curate options in the panel; a real choice comes next.`
+                : field.key === 'chosenApproach'
+                  ? `They are committing to ONE approach — and choosing it deliberately rules the others out (that is the point; a policy that rules nothing out is fluff). Help them pick the option with real leverage on the pivotal obstacle. They select it in the panel.`
+                  : field.key === 'anticipatedResponses'
+                    ? `They are anticipating how people will respond to the chosen approach: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors. Propose sharp, concrete responses for each; they refine in the panel.`
+                    : field.key === 'actions'
+                      ? `They are setting out the COORDINATED actions that execute the policy — each consistent with it and with each other, resources concentrated not smeared. For each action: the practical step, who implements it, and its costs (implementation, enforcement, regulatory friction) and benefits as sourced ranges. Help them concentrate effort and think about sequencing. They add and cost actions in the panel.`
+                      : `Help the user complete this in the panel.`
     return `${specifics}\nDiscuss it conversationally in chatText (1–4 sentences). Do NOT return a proposal for this field — the user fills and Saves it in the panel. Quietly capture anything useful in "extracted".`
   }
 
@@ -114,9 +129,23 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
     case 'challenge':
       return `Propose the Challenge — the problem in ONE crisp sentence, plain English, no solution in it. Draw on everything the user has said. proposal.valueText, proposal.fieldKey "challenge". In chatText, share it in a sentence and invite them to accept or refine it.`
     case 'pivotalObstacle':
-      return `Propose the PIVOTAL OBSTACLE — the single most important thing blocking a *solution* (why the problem persists). It is DISTINCT from the root cause (which is why the problem happens): the obstacle may be enforcement difficulty, vested interest, cost, or political will. This is the thing the eventual policy must defeat. proposal.valueText, proposal.fieldKey "pivotalObstacle". In chatText, name it in a sentence and ask them to accept or refine.`
+      return `Propose the PIVOTAL OBSTACLE — the single most important thing blocking a *solution* (why the problem persists). It is DISTINCT from the root cause (which is why the problem happens): the obstacle may be enforcement difficulty, vested interest, cost, or political will. This is the thing the eventual policy must defeat. ALWAYS ask, in chatText, WHO BENEFITS from things staying as they are (cui bono) — it is frequently the route to the obstacle — and record their answer in extracted.beneficiariesOfStatusQuo. proposal.valueText, proposal.fieldKey "pivotalObstacle". In chatText, name the obstacle in a sentence, ask the cui bono question, and invite them to accept or refine.`
     case 'summaryDiagnosis':
       return `Write the DIAGNOSIS SUMMARY: 2–4 sentences that name BOTH the root cause (why the problem happens) and the pivotal obstacle (why a solution has not stuck), and how they relate. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryDiagnosis". In chatText, invite them to accept it or tell you what to adjust.`
+    // ── Page 3 (Guiding Policy) ──
+    case 'whatItRulesOut':
+      return `Compose WHAT THE POLICY RULES OUT from the options the user ruled out and their reasons (the residue of choosing). 2–4 sentences, concrete. proposal.valueText, proposal.fieldKey "whatItRulesOut". In chatText, invite them to accept or edit.`
+    case 'conditionsForSuccess':
+      return `Propose the CONDITIONS FOR SUCCESS as testable bets — "for this to work, X must be true" — drawn from the chosen approach and its risks. A short list in one text block. proposal.valueText, proposal.fieldKey "conditionsForSuccess". In chatText, invite them to accept or add.`
+    case 'summaryGuidingPolicy':
+      return `Write the GUIDING-POLICY SUMMARY: the chosen approach, its leverage on the pivotal obstacle, what it rules out and why, the anticipated responses, and the conditions for success. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryGuidingPolicy". In chatText, invite them to accept or adjust.`
+    // ── Page 4 (Coherent Actions) ──
+    case 'coherenceCheck':
+      return `Write the COHERENCE CHECK: a short commentary on whether the actions are mutually consistent, whether effort is CONCENTRATED (not smeared), and the SEQUENCING (what must precede what — chain-link dependencies where one failure breaks the chain). No new user labour — just your read. proposal.valueText, proposal.fieldKey "coherenceCheck". In chatText, invite them to accept or push back.`
+    case 'costSummary':
+      return `Present the COST SUMMARY: the aggregated plan cost (implementation one-off; enforcement and regulatory-friction ongoing) set against the Page 2 problem cost — the cost-benefit spine. Every figure is a range; never an unexplained point number. proposal.valueText, proposal.fieldKey "costSummary". In chatText, invite them to accept or challenge any figure.`
+    case 'summaryCoherentActions':
+      return `Write the COHERENT-ACTIONS SUMMARY: the plan of coordinated actions and its cost-benefit case against the problem. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryCoherentActions". In chatText, invite them to accept or adjust.`
     default:
       return `Propose a value for this field in proposal.valueText with proposal.fieldKey "${field.key}".`
   }
@@ -124,6 +153,11 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
 
 export function buildLexSystemPrompt(ctx: LexTurnContext): string {
   const field = ctx.currentField
+  // Method layer (§16.3): M-GENERAL + the active stage's block, injected per stage.
+  const activePage = field ? pageOf(field.key) : null
+  const method = methodForStage(activePage?.key)
+  // [lex-diag] — makes it visible in logs which method blocks are in the prompt (acceptance §19).
+  console.log('[lex-diag] method blocks', { page: activePage?.key ?? null, blocks: methodBlocksFor(activePage?.key) })
   const fieldBlock = field
     ? `CURRENT FIELD (the platform decides this — you never choose the sequence):
   key:    ${field.key}
@@ -137,6 +171,9 @@ ${fieldGuidance(field, ctx)}`
   return `You are Lex, the guide on Scrutinise — a non-partisan platform that helps people turn policy ideas into Parliament-ready proposals. You are warm, curious, plain-spoken, British English, FT op-ed register. No emojis. Never say you are an AI or name a model. "Challenge" not "problem"; "Contributions" not "comments".
 
 You are NOT in control of the conversation's mechanics. The platform tells you which single field is active and renders confirmation cards. You only: (a) write a short conversational message in chatText, (b) when the active field is one you propose, put your proposal in the proposal object, (c) quietly record anything you learn about the user or idea in extracted.
+
+METHOD (how to hold the user to good strategy — apply it, never quote it or name a book)
+${method}
 
 CONTEXT
   user:            ${ctx.preferredName}
@@ -282,6 +319,20 @@ export interface CauseCandidate {
   cause: string
   whyPersisted?: string
   evidence?: string
+  classification?: 'MATERIAL' | 'CONTRIBUTORY' | 'UNASSESSED'
+  /** §16.2 one level of chain — deeper causes that drive this one. */
+  subCauses?: CauseCandidate[]
+}
+
+const CAUSE_ITEM = {
+  type: 'object',
+  properties: {
+    cause: { type: 'string' },
+    whyPersisted: { type: 'string' },
+    evidence: { type: 'string' },
+    classification: { type: 'string', enum: ['MATERIAL', 'CONTRIBUTORY', 'UNASSESSED'] },
+  },
+  required: ['cause'],
 }
 
 const CAUSES_SCHEMA = {
@@ -295,6 +346,9 @@ const CAUSES_SCHEMA = {
           cause: { type: 'string' },
           whyPersisted: { type: 'string' },
           evidence: { type: 'string' },
+          classification: { type: 'string', enum: ['MATERIAL', 'CONTRIBUTORY', 'UNASSESSED'] },
+          // One level of chain — sub-causes that drive this cause (§16.2).
+          subCauses: { type: 'array', items: CAUSE_ITEM },
         },
         required: ['cause'],
       },
@@ -313,7 +367,7 @@ export async function generateCauseCandidates(input: {
   const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
   const timeoutMs = parseInt(process.env.LEX_CAUSES_TIMEOUT_MS ?? '15000', 10)
 
-  const system = `You are Lex, a UK parliamentary research assistant. Given a policy CHALLENGE and excerpts from past debates, committee reports and legislation, list 3–5 candidate CAUSES of the problem that the material identifies or clearly implies. For each cause return: cause (one sentence, the driver of the problem), whyPersisted (why it has resisted solution), evidence (a short pointer to the kind of source, e.g. "raised in a Transport Committee report"). UK context only. Ground it in the excerpts; do not fabricate specific citations, numbers or case names.`
+  const system = `You are Lex, a UK parliamentary research assistant. Given a policy CHALLENGE and excerpts from past debates, committee reports and legislation, list 3–5 candidate CAUSES of the problem that the material identifies or clearly implies. For each cause return: cause (one sentence, the driver of the problem), whyPersisted (why it has resisted solution), evidence (a short pointer to the kind of source, e.g. "raised in a Transport Committee report"), classification (MATERIAL if removing it would largely dissolve the problem, CONTRIBUTORY if it only worsens it, else UNASSESSED). Where a cause is clearly driven by a deeper cause, nest that under subCauses (at most one level) — "X because Y". UK context only. Ground it in the excerpts; do not fabricate specific citations, numbers or case names.`
   const user = [
     `Challenge: ${input.challenge || '(not yet stated)'}`,
     input.context ? `Context: ${input.context}` : '',
@@ -351,17 +405,117 @@ export async function generateCauseCandidates(input: {
     if (typeof text !== 'string') return []
     const obj = JSON.parse(text) as { causes?: unknown }
     if (!Array.isArray(obj.causes)) return []
-    return obj.causes
-      .map((c) => (c && typeof c === 'object' ? (c as Record<string, unknown>) : {}))
-      .filter((c) => typeof c.cause === 'string' && (c.cause as string).trim())
-      .slice(0, 5)
-      .map((c) => ({
-        cause: (c.cause as string).trim(),
+    const CLASSES = new Set(['MATERIAL', 'CONTRIBUTORY', 'UNASSESSED'])
+    const toCandidate = (raw: unknown): CauseCandidate | null => {
+      const c = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+      if (typeof c.cause !== 'string' || !c.cause.trim()) return null
+      const cls = typeof c.classification === 'string' && CLASSES.has(c.classification) ? (c.classification as CauseCandidate['classification']) : undefined
+      const subs = Array.isArray(c.subCauses) ? c.subCauses.map(toCandidate).filter((x): x is CauseCandidate => !!x).slice(0, 3) : undefined
+      return {
+        cause: c.cause.trim(),
         whyPersisted: typeof c.whyPersisted === 'string' ? c.whyPersisted.trim() : undefined,
         evidence: typeof c.evidence === 'string' ? c.evidence.trim() : undefined,
-      }))
+        classification: cls,
+        subCauses: subs && subs.length ? subs : undefined,
+      }
+    }
+    return obj.causes.map(toCandidate).filter((x): x is CauseCandidate => !!x).slice(0, 5)
   } catch (err) {
     console.warn('[lex] cause seeding failed:', err instanceof Error ? err.message : err)
+    return []
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// ── Policy-option seeding (§17) ────────────────────────────────────────────────
+// Generate candidate approaches per material cause, each with a genuine case for and
+// against + mechanism types. Resilient — returns [] on any failure (the user can add
+// their own), so the Guiding Policy flow never blocks on it.
+export interface PolicyOptionCandidate {
+  approach: string
+  caseFor?: string
+  caseAgainst?: string
+  mechanismTypes?: string[]
+}
+
+const POLICY_OPTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    options: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          approach: { type: 'string' },
+          caseFor: { type: 'string' },
+          caseAgainst: { type: 'string' },
+          mechanismTypes: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['approach'],
+      },
+    },
+  },
+  required: ['options'],
+}
+
+export async function generatePolicyOptions(input: {
+  pivotalObstacle: string
+  materialCauses: string[]
+  context: string
+}): Promise<PolicyOptionCandidate[]> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return []
+  const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  const timeoutMs = parseInt(process.env.LEX_POLICY_TIMEOUT_MS ?? '15000', 10)
+
+  const system = `You are Lex, a UK policy strategist. Given a PIVOTAL OBSTACLE and the MATERIAL CAUSES of a problem, propose 3–5 candidate guiding-policy APPROACHES (an approach is a way of tackling the obstacle, NOT a goal and NOT an action list). Draw from the mechanism toolkit: incentives, rules, transparency, market-design, institutional. For each: approach (one line), caseFor (the genuine argument for), caseAgainst (the genuine argument against — do not strawman), mechanismTypes (1–3 from the toolkit). Aim for genuinely different approaches, at least one per material cause. UK context. Do not fabricate specific citations or numbers.`
+  const user = [
+    `Pivotal obstacle: ${input.pivotalObstacle || '(not yet stated)'}`,
+    input.materialCauses.length ? `Material causes:\n- ${input.materialCauses.slice(0, 6).join('\n- ')}` : '',
+    input.context ? `Context: ${input.context}` : '',
+  ].filter(Boolean).join('\n')
+
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: user }] }],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 1400,
+            responseMimeType: 'application/json',
+            responseSchema: POLICY_OPTIONS_SCHEMA,
+          },
+        }),
+        signal: ctrl.signal,
+      },
+    )
+    if (!res.ok) { console.warn('[lex] policy seeding HTTP', res.status); return [] }
+    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    const data = (await res.json()) as Resp
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (typeof text !== 'string') return []
+    const obj = JSON.parse(text) as { options?: unknown }
+    if (!Array.isArray(obj.options)) return []
+    return obj.options
+      .map((o) => (o && typeof o === 'object' ? (o as Record<string, unknown>) : {}))
+      .filter((o) => typeof o.approach === 'string' && (o.approach as string).trim())
+      .slice(0, 5)
+      .map((o) => ({
+        approach: (o.approach as string).trim(),
+        caseFor: typeof o.caseFor === 'string' ? o.caseFor.trim() : undefined,
+        caseAgainst: typeof o.caseAgainst === 'string' ? o.caseAgainst.trim() : undefined,
+        mechanismTypes: Array.isArray(o.mechanismTypes) ? o.mechanismTypes.map(String).slice(0, 3) : undefined,
+      }))
+  } catch (err) {
+    console.warn('[lex] policy seeding failed:', err instanceof Error ? err.message : err)
     return []
   } finally {
     clearTimeout(t)

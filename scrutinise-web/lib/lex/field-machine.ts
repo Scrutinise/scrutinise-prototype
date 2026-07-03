@@ -112,6 +112,39 @@ async function mirrorValue(ideaId: string, userId: string, fieldKey: string, val
       // setRootCause (the route). Here we mirror the text onto the legacy column.
       await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: String(value) } })
       break
+    // ── Page 3 (Guiding Policy) ──
+    case 'chosenApproach':
+      // The CHOSEN PolicyOption's status is set in choosePolicyApproach (the route);
+      // here we mirror the approach text onto the Idea.
+      await prisma.idea.update({ where: { id: ideaId }, data: { chosenApproach: String(value) } })
+      break
+    case 'whatItRulesOut':
+      await prisma.idea.update({ where: { id: ideaId }, data: { whatItRulesOut: String(value) } })
+      break
+    case 'leverage':
+      await prisma.idea.update({ where: { id: ideaId }, data: { leverage: String(value) } })
+      break
+    case 'anticipatedResponses':
+      await prisma.idea.update({ where: { id: ideaId }, data: { anticipatedResponses: asJson(value) as never } })
+      break
+    case 'conditionsForSuccess':
+      await prisma.idea.update({ where: { id: ideaId }, data: { conditionsForSuccessLex: String(value) } })
+      break
+    case 'summaryGuidingPolicy':
+      await prisma.idea.update({ where: { id: ideaId }, data: { summaryGuidingPolicy: String(value) } })
+      break
+    // ── Page 4 (Coherent Actions) ──
+    case 'coherenceCheck':
+      await prisma.idea.update({ where: { id: ideaId }, data: { coherenceCheck: String(value) } })
+      break
+    case 'costSummary':
+      // The accepted value is a plain-English summary; keep the structured aggregate
+      // (computed at seed time) alongside it under { summary }.
+      await prisma.idea.update({ where: { id: ideaId }, data: { costSummary: { summary: String(value) } as never } })
+      break
+    case 'summaryCoherentActions':
+      await prisma.idea.update({ where: { id: ideaId }, data: { summaryCoherentActions: String(value) } })
+      break
   }
 }
 
@@ -332,11 +365,18 @@ export async function buildWhoAffectedSeed(ideaId: string): Promise<Record<strin
 }
 
 // ── Causes loop (§7.2) — DiagnosisCause child records ─────────────────────────
+type Classification = 'MATERIAL' | 'CONTRIBUTORY' | 'UNASSESSED'
+
 export interface CauseInput {
   cause: string
   whyPersisted?: string | null
   evidence?: string | null
   source?: 'USER' | 'LEX_CORPUS'
+  /** §16.2 causal tree — the parent cause id, or null for a root-level cause. */
+  parentCauseId?: string | null
+  classification?: Classification
+  /** §16.2 Lex chains: candidate sub-causes to create as children of this cause. */
+  subCauses?: CauseInput[]
 }
 
 export async function listCauses(ideaId: string) {
@@ -346,36 +386,74 @@ export async function listCauses(ideaId: string) {
   })
 }
 
-/** Bulk-create candidate causes (e.g. from the CAUSE_SEEDING corpus search). */
+/** Bulk-create candidate causes (e.g. from the CAUSE_SEEDING corpus search). Supports
+ *  one level of Lex-proposed chains via `subCauses` (§16.2) — a parent is created, then
+ *  its children point at it. */
 export async function createCauses(ideaId: string, causes: CauseInput[], source: 'USER' | 'LEX_CORPUS') {
-  if (!causes.length) return
-  const base = await prisma.diagnosisCause.count({ where: { ideaId } })
-  await prisma.diagnosisCause.createMany({
-    data: causes
-      .filter((c) => c.cause?.trim())
-      .map((c, i) => ({
+  const clean = causes.filter((c) => c.cause?.trim())
+  if (!clean.length) return
+  let base = await prisma.diagnosisCause.count({ where: { ideaId } })
+  for (const c of clean) {
+    const parent = await prisma.diagnosisCause.create({
+      data: {
         ideaId,
         cause: c.cause.trim(),
         whyPersisted: c.whyPersisted?.trim() || null,
         evidence: c.evidence?.trim() || null,
+        classification: (c.classification ?? 'UNASSESSED') as never,
+        parentCauseId: c.parentCauseId ?? null,
         source: (c.source ?? source) as never,
-        orderIndex: base + i,
-      })),
-  })
+        orderIndex: base++,
+      },
+    })
+    const kids = (c.subCauses ?? []).filter((s) => s.cause?.trim())
+    if (kids.length) {
+      await prisma.diagnosisCause.createMany({
+        data: kids.map((s, i) => ({
+          ideaId,
+          cause: s.cause.trim(),
+          whyPersisted: s.whyPersisted?.trim() || null,
+          evidence: s.evidence?.trim() || null,
+          classification: (s.classification ?? 'UNASSESSED') as never,
+          parentCauseId: parent.id,
+          source: (s.source ?? source) as never,
+          orderIndex: base + i,
+        })),
+      })
+      base += kids.length
+    }
+  }
 }
 
 export async function addCause(ideaId: string, input: CauseInput) {
   const base = await prisma.diagnosisCause.count({ where: { ideaId } })
+  // Scope the parent to this idea so a caller can't graft onto another idea's tree.
+  let parentCauseId: string | null = null
+  if (input.parentCauseId) {
+    const parent = await prisma.diagnosisCause.findFirst({
+      where: { id: input.parentCauseId, ideaId }, select: { id: true },
+    })
+    parentCauseId = parent?.id ?? null
+  }
   return prisma.diagnosisCause.create({
     data: {
       ideaId,
       cause: input.cause.trim(),
       whyPersisted: input.whyPersisted?.trim() || null,
       evidence: input.evidence?.trim() || null,
+      classification: (input.classification ?? 'UNASSESSED') as never,
+      parentCauseId,
       source: (input.source ?? 'USER') as never,
       orderIndex: base,
     },
   })
+}
+
+/** Set a cause's material/contributory classification (§16.1). */
+export async function classifyCause(ideaId: string, causeId: string, classification: Classification) {
+  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true } })
+  if (!row) return null
+  return prisma.diagnosisCause.update({ where: { id: causeId }, data: { classification: classification as never } })
 }
 
 export async function updateCause(
@@ -418,6 +496,241 @@ export async function setRootCause(ideaId: string, causeId: string): Promise<boo
   await setStatus(ideaId, 'rootCause', 'ACCEPTED', { value: chosen.cause, proposal: null })
   await prisma.idea.update({ where: { id: ideaId }, data: { rootCause: chosen.cause } })
   return true
+}
+
+// ── Page 3 (Guiding Policy) — PolicyOption child records (§17) ─────────────────
+export interface PolicyOptionInput {
+  approach: string
+  caseFor?: string | null
+  caseAgainst?: string | null
+  mechanismTypes?: string[]
+  targetCauseIds?: string[]
+  source?: 'USER' | 'LEX'
+}
+
+export async function listPolicyOptions(ideaId: string) {
+  return prisma.policyOption.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
+}
+
+export async function createPolicyOptions(ideaId: string, options: PolicyOptionInput[], source: 'USER' | 'LEX') {
+  const clean = options.filter((o) => o.approach?.trim())
+  if (!clean.length) return
+  const base = await prisma.policyOption.count({ where: { ideaId } })
+  await prisma.policyOption.createMany({
+    data: clean.map((o, i) => ({
+      ideaId,
+      approach: o.approach.trim(),
+      caseFor: o.caseFor?.trim() || null,
+      caseAgainst: o.caseAgainst?.trim() || null,
+      mechanismTypes: o.mechanismTypes ?? [],
+      targetCauseIds: o.targetCauseIds ?? [],
+      source: (o.source ?? source) as never,
+      orderIndex: base + i,
+    })),
+  })
+}
+
+export async function addPolicyOption(ideaId: string, input: PolicyOptionInput) {
+  const base = await prisma.policyOption.count({ where: { ideaId } })
+  return prisma.policyOption.create({
+    data: {
+      ideaId,
+      approach: input.approach.trim(),
+      caseFor: input.caseFor?.trim() || null,
+      caseAgainst: input.caseAgainst?.trim() || null,
+      mechanismTypes: input.mechanismTypes ?? [],
+      targetCauseIds: input.targetCauseIds ?? [],
+      source: (input.source ?? 'USER') as never,
+      orderIndex: base,
+    },
+  })
+}
+
+export async function updatePolicyOption(
+  ideaId: string,
+  optionId: string,
+  patch: { approach?: string; caseFor?: string | null; caseAgainst?: string | null; mechanismTypes?: string[] },
+) {
+  const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true } })
+  if (!row) return null
+  return prisma.policyOption.update({
+    where: { id: optionId },
+    data: {
+      ...(patch.approach !== undefined ? { approach: patch.approach.trim() } : {}),
+      ...(patch.caseFor !== undefined ? { caseFor: patch.caseFor?.trim() || null } : {}),
+      ...(patch.caseAgainst !== undefined ? { caseAgainst: patch.caseAgainst?.trim() || null } : {}),
+      ...(patch.mechanismTypes !== undefined ? { mechanismTypes: patch.mechanismTypes } : {}),
+    },
+  })
+}
+
+export async function removePolicyOption(ideaId: string, optionId: string) {
+  const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true, status: true } })
+  if (!row) return
+  await prisma.policyOption.delete({ where: { id: optionId } })
+  // If the chosen option was removed, reopen the chosenApproach field.
+  if (row.status === 'CHOSEN') {
+    await setStatus(ideaId, 'chosenApproach', 'EMPTY', { value: null, proposal: null })
+    await prisma.idea.update({ where: { id: ideaId }, data: { chosenApproach: null } })
+  }
+}
+
+/** Mark one option RULED_OUT with a reason (without committing to a chosen one). */
+export async function ruleOutPolicyOption(ideaId: string, optionId: string, reason: string) {
+  const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true } })
+  if (!row) return null
+  return prisma.policyOption.update({
+    where: { id: optionId },
+    data: { status: 'RULED_OUT' as never, ruleOutReason: reason.trim() || null },
+  })
+}
+
+/** Commit to one approach (§17 field 2): CHOSEN for it, RULED_OUT for the rest,
+ *  accept the chosenApproach field, and mirror the approach text onto the Idea. */
+export async function choosePolicyApproach(ideaId: string, userId: string, optionId: string): Promise<boolean> {
+  const chosen = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true, approach: true } })
+  if (!chosen) return false
+  await prisma.$transaction([
+    prisma.policyOption.updateMany({ where: { ideaId, id: { not: optionId } }, data: { status: 'RULED_OUT' as never } }),
+    prisma.policyOption.update({ where: { id: optionId }, data: { status: 'CHOSEN' as never, ruleOutReason: null } }),
+  ])
+  await setStatus(ideaId, 'chosenApproach', 'ACCEPTED', { value: chosen.approach, proposal: null })
+  await mirrorValue(ideaId, userId, 'chosenApproach', chosen.approach)
+  return true
+}
+
+// ── Page 4 (Coherent Actions) — LexCoherentAction records + costing (§18) ─────
+type CostRangeInput = {
+  low?: number | null; high?: number | null; unit?: string | null; basis?: string | null
+  benchmarkId?: string | null; userOverride?: boolean
+} | null
+export interface ActionInput {
+  practicalStep: string
+  mechanismType?: string | null
+  whoImplements?: string | null
+  targetOrganisation?: string | null
+  wording?: string | null
+  benefits?: Record<string, string> | null
+  implementationCost?: CostRangeInput
+  enforcementCost?: CostRangeInput
+  regulatoryFriction?: CostRangeInput
+  source?: 'USER' | 'LEX'
+}
+
+export async function listActions(ideaId: string) {
+  return prisma.lexCoherentAction.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
+}
+
+export async function createActions(ideaId: string, actions: ActionInput[], source: 'USER' | 'LEX') {
+  const clean = actions.filter((a) => a.practicalStep?.trim())
+  if (!clean.length) return
+  const base = await prisma.lexCoherentAction.count({ where: { ideaId } })
+  await prisma.lexCoherentAction.createMany({
+    data: clean.map((a, i) => ({
+      ideaId,
+      practicalStep: a.practicalStep.trim(),
+      mechanismType: a.mechanismType?.trim() || null,
+      whoImplements: a.whoImplements?.trim() || null,
+      targetOrganisation: a.targetOrganisation?.trim() || null,
+      wording: a.wording?.trim() || null,
+      benefits: (a.benefits ?? undefined) as never,
+      implementationCost: (a.implementationCost ?? undefined) as never,
+      enforcementCost: (a.enforcementCost ?? undefined) as never,
+      regulatoryFriction: (a.regulatoryFriction ?? undefined) as never,
+      source: (a.source ?? source) as never,
+      orderIndex: base + i,
+    })),
+  })
+}
+
+export async function addAction(ideaId: string, input: ActionInput) {
+  const base = await prisma.lexCoherentAction.count({ where: { ideaId } })
+  return prisma.lexCoherentAction.create({
+    data: {
+      ideaId,
+      practicalStep: input.practicalStep.trim(),
+      mechanismType: input.mechanismType?.trim() || null,
+      whoImplements: input.whoImplements?.trim() || null,
+      targetOrganisation: input.targetOrganisation?.trim() || null,
+      wording: input.wording?.trim() || null,
+      benefits: (input.benefits ?? undefined) as never,
+      implementationCost: (input.implementationCost ?? undefined) as never,
+      enforcementCost: (input.enforcementCost ?? undefined) as never,
+      regulatoryFriction: (input.regulatoryFriction ?? undefined) as never,
+      source: (input.source ?? 'USER') as never,
+      orderIndex: base,
+    },
+  })
+}
+
+export async function updateAction(ideaId: string, actionId: string, patch: Partial<ActionInput>) {
+  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true } })
+  if (!row) return null
+  return prisma.lexCoherentAction.update({
+    where: { id: actionId },
+    data: {
+      ...(patch.practicalStep !== undefined ? { practicalStep: patch.practicalStep.trim() } : {}),
+      ...(patch.mechanismType !== undefined ? { mechanismType: patch.mechanismType?.trim() || null } : {}),
+      ...(patch.whoImplements !== undefined ? { whoImplements: patch.whoImplements?.trim() || null } : {}),
+      ...(patch.targetOrganisation !== undefined ? { targetOrganisation: patch.targetOrganisation?.trim() || null } : {}),
+      ...(patch.wording !== undefined ? { wording: patch.wording?.trim() || null } : {}),
+      ...(patch.benefits !== undefined ? { benefits: (patch.benefits ?? undefined) as never } : {}),
+      ...(patch.implementationCost !== undefined ? { implementationCost: (patch.implementationCost ?? undefined) as never } : {}),
+      ...(patch.enforcementCost !== undefined ? { enforcementCost: (patch.enforcementCost ?? undefined) as never } : {}),
+      ...(patch.regulatoryFriction !== undefined ? { regulatoryFriction: (patch.regulatoryFriction ?? undefined) as never } : {}),
+    },
+  })
+}
+
+export async function removeAction(ideaId: string, actionId: string) {
+  const row = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true } })
+  if (!row) return
+  await prisma.lexCoherentAction.delete({ where: { id: actionId } })
+}
+
+/** The hand-seeded costing benchmarks (§18.3), available to the estimator. */
+export async function listBenchmarks() {
+  return prisma.costBenchmark.findMany({ orderBy: [{ domain: 'asc' }, { metric: 'asc' }] })
+}
+
+/** Aggregate the per-action §18.2 costs into totals + a plain-English summary set
+ *  against the Page 2 problem cost. Every number stays a RANGE (low/high). */
+export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
+  const actions = await prisma.lexCoherentAction.findMany({
+    where: { ideaId },
+    select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
+  })
+  const sum = (key: 'implementationCost' | 'enforcementCost' | 'regulatoryFriction') => {
+    let low = 0, high = 0, any = false
+    for (const a of actions) {
+      const r = a[key] as { low?: number; high?: number } | null
+      if (r && (typeof r.low === 'number' || typeof r.high === 'number')) {
+        any = true
+        low += typeof r.low === 'number' ? r.low : 0
+        high += typeof r.high === 'number' ? r.high : (typeof r.low === 'number' ? r.low : 0)
+      }
+    }
+    return any ? { low, high } : null
+  }
+  const impl = sum('implementationCost')
+  const enf = sum('enforcementCost')
+  const fric = sum('regulatoryFriction')
+
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { whoAffectedImpactCost: true } })
+  const problemCost = (idea?.whoAffectedImpactCost as { cost?: string } | null)?.cost || null
+
+  const gbp = (r: { low: number; high: number } | null) =>
+    r ? `£${Math.round(r.low).toLocaleString()}–${Math.round(r.high).toLocaleString()}` : '—'
+  const oneOff = impl ? `${gbp(impl)} one-off (implementation)` : ''
+  const ongoing = [enf ? `${gbp(enf)}/yr enforcement` : '', fric ? `${gbp(fric)}/yr compliance friction` : ''].filter(Boolean).join(' + ')
+  const parts = [oneOff, ongoing ? `${ongoing} ongoing` : ''].filter(Boolean)
+  const planCost = parts.length ? parts.join('; ') : 'not yet estimated'
+  const summary =
+    `The problem costs ${problemCost ? `~${problemCost}` : '(not yet quantified on Page 2)'}. ` +
+    `This plan costs ${planCost}. All figures are ranges with a stated basis — challenge any of them.`
+
+  const totals = { implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric, problemCost }
+  return { summary, totals }
 }
 
 export { setStatus }

@@ -38,6 +38,17 @@ const legalLandscapeSchema = z
   })
   .strip()
 
+// ── Page 3 (Guiding Policy) ──────────────────────────────────────────────────
+const anticipatedResponsesSchema = z
+  .object({
+    avoidance: z.string().trim().max(4000).optional(),
+    gaming: z.string().trim().max(4000).optional(),
+    enforcementBurden: z.string().trim().max(4000).optional(),
+    legalChallenge: z.string().trim().max(4000).optional(),
+    politicalAttack: z.string().trim().max(4000).optional(),
+  })
+  .strip()
+
 // Map of fieldKey → zod schema for the proposal's `value`.
 // (causes = loop and rootCause = reference are handled by dedicated route actions,
 //  not through this generic proposal/accept validator.)
@@ -53,6 +64,16 @@ const FIELD_VALUE_SCHEMAS: Record<string, z.ZodTypeAny> = {
   summaryDiagnosis: summarySchema,
   whoAffectedImpactCost: whoAffectedImpactCostSchema,
   legalLandscape: legalLandscapeSchema,
+  // Page 3 (Guiding Policy)
+  whatItRulesOut: summarySchema,
+  leverage: narrativeSchema,
+  anticipatedResponses: anticipatedResponsesSchema,
+  conditionsForSuccess: summarySchema,
+  summaryGuidingPolicy: summarySchema,
+  // Page 4 (Coherent Actions)
+  coherenceCheck: summarySchema,
+  costSummary: summarySchema,
+  summaryCoherentActions: summarySchema,
 }
 
 export interface ValidatedProposal {

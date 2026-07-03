@@ -21,8 +21,11 @@
 import { prisma } from '@/lib/prisma'
 import { computeCanonicalState } from './state'
 import { fieldDef, type CanonicalState, type FieldDef } from './page1-config'
-import { buildLexSystemPrompt, runLexTurn, generateCauseCandidates } from './lex-client'
-import { setProposal, storeExtracted, createCauses, buildWhoAffectedSeed } from './field-machine'
+import { buildLexSystemPrompt, runLexTurn, generateCauseCandidates, generatePolicyOptions } from './lex-client'
+import {
+  setProposal, storeExtracted, createCauses, buildWhoAffectedSeed,
+  createPolicyOptions, listPolicyOptions, computeCostSummary,
+} from './field-machine'
 import { validateProposal } from './proposal-schema'
 import { runSearch } from './search-gateway'
 
@@ -236,6 +239,51 @@ async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: 
   return askQuestion(ideaId, userId, def, state)
 }
 
+/** Page 3 policy-options loop: seed candidate approaches per material cause (with a
+ *  genuine case for and against), then invite evaluation. AWAITING so it stays current. */
+async function seedPolicyOptions(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  try {
+    const pivotalObstacle = (acceptedValue(state, 'pivotalObstacle') as string) ?? ''
+    const materialCauses = state.diagnosisCauses.filter((c) => c.classification === 'MATERIAL').map((c) => c.cause)
+    // If nothing was marked material, fall back to all causes so seeding still runs.
+    const causes = materialCauses.length ? materialCauses : state.diagnosisCauses.map((c) => c.cause)
+    const context = [acceptedValue(state, 'challenge'), acceptedValue(state, 'summaryDiagnosis')].filter(Boolean).join(' ').slice(0, 600)
+    const candidates = await generatePolicyOptions({ pivotalObstacle, materialCauses: causes, context })
+    if (candidates.length) await createPolicyOptions(ideaId, candidates.map((c) => ({ ...c, source: 'LEX' as const })), 'LEX')
+  } catch (err) {
+    console.warn('[orchestrator] policy seeding failed (user can add their own):', err instanceof Error ? err.message : err)
+  }
+  await setProposal(ideaId, def.key, { value: '' })
+  return askQuestion(ideaId, userId, def, state)
+}
+
+/** Page 4 actions loop: no corpus seeding — the user authors actions and Lex helps in
+ *  chat + on the costing. Set AWAITING so the loop stays current while they build it. */
+async function seedActions(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  await setProposal(ideaId, def.key, { value: '' })
+  return askQuestion(ideaId, userId, def, state)
+}
+
+/** Proposed scalars whose value is COMPUTED by the platform, not guessed by Lex:
+ *  whatItRulesOut (composed from the RULED_OUT options) and costSummary (aggregated
+ *  §18.2 costs vs the Page 2 problem cost). Seed the computed proposal → inline accept. */
+async function seedComputedProposed(ideaId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  if (def.key === 'costSummary') {
+    const { summary } = await computeCostSummary(ideaId)
+    await setProposal(ideaId, def.key, { value: summary })
+    return 'I’ve totted up the plan’s costs against what the problem costs — it’s in the chat to accept. Every figure is a range; challenge any of them.'
+  }
+  // whatItRulesOut
+  const options = await listPolicyOptions(ideaId)
+  const ruledOut = options.filter((o) => o.status === 'RULED_OUT')
+  const value = ruledOut.length
+    ? 'Choosing this approach rules out: ' +
+      ruledOut.map((o) => `${o.approach}${o.ruleOutReason ? ` (${o.ruleOutReason})` : ''}`).join('; ') + '.'
+    : 'Choosing this approach means committing to it over the alternatives considered, and accepting the trade-offs that comes with.'
+  await setProposal(ideaId, def.key, { value })
+  return 'Here’s what this choice deliberately rules out, drawn from the options you set aside — accept or edit it.'
+}
+
 /** The conductor. Returns any new Lex chat bubbles for the client to append. */
 export async function orchestrateAfterWrite(ideaId: string, userId: string): Promise<{ messages: string[] }> {
   const state = await computeCanonicalState(ideaId)
@@ -255,14 +303,21 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
   console.log('[lex-diag] orchestrator advancing', { currentField: def.key, type: def.type, page: state.stage })
 
   let text: string
-  if (def.origin === 'proposed') {
+  if (def.key === 'whatItRulesOut' || def.key === 'costSummary') {
+    // Proposed scalars whose value the platform COMPUTES (not Lex).
+    text = await seedComputedProposed(ideaId, def, state)
+  } else if (def.origin === 'proposed') {
     text = await proposeScalar(ideaId, userId, def, state)
   } else if (def.type === 'structured') {
     text = await seedStructured(ideaId, userId, def, state)
   } else if (def.type === 'loop') {
-    text = await seedCauses(ideaId, userId, def, state)
+    // Dispatch the loop by which child entity it drives.
+    text =
+      def.key === 'policyOptions' ? await seedPolicyOptions(ideaId, userId, def, state)
+        : def.key === 'actions' ? await seedActions(ideaId, userId, def, state)
+          : await seedCauses(ideaId, userId, def, state)
   } else {
-    // narrative box (Page 1) and reference (rootCause): just ask the question.
+    // narrative box and reference (rootCause / chosenApproach): just ask the question.
     text = await askQuestion(ideaId, userId, def, state)
   }
 

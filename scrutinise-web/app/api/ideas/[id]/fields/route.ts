@@ -16,8 +16,9 @@ import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 
 type Params = { params: Promise<{ id: string }> }
 
-// causes (loop) + rootCause (reference) are mutated via /causes, not here.
-const CAUSES_ENDPOINT_FIELDS = new Set(['causes', 'rootCause'])
+// Child-entity fields are mutated via their own endpoints, not here:
+//   causes/rootCause → /causes · policyOptions/chosenApproach → /policy-options · actions → /actions
+const CHILD_ENTITY_FIELDS = new Set(['causes', 'rootCause', 'policyOptions', 'chosenApproach', 'actions'])
 
 const BodySchema = z.object({
   fieldKey: z.string().min(1),
@@ -45,8 +46,8 @@ export async function POST(req: Request, { params }: Params) {
 
   const def = fieldDef(fieldKey)
   if (!def) return NextResponse.json({ error: `Unknown fieldKey: ${fieldKey}` }, { status: 422 })
-  if (CAUSES_ENDPOINT_FIELDS.has(fieldKey)) {
-    return NextResponse.json({ error: `${fieldKey} is managed via the /causes endpoint` }, { status: 422 })
+  if (CHILD_ENTITY_FIELDS.has(fieldKey)) {
+    return NextResponse.json({ error: `${fieldKey} is managed via its own child-entity endpoint` }, { status: 422 })
   }
 
   try {

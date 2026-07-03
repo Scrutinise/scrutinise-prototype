@@ -15,14 +15,26 @@ import type { FieldDef, PageDef } from './page1-config'
 export const WHO_AFFECTED_SLOTS = ['affectedGroups', 'impact', 'cost', 'evidence'] as const
 export const LEGAL_LANDSCAPE_SLOTS = ['currentLaw', 'whereItFails'] as const
 
-// Human labels for the structured slots (panel + summary rendering).
+// Human labels for the structured slots (panel + summary rendering). Aggregates the
+// slots across all pages' structured fields (Page 2 diagnosis + Page 3 responses + …).
 export const SLOT_LABELS: Record<string, string> = {
-  affectedGroups: 'Who’s affected',
+  // Page 2
+  affectedGroups: 'Who is most acutely affected',
   impact: 'Impact',
   cost: 'Cost',
   evidence: 'Evidence',
   currentLaw: 'Current law',
   whereItFails: 'Where it falls short',
+  // Page 3 — anticipatedResponses
+  avoidance: 'Avoidance',
+  gaming: 'Gaming',
+  enforcementBurden: 'Enforcement burden',
+  legalChallenge: 'Legal challenge',
+  politicalAttack: 'Political attack vectors',
+  // Page 4 — per-action benefits
+  financial: 'Financial benefit',
+  social: 'Social benefit',
+  ongoing: 'Ongoing benefit',
 }
 
 export const DIAGNOSIS_FIELDS: FieldDef[] = [
@@ -42,10 +54,11 @@ export const DIAGNOSIS_FIELDS: FieldDef[] = [
     scope: 'idea',
     origin: 'box', // structured editor in the panel; seeded (carried forward) by the conductor
     slots: [...WHO_AFFECTED_SLOTS],
-    // Kept visibly distinct because affectedGroups is the MP/constituency hook (§7.1).
+    // §16.1: the discriminating question is who is MOST ACUTELY affected (specific
+    // groups — the MP/constituency hook), not "who's affected" (answer: everyone).
     question:
-      'Who is affected (keep the groups visible), what is the impact, and what does it cost? Add any evidence you have.',
-    hints: ['who is affected', 'the impact', 'the cost', 'any evidence you have'],
+      'Who is most acutely affected — the specific groups, not everyone — and what is the impact and cost on them? Add any evidence you have.',
+    hints: ['the specific groups most acutely affected', 'the impact on them', 'the cost', 'any evidence you have'],
   },
   {
     key: 'causes',
@@ -63,7 +76,8 @@ export const DIAGNOSIS_FIELDS: FieldDef[] = [
     scope: 'idea',
     origin: 'box',
     required: true,
-    question: 'Of those causes, which is the main driver of the problem — the root cause?',
+    // §16.1: choose the root cause among the MATERIAL causes (not the contributory ones).
+    question: 'Of the material causes, which is the main driver of the problem — the root cause?',
   },
   {
     key: 'legalLandscape',

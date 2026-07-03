@@ -4,11 +4,14 @@
 **why** and **what**; this says **how it is wired and how to work on it**. The Lex equivalent of
 `INGEST_PLAYBOOK.md`. Update this whenever the conversation layer changes.*
 
-**Status:** Page 1 (Orientation) + Page 2 (Diagnosis) built. Sprint 1 (state layer + panels) + Sprint 1.1
+**Status:** The FULL KERNEL is built — Page 1 (Orientation / "The Basic Idea") + Page 2 (Diagnosis) + Page 3
+(Guiding Policy) + Page 4 (Coherent Actions + costing shell). Sprint 1 (state layer + panels) + Sprint 1.1
 (orchestration) + Sprint 1.2 (markdown background, intro reword, failure logging) + Sprint 1.3
-(save-before-advance guards §3a, "How this works" tour §3b, `preferredName ?? firstName`) + **Sprint 2**
-(Diagnosis / Page 2 + the search gateway + the Page 1→2 transition — §10 below; preview, NOT promoted).
-Pages 3–4 (Guiding Policy / Coherent Actions) and real FTS are later sprints (design §11).
+(save-before-advance guards §3a, "How this works" tour §3b, `preferredName ?? firstName`) + Sprint 1.4 (UX
+polish — prominent pill trigger, auto-open on first idea, modal copy, "The Basic Idea" rename) + Sprint 2
+(Diagnosis / Page 2 + the search gateway + the Page 1→2 transition — §10) + **Sprint 3** (method layer, Page 2
+refinements + causal tree, Page 3, Page 4 + costing — §11 below). All preview, NOT promoted. Real FTS is still
+stubbed behind the gateway; the costing benchmark set is hand-seeded placeholders (Phase-2 research pending).
 
 ---
 
@@ -255,3 +258,61 @@ the user. When a structured Page-1 impact/cost source exists later, widen this s
 
 **Schema apply.** `prisma/lex_rebuild_page2.sql` (additive, idempotent) via `DIRECT_URL=<NEON> npx prisma db
 execute --file …` then `npx prisma generate`. Same rule as §7 — **never `db push`** (targets Railway).
+
+---
+
+## 11. Sprint 3 (the full kernel) — as built
+
+Design source: `LEX_DESIGN_ADDENDUM_16-19.md` (design §16–§19). Preview, NOT promoted. `tsc` clean (react-markdown
+only). Schema in `prisma/lex_rebuild_page3_4.sql` (additive, idempotent; **applied to Neon**; seeds 10 placeholder
+`CostBenchmark` rows). End-to-end smoke passed 16/16 on the deterministic fallback path.
+
+**Method layer (§16.3) — `lib/lex/method.ts`.** The four Rumelt blocks VERBATIM (edit the design doc §16.3 first,
+mirror here). `buildLexSystemPrompt` injects `methodForStage(pageOf(currentField).key)` = M-GENERAL + the active
+stage's block, under a METHOD heading. Never quote the book / name it; ideas only, nothing enters the corpus.
+`[lex-diag] method blocks` logs which blocks are active. ORIENTATION gets M-GENERAL only.
+
+**Page 2 refinements (§16.1).** `DiagnosisCause.classification` (MATERIAL|CONTRIBUTORY|UNASSESSED, default
+UNASSESSED) — chips in the panel + a `classify` action on `/causes`; `rootCause` selection prefers MATERIAL
+causes (falls back to all if none marked, so the flow never blocks). Who's-affected reframed to "most acutely
+affected". Cui bono ("who benefits from the status quo") asked during the `pivotalObstacle` turn and captured as
+the `beneficiariesOfStatusQuo` idea slot (added to `IDEA_SLOT_KEYS` + the extracted schema — no new column).
+
+**Causal tree (§16.2).** `DiagnosisCause.parentCauseId` self-FK (ON DELETE CASCADE → removing a parent removes
+its subtree). The causes field has a **List | Map** toggle; Map renders a **dependency-free nested tree** (indent +
+left connector; MATERIAL nodes amber), each node edit/classify/remove + "+ cause beneath". Soft depth cap 4
+(`MAX_CAUSE_DEPTH`) — "+ beneath" disables at the deepest level with a consolidation nudge. `generateCauseCandidates`
+returns optional `classification` + one level of `subCauses`; `createCauses` links them. **Mermaid was deferred**
+(no diagram dep existed; adding an uninstalled npm dep would produce new module-not-found tsc errors indistinguishable
+from real ones and muddy the gate) — the nested render satisfies acceptance "Map view renders and edits". Swapping to
+Mermaid later is a self-contained change to `CauseTreeView` once the dep is installed.
+
+**Page 3 — Guiding Policy (§17) — `lib/lex/page3-config.ts`.** Fields: `policyOptions` (loop → `PolicyOption`
+child), `chosenApproach` (reference), `whatItRulesOut` (computed proposed), `leverage` (box), `anticipatedResponses`
+(structured), `conditionsForSuccess` + `summaryGuidingPolicy` (proposed). `PolicyOption` table + `/policy-options`
+route (add/update/remove/ruleOut/confirm/skip/choose/skipChoose). Lex seeds candidates per material cause with
+genuine for/against via `generatePolicyOptions` (resilient → `[]`). `choose` → CHOSEN for one, RULED_OUT for the
+rest; the conductor composes `whatItRulesOut` from the ruled-out options + reasons (`seedComputedProposed`). Panels:
+`PolicyOptionsField` + `ChosenApproachField`.
+
+**Page 4 — Coherent Actions + costing (§18) — `lib/lex/page4-config.ts`.** Fields: `actions` (loop →
+`LexCoherentAction` child), `coherenceCheck` (proposed, Lex commentary), `costSummary` (computed), `summaryCoherentActions`
+(proposed). **`LexCoherentAction` is a NEW table, deliberately isolated from the large legacy `CoherentAction` model**
+(old Stage-2 UI + many relations) so the Lex rebuild stays self-contained. §18.2 costs per action = `{low,high,unit,
+basis,benchmarkId?,userOverride?}` JSON for implementation / enforcement / regulatory-friction. `CostBenchmark` (shared
+sourced defaults, hand-seeded placeholders) + `IdeaAssumption` (user overrides w/ evidence). `/actions` route; the panel
+estimator has a per-category range editor with a benchmark picker (prefills unit/basis/low/high; user override flips
+`userOverride`). `computeCostSummary` sums each category into a range and sets it against the Page 2 problem cost
+(`whoAffectedImpactCost.cost`); the conductor seeds it via `seedComputedProposed`.
+
+**Conductor + wiring.** `orchestrateAfterWrite` dispatches: computed proposed (`whatItRulesOut`/`costSummary`) →
+`seedComputedProposed`; loops by key (`causes`→seedCauses, `policyOptions`→seedPolicyOptions, `actions`→seedActions);
+references (`rootCause`/`chosenApproach`) → askQuestion. `computeCanonicalState` now returns `policyOptions`, `actions`,
+`benchmarks` (benchmarks loaded only on Page 4). `field-machine.mirrorValue` + `proposal-schema` extended for every new
+field. `/fields` rejects the child-entity keys (`causes`/`rootCause`/`policyOptions`/`chosenApproach`/`actions`).
+`LOCKED_PAGES` is now empty (all four pages are real). Page-transition CTA copy generalised (`BackgroundPanel`).
+
+**Extending further — the copy-me pattern is unchanged (§9):** add a page-config, register it in
+`page1-config.PAGE_SEQUENCE`, add child entities + their own route where a loop is needed, add mirror + validator +
+canonical-state population + a conductor dispatch by field key, and a panel renderer keyed by field key. Never add a
+counter or a sequence decision to the client.

@@ -618,6 +618,15 @@ model Idea {
   whoAffectedImpactCost     Json?           // { affectedGroups[], impact, cost, evidence }
   legalLandscape            Json?           // { currentLaw, whereItFails }
   pivotalObstacle           String?         // the critical thing blocking a solution (Rumelt)
+  // Lex rebuild — Page 3 (Guiding Policy) fields (design §17). summaryGuidingPolicy reuses legacy col above.
+  chosenApproach            String?         // the committed approach (mirrors the CHOSEN PolicyOption)
+  whatItRulesOut            String?         // composed from the RULED_OUT options + their reasons
+  leverage                  String?         // why this approach hits the pivotal obstacle specifically
+  anticipatedResponses      Json?           // { avoidance, gaming, enforcementBurden, legalChallenge, politicalAttack }
+  conditionsForSuccessLex   String?         // testable bets ("for this to work, X must be true")
+  // Lex rebuild — Page 4 (Coherent Actions) aggregates (design §18). summaryCoherentActions reuses legacy col.
+  coherenceCheck            String?         // Lex commentary: mutual consistency, concentration, sequencing
+  costSummary               Json?           // aggregated totals set against the Page 2 problem cost
   // Referral
   referralLinkActive        Boolean         @default(false)
   // Ownership transfer
@@ -663,6 +672,9 @@ model Idea {
   fieldStates               IdeaFieldState[]
   documents                 Document[]
   diagnosisCauses           DiagnosisCause[]
+  policyOptions             PolicyOption[]
+  lexActions                LexCoherentAction[]
+  ideaAssumptions           IdeaAssumption[]
 
   @@index([creatorId])
   @@index([stage])
@@ -1311,6 +1323,31 @@ enum DiagnosisCauseSource {
   LEX_CORPUS
 }
 
+// The Rumelt spine (design §16.1): a cause is either MATERIAL (remove it and the
+// problem largely goes away — decisive) or CONTRIBUTORY (worsens it, not decisive).
+// UNASSESSED until Lex has pressed the user for the call. The root cause is chosen
+// among the MATERIAL causes.
+enum CauseClassification {
+  MATERIAL
+  CONTRIBUTORY
+  UNASSESSED
+}
+
+// Provenance of a guiding-policy option or a Lex action (design §17/§18): authored
+// by the user vs seeded by Lex (per material cause / from the toolkit).
+enum LexEntitySource {
+  USER
+  LEX
+}
+
+// Status of a candidate guiding-policy approach (design §17): a menu is driven to a
+// single CHOSEN; the rest become RULED_OUT with reasons (the residue of choosing).
+enum PolicyOptionStatus {
+  CANDIDATE
+  CHOSEN
+  RULED_OUT
+}
+
 model IdeaFieldState {
   id        String      @id @default(uuid())
   ideaId    String
@@ -1348,17 +1385,109 @@ model Document {
 // Page 2 (Diagnosis) causes loop (design §7.2). Mirrors the CoherentActions
 // per-row child pattern. Exactly one row per idea should carry isRootCause = true.
 model DiagnosisCause {
-  id           String               @id @default(uuid())
+  id             String               @id @default(uuid())
+  ideaId         String
+  idea           Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  cause          String               // the cause statement
+  whyPersisted   String?              // why it has resisted solution
+  evidence       String?              // summary line (upgrades to a richer Evidence record later)
+  isRootCause    Boolean              @default(false)
+  classification CauseClassification  @default(UNASSESSED) // §16.1 material vs contributory
+  // §16.2 causal tree: a self-referencing parent pointer. Root-level causes have
+  // parentCauseId = null; a sub-cause points at its parent (soft depth cap 4).
+  parentCauseId  String?
+  parent         DiagnosisCause?      @relation("CauseTree", fields: [parentCauseId], references: [id], onDelete: Cascade)
+  children       DiagnosisCause[]     @relation("CauseTree")
+  source         DiagnosisCauseSource @default(USER)
+  orderIndex     Int                  @default(0) // stable display order
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([ideaId])
+  @@index([parentCauseId])
+}
+
+// Page 3 (Guiding Policy) candidate approach (design §17). Lex seeds candidates per
+// material cause (toolkit: incentives, rules, transparency, market design, …), argues
+// each for and against; the user reacts, adds, edits, then commits to ONE.
+model PolicyOption {
+  id             String             @id @default(uuid())
+  ideaId         String
+  idea           Idea               @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  approach       String             // the candidate approach, one line
+  mechanismTypes String[]           @default([]) // incentives | rules | transparency | market-design | institutional
+  targetCauseIds String[]           @default([]) // DiagnosisCause ids this approach targets (structural link)
+  caseFor        String?            // genuine argument for
+  caseAgainst    String?            // genuine argument against
+  status         PolicyOptionStatus @default(CANDIDATE)
+  ruleOutReason  String?            // why it was ruled out (set when status = RULED_OUT)
+  source         LexEntitySource    @default(USER)
+  orderIndex     Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([ideaId])
+}
+
+// Page 4 (Coherent Actions) action record (design §18.1). Kept as a NEW table,
+// deliberately isolated from the large legacy `CoherentAction` model (which is wired
+// into the old Stage-2 UI and many relations) so the Lex rebuild stays self-contained.
+// The §18.2 costs are stored as ranges-with-basis JSON: { low, high, unit, basis,
+// benchmarkId?, userOverride? }.
+model LexCoherentAction {
+  id                 String          @id @default(uuid())
+  ideaId             String
+  idea               Idea            @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  practicalStep      String          // the action, one line
+  mechanismType      String?         // incentives | rules | transparency | market-design | institutional
+  whoImplements      String?
+  targetOrganisation String?         // legislative actions
+  wording            String?         // legislative actions — capture intent now (precise drafting later)
+  benefits           Json?           // { financial, social, ongoing } — ranges + basis
+  implementationCost Json?           // { low, high, unit, basis, benchmarkId?, userOverride? } — falls on Government
+  enforcementCost    Json?           // ongoing cost to police/administer — Regulator/state
+  regulatoryFriction Json?           // ongoing compliance burden — the economy
+  source             LexEntitySource @default(USER)
+  orderIndex         Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([ideaId])
+}
+
+// The costing engine (design §18.3). CostBenchmark = the shared, sourced default
+// values (Green Book, QALY, value of a prevented fatality, admin-burden unit costs …).
+// Populated by the Phase-2 research programme; hand-seeded placeholders for now.
+model CostBenchmark {
+  id        String   @id @default(uuid())
+  domain    String   // e.g. "health", "transport", "admin-burden"
+  metric    String   // e.g. "QALY", "value of a prevented fatality"
+  unit      String   // e.g. "£/QALY", "£/fatality", "£/hour"
+  low       Decimal?
+  high      Decimal?
+  source    String   // e.g. "HM Treasury Green Book"
+  sourceUrl String?
+  year      Int?
+  method    String?  // provenance/notes on how the value was derived
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domain])
+}
+
+// A user's override of a benchmark for THIS idea, with their own evidence (design
+// §18.3). Kept alongside the defaults so the briefing shows which numbers are
+// defaults, which are overridden, and every source link (the transparent project space).
+model IdeaAssumption {
+  id           String   @id @default(uuid())
   ideaId       String
-  idea         Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  cause        String               // the cause statement
-  whyPersisted String?              // why it has resisted solution
-  evidence     String?              // summary line (upgrades to a richer Evidence record later)
-  isRootCause  Boolean              @default(false)
-  source       DiagnosisCauseSource @default(USER)
-  orderIndex   Int                  @default(0) // stable display order
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  idea         Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  benchmarkId  String?  // the CostBenchmark this overrides (nullable = a fresh assumption)
+  userValue    String?  // the user's chosen value/range
+  userEvidence String?  // their evidence for it
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([ideaId])
 }

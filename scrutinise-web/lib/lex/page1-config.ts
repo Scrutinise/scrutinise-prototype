@@ -126,24 +126,28 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
 
 export const ORIENTATION_PAGE: PageDef = {
   key: 'ORIENTATION',
-  label: 'Getting started',
+  // Sprint 1.4: aligned with the modal's "Basic idea" first-stage name (was "Getting started").
+  label: 'The Basic Idea',
   fields: ORIENTATION_FIELDS,
 }
 
-// Page 2 (Diagnosis) is built in Sprint 2 — imported here so page1-config stays the
+// Pages 2–4 are built in later sprints — imported here so page1-config stays the
 // single aggregation point every caller already imports from (no churn to importers).
-// page2-config imports only TYPES from here, so there is no runtime import cycle.
+// Each page-config imports only TYPES from here, so there is no runtime import cycle.
 import { DIAGNOSIS_PAGE } from './page2-config'
+import { GUIDING_POLICY_PAGE } from './page3-config'
+import { COHERENT_ACTIONS_PAGE } from './page4-config'
 
-// The ordered Lex pages that carry fields today.
-export const PAGE_SEQUENCE: PageDef[] = [ORIENTATION_PAGE, DIAGNOSIS_PAGE]
-
-// Later pages (§11) render in Panel 2 as locked placeholders so the user can see the
-// road ahead, but carry no fields yet.
-export const LOCKED_PAGES: { key: string; label: string }[] = [
-  { key: 'GUIDING_POLICY', label: 'Guiding policy' },
-  { key: 'COHERENT_ACTIONS', label: 'Coherent actions' },
+// The ordered Lex pages that carry fields today (Sprint 3: the full kernel).
+export const PAGE_SEQUENCE: PageDef[] = [
+  ORIENTATION_PAGE,
+  DIAGNOSIS_PAGE,
+  GUIDING_POLICY_PAGE,
+  COHERENT_ACTIONS_PAGE,
 ]
+
+// No locked placeholder pages remain — the kernel is complete end-to-end (§19).
+export const LOCKED_PAGES: { key: string; label: string }[] = []
 
 /** Every field across all built pages, in page/field order. */
 export const ALL_FIELDS: FieldDef[] = PAGE_SEQUENCE.flatMap((p) => p.fields)
@@ -175,6 +179,8 @@ export const IDEA_SLOT_KEYS = [
   'motivation',
   'priorWork',
   'ideaGoal',
+  // §16.1 cui bono: captured during the pivotalObstacle conversation, stored as a slot.
+  'beneficiariesOfStatusQuo',
 ] as const
 
 export const USER_SLOT_KEYS = [
@@ -213,14 +219,73 @@ export interface CanonicalPage {
   fields: CanonicalField[]
 }
 
-/** A Page 2 causes-loop child record (§7.2), as the panel renders it. */
+/** A cause classification (§16.1 — the Rumelt spine). */
+export type CauseClassification = 'MATERIAL' | 'CONTRIBUTORY' | 'UNASSESSED'
+
+/** A Page 2 causes-loop child record (§7.2 + §16.1/§16.2), as the panel renders it. */
 export interface CanonicalCause {
   id: string
   cause: string
   whyPersisted: string | null
   evidence: string | null
   isRootCause: boolean
+  classification: CauseClassification
+  /** Causal-tree parent (§16.2); null = a root-level cause. */
+  parentCauseId: string | null
   source: 'USER' | 'LEX_CORPUS'
+}
+
+/** A Page 3 guiding-policy option (§17), as the panel renders it. */
+export interface CanonicalPolicyOption {
+  id: string
+  approach: string
+  mechanismTypes: string[]
+  targetCauseIds: string[]
+  caseFor: string | null
+  caseAgainst: string | null
+  status: 'CANDIDATE' | 'CHOSEN' | 'RULED_OUT'
+  ruleOutReason: string | null
+  source: 'USER' | 'LEX'
+}
+
+/** A §18.2 cost range-with-basis. */
+export interface CostRange {
+  low: number | null
+  high: number | null
+  unit: string | null
+  basis: string | null
+  benchmarkId?: string | null
+  userOverride?: boolean
+}
+
+/** A Page 4 coherent action (§18.1), as the panel renders it. */
+export interface CanonicalAction {
+  id: string
+  practicalStep: string
+  mechanismType: string | null
+  whoImplements: string | null
+  targetOrganisation: string | null
+  wording: string | null
+  benefits: { financial?: string; social?: string; ongoing?: string } | null
+  implementationCost: CostRange | null
+  enforcementCost: CostRange | null
+  regulatoryFriction: CostRange | null
+  source: 'USER' | 'LEX'
+}
+
+/** A costing benchmark (§18.3) — a shared, sourced default value. */
+export interface CanonicalBenchmark {
+  id: string
+  domain: string
+  metric: string
+  unit: string
+  low: number | null
+  high: number | null
+  source: string
+  sourceUrl: string | null
+  year: number | null
+  method: string | null
+  notes: string | null
 }
 
 export interface CanonicalState {
@@ -234,6 +299,12 @@ export interface CanonicalState {
   pages: CanonicalPage[]
   /** Page 2 causes-loop records (empty until Diagnosis). */
   diagnosisCauses: CanonicalCause[]
+  /** Page 3 guiding-policy options (empty until Guiding Policy). */
+  policyOptions: CanonicalPolicyOption[]
+  /** Page 4 coherent-action records (empty until Coherent Actions). */
+  actions: CanonicalAction[]
+  /** Costing benchmarks available to the estimator (§18.3). */
+  benchmarks: CanonicalBenchmark[]
   userProfile: {
     aboutYou: string | null
     experienceLevel: string | null

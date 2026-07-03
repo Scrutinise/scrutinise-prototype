@@ -80,8 +80,7 @@ export default function BackgroundPanel({
       {showCta && (
         <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
           <p className="text-sm text-zinc-700 mb-2">
-            The briefing’s ready. When you are, move on to the <span className="font-medium">{nextPage!.label}</span> —
-            naming the root cause and the pivotal obstacle.
+            This part’s complete. When you’re ready, move on to <span className="font-medium">{nextPage!.label}</span>.
           </p>
           <div className="flex flex-wrap gap-2">
             <button onClick={onContinue} disabled={busy}

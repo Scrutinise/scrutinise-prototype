@@ -4,6 +4,75 @@
 
 ---
 
+## LEX REBUILD — Sprint 3: the full kernel (Page 2 refinements + causal tree + Page 3 + Page 4 + costing shell) (2026-07-03 02:02 UTC)
+
+**Preview only — NOT promoted.** Built `LEX_DESIGN_ADDENDUM_16-19.md` (design §16–§19). `scrutinise-web`
+`tsc --noEmit` clean (only the two pre-existing `react-markdown` errors — install on Vercel). Additive
+schema applied to Neon (`prisma/lex_rebuild_page3_4.sql`, idempotent; 10 placeholder benchmarks seeded).
+Full kernel smoke-tested end-to-end on Neon on the deterministic no-Lex fallback path
+(Orientation→Diagnosis→Guiding Policy→Coherent Actions, **16/16 assertions pass**, throwaway deleted).
+
+- **Task 1 — method layer (§16.3).** `lib/lex/method.ts` — the four blocks VERBATIM (M-GENERAL, M-DIAGNOSIS,
+  M-GUIDING-POLICY, M-COHERENT-ACTIONS). `buildLexSystemPrompt` injects M-GENERAL + the active stage's block
+  (derived via `pageOf(currentField)`), under a METHOD heading ("apply it, never quote it or name a book").
+  `[lex-diag] method blocks` logs which blocks are in the prompt per stage.
+- **Task 2 — Page 2 refinements (§16.1).** `DiagnosisCause.classification` enum (MATERIAL|CONTRIBUTORY|
+  UNASSESSED) + UI chips + a `classify` /causes action; `rootCause` selects among MATERIAL causes (falls back
+  to all if none marked); reframed who's-affected to "most acutely affected"; cui bono asked in the
+  pivotalObstacle turn, captured as the `beneficiariesOfStatusQuo` idea slot.
+- **Task 3 — causal tree (§16.2).** `DiagnosisCause.parentCauseId` self-FK (additive SQL, ON DELETE CASCADE);
+  List | Map toggle in the causes field; Map = a dependency-free nested tree render (indented + left
+  connector; material nodes amber), nodes edit/classify/remove + "+ cause beneath"; soft depth cap 4 with a
+  consolidation nudge; Lex `generateCauseCandidates` extended to return `classification` + one level of
+  `subCauses` chains (linked on create). **Mermaid deferred** — no diagram dep existed and adding an
+  uninstalled npm dep would muddy the tsc gate; the nested-tree render satisfies "Map view renders + edits".
+- **Task 4 — Page 3 Guiding Policy (§17).** `lib/lex/page3-config.ts`; `PolicyOption` table + `/policy-options`
+  route + field-machine CRUD; Lex seeds candidate approaches per material cause with genuine for/against
+  (`generatePolicyOptions`, gateway-adjacent, resilient→[]); choose→CHOSEN + rest RULED_OUT; `whatItRulesOut`
+  composed by the conductor from the ruled-out options; `leverage` (box), `anticipatedResponses` (structured),
+  `conditionsForSuccess` + `summaryGuidingPolicy` (proposed). Panels: `PolicyOptionsField` + `ChosenApproachField`.
+- **Task 5 — Page 4 Coherent Actions + costing shell (§18).** `lib/lex/page4-config.ts`; `LexCoherentAction`
+  table (deliberately isolated from the legacy `CoherentAction` model) with the §18.2 three-way cost structure
+  ({low,high,unit,basis,benchmarkId?,userOverride?}); `CostBenchmark` + `IdeaAssumption` tables + 10 hand-seeded
+  placeholder benchmarks (`method: "placeholder — Phase 2 research pending"`); `/actions` route; estimator UI
+  (per-action cost editors with a benchmark picker + user override); `computeCostSummary` aggregates costs vs
+  the Page 2 problem cost; `coherenceCheck` + `costSummary` (computed) + `summaryCoherentActions` proposed;
+  page-transition CTAs generalised (2→3→4).
+- **Conductor** dispatches loops by key (causes/policyOptions/actions) and computed proposed scalars
+  (whatItRulesOut/costSummary) via `seedComputedProposed`; `state.ts` populates policyOptions/actions/benchmarks;
+  `proposal-schema` + `field-machine.mirrorValue` extended for all new fields; `LOCKED_PAGES` now empty (kernel
+  complete). As-built rules in `LEX_PLAYBOOK.md` §11.
+- **REMAINING GATE:** Charlie validates `/ideas/create` end-to-end through Coherent Actions on the preview,
+  then promote. Files: `lib/lex/method.ts`, `page3-config.ts`, `page4-config.ts` (new); `page1-config.ts`,
+  `page2-config.ts`, `state.ts`, `field-machine.ts`, `orchestrator.ts`, `lex-client.ts`, `proposal-schema.ts`,
+  `components/lex/FieldsPanel.tsx`, `BackgroundPanel.tsx`, `app/ideas/create/CreateIdeaClient.tsx`,
+  `app/api/ideas/[id]/{fields,causes}/route.ts` (edited); `app/api/ideas/[id]/{policy-options,actions}/route.ts`
+  (new); `prisma/schema.prisma` + `prisma/lex_rebuild_page3_4.sql`.
+
+---
+
+## LEX REBUILD — Sprint 1.4: "How this works" UX polish (frontend only) (2026-07-03 01:58 UTC)
+
+**Preview only — NOT promoted. Frontend-only.** `scrutinise-web` `tsc --noEmit` clean (pre-existing
+react-markdown only).
+
+- **Prominent trigger.** Replaced the tiny right-aligned "How this works" link with a coloured pill button
+  (blue-600, rounded-full), centred above the left (chat) column via a grid matching the 3-col layout
+  (`CreateIdeaClient.tsx`).
+- **Auto-open on first idea.** `isFirstIdea` (already passed from `page.tsx`) now initialises `showHelp` → the
+  modal opens unprompted on a user's very first idea.
+- **Lex first message.** The bracketed/aside sentence in both the first-idea intro and the returning-user
+  greeting now reads: "For a quick introduction if you don't know what to do, click 'How this works' above."
+  (`app/ideas/create/page.tsx`).
+- **Modal copy (`HowItWorksModal.tsx`).** Dropped the paragraph that repeated the panel boxes. New copy:
+  "Welcome to Scrutinise." + "When editing your idea you will see three panels which all work together. You
+  can:" → the three panel boxes (kept) → the four-stages closing paragraph (Basic idea, Diagnosis, Guiding
+  policy, Coherent actions; research/evidence/case for Parliament; take it at your own pace).
+- **Stage naming aligned.** First stage / sidebar header renamed "Getting started" → **"The Basic Idea"**
+  (`ORIENTATION_PAGE.label`), matching the modal's first-stage name.
+
+---
+
 ## SEARCH — Stage 3 payoff A/B (recall@20 OFF vs ON) (2026-07-01 16:03 UTC)
 
 Measures whether query expansion surfaces more of the RIGHT (validated) legislation, not just more legislation — as a recall@20 delta. Search thread (separate from the LEX REBUILD entry below). Builds on the 13:57 smoke test.

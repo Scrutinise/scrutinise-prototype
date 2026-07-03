@@ -8,6 +8,7 @@ import {
   removeCause,
   listCauses,
   setRootCause,
+  classifyCause,
   acceptField,
   skipField,
 } from '@/lib/lex/field-machine'
@@ -23,6 +24,12 @@ const BodySchema = z.discriminatedUnion('action', [
     cause: z.string().trim().min(1).max(2000),
     whyPersisted: z.string().trim().max(4000).optional(),
     evidence: z.string().trim().max(4000).optional(),
+    parentCauseId: z.string().min(1).optional(), // §16.2 — add a sub-cause beneath this one
+  }),
+  z.object({
+    action: z.literal('classify'),
+    causeId: z.string().min(1),
+    classification: z.enum(['MATERIAL', 'CONTRIBUTORY', 'UNASSESSED']),
   }),
   z.object({
     action: z.literal('update'),
@@ -55,7 +62,13 @@ export async function POST(req: Request, { params }: Params) {
   try {
     switch (body.action) {
       case 'add':
-        await addCause(id, { cause: body.cause, whyPersisted: body.whyPersisted, evidence: body.evidence, source: 'USER' })
+        await addCause(id, {
+          cause: body.cause, whyPersisted: body.whyPersisted, evidence: body.evidence,
+          parentCauseId: body.parentCauseId, source: 'USER',
+        })
+        break
+      case 'classify':
+        await classifyCause(id, body.causeId, body.classification)
         break
       case 'update':
         await updateCause(id, body.causeId, { cause: body.cause, whyPersisted: body.whyPersisted, evidence: body.evidence })

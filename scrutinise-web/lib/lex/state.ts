@@ -19,6 +19,9 @@ import {
   type CanonicalField,
   type CanonicalPage,
   type CanonicalCause,
+  type CanonicalPolicyOption,
+  type CanonicalAction,
+  type CanonicalBenchmark,
   type FieldStatus,
   type SearchResult,
 } from './page1-config'
@@ -117,7 +120,10 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   const causeRows = await prisma.diagnosisCause.findMany({
     where: { ideaId },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
-    select: { id: true, cause: true, whyPersisted: true, evidence: true, isRootCause: true, source: true },
+    select: {
+      id: true, cause: true, whyPersisted: true, evidence: true, isRootCause: true,
+      classification: true, parentCauseId: true, source: true,
+    },
   })
   const diagnosisCauses: CanonicalCause[] = causeRows.map((c) => ({
     id: c.id,
@@ -125,8 +131,75 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     whyPersisted: c.whyPersisted,
     evidence: c.evidence,
     isRootCause: c.isRootCause,
+    classification: c.classification as CanonicalCause['classification'],
+    parentCauseId: c.parentCauseId,
     source: c.source as 'USER' | 'LEX_CORPUS',
   }))
+
+  // Page 3 policy options.
+  const optionRows = await prisma.policyOption.findMany({
+    where: { ideaId },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+    select: {
+      id: true, approach: true, mechanismTypes: true, targetCauseIds: true,
+      caseFor: true, caseAgainst: true, status: true, ruleOutReason: true, source: true,
+    },
+  })
+  const policyOptions: CanonicalPolicyOption[] = optionRows.map((o) => ({
+    id: o.id,
+    approach: o.approach,
+    mechanismTypes: o.mechanismTypes,
+    targetCauseIds: o.targetCauseIds,
+    caseFor: o.caseFor,
+    caseAgainst: o.caseAgainst,
+    status: o.status as CanonicalPolicyOption['status'],
+    ruleOutReason: o.ruleOutReason,
+    source: o.source as 'USER' | 'LEX',
+  }))
+
+  // Page 4 actions.
+  const actionRows = await prisma.lexCoherentAction.findMany({
+    where: { ideaId },
+    orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+  })
+  const num = (v: unknown): number | null => (typeof v === 'number' ? v : null)
+  const range = (v: unknown) => {
+    const r = v as Record<string, unknown> | null
+    return r
+      ? {
+          low: num(r.low), high: num(r.high),
+          unit: typeof r.unit === 'string' ? r.unit : null,
+          basis: typeof r.basis === 'string' ? r.basis : null,
+          benchmarkId: typeof r.benchmarkId === 'string' ? r.benchmarkId : null,
+          userOverride: r.userOverride === true,
+        }
+      : null
+  }
+  const actions: CanonicalAction[] = actionRows.map((a) => ({
+    id: a.id,
+    practicalStep: a.practicalStep,
+    mechanismType: a.mechanismType,
+    whoImplements: a.whoImplements,
+    targetOrganisation: a.targetOrganisation,
+    wording: a.wording,
+    benefits: (a.benefits as CanonicalAction['benefits']) ?? null,
+    implementationCost: range(a.implementationCost),
+    enforcementCost: range(a.enforcementCost),
+    regulatoryFriction: range(a.regulatoryFriction),
+    source: a.source as 'USER' | 'LEX',
+  }))
+
+  // Costing benchmarks (§18.3) — only load once we're on Page 4 (cheap otherwise to skip).
+  let benchmarks: CanonicalBenchmark[] = []
+  if ((idea.lexPage ?? 'ORIENTATION') === 'COHERENT_ACTIONS') {
+    const bRows = await prisma.costBenchmark.findMany({ orderBy: [{ domain: 'asc' }, { metric: 'asc' }] })
+    benchmarks = bRows.map((b) => ({
+      id: b.id, domain: b.domain, metric: b.metric, unit: b.unit,
+      low: b.low != null ? Number(b.low) : null,
+      high: b.high != null ? Number(b.high) : null,
+      source: b.source, sourceUrl: b.sourceUrl, year: b.year, method: b.method, notes: b.notes,
+    }))
+  }
 
   // Initial Background document
   const doc = await prisma.document.findUnique({
@@ -143,6 +216,9 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     currentField: current,
     pages: [...pages, ...lockedPages],
     diagnosisCauses,
+    policyOptions,
+    actions,
+    benchmarks,
     userProfile: {
       aboutYou: idea.creator.aboutYouNarrative ?? null,
       experienceLevel: idea.creator.experienceLevel ?? null,

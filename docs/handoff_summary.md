@@ -6,6 +6,36 @@
 
 ---
 
+## CURRENT STATE — LEX REBUILD Sprint 3 (the full kernel) + Sprint 1.4 (UX polish) (3 Jul 2026)
+
+**Preview only — NOT promoted.** Frontend Sprint 1.4 + the full-kernel Sprint 3 shipped to the preview this
+session (separate from the SEARCH thread below). Full account: CHANGE_LOG "LEX REBUILD — Sprint 3" +
+"Sprint 1.4" (2026-07-03 02:02 / 01:58 UTC); as-built in `LEX_PLAYBOOK.md` §11. `scrutinise-web`
+`tsc --noEmit` clean (only the two pre-existing `react-markdown` errors — install on Vercel). Additive schema
+**applied to Neon** (`prisma/lex_rebuild_page3_4.sql`, idempotent; 10 placeholder `CostBenchmark` rows).
+**Full kernel smoke-tested end-to-end on Neon on the deterministic no-Lex fallback path
+(Orientation→Diagnosis→Guiding Policy→Coherent Actions, 16/16 assertions pass; throwaway deleted).**
+
+- **Sprint 1.4 (UX polish, frontend).** Prominent coloured **pill** "How this works" centred above the chat
+  column (was a tiny link); **auto-opens on a user's first idea**; Lex's first-message aside → "For a quick
+  introduction if you don't know what to do, click 'How this works' above."; modal copy rewritten (Welcome +
+  three panel boxes + four-stages closing, repetition dropped); first stage / sidebar renamed **"The Basic Idea"**.
+- **Sprint 3 (design §16–§19).** (1) **Method layer** `lib/lex/method.ts` — the four Rumelt blocks verbatim,
+  injected per stage (M-GENERAL + active block), visible in `[lex-diag]`. (2) **Page 2 refinements** —
+  `classification` (material/contributory) chips + root-cause-among-material; who's-affected reframed; cui bono
+  captured. (3) **Causal tree** — `parentCauseId` self-FK; List|Map toggle; dependency-free nested tree render
+  (**Mermaid deferred** to keep the tsc gate clean — no diagram dep existed); soft depth cap 4. (4) **Page 3
+  Guiding Policy** — `PolicyOption` table + `/policy-options`; Lex seeds candidate approaches per material cause
+  with for/against; choose→CHOSEN + rest RULED_OUT; whatItRulesOut composed; leverage/responses/conditions/summary.
+  (5) **Page 4 Coherent Actions + costing** — `LexCoherentAction` (isolated from legacy `CoherentAction`) with the
+  §18.2 three-way cost ranges; `CostBenchmark` + `IdeaAssumption` + 10 placeholder benchmarks; `/actions`; estimator
+  with benchmark picker + override; `computeCostSummary` vs the Page 2 problem cost; coherence check + summaries.
+- **REMAINING GATE:** Charlie validates `/ideas/create` end-to-end through Coherent Actions on the preview, then
+  promote. Real FTS is still stubbed behind the gateway; the benchmark set is hand-seeded placeholders (Phase-2
+  research pending). `commit-all.sh` produced for the single end-of-sprint push (do NOT promote).
+
+---
+
 ## CURRENT STATE — SEARCH: Stage 3 payoff A/B (recall@20 OFF vs ON, 1 Jul 2026)
 
 **Sprint complete** (search thread; separate from the LEX REBUILD thread below). Full account: CHANGE_LOG "SEARCH — Stage 3 payoff A/B" (2026-07-01 16:03 UTC). Reports: **`docs/FTS_STAGE3_AB.md`** + `docs/fts_stage3_ab.json`. `scripts/ingest` `tsc --noEmit` = only the 4 documented pre-existing errors.
