@@ -2,15 +2,52 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 3 Jul 2026 — SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
 
 ---
 
-## CURRENT STATE — LEX REBUILD Sprint 3 (the full kernel) + Sprint 1.4 (UX polish) (3 Jul 2026)
+## CURRENT STATE — SEARCH: VECTOR PILOT (embedding-model bake-off, 3 Jul 2026)
 
-**Preview only — NOT promoted.** Frontend Sprint 1.4 + the full-kernel Sprint 3 shipped to the preview this
-session (separate from the SEARCH thread below). Full account: CHANGE_LOG "LEX REBUILD — Sprint 3" +
-"Sprint 1.4" (2026-07-03 02:02 / 01:58 UTC); as-built in `LEX_PLAYBOOK.md` §11. `scrutinise-web`
+**Sprint complete** (search thread; separate from the LEX thread below). Decision doc:
+**`docs/PILOT_REPORT.md`**; numbers `docs/PILOT_RESULTS.md`/`pilot_results.json`; subset
+`docs/PILOT_SUBSET.md`. CHANGE_LOG "SEARCH — VECTOR PILOT" (2026-07-03 15:50 UTC). `scripts/ingest`
+`tsc --noEmit` = only the 4 documented pre-existing errors. New: `scripts/ingest/search/pilot-*.ts`
+(common/providers/subset/chunk/embed/score). Lance pilot tables live on R2 (throwaway, not committed).
+
+- **DECISION: gemini-embedding-001** for the full-corpus embed — NOT the legal-specialist voyage-4.
+  On the 60k subset (all gold answers + stratified distractors, 0 MISS; 79,908 chunks), recall@20
+  excl-floor: **gemini vector 85.9% / hybrid 84.3% (+16.0pp over BM25 68.3%)**; **voyage-4 vector
+  85.9% (TIE) / hybrid 81.1%**; e5-open-weight 70.5%/77.2%. **No legal-specialist premium** — the
+  brief's central question answers *no*; gemini is already integrated + wins hybrid + more robust on B6.
+- **Vector layer helps where predicted:** archetype B (lay concept) BM25 23.6% → gemini vector
+  **69.4% (+45.8pp)**; **B6 (MiFID burial) 0% → 50%** (3/6 sources unburied, all models). Citations
+  NOT hurt (gemini hybrid A = 100%).
+- **Nuance:** equal-weight RRF *underperforms* vector-alone for strong models (drags them toward the
+  weaker BM25; voyage B6 collapses 50%→0%). End-state should route by query kind / vector-weight the
+  fusion — NOT naive RRF. Open-weight slot = e5-large-instruct (Together delisted BGE-M3; BGE-* non-serverless).
+- **NEXT (gated on Charlie):** full-corpus embed with gemini (test @768-d first — Matryoshka halves
+  the ~$0.8–1.2k sticky cost / 1.5× storage of 1536-d) → ANN index → wire the `vector` capability flag
+  already reserved in `lib/lex/search-gateway.ts`; then tune fusion + chunking. Provisional (gold key
+  still the unvalidated draft). Voyage needs a payment method on the account for standard rate limits
+  (done this session; still within free token credits).
+
+---
+
+## CURRENT STATE — LEX REBUILD Sprint 3 + 3-A (full kernel + preview-validation amendments) + Sprint 1.4 (3 Jul 2026)
+
+**Preview only — NOT promoted.** Frontend Sprint 1.4 + the full-kernel Sprint 3 + the **§19-A amendments
+(Sprint 3-A)** from Sprint 2 preview validation all shipped to the preview this session (separate from the
+SEARCH thread below). Full account: CHANGE_LOG "Sprint 3-A" / "Sprint 3" / "Sprint 1.4"
+(2026-07-03 17:27 / 02:02 / 01:58 UTC); as-built in `LEX_PLAYBOOK.md` §11 + §11a.
+
+**Sprint 3-A amendments (§19-A, take precedence over §19):** **A1 (fix-first)** structured fields are now
+proposable — Lex synthesises chat into slot JSON (`proposal.valueObject`), box shows "proposed by Lex", user
+edits/Saves; new anti-transcribe rule (no more "pop it in the box"). **A2** completed stages collapse in all
+three panels (accordions / chat dividers / legislation stage groups). **A3** middle panel auto-scrolls the
+next box to top on Save. **A4** cause-seeding diagnosed (likely transient Gemini empty/error, swallowed) +
+hardened (stage logging + retry + corpus-grounded fallback). **A5** single-cause root = one-click confirm,
+not "which driver"; duplicate bubbles suppressed. **A6** "The Basic Idea" everywhere. **A7** empty legal-tier
+copy reworded for retained-EU law (+ retrieval question flagged to the search workstream). `scrutinise-web`
 `tsc --noEmit` clean (only the two pre-existing `react-markdown` errors — install on Vercel). Additive schema
 **applied to Neon** (`prisma/lex_rebuild_page3_4.sql`, idempotent; 10 placeholder `CostBenchmark` rows).
 **Full kernel smoke-tested end-to-end on Neon on the deterministic no-Lex fallback path

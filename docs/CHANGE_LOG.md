@@ -1,6 +1,100 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 1 Jul 2026 — SEARCH Stage 3 payoff A/B (recall@20): B +15.3pp; A not flat (bidirectional); B6 filled+scoreable; B6 low ON = ranking, not coverage.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — VECTOR PILOT: embedding-model bake-off on the gold set. Winner gemini-embedding-001 (ties voyage-4 on vector, wins hybrid); vector layer +16pp over BM25, archetype-B +45.8pp; legal-specialist premium NOT found.*
+
+---
+
+## LEX REBUILD — Sprint 3-A: amendments from Sprint 2 preview validation (§19-A) (2026-07-03 17:27 UTC)
+
+**Preview only — NOT promoted.** Executes `LEX_DESIGN_ADDENDUM_16-19.md §19-A` (takes precedence over §19
+where they conflict). `scrutinise-web` `tsc --noEmit` clean (react-markdown only). Kernel re-smoked end-to-end
+on Neon (fallback path) — all four pages still drive with no dead-ends.
+
+- **A1 — structured fields are now PROPOSABLE (the "pop it in the box" defect).** Extended the §4 proposal
+  contract with `proposal.valueObject` (a per-slot JSON map). Lex now SYNTHESISES a chat answer into the slot
+  schema and returns a proposal; the box renders "proposed by Lex — refine"; the user edits/Saves — identical
+  to narrative boxes. Applies generically to every structured field on Pages 2–4 (`whoAffectedImpactCost`,
+  `legalLandscape`, `anticipatedResponses` — added to the proposable enum). New RULE forbids ever asking the
+  user to transcribe/"pop" their own words into a box. `lex-client.ts` (schema + guidance + rule + parser),
+  `/lex` route (structured → valueObject), `FieldsPanel` label.
+- **A4 — cause seeding diagnosed + hardened.** *Finding (by inspection; the live [lex-diag] will confirm):*
+  the CAUSE_SEEDING gateway call is NOT flag-gated and FTS is live, so the most probable cause of "no
+  candidates surfaced" is the Gemini cause generator returning empty/erroring on a transient 429/503 — which
+  `seedCauses` swallowed silently, leaving zero seeds. **Fix:** `seedCauses` now logs every stage
+  (`[lex-diag] cause seeding` — challengeLen/keywords/results/snippets/generated/created/fallbackUsed/error),
+  RETRIES the generator once, and falls back to deterministic corpus-grounded candidates (drawn from the FTS
+  results) when the generator yields nothing but the corpus returned relevant material — so the acceptance
+  ("candidates seeded from the corpus") holds even when Gemini blips.
+- **A5 — single-cause root step + bubble dedupe.** With one (material) cause, the conductor no longer asks
+  "which is the main driver" — it proposes that cause as root with a one-click "Confirm … as the root cause"
+  button (`RootCauseField`), and the conductor `questionFor` phrases it as a confirm. Added consecutive-
+  duplicate suppression in `orchestrateAfterWrite` (`[lex-diag] suppressed duplicate bubble`).
+- **A2 — page collapse on stage transition (all three panels).** Fields panel: completed stages collapse into
+  accordions (title + tick + "n of n", "+"/"−" to expand). Chat: prior-stage messages collapse under a divider
+  ("The Basic Idea — N messages +") — messages are stage-tagged client-side; the active stage stays expanded.
+  Legislation panel: content grouped under its stage header ("The Basic Idea").
+- **A3 — middle-panel auto-scroll.** On Save the newly-active box scrolls to the top of the Fields panel
+  (`currentFieldKey` + `scrollIntoView`), so the user no longer hunts for it.
+- **A6 — "The Basic Idea" everywhere.** Modal four-stage list aligned ("The Basic Idea, Diagnosis, …");
+  the sidebar/first-stage rename shipped in Sprint 1.4. (FAQ's own "## Getting started" heading is a different
+  concept, left as-is.)
+- **A7 — empty legal-tier copy reworded** (`search-stub.ts buildInitialBackground`): "No UK Act matched
+  directly — this area may be governed by retained/assimilated EU law, secondary legislation, or regulator
+  rules." **Retrieval question passed to the search workstream:** when the governing law is onshored/retained
+  EU regulation, surface it in the legal-framework tier (it lives in the corpus under EU_LEGISLATION/GUIDANCE).
+
+---
+
+## SEARCH — VECTOR PILOT (embedding-model bake-off on the gold set) (2026-07-03 15:50 UTC)
+
+Picks ONE embedding model on the gold set BEFORE the sticky full-corpus embed (different models'
+vectors are incompatible → switching = re-embed everything). Measures per-model recall@20
+(vector-alone AND RRF-hybrid) vs the current BM25 baseline, on ONE 60k-section subset so all arms
+see an identical candidate universe. Full account: **`docs/PILOT_REPORT.md`** (decision) +
+`docs/PILOT_RESULTS.md`/`.json` (numbers) + `docs/PILOT_SUBSET.md` (coverage). `scripts/ingest`
+`tsc --noEmit` = only the 4 documented pre-existing errors.
+
+**Candidates.** voyage-4 (Voyage, legal front-runner) · gemini-embedding-001 (best-general, 1536d)
+· open-weight datapoint. Note: brief's BGE-M3 is DELISTED on Together and BGE-* are non-serverless,
+so the open-weight slot is **intfloat/multilingual-e5-large-instruct** (the only serverless
+open-weight embedder Together serves) — same "free/self-host economics" question, different model.
+
+**Subset (validated).** `pilot-subset.ts` locates every gold expected-source (id-probe via Neon
+`id LIKE ANY`; text-probe via Lance BM25 + the exact gold regex), then adds stratified distractors
+keeping corpus proportions → **60,000 sections = 1,715 gold-answer + 58,285 distractor, 0 source
+MISS** across all 31 scoreable recall@20 queries (zero silent drops). `pilot-chunk.ts` pulls bodies
+from R2 (same citation-backfilled text as production), chunks (whole ≤1024 tok; else ~800-tok
+windows, 15% overlap, cap 8/section) → **79,908 chunks**, and builds the subset BM25 (Lance FTS).
+
+**Models embedded.** `pilot-providers.ts` (model-agnostic) + `pilot-embed.ts` (resumable) → three
+`pilot_vec_<slug>` Lance tables, 79,908 vectors each, cosine. `pilot-score.ts` scores vector-alone,
+hybrid (RRF), and BM25 with production semantics (title/leg-tier boost + archetype-A citation
+resolver), exact in-memory kNN (no ANN confound).
+
+**Result (recall@20, excl. [GRAPH] floor, n=26; BM25 baseline 68.3% ≈ full-corpus headline).**
+- **Winner gemini-embedding-001:** vector **85.9%**, hybrid **84.3% (+16.0pp over BM25)**.
+- **voyage-4:** vector **85.9% (ties gemini)**, hybrid 81.1% (+12.8pp). **No legal-specialist
+  premium** — the general model matches on vector and wins hybrid; the brief's central question
+  ("does legal-specialist beat general on OUR corpus?") = **no**.
+- **e5 (open-weight):** vector 70.5%, hybrid 77.2% (+9.0pp) — ~8pp behind, and handicapped by
+  Together's 512-token cap. A viable cost floor, not a quality choice.
+- **Vector layer helps most exactly where predicted:** archetype B (lay-vocabulary concept) BM25
+  **23.6% → gemini vector 69.4% (+45.8pp)**; **B6 (MiFID burial) BM25 0% → vector 50%** for all
+  three (3/6 sources unburied). **Citations not hurt:** gemini hybrid A = 100% (vs BM25 90%).
+- **Nuance — equal-weight RRF is the wrong fusion for a strong model:** hybrid < vector-alone for
+  gemini (84.3<85.9) and voyage (81.1<85.9), because RRF drags the strong vector ranking toward the
+  weaker BM25 (voyage B6 even collapses 50%→0%). Only e5 gains from hybrid. Recommend query-routed
+  / vector-weighted fusion (vector-dominant for concept, BM25+resolver for citations), NOT naive RRF.
+
+**NEXT (gated on Charlie).** Full-corpus embed with gemini (test @768-d first — Matryoshka halves
+the ~$0.8–1.2k sticky cost / 1.5× storage of 1536-d) → ANN index → wire the `vector` capability
+flag already reserved in `lib/lex/search-gateway.ts`. Then tune the fusion + chunking. Provisional:
+gold expected-sources are still the unvalidated draft.
+
+**Files (new, `scripts/ingest/search/`):** `pilot-common.ts`, `pilot-providers.ts`, `pilot-subset.ts`,
+`pilot-chunk.ts`, `pilot-embed.ts`, `pilot-score.ts`. **Docs (new):** `docs/PILOT_REPORT.md`,
+`docs/PILOT_RESULTS.md`, `docs/pilot_results.json`, `docs/PILOT_SUBSET.md`. Lance (R2, throwaway
+pilot tables, not committed): `pilot_chunks`, `pilot_vec_{voyage,gemini,e5}`; `_search/pilot/*`.
 
 ---
 
