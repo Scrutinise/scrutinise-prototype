@@ -167,7 +167,7 @@ export function buildInitialBackground(
     '### The legal framework',
     acts.length
       ? acts.map((a) => `- **${a.citation}** — ${a.snippet}`).join('\n')
-      : '- No primary legislation matched yet; this may be an area governed by regulation or non-statutory practice.',
+      : '- No UK Act matched directly — this area may be governed by retained/assimilated EU law, secondary legislation, or regulator rules.',
     sis.length ? '\n**Secondary legislation:**\n' + sis.map((s) => `- ${s.citation} — ${s.snippet}`).join('\n') : '',
     '',
     '### What Parliament has said',

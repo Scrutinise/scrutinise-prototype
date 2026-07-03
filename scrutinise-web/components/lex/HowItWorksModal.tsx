@@ -21,7 +21,7 @@ const TOUR_INTRO =
   'When editing your idea you will see three panels which all work together. You can:'
 
 const TOUR_CLOSING =
-  "To develop your idea we'll work through four stages — Basic idea, Diagnosis, Guiding policy, and " +
+  "To develop your idea we'll work through four stages — The Basic Idea, Diagnosis, Guiding policy, and " +
   'Coherent actions. Along the way we’ll do research, build up evidence and steadily build a strong ' +
   'case for your preferred actions to present to Parliament. Take it at your own pace.'
 

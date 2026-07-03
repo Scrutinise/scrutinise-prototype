@@ -99,6 +99,13 @@ export default function BackgroundPanel({
         </div>
       )}
 
+      {/* A2: content grouped per stage — the Initial Background belongs to The Basic Idea. */}
+      {(initialBackground || grouped.length > 0) && (
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 border-t border-zinc-100 pt-2">
+          The Basic Idea
+        </div>
+      )}
+
       {/* Initial Background briefing */}
       {initialBackground && (
         <div className="rounded-xl border border-zinc-200 overflow-hidden">

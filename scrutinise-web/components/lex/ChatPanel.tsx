@@ -8,15 +8,36 @@ export interface ChatMessage {
   role: 'user' | 'lex'
   content: string
   timestamp?: string
+  /** A2: the Lex stage (page key) this message belongs to, for stage-collapse. */
+  stage?: string
+}
+
+// One chat bubble.
+function Bubble({ m }: { m: ChatMessage }) {
+  return (
+    <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+      {m.role === 'lex' && (
+        <div className="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1">L</div>
+      )}
+      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+        m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white'
+      }`}>
+        {m.content}
+      </div>
+    </div>
+  )
 }
 
 // Panel 1 — Chat. Renders message history + Lex's chatText + the accept card
 // when a field is AWAITING_CONFIRMATION. Pure renderer of (messages, awaitingField).
+// A2: prior-stage messages collapse under a divider ("The Basic Idea — 14 messages +").
 export default function ChatPanel({
   messages,
   awaitingField,
   busy,
   focusNonce,
+  currentStage,
+  stageLabels,
   onSend,
   onAccept,
   onDecline,
@@ -26,11 +47,16 @@ export default function ChatPanel({
   busy: boolean
   /** Bumped by the parent ("Ask Lex about this") to pull focus into the input. */
   focusNonce?: number
+  /** The active Lex stage (page key) — its messages stay expanded; earlier ones collapse. */
+  currentStage?: string
+  /** Stage key → display label, for the collapse dividers. */
+  stageLabels?: Record<string, string>
   onSend: (text: string) => void
   onAccept: (value: string | string[]) => void
   onDecline: () => void
 }) {
   const [input, setInput] = useState('')
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -49,25 +75,41 @@ export default function ChatPanel({
     onSend(text)
   }
 
+  // Group consecutive messages into stage runs (untagged inherits the previous stage).
+  const groups: { stage: string; items: ChatMessage[] }[] = []
+  let lastStage = currentStage ?? 'ORIENTATION'
+  for (const m of messages) {
+    const stage = m.stage ?? lastStage
+    lastStage = stage
+    const g = groups[groups.length - 1]
+    if (g && g.stage === stage) g.items.push(m)
+    else groups.push({ stage, items: [m] })
+  }
+  const labelOf = (k: string) => stageLabels?.[k] ?? k
+
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {m.role === 'lex' && (
-              <div className="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1">
-                L
-              </div>
-            )}
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white'
-              }`}
-            >
-              {m.content}
+        {groups.map((g, gi) => {
+          // A prior-stage group collapses under a divider unless the user expands it.
+          const isCurrent = g.stage === currentStage || gi === groups.length - 1
+          const isOpen = isCurrent || expanded.has(gi)
+          return (
+            <div key={gi} className="space-y-3">
+              {!isCurrent && (
+                <button
+                  onClick={() => setExpanded((s) => { const n = new Set(s); n.has(gi) ? n.delete(gi) : n.add(gi); return n })}
+                  className="w-full flex items-center gap-2 text-[11px] font-medium text-zinc-400 hover:text-zinc-600 border-t border-zinc-100 pt-2"
+                >
+                  <span className="uppercase tracking-wide">{labelOf(g.stage)}</span>
+                  <span className="flex-1 text-left text-zinc-300">— {g.items.length} message{g.items.length === 1 ? '' : 's'}</span>
+                  <span>{isOpen ? '−' : '+'}</span>
+                </button>
+              )}
+              {isOpen && g.items.map((m, i) => <Bubble key={i} m={m} />)}
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {busy && (
           <div className="flex justify-start">

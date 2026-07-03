@@ -91,16 +91,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       if (!ideaId) return
       // "Say the word" — open the walkthrough instead of a Lex round-trip when the
       // user is plainly asking how this works (the intro offers exactly this).
+      const stage = state?.stage
       if (HELP_INTENT.test(text.trim())) {
         setMessages((prev) => [
           ...prev,
-          { role: 'user', content: text },
-          { role: 'lex', content: "Of course — here's a quick walkthrough. I've opened it for you." },
+          { role: 'user', content: text, stage },
+          { role: 'lex', content: "Of course — here's a quick walkthrough. I've opened it for you.", stage },
         ])
         setShowHelp(true)
         return
       }
-      setMessages((prev) => [...prev, { role: 'user', content: text }])
+      setMessages((prev) => [...prev, { role: 'user', content: text, stage }])
       setBusy(true)
       setError(null)
 
@@ -126,24 +127,24 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           await new Promise((r) => setTimeout(r, 700))
           data = await postOnce()
         }
-        setMessages((prev) => [...prev, { role: 'lex', content: data.chatText }])
+        setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: data.state?.stage ?? stage }])
         if (data.state) applyState(data.state)
       } catch (err) {
         console.error('[lex] turn failed after retry:', err)
         setMessages((prev) => [
           ...prev,
-          { role: 'lex', content: 'I lost the connection there — could you say that again?' },
+          { role: 'lex', content: 'I lost the connection there — could you say that again?', stage },
         ])
       } finally {
         setBusy(false)
       }
     },
-    [ideaId, applyState],
+    [ideaId, applyState, state?.stage],
   )
 
-  const appendLex = useCallback((msgs: unknown) => {
+  const appendLex = useCallback((msgs: unknown, stage?: string) => {
     if (Array.isArray(msgs) && msgs.length) {
-      setMessages((prev) => [...prev, ...msgs.map((c: string) => ({ role: 'lex' as const, content: c }))])
+      setMessages((prev) => [...prev, ...msgs.map((c: string) => ({ role: 'lex' as const, content: c, stage }))])
     }
   }, [])
 
@@ -161,7 +162,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         })
         if (!res.ok) throw new Error(`${path} failed`)
         const data = await res.json()
-        appendLex(data.messages)
+        appendLex(data.messages, data.state?.stage)
         if (data.state) applyState(data.state)
       } catch {
         setError('That didn’t save — please try again.')
@@ -282,6 +283,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 awaitingField={chatAwaitingField}
                 busy={busy}
                 focusNonce={focusNonce}
+                currentStage={state.stage}
+                stageLabels={Object.fromEntries(state.pages.map((p) => [p.key, p.label]))}
                 onSend={sendMessage}
                 onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
                 onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
@@ -297,6 +300,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 actions={state.actions}
                 benchmarks={state.benchmarks}
                 busy={busy}
+                currentFieldKey={state.currentField?.key ?? null}
                 onSubmitBox={(key, value) => transition(key, 'submitBox', value)}
                 onAcceptStructured={(key, value) => transition(key, 'accept', value)}
                 onSkip={(key) => transition(key, 'skip')}

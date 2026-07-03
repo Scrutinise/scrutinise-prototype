@@ -316,3 +316,24 @@ field. `/fields` rejects the child-entity keys (`causes`/`rootCause`/`policyOpti
 `page1-config.PAGE_SEQUENCE`, add child entities + their own route where a loop is needed, add mirror + validator +
 canonical-state population + a conductor dispatch by field key, and a panel renderer keyed by field key. Never add a
 counter or a sequence decision to the client.
+
+### 11a. Sprint 3-A amendments (§19-A) — the important contract change
+
+**A1 — structured fields are PROPOSABLE (the anti-transcribe rule).** The §4 proposal contract now has a THIRD
+value shape: `proposal.valueObject` (a `{slot: string}` map) alongside `valueText`/`valueList`. For a structured
+field, Lex synthesises the user's chat answer into the slots and returns a valueObject proposal; the `/lex` route
+picks `valueObject` when `current.type === 'structured'`, validates it via the field's zod schema (which `.strip()`s
+unknown keys), and sets it AWAITING; `StructuredField` renders it ("proposed by Lex — refine") and Save accepts.
+The proposable enum in `lex-client` RESPONSE_SCHEMA now includes `whoAffectedImpactCost`/`legalLandscape`/
+`anticipatedResponses`. **Hard rule in the prompt:** never ask the user to transcribe/"pop" their own words into a
+box — Lex tidies chat into the proposal; the user only reviews and Saves. When adding a new structured field,
+add its slot keys to the `valueObject` schema properties too.
+
+**A4 seeding robustness.** `seedCauses` logs `[lex-diag] cause seeding {…}` per stage, retries the generator once,
+and has a deterministic corpus-grounded fallback (only fires when the generator yields nothing AND FTS returned
+relevant rows). If a preview shows no seeded causes, read that log first — it names the exact failing stage.
+
+**A2/A3 UX.** Chat messages carry a `stage` tag (client-side, set at append from the response's `state.stage`);
+`ChatPanel` groups by stage and collapses non-active stages. `FieldsPanel` collapses completed pages into
+accordions and scrolls the `currentFieldKey` box to the top on Save. These are pure-render concerns — no canonical
+state involved; resumed history without stage tags simply inherits the previous group.

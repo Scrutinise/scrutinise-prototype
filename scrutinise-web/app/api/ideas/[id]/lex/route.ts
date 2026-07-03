@@ -80,7 +80,11 @@ export async function POST(req: Request, { params }: Params) {
   // the field goes AWAITING_CONFIRMATION and the box renders the tidied text.
   let proposalApplied = false
   if (current && lex.proposal && lex.proposal.fieldKey === current.key) {
-    const rawValue = current.key === 'keywords' ? lex.proposal.valueList : lex.proposal.valueText
+    // A1: structured fields carry a valueObject (multi-slot); keywords a list; the rest text.
+    const rawValue =
+      current.type === 'structured' ? lex.proposal.valueObject
+        : current.key === 'keywords' ? lex.proposal.valueList
+          : lex.proposal.valueText
     const valid = validateProposal({ fieldKey: current.key, value: rawValue, rationale: lex.proposal.rationale })
     if (valid) {
       await setProposal(id, current.key, { value: valid.value, rationale: valid.rationale })

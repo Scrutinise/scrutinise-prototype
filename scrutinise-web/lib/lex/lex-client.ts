@@ -31,6 +31,8 @@ export interface LexRawOutput {
     fieldKey: string
     valueText?: string
     valueList?: string[]
+    /** A1: structured multi-slot proposal — Lex synthesises chat into the slot schema. */
+    valueObject?: Record<string, string>
     rationale?: string
   } | null
   extracted: Record<string, string>
@@ -50,16 +52,36 @@ const RESPONSE_SCHEMA = {
           enum: [
             // Page 1
             'ideaNarrative', 'youAndIdeaNarrative', 'aboutYou', 'title', 'keywords',
-            // Page 2 (Diagnosis) — Lex-proposed scalars (structured/loop fields are panel-filled)
+            // Page 2 (Diagnosis) — proposed scalars + A1 structured multi-slot fields
             'challenge', 'pivotalObstacle', 'summaryDiagnosis',
-            // Page 3 (Guiding Policy)
+            'whoAffectedImpactCost', 'legalLandscape',
+            // Page 3 (Guiding Policy) — incl. A1 structured anticipatedResponses
             'whatItRulesOut', 'leverage', 'conditionsForSuccess', 'summaryGuidingPolicy',
+            'anticipatedResponses',
             // Page 4 (Coherent Actions)
             'coherenceCheck', 'costSummary', 'summaryCoherentActions',
           ],
         },
         valueText: { type: 'string' },
         valueList: { type: 'array', items: { type: 'string' } },
+        // A1: structured multi-slot proposal. Union of every structured field's slots
+        // across Pages 2–4; unknown keys are stripped server-side per the field schema.
+        valueObject: {
+          type: 'object',
+          properties: {
+            affectedGroups: { type: 'string' },
+            impact: { type: 'string' },
+            cost: { type: 'string' },
+            evidence: { type: 'string' },
+            currentLaw: { type: 'string' },
+            whereItFails: { type: 'string' },
+            avoidance: { type: 'string' },
+            gaming: { type: 'string' },
+            enforcementBurden: { type: 'string' },
+            legalChallenge: { type: 'string' },
+            politicalAttack: { type: 'string' },
+          },
+        },
         rationale: { type: 'string' },
       },
       required: ['fieldKey'],
@@ -96,9 +118,28 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
       : `This box can be filled two ways: the user types it in themselves, or they answer you here in chat and you tidy their words into it. When the user's message contains enough to fill this box, RETURN A PROPOSAL — proposal.fieldKey "${field.key}", proposal.valueText = a tidied version of what they said for THIS field, in their own voice (first person), concise, no preamble or quotes. When you return a proposal your chatText must point them to the panel and ask them to review and Save. Do NOT ask the next question in the same turn. If they haven't answered this yet, just ask the question and nudge obvious gaps GENTLY (at most twice), with no proposal. The user confirms by SAVING the box — never tell them to "accept a card". Quietly capture any slots in "extracted".`
   }
 
+  if (field.origin === 'box' && field.type === 'structured') {
+    // A1: structured multi-slot fields are PROPOSABLE, exactly like narrative boxes.
+    // Lex synthesises the user's chat content into the slot schema and returns a
+    // valueObject proposal; the box renders it "proposed by Lex"; the user edits/Saves.
+    // NEVER ask the user to type their own words into the panel.
+    const slots = (field.slots ?? []).join(', ')
+    const specifics =
+      field.key === 'whoAffectedImpactCost'
+        ? `This field captures who is MOST ACUTELY affected (specific groups — the constituency/MP hook), the impact on them, the cost, and any evidence. Some of it may be carried over from earlier.`
+        : field.key === 'legalLandscape'
+          ? `This field captures what law currently governs this and where it falls short. If a relevant Act or regulator came up in the background briefing, fold it in.`
+          : field.key === 'anticipatedResponses'
+            ? `This field captures how people will respond to the chosen approach: avoidance, gaming, enforcement burden, legal challenge, and political attack vectors.`
+            : `Help the user complete this structured field.`
+    return ctx.awaiting
+      ? `You have ALREADY drafted this field — it is showing in the panel on the right ("proposed by Lex"), waiting for the user to review and Save it. Do NOT move on or propose another field. If the user asks for a change, RETURN A FRESH PROPOSAL for THIS field (proposal.fieldKey "${field.key}", proposal.valueObject = the improved slot values for keys: ${slots}) and in chatText say briefly what you changed and ask them to Save it in the panel. If they seem happy, emit no proposal and invite them to Save (or edit in the panel).`
+      : `${specifics} When the user's message contains enough to fill this field, SYNTHESISE their words into the slots and RETURN A PROPOSAL — proposal.fieldKey "${field.key}", proposal.valueObject = an object keyed by these slots: ${slots}, each value a tidied version of what they said (their voice, concise, no preamble). Your chatText must then point them to the panel and ask them to review and Save — do NOT ask the next question in the same turn. If they haven't given enough yet, ask for the gaps GENTLY (at most twice), with no proposal. NEVER ask the user to copy or "pop" their own words into the box — you tidy them in. Quietly capture any extra slots in "extracted".`
+  }
+
   if (field.origin === 'box') {
-    // Structured / loop / reference fields — the user fills them IN THE PANEL. Your job
-    // is to help them think it through in chat. Do NOT emit a proposal for these.
+    // Loop / reference fields — the user curates them IN THE PANEL. Your job is to help
+    // them think it through in chat. Do NOT emit a proposal for these.
     const specifics =
       field.key === 'whoAffectedImpactCost'
         ? `They are describing who is affected, the impact, the cost, and any evidence. Help them be concrete and keep the affected groups specific (it is the constituency/MP hook). Some of this was carried over from earlier — they only need to sharpen it.`
@@ -187,6 +228,7 @@ ${fieldBlock}
 
 RULES
 - One thing at a time. Finish the CURRENT field before the next one. Never ask about, hint at, or propose the next field — the platform moves on only when the user Saves or Skips, and it tells you the new current field then.
+- NEVER ask the user to transcribe, copy, re-type, or "pop"/"put" their own words into a box or panel. If they have told you something in chat, YOU tidy it into a proposal (valueText or valueObject) — they only review and Save. Asking them to fill the box themselves is the exact anti-pattern this platform exists to remove.
 - React to what the user just said before anything else.
 - chatText is always 1–4 sentences. Never put JSON or field names in chatText.
 - Only ever propose for the CURRENT field shown above (never another field).
@@ -256,10 +298,18 @@ function parseLexOutput(raw: string): LexRawOutput | null {
   if (o.proposal && typeof o.proposal === 'object') {
     const p = o.proposal as Record<string, unknown>
     if (typeof p.fieldKey === 'string') {
+      let valueObject: Record<string, string> | undefined
+      if (p.valueObject && typeof p.valueObject === 'object' && !Array.isArray(p.valueObject)) {
+        valueObject = {}
+        for (const [k, val] of Object.entries(p.valueObject as Record<string, unknown>)) {
+          if (typeof val === 'string' && val.trim()) valueObject[k] = val.trim()
+        }
+      }
       proposal = {
         fieldKey: p.fieldKey,
         valueText: typeof p.valueText === 'string' ? p.valueText : undefined,
         valueList: Array.isArray(p.valueList) ? p.valueList.map(String) : undefined,
+        valueObject,
         rationale: typeof p.rationale === 'string' ? p.rationale : undefined,
       }
     }

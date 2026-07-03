@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   fieldDef,
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
@@ -204,7 +204,7 @@ function StructuredField({
     <div className={`rounded-lg border p-3 ${seeded ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
       <FieldHeader
         field={field}
-        right={seeded ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">carried over — refine</span> : undefined}
+        right={seeded ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex — refine</span> : undefined}
       />
       {terminal ? (
         <div className="ml-6 space-y-1">
@@ -483,6 +483,17 @@ function RootCauseField({ field, causes, busy, api }: { field: CanonicalField; c
           <button disabled={busy} onClick={api.skipRoot}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
         </div>
+      ) : options.length === 1 ? (
+        // A5: a single cause — propose it as root with one-click confirm, don't ask "which".
+        <>
+          <p className="text-[11px] text-zinc-400 mb-1.5">You’ve got a single cause here — confirm it as the root cause.</p>
+          <button disabled={busy} onClick={() => api.setRoot(options[0].id)}
+            className="w-full text-left text-sm px-2.5 py-1.5 rounded-lg border border-green-300 bg-green-50/40 hover:border-green-400 disabled:opacity-40">
+            Confirm “{options[0].cause}” as the root cause
+          </button>
+          <button disabled={busy} onClick={api.skipRoot}
+            className="mt-2 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
+        </>
       ) : (
         <>
           <p className="text-[11px] text-zinc-400 mb-1.5">
@@ -829,8 +840,10 @@ function ActionsField({ field, actions, benchmarks, busy, api }: { field: Canoni
 }
 
 // Panel 2 — Fields. Pure renderer of pages[] (+ child entities). "X of Y" derived here.
+// A2: completed stages collapse into accordions (title + tick + "n of n", "+" to expand).
+// A3: on Save the next active field scrolls to the top of the panel.
 export default function FieldsPanel({
-  pages, causes, policyOptions, actions, benchmarks, busy,
+  pages, causes, policyOptions, actions, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onSkip, onReopen, causesApi, policyApi, actionsApi,
 }: {
   pages: CanonicalState['pages']
@@ -839,6 +852,8 @@ export default function FieldsPanel({
   actions: CanonicalAction[]
   benchmarks: CanonicalBenchmark[]
   busy: boolean
+  /** The active field key — A3 scrolls it into view when it changes. */
+  currentFieldKey?: string | null
   onSubmitBox: (key: string, value: string) => void
   onAcceptStructured: (key: string, value: Record<string, string>) => void
   onSkip: (key: string) => void
@@ -847,15 +862,45 @@ export default function FieldsPanel({
   policyApi: PolicyApi
   actionsApi: ActionsApi
 }) {
+  const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
+  const activeRef = useRef<HTMLDivElement>(null)
+
+  // A3: bring the newly-active box to the top of the panel on Save (currentFieldKey change).
+  useEffect(() => {
+    if (currentFieldKey) activeRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [currentFieldKey])
+
+  const renderField = (f: CanonicalField) => {
+    if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} />
+    if (f.type === 'structured') return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
+    if (f.type === 'loop') {
+      if (f.key === 'policyOptions') return <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
+      if (f.key === 'actions') return <ActionsField field={f} actions={actions} benchmarks={benchmarks} busy={busy} api={actionsApi} />
+      return <CausesField field={f} causes={causes} busy={busy} api={causesApi} />
+    }
+    if (f.type === 'reference') {
+      if (f.key === 'chosenApproach') return <ChosenApproachField field={f} options={policyOptions} busy={busy} api={policyApi} />
+      return <RootCauseField field={f} causes={causes} busy={busy} api={causesApi} />
+    }
+    return <OutputField field={f} busy={busy} onReopen={onReopen} />
+  }
+
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
       {pages.map((page) => {
         const total = page.fields.length
         const done = page.fields.filter((f) => f.status === 'ACCEPTED' || f.status === 'SKIPPED').length
         const isLocked = page.status === 'locked'
+        // A2: a completed stage collapses under its title unless the user expands it.
+        const collapsible = page.status === 'complete'
+        const collapsed = collapsible && !manualExpanded.has(page.key)
+        const toggle = () => setManualExpanded((s) => { const n = new Set(s); n.has(page.key) ? n.delete(page.key) : n.add(page.key); return n })
         return (
           <div key={page.key}>
-            <div className="flex items-center gap-2 mb-2">
+            <div
+              className={`flex items-center gap-2 mb-2 ${collapsible ? 'cursor-pointer' : ''}`}
+              onClick={collapsible ? toggle : undefined}
+            >
               <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
                 page.status === 'complete' ? 'bg-green-500' : page.status === 'active' ? 'bg-blue-500' : 'bg-zinc-200'
               }`} />
@@ -864,24 +909,16 @@ export default function FieldsPanel({
               </span>
               {!isLocked && total > 0 && <span className="text-[11px] text-zinc-400">{done} of {total}</span>}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
+              {collapsible && <span className="text-[11px] text-zinc-400 w-3 text-center">{collapsed ? '+' : '−'}</span>}
             </div>
 
-            {!isLocked && (
+            {!isLocked && !collapsed && (
               <div className="space-y-2">
-                {page.fields.map((f) => {
-                  if (f.type === 'narrative') return <BoxField key={f.key} field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} />
-                  if (f.type === 'structured') return <StructuredField key={f.key} field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
-                  if (f.type === 'loop') {
-                    if (f.key === 'policyOptions') return <PolicyOptionsField key={f.key} field={f} options={policyOptions} busy={busy} api={policyApi} />
-                    if (f.key === 'actions') return <ActionsField key={f.key} field={f} actions={actions} benchmarks={benchmarks} busy={busy} api={actionsApi} />
-                    return <CausesField key={f.key} field={f} causes={causes} busy={busy} api={causesApi} />
-                  }
-                  if (f.type === 'reference') {
-                    if (f.key === 'chosenApproach') return <ChosenApproachField key={f.key} field={f} options={policyOptions} busy={busy} api={policyApi} />
-                    return <RootCauseField key={f.key} field={f} causes={causes} busy={busy} api={causesApi} />
-                  }
-                  return <OutputField key={f.key} field={f} busy={busy} onReopen={onReopen} />
-                })}
+                {page.fields.map((f) => (
+                  <div key={f.key} ref={f.key === currentFieldKey ? activeRef : undefined}>
+                    {renderField(f)}
+                  </div>
+                ))}
               </div>
             )}
           </div>

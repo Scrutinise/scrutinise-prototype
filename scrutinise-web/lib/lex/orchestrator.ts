@@ -157,12 +157,26 @@ function fallbackChat(defKey: string): string {
 
 // ── Steps ────────────────────────────────────────────────────────────────────
 
+/** The effective question for a field given current state (A5: a single-cause root
+ *  step must not ask "which is the main driver" — there's nothing to choose between). */
+function questionFor(def: FieldDef, state: CanonicalState): string {
+  if (def.key === 'rootCause') {
+    const material = state.diagnosisCauses.filter((c) => c.classification === 'MATERIAL')
+    const candidates = material.length ? material : state.diagnosisCauses
+    if (candidates.length === 1) {
+      return `There's a single cause on the table — I'll set it as the root cause; just confirm it in the panel on the right.`
+    }
+  }
+  return def.question ?? 'What would you like to add next?'
+}
+
 /** Ask the current box/panel field's question (narrative, structured, loop, reference). */
 async function askQuestion(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
-  const fallback = def.question ?? 'What would you like to add next?'
+  const question = questionFor(def, state)
+  const fallback = question
   try {
     const prompt = await buildPrompt(ideaId, userId, state, def)
-    const directive = `[The user just completed the previous step. In ONE short sentence acknowledge it, then ask this in your own words: "${def.question}". Do not propose anything.]`
+    const directive = `[The user just completed the previous step. In ONE short sentence acknowledge it, then ask this in your own words: "${question}". Do not propose anything, and do not repeat a question you have already asked.]`
     const lex = await runLexTurn(prompt, directive, await chatHistory(ideaId))
     if (lex.extracted && Object.keys(lex.extracted).length) {
       await storeExtracted(ideaId, userId, lex.extracted).catch(() => {})
@@ -219,21 +233,50 @@ async function seedStructured(ideaId: string, userId: string, def: FieldDef, sta
 /** The causes loop: pre-seed candidates from the corpus (CAUSE_SEEDING), then invite
  *  curation. Set AWAITING so the field stays current AND the candidates aren't re-seeded. */
 async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  // A4: instrument every stage so the [lex-diag] log reveals WHERE seeding stopped
+  // (search fired? results? snippets? generator empty/error?). Bytes before hypotheses.
+  const diag: Record<string, unknown> = { challengeLen: 0, keywordCount: 0, results: 0, snippets: 0, generated: 0, created: 0, fallbackUsed: false }
   try {
     const challenge = (acceptedValue(state, 'challenge') as string) ?? ''
     const keywords = (acceptedValue(state, 'keywords') as string[] | null) ?? []
     const context = [challenge, acceptedValue(state, 'ideaNarrative')].filter(Boolean).join(' ').slice(0, 500)
-    const searchTerms = keywords.length ? keywords : challenge.split(/\s+/).slice(0, 8)
+    const searchTerms = keywords.length ? keywords : challenge.split(/\s+/).filter(Boolean).slice(0, 8)
+    diag.challengeLen = challenge.length
+    diag.keywordCount = searchTerms.length
+
     const { results } = await runSearch({ keywords: searchTerms, intent: 'CAUSE_SEEDING', ideaContext: context, limit: 10 })
-    const snippets = results
-      .filter((r) => r.type === 'DEBATE' || r.type === 'COMMITTEE' || r.type === 'PRIMARY_LEGISLATION')
-      .map((r) => `${r.citation}: ${r.snippet}`)
-      .slice(0, 8)
-    const candidates = await generateCauseCandidates({ challenge, context, snippets })
-    if (candidates.length) await createCauses(ideaId, candidates, 'LEX_CORPUS')
+    diag.results = results.length
+    const relevant = results.filter((r) => r.type === 'DEBATE' || r.type === 'COMMITTEE' || r.type === 'PRIMARY_LEGISLATION')
+    const snippets = relevant.map((r) => `${r.citation}: ${r.snippet}`).slice(0, 8)
+    diag.snippets = snippets.length
+
+    // Generate — with ONE retry (the generator is resilient→[] and Gemini 429/503 are
+    // common transient causes of "no candidates surfaced").
+    let candidates = await generateCauseCandidates({ challenge, context, snippets })
+    if (!candidates.length) candidates = await generateCauseCandidates({ challenge, context, snippets })
+    diag.generated = candidates.length
+
+    // Deterministic corpus-grounded fallback: if the generator yields nothing but the
+    // corpus DID return relevant material, seed a couple of candidates pointing at the
+    // sources so the acceptance ("candidates seeded from the corpus") always holds. The
+    // user edits/keeps/deletes them like any seed.
+    if (!candidates.length && relevant.length) {
+      candidates = relevant.slice(0, 3).map((r) => ({
+        cause: `A factor examined in ${r.citation}`,
+        whyPersisted: undefined,
+        evidence: r.snippet.slice(0, 240),
+      }))
+      diag.fallbackUsed = true
+    }
+
+    if (candidates.length) {
+      await createCauses(ideaId, candidates, 'LEX_CORPUS')
+      diag.created = candidates.length
+    }
   } catch (err) {
-    console.warn('[orchestrator] cause seeding failed (user can add their own):', err instanceof Error ? err.message : err)
+    diag.error = err instanceof Error ? err.message : String(err)
   }
+  console.log('[lex-diag] cause seeding', diag)
   // Mark the loop AWAITING so it stays current while the user curates (and isn't re-seeded).
   await setProposal(ideaId, def.key, { value: '' })
   return askQuestion(ideaId, userId, def, state)
@@ -319,6 +362,14 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
   } else {
     // narrative box and reference (rootCause / chosenApproach): just ask the question.
     text = await askQuestion(ideaId, userId, def, state)
+  }
+
+  // A5: dedupe — if this bubble is identical to the last thing Lex said, don't repeat it.
+  const history = await chatHistory(ideaId)
+  const last = history.length ? history[history.length - 1] : null
+  if (last && last.role === 'lex' && last.content.trim() === text.trim()) {
+    console.log('[lex-diag] orchestrator suppressed duplicate bubble', { field: def.key })
+    return { messages: [] }
   }
 
   await pushLex(ideaId, text)
