@@ -15,14 +15,15 @@ import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { FAQ_MARKDOWN } from '@/lib/faq-content'
 
-// Verbatim tour copy (Sprint 1.3 brief).
-const TOUR_COPY =
-  "Welcome to Scrutinise. Three panels work together. Chat (left): talk to me, Lex — I'll help " +
-  'you shape each part of your proposal. Your proposal (middle): the proposal as you build it; ' +
-  'answer my questions in the chat, or type straight into the boxes — each saves as you go. ' +
-  "Legislation (right): once we have enough to search on, I'll pull the most relevant law, debates " +
-  'and committee work and put it here. We work through four stages — diagnosis, guiding policy, and ' +
-  'coherent actions. Take it at your own pace.'
+// Verbatim tour copy (Sprint 1.4 brief). The per-panel detail lives in the boxes
+// below, so the intro no longer repeats it.
+const TOUR_INTRO =
+  'When editing your idea you will see three panels which all work together. You can:'
+
+const TOUR_CLOSING =
+  "To develop your idea we'll work through four stages — Basic idea, Diagnosis, Guiding policy, and " +
+  'Coherent actions. Along the way we’ll do research, build up evidence and steadily build a strong ' +
+  'case for your preferred actions to present to Parliament. Take it at your own pace.'
 
 // react-markdown styling map (Tailwind v4 has no typography plugin → no `prose`).
 const MD: Components = {
@@ -87,9 +88,10 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {view === 'tour' ? (
             <div>
-              <p className="text-sm text-zinc-700 leading-relaxed mb-4">{TOUR_COPY}</p>
+              <p className="text-base font-semibold text-zinc-900 mb-1">Welcome to Scrutinise.</p>
+              <p className="text-sm text-zinc-700 leading-relaxed mb-4">{TOUR_INTRO}</p>
 
-              <div className="space-y-2.5 mb-2">
+              <div className="space-y-2.5 mb-4">
                 {PANELS.map((p, i) => (
                   <div key={p.name} className="flex gap-3 rounded-xl border border-zinc-200 p-3">
                     <div className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
@@ -104,6 +106,8 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
                   </div>
                 ))}
               </div>
+
+              <p className="text-sm text-zinc-700 leading-relaxed">{TOUR_CLOSING}</p>
             </div>
           ) : (
             <ReactMarkdown components={MD}>{FAQ_MARKDOWN}</ReactMarkdown>
