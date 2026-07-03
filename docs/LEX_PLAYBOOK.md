@@ -347,5 +347,15 @@ deflator series 2015–2026). Each `CostRange` may carry a `priceYear` (the benc
 `computeCostSummary` uprates every figure from its price year to the latest deflator year (ratio of indices)
 before totalling, and states the price base in the summary. **When Phase 2 lands** (COSTING_SCOPE §7): replace
 the placeholder deflator rows with the real ONS series, add a GDP-per-head series for VPF (`uprateMethod =
-GDP_PER_HEAD` currently falls back to the deflator), hand-seed ~50 Tier-1 benchmarks (replacing the `seed-*`
-placeholders), and add the optimism-bias uplift + EANDCB ±£5m RPC-scrutiny flag. The schema is ready for all of it.
+GDP_PER_HEAD` currently falls back to the deflator), and add the optimism-bias uplift + EANDCB ±£5m
+RPC-scrutiny flag. The schema is ready for all of it.
+
+**Phase 2a s1 — verified benchmarks are IN, placeholders are OUT.** `docs/cost-benchmarks-seed-v1.json` is the
+benchmark source of truth (principle: verified against a primary source or it stays in `_pending`). Loader:
+`scrutinise-web/scripts/load-cost-benchmarks.ts` (dry-run default, `--apply`; stable `v1-*` ids, upsert,
+deletes `seed-*` placeholders — idempotent). Current DB set: v1-qaly / v1-wellby / v1-vpf / v1-homicide /
+v1-crime-total. Appraisal **parameters** live in `lib/lex/costing-params.ts` (mirror of the JSON's
+`parameters` — edit the JSON first): STPR + EANDCB threshold are VERIFIED; the health discount rate and
+optimism-bias uplifts are **TRAINING_RECALL (`verified:false`) and must not drive user-facing numbers until
+Phase 2b verifies them**. The JSON's `_pending` array is the Phase-2b extraction backlog — extend the file +
+re-run the loader to add rows; never hand-INSERT into `CostBenchmark`.

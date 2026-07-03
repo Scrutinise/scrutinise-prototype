@@ -83,6 +83,15 @@ aggregating (verified: £1m@2016 → £1.33m@2026). Additive SQL applied to Neon
 Phase-2 (per COSTING_SCOPE §7) — real ONS deflator + GDP-per-head series, ~50 Tier-1 benchmarks, optimism-bias
 uplift, EANDCB RPC-scrutiny flag — is scaffolded and ready. See CHANGE_LOG "COSTING_SCOPE §9".
 
+**COSTING Phase 2a s1 — verified benchmark seed LOADED (placeholders OUT).** `docs/cost-benchmarks-seed-v1.json`
+integrated per its loader_note: 5 verified rows in (`v1-qaly` £70k, `v1-wellby` £10–16k, `v1-vpf` £2.0m
+GDP_PER_HEAD + contested note, `v1-homicide` £3.2m, `v1-crime-total` £59bn context anchor), all 10 `seed-*`
+placeholders deleted (the un-replaced ones are in `_pending` — no unverified numbers in the DB). Loader
+`scrutinise-web/scripts/load-cost-benchmarks.ts` (idempotent, `--apply` run on Neon + verified); appraisal
+parameters in `lib/lex/costing-params.ts` (STPR/EANDCB VERIFIED; health rate + optimism-bias TRAINING_RECALL,
+gated `verified:false`). `_pending` in the JSON = the Phase-2b extraction backlog. See CHANGE_LOG
+"COSTING Phase 2a s1".
+
 - **Sprint 1.4 (UX polish, frontend).** Prominent coloured **pill** "How this works" centred above the chat
   column (was a tiny link); **auto-opens on a user's first idea**; Lex's first-message aside → "For a quick
   introduction if you don't know what to do, click 'How this works' above."; modal copy rewritten (Welcome +

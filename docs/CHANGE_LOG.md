@@ -4,6 +4,34 @@
 
 ---
 
+## LEX REBUILD — COSTING Phase 2a s1: verified benchmark seed loaded (placeholders OUT) (2026-07-03 22:39 UTC)
+
+**Preview only — NOT promoted.** Integrates **`docs/cost-benchmarks-seed-v1.json`** (renamed from
+"Cost benchmarks seed v1 · JSON.json" to its own `_meta.file` name) per its loader_note. File principle:
+every value verified against a primary source, or it goes in `_pending` — **no unverified numbers in the DB**.
+`tsc` clean (react-markdown only). **Applied to Neon** and verified row-by-row.
+
+- **5 verified `CostBenchmark` rows IN** (stable ids, upserted by `scripts/load-cost-benchmarks.ts` —
+  dry-run default, `--apply`): `v1-qaly` £70k (2020 prices, Green Book — NOT the NICE £20–30k threshold, per
+  the file's note), `v1-wellby` £10–16k (2019, HMT Wellbeing Guidance), `v1-vpf` £2.0m (2018, **GDP_PER_HEAD**
+  uprating, OFFICIAL_DATED + contested-evidence note), `v1-homicide` £3.2m (2015, HO horr99),
+  `v1-crime-total` £59bn/yr (context anchor, not a unit cost).
+- **All 10 Sprint-3 `seed-*` placeholder rows DELETED** — the un-replaced ones (carbon, travel time, admin
+  burden, service unit costs…) are all in `_pending`, so the "no unverified numbers" principle now holds in
+  the database. (`CostRange.benchmarkId` is a soft string ref — any range already stamped keeps its
+  values/basis; only the picker's offer set changes.)
+- **`parameters` → `lib/lex/costing-params.ts`** (mirror of the JSON — edit the JSON first): STPR 3.5%
+  (VERIFIED; under 2026 HMT review), EANDCB ±£5m RPC-scrutiny threshold (VERIFIED), health discount rate
+  1.5% + optimism-bias uplifts (**TRAINING_RECALL — `verified:false`, hard rule: must NOT drive a user-facing
+  number until Phase 2b verifies them**).
+- **`_pending` stays in the JSON in docs** as the Phase-2b extraction backlog (TAG A4.1.1 live VPF, horr99
+  Table 1 per-offence costs, GMCA top-30 (licence check first), PSSRU core set, ASHE wages, DESNZ carbon,
+  business population counts, real GDP-deflator series).
+- Files: `docs/cost-benchmarks-seed-v1.json` (renamed in), `scrutinise-web/scripts/load-cost-benchmarks.ts`
+  (new), `scrutinise-web/lib/lex/costing-params.ts` (new).
+
+---
+
 ## SEARCH — type-taxonomy display fix (SEARCH_STRATEGY §10.2) (2026-07-03 22:14 UTC)
 
 Live test: "Revoke MiFID II" shows no legislation answer despite retained MiFIR / SI 2017/701 being

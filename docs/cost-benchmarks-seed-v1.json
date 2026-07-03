@@ -1,0 +1,81 @@
+{
+  "_meta": {
+    "file": "cost-benchmarks-seed-v1.json",
+    "phase": "2a session 1",
+    "date": "2026-07-03",
+    "principle": "Every value verified against a primary source this session, or it is NOT a row — it goes in _pending. No unverified numbers ever enter the database.",
+    "loader_note": "CC: load `benchmarks` into CostBenchmark (replacing placeholder rows), `parameters` into config or a parameters table, keep `_pending` visible in docs as the extraction backlog."
+  },
+
+  "benchmarks": [
+    {
+      "domain": "health", "category": "HEALTH",
+      "metric": "Value of one QALY (quality-adjusted life year — one year of full health)",
+      "unit": "GBP per QALY", "low": 70000, "high": 70000, "priceYear": 2020,
+      "region": "UK", "uprateMethod": "GDP_DEFLATOR", "confidence": "OFFICIAL_CURRENT",
+      "source": "HM Treasury Green Book (2022 clarification, carried in DHSC supplementary health appraisal guidance)",
+      "sourceUrl": "https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+      "year": 2022, "method": "Willingness-to-pay value for cross-government appraisal. NOTE: distinct from the NICE cost-effectiveness threshold (~£20–30k/QALY), which is a different instrument for a different decision.",
+      "notes": "Price year stated as 20/21 in GB2022."
+    },
+    {
+      "domain": "wellbeing", "category": "WELLBEING",
+      "metric": "Value of one WELLBY (a 1-point change in life satisfaction, 0–10 scale, for one person for one year)",
+      "unit": "GBP per WELLBY", "low": 10000, "high": 16000, "priceYear": 2019,
+      "region": "UK", "uprateMethod": "GDP_DEFLATOR", "confidence": "OFFICIAL_CURRENT",
+      "source": "HM Treasury, Wellbeing Guidance for Appraisal: Supplementary Green Book Guidance (Jul 2021)",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1005388/Wellbeing_guidance_for_appraisal_-_supplementary_Green_Book_guidance.pdf",
+      "year": 2021, "method": "Central £13,000; low £10,000, high £16,000. Losses and gains valued equally.",
+      "notes": "central=13000 (store in method/notes since schema carries low/high)."
+    },
+    {
+      "domain": "life-safety", "category": "LIFE_SAFETY",
+      "metric": "Value of a prevented fatality (VPF)",
+      "unit": "GBP per prevented fatality", "low": 2000000, "high": 2000000, "priceYear": 2018,
+      "region": "UK", "uprateMethod": "GDP_PER_HEAD", "confidence": "OFFICIAL_DATED",
+      "source": "HM Treasury / DfT (Carthy et al. willingness-to-pay lineage); live value published in DfT TAG Data Book table A4.1.1 'average value of accident prevention per casualty'",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2018, "method": "Stated-preference (willingness-to-pay), uprated annually by GDP per head.",
+      "notes": "CONTESTED: published academic critiques of the 1999 evidence base (Thomas & Vaughan 2015) — surface this to users. Phase 2b: pin the current TAG A4.1.1 figure and update priceYear."
+    },
+    {
+      "domain": "crime", "category": "CRIME",
+      "metric": "Unit cost of one homicide (total economic and social cost)",
+      "unit": "GBP per offence", "low": 3200000, "high": 3200000, "priceYear": 2015,
+      "region": "England and Wales", "uprateMethod": "GDP_DEFLATOR", "confidence": "OFFICIAL_CURRENT",
+      "source": "Home Office, The economic and social costs of crime (2nd ed., Research Report 99, 2018)",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/media/60094b86d3bf7f2ab1a1af96/the-economic-and-social-costs-of-crime-horr99.pdf",
+      "year": 2018, "method": "Costs in anticipation + as consequence + in response; highest unit cost of any offence.",
+      "notes": "Full per-offence table (rape, violence with injury, burglary, robbery, vehicle theft…) is Phase 2b extraction from horr99 Table 1 + the newer 'Economic and social costs of crime 2019 to 2020' publication."
+    },
+    {
+      "domain": "crime", "category": "CRIME",
+      "metric": "Total cost of crime, England & Wales (context figure: individuals + businesses)",
+      "unit": "GBP per year (2015/16 volumes)", "low": 59000000000, "high": 59000000000, "priceYear": 2015,
+      "region": "England and Wales", "uprateMethod": "GDP_DEFLATOR", "confidence": "OFFICIAL_CURRENT",
+      "source": "Home Office horr99: ~£50bn individuals + ~£9bn businesses",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/media/60094b86d3bf7f2ab1a1af96/the-economic-and-social-costs-of-crime-horr99.pdf",
+      "year": 2018, "method": "Context/scale anchor, not a unit cost — useful for sanity-checking impact claims.",
+      "notes": "Violent crime ≈ three-quarters of individual-crime costs from one-third of offences."
+    }
+  ],
+
+  "parameters": {
+    "stpr_discount_rate": { "value": 0.035, "unit": "real, per year, first 30 years", "source": "HM Treasury Green Book", "status": "VERIFIED; under formal HMT review announced 2026 — re-check on review conclusion" },
+    "eandcb_rpc_scrutiny_threshold": { "value": 5000000, "unit": "GBP per year, +/-", "source": "Better Regulation Framework", "status": "VERIFIED; measures above ±£5m EANDCB require independent RPC scrutiny" },
+    "health_discount_rate": { "value": 0.015, "unit": "real, per year (risk-to-life/health values)", "source": "Green Book", "status": "TRAINING-RECALL — VERIFY in Phase 2b before use" },
+    "optimism_bias_uplifts": { "value": "standard buildings 24% / non-standard buildings 51% / standard civil 44% / non-standard civil 66% / equipment & development 200% (upper-bound capex)", "source": "Green Book supplementary guidance on optimism bias", "status": "TRAINING-RECALL — VERIFY in Phase 2b before use; apply to implementationCost" }
+  },
+
+  "_pending": [
+    { "target": "Current VPF / casualty prevention values", "where": "DfT TAG Data Book table A4.1.1 (xlsx)", "why": "Pin live figure + priceYear" },
+    { "target": "Value of travel time (working / non-working, per hour)", "where": "TAG Data Book A1.3", "why": "Time-saving valuations for admin-burden and service-change proposals" },
+    { "target": "Full per-offence crime unit costs (rape, VWI, robbery, burglary, vehicle theft, fraud…)", "where": "horr99 Table 1 + 'Economic and social costs of crime 2019 to 2020' (gov.uk)", "why": "Most-used CRIME rows; the 2019/20 edition may supersede 2015/16 values" },
+    { "target": "GMCA Unit Cost Database top ~30 entries (crime, education, employment, housing, health, social services)", "where": "GMCA Research (Nov 2025 edition, 1,100+ entries)", "why": "Broadest social-outcome coverage; CHECK LICENCE before wholesale ingest (not Crown copyright)" },
+    { "target": "PSSRU unit costs core set (GP consultation, A&E attendance, hospital bed-day, social-worker hour, mental-health contacts)", "where": "PSSRU 'Unit Costs of Health and Social Care' (annual)", "why": "Enforcement/implementation costing of health-touching proposals" },
+    { "target": "ONS ASHE median hourly earnings (by occupation group)", "where": "ONS ASHE latest", "why": "Wage input to Standard Cost Model admin-burden calc (time × wage × frequency × population)" },
+    { "target": "Carbon values (£/tCO2e, traded/non-traded, central/low/high)", "where": "DESNZ carbon valuation series (Green Book-referenced)", "why": "Environmental category; any proposal touching energy/transport" },
+    { "target": "Business population counts by sector/size", "where": "ONS/DBT Business Population Estimates + IDBR", "why": "The N in every regulatory-friction calculation" },
+    { "target": "GDP deflator series", "where": "HMT GDP deflators (quarterly publication)", "why": "Loads DeflatorSeries table; enables all uprating" }
+  ]
+}
