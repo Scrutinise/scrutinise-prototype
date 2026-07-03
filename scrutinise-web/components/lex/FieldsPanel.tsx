@@ -721,7 +721,11 @@ function CostRangeEditor({
           onChange={(e) => {
             const b = benchmarks.find((x) => x.id === e.target.value)
             if (!b) { set({ benchmarkId: null }); return }
-            onChange({ low: b.low, high: b.high, unit: b.unit, basis: `${b.metric} — ${b.source}`, benchmarkId: b.id, userOverride: false })
+            onChange({
+              low: b.low, high: b.high, unit: b.unit,
+              basis: `${b.metric} — ${b.source}${b.priceYear ? ` (${b.priceYear} prices)` : ''}`,
+              benchmarkId: b.id, userOverride: false, priceYear: b.priceYear,
+            })
           }}
           className="flex-1 text-xs p-1 rounded border border-zinc-200 bg-white focus:outline-none focus:border-blue-400">
           <option value="">use a benchmark…</option>

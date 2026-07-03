@@ -172,6 +172,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
           basis: typeof r.basis === 'string' ? r.basis : null,
           benchmarkId: typeof r.benchmarkId === 'string' ? r.benchmarkId : null,
           userOverride: r.userOverride === true,
+          priceYear: num(r.priceYear),
         }
       : null
   }
@@ -198,6 +199,11 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       low: b.low != null ? Number(b.low) : null,
       high: b.high != null ? Number(b.high) : null,
       source: b.source, sourceUrl: b.sourceUrl, year: b.year, method: b.method, notes: b.notes,
+      priceYear: b.priceYear ?? null,
+      category: (b.category as string | null) ?? null,
+      region: b.region ?? null,
+      uprateMethod: (b.uprateMethod as string | null) ?? null,
+      confidence: (b.confidence as string | null) ?? null,
     }))
   }
 

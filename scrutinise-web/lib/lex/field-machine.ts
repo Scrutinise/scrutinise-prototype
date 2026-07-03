@@ -602,7 +602,7 @@ export async function choosePolicyApproach(ideaId: string, userId: string, optio
 // ── Page 4 (Coherent Actions) — LexCoherentAction records + costing (§18) ─────
 type CostRangeInput = {
   low?: number | null; high?: number | null; unit?: string | null; basis?: string | null
-  benchmarkId?: string | null; userOverride?: boolean
+  benchmarkId?: string | null; userOverride?: boolean; priceYear?: number | null
 } | null
 export interface ActionInput {
   practicalStep: string
@@ -694,20 +694,38 @@ export async function listBenchmarks() {
 }
 
 /** Aggregate the per-action §18.2 costs into totals + a plain-English summary set
- *  against the Page 2 problem cost. Every number stays a RANGE (low/high). */
+ *  against the Page 2 problem cost. Every number stays a RANGE (low/high), and each
+ *  figure is UPRATED to a common price year via the GDP deflator (COSTING_SCOPE §3)
+ *  before totalling, so a 2016 value and a 2024 value can be summed honestly. */
 export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
-  const actions = await prisma.lexCoherentAction.findMany({
-    where: { ideaId },
-    select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
-  })
+  const [actions, deflator] = await Promise.all([
+    prisma.lexCoherentAction.findMany({
+      where: { ideaId },
+      select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
+    }),
+    prisma.deflatorSeries.findMany({ select: { year: true, index: true } }),
+  ])
+
+  // Uprate a figure from its price year to the latest year in the deflator series.
+  const idx = new Map(deflator.map((d) => [d.year, d.index]))
+  const targetYear = deflator.length ? Math.max(...deflator.map((d) => d.year)) : null
+  const uprate = (value: number, fromYear?: number | null): number => {
+    if (targetYear == null || fromYear == null) return value
+    const from = idx.get(fromYear), to = idx.get(targetYear)
+    if (!from || !to) return value
+    return value * (to / from)
+  }
+
   const sum = (key: 'implementationCost' | 'enforcementCost' | 'regulatoryFriction') => {
     let low = 0, high = 0, any = false
     for (const a of actions) {
-      const r = a[key] as { low?: number; high?: number } | null
+      const r = a[key] as { low?: number; high?: number; priceYear?: number | null } | null
       if (r && (typeof r.low === 'number' || typeof r.high === 'number')) {
         any = true
-        low += typeof r.low === 'number' ? r.low : 0
-        high += typeof r.high === 'number' ? r.high : (typeof r.low === 'number' ? r.low : 0)
+        const lo = typeof r.low === 'number' ? r.low : 0
+        const hi = typeof r.high === 'number' ? r.high : lo
+        low += uprate(lo, r.priceYear)
+        high += uprate(hi, r.priceYear)
       }
     }
     return any ? { low, high } : null
@@ -725,11 +743,12 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
   const ongoing = [enf ? `${gbp(enf)}/yr enforcement` : '', fric ? `${gbp(fric)}/yr compliance friction` : ''].filter(Boolean).join(' + ')
   const parts = [oneOff, ongoing ? `${ongoing} ongoing` : ''].filter(Boolean)
   const planCost = parts.length ? parts.join('; ') : 'not yet estimated'
+  const priceBase = targetYear ? ` (all figures uprated to ${targetYear} prices)` : ''
   const summary =
     `The problem costs ${problemCost ? `~${problemCost}` : '(not yet quantified on Page 2)'}. ` +
-    `This plan costs ${planCost}. All figures are ranges with a stated basis — challenge any of them.`
+    `This plan costs ${planCost}${priceBase}. All figures are ranges with a stated basis — challenge any of them.`
 
-  const totals = { implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric, problemCost }
+  const totals = { implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric, problemCost, priceYear: targetYear }
   return { summary, totals }
 }
 

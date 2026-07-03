@@ -22,6 +22,7 @@ const CostRange = z.object({
   basis: z.string().trim().max(2000).optional().nullable(),
   benchmarkId: z.string().max(60).optional().nullable(),
   userOverride: z.boolean().optional(),
+  priceYear: z.number().int().min(1900).max(2100).optional().nullable(),
 }).nullable()
 
 const Benefits = z.object({

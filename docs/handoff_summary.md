@@ -53,6 +53,13 @@ copy reworded for retained-EU law (+ retrieval question flagged to the search wo
 **Full kernel smoke-tested end-to-end on Neon on the deterministic no-Lex fallback path
 (Orientation→Diagnosis→Guiding Policy→Coherent Actions, 16/16 assertions pass; throwaway deleted).**
 
+**COSTING_SCOPE §9 (schema brief) also executed** (extends Sprint 3 Task 5): `CostBenchmark` gains
+`priceYear`/`category`/`region`/`uprateMethod`/`confidence`; new `DeflatorSeries { year, index }` table (seeded
+illustrative 2015–2026 placeholder); the estimator now UPRATES each cost to the latest deflator year before
+aggregating (verified: £1m@2016 → £1.33m@2026). Additive SQL applied to Neon (`prisma/lex_costing_deltas.sql`).
+Phase-2 (per COSTING_SCOPE §7) — real ONS deflator + GDP-per-head series, ~50 Tier-1 benchmarks, optimism-bias
+uplift, EANDCB RPC-scrutiny flag — is scaffolded and ready. See CHANGE_LOG "COSTING_SCOPE §9".
+
 - **Sprint 1.4 (UX polish, frontend).** Prominent coloured **pill** "How this works" centred above the chat
   column (was a tiny link); **auto-opens on a user's first idea**; Lex's first-message aside → "For a quick
   introduction if you don't know what to do, click 'How this works' above."; modal copy rewritten (Welcome +

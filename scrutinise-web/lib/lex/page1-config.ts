@@ -248,7 +248,8 @@ export interface CanonicalPolicyOption {
   source: 'USER' | 'LEX'
 }
 
-/** A §18.2 cost range-with-basis. */
+/** A §18.2 cost range-with-basis. `priceYear` (COSTING_SCOPE §3) lets the estimator
+ *  uprate the figure to a common price base before aggregating. */
 export interface CostRange {
   low: number | null
   high: number | null
@@ -256,6 +257,7 @@ export interface CostRange {
   basis: string | null
   benchmarkId?: string | null
   userOverride?: boolean
+  priceYear?: number | null
 }
 
 /** A Page 4 coherent action (§18.1), as the panel renders it. */
@@ -273,7 +275,7 @@ export interface CanonicalAction {
   source: 'USER' | 'LEX'
 }
 
-/** A costing benchmark (§18.3) — a shared, sourced default value. */
+/** A costing benchmark (§18.3 + COSTING_SCOPE §3) — a shared, sourced default value. */
 export interface CanonicalBenchmark {
   id: string
   domain: string
@@ -286,6 +288,11 @@ export interface CanonicalBenchmark {
   year: number | null
   method: string | null
   notes: string | null
+  priceYear: number | null
+  category: string | null
+  region: string | null
+  uprateMethod: string | null
+  confidence: string | null
 }
 
 export interface CanonicalState {

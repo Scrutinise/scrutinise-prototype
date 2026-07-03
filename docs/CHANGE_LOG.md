@@ -4,6 +4,35 @@
 
 ---
 
+## LEX REBUILD — COSTING_SCOPE §9: benchmark schema deltas + estimator uprating (2026-07-03 18:17 UTC)
+
+**Preview only — NOT promoted.** Executes `docs/COSTING_SCOPE.md §9` (the Phase-1 schema brief) as an extension
+of Sprint 3 Task 5. `tsc` clean (react-markdown only). Additive schema **applied to Neon**
+(`prisma/lex_costing_deltas.sql`, idempotent). Uprating verified with a throwaway check: £1,000,000 at 2016
+prices → £1,333,333 at 2026 prices (×136/102), summary states the price base.
+
+- **§3 deltas on `CostBenchmark`:** `priceYear` (prices distinct from publication `year`), `category`
+  (`BenchmarkCategory` enum — HEALTH/LIFE_SAFETY/WELLBEING/TIME/CRIME/ADMIN_BURDEN/EMPLOYMENT_ECONOMY/HOUSING/
+  EDUCATION/ENVIRONMENT/SERVICE_UNIT_COST), `region` (default 'UK'), `uprateMethod` (`UprateMethod` —
+  GDP_DEFLATOR/GDP_PER_HEAD/NONE), `confidence` (`BenchmarkConfidence` — OFFICIAL_CURRENT/OFFICIAL_DATED/
+  ACADEMIC/SECTOR). The 10 placeholder rows backfilled with real price years + categories (e.g. QALY 2020/HEALTH,
+  VPF 2016/LIFE_SAFETY/GDP_PER_HEAD, carbon 2023/ENVIRONMENT). `IdeaAssumption` unchanged (as §3 states).
+- **New `DeflatorSeries { year, index }` table** — the GDP deflator as DATA so uprating is a lookup, not a
+  hardcode. Seeded with an ILLUSTRATIVE placeholder 2015–2026 series (2015=100, ~2%/yr) so the shell is testable
+  before the Phase-2 ingest of the real ONS series (only ratios matter).
+- **Estimator uprates before aggregating.** `CostRange` gains `priceYear`; the benchmark picker stamps it from
+  the chosen benchmark; `computeCostSummary` uprates every per-action cost from its price year to the latest
+  deflator year via the deflator ratio, then totals, and the summary notes "(all figures uprated to N prices)".
+  Falls back to no-op when a figure has no price year or the series lacks the year (graceful before Phase 2).
+- **Files:** `prisma/schema.prisma` + `prisma/lex_costing_deltas.sql` (new); `lib/lex/page1-config.ts`
+  (`CostRange.priceYear`, `CanonicalBenchmark` +5 fields), `state.ts`, `field-machine.ts` (uprating),
+  `components/lex/FieldsPanel.tsx` (picker sets priceYear), `app/api/ideas/[id]/actions/route.ts` (zod).
+- **Deferred to Phase 2 (per COSTING_SCOPE §7):** real ONS deflator series + GDP-per-head series (VPF); ~50
+  Tier-1 benchmark rows (Green Book/GMCA/PSSRU); optimism-bias uplift; EANDCB ±£5m RPC-scrutiny flag; NPV
+  discounting. The schema + uprating pipeline are ready to receive them.
+
+---
+
 ## LEX REBUILD — Sprint 3-A: amendments from Sprint 2 preview validation (§19-A) (2026-07-03 17:27 UTC)
 
 **Preview only — NOT promoted.** Executes `LEX_DESIGN_ADDENDUM_16-19.md §19-A` (takes precedence over §19

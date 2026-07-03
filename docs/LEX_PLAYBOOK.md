@@ -337,3 +337,15 @@ relevant rows). If a preview shows no seeded causes, read that log first — it 
 `ChatPanel` groups by stage and collapses non-active stages. `FieldsPanel` collapses completed pages into
 accordions and scrolls the `currentFieldKey` box to the top on Save. These are pure-render concerns — no canonical
 state involved; resumed history without stage tags simply inherits the previous group.
+
+### 11b. Costing engine — COSTING_SCOPE §9 deltas
+
+`CostBenchmark` carries the §3 deltas (`priceYear`, `category`, `region`, `uprateMethod`, `confidence`), and a
+new **`DeflatorSeries { year, index }`** table holds the GDP deflator as data. Schema in
+`prisma/lex_costing_deltas.sql` (additive, idempotent; **applied to Neon**; seeds an ILLUSTRATIVE placeholder
+deflator series 2015–2026). Each `CostRange` may carry a `priceYear` (the benchmark picker stamps it);
+`computeCostSummary` uprates every figure from its price year to the latest deflator year (ratio of indices)
+before totalling, and states the price base in the summary. **When Phase 2 lands** (COSTING_SCOPE §7): replace
+the placeholder deflator rows with the real ONS series, add a GDP-per-head series for VPF (`uprateMethod =
+GDP_PER_HEAD` currently falls back to the deflator), hand-seed ~50 Tier-1 benchmarks (replacing the `seed-*`
+placeholders), and add the optimism-bias uplift + EANDCB ±£5m RPC-scrutiny flag. The schema is ready for all of it.

@@ -1458,6 +1458,37 @@ model LexCoherentAction {
 // The costing engine (design §18.3). CostBenchmark = the shared, sourced default
 // values (Green Book, QALY, value of a prevented fatality, admin-burden unit costs …).
 // Populated by the Phase-2 research programme; hand-seeded placeholders for now.
+// Green Book category (COSTING_SCOPE §3) — the government's own valuation families.
+enum BenchmarkCategory {
+  HEALTH
+  LIFE_SAFETY
+  WELLBEING
+  TIME
+  CRIME
+  ADMIN_BURDEN
+  EMPLOYMENT_ECONOMY
+  HOUSING
+  EDUCATION
+  ENVIRONMENT
+  SERVICE_UNIT_COST
+}
+
+// How a benchmark value is uprated to a common price year (COSTING_SCOPE §3).
+// VPF uprates by GDP per head; most values by the GDP deflator.
+enum UprateMethod {
+  GDP_DEFLATOR
+  GDP_PER_HEAD
+  NONE
+}
+
+// Provenance/currency of a benchmark (COSTING_SCOPE §3).
+enum BenchmarkConfidence {
+  OFFICIAL_CURRENT
+  OFFICIAL_DATED
+  ACADEMIC
+  SECTOR
+}
+
 model CostBenchmark {
   id        String   @id @default(uuid())
   domain    String   // e.g. "health", "transport", "admin-burden"
@@ -1467,13 +1498,30 @@ model CostBenchmark {
   high      Decimal?
   source    String   // e.g. "HM Treasury Green Book"
   sourceUrl String?
-  year      Int?
+  year      Int?     // publication year of the source
   method    String?  // provenance/notes on how the value was derived
   notes     String?
+  // COSTING_SCOPE §3 deltas — so figures can be uprated to a common price base and graded.
+  priceYear    Int?                 // the prices the value is expressed in (distinct from `year`)
+  category     BenchmarkCategory?
+  region       String?              @default("UK") // many unit costs are England-only
+  uprateMethod UprateMethod?        @default(GDP_DEFLATOR)
+  confidence   BenchmarkConfidence?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([domain])
+  @@index([category])
+}
+
+// The GDP deflator series as DATA (COSTING_SCOPE §3/§7d), so uprating a £ figure from
+// one year's prices to another's is a lookup, not a hardcode. Populated in Phase 2;
+// a small illustrative placeholder set ships with the shell.
+model DeflatorSeries {
+  year      Int      @id
+  index     Float    // GDP deflator index (rebased arbitrarily; only ratios matter)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // A user's override of a benchmark for THIS idea, with their own evidence (design
