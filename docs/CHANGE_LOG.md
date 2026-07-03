@@ -1,6 +1,37 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M) → DEBATE, regulators/reviews → GUIDANCE. retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH FUSION TUNING: weighted RRF fixed 70/30 vector/BM25 ships (gemini 87.8% vs naive 84.3 / vector-alone 85.9); kind-based routing NOT needed (grid ties fixed); voyage B6 naive-collapse fixed 0→33.3.*
+
+---
+
+## SEARCH — FUSION TUNING: weighted RRF 70/30 ships, kind-based routing not needed (2026-07-03 22:54 UTC)
+
+**Search thread; the vector pilot's flag-flip follow-up.** The bake-off left the vector flag off because
+naive equal-weight RRF was a regression against vector-alone (voyage B6 50%→0%). Tuned the fusion on the
+already-embedded 60k pilot subset (zero new embedding cost). Decision report: **`docs/FUSION_REPORT.md`**;
+generated numbers `docs/FUSION_RESULTS.md` + `docs/fusion_tuning.json`. `scripts/ingest` `tsc --noEmit` =
+only the 4 documented pre-existing errors.
+
+- **New `scripts/ingest/search/pilot-fusion.ts`** — reuses pilot-score.ts arms EXACTLY (same subset, BM25
+  incl. citation-resolver pin, exact in-memory cosine, same gold scoring); sweeps weighted RRF
+  `w·1/(60+rank_vec) + (1−w)·1/(60+rank_bm25)`, w ∈ {0,.3,.5,.6,.7,.8,.9,1}, and composes the full
+  (wCit,wCon) routed grid from the per-query sweep (routing = per-query weight choice, so it's free).
+  **Self-check PASS:** w=0.5 reproduces the pilot naive-RRF hybrid exactly for all 3 models (81.1/84.3/77.2).
+- **Result (gemini, ship model): fixed 70/30 = 87.8%** recall@20 excl-floor — beats naive RRF 84.3%
+  (+3.5pp), vector-alone 85.9% (+1.9pp), BM25 68.3% (+19.5pp). Per-archetype at 70/30: A 100% (resolver
+  pin survives fusion) · B 69.4% (matches vector-alone's best) · B6 50% · C 93.3% · E 100% · F 80%.
+- **Routing adds exactly nothing:** best routed = 87.8% (tie). ≥80/20 is where A1 breaks (100→50) — 70/30
+  is the coexistence point of the vector signal and the citation pin, so no router is needed. The
+  `parseCitation` router also over-triggers (fires on E1/E3/E5 debate queries that merely name an Act
+  and all D floors — 12/31 queries) — harmless in the grid, but another reason to prefer no-router.
+- **Robustness:** plateau not spike (60/40=85.3, 80/20=85.9). voyage optimum also vector-heavy
+  (80/20=86.9%) and weighting FIXES its B6 collapse (naive 0% → 33.3%); e5 (weak vector arm) stays best
+  at naive 50/50 (77.2%) → the right weight tracks vector-arm strength; re-tune on any model swap.
+  Watch-item: F5 (BILLS) 100→50 at w≥0.7 — the one per-query regression vs naive.
+- **Ship spec:** weighted RRF w=0.7, RRF_K=60, over BM25-with-resolver-pin; weight as env config
+  (`LEX_FUSION_VECTOR_WEIGHT`, default 0.7); no query-kind router in the fusion layer (production's
+  expansion scoping stays as-is). Wire with the `vector` capability flag after the full-corpus embed;
+  re-confirm 70/30 there (cheap re-run; the plateau means the decision doesn't hang on it).
 
 ---
 

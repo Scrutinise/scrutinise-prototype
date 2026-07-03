@@ -1,0 +1,3944 @@
+{
+  "generatedAt": "2026-07-03T22:50:30.854Z",
+  "subsetSections": 60000,
+  "chunkK": 300,
+  "rrfK": 60,
+  "weights": [
+    0,
+    0.3,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+  ],
+  "nQueries": 31,
+  "nExclFloor": 26,
+  "router": {
+    "citation": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "E1",
+      "E3",
+      "E5"
+    ],
+    "concept": [
+      "A5",
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B5",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "E2",
+      "E4",
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "B6"
+    ]
+  },
+  "selfCheck": [
+    {
+      "slug": "voyage",
+      "sweep": 0.810897435897436,
+      "pilot": 0.810897435897436
+    },
+    {
+      "slug": "gemini",
+      "sweep": 0.8429487179487178,
+      "pilot": 0.8429487179487178
+    },
+    {
+      "slug": "e5",
+      "sweep": 0.7724358974358974,
+      "pilot": 0.7724358974358974
+    }
+  ],
+  "models": [
+    {
+      "slug": "voyage",
+      "model": "voyage-4",
+      "dims": 1024,
+      "byWeight": [
+        {
+          "w": 0,
+          "overallExclFloor": 0.6826923076923077,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.23611111111111108
+            },
+            {
+              "archetype": "C",
+              "recall": 0.6666666666666667
+            },
+            {
+              "archetype": "D",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 0
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.3,
+          "overallExclFloor": 0.733974358974359,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.40277777777777773
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.8333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0.5
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.5,
+          "overallExclFloor": 0.810897435897436,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.45833333333333326
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.6,
+          "overallExclFloor": 0.8365384615384617,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.486111111111111
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.16666666666666666,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.16666666666666666
+            }
+          ]
+        },
+        {
+          "w": 0.7,
+          "overallExclFloor": 0.8557692307692306,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.5694444444444444
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.3333333333333333,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.3333333333333333
+            }
+          ]
+        },
+        {
+          "w": 0.8,
+          "overallExclFloor": 0.8685897435897435,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.5694444444444444
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.3333333333333333,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.3333333333333333
+            }
+          ]
+        },
+        {
+          "w": 0.9,
+          "overallExclFloor": 0.8397435897435896,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.5277777777777778
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.3333333333333333,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.5
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.3333333333333333
+            }
+          ]
+        },
+        {
+          "w": 1,
+          "overallExclFloor": 0.8461538461538461,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.5555555555555555
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.5
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        }
+      ],
+      "routedTop5": [
+        {
+          "wCit": 0.6,
+          "wCon": 0.8,
+          "overall": 0.8685897435897435
+        },
+        {
+          "wCit": 0.7,
+          "wCon": 0.8,
+          "overall": 0.8685897435897435
+        },
+        {
+          "wCit": 0.8,
+          "wCon": 0.8,
+          "overall": 0.8685897435897435
+        },
+        {
+          "wCit": 0.6,
+          "wCon": 1,
+          "overall": 0.8653846153846154
+        },
+        {
+          "wCit": 0.7,
+          "wCon": 1,
+          "overall": 0.8653846153846154
+        }
+      ]
+    },
+    {
+      "slug": "gemini",
+      "model": "gemini-embedding-001",
+      "dims": 1536,
+      "byWeight": [
+        {
+          "w": 0,
+          "overallExclFloor": 0.6826923076923077,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.23611111111111108
+            },
+            {
+              "archetype": "C",
+              "recall": 0.6666666666666667
+            },
+            {
+              "archetype": "D",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 0
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.3,
+          "overallExclFloor": 0.7596153846153846,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.40277777777777773
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 0.8333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0.5
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.5,
+          "overallExclFloor": 0.8429487179487178,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.5972222222222222
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.6,
+          "overallExclFloor": 0.8525641025641024,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.6388888888888888
+            },
+            {
+              "archetype": "C",
+              "recall": 0.8666666666666666
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 1
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.7,
+          "overallExclFloor": 0.8782051282051282,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.6944444444444443
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 1
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.8,
+          "overallExclFloor": 0.8589743589743589,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.6944444444444443
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 1
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.9,
+          "overallExclFloor": 0.8589743589743589,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.6944444444444443
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 1
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 1,
+          "overallExclFloor": 0.8589743589743589,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.6944444444444443
+            },
+            {
+              "archetype": "C",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 1
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 1
+            },
+            {
+              "id": "B2",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 1
+            },
+            {
+              "id": "C1",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 1
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 1
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        }
+      ],
+      "routedTop5": [
+        {
+          "wCit": 0.6,
+          "wCon": 1,
+          "overall": 0.8782051282051282
+        },
+        {
+          "wCit": 0.6,
+          "wCon": 0.9,
+          "overall": 0.8782051282051282
+        },
+        {
+          "wCit": 0.6,
+          "wCon": 0.8,
+          "overall": 0.8782051282051282
+        },
+        {
+          "wCit": 0.6,
+          "wCon": 0.7,
+          "overall": 0.8782051282051282
+        },
+        {
+          "wCit": 0.7,
+          "wCon": 1,
+          "overall": 0.8782051282051282
+        }
+      ]
+    },
+    {
+      "slug": "e5",
+      "model": "intfloat/multilingual-e5-large-instruct",
+      "dims": 1024,
+      "byWeight": [
+        {
+          "w": 0,
+          "overallExclFloor": 0.6826923076923077,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.23611111111111108
+            },
+            {
+              "archetype": "C",
+              "recall": 0.6666666666666667
+            },
+            {
+              "archetype": "D",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 0
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.3,
+          "overallExclFloor": 0.7211538461538461,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.40277777777777773
+            },
+            {
+              "archetype": "C",
+              "recall": 0.6666666666666667
+            },
+            {
+              "archetype": "D",
+              "recall": 0.8333333333333333
+            },
+            {
+              "archetype": "E",
+              "recall": 0.8
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 0.5
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 0.5
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0
+            }
+          ]
+        },
+        {
+          "w": 0.5,
+          "overallExclFloor": 0.7724358974358974,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.4861111111111111
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.9
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 0.5
+            },
+            {
+              "id": "B1",
+              "recall": 0.75
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 0.5
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 1
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 1
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.6,
+          "overallExclFloor": 0.7532051282051282,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.40277777777777773
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9333333333333332
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.25
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 0.5
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.7,
+          "overallExclFloor": 0.766025641025641,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 1
+            },
+            {
+              "archetype": "B",
+              "recall": 0.4583333333333333
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 1
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 1
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.25
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 1
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 0.5
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.8,
+          "overallExclFloor": 0.7467948717948717,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.4583333333333333
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.25
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 0.5
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 0.5
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 0.9,
+          "overallExclFloor": 0.7467948717948717,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.9
+            },
+            {
+              "archetype": "B",
+              "recall": 0.4583333333333333
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0.5
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0.25
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 0.5
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 0.5
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        },
+        {
+          "w": 1,
+          "overallExclFloor": 0.7179487179487178,
+          "byArch": [
+            {
+              "archetype": "A",
+              "recall": 0.8
+            },
+            {
+              "archetype": "B",
+              "recall": 0.4166666666666667
+            },
+            {
+              "archetype": "C",
+              "recall": 0.7333333333333333
+            },
+            {
+              "archetype": "D",
+              "recall": 0.9
+            },
+            {
+              "archetype": "E",
+              "recall": 0.9
+            },
+            {
+              "archetype": "F",
+              "recall": 0.8
+            }
+          ],
+          "b6": 0.5,
+          "perQuery": [
+            {
+              "id": "A1",
+              "recall": 0
+            },
+            {
+              "id": "A2",
+              "recall": 1
+            },
+            {
+              "id": "A3",
+              "recall": 1
+            },
+            {
+              "id": "A4",
+              "recall": 1
+            },
+            {
+              "id": "A5",
+              "recall": 1
+            },
+            {
+              "id": "B1",
+              "recall": 0
+            },
+            {
+              "id": "B2",
+              "recall": 0
+            },
+            {
+              "id": "B3",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "B4",
+              "recall": 1
+            },
+            {
+              "id": "B5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C1",
+              "recall": 0.3333333333333333
+            },
+            {
+              "id": "C2",
+              "recall": 1
+            },
+            {
+              "id": "C3",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "C4",
+              "recall": 1
+            },
+            {
+              "id": "C5",
+              "recall": 0.6666666666666666
+            },
+            {
+              "id": "D1",
+              "recall": 1
+            },
+            {
+              "id": "D2",
+              "recall": 0.5
+            },
+            {
+              "id": "D3",
+              "recall": 1
+            },
+            {
+              "id": "D4",
+              "recall": 1
+            },
+            {
+              "id": "D5",
+              "recall": 1
+            },
+            {
+              "id": "E1",
+              "recall": 1
+            },
+            {
+              "id": "E2",
+              "recall": 1
+            },
+            {
+              "id": "E3",
+              "recall": 0.5
+            },
+            {
+              "id": "E4",
+              "recall": 1
+            },
+            {
+              "id": "E5",
+              "recall": 1
+            },
+            {
+              "id": "F1",
+              "recall": 1
+            },
+            {
+              "id": "F2",
+              "recall": 1
+            },
+            {
+              "id": "F3",
+              "recall": 1
+            },
+            {
+              "id": "F4",
+              "recall": 0.5
+            },
+            {
+              "id": "F5",
+              "recall": 0.5
+            },
+            {
+              "id": "B6",
+              "recall": 0.5
+            }
+          ]
+        }
+      ],
+      "routedTop5": [
+        {
+          "wCit": 0,
+          "wCon": 0.5,
+          "overall": 0.7724358974358974
+        },
+        {
+          "wCit": 0.3,
+          "wCon": 0.5,
+          "overall": 0.7724358974358974
+        },
+        {
+          "wCit": 0.5,
+          "wCon": 0.5,
+          "overall": 0.7724358974358974
+        },
+        {
+          "wCit": 0.6,
+          "wCon": 0.5,
+          "overall": 0.7724358974358974
+        },
+        {
+          "wCit": 0.7,
+          "wCon": 0.5,
+          "overall": 0.7724358974358974
+        }
+      ]
+    }
+  ]
+}
