@@ -1,6 +1,36 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — VECTOR PILOT: embedding-model bake-off on the gold set. Winner gemini-embedding-001 (ties voyage-4 on vector, wins hybrid); vector layer +16pp over BM25, archetype-B +45.8pp; legal-specialist premium NOT found.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M) → DEBATE, regulators/reviews → GUIDANCE. retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display.*
+
+---
+
+## SEARCH — type-taxonomy display fix (SEARCH_STRATEGY §10.2) (2026-07-03 22:14 UTC)
+
+Live test: "Revoke MiFID II" shows no legislation answer despite retained MiFIR / SI 2017/701 being
+in the corpus. Audited the raw-corpus → display-bucket map empirically (68 corpus types + live BM25
+retrieval). Full account: **`docs/TYPE_TAXONOMY_AUDIT.md`**. `scrutinise-web` `tsc --noEmit` = only the
+two pre-existing `react-markdown` errors.
+
+- **Brief's mechanism REFUTED for MiFID (verify-before-asserting).** In the current code
+  `corpus-type-map.ts` ALREADY routes `retained-eu`/`eur-lex` → EU_LEGISLATION and `uksi/*` →
+  STATUTORY_INSTRUMENT, and `BackgroundPanel` renders both — so retained-EU has its own correct
+  bucket and SI routes correctly. The MiFID "empty" is a **RANKING** problem: bare BM25's top-30 for
+  the query is 17 tangential SIs + 9 guidance + 4 dropped explanatory-memoranda, and the VALIDATED
+  answers (MiFIR/SI-701/FSMA-2023) never rank in at all (the B6 case — see `docs/PILOT_REPORT.md`,
+  BM25 B6 0% → vector 50%). A type-map change cannot surface them; that's the vector-layer workstream.
+  Reported honestly, not claimed fixed.
+- **REAL bug found + fixed: 13 corpora were hidden (null) → 4.** The FTS `tier` is baked into the
+  index; corpora seeded after `corpus-map.ts` last covered them carry `tier:'other'` and fell through
+  to `null` → the panel hid them. Biggest loss: **`scottish-parliament-or` = 1,042,819 sections**.
+  Fixed in the DISPLAY layer (`corpus-type-map.ts` `CORPUS_DISPLAY_OVERRIDE`, by corpus name — works
+  on the live baked-tier index, no reindex): scottish-parliament-or / early-day-motions / petitions →
+  DEBATE; cma-cases / ofgem / ofcom / independent-reviews / cps-guidance / inquiry-evidence / lgsco →
+  GUIDANCE. Remaining null (4, INTENTIONAL): explanatory-notes/-memoranda (annotations, not the law),
+  erskine-may, members-interests.
+- **Follow-ups (not this change):** update `corpus-map.ts` `tierFor` for reindex consistency;
+  `buildInitialBackground` prose narrates only 4/9 types (enum-flagged TODO; cards render all buckets);
+  MiFID answer surfacing = the vector layer.
+- **File:** `scrutinise-web/lib/lex/corpus-type-map.ts` (+ `docs/TYPE_TAXONOMY_AUDIT.md`).
 
 ---
 

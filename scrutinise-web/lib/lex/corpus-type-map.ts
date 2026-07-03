@@ -33,14 +33,42 @@ function doctypeFromGid(id: string): string | null {
 
 // Parliamentary corpora that are NOT debates: committees → COMMITTEE; a few
 // procedural/registry corpora have no debate home (PENDING) → null.
-const PARLIAMENTARY_NON_DEBATE_NULL = new Set(['petitions', 'members-interests', 'erskine-may'])
+const PARLIAMENTARY_NON_DEBATE_NULL = new Set(['members-interests', 'erskine-may'])
+
+// ── Corpus-name overrides (taxonomy reconciliation, SEARCH_STRATEGY §10.2) ──────
+// The FTS `tier` is BAKED INTO THE INDEX at build time (scripts/ingest corpus-map
+// tierFor). Several sizeable corpora were seeded AFTER that map last covered them,
+// so they carry tier:'other' in the live index and fell through to null → the panel
+// HID them entirely (audit 2026-07-03: scottish-parliament-or = 1.04M sections lost,
+// plus cma-cases/ofgem/ofcom/independent-reviews/cps-guidance/inquiry-evidence/lgsco,
+// early-day-motions, petitions). Fixing tierFor only helps a FUTURE reindex, so the
+// display layer corrects by CORPUS NAME here — effective on the live index now.
+//   - scottish-parliament-or / EDMs / petitions → DEBATE (parliamentary business a
+//     reformer cites; no dedicated motion/petition bucket exists).
+//   - regulators + reviews + ombudsmen + inquiry material → GUIDANCE (matches the
+//     "Guidance & regulators" bucket that already holds ico/fca/nao/inquiry-reports).
+const CORPUS_DISPLAY_OVERRIDE: Record<string, SearchResultType> = {
+  'scottish-parliament-or': 'DEBATE',
+  'early-day-motions': 'DEBATE',
+  'petitions': 'DEBATE',
+  'cma-cases': 'GUIDANCE',
+  'ofgem': 'GUIDANCE',
+  'ofcom': 'GUIDANCE',
+  'independent-reviews': 'GUIDANCE',
+  'cps-guidance': 'GUIDANCE',
+  'inquiry-evidence': 'GUIDANCE',
+  'lgsco': 'GUIDANCE',
+}
 
 /**
  * Map one FTS hit → a Lex SearchResultType, or null when the corpus family has no
- * agreed home in the current 5-enum (the adapter drops nulls).
- * `tier` + `corpus` come straight from the FTS response; `id` carries the gid.
+ * agreed home (the adapter drops nulls). `tier` + `corpus` come from the FTS
+ * response; `id` carries the gid. Corpus-name overrides run FIRST because the live
+ * index's `tier` is stale for corpora seeded after the tier map last changed.
  */
 export function corpusToType(corpus: string, tier: string, id: string): SearchResultType | null {
+  const override = CORPUS_DISPLAY_OVERRIDE[corpus]
+  if (override) return override
   switch (tier) {
     case 'caselaw':
       return 'CASE_LAW'
