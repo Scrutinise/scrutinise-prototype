@@ -10,7 +10,7 @@
 
 **Sprint complete — BUILT INERT; the embed RUN is the Charlie-triggered spend** (search thread;
 executes the post-pilot/post-fusion embed brief). Report + runbook: **`docs/VECTOR_EMBED_REPORT.md`**.
-CHANGE_LOG "SEARCH — VECTOR EMBED" (2026-07-03 23:01 UTC). `scripts/ingest` `tsc` = only the 4
+CHANGE_LOG "SEARCH — VECTOR EMBED" (2026-07-04 13:37 UTC). `scripts/ingest` `tsc` = only the 4
 documented pre-existing errors; `scrutinise-web` = only the 2 pre-existing `react-markdown` errors.
 New dep `@google/genai@^1.52` (isolates the Batch API's Files-upload + LRO polling).
 

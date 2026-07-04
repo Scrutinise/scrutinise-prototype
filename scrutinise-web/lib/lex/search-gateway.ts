@@ -16,6 +16,7 @@
 
 import type { SearchResult } from './page1-config'
 import { runFtsSearch } from './fts-search'
+import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
 import { expandQuery } from './query-expansion'
 
@@ -115,11 +116,51 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   // 4. Retrieval. The adapter overscans and drops corpus families with no display
   //    type; it also owns the canonical SearchResult[] mapping (§14.4 — the type
   //    taxonomy is owned by the search side via corpus-type-map, consumed here).
-  const { results } = await runFtsSearch(queryKeywords, limit)
+  const { results: ftsResults } = await runFtsSearch(queryKeywords, limit)
+
+  // 4b. Dense retrieval (capability flag; OFF by default — LEX_SEARCH_VECTOR).
+  //     The full-corpus gemini-embedding-001 @768-d layer (docs/VECTOR_EMBED_REPORT.md).
+  //     When ON, fuse BM25 with the vector ranking via the TUNED weighted RRF (70/30,
+  //     docs/FUSION_REPORT.md) — NOT naive equal-weight RRF (the pilot showed that drags
+  //     a strong vector model down). Flag stays OFF regardless until 70/30 is re-confirmed
+  //     on the full-corpus ANN index + the gold key is validated (turning it on before
+  //     that risks a regression). runVectorSearch also returns [] unless VECTOR_SEARCH_URL
+  //     is set, so this is doubly inert.
+  let results = ftsResults
+  if (flags.vector) {
+    const { results: vecResults } = await runVectorSearch(queryKeywords, limit)
+    if (vecResults.length) {
+      results = fuseWeightedRrf(vecResults, ftsResults)
+      console.log('[search-gateway] vector fusion', { intent: q.intent, fts: ftsResults.length, vector: vecResults.length, fused: results.length })
+    }
+  }
 
   // 5. Group by display type — ≤3/type, ~20 cap. Kept INSIDE the gateway so that
   //    when the taxonomy lands as a shared corpus-type-map, only the gateway changes.
   const grouped = groupForPanel(results)
 
   return { intent: q.intent, results, grouped, meta: { flags, expansionAdded } }
+}
+
+// ── fusion (§14, vector layer) — the SHIPPED spec from docs/FUSION_REPORT.md ──
+// Weighted reciprocal-rank fusion: score = w/(k+rank_vec) + (1−w)/(k+rank_bm25), with
+// w=0.7 (RRF_K=60). Tuned on the pilot subset: 70/30 beats naive equal-weight RRF
+// (+3.5pp), vector-alone (+1.9pp) and BM25 (+19.5pp) for gemini, and — critically — is
+// the coexistence point where the vector concept-win survives AND the BM25 citation
+// resolver still pins exact citations (A stays 100%). NOT equal-weight (which the pilot
+// showed drags a strong vector model down). Weight is env config so the full-corpus
+// re-measure can adjust without a deploy. The flag stays OFF until 70/30 is re-confirmed
+// on the full-corpus ANN index (see docs/VECTOR_EMBED_REPORT.md §4).
+const RRF_K = parseInt(process.env.LEX_FUSION_RRF_K ?? '60', 10)
+const VECTOR_WEIGHT = parseFloat(process.env.LEX_FUSION_VECTOR_WEIGHT ?? '0.7')
+
+function fuseWeightedRrf(vec: SearchResult[], bm25: SearchResult[]): SearchResult[] {
+  const w = VECTOR_WEIGHT
+  const scores = new Map<string, number>()
+  const byId = new Map<string, SearchResult>()
+  vec.forEach((r, i) => { scores.set(r.id, (scores.get(r.id) ?? 0) + w / (RRF_K + i + 1)); if (!byId.has(r.id)) byId.set(r.id, r) })
+  bm25.forEach((r, i) => { scores.set(r.id, (scores.get(r.id) ?? 0) + (1 - w) / (RRF_K + i + 1)); if (!byId.has(r.id)) byId.set(r.id, r) })
+  return [...scores.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, score]) => ({ ...byId.get(id)!, score }))
 }

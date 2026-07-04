@@ -31,9 +31,10 @@
  *   tsx search/hetzner-build-run.ts logs                    — tail the box's stdout (via R2); also prints Hetzner server status
  *   tsx search/hetzner-build-run.ts teardown               — DELETE the server via API (frees compute)
  *
- * The build command may also be supplied via HETZNER_BUILD_CMD (argv wins). Example
- * vector-layer build (placeholder — wire the real script when ready):
- *   HETZNER_BUILD_CMD="R2_MAX_SOCKETS=256 npx tsx search/build-vector-index.ts"
+ * The build command may also be supplied via HETZNER_BUILD_CMD (argv wins). The
+ * vector-layer build runs in two steps on the box (chunk manifest, then batch-embed +
+ * ANN); see docs/VECTOR_EMBED_REPORT.md for the full runbook:
+ *   HETZNER_BUILD_CMD="R2_MAX_SOCKETS=256 npx tsx search/build-corpus-chunks.ts && npx tsx search/build-vector-index.ts"
  */
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.env') }) } catch { /* ok */ }

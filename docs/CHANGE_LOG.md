@@ -57,7 +57,7 @@ source updates); loader `load-cost-benchmarks-v2.ts`.
 
 ---
 
-## SEARCH — VECTOR EMBED: full-corpus embed pipeline + ANN + flag wiring (OFF) (2026-07-03 23:01 UTC)
+## SEARCH — VECTOR EMBED: full-corpus embed pipeline + ANN + flag wiring (OFF) + canary PASS (2026-07-04 13:37 UTC)
 
 **Search thread; executes the post-pilot/post-fusion embed brief.** Builds (inert) the full-corpus
 gemini-embedding-001 @768-d embed via the **Gemini Batch API** (50% discount), the ANN index, and the
