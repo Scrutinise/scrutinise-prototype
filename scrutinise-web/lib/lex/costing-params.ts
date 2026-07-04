@@ -42,18 +42,23 @@ export const EANDCB_RPC_SCRUTINY_THRESHOLD: CostingParam<number> = {
   note: 'Measures above ±£5m EANDCB require independent RPC scrutiny — surfacing this is a credibility feature.',
 }
 
-/** Health discount rate (risk-to-life/health values). NOT verified — do not use yet. */
+/** Health discount rate (health/life effects). VERIFIED against the Green Book 2026,
+ *  §6.58: "These health and life effects should be discounted at a lower rate of 1.5%,
+ *  rather than the standard STPR" (wealth-effect component excluded). */
 export const HEALTH_DISCOUNT_RATE: CostingParam<number> = {
   value: 0.015,
-  unit: 'real, per year (risk-to-life/health values)',
-  source: 'Green Book',
-  status: 'TRAINING_RECALL',
-  verified: false,
-  note: 'VERIFY in Phase 2b before use.',
+  unit: 'real, per year (health and life effects)',
+  source: 'HM Treasury Green Book 2026, §6.58',
+  status: 'VERIFIED',
+  verified: true,
+  note: 'Verified 2026-07-04 against The_Green_Book_2026.pdf. Applies alongside the 3.5% STPR for non-health effects.',
 }
 
 /** Optimism-bias uplifts by project class (applied to implementationCost — COSTING_SCOPE
- *  §4.3). NOT verified — do not apply until Phase 2b pins them against the guidance. */
+ *  §4.3). VERIFIED against Table 1 of the HMT supplementary guidance ("Recommended
+ *  Adjustment Ranges", Mott MacDonald 2002 evidence base): the values below are the
+ *  CAPITAL EXPENDITURE UPPER bounds (starting point at outline business case);
+ *  lower bounds are 2% / 4% / 3% / 6% / 10%. Outsourcing = 41% on OPEX. */
 export const OPTIMISM_BIAS_UPLIFTS: CostingParam<Record<string, number>> = {
   value: {
     'standard-buildings': 0.24,
@@ -62,9 +67,9 @@ export const OPTIMISM_BIAS_UPLIFTS: CostingParam<Record<string, number>> = {
     'non-standard-civil': 0.66,
     'equipment-and-development': 2.0,
   },
-  unit: 'fraction uplift on upper-bound capex',
-  source: 'Green Book supplementary guidance on optimism bias',
-  status: 'TRAINING_RECALL',
-  verified: false,
-  note: 'VERIFY in Phase 2b before use; apply to implementationCost.',
+  unit: 'fraction uplift on capex (upper bound, outline business case)',
+  source: 'HMT Supplementary Green Book Guidance — Optimism Bias, Table 1',
+  status: 'VERIFIED',
+  verified: true,
+  note: 'Verified 2026-07-04 against Optimism_bias.pdf (Table 1). Uplift reduces as risks are actively managed; lower bounds 0.02/0.04/0.03/0.06/0.10. Apply to implementationCost.',
 }

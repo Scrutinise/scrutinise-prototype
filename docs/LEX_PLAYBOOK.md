@@ -353,9 +353,19 @@ RPC-scrutiny flag. The schema is ready for all of it.
 **Phase 2a s1 — verified benchmarks are IN, placeholders are OUT.** `docs/cost-benchmarks-seed-v1.json` is the
 benchmark source of truth (principle: verified against a primary source or it stays in `_pending`). Loader:
 `scrutinise-web/scripts/load-cost-benchmarks.ts` (dry-run default, `--apply`; stable `v1-*` ids, upsert,
-deletes `seed-*` placeholders — idempotent). Current DB set: v1-qaly / v1-wellby / v1-vpf / v1-homicide /
-v1-crime-total. Appraisal **parameters** live in `lib/lex/costing-params.ts` (mirror of the JSON's
-`parameters` — edit the JSON first): STPR + EANDCB threshold are VERIFIED; the health discount rate and
-optimism-bias uplifts are **TRAINING_RECALL (`verified:false`) and must not drive user-facing numbers until
-Phase 2b verifies them**. The JSON's `_pending` array is the Phase-2b extraction backlog — extend the file +
-re-run the loader to add rows; never hand-INSERT into `CostBenchmark`.
+deletes `seed-*` placeholders — idempotent). Appraisal **parameters** live in `lib/lex/costing-params.ts`
+(mirror of the JSON's `parameters` — edit the JSON first). Never hand-INSERT into `CostBenchmark`.
+
+**Phase 2a s2 — v2 additions + the extraction manifest (CHANGE_LOG 2026-07-04 12:11 UTC).** The DB holds
+**53 verified rows, zero unverified**. `docs/cost-benchmarks-seed-v2-additions.json` loaded via
+`load-cost-benchmarks-v2.ts` (20 HO crime 2019/20 rows; replaced v1 homicide + context anchor). The
+manifest M1–M11 is worked by **`scrutinise-web/scripts/costing/`** — `util.ts` (download cache, Neon client,
+dependency-free zip reader) + one script per target, each dry-run-default/`--apply`, each verifying values
+against the downloaded bytes before insert (label-anchored; fails loudly on layout drift). **Refresh
+procedure = update the script's SOURCE_URL to the new edition and re-run.** State: M3 real deflator series
+(ONS L8GG 1955–2025, uprating targets 2025); M1/M2 TAG May-2026 (live VPF £2.65m + travel-time rows);
+**M4 GATED** (GMCA UCD v3.0 is CC BY 4.0 — report delivered; `m4-gmca.ts --apply` runs on Charlie's go);
+M5 PSSRU 2025 (9 rows); M6 ASHE 2025 (3 wage rows); M7 DESNZ carbon (2026+2030); M8 BPE 2025 (5 count rows,
+uprate NONE); **M9 BLOCKED** (HO amendments doc 404s on gov.uk — re-check next pass); M10 fraud 2023-24
+(supersedes the v2 fraud row, which is deleted); M11 both costing-params flipped to VERIFIED (optimism-bias
+Table 1 + Green Book 2026 §6.58 health rate 1.5%). `xlsx@0.18.5` is a devDependency (extraction tooling).

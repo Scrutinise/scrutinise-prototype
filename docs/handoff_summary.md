@@ -2,7 +2,42 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 3 Jul 2026 — SEARCH FUSION TUNING (pilot subset, no new embed cost): **weighted RRF fixed 70/30 vector/BM25 ships** — gemini 87.8% recall@20 vs naive RRF 84.3% / vector-alone 85.9% / BM25 68.3%; the pilot's naive-RRF regression is RESOLVED (fusion now beats vector-alone). **Kind-based routing NOT needed** — the full (wCit,wCon) grid over the `parseCitation` router only TIES fixed 70/30 (87.8%); at 70/30 the citation-resolver pin survives fusion (A=100%), ≥80/20 breaks A1. voyage confirms vector-heavy (80/20=86.9%, B6 naive-collapse FIXED 0→33.3%); e5 optimum stays 50/50 → the right weight tracks vector-arm strength. Ship spec: w=0.7 RRF_K=60 as env config, no router. `docs/FUSION_REPORT.md`. ▼ SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M)→DEBATE, regulators/reviews→GUIDANCE (`corpus-type-map.ts` display override). retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display → vector layer. ▼ SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 3 Jul 2026 — ▼ SEARCH VECTOR EMBED (BUILT INERT): full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus **17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520** at the batch rate ($0.075/1M) — **within the ~$600 gate, no flag raised**. **CANARY RUN + PASSED (4 Jul, ~$0.01):** live Batch API contract confirmed — 200/200 vectors @768-d, order/keys clean. Remaining spend = the full Hetzner+Batch run (~$430–520), Charlie-triggered. `@google/genai` added. Report `docs/VECTOR_EMBED_REPORT.md`. ▼ SEARCH FUSION TUNING (pilot subset, no new embed cost): **weighted RRF fixed 70/30 vector/BM25 ships** — gemini 87.8% recall@20 vs naive RRF 84.3% / vector-alone 85.9% / BM25 68.3%; the pilot's naive-RRF regression is RESOLVED (fusion now beats vector-alone). **Kind-based routing NOT needed** — the full (wCit,wCon) grid over the `parseCitation` router only TIES fixed 70/30 (87.8%); at 70/30 the citation-resolver pin survives fusion (A=100%), ≥80/20 breaks A1. voyage confirms vector-heavy (80/20=86.9%, B6 naive-collapse FIXED 0→33.3%); e5 optimum stays 50/50 → the right weight tracks vector-arm strength. Ship spec: w=0.7 RRF_K=60 as env config, no router. `docs/FUSION_REPORT.md`. ▼ SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M)→DEBATE, regulators/reviews→GUIDANCE (`corpus-type-map.ts` display override). retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display → vector layer. ▼ SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — SEARCH: VECTOR EMBED (full-corpus pipeline + ANN + flag wiring, 3 Jul 2026)
+
+**Sprint complete — BUILT INERT; the embed RUN is the Charlie-triggered spend** (search thread;
+executes the post-pilot/post-fusion embed brief). Report + runbook: **`docs/VECTOR_EMBED_REPORT.md`**.
+CHANGE_LOG "SEARCH — VECTOR EMBED" (2026-07-03 23:01 UTC). `scripts/ingest` `tsc` = only the 4
+documented pre-existing errors; `scrutinise-web` = only the 2 pre-existing `react-markdown` errors.
+New dep `@google/genai@^1.52` (isolates the Batch API's Files-upload + LRO polling).
+
+- **Cost CONFIRMED within the ~$600 gate — no flag raised.** Measured on Neon (`search/measure-corpus.ts`):
+  **17,640,217 compiled sections / 6.12 B words → ~22.25 M chunks (1.26/section) → ~6.90 B tokens (chars/4)
+  / ~5.69 B (words×1.3)**. Batch rate $0.075/1M (verified ai.google.dev) → **~$430–520**. 768-d halves the
+  vector store (~68 GB vs ~137 GB @1536-d), not the embed bill (Gemini meters input tokens).
+- **Pipeline (`scripts/ingest/search/`, resumable/idempotent, mirror build-fts-index.ts):** `chunk.ts`
+  (validated pilot chunker, pure) → `build-corpus-chunks.ts` (Neon→R2→`corpus_chunks` Lance + citation
+  backfill) → `gemini-batch.ts` (ONLY Batch-API module: `:asyncBatchEmbedContent`, 50% discount; pure
+  build/parse offline-selftested) → `build-vector-index.ts` (≤40k-req shards, ≤8 inflight, `corpus_vec` +
+  IVF_PQ cosine ANN; `--canary`) → `vector-core.ts`/`vector-query-service.ts` (query-embed + ANN serve, INERT).
+- **Wiring behind `LEX_SEARCH_VECTOR` (OFF):** `scrutinise-web/lib/lex/vector-search.ts` adapter +
+  `search-gateway.ts` fuses via the **tuned 70/30 weighted RRF** (`LEX_FUSION_VECTOR_WEIGHT` 0.7, per
+  FUSION_REPORT). Doubly inert (flag OFF + `VECTOR_SEARCH_URL` unset).
+- **✅ CANARY RUN + PASSED (2026-07-04 11:51 UTC, ~$0.01, Charlie-approved).** Bounded STEP-1
+  (5,000 sections → 23,130 chunks, 0 body misses; full build resumes from this checkpoint) + one live
+  200-chunk batch job to `corpus_vec_canary`: job SUCCEEDED, 200/200 vectors all exactly 768-d, order/key
+  assertions clean, norms 0.572–0.584, cos(adjacent windows) 0.932 > 0.854 (different sections). **The live
+  Batch API JSONL/response contract is CONFIRMED** — the full spend is de-risked. (SDK flags
+  `createEmbeddings()` experimental — pin `@google/genai` if re-installing.)
+- **REMAINING RUN ORDER (Charlie-triggered):** `hetzner-build-run setup` →
+  `run "…build-corpus-chunks && …build-vector-index"` (~$430–520 Batch spend) → `logs` (fts-watch
+  checkpoints) → `teardown`.
+- **Left OFF deliberately:** 70/30 fusion needs full-corpus re-confirm through the ANN path (pilot tuned on
+  the 60k exact-cosine subset); ANN recall vs exact is a separate measurement; gold key still draft. The
+  flag-flip is the next sprint.
 
 ---
 
@@ -121,6 +156,20 @@ placeholders deleted (the un-replaced ones are in `_pending` — no unverified n
 parameters in `lib/lex/costing-params.ts` (STPR/EANDCB VERIFIED; health rate + optimism-bias TRAINING_RECALL,
 gated `verified:false`). `_pending` in the JSON = the Phase-2b extraction backlog. See CHANGE_LOG
 "COSTING Phase 2a s1".
+
+**COSTING Phase 2a s2 — v2 additions loaded + extraction manifest M1–M11 WORKED (4 Jul 2026).**
+**CostBenchmark = 53 verified rows, zero unverified.** v2 (20 HO crime 2019/20 rows) loaded; homicide +
+context anchor replaced. Manifest via `scrutinise-web/scripts/costing/` (per-target scripts, verify-against-
+bytes, refresh = new SOURCE_URL + re-run): **M3 ✓** real ONS L8GG deflator 1955–2025 (placeholder series
+gone; uprating targets 2025); **M1/M2 ✓** TAG May-2026 — live VPF £2,652,796 (replaced provisional £2m) +
+casualty/accident + travel-time rows; **M5 ✓** PSSRU 2025 (9 rows); **M6 ✓** ASHE 2025 wages; **M7 ✓** DESNZ
+carbon 2026/2030; **M8 ✓** BPE 2025 business counts; **M10 ✓** fraud 2023-24 £2,884/£2,170 + £14.4bn
+(v2 fraud row superseded+deleted); **M11 ✓** optimism-bias + 1.5% health rate VERIFIED against the primary
+PDFs → `costing-params.ts` fully verified. **⚠ DECISIONS WAITING ON CHARLIE:** (1) **M4 GMCA ingest go** —
+licence read from the workbook itself = **CC BY 4.0 (© GMCA 2026)**, attribution satisfied per-row;
+`m4-gmca.ts` dry-run-verified with 30 selected entries, `--apply` held per the report-back gate. (2) M9
+(HO amendments to unit costs) BLOCKED — gov.uk link 404s; re-check next pass. See CHANGE_LOG
+"COSTING Phase 2a s2".
 
 - **Sprint 1.4 (UX polish, frontend).** Prominent coloured **pill** "How this works" centred above the chat
   column (was a tiny link); **auto-opens on a user's first idea**; Lex's first-message aside → "For a quick

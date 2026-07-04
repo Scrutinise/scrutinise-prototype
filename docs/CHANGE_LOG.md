@@ -1,6 +1,99 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH FUSION TUNING: weighted RRF fixed 70/30 vector/BM25 ships (gemini 87.8% vs naive 84.3 / vector-alone 85.9); kind-based routing NOT needed (grid ties fixed); voyage B6 naive-collapse fixed 0→33.3.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH VECTOR EMBED: full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus 17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520 batch (within the ~$600 gate); embed RUN is Charlie-triggered (Hetzner + Batch API).*
+
+---
+
+## LEX REBUILD — COSTING Phase 2a s2: v2 additions + extraction manifest M1–M11 worked (2026-07-04 12:11 UTC)
+
+**Preview only — NOT promoted.** Executes `docs/cost-benchmarks-seed-v2-additions.json` per its loader_note,
+then the `cc_extraction_manifest` M1–M11 (M3 first as directed). Every value verified against the actual
+downloaded source bytes before insert (label-anchored extraction; scripts fail loudly on layout drift).
+`tsc` clean (react-markdown only). **CostBenchmark now 53 verified rows; zero unverified values.**
+New scripts under `scrutinise-web/scripts/costing/` (`util.ts` + one per manifest target — repeatable on
+source updates); loader `load-cost-benchmarks-v2.ts`.
+
+- **v2 loaded:** 20 Home Office costs-of-crime 2019/20 rows (2019/20 prices, OGL; per-row multiplier +
+  usage rule carried in notes); REPLACED v1-homicide (£3.2m/2015 → £3,346,680/2019) + v1 context anchor
+  (£59bn/2015 → £77.7bn/2019).
+- **M3 ✓ (first):** HMT GDP deflators June 2026 QNA — the REAL ONS L8GG financial-year series, 71 outturn
+  years 1955→2025 (2025-26=100), forecasts excluded by construction → `DeflatorSeries` replaced (placeholder
+  gone). Uprating now targets 2025 outturn prices. Key = FY starting year (matches stored priceYears).
+- **M1+M2 ✓:** DfT TAG Data Book **May 2026 v2.03** (2023 prices/values, GDP_PER_HEAD uprating): per-casualty
+  fatal (**live VPF £2,652,796** — replaces the v1 provisional £2m; contested-evidence note kept), serious
+  £295,069, slight £22,668, average £98,933; per-accident fatal £2,950,460 / serious £337,548 / slight
+  £34,233; values of time — working (car) £23.17–27.57/hr, commuting £13.04–15.51, other £5.95–7.08.
+- **M4 — LICENCE REPORT (ingest GATED on Charlie):** the GMCA Unit Cost Database **v3.0** states in its own
+  Introduction sheet: *"This work is licensed under the Creative Commons Attribution 4.0 International
+  License"* (© GMCA 2026). **CC BY 4.0 = reuse incl. commercial permitted WITH attribution** — our schema
+  satisfies attribution structurally (source + entry code + URL + CC note per row). NOT Crown copyright.
+  `m4-gmca.ts` is built + dry-run verified (30 selected entries across crime/education/employment/housing/
+  health/social-services, original values + original price years, licence-guard refuses to run if the CC
+  statement disappears) — **`--apply` awaits Charlie's go per the manifest's report-back gate.**
+- **M5 ✓:** PSSRU/CoReC Unit Costs of Health and Social Care **2025** (2024/25 prices; openly published
+  NIHR-funded manual) — 9 rows via verify-then-insert PDF anchors: GP consultation £40–48, GP hour-of-contact
+  £239–285, A&E attendance £280, inpatient stays £6,620/£5,395/£824 (elective/non-el long/short), Band-5
+  nurse £57/hr, social worker £54–61/hr, NHS Talking Therapies contact £169.
+- **M6 ✓:** ONS ASHE 2025 provisional (zip→xlsx via a dependency-free zip reader in util.ts): median gross
+  hourly — all £17.96, professional £26.11, admin & secretarial £15.20 (stored as [median, mean] ranges;
+  SCM wage inputs).
+- **M7 ✓:** DESNZ carbon values (Annex 1, £2020 prices): emissions in 2026 £132/264/396 low/central/high
+  per tCO2e; 2030 £140/280/420.
+- **M8 ✓:** DBT Business Population Estimates 2025 Table 1 — total 5,690,265; micro 5,423,410; small
+  220,085; medium 38,435; large 8,335 (bands verified to sum exactly to the published total; counts,
+  uprateMethod NONE).
+- **M9 — BLOCKED (documented):** the "Economic and social cost of crime: Amendments to unit costs" doc is
+  linked from the 2019/20 publication but its gov.uk URL **404s** (both path variants) and site search can't
+  find it. The 2019/20 page itself notes the Police Activity Survey (2025) supersedes the police-response
+  basis. Re-check next pass; blocker recorded in `m10-fraud.ts` header.
+- **M10 ✓:** HO Economic and social cost of fraud **2023-24** (YE Mar 2024 prices): fraud vs individuals
+  **£2,884**/offence (274+2,256+354, cross-checked against the doc's own summary), vs businesses £2,170,
+  total £14.4bn/yr context anchor. **Superseded `v2-fraud-individual` deleted** per the manifest.
+- **M11 ✓ — both TRAINING_RECALL params now VERIFIED** (`lib/lex/costing-params.ts`): optimism-bias uplifts
+  24/51/44/66/200% confirmed as Table 1 capex UPPER bounds in the HMT supplementary guidance PDF (lower
+  bounds 2/4/3/6/10 added; outsourcing 41% opex); health discount rate **1.5%** confirmed at Green Book 2026
+  §6.58. Both now `verified: true` and usable.
+- **Dependency:** `xlsx@0.18.5` added to scrutinise-web devDependencies (extraction tooling only).
+
+---
+
+## SEARCH — VECTOR EMBED: full-corpus embed pipeline + ANN + flag wiring (OFF) (2026-07-03 23:01 UTC)
+
+**Search thread; executes the post-pilot/post-fusion embed brief.** Builds (inert) the full-corpus
+gemini-embedding-001 @768-d embed via the **Gemini Batch API** (50% discount), the ANN index, and the
+OFF-by-default production wiring. Decision + runbook: **`docs/VECTOR_EMBED_REPORT.md`**. `scripts/ingest`
+`tsc --noEmit` = only the 4 documented pre-existing errors; `scrutinise-web` = only the 2 pre-existing
+`react-markdown` errors. New dep `@google/genai@^1.52` (isolates the Batch API's Files-upload + LRO polling).
+
+- **Cost CONFIRMED within the ~$600 gate (no flag raised).** Measured on Neon (`search/measure-corpus.ts`):
+  **17,640,217 compiled sections / 6.12 B words → ~22.25 M chunks (1.26/section) → ~6.90 B tokens (chars/4,
+  conservative) / ~5.69 B (words×1.3)**. At the batch rate ($0.15→**$0.075/1M**, verified on ai.google.dev):
+  **~$430–520**. Under 8 B est. and the ~$600 gate. 768-d halves the vector store (~68 GB vs ~137 GB), not the
+  embed bill (Gemini meters input tokens); the batch discount is the embed saving.
+- **Pipeline (`scripts/ingest/search/`, all resumable/idempotent, mirror build-fts-index.ts):** `chunk.ts`
+  (validated pilot chunker, extracted pure) → `build-corpus-chunks.ts` (STEP 1: Neon→R2→`corpus_chunks` Lance,
+  + archetype-A citation backfill) → `gemini-batch.ts` (the ONLY Batch-API module: Files upload →
+  `batches.createEmbeddings`/`:asyncBatchEmbedContent` → poll → download → parse; pure JSONL build/parse
+  offline-selftested) → `build-vector-index.ts` (STEP 2: ≤40k-req shards, ≤8 in flight, `corpus_vec` +
+  **IVF_PQ** cosine ANN; `--canary` validates the live batch shape) → `vector-core.ts`/`vector-query-service.ts`
+  (query-embed + ANN serve, INERT — the vector analogue of fts-query-service).
+- **Wiring behind the reserved `LEX_SEARCH_VECTOR` flag (OFF):** `scrutinise-web/lib/lex/vector-search.ts`
+  (platform adapter, mirrors fts-search) + `search-gateway.ts` fuses BM25+vector with the **TUNED 70/30
+  weighted RRF** (`0.7/(60+rank_vec)+0.3/(60+rank_bm25)`, env `LEX_FUSION_VECTOR_WEIGHT`; per FUSION_REPORT.md,
+  NOT naive equal-weight). Doubly inert (flag OFF + `VECTOR_SEARCH_URL` unset).
+- **The embed RUN is the Charlie-triggered spend** (Hetzner CCX43 + Batch API), inert until then — same
+  pattern as the FTS full-corpus build. Runbook in the report: `measure` (re-confirm) → `--canary` (validate
+  batch shape, ~cents) → `hetzner-build-run run "…build-corpus-chunks && …build-vector-index"` → teardown.
+- **✅ CANARY RUN + PASSED (2026-07-04 11:51 UTC, Charlie-approved, ~$0.01).** Bounded STEP-1 (5,000
+  sections → 23,130 chunks, 0 body misses; full build resumes from the checkpoint) + one live 200-chunk
+  batch job → `corpus_vec_canary`: SUCCEEDED; 200/200 vectors all exactly 768-d (Matryoshka honoured);
+  order/key assertions clean; norms 0.572–0.584 no zero/NaN; cos(adjacent same-section windows) 0.932 >
+  cos(different sections) 0.854. **Live Batch API JSONL/response contract CONFIRMED — the full spend is
+  de-risked.** SDK note: `batches.createEmbeddings()` prints an experimental warning; `@google/genai` is
+  version-pinned in package-lock. Remaining: the full Hetzner+Batch run (~$430–520).
+- **Left OFF deliberately:** 70/30 fusion needs a full-corpus re-confirm through the ANN path (pilot tuned on
+  the 60k exact-cosine subset); ANN recall vs exact is a separate measurement; gold key still draft. Flipping
+  the flag is the next sprint.
 
 ---
 

@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "file": "cost-benchmarks-seed-v2-additions.json",
+    "phase": "2a session 2",
+    "date": "2026-07-03",
+    "relationship_to_v1": "ADDITIVE, except the homicide row which REPLACES v1's homicide row (v1 used the 2015/16 edition; this uses the 2019/20 edition published 27 May 2026).",
+    "source_of_all_crime_rows": "Home Office, 'Economic and social costs of crime 2019 to 2020', published 27 May 2026, England and Wales, 2019/20 prices. Licence: Open Government Licence v3.0 (confirmed on the publication itself). URL: https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+    "supersession_note": "The publication itself flags that police-response and fraud components have been superseded: 'Economic and social cost of crime: Amendments to unit costs' carries newer unit costs, and 'Economic and social cost of fraud 2023-24' supersedes fraud. Both are in the extraction manifest below — rows here are OFFICIAL_CURRENT for the 2019/20 series with that caveat carried in notes.",
+    "loader_note": "CC: append `benchmarks` to CostBenchmark; delete/replace the v1 homicide row; keep `cc_extraction_manifest` as the scripted-ingest backlog (your machine has unrestricted network; CCh's container does not, so spreadsheet-bound sources are yours)."
+  },
+
+  "benchmarks_common_fields": {
+    "domain": "crime", "category": "CRIME", "region": "England and Wales",
+    "priceYear": 2019, "uprateMethod": "GDP_DEFLATOR", "confidence": "OFFICIAL_CURRENT", "year": 2026,
+    "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+    "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+    "usage_rule": "Unit costs are per ALL crimes (reported + unreported). To use with police-recorded-crime volumes, FIRST multiply PRC by the multiplier in notes. Consider excluding the anticipation component for marginal crime reductions (individuals don't cancel burglar alarms over small changes)."
+  },
+
+  "benchmarks": [
+    { "metric": "Unit cost: homicide", "unit": "GBP per offence", "low": 3346680, "high": 3346680, "method": "anticipation £68,700 + consequence £2,637,190 + response £640,780", "notes": "REPLACES v1 homicide row. Multiplier 1.00 (all homicides recorded). 673 offences; £2.3bn total." },
+    { "metric": "Unit cost: violence with injury", "unit": "GBP per offence", "low": 15720, "high": 15720, "method": "£280 + £13,390 + £2,050", "notes": "Multiplier 1.64. 885,970 offences; £13.9bn total." },
+    { "metric": "Unit cost: violence without injury", "unit": "GBP per offence", "low": 7150, "high": 7150, "method": "£120 + £5,480 + £1,540", "notes": "Multiplier 0.98." },
+    { "metric": "Unit cost: rape", "unit": "GBP per offence", "low": 48000, "high": 48000, "method": "£820 + £38,100 + £9,090", "notes": "Multiplier 2.78. Highest non-fatal unit cost. Physical/emotional harms component £26,340." },
+    { "metric": "Unit cost: other sexual offences", "unit": "GBP per offence", "low": 6540, "high": 6540, "method": "£130 + £5,610 + £800", "notes": "Multiplier 18.07 — huge under-reporting; never use raw PRC volumes." },
+    { "metric": "Unit cost: robbery (personal)", "unit": "GBP per offence", "low": 10490, "high": 10490, "method": "£480 + £8,560 + £1,450", "notes": "Multiplier 2.02." },
+    { "metric": "Unit cost: domestic burglary", "unit": "GBP per offence", "low": 7720, "high": 7720, "method": "£1,030 + £5,510 + £1,180", "notes": "Multiplier 2.17." },
+    { "metric": "Unit cost: theft of a vehicle", "unit": "GBP per offence", "low": 20330, "high": 20330, "method": "£2,750 + £14,960 + £2,620", "notes": "Multiplier 0.71 (PRC includes business vehicles)." },
+    { "metric": "Unit cost: theft from a vehicle", "unit": "GBP per offence", "low": 1420, "high": 1420, "method": "£170 + £1,130 + £130", "notes": "Multiplier 2.22." },
+    { "metric": "Unit cost: theft from the person", "unit": "GBP per offence", "low": 1590, "high": 1590, "method": "£290 + £1,120 + £180", "notes": "Multiplier 3.43." },
+    { "metric": "Unit cost: criminal damage", "unit": "GBP per offence", "low": 1970, "high": 1970, "method": "£300 + £1,430 + £240", "notes": "Multiplier 1.85." },
+    { "metric": "Unit cost: fraud (individual)", "unit": "GBP per offence", "low": 2000, "high": 2000, "method": "£260 + £1,600 + £130", "notes": "Multiplier 11.78. SUPERSEDED for new analysis by 'Economic and social cost of fraud 2023-24' — see manifest." },
+    { "metric": "Unit cost: cybercrime (individual)", "unit": "GBP per offence", "low": 750, "high": 750, "method": "£150 + £600 + £0 (police component un-costable)", "notes": "Multiplier 33.42." },
+    { "metric": "Unit cost: commercial robbery", "unit": "GBP per offence", "low": 11150, "high": 11150, "method": "£1,030 + £8,680 + £1,450", "notes": "9-sector coverage only (~60% of enterprises)." },
+    { "metric": "Unit cost: commercial burglary", "unit": "GBP per offence", "low": 10020, "high": 10020, "method": "£3,690 + £5,460 + £870", "notes": "9-sector coverage only." },
+    { "metric": "Unit cost: commercial theft", "unit": "GBP per offence", "low": 570, "high": 570, "method": "£110 + £380 + £90", "notes": "Lowest unit cost but £5.5bn total from 9.6M incidents — volume-driven." },
+    { "metric": "Unit cost: theft of a commercial vehicle", "unit": "GBP per offence", "low": 32590, "high": 32590, "method": "£6,970 + £23,000 + £2,620", "notes": "9-sector coverage only." },
+    { "metric": "Unit cost: theft from a commercial vehicle", "unit": "GBP per offence", "low": 2300, "high": 2300, "method": "£480 + £1,700 + £130", "notes": "9-sector coverage only." },
+    { "metric": "Unit cost: commercial criminal damage", "unit": "GBP per offence", "low": 1100, "high": 1100, "method": "£160 + £700 + £240", "notes": "9-sector coverage only." },
+    { "metric": "Total cost of crime, England & Wales 2019/20 (context anchor)", "unit": "GBP per year", "low": 77700000000, "high": 77700000000, "method": "£60.8bn individuals + £16.9bn commercial (9 sectors)", "notes": "REPLACES v1 context anchor (was 2015/16 £59bn). Physical/emotional harms ≈47% of individual-crime cost." }
+  ],
+
+  "cc_extraction_manifest": {
+    "why": "These sources are spreadsheets or large PDFs. CCh's container network is allow-listed (package registries only) and cannot download them; CC's machine can. For each: script the download, extract the named values, insert as CostBenchmark rows with source + priceYear, and record the script in the repo (repeatable on source updates).",
+    "targets": [
+      { "id": "M1", "source": "DfT TAG Data Book (latest xlsx), table A4.1.1", "extract": "Average value of prevention per casualty: fatal / serious / slight (per casualty AND per accident), with the data book's stated price year", "loads": "LIFE_SAFETY rows incl. current VPF; replaces v1 provisional £2m VPF row", "uprateMethod": "GDP_PER_HEAD" },
+      { "id": "M2", "source": "TAG Data Book table A1.3.x", "extract": "Value of travel time: working (per hour), commuting, other non-working", "loads": "TIME rows" },
+      { "id": "M3", "source": "HMT GDP deflators (latest quarterly xlsx)", "extract": "Full annual deflator series 1999→present", "loads": "DeflatorSeries table (enables ALL uprating — do this first)" },
+      { "id": "M4", "source": "GMCA Unit Cost Database (Nov 2025 xlsx)", "extract": "STEP 1: read the licence tab/terms and REPORT BACK before ingesting (not Crown copyright). STEP 2 (if permitted): top ~30 entries across crime/education/employment/housing/health/social services", "loads": "SERVICE_UNIT_COST / outcome rows" },
+      { "id": "M5", "source": "PSSRU Unit Costs of Health and Social Care (latest, PDF)", "extract": "GP consultation; A&E attendance; hospital inpatient bed-day; community nurse hour; social worker hour; IAPT/mental-health contact", "loads": "HEALTH service unit costs (enforcement/implementation costing)" },
+      { "id": "M6", "source": "ONS ASHE (latest)", "extract": "Median gross hourly earnings — all employees, plus 2–3 occupation groups (admin, professional)", "loads": "ADMIN_BURDEN wage inputs for Standard Cost Model" },
+      { "id": "M7", "source": "DESNZ 'Valuation of greenhouse gas emissions for policy appraisal' (HTML/xlsx)", "extract": "Carbon values £/tCO2e: low/central/high, current year and 2030", "loads": "ENVIRONMENT rows" },
+      { "id": "M8", "source": "DBT Business Population Estimates (latest)", "extract": "Business counts by size band (micro/small/medium/large) and headline sector counts", "loads": "the N in every regulatory-friction calculation" },
+      { "id": "M9", "source": "Home Office 'Economic and social cost of crime: Amendments to unit costs' (HTML, gov.uk)", "extract": "Updated police-response and fraud unit-cost amendments", "loads": "amendment rows superseding the affected components above" },
+      { "id": "M10", "source": "Home Office 'Economic and social cost of fraud 2023-24' (HTML, gov.uk)", "extract": "Current fraud unit + total costs", "loads": "supersedes the fraud row above" },
+      { "id": "M11", "source": "Green Book supplementary guidance: optimism bias (gov.uk)", "extract": "Verify the uplift table (24%/51%/44%/66%/200%) flagged TRAINING-RECALL in v1 parameters, + Green Book health discount rate 1.5%", "loads": "confirms/corrects v1 parameters block" }
+    ]
+  }
+}
