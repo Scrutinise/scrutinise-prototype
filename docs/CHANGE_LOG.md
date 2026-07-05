@@ -1,8 +1,49 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 3 Jul 2026 — SEARCH VECTOR EMBED: full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus 17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520 batch (within the ~$600 gate); embed RUN is Charlie-triggered (Hetzner + Batch API).*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jul 2026 — GRAPH Tier 1: explicit-edge legislation graph (2.35M edges in Neon `legislation_edges`) + rescission traversal + service; gold archetype D un-floored 0% → 80%.*
 
 ---
+
+## GRAPH — Tier 1 legislation graph (explicit edges) + rescission traversal (2026-07-05 16:57 UTC)
+
+**Sprint complete — graph built, loaded, traversed, scored.** Full audit + build report:
+**`docs/GRAPH_TIER1_REPORT.md`**. New code all under `scripts/ingest/graph/` (ingest-side only).
+`scripts/ingest` `tsc --noEmit` = only the 4 documented pre-existing errors.
+
+- **Audit first (bytes before hypotheses):** the brief's "CLML cross-reference markup in the XML we
+  already hold" is REFUTED for the per-section fragments — stored raw.xml has ZERO `<Citation>` markup
+  (verified across 30 random + 14 explicitly-amending provisions; act names are plain text). Effects
+  feeds captured for only 3,590 legacy UKPGA acts; corpus-pipeline effects rows = 0; SI preambles never
+  stored. What DOES hold everything: the TNA bulk sources — `best-collection-xml.zip` (1.4 GB whole-doc
+  CLML, on disk since May 2026, WITH Citation/CitationSubRef/SecondaryPreamble) and
+  research.legislation.gov.uk bulk amendments XML (bulk-before-API verified by HEAD + download;
+  secondary types regenerate daily, primary/EU vintage 2025-10-30).
+- **Built:** Neon `legislation_edges` (from_id, to_id, edge_type, sub_type, source, granularity, detail,
+  extracted_at; ids in the corpus_sections `{corpus}:{gid}[:{sectionRef}]` scheme; PK-idempotent inserts;
+  gid expression indexes both directions). Extractors (each pilot→full, zero silent drops, resumable):
+  `extract-effects-edges.ts` (2,605,737 effects → amends/repeals/commences/modifies; regnal-year URI fix
+  recovered 22k skips), `extract-madeunder-edges.ts` (82,831 SIs → 230,681 made-under edges incl.
+  section-level enabling powers; recital fallback; 6,108 TNA-elided revised preambles counted),
+  `extract-cites-edges.ts` (body citations only — commentary/footnote/preamble zones excluded as
+  effects/made-under duplicates; 121,279 edges), `extract-inforce-edges.ts` (~107k act-level historical
+  repeals back to 1235). **Total 2,348,993 edges / ~0.94 GB; Neon 15 → ~16 GB (17.5 GB line — thin).**
+- **Traversal + service:** `traverse-edges.ts` `impactSet(gid, sectionRef?)` — "if this is repealed,
+  what is affected" grouped madeUnder/citedBy/amendedBy/repealedBy/commencedBy/targetTouches + one-hop
+  over dependent SIs; section queries prefix-match TNA's subsection grain AND inserted siblings
+  (section-21 → section-21-4, section-21A). `edges-query-service.ts` mirrors fts-query-service
+  (POST /impact; smoke-tested live: 224 ms, correct groups, titles resolved).
+- **Gold archetype D re-scored through the traversal: 0% (floor) → 80% (8/10).** D1 2/2 (Deregulation
+  2015 ss.33–41 + Renters' Rights 2025 prospective repeal of HA1988 s.21), D2 2/2 (35 SIs under BSA 2022
+  incl. Higher-Risk Buildings regs), D3 1/1 (957 commences edges w/ in-force facts), D4 3/3 (ABCPA 2014
+  s.106 + XL Bully order via made-under), D5 0/2 (needs case-interprets-section edges — explicitly out
+  of sprint scope; stays floored as predicted).
+- **Engineering notes:** adm-zip's whole-file 1.4 GB buffer fails on this machine → `zip-reader.ts`
+  (~130-line streaming ZIP64 reader, no new deps). Cites OOM root-caused to V8 sliced strings pinning
+  source docs via regex-match-derived ids → `dedupeEdges` flattens all retained strings.
+- **Follow-ups (report §5):** primary/EU effects vintage top-up (per-act API or TNA refresh); elided SI
+  preambles via made-version fetch; case-law edges for D5 (separate brief); fold the scorer's Title-Case
+  resolver fallback into `citation-resolver.ts`; add `legislation_edges` to schema.prisma when the web
+  app needs typed access.
 
 ## LEX REBUILD — COSTING Phase 2a s2: v2 additions + extraction manifest M1–M11 worked (2026-07-04 12:11 UTC)
 
