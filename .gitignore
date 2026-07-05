@@ -86,3 +86,12 @@ scripts/operational/cop-app-crawl.json
 scripts/ingest/search/.hetzner-cloud-init.preview.sh
 scripts/ingest/search/.hetzner-build-server-id
 scripts/ingest/search/.*-service-id
+
+# Tier-1 graph sprint — bulk TNA amendments data (large, regenerable via download-graph-sources.ts)
+scripts/ingest/graph/data/
+
+
+# Tier-1 graph — extraction checkpoints + pilot projections (regenerable, machine-local)
+scripts/ingest/graph/*-checkpoint.json
+scripts/ingest/graph/cites-pilot.json
+
