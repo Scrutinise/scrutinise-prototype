@@ -136,3 +136,109 @@ quota) and `VECTOR_SHARD_SIZE` (≤50k). Batch jobs have a ≤24h SLA (usually f
   directional until it's validated.
 - **corpus_chunks** (~27 GB chunk text on R2) is retained (feeds hybrid/rerank without re-reading
   the corpus); it can be dropped after embedding if storage is tight.
+
+---
+
+## 5. ADDENDUM 2026-07-07 — the tier wall, and the sync-mode escape route
+
+### 5.1 What the full run found (2026-07-04→06)
+
+**STEP 1 is DONE and durable:** 17,640,560 sections → **21,846,364 chunks** in `corpus_chunks`
+(1.24/section, 230 body misses = 0.001%, ~32 h on a cpx62 — Hetzner's dedicated-core quota blocked
+the CCX43; cpx62 16 shared vCPU/32 GB was the fallback). Never needs re-running.
+
+**STEP 2 hit three walls in sequence:**
+
+1. **Node default-heap OOM (exit 134)** loading the 21.8 M-row chunkId list — V8's default ~4 GB
+   heap cap, not machine RAM. Operational fix, no code: run with
+   `NODE_OPTIONS=--max-old-space-size=28672`.
+2. **`GEMINI_API_KEY` was never injected onto the box** (cloud-init carried only Neon+R2 creds; the
+   canary passed because it ran locally). Fixed in `hetzner-build-run.ts` — commit `c715e00`,
+   shipped solo under the §12 build-breaking carve-out. Zero spend lost (client-side failure).
+3. **THE BLOCKER — Batch tier caps ENQUEUED TOKENS per model.** Every job 429'd at creation.
+   Probed empirically (`gemini-tier-probe.ts`, cancel-on-accept ≈ $0): 182 k-token job ACCEPTED,
+   2.56 M REJECTED → the account is **paid Tier 1 = 500 k enqueued tokens**. Documented caps
+   (ai.google.dev/gemini-api/docs/rate-limits): **T1 500 k / T2 5 M / T3 10 M.** The 40 k-chunk
+   shards are ~12.4 M tokens — they fit NO tier. §1's sizing modelled the 50 k-requests/job cap but
+   not this quota; the ~62 k-token canary sailed under every cap, which is why it couldn't catch it.
+
+**Billing decode (Charlie, from the console):** account is Paid Tier 1; the £150 payment is CREDIT,
+not spend — Tier 2 requires **≥$100 of ACTUAL usage** (+3 days from first payment — met); usage to
+date ≈ $36. Tier upgrades are AUTOMATIC once criteria are met ("within 10 minutes" per docs —
+though billing-usage aggregation itself can lag hours; detect the flip with `gemini-tier-probe.ts`,
+whose ~4 M-token probe is accepted only at Tier 2+). The **"£189.01 Billing Account Tier Cap" is
+Tier 1's mandatory $250/month billing-account spend ceiling** (in GBP; enforced since Apr 2026 —
+requests pause for the month at the cap). A ~$100 sync slice + the $36 existing usage ≈ $136 fits
+under it; Tier 2's monthly cap is $2,000, so the batch remainder fits in the same month post-flip.
+
+### 5.2 The plan (Charlie-gated): sync-embed a slice → cross $100 → Tier 2 → resume batch
+
+**Built this sprint (INERT, all offline-selftested + tsc-clean):**
+
+- **`VECTOR_EMBED_MODE=sync|batch`** on `build-vector-index.ts` — sync routes each shard through
+  **`gemini-sync.ts`** (NEW): the pilot's synchronous `embedContent` transport at STANDARD rate
+  ($0.15/1M, double batch), packed ≤100 texts / ≤18 k est-tokens per call (verified API caps: 250
+  texts, 20 k tokens, 2,048 tok/text silently truncated — our chunks max ~1,024), paced by a
+  GLOBAL minute-window limiter across all in-flight shards (defaults 950 k TPM / 2,800 RPM — 5%
+  under the Tier-1 sync limits of 1 M TPM / 3,000 RPM; per-model figures are from Google's forum
+  staff reply, **confirm on aistudio.google.com/rate-limit**), per-call 429/5xx retries. Same shard
+  plan, same writes, same checkpoint — a shard is a shard regardless of transport, and vectors are
+  transport-identical (same model/dims/taskType → same embedding space).
+- **Checkpoint pins `shardSize`** — completed-shard indices are meaningless under a different
+  `VECTOR_SHARD_SIZE`, so the build now refuses a mismatched resume (the plan must survive the
+  sync→batch switch; pick 12,000 BEFORE the slice).
+- **`gemini-batch.ts` splits over-budget shards into sequential sub-jobs**
+  (`VECTOR_BATCH_JOB_TOKENS`, default 4.5 M = Tier-2 cap × 0.9). This matters: sorted chunkIds
+  group corpora contiguously, and caselaw/debate regions run ~800 tok/chunk vs the ~310 corpus
+  average — a 12 k-chunk shard there is ~9.6 M tokens and would 429 at Tier 2 forever. Count-sized
+  shards + token-capped jobs keeps the deterministic plan AND the queue legal.
+- **`gemini-tier-probe.ts`** (promoted from the diagnostic throwaway): token-targeted create-then-
+  cancel probes at ~300 k / ~4 M / ~8 M — the ~free tier detector.
+
+### 5.3 The numbers
+
+Basis: 21,846,364 chunks, ~310 est tok/chunk (chars/4) → **~6.77 B tokens** total (~5.59 B on the
+words×1.3 basis). Plan: `VECTOR_SHARD_SIZE=12000` → **1,821 shards**, pinned.
+
+| stage | tokens | rate | cost | wall-time |
+|---|---|---|---|---|
+| sync slice → +$100 usage | ~667 M | $0.15/1M | ~$100 | **~11.7 h** at 950 k TPM (~57 M tok/h) |
+| (if the $36 counts → only +$64) | ~427 M | $0.15/1M | ~$64 | ~7.5 h |
+| batch remainder at Tier 2 | ~6.1 B | $0.075/1M | ~$370–460 | ~1,640 shards → ~1,900–2,200 jobs (sub-job splits), MAX_INFLIGHT=1, sequential; drain-rate unknown → realistically **days, possibly 1–2 weeks** (24 h/job SLA worst case) |
+
+**Revised total: ~$470–560** (vs ~$430–520 all-batch) — the ~$50 premium on the sync slice is the
+price of the tier flip. Still under the ~$600 gate; the chars/4 (upper) basis is now within ~$40 of
+it, so the words-basis (~$470) is the central estimate. Token counts per shard vary by region
+(~170–800 tok/chunk), so **the $100 crossing is controlled by the billing console, not shard
+count** — run the slice open-ended, check console spend every few hours, probe, then switch (the
+overshoot window costs at most the sync premium on a few hours of embedding).
+
+### 5.4 Runbook (all Charlie-gated — NOTHING runs without the go)
+
+```
+# 0. sync canary (~$0.03): live-validate the sync response shape end-to-end
+#    (needs the big heap for the id-list load → run on the box, or any 32 GB machine)
+NODE_OPTIONS=--max-old-space-size=28672 VECTOR_EMBED_MODE=sync VECTOR_SHARD_SIZE=12000 \
+  npx tsx search/build-vector-index.ts --canary
+
+# 1. sync slice on a cpx62 (same transient-box pattern; ~$0.06/h):
+HETZNER_SERVER_TYPE=cpx62 HETZNER_LOCATION=nbg1 npx tsx search/hetzner-build-run.ts run \
+  "NODE_OPTIONS=--max-old-space-size=28672 R2_MAX_SOCKETS=256 VECTOR_EMBED_MODE=sync \
+   VECTOR_SHARD_SIZE=12000 VECTOR_MAX_INFLIGHT=4 npx tsx search/build-vector-index.ts"
+
+# 2. watch console usage → at ≥$100 total, detect the flip (~free, local):
+npx tsx search/gemini-tier-probe.ts        # "~4,000,000 est tok: ACCEPTED → Tier 2+"
+
+# 3. teardown, relaunch in batch mode (same shard size — the checkpoint enforces it):
+"NODE_OPTIONS=--max-old-space-size=28672 R2_MAX_SOCKETS=256 \
+ VECTOR_SHARD_SIZE=12000 VECTOR_MAX_INFLIGHT=1 npx tsx search/build-vector-index.ts"
+# then: logs / teardown; ANN builds at the end (32 GB risk → --index-only on a CCX43 if it OOMs)
+```
+
+Residual uncertainties, stated plainly: (a) whether credit-funded usage counts toward the $100 —
+Charlie's console decode says usage is what counts, and the "prepaid balance ≠ spend" forum reports
+agree, but the flip timing is only proven by the probe; (b) Tier-1 sync limits for
+gemini-embedding-001 (3,000 RPM / 1 M TPM) are from Google-staff forum replies, not the pricing
+table — one AI-Studio dashboard glance confirms; the pacer env-tunes (`VECTOR_SYNC_TPM/RPM`) if the
+dashboard says otherwise; (c) Tier-2 batch drain rate is unmeasured — if the remainder's wall-time
+disappoints, the rate-limit-increase form (linked from the rate-limits page) is the lever.

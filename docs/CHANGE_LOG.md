@@ -4,6 +4,32 @@
 
 ---
 
+## SEARCH — VECTOR EMBED: tier wall verified + sync-embed mode built (INERT, spend Charlie-gated) (2026-07-06 23:26 UTC)
+
+**Executes the verify-limits + sync-mode brief.** Full findings + plan: **`docs/VECTOR_EMBED_REPORT.md` §5**.
+`tsc`: only the 4 documented pre-existing errors; both transports offline-selftested.
+
+- **VERIFIED (no spend):** account = paid **Batch Tier 1 → 500k enqueued-token queue** (probed:
+  182k accepted / 2.56M rejected; docs: T1 500k / T2 5M / T3 10M). The "£189.01 Billing Account
+  Tier Cap" = Tier 1's mandatory **$250/month** account spend ceiling (GBP) — a ~$100 sync slice +
+  $36 existing usage fits. Tier-2 flip is AUTOMATIC at ≥$100 actual usage (+3 days, met), docs say
+  ≤10 min once criteria register. Sync limits for gemini-embedding-001 at T1: **3,000 RPM / 1M TPM**
+  (forum-official; confirm in AI Studio). Sync request caps: 250 texts / 20k tokens / 2,048 tok/text.
+- **BUILT:** `VECTOR_EMBED_MODE=sync|batch` on `build-vector-index.ts` — sync drives the SAME shard
+  plan/writes/checkpoint through NEW **`gemini-sync.ts`** (packed ≤100 texts/≤18k tok per call,
+  GLOBAL 950k-TPM/2,800-RPM pacer, per-call 429 retries). Checkpoint now **pins shardSize** (plan
+  must survive the transport switch). **`gemini-batch.ts` splits over-budget shards into sequential
+  sub-jobs** (`VECTOR_BATCH_JOB_TOKENS` 4.5M) — caselaw/debate regions run ~800 tok/chunk, so a 12k
+  shard there (~9.6M tok) would otherwise 429 at Tier 2 forever. `gemini-tier-probe.ts` promoted
+  (token-targeted create-then-cancel tier detector, ~$0).
+- **PLAN NUMBERS (gated):** shard plan `VECTOR_SHARD_SIZE=12000` → 1,821 shards, pinned. Sync slice
+  ~667M tok ≈ $100 ≈ **~11.7h** at the pacer rate (427M/$64/7.5h if the $36 counts — console-controlled,
+  not shard-counted). Tier-2 batch remainder ~6.1B tok ≈ **$370–460**, ~1,900–2,200 sequential jobs
+  (MAX_INFLIGHT=1), days-to-2-weeks. **Revised total ~$470–560** (~$50 sync premium buys the flip) —
+  still under the ~$600 gate. NOTHING runs without Charlie's go.
+
+---
+
 ## SEARCH — VECTOR EMBED hotfix: GEMINI_API_KEY injected onto the Hetzner build box (2026-07-06 07:05 UTC)
 
 **Mid-sprint carve-out commit (build-breaking fix).** The full-corpus STEP-2 embed failed on the
