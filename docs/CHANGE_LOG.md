@@ -4,6 +4,21 @@
 
 ---
 
+## SEARCH — VECTOR EMBED hotfix: GEMINI_API_KEY injected onto the Hetzner build box (2026-07-06 07:05 UTC)
+
+**Mid-sprint carve-out commit (build-breaking fix).** The full-corpus STEP-2 embed failed on the
+box with every shard erroring `GEMINI_API_KEY not set` — `hetzner-build-run.ts` injected only the
+Neon+R2 creds via cloud-init, never the Gemini key (the canary passed because it ran locally where
+`.env` supplies it). One-line fix: `GEMINI_API_KEY` added to the `NEEDED` inject list. **Zero Gemini
+spend lost** — all 547 shards failed client-side before any Batch API call; checkpoint intact (0 done).
+Also hit + fixed operationally (no code change): STEP-2's chunkId load OOM'd at node's default ~4GB
+heap cap (21.8M ids ≫ the comment's <1GB estimate once V8 object overhead counts) — relaunch command
+now carries `NODE_OPTIONS=--max-old-space-size=28672`. STEP 1 final: **17,640,560 sections →
+21,846,364 chunks** (1.24/section, 230 body misses, ~32h on the cpx62). tsc: only the 4 documented
+pre-existing errors.
+
+---
+
 ## GRAPH — Tier 1 legislation graph (explicit edges) + rescission traversal (2026-07-05 16:57 UTC)
 
 **Sprint complete — graph built, loaded, traversed, scored.** Full audit + build report:

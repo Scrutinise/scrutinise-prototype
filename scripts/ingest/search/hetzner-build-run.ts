@@ -57,13 +57,15 @@ const STATE_KEY = path.join(__dirname, '.hetzner-build-server-id')
 // own machine checkpoint (`_search/*.checkpoint.json`) that fts-watch consumes.
 const LOG_TAIL_KEY = process.env.HETZNER_LOG_TAIL_KEY ?? '_search/hetzner-build.tail.log'
 
-// Neon + R2 creds to inject (same set fts-railway-run copies; NOT the Hetzner token).
+// Neon + R2 + Gemini creds to inject (NOT the Hetzner token). GEMINI_API_KEY is required
+// by the STEP-2 batch embed (gemini-batch.ts) — without it every shard fails client-side.
 const NEEDED = [
   'NEON_DATABASE_URL',
   'CLOUDFLARE_R2_ACCOUNT_ID',
   'CLOUDFLARE_R2_ACCESS_KEY_ID',
   'CLOUDFLARE_R2_SECRET_ACCESS_KEY',
   'CLOUDFLARE_R2_BUCKET_NAME',
+  'GEMINI_API_KEY',
 ] as const
 
 const fs = require('fs') as typeof import('fs')
