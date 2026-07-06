@@ -28,12 +28,19 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { GoogleGenAI } from '@google/genai'
-import { VECTOR_MODEL, VECTOR_DIMS, TASK_DOCUMENT } from './vector-common'
+import { VECTOR_MODEL, VECTOR_DIMS, TASK_DOCUMENT, estTokens } from './vector-common'
 
 const POLL_MS = parseInt(process.env.VECTOR_BATCH_POLL_MS ?? '30000', 10)
 const POLL_MAX = parseInt(process.env.VECTOR_BATCH_POLL_MAX ?? '2880', 10) // 2880×30s = 24h SLA ceiling
 const UPLOAD_MIME = process.env.VECTOR_BATCH_MIME ?? 'application/jsonl'
 const TERMINAL = new Set(['JOB_STATE_SUCCEEDED', 'JOB_STATE_FAILED', 'JOB_STATE_CANCELLED', 'JOB_STATE_EXPIRED'])
+// Per-JOB est-token budget (2026-07-07): the Batch tier caps ENQUEUED TOKENS across
+// active jobs (T1 500k / T2 5M / T3 10M — probed + docs). A count-sized shard can't
+// guarantee this (sorted chunkIds group corpora contiguously; caselaw/debate regions
+// run ~800 tok/chunk vs the ~310 corpus average), so any over-budget shard is split
+// into SEQUENTIAL sub-jobs here at submission time, where the bodies are in hand.
+// Default 4.5M = Tier-2 cap × 0.9. Set 0 to disable (single job per shard).
+const JOB_TOKENS = parseInt(process.env.VECTOR_BATCH_JOB_TOKENS ?? '4500000', 10)
 
 export interface ChunkForEmbed { chunkId: string; body: string }
 
@@ -79,15 +86,44 @@ export function parseEmbedResponseLine(line: string): { key: string | null; valu
 
 // ── the one batch call ─────────────────────────────────────────────────────────
 
+/** Pure: split a shard into consecutive sub-job groups of ≤JOB_TOKENS est tokens
+ *  (order preserved; a single over-budget chunk still ships alone). Exported for
+ *  the offline --selftest. */
+export function splitForJobTokens(chunks: ChunkForEmbed[], budget = JOB_TOKENS): ChunkForEmbed[][] {
+  if (!budget || budget <= 0) return [chunks]
+  const groups: ChunkForEmbed[][] = []
+  let group: ChunkForEmbed[] = []
+  let tokens = 0
+  for (const c of chunks) {
+    const t = estTokens(c.body)
+    if (group.length && tokens + t > budget) { groups.push(group); group = []; tokens = 0 }
+    group.push(c); tokens += t
+  }
+  if (group.length) groups.push(group)
+  return groups
+}
+
 /**
- * Embed one shard (≤ SHARD_SIZE chunks) via a single batch job. Returns one vector per
- * input chunk, IN INPUT ORDER; a chunk the service couldn't embed (e.g. over the token
- * cap) comes back as null (the caller records a miss and moves on). Deletes the uploaded
- * input file on completion so Files storage never approaches the 20GB cap.
+ * Embed one shard via the Batch API. Returns one vector per input chunk, IN INPUT
+ * ORDER; a chunk the service couldn't embed (e.g. over the token cap) comes back as
+ * null (the caller records a miss and moves on). A shard whose estimated tokens
+ * exceed the per-job budget is transparently split into SEQUENTIAL sub-jobs (keeps
+ * the deterministic shard plan while never over-filling the tier's enqueued-token
+ * queue). Deletes uploaded input files as it goes so Files storage stays bounded.
  *
  * @param tag  a short label for logs + the batch displayName (e.g. "shard-000123").
  */
 export async function embedShardViaBatch(chunks: ChunkForEmbed[], tag: string): Promise<(number[] | null)[]> {
+  const groups = splitForJobTokens(chunks)
+  if (groups.length === 1) return embedJob(chunks, tag)
+  console.log(`[gemini-batch] ${tag}: ~${estTokens(chunks.map((c) => c.body).join('')).toLocaleString()} est tok > job budget — ${groups.length} sequential sub-jobs`)
+  const out: (number[] | null)[] = []
+  for (let g = 0; g < groups.length; g++) out.push(...await embedJob(groups[g], `${tag}.${g}`))
+  return out
+}
+
+/** One shard-or-sub-job → one batch job (upload → create → poll → collect). */
+async function embedJob(chunks: ChunkForEmbed[], tag: string): Promise<(number[] | null)[]> {
   const ai = client()
   const tmp = path.join(os.tmpdir(), `vec-${tag}-${process.pid}.jsonl`)
   fs.writeFileSync(tmp, chunks.map((c) => buildEmbedRequestLine(c.chunkId, c.body)).join('\n') + '\n', 'utf8')
@@ -162,10 +198,20 @@ function selftest() {
   ]
   const parses = samples.map(parseEmbedResponseLine)
   const ok2 = parses[0].values?.length === 3 && parses[1].values?.length === 2 && parses[2].values?.length === 1 && parses[3].values === null
+  // job splitting: 12k chunks of 3,200 chars (800 est tok) = 9.6M tok → sub-jobs each
+  // ≤ budget, order + count preserved; small shard stays one group; oversize chunk ships alone
+  const dense = Array.from({ length: 12000 }, (_, i) => ({ chunkId: `d#${i}`, body: 'x'.repeat(3200) }))
+  const g1 = splitForJobTokens(dense, 4_500_000)
+  const ok3 = g1.length === 3 && g1.every((g) => g.reduce((a, c) => a + Math.ceil(c.body.length / 4), 0) <= 4_500_000)
+    && g1.flat().length === 12000 && g1.flat()[0].chunkId === 'd#0' && g1.flat()[11999].chunkId === 'd#11999'
+  const ok4 = splitForJobTokens(dense.slice(0, 100), 4_500_000).length === 1
+    && splitForJobTokens([{ chunkId: 'big', body: 'x'.repeat(40_000_000) }], 4_500_000).length === 1
   console.log(`buildEmbedRequestLine: ${ok1 ? 'PASS' : 'FAIL'}  (${line.slice(0, 90)}…)`)
   console.log(`parseEmbedResponseLine: ${ok2 ? 'PASS' : 'FAIL'}  (${JSON.stringify(parses.map((p) => p.values?.length ?? null))})`)
-  console.log(`model=${VECTOR_MODEL} dims=${VECTOR_DIMS} mime=${UPLOAD_MIME}`)
-  if (!ok1 || !ok2) process.exit(1)
+  console.log(`splitForJobTokens dense: ${ok3 ? 'PASS' : 'FAIL'} (${g1.length} sub-jobs for 9.6M est tok)`)
+  console.log(`splitForJobTokens edge:  ${ok4 ? 'PASS' : 'FAIL'}`)
+  console.log(`model=${VECTOR_MODEL} dims=${VECTOR_DIMS} mime=${UPLOAD_MIME} jobTokens=${JOB_TOKENS}`)
+  if (!ok1 || !ok2 || !ok3 || !ok4) process.exit(1)
 }
 
 if (process.argv.includes('--selftest')) selftest()

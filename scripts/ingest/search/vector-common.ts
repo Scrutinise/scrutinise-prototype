@@ -39,4 +39,20 @@ export const VEC_CHECKPOINT_KEY = `_search/${VEC_TABLE}.checkpoint.json`
 export const SHARD_SIZE = parseInt(process.env.VECTOR_SHARD_SIZE ?? '40000', 10)     // < 50k hard cap, headroom
 export const MAX_INFLIGHT_SHARDS = parseInt(process.env.VECTOR_MAX_INFLIGHT ?? '8', 10)
 
+// ── embed transport (2026-07-07) ─────────────────────────────────────────────
+// 'batch' (default) = gemini-batch.ts, half price, but the account's Batch tier
+// caps enqueued tokens (Tier 1 = 500k / Tier 2 = 5M / Tier 3 = 10M — probed +
+// docs-verified). 'sync' = gemini-sync.ts, standard rate through embedContent,
+// paced client-side under the Tier-1 sync limits — used to bank a corpus slice
+// AND accrue the ≥$100 usage that auto-flips the account to Tier 2.
+// NOTE: once any shard is DONE, VECTOR_SHARD_SIZE is pinned by the checkpoint
+// (build-vector-index.ts asserts) — pick the Tier-2-compatible size BEFORE the
+// sync slice so the plan survives the transport switch.
+export const EMBED_MODE = (process.env.VECTOR_EMBED_MODE ?? 'batch').toLowerCase()
+
 export function chunkId(sectionId: string, k: number): string { return `${sectionId}#${k}` }
+
+/** Conservative token estimator (chars/4 — same basis as measure-corpus.ts; a slight
+ *  OVER-estimate for legal English at ~4.3 chars/token, so budgets err safe). Used by
+ *  both transports: gemini-sync.ts call packing and gemini-batch.ts job splitting. */
+export function estTokens(text: string): number { return Math.ceil(text.length / 4) }

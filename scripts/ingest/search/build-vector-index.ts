@@ -31,11 +31,24 @@
  *   npx tsx search/build-vector-index.ts --reset      # drop corpus_vec, fresh checkpoint, then full
  * Env: VECTOR_SHARD_SIZE(40000) VECTOR_MAX_INFLIGHT(8) VECTOR_SHARD_RETRIES(3)
  *      VECTOR_ANN_PARTITIONS(4096) VECTOR_ANN_SUBVECTORS(96) VECTOR_CANARY_N(200)
+ *      VECTOR_EMBED_MODE(batch) — 'sync' routes shards through gemini-sync.ts (standard
+ *      rate, client-paced) instead of the Batch API; same shard plan, writes, checkpoint.
+ *
+ * OPERATIONAL NOTES (learned on the 2026-07 full run):
+ *   - The chunkId-list load needs NODE_OPTIONS=--max-old-space-size=28672 — 21.8M id
+ *     strings + Arrow row objects blow node's DEFAULT ~4GB heap cap (exit 134) long
+ *     before the box's RAM matters.
+ *   - Batch tier caps ENQUEUED TOKENS per model (T1 500k / T2 5M / T3 10M): size
+ *     VECTOR_SHARD_SIZE × ~310 tok/chunk × VECTOR_MAX_INFLIGHT under the account's cap
+ *     (Tier 2 → SHARD_SIZE 12000, MAX_INFLIGHT 1). The 40k default predates this finding.
+ *   - SHARD_SIZE is PINNED by the checkpoint once a shard completes (asserted below):
+ *     shard boundaries must stay deterministic across resumes AND transport switches.
  */
 import { Schema, Field, Utf8, Float32, FixedSizeList } from 'apache-arrow'
 import { connectLance, lanceDbUri, lancedb } from './lance'
-import { CHUNKS_TABLE, VEC_TABLE, VEC_CHECKPOINT_KEY, VECTOR_DIMS, VECTOR_MODEL, SHARD_SIZE, MAX_INFLIGHT_SHARDS } from './vector-common'
+import { CHUNKS_TABLE, VEC_TABLE, VEC_CHECKPOINT_KEY, VECTOR_DIMS, VECTOR_MODEL, SHARD_SIZE, MAX_INFLIGHT_SHARDS, EMBED_MODE } from './vector-common'
 import { embedShardViaBatch, ChunkForEmbed } from './gemini-batch'
+import { embedShardViaSync } from './gemini-sync'
 import { r2Get, r2Put } from '../shared/r2-client'
 
 const RESET = process.argv.includes('--reset')
@@ -60,7 +73,7 @@ function vecSchema(): Schema {
   ])
 }
 
-type Checkpoint = { phase: 'embedding' | 'indexing' | 'done'; doneShards: number[]; vectors: number; misses: number; updatedAt: string }
+type Checkpoint = { phase: 'embedding' | 'indexing' | 'done'; doneShards: number[]; vectors: number; misses: number; shardSize?: number; updatedAt: string }
 const FRESH: Checkpoint = { phase: 'embedding', doneShards: [], vectors: 0, misses: 0, updatedAt: '' }
 
 async function loadCp(): Promise<Checkpoint> {
@@ -87,7 +100,8 @@ async function withRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
 }
 
 async function main() {
-  console.log(`[vec-index] dataset=${lanceDbUri()}/${vecTableName} model=${VECTOR_MODEL} dims=${VECTOR_DIMS} shard=${SHARD_SIZE} inflight=${MAX_INFLIGHT_SHARDS}` + (CANARY ? ` CANARY(n=${CANARY_N})` : '') + (RESET ? ' RESET' : ''))
+  if (EMBED_MODE !== 'batch' && EMBED_MODE !== 'sync') throw new Error(`VECTOR_EMBED_MODE must be 'batch' or 'sync', got '${EMBED_MODE}'`)
+  console.log(`[vec-index] dataset=${lanceDbUri()}/${vecTableName} model=${VECTOR_MODEL} dims=${VECTOR_DIMS} mode=${EMBED_MODE} shard=${SHARD_SIZE} inflight=${MAX_INFLIGHT_SHARDS}` + (CANARY ? ` CANARY(n=${CANARY_N})` : '') + (RESET ? ' RESET' : ''))
   const conn = await connectLance()
   const chunksTbl = await conn.openTable(CHUNKS_TABLE)
 
@@ -96,6 +110,12 @@ async function main() {
 
   const cp = await loadCp()
   console.log(`[vec-index] checkpoint: phase=${cp.phase} doneShards=${cp.doneShards.length} vectors=${cp.vectors} misses=${cp.misses}`)
+  // Shard boundaries are deterministic ONLY for a fixed SHARD_SIZE — completed shard
+  // indices from one size are meaningless under another. Pin it after the first shard.
+  if (cp.doneShards.length > 0 && cp.shardSize && cp.shardSize !== SHARD_SIZE) {
+    throw new Error(`checkpoint was built with VECTOR_SHARD_SIZE=${cp.shardSize} but this run has ${SHARD_SIZE} — set VECTOR_SHARD_SIZE=${cp.shardSize} (or --reset to replan from scratch)`)
+  }
+  cp.shardSize = cp.doneShards.length > 0 ? (cp.shardSize ?? SHARD_SIZE) : SHARD_SIZE
 
   // ── build the canonical shard plan from the sorted chunkId list ──────────────
   // chunkId-only scan (bodies excluded) — ~22M × ~40B ≈ <1GB, sortable on the 64GB box.
@@ -128,7 +148,7 @@ async function main() {
       rows.sort((a, b) => (a.chunkId < b.chunkId ? -1 : a.chunkId > b.chunkId ? 1 : 0))
       const chunks: ChunkForEmbed[] = rows.map((r) => ({ chunkId: r.chunkId, body: r.body }))
 
-      const vecs = await withRetry(tag, () => embedShardViaBatch(chunks, tag))
+      const vecs = await withRetry(tag, () => (EMBED_MODE === 'sync' ? embedShardViaSync(chunks, tag) : embedShardViaBatch(chunks, tag)))
 
       if (CANARY && !firstCanaryLogged) {
         firstCanaryLogged = true
