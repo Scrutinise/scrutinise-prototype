@@ -86,6 +86,37 @@ export function parseEmbedResponseLine(line: string): { key: string | null; valu
 
 // ── the one batch call ─────────────────────────────────────────────────────────
 
+/** Pure: match response lines to input chunks (2026-07-07 fix). File-based output is
+ *  NOT in input order at scale — the first real 4.5M-token job returned key-shuffled
+ *  lines (the docs' in-order claim held only for small jobs' INLINE responses, which is
+ *  all the canary exercised). Every request line carries our chunkId as `key` and the
+ *  service echoes it, so correlate by key whenever keys are present; positional only for
+ *  the keyless inline path. Silent drops stay impossible: unknown/duplicate keys throw,
+ *  absent keys return null (counted as misses by the caller). */
+export function correlateResponses(chunks: ChunkForEmbed[], lines: string[], tag: string): (number[] | null)[] {
+  const parsed = lines.map((line) => parseEmbedResponseLine(line))
+  const keyed = parsed.filter((p) => p.key !== null)
+  if (keyed.length > 0 && keyed.length < parsed.length) {
+    throw new Error(`batch ${tag}: ${keyed.length}/${parsed.length} response lines carry keys (mixed shape — cannot correlate safely)`)
+  }
+  if (keyed.length === parsed.length && parsed.length > 0) {
+    const byKey = new Map<string, number[] | null>()
+    for (const p of parsed) {
+      if (byKey.has(p.key!)) throw new Error(`batch ${tag}: duplicate response key '${p.key}'`)
+      byKey.set(p.key!, p.values)
+    }
+    const inputKeys = new Set(chunks.map((c) => c.chunkId))
+    for (const k of byKey.keys()) { if (!inputKeys.has(k)) throw new Error(`batch ${tag}: response key '${k}' not in this job's input`) }
+    if (byKey.size !== chunks.length) console.warn(`[gemini-batch] ${tag}: ${byKey.size} responses for ${chunks.length} requests — ${chunks.length - byKey.size} absent (counted as misses)`)
+    return chunks.map((c) => byKey.get(c.chunkId) ?? null)
+  }
+  // keyless (inline path) — positional, which requires exact 1:1
+  if (lines.length !== chunks.length) {
+    throw new Error(`batch ${tag}: got ${lines.length} keyless responses for ${chunks.length} requests (positional correlation needs 1:1)`)
+  }
+  return parsed.map((p) => p.values)
+}
+
 /** Pure: split a shard into consecutive sub-job groups of ≤JOB_TOKENS est tokens
  *  (order preserved; a single over-budget chunk still ships alone). Exported for
  *  the offline --selftest. */
@@ -163,15 +194,7 @@ async function embedJob(chunks: ChunkForEmbed[], tag: string): Promise<(number[]
       lines = text.split('\n').filter((l) => l.trim())
     }
 
-    if (lines.length !== chunks.length) {
-      // order-based correlation requires 1:1; a mismatch is a shape problem to surface loudly.
-      throw new Error(`batch ${tag}: got ${lines.length} responses for ${chunks.length} requests (order correlation needs 1:1)`)
-    }
-    return lines.map((line, i) => {
-      const { key, values } = parseEmbedResponseLine(line)
-      if (key && key !== chunks[i].chunkId) throw new Error(`batch ${tag}: response key '${key}' != input '${chunks[i].chunkId}' at line ${i} (order broken)`)
-      return values
-    })
+    return correlateResponses(chunks, lines, tag)
   } finally {
     try { fs.unlinkSync(tmp) } catch { /* ignore */ }
     try { fs.unlinkSync(outTmp) } catch { /* ignore */ }
@@ -206,12 +229,33 @@ function selftest() {
     && g1.flat().length === 12000 && g1.flat()[0].chunkId === 'd#0' && g1.flat()[11999].chunkId === 'd#11999'
   const ok4 = splitForJobTokens(dense.slice(0, 100), 4_500_000).length === 1
     && splitForJobTokens([{ chunkId: 'big', body: 'x'.repeat(40_000_000) }], 4_500_000).length === 1
+  // key-based correlation: SHUFFLED keyed lines (the live failure) must land in input
+  // order; absent key → null miss; unknown key / mixed keyed-keyless / dup keys → throw
+  const cIn: ChunkForEmbed[] = ['a#0', 'b#1', 'c#2'].map((id) => ({ chunkId: id, body: 'x' }))
+  const L = (key: string, v: number[]) => JSON.stringify({ key, response: { embedding: { values: v } } })
+  const shuffled = [L('c#2', [3]), L('a#0', [1]), L('b#1', [2])]
+  const r1 = correlateResponses(cIn, shuffled, 't')
+  const ok5 = r1[0]?.[0] === 1 && r1[1]?.[0] === 2 && r1[2]?.[0] === 3
+  const r2 = correlateResponses(cIn, [L('c#2', [3]), L('a#0', [1])], 't') // b#1 absent → miss
+  const ok6 = r2[0]?.[0] === 1 && r2[1] === null && r2[2]?.[0] === 3
+  const threw = (fn: () => void) => { try { fn(); return false } catch { return true } }
+  const ok7 = threw(() => correlateResponses(cIn, [L('zz#9', [9]), L('a#0', [1]), L('b#1', [2])], 't'))
+    && threw(() => correlateResponses(cIn, [L('a#0', [1]), JSON.stringify({ embedding: { values: [5] } }), L('b#1', [2])], 't'))
+    && threw(() => correlateResponses(cIn, [L('a#0', [1]), L('a#0', [1]), L('b#1', [2])], 't'))
+  // keyless inline path stays positional
+  const inline = [1, 2, 3].map((n) => JSON.stringify({ embedding: { values: [n] } }))
+  const r3 = correlateResponses(cIn, inline, 't')
+  const ok8 = r3[0]?.[0] === 1 && r3[2]?.[0] === 3 && threw(() => correlateResponses(cIn, inline.slice(0, 2), 't'))
   console.log(`buildEmbedRequestLine: ${ok1 ? 'PASS' : 'FAIL'}  (${line.slice(0, 90)}…)`)
   console.log(`parseEmbedResponseLine: ${ok2 ? 'PASS' : 'FAIL'}  (${JSON.stringify(parses.map((p) => p.values?.length ?? null))})`)
   console.log(`splitForJobTokens dense: ${ok3 ? 'PASS' : 'FAIL'} (${g1.length} sub-jobs for 9.6M est tok)`)
   console.log(`splitForJobTokens edge:  ${ok4 ? 'PASS' : 'FAIL'}`)
+  console.log(`correlate shuffled-keys: ${ok5 ? 'PASS' : 'FAIL'}`)
+  console.log(`correlate absent→miss:   ${ok6 ? 'PASS' : 'FAIL'}`)
+  console.log(`correlate guards throw:  ${ok7 ? 'PASS' : 'FAIL'}`)
+  console.log(`correlate keyless 1:1:   ${ok8 ? 'PASS' : 'FAIL'}`)
   console.log(`model=${VECTOR_MODEL} dims=${VECTOR_DIMS} mime=${UPLOAD_MIME} jobTokens=${JOB_TOKENS}`)
-  if (!ok1 || !ok2 || !ok3 || !ok4) process.exit(1)
+  if (!ok1 || !ok2 || !ok3 || !ok4 || !ok5 || !ok6 || !ok7 || !ok8) process.exit(1)
 }
 
 if (process.argv.includes('--selftest')) selftest()
