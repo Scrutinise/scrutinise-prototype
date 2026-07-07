@@ -30,13 +30,17 @@ const SYNC_RPM = parseInt(process.env.VECTOR_SYNC_RPM ?? '2800', 10)
 const CALL_TEXTS = Math.min(parseInt(process.env.VECTOR_SYNC_CALL_TEXTS ?? '100', 10), 250) // hard API cap 250
 const CALL_TOKENS = Math.min(parseInt(process.env.VECTOR_SYNC_CALL_TOKENS ?? '18000', 10), 20000) // hard API cap 20k
 const CALL_RETRIES = parseInt(process.env.VECTOR_SYNC_CALL_RETRIES ?? '6', 10)
+// A healthy 100-text call returns in ~1.3–1.6s (measured 2026-07-07). The SDK has NO
+// default timeout, and the first slice run proved a hung connection (503-era) stalls a
+// worker FOREVER, silently. Belt (SDK httpOptions.timeout) + braces (Promise.race).
+const CALL_TIMEOUT_MS = parseInt(process.env.VECTOR_SYNC_CALL_TIMEOUT_MS ?? '45000', 10)
 
 let _client: GoogleGenAI | null = null
 function client(): GoogleGenAI {
   if (!_client) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) throw new Error('GEMINI_API_KEY not set')
-    _client = new GoogleGenAI({ apiKey })
+    _client = new GoogleGenAI({ apiKey, httpOptions: { timeout: CALL_TIMEOUT_MS } })
   }
   return _client
 }
@@ -63,7 +67,7 @@ function acquire(tokens: number): Promise<void> {
   return paceChain
 }
 
-const RETRYABLE = /429|RESOURCE_EXHAUSTED|500|502|503|504|UNAVAILABLE|INTERNAL|ECONNRESET|ETIMEDOUT|fetch failed/i
+const RETRYABLE = /429|RESOURCE_EXHAUSTED|500|502|503|504|UNAVAILABLE|INTERNAL|ECONNRESET|ETIMEDOUT|fetch failed|timed? ?out/i
 
 /** One paced, retried embedContent call for a pack of texts. Returns vectors in input order. */
 async function embedCall(texts: string[], tokens: number, tag: string): Promise<(number[] | null)[]> {
@@ -71,11 +75,16 @@ async function embedCall(texts: string[], tokens: number, tag: string): Promise<
   let lastErr: any
   for (let i = 0; i < CALL_RETRIES; i++) {
     try {
-      const res: any = await client().models.embedContent({
+      const call = client().models.embedContent({
         model: VECTOR_MODEL,
         contents: texts,
         config: { taskType: TASK_DOCUMENT, outputDimensionality: VECTOR_DIMS },
       })
+      // braces: never trust a network call to return — a hung socket must become a retry
+      const res: any = await Promise.race([
+        call,
+        new Promise((_, rej) => setTimeout(() => rej(new Error(`sync ${tag}: call timed out after ${CALL_TIMEOUT_MS + 5000}ms (client guard)`)), CALL_TIMEOUT_MS + 5000)),
+      ])
       const embs: any[] = res.embeddings ?? []
       if (embs.length !== texts.length) throw new Error(`sync ${tag}: ${embs.length} embeddings for ${texts.length} texts (order correlation needs 1:1)`)
       return embs.map((e) => (Array.isArray(e?.values) && e.values.length === VECTOR_DIMS ? (e.values as number[]) : null))
@@ -114,9 +123,12 @@ export function packChunks(chunks: ChunkForEmbed[]): Array<{ texts: string[]; to
  */
 export async function embedShardViaSync(chunks: ChunkForEmbed[], tag: string): Promise<(number[] | null)[]> {
   const out: (number[] | null)[] = []
-  for (const pack of packChunks(chunks)) {
-    const vecs = await embedCall(pack.texts, pack.tokens, tag)
+  const packs = packChunks(chunks)
+  for (let p = 0; p < packs.length; p++) {
+    const vecs = await embedCall(packs[p].texts, packs[p].tokens, tag)
     out.push(...vecs)
+    // heartbeat so a stalled worker is VISIBLE in the tail log (the first slice run hung silently)
+    if ((p + 1) % 50 === 0) console.log(`[sync] ${tag}: ${p + 1}/${packs.length} calls`)
   }
   if (out.length !== chunks.length) throw new Error(`sync ${tag}: assembled ${out.length} vectors for ${chunks.length} chunks`)
   return out
