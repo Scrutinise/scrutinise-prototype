@@ -41,6 +41,13 @@ const TERMINAL = new Set(['JOB_STATE_SUCCEEDED', 'JOB_STATE_FAILED', 'JOB_STATE_
 // into SEQUENTIAL sub-jobs here at submission time, where the bodies are in hand.
 // Default 4.5M = Tier-2 cap × 0.9. Set 0 to disable (single job per shard).
 const JOB_TOKENS = parseInt(process.env.VECTOR_BATCH_JOB_TOKENS ?? '4500000', 10)
+// Job CREATION 429s are the quota's normal pacing signal, not an error (observed live:
+// the Tier-2 quota behaves as a ~5M-token bucket refilling over ~10-15 min — creations
+// 429 with an EMPTY queue until it refills). Waiting patiently HERE is essential: if a
+// 429 escapes to the shard-level retry, already-billed sub-jobs get re-run. 90s × 30
+// waits ≥ 45 min through any refill cycle.
+const CREATE_RETRY_MS = parseInt(process.env.VECTOR_BATCH_CREATE_RETRY_MS ?? '90000', 10)
+const CREATE_RETRY_MAX = parseInt(process.env.VECTOR_BATCH_CREATE_RETRY_MAX ?? '30', 10)
 
 export interface ChunkForEmbed { chunkId: string; body: string }
 
@@ -167,11 +174,23 @@ async function embedJob(chunks: ChunkForEmbed[], tag: string): Promise<(number[]
     uploadedName = uploaded.name
     if (!uploadedName) throw new Error('files.upload returned no name')
 
-    let job = await ai.batches.createEmbeddings({
-      model: VECTOR_MODEL,
-      src: { fileName: uploadedName },
-      config: { displayName: `vec-${tag}` },
-    })
+    // create with patient 429 pacing (quota bucket refill — see CREATE_RETRY_MS note)
+    let job: Awaited<ReturnType<typeof ai.batches.createEmbeddings>> | undefined
+    for (let attempt = 0; ; attempt++) {
+      try {
+        job = await ai.batches.createEmbeddings({
+          model: VECTOR_MODEL,
+          src: { fileName: uploadedName },
+          config: { displayName: `vec-${tag}` },
+        })
+        break
+      } catch (e) {
+        const msg = (e as Error).message ?? String(e)
+        if (!/429|RESOURCE_EXHAUSTED/.test(msg) || attempt >= CREATE_RETRY_MAX) throw e
+        if (attempt === 0 || (attempt + 1) % 5 === 0) console.log(`[gemini-batch] ${tag}: create 429 (quota bucket) — waiting ${CREATE_RETRY_MS / 1000}s (attempt ${attempt + 1}/${CREATE_RETRY_MAX})`)
+        await new Promise((r) => setTimeout(r, CREATE_RETRY_MS))
+      }
+    }
 
     for (let i = 0; i < POLL_MAX && job.name && !TERMINAL.has(job.state ?? ''); i++) {
       await new Promise((r) => setTimeout(r, POLL_MS))
