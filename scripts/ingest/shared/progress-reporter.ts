@@ -1,5 +1,9 @@
 /**
- * progress-reporter.ts — Neon queries + hourly progress email for `ops` (V17).
+ * progress-reporter.ts — Neon queries + daily progress email for `ops` (V17).
+ *
+ * Maintenance (reaper, census, corpus snapshot, cleanup) runs hourly; the
+ * progress email itself is a once-daily digest (08:00 Europe/London — see
+ * ops.ts) reporting the trailing 24h, not the trailing hour.
  *
  * Fleet relics removed in V17: per-worker R2 checkpoints (buildAggregate),
  * R2 progress JSON/CSV writes, per-worker throughput snapshots and the email
@@ -13,8 +17,10 @@ const TO = 'cl@scrutinise.org'
 
 // ── Locks — prevent duplicate runs when two ops instances overlap ─────────────
 // Random per-startup ID (not process.pid) because Railway containers all start
-// as PID 1. scheduler_lock ids: 1 = hourly run, 2 = (legacy discovery, unused),
-// 4 = 15-min breaker/liveness run.
+// as PID 1. scheduler_lock ids: 1 = hourly maintenance run, 2 = (legacy
+// discovery, unused), 4 = 15-min breaker/liveness run, 5 = daily email dedupe
+// (23h window — survives a mid-hour redeploy re-entering the 08:00 tick
+// without double-sending).
 
 const OPS_INSTANCE_ID = Math.random().toString(36).slice(2)
 
@@ -49,6 +55,10 @@ export async function acquireSchedulerLock(): Promise<boolean> {
 
 export async function acquireBreakerLock(): Promise<boolean> {
   return acquireLock(4, 12)
+}
+
+export async function acquireDailyEmailLock(): Promise<boolean> {
+  return acquireLock(5, 23 * 60)
 }
 
 // ── corpus_targets row ────────────────────────────────────────────────────────
@@ -122,14 +132,15 @@ export async function writeCorpusSnapshot(
   console.log(`[reporter] wrote ${entries.length} snapshot rows for hour ${hour.toISOString()}`)
 }
 
-// ── Hourly delta from corpus_snapshots ───────────────────────────────────────
+// ── Snapshot delta from corpus_snapshots (variable lookback) ────────────────
 
-export async function getHourlyDelta(
+export async function getSnapshotDelta(
   currentCounts: Map<string, number>,
   currentHour: Date,
+  lookbackHours: number,
 ): Promise<Map<string, number>> {
   const neonPool = getNeonPool()
-  const prevHour = new Date(currentHour.getTime() - 60 * 60 * 1000)
+  const prevHour = new Date(currentHour.getTime() - lookbackHours * 60 * 60 * 1000)
   try {
     const { rows } = await neonPool.query<{ corpus_key: string; section_count: number }>(`
       SELECT corpus_key, section_count
@@ -281,22 +292,22 @@ export async function runHourlyCleanup(): Promise<{ snapshots: number; doneRows:
   return { snapshots: r1.rowCount ?? 0, doneRows: r2.rowCount ?? 0 }
 }
 
-// ── Rows completed in the last hour (divergence check input) ──────────────────
+// ── Rows completed in a lookback window (divergence check input) ──────────────
 
-// Returns both the total done-this-hour and the genuinely-EMPTY subset
+// Returns both the total done-in-window and the genuinely-EMPTY subset
 // (produced_output=false: wrote no section, confirmed no existing R2 file, wrote
 // no marker, not a structural seeder — V24). The divergence warning fires on the
 // empty count, NOT on compiled-section delta: a marker-heavy or idempotent-reseed
-// hour completes rows without growing the compiled count, which is legitimate and
-// must not raise a false alarm. produced_output=NULL (pre-V24 rows) is excluded.
-export async function queryRowsCompletedLastHour(): Promise<{ total: number; empty: number }> {
+// window completes rows without growing the compiled count, which is legitimate
+// and must not raise a false alarm. produced_output=NULL (pre-V24 rows) is excluded.
+export async function queryRowsCompletedSince(hoursBack: number): Promise<{ total: number; empty: number }> {
   try {
     const res = await getNeonPool().query<{ total: number; empty: number }>(`
       SELECT COUNT(*)::int AS total,
              COUNT(*) FILTER (WHERE produced_output = false)::int AS empty
       FROM ingest_queue
-      WHERE status = 'done' AND "completedAt" > NOW() - INTERVAL '1 hour'
-    `)
+      WHERE status = 'done' AND "completedAt" > NOW() - ($1 || ' hours')::interval
+    `, [hoursBack])
     return { total: res.rows[0]?.total ?? 0, empty: res.rows[0]?.empty ?? 0 }
   } catch { return { total: 0, empty: 0 } }
 }
@@ -350,10 +361,11 @@ export interface ProgressEmailInput {
   neonCount: number
   dbSize?: DbSizeResult
   stalledSources?: string[]
-  hourlyDelta?: Map<string, number>
+  periodDelta?: Map<string, number>
+  periodHours?: number
   reclaimedCount?: number
-  rowsCompletedThisHour?: number
-  emptyRowsThisHour?: number
+  rowsCompletedInPeriod?: number
+  emptyRowsInPeriod?: number
   ingestService?: IngestServiceState
   breakerIssues?: string[]
 }
@@ -361,8 +373,8 @@ export interface ProgressEmailInput {
 export async function sendProgressEmail(input: ProgressEmailInput): Promise<void> {
   const {
     timestamp, corpusCounts, neonCount, dbSize,
-    stalledSources = [], hourlyDelta = new Map(), reclaimedCount = 0,
-    rowsCompletedThisHour = 0, emptyRowsThisHour = 0, ingestService, breakerIssues = [],
+    stalledSources = [], periodDelta = new Map(), periodHours = 24, reclaimedCount = 0,
+    rowsCompletedInPeriod = 0, emptyRowsInPeriod = 0, ingestService, breakerIssues = [],
   } = input
 
   const apiKey = process.env.RESEND_API_KEY
@@ -373,13 +385,13 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   const bst = bstFmt.format(now)
   const bstTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }).format(now)
 
-  // Previous hour window label (e.g. "08:00–08:59")
-  const prevHourStart = new Date(now)
-  prevHourStart.setMinutes(0, 0, 0)
-  prevHourStart.setTime(prevHourStart.getTime() - 60 * 60 * 1000)
-  const prevHourEnd = new Date(prevHourStart.getTime() + 59 * 60 * 1000)
+  // Report-period window label (e.g. "since 08:00 yesterday" for the daily digest)
   const timeFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false })
-  const prevWindow = `${timeFmt.format(prevHourStart)}–${timeFmt.format(prevHourEnd)}`
+  const periodStart = new Date(now.getTime() - periodHours * 60 * 60 * 1000)
+  const periodLabel = periodHours >= 24 ? 'TODAY' : `LAST ${periodHours}H`
+  const prevWindow = periodHours >= 24
+    ? `since ${timeFmt.format(periodStart)} yesterday`
+    : `${timeFmt.format(periodStart)}–${timeFmt.format(now)}`
 
   // ── Load data ──────────────────────────────────────────────────────────────
   let targets: CorpusTarget[] = []
@@ -461,15 +473,15 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   }
   const totalWordsB = totalWords != null ? (totalWords / 1e9).toFixed(2) : null
 
-  // ── This-hour delta ───────────────────────────────────────────────────────
-  const hasDelta = hourlyDelta.size > 0
+  // ── Report-period delta ─────────────────────────────────────────────────────
+  const hasDelta = periodDelta.size > 0
   const totalDelta = hasDelta
-    ? [...hourlyDelta.values()].reduce((s, v) => s + Math.max(0, v), 0)
+    ? [...periodDelta.values()].reduce((s, v) => s + Math.max(0, v), 0)
     : null
 
-  // Corpora that grew this hour count as "active"
+  // Corpora that grew this period count as "active"
   const activeCorpusKeys = new Set(
-    [...hourlyDelta.entries()].filter(([, v]) => v > 0).map(([k]) => k)
+    [...periodDelta.entries()].filter(([, v]) => v > 0).map(([k]) => k)
   )
 
   // ── Subject ───────────────────────────────────────────────────────────────
@@ -477,7 +489,8 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
   const breakerWarn = breakerIssues.length > 0 ? ` | 🔴 ${breakerIssues.length} breaker` : ''
   const wordsSubj = totalWordsB != null ? ` | ${totalWordsB}B words` : ''
-  const subject = `Ingest ${bstTime} | ${deltaStr} this hour | ${grandTotalCompiled.toLocaleString()} sections${wordsSubj}${dbWarn}${breakerWarn}`
+  const periodSubjLabel = periodHours >= 24 ? 'today' : `last ${periodHours}h`
+  const subject = `Ingest ${bstTime} | ${deltaStr} ${periodSubjLabel} | ${grandTotalCompiled.toLocaleString()} sections${wordsSubj}${dbWarn}${breakerWarn}`
 
   const SEP = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
   const parts: string[] = [SEP, `SCRUTINISE INGEST — ${bst} BST`, SEP]
@@ -491,29 +504,29 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
     parts.push('', `INGEST SERVICE: ${stateStr}${beatStr}  |  starts today: ${ingestService.startsToday}`)
   }
 
-  // ── THIS HOUR ─────────────────────────────────────────────────────────────
-  parts.push('', `THIS HOUR  (${prevWindow})`)
+  // ── TODAY (report period) ────────────────────────────────────────────────
+  parts.push('', `${periodLabel}  (${prevWindow})`)
   if (!hasDelta) {
     parts.push('  Total added:  -- sections  (no previous snapshot yet)')
   } else {
     parts.push(`  Total added:  +${totalDelta!.toLocaleString()} sections`)
-    const activeDelta = [...hourlyDelta.entries()]
+    const activeDelta = [...periodDelta.entries()]
       .filter(([, v]) => v > 0)
       .sort(([, a], [, b]) => b - a)
     for (const [corpus, delta] of activeDelta) {
       const label = targets.find(t => t.corpus_key === corpus)?.display_label ?? corpus
       parts.push(`  ${label.padEnd(38)} +${delta.toLocaleString()}`)
     }
-    if (activeDelta.length === 0) parts.push('  (no corpora added sections this hour)')
+    if (activeDelta.length === 0) parts.push('  (no corpora added sections this period)')
   }
   // Divergence (V24): the silent-failure signal is the per-row produced_output
-  // verdict, NOT compiled-section delta. A marker-heavy hour (e.g. committees
+  // verdict, NOT compiled-section delta. A marker-heavy period (e.g. committees
   // metadata-only publications) or an idempotent reseed completes rows without
   // growing the compiled count — both are legitimate output and must not warn.
   // We warn only on rows that genuinely produced nothing (the breaker's input).
-  parts.push(`  Rows completed: ${rowsCompletedThisHour.toLocaleString()}${emptyRowsThisHour > 0 ? ` (${emptyRowsThisHour.toLocaleString()} produced zero output)` : ''}`)
-  if (emptyRowsThisHour > 0) {
-    parts.push(`  ⚠️  DIVERGENCE: ${emptyRowsThisHour.toLocaleString()} rows done with ZERO output (no section, no existing-content confirm, no marker) — the genuine zero-output signal; investigate before the breaker trips`)
+  parts.push(`  Rows completed: ${rowsCompletedInPeriod.toLocaleString()}${emptyRowsInPeriod > 0 ? ` (${emptyRowsInPeriod.toLocaleString()} produced zero output)` : ''}`)
+  if (emptyRowsInPeriod > 0) {
+    parts.push(`  ⚠️  DIVERGENCE: ${emptyRowsInPeriod.toLocaleString()} rows done with ZERO output (no section, no existing-content confirm, no marker) — the genuine zero-output signal; investigate before the breaker trips`)
   }
 
   // ── TOTAL CORPUS ──────────────────────────────────────────────────────────

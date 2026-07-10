@@ -2,9 +2,13 @@
  * ops.ts — V17 merged scheduler + monitor. One always-on (but tiny) service,
  * one process, two cadences:
  *
- *   Hourly (:01)    — stale-claim reaper, census, corpus snapshot, cleanup,
- *                     progress email (existing format + ingest state, sections
- *                     vs rows divergence, persistent breaker ISSUES).
+ *   Hourly (:01)    — stale-claim reaper, census, corpus snapshot, cleanup.
+ *   Daily (08:00 Europe/London) — progress email (existing format + ingest
+ *                     state, sections vs rows divergence, persistent breaker
+ *                     ISSUES), reporting the trailing 24h. Piggybacks on the
+ *                     hourly tick whose local wall-clock hour is 8; a
+ *                     dedicated lock (progress-reporter.ts acquireDailyEmailLock)
+ *                     stops a mid-hour redeploy from re-sending it.
  *   Every 15 min    — circuit-breaker evaluation, ingest liveness check,
  *                     pwdata daily-file reseed, transient-failure retry reset.
  *
@@ -50,13 +54,14 @@ import {
   saveProgressSnapshot,
   acquireSchedulerLock,
   acquireBreakerLock,
+  acquireDailyEmailLock,
   queryDbSize,
   runHourlyCleanup,
   queryStalledSources,
   reclaimStaleRows,
   writeCorpusSnapshot,
-  getHourlyDelta,
-  queryRowsCompletedLastHour,
+  getSnapshotDelta,
+  queryRowsCompletedSince,
   type CorpusSnapshotEntry,
   type IngestServiceState,
 } from './shared/progress-reporter'
@@ -73,6 +78,7 @@ const FAILURE_BREAKER_THRESHOLD = 5    // consecutive failures, no intervening s
 const ZERO_OUTPUT_THRESHOLD     = 25   // done rows with zero section growth
 const HEARTBEAT_STALE_MINUTES   = 10   // ingest considered stopped if no beat for this long
 const START_COOLDOWN_MINUTES    = 15   // don't re-trigger a deploy while one may still be building
+const DAILY_EMAIL_LOCAL_HOUR    = 8    // Europe/London wall-clock hour the progress email fires
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
@@ -512,37 +518,53 @@ async function runHourly(): Promise<void> {
   let stalledSources: string[] = []
   try { stalledSources = await queryStalledSources() } catch (err) { console.warn('[ops] stalled check failed:', err) }
 
-  let hourlyDelta = new Map<string, number>()
-  try {
-    const currentHour = new Date(capturedAt)
-    currentHour.setMinutes(0, 0, 0)
-    currentHour.setMilliseconds(0)
-    const currentCounts = new Map<string, number>()
-    for (const c of census.corpusSections) currentCounts.set(c.corpus, c.compiled)
-    currentCounts.set('legacy-legislation-section', neonCount)
-    hourlyDelta = await getHourlyDelta(currentCounts, currentHour)
-  } catch (err) { console.warn('[ops] hourly delta failed:', err) }
+  // ── Daily progress email ────────────────────────────────────────────────
+  // Piggybacks on this hourly tick, gated to the one tick per day whose local
+  // wall-clock hour is DAILY_EMAIL_LOCAL_HOUR. acquireDailyEmailLock guards
+  // against a redeploy re-entering that same hour and sending it twice.
+  const localHour = Number(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London', hour: '2-digit', hour12: false,
+  }).format(capturedAt))
 
-  const [completedLastHour, ingestService, breakerIssues] = await Promise.all([
-    queryRowsCompletedLastHour(),
-    getIngestState().catch(() => undefined),
-    queryBreakerIssues(),
-  ])
+  if (localHour === DAILY_EMAIL_LOCAL_HOUR) {
+    const hasEmailLock = await acquireDailyEmailLock()
+    if (!hasEmailLock) {
+      console.log('[ops] daily email already sent today — skipping')
+    } else {
+      let periodDelta = new Map<string, number>()
+      try {
+        const currentHour = new Date(capturedAt)
+        currentHour.setMinutes(0, 0, 0)
+        currentHour.setMilliseconds(0)
+        const currentCounts = new Map<string, number>()
+        for (const c of census.corpusSections) currentCounts.set(c.corpus, c.compiled)
+        currentCounts.set('legacy-legislation-section', neonCount)
+        periodDelta = await getSnapshotDelta(currentCounts, currentHour, 24)
+      } catch (err) { console.warn('[ops] daily delta failed:', err) }
 
-  console.log('[ops] sending email')
-  await sendProgressEmail({
-    timestamp: capturedAt,
-    corpusCounts,
-    neonCount,
-    dbSize,
-    stalledSources,
-    hourlyDelta,
-    reclaimedCount,
-    rowsCompletedThisHour: completedLastHour.total,
-    emptyRowsThisHour: completedLastHour.empty,
-    ingestService,
-    breakerIssues,
-  })
+      const [completedToday, ingestService, breakerIssues] = await Promise.all([
+        queryRowsCompletedSince(24),
+        getIngestState().catch(() => undefined),
+        queryBreakerIssues(),
+      ])
+
+      console.log('[ops] sending daily email')
+      await sendProgressEmail({
+        timestamp: capturedAt,
+        corpusCounts,
+        neonCount,
+        dbSize,
+        stalledSources,
+        periodDelta,
+        periodHours: 24,
+        reclaimedCount,
+        rowsCompletedInPeriod: completedToday.total,
+        emptyRowsInPeriod: completedToday.empty,
+        ingestService,
+        breakerIssues,
+      })
+    }
+  }
 }
 
 // ── 15-min cycle ──────────────────────────────────────────────────────────────
