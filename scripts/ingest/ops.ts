@@ -10,7 +10,9 @@
  *                     dedicated lock (progress-reporter.ts acquireDailyEmailLock)
  *                     stops a mid-hour redeploy from re-sending it.
  *   Every 15 min    — circuit-breaker evaluation, ingest liveness check,
- *                     pwdata daily-file reseed, transient-failure retry reset.
+ *                     pwdata daily-file reseed, transient-failure retry reset,
+ *                     vector-embed heartbeat/stall watcher (search/embed-observer.ts;
+ *                     R2-only, edge-triggered emails, no-op when no embed is running).
  *
  * ops connects to NEON ONLY. The V16-era queryFormatBreakdown() /
  * queryUnrecognisedFormats() Railway-DB calls — the documented cause of
@@ -65,6 +67,7 @@ import {
   type CorpusSnapshotEntry,
   type IngestServiceState,
 } from './shared/progress-reporter'
+import { checkEmbedProgress } from './search/embed-observer'
 import { runCensus, saveToR2 as saveCensusToR2 } from './census/live-census'
 import { clearExpiredSuspensions } from './shared/queue-client'
 import { getNeonPool } from './shared/neon-pool'
@@ -578,6 +581,9 @@ async function runQuarterHour(): Promise<void> {
   await evaluateBreakers().catch(err => console.error('[ops] breaker evaluation failed:', err))
   await resetRetryableFailures().catch(err => console.error('[ops] retry reset failed:', err))
   await checkIngestLiveness().catch(err => console.error('[ops] liveness check failed:', err))
+  // Vector-embed heartbeat/stall watcher (R2-only; edge-triggered emails). No-op when
+  // no embed is in progress. Isolated so it can never break the ingest-critical checks.
+  await checkEmbedProgress().catch(err => console.error('[ops] embed observer failed:', err))
 }
 
 // ── Scheduler loop ────────────────────────────────────────────────────────────

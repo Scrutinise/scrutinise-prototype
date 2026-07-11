@@ -242,3 +242,47 @@ gemini-embedding-001 (3,000 RPM / 1 M TPM) are from Google-staff forum replies, 
 table — one AI-Studio dashboard glance confirms; the pacer env-tunes (`VECTOR_SYNC_TPM/RPM`) if the
 dashboard says otherwise; (c) Tier-2 batch drain rate is unmeasured — if the remainder's wall-time
 disappoints, the rate-limit-increase form (linked from the rate-limits page) is the lever.
+
+---
+
+## 6. ADDENDUM 2026-07-11 — flip CONFIRMED, run LIVE, and the email observer that was missing
+
+### 6.1 True state (laptop diagnosis, 2026-07-11 ~21:35 UTC)
+
+The 7-Jul plan (§5.2/§5.4) was **executed on the desktop and is running**: the sync slice banked
+~$47 (34 shards), the account flipped to **Tier 2**, and the batch relaunch (`VECTOR_SHARD_SIZE=12000
+VECTOR_MAX_INFLIGHT=1`, correlation fix `84eba61` + create-429 pacing `f6022df`) has been draining
+since. Verified live from the laptop: Hetzner `scrutinise-build` (cpx62) **running** since 2026-07-07
+08:08 UTC; `corpus_vec` checkpoint **advancing** through 849→850→851→852→859 shards in real time;
+**~47% done (859/1,821 shards, 10.31 M vectors, 0 misses)**; all Gemini batch jobs SUCCEEDED, none
+stuck. **Not stalled.** The earlier "paused/blocked" read was a **~24.5 h-behind laptop clock** (which
+made every timestamp look future-dated) plus a **sync-only £46.55 console snapshot** (batch charges
+hadn't posted). Lesson logged: `w32tm /resync` a suspect box before trusting any age/staleness call —
+this is the same UTC-discipline point as CLAUDE.md §12.
+
+### 6.2 The monitoring gap — now closed (`search/embed-observer.ts`, wired into `ops`)
+
+The run went days with **nothing watching it**: `fts-watch.ts` is a foreground human-run tool (prints,
+never emails), and the Railway daily digest never referenced the embed. **`embed-observer.ts`** closes
+it — an R2-only, edge-triggered checker that `ops.ts` calls each 15-min cycle (behind the existing
+breaker lock; in its own `.catch`; a no-op when no embed is running). It emails `cl@scrutinise.org`
+only on transitions:
+
+| event | trigger | phase |
+|---|---|---|
+| 🔴 STALL | `corpus_vec` checkpoint not advanced > `EMBED_STALL_MIN` (25m) | embedding |
+| 🟢 RECOVERED | checkpoint advances after a stall | embedding |
+| ✅ COMPLETE | phase leaves `embedding` (→ indexing / done) | any |
+| 💥 CRASH | tail log shows `build exited code≠0`, `FATAL`, or a shard `FAILED after` retries | **any (incl. indexing)** |
+| ⏳ ANN-STUCK | phase=`indexing` frozen > `EMBED_INDEXING_CEILING_MIN` (8h) | indexing |
+| 💚 HEARTBEAT | one positive "still progressing X/1821" per London day from 08:00 | embedding |
+
+The **CRASH scan + ANN-STUCK ceiling** specifically cover the phase=`indexing` blind spot: the stall
+test is (correctly) suppressed while the IVF_PQ index builds and the checkpoint legitimately freezes,
+so an ANN OOM (the 32 GB risk, landing at the very end of the run) would otherwise be **silent** — the
+tail-log scan catches an exit line regardless of phase, and the 8h ceiling backstops a hard box-kill
+that never flushes one. State (last-alerted line, heartbeat day, etc.) lives in
+`_search/corpus_vec.observer-state.json` so alerts are edge-triggered, not repeated every tick.
+Offline-selftested (`--selftest`, 23 cases); confirmed live with one heartbeat email on 2026-07-11.
+Envs (all optional, sensible defaults): `EMBED_STALL_MIN`, `EMBED_INDEXING_CEILING_MIN`,
+`EMBED_TOTAL_SHARDS`, `EMBED_HEARTBEAT_HOUR`, `EMBED_OBSERVER_TO`.
