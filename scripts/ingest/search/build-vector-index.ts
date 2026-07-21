@@ -51,6 +51,18 @@ import { embedShardViaBatch, ChunkForEmbed } from './gemini-batch'
 import { embedShardViaSync } from './gemini-sync'
 import { r2Get, r2Put } from '../shared/r2-client'
 
+// 2026-07-16: a shard's create-retry loop crashed the whole process on an
+// unhandled 'error' event from a stale keep-alive socket reset mid-request
+// (undici, inside @google/genai — not a promise rejection, so the try/catch
+// around createEmbeddings() never saw it). try/catch cannot catch this class
+// of fault; only a top-level handler can. Log it clearly and exit — the
+// checkpoint is R2-resumable, so the Hetzner retry wrapper (hetzner-build-run.ts)
+// picks the shard back up rather than leaving the box idle indefinitely.
+process.on('uncaughtException', (err) => {
+  console.error('[vec-index] FATAL uncaughtException (likely a transient network/stream fault, e.g. a stale keep-alive socket reset mid-request) — exiting; checkpoint is R2-resumable:', err)
+  process.exit(1)
+})
+
 const RESET = process.argv.includes('--reset')
 const CANARY = process.argv.includes('--canary')
 const INDEX_ONLY = process.argv.includes('--index-only')
@@ -196,8 +208,21 @@ async function main() {
 
   // ── ANN index ────────────────────────────────────────────────────────────────
   if (cp.phase === 'indexing' || INDEX_ONLY) {
-    console.log(`[vec-index] compacting corpus_vec before indexing…`)
-    try { const st = await vecTbl.optimize(); console.log('[vec-index] optimize:', JSON.stringify(st?.compaction ?? st)) } catch (e) { console.warn('[vec-index] optimize warning:', (e as Error).message) }
+    // 2026-07-21: optimize() (fragment compaction across 1821 shard-appended
+    // fragments, ~67GB of raw float32 vector data across 21.8M rows) SIGKILLed
+    // (exit 137, genuine OOM — not a JS exception the try/catch below could ever
+    // see) on a 32GB box, twice, before createIndex() was ever reached. CCX43
+    // (64GB) is unavailable on this Hetzner account (dedicated-core quota — same
+    // wall STEP 1 hit). Compaction is a read-efficiency optimization, not a
+    // correctness requirement for createIndex(), which can index across
+    // fragments directly — so it's skippable under this flag as the 32GB-box
+    // workaround. Leave default behaviour (compact) unchanged for normal runs.
+    if (process.env.VECTOR_SKIP_COMPACT === 'true') {
+      console.log(`[vec-index] VECTOR_SKIP_COMPACT=true — skipping fragment compaction, indexing directly`)
+    } else {
+      console.log(`[vec-index] compacting corpus_vec before indexing…`)
+      try { const st = await vecTbl.optimize(); console.log('[vec-index] optimize:', JSON.stringify(st?.compaction ?? st)) } catch (e) { console.warn('[vec-index] optimize warning:', (e as Error).message) }
+    }
     const rows = await vecTbl.countRows()
     console.log(`[vec-index] building IVF_PQ ANN index on \`vector\` (rows=${rows}, partitions=${ANN_PARTITIONS}, subvectors=${ANN_SUBVECTORS}, cosine)…`)
     const t0 = Date.now()
