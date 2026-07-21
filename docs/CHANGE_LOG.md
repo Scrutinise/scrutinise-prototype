@@ -1,6 +1,32 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 5 Jul 2026 — GRAPH Tier 1: explicit-edge legislation graph (2.35M edges in Neon `legislation_edges`) + rescission traversal + service; gold archetype D un-floored 0% → 80%.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-11 — SEARCH VECTOR EMBED: Tier-2 flip CONFIRMED + batch run LIVE (~47%, not stalled — was a 24.5h-behind laptop clock); shipped `embed-observer.ts` email heartbeat/stall/crash watcher into `ops`.*
+
+---
+
+## SEARCH — VECTOR EMBED: live-state correction + email heartbeat/stall observer shipped (2026-07-11 22:09 UTC)
+
+**Laptop diagnosis after the desktop's 7-Jul Tier-2 flip + batch relaunch.** Full detail:
+**`docs/VECTOR_EMBED_REPORT.md` §6**. `tsc`: only the 4 documented pre-existing errors;
+`embed-observer.ts` offline-selftested (23 cases, all PASS).
+
+- **The run is NOT stalled — it is LIVE at ~47%** (859/1,821 shards, 10.31 M vectors, 0 misses,
+  climbing in real time). The "spend PAUSED / Tier-1 blocked / awaiting go" handoff was STALE: the
+  sync slice (~$47, 34 shards) + Tier-2 flip + batch relaunch all happened on the desktop and have
+  been draining for days. Hetzner `scrutinise-build` (cpx62) up since 2026-07-07 08:08 UTC.
+- **Why it looked stalled:** the diagnosing laptop's clock was **~24.5 h behind** (read 07-10 21:00
+  when 3 network sources agreed it was 07-11 21:26 UTC) → every checkpoint/job timestamp looked
+  future-dated / negative-age; compounded by a **sync-only £46.55 console figure** (batch charges
+  unposted). Fixed the clock (`w32tm /resync`) and refreshed the stale `HETZNER_API_TOKEN`.
+- **NEW `search/embed-observer.ts` — the monitoring that never shipped.** R2-only, edge-triggered,
+  called by `ops.ts` in the 15-min cycle (behind the breaker lock, own `.catch`, no-op when no embed
+  runs). Emails `cl@scrutinise.org` on transitions only: 🔴 STALL (checkpoint >25m idle while
+  embedding), 🟢 RECOVERED, ✅ COMPLETE, 💚 daily HEARTBEAT (so silence = healthy, not dead observer),
+  and — closing the ANN blind spot — 💥 CRASH (tail-log `build exited code≠0`/`FATAL`/shard-`FAILED`,
+  **any phase**) + ⏳ ANN-STUCK (phase=indexing frozen >8h, for a box-kill that flushes no exit line).
+  Edge-state in `_search/corpus_vec.observer-state.json`. Confirmed live with one heartbeat email.
+- **Handoff CURRENT STATE rewritten** to the true post-flip live state (old tier-wall text collapsed
+  into a superseded `<details>` block).
 
 ---
 
