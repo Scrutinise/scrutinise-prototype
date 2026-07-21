@@ -157,6 +157,8 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'ofcom':               return processOfcom(row)
     case 'lgsco':               return processLgsco(row)
     case 'library-briefings':   return processLibraryBriefings(row)
+    case 'fcdo-treaties':       return processFcdoTreaties(row)
+    case 'parliament-treaties': return processParliamentTreaties(row)
     default:
       await markSkipped(row.id)
       console.warn(`[pool] unknown sourceType ${row.sourceType} — skipped`)
@@ -1151,6 +1153,179 @@ async function processGovukContent(row: QueueRow): Promise<void> {
   await bulkUpsertSections(metas)
   await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
   await markDone(row.id, metas[0].format)
+}
+
+// ── FCDO UK Treaties Online (V31 STEP 1) ───────────────────────────────────────
+// treaties.fcdo.gov.uk Knowvation/AWARE JSON API — see sources/fcdo-treaties.ts
+// header for the access-route rationale (no bulk export, JS-only SPA, the
+// underlying anonymous REST API is the best-available tier). docId is the
+// numeric lb_document_id; the processor re-fetches by that id (queryType=16
+// exact match) rather than caching bulk search data across the queue, matching
+// the codebase's usual one-fetch-per-row convention. Two-thirds of records
+// carry no PDF at all (measured 8 Jul 2026: 14,786 of 21,970) — those get a
+// compiled, searchable metadata-only section rather than a silent gap.
+
+async function processFcdoTreaties(row: QueueRow): Promise<void> {
+  const { fetchByLbDocumentId, fetchPdfBuffer } = await import('../sources/fcdo-treaties')
+  const record = await fetchByLbDocumentId(row.docId)
+  if (!record) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: 'https://treaties.fcdo.gov.uk/responsive/app/consolidatedSearch/',
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: `FCDO UKTO record ${row.docId} not found on re-fetch (removed/renumbered upstream).`,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const pageUrl = record.documentUrl ?? 'https://treaties.fcdo.gov.uk/responsive/app/consolidatedSearch/'
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+
+  const MAX_PDFS = 10
+  for (const pdfUrl of record.pdfUrls.slice(0, MAX_PDFS)) {
+    const buf = await fetchPdfBuffer(pdfUrl)
+    if (!buf) continue
+    const text = await pdfToText(buf, pdfUrl)
+    if (!text || text.length < 100) continue
+    const ref = String(++seq)
+    metas.push({
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      sourceUrl: pdfUrl,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format: 'pdf',
+      sectionTitle: record.title,
+      itemDate: record.signedDate ?? record.effectiveDate ?? undefined,
+      parentDocId: row.docId,
+      availabilityStatus: 'full',
+    })
+    texts.push(text)
+  }
+
+  if (metas.length === 0) {
+    // No PDF at all, or every PDF failed extraction — the honest-denominator
+    // fallback: a compiled, searchable record built from the API metadata,
+    // explicitly flagged metadata-only rather than silently dropped.
+    const lines = [
+      '[Metadata-only UK Treaties Online record — full treaty text is not available from this source]',
+      '',
+      `Title: ${record.title}`,
+      record.countryNames ? `Parties: ${record.countryNames}` : null,
+      record.subject ? `Subject: ${record.subject}` : null,
+      record.signedDate ? `Signed: ${record.signedDate}` : null,
+      record.effectiveDate ? `Entry into force / definitive date: ${record.effectiveDate}` : null,
+      record.references ? `Archive references: ${record.references}` : null,
+    ].filter((l): l is string => l !== null)
+    const text = lines.join('\n')
+    metas.push({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: pageUrl,
+      r2Key: compiledKey(row.corpus, row.docId, '1'),
+      wordCount: countWords(text),
+      status: 'compiled',
+      format: 'html',
+      sectionTitle: record.title,
+      itemDate: record.signedDate ?? record.effectiveDate ?? undefined,
+      parentDocId: row.docId,
+      availabilityStatus: 'metadata-only',
+      availabilityNote: record.pdfUrls.length > 0
+        ? 'PDF link(s) present but text extraction failed for all of them.'
+        : 'No PDF linked for this record on UK Treaties Online.',
+    })
+    texts.push(text)
+  }
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── Parliament Treaty Tracker (V31 STEP 2) ─────────────────────────────────────
+// treaties-api.parliament.uk — documented JSON API, CRaG 2010 scrutiny layer.
+// One section per treaty: the Treaty record + its BusinessItems timeline
+// (debates, committee evidence, objection-period tracking) combined into one
+// readable text — the small universe (328) and narrative-timeline shape don't
+// warrant per-BusinessItem sections. Kept as its own corpus, separate from
+// uk-treaties-fcdo (different id space, different content kind — procedure
+// metadata vs treaty legal text). See sources/parliament-treaties.ts header.
+
+async function processParliamentTreaties(row: QueueRow): Promise<void> {
+  const { fetchTreaty, fetchBusinessItems } = await import('../sources/parliament-treaties')
+  const treaty = await fetchTreaty(row.docId)
+  if (!treaty) {
+    await upsertSection({
+      id: sectionId(row.corpus, row.docId, '1'),
+      corpus: row.corpus,
+      sourceUrl: `https://treaties-api.parliament.uk/api/Treaty/${row.docId}`,
+      status: 'unavailable',
+      availabilityStatus: 'no-provisions',
+      availabilityNote: `Parliament Treaty Tracker record ${row.docId} not found on re-fetch.`,
+      parentDocId: row.docId,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  let items: Awaited<ReturnType<typeof fetchBusinessItems>> = []
+  try { items = await fetchBusinessItems(row.docId) } catch (err) { console.warn(`[pool] ${row.id}: BusinessItems fetch failed:`, err) }
+
+  const lines = [
+    treaty.name,
+    '',
+    treaty.treatySeriesCitation ? `Treaty Series: ${treaty.treatySeriesCitation}` : null,
+    (treaty.commandPaperPrefix || treaty.commandPaperNumber != null)
+      ? `Command Paper: ${treaty.commandPaperPrefix ?? ''} ${treaty.commandPaperNumber ?? ''}`.trim() : null,
+    treaty.signedDate ? `Signed: ${treaty.signedDate.slice(0, 10)}` : null,
+    treaty.laidDate ? `Laid before Parliament: ${treaty.laidDate.slice(0, 10)} (Commons: ${treaty.commonsLayingDate?.slice(0, 10) ?? '—'}; Lords: ${treaty.lordsLayingDate?.slice(0, 10) ?? '—'})` : null,
+    treaty.leadDepartment ? `Lead department: ${treaty.leadDepartment}` : null,
+    treaty.layingBodyDepartment && treaty.layingBodyDepartment !== treaty.leadDepartment ? `Laying department: ${treaty.layingBodyDepartment}` : null,
+    treaty.parliamentaryConclusion ? `CRaG 2010 scrutiny status: ${treaty.parliamentaryConclusion}` : null,
+    treaty.debateScheduled ? `Debate scheduled: ${treaty.debateScheduled}` : null,
+    treaty.broughtToAttentionDate ? `Brought to attention: ${treaty.broughtToAttentionDate.slice(0, 10)}` : null,
+    treaty.webLink ? `Source: ${treaty.webLink}` : null,
+  ].filter((l): l is string => l !== null)
+
+  if (items.length > 0) {
+    lines.push('', 'Parliamentary scrutiny timeline:')
+    for (const item of items) {
+      const date = item.itemDate ? item.itemDate.slice(0, 10) : 'undated'
+      const houses = item.houses.length ? ` [${item.houses.join(', ')}]` : ''
+      const link = item.link ? ` (${item.link})` : ''
+      lines.push(`- ${date}: ${item.steps.join('; ')}${houses}${link}`)
+    }
+  }
+
+  const text = lines.join('\n')
+  const meta: SectionMeta = {
+    id: sectionId(row.corpus, row.docId, '1'),
+    corpus: row.corpus,
+    sourceUrl: treaty.webLink ?? treaty.uri ?? `https://treaties-api.parliament.uk/api/Treaty/${row.docId}`,
+    r2Key: compiledKey(row.corpus, row.docId, '1'),
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'html',
+    sectionTitle: treaty.name,
+    itemDate: (treaty.laidDate ?? treaty.signedDate ?? undefined)?.slice(0, 10),
+    parentDocId: row.docId,
+    availabilityStatus: 'full',
+  }
+
+  await r2Put(meta.r2Key!, text)
+  await bulkUpsertSections([meta])
+  await deleteStaleSections(row.corpus, row.docId, [meta.id])
+  await markDone(row.id, meta.format)
 }
 
 // ── TNA queue-driven year enumeration (V20) ───────────────────────────────────

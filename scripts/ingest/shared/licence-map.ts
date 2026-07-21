@@ -275,6 +275,20 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // terms-and-conditions, 24 Jun 2026: "© Crown copyright. Licensed under the
   // Open Government Licence v3.0"). Other inquiries verified per inquiry at seed.
   'inquiry-evidence': OGL3,
+  // ── V31 — TREATY_INGEST_BRIEF.md STEP 1 ────────────────────────────────────
+  // FCDO UK Treaties Online (treaties.fcdo.gov.uk) — VERIFIED via the FCDO's own
+  // data.gov.uk catalogue entry for this exact dataset (8 Jul 2026): organisation
+  // "Foreign and Commonwealth Office", license_id "uk-ogl", license_url
+  // nationalarchives.gov.uk/doc/open-government-licence/version/3. The site itself
+  // has no dedicated terms/copyright page (checked /copyright, /terms, /about,
+  // /privacy, /accessibility — all 404 on the JBoss host); the catalogue record is
+  // the FCDO's own published licence statement for this dataset, same evidentiary
+  // tier as the gov.uk-adjacent pages used for the rest of this map.
+  'uk-treaties-fcdo': OGL3,
+  // STEP 2 — Parliament Treaty Tracker (CRaG 2010 scrutiny layer). Same verified
+  // *.parliament.uk API family (id.parliament.uk URIs) as bills-api /
+  // committees-api / erskine-may / division-votes, all OPL v3.0 above.
+  'parliament-treaties': OPL3,
 }
 
 export function licenceForCorpus(corpus: string): string | null {

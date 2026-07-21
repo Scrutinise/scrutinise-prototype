@@ -51,6 +51,8 @@ const TIER_EXACT: Record<string, Tier> = {
   'bills-api': 'parliamentary',
   'uk-treaties': 'parliamentary',
   'tax-treaties-dta': 'parliamentary',
+  'uk-treaties-fcdo': 'parliamentary', // V31 STEP 1 — same family as uk-treaties
+  'parliament-treaties': 'parliamentary', // V31 STEP 2 — CRaG 2010 scrutiny layer
 
   // guidance  (law-commission reports→guidance, flagged debatable)
   'fca-handbook': 'guidance',

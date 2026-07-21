@@ -74,6 +74,9 @@ const RATE_LIMITS: Array<{ sourceKey: string; intervalMs: number; maxConcurrentW
   { sourceKey: 'inquiry-evidence',    intervalMs: 1000, maxConcurrentWorkers: 2, note: 'public-inquiry evidence sites (V30 §3) — §0-governed. Pilot: postofficehorizoninquiry.org.uk Drupal evidence library; per row 1 detail page (resolves the live /file download token + §0 metadata) + 1 PDF. ~19,605 items. OGL v3.0 (verified /terms-and-conditions). Charity/inquiry host — keep gentle, ≲2 rps.' },
   // scottish-parliament-or (V30 §4 pre-2016 archive) reuses the existing entry
   // above; independent-reviews (V30 §2 own-domain) reuses its V29 entry.
+  // ── V31 ──────────────────────────────────────────────────────────────────────
+  { sourceKey: 'fcdo-treaties', intervalMs: 750, maxConcurrentWorkers: 2, note: 'treaties.fcdo.gov.uk (V31 STEP 1) — legacy JBoss/Knowvation AWARE host, reverse-engineered anonymous JSON search API (no bulk/HTML route exists). 1 search-by-id fetch/row + up to N PDF fetches (references field). 21,970 records, 33% carry a PDF. OGL v3.0. Keep gentle — old enterprise box, no CDN in front of it.' },
+  { sourceKey: 'parliament-treaties', intervalMs: 400, maxConcurrentWorkers: 3, note: 'treaties-api.parliament.uk (V31 STEP 2) — documented OpenAPI, same robust family as bills-api/committees-api. 2 fetches/row (Treaty detail + BusinessItems). 328 treaties total (CRaG 2010 scrutiny register). OPL v3.0.' },
 ]
 
 async function main(): Promise<void> {
