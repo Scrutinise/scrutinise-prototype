@@ -35,6 +35,12 @@
  * vector-layer build runs in two steps on the box (chunk manifest, then batch-embed +
  * ANN); see docs/VECTOR_EMBED_REPORT.md for the full runbook:
  *   HETZNER_BUILD_CMD="R2_MAX_SOCKETS=256 npx tsx search/build-corpus-chunks.ts && npx tsx search/build-vector-index.ts"
+ *
+ * CRASH RECOVERY (2026-07-16): the build command's exit is auto-retried on the box
+ * (checkpoint-resumable, so a nonzero exit just re-enters where it left off) —
+ * HETZNER_BUILD_RETRY_MAX (default 20) attempts, HETZNER_BUILD_RETRY_SLEEP (default
+ * 30s) between. Guards against a stale keep-alive socket reset crashing the whole
+ * unattended process and leaving the box idle+billing with nobody watching.
  */
 import path from 'path'
 try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.env') }) } catch { /* ok */ }
@@ -158,9 +164,24 @@ nohup npx tsx search/hetzner-logtail.ts "$LOG" "${LOG_TAIL_KEY}" 30 >/var/log/lo
 LOGTAIL_PID=$!
 
 echo "[hetzner-build] starting: ${buildCmd}" | tee -a "$LOG"
-bash /root/build.sh 2>&1 | tee -a "$LOG"
-CODE=\${PIPESTATUS[0]}
-echo "[hetzner-build] build exited code=\$CODE" | tee -a "$LOG"
+# The build is R2-checkpointed + idempotent (shard boundaries are deterministic,
+# a redo deletes-then-reappends its own range) — so ANY nonzero exit is safe to
+# retry from scratch. 2026-07-16: a stale keep-alive socket reset mid-request
+# crashed the whole process (unhandled 'error' event, not a promise rejection —
+# see build-vector-index.ts) and left the box idle+billing for 4 days with
+# nobody watching. This loop auto-resumes instead of silently going idle.
+RETRY_MAX=\${HETZNER_BUILD_RETRY_MAX:-20}
+RETRY_SLEEP=\${HETZNER_BUILD_RETRY_SLEEP:-30}
+CODE=1
+for ATTEMPT in \$(seq 1 \$RETRY_MAX); do
+  echo "[hetzner-build] attempt \$ATTEMPT/\$RETRY_MAX" | tee -a "$LOG"
+  bash /root/build.sh 2>&1 | tee -a "$LOG"
+  CODE=\${PIPESTATUS[0]}
+  if [ \$CODE -eq 0 ]; then break; fi
+  echo "[hetzner-build] attempt \$ATTEMPT failed code=\$CODE — checkpoint is R2-resumable, retrying in \${RETRY_SLEEP}s" | tee -a "$LOG"
+  sleep \$RETRY_SLEEP
+done
+echo "[hetzner-build] build exited code=\$CODE (attempt \$ATTEMPT/\$RETRY_MAX)" | tee -a "$LOG"
 
 # final flush of the stdout tail, then stop the background tailer
 npx tsx search/hetzner-logtail.ts "$LOG" "${LOG_TAIL_KEY}" 1 & FLUSH=$!; sleep 3; kill $FLUSH 2>/dev/null || true

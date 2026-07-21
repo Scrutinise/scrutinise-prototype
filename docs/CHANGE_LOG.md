@@ -1,6 +1,31 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-11 — SEARCH VECTOR EMBED: Tier-2 flip CONFIRMED + batch run LIVE (~47%, not stalled — was a 24.5h-behind laptop clock); shipped `embed-observer.ts` email heartbeat/stall/crash watcher into `ops`.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-21 — SEARCH VECTOR EMBED COMPLETE: 21,846,364 vectors, 0 misses, ANN index built (worked around a Hetzner CCX43-quota-blocked OOM at fragment compaction via `VECTOR_SKIP_COMPACT`); recall re-confirm still gates the flag flip. Previously (2026-07-11): Tier-2 flip CONFIRMED + batch run LIVE; shipped `embed-observer.ts` email heartbeat/stall/crash watcher into `ops`.*
+
+---
+
+## SEARCH — VECTOR EMBED: full run COMPLETE — ANN index built (2026-07-21 13:58 UTC)
+
+**The full-corpus embed finished end to end.** `corpus_vec` checkpoint: `phase: "done"`, 1,821/1,821
+shards, **21,846,364 vectors, 0 misses** (exact match to `corpus_chunks` — zero loss). Full detail +
+caveat: `docs/handoff_summary.md` CURRENT STATE (21 Jul). `tsc`: only the 4 documented pre-existing
+errors.
+
+- The batch drain (live since 7/11) reached 1,821/1,821 shards unattended, then the indexing phase's
+  fragment compaction (`vecTbl.optimize()`) OOM-killed (exit 137) twice on the 32 GB cpx62 box — the
+  documented CCX43 fallback is unavailable on this Hetzner account (`dedicated_core_limit exceeded`,
+  confirmed live; no shared-core type exceeds 32 GB).
+- **Fix (`fe518eb`):** `VECTOR_SKIP_COMPACT=true` skips the compaction step (a read-efficiency
+  optimization, not required for `createIndex()` correctness) and builds the IVF_PQ index directly
+  over the un-compacted fragments. Rebuilt in 711.7s. Bundled with the 16 Jul `uncaughtException`
+  crash-recovery handler (same file, already in place — is what let the box's retry wrapper survive
+  the stall alert that preceded the OOM discovery).
+- **Caveat flagged, not yet resolved:** the build logged repeated Lance kmeans "clusters empty /
+  dataset too small" warnings and many `partition N is empty, skipping` lines — possibly benign at
+  this scale, possibly a sign the un-compacted build is less globally optimal than a compacted one
+  would be. Rides on the already-planned fusion/gold-key re-confirm on the full ANN index as its
+  validation; a compact-then-reindex follow-up would need the Hetzner quota resolved first.
+- Box torn down; no further Hetzner spend from the index-build phase.
 
 ---
 
