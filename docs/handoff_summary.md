@@ -6,16 +6,17 @@
 
 ---
 
-## CURRENT STATE — INGEST: Treaty coverage extension (8 Jul 2026)
+## CURRENT STATE — INGEST: Treaty coverage extension (8 Jul 2026, drain confirmed + re-baselined 21 Jul)
 
-**`TREATY_INGEST_BRIEF.md` executed end-to-end this sprint** (ingest thread). CHANGE_LOG "INGEST —
-Treaty coverage extension" (2026-07-08 16:33 UTC). `scripts/ingest` `tsc --noEmit` = only the 4
-documented pre-existing errors, unrelated.
+**`TREATY_INGEST_BRIEF.md` executed end-to-end** (ingest thread). CHANGE_LOG "INGEST — Treaty
+coverage extension" (2026-07-08 16:33 UTC). `scripts/ingest` `tsc --noEmit` = only the 4 documented
+pre-existing errors, unrelated. **Code committed to `Main` 2026-07-21** (`7deffbf`) — it had been
+built and documented on 8 Jul but never pushed until this session.
 
 - **STEP 0:** confirmed `uk-treaties` (3,264 sections/1,519 docs) + `tax-treaties-dta` (324/172) are
   entirely gov.uk-sourced (`filter_format=international_treaty`, V19) — not FCDO's own archive, not
   Parliament's. Extending, not duplicating.
-- **STEP 1 `uk-treaties-fcdo` (new corpus) — SEEDED, DRAINING (not complete):** treaties.fcdo.gov.uk
+- **STEP 1 `uk-treaties-fcdo` (new corpus) — ✅ SEEDED + DRAINED, re-baselined:** treaties.fcdo.gov.uk
   has no bulk export and no server-rendered HTML (legacy JBoss/Knowvation Backbone SPA) — the
   underlying anonymous JSON REST API was reverse-engineered from the SPA's own JS
   (`sources/fcdo-treaties.ts`: anonymous session login + `POST /awweb/awfp/search/1`). **Measured
@@ -26,9 +27,12 @@ documented pre-existing errors, unrelated.
   existing gov.uk-sourced corpora is best-effort exact-title-match (different id namespace, no shared
   key) — 127 skipped. Licence OGL v3.0, verified via the FCDO's own data.gov.uk catalogue entry (the
   site itself has no terms page). Pilot (3 diverse rows incl. a genuinely-scanned 1976 PDF) passed
-  clean. **21,840 queue rows seeded; draining via the live Railway `Ingest` service (750ms/2-worker,
-  legacy host) — multi-hour run, no action needed. Re-baseline `corpus_targets.est_sections` once it
-  drains** (current value 21,843 is the provisional queued-row count).
+  clean. **Drain confirmed complete 21 Jul: 0 open `ingest_queue` rows (pending/claimed/blocked/
+  failed), 23,372/23,372 `corpus_sections` compiled, 0 residue** — the queue's completed rows have
+  since been auto-purged by the 7-day cleanup job (`run-cleanup.ts`), which is why the queue itself
+  now shows empty rather than "done". Section count (23,372) exceeds the 21,843 queued-row estimate
+  because multi-PDF records produce more than one section each. **Re-baselined:**
+  `corpus_targets.est_sections` 21,843 → **23,372**, `est_is_confirmed` false → **true**.
 - **STEP 2 `parliament-treaties` (new corpus) — COMPLETE, 328/328, 0 failures:** the documented
   `treaties-api.parliament.uk` OpenAPI (same family as bills-api/committees-api) covers the CRaG 2010
   scrutiny register — laid dates, parliamentary conclusion, sponsoring department, and a
@@ -39,8 +43,7 @@ documented pre-existing errors, unrelated.
   seeded and drained this session.
 - **Wiring:** `licence-map.ts`, `seed-rate-limits.ts`, `search/corpus-map.ts` all updated for both new
   corpora.
-- **NEXT:** nothing blocking — `uk-treaties-fcdo` finishes draining unattended. When it does, rerun
-  the corpus-status re-baseline (playbook §1c) to lock `est_sections`/`est_is_confirmed`.
+- **NEXT:** nothing outstanding — both corpora fully drained, code pushed, targets re-baselined.
 
 ---
 
