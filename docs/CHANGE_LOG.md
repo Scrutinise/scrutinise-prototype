@@ -30,6 +30,72 @@
 
 ---
 
+## INGEST — Treaty coverage extension: uk-treaties-fcdo + parliament-treaties (2026-07-08 16:33 UTC)
+
+**Executes `TREATY_INGEST_BRIEF.md` end to end** (STEP 0–2 + ACCEPTANCE). `scripts/ingest` `tsc --noEmit`
+clean (only the 4 documented pre-existing errors, unrelated). No git mid-sprint per §12 — see
+`commit-all.sh`.
+
+- **STEP 0 (provenance check, before extending):** `uk-treaties` (3,264 sections / 1,519 docs) and
+  `tax-treaties-dta` (324 sections / 172 docs) were built entirely from **gov.uk's search API**
+  (`filter_format=international_treaty`, V19) — NOT from FCDO's UK Treaties Online and NOT from the
+  Parliament API. Confirms the brief's premise: current coverage is a small gov.uk-sourced subset,
+  not the authoritative FCDO archive.
+- **STEP 1 — FCDO UK Treaties Online (`uk-treaties-fcdo`, new corpus).** treaties.fcdo.gov.uk is a
+  legacy JBoss/Knowvation "AWARE" federated-search deployment (Backbone.js SPA, Solr-backed, PTFS
+  Inc) with **no bulk export** — data.gov.uk's "UK Treaties Database" dataset's only bulk resource is
+  a stale one-off Nov-2015–Feb-2016 CSV bulletin — and **no server-rendered HTML** (JS-only SPA). Per
+  the bulk→HTML→API priority order, the underlying anonymous JSON REST API was reverse-engineered from
+  the SPA's own JS (`GET /awweb/federated/users/op/login/anonymous` for a session cookie, `POST
+  /awweb/awfp/search/1` for search, both undocumented but require no auth beyond the anonymous
+  session the UI itself silently uses) — `scripts/ingest/sources/fcdo-treaties.ts`.
+  - **Honest-denominator correction:** measured universe = **21,970 records** (single collection,
+    library2_lib), NOT the ~15,000 the brief and the gov.uk `/uk-treaties` page state. Reported as
+    measured, not silently substituted.
+  - Every record's HTML "page" is confirmed to be ALWAYS just a country/action-date summary table,
+    never full text (checked multiple samples incl. records both with and without a linked PDF).
+    Full text exists ONLY in linked Treaty Series PDFs embedded in the `references` field: **7,184
+    records (33%) carry ≥1 PDF; 14,786 (67%) are metadata-only** with no full text anywhere on the
+    site. Metadata-only records get a compiled, searchable section built from the API's structured
+    fields (title/parties/subject/dates/archive references), flagged `availabilityStatus:
+    'metadata-only'` — surfaced honestly, not silently dropped, per the brief's explicit ask.
+  - **Dedup vs what we hold:** best-effort exact-normalized-title match against `uk-treaties` +
+    `tax-treaties-dta` (3,197 distinct titles) — conservative on purpose (different id namespace,
+    no shared key; a false-positive skip would silently drop a unique FCDO treaty, a false-negative
+    just duplicates cheaply). **127 apparent duplicates skipped**, 21,843 net-new candidates.
+  - **Licence OGL v3.0** — verified via the FCDO's own data.gov.uk catalogue entry for this dataset
+    (organisation "Foreign and Commonwealth Office", `license_id: uk-ogl`); the site itself has no
+    dedicated terms page (`/copyright`, `/terms`, `/about` etc. all 404 on the JBoss host).
+  - Pilot shakedown (3 rows: zero-pdf / one-pdf / multi-pdf, incl. one genuinely-scanned 1976 PDF
+    that correctly fell back to the metadata-only marker) passed clean — real extracted text,
+    correct classification, no encoding corruption. Full seed: **21,840 queue rows** (P3,
+    `sourceType: fcdo-treaties`, 750ms/2-worker rate limit — legacy host, kept gentle). **Draining in
+    the background at seed time; not complete this sprint** (~21.5k rows remaining, multi-hour run) —
+    the live `ops`/`Ingest` Railway service picks it up automatically (no manual trigger needed).
+- **STEP 2 — Parliament Treaty Tracker (`parliament-treaties`, new corpus) — COMPLETE.**
+  `treaties-api.parliament.uk` is a clean documented JSON API (OpenAPI spec at
+  `/swagger/v1/swagger.json`), same family as `bills-api`/`committees-api`/`erskine-may-api`.
+  Covers CRaG-2010 scrutiny: laid dates, `parliamentaryConclusion`, sponsoring/laying department, and
+  a `BusinessItems` timeline (debates, committee evidence sessions, objection-period tracking) —
+  `scripts/ingest/sources/parliament-treaties.ts`.
+  - **Model decision (brief left this as CC's call):** kept as its OWN corpus, not an enrichment on
+    `uk-treaties-fcdo` — different id namespace (no shared key), different content kind (scrutiny
+    procedure vs treaty legal text), and matches the codebase's existing convention that
+    parliamentary-procedure APIs (`bills-api`, `division-votes`, `committees-api`) always live
+    separately from the legal-text corpora they relate to.
+  - Universe = 328 treaties (verified live, single-page `Take=1000` response — no pagination needed
+    at this size). One section per treaty (Treaty record + BusinessItems timeline combined — the
+    small volume and narrative-timeline shape don't warrant per-item sections).
+  - **Licence OPL v3.0** — same verified `*.parliament.uk` API family as the existing OPL entries.
+  - **Seeded and fully drained this sprint: 328/328 done, 328/328 compiled, 0 failures.**
+- **Wiring:** `shared/licence-map.ts` (`uk-treaties-fcdo` → OGL3, `parliament-treaties` → OPL3),
+  `seed-rate-limits.ts` (both sourceTypes), `search/corpus-map.ts` (`parliamentary` tier for both).
+- **NEXT:** `uk-treaties-fcdo` backlog continues draining via the live Railway `Ingest` service — no
+  action needed; re-baseline `corpus_targets.est_sections`/`est_is_confirmed` once it drains (current
+  value is the provisional queued-row count, 21,843).
+
+---
+
 ## SEARCH — VECTOR EMBED: tier wall verified + sync-embed mode built (INERT, spend Charlie-gated) (2026-07-06 23:26 UTC)
 
 **Executes the verify-limits + sync-mode brief.** Full findings + plan: **`docs/VECTOR_EMBED_REPORT.md` §5**.
