@@ -276,11 +276,21 @@ async function main() {
 
   // ── Phase 2: compact + build FTS index ────────────────────────────────────
   if (cp.phase === 'indexing') {
-    // mergeInsert produced many small fragments; compact before indexing.
-    try {
-      const stats = await tbl.optimize()
-      console.log('[fts-index] optimize:', JSON.stringify(stats?.compaction ?? stats))
-    } catch (e) { console.warn('[fts-index] optimize warning (continuing):', (e as Error).message) }
+    // 2026-07-22 (positions rider, mirrors VECTOR_SKIP_COMPACT on the vector
+    // build): optimize() has an independent v0.30 bug/memory cost on top of
+    // createIndex's own OOM risk. FTS_SKIP_COMPACT=true skips fragment
+    // compaction and runs createIndex() directly over the existing fragments —
+    // a single-shot build already proven to work in the June positions pilot.
+    // Default behaviour (compact) unchanged for normal runs.
+    if (process.env.FTS_SKIP_COMPACT === 'true') {
+      console.log('[fts-index] FTS_SKIP_COMPACT=true — skipping fragment compaction, indexing directly')
+    } else {
+      // mergeInsert produced many small fragments; compact before indexing.
+      try {
+        const stats = await tbl.optimize()
+        console.log('[fts-index] optimize:', JSON.stringify(stats?.compaction ?? stats))
+      } catch (e) { console.warn('[fts-index] optimize warning (continuing):', (e as Error).message) }
+    }
 
     console.log(`[fts-index] building native FTS inverted index on \`body\` (withPosition=${WITH_POSITION})…`)
     const tIdx0 = Date.now()

@@ -1,6 +1,37 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-21 — SEARCH VECTOR EMBED COMPLETE: 21,846,364 vectors, 0 misses, ANN index built (worked around a Hetzner CCX43-quota-blocked OOM at fragment compaction via `VECTOR_SKIP_COMPACT`); recall re-confirm still gates the flag flip. Previously (2026-07-11): Tier-2 flip CONFIRMED + batch run LIVE; shipped `embed-observer.ts` email heartbeat/stall/crash watcher into `ops`.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-22 — SEARCH VECTOR: full-index recall re-confirm CONFIRMS the compaction-skip caveat is a real regression (vector-alone 71.2% vs pilot 85.9%, fused adds zero lift); nprobes/refine query-time sweep found NO recovery (flat ~70-71% from nprobes 24 to 512) — index needs a compact-then-reindex rebuild, Charlie-approved on a DigitalOcean/Vultr box (Hetzner CCX* quota-blocked). Flag stays OFF. Previously (2026-07-21): embed COMPLETE, ANN index built via `VECTOR_SKIP_COMPACT`.*
+
+---
+
+## SEARCH — VECTOR: full-index recall re-confirm + nprobes diagnostic — regression CONFIRMED, rebuild approved (2026-07-22 12:55 UTC)
+
+**Executes the SEARCH_STRATEGY.md §12 step-1 re-confirm, then CC's go for a query-time recovery
+diagnostic.** New harness `search/score-vector-full.ts` (permanent) + `search/_nprobes-diag-tmp.ts`
+(throwaway). Reports: `docs/VECTOR_FULL_RECONFIRM.md`, `docs/VECTOR_NPROBES_DIAG.md`. `tsc`: only the
+4 documented pre-existing errors.
+
+- **Full-index recall (real `corpus_fts` + real `corpus_vec`, not the 60k-row pilot subset):**
+  BM25-alone 62.2% (pilot 68.3%, −6.1pp — corpus-scale control). **Vector-alone 71.2% (pilot 85.9%,
+  −14.7pp). Fused 70/30 71.2% (pilot 87.8%, −16.7pp)** — fusion contributes nothing at the shipped
+  weight; fused == vector-alone in every query at w≥0.7. **Archetype B (lay-concept) collapsed to
+  30.6%**, 3/6 queries scoring literal 0% on both arms.
+- **Harness self-tested before trusting the result:** pure `fuseWeighted` unit tests + a live-wiring
+  re-check against 2 sample queries, both PASS — the regression is real, not a scoring bug.
+- **nprobes [24,64,128,256,512] × refineFactor [2,4] sweep: flat at ~70-71%, no recovery** (64/128 even
+  dipped below baseline). A 21× search-depth increase producing no monotonic gain rules out
+  under-probing — the IVF_PQ partition structure itself is degraded from the compaction-skip build.
+  Also found: ~9s/query ANN latency at the production default — independently unshippable.
+- **Decision: `LEX_SEARCH_VECTOR` flag stays OFF. Rebuild approved (Charlie)** — one-off memory-optimised
+  cloud box (Hetzner CCX* ruled out, same dedicated-core quota wall as the original embed run),
+  DigitalOcean primary / Vultr fallback, 128–256GB RAM. DO preflight: account gated to `m-2vcpu-16gb`
+  only (new-account Memory-Optimized class restriction) — needs a Charlie-side support ticket, not a
+  droplet-count increase. Vultr token landed same session; its preflight is next.
+- **Positions-rider prep (bonus, riding on the same paid box, abandon-don't-debug):** R2 server-side
+  copy of `corpus_fts.lance` (10,106 objects / 34.16GB) → isolated `corpus_fts_positions` table (zero
+  risk to live search), fresh checkpoint pinned to `phase: "indexing"` (no reload needed),
+  `build-fts-index.ts` gained `FTS_SKIP_COMPACT=true` mirroring the vector fix — one shot at the
+  `withPosition:true` build parked since the 20 Jun OOM + independent v0.30 optimize() bug.
 
 ---
 

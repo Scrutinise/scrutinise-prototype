@@ -47,6 +47,56 @@ built and documented on 8 Jul but never pushed until this session.
 
 ---
 
+## CURRENT STATE — SEARCH: VECTOR ANN index CONFIRMED DEGRADED — rebuild approved, in progress (2026-07-22)
+
+**The quality caveat flagged below is CONFIRMED, not benign.** `score-vector-full.ts` (new harness,
+real production indexes, not the pilot subset) + `_nprobes-diag-tmp.ts` (throwaway, query-time
+recovery diagnostic) together show the un-compacted `corpus_vec` ANN index is structurally degraded,
+not just under-tuned. **The `LEX_SEARCH_VECTOR` flag stays OFF; a full rebuild is approved and in
+progress** (Charlie-gated per the standing rule). Reports: `docs/VECTOR_FULL_RECONFIRM.md`,
+`docs/VECTOR_NPROBES_DIAG.md`.
+
+- **Full-index recall vs the pilot subset (60k rows, exact cosine):** BM25-alone 62.2% (pilot 68.3%,
+  −6.1pp — expected corpus-scale control, 16.5M real distractors vs a curated subset, not a defect).
+  **Vector-alone 71.2% (pilot 85.9%, −14.7pp). Fused 70/30 (shipped weight) 71.2% (pilot 87.8%,
+  −16.7pp)** — fusion adds ZERO lift at the shipped weight; the fused top-20 is *identical, query for
+  query*, to vector-alone at every weight ≥0.7. **Archetype B (lay-concept — the vector layer's
+  entire reason for existing) collapsed to 30.6%**, half its 6 queries scoring literal 0% on both arms.
+- **Self-tested the harness before trusting this** (per CC's go): pure `fuseWeighted` unit-tests PASS
+  (w=0 reproduces BM25 order exactly, w=1 vector order exactly, w=0.5 differs from both); live wiring
+  re-check on 2 sample queries PASS (fresh BM25-alone exactly matches the stored sweep, including a
+  literal-0% miss — a genuine retrieval gap, not a scoring bug).
+- **nprobes sweep [24,64,128,256,512] + refineFactor [2,4]: FLAT at ~70–71%, no recovery.** Best
+  setting = the untouched baseline. A 21× increase in search depth produced no monotonic improvement
+  (64/128 even dipped to 69.9%) — the opposite of what under-probing would show. **Verdict: query-time
+  tuning cannot fix this; the index itself needs rebuilding** (compact-then-reindex, which the current
+  32GB Hetzner box can't do — same CCX43 dedicated-core quota wall as before).
+- **Extra finding: current query latency is ~9s/ANN-call at the production nprobes=24 default** —
+  independently unshippable regardless of recall, consistent with searching a mostly-degenerate
+  4096-partition space.
+- **Rebuild approved (Charlie, 22 Jul):** a one-off memory-optimised cloud box (NOT Hetzner CCX* —
+  same quota wall), DigitalOcean primary / Vultr fallback, 128–256GB RAM, hourly (~$1–2.5/hr class).
+  **DO preflight run: account active but size-gated** — `/v2/sizes` exposes only `m-2vcpu-16gb` for
+  this account, none of the larger Memory-Optimized tiers (classic new-account premium-class gate,
+  separate from the droplet_limit=10 count cap which is fine). **Ask for Charlie: a DO support ticket
+  for Memory-Optimized droplet access, not a droplet-count increase.** Vultr fallback token landed
+  22 Jul; its own preflight is next.
+- **Bonus "positions rider" prepped ahead of the box (free, off-box R2-side work, done 22 Jul):** the
+  parked FTS positions build (`withPosition:true`, blocked since 20 Jun by createIndex OOM + an
+  independent v0.30 optimize() bug — see the 20 Jun SEARCH S1b entry) gets one shot on the same box.
+  R2-side copy of the live `corpus_fts.lance` (10,106 objects, 34.16 GB) → a separate
+  `corpus_fts_positions` table (zero risk to live search if it fails), fresh checkpoint pinned to
+  `phase: "indexing"` so no 16.5M-row reload is needed, and `build-fts-index.ts` gained
+  `FTS_SKIP_COMPACT=true` (mirrors `VECTOR_SKIP_COMPACT`) to skip the buggy optimize() and run
+  `createIndex()` directly, same workaround shape as the vector fix. **Rule: abandon, don't debug** —
+  if it doesn't build clean on the first attempt, stop and report; this is a bonus riding on
+  paid box-time for the actual blocking vector rebuild, not a requirement.
+- **NEXT:** DO Memory-Optimized limit ticket (Charlie) or Vultr preflight (CC, pending) → provision →
+  compact + reindex `corpus_vec` → re-confirm via `score-vector-full.ts` against THIS index → if clean,
+  positions rider (abandon-don't-debug) → teardown → report, incl. a fresh flag-flip recommendation.
+
+---
+
 ## CURRENT STATE — SEARCH: VECTOR EMBED full run — ANN INDEX BUILT, embed COMPLETE (2026-07-21)
 
 **The full-corpus embed is DONE end to end.** `corpus_vec` checkpoint: `phase: "done"`, **1,821/1,821
