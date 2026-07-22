@@ -1,6 +1,42 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-22 — SEARCH VECTOR: full-index recall re-confirm CONFIRMS the compaction-skip caveat is a real regression (vector-alone 71.2% vs pilot 85.9%, fused adds zero lift); nprobes/refine query-time sweep found NO recovery (flat ~70-71% from nprobes 24 to 512) — index needs a compact-then-reindex rebuild, Charlie-approved on a DigitalOcean/Vultr box (Hetzner CCX* quota-blocked). Flag stays OFF. Previously (2026-07-21): embed COMPLETE, ANN index built via `VECTOR_SKIP_COMPACT`.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## SEARCH — VECTOR: rebuild on Vultr COMPLETE — regression did NOT recover, diagnosis reversed; positions rider abandoned (2026-07-22 17:20 UTC)
+
+**Executes the Charlie-approved rebuild brief (provision → compact+reindex → re-confirm → positions
+rider → teardown → report).** Full account: `docs/handoff_summary.md` CURRENT STATE. New
+`search/vultr-build-run.ts` (permanent, mirrors `hetzner-build-run.ts`). `tsc`: only the 4 documented
+pre-existing errors.
+
+- **Provisioned `voc-g-32c-128gb-640s-amd` in `lhr`** ($1.315/hr) after DO's Memory-Optimized class
+  came back new-account-gated (only `m-2vcpu-16gb` visible via `/v2/sizes`; Vultr had no such gate).
+- **`corpus_vec` compact+reindex: SUCCEEDED technically** — `optimize()` merged 1,821 fragments → 40
+  (never got this far on the 32GB Hetzner box; genuine OOM there both times), `createIndex()` completed
+  in 935.9s, checkpoint `phase: "done"`, 21,846,364 vectors / 0 misses preserved.
+- **Recall re-confirm: NO RECOVERY.** `score-vector-full.ts` against the rebuilt index: vector-alone
+  70.5% (pre-rebuild 71.2%), fused 70/30 71.2% (unchanged) — reproduced bit-for-bit across two
+  independent runs. BM25-alone numbers identical to the pre-rebuild run (62.2%, matching per-query),
+  confirming the harness itself is stable and this is a real result. **The compaction-skip hypothesis
+  from earlier today is REVERSED** — properly compacting and rebuilding from scratch on ample hardware
+  produced essentially the same recall as the "degraded" un-compacted build. The true bottleneck is
+  unknown; leading candidate is an inherent ANN-at-21.8M-scale vs pilot's-exact-cosine-at-60k gap
+  rather than a build defect. `docs/VECTOR_FULL_RECONFIRM.md` updated with the corrected framing.
+- **Positions rider (bonus step 4): ABANDONED.** The prepped single-shot `withPosition:true` build
+  (`corpus_fts_positions`, checkpoint pre-pinned to `phase:"indexing"`, `FTS_SKIP_COMPACT=true`) hit a
+  **hard R2/S3 multipart-upload 10,000-part limit** writing the inverted-index file — a platform
+  ceiling, deterministic on retry. Stopped immediately per the "abandon, don't debug" rule rather than
+  let the retry wrapper spend paid box-time on a guaranteed-repeat failure. Left in a partial, isolated
+  state (zero risk to live `corpus_fts`) for a future attempt with a rethought upload-chunking approach.
+- **Process note (own mistake):** tore down the vector-rebuild box before running the positions rider,
+  out of the specified order (rebuild → reconfirm → **positions rider** → teardown). Required a second
+  short-lived Vultr box for the positions attempt. Minor extra spend (~20 min), no data risk — flagging
+  for the record rather than quietly absorbing it.
+- **Decision: `LEX_SEARCH_VECTOR` stays OFF.** Not an infrastructure problem to throw more compute at —
+  needs a search-quality investigation (chunking/collapse diff vs the pilot; a larger validation slice
+  to test whether recall degrades gradually with scale; the unexplained ~9s ANN query latency separately).
 
 ---
 

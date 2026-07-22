@@ -82,9 +82,11 @@ commit-all.sh
 scripts/operational/cop-app-crawl.json
 
 # Build-runner transient state. The cloud-init preview embeds Neon + R2 creds — NEVER
-# commit. The *-service-id / *-server-id files are throwaway box/service handles.
+# commit. The *-service-id / *-server-id / *-instance-id files are throwaway box/service handles.
 scripts/ingest/search/.hetzner-cloud-init.preview.sh
 scripts/ingest/search/.hetzner-build-server-id
+scripts/ingest/search/.vultr-cloud-init.preview.sh
+scripts/ingest/search/.vultr-build-instance-id
 scripts/ingest/search/.*-service-id
 
 # Tier-1 graph sprint — bulk TNA amendments data (large, regenerable via download-graph-sources.ts)
