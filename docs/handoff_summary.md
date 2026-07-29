@@ -2,7 +2,200 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-07-22 — ▼ SEARCH VECTOR REBUILD on a 128GB Vultr box **did NOT recover recall** (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the compaction-skip diagnosis from earlier the same day is REVERSED; the true cause is an open search-quality question (see CURRENT STATE). Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable). `LEX_SEARCH_VECTOR` stays OFF. ▼ 2026-07-21 — ▼ SEARCH VECTOR EMBED **COMPLETE**: full-corpus batch drain finished (1,821/1,821 shards), ANN index build OOM'd at fragment compaction on the 32GB box (CCX43 fallback blocked by Hetzner account quota) — fixed via `VECTOR_SKIP_COMPACT=true` (skips compaction, indexes the fragments directly), index built in 711.7s. **21,846,364 vectors, 0 misses, `phase: "done"`.** Caveat: un-compacted build logged Lance kmeans "empty cluster" warnings — quality not yet independently confirmed, rides on the already-planned gold-set/fusion re-confirm before the flag flip. See CURRENT STATE below. ▼ 2026-07-11 (laptop diagnosis) — ▼ INGEST TREATY COVERAGE EXTENSION (executes `TREATY_INGEST_BRIEF.md`, 8 Jul): `uk-treaties-fcdo` NEW corpus — FCDO UK Treaties Online reverse-engineered anonymous JSON API (treaties.fcdo.gov.uk, legacy JBoss/Knowvation, no bulk export, JS-only SPA); **honest-denominator correction: measured universe = 21,970 records, not the ~15,000 brief/gov.uk estimate**; 33% carry a PDF (full text), 67% metadata-only (surfaced honestly, not dropped); 127 dedup skips vs existing `uk-treaties`/`tax-treaties-dta`; pilot passed clean; **21,840-row backlog SEEDED, DRAINING in the background (not complete this sprint)** — live `ops`/`Ingest` Railway service picks it up automatically, no action needed. `parliament-treaties` NEW corpus — CRaG-2010 scrutiny register via the documented `treaties-api.parliament.uk` API (laid dates, scrutiny status, committee/debate timeline); kept separate from `uk-treaties-fcdo` (different id space + content kind, CC's call per the brief); **328/328 SEEDED + DRAINED this sprint, 0 failures.** Both licence-verified OGL3/OPL3, rate-limited, corpus-mapped. CHANGE_LOG "INGEST — Treaty coverage extension" (2026-07-08 16:33 UTC). ▼ SEARCH VECTOR EMBED — **TIER 2 FLIPPED; batch embed LIVE & progressing, 851/1,821 shards (~46.7%), 10.21M vectors, 0 misses at 21:32 UTC — NOT stalled** (the prior "paused/blocked" read was a ~24.5h-behind laptop clock + a sync-only £46.55 console snapshot; see CURRENT STATE). **Shipped the missing email observer** (`search/embed-observer.ts` → `ops`: stall/crash/ANN-stuck/daily-heartbeat alerts; deploys on next push). Historical tier-wall note follows. ▼ SEARCH VECTOR EMBED — TIER WALL + SYNC MODE (7 Jul, now superseded): full-run STEP 1 **DONE** (17,640,560 sections → **21,846,364 chunks** in `corpus_chunks`, 230 misses, ~32h cpx62); STEP 2 blocked — **account is Batch Tier 1 (500k enqueued-token queue; probed + docs-verified T1 500k/T2 5M/T3 10M)**, 40k shards ≈ 12.4M tok fit NO tier; also fixed en route: node default-heap OOM on the 21.8M id load (`NODE_OPTIONS=--max-old-space-size=28672`) and GEMINI_API_KEY missing from cloud-init (carve-out commit `c715e00`). Zero Gemini spend lost. **BUILT INERT this sprint:** `VECTOR_EMBED_MODE=sync|batch` (NEW `gemini-sync.ts` — standard-rate embedContent, global 950k-TPM pacer, same shard plan/checkpoint), checkpoint-pinned shardSize, batch sub-job token splitting (`VECTOR_BATCH_JOB_TOKENS` 4.5M — dense caselaw regions ~800 tok/chunk), `gemini-tier-probe.ts` tier detector. **Gated plan:** sync slice ~667M tok ≈ $100 (~11.7h) → auto Tier-2 flip → batch remainder ~$370–460 with SHARD_SIZE=12000/INFLIGHT=1 → revised total **~$470–560** (under the ~$600 gate; Tier-1 monthly cap £189≈$250 accommodates the slice). Report `docs/VECTOR_EMBED_REPORT.md` §5. ▼ GRAPH TIER 1 (COMPLETE): explicit-edge legislation graph — Neon `legislation_edges` **2,348,993 edges / ~0.94 GB** (amends 1.02M · commences 478k · repeals 322k · made-under 231k · modifies 181k · cites 121k), all from bulk TNA sources (bulk-before-API held; no LLM extraction); rescission traversal `impactSet()` + `/impact` service (fts-serve pattern, smoke-tested 224ms); **gold archetype D un-floored 0% → 80%** (D1–D4 = 8/8; D5 needs case-law edges, out of sprint scope). Audit refuted the fragments-have-Citation-markup premise — whole-doc bulk CLML + bulk amendments XML are the real sources. Report `docs/GRAPH_TIER1_REPORT.md`. **⚠ Neon now ~16 GB of the 17.5 GB line.** ▼ Earlier: SEARCH VECTOR EMBED (BUILT INERT): full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus **17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520** at the batch rate ($0.075/1M) — **within the ~$600 gate, no flag raised**. **CANARY RUN + PASSED (4 Jul, ~$0.01):** live Batch API contract confirmed — 200/200 vectors @768-d, order/keys clean. Remaining spend = the full Hetzner+Batch run (~$430–520), Charlie-triggered. `@google/genai` added. Report `docs/VECTOR_EMBED_REPORT.md`. ▼ SEARCH FUSION TUNING (pilot subset, no new embed cost): **weighted RRF fixed 70/30 vector/BM25 ships** — gemini 87.8% recall@20 vs naive RRF 84.3% / vector-alone 85.9% / BM25 68.3%; the pilot's naive-RRF regression is RESOLVED (fusion now beats vector-alone). **Kind-based routing NOT needed** — the full (wCit,wCon) grid over the `parseCitation` router only TIES fixed 70/30 (87.8%); at 70/30 the citation-resolver pin survives fusion (A=100%), ≥80/20 breaks A1. voyage confirms vector-heavy (80/20=86.9%, B6 naive-collapse FIXED 0→33.3%); e5 optimum stays 50/50 → the right weight tracks vector-arm strength. Ship spec: w=0.7 RRF_K=60 as env config, no router. `docs/FUSION_REPORT.md`. ▼ SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M)→DEBATE, regulators/reviews→GUIDANCE (`corpus-type-map.ts` display override). retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display → vector layer. ▼ SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+*Last updated: 2026-07-29 16:12 UTC — ▼ FTS rebuild + cursor fix PULLED OUT of the queued Act-metadata
+sprint and run separately (ready-now, independent) — see its own CURRENT STATE section. ▼ 2026-07-29
+13:04 UTC — ▼ shipped the Stage-3 query-expansion fix (`thinkingConfig:{thinkingBudget:0}`, commit
+`eb8641f`) — see below. ▼ 2026-07-29 12:10 UTC — ▼ ADDENDUM to the queued sprint's item-4 number: **the headline combined legacy total is
+1,049,805 rows, not 914,274** — 914,274 is `LegislationSection` alone; `LegislationItem`'s 135,531 rows
+are separate/additional and gated on item 2 (Act-metadata table), not item 1 (route swap). Use
+1,049,805 for Neon space-planning when this sprint is scheduled — no other change to the still-queued
+Act-metadata sprint. ▼ QUEUED (not started): Act-metadata sprint scoped (now 3 items — FTS-freshness
+pulled out, see above) — the one pre-scheduling number Charlie asked for is answered: see the addendum
+above for the corrected total. ▼ 2026-07-29 08:10 UTC — ▼ SEARCH: stale-vector mechanism IDENTIFIED (not deletion — `corpus_fts` is stale) + scoped legislation-tier recall test on B1–B3 (see CURRENT STATE below). ▼ 2026-07-22 — ▼ SEARCH VECTOR REBUILD on a 128GB Vultr box **did NOT recover recall** (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the compaction-skip diagnosis from earlier the same day is REVERSED; the true cause is an open search-quality question (see CURRENT STATE). Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable). `LEX_SEARCH_VECTOR` stays OFF. ▼ 2026-07-21 — ▼ SEARCH VECTOR EMBED **COMPLETE**: full-corpus batch drain finished (1,821/1,821 shards), ANN index build OOM'd at fragment compaction on the 32GB box (CCX43 fallback blocked by Hetzner account quota) — fixed via `VECTOR_SKIP_COMPACT=true` (skips compaction, indexes the fragments directly), index built in 711.7s. **21,846,364 vectors, 0 misses, `phase: "done"`.** Caveat: un-compacted build logged Lance kmeans "empty cluster" warnings — quality not yet independently confirmed, rides on the already-planned gold-set/fusion re-confirm before the flag flip. See CURRENT STATE below. ▼ 2026-07-11 (laptop diagnosis) — ▼ INGEST TREATY COVERAGE EXTENSION (executes `TREATY_INGEST_BRIEF.md`, 8 Jul): `uk-treaties-fcdo` NEW corpus — FCDO UK Treaties Online reverse-engineered anonymous JSON API (treaties.fcdo.gov.uk, legacy JBoss/Knowvation, no bulk export, JS-only SPA); **honest-denominator correction: measured universe = 21,970 records, not the ~15,000 brief/gov.uk estimate**; 33% carry a PDF (full text), 67% metadata-only (surfaced honestly, not dropped); 127 dedup skips vs existing `uk-treaties`/`tax-treaties-dta`; pilot passed clean; **21,840-row backlog SEEDED, DRAINING in the background (not complete this sprint)** — live `ops`/`Ingest` Railway service picks it up automatically, no action needed. `parliament-treaties` NEW corpus — CRaG-2010 scrutiny register via the documented `treaties-api.parliament.uk` API (laid dates, scrutiny status, committee/debate timeline); kept separate from `uk-treaties-fcdo` (different id space + content kind, CC's call per the brief); **328/328 SEEDED + DRAINED this sprint, 0 failures.** Both licence-verified OGL3/OPL3, rate-limited, corpus-mapped. CHANGE_LOG "INGEST — Treaty coverage extension" (2026-07-08 16:33 UTC). ▼ SEARCH VECTOR EMBED — **TIER 2 FLIPPED; batch embed LIVE & progressing, 851/1,821 shards (~46.7%), 10.21M vectors, 0 misses at 21:32 UTC — NOT stalled** (the prior "paused/blocked" read was a ~24.5h-behind laptop clock + a sync-only £46.55 console snapshot; see CURRENT STATE). **Shipped the missing email observer** (`search/embed-observer.ts` → `ops`: stall/crash/ANN-stuck/daily-heartbeat alerts; deploys on next push). Historical tier-wall note follows. ▼ SEARCH VECTOR EMBED — TIER WALL + SYNC MODE (7 Jul, now superseded): full-run STEP 1 **DONE** (17,640,560 sections → **21,846,364 chunks** in `corpus_chunks`, 230 misses, ~32h cpx62); STEP 2 blocked — **account is Batch Tier 1 (500k enqueued-token queue; probed + docs-verified T1 500k/T2 5M/T3 10M)**, 40k shards ≈ 12.4M tok fit NO tier; also fixed en route: node default-heap OOM on the 21.8M id load (`NODE_OPTIONS=--max-old-space-size=28672`) and GEMINI_API_KEY missing from cloud-init (carve-out commit `c715e00`). Zero Gemini spend lost. **BUILT INERT this sprint:** `VECTOR_EMBED_MODE=sync|batch` (NEW `gemini-sync.ts` — standard-rate embedContent, global 950k-TPM pacer, same shard plan/checkpoint), checkpoint-pinned shardSize, batch sub-job token splitting (`VECTOR_BATCH_JOB_TOKENS` 4.5M — dense caselaw regions ~800 tok/chunk), `gemini-tier-probe.ts` tier detector. **Gated plan:** sync slice ~667M tok ≈ $100 (~11.7h) → auto Tier-2 flip → batch remainder ~$370–460 with SHARD_SIZE=12000/INFLIGHT=1 → revised total **~$470–560** (under the ~$600 gate; Tier-1 monthly cap £189≈$250 accommodates the slice). Report `docs/VECTOR_EMBED_REPORT.md` §5. ▼ GRAPH TIER 1 (COMPLETE): explicit-edge legislation graph — Neon `legislation_edges` **2,348,993 edges / ~0.94 GB** (amends 1.02M · commences 478k · repeals 322k · made-under 231k · modifies 181k · cites 121k), all from bulk TNA sources (bulk-before-API held; no LLM extraction); rescission traversal `impactSet()` + `/impact` service (fts-serve pattern, smoke-tested 224ms); **gold archetype D un-floored 0% → 80%** (D1–D4 = 8/8; D5 needs case-law edges, out of sprint scope). Audit refuted the fragments-have-Citation-markup premise — whole-doc bulk CLML + bulk amendments XML are the real sources. Report `docs/GRAPH_TIER1_REPORT.md`. **⚠ Neon now ~16 GB of the 17.5 GB line.** ▼ Earlier: SEARCH VECTOR EMBED (BUILT INERT): full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus **17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520** at the batch rate ($0.075/1M) — **within the ~$600 gate, no flag raised**. **CANARY RUN + PASSED (4 Jul, ~$0.01):** live Batch API contract confirmed — 200/200 vectors @768-d, order/keys clean. Remaining spend = the full Hetzner+Batch run (~$430–520), Charlie-triggered. `@google/genai` added. Report `docs/VECTOR_EMBED_REPORT.md`. ▼ SEARCH FUSION TUNING (pilot subset, no new embed cost): **weighted RRF fixed 70/30 vector/BM25 ships** — gemini 87.8% recall@20 vs naive RRF 84.3% / vector-alone 85.9% / BM25 68.3%; the pilot's naive-RRF regression is RESOLVED (fusion now beats vector-alone). **Kind-based routing NOT needed** — the full (wCit,wCon) grid over the `parseCitation` router only TIES fixed 70/30 (87.8%); at 70/30 the citation-resolver pin survives fusion (A=100%), ≥80/20 breaks A1. voyage confirms vector-heavy (80/20=86.9%, B6 naive-collapse FIXED 0→33.3%); e5 optimum stays 50/50 → the right weight tracks vector-arm strength. Ship spec: w=0.7 RRF_K=60 as env config, no router. `docs/FUSION_REPORT.md`. ▼ SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M)→DEBATE, regulators/reviews→GUIDANCE (`corpus-type-map.ts` display override). retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display → vector layer. ▼ SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — Community feature: Stage 1 build complete, not click-tested (2026-07-29 17:43 UTC)
+
+**Full Stage 1 build shipped this session** (schema → API routes → UI), executing the brief Charlie
+dictated and the scope now formalised in `docs/SCRUTINISE_CENTRAL_SPEC.md` (new master spec for the
+whole Central module — read this, not just this handoff section, for the full roadmap through Stage 4).
+Full account: `docs/CHANGE_LOG.md` "CENTRAL — Stage 1 Community build" (2026-07-29 17:43 UTC) and the
+schema-migration entry just above it (17:24 UTC).
+
+- **Two migrations applied to production this session:** `20260729141507_add_community_hierarchy`
+  (Community/CommunityMember/CommunityInvite/Idea.communityId) and `20260729173128_add_bulletin_board`
+  (BulletinPost/BulletinVote/Community.managerId/CommunityMember.lastReadAt). Both hand-scoped from the
+  raw `prisma migrate diff` output rather than applied as-is — the raw diff also wants to drop the
+  914,274-row `LegislationSection_DEPRECATED_2026-06-19` table and `specialist_queue`, fallout from
+  `schema.prisma` having drifted ahead of production on the unrelated, deliberately-still-unmigrated LEX
+  Rebuild Sprint 2 set. **That wider drift is still there and will resurface on every future migration
+  attempt** until someone either migrates the Sprint 2 tables for real or reconciles
+  `LegislationSection`'s physical rename back into a proper migration — not this session's job, flagging
+  for whoever touches `schema.prisma` next.
+- **Built:** API routes (create/join Communities, branches, manager assignment, invites, bulletin
+  CRUD+vote+search), `/communities` + `/communities/[id]` + `/community-invite/[code]` pages, dashboard
+  reorg ("My Communities and teams" section, Feed/Upcoming tabs). Detail in CHANGE_LOG — not repeated
+  here.
+- **Real bug caught by testing against a live dev server (not just `tsc`):** `middleware.ts` was missing
+  `/communities` from its protected-route list, so the page-level redirect for signed-out visitors only
+  worked via React's streaming protocol (real browsers were fine; a non-JS client would hang on a 200 +
+  loading shell). Fixed — see CHANGE_LOG for exact detail.
+- **NOT tested:** the actual signed-in interactive paths (create/join a Community, post/reply/vote,
+  assign a manager). No way to authenticate as a real user from this environment — only auth-boundary
+  and error-path smoke tests were run. **The Stage 1 test checklist in
+  `SCRUTINISE_CENTRAL_SPEC.md` §3 still needs running by a signed-in human in a browser** before this
+  is considered done, not just shipped.
+- **Deliberately not touched:** `entity_list_v5.md` (CCh-only, never edited by CC without instruction —
+  the new entities are documented in `SCRUTINISE_CENTRAL_SPEC.md` §2 instead). DOMPurify gap (referenced
+  only in a schema comment codebase-wide, never implemented) — sidestepped for bulletin posts via
+  plain-text/default-JSX-escaping rendering rather than closed.
+- **NEXT:** click-test the Stage 1 checklist; Stage 2 (points/leaderboards) is "under discussion," not
+  yet briefed — see `SCRUTINISE_CENTRAL_SPEC.md` §4 for what's agreed so far.
+
+---
+
+## QUEUED (not started) — Act-metadata sprint (scoped 2026-07-29 11:52 UTC; FTS item pulled out 16:12 UTC)
+
+**Not started. Scoped and recorded for when Charlie schedules it.** Three items (item 3, the
+`corpus_fts` cursor/rebuild, was PULLED OUT 2026-07-29 16:12 UTC into its own ready-now, independently
+scheduled piece of work — see its own CURRENT STATE section below; no change to items 1/2 here):
+1. Low-effort: repoint `searchLegislation()`/idea-chat onto the current (once-rebuilt) FTS path.
+2. **Gating item — scope as ONE sub-project, not three small fixes:** a proper Act-level metadata
+   table (title/year/jurisdiction/number/section-counts + whatever `LegislationPanel` needs), fed from
+   ingest, independent of `corpus_sections`' section granularity and of `LegislationItem`. Unblocks the
+   panel route + browse-page route AND makes `LegislationItem` itself droppable.
+3. **Answered below** — the one number needed before scheduling.
+
+**ADDENDUM (2026-07-29 16:12 UTC) — correction to the item-3 (orig. item-4) number, per Charlie:**
+**the headline combined legacy total to use for Neon space-planning is 1,049,805 rows, not 914,274.**
+The table below already had this right, but the top-line framing undersold it — flagging explicitly so
+a skim doesn't anchor on 914,274 alone. 914,274 is `LegislationSection` (gated on items 1+2 above);
+`LegislationItem`'s 135,531 rows are separate/additional and gated on item 2 only. No other change to
+this queued sprint's scope.
+
+**Original answer — the row split, with a correction to the framing:** queried Railway (`DATABASE_URL`,
+the main app's Prisma DB) directly. **The "914,274 legacy rows" figure is not a combined total that
+needs splitting — it already equals the entire `LegislationSection` row count, exactly.**
+`LegislationItem` (135,531 rows) is separate and additional, not part of that number.
+
+| Table | Rows | Droppable when |
+|---|---|---|
+| `LegislationSection` (physically renamed `LegislationSection_DEPRECATED_2026-06-19`) | **914,274** | #1 + #2 land |
+| `LegislationItem` | **135,531** | #2 lands (Act-metadata table) |
+| **Combined legacy footprint — USE THIS FOR SPACE-PLANNING** | **1,049,805** | — |
+
+**Two things this surfaced (flagged, not touched):**
+- **Schema/DB drift, live now, not a future-state description:** `schema.prisma` still declares
+  `model LegislationSection` mapped to the un-suffixed table name, but the physical Railway table was
+  already renamed to `LegislationSection_DEPRECATED_2026-06-19` (date suggests this happened the day
+  before `corpus_fts`'s last successful build, 2026-06-20 — likely the same cutover). Schema and DB are
+  out of sync right now.
+- **One live-broken route from that drift:** `app/api/legislation/test-sections/route.ts` (public,
+  no-auth "research tool") is the ONLY code path still calling `prisma.legislationSection.findMany(...)`
+  — it would 500 if hit today, since that table name no longer exists. Given it's the sole remaining
+  reference, `LegislationSection` may already be closer to actually droppable than item #1+#2 assumed —
+  worth weighing whether removing/fixing this one route unblocks dropping it sooner, ahead of the full
+  Act-metadata sub-project, rather than only as part of it. Not removed this session (out of scope of
+  what was asked). Script (throwaway): `scripts/ingest/search/_legacy-row-split-tmp.ts`.
+
+---
+
+## CURRENT STATE — SEARCH: stale-vector mechanism identified + scoped legislation-tier recall test (2026-07-29 08:10 UTC)
+
+**Part 1 — "removed since indexing" ghosts are `corpus_fts` staleness, NOT deletion.** Sampled 17 of the
+`(metadata unavailable — section may have been removed since indexing)` ids from `VECTOR_DOSSIER.md`
+(16 `scottish-parliament-or` + 1 `cps-guidance`). **17/17 exist in `corpus_sections` (Neon, the
+keyword source of truth) AND in `corpus_chunks` (Lance, the vector pipeline's own body manifest —
+full text retrieved, content confirmed intact). 0/17 exist in `corpus_fts`** (the Lance keyword table
+the dossier script queries for display metadata, and the live BM25 arm's index).
+
+**Root cause confirmed:** `corpus_fts`'s checkpoint (`_search/corpus_fts.checkpoint.json`) shows
+`phase: "done"`, `updatedAt: 2026-06-20T17:34:13Z`, `lastId: "written-statements:2026-06-01:..."`.
+The build resumes via a plain **lexicographic string cursor** (`WHERE id > lastId ORDER BY id`), which
+only ever moves forward. All 1,043,743 `scottish-parliament-or` rows were created **2026-06-25 —
+five days after that build completed** — no rebuild has run since, so the entire corpus (0/1,043,743
+rows) has never been in `corpus_fts`, and a plain resume can never pick it up either (`s` sorts before
+the cursor's final `w...` value, so `id > lastId` permanently excludes it without a `--reset`).
+`cps-guidance` (created 2026-06-20, same day, 224/270 present) shows the same mechanism on a smaller
+scale: rows compiled by the concurrent ingest worker after that single run's cursor had already swept
+past the `cps-guidance:` id range are invisible to a forward-only cursor. **Not a reprocessing decision,
+not a join-key mismatch between the vector's stored id and the current DB — both point at the same row,
+which genuinely exists — `corpus_fts` is simply missing everything ingested after its last build that
+sorts before the final cursor position.** The vector arm's ANN search correctly finds these sections
+(they're properly embedded); it's the metadata/snippet lookup (which reads `corpus_fts`) that comes up
+empty and prints the misleading "removed" placeholder.
+**Blast radius:** at minimum the full 1.04M-row `scottish-parliament-or` corpus is currently
+unsearchable via BM25/keyword at all, plus a partial `cps-guidance` gap — likely more corpora are
+affected (anything seeded/re-ingested after 2026-06-20 whose id sorts before `written-statements`, i.e.
+most of the alphabet). **Not exhaustively audited this session** (only the 17 sampled ids + the two
+corpora's row counts were checked) — a full completeness sweep (`corpus_sections.createdAt` vs the
+checkpoint's `updatedAt`, per corpus) is the natural next step. **Fix needs a `corpus_fts` rebuild**
+(full `--reset`, or a targeted backfill of rows created after 2026-06-20) — Charlie's call on which,
+not executed this session (multi-hour class of operation). Diagnostic scripts (throwaway):
+`scripts/ingest/search/_stale-vector-diag-tmp.ts`, `_stale-vector-diag2-tmp.ts`.
+
+**Part 2 — scoped (tier=legislation) recall test, B1–B3.** Filter-only, no rebuild (both `corpus_fts`
+and `corpus_vec` already carry `tier` per row via `corpus-map.ts`). Full report:
+`docs/VECTOR_DOSSIER_SCOPED.md` (full section text, not snippets, top 3 per arm).
+
+- **B1 (landlord eviction) — CONFIRMS the noise-drowning diagnosis on the vector arm:** vector-alone
+  unscoped does not surface HA 1988 s.21 in the top 10 at all; **scoped to legislation, it appears at
+  rank 8.** BM25 fails both scoped and unscoped (never retrieves it regardless of tier — a genuine
+  BM25 vocabulary gap, not a noise problem).
+- **B3 (photographing people in public) — CONFIRMS the same pattern:** vector-alone unscoped misses
+  Sexual Offences Act 2003 entirely (top 10 is petitions + Scottish-Parliament-OR ghosts + a 2026 Act);
+  **scoped to legislation, SOA 2003 s.67A appears at rank 6.** BM25 fails both scoped and unscoped.
+- **B2 (Airbnb whole-house lets) — DOES NOT confirm the diagnosis; a distinct failure mode.** Neither
+  arm recovers the anchor Acts (Levelling-up and Regeneration Act 2023 / Deregulation Act 2015 s.44 /
+  Use Classes Order) even scoped to legislation-only — the vector-alone top 10 stays dominated by
+  unrelated pre-2000 housing-benefit-SI and redevelopment provisions regardless of scoping. BM25
+  unscoped had a loose phrase-match at rank 9 (a parliamentary debate that happens to say "Use Classes
+  Order," not the Act itself) — **scoping to legislation actually loses that hit** and surfaces nothing
+  better. B2 looks like a genuine embedding/vocabulary miss where the anchor never enters the candidate
+  set at all, scoped or not — not a case of the right answer being buried in noise. Worth its own look
+  rather than folding into the noise-drowning story.
+
+**Net read: 2 of 3 archetype-B queries tested show sharp vector-alone recall recovery when scoped to
+legislation, supporting the "drowning in noise, not failing to find the law" diagnosis — but it is not
+universal (B2 contradicts it), so scoping is not a substitute for fixing retrieval quality, only a
+partial mitigation.** `LEX_SEARCH_VECTOR` stays OFF; this doesn't change that gate on its own. Script:
+`scripts/ingest/search/_dossier-scoped-tmp.ts`.
+
+**Part 3 — B2 follow-up: the Part 2 test above was RAW query, no Stage-3 expansion.** Re-ran BM25
+B2 scoped WITH expandQuery's enrichment (mirroring score-fts.ts's exact merge mechanism). **Result:
+B2 recovers under expansion+scoping — it is NOT a new/distinct vocabulary gap, it's the July A/B
+finding (expansion already recovers B2 unscoped) and legislation-tier scoping, just never tried
+together.** Levelling-up and Regeneration Act 2023: unscoped+expansion rank 12 → **scoped+expansion
+rank 7** (scoping helps further). Use Classes Order: raw rank 9 → expansion rank 1 (scoped or
+unscoped, tied). **One sub-source still never recovers in any of the 4 arms: Deregulation Act 2015
+s.44 (the London 90-night provision)** — a standalone gap, not explained by either fix.
+**⚠ Side-discovery, unrelated to B2, flagging separately: the production `expandQuery()`
+(`scrutinise-web/lib/lex/query-expansion.ts`, `LEX_QUERY_EXPANSION` flag) is currently NON-FUNCTIONAL
+against live `gemini-2.5-flash`** — the model's default "thinking" mode consumes the entire
+`maxOutputTokens: 512` budget before writing any output (`finishReason: MAX_TOKENS`, ~488
+`thoughtsTokenCount`, output truncated mid-JSON), so `JSON.parse` always fails and the function
+silently degrades to EMPTY (by design — fail-open, no user-facing harm since BM25 falls back to the
+bare query — but the feature does nothing if the flag is ever turned on). **Verified fix:** add
+`thinkingConfig: { thinkingBudget: 0 }` to `generationConfig` — confirmed via direct API round-trip
+(same prompt: `MAX_TOKENS`/empty parts → `STOP`/full valid JSON). **Not patched this session** — this
+is a live-file change outside what was asked; Charlie's call whether to ship it. This was NOT
+happening back on 1 Jul when the Stage-3 A/B was measured (it produced real anchors then) — something
+changed in the model's default behaviour or the call site between then and now, unconfirmed which.
+Scripts (throwaway): `scripts/ingest/search/_b2-scoped-expansion-tmp.ts`,
+`_expansion-raw-debug-tmp.ts`.
+
+**Note for the ingest/index-check thread (flag only, no action taken):** the `corpus_fts` rebuild
+(Part 1 above) is now a **precondition** for any legacy-route migration work, not a parallel/independent
+task — repointing those routes today, before the rebuild, would silently drop the entire
+`scottish-parliament-or` corpus (1.04M rows) from production keyword results.
+
+**One-line thought on preventing a repeat (no action taken):** the same "silent staleness" pattern
+that bit the embed observer now confirmed to have bitten `corpus_fts` too — a cheap fix would be the
+same `embed-observer.ts` pattern (already shipped for `corpus_vec`) applied to `corpus_fts`: a daily
+Railway `ops` check comparing `MAX(corpus_sections."createdAt")` against the `corpus_fts` checkpoint's
+`updatedAt`, alerting if the gap exceeds some threshold (e.g. 24h) — one query + one checkpoint read,
+no new infra.
 
 ---
 

@@ -4,6 +4,60 @@
 
 ---
 
+## CENTRAL — Stage 1 Community build: bulletin board, teams/branches, invites, dashboard reorg (2026-07-29 17:43 UTC)
+
+**Full Stage 1 build per `docs/SCRUTINISE_CENTRAL_SPEC.md` §3 and `docs/SPRINT.md`.** `tsc --noEmit`
+clean (0 errors). Smoke-tested against a live local dev server (not just `tsc`): auth-boundary checks
+on every new route/page, invalid-invite-code handling. **Not tested: the actual signed-in interactive
+paths (create/join a Community, post/reply/vote) — no way to authenticate as a real user in this
+environment; say so explicitly rather than claiming full verification.**
+
+- **New schema, second migration this session** (`20260729173128_add_bulletin_board`, applied via the
+  same hand-scoped `migrate deploy` procedure as the Community migration below — same drift avoidance):
+  `Community.managerId` (branch-manager assignment), `CommunityMember.lastReadAt` (unread bulletin
+  count), `BulletinPost` (self-referential `parentId` — root posts carry title/category, replies don't;
+  same pattern as `RootCause.parentId`), `BulletinVote` (unique per post+user, cached `score` on the
+  post to avoid a COUNT aggregate per render).
+- **API routes** (`app/api/communities/`): list/create Communities, get/rename a Community, create a
+  branch, assign/clear a branch manager, generate/list invite codes, redeem an invite code
+  (`/api/communities/join`), bulletin thread list (ILIKE keyword search + category filter, deliberately
+  NOT the corpus-search stack — different scale, different problem) + create/reply/vote, mark-read.
+  Auth/validation pattern copied from the existing `app/api/ideas/[id]/*` routes (Zod, `getAuthenticatedUser()`,
+  404-not-403 for non-members so membership isn't leaked). Vote endpoint rate-limited 20/hr per IP via
+  `lib/rateLimit.ts`, mirroring `app/api/ai/public/route.ts` (CLAUDE.md security rule #7 — the existing
+  `ideas/[id]/vote` route doesn't actually enforce this today, a pre-existing gap not fixed here).
+- **UI**: `/communities` (My Communities landing list, create + join-by-code), `/communities/[id]`
+  (dashboard — header, Teams & branches expandable tree, Bulletin board, Points & leaderboards stub),
+  `/community-invite/[code]` (rules/points-info screen, explicit Join click — not auto-accept, since a
+  reusable code isn't a targeted 1:1 invite the way the existing `UserInvite` magic link is). Dashboard
+  reorg: "My Communities and teams" section added below "Your ideas" (Community and Idea-team/`Group`
+  cards side by side, tagged not merged); Notifications panel split into Feed/Upcoming tabs — Upcoming is
+  an intentional empty state (events land in Stage 2b, not this sprint); Feed reuses the existing
+  `Notification` model unchanged (bulletin replies now create a `SYSTEM`-type notification, so they
+  surface in Feed without a second data source).
+- **"Training — offers & requests" bulletin category** seeded as a first-class category option
+  (`lib/community.ts` `BULLETIN_CATEGORIES`) per the explicit Stage 1 scope note — the Stage 2c
+  structured training marketplace starts life as ordinary bulletin posts.
+- **Real bug caught by testing against a live server, not by `tsc`:** `middleware.ts` didn't list
+  `/communities` as a protected route, so the page-level `redirect()` for signed-out visitors was only
+  ever delivered via the React streaming/RSC protocol (real browsers still redirect correctly via the
+  client router, but a non-JS client — or anything relying on a plain HTTP 30x — would see 200 + an
+  infinite loading shell instead). Fixed: `/communities(.*)` and `/api/communities(.*)` added to
+  `isProtectedRoute`; `/community-invite(.*)` added to `isPublicRoute` (mirrors the existing `/invite`
+  pattern — the whole point of that page is to be viewable before signing up).
+- **Known gaps carried forward, not fixed here (flagged, not silently absorbed):** DOMPurify is
+  referenced only in a schema comment across the whole codebase, never actually implemented anywhere —
+  bulletin post bodies are plain text rendered through default JSX escaping (no `dangerouslySetInnerHTML`
+  anywhere in this build), which sidesteps the gap rather than closing it. No abuse-reporting workflow
+  yet (§1, explicitly out of Stage 1). `entity_list_v5.md` was deliberately NOT edited — it's a
+  CCh-only document; the new entities are documented in `SCRUTINISE_CENTRAL_SPEC.md` §2 instead, add to
+  `entity_list_v5.md` at Charlie's discretion.
+- **NEXT:** the Stage 1 test checklist (`SCRUTINISE_CENTRAL_SPEC.md` §3) needs running by a signed-in
+  human in a browser — nothing in this build has been click-tested end to end. Stage 2 (points/
+  leaderboards) is still "under discussion," not briefed.
+
+---
+
 ## CENTRAL — Community schema committed + migrated to production (2026-07-29 17:24 UTC)
 
 **Commits the `Community` / `CommunityMember` / `CommunityInvite` schema draft that had been sitting

@@ -25,7 +25,7 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/sign-in?redirect_url=/dashboard')
 
-  const [ideas, notifications, contributionCount] = await Promise.all([
+  const [ideas, notifications, contributionCount, communityMemberships, groupMemberships] = await Promise.all([
     prisma.idea.findMany({
       where: { creatorId: user.id },
       orderBy: { updatedAt: 'desc' },
@@ -58,11 +58,45 @@ export default async function DashboardPage() {
       },
     }),
     prisma.comment.count({ where: { authorId: user.id } }),
+    prisma.communityMember.findMany({
+      where: { userId: user.id },
+      include: { community: { select: { id: true, name: true } } },
+      orderBy: { joinedAt: 'desc' },
+      take: 6,
+    }),
+    prisma.groupMember.findMany({
+      where: { userId: user.id },
+      include: { group: { select: { id: true, name: true, ideaId: true, idea: { select: { title: true } } } } },
+      orderBy: { joinedAt: 'desc' },
+      take: 6,
+    }),
   ])
 
   const credibilityScore = user.credibilityScore?.totalScore
     ? Math.round(Number(user.credibilityScore.totalScore))
     : 0
+
+  // "My Communities and teams" — Community and Idea-team (Group) memberships
+  // shown side by side, tagged by kind rather than merged into one concept
+  // (docs/SCRUTINISE_CENTRAL_SPEC.md §3 item 7).
+  const myGroups = [
+    ...communityMemberships.map((m) => ({
+      kind: 'COMMUNITY' as const,
+      id: m.community.id,
+      name: m.community.name,
+      subtitle: null as string | null,
+      role: m.role as string,
+      href: `/communities/${m.community.id}`,
+    })),
+    ...groupMemberships.map((m) => ({
+      kind: 'IDEA_TEAM' as const,
+      id: m.group.id,
+      name: m.group.name,
+      subtitle: m.group.idea?.title ?? null,
+      role: m.role as string,
+      href: m.group.ideaId ? `/ideas/${m.group.ideaId}` : '/dashboard',
+    })),
+  ]
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -78,6 +112,7 @@ export default async function DashboardPage() {
           createdAt: n.createdAt.toISOString(),
           ideaTitle: n.relatedIdea?.title ?? null,
         }))}
+        myGroups={myGroups}
         contributionCount={contributionCount}
         credibilityScore={credibilityScore}
       />

@@ -501,6 +501,9 @@ model User {
   groupMemberships          GroupMember[]
   ownedGroups               Group[]
   communityMemberships      CommunityMember[]
+  managedCommunities        Community[]         @relation("CommunityManager")
+  bulletinPosts             BulletinPost[]
+  bulletinVotes             BulletinVote[]
   partyMemberships          PartyMembership[]
   platformConfigUpdates     PlatformConfig[]
   ideaReviews               IdeaReview[]
@@ -1211,15 +1214,23 @@ model Community {
   parentCommunityId String?
   parent            Community?  @relation("CommunityHierarchy", fields: [parentCommunityId], references: [id])
   children          Community[] @relation("CommunityHierarchy")
+  // Assigned branch/node manager (Stage 1 "Teams & branches" — admin can assign
+  // a manager per node). Informational/authorization hint only, not itself a
+  // permission grant — the manager must also hold an OWNER/ADMIN CommunityMember
+  // row on this node for the app layer to actually treat them as an admin here.
+  managerId         String?
+  manager           User?       @relation("CommunityManager", fields: [managerId], references: [id])
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   members           CommunityMember[]
   invites           CommunityInvite[]
+  bulletinPosts     BulletinPost[]
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
 
   @@index([parentCommunityId])
+  @@index([managerId])
 }
 
 model CommunityMember {
@@ -1230,6 +1241,9 @@ model CommunityMember {
   user        User                @relation(fields: [userId], references: [id])
   role        CommunityMemberRole @default(MEMBER)
   joinedAt    DateTime            @default(now())
+  // Bulletin-board "unread" count is derived at read time as posts/replies
+  // newer than this per member — bumped whenever the member views the board.
+  lastReadAt  DateTime            @default(now())
 
   // Community membership intentionally grants no Idea access — kept separate so
   // Idea permissions stay tightly scoped, decision 22 Jul 2026. Idea access is
@@ -1249,6 +1263,53 @@ model CommunityInvite {
   expiresAt       DateTime?
   createdByUserId String
   createdAt       DateTime  @default(now())
+}
+
+// Bulletin board — thread + reply share one self-referential table (same
+// pattern as RootCause.parentId / DiagnosisCause.parentCauseId): parentId
+// null = root post (title/category set); non-null = a reply (title/category
+// left null). Scoped to exactly one Community, never a cross-Community feed
+// (Stage 1 spec, docs/SCRUTINISE_CENTRAL_SPEC.md §3). Keyword search is plain
+// ILIKE over title+body at this scale — deliberately NOT the corpus-search
+// stack (different scale, different problem; see §9 "Deferred" semantic-search
+// note for the future trigger condition).
+model BulletinPost {
+  id          String   @id @default(uuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id])
+  parentId    String?
+  parent      BulletinPost?  @relation("BulletinPostReplies", fields: [parentId], references: [id])
+  replies     BulletinPost[] @relation("BulletinPostReplies")
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  // Root posts only — the "Training — offers & requests" category is seeded
+  // as one of the default category tags at Community creation time (Stage 1
+  // workaround for the Stage 2c structured training marketplace).
+  title       String?
+  category    String?
+  body        String
+  // Cached net (upvotes - downvotes), maintained alongside BulletinVote writes
+  // — avoids a COUNT aggregate on every thread-list render.
+  score       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  votes       BulletinVote[]
+
+  @@index([communityId, parentId])
+  @@index([communityId, category])
+}
+
+model BulletinVote {
+  id        String   @id @default(uuid())
+  postId    String
+  post      BulletinPost @relation(fields: [postId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  value     Int      // +1 or -1
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

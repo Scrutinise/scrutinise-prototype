@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { stageToLabel } from '@/lib/display-utils'
@@ -33,21 +34,42 @@ interface NotificationSummary {
   createdAt: string
 }
 
+interface GroupSummary {
+  kind: 'COMMUNITY' | 'IDEA_TEAM'
+  id: string
+  name: string
+  subtitle: string | null
+  role: string
+  href: string
+}
+
 interface Props {
   userName: string | null
   ideas: IdeaSummary[]
   notifications: NotificationSummary[]
+  myGroups: GroupSummary[]
   contributionCount: number
   credibilityScore: number
+}
+
+const KIND_BADGE: Record<GroupSummary['kind'], string> = {
+  COMMUNITY: 'bg-purple-100 text-purple-700',
+  IDEA_TEAM: 'bg-zinc-100 text-zinc-600',
+}
+const KIND_LABEL: Record<GroupSummary['kind'], string> = {
+  COMMUNITY: 'Community',
+  IDEA_TEAM: 'Idea-team',
 }
 
 export default function DashboardClient({
   userName,
   ideas,
   notifications,
+  myGroups,
   contributionCount,
   credibilityScore,
 }: Props) {
+  const [feedTab, setFeedTab] = useState<'feed' | 'upcoming'>('feed')
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-8 flex items-center justify-between">
@@ -119,12 +141,76 @@ export default function DashboardClient({
               ))}
             </div>
           )}
+
+          {/* My Communities and teams */}
+          <div className="mt-8">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold">My Communities and teams</h2>
+              <Link href="/communities" className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+                View all
+              </Link>
+            </div>
+            {myGroups.length === 0 ? (
+              <div className="rounded-lg border border-border p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  You&apos;re not in any Communities or teams yet.
+                </p>
+                <Button asChild size="sm" className="mt-3">
+                  <Link href="/communities">Find a Community</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {myGroups.map((g) => (
+                  <Link
+                    key={`${g.kind}-${g.id}`}
+                    href={g.href}
+                    className="flex items-start justify-between rounded-lg border border-border p-3 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="min-w-0 flex-1 pr-3">
+                      <p className="truncate text-sm font-medium">{g.name}</p>
+                      {g.subtitle && <p className="truncate text-xs text-muted-foreground mt-0.5">{g.subtitle}</p>}
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${KIND_BADGE[g.kind]}`}>
+                      {KIND_LABEL[g.kind]}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Notifications */}
+        {/* Feed / Upcoming */}
         <div>
-          <h2 className="mb-4 text-base font-semibold">Notifications</h2>
-          <NotificationList notifications={notifications} />
+          <div className="mb-4 flex items-center gap-1 rounded-md border border-border p-0.5 w-fit">
+            <button
+              onClick={() => setFeedTab('feed')}
+              className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                feedTab === 'feed' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Feed
+            </button>
+            <button
+              onClick={() => setFeedTab('upcoming')}
+              className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+                feedTab === 'upcoming' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Upcoming
+            </button>
+          </div>
+
+          {feedTab === 'feed' ? (
+            <NotificationList notifications={notifications} />
+          ) : (
+            <div className="rounded-lg border border-border p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                No upcoming events yet — Community events are coming soon.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </main>

@@ -7,9 +7,11 @@ const isProtectedRoute = createRouteMatcher([
   '/onboarding(.*)',
   '/dashboard(.*)',
   '/settings(.*)',
+  '/communities(.*)',
   '/api/ideas(.*)',
   '/api/ai(.*)',
   '/api/user(.*)',
+  '/api/communities(.*)',
   '/admin(.*)',
   '/api/admin(.*)',
 ])
@@ -23,6 +25,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/sign-out(.*)',
   '/invite(.*)',
+  '/community-invite(.*)',
   '/unsubscribe(.*)',
   '/ideas(.*)',         // idea detail pages public — visibility enforced in API/page
   '/user(.*)',          // public profile pages
