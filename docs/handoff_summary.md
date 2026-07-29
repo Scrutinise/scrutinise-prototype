@@ -2,7 +2,17 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-07-29 16:12 UTC — ▼ FTS rebuild + cursor fix PULLED OUT of the queued Act-metadata
+*Last updated: 2026-07-29 20:14 UTC — ▼ SEARCH: FTS rebuild + cursor fix COMPLETE — `corpus_fts` fully
+reconciled (0 gap across all 70 corpora, 1,172,169+ rows backfilled incl. all of scottish-parliament-or,
+uk-treaties-fcdo, parliament-treaties, cma-cases, the Hansard partial gaps); new append-safe
+`fts-catchup.ts` ships for future drift. Hit + resolved a real operational incident along the way
+(harness "kill" doesn't actually kill the OS process here — caused a duplicate-write mess, cleanly
+fixed) — see its own CURRENT STATE section for the full story. ▼ 2026-07-29 19:25 UTC — ▼ SEARCH:
+query router built + measured (`LEX_QUERY_ROUTER`,
+default OFF) — one LLM call routes per-stream (legislation/debates/committees/caselaw), generalising
+Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted — citation-exact special case confirmed
+working), C -20.0pp (guidance stream not yet routed, an honest expected cost, not a bug) — see its own
+CURRENT STATE section. ▼ 2026-07-29 16:12 UTC — ▼ FTS rebuild + cursor fix PULLED OUT of the queued Act-metadata
 sprint and run separately (ready-now, independent) — see its own CURRENT STATE section. ▼ 2026-07-29
 13:04 UTC — ▼ shipped the Stage-3 query-expansion fix (`thinkingConfig:{thinkingBudget:0}`, commit
 `eb8641f`) — see below. ▼ 2026-07-29 12:10 UTC — ▼ ADDENDUM to the queued sprint's item-4 number: **the headline combined legacy total is
@@ -12,6 +22,56 @@ are separate/additional and gated on item 2 (Act-metadata table), not item 1 (ro
 Act-metadata sprint. ▼ QUEUED (not started): Act-metadata sprint scoped (now 3 items — FTS-freshness
 pulled out, see above) — the one pre-scheduling number Charlie asked for is answered: see the addendum
 above for the corrected total. ▼ 2026-07-29 08:10 UTC — ▼ SEARCH: stale-vector mechanism IDENTIFIED (not deletion — `corpus_fts` is stale) + scoped legislation-tier recall test on B1–B3 (see CURRENT STATE below). ▼ 2026-07-22 — ▼ SEARCH VECTOR REBUILD on a 128GB Vultr box **did NOT recover recall** (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the compaction-skip diagnosis from earlier the same day is REVERSED; the true cause is an open search-quality question (see CURRENT STATE). Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable). `LEX_SEARCH_VECTOR` stays OFF. ▼ 2026-07-21 — ▼ SEARCH VECTOR EMBED **COMPLETE**: full-corpus batch drain finished (1,821/1,821 shards), ANN index build OOM'd at fragment compaction on the 32GB box (CCX43 fallback blocked by Hetzner account quota) — fixed via `VECTOR_SKIP_COMPACT=true` (skips compaction, indexes the fragments directly), index built in 711.7s. **21,846,364 vectors, 0 misses, `phase: "done"`.** Caveat: un-compacted build logged Lance kmeans "empty cluster" warnings — quality not yet independently confirmed, rides on the already-planned gold-set/fusion re-confirm before the flag flip. See CURRENT STATE below. ▼ 2026-07-11 (laptop diagnosis) — ▼ INGEST TREATY COVERAGE EXTENSION (executes `TREATY_INGEST_BRIEF.md`, 8 Jul): `uk-treaties-fcdo` NEW corpus — FCDO UK Treaties Online reverse-engineered anonymous JSON API (treaties.fcdo.gov.uk, legacy JBoss/Knowvation, no bulk export, JS-only SPA); **honest-denominator correction: measured universe = 21,970 records, not the ~15,000 brief/gov.uk estimate**; 33% carry a PDF (full text), 67% metadata-only (surfaced honestly, not dropped); 127 dedup skips vs existing `uk-treaties`/`tax-treaties-dta`; pilot passed clean; **21,840-row backlog SEEDED, DRAINING in the background (not complete this sprint)** — live `ops`/`Ingest` Railway service picks it up automatically, no action needed. `parliament-treaties` NEW corpus — CRaG-2010 scrutiny register via the documented `treaties-api.parliament.uk` API (laid dates, scrutiny status, committee/debate timeline); kept separate from `uk-treaties-fcdo` (different id space + content kind, CC's call per the brief); **328/328 SEEDED + DRAINED this sprint, 0 failures.** Both licence-verified OGL3/OPL3, rate-limited, corpus-mapped. CHANGE_LOG "INGEST — Treaty coverage extension" (2026-07-08 16:33 UTC). ▼ SEARCH VECTOR EMBED — **TIER 2 FLIPPED; batch embed LIVE & progressing, 851/1,821 shards (~46.7%), 10.21M vectors, 0 misses at 21:32 UTC — NOT stalled** (the prior "paused/blocked" read was a ~24.5h-behind laptop clock + a sync-only £46.55 console snapshot; see CURRENT STATE). **Shipped the missing email observer** (`search/embed-observer.ts` → `ops`: stall/crash/ANN-stuck/daily-heartbeat alerts; deploys on next push). Historical tier-wall note follows. ▼ SEARCH VECTOR EMBED — TIER WALL + SYNC MODE (7 Jul, now superseded): full-run STEP 1 **DONE** (17,640,560 sections → **21,846,364 chunks** in `corpus_chunks`, 230 misses, ~32h cpx62); STEP 2 blocked — **account is Batch Tier 1 (500k enqueued-token queue; probed + docs-verified T1 500k/T2 5M/T3 10M)**, 40k shards ≈ 12.4M tok fit NO tier; also fixed en route: node default-heap OOM on the 21.8M id load (`NODE_OPTIONS=--max-old-space-size=28672`) and GEMINI_API_KEY missing from cloud-init (carve-out commit `c715e00`). Zero Gemini spend lost. **BUILT INERT this sprint:** `VECTOR_EMBED_MODE=sync|batch` (NEW `gemini-sync.ts` — standard-rate embedContent, global 950k-TPM pacer, same shard plan/checkpoint), checkpoint-pinned shardSize, batch sub-job token splitting (`VECTOR_BATCH_JOB_TOKENS` 4.5M — dense caselaw regions ~800 tok/chunk), `gemini-tier-probe.ts` tier detector. **Gated plan:** sync slice ~667M tok ≈ $100 (~11.7h) → auto Tier-2 flip → batch remainder ~$370–460 with SHARD_SIZE=12000/INFLIGHT=1 → revised total **~$470–560** (under the ~$600 gate; Tier-1 monthly cap £189≈$250 accommodates the slice). Report `docs/VECTOR_EMBED_REPORT.md` §5. ▼ GRAPH TIER 1 (COMPLETE): explicit-edge legislation graph — Neon `legislation_edges` **2,348,993 edges / ~0.94 GB** (amends 1.02M · commences 478k · repeals 322k · made-under 231k · modifies 181k · cites 121k), all from bulk TNA sources (bulk-before-API held; no LLM extraction); rescission traversal `impactSet()` + `/impact` service (fts-serve pattern, smoke-tested 224ms); **gold archetype D un-floored 0% → 80%** (D1–D4 = 8/8; D5 needs case-law edges, out of sprint scope). Audit refuted the fragments-have-Citation-markup premise — whole-doc bulk CLML + bulk amendments XML are the real sources. Report `docs/GRAPH_TIER1_REPORT.md`. **⚠ Neon now ~16 GB of the 17.5 GB line.** ▼ Earlier: SEARCH VECTOR EMBED (BUILT INERT): full-corpus gemini-embedding-001 @768-d batch-embed pipeline + IVF_PQ ANN + OFF-by-default gateway wiring (tuned 70/30 fusion). Actual corpus **17.64M sections / 6.12B words → ~22.25M chunks / ~5.7–6.9B tokens → ~$430–520** at the batch rate ($0.075/1M) — **within the ~$600 gate, no flag raised**. **CANARY RUN + PASSED (4 Jul, ~$0.01):** live Batch API contract confirmed — 200/200 vectors @768-d, order/keys clean. Remaining spend = the full Hetzner+Batch run (~$430–520), Charlie-triggered. `@google/genai` added. Report `docs/VECTOR_EMBED_REPORT.md`. ▼ SEARCH FUSION TUNING (pilot subset, no new embed cost): **weighted RRF fixed 70/30 vector/BM25 ships** — gemini 87.8% recall@20 vs naive RRF 84.3% / vector-alone 85.9% / BM25 68.3%; the pilot's naive-RRF regression is RESOLVED (fusion now beats vector-alone). **Kind-based routing NOT needed** — the full (wCit,wCon) grid over the `parseCitation` router only TIES fixed 70/30 (87.8%); at 70/30 the citation-resolver pin survives fusion (A=100%), ≥80/20 breaks A1. voyage confirms vector-heavy (80/20=86.9%, B6 naive-collapse FIXED 0→33.3%); e5 optimum stays 50/50 → the right weight tracks vector-arm strength. Ship spec: w=0.7 RRF_K=60 as env config, no router. `docs/FUSION_REPORT.md`. ▼ SEARCH type-taxonomy fix (§10.2): 13 hidden corpora → 4 (all intentional); scottish-parliament-or (1.04M)→DEBATE, regulators/reviews→GUIDANCE (`corpus-type-map.ts` display override). retained-EU/SI already mapped correctly; MiFID miss is RANKING (B6), not display → vector layer. ▼ SEARCH VECTOR PILOT: embedding-model bake-off on the gold set. **Winner gemini-embedding-001** (vector 85.9% / hybrid 84.3%, +16pp over BM25); voyage-4 TIES on vector (85.9%) but no legal-specialist premium; e5 open-weight 70.5%. Vector layer's big win = archetype B +45.8pp (lay-concept); B6 burial 0→50%. Equal-weight RRF hurts strong models → route/vector-weight the fusion. Full embed with gemini gated on Charlie (test @768-d). ▼ 1 Jul 2026 — SEARCH: Stage 3 PAYOFF MEASURED (recall@20 A/B, OFF vs ON). **B +15.3pp (33.3→48.6)** — expansion bridges lay vocab to anchor Acts. **A NOT flat (+10pp, bidirectional)** — helps concept queries (A5 +100) but HURTS precise citations (A1 −50, dilution); keep expansion scoped to concept queries. B6 answer-key filled+verified (all 6 sources in corpus, incl. fca-handbook — no coverage gaps) & now scoreable; B6 itself only +16.7pp = a RANKING problem (legislation buried under parliamentary/HMRC noise even when named) → the vector-layer flag. ▼ LEX REBUILD Sprint 2 (Diagnosis / Page 2 + search gateway + Page 1→2 transition), preview only, NOT promoted; `tsc` clean (pre-existing react-markdown only); Page 1→Diagnosis chain smoke-tested end-to-end on Neon (fallback path). ▼ SEARCH: Stage 3 SMOKE-TESTED (verified — MiFID/data-protection/seatbelt all name real anchors + surface new legislation; Gemini 503s degrade gracefully as designed) + v2 GOLD structure encoded in the scoring harness (`gold-queries.ts`/`score-fts.ts`; headline byte-identical to v1 at 69.4%/68.0%; new B6·G–I·J1·K1–K2 present, principle+pending cleanly excluded). ▼ 30 Jun — SEARCH Stage 3: LLM query expansion built + flag-gated (`LEX_QUERY_EXPANSION=true`, default off). `lib/lex/query-expansion.ts` (new) + `field-machine.ts` modified. `tsc --noEmit` clean (pre-existing react-markdown only). ▼ Earlier 25 Jun LEX REBUILD Sprint 1.3 (preview, NOT promoted): save-before-advance enforced, "How this works" tour + FAQ modal restored, `preferredName ?? firstName` (+ Neon data fix Charles→Charlie). ▼ V30 POST-PUSH EXECUTED: cma-cases SEEDED+DRAINED (22,890 sections); scottish-parliament-or SEEDED 7,452 rows (2016+ ∪ pre-2016) + DRAINING, canary PASS; inquiry-evidence POH bounded tranche (90 rows) SEEDED+DRAINED, §0 canary PASS → full POH seed awaiting go. ▼ V26 soak continues (DROP gated; legacy `Legislation*` STILL PRESENT).*
+
+---
+
+## CURRENT STATE — SEARCH: query router built + measured, flag OFF (2026-07-29 19:25 UTC)
+
+**Executes the CC brief "build the query router" (generalises Stage-3 expansion into per-stream
+routing).** One new Gemini call (`routeQuery()`, `scrutinise-web/lib/lex/query-expansion.ts`)
+decides which of four streams — legislation / debates / committees / caselaw — a query belongs
+to and writes a tailored search string for each; everything after is deterministic dispatch
+(`query-router.ts`, a config list of `{name, tier, types?, search}`). Flag `LEX_QUERY_ROUTER`
+(default OFF), independent of `LEX_QUERY_EXPANSION` — router ON supersedes expansion for that
+call. Fail-open: a null/unparseable/empty router decision degrades to searching all streams
+unfiltered with the bare query (today's default) — never an empty result.
+
+- **Audit finding — contradicts the brief's premise:** `query-expansion.ts` had no existing
+  citation-vs-concept logic; `expandQuery()` called the LLM unconditionally for every query,
+  always. Citation-pinning lives entirely server-side (`citation-resolver.ts`/`fts-core.ts`'s
+  `resolveInjections`), unrelated to `query-expansion.ts`. The router's own prompt now makes
+  this decision for the first time — verified live: A1–A4 (exact citations) all route to
+  `legislation` alone, scoring identically to baseline (zero dilution).
+- **Tier filter confirmed real, not throwaway:** `fts-query-service.ts`'s `POST /fts-search`
+  already accepts `tier`, wired to `rankedSearch`'s existing filter — the platform-side gap was
+  `fts-search.ts` never threading a `tier` param through; fixed. debates/committees share
+  `tier='parliamentary'`, split via the existing `corpusToType()` display mapping rather than a
+  new filter axis.
+- **Gold-set result (43-query set, 0/34 fail-opens):**
+
+  | archetype | OFF | ON | delta |
+  |---|---|---|---|
+  | A (citation) | 60.0% | 70.0% | +10.0pp |
+  | B (concept, payoff target) | 33.3% | 45.8% | +12.5pp |
+  | C (legislation+guidance) | 60.0% | 40.0% | **-20.0pp** |
+  | D (graph, floor) | 76.7% | 76.7% | 0.0pp |
+  | E (Hansard intent) | 90.0% | 90.0% | 0.0pp |
+  | F (bills/precedent) | 90.0% | 80.0% | -10.0pp |
+
+  Both brief predictions confirmed (B rises, A improves not dilutes). **C regresses -20.0pp — an
+  honest expected cost**, not a bug: `guidance` is a deferred stream (brief scope: 4 streams
+  only), so any C-archetype guidance-tier expected source (FCA/HMRC/etc.) is now unreachable by
+  ANY routed stream, where the unscoped baseline could stumble onto it via the shared candidate
+  pool. Full detail: `docs/FTS_ROUTER_AB.md` / `docs/fts_router_ab.json`.
+- **Bug found + fixed during measurement:** the harness crashed twice (bare exit 255, no JS
+  stack trace) from concurrent `rankedSearch` calls via `Promise.all` against the same in-process
+  Lance table handle — fixed by making the harness's per-stream dispatch sequential. **Flagged,
+  not fixed:** production's `query-router.ts` also uses `Promise.all`, but through independent
+  HTTP calls to `fts-query-service` rather than a shared in-process handle — a different
+  execution model, not confirmed to share the risk, but not confirmed safe either.
+- **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C regression — accept it
+  as the current 4-stream scope's known cost, or add a `guidance` stream (one config-list entry)
+  before flipping. Both `tsc --noEmit` clean.
 
 ---
 
@@ -98,6 +158,95 @@ needs splitting — it already equals the entire `LegislationSection` row count,
   worth weighing whether removing/fixing this one route unblocks dropping it sooner, ahead of the full
   Act-metadata sub-project, rather than only as part of it. Not removed this session (out of scope of
   what was asked). Script (throwaway): `scripts/ingest/search/_legacy-row-split-tmp.ts`.
+
+---
+
+## CURRENT STATE — SEARCH: FTS rebuild + cursor fix COMPLETE, `corpus_fts` fully reconciled (2026-07-29 20:14 UTC)
+
+**Executes the "FTS rebuild + cursor fix" brief pulled out of the queued Act-metadata sprint (16:12
+UTC) to run separately, ready-now.** All four asks done: (1) append-safe catch-up mechanism built,
+(2) the backfill run to completion, (3) completeness confirmed across scottish-parliament-or/treaty
+corpora/cma-cases/Hansard, (4) this write-up.
+
+**1. Fix shipped — `scripts/ingest/search/fts-catchup.ts` (new, committed).** Rather than rework
+`build-fts-index.ts`'s id-cursor (higher-risk change to a script that already correctly completed a
+16.5M-row build once), this does a full per-corpus RECONCILIATION every run: count `corpus_sections`
+(status='compiled') vs `corpus_fts` per corpus, diff the exact id sets for any corpus with a gap, and
+APPEND the missing rows. Self-healing against any future drift, not just id-sort position — run on a
+schedule (e.g. daily via `ops.ts`) to stop the gap regrowing. **Correctness does not require a
+`createIndex()` rebuild after appending**: confirmed LanceDB's default query behaviour (no
+`.fastSearch()` call anywhere in `rankedSearch()`/`fts-core.ts`) scans un-indexed fragments alongside
+the FTS index, so newly-appended rows are searchable immediately — verified directly against the live
+production module, not just a throwaway repro (a freshly-backfilled `cps-guidance` row ranked #2 via
+`rankedSearch()` with zero reindex). `createIndex()` stays available via `--reindex` as a pure
+performance step for later.
+
+**2. Full audit before backfilling — the gap was much bigger than the two corpora first sampled.**
+Per-corpus reconciliation (`corpus_sections` compiled count vs `corpus_fts` count, every corpus) found
+**21 corpora with a gap, 1,172,169+ rows missing** (grew to ~1,177,770 by the time of the dry-run,
+live proof the gap was actively widening under the old cursor, exactly as flagged): `scottish-
+parliament-or` entirely absent (1,043,264, ~89% of the total gap), `early-day-motions` (50,437 of
+60,737 — 83% missing, a new finding), `uk-treaties-fcdo` (23,372, entirely absent), `cma-cases`
+(21,525, entirely absent), `pwdata-wrans`/`pwdata-debates`/`pwdata-lords`/`pwdata-westminster`/
+`pwdata-lordswrans`/`pwdata-lordswms`/`pwdata-wms` (partial — the "Hansard gap", ~24k combined),
+`erskine-may` (1,319 of 1,873 — 70% missing), `members-interests` (2,768 of 3,448 — 80% missing),
+`ofgem` (4,272), `parliament-treaties` (328, entirely absent), `inquiry-evidence` (89, entirely
+absent), `lgsco` (20 of 40 — 50% missing), `petitions`/`quangos-govuk`/`ico`/`cps-guidance`/
+`pwdata-lordswms` (small tails). The prior "264k unexplained gap" figure referenced going into this
+work is **superseded by this exact, itemised audit** — not reconciled against that number since this
+one is the ground truth (full per-corpus count, not an estimate).
+
+**3. Backfill executed — all 1,172,169+ rows written, verified complete.** Final full-corpus
+`--dry-run` reconciliation: **0 corpora with gaps, 0 rows missing.** `corpus_fts` total
+16,509,051 → **17,700,396**. Spot-verified: `scottish-parliament-or` count (1,043,264) exactly matches
+`corpus_sections`, 0 duplicates (distinct ids == total rows); `cma-cases` and `early-day-motions` also
+clean (0 duplicates). Searchability confirmed live via `rankedSearch()`: a freshly-backfilled
+`cma-cases` row and `early-day-motions` row both rank in the top 10 for a phrase pulled from their own
+body; a `scottish-parliament-or` row scores **rank 1 of 500** in a raw unboosted FTS scan on its own
+distinctive terms (fully indexed and matchable) — it just doesn't win `rankedSearch`'s TITLE_BOOST/
+tier-boost ranking for a generic query, because `corpus-map.ts`'s `tierFor()` has no entry for
+`scottish-parliament-or` (falls through to `tier: 'other'`, no boost) — a **pre-existing corpus-map.ts
+gap, not introduced by this backfill**, and consistent with the noise-burial pattern already diagnosed
+in the 08:10 UTC entry below. Not fixed this session (a labelling/taxonomy question, out of scope of
+what was asked) — flagging for whoever next touches `corpus-map.ts`'s tier map.
+
+**4. Operational incident + clean resolution, worth remembering for future long-running sessions:**
+attempting to chunk the ~1M-row `scottish-parliament-or` backfill across repeated harness-tracked
+`Bash(run_in_background: true)` calls (needed because the tool caps a single invocation's actual
+runtime at 600s, whether foreground or background) ran into the tool's timeout repeatedly; using
+`TaskStop` / letting the timeout fire to "kill" a chunk **did not actually terminate the underlying
+Windows node process** — it kept running, unsupervised, writing to `corpus_fts` in the background,
+invisible to the harness. Multiple such zombies accumulated (one, an attempted `tbl.optimize()`
+compaction, alone burned 3,939 CPU-seconds before being found) and wrote **overlapping/duplicate
+batches concurrently** — `scottish-parliament-or` ended up with 274,000 rows for only 88,390 distinct
+ids (up to 4× duplicates) before this was caught. **Root cause of the confusion, now resolved:** the
+apparent "fragmentation slowdown" that made repeated diff-fetches progressively slower was actually
+resource contention from these accumulating zombie processes, not Lance table fragmentation — killing
+them (`Stop-Process -Force` on all `node` processes, verified via `Get-Process`, not just the harness's
+own tracking) restored normal query latency immediately (a full-row fetch that had been hanging past
+600s completed in 3.3s once the zombies were gone). **Fix:** deleted the corrupted
+`scottish-parliament-or` slice (`tbl.delete(...)`, cheap — 3.3–8.1s regardless of row count, since it's
+predicate-based, not a full fetch) and re-ran the backfill ONE more time as a genuinely OS-level
+detached process (`nohup ... > logfile 2>&1 & disown`, absolute paths, polling the log file — not the
+harness's `run_in_background`/`TaskStop`, which is a leaky abstraction here) — completed cleanly,
+verified 0 duplicates. **General lesson for this environment:** the harness's "killed" status on a
+background task means "the harness stopped watching it," not "the process is dead" — for anything that
+mutates shared state (a Lance table, a DB), verify with `Get-Process`/OS tools before trusting it, and
+prefer real OS-level detachment for genuinely long operations rather than fighting the tool's ~10-minute
+per-call ceiling.
+
+**5. Outstanding, not blocking:** `corpus_fts` has accumulated many small fragments from all the
+`tbl.add()` batches across this backfill (and the historical incremental builds) — a `tbl.optimize()`
+compaction pass is recommended for live query latency, but was not completed cleanly this session (the
+attempt became one of the zombie processes above, uncertain whether it partially compacted before being
+killed — Lance's atomic-commit design means this is safe, not corrupting, just incomplete). Flagging as
+a follow-up, not correctness-blocking (confirmed rows are searchable regardless of compaction state).
+
+**Scripts:** `scripts/ingest/search/fts-catchup.ts` (real, committed). Throwaway diagnostics (not
+committed, left untracked per repo convention): `_fts-gap-audit-tmp.ts`, `_stale-vector-diag-tmp.ts`,
+`_stale-vector-diag2-tmp.ts`, `_dedup-check-tmp.ts`, `_dedup-check2-tmp.ts`, `_dedup-spotcheck-tmp.ts`,
+`_dedup-fix-tmp.ts`, `_quick-count-tmp.ts`, `_optimize-fts-tmp.ts`, `_final-search-verify-tmp.ts`,
+`_final-search-verify2-tmp.ts`, `_sp-search-deep-tmp.ts`.
 
 ---
 
