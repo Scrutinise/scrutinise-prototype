@@ -92,6 +92,11 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
             maxOutputTokens: 512,
             responseMimeType: 'application/json',
             responseSchema: EXPANSION_SCHEMA,
+            // Without this, gemini-2.5-flash's default "thinking" mode consumes the
+            // entire maxOutputTokens budget before writing any output (finishReason:
+            // MAX_TOKENS, truncated mid-JSON) — expandQuery then always silently
+            // degrades to EMPTY. Verified 29 Jul 2026 (see handoff_summary.md).
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
         signal: ctrl.signal,
