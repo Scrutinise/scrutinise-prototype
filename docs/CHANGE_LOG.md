@@ -4,6 +4,31 @@
 
 ---
 
+## CENTRAL — Community schema committed + migrated to production (2026-07-29 17:24 UTC)
+
+**Commits the `Community` / `CommunityMember` / `CommunityInvite` schema draft that had been sitting
+uncommitted since 22 Jul with no CHANGE_LOG/handoff trace — this session started by finding it orphaned
+and asking Charlie what it was.** Full feature scope now recorded in `docs/SCRUTINISE_CENTRAL_SPEC.md`
+(new master spec for the whole Central module, §2–3) and `docs/SPRINT.md` (active Stage 1 brief).
+
+- **Schema:** `Community` (self-referential `parentCommunityId` hierarchy), `CommunityMember`
+  (`OWNER`/`ADMIN`/`MEMBER`, unique per community+user), `CommunityInvite` (code/email/maxUses/expiry,
+  mirrors `GroupInvite`), `Idea.communityId` (informational/display only — grants no permissions, per
+  the 22 Jul decision already in schema comments). Existing `Group`/`GroupMember`/`GroupInvite`/
+  `IdeaCollaborator` (Idea-scoped "Team" mechanism) untouched — deliberately separate hierarchy.
+- **Migration `20260729141507_add_community_hierarchy` — applied to production this session** (see the
+  V30 entry below for the same-session ingest fixes; this is a separate thread). Hand-written, not the
+  raw `prisma migrate diff` output: the raw diff also wanted to drop the 914,274-row
+  `LegislationSection_DEPRECATED_2026-06-19` table and `specialist_queue`, fallout from `schema.prisma`
+  having drifted ahead of production on an unrelated already-in-git LEX Rebuild Sprint 2 set
+  (`IdeaFieldState`/`Document`/`DiagnosisCause`/etc., still deliberately unmigrated, "preview only, not
+  promoted"). Only the additive Community statements were extracted and applied via `prisma migrate
+  deploy`. `migrate dev`'s shadow-database path is currently broken by the same `LegislationSection`
+  drift — unrelated to this change, not fixed here.
+- **NEXT:** Stage 1 build (API routes + UI per `docs/SPRINT.md`) — in progress this session.
+
+---
+
 ## INGEST — V30 tidy-up: LGSCO pagination + members-interests Take=20 fixes (2026-07-29 14:16 UTC)
 
 **Two silent data-correctness bugs found and fixed in the ingest workers, both verified live against

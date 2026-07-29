@@ -126,6 +126,15 @@ enum GroupMemberRole {
   MEMBER
 }
 
+// Deliberately separate from GroupMemberRole even though the values match —
+// Community is an independent hierarchy from Idea/Group and must not share
+// an enum (or any other coupling) with it. See Community section below.
+enum CommunityMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
 enum CollaboratorRole {
   EDITOR
   VIEWER
@@ -491,6 +500,7 @@ model User {
   sentInvites               UserInvite[]        @relation("SentInvites")
   groupMemberships          GroupMember[]
   ownedGroups               Group[]
+  communityMemberships      CommunityMember[]
   partyMemberships          PartyMembership[]
   platformConfigUpdates     PlatformConfig[]
   ideaReviews               IdeaReview[]
@@ -633,6 +643,12 @@ model Idea {
   ownershipTransferToken    String?         @unique
   ownershipTransferToId     String?
   ownershipTransferExpiry   DateTime?
+  // Community origin — informational/display only ("this Idea originated in this
+  // Community"). Community membership intentionally grants no Idea access — Idea
+  // permissions stay governed entirely by IdeaCollaborator/Group, unchanged.
+  // Decision 22 Jul 2026.
+  communityId               String?
+  community                 Community?      @relation(fields: [communityId], references: [id])
   // Timestamps
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt
@@ -680,6 +696,7 @@ model Idea {
   @@index([stage])
   @@index([visibility])
   @@index([status])
+  @@index([communityId])
 }
 
 model WordingHistory {
@@ -1174,6 +1191,64 @@ model UserInvite {
 
   @@index([magicLinkToken])
   @@index([email])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 5B — COMMUNITY
+// Entirely separate from the Group/GroupMember/GroupInvite models above, which
+// remain the Idea-scoped "Team" mechanism and are unchanged by this section.
+// Community is a larger, persistent, cross-Idea entity with its own hierarchy
+// (branches/sub-teams via parentCommunityId, mirroring RootCause.parentId /
+// DiagnosisCause.parentCauseId). Idea.communityId (see SECTION 1) links an Idea
+// to its originating Community for display only — it grants no permissions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Community {
+  id                String    @id @default(uuid())
+  name              String
+  description       String?
+  // Self-referential hierarchy for branches/sub-teams — null = top-level Community.
+  parentCommunityId String?
+  parent            Community?  @relation("CommunityHierarchy", fields: [parentCommunityId], references: [id])
+  children          Community[] @relation("CommunityHierarchy")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  members           CommunityMember[]
+  invites           CommunityInvite[]
+  // Ideas that originated in this Community — informational/display only, see note above.
+  ideas             Idea[]
+
+  @@index([parentCommunityId])
+}
+
+model CommunityMember {
+  id          String              @id @default(uuid())
+  communityId String
+  community   Community           @relation(fields: [communityId], references: [id])
+  userId      String
+  user        User                @relation(fields: [userId], references: [id])
+  role        CommunityMemberRole @default(MEMBER)
+  joinedAt    DateTime            @default(now())
+
+  // Community membership intentionally grants no Idea access — kept separate so
+  // Idea permissions stay tightly scoped, decision 22 Jul 2026. Idea access is
+  // governed entirely by IdeaCollaborator/Group; do not join across these tables
+  // to derive permissions.
+  @@unique([communityId, userId])
+}
+
+model CommunityInvite {
+  id              String    @id @default(uuid())
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id])
+  inviteCode      String    @unique
+  email           String?
+  maxUses         Int       @default(1)
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  createdByUserId String
+  createdAt       DateTime  @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
