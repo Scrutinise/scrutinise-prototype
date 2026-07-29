@@ -1,6 +1,42 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## INGEST — V30 tidy-up: LGSCO pagination + members-interests Take=20 fixes (2026-07-29 14:16 UTC)
+
+**Two silent data-correctness bugs found and fixed in the ingest workers, both verified live against
+the source APIs before the fix, not assumed.** `scripts/ingest` `tsc --noEmit` unaffected (no new
+errors). Files: `scripts/ingest/workers/process-row.ts`, `scripts/ingest/v29-seed-parliament.ts` (code
+fixes) + new one-off companion scripts `scripts/ingest/v30-lgsco-fix.ts`,
+`scripts/ingest/v30-members-interests-fix.ts` (idempotent, dry-run by default, `--apply` to execute —
+Charlie-gated, not run as part of this commit).
+
+- **LGSCO (`lgo.org.uk`) fake pagination.** `processLgsco()`'s self-propagating paged walk assumed
+  `?page=N` moved through an archive. Verified live: `page=1` through `page=999999` return
+  byte-identical "10 most recent" listings — the page itself says "Recent [statements/reports] in this
+  category are shown below," not an archive browse. The walk therefore never terminated naturally; it
+  re-discovered the same 10 already-queued decisions forever (harmless, dedup'd on insert) until a
+  random transient fetch failure killed the chain (the V30 incident: `adult-care-services` ground on to
+  page 108 before failing there). **Fix:** stopped propagating to `page+1` — one row per category
+  captures everything this endpoint actually exposes; no working pagination/sitemap/date-search endpoint
+  exists on the site for a real full-archive build (future Charlie-gated decision, out of scope here).
+  `v30-lgsco-fix.ts` retires the one stray failed row and reseeds the 7 categories whose page-1 seed
+  never produced output.
+- **`interests-api.parliament.uk` silently caps `Take` at 20.** Verified live: `Take=21/50/100` all
+  return exactly 20 items regardless of what's requested. The original seeder (`TAKE=100`, skip-by-100)
+  paired with `processMembersInterests()`'s `TAKE=100` meant every queued row only ever captured the
+  first 20 of its intended 100-item window — **80% of the members'-interests corpus (items 20–99 of
+  every hundred) was silently never fetched.** Matches the measured stall exactly: 34 rows × 20
+  items/row ≈ 680 of the reported 680/3,341 (20.4%). **Fix:** `TAKE` is now the true page size (20) in
+  both the seeder and the worker, so skip steps by 20 instead of 100. `v30-members-interests-fix.ts`
+  reseeds `list:{skip}` for `skip = 0, 20, 40, …` across the live total (3,415, up from the 3,341
+  measured at the original V29 seed — re-baselined in the script too); idempotent, harmlessly re-touches
+  already-compiled windows.
+- **Not included in this commit:** `v30-triage-fix.ts` (queue-breaker triage) and
+  `v30-denominator-rebaseline.ts` (corpus_targets honest-denominator correction) are separate V30
+  tidy-up items from the same session, still uncommitted — out of scope of "the two fixes."
 
 ---
 

@@ -3001,9 +3001,23 @@ async function processLibraryBriefings(row: QueueRow): Promise<void> {
 }
 
 // ── LGSCO decisions (V29 §7 — lgo.org.uk, lgsco-open OGL-equivalent) ───────────
-// Self-propagating paged walk. docId = "list:{category}:{page}" enumerates one
-// listing page into per-decision content rows + the next list page (if full);
-// docId = "decisions/{cat}/{subcat}/{ref}" extracts ONE decision → one section.
+// docId = "list:{category}:{page}" enumerates one listing page into per-decision
+// content rows; docId = "decisions/{cat}/{subcat}/{ref}" extracts ONE decision →
+// one section.
+//
+// V30: NOT actually paged past page 1 — verified live that lgo.org.uk's
+// /decisions/{category}?page=N ignores N entirely (page=1 through page=999999
+// return byte-identical "10 most recent" listings; the page heading literally
+// reads "Recent [statements/reports] in this category are shown below", not an
+// archive browse). The original self-propagating design (page+1 whenever
+// paths.length hit PAGE_SIZE) therefore never terminated naturally and just
+// re-discovered the same 10 already-queued decisions forever (harmless — dedup'd
+// on insert) until a random transient fetch failure killed the chain (V30
+// incident: adult-care-services ground on to p108 before failing there). No
+// working pagination or sitemap/date-search endpoint was found on the site
+// (see V30 tidy-up notes) — a real full-archive build needs a different
+// mechanism and is a future Charlie-gated decision. Until then, one row per
+// category captures everything this endpoint exposes — do not propagate.
 
 async function processLgsco(row: QueueRow): Promise<void> {
   const { fetchLgscoListPage, fetchLgscoDecision } = await import('../sources/lgsco')
@@ -3016,7 +3030,6 @@ async function processLgsco(row: QueueRow): Promise<void> {
     const res = await fetchLgscoListPage(category, page)
     if (res === null) { await markFailed(row.id, `lgsco list ${category} p${page}: fetch failed`); return }
     const rows = res.paths.map(p => ({ id: `${row.corpus}:${p}`, corpus: row.corpus, docId: p, sourceType: 'lgsco', priority: 4 }))
-    if (res.full) rows.push({ id: `${row.corpus}:list:${category}:${page + 1}`, corpus: row.corpus, docId: `list:${category}:${page + 1}`, sourceType: 'lgsco', priority: 4 })
     if (rows.length) await bulkInsertQueueRows(rows)
     await markDone(row.id)
     return
@@ -3085,7 +3098,13 @@ async function processMembersInterests(row: QueueRow): Promise<void> {
   const m = /^list:(\d+)$/.exec(row.docId)
   if (!m) { await markFailed(row.id, `bad members-interests docId: ${row.docId}`); return }
   const skip = Number(m[1])
-  const TAKE = 100
+  // V30: interests-api.parliament.uk silently caps Take at 20 regardless of what's
+  // requested (verified live — Take=21/50/100 all return exactly 20 items). The
+  // original TAKE=100 here paired with a skip-by-100 seeder meant every row only
+  // captured the first 20 of its intended 100-item window — 80% of the corpus was
+  // silently never fetched. TAKE is now the true page size; the seeder steps skip
+  // by 20 to match (v29-seed-parliament.ts).
+  const TAKE = 20
   const items = await fetchInterestsPage(skip, TAKE)
   if (items === null) { await markFailed(row.id, `members-interests list skip=${skip}: fetch failed`); return }
   if (items.length === 0) { await markDone(row.id, 'html'); return }

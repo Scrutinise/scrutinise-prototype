@@ -116,7 +116,10 @@ async function interests(mode: Mode) {
     return
   }
   if (mode === 'measure') return
-  const TAKE = 100
+  // V30: interests-api.parliament.uk caps Take at 20 regardless of what's
+  // requested (verified live) — skip must step by the true page size or 80% of
+  // each intended window is silently skipped. See process-row.ts's matching note.
+  const TAKE = 20
   const rows = []
   for (let skip = 0; skip < total; skip += TAKE) rows.push({ id: `${corpus}:list:${skip}`, corpus, docId: `list:${skip}`, sourceType: corpus, priority: 3 })
   const { affected } = await bulkInsertQueueRows(rows)
