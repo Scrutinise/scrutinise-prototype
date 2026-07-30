@@ -1,6 +1,141 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## SEARCH — Query router: guidance stream, concurrency fix, flip recommendation (2026-07-30 04:32 UTC)
+
+**Executes the CC brief "add guidance as a fifth routed stream, then re-measure."** Follow-up to
+the query-router sprint below (2026-07-29 19:25 UTC) — reads as a continuation of that entry, not
+a separate feature.
+
+- **Guidance stream added — additive as predicted, zero routing-logic changes needed.**
+  `RouterStreamName`/`ROUTER_STREAMS`/`ROUTER_SCHEMA`/prompt in `query-expansion.ts` gained
+  `guidance`; `query-router.ts`'s `STREAMS` config gained one entry
+  (`{ name: 'guidance', tier: 'guidance', search: ftsStream('guidance') }` — single-type tier,
+  same shape as legislation/caselaw, no `types` filter needed); `score-fts.ts`'s mirrored config
+  updated to match. `tsc --noEmit` clean in both packages — confirms the file's own design claim
+  ("adding a stream means adding a list entry, not touching this file's logic").
+- **Concurrency risk CONFIRMED, not just flagged — the prior entry's hedge was WRONG.** The prior
+  entry assumed production's HTTP-based dispatch (`query-router.ts` → `fts-query-service.ts`) was
+  a "different execution model" from the harness's in-process `Promise.all` crash and therefore
+  not necessarily at risk. Direct load-testing (new `scripts/ingest/search/concurrency-stress-test.ts`
+  — starts the real `fts-query-service.ts` locally and fires concurrent requests shaped exactly
+  like `runRoutedSearch()`'s 5-stream fan-out) refutes that: **the unpatched service crashed
+  outright (bare process death, no JS-catchable error) at 15 concurrent requests** — the exact
+  load one background search trigger now produces with `LEX_QUERY_ROUTER=true` if just 3 users
+  search within the same few hundred ms. 10 concurrent survived but took 226s (already severe
+  contention). The "independent HTTP calls vs in-process `Promise.all`" distinction was a red
+  herring: the actual danger is concurrent native Lance calls against ONE shared table handle
+  within a single Node process, which happens either way — production genuinely shared the risk.
+- **Fixed:** `fts-query-service.ts` now gates every `/fts-search` call through a global in-process
+  semaphore (`FTS_MAX_CONCURRENT`, default 4) — excess requests queue FIFO instead of running
+  concurrently against the shared handle. `/stats` now reports `concurrency: {max, inFlight,
+  queued, queueHighWaterMark}` for monitoring after flip. **Re-tested clean:** the exact 15-request
+  load that crashed the unpatched service now completes with 0 errors and the service stays
+  alive. At significantly heavier synthetic load (20–25 concurrent, well beyond realistic current
+  traffic) some individual requests failed client-side ("fetch failed", no server-side error, no
+  crash) — noted in the stress-test file as an unconfirmed residual (possibly the single test
+  client's own connection pool, not a server limit) for anyone raising `FTS_MAX_CONCURRENT` later.
+  **The confirmed, load-bearing result: the full-process crash is gone.**
+- **Gold-set re-measured (43 queries, full run):**
+
+  | archetype | recall@20 OFF | ON (4-stream, 29 Jul) | ON (5-stream, this session) |
+  |---|---|---|---|
+  | A (citation) | 60.0% | +10.0pp | **+10.0pp — held** |
+  | B (concept, payoff target) | 33.3% | +12.5pp | **+15.3pp — improved further** |
+  | C (legislation+guidance breadth) | 60.0% | **-20.0pp** | **-13.3pp — partially recovered** |
+  | D (graph, floor) | 76.7% | 0.0pp | +13.3pp |
+  | E (Hansard intent) | 90.0% | 0.0pp | 0.0pp |
+  | F (bills/precedent) | 90.0% | -10.0pp | 0.0pp — recovered |
+
+  Both brief predictions **directionally confirmed, C only partially so.** A held exactly, B
+  improved further (33.3%→48.6%). **C recovered from -20.0pp to -13.3pp — real but incomplete.**
+  Investigated why: C1 and C3 (the two still-regressing C queries) both route to `legislation`
+  ONLY even with `guidance` available — because their true expected sources (Finance Act FHL
+  provisions; Care Act 2014 / Care and Support Charging Regs) genuinely ARE legislation-tier, not
+  guidance-tier. **The original "guidance stream missing" diagnosis was therefore only PART of the
+  story for C's regression** — the router correctly scopes these two queries to legislation, and
+  still loses the unscoped baseline's incidental cross-tier hits (e.g. a differently-tiered
+  document that happens to contain a matching phrase). That is a smaller, more fundamental
+  tradeoff of ANY tier-scoping, not fixable by adding more streams — flagged for awareness, not
+  a regression this brief's scope can close. D/F variance (D4, F3) looks like normal LLM
+  stream-choice variance (temperature 0.2, not zero) between runs rather than a guidance effect.
+  Full detail: `docs/FTS_ROUTER_AB.md` / `docs/fts_router_ab.json` (overwritten with this run —
+  the 29 Jul 4-stream numbers are preserved in this CHANGE_LOG entry and the prior one).
+- **RECOMMENDATION: flip `LEX_QUERY_ROUTER=true` in production.** Both brief gate conditions are
+  met well enough to ship: the concurrency crash — the one genuinely blocking risk — is fixed and
+  empirically validated at the load that broke it; every archetype is net flat-or-positive except
+  C, whose residual -13.3pp is small, understood, bounded, and not a hidden landmine. This ships
+  independently of the vector-layer question, per the brief. **Not flipped by this session** —
+  Charlie's call per the git/deploy discipline (this session only prepares the recommendation +
+  evidence, doesn't flip flags in production unilaterally).
+- **Files:** `scrutinise-web/lib/lex/query-expansion.ts`, `query-router.ts` (guidance stream);
+  `scripts/ingest/search/fts-query-service.ts` (concurrency semaphore), `score-fts.ts` (mirrored
+  config); new `scripts/ingest/search/concurrency-stress-test.ts` (permanent regression check, not
+  throwaway — re-run after any future change to `fts-query-service.ts`'s request handling).
+  `tsc --noEmit` clean, both packages.
+
+---
+
+## INCIDENT — production `/dashboard` full outage: local `.env` pointed at Railway, not Neon (2026-07-30 02:10 UTC)
+
+**Full outage, every signed-in `/dashboard` request threw the app's error boundary, for ~1h32m
+(00:19 UTC deploy of an unrelated commit surfaced it → 01:51 UTC fix).** Root cause: **`.env` on this
+machine was never updated for the 18 Jun 2026 Railway→Neon app-database cutover.** `DATABASE_URL` still
+pointed at `switchback.proxy.rlwy.net` (Railway) the whole time. Every migration run locally since 18 Jun
+— including both Community/bulletin-board migrations committed earlier tonight (see the two corrected
+entries below) — was applied to Railway, which had already stopped being production over a month
+earlier. `prisma migrate deploy` reported success both times because it genuinely succeeded, just against
+the wrong database. Production (Neon) silently fell behind with no error until code that depended on the
+new schema actually shipped.
+
+- **Trigger:** an unrelated deploy (`3b67324`, "feat(search): query router") promoted to production at
+  00:19:48 UTC. `/dashboard` queries `prisma.communityMember.findMany()` unconditionally (Community
+  section of the dashboard reorg, see the Stage 1 Community build entry below) — first request after
+  that promotion hit it.
+- **Runtime trace** (Vercel production logs, `www.scrutinise.org`, digest `2385406076`):
+  ```
+  Error [PrismaClientKnownRequestError]:
+  Invalid `prisma.communityMember.findMany()` invocation:
+  The table `public.CommunityMember` does not exist in the current database.
+    code: 'P2021', clientVersion: '7.5.0'
+  ```
+  First captured 00:58:30 UTC via `vercel logs` on the live deployment.
+- **Diagnosis:** `scripts/whichdb.ts` (new — prints connected host/database + last 5
+  `_prisma_migrations` rows, written this session) confirmed local tooling was on Railway.
+  `_prisma_migrations` diffed between Neon and Railway: identical history through
+  `20260605010000_source_rate_limits_max_workers`, diverging only on the two Community migrations —
+  confirms the drift started exactly at the 29 Jul Community work, not earlier. Row counts corroborated
+  Neon as the real live database (67 `Idea` rows vs Railway's 54, identical `User` count on both — a
+  common fork point, not a live mirror).
+- **Surprise finding:** `prisma migrate diff` from Neon to `schema.prisma` showed the LEX Rebuild Sprint 2
+  models (`IdeaFieldState`, `Document`, `DiagnosisCause`, `PolicyOption`, `LexCoherentAction`,
+  `CostBenchmark`, `DeflatorSeries`) and the new `Idea`/`User` Lex columns **already present on Neon** —
+  no `CREATE TABLE`/`ADD COLUMN` needed for any of them, only a cosmetic `updatedAt` default mismatch (8
+  statements). These were previously logged as "still deliberately unmigrated, preview only, not
+  promoted" (see the corrected Community-schema entry below) — that was wrong on the production side;
+  they'd been applied directly to Neon at some point outside the tracked migration history (no matching
+  migration file exists for them on either database — most likely a manual `prisma db execute`/`db push`
+  against Neon, never recorded here). Railway, not Neon, was missing this schema. Net effect: **no Lex
+  Sprint 2 migration work was needed tonight** — Phase 2 of the incident runbook was cancelled once this
+  was confirmed.
+- **Fix:** `DATABASE_URL`/`DIRECT_URL` in `.env` corrected to Neon (pooled/non-pooled respectively); old
+  Railway value preserved as `RAILWAY_DATABASE_URL_LEGACY` for reference only, never to be used for
+  schema work again (see `docs/CLAUDE.md` §16). Both pending migrations
+  (`20260729141507_add_community_hierarchy`, `20260729173128_add_bulletin_board`) applied to Neon via
+  `prisma migrate deploy` against `DIRECT_URL` (not the pooled endpoint — PgBouncer's transaction pooling
+  breaks Prisma Migrate's advisory locks) at 01:51 UTC. `CommunityMember` confirmed present on Neon
+  immediately after; `/dashboard` confirmed working on reload.
+- **Not done tonight, deliberately:** Railway Postgres (`scrutinise-db`) is left running — decommission
+  scheduled for next week after a `pg_dump` to R2 and a `getRailwayPool` health check, not rushed
+  mid-incident.
+- **Process fix:** `docs/CLAUDE.md` §16 now requires running `scripts/whichdb.ts` and pasting its output
+  before any migration, `db execute`, or destructive SQL, no exceptions. See also `docs/roadmap.md` for
+  the proposed separate ingest schema (would have made this class of mix-up structurally harder) and this
+  session's Phase 3 proposals (build-step `migrate deploy`, Neon dev branch) — reported for approval, not
+  yet applied.
 
 ---
 
@@ -109,6 +244,9 @@ environment; say so explicitly rather than claiming full verification.**
   count), `BulletinPost` (self-referential `parentId` — root posts carry title/category, replies don't;
   same pattern as `RootCause.parentId`), `BulletinVote` (unique per post+user, cached `score` on the
   post to avoid a COUNT aggregate per render).
+  **CORRECTION (2026-07-30 ~02:10 UTC):** "same drift avoidance" turned out not to mean "applied to
+  production" — see the correction on the Community-schema entry below for the full story. This
+  migration also landed on Railway only and had to be re-applied to Neon on 30 Jul.
 - **API routes** (`app/api/communities/`): list/create Communities, get/rename a Community, create a
   branch, assign/clear a branch manager, generate/list invite codes, redeem an invite code
   (`/api/communities/join`), bulletin thread list (ILIKE keyword search + category filter, deliberately
@@ -170,6 +308,24 @@ and asking Charlie what it was.** Full feature scope now recorded in `docs/SCRUT
   promoted"). Only the additive Community statements were extracted and applied via `prisma migrate
   deploy`. `migrate dev`'s shadow-database path is currently broken by the same `LegislationSection`
   drift — unrelated to this change, not fixed here.
+- **CORRECTION (2026-07-30 ~02:10 UTC), added by the incident-response session that found this:** "applied
+  to production" above is **false**. Local `.env`'s `DATABASE_URL` still pointed at Railway
+  (`switchback.proxy.rlwy.net`) — a stale value left over from the 18 Jun 2026 Railway→Neon app-DB
+  cutover, which was never propagated to this machine's `.env`. `migrate deploy` ran clean and really did
+  apply the migration, just to Railway, which had already stopped being production over a month earlier.
+  Actual production (Neon, `ep-old-dust-aboxi69a`) never received this migration or the bulletin-board one
+  below. Silent until `/dashboard` was reloaded after an unrelated deploy ~00:19 UTC on 30 Jul, which
+  surfaced `PrismaClientKnownRequestError P2021: table public.CommunityMember does not exist` in
+  production runtime logs at 00:58 UTC — full outage, every `/dashboard` request threw the app's error
+  boundary. Root cause confirmed by `scripts/whichdb.ts` and a `_prisma_migrations` diff between the two
+  databases (Neon and Railway shared identical migration history up to `20260605010000`, diverging only
+  on these two migrations — no earlier drift). Both migrations applied to Neon via `DIRECT_URL` at 01:51
+  UTC same night; `/dashboard` confirmed working after. Also discovered while fixing this: the
+  "unrelated already-in-git LEX Rebuild Sprint 2 set" mentioned above as "still deliberately unmigrated"
+  was in fact **already present on Neon** (created via a manual `prisma db execute`, or equivalent,
+  outside the tracked migration history — no corresponding migration file exists for it on either
+  database). It was Railway, not production, that was missing it. Full incident writeup in the new
+  30 Jul entry above this one.
 - **NEXT:** Stage 1 build (API routes + UI per `docs/SPRINT.md`) — in progress this session.
 
 ---
