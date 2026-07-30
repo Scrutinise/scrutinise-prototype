@@ -1,6 +1,6 @@
 # FTS S1b — scoring report
 
-*Generated 2026-07-29T19:24:39.623Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
+*Generated 2026-07-30T04:31:44.720Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
 
 ## Headline
 
@@ -1555,12 +1555,12 @@ Top-20 retrieved:
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — I did not make a statement; I said that I was speaking about my personal opinion. I do not want to undermine the superb training that our voluntary organisation
  3. [other/petitions] score=92.615↑T `petitions:764819:1`
     **Make first aid education compulsory in all UK schools** — Make first aid education compulsory in all UK schools State: rejected · Signatures: 10 We want the Government to make first aid training a compulsory part of th
- 4. [other/petitions] score=91.471↑T `petitions:643606:1`
-    **Make it compulsory for schools to first aid train all staff** — Make it compulsory for schools to first aid train all staff State: closed · Signatures: 60 · Opened: 2023-09-18 · Departments: Department for Education This cou
- 5. [parliamentary/pwdata-wrans] score=90.477↑T `pwdata-wrans:answers2012-06-28d:108`
+ 4. [parliamentary/pwdata-wrans] score=90.477↑T `pwdata-wrans:answers2012-06-28d:108`
     **EDUCATION — First Aid: Training** — Q (Justin Tomlinson): To ask the Secretary of State for Education (1) how many (a) teachers and (b) childminders in (i) Swindon and (ii) England are first aid t
- 6. [parliamentary/pwdata-debates] score=90.028↑T `pwdata-debates:debates2015-11-20a:272`
+ 5. [parliamentary/pwdata-debates] score=90.028↑T `pwdata-debates:debates2015-11-20a:272`
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — May I clarify the point that I made in an earlier intervention? If somebody has a pulse that cannot be detected, or if somebody is breathing very shallowly, som
+ 6. [other/petitions] score=89.704↑T `petitions:643606:1`
+    **Make it compulsory for schools to first aid train all staff** — Make it compulsory for schools to first aid train all staff State: closed · Signatures: 60 · Opened: 2023-09-18 · Departments: Department for Education This cou
  7. [other/petitions] score=86.874↑T `petitions:767525:1`
     **Make First Aid Education Mandatory in all UK schools.** — Make First Aid Education Mandatory in all UK schools. State: rejected · Signatures: 6 Introduce compulsory first aid education in all UK schools, including CPR,
  8. [parliamentary/pwdata-wrans] score=86.750↑T `pwdata-wrans:answers2020-12-08:153`
@@ -1869,26 +1869,26 @@ Top-20 retrieved:
     **Orders of the Day — Clause 1.—(APPROVAL OF BUILDING SOCIETIES FOR INVESTMENT BY TRUSTEES AND GOVERNM** — I have listened with very great care and attention to what has been said, because, unlike most hon. Members who have taken part in the discussion, I have no con
 10. [parliamentary/pwdata-debates] score=58.447↑T `pwdata-debates:debates1953-12-15a:403`
     **Orders of the Day — TELEVISION DEVELOPMENT (GOVERNMENT POLICY)** — At the same time the hon. Member, who is a fair man, would be the first to admit that it was not a coincidence that the first application for a licence was for 
-11. [parliamentary/historic-hansard] score=29.540 `historic-hansard:S5LV0263P0:1259`
+11. [other/scottish-parliament-or] score=31.389 `scottish-parliament-or:11682:131`
+    **Scottish Parliament: Pre-budget Scrutiny 2019-20** — The official answer is that it is too early to say. The big difference between these programmes and the DWP-run ones is of course they involve the Scottish Gove
+12. [parliamentary/historic-hansard] score=29.540 `historic-hansard:S5LV0263P0:1259`
     **Lords: FORESTRY** — My Lords, I have made more speeches than I care to remember about this in the last 35 years, both in the House of Commons and here, and I have always been criti
-12. [parliamentary/pwdata-lords] score=28.805 `pwdata-lords:daylord2010-06-23a:139`
+13. [parliamentary/pwdata-lords] score=28.805 `pwdata-lords:daylord2010-06-23a:139`
     **Academies Bill [HL] — Committee (2nd Day)** — I shall also speak to Amendment 58. In doing so I am conscious that we are about two and three-quarter hours into day 2 and still on page 1 of the Bill. I shall
-13. [parliamentary/pwdata-debates] score=28.091 `pwdata-debates:debates2002-07-04:331`
+14. [parliamentary/pwdata-debates] score=28.091 `pwdata-debates:debates2002-07-04:331`
     **Orders of the Day — Finance Bill — [2nd Allotted Day] — Schedule 37 — Aggregates levy amendments** — When the Government imposed their big windfall licence fee on the telecommunications industry—a very big one-off tax—I warned that it would lead to job losses a
-14. [parliamentary/pwdata-debates] score=27.883 `pwdata-debates:debates2000-10-26a:295`
+15. [parliamentary/pwdata-debates] score=27.883 `pwdata-debates:debates2000-10-26a:295`
     **Defence Procurement** — How will the United States transfer the key technologies that are relevant to that programme, as BAE will tell them time and again that stealth technologies are
-15. [parliamentary/pwdata-debates] score=27.571 `pwdata-debates:debates2004-05-24:150`
+16. [parliamentary/pwdata-debates] score=27.571 `pwdata-debates:debates2004-05-24:150`
     **Deepcut Barracks** — I recognise that, but we should not take one given set of circumstances and say that, when something goes wrong anywhere within government, we should automatica
-16. [parliamentary/pwdata-debates] score=27.153 `pwdata-debates:debates1975-03-13a:340`
+17. [parliamentary/pwdata-debates] score=27.153 `pwdata-debates:debates1975-03-13a:340`
     **Orders of the Day — SMALL BUSINESSES AND THE SELF-EMPLOYED** — I wish merely to say a few words about the position of small businesses, which are a vital part of our industrial sector. From that sector will come the entrepr
-17. [parliamentary/pwdata-lords] score=26.984 `pwdata-lords:daylord2008-01-29b:134`
+18. [parliamentary/pwdata-lords] score=26.984 `pwdata-lords:daylord2008-01-29b:134`
     **Dormant Bank and Building Society Accounts Bill [HL]** — My Lords, we on this side appreciate and admire the noble Lord's spirited attempt to ensure that the investment of dormant account funds in communities across t
-18. [parliamentary/pwdata-lords] score=26.850 `pwdata-lords:daylord2022-02-28c:43`
+19. [parliamentary/pwdata-lords] score=26.850 `pwdata-lords:daylord2022-02-28c:43`
     **Crypto Currencies - Question** — My Lords, the FCA advice to customers, last updated on 18 June 2021, says: “Before you invest in cryptoassets you should be aware of the following … cryptoasset
-19. [parliamentary/pwdata-debates] score=26.525 `pwdata-debates:debates1972-11-01a:81`
+20. [parliamentary/pwdata-debates] score=26.525 `pwdata-debates:debates1972-11-01a:81`
     **Orders of the Day — INDUSTRIAL RELATIONS** — I do not know whether dinosaurs were cannibals. When these large companies have eaten up everything, what will be left of our economic system? An enormous perce
-20. [parliamentary/pwdata-debates] score=26.477 `pwdata-debates:debates2001-04-09a:331`
-    **Committee** — The programme motion has two deficiencies: it is the wrong motion, and it is wrong to have it in the first place: otherwise, it is perfect. What is wrong with t
 
 ### H3 (H/H1) [PRINCIPLE-STREAM][MECHANISM] — PRINCIPLE (0–2, uncalibrated)
 *Query:* Where inquiries have examined regulatory capture, what mechanisms recur?
@@ -2004,38 +2004,38 @@ Top-20 retrieved:
     **Updated guidance on sunset clauses in market investigation remedies: consultation document** — Updated guidance on ‘sunset clauses’ in market investigation remedies Consultation document 27 May 2015 © Crown copyright 2015 You may reuse this information (n
  4. [parliamentary/committees-reports] score=75.192↑T `committees-reports:publication:134:885`
     **Report: 7th Report - Correspondence: Lapsed sunset clauses** — Dear House of Lords Secondary Legislation Scrutiny Committee The Merchant Shipping (Ship-to-Ship Transfers) Regulations 2020 (SI 2020/94, “the new Regulations”)
- 5. [parliamentary/pwdata-lords] score=36.943 `pwdata-lords:daylord2023-02-23c:223`
+ 5. [other/scottish-parliament-or] score=37.463 `scottish-parliament-or:arch-3800:67`
+    **Scottish Parliament: Subordinate Legislation Committee, 01 Feb 2005 [The Convener opened the meeting** — The committee's consultation paper refers to the blanket use of sunset or review clauses. In my submission, I do not oppose review, but I say that it should not
+ 6. [parliamentary/pwdata-lords] score=36.943 `pwdata-lords:daylord2023-02-23c:223`
     **Retained EU Law (Revocation and Reform) Bill - Committee (1st Day) (Continued) — Amendment 3** — One of the more entertaining bits of the Minister’s elegant reply was the opening bit, in which she gave us a new rationale for the sunset clause: it was necess
- 6. [parliamentary/pwdata-lords] score=36.159 `pwdata-lords:daylord2021-06-22c:180`
+ 7. [parliamentary/pwdata-lords] score=36.159 `pwdata-lords:daylord2021-06-22c:180`
     **Professional Qualifications Bill [HL] - Committee (3rd Day) — Amendment 59** — My Lords, I support the amendment of the noble Lord, Lord Hunt of Kings Heath, which would insert a sunset clause into the Bill. Why do I say that? Because many
- 7. [parliamentary/pwdata-lords] score=36.019 `pwdata-lords:daylord2023-02-28a:320`
+ 8. [parliamentary/pwdata-lords] score=36.019 `pwdata-lords:daylord2023-02-28a:320`
     **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — No, I do not accept that, because the vast majority of the rule that would be allowed to sunset is now legally inoperable and not working. My noble friend Lord 
- 8. [parliamentary/bills-api] score=35.820 `bills-api:3340:98`
+ 9. [parliamentary/bills-api] score=35.820 `bills-api:3340:98`
     **Bill 3340 — publication 98** — WRITTEN EVIDENCE SUBMITTED BY LEWIS SILKIN LLP (REULB14) CALL FOR WRITTEN EVIDENCE: RETAINED EU LAW (REVOCATION AND REFORM) BILL This evidence is submitted by L
- 9. [guidance/quangos-govuk] score=35.775 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:7`
+10. [guidance/quangos-govuk] score=35.775 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:7`
     **Law Society of Scotland** — © The Law Society of Scotland 2015
-10. [parliamentary/pwdata-debates] score=35.647 `pwdata-debates:debates2005-03-09a:411`
+11. [parliamentary/pwdata-debates] score=35.647 `pwdata-debates:debates2005-03-09a:411`
     **Orders of the Day — Prevention of Terrorism Bill — Clause 1 — Power to Make Control Orders** — I am trying to recognise the dilemma in which the Government find themselves, as they try to find a way between the requirements of security and our traditions 
-11. [parliamentary/pwdata-lords] score=35.132 `pwdata-lords:daylord2023-02-28a:301`
+12. [parliamentary/pwdata-lords] score=35.132 `pwdata-lords:daylord2023-02-28a:301`
     **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — I support the amendment in the name of the noble and learned Lord, Lord Hope, and Amendment 26. The point about consultation is extremely important, especially 
-12. [parliamentary/pwdata-debates] score=35.036 `pwdata-debates:debates2020-02-12c:314`
+13. [parliamentary/pwdata-debates] score=35.036 `pwdata-debates:debates2020-02-12c:314`
     **Terrorist Offenders (Restriction of Early Release) Bill — Clause 1 - Eligibility for release on lice** — I am not seeking to press new clause 3, but I am seeking reassurances from the Minister relating to the purpose behind it and a commitment to post-legislative s
-13. [parliamentary/pwdata-debates] score=34.491 `pwdata-debates:debates2023-01-18e:346`
+14. [parliamentary/pwdata-debates] score=34.491 `pwdata-debates:debates2023-01-18e:346`
     **Retained EU Law (Revocation and Reform) Bill — New Clause 1 - “Assimilated law”** — I rise to speak in support of amendments 18, 19, 21, 24 and 36. What is clear from the Government is that this Bill is ideologically driven, lacks common sense,
-14. [parliamentary/pwdata-lords] score=34.227 `pwdata-lords:daylord2015-01-19a:344`
+15. [parliamentary/pwdata-lords] score=34.227 `pwdata-lords:daylord2015-01-19a:344`
     **Recall of MPs Bill — Committee (2nd Day) (Continued)** — I am grateful to the Minister. I said in my opening remarks that the alternative was a review system and I think that the Government ought to think about that. 
-15. [parliamentary/pwdata-lords] score=34.177 `pwdata-lords:daylord2023-02-28a:318`
+16. [parliamentary/pwdata-lords] score=34.177 `pwdata-lords:daylord2023-02-28a:318`
     **Retained EU Law (Revocation and Reform) Bill - Committee (2nd Day) — Amendment 26** — I will address the noble Lord’s point at the end of my remarks, after I have moved the government amendments. I think I had got to the new clause tabled as Amen
-16. [guidance/quangos-govuk] score=34.100 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:5`
+17. [guidance/quangos-govuk] score=34.100 `quangos-govuk:government/consultations/sunset-clauses-in-market-investigation-remedies-updated-guidance:5`
     **Elcena Jeffers Foundation ** — ELCENA JEFFERS FOUNDATION (EJF) PO BOX 63057, LONDON NW9 1LQ UNITED KINGDOM Registered Charity Number: 1072333 Company Registration Number: 3601958 Alice Cole R
-17. [parliamentary/pwdata-lords] score=34.074 `pwdata-lords:daylord2015-01-20a:88`
+18. [parliamentary/pwdata-lords] score=34.074 `pwdata-lords:daylord2015-01-20a:88`
     **Counter-Terrorism and Security Bill — Committee (1st Day)** — My Lords, we have had a very good, short debate on this, with a lot of contributions that in many ways highlight the difficulties that there are in this area wh
-18. [parliamentary/pwdata-lords] score=34.018 `pwdata-lords:daylord2023-03-02b:81`
+19. [parliamentary/pwdata-lords] score=34.018 `pwdata-lords:daylord2023-03-02b:81`
     **Retained EU Law (Revocation and Reform) Bill - Committee (3rd Day) — Amendment 29** — My Lords, this has been a very full and comprehensive debate—I did not expect anything less, given the subject matter. Amendments 29, 33, 34, 35, 36, 49, 55 and
-19. [parliamentary/pwdata-lords] score=33.810 `pwdata-lords:daylord2025-02-26a:149`
+20. [parliamentary/pwdata-lords] score=33.810 `pwdata-lords:daylord2025-02-26a:149`
     **Product Regulation and Metrology Bill [HL] - Report (1st Day) — Amendment 5** — My Lords, I rise to speak in favour of my Amendments 21 and 59, and to support the amendments, to which I have added my name, from the noble Lord, Lord Frost. A
-20. [parliamentary/pwdata-lords] score=33.795 `pwdata-lords:daylord2015-01-20a:75`
-    **Counter-Terrorism and Security Bill — Committee (1st Day)** — My Lords, I do not understand the two-year period contained in these amendments. The issue which we are dealing with and which is covered in this clause is, unf
 
 ### I3 (I/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
 *Query:* When has post-legislative scrutiny found a law had significant unintended consequences, and of what kind?
@@ -2069,22 +2069,22 @@ Top-20 retrieved:
     **Coroners and Justice Bill — Committee (6th Day)** — I have been somewhat intimidated by the Bill. It has tremendous scope, covering many emotive issues. I am not a policeman or a lawyer; I am not interested in po
 12. [parliamentary/pwdata-lords] score=86.021↑T `pwdata-lords:daylord2012-01-10b:87`
     **Legal Aid, Sentencing and Punishment of Offenders Bill — Committee (2nd Day)** — My Lords, I, too, support the amendment, which is about unintended consequences. The Government should be grateful that it has been raised at this stage of deba
-13. [parliamentary/pwdata-lords] score=85.216↑T `pwdata-lords:daylord2026-04-13d:279`
+13. [other/scottish-parliament-or] score=85.683↑T `scottish-parliament-or:16583:158`
+    **Scottish Parliament: Children (Care, Care Experience and Services Planning) (Scotland) Bill: Stage 1** — Workforce planning is obviously not our area of expertise, but I reiterate what we said in our response, which is that there needs to be sufficient investment i
+14. [parliamentary/pwdata-lords] score=85.216↑T `pwdata-lords:daylord2026-04-13d:279`
     **English Devolution and Community Empowerment Bill - Report (3rd Day) — Amendment 318B** — My Lords, as I mentioned earlier, good law is a public good. It is essential that Acts deliver what they are expected to deliver, and not all do so, as the nobl
-14. [parliamentary/pwdata-lords] score=85.184↑T `pwdata-lords:daylord2023-02-06b:246`
+15. [parliamentary/pwdata-lords] score=85.184↑T `pwdata-lords:daylord2023-02-06b:246`
     **Retained EU Law (Revocation and Reform) Bill - Second Reading (Continued)** — My Lords, setting out on a journey when you do not know where you are going seems somewhat unwise. Politicians sometimes have to pursue careers without certaint
-15. [parliamentary/pwdata-debates] score=85.143↑T `pwdata-debates:debates2025-03-26b:330`
+16. [parliamentary/pwdata-debates] score=85.143↑T `pwdata-debates:debates2025-03-26b:330`
     **Tobacco and Vapes Bill — New Clause 11 - Age verification in relation to tobacco and vaping products** — In our post-spiritual or at least post-religious age, two phenomena are evident. When God is forgotten and faith declines, people do not believe in nothing but,
-16. [other/erskine-may] score=84.522↑T `erskine-may:4989:1`
+17. [other/erskine-may] score=84.522↑T `erskine-may:4989:1`
     **Erskine May: Preliminary view of public bills: Pre- and post-legislative scrutiny** — 26.18 The Modernisation Committee, 1 the Constitution Committee of the House of Lords 2 and the Law Commission 3 have also drawn attention to the desirability o
-17. [parliamentary/committees-reports] score=84.511↑T `committees-reports:publication:52418:290924`
+18. [parliamentary/committees-reports] score=84.511↑T `committees-reports:publication:52418:290924`
     **Correspondence: Correspondence from Dr Jo Farrar CB OBE, Ministry of Justice Permanent Secretary, da** — Andy Slaughter MP Chair Justice Committee House of Commons London SW1A 0AA By email only Dr Jo Farrar CB OBE Permanent Secretary Ministry of Justice 102 Petty F
-18. [parliamentary/pwdata-lords] score=84.219↑T `pwdata-lords:daylord2008-07-16a:187`
+19. [parliamentary/pwdata-lords] score=84.219↑T `pwdata-lords:daylord2008-07-16a:187`
     **Pre-legislative Scrutiny** — My Lords, I congratulate my noble friend Lord Goodlad on raising this important question. The Constitution Committee's report on pre-legislative scrutiny follow
-19. [parliamentary/pwdata-lords] score=83.732↑T `pwdata-lords:daylord2011-12-21a:126`
+20. [parliamentary/pwdata-lords] score=83.732↑T `pwdata-lords:daylord2011-12-21a:126`
     **Health and Social Care Bill — Committee (15th Day)** — My Lords, I thank the noble Earl for his response, which I think recognises the fact that there will be a need continually to provide reassurance that the purpo
-20. [parliamentary/pwdata-lords] score=83.290↑T `pwdata-lords:daylord2021-01-20c:137`
-    **Overseas Operations (Service Personnel and Veterans) Bill - Second Reading** — My Lords, this is an important Bill, but it has to be examined closely so that it does not create more problems than it sets out to solve. Ordinarily, I would a
 
 ### J1 (J/H1) [FOREIGN] — PENDING VALIDATION
 *Query:* How do other countries regulate short-term lets — and what worked?
@@ -2103,38 +2103,38 @@ Top-20 retrieved:
     **Sharing Economy: Short-term Letting** — My hon. Friend is absolutely right. With the explosion in the number of short-term lettings, a whole host of problems associated with such lettings have become 
  4. [parliamentary/pwdata-lordswrans] score=75.175↑T `pwdata-lordswrans:lordswrans2019-01-07:28`
     **Ministry of Housing, Communities and Local Government — Holiday Accommodation: Registration** — Q (baroness gardner of parkes): To ask Her Majesty's Government what assessment they have made of steps taken in other countries requiring home owners to offer 
- 5. [parliamentary/pwdata-wrans] score=71.854↑T `pwdata-wrans:answers2024-02-22:136`
+ 5. [other/scottish-parliament-or] score=72.553↑T `scottish-parliament-or:15433:240`
+    **Scottish Parliament: Short-term Lets Licensing Scheme** — I thank the minister for that intervention, but he has already had an extensive conversation across the chamber, and answers from my colleagues, on that matter,
+ 6. [parliamentary/pwdata-wrans] score=71.854↑T `pwdata-wrans:answers2024-02-22:136`
     **Department for Culture, Media and Sport — Holiday Accommodation: Registration** — Q (Rachael Maskell): To ask the Secretary of State for Culture, Media and Sport, whether the proposed register for short-term lets will be shared with HMRC to e
- 6. [parliamentary/pwdata-westminster] score=71.261↑T `pwdata-westminster:westminster2023-05-23a:18`
+ 7. [parliamentary/pwdata-westminster] score=71.261↑T `pwdata-westminster:westminster2023-05-23a:18`
     **Short-term Holiday Lets: Planning — [Dame Caroline Dinenage in the Chair]** — It is a pleasure to speak in this debate, and to support my neighbour, my hon. Friend the Member for Torbay (Kevin Foster) . Across south Devon, we have been de
- 7. [parliamentary/pwdata-westminster] score=71.187↑T `pwdata-westminster:westminster2024-09-12a:42`
+ 8. [parliamentary/pwdata-westminster] score=71.187↑T `pwdata-westminster:westminster2024-09-12a:42`
     **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — It has been a real honour to hear the stories of different places across our country. It has been a real privilege to serve under your chairship, Mrs Harris; to
- 8. [parliamentary/pwdata-westminster] score=70.751↑T `pwdata-westminster:westminster2024-09-12a:10`
+ 9. [parliamentary/pwdata-westminster] score=70.751↑T `pwdata-westminster:westminster2024-09-12a:10`
     **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — I thank the hon. Gentleman for that helpful intervention and for elaborating on that point. I definitely believe in the politics of justice over the politics of
- 9. [parliamentary/pwdata-lordswms] score=70.506↑T `pwdata-lordswms:lordswms2024-02-19:1`
+10. [parliamentary/pwdata-lordswms] score=70.506↑T `pwdata-lordswms:lordswms2024-02-19:1`
     **Department for Culture, Media and Sport — Delivery Update** — Following consultation on a registration scheme for short-term lets in England, today the Government sets out further details on how the scheme will operate. Sh
-10. [parliamentary/pwdata-wms] score=70.426↑T `pwdata-wms:ministerial2024-02-19:2`
+11. [parliamentary/pwdata-wms] score=70.426↑T `pwdata-wms:ministerial2024-02-19:2`
     **Department for Culture, Media and Sport — Delivery Update** — Following consultation on a registration scheme for short-term lets in England, today the Government sets out further details on how the scheme will operate. Sh
-11. [parliamentary/pwdata-debates] score=70.421↑T `pwdata-debates:debates2015-03-10a:282`
+12. [parliamentary/pwdata-debates] score=70.421↑T `pwdata-debates:debates2015-03-10a:282`
     **DEREGULATION BILL (PROGRAMME) (NO.3) — Clause 1 — Health and safety at work: general duty of self-em** — The honest answer is that we do not yet have such details, but they will be set out in regulations. I assume that a local authority would have to provide exampl
-12. [parliamentary/pwdata-westminster] score=70.247↑T `pwdata-westminster:westminster2015-01-07a:93`
+13. [parliamentary/pwdata-westminster] score=70.247↑T `pwdata-westminster:westminster2015-01-07a:93`
     **Short Let Deregulation (London)** — I suspect, therefore, that the hon. Gentleman will be pleased to support the Government’s proposals. If he looks back at my opening remarks, I think that that w
-13. [parliamentary/pwdata-lords] score=69.873↑T `pwdata-lords:daylord2023-03-22a:132`
+14. [parliamentary/pwdata-lords] score=69.873↑T `pwdata-lords:daylord2023-03-22a:132`
     **Levelling-up and Regeneration Bill - Committee (7th Day) — Amendment 180** — I will be coming to that in a moment. Finally, I turn to Amendments 445, 445A, 445B and 447, tabled by the noble Lord, Lord Foster of Bath. These amendments con
-14. [parliamentary/pwdata-wrans] score=68.996↑T `pwdata-wrans:answers2020-06-30:374`
+15. [other/scottish-parliament-or] score=69.077↑T `scottish-parliament-or:15433:90`
+    **Scottish Parliament: Short-term Lets Licensing Scheme** — The tourism sector is vitally important for Scotland. It is the largest part of our economy in terms of employment and is particularly important in remote and r
+16. [parliamentary/pwdata-wrans] score=68.996↑T `pwdata-wrans:answers2020-06-30:374`
     **Department for Digital, Culture, Media and Sport — Holiday Accommodation: Bristol** — Q (Thangam Debbonaire): To ask the Secretary of State for Digital, Culture, Media and Sport, what assessment his Department has made of the effect of the covid-
-15. [parliamentary/pwdata-westminster] score=68.873↑T `pwdata-westminster:westminster2023-05-23a:30`
+17. [parliamentary/pwdata-westminster] score=68.873↑T `pwdata-westminster:westminster2023-05-23a:30`
     **Short-term Holiday Lets: Planning — [Dame Caroline Dinenage in the Chair]** — It is a great pleasure to see you in the Chair, Dame Caroline, and I thank my hon. Friend the Member for Torbay (Kevin Foster) for introducing this vital debate
-16. [parliamentary/pwdata-westminster] score=68.797↑T `pwdata-westminster:westminster2024-09-12a:1`
+18. [parliamentary/pwdata-westminster] score=68.797↑T `pwdata-westminster:westminster2024-09-12a:1`
     **Short-term Lets: Regulation — [Carolyn Harris in the Chair]** — I beg to move, That this House has considered the regulation of short-term lets. It is an honour and a genuine privilege to serve under your chairship, Mrs Harr
-17. [parliamentary/pwdata-wrans] score=68.787↑T `pwdata-wrans:answers2022-04-25:654`
+19. [parliamentary/pwdata-wrans] score=68.787↑T `pwdata-wrans:answers2022-04-25:654`
     **Department for Digital, Culture, Media and Sport — Holiday Accommodation** — Q (Rachael Maskell): To ask the Secretary of State for Digital, Culture, Media and Sport, whether she has made an assessment of the potential merits of (a) the 
-18. [parliamentary/pwdata-debates] score=68.737↑T `pwdata-debates:debates2022-06-16a:379`
+20. [parliamentary/pwdata-debates] score=68.737↑T `pwdata-debates:debates2022-06-16a:379`
     **Sharing Economy: Short-term Letting** — The hon. Lady makes an important point. I will come on to registration, but clearly we do need to look at the options. We have heard about the problems caused, 
-19. [parliamentary/pwdata-lords] score=68.649↑T `pwdata-lords:daylord2023-03-22a:126`
-    **Levelling-up and Regeneration Bill - Committee (7th Day) — Amendment 180** — My Lords, I am speaking as a former member of the Built Environment Committee; I was a member when the committee’s report was drawn up. I thank the chairman, th
-20. [parliamentary/pwdata-debates] score=68.492↑T `pwdata-debates:debates2022-03-23c:332`
-    **Short and Holiday-Let Accommodation (Registration) Bill** — I beg to move, That leave be given to bring in a Bill to establish a national register of short and holiday-let accommodation; to give local authorities powers 
 
 ### K1 (K/H2) — PENDING VALIDATION
 *Query:* I want to remove the no-fault eviction route — which exact provision do I amend?
@@ -2227,11 +2227,11 @@ Top-20 retrieved:
     **Bill 4019 — publication 6** — 1 Public Office (Accountability) Bill 2025 Briefing for Committee Stage, House of Commons, November 2025 1. Hillsborough Law Now (HLN) has worked closely with t
 16. [parliamentary/bills-api] score=83.300↑T `bills-api:4019:7`
     **Bill 4019 — publication 7** — Campaign Group Statement – The Chinook Justice Campaign Submitted by: The Chinook Justice Campaign Bill: Public Office (Accountability) Bill Stage: House of Com
-17. [parliamentary/pwdata-debates] score=82.849↑T `pwdata-debates:debates2026-07-14a:263`
-    **Public Office (Accountability) Bill — New Clause 8 - Information contained in public records** — With this it will be convenient to discuss the following: Government new clause 9. New clause 1—Post-legislative assessment of the legal duty of candour for pub
-18. [parliamentary/pwdata-debates] score=82.849↑T `pwdata-debates:debates2026-07-14a:263`
-    **Public Office (Accountability) Bill — New Clause 8 - Information contained in public records** — With this it will be convenient to discuss the following: Government new clause 9. New clause 1—Post-legislative assessment of the legal duty of candour for pub
-19. [parliamentary/committees-evidence] score=82.644↑T `committees-evidence:writtenevidence:128967:220290`
+17. [parliamentary/committees-evidence] score=82.644↑T `committees-evidence:writtenevidence:128967:220290`
     **Statutory Inquiries — STI0014** — Written Evidence from Pete Weatherby KC and Anna Morris KC (STI0014) Pete Weatherby KC I have been a barrister for 32 years, 12 of them in silk. A significant p
-20. [parliamentary/committees-reports] score=82.569↑T `committees-reports:publication:44986:223253`
+18. [parliamentary/committees-reports] score=82.569↑T `committees-reports:publication:44986:223253`
     **Report: Third Report - Human rights and the proposal for a “Hillsborough Law”** — House of Lords House of Commons Joint Committee on Human Rights Human rights and the proposal for a “Hillsborough Law” Third Report of Session 2023–24 Report, t
+19. [parliamentary/pwdata-westminster] score=82.548↑T `pwdata-westminster:westminster2025-09-03a:77`
+    **Duty of Candour for Public Authorities and Legal Representation for Bereaved Families — [Wera Hobhou** — It is a pleasure to speak in this debate. I congratulate my hon. Friend the Member for Liverpool West Derby (Ian Byrne) on securing it. The Government committed
+20. [parliamentary/niassembly-hansard] score=82.380↑T `niassembly-hansard:416633:415`
+    **NI Assembly: Private Members' Business — Statutory Duty of Candour** — A statutory and legally enforceable duty of candour in our health and social care system is urgently needed on both an organisational and individual basis. Alth

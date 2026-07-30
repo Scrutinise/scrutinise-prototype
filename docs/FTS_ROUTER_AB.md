@@ -1,12 +1,12 @@
 # FTS query ROUTER — per-stream routing A/B (recall@20 OFF vs ON)
 
-*Generated 2026-07-29T19:24:39.658Z against the Lance FTS dataset (16658132 rows). For each recall@20 query: `rankedSearch` on the BARE query (OFF) vs `routeQuery`'s per-stream decision dispatched to tier-filtered `rankedSearch` calls, merged and re-sorted by score (ON) — the same `routeQuery`/query-router.ts path search-gateway.ts uses behind `LEX_QUERY_ROUTER` (Gemini 2.5 Flash). Router fail-opens (null/empty decision, 0/34 queries) fall back to the identical OFF result, so those queries show a flat delta by construction, not a router win/loss.*
+*Generated 2026-07-30T04:31:44.753Z against the Lance FTS dataset (17700396 rows). For each recall@20 query: `rankedSearch` on the BARE query (OFF) vs `routeQuery`'s per-stream decision dispatched to tier-filtered `rankedSearch` calls, merged and re-sorted by score (ON) — the same `routeQuery`/query-router.ts path search-gateway.ts uses behind `LEX_QUERY_ROUTER` (Gemini 2.5 Flash). Router fail-opens (null/empty decision, 2/34 queries) fall back to the identical OFF result, so those queries show a flat delta by construction, not a router win/loss.*
 
 ## Headline — archetype B (payoff, the vocabulary-bridge target) and A (citation queries — expect flat or improved, NOT diluted)
 
 | archetype | stream | recall@20 OFF | recall@20 ON | delta | n |
 |---|---|---|---|---|---|
-| B | legislation | 33.3% | 45.8% | **+12.5pp** | 6 |
+| B | legislation | 33.3% | 48.6% | **+15.3pp** | 6 |
 | A | legislation | 60.0% | 70.0% | **+10.0pp** | 5 |
 
 ## All recall@20 archetypes
@@ -14,11 +14,11 @@
 | archetype | recall@20 OFF | recall@20 ON | delta | n |
 |---|---|---|---|---|
 | A | 60.0% | 70.0% | +10.0pp | 5 |
-| B | 33.3% | 45.8% | +12.5pp | 6 |
-| C | 60.0% | 40.0% | -20.0pp | 5 |
-| D | 76.7% | 76.7% | 0.0pp | 5 |
+| B | 33.3% | 48.6% | +15.3pp | 6 |
+| C | 60.0% | 46.7% | -13.3pp | 5 |
+| D | 76.7% | 90.0% | +13.3pp | 5 |
 | E | 90.0% | 90.0% | 0.0pp | 5 |
-| F | 90.0% | 80.0% | -10.0pp | 5 |
+| F | 90.0% | 90.0% | 0.0pp | 5 |
 | J | 0.0% | 0.0% | 0.0pp | 1 |
 | K | 0.0% | 0.0% | 0.0pp | 2 |
 
@@ -31,35 +31,35 @@
 | A3 | A | 100.0% | 100.0% | 0.0pp | routed | legislation |
 | A4 | A | 50.0% | 50.0% | 0.0pp | routed | legislation |
 | A5 | A | 0.0% | 50.0% | +50.0pp | routed | legislation |
-| B1 | B | 0.0% | 75.0% | +75.0pp | routed | legislation, debates, committees, caselaw |
-| B2 | B | 33.3% | 33.3% | 0.0pp | routed | legislation, debates, committees, caselaw |
-| B3 | B | 0.0% | 33.3% | +33.3pp | routed | legislation, debates, committees, caselaw |
-| B4 | B | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, caselaw |
-| B5 | B | 66.7% | 33.3% | -33.3pp | routed | legislation, debates, committees, caselaw |
-| C1 | C | 33.3% | 0.0% | -33.3pp | routed | legislation, debates, committees, caselaw |
+| B1 | B | 0.0% | 75.0% | +75.0pp | routed | legislation, debates, committees, caselaw, guidance |
+| B2 | B | 33.3% | 33.3% | 0.0pp | routed | legislation |
+| B3 | B | 0.0% | 33.3% | +33.3pp | routed | legislation, debates, committees, caselaw, guidance |
+| B4 | B | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, caselaw, guidance |
+| B5 | B | 66.7% | 33.3% | -33.3pp | routed | legislation, debates, committees, caselaw, guidance |
+| C1 | C | 33.3% | 0.0% | -33.3pp | routed | legislation |
 | C2 | C | 66.7% | 66.7% | 0.0pp | routed | legislation |
-| C3 | C | 33.3% | 0.0% | -33.3pp | routed | legislation, debates, committees, caselaw |
-| C4 | C | 66.7% | 66.7% | 0.0pp | routed | legislation, debates, committees, caselaw |
-| C5 | C | 100.0% | 66.7% | -33.3pp | routed | legislation, debates, committees, caselaw |
+| C3 | C | 33.3% | 0.0% | -33.3pp | routed | legislation |
+| C4 | C | 66.7% | 66.7% | 0.0pp | fail-open | — |
+| C5 | C | 100.0% | 100.0% | 0.0pp | fail-open | — |
 | D1 | D | 50.0% | 50.0% | 0.0pp | routed | legislation |
-| D2 | D | 100.0% | 100.0% | 0.0pp | routed | legislation, debates |
+| D2 | D | 100.0% | 100.0% | 0.0pp | routed | legislation |
 | D3 | D | 100.0% | 100.0% | 0.0pp | routed | legislation |
-| D4 | D | 33.3% | 33.3% | 0.0pp | routed | legislation |
-| D5 | D | 100.0% | 100.0% | 0.0pp | routed | legislation, caselaw |
+| D4 | D | 33.3% | 100.0% | +66.7pp | routed | legislation |
+| D5 | D | 100.0% | 100.0% | 0.0pp | routed | caselaw |
 | E1 | E | 100.0% | 50.0% | -50.0pp | routed | legislation, debates |
-| E2 | E | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees |
-| E3 | E | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees |
-| E4 | E | 50.0% | 100.0% | +50.0pp | routed | legislation, debates, committees |
-| E5 | E | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees |
-| F1 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, caselaw |
-| F2 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees |
-| F3 | F | 100.0% | 50.0% | -50.0pp | routed | legislation, debates, committees, caselaw |
-| F4 | F | 50.0% | 50.0% | 0.0pp | routed | legislation, debates, committees |
-| F5 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees |
-| B6 | B | 0.0% | 0.0% | 0.0pp | routed | legislation, debates, committees, caselaw |
-| J1 | J | 0.0% | 0.0% | 0.0pp | routed | legislation, debates, committees |
+| E2 | E | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, guidance |
+| E3 | E | 100.0% | 100.0% | 0.0pp | routed | legislation, debates |
+| E4 | E | 50.0% | 100.0% | +50.0pp | routed | legislation, debates |
+| E5 | E | 100.0% | 100.0% | 0.0pp | routed | debates, guidance |
+| F1 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, guidance |
+| F2 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates |
+| F3 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, committees, caselaw, guidance |
+| F4 | F | 50.0% | 50.0% | 0.0pp | routed | legislation, debates |
+| F5 | F | 100.0% | 100.0% | 0.0pp | routed | legislation, debates, guidance |
+| B6 | B | 0.0% | 16.7% | +16.7pp | routed | legislation |
+| J1 | J | 0.0% | 0.0% | 0.0pp | routed | legislation, debates, committees, guidance |
 | K1 | K | 0.0% | 0.0% | 0.0pp | routed | legislation |
-| K2 | K | 0.0% | 0.0% | 0.0pp | routed | legislation, debates, committees, caselaw |
+| K2 | K | 0.0% | 0.0% | 0.0pp | routed | legislation |
 
 ## Archetype A — per-source OFF vs ON (citation dilution check)
 
@@ -106,26 +106,26 @@ OFF 0.0% → ON 50.0% (+50.0pp) · mode: routed · streams: legislation
 ## Archetype B — per-source OFF vs ON (which streams recovered the concept query)
 
 ### B1 — Can my landlord kick me out without giving a reason?
-OFF 0.0% → ON 75.0% (+75.0pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 0.0% → ON 75.0% (+75.0pp) · mode: routed · streams: legislation, debates, committees, caselaw, guidance
 
 | expected source | OFF | ON |
 |---|---|---|
 | HA 1988 s.21 | ✗ | ✓ @1 |
 | HA 1988 s.8 / Sch 2 | ✗ | ✗ |
-| Renters’ Rights Act 2025 | ✗ | ✓ @7 |
-| Deregulation Act 2015 ss.33–41 (retaliatory eviction) | ✗ | ✓ @2 |
+| Renters’ Rights Act 2025 | ✗ | ✓ @12 |
+| Deregulation Act 2015 ss.33–41 (retaliatory eviction) | ✗ | ✓ @8 |
 
 ### B2 — I want to stop people renting out whole houses as Airbnbs all year round
-OFF 33.3% → ON 33.3% (0.0pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 33.3% → ON 33.3% (0.0pp) · mode: routed · streams: legislation
 
 | expected source | OFF | ON |
 |---|---|---|
 | Levelling-up and Regeneration Act 2023 (short-term lets) | ✗ | ✗ |
-| Use Classes Order | ✓ @9 | ✓ @2 |
+| Use Classes Order | ✓ @9 | ✓ @7 |
 | Deregulation Act 2015 s.44 (London 90-night) | ✗ | ✗ |
 
 ### B3 — Is it illegal to take a photo of someone in public without their permission?
-OFF 0.0% → ON 33.3% (+33.3pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 0.0% → ON 33.3% (+33.3pp) · mode: routed · streams: legislation, debates, committees, caselaw, guidance
 
 | expected source | OFF | ON |
 |---|---|---|
@@ -134,15 +134,15 @@ OFF 0.0% → ON 33.3% (+33.3pp) · mode: routed · streams: legislation, debates
 | UK GDPR / DPA 2018 | ✗ | ✓ @1 |
 
 ### B4 — Statutory duty of candour — who does it bind and where is it heading?
-OFF 100.0% → ON 100.0% (0.0pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 100.0% → ON 100.0% (0.0pp) · mode: routed · streams: legislation, debates, committees, caselaw, guidance
 
 | expected source | OFF | ON |
 |---|---|---|
 | HSCA 2008 (Regulated Activities) Regs 2014 reg 20 | ✓ @1 | ✓ @1 |
-| Public Office (Accountability) Bill / Hillsborough Law [BILLS] | ✓ @9 | ✓ @14 |
+| Public Office (Accountability) Bill / Hillsborough Law [BILLS] | ✓ @9 | ✓ @20 |
 
 ### B5 — What are the rules about how much noise my neighbours can make at night?
-OFF 66.7% → ON 33.3% (-33.3pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 66.7% → ON 33.3% (-33.3pp) · mode: routed · streams: legislation, debates, committees, caselaw, guidance
 
 | expected source | OFF | ON |
 |---|---|---|
@@ -151,7 +151,7 @@ OFF 66.7% → ON 33.3% (-33.3pp) · mode: routed · streams: legislation, debate
 | Control of Pollution Act 1974 s.60 | ✗ | ✗ |
 
 ### B6 — I want to revoke MiFID II
-OFF 0.0% → ON 0.0% (0.0pp) · mode: routed · streams: legislation, debates, committees, caselaw
+OFF 0.0% → ON 16.7% (+16.7pp) · mode: routed · streams: legislation
 
 | expected source | OFF | ON |
 |---|---|---|
@@ -159,5 +159,5 @@ OFF 0.0% → ON 0.0% (0.0pp) · mode: routed · streams: legislation, debates, c
 | FSMA 2000 (Markets in Financial Instruments) Regs 2017 (uksi/2017/701) | ✗ | ✗ |
 | Retained/assimilated MiFIR — Reg (EU) 600/2014 (eur/2014/600) | ✗ | ✗ |
 | FCA Handbook COBS + SYSC (fca-handbook) | ✗ | ✗ |
-| FSMA 2000 — framework Act (ukpga/2000/8) | ✗ | ✗ |
+| FSMA 2000 — framework Act (ukpga/2000/8) | ✗ | ✓ @1 |
 | Post-Brexit onshoring SIs (uksi/2019/1390; uksi/2021/1388) | ✗ | ✗ |

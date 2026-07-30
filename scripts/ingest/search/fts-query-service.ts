@@ -10,6 +10,25 @@
  * The BM25 search + query-time ~2.5× title boost live in fts-core (shared with
  * the scoring harness). Title-boost only moves rows in tiers that have titles
  * (parliamentary/guidance); it is inert for legislation & caselaw (NULL titles).
+ *
+ * CONCURRENCY GUARD (added investigating the query-router flip): this process
+ * opens ONE Lance table handle at boot and every request's rankedSearch() call
+ * runs a native query against that SAME handle. Direct load-testing (CC brief
+ * "add guidance stream, then re-measure", step 3) confirmed concurrent calls
+ * against one handle are unsafe at this scale — 10 concurrent requests survived
+ * but took 226s (severe contention), 15 concurrent crashed the process outright
+ * (no JS-catchable error, the process just died). This was previously assumed
+ * safe because the trigger is independent HTTP requests rather than an in-process
+ * Promise.all — that assumption was WRONG: the danger is concurrent native calls
+ * against one handle, regardless of what triggers them. The query router
+ * (query-router.ts) fans one user's search out to up to 5 concurrent stream
+ * calls, so flipping LEX_QUERY_ROUTER on would multiply real-world concurrent
+ * load against this exact vulnerability. Fix: a global in-process semaphore caps
+ * concurrent rankedSearch calls at FTS_MAX_CONCURRENT (default 4 — chosen below
+ * the 15 that crashed and below the 10 that already showed severe slowdown,
+ * with headroom; re-tune from the p50/p95 /stats endpoint under real load).
+ * Excess requests queue FIFO rather than fail — a request under load waits
+ * longer, it does not error.
  */
 import http from 'http'
 import { Pool } from 'pg'
@@ -18,6 +37,33 @@ import { rankedSearch, TITLE_BOOST, OVERSCAN } from './fts-core'
 import { ActIndex, loadActIndex } from './citation-resolver'
 
 const PORT = parseInt(process.env.FTS_PORT ?? '8080', 10)
+
+// ── concurrency guard ────────────────────────────────────────────────────────
+const MAX_CONCURRENT = parseInt(process.env.FTS_MAX_CONCURRENT ?? '4', 10)
+let inFlight = 0
+const waiters: Array<() => void> = []
+let queueHighWaterMark = 0
+
+/** Acquire a slot (queues FIFO if all MAX_CONCURRENT slots are taken); returns
+ *  a release function the caller MUST call exactly once, in a finally block. */
+function acquireSlot(): Promise<() => void> {
+  return new Promise((resolve) => {
+    const grant = () => {
+      inFlight++
+      resolve(() => {
+        inFlight--
+        const next = waiters.shift()
+        if (next) next()
+      })
+    }
+    if (inFlight < MAX_CONCURRENT) {
+      grant()
+    } else {
+      waiters.push(grant)
+      queueHighWaterMark = Math.max(queueHighWaterMark, waiters.length)
+    }
+  })
+}
 
 let table: lancedb.Table
 let actIndex: ActIndex | undefined
@@ -44,25 +90,31 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
     return send(res, 200, {
       served, cold_ms: cold[0] ?? null,
       warm_p50_ms: pct(warm, 50), warm_p95_ms: pct(warm, 95), warm_n: warm.length,
+      concurrency: { max: MAX_CONCURRENT, inFlight, queued: waiters.length, queueHighWaterMark },
     })
   }
   if (req.method === 'POST' && req.url === '/fts-search') {
     let raw = ''
     req.on('data', (c) => { raw += c })
     req.on('end', async () => {
+      const tQueueStart = Date.now()
+      const release = await acquireSlot()
       try {
         const { query, tier, limit } = JSON.parse(raw || '{}')
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
+        const queueMs = Date.now() - tQueueStart
         const t0 = Date.now()
         const results = await rankedSearch(table, query, { tier, limit: lim, actIndex })
         const ms = Date.now() - t0
         ;(served === 0 ? cold : warm).push(ms)
         served++
         // body omitted from the wire payload; snippet is enough for inspection
-        send(res, 200, { query, tier: tier ?? null, ms, count: results.length, results: results.map(({ body, ...r }) => r) })
+        send(res, 200, { query, tier: tier ?? null, ms, queueMs, count: results.length, results: results.map(({ body, ...r }) => r) })
       } catch (e) {
         send(res, 500, { error: (e as Error).message })
+      } finally {
+        release()
       }
     })
     return

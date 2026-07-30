@@ -2,16 +2,19 @@
 // query router"). query-expansion.ts's routeQuery() is the ONLY AI judgement: it
 // decides which streams are relevant and writes each one's tailored query string.
 // Everything here runs AFTER that call and contains no AI judgement at all — it is
-// pure dispatch, config-driven, so adding a stream later (guidance, the web/X
-// layer, principle streams, the graph) means adding a list entry, not touching
-// this file's logic.
+// pure dispatch, config-driven, so adding a stream (guidance landed as the 5th,
+// confirming the design; the web/X layer, principle streams, the graph are next)
+// means adding a list entry, not touching this file's logic.
 //
-// Today's four streams share ONE underlying retrieval call (runFtsSearch, tier-
+// Today's five streams share ONE underlying retrieval call (runFtsSearch, tier-
 // filtered — the same filter mechanism already proven in the scoped B1/B3 test
 // and already live on the wire via fts-query-service.ts's `tier` param). debates
 // and committees share the FTS tier `parliamentary`; corpusToType's existing
 // type split (already computed by runFtsSearch on every hit) is reused to
-// separate them rather than inventing a second filter axis server-side.
+// separate them rather than inventing a second filter axis server-side. guidance
+// is a single-type tier (corpusToType maps the whole `guidance` tier to
+// SearchResultType 'GUIDANCE'), so — like legislation/caselaw — it needs no
+// `types` filter of its own.
 
 import type { SearchResult, SearchResultType } from './page1-config'
 import { runFtsSearch } from './fts-search'
@@ -42,6 +45,7 @@ export const STREAMS: StreamConfig[] = [
   { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], search: ftsStream('parliamentary', ['DEBATE']) },
   { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], search: ftsStream('parliamentary', ['COMMITTEE']) },
   { name: 'caselaw', tier: 'caselaw', search: ftsStream('caselaw') },
+  { name: 'guidance', tier: 'guidance', search: ftsStream('guidance') },
 ]
 
 /**

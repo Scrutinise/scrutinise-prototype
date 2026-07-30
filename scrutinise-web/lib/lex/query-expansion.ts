@@ -153,9 +153,9 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
 
 /** The stream names the router can address today (query-router.ts owns the
  *  matching {tier, types, search} config — this file only owns the LLM decision). */
-export type RouterStreamName = 'legislation' | 'debates' | 'committees' | 'caselaw'
+export type RouterStreamName = 'legislation' | 'debates' | 'committees' | 'caselaw' | 'guidance'
 
-const ROUTER_STREAMS: RouterStreamName[] = ['legislation', 'debates', 'committees', 'caselaw']
+const ROUTER_STREAMS: RouterStreamName[] = ['legislation', 'debates', 'committees', 'caselaw', 'guidance']
 
 /** One tailored query string per stream the LLM judged relevant. A stream absent
  *  from the object was judged NOT relevant — the caller skips it entirely. */
@@ -168,6 +168,7 @@ const ROUTER_SCHEMA = {
     debates: { type: 'string' },
     committees: { type: 'string' },
     caselaw: { type: 'string' },
+    guidance: { type: 'string' },
   },
 }
 
@@ -180,10 +181,11 @@ Corpora:
 - debates: Hansard chamber debates, written questions/statements. Tailor with the political/topical phrasing a debate would use.
 - committees: select committee reports and evidence. Tailor with inquiry/evidence phrasing (e.g. "pre-legislative scrutiny", "committee evidence").
 - caselaw: court judgments. Tailor with legal doctrine/case terminology.
+- guidance: regulator and soft-law material — FCA/ICO/HMRC/Ofgem/Ofcom guidance, Law Commission reports, NAO reports, statutory inquiries, sentencing guidelines, CPS guidance, Codes of Practice. Tailor with the regulator/body name and the practical compliance terms-of-art it uses (e.g. "FCA Handbook COBS", "ICO guidance data protection", "sentencing guideline").
 
 SPECIAL CASE — exact statutory citation: if the keywords are already an exact citation (e.g. "Section 21 Housing Act 1988", "Equality Act 2010 section 149"), route ONLY to legislation, and its query string must be the citation EXACTLY AS GIVEN with nothing added, removed, or reworded — any extra term dilutes the exact-match ranking. Do not route a citation query to any other corpus.
 
-UK law/parliament only. No elaboration. Each query string must be 200 characters or fewer.`
+UK law/parliament/regulator only. No elaboration. Each query string must be 200 characters or fewer.`
 
 function parseRoute(raw: string): RouteResult | null {
   let obj: unknown

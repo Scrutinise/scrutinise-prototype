@@ -68,10 +68,10 @@ const OUT_ROUTER_JSON = path.join(__dirname, '../../../docs/fts_router_ab.json')
 // tsconfig rootDir and not resolvable via the require-by-computed-path trick).
 // Keep in sync if the stream list in query-router.ts changes.
 const ROUTER_STREAM_TIER: Record<string, string> = {
-  legislation: 'legislation', debates: 'parliamentary', committees: 'parliamentary', caselaw: 'caselaw',
+  legislation: 'legislation', debates: 'parliamentary', committees: 'parliamentary', caselaw: 'caselaw', guidance: 'guidance',
 }
 const ROUTER_STREAM_TYPES: Record<string, string[] | undefined> = {
-  legislation: undefined, debates: ['DEBATE'], committees: ['COMMITTEE'], caselaw: undefined,
+  legislation: undefined, debates: ['DEBATE'], committees: ['COMMITTEE'], caselaw: undefined, guidance: undefined,
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-29T19:24:39.662Z",
-  "failOpenCount": 0,
+  "generatedAt": "2026-07-30T04:31:44.760Z",
+  "failOpenCount": 2,
   "totalQueried": 34,
   "byArchetype": [
     {
@@ -14,22 +14,22 @@
       "archetype": "B",
       "n": 6,
       "off": 0.3333333333333333,
-      "on": 0.4583333333333333,
-      "delta": 0.125
+      "on": 0.4861111111111111,
+      "delta": 0.1527777777777778
     },
     {
       "archetype": "C",
       "n": 5,
       "off": 0.6,
-      "on": 0.4,
-      "delta": -0.19999999999999996
+      "on": 0.4666666666666666,
+      "delta": -0.13333333333333336
     },
     {
       "archetype": "D",
       "n": 5,
       "off": 0.7666666666666667,
-      "on": 0.7666666666666667,
-      "delta": 0
+      "on": 0.9,
+      "delta": 0.1333333333333333
     },
     {
       "archetype": "E",
@@ -42,8 +42,8 @@
       "archetype": "F",
       "n": 5,
       "off": 0.9,
-      "on": 0.8,
-      "delta": -0.09999999999999998
+      "on": 0.9,
+      "delta": 0
     },
     {
       "archetype": "J",
@@ -233,7 +233,8 @@
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "caselaw",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -264,11 +265,11 @@
         },
         {
           "label": "Renters’ Rights Act 2025",
-          "rank": 7
+          "rank": 12
         },
         {
           "label": "Deregulation Act 2015 ss.33–41 (retaliatory eviction)",
-          "rank": 2
+          "rank": 8
         }
       ]
     },
@@ -281,10 +282,7 @@
       "delta": 0,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
+        "legislation"
       ],
       "offMatched": [
         {
@@ -307,7 +305,7 @@
         },
         {
           "label": "Use Classes Order",
-          "rank": 2
+          "rank": 7
         },
         {
           "label": "Deregulation Act 2015 s.44 (London 90-night)",
@@ -327,7 +325,8 @@
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "caselaw",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -370,7 +369,8 @@
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "caselaw",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -389,7 +389,7 @@
         },
         {
           "label": "Public Office (Accountability) Bill / Hillsborough Law [BILLS]",
-          "rank": 14
+          "rank": 20
         }
       ]
     },
@@ -405,7 +405,8 @@
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "caselaw",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -445,10 +446,7 @@
       "delta": -0.3333333333333333,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
+        "legislation"
       ],
       "offMatched": [
         {
@@ -511,7 +509,7 @@
         },
         {
           "label": "Electrically Assisted Pedal Cycles Regs 1983",
-          "rank": 14
+          "rank": 1
         },
         {
           "label": "e-scooter trial SIs (2020–)",
@@ -528,10 +526,7 @@
       "delta": -0.3333333333333333,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
+        "legislation"
       ],
       "offMatched": [
         {
@@ -569,13 +564,8 @@
       "off": 0.6666666666666666,
       "on": 0.6666666666666666,
       "delta": 0,
-      "mode": "routed",
-      "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
-      ],
+      "mode": "fail-open",
+      "streams": [],
       "offMatched": [
         {
           "label": "Water Industry Act 1991 (s.94 etc.)",
@@ -593,11 +583,11 @@
       "onMatched": [
         {
           "label": "Water Industry Act 1991 (s.94 etc.)",
-          "rank": 13
+          "rank": 9
         },
         {
           "label": "Environment Act 2021 storm overflow duties",
-          "rank": 20
+          "rank": 1
         },
         {
           "label": "Urban Waste Water Treatment Regs 1994",
@@ -610,15 +600,10 @@
       "archetype": "C",
       "scoreable": true,
       "off": 1,
-      "on": 0.6666666666666666,
-      "delta": -0.33333333333333337,
-      "mode": "routed",
-      "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
-      ],
+      "on": 1,
+      "delta": 0,
+      "mode": "fail-open",
+      "streams": [],
       "offMatched": [
         {
           "label": "Mobile Homes Act 1983",
@@ -640,11 +625,11 @@
         },
         {
           "label": "Mobile Homes Act 2013",
-          "rank": null
+          "rank": 2
         },
         {
           "label": "Caravan Sites Act 1968",
-          "rank": 14
+          "rank": 15
         }
       ]
     },
@@ -689,8 +674,7 @@
       "delta": 0,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates"
+        "legislation"
       ],
       "offMatched": [
         {
@@ -709,7 +693,7 @@
         },
         {
           "label": "Higher-Risk Buildings regs",
-          "rank": 13
+          "rank": 1
         }
       ]
     },
@@ -742,8 +726,8 @@
       "archetype": "D",
       "scoreable": true,
       "off": 0.3333333333333333,
-      "on": 0.3333333333333333,
-      "delta": 0,
+      "on": 1,
+      "delta": 0.6666666666666667,
       "mode": "routed",
       "streams": [
         "legislation"
@@ -769,11 +753,11 @@
         },
         {
           "label": "ABCPA 2014 s.106",
-          "rank": null
+          "rank": 18
         },
         {
           "label": "XL Bully designation order 2023",
-          "rank": null
+          "rank": 16
         }
       ]
     },
@@ -786,7 +770,6 @@
       "delta": 0,
       "mode": "routed",
       "streams": [
-        "legislation",
         "caselaw"
       ],
       "offMatched": [
@@ -802,11 +785,11 @@
       "onMatched": [
         {
           "label": "Grainger plc v Nicholson",
-          "rank": 12
+          "rank": 2
         },
         {
           "label": "Forstater v CGD Europe",
-          "rank": 12
+          "rank": 2
         }
       ]
     },
@@ -854,7 +837,8 @@
       "streams": [
         "legislation",
         "debates",
-        "committees"
+        "committees",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -873,7 +857,7 @@
         },
         {
           "label": "Budget 2016 / Finance Bill 2017 debate",
-          "rank": 13
+          "rank": 1
         }
       ]
     },
@@ -887,8 +871,7 @@
       "mode": "routed",
       "streams": [
         "legislation",
-        "debates",
-        "committees"
+        "debates"
       ],
       "offMatched": [
         {
@@ -921,8 +904,7 @@
       "mode": "routed",
       "streams": [
         "legislation",
-        "debates",
-        "committees"
+        "debates"
       ],
       "offMatched": [
         {
@@ -954,9 +936,8 @@
       "delta": 0,
       "mode": "routed",
       "streams": [
-        "legislation",
         "debates",
-        "committees"
+        "guidance"
       ],
       "offMatched": [
         {
@@ -975,7 +956,7 @@
         },
         {
           "label": "Hansard 2003–04 enforcement passages",
-          "rank": 14
+          "rank": 2
         }
       ]
     },
@@ -991,7 +972,7 @@
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "guidance"
       ],
       "offMatched": [
         {
@@ -1024,8 +1005,7 @@
       "mode": "routed",
       "streams": [
         "legislation",
-        "debates",
-        "committees"
+        "debates"
       ],
       "offMatched": [
         {
@@ -1044,7 +1024,7 @@
         },
         {
           "label": "Fireworks Act 2003",
-          "rank": 3
+          "rank": 2
         }
       ]
     },
@@ -1053,14 +1033,15 @@
       "archetype": "F",
       "scoreable": true,
       "off": 1,
-      "on": 0.5,
-      "delta": -0.5,
+      "on": 1,
+      "delta": 0,
       "mode": "routed",
       "streams": [
         "legislation",
         "debates",
         "committees",
-        "caselaw"
+        "caselaw",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -1075,11 +1056,11 @@
       "onMatched": [
         {
           "label": "Dogs and Domestic Animals (Accommodation) Bill",
-          "rank": null
+          "rank": 1
         },
         {
           "label": "Renters (Reform) Bill 2023 / Renters’ Rights Act 2025 pets",
-          "rank": 4
+          "rank": 5
         }
       ]
     },
@@ -1093,8 +1074,7 @@
       "mode": "routed",
       "streams": [
         "legislation",
-        "debates",
-        "committees"
+        "debates"
       ],
       "offMatched": [
         {
@@ -1109,7 +1089,7 @@
       "onMatched": [
         {
           "label": "PR / PMB attempts",
-          "rank": 5
+          "rank": 3
         },
         {
           "label": "Parliamentary Voting System and Constituencies Act 2011",
@@ -1128,7 +1108,7 @@
       "streams": [
         "legislation",
         "debates",
-        "committees"
+        "guidance"
       ],
       "offMatched": [
         {
@@ -1143,11 +1123,11 @@
       "onMatched": [
         {
           "label": "Emergency First Aid Education Bill 2015",
-          "rank": 14
+          "rank": 13
         },
         {
           "label": "Children and Social Work Act 2017 s.34 (statutory RSHE)",
-          "rank": 18
+          "rank": 10
         }
       ]
     },
@@ -1156,14 +1136,11 @@
       "archetype": "B",
       "scoreable": true,
       "off": 0,
-      "on": 0,
-      "delta": 0,
+      "on": 0.16666666666666666,
+      "delta": 0.16666666666666666,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
+        "legislation"
       ],
       "offMatched": [
         {
@@ -1210,7 +1187,7 @@
         },
         {
           "label": "FSMA 2000 — framework Act (ukpga/2000/8)",
-          "rank": null
+          "rank": 1
         },
         {
           "label": "Post-Brexit onshoring SIs (uksi/2019/1390; uksi/2021/1388)",
@@ -1229,7 +1206,8 @@
       "streams": [
         "legislation",
         "debates",
-        "committees"
+        "committees",
+        "guidance"
       ],
       "offMatched": [
         {
@@ -1277,10 +1255,7 @@
       "delta": 0,
       "mode": "routed",
       "streams": [
-        "legislation",
-        "debates",
-        "committees",
-        "caselaw"
+        "legislation"
       ],
       "offMatched": [
         {
