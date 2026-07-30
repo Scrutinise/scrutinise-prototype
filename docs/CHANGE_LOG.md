@@ -1,6 +1,97 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## SEARCH — Query router (per-stream routing, generalises Stage-3 expansion) (2026-07-29 19:25 UTC)
+
+**Executes the CC brief "build the query router."** One new Gemini call (`routeQuery()`,
+`scrutinise-web/lib/lex/query-expansion.ts`) decides which of four streams — legislation /
+debates / committees / caselaw — a query belongs to and writes a tailored search string for
+each; everything after that is deterministic dispatch (`query-router.ts`, a config list of
+`{name, tier, types?, search}` — adding a stream later means adding a list entry, not touching
+logic). Flag-gated `LEX_QUERY_ROUTER` (default OFF), independent of `LEX_QUERY_EXPANSION` —
+router ON supersedes expansion for that call, the two are never combined. Fail-open
+(brief-mandated): a null/unparseable/empty router decision degrades to searching all streams
+unfiltered with the bare query — today's default behaviour — never an empty result.
+
+- **Audit finding (contradicts the brief's premise):** `query-expansion.ts` had NO existing
+  citation-vs-concept decision or "skip expansion for citations" logic — `expandQuery()` called
+  the LLM unconditionally for every query, always. The actual citation-pinning mechanism lives
+  entirely server-side (`citation-resolver.ts` + `fts-core.ts`'s `resolveInjections`), unrelated
+  to `query-expansion.ts`. The router's own prompt now makes this decision explicitly for the
+  first time (an exact-citation query routes ONLY to `legislation` with the citation string
+  unchanged — verified live: A1–A4 all route to `legislation` alone).
+- **Tier-filter mechanism confirmed real, not throwaway** (audit requirement): `fts-query-service.ts`'s
+  `POST /fts-search` already accepts a `tier` param, passed straight to `rankedSearch`'s existing
+  `tier` filter — both already production code, not the scoped B1/B3 test's throwaway script. The
+  platform-side gap was that `fts-search.ts`'s `runFtsSearch()` never threaded a `tier` through;
+  fixed (new optional 3rd param).
+- **debates vs committees** share the FTS `tier='parliamentary'`; split via the existing
+  `corpusToType()` display-mapping (already computed on every FTS hit) rather than inventing a
+  second server-side filter axis for two streams sharing one tier.
+- **Files:** `scrutinise-web/lib/lex/query-expansion.ts` (routeQuery + shared Gemini-call
+  helper factored out of expandQuery's fetch/timeout/parse mechanics), `query-router.ts` (new —
+  STREAMS config + dispatch), `fts-search.ts` (tier param threaded through), `search-gateway.ts`
+  (router capability flag + wiring, supersedes expansion when ON); `scripts/ingest/search/score-fts.ts`
+  (`--router` measurement mode, mirrors the existing `--ab` convention exactly).
+- **Bug found + fixed during measurement:** the harness's first two runs crashed (bare exit 255,
+  no JS stack trace — not a catchable error) after making it through 0–15 queries inconsistently.
+  Root cause: concurrent `rankedSearch` calls via `Promise.all` against the SAME in-process Lance
+  table handle. Fixed by making the harness's per-stream dispatch sequential (order doesn't affect
+  the score; confirmed clean on rerun, made it through all 43 queries with 0 crashes). **Flagged,
+  not fixed:** production's `query-router.ts` also dispatches streams via `Promise.all`, but each
+  goes through an independent HTTP round-trip to the Railway `fts-query-service` rather than a
+  shared in-process handle — a different execution model, so the same failure mode is NOT
+  confirmed to apply there, but it is also not confirmed safe. Worth a look if `fts-query-service`
+  ever shows unexplained crashes under concurrent load.
+- **Gold-set result (router ON vs OFF, full 43-query set, 0/34 fail-opens across every
+  recall@20 query):**
+
+  | archetype | recall@20 OFF | recall@20 ON | delta | n |
+  |---|---|---|---|---|
+  | A (citation) | 60.0% | 70.0% | **+10.0pp** | 5 |
+  | B (concept, the payoff target) | 33.3% | 45.8% | **+12.5pp** | 6 |
+  | C (legislation+guidance breadth) | 60.0% | 40.0% | **-20.0pp** | 5 |
+  | D (graph, floor) | 76.7% | 76.7% | 0.0pp | 5 |
+  | E (Hansard intent) | 90.0% | 90.0% | 0.0pp | 5 |
+  | F (bills/precedent) | 90.0% | 80.0% | -10.0pp | 5 |
+
+  **Both brief predictions confirmed: B rises (+12.5pp) and A improves rather than dilutes
+  (+10.0pp)** — A1–A4 (exact citations) route to `legislation` only and score identically to the
+  baseline (the citation-exact special case working as designed, zero dilution); A5 ("wear a
+  seatbelt", lay-phrased, not a citation) gains +50pp from multi-stream routing. B1 +75pp, B3
+  +33.3pp (both previously-buried concept queries now surfaced); B5 -33.3pp is the one B
+  regression (see `FTS_ROUTER_AB.md` for the per-source detail).
+  **C regresses (-20.0pp) — an honest, expected cost, not a bug:** `guidance` is explicitly a
+  deferred stream (brief scope: legislation/debates/committees/caselaw only), so a C-archetype
+  expected source living in the guidance tier (FCA/HMRC/etc.) is now unreachable by ANY routed
+  stream, where the unscoped baseline could at least stumble onto it via the shared candidate
+  pool. E flat; F -10.0pp (F3 -50pp — one precedent query lost a Bill-tier hit outside the routed
+  streams' reach). Full per-query + per-source breakdown: `docs/FTS_ROUTER_AB.md` /
+  `docs/fts_router_ab.json`.
+- **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C-archetype regression —
+  either accept it as the known cost of the current 4-stream scope (a `guidance` stream is
+  already a one-line config-list addition away, per query-router.ts's design) or add it before
+  flipping. `scrutinise-web` `tsc --noEmit` clean; `scripts/ingest` `tsc --noEmit` clean
+  (`query-router.ts`/`routeQuery`/`corpusToType` loaded via the same require-by-computed-path
+  trick as the existing `expandQuery` usage, invisible to tsc by design — same pattern the
+  `--ab` mode already relies on).
+
+---
+
+## CENTRAL — add "Communities" nav link (2026-07-30 00:11 UTC)
+
+**Real gap found by Charlie on live production, not by any of the earlier local/build testing:** the
+Stage 1 build (below) shipped `/communities` as a working, promoted, live route — confirmed via direct
+`curl` against `www.scrutinise.org` (signed-out redirect fires correctly, the invite page renders
+server-side) — but `components/PublicNav.tsx` was never given a link to it. The only discovery path was
+the "My Communities and teams" section on `/dashboard` itself; anyone elsewhere on the site had no way
+to find the feature at all. `tsc --noEmit` a build weren't going to catch this — it's a missing UI
+affordance, not a compile or runtime error. Fixed: `PublicNav.tsx` — a signed-in-only "Communities" link
+added to both the desktop and mobile nav, next to the dashboard-avatar link (same gating pattern as the
+existing admin-only links).
 
 ---
 

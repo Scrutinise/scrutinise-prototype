@@ -101,6 +101,12 @@ export default function PublicNav() {
             </>
           )}
 
+          {isLoaded && isSignedIn && (
+            <Link href="/communities" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              Communities
+            </Link>
+          )}
+
           {isLoaded && isSignedIn && user && (
             <div className="flex items-center gap-3">
               <Link href="/dashboard" title="Your dashboard">
@@ -183,6 +189,16 @@ export default function PublicNav() {
                   <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
                 </Button>
               </div>
+            )}
+
+            {isLoaded && isSignedIn && (
+              <Link
+                href="/communities"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Communities
+              </Link>
             )}
 
             {isLoaded && isSignedIn && user && (
