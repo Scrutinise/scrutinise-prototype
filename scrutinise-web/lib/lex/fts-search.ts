@@ -83,7 +83,7 @@ function legislationUrl(gid: string, ref: string): string {
 
 // ── the adapter ──────────────────────────────────────────────────────────────
 
-async function callFts(query: string, limit: number): Promise<FtsHit[]> {
+async function callFts(query: string, limit: number, tier?: string): Promise<FtsHit[]> {
   if (!FTS_URL) throw new Error('FTS_SEARCH_URL not set')
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), FTS_TIMEOUT_MS)
@@ -91,7 +91,7 @@ async function callFts(query: string, limit: number): Promise<FtsHit[]> {
     const res = await fetch(`${FTS_URL.replace(/\/$/, '')}/fts-search`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, limit }),
+      body: JSON.stringify(tier ? { query, limit, tier } : { query, limit }),
       signal: ctrl.signal,
     })
     if (!res.ok) throw new Error(`FTS ${res.status}: ${await res.text()}`)
@@ -102,14 +102,19 @@ async function callFts(query: string, limit: number): Promise<FtsHit[]> {
   }
 }
 
-/** Real FTS search → SearchResult[]. Falls back to the stub on any failure. */
-export async function runFtsSearch(keywords: string[], limit = 12): Promise<{ results: SearchResult[] }> {
+/**
+ * Real FTS search → SearchResult[]. Falls back to the stub on any failure.
+ * `tier` (optional) scopes the search server-side to one FTS tier — the same
+ * filter the query-router streams use (query-router.ts); omitted = unfiltered,
+ * today's default behaviour.
+ */
+export async function runFtsSearch(keywords: string[], limit = 12, tier?: string): Promise<{ results: SearchResult[] }> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
   if (!query) return { results: [] }
 
   try {
     // Overscan: nulls (guidance/bill/treaty/EU) get dropped, so ask for more.
-    const hits = await callFts(query, Math.max(limit * 3, 30))
+    const hits = await callFts(query, Math.max(limit * 3, 30), tier)
     if (!hits.length) return { results: [] }
 
     // Keep only hits that map to a Lex type; remember the type per id.

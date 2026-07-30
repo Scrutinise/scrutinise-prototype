@@ -17,12 +17,21 @@
  * (bills-api landed). Overall is reported BOTH including and excluding floors.
  *
  * Usage:
- *   tsx search/score-fts.ts        baseline (expansion OFF) → docs/FTS_S1b_SCORING.md + .json
- *   tsx search/score-fts.ts --ab   ALSO measure the Stage-3 payoff: for each recall@20
- *                                   query, run rankedSearch on the BARE query AND on the
- *                                   expandQuery-enriched set, and write the A/B delta →
- *                                   docs/FTS_STAGE3_AB.md + .json. Without --ab the harness
- *                                   is byte-identical to the baseline (expansion never runs).
+ *   tsx search/score-fts.ts            baseline (expansion OFF) → docs/FTS_S1b_SCORING.md + .json
+ *   tsx search/score-fts.ts --ab       ALSO measure the Stage-3 payoff: for each recall@20
+ *                                       query, run rankedSearch on the BARE query AND on the
+ *                                       expandQuery-enriched set, and write the A/B delta →
+ *                                       docs/FTS_STAGE3_AB.md + .json. Without --ab the harness
+ *                                       is byte-identical to the baseline (expansion never runs).
+ *   tsx search/score-fts.ts --router   ALSO measure the query-ROUTER payoff (CC brief "build
+ *                                       the query router"): for each recall@20 query, run
+ *                                       routeQuery() (the same LLM call search-gateway.ts uses
+ *                                       behind LEX_QUERY_ROUTER) and dispatch to each named
+ *                                       stream via rankedSearch tier-filtered (+ corpusToType
+ *                                       split for debates/committees, mirroring query-router.ts
+ *                                       exactly) → docs/FTS_ROUTER_AB.md + .json. A router
+ *                                       fail-open (null/empty decision) falls back to the bare
+ *                                       unfiltered query, same as search-gateway.ts.
  */
 import fs from 'fs'
 import path from 'path'
@@ -37,14 +46,33 @@ import { GOLD, GoldQuery, ARCHETYPE_META } from './gold-queries'
 // package's tsconfig rootDir, so a static import would trip TS6059 (as v26-pooled-smoke
 // does). tsc doesn't resolve computed-path require() → clean; tsx resolves the .ts.
 type Expansion = { anchors: string[]; termsOfArt: string[]; rephrasings: string[] }
-const { expandQuery } = require(path.join(__dirname, '../../../scrutinise-web/lib/lex/query-expansion')) as {
+const { expandQuery, routeQuery } = require(path.join(__dirname, '../../../scrutinise-web/lib/lex/query-expansion')) as {
   expandQuery: (keywords: string[], ideaContext: string) => Promise<Expansion>
+  routeQuery: (keywords: string[], ideaContext: string) => Promise<Record<string, string> | null>
+}
+// corpusToType is a pure function (only a type-only import of page1-config, erased at
+// compile — safe to require directly via the same computed-path trick as above).
+const { corpusToType } = require(path.join(__dirname, '../../../scrutinise-web/lib/lex/corpus-type-map')) as {
+  corpusToType: (corpus: string, tier: string, id: string) => string | null
 }
 
 const OUT_MD = path.join(__dirname, '../../../docs/FTS_S1b_SCORING.md')
 const OUT_JSON = path.join(__dirname, '../../../docs/fts_s1b_scores.json')
 const OUT_AB_MD = path.join(__dirname, '../../../docs/FTS_STAGE3_AB.md')
 const OUT_AB_JSON = path.join(__dirname, '../../../docs/fts_stage3_ab.json')
+const OUT_ROUTER_MD = path.join(__dirname, '../../../docs/FTS_ROUTER_AB.md')
+const OUT_ROUTER_JSON = path.join(__dirname, '../../../docs/fts_router_ab.json')
+
+// query-router.ts's STREAMS config, mirrored here (can't import it directly — it
+// imports fts-search.ts, which imports @/lib/prisma, outside this package's
+// tsconfig rootDir and not resolvable via the require-by-computed-path trick).
+// Keep in sync if the stream list in query-router.ts changes.
+const ROUTER_STREAM_TIER: Record<string, string> = {
+  legislation: 'legislation', debates: 'parliamentary', committees: 'parliamentary', caselaw: 'caselaw',
+}
+const ROUTER_STREAM_TYPES: Record<string, string[] | undefined> = {
+  legislation: undefined, debates: ['DEBATE'], committees: ['COMMITTEE'], caselaw: undefined,
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -55,6 +83,20 @@ async function expandWithRetry(keywords: string[], tries = 4) {
   for (let i = 0; i < tries; i++) {
     last = await expandQuery(keywords, '')
     if (last.anchors.length || last.termsOfArt.length || last.rephrasings.length) return last
+    if (i < tries - 1) await sleep(2500)
+  }
+  return last
+}
+
+/** Retry routeQuery over transient Gemini 503/overload — but ONLY retry a null
+ *  (transient failure/unparseable); a parsed-but-empty `{}` (the LLM judged zero
+ *  streams relevant) is a real decision, not a fault, so it is returned as-is
+ *  and the caller fails open exactly as search-gateway.ts does. */
+async function routeWithRetry(keywords: string[], tries = 4): Promise<Record<string, string> | null> {
+  let last: Record<string, string> | null = null
+  for (let i = 0; i < tries; i++) {
+    last = await routeQuery(keywords, '')
+    if (last !== null) return last
     if (i < tries - 1) await sleep(2500)
   }
   return last
@@ -150,9 +192,18 @@ async function main() {
     console.log('[score] A/B MODE — expansion ON variant computed for every recall@20 query')
   }
 
+  // Router mode: --router measures the query-router payoff (router OFF vs ON).
+  const ROUTER = process.argv.includes('--router')
+  if (ROUTER) {
+    process.env.LEX_QUERY_ROUTER = 'true'
+    console.log('[score] ROUTER MODE — router ON variant computed for every recall@20 query')
+  }
+
   type AbResult = { terms: string[]; anchors: string[]; on: QueryScore }
+  type RouterResult = { streams: string[]; mode: 'routed' | 'fail-open'; on: QueryScore }
   const scores: QueryScore[] = []
   const ab: (AbResult | null)[] = [] // parallel to scores; null when not computed
+  const router: (RouterResult | null)[] = [] // parallel to scores; null when not computed
 
   for (const q of GOLD) {
     // OFF (baseline): retrieval runs for every query — for principle/pending queries
@@ -173,11 +224,54 @@ async function main() {
     }
     ab.push(abRes)
 
+    // ON (router): only for recall@20 queries. Mirrors search-gateway.ts exactly —
+    // dispatch to each named stream via a tier-filtered rankedSearch call (+ the
+    // corpusToType split for debates/committees sharing the parliamentary tier),
+    // merge, sort by score, take top 20. A null/empty decision fails open to the
+    // bare unfiltered query, same as production.
+    let routerRes: RouterResult | null = null
+    if (ROUTER && q.metric === 'recall@20') {
+      const route = await routeWithRetry([q.query])
+      const streamNames = route ? Object.keys(route) : []
+      let routedHits: Hit[]
+      let mode: 'routed' | 'fail-open'
+      if (route && streamNames.length) {
+        mode = 'routed'
+        // Sequential, NOT Promise.all: concurrent rankedSearch calls against the SAME
+        // in-process Lance table handle crashed the harness twice (bare exit 255, no JS
+        // stack trace — a native/Rust-binding fault under concurrent access, not a
+        // catchable error). Measurement-only concern; order doesn't affect the score.
+        // Flagged separately for query-router.ts's production dispatch, which also uses
+        // Promise.all but through independent HTTP calls to fts-query-service rather than
+        // a shared in-process handle — a different execution model, not necessarily the
+        // same risk, but unconfirmed either way.
+        const perStream: Hit[][] = []
+        for (const name of streamNames) {
+          const tier = ROUTER_STREAM_TIER[name]
+          if (!tier) { perStream.push([]); continue } // unknown stream name from the LLM — ignore, don't crash
+          const tailored = route[name]
+          const streamHits = await rankedSearch(table, tailored, { tier, limit: 20, actIndex })
+          const types = ROUTER_STREAM_TYPES[name]
+          perStream.push(streamHits.filter((h) => {
+            const t = corpusToType(h.corpus, h.tier, h.id)
+            return types ? (t !== null && types.includes(t)) : t !== null
+          }))
+        }
+        routedHits = perStream.flat().sort((a, b) => b.score - a.score).slice(0, 20)
+      } else {
+        mode = 'fail-open'
+        routedHits = hits // identical call already made above for the OFF baseline
+      }
+      routerRes = { streams: streamNames, mode, on: scoreQuery(q, routedHits) }
+    }
+    router.push(routerRes)
+
     const status = q.metric === 'lesson' ? 'principle(0–2 uncalibrated)'
       : !q.scoreable ? 'pending(TODO)' : (q.floor ? '(floor)' : '')
     const num = q.metric === 'recall@20' && q.scoreable ? `recall@20=${pctStr(s.recall)} mrr=${s.mrr.toFixed(3)}` : ''
     const abStr = abRes ? ` | ON=${pctStr(abRes.on.recall)} (${ppDelta(abRes.on.recall - s.recall)}, +${abRes.terms.length} terms)` : ''
-    console.log(`  ${q.id} ${q.archetype} ${num} ${status}${abStr}`.trimEnd())
+    const routerStr = routerRes ? ` | ROUTER=${pctStr(routerRes.on.recall)} (${ppDelta(routerRes.on.recall - s.recall)}, ${routerRes.mode}:${routerRes.streams.join(',') || 'none'})` : ''
+    console.log(`  ${q.id} ${q.archetype} ${num} ${status}${abStr}${routerStr}`.trimEnd())
   }
 
   // ── aggregates ──────────────────────────────────────────────────────────────
@@ -303,6 +397,76 @@ async function main() {
     console.log(`[score][A/B] archetype B (payoff): OFF ${pctStr(mean(offR('B')))} → ON ${pctStr(mean(onR('B')))} (${ppDelta(mean(onR('B')) - mean(offR('B')))})`)
     console.log(`[score][A/B] archetype A (flat?):  OFF ${pctStr(mean(offR('A')))} → ON ${pctStr(mean(onR('A')))} (${ppDelta(mean(onR('A')) - mean(offR('A')))})`)
     console.log(`[score][A/B] wrote ${OUT_AB_MD} + ${OUT_AB_JSON}`)
+  }
+
+  // ── Router report (per-stream routing payoff: recall@20 OFF vs ON) ───────────
+  if (ROUTER) {
+    const pairs = scores
+      .map((s, i) => ({ s, r: router[i] }))
+      .filter((x): x is { s: QueryScore; r: RouterResult } => x.r !== null)
+    const offR = (a: string) => pairs.filter((x) => x.s.q.archetype === a).map((x) => x.s.recall)
+    const onR  = (a: string) => pairs.filter((x) => x.s.q.archetype === a).map((x) => x.r.on.recall)
+    const archOf = Array.from(new Set(pairs.map((x) => x.s.q.archetype)))
+    const failOpenCount = pairs.filter((x) => x.r.mode === 'fail-open').length
+
+    const md3: string[] = []
+    md3.push('# FTS query ROUTER — per-stream routing A/B (recall@20 OFF vs ON)', '')
+    md3.push(`*Generated ${new Date().toISOString()} against the Lance FTS dataset (${await table.countRows()} rows). For each recall@20 query: \`rankedSearch\` on the BARE query (OFF) vs \`routeQuery\`'s per-stream decision dispatched to tier-filtered \`rankedSearch\` calls, merged and re-sorted by score (ON) — the same \`routeQuery\`/query-router.ts path search-gateway.ts uses behind \`LEX_QUERY_ROUTER\` (Gemini 2.5 Flash). Router fail-opens (null/empty decision, ${failOpenCount}/${pairs.length} queries) fall back to the identical OFF result, so those queries show a flat delta by construction, not a router win/loss.*`, '')
+    md3.push('## Headline — archetype B (payoff, the vocabulary-bridge target) and A (citation queries — expect flat or improved, NOT diluted)', '')
+    md3.push('| archetype | stream | recall@20 OFF | recall@20 ON | delta | n |', '|---|---|---|---|---|---|')
+    for (const a of ['B', 'A'] as const) {
+      md3.push(`| ${a} | ${ARCHETYPE_META[a].stream} | ${pctStr(mean(offR(a)))} | ${pctStr(mean(onR(a)))} | **${ppDelta(mean(onR(a)) - mean(offR(a)))}** | ${offR(a).length} |`)
+    }
+    md3.push('')
+    md3.push('## All recall@20 archetypes', '')
+    md3.push('| archetype | recall@20 OFF | recall@20 ON | delta | n |', '|---|---|---|---|---|')
+    for (const a of archOf) md3.push(`| ${a} | ${pctStr(mean(offR(a)))} | ${pctStr(mean(onR(a)))} | ${ppDelta(mean(onR(a)) - mean(offR(a)))} | ${offR(a).length} |`)
+    md3.push('')
+    md3.push('## Per-query recall@20 OFF vs ON + routing decision', '')
+    md3.push('| id | arch | OFF | ON | delta | mode | streams routed |', '|---|---|---|---|---|---|---|')
+    for (const x of pairs) md3.push(`| ${x.s.q.id} | ${x.s.q.archetype} | ${pctStr(x.s.recall)} | ${pctStr(x.r.on.recall)} | ${ppDelta(x.r.on.recall - x.s.recall)} | ${x.r.mode} | ${x.r.streams.join(', ') || '—'} |`)
+    md3.push('')
+    md3.push('## Archetype A — per-source OFF vs ON (citation dilution check)', '')
+    for (const x of pairs.filter((p) => p.s.q.archetype === 'A')) {
+      md3.push(`### ${x.s.q.id} — ${x.s.q.query}`)
+      md3.push(`OFF ${pctStr(x.s.recall)} → ON ${pctStr(x.r.on.recall)} (${ppDelta(x.r.on.recall - x.s.recall)}) · mode: ${x.r.mode} · streams: ${x.r.streams.join(', ') || '—'}`, '')
+      md3.push('| expected source | OFF | ON |', '|---|---|---|')
+      x.s.matched.forEach((mOff, si) => {
+        const mOn = x.r.on.matched[si]
+        const f = (m: { rank: number | null }) => (m.rank ? `✓ @${m.rank}` : '✗')
+        md3.push(`| ${mOff.label} | ${f(mOff)} | ${f(mOn)} |`)
+      })
+      md3.push('')
+    }
+    md3.push('## Archetype B — per-source OFF vs ON (which streams recovered the concept query)', '')
+    for (const x of pairs.filter((p) => p.s.q.archetype === 'B')) {
+      md3.push(`### ${x.s.q.id} — ${x.s.q.query}`)
+      md3.push(`OFF ${pctStr(x.s.recall)} → ON ${pctStr(x.r.on.recall)} (${ppDelta(x.r.on.recall - x.s.recall)}) · mode: ${x.r.mode} · streams: ${x.r.streams.join(', ') || '—'}`, '')
+      md3.push('| expected source | OFF | ON |', '|---|---|---|')
+      x.s.matched.forEach((mOff, si) => {
+        const mOn = x.r.on.matched[si]
+        const f = (m: { rank: number | null }) => (m.rank ? `✓ @${m.rank}` : '✗')
+        md3.push(`| ${mOff.label} | ${f(mOff)} | ${f(mOn)} |`)
+      })
+      md3.push('')
+    }
+    fs.writeFileSync(OUT_ROUTER_MD, md3.join('\n'))
+    fs.writeFileSync(OUT_ROUTER_JSON, JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      failOpenCount, totalQueried: pairs.length,
+      byArchetype: archOf.map((a) => ({ archetype: a, n: offR(a).length, off: mean(offR(a)), on: mean(onR(a)), delta: mean(onR(a)) - mean(offR(a)) })),
+      queries: pairs.map((x) => ({
+        id: x.s.q.id, archetype: x.s.q.archetype, scoreable: x.s.q.scoreable,
+        off: x.s.recall, on: x.r.on.recall, delta: x.r.on.recall - x.s.recall,
+        mode: x.r.mode, streams: x.r.streams,
+        offMatched: x.s.matched, onMatched: x.r.on.matched,
+      })),
+    }, null, 2))
+    console.log('')
+    console.log(`[score][ROUTER] archetype B (payoff): OFF ${pctStr(mean(offR('B')))} → ON ${pctStr(mean(onR('B')))} (${ppDelta(mean(onR('B')) - mean(offR('B')))})`)
+    console.log(`[score][ROUTER] archetype A (dilution check): OFF ${pctStr(mean(offR('A')))} → ON ${pctStr(mean(onR('A')))} (${ppDelta(mean(onR('A')) - mean(offR('A')))})`)
+    console.log(`[score][ROUTER] fail-opens: ${failOpenCount}/${pairs.length} queries`)
+    console.log(`[score][ROUTER] wrote ${OUT_ROUTER_MD} + ${OUT_ROUTER_JSON}`)
   }
 }
 

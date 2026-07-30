@@ -18,7 +18,8 @@ import type { SearchResult } from './page1-config'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
-import { expandQuery } from './query-expansion'
+import { expandQuery, routeQuery } from './query-expansion'
+import { runRoutedSearch } from './query-router'
 
 // ── Query intent (§14.2) — owned HERE, aligned to the search side's stream taxonomy.
 // Add an intent when a new Lex moment needs retrieval; tell the search side so they
@@ -32,6 +33,7 @@ export type SearchIntent =
 // switched on when the search side ships it AND the gold set rewards it. Default OFF.
 export interface CapabilityFlags {
   expansion: boolean      // Stage-3 LLM query expansion (shipped; A/B on the gold set)
+  router: boolean         // per-stream query routing (generalises expansion; A/B on the gold set)
   webOrientation: boolean // Gemini-grounded current-state pass (not shipped)
   vector: boolean         // dense retrieval (not shipped)
   reranker: boolean       // cross-encoder rerank (not shipped)
@@ -42,6 +44,7 @@ export function capabilityFlags(): CapabilityFlags {
   return {
     // Back-compat: the expansion switch is the existing LEX_QUERY_EXPANSION env.
     expansion: process.env.LEX_QUERY_EXPANSION === 'true',
+    router: process.env.LEX_QUERY_ROUTER === 'true',
     webOrientation: process.env.LEX_WEB_ORIENTATION === 'true',
     vector: process.env.LEX_SEARCH_VECTOR === 'true',
     reranker: process.env.LEX_SEARCH_RERANKER === 'true',
@@ -68,7 +71,7 @@ export interface GatewayResult {
   /** Grouped by display type, ≤3 per type, ~20 cap — the panel-ready set. */
   grouped: SearchResult[]
   /** Observability: which flags fired + terms the expansion added (query-only). */
-  meta: { flags: CapabilityFlags; expansionAdded: string[] }
+  meta: { flags: CapabilityFlags; expansionAdded: string[]; routedStreams?: string[] }
 }
 
 /**
@@ -85,38 +88,68 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     return { intent: q.intent, results: [], grouped: [], meta: { flags, expansionAdded: [] } }
   }
 
-  // 2. Stage-3 expansion (capability flag). expandQuery is itself a no-op unless
-  //    LEX_QUERY_EXPANSION=true; we also gate here so the flag is the single switch.
-  //    Feeds the FTS query ONLY — never the briefing text (grounding guardrail §3).
-  let queryKeywords = keywords
+  // 2. Query routing (capability flag) generalises Stage-3 expansion into
+  //    per-stream retrieval: ONE LLM call decides which stream(s) the query
+  //    belongs to and writes a tailored search string for each, then dispatch
+  //    is pure deterministic code (query-router.ts). Router ON supersedes
+  //    expansion for this call — it is the next generation of the same
+  //    enrichment step, not an additional one, so the two are never combined.
+  //    FAIL-OPEN (brief-mandated): if routeQuery returns null (disabled,
+  //    missing key, HTTP failure, timeout, unparseable JSON) OR a parsed-but-
+  //    empty decision (the LLM named zero streams — indistinguishable from a
+  //    failure for our purposes), degrade to searching ALL streams unfiltered
+  //    with the bare query — i.e. today's current (both-flags-off) behaviour.
+  //    A router failure must never mean an empty result.
+  let ftsResults: SearchResult[]
   let expansionAdded: string[] = []
-  if (flags.expansion) {
-    const expansion = await expandQuery(keywords, q.ideaContext ?? '')
-    const expanded = [
-      ...new Set([...keywords, ...expansion.anchors, ...expansion.termsOfArt, ...expansion.rephrasings]),
-    ]
-    expansionAdded = expanded.filter((k) => !keywords.includes(k))
-    queryKeywords = expanded
-    if (expansionAdded.length) {
-      console.log('[search-gateway] expansion terms added', {
-        intent: q.intent,
-        original: keywords,
-        added: expansionAdded,
-      })
+  let routedStreams: string[] | undefined
+  // Used only by the vector-fusion step below (4b), which routing doesn't touch
+  // (out of this brief's scope) — defaults to the bare keywords when routed.
+  let queryKeywords = keywords
+  if (flags.router) {
+    const route = await routeQuery(keywords, q.ideaContext ?? '')
+    const streamNames = route ? Object.keys(route) : []
+    if (route && streamNames.length) {
+      routedStreams = streamNames
+      ftsResults = await runRoutedSearch(route, limit)
+      console.log('[search-gateway] router dispatched', { intent: q.intent, streams: streamNames })
+    } else {
+      console.log('[search-gateway] router fail-open — searching all streams unfiltered', { intent: q.intent })
+      ftsResults = (await runFtsSearch(keywords, limit)).results
     }
-  }
+  } else {
+    // 2b. Stage-3 expansion (capability flag). expandQuery is itself a no-op
+    //     unless LEX_QUERY_EXPANSION=true; we also gate here so the flag is the
+    //     single switch. Feeds the FTS query ONLY — never the briefing text
+    //     (grounding guardrail §3).
+    if (flags.expansion) {
+      const expansion = await expandQuery(keywords, q.ideaContext ?? '')
+      const expanded = [
+        ...new Set([...keywords, ...expansion.anchors, ...expansion.termsOfArt, ...expansion.rephrasings]),
+      ]
+      expansionAdded = expanded.filter((k) => !keywords.includes(k))
+      queryKeywords = expanded
+      if (expansionAdded.length) {
+        console.log('[search-gateway] expansion terms added', {
+          intent: q.intent,
+          original: keywords,
+          added: expansionAdded,
+        })
+      }
+    }
 
-  // 3. Web orientation (capability flag; OFF — the search side hasn't shipped it).
-  //    Reserved: a Gemini-grounded current-state pass (SEARCH_STRATEGY §3b). Web
-  //    steers and orients; the corpus is what gets cited as law.
-  if (flags.webOrientation) {
-    // Not wired until the search side ships it; flag exists so only this file changes.
-  }
+    // 3. Web orientation (capability flag; OFF — the search side hasn't shipped it).
+    //    Reserved: a Gemini-grounded current-state pass (SEARCH_STRATEGY §3b). Web
+    //    steers and orients; the corpus is what gets cited as law.
+    if (flags.webOrientation) {
+      // Not wired until the search side ships it; flag exists so only this file changes.
+    }
 
-  // 4. Retrieval. The adapter overscans and drops corpus families with no display
-  //    type; it also owns the canonical SearchResult[] mapping (§14.4 — the type
-  //    taxonomy is owned by the search side via corpus-type-map, consumed here).
-  const { results: ftsResults } = await runFtsSearch(queryKeywords, limit)
+    // 4. Retrieval. The adapter overscans and drops corpus families with no display
+    //    type; it also owns the canonical SearchResult[] mapping (§14.4 — the type
+    //    taxonomy is owned by the search side via corpus-type-map, consumed here).
+    ftsResults = (await runFtsSearch(queryKeywords, limit)).results
+  }
 
   // 4b. Dense retrieval (capability flag; OFF by default — LEX_SEARCH_VECTOR).
   //     The full-corpus gemini-embedding-001 @768-d layer (docs/VECTOR_EMBED_REPORT.md).
@@ -139,7 +172,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //    when the taxonomy lands as a shared corpus-type-map, only the gateway changes.
   const grouped = groupForPanel(results)
 
-  return { intent: q.intent, results, grouped, meta: { flags, expansionAdded } }
+  return { intent: q.intent, results, grouped, meta: { flags, expansionAdded, routedStreams } }
 }
 
 // ── fusion (§14, vector layer) — the SHIPPED spec from docs/FUSION_REPORT.md ──

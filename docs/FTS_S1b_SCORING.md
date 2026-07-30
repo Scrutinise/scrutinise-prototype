@@ -1,6 +1,6 @@
 # FTS S1b — scoring report
 
-*Generated 2026-07-01T15:59:47.419Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
+*Generated 2026-07-29T19:24:39.623Z against the Lance FTS dataset. Expected-sources are CCh's UNVALIDATED draft — these numbers are PROVISIONAL; the top-20 dumps below are the validation artefact.*
 
 ## Headline
 
@@ -1546,7 +1546,7 @@ Top-20 retrieved:
 
 Expected sources:
 - ✓ @1 — Emergency First Aid Education Bill 2015
-- ✓ @7 — Children and Social Work Act 2017 s.34 (statutory RSHE)
+- ✓ @8 — Children and Social Work Act 2017 s.34 (statutory RSHE)
 
 Top-20 retrieved:
  1. [parliamentary/pwdata-debates] score=92.832↑T `pwdata-debates:debates2015-11-20a:278`
@@ -1555,40 +1555,40 @@ Top-20 retrieved:
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — I did not make a statement; I said that I was speaking about my personal opinion. I do not want to undermine the superb training that our voluntary organisation
  3. [other/petitions] score=92.615↑T `petitions:764819:1`
     **Make first aid education compulsory in all UK schools** — Make first aid education compulsory in all UK schools State: rejected · Signatures: 10 We want the Government to make first aid training a compulsory part of th
- 4. [parliamentary/pwdata-wrans] score=90.477↑T `pwdata-wrans:answers2012-06-28d:108`
+ 4. [other/petitions] score=91.471↑T `petitions:643606:1`
+    **Make it compulsory for schools to first aid train all staff** — Make it compulsory for schools to first aid train all staff State: closed · Signatures: 60 · Opened: 2023-09-18 · Departments: Department for Education This cou
+ 5. [parliamentary/pwdata-wrans] score=90.477↑T `pwdata-wrans:answers2012-06-28d:108`
     **EDUCATION — First Aid: Training** — Q (Justin Tomlinson): To ask the Secretary of State for Education (1) how many (a) teachers and (b) childminders in (i) Swindon and (ii) England are first aid t
- 5. [parliamentary/pwdata-debates] score=90.028↑T `pwdata-debates:debates2015-11-20a:272`
+ 6. [parliamentary/pwdata-debates] score=90.028↑T `pwdata-debates:debates2015-11-20a:272`
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — May I clarify the point that I made in an earlier intervention? If somebody has a pulse that cannot be detected, or if somebody is breathing very shallowly, som
- 6. [other/petitions] score=86.874↑T `petitions:767525:1`
+ 7. [other/petitions] score=86.874↑T `petitions:767525:1`
     **Make First Aid Education Mandatory in all UK schools.** — Make First Aid Education Mandatory in all UK schools. State: rejected · Signatures: 6 Introduce compulsory first aid education in all UK schools, including CPR,
- 7. [parliamentary/pwdata-wrans] score=86.750↑T `pwdata-wrans:answers2020-12-08:153`
+ 8. [parliamentary/pwdata-wrans] score=86.750↑T `pwdata-wrans:answers2020-12-08:153`
     **Department for Education — First Aid: Secondary Education** — Q (Andrew Rosindell): To ask the Secretary of State for Education, what assessment he has made of the potential merits of making first-aid training a compulsory
- 8. [other/petitions] score=85.811↑T `petitions:754302:1`
+ 9. [other/petitions] score=85.811↑T `petitions:754302:1`
     **Make First Aid Education Compulsory for All Secondary School Students** — Make First Aid Education Compulsory for All Secondary School Students State: rejected · Signatures: 19 We call on the UK Government to introduce compulsory firs
- 9. [other/petitions] score=85.648↑T `petitions:634117:1`
+10. [other/petitions] score=85.648↑T `petitions:634117:1`
     **Make first aid a compulsory part of the school curriculum** — Make first aid a compulsory part of the school curriculum State: rejected · Signatures: 7 Make first aid, recovery position, etc. a compulsory part of the schoo
-10. [parliamentary/pwdata-wrans] score=85.528↑T `pwdata-wrans:answers2025-10-14:187`
+11. [parliamentary/pwdata-wrans] score=85.528↑T `pwdata-wrans:answers2025-10-14:187`
     **Department for Education — Teachers: First Aid** — Q (Damien Egan): To ask the Secretary of State for Education, whether her Department has made an assessment of the potential merits of introducing introducing c
-11. [other/petitions] score=85.152↑T `petitions:644245:1`
+12. [other/petitions] score=85.152↑T `petitions:644245:1`
     **Make First Aid & Mental Health 1st Aid mandatory in schools & further education** — Make First Aid & Mental Health 1st Aid mandatory in schools & further education State: rejected · Signatures: 7 I would like Parliament to make an Act stating t
-12. [parliamentary/pwdata-debates] score=84.861↑T `pwdata-debates:debates2015-11-20a:281`
+13. [parliamentary/pwdata-debates] score=84.861↑T `pwdata-debates:debates2015-11-20a:281`
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — My hon. Friend makes a very good point that merely passing a piece of legislation and enshrining something in law does nothing to guarantee the outcome at the e
-13. [parliamentary/pwdata-debates] score=83.756↑T `pwdata-debates:debates2015-11-20a:279`
+14. [parliamentary/pwdata-debates] score=83.756↑T `pwdata-debates:debates2015-11-20a:279`
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — As always, it is a great pleasure to follow my hon. Friend the Member for South East Cornwall (Mrs Murray) . I congratulate the hon. Member for Erith and Thames
-14. [other/petitions] score=83.436↑T `petitions:642184:1`
+15. [other/petitions] score=83.436↑T `petitions:642184:1`
     **Make learning about money (taxes, investments, bills) compulsory in schools** — Make learning about money (taxes, investments, bills) compulsory in schools State: rejected · Signatures: 6 I would like Parliament to add compulsory presentati
-15. [parliamentary/pwdata-wrans] score=82.247↑T `pwdata-wrans:answers2021-07-07:82`
+16. [parliamentary/pwdata-wrans] score=82.247↑T `pwdata-wrans:answers2021-07-07:82`
     **Department for Education — Secondary Education: First Aid** — Q (Sir Mark Hendrick): To ask the Secretary of State for Education, what assessment he has made of the potential merits of including CPR as a compulsory part of
-16. [parliamentary/pwdata-wrans] score=81.715↑T `pwdata-wrans:answers2018-07-19:50`
+17. [parliamentary/pwdata-wrans] score=81.715↑T `pwdata-wrans:answers2018-07-19:50`
     **Department of Health and Social Care — Mental Health: First Aid** — Q (Adam Afriyie): To ask the Secretary of State for Health and Social Care, what steps his Department has taken to promote mental health first aid. A (Jackie Do
-17. [other/petitions] score=81.339↑T `petitions:741416:1`
+18. [other/petitions] score=81.339↑T `petitions:741416:1`
     **Make First Aid and Seizure Training Mandatory in All Schools** — Make First Aid and Seizure Training Mandatory in All Schools State: rejected · Signatures: 21 Change the law so that all schools must provide age-appropriate fi
-18. [parliamentary/pwdata-debates] score=81.031↑T `pwdata-debates:debates2015-11-20a:249`
+19. [parliamentary/pwdata-debates] score=81.031↑T `pwdata-debates:debates2015-11-20a:249`
     **Compulsory Emergency First Aid Education (State-funded Secondary Schools) Bill** — It would be very worth while if everybody joined the scouts. It would be very worth while if everybody joined the guides. It would be very worth while if everyb
-19. [parliamentary/pwdata-westminster] score=81.008↑T `pwdata-westminster:westminster2015-03-10a:31`
+20. [parliamentary/pwdata-westminster] score=81.008↑T `pwdata-westminster:westminster2015-03-10a:31`
     **First Aid Techniques: National Curriculum — [Sir David Amess intheChair]** — The hon. and learned Gentleman clearly caught sight of my speech before he raised his point. I was about to go on to say that Mandy Hobbs was really lucky, too.
-20. [parliamentary/pwdata-westminster] score=80.098↑T `pwdata-westminster:westminster2015-03-10a:58`
-    **First Aid Techniques: National Curriculum — [Sir David Amess intheChair]** — I congratulate my hon. Friend the Member for Bolton West (Julie Hilling) on securing the debate. She has been assiduous in ensuring that the rest of us are held
 
 ### B6 (B/H2)
 *Query:* I want to revoke MiFID II
@@ -1638,11 +1638,11 @@ Top-20 retrieved:
     10 In Part 31 (Behaviour orders)— a in rule 31.1 (When this Part applies), in paragraph (1) for “make, vary or revoke” substitute “make, vary, renew, discharge 
 17. [legislation/si-2010plus] score=37.014 `si-2010plus:uksi/2025/909:rule-32.2`
     32.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
-18. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2012/1726:article-44.2`
+18. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2013/1554:article-44.2`
     **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
 19. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2014/1610:article-44.2`
     **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
-20. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2013/1554:article-44.2`
+20. [legislation/si-2010plus] score=36.881 `si-2010plus:uksi/2012/1726:article-44.2`
     **Application by responsible officer or supervisor** — 44.2 1 This rule applies where— a the responsible officer or supervisor wants the court to— i deal with a defendant for failure to comply with an order to which
 
 ### G1 (G/H1) [PRINCIPLE-STREAM] — PRINCIPLE (0–2, uncalibrated)
@@ -2227,11 +2227,11 @@ Top-20 retrieved:
     **Bill 4019 — publication 6** — 1 Public Office (Accountability) Bill 2025 Briefing for Committee Stage, House of Commons, November 2025 1. Hillsborough Law Now (HLN) has worked closely with t
 16. [parliamentary/bills-api] score=83.300↑T `bills-api:4019:7`
     **Bill 4019 — publication 7** — Campaign Group Statement – The Chinook Justice Campaign Submitted by: The Chinook Justice Campaign Bill: Public Office (Accountability) Bill Stage: House of Com
-17. [parliamentary/committees-evidence] score=82.644↑T `committees-evidence:writtenevidence:128967:220290`
+17. [parliamentary/pwdata-debates] score=82.849↑T `pwdata-debates:debates2026-07-14a:263`
+    **Public Office (Accountability) Bill — New Clause 8 - Information contained in public records** — With this it will be convenient to discuss the following: Government new clause 9. New clause 1—Post-legislative assessment of the legal duty of candour for pub
+18. [parliamentary/pwdata-debates] score=82.849↑T `pwdata-debates:debates2026-07-14a:263`
+    **Public Office (Accountability) Bill — New Clause 8 - Information contained in public records** — With this it will be convenient to discuss the following: Government new clause 9. New clause 1—Post-legislative assessment of the legal duty of candour for pub
+19. [parliamentary/committees-evidence] score=82.644↑T `committees-evidence:writtenevidence:128967:220290`
     **Statutory Inquiries — STI0014** — Written Evidence from Pete Weatherby KC and Anna Morris KC (STI0014) Pete Weatherby KC I have been a barrister for 32 years, 12 of them in silk. A significant p
-18. [parliamentary/committees-reports] score=82.569↑T `committees-reports:publication:44986:223253`
+20. [parliamentary/committees-reports] score=82.569↑T `committees-reports:publication:44986:223253`
     **Report: Third Report - Human rights and the proposal for a “Hillsborough Law”** — House of Lords House of Commons Joint Committee on Human Rights Human rights and the proposal for a “Hillsborough Law” Third Report of Session 2023–24 Report, t
-19. [parliamentary/pwdata-westminster] score=82.548↑T `pwdata-westminster:westminster2025-09-03a:77`
-    **Duty of Candour for Public Authorities and Legal Representation for Bereaved Families — [Wera Hobhou** — It is a pleasure to speak in this debate. I congratulate my hon. Friend the Member for Liverpool West Derby (Ian Byrne) on securing it. The Government committed
-20. [parliamentary/niassembly-hansard] score=82.380↑T `niassembly-hansard:416633:415`
-    **NI Assembly: Private Members' Business — Statutory Duty of Candour** — A statutory and legally enforceable duty of candour in our health and social care system is urgently needed on both an organisational and individual basis. Alth
