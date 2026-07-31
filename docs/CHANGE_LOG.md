@@ -78,13 +78,15 @@ entry is the scorecard + sprint outcome.
   reads for Lex/analysis, kept separate from `scrutinise-web/lib/search.ts` (analytical vs
   full-text).
 - **`tsc --noEmit` clean** (`scripts/stats/tsconfig.json`, new — scoped to this folder only).
-- **DB choice: NOT decided, NOT provisioned — Charlie's call per brief §9.** Given the measured
-  size (tens–low-hundreds of MB), cost is trivial either way; CC's recommendation is a **new,
-  separate Neon project** (managed backups/branching, and — being a genuinely new project —
-  it does not compete with the corpus Neon's already-tight ~16/17.5 GB headroom) over a
-  self-managed Hetzner Postgres instance, whose only edge at this data size is a few dollars a
-  month against real operational overhead (patching, backups, no branching). Nothing has been
-  provisioned; `STATS_DATABASE_URL` is unset everywhere.
+- **DB choice DECIDED, NOT YET PROVISIONED.** Charlie confirmed CC's recommendation — a new,
+  separate Neon project (managed backups/branching, and — being a genuinely new project — it
+  does not compete with the corpus Neon's already-tight ~16/17.5 GB headroom) over a
+  self-managed Hetzner Postgres instance. **Provisioning itself is on hold**: this environment
+  has no stored Neon API key and `neonctl`'s login needs a browser it doesn't have, so CC
+  cannot create the project unassisted — it needs either Charlie creating it in the Neon
+  console (pasting back the pooled + direct connection strings) or a Neon API key. Charlie
+  chose to hold off this session rather than hand over either. `STATS_DATABASE_URL` remains
+  unset everywhere; nothing costing money has been touched.
 - **NOT built this sprint:** the actual DB (pending the above), `seed-catalogue.ts`/
   `ingest-handlers.ts` run for real, the Railway cron wiring for `refresh-scheduler.ts`, full
   Lex tool-calling integration (brief explicitly scopes this as a follow-on), Phase B/C sources

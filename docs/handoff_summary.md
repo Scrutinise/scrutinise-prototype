@@ -55,14 +55,17 @@ spine)" (2026-07-31 00:03 UTC) — not repeated here.
   partial, see CHANGE_LOG for the extrapolation). Honest read: full Phase A UK spine likely
   lands in the tens-to-low-hundreds of MB, not the brief's "single-digit to low-tens of GB"
   expectation — that ceiling looks more like Phase B/C (OECD/IMF/World Bank) scale.
-- **OPEN — Charlie's call before anything is provisioned:** DB choice (new separate Neon
-  project vs Hetzner Postgres). CC's recommendation is **Neon** (managed backups/branching, no
-  competition with the corpus Neon's tight headroom since it's a genuinely new project) — cost
-  is trivial either way at this measured size, so the deciding factor is operational
-  simplicity, not price. Nothing costing money has been touched.
-- **NEXT (once Charlie decides):** provision the DB, run `seed-catalogue.ts` then
-  `refresh-scheduler.ts` for real, wire the Railway cron, then full Lex tool-calling integration
-  (brief scopes this as a follow-on, not Phase A blocking).
+- **DB choice DECIDED (Neon, new separate project) — provisioning still blocked.** Charlie
+  confirmed CC's recommendation. CC cannot create the project itself in this environment (no
+  stored Neon API key, and `neonctl` login needs a browser that isn't available here) — it
+  needs Charlie to either create the project in the Neon console and paste back the pooled +
+  direct connection strings, or hand over a Neon API key. **Charlie chose to hold off this
+  session** — nothing costing money has been touched, `STATS_DATABASE_URL` is unset everywhere.
+- **NEXT (whenever Charlie is ready to unblock provisioning):** get the Neon project created
+  (either path above), wire `STATS_DATABASE_URL`/`STATS_DIRECT_URL`, run the offline-generated
+  migration, `seed-catalogue.ts`, then `refresh-scheduler.ts` for real, wire the Railway cron,
+  then full Lex tool-calling integration (brief scopes this as a follow-on, not Phase A
+  blocking).
 
 ---
 
