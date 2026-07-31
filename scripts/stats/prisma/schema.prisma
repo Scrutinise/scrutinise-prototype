@@ -1,0 +1,207 @@
+// STATISTICS LAYER — Phase A (UK spine)
+// Separate database from the corpus DB. Do NOT add corpus/app models here.
+// SDMX-modelled: dataset (dataflow) -> dimension -> series (unique non-time combo) -> observation (value at a time period).
+// See docs/STATS_LAYER_SPEC.md and docs/STATS_PHASE_A_BRIEF.md for the governing brief.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/stats-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- Reference / code lists ----------------------------------------------
+
+/// COFOG — Classification of the Functions of Government. First-class code list;
+/// the axis the comparative (Phase B/C) spending questions turn on.
+model StatCofogFunction {
+  code   String  @id // '01'..'10' (top-level); sub-functions use 'NN.N' e.g. '07.1'
+  parent String? // top-level code this sub-function rolls up to, null for top-level
+  name   String
+
+  series StatSeries[]
+
+  @@map("stat_cofog_function")
+}
+
+enum StatSource {
+  ONS
+  OBR
+  HMT_PESA
+  HMRC
+
+  @@map("stat_source")
+}
+
+enum StatRefreshCadence {
+  MONTHLY
+  QUARTERLY
+  BIANNUAL
+  ANNUAL
+  IRREGULAR
+  STATIC // one-off / historical, no scheduled re-pull expected
+
+  @@map("stat_refresh_cadence")
+}
+
+enum StatPeriodType {
+  ANNUAL
+  FINANCIAL_YEAR // UK fiscal year, e.g. "2024-25"
+  QUARTERLY
+  MONTHLY
+
+  @@map("stat_period_type")
+}
+
+enum StatRefreshStatus {
+  SUCCESS
+  NO_CHANGE
+  FAILURE
+
+  @@map("stat_refresh_status")
+}
+
+// ---- SDMX core -------------------------------------------------------------
+
+/// A dataflow/table — e.g. "ONS CPIH time series", "OBR Public Finances Databank",
+/// "PESA Table 5.2 (function)", "HMRC tax receipts".
+model StatDataset {
+  id          String     @id // slug, e.g. 'ons-cpih01', 'obr-psf-databank', 'pesa-ch5-function'
+  source      StatSource
+  title       String
+  description String?
+
+  cofogRelevant Boolean @default(false)
+
+  licence           String // e.g. "Open Government Licence v3.0"
+  licenceUrl        String?
+  licenceVerifiedAt DateTime // when CC last confirmed the licence at the source's own terms page
+
+  // Phase B forward-compat: OECD-sourced data (and similar) needs a commercial-use
+  // exclusion flag carried per-series. Always false for Phase A (all OGL, commercial-clean).
+  commercialUseExcluded Boolean @default(false)
+
+  refreshCadence StatRefreshCadence
+  sourceUrl      String // canonical human-readable page (not necessarily the direct file — that can rotate)
+
+  // change-detection for the scheduler: an edition/version id (ONS Beta API),
+  // a file URL or last-modified/ETag (spreadsheet sources) — whatever the source exposes.
+  sourceEditionOrVersion String?
+  lastCheckedAt          DateTime?
+  lastRefreshedAt        DateTime?
+
+  dimensions StatDimension[]
+  series     StatSeries[]
+  refreshLog StatRefreshLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("stat_dataset")
+}
+
+/// The axes of a dataset (geography / time / measure / unit / cofog_function / ...).
+/// Documents the shape; stat_series carries the actual per-series values.
+model StatDimension {
+  id        String @id @default(cuid())
+  datasetId String
+  dataset   StatDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  name     String // 'geography' | 'time' | 'measure' | 'unit' | 'cofog_function' | 'forecast_vintage' | ...
+  codeList Json? // e.g. list of allowed codes/labels, informational
+
+  createdAt DateTime @default(now())
+
+  @@unique([datasetId, name])
+  @@map("stat_dimension")
+}
+
+/// Catalogue entry: one unique combination of non-time dimensions — i.e. one line
+/// you can chart over time. Carries the source series id for provenance + refresh.
+model StatSeries {
+  id        String @id @default(cuid())
+  datasetId String
+  dataset   StatDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  // Provenance: ONS CDID, OBR "ONS code" column, PESA row code, etc. Null where the
+  // source has no stable per-series id (rare; use a derived slug in that case).
+  sourceSeriesId String?
+
+  seriesLabel String // human-readable, e.g. "GDP: chained volume measures, seasonally adjusted"
+
+  // ISO-3166 (alpha-2) for country-level; ISO-3166-2:GB (GB-ENG/GB-SCT/GB-WLS/GB-NIR) for devolved.
+  geography String @default("GB")
+
+  measure String // e.g. 'total_receipts', 'gdp_cvm', 'unemployment_rate', 'exp_by_subfunction'
+  unit    String // e.g. 'GBP_MILLION', 'PERCENT_GDP', 'PERCENT', 'INDEX'
+
+  cofogFunctionCode String?
+  cofogFunction     StatCofogFunction? @relation(fields: [cofogFunctionCode], references: [code])
+
+  // Non-null only for OBR forecast-round series; null/omitted = outturn (actual).
+  // e.g. "March 2015 EFO" — lets successive forecasts for the same measure/period coexist
+  // as distinct series (vintage doesn't vary over time within one series, so it's a
+  // series-level dimension, not an observation-level one).
+  forecastVintage String?
+
+  observations StatObservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([datasetId, sourceSeriesId, geography, cofogFunctionCode, forecastVintage, measure])
+  @@index([datasetId])
+  @@map("stat_series")
+}
+
+/// The value. Kept narrow — this is the big table (millions of rows at full scale).
+/// geography/cofogFunctionCode/unit are denormalised from stat_series onto the fact
+/// row so the (geography, cofog_function, time) rollup query in §1 doesn't need a
+/// join through stat_series.
+model StatObservation {
+  id       BigInt     @id @default(autoincrement())
+  seriesId String
+  series   StatSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  periodType  StatPeriodType
+  periodStart DateTime // first day of the period — the sortable form
+  periodLabel String // display form, e.g. "2025-26", "2025 Q1", "1900"
+
+  value  Decimal @db.Decimal(20, 4)
+  status String? // 'outturn' | 'forecast' | 'provisional' | 'revised' | null
+
+  // denormalised for rollup queries (see model doc comment)
+  geography         String
+  cofogFunctionCode String?
+  unit              String
+
+  createdAt DateTime @default(now())
+
+  @@unique([seriesId, periodStart])
+  @@index([seriesId, periodStart])
+  @@index([geography, cofogFunctionCode, periodStart])
+  @@map("stat_observation")
+}
+
+// ---- Refresh scheduler ------------------------------------------------------
+
+/// One row per refresh attempt. Mirrors the existing Ops scheduler pattern
+/// (scripts/operational) but scoped to this DB.
+model StatRefreshLog {
+  id        String      @id @default(cuid())
+  datasetId String
+  dataset   StatDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  status     StatRefreshStatus?
+
+  observationsUpserted Int     @default(0)
+  seriesUpserted       Int     @default(0)
+  errorMessage         String?
+
+  @@index([datasetId, startedAt])
+  @@map("stat_refresh_log")
+}

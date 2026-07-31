@@ -19,7 +19,8 @@
       "pg": ["./node_modules/pg"],
       "pg/*": ["./node_modules/pg/*"],
       "@prisma/adapter-pg": ["./node_modules/@prisma/adapter-pg"],
-      "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"]
+      "@prisma/adapter-pg/*": ["./node_modules/@prisma/adapter-pg/*"],
+      "xlsx": ["./node_modules/xlsx"]
     }
   },
   "exclude": ["attic", "**/node_modules", "legislation/v3opt"]
