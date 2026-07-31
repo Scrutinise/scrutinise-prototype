@@ -45,3 +45,13 @@ Many policy proposals require new money or reallocation rather than (or in addit
 First step: an information page explaining the funding pathways for users whose ideas need money rather than (or as well as) law. Later: ingest Spending Review documents and Departmental Annual Reports into a parallel corpus to enable Lex to reference current departmental spending and identify realistic funding routes.
 
 **Target:** design after V2-LEX-FLOW-AND-LEGPANEL ships.
+
+---
+
+## Separate Postgres schema for ingest-owned tables
+
+The app's own models (`User`, `Idea`, `Community`, etc.) and the ingest pipeline's operational tables (`corpus_sections`, `ingest_queue`, `ingest_progress_snapshots`, `source_rate_limits`, `scheduler_lock`, and the various now-defunct scratch tables like `corpus_snapshots`/`corpus_targets`/`specialist_queue`/`v26_cs_gids`) currently all live in the same `public` schema and the same Prisma schema file, migrated together even though they're owned and evolved by completely different workflows — the ingest pipeline routinely creates/drops tables out-of-band (raw SQL, one-off scripts) without going through `prisma migrate`.
+
+Proposal: move ingest-owned tables into a separate Postgres schema (e.g. `ingest`), and scope `prisma migrate diff`/`schema.prisma` to `public` only. This would have prevented (or at minimum made much more visible) the 30 Jul 2026 incident's contributing tangle, where `prisma migrate diff` against production mixed genuine app-schema drift (the Community migrations) together with a long tail of unrelated ingest-table churn, making the diff much harder to read and reason about under incident pressure. See `docs/CHANGE_LOG.md`, "INCIDENT — production `/dashboard` full outage" (2026-07-30 02:10 UTC).
+
+**Not yet scoped:** whether ingest scripts connect via a separate `DATABASE_URL` (schema-qualified) or the same connection with `search_path` set; whether this is a `prisma migrate` operation or a manual `ALTER TABLE ... SET SCHEMA` pass followed by updating every ingest script's raw SQL references.

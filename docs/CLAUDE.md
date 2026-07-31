@@ -486,3 +486,35 @@ The thesaurus template requires placing `.ths` files on the server filesystem, w
 ### FTS query: prefix matching
 
 `scrutinise-web/lib/search.ts` uses `buildTsQuery()` to detect mid-word input (no trailing space) and appends `:*` to the final token, switching from `plainto_tsquery` to `to_tsquery`. This enables "data prot" → "data protection" matching without waiting for a space keystroke.
+
+***
+
+## 16. DATABASE MIGRATION SAFETY — WHICHDB CHECK (mandatory, added 30 Jul 2026)
+
+**Incident:** on 29–30 Jul 2026, `.env` on this machine still pointed `DATABASE_URL` at Railway
+(`switchback.proxy.rlwy.net`), a stale value left over from the **18 Jun 2026 Railway→Neon app-database
+cutover** that was never propagated locally. Two migrations were run with `prisma migrate deploy`, both
+reported success, both were silently applied to the wrong database. Production (Neon) fell behind with no
+error until dependent code shipped and threw `P2021` in production, causing a full `/dashboard` outage.
+Full writeup: `docs/CHANGE_LOG.md`, "INCIDENT — production `/dashboard` full outage" (2026-07-30 02:10
+UTC) and the corrections on the two entries it references.
+
+**The rule this incident produces, no exceptions:**
+
+> Before running `prisma migrate deploy`, `prisma db execute`, or any other schema-altering or destructive
+> SQL against any database — including when confident about which database is targeted — run
+> `npx tsx scripts/whichdb.ts` first and paste its output (host, database name, last 5
+> `_prisma_migrations` rows) before proceeding. If the host isn't the one you expect, stop.
+
+**Current state of record, as of 30 Jul 2026:** local `.env`'s `DATABASE_URL` (pooled) and `DIRECT_URL`
+(non-pooled) point at Neon (`ep-old-dust-aboxi69a`) — this is production. The old Railway connection
+string is preserved in `.env` as `RAILWAY_DATABASE_URL_LEGACY` for reference only. **`RAILWAY_DATABASE_URL_LEGACY`
+is dead and must never be used for schema work again** — Railway (`scrutinise-db`) is scheduled for
+decommission (after a `pg_dump` to R2 and a `getRailwayPool` check), and any migration/DDL run against it
+between now and then will not reach production and will not be noticed until something depends on it,
+exactly as happened here.
+
+This supersedes the "PostgreSQL (Railway EU West Amsterdam)" stack line in §2 and the plain `DATABASE_URL`
+description in §9 for anything migration/schema-related — those sections describe the historical setup
+and haven't been rewritten; this section is the current authority on which database is production until
+they are.
