@@ -97,3 +97,9 @@ scripts/ingest/graph/data/
 scripts/ingest/graph/*-checkpoint.json
 scripts/ingest/graph/cites-pilot.json
 
+# HMRC full-run + Sentencing Council ingest runtime state (regenerable, machine-local)
+scripts/operational/hmrc-full-checkpoint.json
+scripts/operational/hmrc-full-log.csv
+scripts/operational/sc-checkpoint.json
+scripts/operational/sc-log.csv
+
