@@ -1,6 +1,94 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-31 00:03 UTC — STATS: Phase A (UK spine) sprint — new standalone
+statistics layer built end-to-end (SDMX schema, ONS/OBR/PESA/HMRC source modules, refresh
+scheduler, Lex query layer), verified against real live sources (all licences confirmed OGL
+v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
+ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
+2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## STATS — Statistics layer, Phase A (UK spine) (2026-07-31 00:03 UTC)
+
+**Executes `docs/STATS_PHASE_A_BRIEF.md` (built on `docs/STATS_LAYER_SPEC.md`).** New parallel
+workstream — a separate statistics store (SDMX-modelled: dataset → dimension → series →
+observation), UK fiscal/economic/forecast data only (Phase B/C — OECD/IMF/World Bank/Eurostat,
+other countries — explicitly out of scope this sprint). Full build detail:
+`docs/STATS_SCHEMA.md` (schema as built) and `docs/STATS_REFRESH.md` (refresh design). This
+entry is the scorecard + sprint outcome.
+
+- **Own npm project, own DB target, zero contact with the corpus DB.** `scripts/stats/` has its
+  own `package.json`/`node_modules` (Prisma 7's client generator resolves `@prisma/client`
+  relative to the schema file's directory tree, not `cwd` — sharing `scrutinise-web`'s
+  `node_modules` the way `scripts/legislation` does doesn't work for a second Prisma schema).
+  New env var `STATS_DATABASE_URL` (+ `STATS_DIRECT_URL`) — deliberately not `DATABASE_URL`, so
+  a stale `.env` can never point a stats script at the corpus/app DB the way the 29–30 Jul
+  incident happened in the other direction (`docs/CLAUDE.md` §16).
+- **Schema validated + client generated + initial migration produced, all OFFLINE** — no live
+  database was touched or provisioned. `prisma validate`/`generate` needed only a placeholder
+  connection string; the initial migration SQL came from
+  `prisma migrate diff --from-empty --to-schema=prisma/schema.prisma --script`, which needs no
+  DB connection at all. `scripts/stats/prisma/migrations/20260730235112_init/migration.sql` is
+  ready to apply the moment a target exists.
+- **Every source probed and licence-verified live, not assumed:**
+
+  | source | licence (verified at source) | route confirmed |
+  |---|---|---|
+  | ONS Beta API | OGL v3.0 (`"license"` field on the dataset JSON itself) | `api.beta.ons.gov.uk/v1` — live, 337 datasets in catalogue |
+  | ONS CDID | OGL v3.0 (`ons.gov.uk/help/termsandconditions`) | `ons.gov.uk/generator?format=csv&uri=...` — 429s under rapid requests, needs pacing (built in) |
+  | OBR | OGL v3.0 (footer, `obr.uk/data/`) | gated behind a WordPress Download-Monitor nonce — bare/no-cookie request 302s to `/no-access/`; a stale/no-referer token 403s; **fresh cookie jar from `/data/` + matching Referer resolves it** to a static ungated `obr.uk/docs/dlm_uploads/*.xlsx` |
+  | HM Treasury PESA | OGL v3.0 (footer, gov.uk statistics page) | direct static `assets.publishing.service.gov.uk` URLs, no gating |
+  | HMRC | OGL v3.0 (footer, gov.uk statistics page) | direct static `assets.publishing.service.gov.uk` URLs, no gating |
+
+- **Pilot measurement (real fetches, real parses, zero DB writes — `measure-pilot.ts`):**
+
+  | source | dataset slice | series | observations |
+  |---|---|---|---|
+  | ONS (CDID) | 4 curated, individually-verified headline series (GDP, unemployment, CPIH, avg earnings) | 4 | 2,242 |
+  | ONS (Beta API) | 1 of 337 catalogue datasets (`wellbeing-quarterly`, pilot sample) | 980 | 1,960 |
+  | OBR | Public Finances Databank (2 sheets) | 31 | 2,443 |
+  | OBR | Historical Official Forecasts Database (85/131 sheets parsed — 6 are index/contents pages, not data, correctly skipped) | 2,807 | 20,506 |
+  | HMT PESA | Chapter 5 (function), Tables 5.1+5.2 — 1 of 10 chapters | 186 | 422 |
+  | HMRC | Tax receipts (annual) + tax gap Table 1.1 (1 of 15 tax-gap tables) | 73 | 1,293 |
+  | **TOTAL (pilot slice)** | | **4,081** | **28,866** |
+
+  This is a deliberately partial slice (1 Beta dataset of 337 relevant candidates, 1 of 10 PESA
+  chapters, 1 of 15 tax-gap tables) — **not the full Phase A footprint**, which the brief's own
+  §9 says to measure-then-extrapolate rather than estimate blind. Extrapolating honestly: OBR
+  (both sources) is already near-complete at this slice; PESA/HMRC would roughly 5-15x with
+  every chapter/table; a *curated* (not all-337) ONS Beta subset covering the relevant
+  economy/public-finance/population/wellbeing datasets the brief asks for is the biggest
+  remaining unknown. Best-effort full-Phase-A-UK-spine projection: **low hundreds of thousands
+  of observations, comfortably tens to low hundreds of MB** at the schema's per-row size — this
+  undershoots the brief's "single-digit to low-tens of GB" expectation; that ceiling looks more
+  like a Phase B/C (full OECD/IMF/World Bank multi-country) scale than the UK-alone spine.
+- **Successive-forecast-vintage capability confirmed working end-to-end**, the OBR databank's
+  standout feature: the Historical Official Forecasts Database's `£TME (2)` sheet alone parsed
+  into 34 distinct forecast vintages (June 2010 → latest) for one measure — "what did the OBR
+  predict in round N vs what actually happened" is answerable the moment this loads.
+- **COFOG confirmed as a first-class, real classification already embedded in PESA**: Table 5.2
+  row labels are literally COFOG sub-function codes (`"1.1 Executive and legislative organs..."`
+  → `01.1`); Table 5.1's departmental-group x function cross-tab parses cleanly against the same
+  code parser. `lib/cofog.ts` seeds the 10 top-level codes as a real FK'd reference table.
+- **Refresh scheduler + Lex query layer built, both untested against a live DB** (no DB exists
+  yet) — same "built inert" posture the vector-embed pipeline shipped with. `refresh-scheduler.ts`
+  is cadence-aware run-and-exit (not an always-on daemon — nothing here updates faster than
+  monthly); `query/stats-query.ts` gives time-series-by-series and COFOG-rollup-by-geography
+  reads for Lex/analysis, kept separate from `scrutinise-web/lib/search.ts` (analytical vs
+  full-text).
+- **`tsc --noEmit` clean** (`scripts/stats/tsconfig.json`, new — scoped to this folder only).
+- **DB choice: NOT decided, NOT provisioned — Charlie's call per brief §9.** Given the measured
+  size (tens–low-hundreds of MB), cost is trivial either way; CC's recommendation is a **new,
+  separate Neon project** (managed backups/branching, and — being a genuinely new project —
+  it does not compete with the corpus Neon's already-tight ~16/17.5 GB headroom) over a
+  self-managed Hetzner Postgres instance, whose only edge at this data size is a few dollars a
+  month against real operational overhead (patching, backups, no branching). Nothing has been
+  provisioned; `STATS_DATABASE_URL` is unset everywhere.
+- **NOT built this sprint:** the actual DB (pending the above), `seed-catalogue.ts`/
+  `ingest-handlers.ts` run for real, the Railway cron wiring for `refresh-scheduler.ts`, full
+  Lex tool-calling integration (brief explicitly scopes this as a follow-on), Phase B/C sources
+  (OECD/IMF/World Bank/Eurostat/FRED, other countries).
 
 ---
 
