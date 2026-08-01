@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import AcceptCard from './AcceptCard'
-import type { CanonicalField } from '@/lib/lex/page1-config'
+import type { CanonicalField, CanonicalState } from '@/lib/lex/page1-config'
+import { accentFor } from '@/lib/lex/stage-accents'
 
 export interface ChatMessage {
   role: 'user' | 'lex'
@@ -31,6 +32,43 @@ function Bubble({ m }: { m: ChatMessage }) {
 // Panel 1 — Chat. Renders message history + Lex's chatText + the accept card
 // when a field is AWAITING_CONFIRMATION. Pure renderer of (messages, awaitingField).
 // A2: prior-stage messages collapse under a divider ("The Basic Idea — 14 messages +").
+// §19-B Task 3 — the slim stage divider marking where a transition happened.
+function StageDivider({ label, stage }: { label: string; stage: string }) {
+  const accent = accentFor(stage)
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <span className={`h-px flex-1 ${accent.rule}`} />
+      <span className={`text-[10px] font-semibold uppercase tracking-widest ${accent.text}`}>{label}</span>
+      <span className={`h-px flex-1 ${accent.rule}`} />
+    </div>
+  )
+}
+
+// §19-B Task 2 — the inline transition affordance, in the chat where the user's
+// attention is. Same surface and pattern as the AcceptCard; calls the SAME advance
+// path as the panel CTA and typed assent.
+function ContinueCard({
+  nextPage, busy, onContinue,
+}: {
+  nextPage: NonNullable<CanonicalState['nextPage']>
+  busy: boolean
+  onContinue: () => void
+}) {
+  const accent = accentFor(nextPage.key)
+  return (
+    <div className={`rounded-2xl border ${accent.border} ${accent.bg} p-3 ml-9`}>
+      <p className="text-xs text-zinc-600 mb-2">This section is done — the next one builds straight on it.</p>
+      <button
+        onClick={onContinue}
+        disabled={busy}
+        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
+      >
+        Continue to {nextPage.label}
+      </button>
+    </div>
+  )
+}
+
 export default function ChatPanel({
   messages,
   awaitingField,
@@ -38,9 +76,11 @@ export default function ChatPanel({
   focusNonce,
   currentStage,
   stageLabels,
+  nextPage,
   onSend,
   onAccept,
   onDecline,
+  onContinue,
 }: {
   messages: ChatMessage[]
   awaitingField: CanonicalField | null
@@ -51,9 +91,13 @@ export default function ChatPanel({
   currentStage?: string
   /** Stage key → display label, for the collapse dividers. */
   stageLabels?: Record<string, string>
+  /** Set when the active page is complete and a further page is reachable — drives
+   *  the inline Continue action (§19-B Task 2). */
+  nextPage?: CanonicalState['nextPage']
   onSend: (text: string) => void
   onAccept: (value: string | string[]) => void
   onDecline: () => void
+  onContinue: () => void
 }) {
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
@@ -94,8 +138,11 @@ export default function ChatPanel({
           // A prior-stage group collapses under a divider unless the user expands it.
           const isCurrent = g.stage === currentStage || gi === groups.length - 1
           const isOpen = isCurrent || expanded.has(gi)
+          // §19-B Task 3: mark where the stage changed — the transition point itself.
+          const startsNewStage = gi > 0 && groups[gi - 1].stage !== g.stage
           return (
             <div key={gi} className="space-y-3">
+              {isCurrent && startsNewStage && <StageDivider label={labelOf(g.stage)} stage={g.stage} />}
               {!isCurrent && (
                 <button
                   onClick={() => setExpanded((s) => { const n = new Set(s); n.has(gi) ? n.delete(gi) : n.add(gi); return n })}
@@ -127,6 +174,12 @@ export default function ChatPanel({
         {/* The accept card renders IFF a field is awaiting confirmation. */}
         {awaitingField && awaitingField.status === 'AWAITING_CONFIRMATION' && (
           <AcceptCard field={awaitingField} busy={busy} onAccept={onAccept} onDecline={onDecline} />
+        )}
+
+        {/* The transition affordance renders IFF the page is complete and a next page
+            is reachable — the chat never dead-ends with nothing to do (§19-B Task 2). */}
+        {!awaitingField && nextPage && (
+          <ContinueCard nextPage={nextPage} busy={busy} onContinue={onContinue} />
         )}
       </div>
 

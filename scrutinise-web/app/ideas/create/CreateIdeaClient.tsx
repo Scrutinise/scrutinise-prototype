@@ -85,6 +85,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
 
   const applyState = useCallback((s: CanonicalState) => setState(s), [])
 
+  const appendLex = useCallback((msgs: unknown, stage?: string) => {
+    if (Array.isArray(msgs) && msgs.length) {
+      setMessages((prev) => [...prev, ...msgs.map((c: string) => ({ role: 'lex' as const, content: c, stage }))])
+    }
+  }, [])
+
   // ── Actions ────────────────────────────────────────────────────────────────
   const sendMessage = useCallback(
     async (text: string) => {
@@ -127,7 +133,13 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           await new Promise((r) => setTimeout(r, 700))
           data = await postOnce()
         }
-        setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: data.state?.stage ?? stage }])
+        // A chat turn returns EITHER Lex's own reply, or — when the message advanced
+        // the stage (§19-B Task 1) — the conductor's bubbles for the new page.
+        const replyStage = data.state?.stage ?? stage
+        if (data.chatText) {
+          setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: replyStage }])
+        }
+        appendLex(data.messages, replyStage)
         if (data.state) applyState(data.state)
       } catch (err) {
         console.error('[lex] turn failed after retry:', err)
@@ -139,14 +151,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         setBusy(false)
       }
     },
-    [ideaId, applyState, state?.stage],
+    [ideaId, applyState, appendLex, state?.stage],
   )
-
-  const appendLex = useCallback((msgs: unknown, stage?: string) => {
-    if (Array.isArray(msgs) && msgs.length) {
-      setMessages((prev) => [...prev, ...msgs.map((c: string) => ({ role: 'lex' as const, content: c, stage }))])
-    }
-  }, [])
 
   // POST to a server endpoint that returns { state, messages } and apply both.
   const post = useCallback(
@@ -285,9 +291,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 focusNonce={focusNonce}
                 currentStage={state.stage}
                 stageLabels={Object.fromEntries(state.pages.map((p) => [p.key, p.label]))}
+                nextPage={state.nextPage}
                 onSend={sendMessage}
                 onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
                 onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
+                onContinue={advancePage}
               />
             </div>
 
@@ -303,6 +311,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 currentFieldKey={state.currentField?.key ?? null}
                 onSubmitBox={(key, value) => transition(key, 'submitBox', value)}
                 onAcceptStructured={(key, value) => transition(key, 'accept', value)}
+                onAcceptOutput={(key, value) => transition(key, 'accept', value)}
                 onSkip={(key) => transition(key, 'skip')}
                 onReopen={(key) => transition(key, 'reopen')}
                 causesApi={causesApi}

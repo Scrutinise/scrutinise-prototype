@@ -6,6 +6,7 @@ import {
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
   type CanonicalPolicyOption, type CanonicalAction, type CanonicalBenchmark, type CostRange,
 } from '@/lib/lex/page1-config'
+import { accentFor } from '@/lib/lex/stage-accents'
 import { SLOT_LABELS } from '@/lib/lex/page2-config'
 import { MECHANISM_TYPES } from '@/lib/lex/page3-config'
 import { COST_CATEGORIES } from '@/lib/lex/page4-config'
@@ -151,29 +152,97 @@ function BoxField({
   )
 }
 
-// A generated output proposed by Lex, confirmed in CHAT (title / keywords / challenge /
-// pivotalObstacle / summaryDiagnosis). The panel is a read-out + Change.
-function OutputField({ field, busy, onReopen }: { field: CanonicalField; busy: boolean; onReopen: (key: string) => void }) {
+// A generated output proposed by Lex (title / keywords / challenge / pivotalObstacle /
+// summaryDiagnosis / the Page 3–4 equivalents). Confirmed inline in chat — AND, since
+// §19-B Task 1, editable-and-saveable here too: every non-terminal card carries its own
+// action buttons, so no field can ever render inert. Terminal = read-out + Change.
+function OutputField({
+  field, busy, onAcceptOutput, onSkip, onReopen,
+}: {
+  field: CanonicalField
+  busy: boolean
+  onAcceptOutput: (key: string, value: string | string[]) => void
+  onSkip: (key: string) => void
+  onReopen: (key: string) => void
+}) {
   const accepted = field.status === 'ACCEPTED'
-  const display = Array.isArray(field.value)
-    ? (field.value as string[]).join(', ')
-    : (field.value as string | null) ?? ''
+  const terminal = isTerminal(field)
+  const isList = field.key === 'keywords'
+  const asText = (v: unknown) => (Array.isArray(v) ? (v as string[]).join(', ') : ((v as string | null) ?? ''))
+
+  const proposed = field.status === 'AWAITING_CONFIRMATION' ? asText(field.proposal?.value) : ''
+  const baseline = proposed || asText(field.value)
+  const [draft, setDraft] = useState(baseline)
+  useEffect(() => { setDraft(baseline) }, [field.status, baseline]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const canReopen = accepted && field.key !== 'summaryDiagnosis' // summary is regenerated, not hand-edited here
+
+  if (terminal) {
+    return (
+      <div className="rounded-lg border border-zinc-200 p-3">
+        <FieldHeader
+          field={field}
+          right={canReopen ? (
+            <button onClick={() => onReopen(field.key)} disabled={busy}
+              className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
+          ) : undefined}
+        />
+        <p className="text-xs mt-1 ml-6 text-zinc-500 whitespace-pre-wrap">
+          {accepted ? asText(field.value) : 'Skipped'}
+        </p>
+      </div>
+    )
+  }
+
+  const hasProposal = !!proposed
+  const submit = () => {
+    const text = draft.trim()
+    if (!text) return
+    onAcceptOutput(field.key, isList ? text.split(',').map((s) => s.trim()).filter(Boolean) : text)
+  }
+
   return (
-    <div className="rounded-lg border border-zinc-200 p-3">
+    <div className={`rounded-lg border p-3 ${hasProposal ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
       <FieldHeader
         field={field}
-        right={canReopen ? (
-          <button onClick={() => onReopen(field.key)} disabled={busy}
-            className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">Change</button>
-        ) : undefined}
+        right={hasProposal ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex</span> : undefined}
       />
-      <p className="text-xs mt-1 ml-6 text-zinc-500 whitespace-pre-wrap">
-        {accepted ? display
-          : field.status === 'AWAITING_CONFIRMATION' ? 'Awaiting your approval in the chat →'
-          : field.status === 'SKIPPED' ? 'Skipped'
-          : 'Lex will propose this once there’s enough to go on.'}
+      <p className="text-[11px] text-zinc-400 mb-2 leading-snug">
+        {hasProposal
+          ? 'Accept it in the chat, or edit it here and Save.'
+          : 'Lex will propose this from what you’ve said — or write it yourself and Save.'}
       </p>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={isList ? 2 : 3}
+        placeholder={isList ? 'keyword, keyword, keyword…' : 'Write it here if you’d rather…'}
+        className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400"
+      />
+      <div className="flex gap-2 mt-1.5">
+        <button onClick={submit} disabled={busy || !draft.trim()}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40">
+          {hasProposal ? 'Save & accept' : 'Save'}
+        </button>
+        <button onClick={() => onSkip(field.key)} disabled={busy}
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">
+          Skip
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// A field further down the ACTIVE stage — shown greyed-out so the user can see the
+// shape of what's coming, but not workable until the flow reaches it (§19-B Task 3).
+function QueuedField({ field }: { field: CanonicalField }) {
+  return (
+    <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-2">
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 w-4 h-4 rounded-full bg-zinc-200" />
+        <span className="text-sm text-zinc-400 flex-1">{field.label}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-300">next up</span>
+      </div>
     </div>
   )
 }
@@ -848,7 +917,7 @@ function ActionsField({ field, actions, benchmarks, busy, api }: { field: Canoni
 // A3: on Save the next active field scrolls to the top of the panel.
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, benchmarks, busy, currentFieldKey,
-  onSubmitBox, onAcceptStructured, onSkip, onReopen, causesApi, policyApi, actionsApi,
+  onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, causesApi, policyApi, actionsApi,
 }: {
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
@@ -860,6 +929,8 @@ export default function FieldsPanel({
   currentFieldKey?: string | null
   onSubmitBox: (key: string, value: string) => void
   onAcceptStructured: (key: string, value: Record<string, string>) => void
+  /** §19-B: accept a proposed scalar from the PANEL (text or keyword list). */
+  onAcceptOutput: (key: string, value: string | string[]) => void
   onSkip: (key: string) => void
   onReopen: (key: string) => void
   causesApi: CausesApi
@@ -868,11 +939,21 @@ export default function FieldsPanel({
 }) {
   const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
   const activeRef = useRef<HTMLDivElement>(null)
+  const stageHeaderRef = useRef<HTMLDivElement>(null)
+
+  const activePageKey = pages.find((p) => p.status === 'active')?.key ?? null
 
   // A3: bring the newly-active box to the top of the panel on Save (currentFieldKey change).
   useEffect(() => {
     if (currentFieldKey) activeRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }, [currentFieldKey])
+
+  // §19-B Task 3: on STAGE entry the new stage's header goes to the top. Declared after
+  // the field effect so it wins when both fire in the same commit (a stage change also
+  // changes the current field).
+  useEffect(() => {
+    if (activePageKey) stageHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [activePageKey])
 
   const renderField = (f: CanonicalField) => {
     if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} />
@@ -886,7 +967,7 @@ export default function FieldsPanel({
       if (f.key === 'chosenApproach') return <ChosenApproachField field={f} options={policyOptions} busy={busy} api={policyApi} />
       return <RootCauseField field={f} causes={causes} busy={busy} api={causesApi} />
     }
-    return <OutputField field={f} busy={busy} onReopen={onReopen} />
+    return <OutputField field={f} busy={busy} onAcceptOutput={onAcceptOutput} onSkip={onSkip} onReopen={onReopen} />
   }
 
   return (
@@ -895,20 +976,28 @@ export default function FieldsPanel({
         const total = page.fields.length
         const done = page.fields.filter((f) => f.status === 'ACCEPTED' || f.status === 'SKIPPED').length
         const isLocked = page.status === 'locked'
+        const isActive = page.status === 'active'
+        const accent = accentFor(page.key)
         // A2: a completed stage collapses under its title unless the user expands it.
         const collapsible = page.status === 'complete'
         const collapsed = collapsible && !manualExpanded.has(page.key)
         const toggle = () => setManualExpanded((s) => { const n = new Set(s); n.has(page.key) ? n.delete(page.key) : n.add(page.key); return n })
+        // §19-B Task 3: within the ACTIVE stage, everything past the current field is
+        // queued — visible (so the shape of the stage is legible) but not workable.
+        const currentIdx = isActive && currentFieldKey ? page.fields.findIndex((f) => f.key === currentFieldKey) : -1
         return (
           <div key={page.key}>
             <div
-              className={`flex items-center gap-2 mb-2 ${collapsible ? 'cursor-pointer' : ''}`}
+              ref={isActive ? stageHeaderRef : undefined}
+              className={`flex items-center gap-2 mb-2 rounded-lg px-2 py-1.5 ${isActive ? accent.bg : ''} ${collapsible ? 'cursor-pointer' : ''}`}
               onClick={collapsible ? toggle : undefined}
             >
               <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${
-                page.status === 'complete' ? 'bg-green-500' : page.status === 'active' ? 'bg-blue-500' : 'bg-zinc-200'
+                page.status === 'complete' ? 'bg-green-500' : isActive ? accent.dot : 'bg-zinc-200'
               }`} />
-              <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${isLocked ? 'text-zinc-300' : 'text-zinc-700'}`}>
+              <span className={`text-xs font-semibold uppercase tracking-wide flex-1 ${
+                isLocked ? 'text-zinc-300' : isActive ? accent.text : 'text-zinc-700'
+              }`}>
                 {page.label}
               </span>
               {!isLocked && total > 0 && <span className="text-[11px] text-zinc-400">{done} of {total}</span>}
@@ -917,12 +1006,15 @@ export default function FieldsPanel({
             </div>
 
             {!isLocked && !collapsed && (
-              <div className="space-y-2">
-                {page.fields.map((f) => (
-                  <div key={f.key} ref={f.key === currentFieldKey ? activeRef : undefined}>
-                    {renderField(f)}
-                  </div>
-                ))}
+              <div className={`space-y-2 ${isActive ? `border-l-2 ${accent.border} pl-3` : ''}`}>
+                {page.fields.map((f, i) => {
+                  const queued = currentIdx >= 0 && i > currentIdx && !isTerminal(f)
+                  return (
+                    <div key={f.key} ref={f.key === currentFieldKey ? activeRef : undefined}>
+                      {queued ? <QueuedField field={f} /> : renderField(f)}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
