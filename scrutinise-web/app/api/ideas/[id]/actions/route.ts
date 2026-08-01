@@ -11,6 +11,7 @@ import {
   skipField,
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
+import { assertWritableField } from '@/lib/lex/stage'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -68,6 +69,12 @@ export async function POST(req: Request, { params }: Params) {
   const parsed = BodySchema.safeParse(raw)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   const body = parsed.data
+
+  // §19-B Task 1 — write side of "chat page == state page".
+  const blocked = await assertWritableField(id, 'actions')
+  if (blocked) {
+    return NextResponse.json({ error: 'You haven’t started the Coherent Actions yet.' }, { status: 409 })
+  }
 
   let messages: string[] = []
   try {

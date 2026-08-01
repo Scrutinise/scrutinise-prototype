@@ -29,7 +29,7 @@ import {
 import { validateProposal } from './proposal-schema'
 import { runSearch } from './search-gateway'
 
-type ChatMsg = { role: string; content: string; timestamp?: string }
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
 
 function historyOf(raw: unknown): { role: string; content: string }[] {
   return (Array.isArray(raw) ? (raw as ChatMsg[]) : [])
@@ -42,11 +42,16 @@ async function chatHistory(ideaId: string) {
   return historyOf((await prisma.idea.findUnique({ where: { id: ideaId }, select: { aiChatHistory: true } }))?.aiChatHistory)
 }
 
-async function pushLex(ideaId: string, content: string) {
+/** Append Lex bubbles to the stored transcript, each tagged with the stage it was
+ *  said in (§19-B Task 3 — so the chat's stage dividers survive a page reload). */
+async function pushLex(ideaId: string, content: string | string[], stage?: string) {
+  const contents = (Array.isArray(content) ? content : [content]).filter((c) => c.trim())
+  if (!contents.length) return
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { aiChatHistory: true } })
+  const now = new Date().toISOString()
   const updated: ChatMsg[] = [
     ...(Array.isArray(idea?.aiChatHistory) ? (idea!.aiChatHistory as ChatMsg[]) : []),
-    { role: 'lex', content, timestamp: new Date().toISOString() },
+    ...contents.map((c) => ({ role: 'lex', content: c, timestamp: now, stage })),
   ].slice(-60)
   await prisma.idea.update({ where: { id: ideaId }, data: { aiChatHistory: updated } })
 }
@@ -85,6 +90,7 @@ async function buildPrompt(ideaId: string, userId: string, state: CanonicalState
     // The conductor only ever speaks for a freshly-EMPTY field (it returns early on
     // AWAITING_CONFIRMATION), so it is never in the awaiting-refine state.
     awaiting: false,
+    activePage: state.stage,
     acceptedSummary: acceptedSummary(state),
   })
 }
@@ -327,10 +333,65 @@ async function seedComputedProposed(ideaId: string, def: FieldDef, state: Canoni
   return 'Here’s what this choice deliberately rules out, drawn from the options you set aside — accept or edit it.'
 }
 
+// ── End-of-page wrap-up (§19-B Task 2) ───────────────────────────────────────
+// A completed page must never dead-end in chat: the conductor says what has just
+// been achieved, what the briefing is FOR, and what the next three sections do —
+// and the client renders an inline "Continue to …" action alongside it (the same
+// surface the AcceptCard uses). VERBATIM copy, per the brief.
+
+const ORIENTATION_WRAP_BRIEFING =
+  "That completes the first section — the bare bones of your idea are down. I've also put together an " +
+  'initial background briefing in the legislation panel on the right. It’s preliminary research: a first ' +
+  'look at what’s already out there — the law, what Parliament has said, and a few threads worth pulling — ' +
+  'to spark ideas for further investigation. We’ll refine and deepen it as we go.'
+
+const ORIENTATION_WRAP_NO_BRIEFING =
+  'That completes the first section — the bare bones of your idea are down.'
+
+const ORIENTATION_WRAP_ONWARD =
+  'From here the real work starts. Over the next three sections we’ll establish what’s actually causing ' +
+  'the problem, find the points of leverage for solving it, weigh the alternatives and choose the ' +
+  'strongest solution, and build a robust, defensible case for the one you propose. Ready to start the ' +
+  'diagnosis?'
+
+/** The two bubbles that close a completed page and offer the transition. */
+function wrapUpBubbles(state: CanonicalState): string[] {
+  const nextLabel = state.nextPage?.label ?? 'the next section'
+  if (state.stage === 'ORIENTATION') {
+    return [
+      state.initialBackground?.status === 'ready' ? ORIENTATION_WRAP_BRIEFING : ORIENTATION_WRAP_NO_BRIEFING,
+      ORIENTATION_WRAP_ONWARD,
+    ]
+  }
+  const doneLabel = state.pages.find((p) => p.key === state.stage)?.label ?? 'this section'
+  return [
+    `That completes ${doneLabel} — it’s all captured in the panel, and you can reopen anything in it later.`,
+    `Next comes ${nextLabel}, which builds directly on what you’ve just settled. Ready to start ${nextLabel}?`,
+  ]
+}
+
+/** Post the wrap-up once. Returns the bubbles for the client (empty if already said). */
+async function conductPageWrapUp(ideaId: string, state: CanonicalState): Promise<{ messages: string[] }> {
+  const bubbles = wrapUpBubbles(state)
+  const recent = (await chatHistory(ideaId)).slice(-8).map((m) => m.content.trim())
+  if (recent.includes(bubbles[bubbles.length - 1].trim())) {
+    console.log('[lex-diag] wrap-up already said', { page: state.stage })
+    return { messages: [] }
+  }
+  console.log('[lex-diag] page wrap-up', { page: state.stage, nextPage: state.nextPage?.key ?? null })
+  await pushLex(ideaId, bubbles, state.stage)
+  return { messages: bubbles }
+}
+
 /** The conductor. Returns any new Lex chat bubbles for the client to append. */
 export async function orchestrateAfterWrite(ideaId: string, userId: string): Promise<{ messages: string[] }> {
   const state = await computeCanonicalState(ideaId)
-  if (!state || !state.currentField) return { messages: [] }
+  if (!state) return { messages: [] }
+  if (!state.currentField) {
+    // The page is finished. If there's a next page, close this one properly and
+    // offer the transition (§19-B Task 2) — never leave the chat with nothing to do.
+    return state.nextPage ? conductPageWrapUp(ideaId, state) : { messages: [] }
+  }
   const def = fieldDef(state.currentField.key)
   if (!def) return { messages: [] }
   // Only speak when the current field is freshly EMPTY (needs a prompt). If it is
@@ -372,6 +433,6 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
     return { messages: [] }
   }
 
-  await pushLex(ideaId, text)
+  await pushLex(ideaId, text, state.stage)
   return { messages: [text] }
 }

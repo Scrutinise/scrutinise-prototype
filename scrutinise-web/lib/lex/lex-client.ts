@@ -7,7 +7,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { FieldDef } from './page1-config'
-import { pageOf } from './page1-config'
 import { methodForStage, methodBlocksFor } from './method'
 
 export interface LexTurnContext {
@@ -21,6 +20,13 @@ export interface LexTurnContext {
    *  Saved (status AWAITING_CONFIRMATION). In this state Lex refines THIS field only
    *  and points the user to the panel to Save — it never moves on (§13 / Sprint 1.3). */
   awaiting?: boolean
+  /** §19-B Task 1 — the page the STATE MACHINE is on (`Idea.lexPage`), which is what
+   *  selects the method block. Never derived from the field: if they could disagree,
+   *  the prompt could carry a page the user has not entered. */
+  activePage: string
+  /** The page the user has NOT yet moved into, when the active page is complete.
+   *  Present ⇒ the transition-guard block replaces the field block. */
+  nextPageLabel?: string | null
   /** A compact summary of what's already accepted, for grounding. */
   acceptedSummary: string
 }
@@ -195,10 +201,11 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
 export function buildLexSystemPrompt(ctx: LexTurnContext): string {
   const field = ctx.currentField
   // Method layer (§16.3): M-GENERAL + the active stage's block, injected per stage.
-  const activePage = field ? pageOf(field.key) : null
-  const method = methodForStage(activePage?.key)
+  // §19-B: keyed off the STATE MACHINE's page, never off the field — so the method
+  // in the prompt can never describe a section the user has not been moved into.
+  const method = methodForStage(ctx.activePage)
   // [lex-diag] — makes it visible in logs which method blocks are in the prompt (acceptance §19).
-  console.log('[lex-diag] method blocks', { page: activePage?.key ?? null, blocks: methodBlocksFor(activePage?.key) })
+  console.log('[lex-diag] method blocks', { page: ctx.activePage, blocks: methodBlocksFor(ctx.activePage) })
   const fieldBlock = field
     ? `CURRENT FIELD (the platform decides this — you never choose the sequence):
   key:    ${field.key}
@@ -207,7 +214,17 @@ export function buildLexSystemPrompt(ctx: LexTurnContext): string {
   ${field.hints?.length ? 'helps to cover: ' + field.hints.join('; ') : ''}
 
 ${fieldGuidance(field, ctx)}`
-    : `All the fields on the current page are complete. Acknowledge warmly in one or two sentences and tell the user what comes next (they can move on when they're ready). Emit no proposal.`
+    : ctx.nextPageLabel
+      // §19-B Task 1 — the transition guard. This section is finished, the NEXT one
+      // has not been entered, and only the platform can enter it. Lex answers where
+      // it stands and waits; it must not start the next section's conversation.
+      ? `THIS SECTION IS COMPLETE — AND THE USER HAS NOT YET MOVED ON TO "${ctx.nextPageLabel}".
+The platform, not you, moves the user between sections. There is NO active field: nothing you write can be saved anywhere right now.
+
+Answer whatever the user just said, briefly and warmly (1–3 sentences), using only what is already captured. Then, if it fits, remind them they can start ${ctx.nextPageLabel} whenever they're ready — there's a "Continue to ${ctx.nextPageLabel}" button in the chat and in the panel on the right, and simply saying so also works.
+
+HARD RULE: do NOT ask any ${ctx.nextPageLabel} question, do NOT begin diagnosing, analysing causes or proposing next-section content, and do NOT claim you have written anything into a box. Emit no proposal.`
+      : `Every section is complete. Acknowledge warmly in one or two sentences. Emit no proposal.`
 
   return `You are Lex, the guide on Scrutinise — a non-partisan platform that helps people turn policy ideas into Parliament-ready proposals. You are warm, curious, plain-spoken, British English, FT op-ed register. No emojis. Never say you are an AI or name a model. "Challenge" not "problem"; "Contributions" not "comments".
 
@@ -231,7 +248,8 @@ RULES
 - NEVER ask the user to transcribe, copy, re-type, or "pop"/"put" their own words into a box or panel. If they have told you something in chat, YOU tidy it into a proposal (valueText or valueObject) — they only review and Save. Asking them to fill the box themselves is the exact anti-pattern this platform exists to remove.
 - React to what the user just said before anything else.
 - chatText is always 1–4 sentences. Never put JSON or field names in chatText.
-- Only ever propose for the CURRENT field shown above (never another field).
+- Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
+- Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
 - "extracted" is optional; include only slots you are confident about.`
 }
 

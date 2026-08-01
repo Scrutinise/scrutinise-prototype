@@ -8,12 +8,13 @@ import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
 import { setProposal, storeExtracted } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
+import { isContinueIntent, performStageAdvance } from '@/lib/lex/stage'
 
 type Params = { params: Promise<{ id: string }> }
 
 const BodySchema = z.object({ message: z.string().trim().min(1).max(4000) })
 
-type ChatMsg = { role: string; content: string; timestamp?: string }
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
 
 // POST /api/ideas/[id]/lex — one Lex turn. Lex returns content only; the
 // platform validates any proposal and sets state. State never half-advances (§4).
@@ -34,8 +35,33 @@ export async function POST(req: Request, { params }: Params) {
   const { message } = parsed.data
 
   // Current field is whatever the platform says — never the model's choice.
-  const pre = await computeCanonicalState(id)
+  let pre = await computeCanonicalState(id)
   if (!pre) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // ── §19-B Task 1: chat-expressed intent to continue advances the STAGE, via the
+  // same server-side path as the panel CTA — the platform moves first, then Lex
+  // speaks for the new page. Lex is never left conducting a page the state machine
+  // has not entered. // Invariant: chat page == state page, always. If they can
+  // diverge, the bug will recur somewhere else.
+  if (!pre.currentField && pre.nextPage && isContinueIntent(message)) {
+    const now = new Date().toISOString()
+    const historyWithUser: ChatMsg[] = [
+      ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
+      { role: 'user', content: message, timestamp: now, stage: pre.stage },
+    ].slice(-60)
+    await prisma.idea.update({ where: { id }, data: { aiChatHistory: historyWithUser } })
+
+    const { advanced, messages } = await performStageAdvance(id, idea.creatorId, 'chat-assent')
+    const state = await computeCanonicalState(id)
+    console.log('[lex-diag] lex turn → stage advance', {
+      via: 'chat-assent', advanced, currentField: state?.currentField?.key ?? null,
+    })
+    if (advanced) return NextResponse.json({ chatText: null, messages, state })
+    // Advance refused (page not actually complete) — fall through to a normal turn
+    // against freshly-read state.
+    pre = (await computeCanonicalState(id)) ?? pre
+  }
+
   const current = pre.currentField ? fieldDef(pre.currentField.key) ?? null : null
   // While the current box already holds an unsaved proposal, Lex refines THAT box
   // only and points the user to Save — it must not advance (§13 / Sprint 1.3).
@@ -56,6 +82,9 @@ export async function POST(req: Request, { params }: Params) {
     isFirstIdea: ideaCount <= 1,
     currentField: current,
     awaiting,
+    // The method block and the transition guard both key off the STATE MACHINE's page.
+    activePage: pre.stage,
+    nextPageLabel: !current ? pre.nextPage?.label ?? null : null,
     acceptedSummary,
   })
 
@@ -116,15 +145,16 @@ export async function POST(req: Request, { params }: Params) {
     )
   }
 
-  // Persist chat history.
+  // Persist chat history, each message tagged with the stage it was said in (§19-B
+  // Task 3 — the chat's stage dividers must survive a reload).
   const now = new Date().toISOString()
   const updatedHistory: ChatMsg[] = [
     ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
-    { role: 'user', content: message, timestamp: now },
-    { role: 'lex', content: lex.chatText, timestamp: now },
+    { role: 'user', content: message, timestamp: now, stage: pre.stage },
+    { role: 'lex', content: lex.chatText, timestamp: now, stage: pre.stage },
   ].slice(-60)
   await prisma.idea.update({ where: { id }, data: { aiChatHistory: updatedHistory } })
 
   const state = await computeCanonicalState(id)
-  return NextResponse.json({ chatText: lex.chatText, state })
+  return NextResponse.json({ chatText: lex.chatText, messages: [], state })
 }

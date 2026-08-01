@@ -13,6 +13,7 @@ import {
   fireSearchTrigger,
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
+import { assertWritableField } from '@/lib/lex/stage'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -29,7 +30,7 @@ const BodySchema = z.object({
   value: z.union([z.string(), z.array(z.string()), z.record(z.string(), z.string())]).optional(),
 })
 
-type ChatMsg = { role: string; content: string; timestamp?: string }
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
 
 // POST /api/ideas/[id]/fields — server-authoritative field transition (§3.2/§3.4).
 export async function POST(req: Request, { params }: Params) {
@@ -48,6 +49,15 @@ export async function POST(req: Request, { params }: Params) {
   if (!def) return NextResponse.json({ error: `Unknown fieldKey: ${fieldKey}` }, { status: 422 })
   if (CHILD_ENTITY_FIELDS.has(fieldKey)) {
     return NextResponse.json({ error: `${fieldKey} is managed via its own child-entity endpoint` }, { status: 422 })
+  }
+  // §19-B Task 1 — the write-side half of "chat page == state page": a field on a
+  // page the state machine has not entered cannot be written at all.
+  const blocked = await assertWritableField(id, fieldKey)
+  if (blocked) {
+    return NextResponse.json(
+      { error: `${fieldKey} belongs to ${blocked.fieldPage}, which you haven’t started yet.` },
+      { status: 409 },
+    )
   }
 
   try {
@@ -89,15 +99,22 @@ export async function POST(req: Request, { params }: Params) {
   // Post-write conducting (§13 Task 3): every write produces a next step.
   let messages: string[] = []
   if (action === 'accept' && fieldKey === 'keywords') {
-    // Deterministic, platform-owned search trigger (§8.4) + Lex's one-line pointer.
-    // Stage advance to DIAGNOSIS is derived in computeCanonicalState once complete.
+    // Deterministic, platform-owned search trigger (§8.4). The briefing must exist
+    // BEFORE the conductor speaks, because the end-of-page wrap-up (§19-B Task 2)
+    // points at it.
     await fireSearchTrigger(id)
+  }
+  // §19-B Task 2: the conductor always runs — on a completed page it posts the
+  // wrap-up + transition offer rather than falling silent.
+  messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages
+  if (!messages.length && action === 'accept' && fieldKey === 'keywords') {
+    // Keywords accepted but the page isn't finished (an earlier box is still open):
+    // still tell the user the briefing has landed.
     const pointer =
-      "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right. Next we'll move on to the diagnosis."
-    await postLexPointer(id, pointer)
+      "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right."
+    const state = await computeCanonicalState(id)
+    await postLexPointer(id, pointer, state?.stage)
     messages = [pointer]
-  } else {
-    messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages
   }
 
   const state = await computeCanonicalState(id)
@@ -112,12 +129,12 @@ export async function POST(req: Request, { params }: Params) {
   return NextResponse.json({ state, messages })
 }
 
-// Append a Lex message to the chat history.
-async function postLexPointer(ideaId: string, content: string) {
+// Append a Lex message to the chat history, tagged with the stage it was said in.
+async function postLexPointer(ideaId: string, content: string, stage?: string) {
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { aiChatHistory: true } })
   const updated: ChatMsg[] = [
     ...(Array.isArray(idea?.aiChatHistory) ? (idea!.aiChatHistory as ChatMsg[]) : []),
-    { role: 'lex', content, timestamp: new Date().toISOString() },
+    { role: 'lex', content, timestamp: new Date().toISOString(), stage },
   ].slice(-60)
   await prisma.idea.update({ where: { id: ideaId }, data: { aiChatHistory: updated } })
 }

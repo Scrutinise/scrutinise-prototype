@@ -2,14 +2,17 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { computeCanonicalState } from '@/lib/lex/state'
-import { advanceLexPage } from '@/lib/lex/field-machine'
-import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
+import { performStageAdvance } from '@/lib/lex/stage'
 
 type Params = { params: Promise<{ id: string }> }
 
 // The user explicitly moves the flow into the next Lex page ("Continue to Diagnosis",
 // design §14 / Sprint 2 Task 4). Guarded server-side: only forward, only from a
 // complete page. Then the conductor seeds the new page's first field.
+//
+// §19-B Task 1: this route no longer owns the advance — it calls the ONE shared
+// path (`performStageAdvance`) that the chat-assent and inline-chat routes also use.
+// `via` distinguishes them in `[lex-diag]`, nothing else differs.
 const BodySchema = z.object({ action: z.literal('advance') })
 
 export async function POST(req: Request, { params }: Params) {
@@ -24,14 +27,12 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Invalid body' }, { status: 422 })
   }
 
-  const next = await advanceLexPage(id)
-  if (!next) {
+  const { advanced, messages } = await performStageAdvance(id, idea.creatorId, 'panel-cta')
+  if (!advanced) {
     return NextResponse.json({ error: 'Cannot advance yet — finish the current page first.' }, { status: 409 })
   }
 
-  // Seed the new page's first step so the flow never lands idle.
-  const { messages } = await orchestrateAfterWrite(id, idea.creatorId)
   const state = await computeCanonicalState(id)
-  console.log('[lex-diag] page advance', { to: next, seededField: state?.currentField?.key ?? null })
+  console.log('[lex-diag] page advance', { to: advanced, seededField: state?.currentField?.key ?? null })
   return NextResponse.json({ state, messages })
 }

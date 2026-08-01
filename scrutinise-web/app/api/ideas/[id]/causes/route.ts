@@ -13,6 +13,7 @@ import {
   skipField,
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
+import { assertWritableField } from '@/lib/lex/stage'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -57,6 +58,13 @@ export async function POST(req: Request, { params }: Params) {
   const parsed = BodySchema.safeParse(raw)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   const body = parsed.data
+
+  // §19-B Task 1 — the causes loop belongs to Diagnosis; refuse it until the state
+  // machine has entered that page ("chat page == state page", write side).
+  const blocked = await assertWritableField(id, 'causes')
+  if (blocked) {
+    return NextResponse.json({ error: 'You haven’t started the Diagnosis yet.' }, { status: 409 })
+  }
 
   let messages: string[] = []
   try {
