@@ -52,11 +52,41 @@ unset (`lastCheckedAt` still updates) so the next scheduled tick picks it straig
 Deterministic parse failures (a source changed its sheet layout) would fail identically on
 every retry; the log is where a human finds out.
 
+**A zero-observation run is always a FAILURE, never a no-op** (added 2026-08-01). Every handler
+re-upserts its full series on every pass, so "0 observations upserted" cannot mean "nothing
+changed" — it can only mean the fetch or the parse produced nothing. Reporting SUCCESS on zero
+is how `ons-beta-wellbeing-quarterly` shipped a **green run that ingested nothing at all** on the
+first live refresh: ONS's v4 CSV had two confidence-limit columns between the value and the
+first dimension pair, the parser assumed none, and all 1,960 rows were silently discarded by a
+`continue`. A source quietly changing shape is the single most likely long-run failure mode of
+this whole layer, and it must not look like success. Recording FAILURE also leaves
+`lastRefreshedAt` unset, so the next tick retries rather than waiting out a full annual cadence.
+
+## Measured runtimes (first live run, 2026-08-01)
+
+The upsert path is one round trip per observation, sequential — so wall-clock tracks observation
+count closely. Full cold run of all 7 datasets: **~34 minutes** for ~28,500 observations
+(≈14 obs/sec against pooled Neon in `eu-west-2`). The long pole is `obr-historical-forecasts`
+(20,506 observations, ~22 min); everything else is single-digit minutes or less.
+
+That is comfortably inside any sensible cron window, and a normal tick does far less work than
+this (most datasets skip as not-due). It does mean a daily tick should be given a timeout well
+above an hour if several sources come due at once. If runtime ever becomes a problem the obvious
+fix is batching the observation writes (`createMany` + a follow-up update pass) rather than
+per-row `upsert` — not needed at this scale, noted so nobody re-derives it.
+
 ## Not built this sprint
 
-- The actual Railway cron wiring (or equivalent) to invoke `refresh-scheduler.ts` on a schedule
-  — this is the same "built inert, needs Charlie's go-ahead to deploy" position as the DB
-  itself (see the sprint report's DB-choice section).
+- **The actual Railway cron wiring to invoke `refresh-scheduler.ts` on a schedule.** The script
+  itself is now live-run and proven against the real DB — this is purely the deployment step,
+  and it is held because a Railway cron service is a **paid resource**, which falls under the
+  brief's "Charlie confirms before you provision anything that costs money" gate. What it needs
+  when approved: a Railway cron service on this repo, start command
+  `cd scripts/stats && npx tsx --tsconfig ../tsconfig.json refresh-scheduler.ts`, schedule
+  `0 3 * * *` (daily 03:00 UTC — every source's due-ness check makes a daily tick harmless),
+  and `STATS_DATABASE_URL` set in that service's variables. It must NOT be added to the existing
+  `ops`/Ingest service, whose env points at the corpus DB.
 - Alerting on refresh failure (the corpus pipeline's scheduler emails a daily summary; this
-  layer's failure visibility today is "query `StatRefreshLog` yourself"). Cheap follow-on once
-  the DB exists and a first real failure needs surfacing.
+  layer's failure visibility today is "query `StatRefreshLog` yourself"). Now more valuable than
+  it looked when this was written — the first live run produced two failures, one of them silent
+  until the zero-observation rule above was added.

@@ -44,34 +44,42 @@ everything was built and committed from the desktop this session.
 - Initial migration SQL already generated **offline** (no DB was needed to produce it):
   `scripts/stats/prisma/migrations/20260730235112_init/migration.sql`
 
-**What's NOT done — the one open item:** no database exists. Charlie confirmed the DB choice
-is a **new, separate Neon project** (not Hetzner) — but the desktop session couldn't provision
-it: no stored Neon API key, and `neonctl`'s login needs a browser this environment doesn't
-have. Charlie chose to hold off rather than hand over credentials that session. **This is the
-actual next step** — see below.
+> **SUPERSEDED 2026-08-01 — the database is now provisioned and loaded.** Everything below in
+> this section described the pre-provisioning state; steps 1–5 are DONE. Neon project
+> `scrutinise-stats` (`winter-frost-26605722`), `aws-eu-west-2`, PG 17, separate project from
+> the corpus DB. Both migrations applied, catalogue seeded, all 7 datasets ingested. Credentials
+> are in **`scripts/stats/.env`** (gitignored) — note that location: NOT `scrutinise-web/.env`
+> as step 1 below originally suggested, because the stats scripts run with `scripts/stats` as
+> cwd and `dotenv/config` reads the cwd's `.env`. On a fresh clone you still need step 2
+> (`npm install`) and you need to recreate `.env` (ask Charlie for the connection strings, or
+> read them from the Neon console). See `STATS_SCHEMA.md` for the full connection details and
+> `CHANGE_LOG.md` "STATS — database provisioned" for what the first live run found.
+>
+> **Still open:** step 6 (the Railway cron) — held because it is a paid resource, see
+> `STATS_REFRESH.md` for the exact wiring it needs. And step 7.
 
 ## Next steps, in order
 
-1. **Provision the Neon project.** Check whether the laptop has Neon console access or an API
-   key available (browser-based `neonctl auth` may just work there, unlike the desktop). Either:
-   - Create a new Neon project (e.g. `scrutinise-stats`) via console yourself, grab the pooled +
-     direct connection strings, and set `STATS_DATABASE_URL` (pooled) + `STATS_DIRECT_URL`
-     (direct) in `scrutinise-web/.env`, **or**
-   - Run `npx neonctl auth` then `npx neonctl projects create --name scrutinise-stats` if you'd
-     rather have CC do it on the laptop.
-   Do **not** put these in the corpus DB's project — separate project, separate cost line.
-2. `cd scripts/stats && npm install` — this folder has its own `node_modules` (see gotcha #1),
-   not committed, so this is required after every fresh clone/pull.
-3. Apply the migration: `npx prisma migrate deploy --schema=prisma/schema.prisma --config=prisma.config.ts`
-   (from `scripts/stats/`, with `STATS_DATABASE_URL`/`STATS_DIRECT_URL` set).
-4. `npx tsx --tsconfig ../tsconfig.json seed-catalogue.ts` — seeds COFOG codes + the 7
-   `StatDataset` rows.
-5. `npx tsx --tsconfig ../tsconfig.json refresh-scheduler.ts` — first real ingest run. Sanity
-   check the counts against the pilot numbers in `CHANGE_LOG.md` (same order of magnitude,
-   though `obr-historical-forecasts` will ingest more sheets than the pilot's spot-check did —
-   read the handler in `ingest-handlers.ts` if a count looks off).
-6. Once real data is in and counts look sane: wire a scheduled job (Railway cron or equivalent)
-   to invoke `refresh-scheduler.ts` periodically — not built this sprint, see `STATS_REFRESH.md`.
+1. ~~**Provision the Neon project.**~~ **DONE 2026-08-01** — see the note above. Historical
+   detail: Charlie confirmed the DB choice is a new, separate Neon project (not Hetzner); the
+   30 Jul desktop session couldn't provision it (no stored API key, `neonctl` login needs a
+   browser). Resolved by Charlie issuing an **organisation-scoped** Neon API key — note a
+   *project-scoped* key cannot create projects (`"project-scoped keys are not allowed to create
+   projects"`), which cost a round trip.
+2. ~~`cd scripts/stats && npm install`~~ **DONE** — but still required after every fresh
+   clone/pull, since `node_modules` isn't committed (see gotcha #1).
+3. ~~Apply the migration~~ **DONE** — `npx prisma migrate deploy --config=prisma.config.ts` from
+   `scripts/stats/`. **Run `npx tsx --tsconfig ../tsconfig.json whichdb.ts` first, every time**
+   (`docs/CLAUDE.md` §16) — it hard-fails if either URL resolves to the corpus endpoint.
+4. ~~`seed-catalogue.ts`~~ **DONE** — 10 COFOG codes + 7 `StatDataset` rows.
+5. ~~`refresh-scheduler.ts` first real ingest~~ **DONE.** Worth knowing: the first live run
+   found **six** real bugs that the offline build could not have surfaced, three of which
+   silently produced wrong or missing data behind a green status. Use
+   `npx tsx --tsconfig ../tsconfig.json verify.ts` — it prints the per-dataset scorecard and,
+   importantly, **reconciles attempted-vs-stored observation counts**, which is how the silent
+   overwrites were caught. Any `** ROWS LOST **` line means duplicate observation keys.
+6. **Wire the scheduled job (Railway cron) — STILL OPEN, needs Charlie's go-ahead** because it
+   is a paid resource. Exact wiring in `STATS_REFRESH.md`.
 7. Longer-term, explicitly out of scope for Phase A (don't start these without a fresh brief):
    full Lex tool-calling integration, Phase B (OECD/IMF/World Bank/Eurostat), Phase C (other
    countries), broadening ONS Beta API coverage past the one pilot dataset, PESA past Chapter 5,

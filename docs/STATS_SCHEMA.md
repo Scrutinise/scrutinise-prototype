@@ -70,11 +70,21 @@ period).
   needs a join through `stat_series`. Indexed on `(seriesId, periodStart)` (unique — one value
   per series per period, upsert target) and `(geography, cofogFunctionCode, periodStart)` (the
   rollup index).
-- **`stat_cofog_function`** — the 10 top-level COFOG codes as a first-class reference table
-  (`lib/cofog.ts`), FK'd from `stat_series.cofogFunctionCode`. Sub-function codes (e.g. `07.1`)
-  are stored as free text on the series, not FK'd — the reference table only carries the
-  top-level 10 (extending to the full official sub-function tree is a Phase B/C nice-to-have,
-  not blocking).
+- **`stat_cofog_function`** — the COFOG code list as a first-class reference table, FK'd from
+  `stat_series.cofogFunctionCode`. **Sub-function codes (e.g. `07.1`) are FK'd too, not free
+  text** — the `code` column is the FK target for every value, at any depth, and `parent`
+  carries the top-level code a sub-function rolls up to.
+
+  > **CORRECTION (2026-08-01).** This bullet previously claimed sub-codes were "stored as free
+  > text on the series, not FK'd." That was wrong — `schema.prisma` has always declared a real
+  > relation on this column. The doc and the schema disagreed, the schema won at runtime, and
+  > the **entire PESA refresh failed with `P2003` on the first live ingest** because
+  > `seed-catalogue.ts` seeds only the top-level 10 while PESA Table 5.2 reports against 59
+  > sub-functions. Fixed in `lib/upsert.ts`'s `ensureCofogFunction()`, which creates a
+  > sub-function reference row on demand from the source's own label (deriving `parent` from
+  > the code) rather than relying on a hardcoded list that drifts as sources add breakdowns.
+  > `seed-catalogue.ts` still seeds only the top-level 10 — that is now deliberate, since the
+  > sub-tree is discovered from the data.
 - **`stat_refresh_log`** — one row per refresh attempt (`stat_dataset` 1:many), mirroring the
   existing Ops scheduler pattern (`scripts/operational`) but scoped to this DB and much
   lighter — no always-on daemon, see `STATS_REFRESH.md`.
@@ -95,18 +105,40 @@ ISO-3166 alpha-2 for country level (`GB`), with room for ISO-3166-2:GB (`GB-ENG`
 no devolved rows exist yet, but the column supports it without a migration when they do. This
 is also the field Phase C adds `US`/`FR` to.
 
+## The database (live since 2026-08-01)
+
+Neon project **`scrutinise-stats`** (`winter-frost-26605722`), org `org-summer-tooth-29015000`,
+region `aws-eu-west-2` (London — same region as the corpus project, different project),
+Postgres 17, branch `main` (`br-soft-lake-za4122vr`), endpoint `ep-gentle-waterfall-zab5zcwv`,
+database `neondb`. Compute is capped at 0.25–2 CU autoscaling with a 5-minute suspend timeout —
+this workload is a few hundred MB and runs a handful of scheduled batch jobs a month, so it
+should sit idle (and unbilled for compute) almost all the time.
+
+Credentials live in **`scripts/stats/.env`** (gitignored) as `STATS_DATABASE_URL` (pooled) and
+`STATS_DIRECT_URL` (non-pooled, used by `prisma.config.ts` for migrations).
+
+**Before any migration or DDL against this DB, run `npx tsx --tsconfig ../tsconfig.json
+whichdb.ts` from `scripts/stats/`** — the `docs/CLAUDE.md` §16 rule, with a stats-specific
+guard: it prints host/database/user for both URLs and hard-fails if either resolves to the
+corpus/app endpoint.
+
 ## What's genuinely NOT built yet (honest gaps, not oversights)
 
-- **No live database.** Schema is validated and the client generates offline; the initial
-  migration SQL was produced via `prisma migrate diff --from-empty` (no DB connection needed
-  for that command) and has never been applied anywhere. See the DB-choice section of the
-  sprint report for why, and `seed-catalogue.ts`/`refresh-scheduler.ts` are therefore built but
-  never run against a real target — same "built inert" pattern this codebase already uses for
-  the vector-embed pipeline.
-- **`ingest-handlers.ts` is untested against a live DB** for the same reason — the parsing logic
-  underneath it (in `sources/*.ts`) IS tested, against real fetched data, in `measure-pilot.ts`
-  runs (see the pilot scorecard). The upsert plumbing itself has not been exercised.
-- Full COFOG sub-function code list (only top-10 + whatever sub-codes PESA's Table 5.2 rows
-  happened to carry are seeded/seen — not the complete official COFOG classification tree).
-- Sub-function-level FK integrity (sub-codes are free text, not FK'd to a sub-function
-  reference row, since no such table was built this sprint).
+- **The scheduled invocation of `refresh-scheduler.ts` is not deployed.** The script is live-run
+  and proven, but nothing calls it on a timer yet — that needs a Railway cron service, which is
+  a paid resource and so sits behind the brief's "Charlie confirms before you provision anything
+  that costs money" gate. See `STATS_REFRESH.md` for exactly what the wiring needs.
+- **Refresh-failure alerting.** Failures are recorded in `stat_refresh_log` (and a
+  zero-observation run is now correctly recorded as `FAILURE`), but nothing emails anyone.
+- Full official COFOG sub-function tree. The reference table now holds the top-level 10 plus
+  every sub-code the ingested sources actually report against, created on demand — not the
+  complete official classification. Codes no source uses simply don't exist as rows.
+- **PESA's health lines are attributed to top-level `07`, not to COFOG sub-functions.** PESA
+  reports health as three unnumbered UK service categories ("Medical services", "Medical
+  research", "Central and other health services") rather than COFOG `07.1`–`07.6`. Mapping
+  "Medical services" to a single COFOG sub-function would be inventing a classification the
+  source does not make, so the three are kept as distinct series under `07`, with the service
+  name in `sourceSeriesId`. They sum to PESA's own "Total health" row exactly.
+- A combined department × function × **year** cube. PESA publishes the function time series
+  (Table 5.2, multi-year, no departmental split) and the departmental cross-tab (Table 5.1,
+  single latest year) as separate tables; it does not publish the combined cube.

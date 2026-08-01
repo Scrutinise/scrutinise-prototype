@@ -1,6 +1,15 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-01 11:05 UTC — LEX REBUILD Sprint 3-B: the conversation/state divergence fix
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-01 23:30 UTC — STATS: the statistics DB is PROVISIONED and LIVE — a separate
+Neon project (`scrutinise-stats`), both migrations applied, all 7 Phase A datasets ingested
+(3,147 series / 28,857 observations / 17 MB), query layer exercised end-to-end. The first live run
+found six real bugs the offline build could not see, three of which reported SUCCESS while
+producing wrong or missing data — ONS Beta ingested 0 of 1,960 rows, ALL UK health spending was
+being dropped from PESA, and 533 CDID rows were destroyed by a unique key that could not
+distinguish an annual observation from Q1 of the same year. All fixed, re-ingested, and two new
+guards (zero-observation = FAILURE; an attempted-vs-stored reconciliation) make that class of
+silent failure visible from now on. Railway cron still NOT wired — paid resource, Charlie's gate.
+Earlier: 2026-08-01 11:05 UTC — LEX REBUILD Sprint 3-B: the conversation/state divergence fix
 (§19-B). Cause found in the data, not guessed: `lexPage` never left ORIENTATION, so `currentField`
 was null, so every Page-2 proposal Lex emitted was silently discarded while the empty-field prompt
 ("tell them what comes next") plus the whole-kernel M-GENERAL method block let it conduct Diagnosis
@@ -118,6 +127,202 @@ dividers and stage collapse survive a page reload instead of only living in clie
 
 **Out of scope, unchanged:** search-result relevance (pass-2 / search workstream). **Not
 promoted** — Charlie replays the test on the preview first.
+
+---
+
+## STATS — Database provisioned, first live ingest, six bugs the offline build could not see (2026-08-01 23:30 UTC)
+
+**Completes the provisioning step left open by the 31 Jul entry below.** Charlie supplied an
+**organisation-scoped** Neon API key; the stats DB now exists, both migrations are applied, the
+catalogue is seeded, and all 7 Phase A datasets are ingested. Read this entry together with the
+one below — that one is the build, this one is what happened when the build met real data.
+
+### The database
+
+Neon project **`scrutinise-stats`** (`winter-frost-26605722`), org `org-summer-tooth-29015000`,
+**a genuinely separate project** from the corpus/app Neon (`dry-wildflower-60883981`, logical
+size 16.98 GB — the one the brief §0 says not to compete with). `aws-eu-west-2` (London, same
+region as the corpus), Postgres 17, branch `main`, endpoint `ep-gentle-waterfall-zab5zcwv`,
+database `neondb`. Compute capped at **0.25–2 CU autoscaling, 5-minute suspend** — this workload
+is 17 MB and a handful of batch jobs a month, so it should be idle and unbilled for compute
+almost always. Credentials in **`scripts/stats/.env`** (gitignored, confirmed via
+`git check-ignore`) — note: `scripts/stats/.env`, NOT `scrutinise-web/.env`, because these
+scripts run with `scripts/stats` as cwd and `dotenv/config` reads the cwd's `.env`.
+
+**One round trip lost to key scope:** the first key Charlie issued was *project-scoped* to the
+existing Scrutinise project. Project-scoped keys cannot list or create projects
+(`"project-scoped keys are not allowed to create projects"`), and using it to add a database
+*inside* the corpus project would have violated brief §0. An **Organization**-scoped key is
+required. Worth remembering — the Neon console offers Personal / Organization / Project scope
+and the project-settings route naturally leads to the wrong one.
+
+### Six real bugs, every one invisible without a live run
+
+The build shipped "inert" on 31 Jul — schema validated, client generated, migration produced,
+sources parse-tested against live fetches, but **nothing ever written to a database**. That
+posture caught the fetch/parse bugs and none of the write-path or data-modelling ones. All six
+below survived the offline build; **three produced wrong or missing data behind a green
+`SUCCESS`.**
+
+1. **ONS Beta CSV: hardcoded `v4_0` header shape → 0 rows ingested, reported SUCCESS.** The v4
+   CSV-W header's first cell is `v4_N`, where N counts observation-adjacent columns (markers,
+   confidence limits) between the value and the first dimension pair. `wellbeing-quarterly`
+   ships **`v4_2`** (LCL, UCL). Assuming N=0 shifted every dimension two columns left, so the
+   `time` dimension read the empty LCL/UCL cells and **all 1,960 rows failed their period parse
+   and were dropped by a `continue`.** Fixed by reading N from the marker.
+2. **ONS Beta dimensions mapped positionally against the API's `dimensions` array.** The CSV's
+   column order does not match it — `wellbeing-quarterly` lists `estimate` before
+   `measureofwellbeing` in the API and the reverse in the CSV. Even with (1) fixed, two
+   dimensions would have been silently mislabelled. Now matched by the header's own column names.
+3. **PESA failed entirely — `P2003` foreign-key violation.** `STATS_SCHEMA.md` claimed
+   sub-function COFOG codes were "free text, not FK'd". **That was wrong** —
+   `stat_series.cofogFunctionCode` has always been a real FK to `stat_cofog_function.code`, and
+   the seed loads only the 10 top-level codes while PESA reports against 59 sub-functions. Doc
+   and schema disagreed; the schema won at runtime. Fixed with `ensureCofogFunction()`, which
+   creates sub-function rows on demand from the source's own label (deriving `parent` from the
+   code) rather than a hardcoded list that drifts. Doc corrected.
+4. **ALL UK health spending was being silently dropped from the function time series.** PESA
+   numbers every function's sub-rows (`1.1`, `1.2`…) **except health**, which it reports as three
+   unnumbered UK service categories — "Medical services", "Medical research", "Central and other
+   health services". `parseCofogRowLabel` returned null for all three. This is the series behind
+   the brief's own example question ("how has UK health spending changed since 1997"). Fixed by
+   tracking the enclosing section and attributing unnumbered rows to it.
+   **That fix was wrong on the first attempt and the check caught it:** it swept the sheet's
+   trailing grand-total and accounting-adjustment rows into COFOG 10, inflating social protection
+   from £299bn to £1,424bn. A section now ends at its own "Total" row. Verified against PESA's
+   own totals — **all 50 section-year totals reconcile within ±2 £m** on values up to £384bn
+   (rounding noise from summing rounded sub-rows); health went from absent to exact
+   (218,567 vs 218,567 for 2020-21). Capture 295 → 310 observations.
+5. **The observation unique key could not represent granularity — 533 CDID rows destroyed.** A
+   single ONS CDID file carries annual, quarterly *and* monthly rows for one series, and `"1948"`,
+   `"1948 Q1"` and `"1948 JAN"` all normalise to `periodStart` 1948-01-01. Under
+   `@@unique([seriesId, periodStart])` each year's Q1 value was **overwritten by that year's
+   annual value** — GDP held 78 annual + 214 quarterly observations where 292 quarterly should
+   exist, with every 1-January row being the annual one. Fixed by adding `periodType` to the key
+   (migration `20260801225500_observation_key_includes_period_type`) and re-ingesting.
+6. **HMRC tax-gap series identity was incomplete — 60 of 600 rows overwritten.** Table 1.1 is
+   Tax × Type × Component, but the series key came from **Component alone**, so component names
+   that recur under every tax ("Tax gap", "Total VAT") collapsed VAT's tax gap and Corporation
+   Tax's tax gap into the same series. Now keyed on tax + type as well: 600/600 distinct, 0 lost,
+   30 series (was 27).
+
+### Measured scorecard (live DB, after all fixes and a full forced re-ingest)
+
+| dataset | series | observations | span | reconcile |
+|---|---|---|---|---|
+| `ons-cdid-headline` | 4 | 2,242 | 1948-01-01 → 2026-06-01 | exact |
+| `ons-beta-wellbeing-quarterly` | 40 | 1,960 | 2011 → 2023 | exact |
+| `obr-psf-databank` | 31 | 2,443 | **1900** → 2030 | exact |
+| `obr-historical-forecasts` | 2,807 | 20,482 | 1970 → 2030 | −24 (source dupes, below) |
+| `pesa-ch5-function` | 189 | 437 | 2020-21 → 2024-25 | exact |
+| `hmrc-receipts` | 46 | 693 | 2006-07 → 2025-26 | exact |
+| `hmrc-tax-gap` | 30 | 600 | 2005-06 → 2024-25 | exact |
+| **TOTAL** | **3,147** | **28,857** | — | 6 of 7 exact |
+
+**DB size 17 MB** (18,096,128 bytes). `outturn` 4,335 · `forecast` 19,027 · unflagged 5,495;
+**123 distinct forecast vintages**.
+
+**Query layer exercised live, all three entry points.** `findSeries` returns the 4 CDID macro
+series; `getSeriesTimeSeries` returns **363 GDP points** (292 before the bug-5 fix — the
+recovered Q1 rows); and the brief's headline question now answers cleanly:
+
+```
+"What does the UK spend most on", 2024-25 -> 10 functions, £1,157,828m total
+  10  Social protection                 £383,934m  33.2%
+  07  Health                            £241,835m  20.9%     <- absent entirely before bug 4 was fixed
+  01  General public services           £157,591m  13.6%
+  09  Education                         £118,676m  10.2%
+  04  Economic affairs                  £ 86,793m   7.5%
+  02  Defence                           £ 63,648m   5.5%
+  03  Public order and safety           £ 51,371m   4.4%
+  06  Housing and community amenities   £ 22,319m   1.9%
+  05  Environmental protection          £ 17,140m   1.5%
+  08  Recreation, culture and religion  £ 14,521m   1.3%
+```
+
+Every one of those ten matches PESA's own "Total <function>" row.
+
+### The lesson, and the guard that now enforces it
+
+Bugs 1, 5 and 6 all reported **`SUCCESS`**. That is the failure mode this layer must not have:
+these sources revise their spreadsheet layouts on their own schedule, and a shape change that
+silently yields nothing looks exactly like a clean run. Two changes make it visible:
+
+- **`refresh-scheduler.ts` now treats a zero-observation run as `FAILURE`, never a no-op.** Safe
+  because every handler re-upserts its full series each pass, so "0 upserted" can only mean the
+  fetch or parse produced nothing. `FAILURE` also leaves `lastRefreshedAt` unset, so the next
+  tick retries instead of waiting out a full annual cadence.
+- **`verify.ts` (new) reconciles attempted-vs-stored observation counts per dataset** and prints
+  `** N ROWS LOST **` on any gap. This reconciliation is what caught bugs 5 and 6 — the handler
+  counts what it *tried* to write, the table holds what *landed*, and nothing was comparing them.
+
+**And it immediately caught a seventh thing, in the opposite direction.** After the bug-6
+re-ingest, `hmrc-tax-gap` reconciled at **1,140 stored vs 600 attempted** — a *surplus*. Cause:
+fixing a series key **strands the series created under the old key**. The upsert matches by key,
+so a changed key writes a new row beside the old one rather than updating it; 27 pre-fix series
+(created 22:35, `sourceSeriesId` null, old `tax_gap_pct_*` labels) sat alongside the 30 correct
+ones (created 23:14), double-counting all 540 observations. Verified against `createdAt` and key
+shape, then deleted with a guard that refused to run unless it matched exactly 27 series / 540
+observations. `hmrc-tax-gap` is now 30 / 600, exact. `verify.ts` now distinguishes the two
+directions — a deficit is `ROWS LOST` (key collision), a surplus is `ORPHANED ROWS` (stale series
+from a key change). **Anyone changing a series key in future must delete the old series**; the
+re-ingest alone will not.
+
+### Known, quantified, deliberately NOT "fixed"
+
+`obr-historical-forecasts` loses **24 of 20,506 rows (0.12%)** to duplicate observation keys, and
+the `periodType` fix does not explain it. Diagnosed exactly, both causes in OBR's own workbook:
+the `CACB (2)` sheet has **two adjacent columns both labelled `2023-24`** with different values
+(12 rows), and `£PSNB`/`PSNB` have the row label **`July 1996` appearing twice** (12 rows). No
+fix applied on purpose: for the duplicate column there is no principled basis for choosing a
+value, and inventing a vintage name like "July 1996 (2)" would assert a forecast round that does
+not exist. `verify.ts` surfaces this every run rather than hiding it.
+
+### Corrections to the pilot numbers in the entry below
+
+- **ONS Beta: 980 series → 40.** The pilot's 980 was inflated ~24× by bug (1) — with dimensions
+  shifted, the series key was built from the empty confidence-limit and time columns, making
+  nearly every row look unique. Observation count (1,960) was right.
+- **PESA: 186 series / 422 obs → 189 / 437**, the increase being the recovered health lines.
+- The pilot's **4,081 series** headline is therefore superseded by the measured live figure.
+
+### Sizing — the 31 Jul projection held
+
+Measured **17 MB** for the full ingested Phase A slice. This confirms the 31 Jul read that the
+brief §9's "single-digit to low-tens of GB" expectation is a Phase B/C (multi-country OECD/IMF)
+scale, not the UK spine — by roughly three orders of magnitude. Nothing about the DB choice
+changes; the 0.25–2 CU cap is generous for this.
+
+### Also in this entry
+
+- **`whichdb.ts` (new, `scripts/stats/`)** — the `docs/CLAUDE.md` §16 pre-migration check for
+  this DB, with a stats-specific guard: prints host/database/user for both URLs and **hard-fails
+  if either resolves to the corpus endpoint**. Run before both migrations.
+- **`lib/db.ts` gained `import 'dotenv/config'`.** Without it only `prisma.config.ts` loaded a
+  `.env`, so migrations would have worked and every subsequent script would have thrown
+  "STATS_DATABASE_URL not set".
+- **`getCofogRollup` gained `rollUpToTopLevel`** so "what does the UK spend most on" returns the
+  10 top-level functions rather than 60 mixed-granularity rows. Double-count-safe for Phase A
+  data (PESA publishes only leaf codes, except health at top level only) — re-check if a source
+  is added that publishes both levels.
+- **`package.json`'s `migrate:diff` used Prisma-6 flags** (`--from-empty --to-schema-datamodel`)
+  that error outright on Prisma 7. Corrected to `--from-config-datasource --to-schema`, and
+  `whichdb`/`seed`/`refresh`/`verify`/`migrate:deploy` scripts added.
+- COFOG display names leaked footnote markers (`"Public debt transactions (2),"`) because the
+  strip pattern was anchored before trailing punctuation. Fixed — these names reach Lex.
+- `xlsx` carries a known high-severity advisory (prototype pollution + ReDoS) with **no fix
+  available** on npm (SheetJS left the registry). Same dependency `scripts/costing/*` already
+  uses; inputs are government spreadsheets from fixed known URLs. Accepted, flagged.
+
+### Still open
+
+- **The Railway cron for `refresh-scheduler.ts` is NOT wired** — held because it is a paid
+  resource, under brief §9's "Charlie confirms before you provision anything that costs money".
+  Exact wiring in `STATS_REFRESH.md`. Measured full cold run: **~34 min for ~28.5k observations**
+  (~14 obs/sec, one round trip per observation; `obr-historical-forecasts` is ~22 min of it), so
+  a daily tick needs a timeout above an hour.
+- Refresh-failure alerting (visibility today is "query `stat_refresh_log`").
+- Full Lex tool-calling integration; Phase B/C sources. Both explicitly follow-ons.
 
 ---
 

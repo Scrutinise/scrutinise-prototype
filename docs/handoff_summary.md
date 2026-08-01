@@ -2,7 +2,16 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-01 11:05 UTC — ▼ LEX REBUILD Sprint 3-B (§19-B): the three defects from
+*Last updated: 2026-08-01 23:30 UTC — ▼ STATS: **the statistics DB is PROVISIONED and LIVE** —
+separate Neon project `scrutinise-stats` (`winter-frost-26605722`, `aws-eu-west-2`, PG 17), both
+migrations applied, all 7 Phase A datasets ingested, 17 MB. The first live run found **six real
+bugs the offline build could not see, three of them reporting `SUCCESS` while producing wrong or
+missing data** — ONS Beta ingested 0 of 1,960 rows, ALL UK health spending was being dropped from
+PESA, 533 CDID rows were destroyed by a unique key that couldn't tell an annual observation from
+Q1. All fixed and re-ingested; two new guards (zero-observation = FAILURE, and an
+attempted-vs-stored reconciliation in the new `verify.ts`) make that class of failure visible from
+now on. **Railway cron still NOT wired — paid resource, Charlie's money gate.** See its own
+CURRENT STATE section. ▼ 2026-08-01 11:05 UTC — ▼ LEX REBUILD Sprint 3-B (§19-B): the three defects from
 Charlie's 1 Aug pass-1 test are fixed, preview only, **NOT promoted**. Cause of the headline
 breakdown found in the idea row itself, not guessed — see its own CURRENT STATE section. ▼
 2026-07-31 00:03 UTC — ▼ STATS: Phase A (UK spine) sprint built end-to-end
@@ -82,7 +91,58 @@ CHANGE_LOG "LEX REBUILD — Sprint 3-B" (2026-08-01 11:05 UTC); the rules that h
 
 ---
 
+## CURRENT STATE — STATS: DB PROVISIONED + LIVE, six bugs found and fixed (2026-08-01 23:30 UTC)
+
+**Completes the provisioning step the entry below left open.** Full detail: CHANGE_LOG "STATS —
+Database provisioned, first live ingest, six bugs the offline build could not see"
+(2026-08-01 23:30 UTC), plus `docs/STATS_SCHEMA.md` (now carries the live connection details and
+a correction) and `docs/STATS_REFRESH.md`. Not repeated here.
+
+- **The DB exists and holds real data.** Neon project `scrutinise-stats`
+  (`winter-frost-26605722`), `aws-eu-west-2`, PG 17 — **a separate project** from the corpus Neon
+  (`dry-wildflower-60883981`), as brief §0 requires. Both migrations applied, catalogue seeded,
+  all 7 Phase A datasets ingested. Credentials in **`scripts/stats/.env`** (gitignored) — that
+  path, not `scrutinise-web/.env`, because the scripts run with `scripts/stats` as cwd.
+  Compute capped 0.25–2 CU with a 5-min suspend; measured footprint 17 MB (3,147 series / 28,857 observations).
+- **Charlie's first API key was project-scoped and could not create projects** — an
+  **Organization**-scoped Neon key is required. Cost one round trip; noting so it isn't repeated.
+- **Six real bugs, none of which the offline build could have surfaced; three reported
+  `SUCCESS` while producing wrong or missing data.** Headlines: ONS Beta ingested **0 of 1,960
+  rows** (hardcoded `v4_0` CSV header shape — that dataset is `v4_2`); **all UK health spending
+  was silently dropped** from PESA's function series (PESA doesn't COFOG-number its health
+  rows); the observation unique key couldn't tell an annual observation from Q1 of the same
+  year, **destroying 533 CDID rows**; HMRC tax-gap collapsed every tax's identically-named
+  component into one series, **overwriting 60 rows**. Plus a PESA foreign-key failure from a
+  schema/doc contradiction, and a dimension-order assumption. All fixed, all re-ingested.
+- **Two guards now make that class of failure visible**, which matters more than the individual
+  fixes: `refresh-scheduler.ts` treats a zero-observation run as `FAILURE` (never a no-op), and
+  the new `verify.ts` **reconciles attempted-vs-stored observation counts** per dataset, printing
+  `** N ROWS LOST **` on any gap. That reconciliation is what caught two of the six — and then
+  caught a seventh thing in the opposite direction: **fixing a series key strands the series
+  created under the old key** (the upsert matches by key, so a changed key writes a new row
+  beside the old). 27 stale tax-gap series were double-counting 540 observations; deleted behind
+  an exact-match guard. **If you ever change a series key, delete the old series — re-ingesting
+  alone will not.**
+- **Verified end-to-end, not just counted:** PESA parses reconcile against PESA's own totals
+  (all 50 section-year totals within ±2 £m on values up to £384bn), and the brief's headline
+  question now answers cleanly across all 10 COFOG functions (£1,157,828m for 2024-25;
+  Social protection 33.2%, Health 20.9% — Health having been absent entirely before the fix).
+- **One known, quantified residual, deliberately not fixed:** `obr-historical-forecasts` loses
+  24 of 20,506 rows (0.12%) to duplicate keys **in OBR's own workbook** — a sheet with two
+  columns both labelled `2023-24`, and a row label `July 1996` appearing twice. No principled
+  way to choose a value or name a vintage that doesn't exist; surfaced by `verify.ts` every run.
+- **NEXT / still open:** the **Railway cron is NOT wired** — held because it is a paid resource
+  (brief §9's money gate); exact wiring is in `STATS_REFRESH.md`, and a full cold run measures
+  ~34 min so give it a timeout above an hour. Then refresh-failure alerting, then full Lex
+  tool-calling integration (brief scopes it as a follow-on, not Phase A blocking).
+
+---
+
 ## CURRENT STATE — STATS: Phase A (UK spine) built, DB choice pending Charlie (2026-07-31 00:03 UTC)
+
+> **SUPERSEDED by the entry above (2026-08-01 23:30 UTC)** — the DB is now provisioned and
+> loaded, and the "built inert / never run" statements below no longer hold. Kept for the build
+> history and the pilot numbers (two of which the live run corrected — see the CHANGE_LOG).
 
 **Executes `docs/STATS_PHASE_A_BRIEF.md`.** New parallel workstream, separate from the corpus/
 search/Central work above — a standalone statistics store. Full detail: `docs/STATS_SCHEMA.md`,
