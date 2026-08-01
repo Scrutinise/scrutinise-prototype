@@ -1,7 +1,7 @@
 // The write path for each seeded StatDataset — fetch (via the source modules
 // proven in measure-pilot.ts) + upsert series/observations. One handler per
 // dataset id in seed-catalogue.ts. refresh-scheduler.ts dispatches to these.
-import { upsertSeries, upsertObservation } from './lib/upsert'
+import { upsertSeries, upsertObservation, ensureCofogFunction } from './lib/upsert'
 import { CDID_SERIES, fetchCdidSeries } from './sources/ons-cdid'
 import { getLatestVersionMeta, parseOnsBetaCsv } from './sources/ons-beta'
 import { fetchObrWorkbook, parsePsfSince1900, parsePsfAggregatesGbp, parseHistoricalForecastSheet } from './sources/obr'
@@ -65,18 +65,23 @@ async function refreshOnsBetaWellbeing(): Promise<RefreshResult> {
     const sourceSeriesId = nonTimeDims.map(([, v]) => v.code).join('|')
     const seriesLabel = nonTimeDims.map(([, v]) => v.label).join(' / ')
     const geography = geo.code === 'K02000001' ? 'GB' : geo.code
+    // Not every row on this dataset is a 0–10 score: the `estimate` dimension carries
+    // both the mean rating (average-mean, a 0–10 score) and the share of respondents in
+    // each band (very-good/good/fair/poor — percentages, e.g. 16.30). Labelling those
+    // SCORE_0_10 would be wrong data, so the unit is derived per row.
+    const unit = row.dims.estimate?.code === 'average-mean' ? 'SCORE_0_10' : 'PERCENT'
     const seriesId = await upsertSeries({
       datasetId: 'ons-beta-wellbeing-quarterly',
       sourceSeriesId,
       geography,
       measure: 'wellbeing_estimate',
-      unit: 'SCORE_0_10',
+      unit,
       cofogFunctionCode: null,
       forecastVintage: null,
       seriesLabel,
     })
     seriesSeen.add(seriesId)
-    await upsertObservation(seriesId, geography, 'SCORE_0_10', null, {
+    await upsertObservation(seriesId, geography, unit, null, {
       periodType: period.periodType as never,
       periodStart: period.periodStart,
       periodLabel: period.periodLabel,
@@ -159,6 +164,9 @@ async function refreshPesaCh5(): Promise<RefreshResult> {
   const seriesSeen = new Set<string>()
   let observations = 0
   for (const row of [...parseFunctionTimeSeries(wb), ...parseDeptByFunctionSnapshot(wb)]) {
+    // stat_series.cofogFunctionCode is a real FK — the sub-function codes PESA reports
+    // against are not in seed-catalogue.ts's top-level-only seed, so create them here.
+    if (row.cofogFunctionCode) await ensureCofogFunction(row.cofogFunctionCode, row.cofogFunctionName)
     const seriesId = await upsertSeries({
       datasetId: 'pesa-ch5-function',
       sourceSeriesId: row.sourceSeriesId,
@@ -217,13 +225,13 @@ async function refreshHmrcTaxGap(): Promise<RefreshResult> {
   for (const row of parseTaxGapTable11(wb)) {
     const seriesId = await upsertSeries({
       datasetId: 'hmrc-tax-gap',
-      sourceSeriesId: null,
+      sourceSeriesId: row.sourceSeriesId ?? null,
       geography: 'GB',
       measure: row.measure,
       unit: row.unit,
       cofogFunctionCode: null,
       forecastVintage: null,
-      seriesLabel: row.measure,
+      seriesLabel: row.seriesLabel ?? row.measure,
     })
     seriesSeen.add(seriesId)
     await upsertObservation(seriesId, 'GB', row.unit, null, {

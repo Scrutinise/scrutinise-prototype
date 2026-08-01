@@ -96,25 +96,60 @@ export interface OnsBetaObservationRow {
   dims: Record<string, { code: string; label: string }> // keyed by dimension name
 }
 
+const normHeader = (s: string) => s.trim().replace(/^"|"$/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+
 /**
- * Parse the v4 CSV-W bulk download: header is `v4_0,<code1>,<label1>,<code2>,<label2>,...`
- * Column pairs are in the same order as the version's `dimensions` array.
+ * Parse the v4 CSV-W bulk download. Header shape is
+ * `v4_N,<N extra cols>,<code1>,<label1>,<code2>,<label2>,...`
+ *
+ * Two things this must NOT assume, both learned the hard way from
+ * `wellbeing-quarterly` (which silently yielded 0 rows on 1 Aug 2026):
+ *
+ *  1. **N is not always 0.** The `v4_N` marker declares how many observation-adjacent
+ *     columns (markers, lower/upper confidence limits) sit between the value column
+ *     and the first dimension pair. `wellbeing-quarterly` ships `v4_2` (LCL, UCL);
+ *     assuming `v4_0` shifted every dimension two columns left, so the `time` dim
+ *     picked up the empty LCL/UCL cells and every row failed its period parse.
+ *  2. **CSV column order does not follow the API's `dimensions` array order.**
+ *     `wellbeing-quarterly` lists `estimate` before `measureofwellbeing` in the API
+ *     but the reverse in the CSV. So dimensions are matched by the header's own
+ *     column names, not positionally.
+ *
+ * `dimensionNames` is used only to recover the API's canonical spelling of a
+ * dimension; an unrecognised header falls back to its own normalised name rather
+ * than being dropped.
  */
 export function parseOnsBetaCsv(text: string, dimensionNames: string[]): OnsBetaObservationRow[] {
   const lines = text.split(/\r?\n/).filter((l) => l.length > 0)
   if (lines.length < 2) return []
+
+  const header = splitCsvLine(lines[0])
+  const marker = /^v4_(\d+)$/i.exec(header[0]?.trim() ?? '')
+  const firstDimCol = 1 + (marker ? parseInt(marker[1], 10) : 0)
+
+  const known = new Map(dimensionNames.map((d) => [normHeader(d), d]))
+  const cols: { name: string; codeIdx: number }[] = []
+  for (let c = firstDimCol; c + 1 < header.length; c += 2) {
+    const labelKey = normHeader(header[c + 1])
+    const codeKey = normHeader(header[c])
+    cols.push({ name: known.get(labelKey) ?? known.get(codeKey) ?? labelKey ?? `col${c}`, codeIdx: c })
+  }
+  if (cols.length === 0) return []
+
   const rows: OnsBetaObservationRow[] = []
   for (let i = 1; i < lines.length; i++) {
-    const cols = splitCsvLine(lines[i])
-    if (cols.length < 1 + dimensionNames.length * 2) continue
-    const value = parseFloat(cols[0])
+    const line = splitCsvLine(lines[i])
+    const value = parseFloat(line[0])
     if (Number.isNaN(value)) continue
     const dims: Record<string, { code: string; label: string }> = {}
-    for (let d = 0; d < dimensionNames.length; d++) {
-      const code = cols[1 + d * 2]
-      const label = cols[2 + d * 2]
-      dims[dimensionNames[d]] = { code, label }
+    let complete = true
+    for (const col of cols) {
+      const code = line[col.codeIdx]
+      const label = line[col.codeIdx + 1]
+      if (code === undefined || label === undefined) { complete = false; break }
+      dims[col.name] = { code, label }
     }
+    if (!complete) continue
     rows.push({ value, dims })
   }
   return rows

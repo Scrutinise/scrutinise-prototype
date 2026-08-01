@@ -18,6 +18,15 @@ export interface HmrcObservation {
   periodLabel: string
   periodStart: Date
   value: number
+  /**
+   * Series identity WITHIN a measure. Tax-gap Table 1.1 is Tax x Type x Component, and the
+   * same Component name ("Tax gap", "Theoretical liability", ...) recurs under every tax —
+   * so the component alone does not identify a series. Keying on it lost 60 of 600
+   * observations to silent overwrites on the first live ingest (2026-08-01): VAT's tax gap
+   * and Corporation Tax's tax gap were being written to the same row.
+   */
+  sourceSeriesId?: string | null
+  seriesLabel?: string
 }
 
 /** "HMRC tax receipts and National Insurance contributions" workbook, Receipts_Annually sheet. */
@@ -64,9 +73,20 @@ export function parseTaxGapTable11(workbook: XLSX.WorkBook, sheetName = 'Table 1
   for (let i = headerRowIdx + 1; i < rows.length; i++) {
     const row = rows[i]
     const tax = row[0]
+    const type = row[1]
     const component = row[2]
     if (typeof tax !== 'string' || typeof component !== 'string') continue
     const measure = `tax_gap_pct_${slugify(component)}`
+    // Tax (and Type, where present) are what make this row's series distinct from the same
+    // component under another tax — see the HmrcObservation.sourceSeriesId doc comment.
+    const typeStr = typeof type === 'string' && type.trim() ? type.trim() : null
+    const sourceSeriesId = [tax.trim(), typeStr].filter(Boolean).map(slugify).join('__')
+    // Tax/Type/Component often repeat each other ("VAT | Total VAT | Total VAT"), so drop
+    // duplicate parts — these labels are what Lex reads back to a user.
+    const seriesLabel = [tax.trim(), typeStr, component.trim()]
+      .filter((p): p is string => !!p)
+      .filter((p, i, a) => a.indexOf(p) === i)
+      .join(' — ')
     for (let c = 0; c < years.length; c++) {
       const fyLabel = years[c]
       if (!fyLabel) continue
@@ -76,7 +96,7 @@ export function parseTaxGapTable11(workbook: XLSX.WorkBook, sheetName = 'Table 1
       if (typeof raw !== 'string' || !raw.endsWith('%')) continue
       const num = parseFloat(raw.slice(0, -1))
       if (Number.isNaN(num)) continue
-      out.push({ measure, unit: 'PERCENT', periodLabel: period.periodLabel, periodStart: period.periodStart, value: num })
+      out.push({ measure, unit: 'PERCENT', periodLabel: period.periodLabel, periodStart: period.periodStart, value: num, sourceSeriesId, seriesLabel })
     }
   }
   return out

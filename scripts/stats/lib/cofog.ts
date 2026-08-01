@@ -33,6 +33,9 @@ export function parseCofogRowLabel(label: string): { code: string; name: string;
   if (!m) return null
   const [, major, minor, rawName] = m
   const code = minor ? `${major.padStart(2, '0')}.${minor}` : major.padStart(2, '0')
-  const name = rawName.replace(/\s*\(\d+\)\s*$/, '').trim() // strip footnote markers like "(1)"
+  // Strip footnote markers like "(1)", including when trailing punctuation follows them —
+  // PESA's row 1.7 is literally "Public debt transactions (2)," and the old anchored pattern
+  // left "(2)," in the display name that reaches Lex.
+  const name = rawName.replace(/[\s,;.]*\(\d+\)[\s,;.]*$/, '').replace(/[\s,;]+$/, '').trim()
   return { code, name, isTopLevel: !minor }
 }

@@ -22,10 +22,16 @@ export interface PesaObservation {
   measure: string
   unit: string
   cofogFunctionCode: string | null
-  sourceSeriesId: string | null // department name, where applicable
+  cofogFunctionName: string | null // the source's own row label for that code — seeds stat_cofog_function
+  sourceSeriesId: string | null // department name, or the named service line, where applicable
   periodLabel: string
   periodStart: Date
   value: number
+}
+
+/** Rows that carry numbers but are aggregates or partial breakdowns of a line we already take. */
+function isAggregateOrOfWhichRow(label: string): boolean {
+  return /^\s*(total\b|of which\b)/i.test(label) || /^\s*of which:/i.test(label)
 }
 
 /** Table 5.2 — public sector expenditure by (sub-)function, national total, multi-year. */
@@ -37,13 +43,45 @@ export function parseFunctionTimeSeries(workbook: XLSX.WorkBook, sheetName = '5_
   if (yearRowIdx === -1) throw new Error(`Year header row not found in "${sheetName}"`)
   const years = (rows[yearRowIdx].slice(1) as unknown[]).map((v) => (typeof v === 'string' ? v : null))
   const out: PesaObservation[] = []
+  // Health is the one function PESA does NOT number: "7. Health (6)" is a bare section
+  // header with no data, and its three data rows ("Medical services", "Medical research",
+  // "Central and other health services") carry no COFOG sub-number at all, unlike every
+  // other function's "N.M <name>" rows. Tracking the current section lets those rows be
+  // attributed to top-level 07 instead of being dropped — which is what happened before
+  // 1 Aug 2026, silently losing ALL UK health spending from this measure.
+  let currentTopLevel: { code: string; name: string } | null = null
+
   for (let i = yearRowIdx + 2; i < rows.length; i++) {
     // yearRowIdx+1 is the outturn/plans status row — skip
     const row = rows[i]
     const label = row[0]
     if (typeof label !== 'string' || !label.trim()) continue
+
     const cofog = parseCofogRowLabel(label)
-    if (!cofog) continue // sub-total / "of which" / footnote rows
+    if (cofog?.isTopLevel) currentTopLevel = { code: cofog.code, name: cofog.name }
+
+    // A section ENDS at its own "Total <function>" row. Without this, the sheet's
+    // trailing grand-total and accounting-adjustment rows (which sit after "Total social
+    // protection" and are also unnumbered) get swept into the last open section — that
+    // inflated COFOG 10 from £299bn to £1,424bn when this rule was first written.
+    if (/^\s*total\b/i.test(label)) currentTopLevel = null
+
+    // Which code does this row's data belong to, and is it its own series?
+    let code: string | null = null
+    let codeName: string | null = null
+    let seriesKey: string | null = null
+    if (cofog) {
+      code = cofog.code
+      codeName = cofog.name
+    } else if (currentTopLevel && !isAggregateOrOfWhichRow(label)) {
+      // An unnumbered, non-aggregate data row inside a numbered section (health's three).
+      code = currentTopLevel.code
+      codeName = currentTopLevel.name
+      seriesKey = label.trim()
+    } else {
+      continue // "Total <function>" / "of which:" / footnote rows
+    }
+
     for (let c = 0; c < years.length; c++) {
       const fyLabel = years[c]
       if (!fyLabel) continue
@@ -54,8 +92,9 @@ export function parseFunctionTimeSeries(workbook: XLSX.WorkBook, sheetName = '5_
       out.push({
         measure: 'public_expenditure_by_function',
         unit: 'GBP_MILLION',
-        cofogFunctionCode: cofog.code,
-        sourceSeriesId: null,
+        cofogFunctionCode: code,
+        cofogFunctionName: codeName,
+        sourceSeriesId: seriesKey,
         periodLabel: period.periodLabel,
         periodStart: period.periodStart,
         value: raw,
@@ -99,6 +138,7 @@ export function parseDeptByFunctionSnapshot(workbook: XLSX.WorkBook, sheetName =
         measure: 'dept_expenditure_by_function',
         unit: 'GBP_MILLION',
         cofogFunctionCode: code,
+        cofogFunctionName: null, // top-level codes are seeded; no name needed
         sourceSeriesId: dept.trim(),
         periodLabel: period.periodLabel,
         periodStart: period.periodStart,
@@ -110,6 +150,7 @@ export function parseDeptByFunctionSnapshot(workbook: XLSX.WorkBook, sheetName =
         measure: 'dept_total_expenditure',
         unit: 'GBP_MILLION',
         cofogFunctionCode: null,
+        cofogFunctionName: null,
         sourceSeriesId: dept.trim(),
         periodLabel: period.periodLabel,
         periodStart: period.periodStart,
