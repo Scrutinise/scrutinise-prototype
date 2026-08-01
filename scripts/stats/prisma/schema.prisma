@@ -179,7 +179,13 @@ model StatObservation {
 
   createdAt DateTime @default(now())
 
-  @@unique([seriesId, periodStart])
+  // periodType MUST be part of the key. A single ONS CDID series carries annual,
+  // quarterly and monthly rows in one file, and "1948", "1948 Q1" and "1948 JAN" all
+  // normalise to periodStart 1948-01-01 — so a (seriesId, periodStart) key silently
+  // overwrote the Q1/January value with the annual one. That cost 533 of 2,242 CDID
+  // observations on the first live ingest (2026-08-01) before it was caught by
+  // reconciling upserted-vs-stored counts.
+  @@unique([seriesId, periodType, periodStart])
   @@index([seriesId, periodStart])
   @@index([geography, cofogFunctionCode, periodStart])
   @@map("stat_observation")
