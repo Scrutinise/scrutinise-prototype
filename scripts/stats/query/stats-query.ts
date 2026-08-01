@@ -63,6 +63,17 @@ export async function getCofogRollup(params: {
   geography: string
   measure: string
   periodStart: Date
+  /**
+   * Aggregate sub-functions into their parent (`10.2` → `10`), giving the 10-function answer
+   * "what does the UK spend most on" actually wants. Default false returns the source's own
+   * granularity.
+   *
+   * Safe from double-counting for the Phase A data: PESA Table 5.2 reports ONLY leaf codes
+   * (59 sub-functions, no top-level rows) except health, which it reports only at top-level
+   * `07` — so no observation is ever both a parent and a child of another observation in the
+   * same measure. Re-check this if a source is added that publishes both levels.
+   */
+  rollUpToTopLevel?: boolean
 }): Promise<CofogRollupRow[]> {
   const prisma = getStatsPrisma()
   const rows = await prisma.statObservation.findMany({
@@ -77,10 +88,11 @@ export async function getCofogRollup(params: {
   const byCode = new Map<string, CofogRollupRow>()
   for (const r of rows) {
     if (!r.cofogFunctionCode) continue
-    const existing = byCode.get(r.cofogFunctionCode)
+    const code = params.rollUpToTopLevel ? r.cofogFunctionCode.split('.')[0] : r.cofogFunctionCode
+    const existing = byCode.get(code)
     const value = Number(r.value)
     if (existing) existing.totalValue += value
-    else byCode.set(r.cofogFunctionCode, { cofogFunctionCode: r.cofogFunctionCode, cofogFunctionName: null, periodLabel: r.periodLabel, totalValue: value })
+    else byCode.set(code, { cofogFunctionCode: code, cofogFunctionName: null, periodLabel: r.periodLabel, totalValue: value })
   }
   const names = await prisma.statCofogFunction.findMany({ where: { code: { in: [...byCode.keys()] } } })
   const nameByCode = new Map(names.map((n) => [n.code, n.name]))

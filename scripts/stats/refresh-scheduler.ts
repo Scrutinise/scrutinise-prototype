@@ -50,6 +50,20 @@ async function main() {
     const logId = await startRefreshLog(ds.id)
     try {
       const result = await handler()
+      // A zero-observation run is ALWAYS a failure here, never a legitimate no-op: every
+      // handler re-upserts its full series each pass (idempotently), so "nothing upserted"
+      // can only mean the fetch or the parse produced nothing. Reporting SUCCESS is how
+      // ons-beta-wellbeing-quarterly's v4_N column-offset bug shipped a green run with 0
+      // rows on the first live refresh (1 Aug 2026) — a source silently changing shape is
+      // exactly the failure this layer must not swallow. FAILURE also leaves
+      // lastRefreshedAt unset, so the next scheduled tick retries instead of waiting out
+      // the full cadence.
+      if (result.observations === 0) {
+        const msg = 'Handler returned 0 observations — source fetch or parse yielded nothing (treated as failure, not a no-op)'
+        await finishRefreshLog(logId, ds.id, 'FAILURE', { seriesUpserted: 0, observationsUpserted: 0 }, msg)
+        console.error(`FAIL  ${ds.id} — ${msg}`)
+        continue
+      }
       await finishRefreshLog(logId, ds.id, 'SUCCESS', {
         seriesUpserted: result.series,
         observationsUpserted: result.observations,

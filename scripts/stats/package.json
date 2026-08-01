@@ -5,7 +5,12 @@
   "description": "Statistics layer (Phase A, UK spine) — separate DB from the corpus/app. See docs/STATS_LAYER_SPEC.md.",
   "scripts": {
     "generate": "prisma generate --config=prisma.config.ts",
-    "migrate:diff": "prisma migrate diff --from-empty --to-schema-datamodel=prisma/schema.prisma --script",
+    "migrate:diff": "prisma migrate diff --config=prisma.config.ts --from-config-datasource --to-schema prisma/schema.prisma --script",
+    "migrate:deploy": "prisma migrate deploy --config=prisma.config.ts",
+    "whichdb": "tsx --tsconfig ../tsconfig.json whichdb.ts",
+    "seed": "tsx --tsconfig ../tsconfig.json seed-catalogue.ts",
+    "refresh": "tsx --tsconfig ../tsconfig.json refresh-scheduler.ts",
+    "verify": "tsx --tsconfig ../tsconfig.json verify.ts",
     "measure": "tsx --tsconfig ../tsconfig.json measure-pilot.ts"
   },
   "dependencies": {
