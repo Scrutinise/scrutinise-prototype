@@ -369,3 +369,72 @@ M5 PSSRU 2025 (9 rows); M6 ASHE 2025 (3 wage rows); M7 DESNZ carbon (2026+2030);
 uprate NONE); **M9 BLOCKED** (HO amendments doc 404s on gov.uk — re-check next pass); M10 fraud 2023-24
 (supersedes the v2 fraud row, which is deleted); M11 both costing-params flipped to VERIFIED (optimism-bias
 Table 1 + Green Book 2026 §6.58 health rate 1.5%). `xlsx@0.18.5` is a devDependency (extraction tooling).
+
+---
+
+## 12. Sprint 3-B (§19-B) — the rules that stop conversation and state diverging
+
+**THE INVARIANT: the chat can never be on a different page than the state machine.** Sprint 3-B exists
+because they diverged once (Page 1 complete, `lexPage` still `ORIENTATION`, Lex conducting Diagnosis,
+every proposal silently discarded). The rules below are what hold it. Read them before touching `/lex`,
+the conductor, or any page transition.
+
+**12.1 One advance path — `lib/lex/stage.ts`.** `performStageAdvance(ideaId, userId, via)` is the ONLY
+thing that moves `Idea.lexPage`. Three callers, identical behaviour, `via` only distinguishes them in
+`[lex-diag]`: `panel-cta` (Background-panel CTA → `/page`), `chat-inline` (the ContinueCard in chat →
+`/page`), `chat-assent` (typed assent → `/lex`). It calls `advanceLexPage` (still forward-only, still
+complete-page-only) and then the conductor, so the new page is never idle. **Never call
+`advanceLexPage` directly again**, and never advance from the client.
+
+**12.2 Typed assent is handled by the PLATFORM, before the model.** `/lex` checks
+`!currentField && nextPage && isContinueIntent(message)` FIRST; on a match it advances and returns the
+conductor's bubbles with `chatText: null` — the user's turn never reaches Gemini, so Lex cannot start
+the next page before the state machine is in it. `isContinueIntent` is intentionally conservative: any
+negation ⇒ false; a question without a leading assent ⇒ false ("what's next?" is answered, not acted
+on). Widen it only with a test for each new phrase.
+
+**12.3 The prompt is keyed off the STATE MACHINE, not the field.** `buildLexSystemPrompt` takes
+`activePage` (= `state.stage` = `Idea.lexPage`) and derives `methodForStage()` from it. It used to
+derive it from `pageOf(currentField)` — which yields *nothing* when the page is complete, exactly when
+the guard is most needed. When there is no current field but a next page exists, pass `nextPageLabel`
+and the prompt emits the **transition-guard block**: names the section not yet entered, forbids its
+questions, states that nothing can be saved right now. Also a standing rule: **Lex must never claim to
+have written to a box unless it returned a proposal for the current field in the same turn** — the
+1 Aug transcript is full of writes that never happened.
+
+**12.4 Write-side guard.** `assertWritableField(ideaId, fieldKey)` returns `null` when the write is
+allowed and the offending page pair when it is not (409). Wired into `/fields`, `/causes`,
+`/policy-options`, `/actions`. **Any new route that writes a field must call it** — one line, and it
+makes "state is on Page 1" unfalsifiable from the write side.
+
+**12.5 A completed page never dead-ends.** `orchestrateAfterWrite` handles `currentField === null`:
+if `nextPage` exists it posts the two wrap bubbles (verbatim for ORIENTATION — briefing explanation +
+what the next three sections do + "Ready to start the diagnosis?"; generic for later pages) and returns
+them, dedup-guarded against the last 8 transcript messages. The client renders `ContinueCard` in chat
+whenever `state.nextPage` is set, so the affordance is where the user's attention is, not only in the
+right-hand panel. **If you add a page, you get the wrap for free — don't hand-write another pointer.**
+
+**12.6 Every non-terminal field card carries its own buttons.** `OutputField` (proposed scalars:
+title/keywords/challenge/pivotalObstacle/summaries) is now editable with **Save / Save & accept /
+Skip** in every non-terminal status, not a read-out. The chat `AcceptCard` still works — a proposed
+scalar has two accept surfaces and that's deliberate. Rule for new field kinds: **no card may render
+without an action in a non-terminal status.**
+
+**12.7 Stage accents — `lib/lex/stage-accents.ts`.** ORIENTATION **blue** · DIAGNOSIS **amber** ·
+GUIDING_POLICY **violet** · COHERENT_ACTIONS **emerald**. Used for the fields-panel stage header (dot,
+label, wash), the active section's left border, and the chat stage divider. Every class is a **complete
+literal string** — Tailwind scans source text, so an interpolated class name silently produces no CSS.
+Add a page ⇒ add its accent here.
+
+**12.8 Queued fields.** Inside the ACTIVE stage, non-terminal fields after the current one render as
+greyed "next up" cards — the shape of the section is visible, but only the current field is workable.
+
+**12.9 Transcript stage tags are PERSISTED.** `aiChatHistory[].stage` is written by every producer
+(`/lex`, the conductor's `pushLex`, the `/fields` pointer). Before 3-B the tag was client-only, so
+dividers and stage collapse vanished on reload. Anything that appends to `aiChatHistory` must set it.
+
+**12.10 Diagnosing this class of bug.** `[lex-diag]` in Vercel logs is the first stop, but it rolls —
+the durable evidence is the idea row itself: `Idea.lexPage`, the `IdeaFieldState` rows (status + value +
+proposal), the mirrored `Idea.*` columns, and `aiChatHistory`. If Lex claims a write and the field row
+is `EMPTY` with a null proposal, the proposal was discarded — look at `currentField` first, not at the
+model.

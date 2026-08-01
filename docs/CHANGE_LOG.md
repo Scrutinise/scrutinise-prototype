@@ -1,11 +1,123 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-07-31 00:03 UTC — STATS: Phase A (UK spine) sprint — new standalone
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-01 11:05 UTC — LEX REBUILD Sprint 3-B: the conversation/state divergence fix
+(§19-B). Cause found in the data, not guessed: `lexPage` never left ORIENTATION, so `currentField`
+was null, so every Page-2 proposal Lex emitted was silently discarded while the empty-field prompt
+("tell them what comes next") plus the whole-kernel M-GENERAL method block let it conduct Diagnosis
+anyway. Fixed by making stage advance ONE server-side path (panel CTA · inline chat action · typed
+assent), keying the prompt's method + a new transition guard off the state machine's page, refusing
+writes to un-entered pages, giving every non-terminal field card its buttons, adding the two verbatim
+end-of-Page-1 wrap bubbles with an inline Continue, and marking the stage shift visually (per-stage
+accents, chat divider, queued fields). Preview only, NOT promoted. Earlier:
+2026-07-31 00:03 UTC — STATS: Phase A (UK spine) sprint — new standalone
 statistics layer built end-to-end (SDMX schema, ONS/OBR/PESA/HMRC source modules, refresh
 scheduler, Lex query layer), verified against real live sources (all licences confirmed OGL
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## LEX REBUILD — Sprint 3-B: the conversation/state divergence fix (2026-08-01 11:05 UTC)
+
+**Executes `docs/SPRINT_3B_BRIEF.md` (§19-B) — the three defects from Charlie's 1 Aug pass-1 test
+("VAT on care home renovations").** Preview only, **NOT promoted**. `scrutinise-web`
+`tsc --noEmit` clean (only 5 pre-existing `xlsx` module-not-found errors in `scripts/costing/*` —
+declared in `package.json`, simply not installed locally; installs on Vercel). No schema change.
+
+### Task 1 — the cause, found in the data before any code was touched
+
+The `[lex-diag]` trail was gone (Vercel logs roll), so the diagnosis was done against the idea
+itself in Neon (`f534c43d-…`, "Reforming VAT on Care Home Renovations", read-only). What it shows,
+exactly:
+
+- **`Idea.lexPage` was still `ORIENTATION`.** The stage never advanced. All five Page-1 field
+  rows `ACCEPTED`; **all seven Page-2 rows `EMPTY`, every `value` and `proposal` null**;
+  `Idea.challenge` / `whoAffectedImpactCost` null; 0 `DiagnosisCause` rows. Meanwhile the stored
+  transcript has Lex asking the Diagnosis questions and twice *claiming* a write —
+  "I've put it into the 'Challenge' box", "I've drafted this for the 'Who is affected…' section".
+  Nothing had been written anywhere.
+- **Why Lex conversed ahead.** With Page 1 complete, `computeCanonicalState` correctly returns
+  `currentField: null` (the page is done; the next page is not entered until an explicit advance).
+  `/lex` then built the prompt with **no field block** — whose text was *"All the fields on the
+  current page are complete… tell the user what comes next"* — plus the **M-GENERAL method block,
+  which describes the whole kernel (diagnosis → guiding policy → coherent actions)**. That is
+  ample material for a capable model to start conducting Diagnosis. Nothing stopped it: there was
+  no instruction that the next page had not been entered and must not be started.
+- **Why nothing landed.** `/lex` only ever persists a proposal `if (current && proposal.fieldKey
+  === current.key)`. With `current === null` **every** proposal Lex emitted was discarded silently
+  — the user saw Lex say "I've drafted this" and saw nothing appear.
+- **Why the Page-2 cards had no buttons.** Two separate reasons, both real: (a) `DIAGNOSIS` was
+  `status: 'locked'`, and `FieldsPanel` renders a locked page's header only — no field cards at
+  all; (b) independently, the first Diagnosis field (`challenge`) is a Lex-**proposed** scalar, and
+  proposed scalars rendered through `OutputField`, which had **no action buttons in any
+  non-terminal status** — only a read-out and a "Change" link once accepted. So even a correctly
+  entered Page 2 would have opened on an inert card.
+
+**One code path for the advance — `lib/lex/stage.ts` (new).** `performStageAdvance(ideaId, userId,
+via)` is now the ONLY way the stage moves, and all three routes call it: the Background-panel CTA
+(`/page`), the new inline Continue action in chat (`/page`), and typed assent in chat (`/lex`,
+`via: 'chat-assent'`). `isContinueIntent()` is deliberately conservative — a negation never
+advances, and a question without a leading assent never advances ("what's next?" is answered, not
+acted on). When assent fires, **the platform advances first and the conductor speaks for the new
+page**; the user's turn does not reach the model at all, so Lex cannot get there first.
+
+**The invariant, enforced on both sides.**
+- Prompt side: `buildLexSystemPrompt` now takes `activePage` (the state machine's `Idea.lexPage`)
+  and keys the **method block off that**, never off the current field's page. When the page is
+  complete and unexited it emits a **transition-guard block** naming the next section and
+  forbidding its questions outright, plus a new rule: never claim to have written to a box without
+  having returned a proposal for the current field in the same turn.
+- Write side: `assertWritableField()` refuses any write to a field on a page after `lexPage` —
+  wired into `/fields`, `/causes`, `/policy-options`, `/actions` (409). A page the state machine
+  has not entered cannot be written by any route.
+
+**Every non-terminal card now has its buttons.** `OutputField` became a real accept surface:
+editable, with **Save / Save & accept** (and Skip) in every non-terminal status, keyword lists
+split on commas. The chat `AcceptCard` is unchanged — proposed scalars are now acceptable from
+either surface.
+
+### Task 2 — end-of-page wrap-up + transition affordance
+
+`orchestrateAfterWrite` no longer returns empty on a completed page: it posts the **two verbatim
+wrap bubbles** (briefing explanation + what the next three sections do + "Ready to start the
+diagnosis?"), once, dedup-guarded against the recent transcript. The `/fields` keywords branch now
+fires the search and then runs the conductor (the briefing must exist before the bubble points at
+it); the old one-line pointer survives only for the case where keywords are accepted while an
+earlier box is still open. A generic two-bubble wrap covers Pages 2–4. **`ContinueCard`** renders
+inline in chat whenever `state.nextPage` is set — the same surface as the accept card — alongside
+the existing right-panel CTA; both call the one advance path.
+
+### Task 3 — the stage shift is now visible
+
+`lib/lex/stage-accents.ts` (new) holds the four-colour set — **ORIENTATION blue · DIAGNOSIS amber ·
+GUIDING_POLICY violet · COHERENT_ACTIONS emerald** — all literal Tailwind class strings (never
+interpolated, or Tailwind won't emit them). Applied to the fields-panel stage header (dot, label,
+soft wash) and the **active section's left border**, and to the chat's new slim **stage divider**
+("— Diagnosis —") at the transition point. Within the active stage, fields past the current one
+render **greyed "next up"** cards so the shape of the section is visible but not workable.
+Completed stages collapse (existing accordions) and the new stage's header scrolls to the top on
+entry. Chat messages are now **persisted with their stage tag** (`aiChatHistory[].stage`), so
+dividers and stage collapse survive a page reload instead of only living in client memory.
+
+### Verification
+
+- **Deterministic replay, 34/34 assertions** (throwaway, run on Neon with `GEMINI_API_KEY`
+  cleared so every fallback path is exercised; test idea created and deleted). Covers: Page 1 →
+  complete → wrap bubbles posted once → assent advances → `lexPage` DIAGNOSIS → `challenge`
+  current and proposed → Page-2 writes mirror to `Idea.*` → Page-2 field unwritable before the
+  advance and writable after → the guard block present on Page 1 and the M-DIAGNOSIS block absent
+  until entry.
+- **Live-model check of the exact failure**: on Page 2, a chat answer about who is affected came
+  back as a `valueObject` proposal for `whoAffectedImpactCost`, passed the field schema, and the
+  box rendered "proposed by Lex" — the thing that silently vanished on 1 Aug.
+- **Operational note for future runs:** PowerShell `| Select-Object -First N` terminates the
+  upstream pipeline, which killed one smoke run mid-flight and left its test idea behind (found
+  and deleted). Filter with `Select-String`, or let the command finish, when the script has
+  cleanup in a `finally`.
+
+**Out of scope, unchanged:** search-result relevance (pass-2 / search workstream). **Not
+promoted** — Charlie replays the test on the preview first.
 
 ---
 
