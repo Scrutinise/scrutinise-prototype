@@ -15,7 +15,8 @@ import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
-import type { CausesApi, PolicyApi, ActionsApi } from '@/components/lex/FieldsPanel'
+import type { CausesApi, PolicyApi, ActionsApi, CostLinesApi } from '@/components/lex/FieldsPanel'
+import { accentFor } from '@/lib/lex/stage-accents'
 import { acceptSurfaceOf, fieldDef, type CanonicalState, type CanonicalField } from '@/lib/lex/page1-config'
 
 // "Say the word" — a conservative match for a user asking to be shown how the
@@ -221,9 +222,47 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // "Continue to …" — advance the Lex page (→ /page).
   const advancePage = useCallback(() => post('/page', { action: 'advance' }), [post])
 
+  // §19-C Task 1a — re-run the current stage's search after an honest failure.
+  const retrySearch = useCallback(() => post('/search', { action: 'retry' }), [post])
+
+  // §19-C Task 6 — cost lines under an action.
+  const costLinesApi: CostLinesApi = {
+    add: (actionId, input) => post('/cost-lines', { action: 'add', actionId, ...input }),
+    update: (lineId, patch) => post('/cost-lines', { action: 'update', lineId, ...patch }),
+    remove: (lineId) => post('/cost-lines', { action: 'remove', lineId }),
+    suggest: async (staffLevel, fteCount, durationMonths) => {
+      if (!ideaId) return null
+      try {
+        const res = await fetch(`/api/ideas/${ideaId}/cost-lines`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'suggest', staffLevel, fteCount, durationMonths }),
+        })
+        if (!res.ok) return null
+        return (await res.json()).suggestion ?? null
+      } catch { return null }
+    },
+  }
+
   // "Ask Lex about this" — bring the chat forward and focus it.
   const [focusNonce, setFocusNonce] = useState(0)
   const askLex = useCallback(() => { setTab('chat'); setFocusNonce((n) => n + 1) }, [])
+
+  // §19-C Task 7 — Exit. "Unsaved" here means a box the platform is holding for the
+  // user's Save (a Lex proposal awaiting confirmation); everything else is already
+  // server-side the moment it's saved, so there is nothing to lose by leaving.
+  const [exitPrompt, setExitPrompt] = useState(false)
+  const unsavedField = state?.pages
+    .flatMap((p) => p.fields)
+    .find((f) => f.status === 'AWAITING_CONFIRMATION') ?? null
+  const unsavedLabel = unsavedField?.label ?? null
+  const leaveNow = useCallback(() => {
+    window.location.href = ideaId ? `/ideas/${ideaId}` : '/dashboard'
+  }, [ideaId])
+  const handleExit = useCallback(() => {
+    if (unsavedField) setExitPrompt(true)
+    else leaveNow()
+  }, [unsavedField, leaveNow])
 
   // The accept CARD lives in chat for Lex-PROPOSED scalars (title/keywords/challenge/
   // pivotalObstacle/summaryDiagnosis). Box-authored fields (narrative/structured/loop/
@@ -247,9 +286,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       )}
 
       {/* Persistent help affordance — a prominent pill, centred above the chat column
-          (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4). */}
+          (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4).
+          §19-C Task 7: Exit sits to its left, so leaving is always in reach. */}
       <div className="border-b border-zinc-100 px-4 py-2 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr]">
-        <div className="flex justify-center">
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={handleExit}
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 border border-zinc-300 rounded-full px-4 py-2 hover:bg-zinc-50 transition-colors"
+          >
+            Exit
+          </button>
           <button
             onClick={() => setShowHelp(true)}
             className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full px-5 py-2 shadow-sm transition-colors"
@@ -259,6 +305,34 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           </button>
         </div>
       </div>
+
+      {/* §19-C Task 7 — one Exit. If a box holds unsaved edits, ask first. */}
+      {exitPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5">
+            <h2 className="text-base font-semibold text-zinc-900">Save changes before leaving?</h2>
+            <p className="text-sm text-zinc-600 mt-1.5">
+              {unsavedLabel
+                ? `“${unsavedLabel}” is waiting for you to Save. Leave now and that draft is lost.`
+                : 'You have edits that haven’t been saved yet.'}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button onClick={() => { setExitPrompt(false); setTab('fields') }}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90">
+                Save &amp; exit
+              </button>
+              <button onClick={leaveNow}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50">
+                Discard
+              </button>
+              <button onClick={() => setExitPrompt(false)}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50">
+                Stay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showHelp && <HowItWorksModal onClose={() => setShowHelp(false)} />}
 
@@ -306,6 +380,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 causes={state.diagnosisCauses}
                 policyOptions={state.policyOptions}
                 actions={state.actions}
+                costLines={state.costLines}
                 benchmarks={state.benchmarks}
                 busy={busy}
                 currentFieldKey={state.currentField?.key ?? null}
@@ -317,6 +392,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 causesApi={causesApi}
                 policyApi={policyApi}
                 actionsApi={actionsApi}
+                costLinesApi={costLinesApi}
               />
             </div>
 
@@ -325,10 +401,15 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
               <BackgroundPanel
                 initialBackground={state.initialBackground}
                 legislationRefs={state.legislationRefs}
+                stageSearch={state.stageSearch}
+                research={state.research}
+                stageLabel={state.pages.find((p) => p.key === state.stage)?.label ?? state.stage}
+                stageAccent={accentFor(state.stage)}
                 nextPage={state.nextPage}
                 busy={busy}
                 onContinue={advancePage}
                 onAskLex={askLex}
+                onRetrySearch={retrySearch}
               />
             </div>
           </div>
