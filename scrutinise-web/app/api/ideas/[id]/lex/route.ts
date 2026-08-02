@@ -9,6 +9,7 @@ import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
 import { setProposal, storeExtracted } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
 import { isContinueIntent, performStageAdvance } from '@/lib/lex/stage'
+import { runLexTools } from '@/lib/lex/tools/tool-runner'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -73,6 +74,18 @@ export async function POST(req: Request, { params }: Params) {
     .map((f) => `${f.label}: ${typeof f.value === 'string' ? f.value.slice(0, 80) : JSON.stringify(f.value).slice(0, 120)}`)
     .join(' · ')
 
+  const history = (Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : [])
+    .filter((m) => m.role === 'user' || m.role === 'lex')
+    .slice(-20)
+    .map((m) => ({ role: m.role, content: m.content }))
+
+  // Tool call (STATS_PHASE_A_BRIEF §7). A separate tools-enabled model call decides
+  // whether this turn needs real figures; the platform executes the lookup and hands
+  // the observations to the turn below as grounded context. Lex never fetches, and
+  // never states a number that isn't in that block. Resilient: any failure → no block,
+  // and the turn proceeds exactly as it does today.
+  const tools = await runLexTools(message, history)
+
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
   const systemPrompt = buildLexSystemPrompt({
     preferredName: user.preferredName ?? user.firstName,
@@ -85,13 +98,9 @@ export async function POST(req: Request, { params }: Params) {
     // The method block and the transition guard both key off the STATE MACHINE's page.
     activePage: pre.stage,
     nextPageLabel: !current ? pre.nextPage?.label ?? null : null,
+    statsBlock: tools.block ?? null,
     acceptedSummary,
   })
-
-  const history = (Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : [])
-    .filter((m) => m.role === 'user' || m.role === 'lex')
-    .slice(-20)
-    .map((m) => ({ role: m.role, content: m.content }))
 
   let lex
   try {

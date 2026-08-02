@@ -27,6 +27,9 @@ export interface LexTurnContext {
   /** The page the user has NOT yet moved into, when the active page is complete.
    *  Present ⇒ the transition-guard block replaces the field block. */
   nextPageLabel?: string | null
+  /** Figures retrieved by a tool for THIS turn (lib/lex/tools). When present it is
+   *  the only source of numbers Lex may quote — the data testifies, Lex narrates. */
+  statsBlock?: string | null
   /** A compact summary of what's already accepted, for grounding. */
   acceptedSummary: string
 }
@@ -221,7 +224,7 @@ ${fieldGuidance(field, ctx)}`
       ? `THIS SECTION IS COMPLETE — AND THE USER HAS NOT YET MOVED ON TO "${ctx.nextPageLabel}".
 The platform, not you, moves the user between sections. There is NO active field: nothing you write can be saved anywhere right now.
 
-Answer whatever the user just said, briefly and warmly (1–3 sentences), using only what is already captured. Then, if it fits, remind them they can start ${ctx.nextPageLabel} whenever they're ready — there's a "Continue to ${ctx.nextPageLabel}" button in the chat and in the panel on the right, and simply saying so also works.
+Answer whatever the user just said, briefly and warmly (1–3 sentences), using only what is already captured (plus any RETRIEVED STATISTICS block above, if one is present). Then, if it fits, remind them they can start ${ctx.nextPageLabel} whenever they're ready — there's a "Continue to ${ctx.nextPageLabel}" button in the chat and in the panel on the right, and simply saying so also works.
 
 HARD RULE: do NOT ask any ${ctx.nextPageLabel} question, do NOT begin diagnosing, analysing causes or proposing next-section content, and do NOT claim you have written anything into a box. Emit no proposal.`
       : `Every section is complete. Acknowledge warmly in one or two sentences. Emit no proposal.`
@@ -233,7 +236,7 @@ You are NOT in control of the conversation's mechanics. The platform tells you w
 METHOD (how to hold the user to good strategy — apply it, never quote it or name a book)
 ${method}
 
-CONTEXT
+${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}
@@ -250,6 +253,7 @@ RULES
 - chatText is always 1–4 sentences. Never put JSON or field names in chatText.
 - Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
 - Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
+- NUMBERS: state a figure only if it appears in a RETRIEVED STATISTICS block above, and give its period, unit and source when you do. With no such block, do not produce figures from memory — say what you'd need to look up. A confident wrong number is the worst thing you can give a user building a case for Parliament.
 - "extracted" is optional; include only slots you are confident about.`
 }
 
