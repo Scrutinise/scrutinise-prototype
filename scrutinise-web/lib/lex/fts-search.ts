@@ -103,12 +103,31 @@ async function callFts(query: string, limit: number, tier?: string): Promise<Fts
 }
 
 /**
- * Real FTS search → SearchResult[]. Falls back to the stub on any failure.
- * `tier` (optional) scopes the search server-side to one FTS tier — the same
- * filter the query-router streams use (query-router.ts); omitted = unfiltered,
- * today's default behaviour.
+ * Real FTS search → SearchResult[].
+ *
+ * §19-C Task 1a — NO SILENT STUB IN PRODUCTION. This used to fall back to
+ * `runStubSearch` on any failure, which is how a data-protection idea ended up with
+ * Road Traffic Act 1988 in its panel, in its briefing prose ("the law … is anchored
+ * by Road Traffic Act 1988") and in its seeded causes. The fixture is indistinguishable
+ * from real research to the reader.
+ *
+ * // An honest "no answer" is always safer than plausible wrong law.
+ *
+ * A failure now returns `{ results: [], failed: true, reason }` and every caller is
+ * responsible for saying so. The stub survives only for local development, behind an
+ * explicit opt-in (`LEX_SEARCH_STUB=true`), and refuses to arm itself in production.
  */
-export async function runFtsSearch(keywords: string[], limit = 12, tier?: string): Promise<{ results: SearchResult[] }> {
+const STUB_ENABLED =
+  process.env.LEX_SEARCH_STUB === 'true' && process.env.VERCEL_ENV !== 'production'
+
+export interface FtsSearchOutcome {
+  results: SearchResult[]
+  /** True when the search could not be completed — NOT the same as "no matches". */
+  failed?: boolean
+  reason?: string
+}
+
+export async function runFtsSearch(keywords: string[], limit = 12, tier?: string): Promise<FtsSearchOutcome> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
   if (!query) return { results: [] }
 
@@ -170,7 +189,13 @@ export async function runFtsSearch(keywords: string[], limit = 12, tier?: string
 
     return { results: results.slice(0, limit * 3) } // groupForPanel caps downstream
   } catch (err) {
-    console.warn('[fts-search] falling back to stub:', err instanceof Error ? err.message : err)
-    return runStubSearch(keywords, limit)
+    const reason = err instanceof Error ? err.message : String(err)
+    if (STUB_ENABLED) {
+      console.warn('[fts-search] DEV stub fallback (LEX_SEARCH_STUB=true):', reason)
+      return { ...runStubSearch(keywords, limit), failed: false }
+    }
+    // Honest failure. The caller must surface this, never paper over it.
+    console.error('[fts-search] search failed — returning empty, NOT a stub:', reason)
+    return { results: [], failed: true, reason }
   }
 }

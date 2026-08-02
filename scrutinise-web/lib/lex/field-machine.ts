@@ -286,8 +286,15 @@ export async function storeExtracted(
 }
 
 // ── Search trigger (§8.4): deterministic, platform-owned ─────────────────────
-/** Fire the search through the gateway (§14) and write legislationRefs + Initial Background. */
-export async function fireSearchTrigger(ideaId: string): Promise<void> {
+/**
+ * Fire the search through the gateway (§14) and write legislationRefs + Initial Background.
+ *
+ * §19-C Task 1a — a FAILED search is now recorded as failed. It writes no references
+ * and no briefing prose, and the document is marked `failed` so the panel can offer a
+ * Retry instead of showing invented law. Previously the stub fallback produced a
+ * briefing that read "The law in Data protection … is anchored by Road Traffic Act 1988".
+ */
+export async function fireSearchTrigger(ideaId: string): Promise<{ ok: boolean; results: number }> {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
     select: { keywords: true, ideaNarrative: true, youAndIdeaNarrative: true },
@@ -299,12 +306,25 @@ export async function fireSearchTrigger(ideaId: string): Promise<void> {
   // that expansion but never enters the briefing text (grounding guardrail §3).
   const ideaContext = [idea?.ideaNarrative, idea?.youAndIdeaNarrative]
     .filter(Boolean).join(' ').slice(0, 500)
-  const { grouped: refs } = await runSearch({
+  const { grouped: refs, failed, failureReason } = await runSearch({
     keywords,
     intent: 'BACKGROUND_BRIEFING',
     ideaContext,
     limit: 12,
   })
+
+  if (failed) {
+    // Honest empty state. No references, no prose, and a status the panel renders as
+    // "the corpus search didn't complete — Retry".
+    console.error('[lex-diag] briefing search FAILED — storing honest empty state', { ideaId, failureReason })
+    await prisma.idea.update({ where: { id: ideaId }, data: { legislationRefs: [] as never } })
+    await prisma.document.upsert({
+      where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
+      create: { ideaId, kind: 'INITIAL_BACKGROUND', status: 'failed', summary: null, body: null },
+      update: { status: 'failed', summary: null, body: null },
+    })
+    return { ok: false, results: 0 }
+  }
 
   // Briefing prose uses the user's original keywords (not the expanded set) — ground truth only.
   const { summary, body } = buildInitialBackground(keywords, refs)
@@ -318,6 +338,7 @@ export async function fireSearchTrigger(ideaId: string): Promise<void> {
     create: { ideaId, kind: 'INITIAL_BACKGROUND', status: 'ready', summary, body },
     update: { status: 'ready', summary, body },
   })
+  return { ok: true, results: refs.length }
 }
 
 // ── Page advance (§14 / Sprint 2 Task 4): explicit forward move between Lex pages ──
@@ -693,17 +714,145 @@ export async function listBenchmarks() {
   return prisma.costBenchmark.findMany({ orderBy: [{ domain: 'asc' }, { metric: 'asc' }] })
 }
 
+// ── Cost engine v0 (§19-C Task 6) — line items under an action ────────────────
+type CostLineType = 'STAFF' | 'CAPITAL' | 'PROPERTY' | 'RESEARCH' | 'OTHER'
+type CostLineCategory = 'IMPLEMENTATION' | 'ENFORCEMENT' | 'FRICTION'
+type StaffLevel = 'JUNIOR' | 'MID' | 'SENIOR'
+
+export interface CostLineInput {
+  label: string
+  costType?: CostLineType
+  category?: CostLineCategory
+  staffLevel?: StaffLevel | null
+  fteCount?: number | null
+  durationMonths?: number | null
+  low?: number | null
+  high?: number | null
+  unit?: string | null
+  basis?: string | null
+  benchmarkId?: string | null
+  priceYear?: number | null
+}
+
+/** Cost lines for every action on an idea (one query, grouped by the caller). */
+export async function listCostLines(ideaId: string) {
+  return prisma.costLine.findMany({
+    where: { action: { ideaId } },
+    orderBy: [{ actionId: 'asc' }, { orderIndex: 'asc' }],
+  })
+}
+
+/** Scope the action to the idea so a caller can't attach a line to someone else's plan. */
+async function actionInIdea(ideaId: string, actionId: string) {
+  return prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId }, select: { id: true } })
+}
+
+export async function addCostLine(ideaId: string, actionId: string, input: CostLineInput) {
+  if (!(await actionInIdea(ideaId, actionId))) return null
+  const base = await prisma.costLine.count({ where: { actionId } })
+  return prisma.costLine.create({
+    data: {
+      actionId,
+      label: input.label.trim(),
+      costType: (input.costType ?? 'OTHER') as never,
+      category: (input.category ?? 'IMPLEMENTATION') as never,
+      staffLevel: (input.staffLevel ?? null) as never,
+      fteCount: input.fteCount ?? null,
+      durationMonths: input.durationMonths ?? null,
+      low: input.low ?? null,
+      high: input.high ?? null,
+      unit: input.unit ?? 'GBP',
+      basis: input.basis?.trim() || null,
+      benchmarkId: input.benchmarkId ?? null,
+      priceYear: input.priceYear ?? null,
+      orderIndex: base,
+    },
+  })
+}
+
+export async function updateCostLine(ideaId: string, lineId: string, patch: Partial<CostLineInput>) {
+  const row = await prisma.costLine.findFirst({ where: { id: lineId, action: { ideaId } }, select: { id: true } })
+  if (!row) return null
+  return prisma.costLine.update({
+    where: { id: lineId },
+    data: {
+      ...(patch.label !== undefined ? { label: patch.label.trim() } : {}),
+      ...(patch.costType !== undefined ? { costType: patch.costType as never } : {}),
+      ...(patch.category !== undefined ? { category: patch.category as never } : {}),
+      ...(patch.staffLevel !== undefined ? { staffLevel: (patch.staffLevel ?? null) as never } : {}),
+      ...(patch.fteCount !== undefined ? { fteCount: patch.fteCount } : {}),
+      ...(patch.durationMonths !== undefined ? { durationMonths: patch.durationMonths } : {}),
+      ...(patch.low !== undefined ? { low: patch.low } : {}),
+      ...(patch.high !== undefined ? { high: patch.high } : {}),
+      ...(patch.unit !== undefined ? { unit: patch.unit } : {}),
+      ...(patch.basis !== undefined ? { basis: patch.basis?.trim() || null } : {}),
+      ...(patch.benchmarkId !== undefined ? { benchmarkId: patch.benchmarkId } : {}),
+      ...(patch.priceYear !== undefined ? { priceYear: patch.priceYear } : {}),
+    },
+  })
+}
+
+export async function removeCostLine(ideaId: string, lineId: string) {
+  const row = await prisma.costLine.findFirst({ where: { id: lineId, action: { ideaId } }, select: { id: true } })
+  if (!row) return
+  await prisma.costLine.delete({ where: { id: lineId } })
+}
+
+/**
+ * ASHE wage suggestions for a staffing line (§19-C Task 6). The mapping from our three
+ * staff levels onto the seeded ASHE benchmarks is recorded in LEX_PLAYBOOK §14 — it is
+ * a SUGGESTION the user can always override, never an assertion, and the basis string
+ * always names the benchmark it came from.
+ */
+export const STAFF_LEVEL_METRIC: Record<StaffLevel, string> = {
+  JUNIOR: 'annual gross pay — lower quartile',
+  MID: 'annual gross pay — median',
+  SENIOR: 'annual gross pay — upper quartile',
+}
+
+export async function suggestStaffCost(level: StaffLevel, fte: number, months: number) {
+  const benchmarks = await prisma.costBenchmark.findMany({
+    where: { domain: { contains: 'wage', mode: 'insensitive' } },
+    orderBy: { metric: 'asc' },
+  })
+  const wanted = STAFF_LEVEL_METRIC[level]
+  const match =
+    benchmarks.find((b) => b.metric.toLowerCase().includes(wanted.split('—')[1]?.trim() ?? '')) ??
+    benchmarks.find((b) => /median/i.test(b.metric)) ??
+    benchmarks[0]
+  if (!match || (match.low == null && match.high == null)) return null
+  const years = (months || 0) / 12
+  const scale = (fte || 0) * years
+  const low = match.low != null ? Number(match.low) * scale : null
+  const high = match.high != null ? Number(match.high) * scale : low
+  return {
+    low, high,
+    unit: match.unit ?? 'GBP',
+    benchmarkId: match.id,
+    priceYear: match.priceYear ?? match.year ?? null,
+    basis:
+      `${fte} FTE × ${months} months at ${match.metric} (${match.source}` +
+      `${match.priceYear ? `, ${match.priceYear} prices` : ''})`,
+  }
+}
+
 /** Aggregate the per-action §18.2 costs into totals + a plain-English summary set
  *  against the Page 2 problem cost. Every number stays a RANGE (low/high), and each
  *  figure is UPRATED to a common price year via the GDP deflator (COSTING_SCOPE §3)
  *  before totalling, so a 2016 value and a 2024 value can be summed honestly. */
 export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
-  const [actions, deflator] = await Promise.all([
+  const [actions, deflator, lines] = await Promise.all([
     prisma.lexCoherentAction.findMany({
       where: { ideaId },
       select: { implementationCost: true, enforcementCost: true, regulatoryFriction: true },
     }),
     prisma.deflatorSeries.findMany({ select: { year: true, index: true } }),
+    // §19-C Task 6 — cost LINES are the primary source now; the legacy per-action
+    // three-range fields are still summed so nothing captured before this sprint is lost.
+    prisma.costLine.findMany({
+      where: { action: { ideaId } },
+      select: { category: true, low: true, high: true, priceYear: true },
+    }),
   ])
 
   // Uprate a figure from its price year to the latest year in the deflator series.
@@ -730,9 +879,26 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     }
     return any ? { low, high } : null
   }
-  const impl = sum('implementationCost')
-  const enf = sum('enforcementCost')
-  const fric = sum('regulatoryFriction')
+  // Cost lines roll up into the same three categories, uprated the same way.
+  const lineSum = (category: 'IMPLEMENTATION' | 'ENFORCEMENT' | 'FRICTION') => {
+    let low = 0, high = 0, any = false
+    for (const l of lines) {
+      if (l.category !== category) continue
+      if (l.low == null && l.high == null) continue
+      any = true
+      const lo = l.low ?? 0
+      const hi = l.high ?? lo
+      low += uprate(lo, l.priceYear)
+      high += uprate(hi, l.priceYear)
+    }
+    return any ? { low, high } : null
+  }
+  const merge = (a: { low: number; high: number } | null, b: { low: number; high: number } | null) =>
+    a && b ? { low: a.low + b.low, high: a.high + b.high } : a ?? b
+
+  const impl = merge(sum('implementationCost'), lineSum('IMPLEMENTATION'))
+  const enf = merge(sum('enforcementCost'), lineSum('ENFORCEMENT'))
+  const fric = merge(sum('regulatoryFriction'), lineSum('FRICTION'))
 
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { whoAffectedImpactCost: true } })
   const problemCost = (idea?.whoAffectedImpactCost as { cost?: string } | null)?.cost || null
@@ -744,11 +910,25 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
   const parts = [oneOff, ongoing ? `${ongoing} ongoing` : ''].filter(Boolean)
   const planCost = parts.length ? parts.join('; ') : 'not yet estimated'
   const priceBase = targetYear ? ` (all figures uprated to ${targetYear} prices)` : ''
+
+  // §19-C Task 6 — the EANDCB threshold: an equivalent annual net direct cost to
+  // business beyond ±£5m/yr triggers RPC scrutiny, which changes what the proposal
+  // has to carry. Flag it as soon as the friction estimate crosses it.
+  const EANDCB_THRESHOLD = 5_000_000
+  const frictionPeak = fric ? Math.max(Math.abs(fric.low), Math.abs(fric.high)) : 0
+  const eandcbFlag = frictionPeak > EANDCB_THRESHOLD
+  const eandcbNote = eandcbFlag
+    ? ` Ongoing friction on business is above £5m a year, so this would fall in scope of RPC scrutiny (an EANDCB assessment) — worth knowing before it reaches a department.`
+    : ''
+
   const summary =
     `The problem costs ${problemCost ? `~${problemCost}` : '(not yet quantified on Page 2)'}. ` +
-    `This plan costs ${planCost}${priceBase}. All figures are ranges with a stated basis — challenge any of them.`
+    `This plan costs ${planCost}${priceBase}. All figures are ranges with a stated basis — challenge any of them.${eandcbNote}`
 
-  const totals = { implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric, problemCost, priceYear: targetYear }
+  const totals = {
+    implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric,
+    problemCost, priceYear: targetYear, costLines: lines.length, eandcbFlag,
+  }
   return { summary, totals }
 }
 

@@ -21,13 +21,18 @@
 import { prisma } from '@/lib/prisma'
 import { computeCanonicalState } from './state'
 import { fieldDef, type CanonicalState, type FieldDef } from './page1-config'
-import { buildLexSystemPrompt, runLexTurn, generateCauseCandidates, generatePolicyOptions } from './lex-client'
+import {
+  buildLexSystemPrompt, runLexTurn, generateCauseCandidates, generatePolicyOptions,
+  generateCoherenceReview, formatCoherenceReview,
+} from './lex-client'
 import {
   setProposal, storeExtracted, createCauses, buildWhoAffectedSeed,
-  createPolicyOptions, listPolicyOptions, computeCostSummary,
+  createPolicyOptions, listPolicyOptions, computeCostSummary, listActions,
 } from './field-machine'
 import { validateProposal } from './proposal-schema'
 import { runSearch } from './search-gateway'
+import { buildFactsBlock, type TurnFacts } from './facts'
+import { readStageSearches, displayStageFor, type StageSearchRecord } from './stage-search'
 
 type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
 
@@ -74,7 +79,19 @@ function acceptedSummary(state: CanonicalState): string {
     .join(' · ')
 }
 
-async function buildPrompt(ideaId: string, userId: string, state: CanonicalState, def: FieldDef) {
+/** The facts of this conductor turn (§19-C Task 1b) — including the stage's stored
+ *  search, so a conductor message can only describe results that actually exist. */
+async function factsFor(ideaId: string, state: CanonicalState, extra: Partial<TurnFacts> = {}): Promise<string> {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { stageSearches: true } })
+  const store = readStageSearches(idea?.stageSearches)
+  const stageRecord: StageSearchRecord | undefined = store.byStage[displayStageFor(state.stage)]
+  return buildFactsBlock({ state, search: extra.search ?? stageRecord ?? null, ...extra })
+}
+
+async function buildPrompt(
+  ideaId: string, userId: string, state: CanonicalState, def: FieldDef,
+  opts: { factsBlock?: string } = {},
+) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { preferredName: true, firstName: true, aiPreferredStyle: true },
@@ -91,6 +108,7 @@ async function buildPrompt(ideaId: string, userId: string, state: CanonicalState
     // AWAITING_CONFIRMATION), so it is never in the awaiting-refine state.
     awaiting: false,
     activePage: state.stage,
+    factsBlock: opts.factsBlock ?? (await factsFor(ideaId, state)),
     acceptedSummary: acceptedSummary(state),
   })
 }
@@ -193,35 +211,90 @@ async function askQuestion(ideaId: string, userId: string, def: FieldDef, state:
   }
 }
 
-/** A proposed scalar (title/keywords/challenge/pivotalObstacle/summaryDiagnosis). */
-async function proposeScalar(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+/**
+ * Fields whose deterministic fallback is genuinely DERIVED FROM THE USER'S OWN WORDS
+ * (a title cut from their narrative, keywords by frequency, the challenge as their
+ * first sentence). For these a fallback is a real, if rough, draft.
+ *
+ * §19-C Tasks 4/5 — every OTHER proposed field used to fall back to the literal string
+ * "Please refine this.", written into the field as though it were a draft. That is how
+ * `coherenceCheck` came to hold "this is missing save for now. Please refine this." in
+ * the 2 Aug run: two Lex attempts failed, the fallback fired, and the failure was
+ * indistinguishable from a successful generation. A failed draft is now REPORTED, not
+ * papered over — same principle as the stub removal in Task 1a.
+ */
+const DERIVABLE_FALLBACK_KEYS = new Set(['title', 'keywords', 'challenge'])
+
+/** A proposed scalar (title/keywords/challenge/pivotalObstacle/summaryDiagnosis…). */
+async function proposeScalar(
+  ideaId: string, userId: string, def: FieldDef, state: CanonicalState,
+  opts: { directive?: string; presetValue?: unknown } = {},
+): Promise<string> {
   let chatText = ''
   let applied = false
-  try {
-    const prompt = await buildPrompt(ideaId, userId, state, def)
-    const directive = `[Propose a ${def.label} now from what the user has told you, and say one short sentence about it in chatText.]`
-    const lex = await runLexTurn(prompt, directive, await chatHistory(ideaId))
-    chatText = lex.chatText
-    if (lex.proposal && lex.proposal.fieldKey === def.key) {
-      const rawValue = def.key === 'keywords' ? lex.proposal.valueList : lex.proposal.valueText
-      const valid = validateProposal({ fieldKey: def.key, value: rawValue, rationale: lex.proposal.rationale })
-      if (valid) {
-        await setProposal(ideaId, def.key, { value: valid.value, rationale: valid.rationale })
-        applied = true
+
+  // Some fields are COMPOSED by the platform, not guessed by the model.
+  if (opts.presetValue !== undefined) {
+    await setProposal(ideaId, def.key, { value: opts.presetValue })
+    applied = true
+  } else {
+    try {
+      const prompt = await buildPrompt(ideaId, userId, state, def)
+      const directive = opts.directive ??
+        `[Propose a ${def.label} now from what the user has told you, and say one short sentence about it in chatText.]`
+      const lex = await runLexTurn(prompt, directive, await chatHistory(ideaId))
+      chatText = lex.chatText
+      if (lex.proposal && lex.proposal.fieldKey === def.key) {
+        const rawValue = def.key === 'keywords' ? lex.proposal.valueList : lex.proposal.valueText
+        const valid = validateProposal({ fieldKey: def.key, value: rawValue, rationale: lex.proposal.rationale })
+        if (valid) {
+          await setProposal(ideaId, def.key, { value: valid.value, rationale: valid.rationale })
+          applied = true
+        }
       }
+      if (lex.extracted && Object.keys(lex.extracted).length) {
+        await storeExtracted(ideaId, userId, lex.extracted).catch(() => {})
+      }
+    } catch (err) {
+      console.warn('[lex-diag] generation threw', { field: def.key, error: err instanceof Error ? err.message : err })
     }
-    if (lex.extracted && Object.keys(lex.extracted).length) {
-      await storeExtracted(ideaId, userId, lex.extracted).catch(() => {})
-    }
-  } catch {
-    /* fall through to deterministic proposal */
   }
-  // Guarantee a proposal exists so the confirm appears — no stall.
-  if (!applied) {
+
+  if (applied) return chatText
+
+  if (DERIVABLE_FALLBACK_KEYS.has(def.key)) {
+    // A rough draft built from the user's own words — honest enough to offer.
     await setProposal(ideaId, def.key, { value: fallbackValue(def.key, state) })
-    if (!chatText) chatText = fallbackChat(def.key)
+    return chatText || fallbackChat(def.key)
   }
-  return chatText
+
+  // Generation failed and there is nothing truthful to put in the box. Leave the field
+  // EMPTY (so the panel still offers Save/Skip and the conductor can retry on the next
+  // write) and SAY SO.
+  console.warn('[lex-diag] generation failed — reporting, not substituting', { field: def.key })
+  const honest = await honestFailureMessage(ideaId, userId, state, def)
+  return honest
+}
+
+/** Tell the user a draft failed, in Lex's voice, grounded in the facts of the turn. */
+async function honestFailureMessage(
+  ideaId: string, userId: string, state: CanonicalState, def: FieldDef,
+): Promise<string> {
+  const fallback =
+    `I wasn't able to draft the ${def.label.toLowerCase()} just then — that's on me, not you. ` +
+    `Say the word and I'll try again, or write it yourself in the panel and Save.`
+  try {
+    const facts = await factsFor(ideaId, state, { generationFailed: def.label })
+    const prompt = await buildPrompt(ideaId, userId, state, def, { factsBlock: facts })
+    const lex = await runLexTurn(
+      prompt,
+      `[Your attempt to draft the ${def.label} failed. In ONE or TWO sentences tell the user plainly that you couldn't draft it, and offer to try again or let them write it themselves. Do not produce the draft. Emit no proposal.]`,
+      await chatHistory(ideaId),
+    )
+    return lex.chatText || fallback
+  } catch {
+    return fallback
+  }
 }
 
 /** A structured panel box (whoAffectedImpactCost/legalLandscape): seed a proposal so
@@ -291,19 +364,54 @@ async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: 
 /** Page 3 policy-options loop: seed candidate approaches per material cause (with a
  *  genuine case for and against), then invite evaluation. AWAITING so it stays current. */
 async function seedPolicyOptions(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  const pivotalObstacle = (acceptedValue(state, 'pivotalObstacle') as string) ?? ''
+  const rootCause = (acceptedValue(state, 'rootCause') as string) ?? ''
+  const materialCauses = state.diagnosisCauses.filter((c) => c.classification === 'MATERIAL').map((c) => c.cause)
+  // If nothing was marked material, fall back to all causes so seeding still runs.
+  const causes = materialCauses.length ? materialCauses : state.diagnosisCauses.map((c) => c.cause)
+
+  let created = 0
   try {
-    const pivotalObstacle = (acceptedValue(state, 'pivotalObstacle') as string) ?? ''
-    const materialCauses = state.diagnosisCauses.filter((c) => c.classification === 'MATERIAL').map((c) => c.cause)
-    // If nothing was marked material, fall back to all causes so seeding still runs.
-    const causes = materialCauses.length ? materialCauses : state.diagnosisCauses.map((c) => c.cause)
     const context = [acceptedValue(state, 'challenge'), acceptedValue(state, 'summaryDiagnosis')].filter(Boolean).join(' ').slice(0, 600)
     const candidates = await generatePolicyOptions({ pivotalObstacle, materialCauses: causes, context })
-    if (candidates.length) await createPolicyOptions(ideaId, candidates.map((c) => ({ ...c, source: 'LEX' as const })), 'LEX')
+    if (candidates.length) {
+      await createPolicyOptions(ideaId, candidates.map((c) => ({ ...c, source: 'LEX' as const })), 'LEX')
+      created = candidates.length
+    }
   } catch (err) {
     console.warn('[orchestrator] policy seeding failed (user can add their own):', err instanceof Error ? err.message : err)
   }
   await setProposal(ideaId, def.key, { value: '' })
-  return askQuestion(ideaId, userId, def, state)
+
+  // §19-C Task 3 — Lex speaks only AFTER the rows exist, and the count it sees is the
+  // count that persisted (the 2 Aug "I've pulled some options" was said with zero rows
+  // in the table). The facts block is rebuilt from fresh state for exactly this reason.
+  const fresh = (await computeCanonicalState(ideaId)) ?? state
+  console.log('[lex-diag] policy options seeded', { created, nowInDb: fresh.policyOptions.length })
+
+  // §19-C Task 3 — the orientation must be about THIS idea: name the user's own
+  // material causes and obstacle, not the method in the abstract.
+  const specifics = [
+    rootCause ? `their root cause: "${rootCause}"` : '',
+    pivotalObstacle ? `their pivotal obstacle: "${pivotalObstacle}"` : '',
+    causes.length ? `the causes they identified: ${causes.slice(0, 4).map((c) => `"${c}"`).join(', ')}` : '',
+  ].filter(Boolean).join('; ')
+
+  const directive =
+    `[The user has just entered Guiding Policy. ${fresh.policyOptions.length
+      ? `${fresh.policyOptions.length} candidate approach(es) are now showing in the panel.`
+      : 'NO candidate approaches were generated — do not say any are there.'} ` +
+    `In 2–4 sentences, orient them: a guiding policy is an APPROACH to the obstacle, designed not picked, ` +
+    `and choosing one rules the others out — but say it in terms of ${specifics || 'their own diagnosis'}. ` +
+    `Name their actual obstacle and causes in your own words rather than talking about method in the abstract. ` +
+    `Then invite them to weigh, edit and add options in the panel. Emit no proposal.]`
+
+  try {
+    const prompt = await buildPrompt(ideaId, userId, fresh, def)
+    const lex = await runLexTurn(prompt, directive, await chatHistory(ideaId))
+    if (lex.chatText) return lex.chatText
+  } catch { /* fall through */ }
+  return questionFor(def, fresh)
 }
 
 /** Page 4 actions loop: no corpus seeding — the user authors actions and Lex helps in
@@ -316,21 +424,100 @@ async function seedActions(ideaId: string, userId: string, def: FieldDef, state:
 /** Proposed scalars whose value is COMPUTED by the platform, not guessed by Lex:
  *  whatItRulesOut (composed from the RULED_OUT options) and costSummary (aggregated
  *  §18.2 costs vs the Page 2 problem cost). Seed the computed proposal → inline accept. */
-async function seedComputedProposed(ideaId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+async function seedComputedProposed(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
   if (def.key === 'costSummary') {
     const { summary } = await computeCostSummary(ideaId)
     await setProposal(ideaId, def.key, { value: summary })
     return 'I’ve totted up the plan’s costs against what the problem costs — it’s in the chat to accept. Every figure is a range; challenge any of them.'
   }
-  // whatItRulesOut
+  // whatItRulesOut — the RULED_OUT records are the raw material, but the composition
+  // should read like an argument, not a list join (§19-C Task 4: the mechanical
+  // "Choosing this approach rules out: We could legislate." was the 2 Aug output).
   const options = await listPolicyOptions(ideaId)
   const ruledOut = options.filter((o) => o.status === 'RULED_OUT')
-  const value = ruledOut.length
-    ? 'Choosing this approach rules out: ' +
-      ruledOut.map((o) => `${o.approach}${o.ruleOutReason ? ` (${o.ruleOutReason})` : ''}`).join('; ') + '.'
-    : 'Choosing this approach means committing to it over the alternatives considered, and accepting the trade-offs that comes with.'
-  await setProposal(ideaId, def.key, { value })
-  return 'Here’s what this choice deliberately rules out, drawn from the options you set aside — accept or edit it.'
+  const chosen = options.find((o) => o.status === 'CHOSEN')
+  if (!ruledOut.length) {
+    await setProposal(ideaId, def.key, {
+      value:
+        'Choosing this approach means committing to it over the alternatives considered, and accepting ' +
+        'the trade-offs that come with it.',
+    })
+    return 'Here’s what this choice commits you to — accept it or sharpen it.'
+  }
+  const material = ruledOut
+    .map((o) => `- ${o.approach}${o.caseFor ? ` (its case was: ${o.caseFor})` : ''}${o.ruleOutReason ? ` — set aside because: ${o.ruleOutReason}` : ''}`)
+    .join('\n')
+  return proposeScalar(ideaId, userId, def, state, {
+    directive:
+      `[Compose WHAT THIS POLICY RULES OUT. The user chose: "${chosen?.approach ?? '(the chosen approach)'}". ` +
+      `They set these aside:\n${material}\n` +
+      'Write 2–4 sentences naming what is now off the table and what is given up by not doing it — the ' +
+      'residue of choosing. Ground it strictly in the options above; do not invent alternatives. ' +
+      'proposal.fieldKey "whatItRulesOut", proposal.valueText. One short sentence in chatText.]',
+  })
+}
+
+/**
+ * §19-C Task 5 — the coherence check, to spec. A structured review generated from the
+ * actual actions and the actual diagnosis, then rendered into the field for the user
+ * to accept. Corpus grounding (committee post-mortems and similar) is flag-gated:
+ * LEX_COHERENCE_CORPUS=true routes it through the gateway; off, the structured review
+ * stands alone. A failed review is reported, never replaced with placeholder text.
+ */
+async function seedCoherenceCheck(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  const actions = await listActions(ideaId)
+  if (!actions.length) {
+    return proposeScalar(ideaId, userId, def, state, {
+      presetValue: 'No actions have been recorded yet, so there is nothing to review for coherence.',
+    })
+  }
+
+  let corpusNotes: string[] | undefined
+  if (process.env.LEX_COHERENCE_CORPUS === 'true') {
+    try {
+      const { results } = await runSearch({
+        keywords: [
+          ...(acceptedValue(state, 'keywords') as string[] | null ?? []),
+          'implementation', 'lessons learned', 'post-implementation review',
+        ].filter(Boolean),
+        intent: 'CAUSE_SEEDING',
+        ideaContext: (acceptedValue(state, 'summaryDiagnosis') as string) ?? '',
+        limit: 8,
+      })
+      corpusNotes = results
+        .filter((r) => r.type === 'COMMITTEE' || r.type === 'DEBATE')
+        .slice(0, 5)
+        .map((r) => `${r.citation}: ${r.snippet.slice(0, 200)}`)
+    } catch { /* the review stands alone */ }
+  }
+
+  const review = await generateCoherenceReview({
+    actions: actions.map((a) => ({
+      practicalStep: a.practicalStep, whoImplements: a.whoImplements, mechanismType: a.mechanismType,
+    })),
+    chosenApproach: (acceptedValue(state, 'chosenApproach') as string) ?? '',
+    rootCause: (acceptedValue(state, 'rootCause') as string) ?? '',
+    pivotalObstacle: (acceptedValue(state, 'pivotalObstacle') as string) ?? '',
+    causes: state.diagnosisCauses.map((c) => c.cause),
+    corpusNotes,
+  })
+
+  if (!review) {
+    console.warn('[lex-diag] coherence review generation failed — reporting honestly')
+    return honestFailureMessage(ideaId, userId, state, def)
+  }
+
+  const unnamed = actions.filter((a) => !a.whoImplements?.trim()).length
+  console.log('[lex-diag] coherence review', {
+    actions: actions.length, gaps: review.gaps.length, flaws: review.flaws.length,
+    missingImplementers: review.missingImplementers.length, sequence: review.sequence.length, unnamed,
+  })
+  await setProposal(ideaId, def.key, { value: formatCoherenceReview(review) })
+  return (
+    `I've read the plan back as a reviewer would — gaps, how it could go wrong, ` +
+    `${unnamed ? `${unnamed} action${unnamed === 1 ? '' : 's'} still without a named implementer, ` : ''}` +
+    `a suggested order, and whether this actually defeats the diagnosis. It's in the panel to accept or argue with.`
+  )
 }
 
 // ── End-of-page wrap-up (§19-B Task 2) ───────────────────────────────────────
@@ -407,9 +594,12 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
   console.log('[lex-diag] orchestrator advancing', { currentField: def.key, type: def.type, page: state.stage })
 
   let text: string
-  if (def.key === 'whatItRulesOut' || def.key === 'costSummary') {
+  if (def.key === 'coherenceCheck') {
+    // §19-C Task 5 — the structured reviewer pass, not a generic proposal.
+    text = await seedCoherenceCheck(ideaId, userId, def, state)
+  } else if (def.key === 'whatItRulesOut' || def.key === 'costSummary') {
     // Proposed scalars whose value the platform COMPUTES (not Lex).
-    text = await seedComputedProposed(ideaId, def, state)
+    text = await seedComputedProposed(ideaId, userId, def, state)
   } else if (def.origin === 'proposed') {
     text = await proposeScalar(ideaId, userId, def, state)
   } else if (def.type === 'structured') {

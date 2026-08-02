@@ -27,7 +27,10 @@ import { runRoutedSearch } from './query-router'
 export type SearchIntent =
   | 'BACKGROUND_BRIEFING' // Page 1 keywords-accept; the broad landscape search. Gets stage-3 expansion first.
   | 'CAUSE_SEEDING'       // Page 2; past debates/committee reports where the problem was examined.
-  // Reserved, later: 'AMENDABLE_SECTION' | 'POLICY_ALTERNATIVES' | 'COMPARATIVE_LAW'
+  | 'LEGAL_LANDSCAPE'     // §19-C Task 2 — DIAGNOSIS entry: what law governs this and where it falls short.
+  | 'POLICY_ALTERNATIVES' // §19-C Task 2 — GUIDING_POLICY entry: how others have approached this.
+  | 'AD_HOC_RESEARCH'     // §19-C Task 1c — the user asked, in chat, for a corpus search.
+  // Reserved, later: 'AMENDABLE_SECTION' | 'COMPARATIVE_LAW'
 
 // ── Capability flags (§14.3). Each search capability is adopted behind a flag,
 // switched on when the search side ships it AND the gold set rewards it. Default OFF.
@@ -70,6 +73,11 @@ export interface GatewayResult {
   results: SearchResult[]
   /** Grouped by display type, ≤3 per type, ~20 cap — the panel-ready set. */
   grouped: SearchResult[]
+  /** §19-C Task 1a — TRUE when the search could not be completed. Distinct from an
+   *  empty result set (a search that ran and found nothing). Callers MUST distinguish
+   *  the two in what they store and in what Lex is allowed to say. */
+  failed: boolean
+  failureReason?: string
   /** Observability: which flags fired + terms the expansion added (query-only). */
   meta: { flags: CapabilityFlags; expansionAdded: string[]; routedStreams?: string[] }
 }
@@ -85,7 +93,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const limit = q.limit ?? 12
 
   if (!keywords.length) {
-    return { intent: q.intent, results: [], grouped: [], meta: { flags, expansionAdded: [] } }
+    return { intent: q.intent, results: [], grouped: [], failed: false, meta: { flags, expansionAdded: [] } }
   }
 
   // 2. Query routing (capability flag) generalises Stage-3 expansion into
@@ -101,6 +109,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //    with the bare query — i.e. today's current (both-flags-off) behaviour.
   //    A router failure must never mean an empty result.
   let ftsResults: SearchResult[]
+  let failed = false
+  let failureReason: string | undefined
   let expansionAdded: string[] = []
   let routedStreams: string[] | undefined
   // Used only by the vector-fusion step below (4b), which routing doesn't touch
@@ -115,7 +125,10 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       console.log('[search-gateway] router dispatched', { intent: q.intent, streams: streamNames })
     } else {
       console.log('[search-gateway] router fail-open — searching all streams unfiltered', { intent: q.intent })
-      ftsResults = (await runFtsSearch(keywords, limit)).results
+      const out = await runFtsSearch(keywords, limit)
+      ftsResults = out.results
+      failed = !!out.failed
+      failureReason = out.reason
     }
   } else {
     // 2b. Stage-3 expansion (capability flag). expandQuery is itself a no-op
@@ -148,7 +161,10 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     // 4. Retrieval. The adapter overscans and drops corpus families with no display
     //    type; it also owns the canonical SearchResult[] mapping (§14.4 — the type
     //    taxonomy is owned by the search side via corpus-type-map, consumed here).
-    ftsResults = (await runFtsSearch(queryKeywords, limit)).results
+    const out = await runFtsSearch(queryKeywords, limit)
+    ftsResults = out.results
+    failed = !!out.failed
+    failureReason = out.reason
   }
 
   // 4b. Dense retrieval (capability flag; OFF by default — LEX_SEARCH_VECTOR).
@@ -172,7 +188,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //    when the taxonomy lands as a shared corpus-type-map, only the gateway changes.
   const grouped = groupForPanel(results)
 
-  return { intent: q.intent, results, grouped, meta: { flags, expansionAdded, routedStreams } }
+  console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null })
+  return { intent: q.intent, results, grouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams } }
 }
 
 // ── fusion (§14, vector layer) — the SHIPPED spec from docs/FUSION_REPORT.md ──

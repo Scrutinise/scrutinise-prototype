@@ -30,6 +30,9 @@ export interface LexTurnContext {
   /** Figures retrieved by a tool for THIS turn (lib/lex/tools). When present it is
    *  the only source of numbers Lex may quote — the data testifies, Lex narrates. */
   statsBlock?: string | null
+  /** §19-C Task 1b — the facts of this turn (lib/lex/facts.ts). The only permitted
+   *  source for any claim about what exists, was written, or was found. */
+  factsBlock?: string | null
   /** A compact summary of what's already accepted, for grounding. */
   acceptedSummary: string
 }
@@ -236,7 +239,7 @@ You are NOT in control of the conversation's mechanics. The platform tells you w
 METHOD (how to hold the user to good strategy — apply it, never quote it or name a book)
 ${method}
 
-${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
+${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsBlock}\n\n` : ''}CONTEXT
   user:            ${ctx.preferredName}
   experience:      ${ctx.experienceLevel ?? 'unknown — establish it gently early on'}
   mode:            ${ctx.lexMode}
@@ -254,6 +257,9 @@ RULES
 - Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
 - Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
 - NUMBERS: state a figure only if it appears in a RETRIEVED STATISTICS block above, and give its period, unit and source when you do. With no such block, do not produce figures from memory — say what you'd need to look up. A confident wrong number is the worst thing you can give a user building a case for Parliament.
+- NEVER CLAIM: do not say that something exists, was written, was saved, was found, or is waiting in a panel unless the FACTS OF THIS TURN block says so. No "I've pulled together…", no "you'll find… in the panel", no describing research you have not been shown. If you have not been given it, you have not got it — say that instead. This is the single most damaging thing you can get wrong, because the user cannot tell the difference.
+- If you could not do something (a draft failed, a search didn't run), say it plainly in one sentence and offer to try again. An honest failure is always better than a confident substitute.
+- RESEARCH REQUESTS: you cannot search the corpus yourself. If the user asks you to look something up and the FACTS block shows no search ran this turn, say so plainly — "I can't run a corpus search from here yet; the panel search runs at each stage, and I can look again when we move on" — and offer what you can do instead. Never imply you have searched, never describe sources you have not been shown, and never send them to the panel on spec.
 - "extracted" is optional; include only slots you are confident about.`
 }
 
@@ -498,6 +504,124 @@ export async function generateCauseCandidates(input: {
   } finally {
     clearTimeout(t)
   }
+}
+
+// ── Coherence review (§18 / §19-C Task 5) ─────────────────────────────────────
+// The coherence check is NOT a paragraph of praise. It is an experienced reviewer
+// reading the plan back: what's missing, what will go wrong, who is actually doing
+// each thing, in what order, whether effort is concentrated — and the closing test,
+// do these actions actually defeat the diagnosed causes and obstacle. Structured
+// output so each required element is present or visibly absent, rather than lost in
+// prose the model felt like writing.
+export interface CoherenceReview {
+  gaps: string[]
+  flaws: string[]
+  missingImplementers: string[]
+  sequence: string[]
+  concentration: string
+  defeatsTest: string
+}
+
+const COHERENCE_SCHEMA = {
+  type: 'object',
+  properties: {
+    gaps: { type: 'array', items: { type: 'string' } },
+    flaws: { type: 'array', items: { type: 'string' } },
+    missingImplementers: { type: 'array', items: { type: 'string' } },
+    sequence: { type: 'array', items: { type: 'string' } },
+    concentration: { type: 'string' },
+    defeatsTest: { type: 'string' },
+  },
+  required: ['gaps', 'flaws', 'missingImplementers', 'sequence', 'concentration', 'defeatsTest'],
+}
+
+export async function generateCoherenceReview(input: {
+  actions: { practicalStep: string; whoImplements: string | null; mechanismType: string | null }[]
+  chosenApproach: string
+  rootCause: string
+  pivotalObstacle: string
+  causes: string[]
+  corpusNotes?: string[]
+}): Promise<CoherenceReview | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
+  const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  const timeoutMs = parseInt(process.env.LEX_COHERENCE_TIMEOUT_MS ?? '20000', 10)
+
+  const system =
+    'You are an experienced UK policy adviser reviewing a plan of action before it goes to a ' +
+    'minister. Be useful, not encouraging. Return: gaps (what a reviewer would immediately ask ' +
+    'about — "have you considered…"), flaws (concrete failure modes, how this goes wrong in ' +
+    'practice), missingImplementers (name every action whose implementer is unnamed or whose step ' +
+    'is too vague to act on — quote the action), sequence (a suggested order of events, naming ' +
+    'chain-links where one failure breaks the rest), concentration (is effort concentrated where ' +
+    'the leverage is, or smeared), and defeatsTest (the closing test: do these actions actually ' +
+    'defeat the diagnosed root cause and pivotal obstacle — and HOW; say so plainly if they do ' +
+    'not). UK context. Do not invent citations, numbers or bodies that were not mentioned.'
+
+  const user = [
+    `Chosen approach: ${input.chosenApproach || '(not stated)'}`,
+    `Root cause: ${input.rootCause || '(not stated)'}`,
+    `Pivotal obstacle: ${input.pivotalObstacle || '(not stated)'}`,
+    input.causes.length ? `Causes identified:\n- ${input.causes.join('\n- ')}` : '',
+    'Actions:',
+    ...input.actions.map((a, i) =>
+      `${i + 1}. ${a.practicalStep} — implementer: ${a.whoImplements || 'NOT NAMED'}${a.mechanismType ? ` — mechanism: ${a.mechanismType}` : ''}`),
+    input.corpusNotes?.length ? `\nRelevant material from past scrutiny:\n- ${input.corpusNotes.join('\n- ')}` : '',
+  ].filter(Boolean).join('\n')
+
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: user }] }],
+          generationConfig: {
+            temperature: 0.4, maxOutputTokens: 2048,
+            responseMimeType: 'application/json', responseSchema: COHERENCE_SCHEMA,
+          },
+        }),
+      },
+    )
+    if (!res.ok) { console.warn('[lex] coherence review HTTP', res.status); return null }
+    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    const data = (await res.json()) as Resp
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (typeof text !== 'string') return null
+    const o = JSON.parse(text) as Partial<CoherenceReview>
+    const list = (v: unknown) => (Array.isArray(v) ? v.map(String).filter((s) => s.trim()) : [])
+    return {
+      gaps: list(o.gaps), flaws: list(o.flaws), missingImplementers: list(o.missingImplementers),
+      sequence: list(o.sequence),
+      concentration: typeof o.concentration === 'string' ? o.concentration : '',
+      defeatsTest: typeof o.defeatsTest === 'string' ? o.defeatsTest : '',
+    }
+  } catch (err) {
+    console.warn('[lex] coherence review failed:', err instanceof Error ? err.message : err)
+    return null
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+/** Render a review as the text proposed into the coherenceCheck field. */
+export function formatCoherenceReview(r: CoherenceReview): string {
+  const section = (title: string, items: string[]) =>
+    items.length ? `${title}\n${items.map((i) => `• ${i}`).join('\n')}` : ''
+  return [
+    section('Gaps worth closing', r.gaps),
+    section('How this could go wrong', r.flaws),
+    section('Actions needing an owner or a sharper step', r.missingImplementers),
+    section('Suggested order of events', r.sequence),
+    r.concentration ? `Concentration of effort\n${r.concentration}` : '',
+    r.defeatsTest ? `Does this defeat the diagnosis?\n${r.defeatsTest}` : '',
+  ].filter(Boolean).join('\n\n')
 }
 
 // ── Policy-option seeding (§17) ────────────────────────────────────────────────
