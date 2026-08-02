@@ -14,6 +14,7 @@ import {
 } from '@/lib/lex/field-machine'
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 import { assertWritableField } from '@/lib/lex/stage'
+import { runStageSearch } from '@/lib/lex/stage-search'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -98,20 +99,28 @@ export async function POST(req: Request, { params }: Params) {
 
   // Post-write conducting (§13 Task 3): every write produces a next step.
   let messages: string[] = []
+  let briefingOk = true
   if (action === 'accept' && fieldKey === 'keywords') {
     // Deterministic, platform-owned search trigger (§8.4). The briefing must exist
     // BEFORE the conductor speaks, because the end-of-page wrap-up (§19-B Task 2)
     // points at it.
-    await fireSearchTrigger(id)
+    briefingOk = (await fireSearchTrigger(id)).ok
+  }
+  // §19-C Task 2 — the challenge is the sharpest signal for the legal-landscape
+  // search, so accepting it refreshes the Diagnosis stage's results.
+  if (action === 'accept' && fieldKey === 'challenge') {
+    await runStageSearch(id, 'DIAGNOSIS').catch((e) =>
+      console.warn('[lex-diag] landscape refresh failed:', e instanceof Error ? e.message : e))
   }
   // §19-B Task 2: the conductor always runs — on a completed page it posts the
   // wrap-up + transition offer rather than falling silent.
   messages = (await orchestrateAfterWrite(id, idea.creatorId)).messages
   if (!messages.length && action === 'accept' && fieldKey === 'keywords') {
     // Keywords accepted but the page isn't finished (an earlier box is still open):
-    // still tell the user the briefing has landed.
-    const pointer =
-      "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right."
+    // still say what happened — including when the search DIDN'T complete (§19-C 1a).
+    const pointer = briefingOk
+      ? "I've pulled an initial background briefing together — what the law says, where Parliament has been, and a few threads worth pulling. It's in the legislation panel on the right."
+      : "The corpus search didn't complete, so there's no background briefing yet — nothing has been put in the panel. You can retry it there whenever you like; it doesn't block us."
     const state = await computeCanonicalState(id)
     await postLexPointer(id, pointer, state?.stage)
     messages = [pointer]

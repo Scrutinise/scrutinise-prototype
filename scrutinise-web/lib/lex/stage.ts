@@ -20,6 +20,7 @@ import { prisma } from '@/lib/prisma'
 import { advanceLexPage } from './field-machine'
 import { orchestrateAfterWrite } from './orchestrator'
 import { pageOf, pageSeqIndex } from './page1-config'
+import { runStageSearch } from './stage-search'
 
 export type AdvanceVia = 'panel-cta' | 'chat-inline' | 'chat-assent'
 
@@ -47,6 +48,38 @@ export function isContinueIntent(raw: string): boolean {
   return assent || CONTINUE_PHRASE.test(text)
 }
 
+// ── §19-C Task 1c — an explicit request to search the corpus ─────────────────
+// As conservative as the assent detector: it must be an EXPLICIT instruction to look
+// something up, not merely a question that mentions the law. Where this doesn't fire,
+// the prompt makes Lex decline honestly rather than improvise (lex-client).
+const RESEARCH_VERB =
+  /\b(?:research|search|look\s?up|find|check|dig (?:in)?to|pull (?:up|together)|what does the corpus (?:say|hold))\b/i
+const RESEARCH_OBJECT =
+  /\b(?:corpus|database|library|legislation|law|laws|statute|act|acts|regulations?|case ?law|debates?|hansard|committee|precedent)\b/i
+
+/** True when the user is plainly asking the platform to run a corpus search. */
+export function isResearchRequest(raw: string): boolean {
+  const text = raw.trim()
+  if (!text) return false
+  if (!RESEARCH_VERB.test(text)) return false
+  if (!RESEARCH_OBJECT.test(text)) return false
+  // "I've researched the law myself" is not a request.
+  if (/\b(?:i(?:'ve| have)? (?:already )?(?:researched|searched|looked)|don'?t (?:search|research|look))\b/i.test(text)) return false
+  return true
+}
+
+/** Strip the instruction wrapper so the query is the SUBJECT, not the request. */
+export function researchQueryFrom(raw: string): string {
+  return raw
+    .replace(/^[^:]*:\s*/, '')                     // "can you research X in the corpus: <query>"
+    .replace(RESEARCH_VERB, ' ')
+    .replace(/\b(?:can|could|would|please|you|for me|in (?:our|the) (?:corpus|database|library)|the corpus)\b/gi, ' ')
+    .replace(/[?]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 300)
+}
+
 /**
  * Advance the Lex page pointer and let the conductor seed the new page's first
  * field. The ONLY way the stage moves. Returns the new page key (null when the
@@ -64,9 +97,18 @@ export async function performStageAdvance(
     console.warn('[lex-diag] stage advance refused', { via, from: before })
     return { advanced: null, messages: [] }
   }
+  // §19-C Task 2 — the stage's own focused search runs BEFORE the conductor speaks,
+  // so the message Lex writes is grounded in results that already exist (the facts
+  // block reads the stored record). A search failure is recorded honestly and the
+  // conductor still speaks; it simply cannot claim to have found anything.
+  const search = await runStageSearch(ideaId, next)
+
   // Seed the new page's first step so the flow never lands idle.
   const { messages } = await orchestrateAfterWrite(ideaId, userId)
-  console.log('[lex-diag] stage advance', { via, from: before, to: next, bubbles: messages.length })
+  console.log('[lex-diag] stage advance', {
+    via, from: before, to: next, bubbles: messages.length,
+    searchRan: !!search, searchOk: search?.ok ?? null, results: search?.results.length ?? 0,
+  })
   return { advanced: next, messages }
 }
 

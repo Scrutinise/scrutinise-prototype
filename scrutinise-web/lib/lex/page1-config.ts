@@ -260,6 +260,24 @@ export interface CostRange {
   priceYear?: number | null
 }
 
+/** A cost line under an action (§19-C Task 6) — the cost engine's unit of capture. */
+export interface CanonicalCostLine {
+  id: string
+  actionId: string
+  label: string
+  costType: 'STAFF' | 'CAPITAL' | 'PROPERTY' | 'RESEARCH' | 'OTHER'
+  category: 'IMPLEMENTATION' | 'ENFORCEMENT' | 'FRICTION'
+  staffLevel: 'JUNIOR' | 'MID' | 'SENIOR' | null
+  fteCount: number | null
+  durationMonths: number | null
+  low: number | null
+  high: number | null
+  unit: string | null
+  basis: string | null
+  benchmarkId: string | null
+  priceYear: number | null
+}
+
 /** A Page 4 coherent action (§18.1), as the panel renders it. */
 export interface CanonicalAction {
   id: string
@@ -310,6 +328,8 @@ export interface CanonicalState {
   policyOptions: CanonicalPolicyOption[]
   /** Page 4 coherent-action records (empty until Coherent Actions). */
   actions: CanonicalAction[]
+  /** §19-C Task 6 — cost lines across all of this idea's actions. */
+  costLines: CanonicalCostLine[]
   /** Costing benchmarks available to the estimator (§18.3). */
   benchmarks: CanonicalBenchmark[]
   userProfile: {
@@ -320,10 +340,25 @@ export interface CanonicalState {
   legislationRefs: SearchResult[]
   initialBackground: {
     documentId: string | null
-    status: 'pending' | 'ready'
+    /** §19-C Task 1a — `failed` means the corpus search did not complete. The panel
+     *  offers a Retry; it never shows substituted content. */
+    status: 'pending' | 'ready' | 'failed'
     summary: string | null
     body: string | null
   } | null
+  /** §19-C Task 2 — the ACTIVE stage's search, grouped for the panel. Earlier stages'
+   *  results stay stored but fold away, so a later stage never shows an earlier
+   *  stage's landscape as though it were current. */
+  stageSearch: {
+    stage: string
+    intent: string
+    ranAt: string
+    ok: boolean
+    resultCount: number
+    groups: { key: string; label: string; results: SearchResult[] }[]
+  } | null
+  /** §19-C Task 1c — corpus searches the user asked for in chat ("Your research"). */
+  research: { query: string; ranAt: string; ok: boolean; results: SearchResult[] }[]
 }
 
 // ── The FTS interface contract (§8.3). Stub now, real FTS in Sprint 3. ───────

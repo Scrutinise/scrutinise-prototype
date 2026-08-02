@@ -8,8 +8,10 @@ import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
 import { setProposal, storeExtracted } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
-import { isContinueIntent, performStageAdvance } from '@/lib/lex/stage'
+import { isContinueIntent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
+import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
+import { buildFactsBlock } from '@/lib/lex/facts'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -63,6 +65,16 @@ export async function POST(req: Request, { params }: Params) {
     pre = (await computeCanonicalState(id)) ?? pre
   }
 
+  // ── §19-C Task 1c: an explicit request to search the corpus is HANDLED, not
+  // improvised. The platform runs the search, stores the references in the panel,
+  // and Lex describes only what came back (the facts block enforces that).
+  let research: ResearchRecord | null = null
+  if (isResearchRequest(message)) {
+    const query = researchQueryFrom(message) || message
+    research = await runAdHocResearch(id, query)
+    console.log('[lex-diag] ad-hoc research from chat', { query: query.slice(0, 80), ok: research.ok, results: research.results.length })
+  }
+
   const current = pre.currentField ? fieldDef(pre.currentField.key) ?? null : null
   // While the current box already holds an unsaved proposal, Lex refines THAT box
   // only and points the user to Save — it must not advance (§13 / Sprint 1.3).
@@ -86,6 +98,17 @@ export async function POST(req: Request, { params }: Params) {
   // and the turn proceeds exactly as it does today.
   const tools = await runLexTools(message, history)
 
+  // §19-C Task 1b — the facts of THIS turn. If a research search just ran, its actual
+  // results are the facts; otherwise the active stage's stored search is, so Lex can
+  // describe the panel truthfully and can never point at content it hasn't seen.
+  const stageStore = readStageSearches(
+    (await prisma.idea.findUnique({ where: { id }, select: { stageSearches: true } }))?.stageSearches,
+  )
+  const factsBlock = buildFactsBlock({
+    state: pre,
+    search: research ?? stageStore.byStage[displayStageFor(pre.stage)] ?? null,
+  })
+
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
   const systemPrompt = buildLexSystemPrompt({
     preferredName: user.preferredName ?? user.firstName,
@@ -99,6 +122,7 @@ export async function POST(req: Request, { params }: Params) {
     activePage: pre.stage,
     nextPageLabel: !current ? pre.nextPage?.label ?? null : null,
     statsBlock: tools.block ?? null,
+    factsBlock,
     acceptedSummary,
   })
 

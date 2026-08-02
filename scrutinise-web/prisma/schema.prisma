@@ -621,6 +621,10 @@ model Idea {
   keywords                  String[]        @default([])  // accepted search keywords (government area inferred among them)
   ideaContext               String?         // §9 migration sink — removed-field content, tagged [migrated: <field>]
   legislationRefs           Json?           // SearchResult[] stub, populated by the search trigger on keywords accept
+  // Sprint 3-C (§19-C Task 2) — stage-aware search record + ad-hoc research results.
+  // REFERENCES ONLY (id/citation/url/snippet); no corpus full text is copied here.
+  // { version, byStage: { <PAGE>: { intent, ranAt, ok, failureReason?, query[], results[] } }, research: [...] }
+  stageSearches             Json?
   // Lex rebuild — the current Lex PAGE the user has advanced into (§14 / Sprint 2).
   // Distinct from the 5-stage lifecycle `stage`. Advanced explicitly ("Continue to Diagnosis").
   lexPage                   String?         @default("ORIENTATION") // ORIENTATION | DIAGNOSIS | …
@@ -1587,8 +1591,57 @@ model LexCoherentAction {
   orderIndex         Int             @default(0)
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
+  costLines          CostLine[]
 
   @@index([ideaId])
+}
+
+/// Sprint 3-C (§19-C Task 6) — cost engine v0. One costed line at a time under an
+/// action ("2 mid-level FTE for 6 months", "a venue hire"), instead of the un-called
+/// three-range estimator. Lines roll up per action → the three §18.2 categories →
+/// costSummary, uprated to a common price year. Staffing lines suggest a unit cost
+/// from the seeded ASHE wage benchmarks — a suggestion the user can always override.
+model CostLine {
+  id             String            @id @default(uuid())
+  actionId       String
+  action         LexCoherentAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  label          String
+  costType       CostLineType      @default(OTHER)
+  category       CostLineCategory  @default(IMPLEMENTATION)
+  staffLevel     StaffLevel?       // STAFF lines only
+  fteCount       Float?
+  durationMonths Float?
+  low            Float?
+  high           Float?
+  unit           String?           // e.g. 'GBP'
+  basis          String?           // the stated assumption — required in spirit, never auto-asserted
+  benchmarkId    String?           // CostBenchmark the figure came from, when it did
+  priceYear      Int?
+  orderIndex     Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([actionId])
+}
+
+enum CostLineType {
+  STAFF
+  CAPITAL
+  PROPERTY
+  RESEARCH
+  OTHER
+}
+
+enum CostLineCategory {
+  IMPLEMENTATION
+  ENFORCEMENT
+  FRICTION
+}
+
+enum StaffLevel {
+  JUNIOR
+  MID
+  SENIOR
 }
 
 // The costing engine (design §18.3). CostBenchmark = the shared, sourced default

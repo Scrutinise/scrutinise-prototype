@@ -10,6 +10,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { initializeFieldStates } from './field-machine'
+import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import {
   PAGE_SEQUENCE,
   LOCKED_PAGES,
@@ -22,6 +23,7 @@ import {
   type CanonicalPolicyOption,
   type CanonicalAction,
   type CanonicalBenchmark,
+  type CanonicalCostLine,
   type FieldStatus,
   type SearchResult,
 } from './page1-config'
@@ -45,6 +47,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
       creatorId: true,
       lexPage: true,
       legislationRefs: true,
+      stageSearches: true,
       creator: {
         select: { aboutYouNarrative: true, experienceLevel: true, profileSlots: true },
       },
@@ -190,6 +193,28 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     source: a.source as 'USER' | 'LEX',
   }))
 
+  // §19-C Task 6 — cost lines under this idea's actions.
+  const costLineRows = await prisma.costLine.findMany({
+    where: { action: { ideaId } },
+    orderBy: [{ actionId: 'asc' }, { orderIndex: 'asc' }],
+  })
+  const costLines: CanonicalCostLine[] = costLineRows.map((l) => ({
+    id: l.id,
+    actionId: l.actionId,
+    label: l.label,
+    costType: l.costType as CanonicalCostLine['costType'],
+    category: l.category as CanonicalCostLine['category'],
+    staffLevel: (l.staffLevel as CanonicalCostLine['staffLevel']) ?? null,
+    fteCount: l.fteCount ?? null,
+    durationMonths: l.durationMonths ?? null,
+    low: l.low ?? null,
+    high: l.high ?? null,
+    unit: l.unit ?? null,
+    basis: l.basis ?? null,
+    benchmarkId: l.benchmarkId ?? null,
+    priceYear: l.priceYear ?? null,
+  }))
+
   // Costing benchmarks (§18.3) — only load once we're on Page 4 (cheap otherwise to skip).
   let benchmarks: CanonicalBenchmark[] = []
   if ((idea.lexPage ?? 'ORIENTATION') === 'COHERENT_ACTIONS') {
@@ -215,6 +240,12 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
 
   const legislationRefs = (idea.legislationRefs as unknown as SearchResult[] | null) ?? []
 
+  // §19-C Task 2 — the panel shows the ACTIVE stage's search only (Coherent Actions
+  // reuses the Diagnosis landscape until an amendable-section intent exists).
+  const searches = readStageSearches(idea.stageSearches)
+  const shownStage = displayStageFor(lexPage)
+  const stageRecord = searches.byStage[shownStage]
+
   return {
     ideaId: idea.id,
     stage: lexPage,
@@ -224,6 +255,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     diagnosisCauses,
     policyOptions,
     actions,
+    costLines,
     benchmarks,
     userProfile: {
       aboutYou: idea.creator.aboutYouNarrative ?? null,
@@ -234,10 +266,23 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     initialBackground: doc
       ? {
           documentId: doc.id,
-          status: doc.status === 'ready' ? 'ready' : 'pending',
+          status: doc.status === 'ready' ? 'ready' : doc.status === 'failed' ? 'failed' : 'pending',
           summary: doc.summary ?? null,
           body: doc.body ?? null,
         }
       : null,
+    stageSearch: stageRecord
+      ? {
+          stage: shownStage,
+          intent: stageRecord.intent,
+          ranAt: stageRecord.ranAt,
+          ok: stageRecord.ok,
+          resultCount: stageRecord.results.length,
+          groups: groupLandscape(stageRecord.results),
+        }
+      : null,
+    research: searches.research.map((r) => ({
+      query: r.query, ranAt: r.ranAt, ok: r.ok, results: r.results,
+    })),
   }
 }

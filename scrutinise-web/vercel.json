@@ -2,7 +2,14 @@
   "functions": {
     "app/api/ai/[ideaId]/route.ts": {
       "maxDuration": 60
-    }
+    },
+    "app/api/ideas/[id]/lex/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/fields/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/page/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/causes/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/policy-options/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/actions/route.ts": { "maxDuration": 60 },
+    "app/api/ideas/[id]/search/route.ts": { "maxDuration": 60 }
   },
   "build": {
     "env": {
