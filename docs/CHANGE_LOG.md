@@ -1,6 +1,16 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-01 23:30 UTC — STATS: the statistics DB is PROVISIONED and LIVE — a separate
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-02 00:36 UTC — LEX: `query_stats` — Lex is wired to the statistics database.
+Audit finding first: Lex had NO tool-calling anywhere, and adding `tools` to the main turn is a hard
+400 (Gemini rejects function calling combined with the `responseSchema` the proposal contract depends
+on) — so the tool runs as its own tools-enabled call, the platform executes it, and Lex narrates from
+the observations. "What does the UK spend most on?" now answers "Social protection, £383,934m, 33.2%
+of the total, an outturn figure from HMT_PESA" — reconciling exactly with the stats thread's verified
+numbers — instead of an unsourced guess. Found two bugs by running it: the SCRIPT-side stats read
+layer queries a measure name that doesn't exist in its own live DB (`exp_by_subfunction`) and so
+returns nothing, and Lex called PESA outturn "projected" until the block carried observation status.
+**One step outstanding: `STATS_DATABASE_URL` is not in Vercel — the stored token can't authenticate to
+the team scope, so Charlie must add it.** Earlier: 2026-08-01 23:30 UTC — STATS: the statistics DB is PROVISIONED and LIVE — a separate
 Neon project (`scrutinise-stats`), both migrations applied, all 7 Phase A datasets ingested
 (3,147 series / 28,857 observations / 17 MB), query layer exercised end-to-end. The first live run
 found six real bugs the offline build could not see, three of which reported SUCCESS while
@@ -24,6 +34,111 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## LEX — `query_stats`: Lex wired to the statistics database (2026-08-02 00:36 UTC)
+
+**Executes the Lex-thread brief "wire Lex to the stats database" (STATS_PHASE_A_BRIEF §7).**
+Lex-side only — the stats read layer and the DB itself are the ingest thread's work. Preview
+build; `tsc --noEmit` clean (bar the 5 pre-existing `xlsx` errors in `scripts/costing/*`).
+**Prerequisite for the cost engine (Charlie's testing-notes item 12), built with that in mind.**
+
+### The audit the brief asked for, and what it found
+
+**Lex had no tool-calling mechanism at all.** Neither chat route declares `tools` /
+`functionDeclarations`: `/api/ideas/[id]/lex` (the rebuild chat) and `/api/ai/[ideaId]` (the
+legacy chat) both call Gemini with `responseMimeType: 'application/json'` + `responseSchema`.
+Retrieval has always been platform-owned and pre-fetched (search gateway, query-router), never
+model-invoked. So there was no existing pattern to follow.
+
+**And the obvious approach is impossible, not merely undesirable** — probed directly rather than
+assumed:
+
+```
+tools + responseMimeType 'application/json'
+  → HTTP 400 INVALID_ARGUMENT
+    "Function calling with a response mime type: 'application/json' is unsupported"
+```
+
+The structured-output contract is load-bearing for the entire proposal/field machine, so it wins.
+**The tool call therefore runs as its own tools-enabled model call** (`lib/lex/tools/tool-runner.ts`):
+a real `FunctionDeclaration`, native function calling, mode AUTO — the model genuinely chooses
+whether to call and with what arguments — then the platform executes the lookup and injects the
+observations into the main turn as grounded context. House rule intact: the data source testifies,
+Lex narrates. If the main turn ever moves off `responseSchema`, this becomes an ordinary in-turn
+tool loop with no change to the declaration or the handler.
+
+A cheap regex pre-filter (`looksStatistical`) gates the decider so ordinary conversation costs
+nothing — measured 0 ms on a non-statistical turn vs ~1–3 s when a lookup happens.
+
+### What shipped
+
+- **`lib/stats/stats-db.ts` + `lib/stats/stats-query.ts`** — the web-side read layer.
+  **It could not import `scripts/stats/query/stats-query.ts`**: that layer's generated Prisma
+  client lives at `scripts/stats/generated/`, which is **gitignored and outside the Vercel build
+  root**. Uses `pg` (already a direct dependency, no new package, no second client to generate),
+  5 s statement timeout, SELECT-only, pool cached per runtime.
+- **`lib/lex/tools/query-stats.ts`** — the `query_stats` declaration exactly as the brief
+  specified (`series`, `cofogFunction?`, `dateFrom?`, `dateTo?`), the handler, and the renderer
+  that turns results into the grounding block. Every figure carries unit, period, status, source
+  and source URL.
+- **`lib/lex/tools/tool-runner.ts`** — the decider + dispatch described above.
+- **Prompt discipline** — `buildLexSystemPrompt` takes an optional `statsBlock`, and a new
+  standing rule: *state a figure only if it appears in a RETRIEVED STATISTICS block, with its
+  period, unit and source; with no block, do not produce figures from memory.*
+- **`/api/admin/stats-health`** (Admin+) — proves from the deployed runtime that the app can
+  reach the stats DB, and returns the top spending function so a connection that succeeds but
+  returns nothing is caught too.
+
+### Two bugs found by running it, neither visible to a type-check
+
+1. **The script-side read layer is broken against its own live database.**
+   `scripts/stats/query/stats-query.ts::getCofogRollup` queries measure `exp_by_subfunction` and
+   defaults geography to `UK`. Neither exists: the live measures are
+   `public_expenditure_by_function` (62 series, 60 COFOG codes, 2020-21…2024-25) and
+   `dept_expenditure_by_function` (the same total cut by department), and **every observation is
+   labelled `GB`** — even though PESA's figures are UK public expenditure. That layer was written
+   offline before the ingest fixes settled the names, so its headline function returns nothing.
+   The web-side mirror uses the verified names, treats geography as an optional filter rather than
+   a default, and records the divergence in a header comment. **Flagged to the stats thread; not
+   changed from here** (and the `GB` labelling looks like a mislabel worth its own look).
+2. **Lex called PESA outturn figures "projected".** The rollup wasn't carrying
+   `StatObservation.status`, so the model characterised the figures itself — precisely the failure
+   this tool exists to prevent, in miniature. The rollup now aggregates status and the block states
+   it in terms (*"These are OUTTURN figures — money actually spent, not a forecast or a plan"*);
+   re-run, Lex says "This is an outturn figure from HMT_PESA."
+
+Also deliberate: series whose `unit` is `UNKNOWN` (the OBR historical-forecast vintages, labels
+like `PSNB (April 1970)`) are **excluded from catalogue search by default** — real data, but a
+figure with no unit cannot be quoted responsibly.
+
+### Test — the brief's acceptance question, end to end against the live DB
+
+| Message | Tool | Result |
+|---|---|---|
+| "What does the UK spend most on?" | `query_stats{series:'public_spending_by_function'}` | Lex: *"the largest category is Social protection, at £383,934m, which is 33.2% of the total. This is an outturn figure from HMT_PESA."* |
+| "How much does the UK spend on health each year?" | `{series:…, cofogFunction:'health'}` | £241,835m, 2024-25, cited to PESA |
+| "How many hospital beds are there in England?" | decider declined | Lex says it doesn't hold that and points at NHS England — **no invented number** |
+| "Who else should I talk to about this idea?" | pre-filter, 0 ms | ordinary conversation, unchanged |
+
+The £1,157,828m total and the 33.2% / 20.9% split **reconcile exactly** with the ingest thread's
+independently verified figures (handoff, 2026-08-01 23:30 UTC). For contrast, the same question
+with no tool returns "The UK government spends most on social protection" — right, but unsourced,
+uncitable, and indistinguishable from a wrong answer.
+
+### Environment — ONE STEP OUTSTANDING, needs Charlie
+
+`STATS_DATABASE_URL` was added to `scrutinise-web/.env` (local, gitignored). **It is NOT yet in
+Vercel**: the stored `VERCEL_TOKEN` returns `403 … "Not authorized: Trying to access resource
+under scope charlie-leachs-projects. You must re-authenticate to this scope"` — a SAML re-auth CC
+cannot perform. Until it is set, `runLexTools` short-circuits on `statsConfigured()` and Lex
+behaves exactly as it does today (deliberately NOT "the database doesn't hold that" — an
+unconfigured environment must not put words in Lex's mouth about the data).
+
+To finish: add `STATS_DATABASE_URL` (Production + Preview) with the **pooled** value from
+`scripts/stats/.env`, redeploy, then `GET /api/admin/stats-health` signed in as admin — expect
+`ok: true`, 7 datasets / 3,147 series / 28,857 observations, `topFunction: Social protection`.
 
 ---
 

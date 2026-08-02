@@ -438,3 +438,50 @@ the durable evidence is the idea row itself: `Idea.lexPage`, the `IdeaFieldState
 proposal), the mirrored `Idea.*` columns, and `aiChatHistory`. If Lex claims a write and the field row
 is `EMPTY` with a null proposal, the proposal was discarded — look at `currentField` first, not at the
 model.
+
+---
+
+## 13. Tools — how Lex calls anything (`query_stats` and whatever comes next)
+
+**13.1 The constraint that dictates the shape. `tools` and `responseSchema` cannot coexist.**
+Probed directly against `gemini-2.5-flash`:
+`tools` + `responseMimeType:'application/json'` → **HTTP 400 INVALID_ARGUMENT, "Function calling
+with a response mime type: 'application/json' is unsupported"**. The structured-output contract is
+load-bearing for the whole proposal/field machine, so it wins. **Do not try to add a `tools` block
+to the main `/lex` turn** — it will 400 the entire turn, not degrade.
+
+**13.2 The pattern instead: decide in a side call, execute on the platform, narrate in the main
+turn.** `lib/lex/tools/tool-runner.ts` makes a separate tools-enabled call carrying the real
+`FunctionDeclaration` (mode AUTO — the model genuinely chooses whether to call and with what
+args), the platform runs the handler, and the result is injected into the main turn's system
+prompt as a grounding block. This is the same "one model call decides, deterministic dispatch
+follows" idiom as `query-router.ts`, and it keeps the house rule: **the data source testifies, Lex
+narrates.** If the main turn ever moves off `responseSchema`, this becomes an ordinary in-turn tool
+loop with no change to the declaration or the handler.
+
+**13.3 Adding a tool.** Write the `FunctionDeclaration` + handler + prompt-block renderer in one
+file under `lib/lex/tools/`, then add it to `tool-runner`. A tool MUST: never throw (a tool
+failure cannot break a turn); return provenance with every value (unit, period, status, source,
+source URL); and short-circuit when its backing store is unconfigured — returning `called:false`,
+**not** a "we don't have that" result. An unconfigured environment must never put words in Lex's
+mouth about what the data does or doesn't contain.
+
+**13.4 Pre-filter before you spend a model call.** `looksStatistical()` is a cheap regex gate so
+ordinary conversation costs 0 ms. Generous on recall (a miss just means Lex answers without data,
+as it always did); the model still decides after the gate.
+
+**13.5 The numbers rule is in the system prompt, and it is not optional.** Lex may state a figure
+only if it appears in a `RETRIEVED STATISTICS` block, with period, unit and source; with no block
+it must say what it would need to look up. Watch for the subtler leak: Lex once called PESA
+**outturn** figures "projected" because the block didn't carry `status`. **If a value has a
+property that changes its meaning — status, price base, vintage, geography — put it in the block.
+Anything you omit, the model will fill in.**
+
+**13.6 The stats read layer is duplicated on purpose.** `scrutinise-web/lib/stats/stats-query.ts`
+mirrors `scripts/stats/query/stats-query.ts` because the script-side layer's generated Prisma
+client is gitignored and outside the Vercel build root — the app cannot import it. **Keep the
+analytical semantics in sync**, especially the COFOG roll-up rule (`public_expenditure_by_function`
+only; never sum it with `dept_expenditure_by_function` — they are alternative cuts of the same
+total and summing both doubles the answer). As of 2026-08-02 the script-side copy is **stale and
+non-functional** (measure `exp_by_subfunction`, geography `UK` — neither exists live); the web-side
+copy carries the verified names.

@@ -2,7 +2,14 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-01 23:30 UTC — ▼ STATS: **the statistics DB is PROVISIONED and LIVE** —
+*Last updated: 2026-08-02 00:36 UTC — ▼ LEX: **`query_stats` — Lex is wired to the statistics
+database** and now answers "What does the UK spend most on?" from real PESA observations with
+source and status attached, instead of parametric guesswork. Audit finding: Lex had no tool-calling
+at all, and it cannot be added to the main turn (Gemini rejects `tools` + `responseSchema`), so the
+tool is its own tools-enabled call. **Outstanding: `STATS_DATABASE_URL` must be added to Vercel by
+Charlie** (the stored token can't authenticate to the team scope) — until then the tool
+short-circuits and Lex behaves exactly as today. See its own CURRENT STATE section. ▼
+2026-08-01 23:30 UTC — ▼ STATS: **the statistics DB is PROVISIONED and LIVE** —
 separate Neon project `scrutinise-stats` (`winter-frost-26605722`, `aws-eu-west-2`, PG 17), both
 migrations applied, all 7 Phase A datasets ingested, 17 MB. The first live run found **six real
 bugs the offline build could not see, three of them reporting `SUCCESS` while producing wrong or
@@ -88,6 +95,47 @@ CHANGE_LOG "LEX REBUILD — Sprint 3-B" (2026-08-01 11:05 UTC); the rules that h
 - **REMAINING GATE:** Charlie replays the same test on the preview (end of Page 1 → inline Continue
   / typed assent / panel CTA → Diagnosis), then promote. Out of scope and untouched: search-result
   relevance (pass-2 / search workstream).
+
+---
+
+## CURRENT STATE — LEX: `query_stats` tool — Lex wired to the stats DB (2026-08-02 00:36 UTC)
+
+**Executes the Lex-thread brief "wire Lex to the stats database" (STATS_PHASE_A_BRIEF §7).**
+Lex-side only. Full detail: CHANGE_LOG "LEX — `query_stats`" (2026-08-02 00:36 UTC);
+`LEX_PLAYBOOK.md` §13 has the rules. `tsc` clean (bar the pre-existing `xlsx` errors). No schema
+change. **Prerequisite for the cost engine (testing-notes item 12).**
+
+- **⚠ ONE STEP OUTSTANDING, CHARLIE'S:** add **`STATS_DATABASE_URL`** to Vercel **Production +
+  Preview** — the **pooled** value in `scripts/stats/.env` (host
+  `ep-gentle-waterfall-zab5zcwv-pooler…`). CC could not: the stored `VERCEL_TOKEN` gets `403 …
+  must re-authenticate to this scope` (SAML). Then redeploy and hit **`GET
+  /api/admin/stats-health`** signed in as admin — expect `ok:true`, 7 datasets / 3,147 series /
+  28,857 observations, `topFunction: Social protection`. Until it is set the tool short-circuits
+  and Lex behaves exactly as today.
+- **The audit came back empty, which shaped the design: Lex had NO tool-calling anywhere** — both
+  chat routes use `responseSchema` structured output and platform-owned pre-fetched retrieval.
+  And `tools` + `responseMimeType:'application/json'` is a **hard 400** from Gemini (probed, not
+  assumed), so function calling cannot go in the main turn while the proposal contract depends on
+  structured output. **Shape adopted:** a separate tools-enabled model call makes the real
+  function call (mode AUTO — the model decides), the platform executes it, and the observations go
+  into the main turn as grounded context. A regex pre-filter keeps ordinary turns at 0 ms.
+- **Built:** `lib/stats/{stats-db,stats-query}.ts` (web-side read layer over `pg` —
+  `scripts/stats/query/stats-query.ts` is **not importable** from the app: its generated Prisma
+  client is gitignored and outside the Vercel root), `lib/lex/tools/{query-stats,tool-runner}.ts`,
+  a `statsBlock` in the Lex prompt with a hard no-figures-from-memory rule, and
+  `/api/admin/stats-health`.
+- **Two bugs found by running it, both invisible to `tsc`:** (1) **the script-side stats read layer
+  is broken against its own live DB** — `getCofogRollup` queries measure `exp_by_subfunction` and
+  geography `UK`; the live data has `public_expenditure_by_function` and labels everything `GB`,
+  so it returns nothing (**flagged to the stats thread, not changed from here** — and the `GB`
+  label on UK figures looks like a mislabel worth its own look); (2) Lex described PESA **outturn**
+  figures as "projected" until the block carried `StatObservation.status`.
+- **Verified end-to-end on the live DB:** "What does the UK spend most on?" → Social protection
+  £383,934m, 33.2%, outturn, cited to PESA — **reconciles exactly** with the stats thread's own
+  verified totals. "How much on health?" → £241,835m. "How many hospital beds in England?" →
+  declines honestly, invents nothing. Ordinary conversation is untouched.
+- **NEXT:** the env var above; then this is the retrieval half of the cost engine — the costing
+  work in item 12 can call `runQueryStats` directly rather than re-inventing a lookup.
 
 ---
 
