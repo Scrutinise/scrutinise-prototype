@@ -2,7 +2,14 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-02 00:36 UTC — ▼ LEX: **`query_stats` — Lex is wired to the statistics
+*Last updated: 2026-08-02 18:47 UTC — ▼ LEX REBUILD **Sprint 3-C** (§19-C) shipped to the preview
+(NOT promoted): the stub fallback is out of production and a failed search now says so with a Retry;
+a FACTS OF THIS TURN block stops Lex claiming things that don't exist; every stage entry runs its own
+focused corpus search rendered in five groups with earlier stages folded; cost engine v0 (CostLine +
+ASHE staffing suggestions + EANDCB flag). **Tasks 4/5 diagnosed differently from the brief** — the
+generators all work; the FAILURE path was writing placeholder text into real fields, and the Lex API
+had no `maxDuration`. Additive schema applied to Neon. See its own CURRENT STATE section. ▼
+2026-08-02 00:36 UTC — ▼ LEX: **`query_stats` — Lex is wired to the statistics
 database** and now answers "What does the UK spend most on?" from real PESA observations with
 source and status attached, instead of parametric guesswork. Audit finding: Lex had no tool-calling
 at all, and it cannot be added to the main turn (Gemini rejects `tools` + `responseSchema`), so the
@@ -95,6 +102,44 @@ CHANGE_LOG "LEX REBUILD — Sprint 3-B" (2026-08-01 11:05 UTC); the rules that h
 - **REMAINING GATE:** Charlie replays the same test on the preview (end of Page 1 → inline Continue
   / typed assent / panel CTA → Diagnosis), then promote. Out of scope and untouched: search-result
   relevance (pass-2 / search workstream).
+
+---
+
+## CURRENT STATE — LEX REBUILD Sprint 3-C: truth, stage search, cost engine (2026-08-02 18:47 UTC)
+
+**Executes `docs/SPRINT_3C_BRIEF.md` (§19-C).** Preview only, **NOT promoted**. Full account:
+CHANGE_LOG "LEX REBUILD — Sprint 3-C" (2026-08-02 18:47 UTC); rules in `LEX_PLAYBOOK.md` **§14**.
+`tsc` clean (bar the pre-existing `xlsx` errors). Smoke 30/30 on the deterministic path.
+
+- **Schema (additive, applied to Neon after a whichdb check):** `prisma/lex_sprint3c.sql` —
+  `Idea.stageSearches` (JSONB, references only) + `CostLine` table + three enums.
+- **Task 0 done:** idea `06ca807a` cleared of all stub contamination (refs, briefing doc, 3 causes);
+  the user's own root cause untouched. **Briefing NOT re-run** — needs the parked FTS latency work.
+- **⚠ Tasks 4/5: the brief's premise did not reproduce.** All five crystallise fields fired and were
+  ACCEPTED with real content on 2 Aug, and every generator works when probed (2.8–9.1s, valid
+  proposals). **The real defect is the failure path**: `coherenceCheck` held the literal fallback
+  `"Please refine this."` announced as a draft — a failed generation was indistinguishable from a
+  successful one. Now only user-derived fields (title/keywords/challenge) fall back; everything else
+  reports the failure honestly and leaves the field EMPTY for a retry. **Also found: the entire Lex
+  rebuild API surface had no `maxDuration` in `vercel.json`** (only the legacy `/api/ai/[ideaId]`
+  did), so any conductor step over the platform default 504s mid-write — the likely reason it looked
+  like "nothing was proposed". All seven Lex routes now set 60s.
+- **Task 1:** stub out of production (`LEX_SEARCH_STUB` dev-only, refuses in production); failed
+  searches store an honest empty state + Retry via the new `POST /api/ideas/[id]/search`; a FACTS OF
+  THIS TURN block (`lib/lex/facts.ts`) is injected into every turn; mid-chat research requests are
+  detected and run for real, or declined honestly (verified live against the exact 2 Aug message).
+- **Task 2:** `LEGAL_LANDSCAPE` on Diagnosis entry (refreshed on `challenge` accept),
+  `POLICY_ALTERNATIVES` on Guiding Policy, Actions reuses the landscape; five grouped sections;
+  prior stages fold. **Known limitation:** the "principles elsewhere" group is a labelled display
+  split, not a classifier — the search workstream owns the real principle stream.
+- **Tasks 3/6/7:** P3 cards collapse to Title with Detail/For/Against on click and the chosen
+  approach is bold in the stage accent; GP orientation names the user's actual causes/obstacle and
+  speaks only after rows persist; cost engine v0 (per-action CostLine, ASHE staffing suggestions,
+  rollup to the three categories, EANDCB flag over ±£5m/yr); Save greys until dirty; Exit with
+  Save/Discard/Stay; **Lex-seeded cause cards are now editable and deletable after confirmation**
+  (they rendered read-only, which is why the road-traffic causes were stuck).
+- **NEXT:** Charlie replays the walk-through on the preview. The FTS compaction/latency work stays
+  parked in the search workstream and is the prerequisite for re-running any real briefing.
 
 ---
 

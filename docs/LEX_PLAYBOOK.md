@@ -485,3 +485,62 @@ only; never sum it with `dept_expenditure_by_function` — they are alternative 
 total and summing both doubles the answer). As of 2026-08-02 the script-side copy is **stale and
 non-functional** (measure `exp_by_subfunction`, geography `UK` — neither exists live); the web-side
 copy carries the verified names.
+
+---
+
+## 14. Sprint 3-C (§19-C) — truth rules, stage search, and the cost engine
+
+**14.1 NO SUBSTITUTED CONTENT, EVER — the rule the last two sprints keep re-learning.** A failed
+search does not return fixtures; a failed generation does not write placeholder text. Both had a
+"helpful" fallback that produced content indistinguishable from the real thing, and both reached a
+user as fact: road-traffic law in a data-protection idea, and `"Please refine this."` announced as
+a draft. `runFtsSearch` returns `{results: [], failed: true, reason}`; the stub is dev-only
+(`LEX_SEARCH_STUB=true`, and it refuses to arm when `VERCEL_ENV=production`). Only fields whose
+fallback is genuinely derived from the user's own words (`title`, `keywords`, `challenge`) still
+fall back — see `DERIVABLE_FALLBACK_KEYS`. **When you add a fallback, ask what it looks like to
+someone who cannot tell it from the real output.**
+
+**14.2 `failed` ≠ empty.** Thread them separately from the adapter to the UI. "The search didn't
+run" and "the law has nothing to say" are different sentences to someone building a case for
+Parliament. `GatewayResult.failed`, `StageSearchRecord.ok`, `Document.status = 'failed'`, and the
+panel's honest empty state + Retry all exist to keep that distinction alive.
+
+**14.3 The FACTS OF THIS TURN block (`lib/lex/facts.ts`) is how the never-claim rule is enforced.**
+Prompt scolding does not stop a model describing the world from expectation; giving it the state
+does. Every turn (conductor and `/lex`) injects what is actually persisted, what the panel holds,
+the real record counts, and exactly what any search returned. **Any new surface that talks to the
+user must pass a facts block** — and anything you leave out of it, the model will fill in.
+
+**14.4 Speak after the write, and count from fresh state.** `seedPolicyOptions` re-reads canonical
+state after creating rows and tells Lex the count that actually persisted. "I've pulled some
+options" was said with zero rows in the table.
+
+**14.5 Stage search — `lib/lex/stage-search.ts`.** One deterministic gateway search per stage entry,
+fired inside `performStageAdvance` BEFORE the conductor speaks. Intents: `DIAGNOSIS` →
+`LEGAL_LANDSCAPE` (refreshed when `challenge` is accepted — the sharpest signal), `GUIDING_POLICY` →
+`POLICY_ALTERNATIVES`, `COHERENT_ACTIONS` reuses the Diagnosis landscape (`STAGE_INTENT[...] = null`
+→ `displayStageFor`). Stored on `Idea.stageSearches` as **references only** — id, citation, url,
+snippet, score. **Never copy corpus text into the ideas DB.** Adding a stage = one `STAGE_INTENT`
+entry and a query-building branch.
+
+**14.6 The five panel groups are a DISPLAY split, not a taxonomy.** "Comparable provisions
+elsewhere" is the tail of the same ranked legislation set; there is no principle classifier in the
+corpus yet (the search workstream's G–I streams are its home). Labelled so the user knows what
+they're looking at. Don't let it drift into claiming a relationship the data hasn't established.
+
+**14.7 Every conductor step is a synchronous model round trip — budget for it.** Measured 2.8–9.1s
+per generation, and the live trail showed 21s. **`vercel.json` must carry `maxDuration` for every
+Lex route**; before 3-C only the legacy `/api/ai/[ideaId]` had it, so any slow step 504'd mid-write
+and looked to the user like nothing happened. Add the entry when you add a route.
+
+**14.8 Cost engine v0 — `CostLine` under an action.** One line at a time; lines roll up per action →
+IMPLEMENTATION / ENFORCEMENT / FRICTION → `costSummary`, uprated to a common price year, summed
+alongside any legacy per-action ranges (never instead of — both are read). **Staff level → ASHE
+benchmark mapping:** `JUNIOR` → lower quartile, `MID` → median, `SENIOR` → upper quartile, scaled by
+FTE × (months / 12), with the basis string naming the benchmark, source and price year. It is a
+SUGGESTION — `suggest` never writes; the user accepts or overrides. **EANDCB**: friction beyond
+±£5m/yr flags RPC scrutiny in the summary.
+
+**14.9 Seeded child records must stay editable.** Cause cards rendered read-only once the loop was
+confirmed, which is why three Lex-seeded road-traffic causes could not be deleted from a
+data-protection idea. Anything Lex creates, the user can edit and delete — at any point.

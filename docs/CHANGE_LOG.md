@@ -1,6 +1,16 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-02 00:36 UTC — LEX: `query_stats` — Lex is wired to the statistics database.
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
+engine. The stub fallback is OUT of production (a failed search now stores an honest empty state +
+Retry, and `failed` is threaded distinctly from "found nothing" all the way to the UI); a FACTS OF
+THIS TURN block confines every Lex claim to what the server actually recorded; each stage entry
+fires its own focused corpus search whose references render in five groups with earlier stages
+folded away; cost engine v0 lands as per-action CostLine records with ASHE staffing suggestions and
+an EANDCB flag. **The Tasks 4/5 diagnosis contradicted the brief**: the crystallise fields and the
+coherence generators all work (2.8-9.1s, valid proposals) — what was broken is the FAILURE path,
+which wrote "Please refine this." into a real field and announced it as a draft, plus the whole Lex
+API surface running without a `maxDuration`. Preview only, NOT promoted. Earlier:
+2026-08-02 00:36 UTC — LEX: `query_stats` — Lex is wired to the statistics database.
 Audit finding first: Lex had NO tool-calling anywhere, and adding `tools` to the main turn is a hard
 400 (Gemini rejects function calling combined with the `responseSchema` the proposal contract depends
 on) — so the tool runs as its own tools-enabled call, the platform executes it, and Lex narrates from
@@ -34,6 +44,130 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## LEX REBUILD — Sprint 3-C: truth, stage search, and the cost engine (2026-08-02 18:47 UTC)
+
+**Executes `docs/SPRINT_3C_BRIEF.md` (§19-C).** Preview only, **NOT promoted**. `tsc --noEmit`
+clean (bar the 5 pre-existing `xlsx` errors in `scripts/costing/*`). Schema: additive
+`prisma/lex_sprint3c.sql`, **applied to Neon** (whichdb-checked first: `ep-old-dust-aboxi69a`).
+Smoke: **30/30** on the deterministic no-Gemini/no-FTS path, test idea created and deleted.
+
+### Task 0 — contamination cleared
+
+Idea `06ca807a`: 10 stub `legislationRefs` removed, the road-traffic `INITIAL_BACKGROUND`
+document deleted, the 3 stub-derived causes deleted. The user's own cause ("AI is sharing data
+in new and previously non existent ways") is untouched and still the root cause. The cleanup
+matched the exact stub ids and refused to run if any didn't match. **The briefing was NOT
+re-run** — the FTS latency work is parked, so re-running would reproduce the same timeout.
+
+### Tasks 4/5 — the diagnosis contradicts the brief's premise, and the real cause is worse
+
+The brief said the P3 crystallise generation and the coherence check "produced nothing". **The
+persisted state says otherwise**, and only one idea ever walked the kernel, so there is no other
+run to look at. On idea `06ca807a` all five crystallise fields fired and were **ACCEPTED with
+real content**, in order, minutes apart, each with its own Lex bubble (`whatItRulesOut` 08:04:42,
+`leverage` 08:06:04, `anticipatedResponses` 08:07:52, `conditionsForSuccess` 08:08:02,
+`summaryGuidingPolicy` 08:08:12). Probing every one of those generators directly against the live
+model: **all four succeed in 2.8–9.1s with valid proposals that pass their schema.** The
+generation path is not broken.
+
+**What IS broken is the failure path.** `coherenceCheck` holds
+`"this is missing save for now. Please refine this."` — the literal `fallbackValue` default,
+plus what Charlie typed to get past it, and the accompanying bubble was `fallbackChat`'s generic
+"Here's a draft — accept it or tell me how to change it." So: two Lex attempts failed
+(transient — the same call works now), the deterministic fallback fired, and **it wrote
+placeholder text into a real field and announced it as a draft.** A failed generation was
+indistinguishable from a successful one. That is the stub incident again in a different costume.
+
+- **Fixed:** only fields whose fallback is genuinely derived from the user's own words
+  (`title`, `keywords`, `challenge`) still fall back. Every other proposed field now **reports
+  the failure** — the field stays EMPTY (so the panel's own Save/Skip still work and the
+  conductor retries on the next write) and Lex says plainly that it couldn't draft it and offers
+  to try again.
+- **Latency, the likely reason it looked like "nothing happened":** every conductor step is a
+  synchronous Lex round trip inside the write request (measured 2.8–9.1s here; the live trail
+  shows a 21s gap), and **`vercel.json` set `maxDuration` only for the legacy
+  `/api/ai/[ideaId]` route** — the entire Lex rebuild API surface ran on the platform default.
+  A step over the ceiling 504s, the client shows "That didn't save", and the write may already
+  have landed. All seven Lex routes now carry `maxDuration: 60`.
+- **Coherence check built to spec** (it never existed — the old prompt was one line):
+  `generateCoherenceReview` returns structured `{gaps, flaws, missingImplementers, sequence,
+  concentration, defeatsTest}`, so every required element is present or visibly absent rather
+  than lost in prose. Corpus grounding is flag-gated (`LEX_COHERENCE_CORPUS`, default off).
+- **`whatItRulesOut`** no longer string-joins the ruled-out options ("Choosing this approach
+  rules out: We could legislate.") — it composes an argument from each option's case and
+  rule-out reason.
+
+### Task 1 — truth and fallback
+
+- **1a. The stub is out of the production path.** `runFtsSearch` returns
+  `{results: [], failed: true, reason}` on failure; the stub survives only behind
+  `LEX_SEARCH_STUB=true` **and** refuses to arm when `VERCEL_ENV=production`. A failed briefing
+  stores no references and no prose and marks the document `failed`; the panel shows an honest
+  empty state with **Retry** (new `POST /api/ideas/[id]/search`). `failed` is threaded distinctly
+  from "ran and found nothing" all the way to the UI — they are different sentences to a user
+  building a case for Parliament.
+- **1b. The never-claim invariant, as a mechanism.** Every turn now carries a **FACTS OF THIS
+  TURN** block (`lib/lex/facts.ts`): the current section and box, what the panel actually holds,
+  the real record counts, what search ran this turn and exactly what it returned — with the rule
+  that any claim about what exists must come from that list. Both live failures ("You'll find an
+  overview in the panel", "I've pulled some options") were the model describing the world from
+  expectation rather than state.
+- **1c. Mid-chat research is handled, not improvised.** Conservative server-side detection (an
+  explicit search verb AND a corpus/law object, with negation guards) → `AD_HOC_RESEARCH` through
+  the gateway → results stored under "Your research" in the panel → Lex describes only what came
+  back. Where it doesn't fire, the prompt makes Lex **decline honestly**. Verified live: the exact
+  2 Aug message now gets *"I can't run a corpus search from here yet; the panel search runs at
+  each stage."*
+
+### Task 2 — stage-entry focused search
+
+`Idea.stageSearches` (new, additive) records **references only** — no corpus text is copied into
+the ideas DB. `performStageAdvance` fires the stage's search **before** the conductor speaks, so
+Lex's message is grounded in results that already exist. `DIAGNOSIS` → `LEGAL_LANDSCAPE` (query
+built from keywords + narrative, **refreshed when `challenge` is accepted** — the sharpest
+signal); `GUIDING_POLICY` → `POLICY_ALTERNATIVES` (keywords + pivotal obstacle + chosen approach);
+`COHERENT_ACTIONS` reuses the Diagnosis landscape until an amendable-section intent exists. The
+panel renders five groups — legislation · comparable provisions elsewhere · debates · committee
+hearings · anything else — and **prior stages fold away**, which is the stale-panel fix (Task 3):
+the Orientation briefing is now a collapsed line once a later stage has its own search.
+
+**Honest limitation:** "principles appearing in other legislation" has no classifier in the
+corpus (the search workstream's G–I streams are its eventual home). It is currently a labelled
+display split of the same ranked set — comparable provisions to look across — and claims no
+relationship the data hasn't established.
+
+### Tasks 3, 6, 7
+
+- **P3 cards**: Title / Detail / For / Against, collapsed to the title until clicked; the CHOSEN
+  option is bold in the stage accent with a doubled border; add/edit/delete/rule-out retained.
+  The GP orientation now names the user's **actual** root cause, obstacle and causes rather than
+  talking method in the abstract, and speaks only after the rows persist (with the count read
+  from fresh state).
+- **Cost engine v0**: new `CostLine` table (label, costType, category, staffLevel, fte, months,
+  low/high, basis, benchmarkId, priceYear) + `POST /api/ideas/[id]/cost-lines`
+  (add/update/remove/suggest). Each action takes one line at a time; **staffing lines suggest a
+  figure from the seeded ASHE wage benchmarks** (junior/mid/senior → lower-quartile/median/
+  upper-quartile, scaled by FTE × months, with the basis string naming the benchmark) — a
+  suggestion the user accepts or overrides, never an assertion. Lines roll up per action → the
+  three §18.2 categories → `costSummary`, uprated to a common price year, alongside any legacy
+  per-action ranges. **EANDCB flag** when friction crosses ±£5m/yr.
+- **UX**: Save is grey until a box is dirty and black once it is (a pending Lex proposal stays
+  black — it genuinely awaits a press); **Exit** sits left of "How this works" with a
+  Save/Discard/Stay prompt when a draft is unsaved; **Lex-seeded cause cards stay editable and
+  deletable after the loop is confirmed** — they used to render read-only, which is precisely why
+  the three road-traffic causes couldn't be removed.
+
+### Verification
+
+30/30 deterministic assertions (test idea created and deleted): stub never returned; briefing
+failure stored as `failed` with no refs; stage search recorded with the right intent and a
+query built from accepted signals; facts block states non-completion and forbids pointing at the
+panel; a derivable field still drafts while the placeholder never appears; cost lines roll up and
+trip the EANDCB flag; research detection accepts the two real phrasings and rejects a plain
+question and a statement about the user's own research. Plus the live check above.
 
 ---
 
