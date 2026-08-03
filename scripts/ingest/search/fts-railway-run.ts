@@ -74,10 +74,24 @@ const NEEDED = [
 const fs = require('fs') as typeof import('fs')
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+/**
+ * Railway has TWO token kinds and they authenticate DIFFERENTLY (3 Aug 2026):
+ *   - account / team token  → `Authorization: Bearer <token>`
+ *   - PROJECT token (a UUID, scoped to one project+environment)
+ *                           → `Project-Access-Token: <token>`  (Bearer returns "Not Authorized")
+ * A project token is the least privilege that can drive this service, so support both
+ * and pick by shape rather than making the caller care.
+ */
+function railwayAuthHeader(): Record<string, string> {
+  const token = process.env.RAILWAY_API_TOKEN ?? ''
+  const isProjectToken = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)
+  return isProjectToken ? { 'Project-Access-Token': token } : { Authorization: `Bearer ${token}` }
+}
+
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   const res = await fetch(RAILWAY_API, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.RAILWAY_API_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { ...railwayAuthHeader(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   })
   const data = await res.json() as { data?: T; errors?: Array<{ message: string }> }
@@ -163,12 +177,16 @@ async function idle() {
   console.log('fts-build parked: startCommand=true, restartPolicyType=NEVER (safe for push auto-redeploy)')
 }
 
-async function deployWith(cmd: string) {
+async function deployWith(cmd: string, restartPolicyType: 'ON_FAILURE' | 'NEVER' = 'ON_FAILURE') {
   const id = loadId()
-  console.log(`setting startCommand: ${cmd}`)
+  console.log(`setting startCommand: ${cmd} (restartPolicy=${restartPolicyType})`)
   // ON_FAILURE: a crashed build auto-restarts + resumes from the R2 checkpoint; a
   // clean exit 0 (done / --limit reached) stays stopped. --reset is NEVER in cmd.
-  await updateInstance(id, { startCommand: cmd, restartPolicyType: 'ON_FAILURE' })
+  //
+  // NEVER is for jobs that CANNOT resume. fts-optimize restarts from scratch, so on
+  // 3 Aug an OOM under ON_FAILURE became an eight-cycle restart loop, each pass redoing
+  // a 30s probe query before dying again. If a job has no checkpoint, it gets NEVER.
+  await updateInstance(id, { startCommand: cmd, restartPolicyType })
   console.log('redeploying…')
   await redeploy(id)
   return id
@@ -247,7 +265,7 @@ const fn = mode === 'setup' ? setup
   : mode === 'canary' ? async () => { await tailLogs(await deployWith(CANARY_CMD)) }
   : mode === 'full' ? async () => { await monitorStartup(await deployWith(FULL_CMD), 7) }
   : mode === 'v1' ? async () => { await monitorStartup(await deployWith(V1_CMD), 7) }
-  : mode === 'optimize' ? async () => { await tailLogs(await deployWith(OPTIMIZE_CMD)) }
+  : mode === 'optimize' ? async () => { await tailLogs(await deployWith(OPTIMIZE_CMD, 'NEVER')) }
   : mode === 'logs' ? logs
   : mode === 'teardown' ? teardown
   : null

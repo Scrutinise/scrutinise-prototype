@@ -19,22 +19,46 @@
  * was correct (rows were findable immediately, as verified at the time) and yet every
  * query afterwards paid a 1.19M-row scan.
  *
- * `optimize()` in LanceDB 0.30 covers three things — compaction, prune, and
- * "Index: optimizes the indices, ADDING NEW DATA TO EXISTING INDICES". That last one is
- * the fix; it is an incremental merge, not the full 17.7M-row rebuild that OOM-looped
- * when the index was first built.
+ * Proof that this is the whole story: a rare term with ZERO matches ("quokka") takes
+ * 24.2s against the live service — an indexed lookup for a term that isn't there returns
+ * in milliseconds, so those 24 seconds ARE the scan of the un-indexed rows.
  *
- * RUN IT IN THE DATACENTRE. Compaction rewrites data files, so this is a
- * datacentre→R2 job, not a home-connection one (same reasoning as fts-railway-run.ts).
+ * DO NOT USE optimize() FOR THIS (learned the hard way, 3 Aug 2026)
+ * ------------------------------------------------------------------
+ * The first attempt called `table.optimize()`. It OOM-killed the Railway container
+ * ~45s in, eight times in a row. That is the SAME wall this repo already hit twice and
+ * already documented — `build-fts-index.ts` carries the note from 22 Jul:
+ *
+ *     "optimize() has an independent v0.30 bug/memory cost on top of createIndex's own
+ *      OOM risk. FTS_SKIP_COMPACT=true skips fragment compaction and runs createIndex()
+ *      directly over the existing fragments"
+ *
+ * — and the vector build has the identical `VECTOR_SKIP_COMPACT` escape. Compaction is
+ * the part that explodes, and we do not need it: we need the rows INDEXED, not the files
+ * merged. So the default action here is a `createIndex` rebuild over the existing
+ * fragments, which is exactly how the live index was built (2026-06-20: 16,509,051 rows
+ * in 339s, no OOM). Compaction is available behind --compact for anyone who wants it,
+ * with the memory warning attached.
+ *
+ * The index config below MIRRORS build-fts-index.ts EXACTLY, including
+ * withPosition=false. The live index is the no-positions v1 build (CHANGE_LOG
+ * 2026-06-20; the positions rider was abandoned 2026-07-22), and rebuilding with
+ * different settings would silently change ranking. If you change one, change both.
+ *
+ * RUN IT IN THE DATACENTRE — it reads the whole body column from R2.
  *   Railway:  FTS_SERVICE=fts-build tsx search/fts-railway-run.ts optimize
- *   Direct:   tsx search/fts-optimize.ts            (add --verify-only to just report)
+ *   Direct:   tsx search/fts-optimize.ts        (--verify-only to just report coverage)
  *
- * It logs a heartbeat every 30s because optimize() is one long native call: without it
- * the logs go silent for a long stretch and a healthy run looks hung.
+ * Heartbeat every 30s: these are single long native calls, and without it a healthy run
+ * looks hung.
  */
 import { connectLance, FTS_TABLE, lancedb } from './lance'
 
 const VERIFY_ONLY = process.argv.includes('--verify-only')
+/** Opt in to compaction. It OOM-killed a Railway container on 3 Aug; see the header. */
+const COMPACT = process.argv.includes('--compact')
+/** Must match the live index. The v1 build is no-positions — see the header. */
+const WITH_POSITION = (process.env.FTS_WITH_POSITIONS ?? 'false') !== 'false'
 const HEARTBEAT_MS = 30_000
 const log = (msg: string) => console.log(`[fts-optimize] ${msg}`)
 const rssMb = () => Math.round(process.memoryUsage().rss / 1024 / 1024)
@@ -99,26 +123,43 @@ async function main() {
   if (VERIFY_ONLY) { log('verify-only — not optimizing.'); return }
 
   const totalUnindexed = covBefore.reduce((a, c) => a + c.unindexed, 0)
-  if (totalUnindexed === 0) {
-    log('every row is already indexed; running optimize anyway for compaction + prune.')
+  if (totalUnindexed === 0 && !COMPACT) {
+    log('every row is already indexed — nothing to do. Pass --compact to compact files anyway.')
+    return
   }
 
-  log('running optimize() — compaction + prune + index merge. This is the long part.')
   const t0 = Date.now()
   const beat = setInterval(
-    () => log(`  … still optimizing, ${Math.round((Date.now() - t0) / 1000)}s elapsed, rss=${rssMb()}MB`),
+    () => log(`  … still working, ${Math.round((Date.now() - t0) / 1000)}s elapsed, rss=${rssMb()}MB`),
     HEARTBEAT_MS,
   )
-  let stats
   try {
-    stats = await table.optimize()
+    if (COMPACT) {
+      log('--compact given: running optimize() (compaction + prune + index). MEMORY-HEAVY — see header.')
+      const stats = await table.optimize()
+      log(`  compaction: ${JSON.stringify(stats.compaction)}`)
+      log(`  prune:      ${JSON.stringify(stats.prune)}`)
+    } else {
+      log(`rebuilding the FTS index over the existing fragments (withPosition=${WITH_POSITION}) — no compaction.`)
+      await table.createIndex('body', {
+        config: lancedb.Index.fts({
+          withPosition: WITH_POSITION,
+          baseTokenizer: 'simple',
+          stem: true,
+          language: 'English',
+          removeStopWords: false,   // keep shall/may/must — legally meaningful
+          asciiFolding: true,
+          maxTokenLength: 40,
+          lowercase: true,
+        }),
+        replace: true,
+      })
+    }
   } finally {
     clearInterval(beat)
   }
   const elapsed = Math.round((Date.now() - t0) / 1000)
-  log(`optimize() returned after ${elapsed}s, rss=${rssMb()}MB`)
-  log(`  compaction: ${JSON.stringify(stats.compaction)}`)
-  log(`  prune:      ${JSON.stringify(stats.prune)}`)
+  log(`finished in ${elapsed}s, rss=${rssMb()}MB`)
 
   const rowsAfter = await table.countRows()
   const covAfter = await coverage(table)
@@ -134,7 +175,7 @@ async function main() {
   }
   const stillUnindexed = covAfter.reduce((a, c) => a + c.unindexed, 0)
   if (stillUnindexed > 0) {
-    log(`!! ${stillUnindexed.toLocaleString()} rows STILL outside the index — optimize did not fully merge. A createIndex(replace) rebuild may be needed.`)
+    log(`!! ${stillUnindexed.toLocaleString()} rows STILL outside the index — the rebuild did not cover everything.`)
     process.exitCode = 1
   }
 
