@@ -29,9 +29,22 @@ async function main() {
   const forceId = forceIdx !== -1 ? process.argv[forceIdx + 1] : null
 
   const prisma = getStatsPrisma()
-  const datasets = await prisma.statDataset.findMany()
-  if (datasets.length === 0) {
+  const all = await prisma.statDataset.findMany()
+  if (all.length === 0) {
     console.log('No StatDataset rows found — run seed-catalogue.ts first.')
+    return
+  }
+
+  // `--force <id>` means run EXACTLY that dataset and nothing else.
+  //
+  // It previously meant "force this one, AND also run anything else that happens to be due",
+  // which is a genuine hazard: running `--force B` while a `--force A` run was still going
+  // started a SECOND writer on A (A was un-refreshed, therefore due). upsertSeries is
+  // find-then-create, not atomic, so two writers on one dataset can duplicate series or
+  // collide. Hit exactly this on 2026-08-03 during the Phase B ingest.
+  const datasets = forceId ? all.filter((d) => d.id === forceId) : all
+  if (forceId && datasets.length === 0) {
+    console.log(`No StatDataset with id "${forceId}". Known ids: ${all.map((d) => d.id).join(', ')}`)
     return
   }
 

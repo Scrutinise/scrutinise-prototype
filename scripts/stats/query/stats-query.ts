@@ -46,6 +46,98 @@ export async function findSeries(filter: {
   })
 }
 
+// ---- Phase B: comparative / international reads -----------------------------
+
+export interface ComparativeRow {
+  geography: string
+  periodLabel: string
+  periodStart: Date
+  value: number
+}
+
+export interface ComparativePoint {
+  periodLabel: string
+  /** geography code -> value for that period. Absent key = that country has no value that year. */
+  byGeography: Record<string, number>
+}
+
+/**
+ * "Compare UK vs OECD-average (or any country set) spending on a given COFOG function over time."
+ *
+ * This is the Phase B payoff query. It works because Phase B normalises country codes to
+ * ISO-3166 alpha-2 (see lib/iso.ts), so the UK's own rows sit under the SAME `GB` geography
+ * that Phase A wrote — otherwise the UK would never line up with its own comparators.
+ *
+ * `geographies` accepts country codes and OECD's published aggregates alike ('OECD_REP' is
+ * OECD's own "average country" figure — preferred over averaging member rows ourselves, which
+ * would silently weight by whichever members happen to report).
+ */
+export async function compareByCofogFunction(params: {
+  cofogFunctionCode: string
+  geographies: string[]
+  unit?: string
+  datasetId?: string
+  fromYear?: number
+}): Promise<ComparativePoint[]> {
+  const prisma = getStatsPrisma()
+  const rows = await prisma.statObservation.findMany({
+    where: {
+      cofogFunctionCode: params.cofogFunctionCode,
+      geography: { in: params.geographies },
+      ...(params.unit ? { unit: params.unit } : {}),
+      ...(params.fromYear ? { periodStart: { gte: new Date(Date.UTC(params.fromYear, 0, 1)) } } : {}),
+      ...(params.datasetId ? { series: { datasetId: params.datasetId } } : {}),
+    },
+    orderBy: { periodStart: 'asc' },
+    select: { geography: true, periodLabel: true, periodStart: true, value: true },
+  })
+  const byPeriod = new Map<string, ComparativePoint>()
+  for (const r of rows) {
+    const key = r.periodLabel
+    let e = byPeriod.get(key)
+    if (!e) { e = { periodLabel: key, byGeography: {} }; byPeriod.set(key, e) }
+    e.byGeography[r.geography] = Number(r.value)
+  }
+  return [...byPeriod.values()]
+}
+
+/** One indicator (e.g. health spend % GDP) across countries over time — the non-COFOG comparison. */
+export async function compareByMeasure(params: {
+  measure: string
+  geographies: string[]
+  fromYear?: number
+}): Promise<ComparativePoint[]> {
+  const prisma = getStatsPrisma()
+  const rows = await prisma.statObservation.findMany({
+    where: {
+      geography: { in: params.geographies },
+      series: { measure: params.measure },
+      ...(params.fromYear ? { periodStart: { gte: new Date(Date.UTC(params.fromYear, 0, 1)) } } : {}),
+    },
+    orderBy: { periodStart: 'asc' },
+    select: { geography: true, periodLabel: true, value: true },
+  })
+  const byPeriod = new Map<string, ComparativePoint>()
+  for (const r of rows) {
+    let e = byPeriod.get(r.periodLabel)
+    if (!e) { e = { periodLabel: r.periodLabel, byGeography: {} }; byPeriod.set(r.periodLabel, e) }
+    e.byGeography[r.geography] = Number(r.value)
+  }
+  return [...byPeriod.values()]
+}
+
+/** Which geographies do we actually hold data for? Useful before offering a comparison to Lex. */
+export async function availableGeographies(datasetId?: string): Promise<string[]> {
+  const prisma = getStatsPrisma()
+  const rows = await prisma.statSeries.findMany({
+    where: datasetId ? { datasetId } : {},
+    distinct: ['geography'],
+    select: { geography: true },
+    orderBy: { geography: 'asc' },
+  })
+  return rows.map((r) => r.geography)
+}
+
 export interface CofogRollupRow {
   cofogFunctionCode: string
   cofogFunctionName: string | null
