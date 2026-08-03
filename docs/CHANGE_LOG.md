@@ -379,6 +379,222 @@ promoted** — Charlie replays the test on the preview first.
 
 ---
 
+## CORPUS REPORT + CDN FIX + STATS PHASE B (2026-08-03 08:30 UTC)
+
+**Executes `docs/BRIEF_CC_corpus-report_CDN_statsPhaseB.md`.** Part 1 (tidy-ups) complete;
+Part 2 (Phase B comparative statistics) delivered for World Bank + OECD, with IMF and Eurostat
+deliberately not ingested — reasons below, both flagged rather than quietly dropped.
+
+### Part 1.1 — corpus status report generator
+
+**The spec this was supposed to be built from did not exist.** The brief said "per
+`docs/reports/corpus-status-report.md`"; that file was absent from the repo and the remote
+(confirmed in sync via `git ls-remote`, not `git status`). Rather than block a two-part sprint,
+the generator was built to the tab list and grain rule stated in the brief itself, and
+`docs/reports/corpus-status-report.md` now exists, documenting the contract as built. **The
+column choices are CC's and are the part most likely to need correcting.**
+
+- **`scripts/reports/`** — new, its own tiny npm project (`pg`, `xlsx`, `dotenv`). Deliberately
+  NOT added to `scripts/ingest`: that package is what deploys to Railway as the ingest service,
+  and a report-only `xlsx` dependency would bloat the production image for something that only
+  runs locally. Same reasoning that gave `scripts/stats` its own project.
+- Output `docs/reports/output/corpus-status-2026-08-03.xlsx`, 676 KB, 8 tabs. **Grain rule held:
+  org/collection level throughout — no tab lists an individual section or document.**
+
+  | Tab | Rows | brief expected |
+  |---|---|---|
+  | Corpus Status | **70** | ~68 |
+  | Quangos | **1,255** | ~1,255 (exact) |
+  | Parliamentary | 21 | — |
+  | Regulators & Ombudsmen | 10 | — |
+  | Inquiries & Reviews | 3 | — |
+  | Gaps & Pending | 15 | — |
+  | Statistics | 7 datasets | optional |
+
+  Headline: **17,874,322 sections, 6.20bn words, 98.8% compiled**, 47 breaker-tracked sources
+  all `ok`. Parliamentary is derived from `tierFor()` in `scripts/ingest/search/corpus-map.ts` —
+  **imported, not duplicated**, so the tab cannot drift from the tier map search itself uses.
+- **The Gaps tab immediately earned its place.** It surfaced that the **`pwdata-*` family carries
+  mixed licence values** — `(none) | opl-3.0` across ~8.8M sections, i.e. some rows licensed and
+  some null within the same corpus — plus `ni-judgments`, `nilawcom` and `tax-tribunals` still at
+  `pending-verification`, 3 tracked-but-empty corpora, and 1 `lgsco` queue failure. Not fixed
+  (out of scope); flagged for whoever owns licence backfill.
+- Statistics tab is dataset-level only (brief §1.1: do NOT fold time-series in) and **never fails
+  the run** — if the stats DB is unreachable the tab is skipped with a note, because a corpus
+  report must not depend on the statistics layer being up.
+
+### Part 1.2 — xlsx moved to the SheetJS CDN build
+
+`xlsx@^0.18.5` (npm, frozen, high-severity prototype-pollution + ReDoS advisory, no registry
+fix) → **`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`** in `scripts/stats`,
+`scrutinise-web` and the new `scripts/reports`. 0.20.3 confirmed as the current CDN build.
+
+- `scripts/stats`: **1 high → 0 vulnerabilities.**
+- `scrutinise-web`: **`xlsx` gone from `npm audit` entirely** (36 advisories remain, all
+  pre-existing and unrelated — Clerk, Babel, OpenTelemetry, Prisma).
+- **All five stats parsers re-verified against live spreadsheets** after the switch — identical
+  counts to Phase A (ONS Beta 40/1,960; PESA 310 obs incl. health; OBR 2,807/20,506).
+- **Side-effect worth noting: `scrutinise-web` `tsc --noEmit` is now clean.** The 5 long-standing
+  "xlsx module not found" errors in `scripts/costing/*` are gone — the CDN tarball actually
+  installs locally, where the frozen npm package did not.
+- **New deploy-time risk, flagged:** Vercel must now reach `cdn.sheetjs.com` during install.
+  This is SheetJS's documented distribution route, but it is a new external build dependency —
+  worth watching the next deploy.
+
+### Part 2 — Statistics Phase B (comparative / international)
+
+Additive to the existing `scrutinise-stats` DB, **no schema rebuild** — as the brief predicted,
+the Phase A model absorbed it. Only two additions: four `StatSource` enum values (migration
+`20260803070000_phase_b_sources`) and `scripts/stats/lib/iso.ts`. `whichdb.ts` run before the
+migration, resolving to `scrutinise-stats`, never the corpus DB.
+
+**The decision that makes Phase B work at all: alpha-2 geography.** Phase A wrote the UK as `GB`;
+every international source speaks `GBR`. Storing `GBR` would have put the UK's own spending in a
+*different geography from its own comparators*, and no comparative query would ever have lined
+up. `lib/iso.ts` normalises every country code to alpha-2 on the way in. Published aggregates
+(`OECD`, `OECD_REP` = OECD's own "average country", `EUOECD`, `WLD`) are kept verbatim —
+preferring OECD's published average over averaging member rows ourselves, which would silently
+weight by whichever members happen to report in a given year.
+
+**COFOG is the join.** OECD `EXPENDITURE` codes are `GF`+COFOG digits (`GF07` → `07`,
+`GF0605` → `06.5`), mapped onto the **existing** `cofogFunctionCode` axis with
+`ensureCofogFunction()` auto-creating sub-codes exactly as PESA does. That is what lets UK PESA
+spending and OECD comparator spending sit on one column.
+
+#### The OECD licence contradicts the brief — verified position taken
+
+The brief said set `commercialUseExcluded=true` because "pre-2024 content is CC-BY-NC".
+Verification at source (`oecd.org/en/about/terms-conditions.html`, retrieved 2026-08-03) shows
+two problems with that premise:
+
+1. The CC-BY-NC question concerns OECD **written content** (publications). Statistical **Data**
+   has its own clause, §3, which states: *"you can extract from, download, copy, adapt, print,
+   distribute, share and embed Data for any purpose, **even for commercial use**"* (attribution
+   required).
+2. Even the pre-1-July-2024 written-content clause permits *"commercial and non-commercial"* use.
+
+The brief's own standing instruction is "**verify each new source's licence at its own terms
+page**", so verification won: `commercialUseExcluded = false`, with the verified wording stored
+in the dataset's `licence` field. **This is one boolean in `seed-catalogue.ts` — trivially
+reversible if Charlie prefers the conservative reading.** OECD's own caveat (individual datasets
+may declare third-party restrictions in their metadata) is carried in the module header.
+
+#### Sources
+
+| dataset | source | licence (verified at source 2026-08-03) | commercialUseExcluded |
+|---|---|---|---|
+| `wb-wdi-comparative` | World Bank WDI | **CC BY 4.0** (`data.worldbank.org/summary-terms-of-use`) | `false` |
+| `oecd-cofog-expenditure` | OECD SDMX | OECD T&C §3 "Data" — any purpose incl. commercial, attribution required | `false` |
+
+**Measured result: World Bank 257 series / 11,235 observations, 1960–2025.** OECD ingested
+nothing — see the section below. Stats DB after this sprint: **9 datasets, 3,404 series,
+40,092 observations, 21 MB**, every Phase A dataset reconciling exactly apart from OBR's known
+24 rows lost to duplicate keys in OBR's own workbook.
+
+**Comparative query layer proven live** (`npm run compare`), e.g. current health expenditure
+as % of GDP:
+
+```
+  year        GBR      FRA      DEU      USA
+  2020      12.10    12.13    12.47    18.52
+  2022      11.10    11.83    12.45    16.53
+  2024      11.13    11.54    12.27        —
+```
+
+plus tax revenue % GDP and life expectancy on the same axis — the input/outcome pairing the
+brief asked for. The UK rows sit under `GB`, the same geography Phase A wrote, which is the
+whole point of the alpha-2 normalisation.
+
+World Bank is a curated set of 12 indicators across 22 comparator countries: fiscal aggregates
+(GDP, government expenditure/tax/debt % GDP) **plus outcome indicators** (life expectancy, health
+and education spend, infant mortality, Gini) — the outcome half is what makes "did their approach
+actually work" answerable rather than only "what did they spend".
+
+#### Not ingested, and why — both flagged, neither quietly dropped
+
+- **IMF.** Probed fine (`GFS_COFOG` and `WEO` both reachable; country-filtered CSV works — note
+  the *unfiltered* `GFS_COFOG` response is **242 MB**, so filtering is mandatory).
+  **Licence could not be verified:** `imf.org/external/terms.htm`, `data.imf.org/en/Terms-of-Use`
+  and `imf.org/en/About/copyright-and-terms` all return **403** from this environment, and the
+  data's own `LICENSE` column reads *"© International Monetary Fund Copyright. All Rights
+  Reserved."* Ingesting a source whose terms cannot be read, when its own metadata asserts all
+  rights reserved, is not defensible. **Needs Charlie to open the terms page in a browser.**
+- **Eurostat.** Brief marks it optional and time-boxed; not attempted.
+
+#### OECD COFOG — NOT LOADED. Diagnosed, instrumented, handed over.
+
+**Final state: `oecd-cofog-expenditure` holds 0 rows.** Four attempts, all failed; the source is
+the blocker, not the code. What was established:
+
+| window size | requests | result |
+|---|---|---|
+| 1 year, ×20 | 20 | 19 failed (17× 500, 6× 429) — 1 year returned |
+| 20 years | 1 (after 12-min cooldown) | HTTP 500 |
+| 10 years | 2 | both HTTP 500 |
+| 5 years | 4 | all four HTTP 500 |
+
+Yet a **single year requested in isolation returns HTTP 200 with 426 KB** — proven twice. So the
+data is reachable; the access pattern is the problem.
+
+**Two failure modes, both surfacing as HTTP 500** — separating them is the main finding:
+- **Quota** — too many requests; intermittent; reported as 500 at least as often as 429; waiting
+  helps.
+- **Size** — one window too large; deterministic; waiting does not help (the whole-window request
+  500'd as the *first* request after a full cooldown).
+
+**Honest limit on that attribution:** only the first request after a cooldown cleanly isolates
+size from quota. Every later failure in a run follows ~15 real requests (each failure carries 4
+retries) and cannot be assigned to one mode from the log alone. The 10- and 5-year failures are
+therefore *not* established as size limits.
+
+**Shipped so the next attempt starts from knowledge:**
+- Adaptive `fetchOecdCofog()` — largest window first, subdividing 20 → 10 → 5 only on failure
+  (worst case 7 requests). Right for both modes: minimises request count while searching for a
+  servable size. **Never revert to per-year requests** — that maximises the quota problem to
+  solve a size problem it cannot touch.
+- **Server-side unit filter (UNTESTED — the highest-value thing to try next).** `/all` returns
+  four `UNIT_MEASURE` variants; we map three and discard the fourth, so ~25% of every payload is
+  fetched only to be thrown away on an endpoint whose hard limit is payload size. The SDMX key
+  order was derived from the CSV column order already in hand, costing no quota. Tried first with
+  automatic fallback to `/all`, so a wrong key shape costs one request, never the ingest.
+- The `finalise()` guard, which is why this ends as an honest FAILURE rather than a stub dataset.
+
+**The partial 2022-only slice a killed run had written (185 series / 185 obs) was DELETED.**
+Keeping it would have been incoherent: the guard exists precisely to stop a partial window being
+writable, so leaving one already in the table — where "UK vs OECD health spend over time" would
+have silently returned a single 2022 point and looked like an answer — contradicts it. An empty
+dataset cannot mislead; a one-year slice can, and the data is trivially re-fetchable. The
+`StatDataset` row is retained so the next refresh picks it up.
+
+**To resume:** `cd scripts/stats && npm run refresh -- --force oecd-cofog-expenditure`, from a
+cold quota, with no concurrent `curl` probing.
+
+#### Two operational faults found and fixed during the ingest
+
+- **`--force <id>` was not exclusive, and that is a data-safety bug.** It meant "force this one,
+  *and* also run anything else that happens to be due", so launching `--force oecd-…` while
+  `--force wb-…` was still running started a **second concurrent writer on the World Bank
+  dataset** (un-refreshed, therefore due). `upsertSeries` is find-then-create and **not atomic**,
+  so two writers on one dataset can duplicate series or collide. Caught within a minute; the
+  duplicate was killed at OS level and **verified dead via `Get-CimInstance`, not the harness's
+  own tracking** (the recorded lesson that a harness "kill" is not a process kill). Damage
+  checked, not assumed: **0 duplicate series, 257 series / 257 distinct keys.** `--force` now
+  runs exactly one dataset.
+- **`verify.ts` reported `lastRefresh=never` for a dataset that had succeeded.** The killed
+  process left an orphaned log row with a null status; `findFirst … orderBy startedAt desc` picked
+  that dead row over the successful one. Fixed to reconcile against the latest *completed* run,
+  and to **surface** unfinished rows (`** N UNFINISHED RUN(S) **`) rather than swallow them — an
+  orphaned RUNNING row means a refresh died mid-flight and nobody was told. The orphaned row was
+  closed out as `FAILURE` with an explanation rather than deleted: `stat_refresh_log` is
+  append-only operational history and a killed run is a real event.
+- **OECD returns HTTP 500 for a whole-window request** (2007–2026 all-countries, deterministic,
+  3 retries) while a single year returns ~2.5 MB happily — a response-size limit, not a transient
+  fault, so retrying is exactly the wrong move (§13 retry policy). `fetchOecdCofog` now fetches
+  **one year at a time**, and a year that genuinely fails is reported and skipped rather than
+  aborting the ingest, so one bad vintage cannot cost the other nineteen.
+
+---
+
 ## STATS — Database provisioned, first live ingest, six bugs the offline build could not see (2026-08-01 23:30 UTC)
 
 **Completes the provisioning step left open by the 31 Jul entry below.** Charlie supplied an

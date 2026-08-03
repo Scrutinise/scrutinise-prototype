@@ -122,6 +122,69 @@ whichdb.ts` from `scripts/stats/`** — the `docs/CLAUDE.md` §16 rule, with a s
 guard: it prints host/database/user for both URLs and hard-fails if either resolves to the
 corpus/app endpoint.
 
+## Phase B — comparative / international (added 2026-08-03)
+
+Additive to the same schema; **no schema rebuild** — the model was designed for this. Two new
+things only: four `StatSource` enum values (`WORLD_BANK`, `OECD`, `IMF`, `EUROSTAT`, migration
+`20260803070000_phase_b_sources`) and `scripts/stats/lib/iso.ts`.
+
+### The one thing that makes comparison work: alpha-2 geography
+
+Phase A wrote the UK as **`GB`** (alpha-2). Every international source speaks alpha-3 (`GBR`).
+Had Phase B stored `GBR`, the UK's own spending would sit in a **different geography from its
+own comparators** and no comparative query would ever line up. `lib/iso.ts` normalises every
+country code to alpha-2 on the way in, so UK PESA rows and UK OECD rows share `GB`. This is the
+single highest-consequence decision in Phase B.
+
+Non-ISO published aggregates are kept verbatim and listed explicitly in `AGGREGATE_CODES`:
+`OECD`, `OECD_REP` (OECD's own "average country"), `EUOECD`, `WLD`. Using OECD's published
+average is deliberately preferred over averaging member rows ourselves, which would silently
+weight by whichever members happen to report in a given year.
+
+### Sources as built
+
+| dataset | source | licence (verified at source 2026-08-03) | `commercialUseExcluded` |
+|---|---|---|---|
+| `wb-wdi-comparative` | World Bank WDI | **CC BY 4.0** (`data.worldbank.org/summary-terms-of-use`) | `false` |
+| `oecd-cofog-expenditure` | OECD SDMX | **OECD T&C §3 "Data"** — reuse for any purpose *including commercial*, attribution required | `false` |
+
+**The OECD licence contradicts the brief, and the verified position was taken.** The brief said
+to set `commercialUseExcluded=true` because "pre-2024 content is CC-BY-NC". Verification at
+source shows two problems with that: the CC-BY-NC question concerns OECD **written content**
+(publications), which has its own clause — statistical **Data** is governed by §3, which states
+"you can extract from, download, copy, adapt, print, distribute, share and embed Data for any
+purpose, **even for commercial use**"; and even the pre-1-July-2024 written-content clause
+permits "commercial and non-commercial" use. The brief's standing instruction was to *verify
+each licence at its own terms page*, so verification won. This is one boolean in
+`seed-catalogue.ts` — trivially reversible if Charlie prefers the conservative reading.
+OECD's own caveat is carried in the module: individual datasets may declare third-party
+restrictions in their metadata.
+
+### COFOG is the join
+
+OECD `EXPENDITURE` codes are `GF` + COFOG digits (`GF07` → `07`, `GF0605` → `06.5`), mapped by
+`cofogFromExpenditureCode()` onto the **existing** `cofogFunctionCode` axis, with
+`ensureCofogFunction()` auto-creating sub-codes exactly as PESA does. That is what lets
+"UK health spending" (PESA) and "OECD-average health spending" (OECD) be compared on one column.
+
+### Query layer
+
+`query/stats-query.ts` gains `compareByCofogFunction()` (a COFOG function across geographies
+over time), `compareByMeasure()` (a non-COFOG indicator across geographies), and
+`availableGeographies()`.
+
+### Not ingested, and why
+
+- **IMF** — probed successfully (`GFS_COFOG`, `WEO` reachable; country-filtered CSV works —
+  note the unfiltered `GFS_COFOG` response is **242 MB**, so country filtering is mandatory).
+  **Not ingested: the licence could not be verified.** `imf.org/external/terms.htm`,
+  `data.imf.org/en/Terms-of-Use` and `imf.org/en/About/copyright-and-terms` all return **403**
+  from this environment, and the data's own `LICENSE` column reads *"© International Monetary
+  Fund Copyright. All Rights Reserved."* — materially more restrictive than CC BY. Ingesting a
+  source whose terms cannot be read, when its own metadata asserts all rights reserved, is not a
+  defensible call. Needs Charlie to open the terms page in a browser and confirm.
+- **Eurostat** — the brief marks it optional and time-boxed; not attempted this pass.
+
 ## What's genuinely NOT built yet (honest gaps, not oversights)
 
 - **The scheduled invocation of `refresh-scheduler.ts` is not deployed.** The script is live-run

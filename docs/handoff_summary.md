@@ -2,7 +2,19 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-02 18:47 UTC — ▼ LEX REBUILD **Sprint 3-C** (§19-C) shipped to the preview
+*Last updated: 2026-08-03 08:30 UTC — ▼ CORPUS REPORT + CDN + STATS PHASE B: corpus status
+workbook shipped (`scripts/reports/`, 8 tabs, 70 corpora / 1,255 quangos / 17.87M sections —
+**the spec the brief referenced did not exist**, so it was built to the brief's own tab list and
+the spec written up); `xlsx` moved to the SheetJS CDN build, clearing the advisory in both
+packages (**and `scrutinise-web` now typechecks clean**); **Stats Phase B World Bank live**
+(257 series / 11,235 obs, comparative queries proven — UK vs FR/DE/US on health spend, tax and
+life expectancy). **Two things need Charlie: the OECD `commercialUseExcluded` call (the brief's
+CC-BY-NC premise is wrong — OECD T&C §3 permits commercial use, so the verified position was
+taken), and IMF (NOT ingested — terms 403 everywhere, data says "All Rights Reserved").** **OECD
+COFOG NOT loaded — 0 rows, a source-side blocker**: every window size 500s while a single year in
+isolation returns 200, and the endpoint reports both quota exhaustion AND over-size as HTTP 500.
+Diagnosed and instrumented; a partial 2022-only slice was deleted rather than left queryable. See its own CURRENT STATE section. ▼
+2026-08-02 18:47 UTC — ▼ LEX REBUILD **Sprint 3-C** (§19-C) shipped to the preview
 (NOT promoted): the stub fallback is out of production and a failed search now says so with a Retry;
 a FACTS OF THIS TURN block stops Lex claiming things that don't exist; every stage entry runs its own
 focused corpus search rendered in five groups with earlier stages folded; cost engine v0 (CostLine +
@@ -181,6 +193,65 @@ change. **Prerequisite for the cost engine (testing-notes item 12).**
   declines honestly, invents nothing. Ordinary conversation is untouched.
 - **NEXT:** the env var above; then this is the retrieval half of the cost engine — the costing
   work in item 12 can call `runQueryStats` directly rather than re-inventing a lookup.
+
+---
+
+## CURRENT STATE — CORPUS REPORT + CDN FIX + STATS PHASE B (2026-08-03 08:30 UTC)
+
+**Executes `docs/BRIEF_CC_corpus-report_CDN_statsPhaseB.md`.** Full detail: CHANGE_LOG
+"CORPUS REPORT + CDN FIX + STATS PHASE B" (2026-08-03 08:30 UTC), plus
+`docs/reports/corpus-status-report.md` (new spec), `STATS_SCHEMA.md` §Phase B and
+`STATS_REFRESH.md` (OECD throttling section — read that before touching `sources/oecd.ts`).
+
+- **Part 1.1 — corpus status workbook DONE.** `scripts/reports/` (new, own npm project so the
+  report-only `xlsx` dep never ships in the Railway ingest image) →
+  `docs/reports/output/corpus-status-2026-08-03.xlsx`: 8 tabs, **70 corpora, exactly 1,255
+  quangos, 17,874,322 sections, 6.20bn words, 98.8% compiled**. Grain rule held (org/collection,
+  never section). **The spec the brief referenced did not exist** — built to the brief's own tab
+  list and written up as `docs/reports/corpus-status-report.md`; **the column choices are CC's**
+  and are the most likely thing to need correcting.
+- **Part 1.2 — xlsx → SheetJS CDN DONE.** `scripts/stats` 1 high → **0 vulnerabilities**;
+  `scrutinise-web` **xlsx gone from `npm audit`** (36 unrelated pre-existing remain). All five
+  stats parsers re-verified against live spreadsheets, identical counts. **Bonus:
+  `scrutinise-web` `tsc --noEmit` is now clean** — the 5 long-standing `scripts/costing/*`
+  "xlsx module not found" errors are gone. **New risk: Vercel must reach `cdn.sheetjs.com` at
+  install time — watch the next deploy.**
+- **Part 2 — Phase B: World Bank DONE (257 series / 11,235 obs, 1960–2025, CC BY 4.0 verified).**
+  Comparative query layer built and **proven live** — UK vs FR/DE/US on health spend %GDP, tax
+  revenue %GDP and life expectancy all return correctly (`npm run compare`).
+- **The decision that makes Phase B work: alpha-2 geography.** Phase A wrote the UK as `GB`;
+  every international source says `GBR`. Storing `GBR` would have put UK spending in a different
+  geography from its own comparators and nothing would ever have lined up. `lib/iso.ts`
+  normalises on the way in.
+- **⚠ TWO THINGS NEED CHARLIE:**
+  1. **OECD `commercialUseExcluded` — the brief's premise was wrong and I took the verified
+     position (`false`).** OECD T&C **§3 "Data"** says data may be reused "for any purpose, even
+     for commercial use"; the CC-BY-NC point concerns *written content*, and even that clause
+     permits commercial use. One boolean in `seed-catalogue.ts` to flip if you disagree.
+  2. **IMF NOT ingested — licence unverifiable.** All three terms URLs 403 from this
+     environment and the data's own `LICENSE` column says *"All Rights Reserved"*. Needs you to
+     open the terms page in a browser. Eurostat skipped (brief marks it optional).
+- **OECD COFOG NOT LOADED — 0 rows. Source-side blocker, diagnosed and instrumented.** Four
+  attempts: 20 per-year requests (19 failed), then whole-window / 10-year / 5-year after a
+  12-minute cooldown — **all HTTP 500** — while a **single year in isolation returns 200 with
+  426 KB** (proven twice). Two failure modes both surface as 500: **quota** (intermittent, 500 as
+  often as 429, waiting helps) and **size** (deterministic, waiting does not — the whole-window
+  request 500'd as the first request after a cold start). Only that first-after-cooldown request
+  cleanly separates them; later failures follow ~15 real requests and can't be attributed.
+  Shipped: adaptive largest-window-first fetch (never revert to per-year — it maximises the quota
+  problem to solve a size problem), a **server-side unit filter that is UNTESTED and the best
+  next thing to try** (~25% of every payload is currently fetched and discarded; key order
+  derived from data in hand, with fallback to `/all`), and the guard that made this end as an
+  honest FAILURE. **The partial 2022-only slice a killed run wrote was DELETED** — the guard
+  refuses to write a partial window, so leaving one queryable would contradict it and "UK vs OECD
+  over time" would have returned a single 2022 point looking like an answer. Resume with
+  `npm run refresh -- --force oecd-cofog-expenditure` from a cold quota, no concurrent probing.
+- **Stats DB after this sprint: 9 datasets, 3,404 series, 40,092 observations, 21 MB.**
+- Also fixed en route: **`--force <id>` was not exclusive** (it started a second concurrent
+  writer on World Bank — 0 duplicates confirmed, not assumed), and **`verify.ts` reported
+  `lastRefresh=never` for a dataset that had succeeded** (an orphaned null-status log row
+  outranked the good one; now reconciles against the latest *completed* run and surfaces
+  unfinished ones).
 
 ---
 

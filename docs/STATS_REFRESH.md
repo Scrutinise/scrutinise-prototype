@@ -33,6 +33,54 @@ npx tsx --tsconfig ../tsconfig.json refresh-scheduler.ts --force <datasetId>   #
 | `pesa-ch5-function`             | HMT    | ANNUAL    | PESA publishes once a year (with an in-year update) |
 | `hmrc-receipts`                 | HMRC   | MONTHLY   | published monthly |
 | `hmrc-tax-gap`                  | HMRC   | ANNUAL    | published once a year |
+| `wb-wdi-comparative`            | World Bank | ANNUAL | WDI indicators are annual; the API's `lastupdated` moves a few times a year as countries revise |
+| `oecd-cofog-expenditure`        | OECD   | ANNUAL    | Government at a Glance "yearly updates" flow — one release a year, plus back-revisions |
+
+## OECD SDMX — read this before touching `sources/oecd.ts`
+
+**This endpoint has TWO independent failure modes and both present as HTTP 500.** Conflating
+them sends you in circles; they were only separated by testing each in isolation on 2026-08-03.
+
+| | trigger | signature | does waiting help? |
+|---|---|---|---|
+| **Quota** | too many requests | HTTP 500 *or* 429, intermittent | **yes** |
+| **Size** | one window too large | HTTP 500, deterministic | **no** |
+
+- **Quota.** A 20-request per-year pull of 2007–2026 failed **19 of 20 years** (17× 500, 6× 429
+  across retries) — while the *identical* single-year request issued in isolation returned
+  **HTTP 200 with 426 KB**. Note it reports quota exhaustion as 500 at least as often as 429.
+- **Size.** After a full 12-minute cooldown with no other traffic, the single whole-window
+  request (2007–2026, ~50 MB of CSV) **still** returned 500. So this one is not throttling and
+  cooling off will never fix it.
+
+**Why this matters more than an ordinary flaky API:** a 500 reads as "problem with that slice"
+and an empty result reads as "that year has no data". A naive loop therefore stores whatever
+survived and reports SUCCESS — on the first attempt here that would have been a **one-year
+"time series"**.
+
+Consequences now baked into `sources/oecd.ts`:
+
+- `fetchOecdCofog()` tries the **largest window first** and subdivides (20 → 10 → 5 years) only
+  on failure. This is right for both modes at once: it minimises request count (quota) while
+  still searching downward for a window small enough to serve (size). Worst case 7 requests.
+  **Never go back to per-year requests** — that maximises the quota problem to solve a size
+  problem it cannot touch.
+- 5s spacing, 4 retries, long backoff (10/20/40/80s) via `politeFetch`.
+- A caller-side guard **refuses** a window where more than half the requests failed, rather than
+  storing a partial series as a success. This is the zero-observation rule's sibling: the same
+  silent-partial-success failure, just sitting above zero.
+- **Do not run ad-hoc `curl` probes against this endpoint while an ingest is running** — that is
+  how the quota was exhausted the first time, and it corrupts your own diagnosis by making a
+  size failure look like a quota failure.
+
+## `--force <id>` means EXACTLY that dataset (changed 2026-08-03)
+
+`--force <id>` runs **only** that dataset. It previously meant "force this one, and also run
+anything else that happens to be due" — which is a real hazard, not a cosmetic one: starting
+`--force B` while a `--force A` run was still in flight began a **second writer on A** (A was
+un-refreshed, therefore due). `upsertSeries` is find-then-create and not atomic, so two writers
+on one dataset can duplicate series or collide outright. This happened during the Phase B ingest
+on 2026-08-03 and was caught within a minute; the fix makes it structurally impossible.
 
 ## Idempotency
 
