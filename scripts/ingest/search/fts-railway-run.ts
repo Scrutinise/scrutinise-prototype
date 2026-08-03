@@ -56,6 +56,11 @@ const FULL_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_R2_CONCURRENCY=256 FTS_BATCH=500
 // TRACK 1 v1: build the no-positions index over the already-loaded 16.5M in place
 // (resumes at phase=indexing, no reset) — fits memory, working search this week.
 const V1_CMD = "sh -c 'R2_MAX_SOCKETS=256 FTS_WITH_POSITIONS=false npx tsx search/build-fts-index.ts'"
+// Compaction + index merge (search/fts-optimize.ts). Run in the datacentre: optimize()
+// rewrites data files, so it is a datacentre→R2 job, never a home connection. This is
+// what absorbs rows appended by fts-catchup into the inverted index — see the header of
+// fts-optimize.ts for the 2–3 Aug latency incident that made it necessary.
+const OPTIMIZE_CMD = "sh -c 'R2_MAX_SOCKETS=256 npx tsx search/fts-optimize.ts'"
 
 // Env vars the indexer needs (NEON + R2). Names match what lance.ts / r2-client read.
 const NEEDED = [
@@ -189,9 +194,9 @@ async function tailLogs(id: string) {
       `query($deploymentId: String!, $limit: Int!) { deploymentLogs(deploymentId: $deploymentId, limit: $limit) { message } }`,
       { deploymentId: dep.id, limit: 30 },
     )
-    const tail = l.deploymentLogs.map(r => r.message).filter(m => m.includes('[fts-index]')).slice(-5)
+    const tail = l.deploymentLogs.map(r => r.message).filter(m => m.includes('[fts-index]') || m.includes('[fts-optimize]')).slice(-5)
     if (tail.length) console.log(tail.map(m => '    ' + m).join('\n'))
-    if (l.deploymentLogs.some(r => r.message.includes('[fts-index] DONE') || r.message.includes('--limit') && r.message.includes('reached'))) {
+    if (l.deploymentLogs.some(r => r.message.includes('[fts-index] DONE') || r.message.includes('[fts-optimize] DONE') || r.message.includes('--limit') && r.message.includes('reached'))) {
       console.log('  >>> build reported completion in logs.'); return
     }
   }
@@ -242,6 +247,7 @@ const fn = mode === 'setup' ? setup
   : mode === 'canary' ? async () => { await tailLogs(await deployWith(CANARY_CMD)) }
   : mode === 'full' ? async () => { await monitorStartup(await deployWith(FULL_CMD), 7) }
   : mode === 'v1' ? async () => { await monitorStartup(await deployWith(V1_CMD), 7) }
+  : mode === 'optimize' ? async () => { await tailLogs(await deployWith(OPTIMIZE_CMD)) }
   : mode === 'logs' ? logs
   : mode === 'teardown' ? teardown
   : null
