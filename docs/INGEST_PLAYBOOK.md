@@ -1338,3 +1338,53 @@ V26 folded the legacy `LegislationSection` store into `corpus_sections` and move
 - **Legacy compilation value lives in `legislation_compilation_enrichment`** (Neon), keyed by (legislationGovUkId, sectionNumber), pointer-only. When the legacy `Legislation*` tables are dropped (§6), this table + R2 carry the only non-duplicated derived value (compiled-text / lex-summary keys, unapplied-amendment JSON). `corpus_sections` remains pointer-only — never copy section text into a DB column (the V3 rule).
 - **Coverage gap-fill, not column copy.** Legacy legislation absent from `corpus_sections` is re-seeded through the `tna-legislation` queue (R2-backed, first-class), never by copying the legacy Postgres `originalText` column. The normalization pass (calendar↔regnal, eudr/eudn↔CELEX, uksi↔regional sub-type) must run before declaring a gid a genuine gap — most "missing" gids are form variants already held.
 - **Neon cannot `SET session_replication_role`** (`neondb_owner` lacks it) — cross-DB bulk copies into Neon must order inserts by FK topology (parents first), with self-referencing tables inserted in a single statement.
+
+---
+
+## 20. SEARCH INDEX HYGIENE — ALWAYS `optimize()` AFTER A BACKFILL (3 Aug 2026)
+
+**The rule:** after ANY backfill or large append to a Lance search table (`corpus_fts`,
+`corpus_vec`), run `optimize()` **before the index serves users**:
+
+```
+cd scripts/ingest
+FTS_SERVICE=fts-build tsx search/fts-railway-run.ts optimize     # datacentre run
+tsx search/fts-optimize.ts --verify-only                          # coverage check, no writes
+```
+
+**Why it is not optional.** LanceDB keeps newly-appended rows *searchable* by
+brute-force scanning the un-indexed fragments alongside the inverted index. That is a
+real feature — it is why the 29 Jul `fts-catchup` backfill was correct the moment it
+finished, and it was verified as such at the time. But the scan is paid **on every
+query, forever**, until the rows are merged into the index.
+
+What that cost looked like in production, four days later:
+
+| | before | after |
+|---|---|---|
+| `body_idx` indexed rows | 16,509,051 | (see CHANGE_LOG) |
+| **un-indexed rows** | **1,191,345 (6.7%)** | |
+| warm p50 | 26,005 ms | |
+| warm p95 | 35,585 ms | |
+
+The client timeout is 25s, so effectively **every** Lex search was timing out — which is
+how a data-protection idea was served road-traffic fixtures from the stub fallback
+(CHANGE_LOG "LEX REBUILD — Sprint 3-C"). A silent 6.7% index gap took out the whole
+search layer, and nothing alerted on it: the rows were present, findable and correct.
+
+**Two traps around the operation itself:**
+
+1. **Run it in the datacentre.** `optimize()` compacts — it rewrites data files — so it
+   is a datacentre→R2 job on the `fts-build` service, not a home connection. (A local
+   attempt on 29 Jul burned 3,939 CPU-seconds and had to be killed.)
+2. **Restart `fts-serve` afterwards, or you will measure nothing.**
+   `fts-query-service.ts` calls `openTable()` once at boot with no
+   `readConsistencyInterval`, so a running service holds a **fixed snapshot** and will
+   keep serving the old, unindexed version no matter how well the optimize went. Pushing
+   to `scripts/ingest/search/**` redeploys it (that is the service's `watchPatterns`), or
+   redeploy it explicitly.
+
+**Check coverage the cheap way** — metadata only, no scan, safe any time:
+`table.indexStats('body_idx')` → `{numIndexedRows, numUnindexedRows}`. Anything above
+zero un-indexed on a serving table is a latency bill being charged to every user.
+`fts-optimize.ts --verify-only` prints exactly this and touches nothing.
