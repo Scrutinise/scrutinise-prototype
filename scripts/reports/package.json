@@ -1,0 +1,19 @@
+{
+  "name": "scrutinise-reports",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Re-runnable status/report generators (corpus status workbook). Own npm project so the report-only xlsx dependency never ships in the Railway ingest image — same reasoning as scripts/stats.",
+  "scripts": {
+    "corpus-status": "tsx --tsconfig ../tsconfig.json corpus-status-report.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.20.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
