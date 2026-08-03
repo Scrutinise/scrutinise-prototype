@@ -100,7 +100,61 @@ async function main() {
       update: { ...d, licence: LICENCE, licenceVerifiedAt: now() },
     })
   }
-  console.log(`Seeded ${datasets.length} StatDataset rows.`)
+  console.log(`Seeded ${datasets.length} Phase A StatDataset rows (all ${LICENCE}).`)
+
+  // ---- Phase B — comparative / international ------------------------------
+  // Unlike Phase A (uniformly OGL v3.0), each Phase B source carries its OWN licence and its
+  // own commercial-use position, so these are seeded with explicit per-dataset values rather
+  // than the shared LICENCE constant.
+  const phaseB = [
+    {
+      id: 'wb-wdi-comparative',
+      source: 'WORLD_BANK' as const,
+      title: 'World Bank — World Development Indicators (curated comparative set)',
+      description:
+        'Fiscal aggregates (GDP, government expenditure/tax/debt % GDP) plus outcome indicators '
+        + '(life expectancy, health and education spend, infant mortality, Gini) across a curated '
+        + 'comparator country set. The outcome half is what makes "did their approach work" answerable.',
+      cofogRelevant: false,
+      licence: 'Creative Commons Attribution 4.0 International (CC BY 4.0)',
+      licenceUrl: 'https://data.worldbank.org/summary-terms-of-use',
+      commercialUseExcluded: false, // CC BY 4.0 — verified at source 2026-08-03
+      refreshCadence: 'ANNUAL' as const,
+      sourceUrl: 'https://data.worldbank.org/',
+    },
+    {
+      id: 'oecd-cofog-expenditure',
+      source: 'OECD' as const,
+      title: 'OECD — government expenditure by COFOG function (Government at a Glance, yearly updates)',
+      description:
+        'General government expenditure disaggregated by COFOG function for OECD members and partners, '
+        + 'including OECD\'s own published aggregates (OECD, OECD average country, EU-in-OECD). This is '
+        + 'the direct comparative counterpart to the UK PESA data on the same cofogFunctionCode axis.',
+      cofogRelevant: true,
+      // VERIFIED AT SOURCE 2026-08-03, oecd.org/en/about/terms-conditions.html §3 "Data":
+      // "you can extract from, download, copy, adapt, print, distribute, share and embed Data
+      //  for any purpose, even for commercial use" (attribution required).
+      licence: 'OECD Terms & Conditions §3 (Data) — reuse for any purpose incl. commercial, attribution required',
+      licenceUrl: 'https://www.oecd.org/en/about/terms-conditions.html',
+      // NOTE: the sprint brief instructed commercialUseExcluded=true on the premise that OECD
+      // content is CC-BY-NC pre-2024. Verification at source contradicts that premise (the
+      // CC-BY-NC question concerns OECD *written content*, not Data; and even the pre-July-2024
+      // written-content clause permits "commercial and non-commercial" use). Set to the verified
+      // position; flip this one boolean if Charlie prefers the conservative reading.
+      commercialUseExcluded: false,
+      refreshCadence: 'ANNUAL' as const,
+      sourceUrl: 'https://www.oecd.org/en/data/datasets/government-at-a-glance.html',
+    },
+  ]
+
+  for (const d of phaseB) {
+    await prisma.statDataset.upsert({
+      where: { id: d.id },
+      create: { ...d, licenceVerifiedAt: now() },
+      update: { ...d, licenceVerifiedAt: now() },
+    })
+  }
+  console.log(`Seeded ${phaseB.length} Phase B StatDataset rows (per-dataset licences).`)
 }
 
 main()

@@ -7,6 +7,9 @@ import { getLatestVersionMeta, parseOnsBetaCsv } from './sources/ons-beta'
 import { fetchObrWorkbook, parsePsfSince1900, parsePsfAggregatesGbp, parseHistoricalForecastSheet } from './sources/obr'
 import { fetchPesaWorkbook, parseFunctionTimeSeries, parseDeptByFunctionSnapshot } from './sources/pesa'
 import { fetchHmrcWorkbook, parseReceiptsAnnually, parseTaxGapTable11 } from './sources/hmrc'
+import { WB_INDICATORS, fetchIndicator } from './sources/world-bank'
+import { fetchOecdCofog, OECD_UNIT_MAP } from './sources/oecd'
+import { geographyLabel } from './lib/iso'
 
 export interface RefreshResult {
   series: number
@@ -246,6 +249,72 @@ async function refreshHmrcTaxGap(): Promise<RefreshResult> {
   return { series: seriesSeen.size, observations }
 }
 
+// ---- Phase B — comparative / international ---------------------------------
+
+async function refreshWorldBankWdi(): Promise<RefreshResult> {
+  const seriesSeen = new Set<string>()
+  let observations = 0
+  for (const ind of WB_INDICATORS) {
+    const rows = await fetchIndicator(ind.code)
+    for (const row of rows) {
+      const seriesId = await upsertSeries({
+        datasetId: 'wb-wdi-comparative',
+        sourceSeriesId: `${ind.code}|${row.geography}`,
+        geography: row.geography,
+        measure: ind.measure,
+        unit: ind.unit,
+        cofogFunctionCode: null,
+        forecastVintage: null,
+        seriesLabel: `${geographyLabel(row.geography)} — ${ind.label}`,
+      })
+      seriesSeen.add(seriesId)
+      await upsertObservation(seriesId, row.geography, ind.unit, null, {
+        periodType: 'ANNUAL',
+        periodStart: new Date(Date.UTC(row.year, 0, 1)),
+        periodLabel: String(row.year),
+        value: row.value,
+        status: 'outturn',
+      })
+      observations++
+    }
+  }
+  return { series: seriesSeen.size, observations }
+}
+
+async function refreshOecdCofog(): Promise<RefreshResult> {
+  // Government at a Glance COFOG coverage starts ~2007; take the full published window.
+  const rows = await fetchOecdCofog(2007, new Date().getUTCFullYear())
+  const seriesSeen = new Set<string>()
+  let observations = 0
+  for (const row of rows) {
+    const unit = OECD_UNIT_MAP[row.unit]
+    if (!unit) continue // unmapped unit — skipped deliberately, never guessed
+    if (!row.cofogCode) continue
+    // Same FK requirement as PESA: sub-function codes must exist before a series references them.
+    await ensureCofogFunction(row.cofogCode, row.cofogName)
+    const seriesId = await upsertSeries({
+      datasetId: 'oecd-cofog-expenditure',
+      sourceSeriesId: `${row.geography}|${row.cofogCode}|${unit}`,
+      geography: row.geography,
+      measure: 'govt_expenditure_by_function',
+      unit,
+      cofogFunctionCode: row.cofogCode,
+      forecastVintage: null,
+      seriesLabel: `${geographyLabel(row.geography)} — ${row.cofogName ?? row.cofogCode} (${unit})`,
+    })
+    seriesSeen.add(seriesId)
+    await upsertObservation(seriesId, row.geography, unit, row.cofogCode, {
+      periodType: 'ANNUAL',
+      periodStart: new Date(Date.UTC(row.year, 0, 1)),
+      periodLabel: String(row.year),
+      value: row.value,
+      status: 'outturn',
+    })
+    observations++
+  }
+  return { series: seriesSeen.size, observations }
+}
+
 export const INGEST_HANDLERS: Record<string, () => Promise<RefreshResult>> = {
   'ons-cdid-headline': refreshOnsCdidHeadline,
   'ons-beta-wellbeing-quarterly': refreshOnsBetaWellbeing,
@@ -254,4 +323,7 @@ export const INGEST_HANDLERS: Record<string, () => Promise<RefreshResult>> = {
   'pesa-ch5-function': refreshPesaCh5,
   'hmrc-receipts': refreshHmrcReceipts,
   'hmrc-tax-gap': refreshHmrcTaxGap,
+  // Phase B
+  'wb-wdi-comparative': refreshWorldBankWdi,
+  'oecd-cofog-expenditure': refreshOecdCofog,
 }

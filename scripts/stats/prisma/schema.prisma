@@ -27,10 +27,16 @@ model StatCofogFunction {
 }
 
 enum StatSource {
+  // Phase A — UK spine
   ONS
   OBR
   HMT_PESA
   HMRC
+  // Phase B — comparative / international benchmark layer
+  WORLD_BANK
+  OECD
+  IMF
+  EUROSTAT
 
   @@map("stat_source")
 }
