@@ -8,11 +8,17 @@ interface LegislationItem {
   id: string
   title: string
   year: number
-  number: number
+  // Text, not numeric: pre-1963 Acts are identified by regnal year
+  // (`ukpga/Edw7/1/5`), which has no integer form. Not currently rendered.
+  number: string | null
   legislationType: string
   jurisdiction: string
   compiledSectionCount: number
   sectionCount: number
+  /** SPRINT §1, additive: sections of this instrument present in the SEARCH corpus.
+   *  Distinct from compiledSectionCount, which counts the legacy compile pipeline. */
+  corpusSectionCount?: number
+  inCorpus?: boolean
 }
 
 function useDebounce<T>(value: T, delay: number): T {
