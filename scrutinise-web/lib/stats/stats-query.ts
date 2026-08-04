@@ -16,11 +16,11 @@ import { statsQuery } from './stats-db'
 
 // The measure that carries PESA's expenditure-by-COFOG-function rows.
 //
-// VERIFIED AGAINST THE LIVE DB (2026-08-02), not taken from the script-side layer:
-// `scripts/stats/query/stats-query.ts` still names `exp_by_subfunction`, which does
-// not exist — it was written offline before the ingest fixes settled the measure
-// names, and its getCofogRollup returns nothing against the live data. The real
-// measures are below. Flagged to the stats thread; not changed from here.
+// VERIFIED AGAINST THE LIVE DB (2026-08-02, re-confirmed 2026-08-04). These names came from
+// the data, not from the schema's illustrative comment, which named a measure
+// (`exp_by_subfunction`) that has never existed in this database. The script-side mirror was
+// carrying that stale name in its docs and had no default measure at all; it now declares the
+// same two constants (2026-08-04) and the two sides agree.
 //
 //   public_expenditure_by_function — 62 series, 60 COFOG codes, 2020-21…2024-25.
 //     Spending by function only. 15 top-level rows (health, which PESA reports only
@@ -35,18 +35,25 @@ export const DEPT_SPENDING_MEASURE = 'dept_expenditure_by_function'
 
 export interface SeriesMatch {
   seriesId: string
+  /** The STABLE handle — a deterministic sha-256 over the series' identity fields, added
+   *  2026-08-04. `seriesId` is a cuid and does not survive a re-ingest; this does. Anything
+   *  that stores a reference to a series (the search thread's catalogue index above all)
+   *  should store this. Definition: `scripts/stats/lib/series-key.ts`. */
+  seriesKey: string
   seriesLabel: string
   measure: string
   unit: string
   geography: string
   cofogFunctionCode: string | null
+  forecastVintage: string | null
   datasetId: string
   datasetTitle: string
   source: string
   sourceUrl: string | null
   /** Licence provenance — carried on EVERY result. A figure whose terms you cannot
    *  state is a figure you cannot safely publish, and a commercial fork of Scrutinise
-   *  is a live possibility, so `commercialUseExcluded` travels with the number. */
+   *  is a live possibility, so `commercialUseExcluded` travels with the number.
+   *  It is the EFFECTIVE value: the per-series override where set, else the dataset's. */
   licence: string
   licenceUrl: string | null
   commercialUseExcluded: boolean
@@ -54,6 +61,35 @@ export interface SeriesMatch {
   firstPeriod: string | null
   lastPeriod: string | null
 }
+
+// One SELECT/GROUP BY pair for all three series-shaped reads below. Three hand-maintained
+// copies is how a column gets added to the search path and quietly missed on the repair path.
+const SERIES_COLUMNS = `
+       s.id                AS "seriesId",
+       s."seriesKey"       AS "seriesKey",
+       s."seriesLabel"     AS "seriesLabel",
+       s.measure, s.unit, s.geography,
+       s."cofogFunctionCode" AS "cofogFunctionCode",
+       s."forecastVintage"   AS "forecastVintage",
+       d.id                AS "datasetId",
+       d.title             AS "datasetTitle",
+       d.source::text      AS source,
+       d."sourceUrl"       AS "sourceUrl",
+       d.licence           AS licence,
+       d."licenceUrl"      AS "licenceUrl",
+       -- EFFECTIVE commercial terms: the per-series override wins, the dataset is the default.
+       -- The series-level column exists because terms can change part-way through a source's
+       -- history (OECD's did, on 1 July 2024) and the dataset flag cannot express that.
+       coalesce(s."commercialUseExcluded", d."commercialUseExcluded") AS "commercialUseExcluded",
+       count(o.id)::int    AS observations,
+       min(o."periodLabel") AS "firstPeriod",
+       max(o."periodLabel") AS "lastPeriod"`
+
+const SERIES_GROUP_BY = `
+       GROUP BY s.id, s."seriesKey", s."seriesLabel", s.measure, s.unit, s.geography,
+                s."cofogFunctionCode", s."forecastVintage", s."commercialUseExcluded",
+                d.id, d.title, d.source, d."sourceUrl", d.licence, d."licenceUrl",
+                d."commercialUseExcluded"`
 
 /** Catalogue lookup: match free text against series label / measure / dataset title.
  *  Ranked so an exact measure match beats a fuzzy label match.
@@ -72,28 +108,14 @@ export async function findSeries(
   if (!q) return []
   return statsQuery<SeriesMatch & Record<string, unknown>>(
     `
-    SELECT s.id                AS "seriesId",
-           s."seriesLabel"     AS "seriesLabel",
-           s.measure, s.unit, s.geography,
-           s."cofogFunctionCode" AS "cofogFunctionCode",
-           d.id                AS "datasetId",
-           d.title             AS "datasetTitle",
-           d.source::text      AS source,
-           d."sourceUrl"       AS "sourceUrl",
-           d.licence           AS licence,
-           d."licenceUrl"      AS "licenceUrl",
-           d."commercialUseExcluded" AS "commercialUseExcluded",
-           count(o.id)::int    AS observations,
-           min(o."periodLabel") AS "firstPeriod",
-           max(o."periodLabel") AS "lastPeriod"
+    SELECT ${SERIES_COLUMNS}
     FROM stat_series s
     JOIN stat_dataset d ON d.id = s."datasetId"
     LEFT JOIN stat_observation o ON o."seriesId" = s.id
     WHERE (s.measure ILIKE $1 OR s."seriesLabel" ILIKE $2 OR d.title ILIKE $2)
       AND ($4::boolean OR s.unit <> 'UNKNOWN')
       AND ($5::text IS NULL OR s.geography = $5)
-    GROUP BY s.id, s."seriesLabel", s.measure, s.unit, s.geography, s."cofogFunctionCode",
-             d.id, d.title, d.source, d."sourceUrl", d.licence, d."licenceUrl", d."commercialUseExcluded"
+    ${SERIES_GROUP_BY}
     HAVING count(o.id) > 0
     ORDER BY (s.measure ILIKE $1) DESC, (s.unit <> 'UNKNOWN') DESC, count(o.id) DESC
     LIMIT $3
@@ -233,9 +255,13 @@ export async function getCofogRollup(params: {
     `
     SELECT d.title AS "datasetTitle", d.source::text AS source, d."sourceUrl" AS "sourceUrl",
            d.licence AS licence, d."licenceUrl" AS "licenceUrl",
-           d."commercialUseExcluded" AS "commercialUseExcluded"
+           -- bool_or, not a single row's value: if ANY series in the rollup is restricted,
+           -- the rolled-up figure is restricted. Understating terms is the dangerous error.
+           bool_or(coalesce(s."commercialUseExcluded", d."commercialUseExcluded")) AS "commercialUseExcluded"
     FROM stat_series s JOIN stat_dataset d ON d.id = s."datasetId"
-    WHERE s.measure = $1 LIMIT 1
+    WHERE s.measure = $1
+    GROUP BY d.title, d.source, d."sourceUrl", d.licence, d."licenceUrl"
+    LIMIT 1
     `,
     [SPENDING_MEASURE],
   )
@@ -300,6 +326,9 @@ export interface ComparativeRow {
   value: number
   periodLabel: string
   status: string | null
+  /** Non-null only for forecast-round series. Travels because "the 2027 figure" means
+   *  something different depending on which forecast round produced it. */
+  forecastVintage: string | null
 }
 
 export interface Comparative {
@@ -359,9 +388,10 @@ export async function getComparative(params: {
   const rows = await statsQuery<Record<string, unknown>>(
     `
     SELECT o.geography, o.value::text AS value, o."periodLabel", o.status, o.unit,
+           s."forecastVintage" AS "forecastVintage",
            d.title AS "datasetTitle", d.source::text AS source, d."sourceUrl" AS "sourceUrl",
            d.licence AS licence, d."licenceUrl" AS "licenceUrl",
-           d."commercialUseExcluded" AS "commercialUseExcluded"
+           coalesce(s."commercialUseExcluded", d."commercialUseExcluded") AS "commercialUseExcluded"
     FROM stat_observation o
     JOIN stat_series s ON s.id = o."seriesId"
     JOIN stat_dataset d ON d.id = s."datasetId"
@@ -378,6 +408,7 @@ export async function getComparative(params: {
     value: Number(r.value),
     periodLabel: String(r.periodLabel),
     status: (r.status as string | null) ?? null,
+    forecastVintage: (r.forecastVintage as string | null) ?? null,
   }))
   const mean = parsed.length ? parsed.reduce((a, r) => a + r.value, 0) / parsed.length : null
 
@@ -396,7 +427,9 @@ export async function getComparative(params: {
     sourceUrl: (rows[0].sourceUrl as string | null) ?? null,
     licence: String(rows[0].licence ?? 'not recorded'),
     licenceUrl: (rows[0].licenceUrl as string | null) ?? null,
-    commercialUseExcluded: rows[0].commercialUseExcluded === true,
+    // ANY restricted country restricts the whole comparison — the rows are quoted together.
+    // Taking the first row's flag would understate the terms, which is the dangerous direction.
+    commercialUseExcluded: rows.some((r) => r.commercialUseExcluded === true),
   }
 }
 
@@ -429,24 +462,51 @@ export async function geographiesFor(measure: string): Promise<string[]> {
 // as the fast path AND the natural key + label as the repair path; retrieval tries the
 // id first and falls back. A stale id returns `null` LOUDLY so the search side can
 // re-resolve, rather than silently yielding no data.
+//
+// ── RESOLVED, 2026-08-04: `stat_series.seriesKey` ────────────────────────────────────────
+// The durable fix recommended above has SHIPPED. Every series now carries `seriesKey`, a
+// deterministic sha-256 over (datasetId, measure, geography, cofogFunctionCode,
+// forecastVintage, seriesLabel) — unique, and stable across re-ingest because the upsert
+// targets it. Definition and rationale: `scripts/stats/lib/series-key.ts`.
+//
+// So the contract simplifies: **the catalogue should store `seriesKey` and call
+// `getSeriesByKey`.** `getSeriesById` and `resolveSeries` remain for entries indexed before
+// the key existed, and as a repair path if a source ever re-words a label (the one input
+// that can legitimately change a key).
+
+/**
+ * THE PREFERRED HANDLE (2026-08-04). `seriesKey` is a deterministic hash of the series'
+ * identity, so it survives a re-ingest where `seriesId` does not. The catalogue index should
+ * store this and call this; `getSeriesById` remains for anything indexed before it existed.
+ *
+ * Null = no such key. That is a real answer — the series was removed or re-identified — and
+ * the caller should say so rather than showing an empty chart.
+ */
+export async function getSeriesByKey(seriesKey: string): Promise<SeriesMatch | null> {
+  const rows = await statsQuery<SeriesMatch & Record<string, unknown>>(
+    `
+    SELECT ${SERIES_COLUMNS}
+    FROM stat_series s
+    JOIN stat_dataset d ON d.id = s."datasetId"
+    LEFT JOIN stat_observation o ON o."seriesId" = s.id
+    WHERE s."seriesKey" = $1
+    ${SERIES_GROUP_BY}
+    `,
+    [seriesKey],
+  )
+  return rows[0] ?? null
+}
 
 /** Fast path: fetch a series by the id the catalogue recorded. Null = stale/unknown. */
 export async function getSeriesById(seriesId: string): Promise<SeriesMatch | null> {
   const rows = await statsQuery<SeriesMatch & Record<string, unknown>>(
     `
-    SELECT s.id AS "seriesId", s."seriesLabel" AS "seriesLabel", s.measure, s.unit, s.geography,
-           s."cofogFunctionCode" AS "cofogFunctionCode",
-           d.id AS "datasetId", d.title AS "datasetTitle", d.source::text AS source,
-           d."sourceUrl" AS "sourceUrl", d.licence AS licence, d."licenceUrl" AS "licenceUrl",
-           d."commercialUseExcluded" AS "commercialUseExcluded",
-           count(o.id)::int AS observations,
-           min(o."periodLabel") AS "firstPeriod", max(o."periodLabel") AS "lastPeriod"
+    SELECT ${SERIES_COLUMNS}
     FROM stat_series s
     JOIN stat_dataset d ON d.id = s."datasetId"
     LEFT JOIN stat_observation o ON o."seriesId" = s.id
     WHERE s.id = $1
-    GROUP BY s.id, s."seriesLabel", s.measure, s.unit, s.geography, s."cofogFunctionCode",
-             d.id, d.title, d.source, d."sourceUrl", d.licence, d."licenceUrl", d."commercialUseExcluded"
+    ${SERIES_GROUP_BY}
     `,
     [seriesId],
   )
@@ -468,13 +528,7 @@ export async function resolveSeries(key: {
 }): Promise<SeriesMatch[]> {
   return statsQuery<SeriesMatch & Record<string, unknown>>(
     `
-    SELECT s.id AS "seriesId", s."seriesLabel" AS "seriesLabel", s.measure, s.unit, s.geography,
-           s."cofogFunctionCode" AS "cofogFunctionCode",
-           d.id AS "datasetId", d.title AS "datasetTitle", d.source::text AS source,
-           d."sourceUrl" AS "sourceUrl", d.licence AS licence, d."licenceUrl" AS "licenceUrl",
-           d."commercialUseExcluded" AS "commercialUseExcluded",
-           count(o.id)::int AS observations,
-           min(o."periodLabel") AS "firstPeriod", max(o."periodLabel") AS "lastPeriod"
+    SELECT ${SERIES_COLUMNS}
     FROM stat_series s
     JOIN stat_dataset d ON d.id = s."datasetId"
     LEFT JOIN stat_observation o ON o."seriesId" = s.id
@@ -484,8 +538,7 @@ export async function resolveSeries(key: {
       AND ($4::text IS NULL OR s."cofogFunctionCode" = $4)
       AND ($5::text IS NULL OR s."forecastVintage" = $5)
       AND ($6::text IS NULL OR s."seriesLabel" = $6)
-    GROUP BY s.id, s."seriesLabel", s.measure, s.unit, s.geography, s."cofogFunctionCode",
-             d.id, d.title, d.source, d."sourceUrl", d.licence, d."licenceUrl", d."commercialUseExcluded"
+    ${SERIES_GROUP_BY}
     ORDER BY count(o.id) DESC
     `,
     [key.datasetId, key.measure, key.geography ?? null, key.cofogFunctionCode ?? null,

@@ -3,7 +3,32 @@
 // from scrutinise-web/lib/search.ts. Phase A: at least make the data cleanly
 // queryable; wiring this into Lex's tool-calling is a follow-on (see
 // docs/STATS_PHASE_A_BRIEF.md §7).
+//
+// ⚠ INTENTIONALLY DUPLICATED — keep in sync with `scrutinise-web/lib/stats/stats-query.ts`.
+// The web app cannot import this file: the generated stats Prisma client is gitignored and
+// sits outside the Vercel build root, so the app expresses the same three questions as raw
+// SQL. The two are allowed to differ in *expression*; their ANALYTICAL SEMANTICS — which
+// measure carries spending, the COFOG roll-up rule, the never-sum rule below — must not.
+// Change one, change the other, then run `npm run verify`.
+//
 import { getStatsPrisma } from '../lib/db'
+
+/**
+ * PESA's expenditure-by-COFOG rows. VERIFIED AGAINST THE LIVE DB (2026-08-02, re-confirmed
+ * 2026-08-04) — these names come from the data, not from the schema's illustrative comment,
+ * which named a measure (`exp_by_subfunction`) that has never existed in this database.
+ *
+ *   public_expenditure_by_function — 62 series, 60 COFOG codes, 2020-21…2024-25. Spending by
+ *     function only, and THE rollup source: leaf sub-function rows, plus health, which PESA
+ *     reports only at top level `07`.
+ *   dept_expenditure_by_function   — 103 series, top-level codes only, 2024-25 only. The same
+ *     £1,157,828m total, cut by DEPARTMENT × function.
+ *
+ * ⚠ NEVER SUM ACROSS THE TWO. They are alternative cuts of one quantity — adding them doubles
+ * the answer to "what does the UK spend most on".
+ */
+export const SPENDING_MEASURE = 'public_expenditure_by_function'
+export const DEPT_SPENDING_MEASURE = 'dept_expenditure_by_function'
 
 export interface TimeSeriesPoint {
   periodLabel: string
@@ -152,8 +177,14 @@ export interface CofogRollupRow {
  * needs to join through stat_series.
  */
 export async function getCofogRollup(params: {
-  geography: string
-  measure: string
+  /**
+   * OPTIONAL filter, never a default. UK-wide series are stored under ISO-3166 alpha-2 `GB`
+   * (which IS the code for the United Kingdom — see STATS_SCHEMA.md), so passing a literal
+   * `'UK'` matches nothing at all. Omit it unless you mean to restrict to one country.
+   */
+  geography?: string
+  /** Defaults to SPENDING_MEASURE. Do not pass both cuts and add them — see the constant. */
+  measure?: string
   periodStart: Date
   /**
    * Aggregate sub-functions into their parent (`10.2` → `10`), giving the 10-function answer
@@ -170,10 +201,10 @@ export async function getCofogRollup(params: {
   const prisma = getStatsPrisma()
   const rows = await prisma.statObservation.findMany({
     where: {
-      geography: params.geography,
+      ...(params.geography ? { geography: params.geography } : {}),
       periodStart: params.periodStart,
       cofogFunctionCode: { not: null },
-      series: { measure: params.measure },
+      series: { measure: params.measure ?? SPENDING_MEASURE },
     },
     select: { cofogFunctionCode: true, periodLabel: true, value: true },
   })

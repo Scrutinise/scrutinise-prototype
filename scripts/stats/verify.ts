@@ -4,7 +4,7 @@
 // three query-layer entry points (findSeries / getSeriesTimeSeries / getCofogRollup).
 // Usage: npx tsx --tsconfig ../tsconfig.json verify.ts   (from scripts/stats/)
 import { getStatsPrisma } from './lib/db'
-import { findSeries, getSeriesTimeSeries, getCofogRollup } from './query/stats-query'
+import { findSeries, getSeriesTimeSeries, getCofogRollup, SPENDING_MEASURE } from './query/stats-query'
 
 const fmt = (d: Date | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : '—')
 
@@ -117,8 +117,16 @@ async function main() {
   console.log(`\nCOFOG-coded observations: ${cofogCodes.reduce((a, c) => a + c._count._all, 0)} across ${cofogCodes.length} distinct codes`)
   console.log(`  codes: ${cofogCodes.map((c) => c.cofogFunctionCode).sort().join(', ')}`)
 
+  // Pin the headline to PESA's own measure, not "whatever COFOG row is newest".
+  //
+  // This used to take the latest COFOG observation of ANY measure. The moment the Phase B
+  // comparative sources landed (IMF's window runs to 2025, PESA's to 2024-25) the newest row
+  // became an IMF *percentage*, and the "what does the UK spend most on" answer below would
+  // have quietly switched from £1,157,828m of UK spending to a percent-of-GDP figure —
+  // still internally consistent, still printed without complaint, and no longer the number
+  // this check exists to reconcile against.
   const latestCofog = await prisma.statObservation.findFirst({
-    where: { cofogFunctionCode: { not: null } },
+    where: { cofogFunctionCode: { not: null }, series: { measure: SPENDING_MEASURE } },
     orderBy: { periodStart: 'desc' },
     select: { periodStart: true, periodLabel: true, series: { select: { measure: true, geography: true } } },
   })
