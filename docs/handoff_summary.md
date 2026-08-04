@@ -2,7 +2,22 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-03 08:30 UTC — ▼ CORPUS REPORT + CDN + STATS PHASE B: corpus status
+*Last updated: 2026-08-04 16:53 UTC — ▼ **SEARCH LATENCY RESOLVED AND INDEPENDENTLY VERIFIED.**
+`corpus_fts` `unindexed=0` (was 1,191,345 brute-force-scanned per query); `fts-serve-production`
+warm p50 **1,250 ms** (was 25,520 ms), live query **0.62 s**. `/stats` counters had reset, confirming
+`fts-serve` was redeployed after the rebuild — without that, any after-measurement is meaningless.
+**A duplicate rebuild was avoided**: `jobs.ts` recorded the 4 Aug run and `fts-optimize.ts
+--verify-only` (free metadata read) reported `unindexed=0`, so `run fts-index` was never invoked.
+The semaphore/router-fan-out hypothesis was **refuted** by measurement (`queueMs:0` alongside
+`ms:25344`; `queueHighWaterMark` 0 for the service's lifetime). **New: `docs/CLAUDE.md` §17 — heavy
+jobs never run on Railway**, cross-referenced from `INGEST_PLAYBOOK.md` §20 and `docs/HEAVY_JOBS.md`.
+**NEXT SPRINT IS WRITTEN → `docs/SPRINT.md`** (search thread: freshness → gold baseline → streams one
+at a time → vector fusion last). **That sprint's §1 backfill REQUIRES a follow-up index rebuild
+(§1a) — appended rows land un-indexed and are brute-force scanned on every query until merged; this
+is how the 26-second p50 happened. The gold baseline in §2 must not be taken until `unindexed=0`.** **Still open and unchanged:** idea-chat, LegislationPanel and the
+browse page all still call legacy `searchLegislation()` directly, not `search-gateway.ts` — the fast
+index is not reaching users. §2 of that sprint **blocks on Charlie's human answer-key validation
+pass**. Earlier: 2026-08-03 08:30 UTC — ▼ CORPUS REPORT + CDN + STATS PHASE B: corpus status
 workbook shipped (`scripts/reports/`, 8 tabs, 70 corpora / 1,255 quangos / 17.87M sections —
 **the spec the brief referenced did not exist**, so it was built to the brief's own tab list and
 the spec written up); `xlsx` moved to the SheetJS CDN build, clearing the advisory in both

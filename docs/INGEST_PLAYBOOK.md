@@ -1360,12 +1360,16 @@ query, forever**, until the rows are merged into the index.
 
 What that cost looked like in production, four days later:
 
-| | before | after |
+| | before | after (measured 2026-08-04 16:53 UTC) |
 |---|---|---|
-| `body_idx` indexed rows | 16,509,051 | (see CHANGE_LOG) |
-| **un-indexed rows** | **1,191,345 (6.7%)** | |
-| warm p50 | 26,005 ms | |
-| warm p95 | 35,585 ms | |
+| `body_idx` indexed rows | 16,509,051 | **17,700,396** |
+| **un-indexed rows** | **1,191,345 (6.7%)** | **0 (0.00%)** |
+| warm p50 | 26,005 ms | **1,250 ms** |
+| warm p95 | 35,585 ms | **1,759 ms** |
+
+**Confirmed fixed.** A live `data protection` query now returns in **0.62 s** wall-clock
+against `fts-serve-production`, versus 25–32 s before — a ~20× improvement, and now far
+inside the 25 s client timeout that was previously being blown on every query.
 
 The client timeout is 25s, so effectively **every** Lex search was timing out — which is
 how a data-protection idea was served road-traffic fixtures from the stub fallback
@@ -1393,4 +1397,10 @@ zero un-indexed on a serving table is a latency bill being charged to every user
 FTS index build peaks at **19.8 GB** (measured), against Railway's 8 GB per-replica cap.
 Use the Heavy Job Runner — `cd scripts/ingest && tsx ../ops/heavy-job/run.ts run fts-index`
 — which provisions ephemeral rented compute, verifies, destroys the box and prints the
-cost (€0.049 for the 4 Aug run). Full procedure: **`docs/HEAVY_JOBS.md`**.
+cost (€0.049 for the 4 Aug run). Full procedure: **`docs/HEAVY_JOBS.md`**. The standing
+rule that this is never a Railway job — with the three-failure evidence behind it — is
+**`docs/CLAUDE.md` §17 (Heavy jobs)**.
+
+**Before running it, check whether it is already needed.** `fts-optimize.ts --verify-only`
+is a free metadata read; if it reports `unindexed=0` the rebuild is already done and
+re-running it just spends money. That check is what stopped a duplicate rebuild on 4 Aug.

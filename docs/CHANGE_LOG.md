@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-04 16:53 UTC — SEARCH: post-fix state VERIFIED independently from a cold start — `unindexed=0`, warm p50 1,250ms, live query 0.62s; a duplicate rebuild was avoided by checking `--verify-only` first. Heavy-jobs rule landed as `docs/CLAUDE.md` §17, cross-referenced from INGEST_PLAYBOOK §20 and HEAVY_JOBS.md. Search-thread sprint written to `docs/SPRINT.md`. Earlier: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
 engine. The stub fallback is OUT of production (a failed search now stores an honest empty state +
 Retry, and `failed` is threaded distinctly from "found nothing" all the way to the UI); a FACTS OF
 THIS TURN block confines every Lex claim to what the server actually recorded; each stage entry
@@ -44,6 +44,60 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## SEARCH — independent post-fix verification + heavy-jobs rule into CLAUDE.md (2026-08-04 16:53 UTC)
+
+Confirms the 13:20 UTC entry from a cold start (separate session, no shared state) and lands the
+standing rule in the boot-read docs. **No code changes.**
+
+### Verified independently
+
+`fts-optimize.ts --verify-only` → `body_idx indexed=17,700,396 unindexed=0 (0.00% scanned per query)`.
+Against `fts-serve-production`: `warm_p50 1,250 ms`, `warm_p95 1,759 ms`, `cold 2,365 ms`; a live
+`data protection` query returns in **0.62 s** wall-clock. Before: warm p50 25,520 ms and 25.5–27.1 s
+wall-clock on five sequential real queries. The `/stats` counters had reset, confirming `fts-serve`
+was redeployed after the rebuild — without which the measurement would have been meaningless (§17).
+
+**A duplicate rebuild was avoided by checking first.** `jobs.ts` recorded the 4 Aug run, and
+`--verify-only` is a free metadata read; it reported `unindexed=0`, so `run fts-index` was never
+invoked. `plan fts-index` was run inert (cpx62, €0.2942/hr) and created nothing.
+
+### The pre-fix diagnosis, reached independently — as corroboration
+
+Reached from the opposite direction (black-box probing of the live service) and landing on the same
+cause, which is worth recording because the reasoning is reusable:
+
+- Cost was **flat across `limit`** (k=100 vs k=500: 32,336 ms vs 32,775 ms) → not the OVERSCAN fetch.
+- A **zero-match query still cost 30,820 ms** → not result materialisation or the re-rank.
+- **Repeating an identical query never got faster** → nothing was being cached; the scan was by design.
+- A **`tier` prefilter made it 7× faster** (4,516 ms) → the filter was pruning the un-indexed tail.
+- `lance_io::object_reader` logged **~20 range downloads of 10–16 MB each** from distinct
+  `corpus_fts.lance/data/*.lance` fragments for a single query — the scan, observed directly.
+
+The semaphore/router-fan-out hypothesis was **refuted**: `fts-query-service.ts` computes `queueMs`
+before `t0`, so `warm_p50_ms` already excludes queue wait, and a captured response showed
+`{"ms":25344,"queueMs":0}` with `queueHighWaterMark` at 0 for the service's lifetime. Contention was
+never involved. `query-router.ts:60` *is* a real `Promise.all` fan-out over up to 5 streams against
+`FTS_MAX_CONCURRENT=4`, so it remains a genuine compounding risk — but it multiplied a broken
+baseline rather than causing it, and at today's 1.25 s p50 it is no longer load-bearing.
+
+### Documentation
+
+- **`docs/CLAUDE.md` §17 (new) — "Heavy jobs: memory-bound work does not run on Railway."** The rule,
+  the three-failure evidence, when to reach for the runner, and the traps. Added `plan`-before-`run`
+  and check-before-rebuild to the How list, both earned today.
+- **`INGEST_PLAYBOOK.md` §20** — after-column filled with the measured post-fix numbers; cross-refs
+  `docs/CLAUDE.md` §17; adds the free `--verify-only` pre-check.
+- **`docs/HEAVY_JOBS.md`** — header cross-ref to §17 (the *why/when*) vs this file (the *how*).
+
+### Still open — carried into `docs/SPRINT.md`
+
+The migration gap is unchanged and is now the sprint: `idea-chat` (`app/api/ai/[ideaId]/route.ts:9`),
+`LegislationPanel` and the browse page all still call legacy `searchLegislation()` directly rather
+than `search-gateway.ts`. The index is fast now, but these three surfaces are not on it — the Lex
+rebuild surface that *does* use the gateway is preview-only and NOT promoted.
 
 ---
 
