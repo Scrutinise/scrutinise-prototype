@@ -1404,3 +1404,31 @@ rule that this is never a Railway job — with the three-failure evidence behind
 **Before running it, check whether it is already needed.** `fts-optimize.ts --verify-only`
 is a free metadata read; if it reports `unindexed=0` the rebuild is already done and
 re-running it just spends money. That check is what stopped a duplicate rebuild on 4 Aug.
+
+**§20 addendum (5 Aug 2026) — the append now ANNOUNCES its own debt.**
+
+The rule above only works if somebody knows a backfill happened. For four days after the
+29 Jul catch-up, nobody did — the rows were present, findable and correct, and the only
+symptom was that every query got slower. Correctness is exactly what made it invisible.
+
+`fts-catchup.ts` therefore no longer ends on `DONE. corpus_fts rows now = N`. Every run —
+including `--dry-run` — finishes by reading `indexStats('body_idx')` and reporting:
+
+```
+[fts-catchup] INDEX COVERAGE: indexed=17,700,396 unindexed=0 (0.00% brute-force scanned per query)
+```
+
+and, if anything is un-indexed, an unmissable `*** INDEX RE-MERGE REQUIRED ***` banner carrying
+the Heavy-Job command and the restart-`fts-serve` warning. It also writes
+`scripts/ingest/search/.fts-index-debt.json` — `{ indexedRows, unindexedRows,
+pctScannedPerQuery, remergeRequired, howTo }` — so a scheduled check can alert on it without
+depending on a human having read the console output of a background job.
+
+**Division of labour, so neither side assumes the other did it:** *Ingest* owns the
+reconciliation and owns *telling* Search. *Search* owns the merge. The handoff is that file.
+
+**Also fixed the same day:** `fts-catchup --reindex` was rebuilding with `withPosition: true`
+while the live `corpus_fts.body_idx` is the no-positions build (`withPosition: false` — which
+is what let it fit in memory at all). Anyone using that flag would have silently replaced the
+measured index with a differently-ranked one. See `docs/CLAUDE.md` §17, "Match the live index
+configuration when rebuilding".

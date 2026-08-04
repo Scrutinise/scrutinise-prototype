@@ -35,8 +35,30 @@ npx tsx --tsconfig ../tsconfig.json refresh-scheduler.ts --force <datasetId>   #
 | `hmrc-tax-gap`                  | HMRC   | ANNUAL    | published once a year |
 | `wb-wdi-comparative`            | World Bank | ANNUAL | WDI indicators are annual; the API's `lastupdated` moves a few times a year as countries revise |
 | `oecd-cofog-expenditure`        | OECD   | ANNUAL    | Government at a Glance "yearly updates" flow — one release a year, plus back-revisions |
+| `imf-gfs-cofog`                 | IMF    | ANNUAL    | GFS is an annual publication; countries back-revise, so the whole 2007– window is re-fetched each time rather than appended to |
 
 ## OECD SDMX — read this before touching `sources/oecd.ts`
+
+> **Update 2026-08-04 23:31 UTC — two things closed, one still open.**
+>
+> **The server-side unit filter is TESTED and ruled out.** It shipped on 3 Aug marked "NOT YET
+> CONFIRMED against a live response" and was the best remaining hypothesis for the whole-window
+> 500 (a quarter of every payload was being fetched and discarded, on a size-limited endpoint).
+> Run from a fully cold quota, it returned **HTTP 500 on all seven windows** — whole window, both
+> 10-year halves, all four 5-year quarters. Payload size is not the binding constraint. Do not
+> re-run this experiment.
+>
+> **The `/all` fallback never actually ran, and that invalidates earlier readings.** This module
+> claimed to fall back to the unfiltered key "on any non-200". `politeFetch` treats 429/5xx as
+> retryable and **throws** when retries are exhausted — it never returns a non-ok response for a
+> 500 — so `if (!res.ok)` was unreachable for the only status this endpoint returns. The 4 Aug
+> logs prove it: all seven failures name the *filtered* URL. Now fixed by catching the throw.
+> Treat any earlier "we also tried /all" conclusion as unverified.
+>
+> **Still open:** the flow returns 500 for every window size from a cold quota. The next
+> diagnostic step is a single-year request in isolation (which returned 200 with 426 KB on
+> 3 Aug) — if that now 500s too, the flow itself has moved or been withdrawn, which is a
+> different problem from throttling. **One request, from a cold quota, nothing else running.**
 
 **This endpoint has TWO independent failure modes and both present as HTTP 500.** Conflating
 them sends you in circles; they were only separated by testing each in isolation on 2026-08-03.
@@ -84,13 +106,29 @@ on 2026-08-03 and was caught within a minute; the fix makes it structurally impo
 
 ## Idempotency
 
-Every upsert keys on `stat_series`'s unique tuple
-`(datasetId, sourceSeriesId, geography, cofogFunctionCode, forecastVintage, measure)` and
-`stat_observation`'s unique `(seriesId, periodStart)` — re-running a refresh (forced or
-scheduled) after a source revises a historical figure updates the existing row rather than
-duplicating it. `StatRefreshLog` records `seriesUpserted`/`observationsUpserted` per attempt so
-a revision-only run (no new periods, existing values changed) is visible in the log even though
-the row counts look unchanged.
+Every upsert keys on **`stat_series.seriesKey`** (the deterministic identity hash — see
+STATS_SCHEMA.md) and on `stat_observation`'s unique `(seriesId, periodType, periodStart)`.
+Re-running a refresh, forced or scheduled, after a source revises a historical figure updates
+the existing row rather than duplicating it. `StatRefreshLog` records
+`seriesUpserted`/`observationsUpserted` per attempt so a revision-only run (no new periods,
+existing values changed) is visible in the log even though the row counts look unchanged.
+
+> **Superseded (2026-08-04):** this used to key on the tuple
+> `(datasetId, sourceSeriesId, geography, cofogFunctionCode, forecastVintage, measure)`. That
+> was never actually enforcing much — Postgres treats NULLs as distinct in a unique index and
+> `sourceSeriesId` was NULL on 86% of rows — so it did not prevent the duplicate-series class it
+> was written for. The old index has been dropped.
+
+**The acceptance test, run 2026-08-05:** every handler was re-run against a fully populated
+database and every per-dataset series count came back **unchanged** (3,404 total). Zero new
+duplicate series. `npm run check:series-key` reports `sql/ts mismatches=0, stored-key drift=0,
+colliding keys=0`. That is the thing to re-run if idempotency is ever in doubt.
+
+**The one legitimate way a series re-keys** is a changed `seriesLabel`, since the label is part
+of the identity. If a source re-words its labels — or if we change how a label is built, as the
+`geographyLabel` fix did on 2026-08-05 — the rename and the re-key must be applied together, in
+place, **before** the next ingest, or the handler will fork a duplicate beside every renamed
+row. `backfill-geography-labels.ts` is the worked example.
 
 ## Failure handling
 
@@ -110,18 +148,29 @@ first dimension pair, the parser assumed none, and all 1,960 rows were silently 
 this whole layer, and it must not look like success. Recording FAILURE also leaves
 `lastRefreshedAt` unset, so the next tick retries rather than waiting out a full annual cadence.
 
-## Measured runtimes (first live run, 2026-08-01)
+## Measured runtimes
 
-The upsert path is one round trip per observation, sequential — so wall-clock tracks observation
-count closely. Full cold run of all 7 datasets: **~34 minutes** for ~28,500 observations
-(≈14 obs/sec against pooled Neon in `eu-west-2`). The long pole is `obr-historical-forecasts`
-(20,506 observations, ~22 min); everything else is single-digit minutes or less.
+**Current, after the bulk write path (2026-08-05).** `lib/upsert.ts::ingestRows` issues one
+`INSERT … ON CONFLICT DO UPDATE` per ~500 rows instead of one round trip per row:
 
-That is comfortably inside any sensible cron window, and a normal tick does far less work than
-this (most datasets skip as not-due). It does mean a daily tick should be given a timeout well
-above an hour if several sources come due at once. If runtime ever becomes a problem the obvious
-fix is batching the observation writes (`createMany` + a follow-up update pass) rather than
-per-row `upsert` — not needed at this scale, noted so nobody re-derives it.
+| dataset | rows | wall-clock |
+|---|---|---|
+| `obr-historical-forecasts` | 2,807 series / 20,506 obs | **12.7 s** |
+| `imf-gfs-cofog` | 2,329 series / 40,351 obs | **28.8 s** (incl. a 52.8 MB fetch) |
+| everything else | — | seconds each |
+
+A full run of every dataset is now **a couple of minutes**, fetches included. An hour-plus cron
+timeout is no longer needed, though leaving headroom costs nothing.
+
+> **Superseded — but read this before writing another handler.** The original per-row path
+> measured **~34 minutes** for ~28,500 observations (≈14 obs/sec against pooled Neon), and the
+> note here said batching was "not needed at this scale". That was wrong twice over. Re-measured
+> on 2026-08-05 the OBR dataset alone ran at **~10 series/minute — 3.5 hours** — and IMF's 65,985
+> rows would have been an overnight job, i.e. the per-row path did not merely make Phase B slow,
+> it made it *impractical*. Round trips, not row counts, were always the cost. **New handlers
+> build their full `IngestRow[]` and call `ingestRows()` once.** The per-row helpers still exist
+> and are still correct — same conflict targets, equally idempotent — but they are for small
+> sources and tests.
 
 ## Not built this sprint
 

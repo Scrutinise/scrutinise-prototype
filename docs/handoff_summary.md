@@ -2,7 +2,47 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-04 18:34 UTC — ▼ **SEARCH: THE FAST INDEX NOW REACHES USERS.** SPRINT §0
+*Last updated: 2026-08-05 00:20 UTC — ▼ **STATS: STABLE SERIES IDENTITY, A BULK WRITE PATH, AND
+PHASE B COMPLETED WITH IMF.** Executes `BRIEF_CC_stats-fixes_phaseB_resume.md`; all six sections
+addressed. `tsc` clean both packages; **22/22 end-to-end checks pass against the live DB**
+(`scrutinise-web/scripts/check-stats-layer.ts`, new) and the £1,157,828m / 33.2% / 20.9%
+headline still reconciles exactly. **§1 (time-critical) DONE — the Search thread is UNBLOCKED:**
+`stat_series.seriesKey` is `TEXT NOT NULL UNIQUE`, a sha-256 over (datasetId, measure, geography,
+cofogFunctionCode, forecastVintage, seriesLabel), backfilled across all 3,404 series and now the
+upsert target; index the stats catalogue against it and retrieve via the new `getSeriesByKey()`.
+`unit`/`sourceSeriesId` are deliberately OUT of the key so a metadata repair lands on the
+existing row instead of forking a duplicate. Acceptance test: every handler re-run, every series
+count unchanged, **zero new duplicates**; `npm run check:series-key` is the standing guard.
+**⚠ The write path was the real blocker and the docs understated it** — the per-row upsert
+measured **~10 series/min (3.5h for one OBR dataset)**, and IMF's 66k rows would have been an
+overnight job; `ingestRows()` now bulk-upserts ~500 rows per statement: **OBR 3.5h → 12.7s, IMF
+→ 28.8s.** **§4 Phase B: IMF GFS COFOG is IN — 2,329 series / 40,351 obs, 22 countries,
+2007–2025**, on the same COFOG axis as PESA/OECD; Eurostat optional-and-skipped, Phase C
+confirmed **parked**. **Stats DB now 10 datasets / 5,733 series / 80,443 observations / 53 MB**;
+`verify.ts` reconciles clean everywhere bar the known 24-row OBR residual (duplicate keys in
+OBR's own workbook). **OECD COFOG is STILL 0 rows** — retried from a genuinely cold quota, all
+7 windows HTTP 500. Two things closed there, though: **the untested server-side unit filter is
+now TESTED and ruled out** (payload size is not the binding constraint), and **the `/all`
+fallback was found to have never actually run** — `politeFetch` throws on 5xx, so `if (!res.ok)`
+was unreachable for the only status that endpoint returns, meaning every earlier "we also tried
+/all" reading was unverified. Fixed. Next step is one single-year request from a cold quota: if
+that 500s too, the flow has moved rather than being throttled. **§2:** per-series `commercialUseExcluded` (restricted if ANY contributor
+is); **OBR `unit='UNKNOWN'` 2,807 → 0**, so all those forecast series now reach catalogue search,
+and `forecastVintage` now travels loudly into Lex's block. **§5:** `fts-catchup` already was the
+append-safe mechanism — the missing half was that nothing ANNOUNCED the index debt; it now
+reports coverage + an `INDEX RE-MERGE REQUIRED` banner + `.fts-index-debt.json`. Measured now:
+**0 gaps, 0 rows missing, `unindexed=0` — nothing for Search to merge.** Also fixed there:
+`--reindex` was rebuilding with `withPosition:true` against a no-positions live index.
+**⚠ TWO BRIEF INSTRUCTIONS DECLINED ON VERIFIED EVIDENCE, both need Charlie's eye: (a) OECD
+`commercialUseExcluded` stays FALSE** — terms §3 (Data) permits reuse "even for commercial use"
+and has no 2024 date split at all (that is §1, Written Content, which also permits it); second
+time this premise has failed. **(b) geography stays `GB`, NOT `UK`** — `GB` *is* the ISO-3166-1
+alpha-2 code for the United Kingdom, and relabelling would have put UK spending in a different
+geography from its own comparators; the *display* label was the real defect and is fixed
+("United Kingdom"). **IMF is the first `commercialUseExcluded=true` source in the store** —
+verified at source in a browser, reversing the 3 Aug "not ingestible" call. **Open gap recorded,
+not guessed: price base travels nowhere** (no source exposes one; no column). ▼ Earlier:
+2026-08-04 18:34 UTC — ▼ **SEARCH: THE FAST INDEX NOW REACHES USERS.** SPRINT §0
 and §1 done; §2 not started (**blocks on Charlie's answer-key validation pass**), §3/§4 behind it.
 **§0:** the `thinkingBudget:0` fix is in `origin/Main` HEAD *and* still load-bearing — probed live,
 the control without it returns `MAX_TOKENS` with 469 thought tokens burned and truncated JSON.

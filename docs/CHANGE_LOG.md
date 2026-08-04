@@ -47,6 +47,225 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## STATS — stable series identity, a bulk write path, and Phase B completed with IMF (2026-08-04 23:40 UTC)
+
+**Executes `docs/BRIEF_CC_stats-fixes_phaseB_resume.md`.** All six sections addressed; two of the
+brief's premises did not survive verification and are recorded below rather than followed.
+`tsc --noEmit` clean in both `scripts/stats` and `scrutinise-web`.
+
+### 1. `seriesKey` — the time-critical one. The Search thread is unblocked.
+
+Every series now carries **`seriesKey`: `TEXT NOT NULL UNIQUE`**, a deterministic sha-256 over its
+six identity fields, backfilled across all 3,404 rows and now the upsert target.
+
+```
+seriesKey = sha256_hex( datasetId ␟ measure ␟ geography ␟ cofogFunctionCode ␟ forecastVintage ␟ seriesLabel )
+```
+
+`␟` = U+001F; a null field is written U+001E. Both are C0 control characters that cannot occur in
+a spreadsheet label, a slug or an ISO code, so no value can impersonate a separator or a null.
+Definition: `scripts/stats/lib/series-key.ts`, mirrored in SQL by migration
+`20260804180000_series_key`.
+
+**`unit` and `sourceSeriesId` are deliberately OUT of the key.** Both are corrigible metadata
+about the same line of data. Had `unit` been in it, recovering OBR's 2,807 `unit='UNKNOWN'`
+series (below) would have orphaned every one and re-created the exact duplicate class the column
+exists to end. `seriesLabel` had to be IN it: without the label the natural key is not unique —
+3,404 series collapse onto 3,244 tuples, because `sourceSeriesId` was NULL on 2,925 of them.
+
+**The SQL and TypeScript implementations were checked against each other BEFORE the DDL ran** —
+0 mismatches across all 3,404 rows, including the 849 labels containing `£` and em-dashes, where
+a `convert_to`/UTF-8 mismatch would have shown up. That check is now permanent and standing:
+`npm run check:series-key` asserts SQL/TS parity, that every stored key still matches its own
+identity fields, and that nothing collides.
+
+**The old composite unique index was dropped.** It was near-inert where it mattered — Postgres
+treats NULLs as distinct in a unique index and `sourceSeriesId` was NULL on 86% of rows — so it
+never prevented the duplicate class it was written for. Two competing definitions of identity is
+how they drift apart.
+
+**`sourceSeriesId` is now populated on all 3,404 series** (was NULL on 2,925). Publisher codes are
+used verbatim; where a source issues none, a slug is derived from its own structure and prefixed
+**`derived:`**, so an id we invented is never cited back to the source as if it were theirs.
+
+**Acceptance test, run against a fully populated database:** every handler re-run, every
+per-dataset series count unchanged, **zero new duplicate series**. No stale duplicates were found
+to clean up — the 27 tax-gap series of 1 Aug had already been removed.
+
+### 2. ⚠ The write path was the real blocker, and it was worse than the note in the docs
+
+`STATS_REFRESH.md` recorded ~34 minutes for ~28,500 observations and said batching was "not needed
+at this scale". Re-measured: **`obr-historical-forecasts` alone ran at ~10 series/minute — 3.5
+hours** — and IMF's 65,985 rows would have been an overnight job. The per-row path did not merely
+make Phase B slow, it made it **impractical**; round trips, not row counts, were always the cost.
+
+`lib/upsert.ts::ingestRows` now issues one `INSERT … ON CONFLICT DO UPDATE` per ~500 rows, against
+the same conflict targets, equally idempotent. Every handler builds its full `IngestRow[]` and
+calls it once.
+
+| | before | after |
+|---|---|---|
+| `obr-historical-forecasts` (2,807 series / 20,506 obs) | ~3.5 h (projected) | **12.7 s** |
+| `imf-gfs-cofog` (2,329 series / 40,351 obs) | ~11 h (projected) | **28.8 s** |
+
+### 3. ⚠ Two licence findings — both verified at source IN A BROWSER, both against the brief
+
+Both terms pages 403 every programmatic fetch from this machine (WebFetch, node with a browser
+UA, and a proxy all failed), which is why they had been open since 3 Aug. They were read in a real
+browser instead. **Do not conclude from a 403 that terms are unavailable.**
+
+**OECD — the brief's premise is wrong for the second time; the flag was left `false`.** The brief
+said to set `commercialUseExcluded = true` for OECD pre-2024 series. Terms §3 *Data* →
+*Permitted Use* says: *"Except where additional restrictions apply as stated above, you can extract
+from, download, copy, adapt, print, distribute, share and embed Data for any purpose, even for
+commercial use."* **§3 carries no before/after-1-July-2024 split at all** — that split is in §1,
+*Written Content* — and even §1.2, governing content published *before* 1 July 2024, permits use
+"for commercial and non-commercial purposes"; only *translation* is restricted to non-commercial.
+There is no basis for the flag. One boolean in `seed-catalogue.ts` if Charlie prefers otherwise.
+
+**IMF — reversal of the 3 Aug "not ingestible" call. It IS ingestible, and it is genuinely
+non-commercial.** *Copyright and Usage* (effective 11 October 2024) has a section "The Use of IMF
+Data" that overrides the general prohibition and **names Government Finance Statistics explicitly**:
+*"You may download, extract, copy, create derivative works, publish, distribute, and use Data
+obtained from IMF Sites, subject to the following conditions…"* — with attribution, data-integrity
+and downstream-compliance conditions. But it closes: *"For any potential commercial reuse of IMF
+Data, please email copyright@imf.org to request permission."*
+
+So redistribution is permitted outright and commercial reuse is not. `imf-gfs-cofog` is set
+`commercialUseExcluded = true` — **the first genuinely non-commercial source in the store**, which
+is what makes the new per-series flag load-bearing rather than theoretical. The `LICENSE` column in
+the data reading *"© International Monetary Fund Copyright. All Rights Reserved"* is a copyright
+notice pointing at those terms, not a prohibition — and the URL it points at is itself dead. That
+is what was misread on 3 Aug. Every row also carries `ACCESS_SHARING_LEVEL = PUBLIC_OPEN`.
+
+### 4. Provenance: per-series commercial terms, recovered units, and what still doesn't travel
+
+- **`commercialUseExcluded` now exists on `stat_series` too**, nullable, null = inherit the
+  dataset. Where several series are quoted together — a COFOG rollup, a cross-country comparison —
+  the aggregate is restricted if **any** contributor is (`bool_or` in SQL, `.some()` in TS).
+  Understating terms is the dangerous direction.
+- **OBR unit recovery: `unit='UNKNOWN'` went from 2,807 rows to 0.** The handler had passed a
+  hardcoded literal, and the web catalogue search *excludes* `unit='UNKNOWN'` by design — so every
+  OBR forecast series was invisible to search. The workbook states its unit plainly at cell **A2**
+  of each sheet; `resolveHistoricalForecastUnit` reads it, from a map enumerated across all 131
+  sheets rather than sampled, with a parenthesised-title fallback for the five sheets that have no
+  unit row. Sheets stating no unit anywhere still resolve to `UNKNOWN` rather than a guess.
+- **`forecastVintage` now travels into Lex's block**, and loudly. This became urgent the moment the
+  2,807 OBR forecast-round series became visible: without it Lex would present "PSNB 2027-28:
+  £52bn" as the number, with no way to know it came from the March 2020 round and has been
+  superseded a dozen times since.
+- **Percentage-shaped units are now spelled out** rather than collapsed to a bare `%`. `2.1%` reads
+  as a level; `PERCENT_CHANGE_YOY` is a growth rate and `PERCENT_GDP` is a share.
+- **Price base does NOT travel — recorded as an open gap, not papered over.** No source in this
+  layer exposes one and there is no column for it. Adding one means populating it per source from
+  our own reading of each publication; "nominal vs real" is exactly the distinction that must not
+  be guessed.
+
+### 5. `GB` is the United Kingdom — the brief's geography correction was declined, with reason
+
+The brief asked for UK-wide series to be relabelled `GB` → `UK`, "or document the choice explicitly
+if there's a reason". There is one. **`GB` is the ISO-3166-1 alpha-2 code for the United Kingdom of
+Great Britain and Northern Ireland** — the correct code for the whole state, already including
+Northern Ireland. `UK` is not an ISO-3166-1 code at all. And relabelling would have broken the one
+decision that makes Phase B work: international sources speak `GBR`, normalised to `GB` on the way
+in, so UK figures land in the same geography as their comparators. Writing Phase A as `UK` would
+put UK spending in a different geography from UK spending.
+
+What *was* wrong was the display: `geographyLabel('GB')` returned the string `"GBR"`. Fixed — it
+returns "United Kingdom", and the database keeps the standard code.
+
+**That fix had a consequence worth recording, because it is the documented cost of putting
+`seriesLabel` in the identity.** The label feeds `seriesKey`, so changing it re-keys every
+comparative series — and a handler re-run would have minted a duplicate beside each one, the exact
+failure `seriesKey` exists to prevent. The rename and the re-key therefore had to be applied
+together, in place, **before** the next ingest: `backfill-geography-labels.ts` does that, refuses
+to run if any new key would collide, and is idempotent.
+
+### 6. Script-side query layer synced (§3 of the brief)
+
+`scripts/stats/query/stats-query.ts` now declares `SPENDING_MEASURE` /
+`DEPT_SPENDING_MEASURE` with the never-sum warning, defaults `getCofogRollup` to the right measure,
+and treats `geography` as an optional filter. Both mirrors carry a keep-in-sync banner.
+
+**Correction to the brief's diagnosis:** it said the script-side `getCofogRollup` *queried*
+`exp_by_subfunction`. It did not — the measure was a required parameter, and the stale name lived
+only in comments and in the schema's illustrative example. The real defect was subtler and is the
+one fixed: no default, no shared vocabulary with the web mirror, and a mandatory `geography` that
+matched nothing when passed the obvious value.
+
+### 7. Ingest: the index re-merge is now announced, not assumed (§5)
+
+The append-safe reconciliation mechanism the brief asks for **already existed** —
+`fts-catchup.ts` (29 Jul) does a full per-corpus reconciliation every run and is self-healing
+against any cause of drift, not just the id-cursor defect. What was missing is the half that
+would have prevented the 26-second p50: **nothing told anyone the appended rows were un-indexed.**
+
+A run that appends now ends by reading `indexStats('body_idx')` (a free metadata read) and naming
+its own debt — an unmissable `INDEX RE-MERGE REQUIRED` banner with the Heavy-Job command and the
+restart-`fts-serve` warning, plus a machine-readable `.fts-index-debt.json` so a scheduled check
+can alert without a human reading a background job's console output.
+
+**Also fixed there: `--reindex` rebuilt with `withPosition: true`, contradicting the live index**
+(`withPosition: false`, the no-positions v1 build). Per `docs/CLAUDE.md` §17, rebuilding with
+different settings silently changes ranking — so that path would have quietly replaced the
+measured index with a different one.
+
+### Phase B: intended vs achieved
+
+| source | status |
+|---|---|
+| World Bank WDI | **in** — 257 series / 11,235 obs, 22 countries (unchanged this sprint) |
+| **IMF GFS COFOG** | **IN — new: 2,329 series / 40,351 obs**, 22 countries, 2007–2025, general government (S13), % of GDP and % of total outlays |
+| OECD COFOG | **still 0 rows.** Retried from a genuinely cold quota; all 7 windows HTTP 500. See below |
+| Eurostat | not attempted — the original Phase B brief marks it optional |
+| Phase C (US/France national sources) | **parked, not started**, as instructed |
+
+**Stats DB after this sprint: 10 datasets, 5,733 series, 80,443 observations, 53 MB** (from
+9 / 3,404 / 40,092 / 22 MB). `verify.ts` reconciles `attempted == stored` on every dataset except
+the known, quantified OBR residual — 24 of 20,506 rows lost to duplicate keys **in OBR's own
+workbook** (one sheet has two columns both labelled `2023-24`; the row label `July 1996` appears
+twice). Pre-existing, documented 1 Aug, unchanged.
+
+### OECD COFOG — the untested hypothesis was tested, and it is ruled out
+
+Retried at 23:31 UTC from a fully cold quota with no concurrent probing, exactly the conditions
+the 3 Aug diagnosis asked for. **All seven windows returned HTTP 500** — the whole 20-year window,
+both 10-year halves, all four 5-year quarters.
+
+**This run does settle something.** The server-side unit filter shipped on 3 Aug was explicitly
+recorded as "NOT YET CONFIRMED against a live response" and was the best remaining hypothesis for
+the whole-window 500 — the theory being that ~25% of each payload was fetched only to be
+discarded, on an endpoint whose limit is payload size. It ran, on every window, and **500s
+identically**. So payload size is not the binding constraint, or not the only one. That hypothesis
+is closed rather than left hanging for the next person to re-run.
+
+**And it exposed a real defect that made every previous OECD diagnosis less informative than it
+looked.** The `/all` fallback — documented in this file's history as running "on any non-200" —
+was **unreachable for the one status this endpoint actually returns.** `politeFetch` treats
+429/5xx as retryable and *throws* once retries are exhausted; it never returns a non-ok response
+for a 500, so `if (!res.ok)` could only ever fire on a 4xx. The proof is in the run's own logs:
+all seven failures name the **filtered** URL, never `/all`. Fixed — the call is wrapped so the
+throw is caught and the fallback genuinely runs. Every prior "we also tried /all" reading of an
+OECD failure should be treated as unverified.
+
+No further requests were spent tonight: the quota is now warm (7 windows × 5 attempts ≈ 35
+requests), and re-probing a warm quota is precisely the mistake the source module's header warns
+against. Next attempt should be a scheduled run from cold, which will now exercise `/all` for
+real.
+
+IMF domestic-currency (`XDC`) rows are deliberately excluded: 22 countries in 22 currencies cannot
+be compared without an exchange-rate step this layer does not perform, and storing them behind one
+measure name would invite a wrong answer. IMF writes COFOG as `GF0710`, the same shape OECD uses,
+so `cofogFromExpenditureCode` is reused and UK PESA, OECD and IMF all land on one COFOG axis.
+
+**One bug found by running it, invisible to `tsc`:** the `format=csv` query parameter is **ignored**
+by `api.imf.org` — the response type comes from content negotiation alone. Without an `Accept`
+header the endpoint returns 12 MB of SDMX-ML with an HTTP 200, which the CSV parser reads as "no
+data rows". The scheduler correctly called that a FAILURE rather than a green empty run. Fixed with
+the header plus an explicit content-type assertion that fails loudly.
+
+---
+
 ## SEARCH — the fast index reaches users: freshness, act metadata, legacy call sites repointed (2026-08-04 18:34 UTC)
 
 **Executes `docs/SPRINT.md` §0 and §1.** §2 (gold baseline) is not started — it **blocks on
