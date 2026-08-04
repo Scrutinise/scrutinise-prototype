@@ -170,6 +170,34 @@ CHANGE_LOG "LEX REBUILD — Sprint 3-C" (2026-08-02 18:47 UTC); rules in `LEX_PL
 
 ---
 
+## CURRENT STATE — LEX: stats tool gaps closed + THE RETRIEVAL CONTRACT (2026-08-04 09:40 UTC)
+
+Full detail: CHANGE_LOG "LEX — stats tool: read-only role, licence provenance, comparative
+geography, retrieval contract" (2026-08-04 09:40 UTC). Code `79da5dc`, `66e19e4`.
+
+- **Lex now connects to the stats DB read-only.** `lex_readonly` (SELECT on the five stat
+  tables only; INSERT/UPDATE/DELETE/CREATE all verified refused). It was `neondb_owner`.
+  Credential: the **`STATS_DATABASE_URL_READONLY=`** line in `scrutinise-web/.env` /
+  `scripts/stats/.env` (gitignored) — that is the Vercel value. **LIVE and confirmed:**
+  `/api/admin/stats-health` returns ok, 9 datasets / 3,404 series / 40,092 observations,
+  top function Social protection £383,934m 2024-25. It also reports `role`/`canWrite` now,
+  so the read-only guarantee is checkable rather than assumed.
+- **Licence + commercial terms** ride on every figure and appear in Lex's prompt block.
+  Caveat: `commercialUseExcluded` is per-DATASET, so it cannot express "pre-2024 vintages
+  are non-commercial" if that ever matters.
+- **Comparative geography is live** across 21 countries (World Bank WDI). Cross-country
+  means are computed here and explicitly labelled as not published; the prompt forbids
+  calling them "the OECD average".
+- **FOR THE SEARCH THREAD (stats discoverability):** the retrieval contract is in the
+  CHANGE_LOG entry above, implemented as `getSeriesById` / `resolveSeries`. Short version:
+  **`stat_series.id` is unique but NOT stable across re-ingests, and the natural key is NOT
+  unique** (3,404 series → 3,244 distinct natural keys). The catalogue must store BOTH the
+  cuid and the natural key + `seriesLabel`. **Recommended before the catalogue index is
+  built:** add a deterministic `seriesKey` to `StatSeries` that survives re-ingest —
+  retrofitting a join key later is the expensive version.
+
+---
+
 ## CURRENT STATE — LEX: `query_stats` tool — Lex wired to the stats DB (2026-08-02 00:36 UTC)
 
 **Executes the Lex-thread brief "wire Lex to the stats database" (STATS_PHASE_A_BRIEF §7).**

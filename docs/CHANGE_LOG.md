@@ -47,6 +47,87 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — stats tool: read-only role, licence provenance, comparative geography, retrieval contract (2026-08-04 09:40 UTC)
+
+**Executes `docs/BRIEF_LEX_connect-stats-to-router.md`** — closing the gaps on the 2 Aug
+`query_stats` work rather than rebuilding it. Code: `79da5dc`, `66e19e4`. 16/16 tests pass
+against the live stats DB, running as the new read-only role.
+
+### 1. Read-only role — Lex structurally cannot write
+
+`lex_readonly` created on the stats Neon project. `GRANT SELECT` on the five stat tables
+**explicitly, not `ALL TABLES`** — so a future write-side table (an audit log, a refresh
+journal) is not silently exposed by a blanket grant. Plus `ALTER DEFAULT PRIVILEGES …
+GRANT SELECT` for future tables and `REVOKE CREATE ON SCHEMA public`. Verified from the
+role's own session: SELECT works (40,092 observations); INSERT, UPDATE, DELETE and
+CREATE TABLE all refused.
+
+The previous value was **`neondb_owner`** — full write access to the statistics database
+from the web app. **The credential is on the `STATS_DATABASE_URL_READONLY=` line of
+`scrutinise-web/.env` and `scripts/stats/.env`** (both gitignored); that is the Vercel
+value. `/api/admin/stats-health` now reports `role` and `canWrite`, so the guarantee is
+checkable from production rather than assumed — expect `"role":"lex_readonly"`,
+`"canWrite":false`, and a `warning` field appears if it is ever otherwise.
+
+### 2. Licence provenance travels with every figure
+
+`licence`, `licenceUrl` and `commercialUseExcluded` are on every result and rendered in
+the prompt block, with an instruction to state non-commercial terms when quoting. A
+commercial fork is a live possibility and a wrongly-licensed figure is a legal problem,
+not a style one.
+
+**Structural limit worth knowing:** `commercialUseExcluded` sits on `StatDataset`, so it
+can say "this source is non-commercial" but not "vintages before 2024 are". If that
+distinction ever becomes real it needs a per-series field. (The stats thread has since
+verified the OECD terms independently and set it false — see the Phase B entry.)
+
+### 3. Comparative geography
+
+`geography` accepts one ISO code (filters), a list `GB,FR,DE` (compares), or
+`OECD`/`compare` (every country held). Phase B is live — World Bank WDI across 21
+countries plus GB — so this works on real data now.
+
+**Any cross-country mean is COMPUTED here and labelled as such**, never passed off as
+published: the block carries "THIS MEAN IS COMPUTED BY US, NOT PUBLISHED", names the
+countries, and forbids calling it "the OECD average" (the set is 21 countries, not the
+OECD's 38, and the mean is unweighted by population or economy).
+
+Bug found by testing: naming three countries returned nothing, because the "latest period
+with enough countries" guard demanded five. The floor can no longer exceed the number
+asked for.
+
+### 4. THE RETRIEVAL CONTRACT — for the search thread
+
+The division: **search owns discoverability** (indexing the catalogue so a question
+surfaces a series); **this side owns retrieval** (turning what the catalogue recorded back
+into observations). `getSeriesById` and `resolveSeries` in
+`scrutinise-web/lib/stats/stats-query.ts` are that seam.
+
+**Neither available handle is sufficient alone — measured, not assumed:**
+
+- **`stat_series.id` is a cuid: unique, but NOT stable.** A re-ingest under a changed
+  series key mints a new row beside the old one. That is exactly how 27 stale tax-gap
+  series came to double-count 540 observations (handoff, 2026-08-01).
+- **The natural key is NOT unique.** 3,404 series collapse to **3,244 distinct**
+  `(datasetId, measure, geography, cofogFunctionCode, forecastVintage)` tuples, because
+  `sourceSeriesId` is NULL for 2,925 of them and distinguishing detail — which department,
+  for instance — lives only in `seriesLabel`.
+
+**So the contract is: the catalogue stores BOTH.** The cuid as the fast path, the natural
+key plus `seriesLabel` as the repair path. Retrieval then:
+
+- `getSeriesById(id)` → the row, or **null loudly** on a stale id, so search re-resolves
+  rather than silently showing nothing.
+- `resolveSeries(naturalKey)` → **all** candidates, never a guess, because the key can
+  collide; `seriesLabel` disambiguates.
+
+**Recommended durable fix, which belongs to the stats/ingest side:** give `StatSeries` a
+deterministic `seriesKey` — a hash over dataset + measure + geography + cofog + vintage +
+label — that survives re-ingest. Search indexes that and the ambiguity disappears. Worth
+doing **before** the catalogue index is built; retrofitting a join key afterwards is the
+expensive version.
+
+
 ## SEARCH — independent post-fix verification + heavy-jobs rule into CLAUDE.md (2026-08-04 16:53 UTC)
 
 Confirms the 13:20 UTC entry from a cold start (separate session, no shared state) and lands the
