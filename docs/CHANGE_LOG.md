@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
 engine. The stub fallback is OUT of production (a failed search now stores an honest empty state +
 Retry, and `failed` is threaded distinctly from "found nothing" all the way to the UI); a FACTS OF
 THIS TURN block confines every Lex claim to what the server actually recorded; each stage entry
@@ -46,6 +46,67 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
 
 ---
+
+## SEARCH — FTS index rebuilt; the Heavy Job Runner (2026-08-04 13:20 UTC)
+
+**Executes `docs/BRIEF_HEAVY_JOB_RUNNER.md`.** The deliverable was a reusable runner with
+the index rebuild as its first job — both landed. Procedure: **`docs/HEAVY_JOBS.md`**.
+
+### The result
+
+| | before | after |
+|---|---|---|
+| un-indexed rows | **1,191,345** (6.73%) | **0** |
+| rows | 17,700,396 | 17,700,396 (unchanged) |
+| cold | 6,352 ms | 2,365 ms |
+| warm p50 | **26,005 ms** | **276 ms** |
+| warm p95 | 35,585 ms | 1,382 ms |
+| `"data protection"` | 26,068 ms | 312 ms warm |
+| `"quokka"` (zero matches) | 24,232 ms | **1 ms** server-side |
+
+The zero-match probe is the proof: 24 seconds of work on a query with no results was
+pure brute-force scan of the un-indexed rows, and it is now gone. **`FTS_TIMEOUT_MS` was
+NOT changed** — the Task 1 stopgap turned out to be unnecessary, and p95 at 1.4 s is
+nowhere near the 25 s limit, so there is no mask to remove later.
+
+### Why it kept failing — the real constraint, measured
+
+`fts-index` peaks at **19.8 GB RSS** at 17.7M rows. Railway's per-replica cap on
+`fts-build` is 8 GB (`LIMIT=8000000000`), so **no Railway setting could ever have run
+it**, and June's 24 GB success was closer to the edge than anyone knew. Three failures,
+one cause: no standard home for memory-bound jobs.
+
+### Task 2 audit — the runner already half-existed
+
+`search/hetzner-build-run.ts` already provisioned the exact box, with a proven cloud-init
+(clone, npm install, env injection, R2 log tailing, crash-retry). **It was not replaced.**
+`scripts/ops/heavy-job/` adds the three things it lacked, each of which had caused real
+harm: named jobs (`jobs.ts`), **destroy-by-default** (a manual teardown is how a 64 GB box
+billed for four days in July), and a cost line priced live from the API.
+
+### Three placement failures worth recording
+
+1. `ccx43` → `resource_limit_exceeded` — Hetzner enforces a per-account **dedicated-core**
+   quota. The same wall the vector rebuild hit on 21 Jul.
+2. `cx53` → `resource_unavailable` in all three EU regions; `cpx51` isn't offered in fsn1.
+3. `datacenter` as a create field was **deprecated 2025-12-16** and is now rejected.
+
+The runner now reads `/datacenters` → `server_types.available` and only attempts real
+placements. Guessing cost three failed attempts; asking costs one API call.
+
+**Cost of the successful run: €0.049** — `cpx62` (16 vCPU / 32 GB shared), 10.1 minutes,
+server auto-destroyed. Ten times cheaper than the CCX43 the brief assumed, because shared
+vCPUs dodge the quota entirely.
+
+### Verified end to end
+
+`unindexed=0` confirmed by the job's own `--verify-only` pass on the box; `fts-serve`
+redeployed (it holds a boot-time snapshot — without the restart the measurement means
+nothing); the briefing re-run on idea `06ca807a` now returns **on-topic** results — GOV.UK
+Chat privacy notice, use of AI in government, DSIT correspondence, AI/IP debates — with
+**zero road-traffic fixtures**. No servers left running; Railway `fts-build` parked at zero
+compute.
+
 
 ## LEX REBUILD — Sprint 3-C: truth, stage search, and the cost engine (2026-08-02 18:47 UTC)
 

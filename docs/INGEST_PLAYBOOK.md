@@ -1388,3 +1388,9 @@ search layer, and nothing alerted on it: the rows were present, findable and cor
 `table.indexStats('body_idx')` → `{numIndexedRows, numUnindexedRows}`. Anything above
 zero un-indexed on a serving table is a latency bill being charged to every user.
 `fts-optimize.ts --verify-only` prints exactly this and touches nothing.
+
+**§20 addendum (4 Aug 2026) — HOW to run it.** The rebuild does not fit on Railway: the
+FTS index build peaks at **19.8 GB** (measured), against Railway's 8 GB per-replica cap.
+Use the Heavy Job Runner — `cd scripts/ingest && tsx ../ops/heavy-job/run.ts run fts-index`
+— which provisions ephemeral rented compute, verifies, destroys the box and prints the
+cost (€0.049 for the 4 Aug run). Full procedure: **`docs/HEAVY_JOBS.md`**.
