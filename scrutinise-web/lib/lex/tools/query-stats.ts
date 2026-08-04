@@ -20,7 +20,8 @@
 
 import {
   findSeries, getCofogRollup, getSeriesObservations, listCatalogue,
-  type CofogRollup, type Observation, type SeriesMatch,
+  getComparative, geographiesFor,
+  type CofogRollup, type Comparative, type Observation, type SeriesMatch,
 } from '@/lib/stats/stats-query'
 import { statsConfigured } from '@/lib/stats/stats-db'
 
@@ -57,6 +58,15 @@ export const QUERY_STATS = {
           'affairs, 05 environmental protection, 06 housing and community amenities, ' +
           '07 health, 08 recreation culture and religion, 09 education, 10 social protection.',
       },
+      geography: {
+        type: 'string',
+        description:
+          'Optional. Which country or countries. A single ISO-3166 alpha-2 code ("GB", "FR") ' +
+          'filters to that country; a comma-separated list ("GB,FR,DE") returns a comparison ' +
+          'across them; "OECD" or "compare" returns every country held for that measure, with ' +
+          'the UK marked. Omit for UK-only. International data is World Bank WDI across 21 ' +
+          'countries; UK public-spending data is UK-only.',
+      },
       dateFrom: {
         type: 'string',
         description: 'Optional ISO date or year (e.g. "2015" or "2015-04-01") — earliest period to return.',
@@ -73,16 +83,18 @@ export const QUERY_STATS = {
 export interface QueryStatsArgs {
   series: string
   cofogFunction?: string
+  geography?: string
   dateFrom?: string
   dateTo?: string
 }
 
 export interface QueryStatsResult {
   ok: boolean
-  kind: 'spending_by_function' | 'time_series' | 'catalogue' | 'unavailable' | 'no_match'
+  kind: 'spending_by_function' | 'time_series' | 'comparative' | 'catalogue' | 'unavailable' | 'no_match'
   /** Human-readable note the model may repeat (e.g. why there is nothing). */
   note?: string
   spending?: CofogRollup
+  comparative?: Comparative
   series?: { match: SeriesMatch; observations: Observation[] }[]
   /** What CAN be asked, when nothing matched — so Lex can offer a real alternative. */
   available?: string[]
@@ -146,8 +158,45 @@ export async function runQueryStats(args: QueryStatsArgs): Promise<QueryStatsRes
       return { ok: true, kind: 'spending_by_function', spending: rollup }
     }
 
+    // Comparative geography: a list, or "OECD"/"compare", asks across countries.
+    const geoRaw = (args.geography ?? '').trim()
+    const wantsAll = /^(oecd|compare|comparison|international|all)$/i.test(geoRaw)
+    const geoList = geoRaw && !wantsAll
+      ? geoRaw.split(/[,\s]+/).map((g) => g.trim().toUpperCase()).filter(Boolean)
+      : []
+    const wantsComparison = wantsAll || geoList.length > 1
+
+    if (wantsComparison) {
+      // Resolve the free-text series to a real measure first, then compare on it.
+      const candidates = await findSeries(args.series, 3)
+      const measure = candidates[0]?.measure
+      if (!measure) {
+        const cat = await listCatalogue()
+        return {
+          ok: false, kind: 'no_match',
+          note: `No series matches "${args.series}", so there is nothing to compare across countries.`,
+          available: cat.slice(0, 12).map((c) => `${c.measure} (${c.unit}, ${c.source})`),
+        }
+      }
+      const comparative = await getComparative({
+        measure,
+        geographies: wantsAll ? null : geoList,
+        periodLabel: undefined,
+      })
+      if (!comparative) {
+        const geos = await geographiesFor(measure)
+        return {
+          ok: false, kind: 'no_match',
+          note:
+            `"${measure}" is not held for enough countries to compare` +
+            (geos.length ? ` — it covers ${geos.join(', ')}.` : '.'),
+        }
+      }
+      return { ok: true, kind: 'comparative', comparative }
+    }
+
     // A named statistic → catalogue match, then its observations.
-    const matches = await findSeries(args.series, 3)
+    const matches = await findSeries(args.series, 3, false, geoList[0] ?? null)
     if (!matches.length) {
       const cat = await listCatalogue()
       return {
@@ -179,15 +228,26 @@ function money(value: number, unit: string): string {
   return `${value.toLocaleString()} ${unit}`
 }
 
+/** One line of licence provenance, attached to every block. */
+function licenceLine(l: { licence: string; licenceUrl: string | null; commercialUseExcluded: boolean }): string {
+  const flag = l.commercialUseExcluded
+    ? 'NOT FOR COMMERCIAL USE — say so if you quote this figure.'
+    : 'Commercial use permitted under these terms.'
+  return `Licence: ${l.licence}${l.licenceUrl ? ` (${l.licenceUrl})` : ''}. ${flag}`
+}
+
 /** Render a result as the STATISTICS block for the Lex system prompt. */
 export function formatStatsForPrompt(result: QueryStatsResult): string {
   const header =
-    'RETRIEVED STATISTICS (from the platform statistics database — HM Treasury / OBR / ONS / HMRC).\n' +
+    'RETRIEVED STATISTICS (from the platform statistics database — HM Treasury / OBR / ONS / HMRC / OECD / World Bank).\n' +
     'These figures are the ONLY numbers you may state. Quote them with their unit and period, name ' +
     'the source, and do not add, adjust, convert, extrapolate or round beyond what is written here. ' +
-    'If the user needs something not in this block, say plainly that the database does not hold it.'
+    'If the user needs something not in this block, say plainly that the database does not hold it.\n' +
+    'LICENCE: each block below carries the terms the data is published under. If a figure is marked ' +
+    'NOT FOR COMMERCIAL USE, say so when you quote it — the proposal may end up in a commercial ' +
+    'context, and a wrongly-licensed figure is a legal problem, not a style one.'
 
-  if (!result.ok || (!result.spending && !result.series?.length)) {
+  if (!result.ok || (!result.spending && !result.comparative && !result.series?.length)) {
     const lines = [header, '', `No figures retrieved. ${result.note ?? ''}`.trim()]
     if (result.available?.length) {
       lines.push('', 'The database does hold, among others:', ...result.available.map((a) => `  - ${a}`))
@@ -208,6 +268,7 @@ export function formatStatsForPrompt(result: QueryStatsResult): string {
     lines.push(
       `UK public expenditure by function — ${s.periodLabel} (${s.datasetTitle}, source: ${s.source}${s.sourceUrl ? `, ${s.sourceUrl}` : ''}).`,
       nature,
+      licenceLine(s),
       `Total across the functions listed: ${money(s.total, s.unit)}.`,
       '',
     )
@@ -220,11 +281,36 @@ export function formatStatsForPrompt(result: QueryStatsResult): string {
     if (result.note) lines.push('', `Note: ${result.note}`)
   }
 
+  if (result.comparative) {
+    const c = result.comparative
+    lines.push(
+      `${c.measure} across countries — ${c.periodLabel} (${c.datasetTitle}, source: ${c.source}${c.sourceUrl ? `, ${c.sourceUrl}` : ''}), unit ${c.unit}.`,
+      licenceLine(c),
+      '',
+    )
+    for (const r of c.rows) {
+      const mark = r.geography === 'GB' ? '  <- the UK' : ''
+      lines.push(`  ${r.geography}: ${money(r.value, c.unit)}${r.status ? ` (${r.status})` : ''}${mark}`)
+    }
+    if (c.computedMean != null) {
+      lines.push(
+        '',
+        `Mean across these countries: ${money(c.computedMean, c.unit)}.`,
+        `THIS MEAN IS COMPUTED BY US, NOT PUBLISHED: ${c.computedMeanBasis}.`,
+        'Present it as "the average of the countries we hold", never as "the OECD average" — the',
+        'OECD has more members than this set, and the mean is unweighted by population or economy.',
+      )
+    }
+    if (c.ukValue == null) lines.push('', 'NOTE: the UK is not in this comparison — do not infer a UK position.')
+    if (result.note) lines.push('', `Note: ${result.note}`)
+  }
+
   for (const s of result.series ?? []) {
     const m = s.match
     lines.push(
       '',
-      `${m.seriesLabel} — ${m.datasetTitle} (source: ${m.source}${m.sourceUrl ? `, ${m.sourceUrl}` : ''}), unit ${m.unit}.`,
+      `${m.seriesLabel} — ${m.datasetTitle} (source: ${m.source}${m.sourceUrl ? `, ${m.sourceUrl}` : ''}), unit ${m.unit}, geography ${m.geography}.`,
+      licenceLine(m),
     )
     const obs = s.observations
     const shown = obs.length > 12 ? [...obs.slice(0, 6), ...obs.slice(-6)] : obs
