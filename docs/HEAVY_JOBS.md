@@ -4,6 +4,12 @@
 failed three times in three different ways, each one a symptom of having no standard
 place to run jobs that do not fit on Railway.*
 
+> **The standing rule lives in `docs/CLAUDE.md` §17 — "Heavy jobs: memory-bound work does
+> not run on Railway."** That section carries the three-failure evidence and the decision
+> rule for *when* to reach for the runner; this file is the *how*. Read §17 first if you
+> are deciding whether a job belongs here, and `INGEST_PLAYBOOK.md` §20 for the
+> rebuild-after-backfill rule that most often sends work this way.
+
 ---
 
 ## What this is for
