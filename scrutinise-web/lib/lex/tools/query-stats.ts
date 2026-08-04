@@ -225,6 +225,25 @@ function money(value: number, unit: string): string {
   if (unit === 'GBP_MILLION') return `£${Math.round(value).toLocaleString()}m`
   if (unit === 'GBP_BILLION') return `£${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}bn`
   if (unit === 'PERCENT') return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
+  const n = (d = 1) => value.toLocaleString(undefined, { maximumFractionDigits: d })
+  // The percentage-shaped units must be spelled out, not collapsed to a bare "%". "2.1%" reads
+  // as a level; "2.1% change on a year earlier" is a growth rate and "2.1% of GDP" is a share
+  // — three different facts that would otherwise be rendered identically. These units arrived
+  // with the OBR unit recovery (2026-08-05) and the IMF/OECD comparative layer.
+  if (unit === 'PERCENT_GDP') return `${n()}% of GDP`
+  if (unit === 'PERCENT_TOTAL_EXPENDITURE') return `${n()}% of total government expenditure`
+  if (unit === 'PERCENT_CHANGE_YOY') return `${n()}% change on a year earlier`
+  if (unit === 'PERCENT_POTENTIAL_OUTPUT') return `${n()}% of potential output`
+  if (unit === 'PERCENTAGE_POINT_GDP_CONTRIBUTION') return `${n()} percentage points of GDP growth`
+  if (unit === 'MILLIONS') return `${n()} million`
+  if (unit === 'YEARS') return `${n()} years`
+  if (unit === 'USD') return `US$${Math.round(value).toLocaleString()}`
+  if (unit === 'USD_PPP' || unit === 'USD_PPP_PER_CAPITA') return `US$${Math.round(value).toLocaleString()} (PPP)`
+  if (unit === 'GBP_PER_BARREL') return `£${n(2)}/barrel`
+  if (unit === 'USD_PER_BARREL') return `US$${n(2)}/barrel`
+  if (unit === 'GBP_PER_THERM') return `£${n(2)}/therm`
+  if (unit === 'EUR_PER_GBP') return `€${n(3)} per £`
+  if (unit === 'PER_1000') return `${n()} per 1,000`
   return `${value.toLocaleString()} ${unit}`
 }
 
@@ -290,7 +309,8 @@ export function formatStatsForPrompt(result: QueryStatsResult): string {
     )
     for (const r of c.rows) {
       const mark = r.geography === 'GB' ? '  <- the UK' : ''
-      lines.push(`  ${r.geography}: ${money(r.value, c.unit)}${r.status ? ` (${r.status})` : ''}${mark}`)
+      const vintage = r.forecastVintage ? `, ${r.forecastVintage} forecast round` : ''
+      lines.push(`  ${r.geography}: ${money(r.value, c.unit)}${r.status ? ` (${r.status})` : ''}${vintage}${mark}`)
     }
     if (c.computedMean != null) {
       lines.push(
@@ -312,6 +332,19 @@ export function formatStatsForPrompt(result: QueryStatsResult): string {
       `${m.seriesLabel} — ${m.datasetTitle} (source: ${m.source}${m.sourceUrl ? `, ${m.sourceUrl}` : ''}), unit ${m.unit}, geography ${m.geography}.`,
       licenceLine(m),
     )
+    // A forecast-round figure is not a fact about the year it names — it is a fact about what
+    // one forecast round expected of that year. The OBR historical-forecasts dataset is 2,807
+    // series of exactly this kind, and as of 2026-08-05 they all carry recovered units, so they
+    // now reach catalogue search where before they were filtered out as unit='UNKNOWN'. Without
+    // this line Lex would present "PSNB 2027-28: £52bn" as the number, with no way to know it
+    // came from the March 2020 round and has been superseded a dozen times since.
+    if (m.forecastVintage) {
+      lines.push(
+        `⚠ FORECAST VINTAGE: these are the figures from the ${m.forecastVintage} forecast round, `
+        + 'NOT the current view. Say which round any figure comes from, and do not present it as '
+        + 'the latest estimate.',
+      )
+    }
     const obs = s.observations
     const shown = obs.length > 12 ? [...obs.slice(0, 6), ...obs.slice(-6)] : obs
     for (const o of shown) {

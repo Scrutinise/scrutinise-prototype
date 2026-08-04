@@ -45,13 +45,35 @@ export function normaliseGeography(code: string): string | null {
   return null
 }
 
-/** Human label for a geography code, for series labels. */
+/**
+ * Human label for a geography code, for series labels and anything a user reads.
+ *
+ * This used to fall through to the alpha-3 code, so `GB` displayed as "GBR" — which is how the
+ * UK's own rows came to look mislabelled and prompted a proposal to rewrite the stored code to
+ * `UK`. The stored code was never wrong: `GB` IS the ISO-3166-1 alpha-2 code for the United
+ * Kingdom of Great Britain and Northern Ireland, and it is what makes UK figures line up with
+ * their international comparators (see the file header, and STATS_SCHEMA.md § Geography). The
+ * DISPLAY was wrong. Country names are spelled out here instead; the database keeps the
+ * standard code.
+ */
+const COUNTRY_NAMES: Record<string, string> = {
+  GB: 'United Kingdom', US: 'United States', FR: 'France', DE: 'Germany', IT: 'Italy',
+  ES: 'Spain', NL: 'Netherlands', SE: 'Sweden', DK: 'Denmark', NO: 'Norway', FI: 'Finland',
+  IE: 'Ireland', CA: 'Canada', AU: 'Australia', NZ: 'New Zealand', JP: 'Japan',
+  KR: 'South Korea', CH: 'Switzerland', AT: 'Austria', BE: 'Belgium', PL: 'Poland',
+  PT: 'Portugal', GR: 'Greece', CZ: 'Czechia', HU: 'Hungary', SK: 'Slovakia',
+  SI: 'Slovenia', EE: 'Estonia', LV: 'Latvia', LT: 'Lithuania', LU: 'Luxembourg',
+  IS: 'Iceland', IL: 'Israel', TR: 'Türkiye', MX: 'Mexico', CL: 'Chile', CO: 'Colombia',
+  CR: 'Costa Rica', BG: 'Bulgaria', RO: 'Romania', HR: 'Croatia', CY: 'Cyprus', MT: 'Malta',
+  CN: 'China', IN: 'India', BR: 'Brazil', ZA: 'South Africa', RU: 'Russia', ID: 'Indonesia',
+  // Devolved (ISO-3166-2:GB) — no rows yet, but the column supports them.
+  'GB-ENG': 'England', 'GB-SCT': 'Scotland', 'GB-WLS': 'Wales', 'GB-NIR': 'Northern Ireland',
+}
+
 export function geographyLabel(code: string): string {
-  const names: Record<string, string> = {
+  const aggregates: Record<string, string> = {
     OECD: 'OECD', OECD_REP: 'OECD average country', EUOECD: 'EU countries in OECD',
-    EU27_2020: 'EU27', WLD: 'World',
+    EU27_2020: 'EU27', EA19: 'Euro area (19)', EA20: 'Euro area (20)', WLD: 'World',
   }
-  if (names[code]) return names[code]
-  const back = Object.entries(ISO3_TO_ISO2).find(([, v]) => v === code)
-  return back ? back[0] : code
+  return aggregates[code] ?? COUNTRY_NAMES[code] ?? code
 }

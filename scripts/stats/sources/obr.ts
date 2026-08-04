@@ -161,6 +161,69 @@ export function parsePsfAggregatesGbp(workbook: XLSX.WorkBook): Array<ObrObserva
 }
 
 /**
+ * The unit strings the Historical Official Forecasts workbook actually uses, enumerated
+ * across all 131 sheets rather than sampled (2026-08-04). Keyed on the lower-cased cell.
+ *
+ * This exists because the handler used to pass a hardcoded `'UNKNOWN'`, which left all
+ * 2,807 OBR forecast series unquotable — the web query layer excludes `unit='UNKNOWN'`
+ * from catalogue search by design, since a figure with no unit cannot be cited safely. The
+ * workbook states the unit plainly at A2 on every data sheet; nothing here is inferred.
+ *
+ * Sheet counts at the time of writing: £ billion 70 · percentage change 22 · % of GDP 16 ·
+ * per cent 5 · millions 2 · the singletons below 1 each.
+ */
+export const OBR_HIST_UNIT_MAP: Record<string, string> = {
+  '£ billion': 'GBP_BILLION',
+  'per cent of gdp': 'PERCENT_GDP',
+  'per cent': 'PERCENT',
+  'percentage rate': 'PERCENT',
+  'level, per cent': 'PERCENT',
+  'percentage change on a year earlier': 'PERCENT_CHANGE_YOY',
+  'per cent of potential output': 'PERCENT_POTENTIAL_OUTPUT',
+  'percentage point contribution to gdp growth': 'PERCENTAGE_POINT_GDP_CONTRIBUTION',
+  'millions': 'MILLIONS',
+  'ftse all-share index': 'INDEX',
+  // Stated as a per-cent figure; the trailing clause describes the weighting, not the unit.
+  'per cent, weighted average maturity of the gilts issued over the forecast': 'PERCENT',
+}
+
+/** Five sheets state the unit only in their title, parenthesised, with no A2 unit row. */
+const OBR_HIST_TITLE_UNIT_MAP: Record<string, string> = {
+  '$ per barrel': 'USD_PER_BARREL',
+  '£ per barrel': 'GBP_PER_BARREL',
+  '£/therm': 'GBP_PER_THERM',
+  '€/£': 'EUR_PER_GBP',
+}
+
+/**
+ * Read a Historical Official Forecasts sheet's own stated unit. A2 first (the unit row on
+ * 126 of 131 sheets), then a parenthesised unit in the B1 title (the five sheets whose
+ * header block has no unit row).
+ *
+ * Returns `'UNKNOWN'` rather than a guess when the sheet doesn't say — e.g.
+ * "Nominal consumer spending", whose values look like year-on-year percentage changes but
+ * which states no unit anywhere. An honestly-unknown unit keeps that series out of
+ * catalogue search; a guessed one puts a mislabelled number in front of a user.
+ */
+export function resolveHistoricalForecastUnit(workbook: XLSX.WorkBook, sheetName: string): string {
+  const ws = workbook.Sheets[sheetName]
+  if (!ws) return 'UNKNOWN'
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, blankrows: false }) as unknown[][]
+
+  const a2 = typeof rows[1]?.[0] === 'string' ? String(rows[1][0]).replace(/\s+/g, ' ').trim().toLowerCase() : ''
+  if (OBR_HIST_UNIT_MAP[a2]) return OBR_HIST_UNIT_MAP[a2]
+
+  const title = [rows[0]?.[1], rows[0]?.[0]].find((v) => typeof v === 'string' && String(v).includes('('))
+  const paren = typeof title === 'string' ? /\(([^)]+)\)\s*$/.exec(title.trim()) : null
+  if (paren) {
+    const key = paren[1].replace(/\s+/g, ' ').trim().toLowerCase()
+    if (OBR_HIST_TITLE_UNIT_MAP[key]) return OBR_HIST_TITLE_UNIT_MAP[key]
+    if (OBR_HIST_UNIT_MAP[key]) return OBR_HIST_UNIT_MAP[key]
+  }
+  return 'UNKNOWN'
+}
+
+/**
  * Historical Official Forecasts Database: one sheet per aggregate (e.g. "TME",
  * "PSNB", "PSCR"), shape is header rows (title/unit/contents) then one row per
  * forecast round ("June 2010", "March 2011", ...) with target-year columns.
