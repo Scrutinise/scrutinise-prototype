@@ -145,6 +145,30 @@ async function main() {
       refreshCadence: 'ANNUAL' as const,
       sourceUrl: 'https://www.oecd.org/en/data/datasets/government-at-a-glance.html',
     },
+    {
+      id: 'imf-gfs-cofog',
+      source: 'IMF' as const,
+      title: 'IMF — Government Finance Statistics: government expenditure by COFOG function',
+      description:
+        'General government (S13) expenditure by COFOG function, as percent of GDP and percent of total '
+        + 'outlays, across the same comparator country set as the World Bank layer. Lands on the same '
+        + 'cofogFunctionCode axis as UK PESA and OECD, so the three are directly stackable. Domestic-currency '
+        + 'rows are deliberately excluded — 22 countries in 22 currencies cannot be compared without an '
+        + 'exchange-rate step this layer does not perform.',
+      cofogRelevant: true,
+      // VERIFIED AT SOURCE (in a browser — the page 403s every programmatic fetch) 2026-08-04:
+      // imf.org/en/about/copyright-and-terms, "The Use of IMF Data", effective 11 Oct 2024.
+      // GFS is named explicitly. Publication and redistribution permitted with attribution;
+      // "For any potential commercial reuse of IMF Data, please email copyright@imf.org to
+      // request permission." Full quotes and the 3 Aug misreading: sources/imf.ts header.
+      licence: 'IMF Copyright and Usage — "The Use of IMF Data": reuse/redistribution permitted with attribution; COMMERCIAL reuse requires written permission',
+      licenceUrl: 'https://www.imf.org/en/about/copyright-and-terms',
+      // The first genuinely non-commercial source in the store. This is not a cautious guess —
+      // the terms say commercial reuse needs permission we do not hold.
+      commercialUseExcluded: true,
+      refreshCadence: 'ANNUAL' as const,
+      sourceUrl: 'https://data.imf.org/en/datasets/IMF.STA:GFS_COFOG',
+    },
   ]
 
   for (const d of phaseB) {

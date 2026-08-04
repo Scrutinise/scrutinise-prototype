@@ -147,20 +147,34 @@ function finalise(all: OecdObservation[], failures: string[], attempted: number)
  *   FREQ . REF_AREA . MEASURE . UNIT_MEASURE . SECTOR . EXPENDITURE . EDITION . CATEGORY
  * Empty position = "all values for that dimension".
  *
- * NOT YET CONFIRMED against a live response (the quota was spent working out the failure modes),
- * so `fetchOecdCofogWindow` tries this first and falls back to `/all` on any non-200 — a wrong
- * key costs one request, never the ingest.
+ * TESTED 2026-08-04 23:31 UTC, from a fully cold quota: the filtered key returns HTTP 500 on
+ * every window size, exactly as `/all` did. So **payload size is not the binding constraint**,
+ * or at least not the only one — the filter was the best remaining hypothesis for the
+ * whole-window 500 and it is now ruled out. Kept anyway: it is strictly less data to move if the
+ * endpoint ever serves this flow again.
  */
 const OECD_UNIT_FILTER = Object.keys(OECD_UNIT_MAP).join('+')
 
 export async function fetchOecdCofogWindow(startYear: number, endYear: number): Promise<OecdObservation[]> {
   const period = `format=csvfilewithlabels&startPeriod=${startYear}&endPeriod=${endYear}`
   const filteredKey = `A..GE.${OECD_UNIT_FILTER}.S13...`
-  let res = await politeFetch(`${SDMX}/${OECD_COFOG_FLOW}/${filteredKey}?${period}`, { delayMs: 5000, retries: 4 })
-  if (!res.ok) {
-    // Fall back to the unfiltered key: either the key shape is wrong or the filter isn't the
-    // constraint. Logged so the next reader knows which path produced the data.
-    console.warn(`    OECD COFOG ${startYear}-${endYear}: filtered key returned HTTP ${res.status}, falling back to /all`)
+
+  // ⚠ The `/all` fallback below used to be UNREACHABLE for the one status this endpoint actually
+  // returns. `politeFetch` treats 429/5xx as retryable and THROWS once its retries are exhausted
+  // — it never returns a non-ok response for a 500 — so `if (!res.ok)` could only ever fire for
+  // a 4xx. Every "falls back to /all" claim in this file's history was therefore untrue in
+  // practice, and the 4 Aug run's logs prove it: all seven failures name the FILTERED url.
+  // Catching the throw is what makes the fallback real.
+  let res: Response | null = null
+  try {
+    res = await politeFetch(`${SDMX}/${OECD_COFOG_FLOW}/${filteredKey}?${period}`, { delayMs: 5000, retries: 4 })
+  } catch (e) {
+    console.warn(`    OECD COFOG ${startYear}-${endYear}: filtered key failed (${e instanceof Error ? e.message : String(e)}) — falling back to /all`)
+  }
+  if (!res || !res.ok) {
+    // Either the key shape is wrong or the filter isn't the constraint. Logged so the next
+    // reader knows which path produced the data.
+    if (res && !res.ok) console.warn(`    OECD COFOG ${startYear}-${endYear}: filtered key returned HTTP ${res.status}, falling back to /all`)
     res = await politeFetch(`${SDMX}/${OECD_COFOG_FLOW}/all?${period}`, { delayMs: 5000, retries: 4 })
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
