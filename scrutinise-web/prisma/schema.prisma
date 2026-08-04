@@ -2261,6 +2261,43 @@ model CorpusSection {
   @@map("corpus_sections")
 }
 
+// Act-level metadata over the legislation corpora (SPRINT §1). One row per
+// instrument; a DERIVED table, rebuilt from corpus_sections + LegislationItem by
+// scripts/ingest/search/build-act-metadata.ts. DDL of record is
+// prisma/act_metadata.sql — that file, not this model, is what gets applied.
+//
+// Declared here for one reason: without it, `prisma migrate diff` sees a table that
+// the schema does not know about and proposes DROPPING it. Nothing reads the table
+// through the Prisma client (the browse route uses raw SQL, because the trigram
+// title match has no Prisma equivalent), so this model exists to protect the table,
+// not to query it.
+model CorpusAct {
+  gid                String   @id
+  title              String?
+  titleSource        String?  @map("title_source")
+  legType            String?  @map("leg_type")
+  year               Int?
+  number             String?
+  jurisdiction       String?
+  legislationItemId  String?  @map("legislation_item_id")
+  legislationType    String?  @map("legislation_type")
+  itemSectionCount   Int?     @map("item_section_count")
+  itemCompiledCount  Int?     @map("item_compiled_count")
+  corpus             String?
+  sectionCount       Int      @default(0) @map("section_count")
+  wordCount          BigInt?  @map("word_count")
+  inCorpus           Boolean  @default(false) @map("in_corpus")
+  inLegislationItem  Boolean  @default(false) @map("in_legislation_item")
+  firstDate          DateTime? @map("first_date") @db.Date
+  lastDate           DateTime? @map("last_date") @db.Date
+  refreshedAt        DateTime @default(now()) @map("refreshed_at") @db.Timestamptz()
+
+  @@index([year])
+  @@index([legType])
+  @@index([jurisdiction])
+  @@map("corpus_acts")
+}
+
 // Central ingest work queue — workers claim rows atomically via FOR UPDATE SKIP LOCKED.
 // Populated by queue-populator.ts before workers start.
 model IngestQueue {
