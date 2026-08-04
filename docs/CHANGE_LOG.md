@@ -47,6 +47,177 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — the fast index reaches users: freshness, act metadata, legacy call sites repointed (2026-08-04 18:34 UTC)
+
+**Executes `docs/SPRINT.md` §0 and §1.** §2 (gold baseline) is not started — it **blocks on
+Charlie's human answer-key validation pass**, and §3/§4 sit behind §2. `tsc --noEmit` clean in
+`scrutinise-web`. New docs: `docs/ACT_METADATA.md`.
+
+### §0 — the expansion fix is live, and still load-bearing
+
+`thinkingConfig: { thinkingBudget: 0 }` is present in `origin/Main` HEAD's tree (`eb8641f` is an
+ancestor of `1ece4e8`), which is what Vercel deploys. More usefully, the **live Gemini runtime was
+probed with the exact production request body, with and without the fix**:
+
+| | finishReason | thought tokens | JSON |
+|---|---|---|---|
+| with `thinkingBudget: 0` | `STOP` | 0 | parses |
+| without (control) | `MAX_TOKENS` | 469 burned | truncated mid-string |
+
+So the fix has not drifted *and* removing it would still break the call today. **Not confirmed:
+production's `LEX_QUERY_EXPANSION` / `LEX_QUERY_ROUTER` values** — the stored `VERCEL_TOKEN` still
+returns `403 … must re-authenticate to this scope` (SAML), the same blocker recorded on 2 Aug.
+
+### §1 — freshness: the sprint's premise was stale, the real gap was elsewhere
+
+The brief named Scottish Parliament and CPS guidance as the missing corpora. **Both are complete**
+— `scottish-parliament-or` 1,043,264 = 1,043,264, `cps-guidance` 270 = 270. A full id-level
+reconciliation across all 70 corpora found **268 missing rows in 2 corpora**
+(`pwdata-lordswrans` 219, `pwdata-wrans` 49), all dated 2026-07-29 — drift since the July fix, not
+the July backlog. Backfilled; `corpus_fts` 17,700,396 → 17,700,664.
+
+**A count-based audit would have missed it, and that is the finding worth keeping.** Five pwdata
+corpora had *more* rows in `corpus_fts` than `corpus_sections` had compiled, so a per-corpus count
+comparison shows a **negative** gap and reads as "no rows missing". Materialising the id sets shows
+three distinct drift modes the counts cancelled out against each other:
+
+| corpus | duplicates in index | orphans (gone from corpus_sections) | compiled rows missing |
+|---|---|---|---|
+| `pwdata-debates` | 12,181 | — | 0 |
+| `pwdata-lordswrans` | 1,394 | 0 | **219** |
+| `pwdata-lords` | 0 | 886 (+4 `unavailable`) | 0 |
+| `pwdata-westminster` | 0 | 143 (+1 `unavailable`) | 0 |
+| `pwdata-wrans` | 0 | 0 | **49** |
+
+`fts-catchup.ts` handles only the third column. **The duplicates (~13,575) and orphans (~1,030+)
+are NOT fixed** — see "Left for Charlie" below.
+
+### §1a — index rebuilt, `fts-serve` redeployed, re-measured
+
+Append leaves rows un-indexed, so per the standing rule: `--verify-only` → `unindexed=268` → rebuilt
+through the Heavy Job Runner (`run.ts run fts-index`, cpx62, **11.4 min, €0.056**, box destroyed,
+0 servers left running) → `indexed=17,700,664 unindexed=0`. **Peak RSS 18.8 GB**, which is again the
+whole point of `docs/CLAUDE.md` §17 — Railway's 8 GB per-replica cap could never run this.
+
+`fts-serve` was then redeployed, **and it needed to be**: `/stats` still showed `served: 8` with the
+same `cold_ms` as the 4 Aug reading, i.e. the process had not restarted since 02:36 UTC and was
+still holding the pre-rebuild snapshot. After restart, counters reset (the proof) and warm
+**p50 1,196 ms / cold 1,663 ms** — level with the 4 Aug baseline of 1,250 ms, no regression.
+
+**`served: 8` over a whole day is itself the sprint's thesis in one number**: almost nothing was
+reaching the fast index.
+
+**Railway API access was recovered en route.** `RAILWAY_API_TOKEN` returns `Not Authorized` for
+every query under `Authorization: Bearer` — it is a **project** token and needs the
+`Project-Access-Token` header. With that it works: project `68707c61-5c68-4f37-88fc-c301fd6b90e7`,
+`fts-serve` = `c268ec09-e489-4cfa-837a-7740d95c24c7`.
+
+### §1 — Act-level metadata: `corpus_acts`
+
+New derived table (`prisma/act_metadata.sql`, built by `search/build-act-metadata.ts` in ~17 s):
+one row per instrument, **250,808 rows**, 233,547 in the search corpus, **1,609,670 sections
+attributed with a delta of 0** against the source count — the builder reconciles itself and prints
+`** N SECTIONS UNATTRIBUTED **` on any gap. Full write-up in `docs/ACT_METADATA.md`.
+
+Two findings from building it:
+
+- **`corpus_sections.jurisdiction` is the literal string `'uk'` on all 1.6M legislation rows**, so it
+  cannot distinguish an Act of the Scottish Parliament from a UK public general Act. Jurisdiction is
+  derived from the gid type prefix instead.
+- **The first build omitted the `regional` corpus and so reported ZERO searchable instruments for
+  Scotland, Wales and Northern Ireland.** `regional` is where all devolved legislation lives
+  (331,124 sections / 26,172 instruments). Caught by checking the number rather than believing it;
+  the corpus list now carries a comment saying why it must not be dropped.
+
+**Titles are 54.0% complete and the table says so** (`title_source`). Titles exist only where a
+`LegislationItem` row does; `corpus_sections` cannot supply them (`sectionTitle` is null on all
+20,508 whole-document legislation rows). Filling the rest needs a title fetch from
+legislation.gov.uk — an ingest job, not a query-layer one.
+
+### §1 — the three legacy call sites now go through the gateway
+
+New `lib/lex/gateway-legacy.ts`. Each function returns the **exact shape its caller already
+consumed** — a retrieval swap, not a contract change. All three pass `tier: 'legislation'`, which is
+faithful to what they did before (they only ever queried `LegislationSection`).
+
+- `app/api/ai/[ideaId]` (Lex grounding — the surface the sprint's worked example came from)
+- `/api/ideas/[id]/legislation-search` (LegislationPanel), ranked on the corpus index and then
+  **enriched** from the legacy row where one exists (verified matching: real section titles such as
+  "Position of data protection officer" come through). `compiledTextKey` is populated on only
+  24,579 of 914,274 legacy rows (2.7%), so the snippet is the fallback body.
+- `POST /api/search`
+
+**Measured against the sprint's own worked example** — "what is the law on data protection
+currently?":
+
+| path | result |
+|---|---|
+| old (legacy GIN, `buildTsQuery`) | **no results at all** |
+| new, router OFF | 4 unrelated CELEX documents |
+| new, router ON | **Data Protection Act 2018** |
+
+The old path's hard conjunction does not merely mis-rank the question, it answers it with nothing.
+**And the honest caveat: with the router OFF the new path is not uniformly better** — on "landlord
+repairs obligations" the legacy path's top hit (Landlord and Tenant Act 1985 s.17) is the better
+one. Unscoped BM25 over 1.6M legislation sections is noisy; that is exactly what §2's baseline and
+§3's per-stream routing exist to fix, and both flags are currently OFF.
+
+Three things found by running it rather than reading it:
+
+- **`fts-search.ts` falls back to the raw CORPUS NAME as a title**, so an `eur-lex` hit arrived
+  titled literally `"eur-lex"` and would have been handed to Lex as an Act name — a false statement
+  in a system whose grounding rule is that cited law is real. Now resolves to the CELEX id, then the
+  citation, then the id; never the corpus name.
+- **Tier scoping must not switch the router off.** The router both picks streams *and rewrites the
+  query*; only the first is redundant for a tier-scoped caller. The first cut discarded both, which
+  is why the router-ON result above works — it keeps this tier's tailored query and drops the stream
+  selection.
+- The router fallback log now separates `router-unavailable` from `tier-not-selected`, because a
+  dead router and a working one that judged the tier irrelevant otherwise look identical.
+
+Failure handling: an FTS **infrastructure** failure falls back to the legacy index and says so
+(`degraded: true` in the response, `console.error` in the log). This is not the §19-C stub
+prohibition, which forbade substituting *fixture* data that reads as real law; legacy GIN over real
+legislation is a genuine, if worse, answer, so the rule it must satisfy is "say so", not "refuse".
+An empty-but-successful search returns empty — no fallback, because that is a real answer.
+
+### §1 — browse page: parity, plus a pagination bug fixed
+
+`GET /api/legislation/search` now reads `corpus_acts` (trigram GIN on title) instead of
+`title contains` over `LegislationItem`, which was ILIKE `%q%` — a full scan of 135,531 rows on
+every keystroke of a 300 ms-debounced box. **Population and ids deliberately unchanged**: filtered
+to `in_legislation_item`, and `id` is still the `LegislationItem` uuid, because
+`/legislation/[itemId]` resolves only by that uuid. Widening browse to the 115,277 corpus-only
+instruments would ship links that 404, so it is deliberately not done.
+
+Verified as parity: old and new run side by side over 10 filter combinations returned the **same
+rendered page every time**; populations match at 135,531; no null link ids.
+
+**A pre-existing pagination bug was fixed in passing.** `ORDER BY year DESC, title ASC` is not
+unique — 107 groups covering 215 rows share both (two 2026 rows are both titled "The Boiler Upgrade
+Scheme (England and Wales)"). A tied pair straddling a page boundary can show one instrument twice
+and drop another. `gid ASC` is now the tie-break.
+
+### Left for Charlie / next session
+
+1. **Index hygiene, NOT fixed and NOT in the brief:** ~13,575 duplicate rows and ~1,030+ orphaned
+   rows (superseded pwdata day-files, e.g. `daylord2026-03-23a`, whose `corpus_sections` rows are
+   gone). Duplicates get served twice and distort BM25 statistics; orphans mean **superseded
+   Hansard versions are still searchable**. Deleting the orphans is **irreversible from our own
+   data** — their source rows no longer exist — so it was not done unilaterally. Worth doing before
+   §2's baseline is taken, since the baseline enshrines whatever the index contains.
+2. **`LEX_QUERY_ROUTER=true`** — recommended since 30 July, still not flipped. The evidence above is
+   the strongest yet: it is the difference between the worked example returning EU regulations and
+   returning the Data Protection Act 2018. Flags were not touched this session.
+3. **`FTS_SEARCH_URL` must be set in Vercel** or all three repointed surfaces fall back to legacy and
+   log `gateway search FAILED`. Sprint 3-C's live verification implies it is set; it could not be
+   confirmed here because the Vercel token 403s.
+4. **§2 gold baseline blocks on Charlie's answer-key validation pass.** The index is now
+   `unindexed=0` and `fts-serve` is on the new snapshot, so the sequencing gate the sprint sets is
+   satisfied on the instrument side.
+
+---
+
 ## LEX — stats tool: read-only role, licence provenance, comparative geography, retrieval contract (2026-08-04 09:40 UTC)
 
 **Executes `docs/BRIEF_LEX_connect-stats-to-router.md`** — closing the gaps on the 2 Aug

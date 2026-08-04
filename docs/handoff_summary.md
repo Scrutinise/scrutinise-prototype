@@ -2,7 +2,38 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-04 16:53 UTC — ▼ **SEARCH LATENCY RESOLVED AND INDEPENDENTLY VERIFIED.**
+*Last updated: 2026-08-04 18:34 UTC — ▼ **SEARCH: THE FAST INDEX NOW REACHES USERS.** SPRINT §0
+and §1 done; §2 not started (**blocks on Charlie's answer-key validation pass**), §3/§4 behind it.
+**§0:** the `thinkingBudget:0` fix is in `origin/Main` HEAD *and* still load-bearing — probed live,
+the control without it returns `MAX_TOKENS` with 469 thought tokens burned and truncated JSON.
+**§1 freshness — the brief's premise was stale:** Scottish Parliament and CPS guidance are already
+complete; the real gap was **268 rows in 2 pwdata corpora**, all dated 29 Jul. **A count-based audit
+would have missed it** — five pwdata corpora have MORE rows in the index than in `corpus_sections`,
+so counts show a *negative* gap; id-level reconciliation reveals three drift modes the counts
+cancelled out: **~13,575 duplicates, ~1,030 orphans, 268 missing**. Only the last is fixed
+(`fts-catchup` handles nothing else) — **duplicates + orphans are OPEN and matter before §2's
+baseline: superseded Hansard versions are still searchable.** **§1a:** rebuilt via the Heavy Job
+Runner (11.4 min, €0.056, peak **18.8 GB** — Railway's 8 GB cap could never), `unindexed=0`,
+**`fts-serve` redeployed and it needed it** (`/stats` proved it had not restarted since 02:36 and
+was serving the old snapshot); warm p50 **1,196 ms**, no regression. `served: 8` in a day is the
+sprint's thesis in one number. **§1 act metadata:** new `corpus_acts` — 250,808 instruments,
+1,609,670 sections attributed, **delta 0**, self-reconciling (`docs/ACT_METADATA.md`). Two traps
+caught: `corpus_sections.jurisdiction` is the literal `'uk'` on all 1.6M legislation rows, and the
+first build omitted the `regional` corpus and so reported **zero** searchable instruments for
+Scotland/Wales/NI. **§1 repoint DONE** — idea-chat, LegislationPanel and `/api/search` now go
+through `search-gateway.ts` via new `lib/lex/gateway-legacy.ts`, each keeping its exact existing
+response shape. On the sprint's own worked example ("what is the law on data protection
+currently?") the **old path returns NOTHING**, new+router-OFF returns 4 unrelated CELEX docs, and
+**new+router-ON returns the Data Protection Act 2018** — the strongest case yet for flipping
+`LEX_QUERY_ROUTER` (**not flipped — Charlie's call**). Honest caveat: with the router OFF the new
+path is **not** uniformly better (legacy wins on "landlord repairs obligations") — unscoped BM25 is
+noisy, which is what §2/§3 exist to fix. Browse repointed to `corpus_acts` at exact parity (10
+filter combinations, same rendered page every time) **plus a pre-existing pagination bug fixed** —
+`(year,title)` is not unique, so tied rows straddling a page boundary duplicated one instrument and
+dropped another. Also: **`RAILWAY_API_TOKEN` is a PROJECT token — it needs the
+`Project-Access-Token` header, not `Authorization: Bearer`** (every query returns `Not Authorized`
+otherwise). **Still blocked on Charlie:** Vercel env unreadable (SAML 403) so production's
+`LEX_QUERY_*` values and `FTS_SEARCH_URL` are unconfirmed. Earlier: 2026-08-04 16:53 UTC — ▼ **SEARCH LATENCY RESOLVED AND INDEPENDENTLY VERIFIED.**
 `corpus_fts` `unindexed=0` (was 1,191,345 brute-force-scanned per query); `fts-serve-production`
 warm p50 **1,250 ms** (was 25,520 ms), live query **0.62 s**. `/stats` counters had reset, confirming
 `fts-serve` was redeployed after the rebuild — without that, any after-measurement is meaningless.
