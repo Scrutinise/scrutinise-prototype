@@ -225,6 +225,14 @@ change. **Prerequisite for the cost engine (testing-notes item 12).**
   never section). **The spec the brief referenced did not exist** — built to the brief's own tab
   list and written up as `docs/reports/corpus-status-report.md`; **the column choices are CC's**
   and are the most likely thing to need correcting.
+- **⚠ UNOWNED DATA-QUALITY FINDING the workbook's Gaps tab surfaced — not fixed, not assigned.**
+  The **`pwdata-*` family carries MIXED licence values**: `(none) | opl-3.0` within a single
+  corpus, i.e. some rows licensed and some null, across **~8.8M sections** (`pwdata-debates`
+  6.39M, `pwdata-wrans` 1.24M, `pwdata-lords` 754k, `pwdata-westminster` 241k, plus the smaller
+  siblings). Also still at `pending-verification`: `ni-judgments` (7,927), `tax-tribunals`
+  (13,099), `nilawcom` (17). Out of scope for that sprint, but this is a licence-provenance hole
+  in the largest corpora we hold — re-run `cd scripts/reports && npm run corpus-status` and read
+  the Gaps tab to see the current position.
 - **Part 1.2 — xlsx → SheetJS CDN DONE.** `scripts/stats` 1 high → **0 vulnerabilities**;
   `scrutinise-web` **xlsx gone from `npm audit`** (36 unrelated pre-existing remain). All five
   stats parsers re-verified against live spreadsheets, identical counts. **Bonus:
