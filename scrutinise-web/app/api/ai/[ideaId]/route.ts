@@ -7,6 +7,7 @@ import { checkAndAdvanceStage } from '@/lib/stage-gates'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
 import { searchLegislation, type SearchResult } from '@/lib/search'
+import { searchLegislationViaGateway } from '@/lib/lex/gateway-legacy'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -674,9 +675,41 @@ export async function POST(req: Request, { params }: Params) {
         .slice(0, 250)
     : message
 
-  // Run lexInsight lookup and FTS search in parallel — independent DB reads.
-  // searchLegislation has an 8s statement_timeout stall-guard; catch here
-  // ensures any search failure is never fatal to the Lex response.
+  // SPRINT §1 — Lex's grounding search now runs on the corpus index through the
+  // search gateway, not `searchLegislation()`'s Postgres GIN over the 914k-row
+  // legacy table.
+  //
+  // This is the call site the sprint's worked example came from: asked "what is the
+  // law on data protection currently?" mid-conversation, the legacy path built the
+  // hard conjunction `law & data & protection & current:*` — every token mandatory,
+  // "currently" promoted to a content term by stop-word stripping — and grounded Lex
+  // on the Road Traffic Act. BM25 over 17.7M sections does not AND-join tokens, so
+  // an off-topic word costs rank rather than dictating the result set.
+  //
+  // `minRank: 0.25` is deliberately NOT carried across: it was a ts_rank_cd
+  // threshold, and applying that number to a BM25 score would filter on a scale it
+  // was never tuned for. Ordering plus the limit of 4 does the same job here.
+  //
+  // Failure stays non-fatal to the Lex turn (it always was): a failed search falls
+  // back to the legacy index and says so in the log, rather than silently grounding
+  // Lex on nothing.
+  async function runGroundingSearch(): Promise<{ results: SearchResult[]; totalMatches: number }> {
+    try {
+      const gw = await searchLegislationViaGateway({
+        q: ftsQuery || message,
+        limit: 4,
+        intent: 'IDEA_CHAT_GROUNDING',
+      })
+      if (!gw.failed) return { results: gw.results as SearchResult[], totalMatches: gw.totalMatches }
+      console.error('[ai/route] gateway grounding search FAILED — legacy fallback:', gw.failureReason)
+    } catch (err) {
+      console.error('[ai/route] gateway grounding search threw — legacy fallback:', err)
+    }
+    return searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 })
+      .catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
+  }
+
+  // Run lexInsight lookup and the grounding search in parallel — independent reads.
   const [approvedInsights, autoSearch] = await Promise.all([
     prisma.lexInsight.findMany({
       where: { status: 'APPROVED', approvedRule: { not: null } },
@@ -685,7 +718,7 @@ export async function POST(req: Request, { params }: Params) {
       select: { approvedRule: true },
     }),
     shouldSearch
-      ? searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 }).catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
+      ? runGroundingSearch()
       : Promise.resolve({ results: [] as SearchResult[], totalMatches: 0 }),
   ])
 

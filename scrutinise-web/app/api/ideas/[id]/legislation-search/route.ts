@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { r2Get } from '@/lib/r2'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { searchPanelViaGateway } from '@/lib/lex/gateway-legacy'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -23,6 +24,19 @@ export async function POST(req: Request, { params }: Params) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
   const { query, limit } = parsed.data
+
+  // SPRINT §1 — the panel is served by the corpus index through the search gateway.
+  // Before this it ran raw SQL against the legacy LegislationSection table; the V26
+  // note below (kept for history) describes the last time this query was improved,
+  // but even index-served it only ever saw 914k of the corpus's 17.7M sections.
+  const gateway = await searchPanelViaGateway(query, limit).catch((err) => {
+    console.error('[legislation-search] gateway threw — legacy fallback:', err)
+    return { results: [], failed: true, failureReason: String(err) }
+  })
+  if (!gateway.failed) {
+    return NextResponse.json({ results: gateway.results, degraded: false, path: 'gateway' })
+  }
+  console.error('[legislation-search] gateway search FAILED — legacy fallback:', gateway.failureReason)
 
   type RawResult = {
     id: string
@@ -89,5 +103,5 @@ export async function POST(req: Request, { params }: Params) {
     }
   }))
 
-  return NextResponse.json({ results: withText })
+  return NextResponse.json({ results: withText, degraded: true, path: 'legacy-fallback' })
 }
