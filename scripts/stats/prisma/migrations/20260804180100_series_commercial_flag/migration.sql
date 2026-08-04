@@ -1,0 +1,11 @@
+-- PER-SERIES COMMERCIAL-USE EXCLUSION (2026-08-04)
+--
+-- `stat_dataset.commercialUseExcluded` can say "this source is non-commercial" but not
+-- "the pre-2024 vintages of this source are" — the shape the OECD terms actually take
+-- (their written-content licence changed on 1 July 2024). A wrongly-licensed figure inside a
+-- commercial document is a legal problem, not a style one, so the exclusion has to be able to
+-- travel at the granularity the terms apply at.
+--
+-- NULL = inherit the dataset's value, which is the normal case and stays the default.
+-- Read it as `coalesce(series."commercialUseExcluded", dataset."commercialUseExcluded")`.
+ALTER TABLE "stat_series" ADD COLUMN "commercialUseExcluded" BOOLEAN;

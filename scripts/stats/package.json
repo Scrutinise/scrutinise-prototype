@@ -12,7 +12,9 @@
     "refresh": "tsx --tsconfig ../tsconfig.json refresh-scheduler.ts",
     "verify": "tsx --tsconfig ../tsconfig.json verify.ts",
     "measure": "tsx --tsconfig ../tsconfig.json measure-pilot.ts",
-    "compare": "tsx --tsconfig ../tsconfig.json compare-example.ts"
+    "compare": "tsx --tsconfig ../tsconfig.json compare-example.ts",
+    "check:series-key": "tsx --tsconfig ../tsconfig.json check-series-key.ts",
+    "check:coverage": "tsx --tsconfig ../tsconfig.json check-series-coverage.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",

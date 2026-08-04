@@ -131,8 +131,25 @@ model StatSeries {
   datasetId String
   dataset   StatDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
 
+  /// THE STABLE JOIN KEY. sha-256 hex over the six identity fields, computed by
+  /// `lib/series-key.ts::computeSeriesKey`. `id` is a cuid — unique but NOT stable, so a
+  /// re-ingest mints a new row beside the old one (that is how 27 stale tax-gap series came
+  /// to double-count 540 observations on 1 Aug 2026). `seriesKey` survives re-ingest, so the
+  /// upsert updates in place, and the search thread can index the catalogue against it.
+  ///
+  /// Canonical input, joined with U+001F, nulls written as U+001E (neither occurs in source data):
+  ///   datasetId ␟ measure ␟ geography ␟ cofogFunctionCode ␟ forecastVintage ␟ seriesLabel
+  ///
+  /// `seriesLabel` is IN the key on purpose: it is where the distinguishing detail lives when
+  /// `sourceSeriesId` is null (which it is for 2,925 of 3,404 series) — without it the natural
+  /// key collapses 3,404 series onto 3,244 tuples. `unit` and `sourceSeriesId` are deliberately
+  /// OUT: both are corrigible metadata about the same line of data, so recovering a unit
+  /// (§2, OBR 'UNKNOWN') or backfilling a source id must NOT re-key the series.
+  seriesKey String @unique
+
   // Provenance: ONS CDID, OBR "ONS code" column, PESA row code, etc. Null where the
-  // source has no stable per-series id (rare; use a derived slug in that case).
+  // source has no stable per-series id; where it has none, ingest-handlers.ts derives a
+  // stable slug rather than leaving it null (see deriveSourceSeriesId there).
   sourceSeriesId String?
 
   seriesLabel String // human-readable, e.g. "GDP: chained volume measures, seasonally adjusted"
@@ -152,12 +169,27 @@ model StatSeries {
   // series-level dimension, not an observation-level one).
   forecastVintage String?
 
+  /// Per-SERIES commercial-use exclusion, overriding `StatDataset.commercialUseExcluded`
+  /// when non-null. Null = inherit the dataset's value (the normal case).
+  ///
+  /// Exists because the dataset-level flag cannot express "the pre-2024 vintages of this
+  /// source are non-commercial" — a real possibility for OECD, whose written-content terms
+  /// changed on 1 July 2024. A wrongly-licensed figure inside a commercial document is a
+  /// legal problem, not a style one, so the exclusion has to be able to travel at the
+  /// granularity the terms actually apply at. Read it through
+  /// `commercialUseExcluded ?? dataset.commercialUseExcluded`, never on its own.
+  commercialUseExcluded Boolean?
+
   observations StatObservation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([datasetId, sourceSeriesId, geography, cofogFunctionCode, forecastVintage, measure])
+  // NOTE: the previous @@unique([datasetId, sourceSeriesId, geography, cofogFunctionCode,
+  // forecastVintage, measure]) was REPLACED by @unique on seriesKey (2026-08-04). It was
+  // near-inert where it mattered — Postgres treats NULLs as distinct, and sourceSeriesId is
+  // null for 86% of rows, so it never stopped the duplicate-series class it was meant to —
+  // and keeping two competing definitions of series identity is how they drift apart.
   @@index([datasetId])
   @@map("stat_series")
 }
