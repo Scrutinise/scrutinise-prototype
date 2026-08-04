@@ -235,7 +235,11 @@ async function main() {
   console.log(`[fts-catchup] SUMMARY: ${report.length} corpora with gaps, ${totalMissing} rows missing, ${totalWritten} written, ${totalBodyMisses} body misses`)
   for (const r of report) console.log(`  ${r.corpus}: missing=${r.missing} written=${r.written}`)
 
-  if (DRY) { console.log('[fts-catchup] --dry-run: no writes made.'); return }
+  if (DRY) {
+    console.log('[fts-catchup] --dry-run: no writes made.')
+    await reportIndexDebt(tbl, totalMissing)
+    return
+  }
 
   if (REINDEX && totalWritten > 0) {
     console.log('[fts-catchup] --reindex: compacting + rebuilding FTS index (this scans the WHOLE table, slow)…')
@@ -246,7 +250,13 @@ async function main() {
     const t0 = Date.now()
     await tbl.createIndex('body', {
       config: lancedb.Index.fts({
-        withPosition: true, baseTokenizer: 'simple', stem: true, language: 'English',
+        // ⚠ withPosition MUST match the live index or ranking silently changes under users
+        // (docs/CLAUDE.md §17, "Match the live index configuration when rebuilding"). The live
+        // `corpus_fts.body_idx` is the no-positions v1 build — `withPosition: false` — which is
+        // what let it fit in memory at all. This said `true` until 2026-08-05, so any
+        // --reindex run here would have quietly rebuilt a DIFFERENT index from the one that
+        // was measured. Confirm against the live table before ever changing it.
+        withPosition: false, baseTokenizer: 'simple', stem: true, language: 'English',
         removeStopWords: false, asciiFolding: true, maxTokenLength: 40, lowercase: true,
       }),
     })
@@ -255,5 +265,74 @@ async function main() {
 
   const finalCount = await tbl.countRows()
   console.log(`[fts-catchup] DONE. corpus_fts rows now = ${finalCount}`)
+  await reportIndexDebt(tbl, totalWritten)
+}
+
+/**
+ * THE APPEND-SAFE HANDOFF (2026-08-05) — "ingested ≠ searchable" must never be silent again.
+ *
+ * A catch-up run that appends rows leaves them SEARCHABLE but UN-INDEXED: LanceDB scans the
+ * un-indexed fragments alongside the inverted index, so results are correct from the moment
+ * the append lands. That correctness is exactly what made the problem invisible. The scan is
+ * paid on every query, forever, until someone merges the rows in — and for four days after the
+ * 29 Jul backfill nobody was told, which is how warm p50 reached 26 SECONDS while every row was
+ * present, findable and correct (INGEST_PLAYBOOK §20).
+ *
+ * So the run now ENDS by naming its own debt: how many rows this table is brute-force scanning,
+ * and what to do about it. Ingest owns telling Search; Search owns the merge.
+ *
+ * The state file is the machine-readable half — `ops.ts` or a scheduled check can read it and
+ * alert, rather than depending on a human having read the console output of a background job.
+ * `indexStats` is a metadata read: no scan, no cost, safe to call on a serving table.
+ */
+async function reportIndexDebt(tbl: any, rowsJustAppended: number): Promise<void> {
+  let indexed = -1
+  let unindexed = -1
+  try {
+    const stats = await tbl.indexStats('body_idx')
+    indexed = Number(stats?.numIndexedRows ?? -1)
+    unindexed = Number(stats?.numUnindexedRows ?? -1)
+  } catch (e) {
+    console.warn(`[fts-catchup] could not read indexStats('body_idx'): ${(e as Error).message}`)
+    return
+  }
+
+  const total = indexed + unindexed
+  const pct = total > 0 ? ((unindexed / total) * 100).toFixed(2) : '0.00'
+  console.log('')
+  console.log(`[fts-catchup] INDEX COVERAGE: indexed=${indexed.toLocaleString()} unindexed=${unindexed.toLocaleString()} (${pct}% brute-force scanned per query)`)
+
+  if (unindexed > 0) {
+    console.log('[fts-catchup] ***********************************************************************')
+    console.log(`[fts-catchup] *** INDEX RE-MERGE REQUIRED — ${unindexed.toLocaleString()} un-indexed rows on corpus_fts.`)
+    console.log('[fts-catchup] *** These rows ARE searchable and correct, but every query pays a')
+    console.log('[fts-catchup] *** brute-force scan over them until they are merged in. A 6.7% gap')
+    console.log('[fts-catchup] *** took warm p50 from ~1.2s to 26s and timed out every Lex search.')
+    console.log('[fts-catchup] *** HAND THIS TO THE SEARCH THREAD. The merge is a heavy job (peaks')
+    console.log('[fts-catchup] *** ~19.8GB — never Railway, see docs/CLAUDE.md §17):')
+    console.log('[fts-catchup] ***   cd scripts/ingest && tsx ../ops/heavy-job/run.ts run fts-index')
+    console.log('[fts-catchup] *** then RESTART fts-serve, or the old snapshot keeps being served.')
+    console.log('[fts-catchup] ***********************************************************************')
+  } else {
+    console.log('[fts-catchup] index coverage is complete — no re-merge needed.')
+  }
+
+  // Machine-readable marker so a scheduled check can alert without anyone reading a log.
+  try {
+    const statePath = path.join(__dirname, '.fts-index-debt.json')
+    fs.writeFileSync(statePath, JSON.stringify({
+      checkedAt: new Date().toISOString(),
+      table: FTS_TABLE,
+      indexedRows: indexed,
+      unindexedRows: unindexed,
+      pctScannedPerQuery: Number(pct),
+      rowsAppendedThisRun: rowsJustAppended,
+      remergeRequired: unindexed > 0,
+      howTo: 'cd scripts/ingest && tsx ../ops/heavy-job/run.ts run fts-index  (then restart fts-serve)',
+    }, null, 2))
+    console.log(`[fts-catchup] wrote index-debt state to ${statePath}`)
+  } catch (e) {
+    console.warn(`[fts-catchup] could not write index-debt state: ${(e as Error).message}`)
+  }
 }
 main().catch((e) => { console.error('[fts-catchup] FATAL', e); process.exit(1) })

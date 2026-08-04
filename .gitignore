@@ -89,6 +89,13 @@ scripts/ingest/search/.vultr-cloud-init.preview.sh
 scripts/ingest/search/.vultr-build-instance-id
 scripts/ingest/search/.*-service-id
 
+# fts-catchup transient state. `.fts-catchup-cache/` is a per-corpus resume aid for a chunked
+# backfill; `.fts-index-debt.json` is the machine-readable index-coverage marker each run writes
+# (INGEST_PLAYBOOK §20) — it is a report about the CURRENT table, regenerated on every run, so a
+# committed copy would only ever be a stale claim about whether search needs a re-merge.
+scripts/ingest/search/.fts-catchup-cache/
+scripts/ingest/search/.fts-index-debt.json
+
 # Tier-1 graph sprint — bulk TNA amendments data (large, regenerable via download-graph-sources.ts)
 scripts/ingest/graph/data/
 
