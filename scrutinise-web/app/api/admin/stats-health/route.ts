@@ -43,8 +43,14 @@ export async function GET() {
     }
   }
 
+  // A writable role here is not an error, but it IS a finding: the tool is meant to
+  // connect read-only, so surface it rather than let it pass unnoticed.
+  const warning = health.canWrite
+    ? `Connected as "${health.role}", which CAN WRITE to the stats database. Expected the read-only role.`
+    : undefined
+
   return NextResponse.json(
-    { ...health, configured: true, topFunction, elapsedMs: Date.now() - started },
+    { ...health, configured: true, topFunction, warning, elapsedMs: Date.now() - started },
     { status: health.ok ? 200 : 503 },
   )
 }

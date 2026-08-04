@@ -61,6 +61,12 @@ export async function statsQuery<T extends Record<string, unknown>>(
 export async function statsHealth(): Promise<{
   ok: boolean
   host: string | null
+  /** The Postgres role the app actually connected as, and whether it can write.
+   *  Reported because "Lex structurally cannot write to the stats DB" is a claim that
+   *  should be checkable from production, not taken on trust — a connection string can
+   *  be swapped back to an owner role by accident at any time. */
+  role: string | null
+  canWrite: boolean | null
   datasets: number
   series: number
   observations: number
@@ -73,15 +79,20 @@ export async function statsHealth(): Promise<{
   try {
     const [counts] = await statsQuery<{
       datasets: string; series: string; observations: string; latest: Date | null
+      role: string; can_write: boolean
     }>(`
       SELECT (SELECT count(*) FROM stat_dataset)     AS datasets,
              (SELECT count(*) FROM stat_series)      AS series,
              (SELECT count(*) FROM stat_observation) AS observations,
-             (SELECT max("lastRefreshedAt") FROM stat_dataset) AS latest
+             (SELECT max("lastRefreshedAt") FROM stat_dataset) AS latest,
+             current_user AS role,
+             has_table_privilege(current_user, 'stat_observation', 'INSERT') AS can_write
     `)
     return {
       ok: true,
       host,
+      role: counts.role,
+      canWrite: counts.can_write,
       datasets: Number(counts.datasets),
       series: Number(counts.series),
       observations: Number(counts.observations),
@@ -89,7 +100,7 @@ export async function statsHealth(): Promise<{
     }
   } catch (err) {
     return {
-      ok: false, host, datasets: 0, series: 0, observations: 0, latestRefresh: null,
+      ok: false, host, role: null, canWrite: null, datasets: 0, series: 0, observations: 0, latestRefresh: null,
       error: err instanceof Error ? err.message : String(err),
     }
   }
