@@ -53,8 +53,14 @@ export const JOBS: Record<string, HeavyJob> = {
     // guesswork — Railway Hobby's 8 GB cap could never have run it at any setting, and
     // June's 24 GB success was closer to the edge than anyone realised. 32 GB is the
     // right size; do not drop below it as the corpus grows.
+    // Two runs now agree, which is what makes 32 GB the settled answer rather than one
+    // lucky measurement. Keep the HIGHER of the two: the 5 Aug run was on a slightly
+    // smaller table (19,161 rows removed by fts-hygiene), so its lower peak reflects less
+    // data, not more headroom. Sizing down on it would be reading noise as a trend.
     expectedPeakGb: 19.8,
-    peakSource: '4 Aug 2026 run, cpx62 (32 GB), 17.7M rows, 499s — see docs/HEAVY_JOBS.md',
+    peakSource:
+      '4 Aug 2026, cpx62 (32 GB), 17,700,396 rows, 499s → 19.8 GB peak. ' +
+      'Confirmed 5 Aug 2026, cpx62, 17,681,503 rows (post index-hygiene), 509s → 19.4 GB peak, €0.049.',
   },
   'vector-index': {
     name: 'vector-index',
