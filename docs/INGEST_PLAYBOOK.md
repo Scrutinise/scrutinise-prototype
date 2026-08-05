@@ -1432,3 +1432,40 @@ while the live `corpus_fts.body_idx` is the no-positions build (`withPosition: f
 is what let it fit in memory at all). Anyone using that flag would have silently replaced the
 measured index with a differently-ranked one. See `docs/CLAUDE.md` §17, "Match the live index
 configuration when rebuilding".
+
+**§20 addendum (5 Aug 2026) — DELETIONS COUNT TOO, and they carry an extra hazard.**
+
+Everything above is written about appends, because until now every drift was an append. It is
+not. A **removal** leaves the inverted index describing rows that no longer exist — the same
+inconsistency in the other direction — so the rule is symmetrical: **rebuild after a deletion
+before it serves users, and restart `fts-serve` afterwards.**
+
+`fts-catchup.ts` cannot fix removals; it only ever appends ids present in the source and absent
+from the index. Removal is `scripts/ingest/search/fts-hygiene.ts`
+(`audit` / `export` / `delete-duplicates` / `delete-orphans` / `verify`).
+
+Three things that a deletion tool needs and an append tool does not:
+
+1. **Prove the audit is exhaustive before deleting on it.** `fts-hygiene audit` reconciles
+   rows-scanned against `countRows()` and reports `rows NOT reached`. It must be **0**. A
+   per-corpus scan driven off `SELECT DISTINCT corpus FROM corpus_sections` cannot see rows
+   filed under a corpus the source table has forgotten, and those are exactly the rows most
+   likely to be orphans.
+2. **Back up the rows themselves, not their ids.** For orphans the `corpus_sections` row is
+   already gone, so the index row is the last copy of that content and an id list preserves
+   nothing recoverable. `fts-hygiene export` writes whole rows (body included) as JSONL to
+   `_search/hygiene-backup/<stamp>/` and the delete commands **refuse to run without it**.
+   Read the backup back before deleting — an unverified backup is not a backup.
+3. **Re-confirm the counts; do not delete on a remembered number.** The 4 Aug reconnaissance
+   put the orphans at "~1,030+". The exhaustive audit on 5 Aug found **5,586** — 5.4× more.
+   Deleting to the old figure would have been wrong in the irreversible direction.
+
+**And the consequence that outlives the cleanup:** removing duplicate rows changes BM25
+**document frequencies**, so ranking moves for everyone. That is the defect being corrected, not
+a side effect — but it means **any gold-set or answer-key baseline measured before the cleanup
+is void**. Re-baseline after index hygiene, never across it.
+
+**Deletion is not a Lance `delete` alone where duplicates are concerned.** There is no
+"delete all but one" predicate: `fts-hygiene` deletes every copy of a duplicated id and re-adds
+one, taken from the rows it just read out, so the survivor is a copy that genuinely existed
+rather than something re-derived from R2 and possibly differing.
