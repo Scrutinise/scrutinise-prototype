@@ -13,6 +13,7 @@ import ContributionsTab from './ContributionsTab'
 import ResearchTab, { type ResearchItem } from './ResearchTab'
 import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
+import DocumentExports from '@/components/documents/DocumentExports'
 import WhatNextPanel from '@/components/WhatNextPanel'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2199,10 +2200,10 @@ function PrivacyLogTab({ ideaId }: { ideaId: string }) {
 // Main client component
 // ─────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'idea' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log'
+type Tab = 'idea' | 'contributions' | 'research' | 'amendments' | 'team' | 'campaign' | 'privacy-log' | 'exports'
 
 function isValidTab(t: string | null): t is Tab {
-  return ['idea', 'overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log'].includes(t ?? '')
+  return ['idea', 'overview', 'contributions', 'research', 'amendments', 'team', 'campaign', 'privacy-log', 'exports'].includes(t ?? '')
 }
 
 export default function IdeaDetailClient({
@@ -2299,6 +2300,8 @@ export default function IdeaDetailClient({
     { key: 'research', label: `Research${idea.research.length > 0 ? ` (${idea.research.length})` : ''}` },
     { key: 'contributions', label: `Contributions${commentCount > 0 ? ` (${commentCount})` : ''}` },
     { key: 'amendments', label: 'Amendments' },
+    // §8.2 — generated documents live outside the three Lex panels.
+    { key: 'exports', label: 'Documents' },
     { key: 'team', label: 'Team' },
     ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
     ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log' }] : []),
@@ -2569,6 +2572,18 @@ export default function IdeaDetailClient({
               isOwner={isOwner}
               currentUserId={currentUserId}
             />
+          )}
+          {activeTab === 'exports' && (
+            <div className="max-w-2xl space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900">Documents</h2>
+                <p className="text-sm text-zinc-600 mt-1">
+                  Generated from what is stored on this idea. Each one says what it was made from and
+                  when — re-run a search and the file is marked out of date rather than quietly served.
+                </p>
+              </div>
+              <DocumentExports ideaId={idea.id} variant="page" />
+            </div>
           )}
           {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} ownerReferralCode={currentUserReferralCode} />}
           {activeTab === 'campaign' && ['STAGE_4', 'STAGE_5'].includes(idea.stage) && (

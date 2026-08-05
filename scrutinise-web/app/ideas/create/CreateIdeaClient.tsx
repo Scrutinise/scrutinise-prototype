@@ -15,6 +15,8 @@ import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
+import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
 import type { CausesApi, PolicyApi, ActionsApi, CostLinesApi } from '@/components/lex/FieldsPanel'
 import { accentFor } from '@/lib/lex/stage-accents'
 import { acceptSurfaceOf, fieldDef, type CanonicalState, type CanonicalField } from '@/lib/lex/page1-config'
@@ -29,6 +31,21 @@ interface Props {
   initialIdeaId?: string
   initialMessages?: unknown[]
   isFirstIdea?: boolean
+}
+
+// §20.5 — a conservative match for the user criticising something Lex produced,
+// so the offer to pass it back appears where the criticism was made. Deliberately
+// narrow: a false positive puts an unwanted card in the chat, and the same action
+// is permanently available above the input anyway.
+const CRITIQUE_INTENT =
+  /\b(?:that(?:'s| is)|this(?:'s| is)|it(?:'s| is))\s+(?:not\s+right|wrong|incorrect|inaccurate|nonsense|rubbish|way off|miles off|misleading|too (?:low|high|vague|generic))\b|\b(?:you(?:'ve| have)?\s+(?:got|gotten)\s+(?:that|this|it)\s+wrong|you(?:'re| are)\s+wrong|that(?:'s| is)\s+made\s+up|you\s+made\s+that\s+up|where\s+did\s+(?:that|you\s+get\s+that)\s+(?:number|figure|come\s+from))\b|\bdoesn(?:'|’)?t\s+(?:make\s+sense|reflect|match)\b|\bi\s+don(?:'|’)?t\s+(?:agree|think\s+that(?:'s| is)\s+right)\b/i
+
+// Which part of Lex's output a critique on this page is most likely about (§20.5).
+const SURFACE_BY_STAGE: Record<string, FeedbackSurfaceKey> = {
+  ORIENTATION: 'BRIEFING',
+  DIAGNOSIS: 'CAUSES',
+  GUIDING_POLICY: 'OPTIONS',
+  COHERENT_ACTIONS: 'COSTS',
 }
 
 const DEFAULT_OPENING = ["I'm Lex, your researcher and guide. What's the challenge you want to fix?"]
@@ -108,6 +125,10 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         setShowHelp(true)
         return
       }
+      // §20.5 — did the user just criticise something Lex produced? If so, the offer
+      // to pass it back renders once the turn finishes. Display only; nothing is
+      // captured, and it is cleared on the next message either way.
+      setFeedbackOffer(CRITIQUE_INTENT.test(text))
       setMessages((prev) => [...prev, { role: 'user', content: text, stage }])
       setBusy(true)
       setError(null)
@@ -248,6 +269,20 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   const [focusNonce, setFocusNonce] = useState(0)
   const askLex = useCallback(() => { setTab('chat'); setFocusNonce((n) => n + 1) }, [])
 
+  // §20.5 — feedback capture. All of this is local to this component: the dialog
+  // holds its own state and the offer is a transient flag. Nothing here touches
+  // canonical state, the field machine or the conductor.
+  const [feedbackSurface, setFeedbackSurface] = useState<FeedbackSurfaceKey | null>(null)
+  const [feedbackOffer, setFeedbackOffer] = useState(false)
+  const surfaceForStage = useCallback(
+    (): FeedbackSurfaceKey => SURFACE_BY_STAGE[state?.stage ?? 'ORIENTATION'] ?? 'OTHER',
+    [state?.stage],
+  )
+  const openFeedback = useCallback((surface?: FeedbackSurfaceKey) => {
+    setFeedbackOffer(false)
+    setFeedbackSurface(surface ?? surfaceForStage())
+  }, [surfaceForStage])
+
   // §19-C Task 7 — Exit. "Unsaved" here means a box the platform is holding for the
   // user's Save (a Lex proposal awaiting confirmation); everything else is already
   // server-side the moment it's saved, so there is nothing to lose by leaving.
@@ -336,6 +371,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
 
       {showHelp && <HowItWorksModal onClose={() => setShowHelp(false)} />}
 
+      {/* §20.5 — the consent flow. Stores and sends nothing until an explicit Yes. */}
+      {feedbackSurface && ideaId && (
+        <FeedbackDialog
+          ideaId={ideaId}
+          stage={state?.stage ?? 'ORIENTATION'}
+          initialSurface={feedbackSurface}
+          onClose={() => setFeedbackSurface(null)}
+        />
+      )}
+
       {/* Mobile tab bar */}
       <div className="lg:hidden flex border-b border-zinc-200 text-xs font-medium">
         {(['chat', 'fields', 'background'] as Tab[]).map((t) => (
@@ -366,10 +411,13 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 currentStage={state.stage}
                 stageLabels={Object.fromEntries(state.pages.map((p) => [p.key, p.label]))}
                 nextPage={state.nextPage}
+                feedbackOffer={feedbackOffer}
                 onSend={sendMessage}
                 onAccept={(value) => chatAwaitingField && transition(chatAwaitingField.key, 'accept', value)}
                 onDecline={() => chatAwaitingField && transition(chatAwaitingField.key, 'skip')}
                 onContinue={advancePage}
+                onGiveFeedback={() => openFeedback()}
+                onDismissFeedbackOffer={() => setFeedbackOffer(false)}
               />
             </div>
 
@@ -399,6 +447,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             {/* Panel 3 — Legislation / Background */}
             <div className={`h-full min-h-0 ${tab === 'background' ? 'block' : 'hidden'} lg:block`}>
               <BackgroundPanel
+                ideaId={state.ideaId}
                 initialBackground={state.initialBackground}
                 legislationRefs={state.legislationRefs}
                 stageSearch={state.stageSearch}
@@ -410,6 +459,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onContinue={advancePage}
                 onAskLex={askLex}
                 onRetrySearch={retrySearch}
+                onGiveFeedback={() => openFeedback('BRIEFING')}
               />
             </div>
           </div>

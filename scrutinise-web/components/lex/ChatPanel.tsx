@@ -69,6 +69,36 @@ function ContinueCard({
   )
 }
 
+// §20.5 — the offer, made where the criticism was made. It appears when the user
+// has just criticised something Lex produced; taking it opens the same consent
+// flow as the panel's "Give feedback", and declining it just removes the card.
+// Nothing is captured by this card itself.
+function FeedbackOfferCard({
+  onGiveFeedback, onDismiss,
+}: {
+  onGiveFeedback: () => void
+  onDismiss: () => void
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 ml-9">
+      <p className="text-xs text-zinc-600 mb-2">
+        If that’s wrong, I can pass it back to the Scrutinise team — you’d see exactly what would be
+        sent before anything leaves here.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={onGiveFeedback}
+          className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90">
+          Pass it back
+        </button>
+        <button onClick={onDismiss}
+          className="text-xs font-medium px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100">
+          No thanks
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPanel({
   messages,
   awaitingField,
@@ -77,10 +107,13 @@ export default function ChatPanel({
   currentStage,
   stageLabels,
   nextPage,
+  feedbackOffer,
   onSend,
   onAccept,
   onDecline,
   onContinue,
+  onGiveFeedback,
+  onDismissFeedbackOffer,
 }: {
   messages: ChatMessage[]
   awaitingField: CanonicalField | null
@@ -94,10 +127,15 @@ export default function ChatPanel({
   /** Set when the active page is complete and a further page is reachable — drives
    *  the inline Continue action (§19-B Task 2). */
   nextPage?: CanonicalState['nextPage']
+  /** §20.5 — true when the user has just criticised Lex's output, so the offer shows. */
+  feedbackOffer?: boolean
   onSend: (text: string) => void
   onAccept: (value: string | string[]) => void
   onDecline: () => void
   onContinue: () => void
+  /** §20.5 — opens the feedback consent flow. */
+  onGiveFeedback?: () => void
+  onDismissFeedbackOffer?: () => void
 }) {
   const [input, setInput] = useState('')
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
@@ -181,9 +219,29 @@ export default function ChatPanel({
         {!awaitingField && nextPage && (
           <ContinueCard nextPage={nextPage} busy={busy} onContinue={onContinue} />
         )}
+
+        {/* §20.5 — the offer to pass a criticism back, made in the chat where it
+            was said. Purely additive: it renders and disappears on its own flag. */}
+        {feedbackOffer && !busy && onGiveFeedback && (
+          <FeedbackOfferCard
+            onGiveFeedback={onGiveFeedback}
+            onDismiss={onDismissFeedbackOffer ?? (() => {})}
+          />
+        )}
       </div>
 
       <div className="border-t border-zinc-200 px-4 py-3">
+        {/* §20.5 — the same action, always in reach, not only when Lex offers it. */}
+        {onGiveFeedback && (
+          <div className="flex justify-end mb-1.5">
+            <button
+              onClick={onGiveFeedback}
+              className="text-[11px] text-zinc-400 hover:text-zinc-700"
+            >
+              Give feedback on Lex
+            </button>
+          </div>
+        )}
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
+import DocumentExports from '@/components/documents/DocumentExports'
 import type { CanonicalState, SearchResult, SearchResultType } from '@/lib/lex/page1-config'
 
 // The Initial Background body is markdown (stub now, Lex-generated later). Render
@@ -75,6 +76,7 @@ function Fold({
 }
 
 export default function BackgroundPanel({
+  ideaId,
   initialBackground,
   legislationRefs,
   stageSearch,
@@ -86,7 +88,9 @@ export default function BackgroundPanel({
   onContinue,
   onAskLex,
   onRetrySearch,
+  onGiveFeedback,
 }: {
+  ideaId: string
   initialBackground: CanonicalState['initialBackground']
   legislationRefs: SearchResult[]
   /** §19-C Task 2 — the ACTIVE stage's search, grouped into the five sections. */
@@ -100,6 +104,8 @@ export default function BackgroundPanel({
   onContinue: () => void
   onAskLex: () => void
   onRetrySearch: () => void
+  /** §20.5 — opens the feedback consent flow, pre-set to the briefing. */
+  onGiveFeedback: () => void
 }) {
   const [open, setOpen] = useState(true)
 
@@ -142,8 +148,10 @@ export default function BackgroundPanel({
               className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
               Ask Lex about this
             </button>
-            <button disabled title="Coming soon"
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-300 cursor-not-allowed">
+            {/* §20.5 — live from Sprint 2.5. Opens the consent flow; nothing is
+                stored or sent until the user has seen the wording and said yes. */}
+            <button onClick={onGiveFeedback} disabled={busy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
               Give feedback
             </button>
           </div>
@@ -238,6 +246,12 @@ export default function BackgroundPanel({
             ))}
           </Fold>
         )
+      )}
+
+      {/* §8.2 — the same briefing as a document. Self-contained and additive: it
+          fetches its own status and renders nothing from canonical state. */}
+      {initialBackground && initialBackground.status === 'ready' && (
+        <DocumentExports ideaId={ideaId} variant="panel" />
       )}
 
       {/* Page-1 source cards, while the briefing is the current research. */}
