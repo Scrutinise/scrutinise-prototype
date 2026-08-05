@@ -47,10 +47,26 @@ const NEEDED = [
 const fs = require('fs') as typeof import('fs')
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+/**
+ * Railway has TWO token kinds and they authenticate DIFFERENTLY (3 Aug 2026):
+ *   - account / team token  → `Authorization: Bearer <token>`
+ *   - PROJECT token (a UUID, scoped to one project+environment)
+ *                           → `Project-Access-Token: <token>`  (Bearer returns "Not Authorized")
+ * This file hardcoded Bearer until 2026-08-05, so EVERY command in it — including the
+ * `redeploy` that must follow any index rebuild — failed with a bare "Not Authorized" against
+ * the project token in .env. Copied from fts-railway-run.ts, which already had it right;
+ * the two should not drift again.
+ */
+function railwayAuthHeader(): Record<string, string> {
+  const token = process.env.RAILWAY_API_TOKEN ?? ''
+  const isProjectToken = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)
+  return isProjectToken ? { 'Project-Access-Token': token } : { Authorization: `Bearer ${token}` }
+}
+
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   const res = await fetch(RAILWAY_API, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.RAILWAY_API_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { ...railwayAuthHeader(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   })
   const data = await res.json() as { data?: T; errors?: Array<{ message: string }> }
