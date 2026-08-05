@@ -47,6 +47,95 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — index hygiene: 19,161 duplicate and orphaned rows removed from `corpus_fts` (2026-08-05 08:06 UTC)
+
+The 4 Aug id-level reconciliation found three drift modes between `corpus_sections` and
+`corpus_fts`. Only the third (268 missing rows) was fixable by `fts-catchup.ts`, which only ever
+appends. The other two needed a removal tool, which is new: `scripts/ingest/search/fts-hygiene.ts`
+(`audit` / `export` / `delete-duplicates` / `delete-orphans` / `verify`, dry-run by default).
+
+### What was wrong, shown in one query
+Before the fix, a single search returned all three symptoms at once:
+
+```
+pwdata-debates:debates2026-01-27e:5   ← orphan: superseded scrapeversion, source row gone
+pwdata-debates:debates2026-01-27f:5   ← duplicate
+pwdata-debates:debates2026-01-27f:5   ← the same result surfaced twice
+```
+
+**The mechanism.** TheyWorkForYou republishes a day's debates under an incrementing scrapeversion
+letter. When a newer version lands, ingest marks the old one `unavailable`, collapses it to a single
+`:1` placeholder, and compiles the new one in full. `corpus_fts` was never told: it kept the old
+version entire AND took the new one twice. A COUNT-based audit could not see this — five pwdata
+corpora hold more rows in the index than in the source, so the per-corpus gap reads *negative* and
+the three modes cancel out. Only id-level reconciliation exposes it.
+
+### Measured, exhaustively
+The audit proves its own completeness: it reconciles rows scanned against `countRows()`, so a corpus
+the source table no longer knows about cannot hide. `rows NOT reached = 0`.
+
+| | audit | brief's estimate |
+|---|---|---|
+| duplicate ids | 13,575 (every one exactly 2 copies) | ~13,575 ✓ |
+| orphan rows | **5,586** | ~1,030 — **5.4× under** |
+| stale rows (`unavailable` source, left alone) | 15 | not identified |
+
+Every affected corpus reconciles exactly: `fts − duplicates − orphans − stale == compiled sections`.
+
+**Orphan safety, established before deleting.** All 5,586 rows come from just 15 day-files, and all
+15 have a surviving compiled successor with a matching section count (e.g. version `e` = 526 orphans
++ 1 stale = 527, successor `f` = 527 compiled). So the orphans are superseded copies of content that
+remains searchable in its current form — not unique content. Confirmed against `corpus_sections`
+independently of the audit that found them.
+
+### Applied
+```
+17,700,664  →  17,687,089   −13,575 duplicates  (expected 13,575) ✓
+17,687,089  →  17,681,503   −5,586  orphans     (expected 5,586)  ✓
+```
+Post-deletion re-audit of all four affected corpora: **0 duplicates, 0 orphans.**
+
+- **Safety record first, and it is full rows, not ids.** For orphans the source data is already gone,
+  so ids alone would preserve nothing recoverable. 27,150 duplicate rows (30.9 MB) and 5,586 orphan
+  rows (7.0 MB) written to `s3://scrutinise-legislation/_search/hygiene-backup/2026-08-04T23-54-06-437Z/`
+  with the manifest alongside, **read back and verified** (line counts match, every row has a
+  non-empty body, curly quotes intact) before anything was deleted. Deletion refuses to run without it.
+- **Duplicate removal is delete-all-then-re-add-one** (LanceDB has no "keep one" predicate). Sampling
+  80 duplicated ids found all copies **byte-identical across all 11 columns**, so the removal is lossless.
+- **The 15 stale rows were deliberately NOT deleted.** Their source rows exist but are `unavailable`;
+  that is a policy question, not hygiene. Index therefore lands at 17,681,503 against 17,681,488
+  compiled sections. Removing them would make the two exactly equal — Charlie's call, still open.
+
+### Rebuilt and served
+Deletions leave the index describing rows that are gone — the same inconsistency a backfill leaves in
+the other direction. Rebuilt via the Heavy Job Runner: cpx62 (32 GB), **509s, peak RSS 19.4 GB,
+€0.049**, server self-destroyed. `indexed=17,681,503 unindexed=0`.
+
+`fts-serve` redeployed and **verified by data, not by counters** — `/stats` showed `served: 0` before
+the redeploy, so a counter reset would have proved nothing. The regression query above now returns
+`f:5` once, no `e:5`, and the two freed slots pulled in legitimate results the duplicates had been
+crowding out. Live warm p50 **859 ms**, p95 1,998 ms, cold 3,253 ms.
+
+**Note that ranking has shifted, by design.** Removing 13,575 duplicate documents changes BM25
+document frequencies; `"data protection"` now tops out at `ukpga/2025/18:section-106` rather than an
+HMRC manual page. That is the scoring distortion being corrected, but any answer-key baseline taken
+before 5 Aug is no longer comparable.
+
+### Two fixes made along the way
+- **`fts-serve-run.ts` could not authenticate at all.** It hardcoded `Authorization: Bearer`, but
+  `RAILWAY_API_TOKEN` is a *project* token needing `Project-Access-Token` — so every command in it,
+  including the `redeploy` that must follow any index rebuild, failed with a bare "Not Authorized".
+  Ported the token-shape detection that `fts-railway-run.ts` already had.
+- **`jobs.ts` peak now cites two runs.** 19.4 GB observed here on a slightly smaller table; kept at
+  **19.8 GB** deliberately, since the lower figure reflects less data, not more headroom.
+
+### Trap worth recording
+The harness reported the duplicate-deletion task as "killed" while the **OS process was still running
+and writing**. Re-issuing the command would have raced two delete-and-re-add loops over the same ids.
+Check the process list before concluding a stopped task has stopped — same lesson as 29 Jul.
+
+---
+
 ## STATS — stable series identity, a bulk write path, and Phase B completed with IMF (2026-08-04 23:40 UTC)
 
 **Executes `docs/BRIEF_CC_stats-fixes_phaseB_resume.md`.** All six sections addressed; two of the
