@@ -367,3 +367,82 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
 
   await sendEmail({ to: toEmail, subject, html, text })
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §20.5 — a Lex critique the user consented to pass back. The body carries ONLY
+// `summarisedText` (what the user saw and approved); their raw wording never
+// leaves the database. This THROWS on failure by design: the caller has already
+// stored the record and records the failure against it, so the record survives a
+// mail outage and Lex can report honestly that the send did not happen.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function sendLexFeedbackEmail({
+  feedbackItemId,
+  stage,
+  surface,
+  summarisedText,
+  userEdited,
+  ideaTitle,
+  ideaId,
+}: {
+  feedbackItemId: string
+  stage: string
+  surface: string
+  summarisedText: string
+  userEdited: boolean
+  ideaTitle: string
+  ideaId: string
+}): Promise<void> {
+  const adminEmail = 'cl@scrutinise.org'
+
+  // `sendEmail` returns quietly when there is no API key and when the address is
+  // suppressed. For every other caller that is the right behaviour; here it is
+  // not — a quiet return would let the caller record a send that never happened
+  // and let Lex tell the user their feedback had been passed on. Both cases are
+  // turned into failures so the record carries the truth (§19-C 1b).
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY not set — feedback email was not attempted')
+  }
+  if (await isEmailSuppressed(adminEmail)) {
+    throw new Error(`${adminEmail} is on the suppression list — feedback email was not sent`)
+  }
+
+  const subject = `[Lex feedback] ${stage} · ${surface}`
+  const escaped = summarisedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const text = `
+A user has passed back feedback on Lex's output, with consent.
+
+Stage:   ${stage}
+Surface: ${surface}
+Idea:    ${ideaTitle}
+Edited by the user before sending: ${userEdited ? 'yes' : 'no'}
+
+What they said (summarised, personal content stripped):
+${summarisedText}
+
+---
+FeedbackItem: ${feedbackItemId}
+Idea: ${APP_URL}/ideas/${ideaId}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <h2 style="font-size: 18px; font-weight: 600;">Lex feedback</h2>
+  <table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600; width: 110px;">Stage</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${stage}</td></tr>
+    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">Surface</td><td style="padding: 6px 12px; font-size: 13px;">${surface}</td></tr>
+    <tr><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px; font-weight: 600;">Idea</td><td style="padding: 6px 12px; background: #f4f4f5; font-size: 13px;">${ideaTitle}</td></tr>
+    <tr><td style="padding: 6px 12px; font-size: 13px; font-weight: 600;">User edited</td><td style="padding: 6px 12px; font-size: 13px;">${userEdited ? 'yes' : 'no'}</td></tr>
+  </table>
+  <p style="font-size: 13px; font-weight: 600;">Summarised, personal content stripped:</p>
+  <p style="font-size: 13px; white-space: pre-wrap; padding: 12px; background: #f9f9f9; border-radius: 4px;">${escaped}</p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">FeedbackItem: ${feedbackItemId} · <a href="${APP_URL}/ideas/${ideaId}">open the idea</a></p>
+</body>
+</html>
+`.trim()
+
+  await sendEmail({ to: adminEmail, subject, html, text })
+}
