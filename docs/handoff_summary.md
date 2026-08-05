@@ -2,7 +2,40 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-05 00:20 UTC — ▼ **STATS: STABLE SERIES IDENTITY, A BULK WRITE PATH, AND
+*Last updated: 2026-08-05 16:55 UTC — ▼ **SEARCH: `corpus_fts` INDEX HYGIENE DONE — 19,161 ROWS
+REMOVED, REBUILT, LIVE.** The carried-forward item #1 from the 4 Aug search sprint is CLOSED.
+`corpus_fts` **17,700,664 → 17,681,503**: −13,575 duplicates (every one exactly 2 copies,
+byte-identical across all 11 columns on an 80-id sample, so removal was lossless) and −5,586
+orphans. **The brief's orphan estimate was 5.4× under — it said ~1,030, the exhaustive audit found
+5,586**; re-confirming before deleting is what caught it. Both deletions matched the audit exactly;
+post-deletion re-audit of all four affected corpora shows **0 duplicates, 0 orphans**. New tool
+`scripts/ingest/search/fts-hygiene.ts` (`audit`/`export`/`delete-duplicates`/`delete-orphans`/
+`verify`, dry-run by default, refuses to delete without the R2 export). The audit **proves its own
+completeness** by reconciling rows-scanned against `countRows()` (`rows NOT reached = 0`), so rows
+under a corpus the source no longer knows about cannot hide. **Root cause:** TheyWorkForYou
+republishes a day's debates under an incrementing scrapeversion letter; ingest marks the old one
+`unavailable` and collapses it to a `:1` placeholder, but `corpus_fts` kept the old version entire
+AND took the new one twice. All 5,586 orphans came from just **15 day-files, every one with a
+compiled successor of matching section count**, so no unique content was lost. Full rows (not ids —
+the orphan source data is already gone) backed up to
+`s3://scrutinise-legislation/_search/hygiene-backup/2026-08-04T23-54-06-437Z/`, **read back and
+verified** before deleting. Index rebuilt via the Heavy Job Runner (cpx62, 509s, peak **19.4 GB**,
+€0.049, self-destroyed) → `indexed=17,681,503 unindexed=0`; `fts-serve` redeployed and verified **by
+data, not counters** (`/stats` read `served:0` beforehand, so a counter reset would have proved
+nothing). Live warm p50 **859 ms**. ⚠ **RANKING HAS SHIFTED BY DESIGN** — removing 13,575 duplicate
+documents changes BM25 document frequencies, so **any answer-key baseline taken before 5 Aug is no
+longer comparable**; this directly affects SPRINT §2. ⚠ **15 `stale` rows deliberately NOT deleted**
+(source row exists but is `unavailable`) — index sits at 17,681,503 vs 17,681,488 compiled sections;
+removing them makes the two exactly equal, **Charlie's call, still open**. ⚠ **`corpus_vec` HAS THE
+SAME DRIFT, UNFIXED** — it still holds chunks for sections deleted from `corpus_fts` (confirmed by
+sampling), so vector search can surface superseded content keyword search no longer can; it was
+built 22 Jul and never reconciled. Also fixed: **`fts-serve-run.ts` could never authenticate** — it
+hardcoded `Authorization: Bearer` against what is a *project* token needing `Project-Access-Token`,
+so every command in it, including the post-rebuild `redeploy`, failed with a bare "Not Authorized".
+**Trap re-learned:** the harness reported the delete task "killed" while the OS process was still
+running and writing — re-issuing would have raced two delete-and-re-add loops over the same ids;
+check the process list before believing a stopped task stopped. ▼ Earlier:
+2026-08-05 00:20 UTC — ▼ **STATS: STABLE SERIES IDENTITY, A BULK WRITE PATH, AND
 PHASE B COMPLETED WITH IMF.** Executes `BRIEF_CC_stats-fixes_phaseB_resume.md`; all six sections
 addressed. `tsc` clean both packages; **22/22 end-to-end checks pass against the live DB**
 (`scrutinise-web/scripts/check-stats-layer.ts`, new) and the £1,157,828m / 33.2% / 20.9%

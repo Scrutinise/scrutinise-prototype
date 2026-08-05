@@ -24,10 +24,15 @@ sites repointed" (2026-08-04 18:34 UTC). `docs/CLAUDE.md` §12 says to clear thi
 
 ## Carried into the next sprint
 
-1. **Index hygiene before §2's baseline.** ~13,575 duplicate and ~1,030+ orphaned rows in
-   `corpus_fts`, found this sprint, not fixed: `fts-catchup.ts` only appends missing rows. Orphan
-   deletion is irreversible from our own data (their `corpus_sections` rows are gone), so it needs
-   Charlie's decision. A baseline taken now enshrines whatever the index contains.
+1. ~~**Index hygiene before §2's baseline.**~~ **DONE 2026-08-05** — `scripts/ingest/search/fts-hygiene.ts`;
+   see CHANGE_LOG "SEARCH — index hygiene" (2026-08-05 08:06 UTC). 13,575 duplicates and **5,586**
+   orphans removed (the estimate above said ~1,030 — it was 5.4× under, which is why the counts were
+   re-confirmed before deleting); index rebuilt to `unindexed=0` and `fts-serve` redeployed.
+   **The warning in this item still stands, and now bites harder:** removing 13,575 duplicate
+   documents changed BM25 document frequencies, so **§2's answer key must be validated against the
+   post-5-Aug index** — any gold-set numbers gathered before today are not comparable. Two residues:
+   15 `stale` rows left in place pending Charlie's call, and `corpus_vec` carries the same
+   unreconciled drift.
 2. **`LEX_QUERY_ROUTER=true`** — recommended since 30 July, still not flipped, and this sprint
    produced the sharpest evidence for it yet (see the CHANGE_LOG table).
 3. **Two Vercel unknowns** that need Charlie because the stored token 403s on the SAML scope:
