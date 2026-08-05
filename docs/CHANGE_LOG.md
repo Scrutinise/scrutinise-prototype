@@ -47,6 +47,91 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX Sprint 2.5 — feedback capture (§20.5) and document export (§8.2) (2026-08-05 17:30 UTC)
+
+Executes `docs/BRIEF_SPRINT_2_5.md`. Both tasks built, both verified against the live app DB and
+live R2 — not "tsc-clean and assumed". Preview only, **not promoted**; nothing in the field machine,
+the conductor, the canonical-state contract or the panels' state handling was touched.
+
+### Task 1 — feedback capture
+
+A user critiquing Lex can now pass it back, and **nothing is stored or sent until they have seen the
+exact text and pressed Yes**. The API has two actions and the split is the whole design:
+`summarise` writes nothing at all; `submit` is only reachable after consent.
+
+- `FeedbackItem` on the app Neon DB (`ep-old-dust-aboxi69a` / `neondb`, whichdb run first and
+  recorded), applied by `prisma db execute` with `prisma/lex_sprint2_5.sql` — additive, idempotent,
+  re-run once to prove it. Plus `sentAt` / `sendError`, which the brief's field list didn't have and
+  the "a mail failure must not lose the record" rule requires.
+- **Personal content is stripped three times, by two different mechanisms.** A deterministic scrub
+  (`lib/lex/feedback.ts`) removes the structured identifiers — email, phone, postcode, NI number,
+  card/account digits, dates of birth, street addresses, social handles, and the user's own name
+  from their User row. The model pass then does what regex cannot: third-party names, employers,
+  locations, personal circumstance. Then the model's own output is scrubbed again, because it is
+  instructed to strip personal content and **not trusted to have done it**. And because there is an
+  editable box between the summary and the send, `submit` scrubs a third time server-side: if that
+  changes anything the send is **refused with a 409**, not silently corrected — otherwise we would
+  be sending text the user never saw.
+- **Persist, then send.** The row exists before Resend is called; a send failure is written back to
+  `sendError` and the user is told, in those words, that it is saved but not emailed.
+- **A live bug this found:** `sendEmail` returns *quietly* when `RESEND_API_KEY` is unset or the
+  address is suppressed. Wired naively, that would have set `sentAt` and had Lex tell the user their
+  feedback had been passed on — the exact §19-C 1b failure the brief forbids. `sendLexFeedbackEmail`
+  now throws in both cases. **The test forces it** rather than trusting the catch block.
+- UI: the disabled "Give feedback" placeholder on the Background CTA row is live, the same action
+  sits permanently above the chat input, and Lex offers it inline when it detects a critique. All
+  additive; the dialog holds its own state and reads no canonical state.
+
+### Task 2 — document export
+
+- **A block model with two renderers**, not a briefing exporter: `lib/documents/model.ts` +
+  `markdown.ts` → `render-docx.ts` (docx) and `render-pdf.ts` (pdf-lib). A new document type is a
+  new *builder*; the renderers never learn what they are rendering. That is the §20-B path.
+- **Content is a rendering of stored state only.** `build-initial-background.ts` reads the
+  `Document` row and `Idea.legislationRefs` and nothing else. No briefing → the export is **refused
+  with the reason**, never invented.
+- **Never serve a stale file silently.** Every stored pair carries a sha-256 `sourceFingerprint`
+  over exactly what was rendered. Re-run a search and the file is reported stale: the download
+  buttons are replaced by "Generate the current version", with an explicit
+  `allowStale=1` link for taking the old one knowingly. **An unknown fingerprint counts as stale** —
+  "we cannot prove it is current" is not "it is current".
+- **Signed URLs, never stored URLs.** `docxUrl`/`pdfUrl` hold the app download path; `docxKey`/
+  `pdfKey` hold the R2 key; a fresh 24h signed URL is minted per download behind the same
+  owner/collaborator authorisation (security rule 10). A stored signed URL would be a stored expiry.
+- Download from the legislation panel **and** a new **Documents** tab on the idea page, both showing
+  what the file was generated from and when.
+- **pdf-lib over pdfkit deliberately** — pdfkit reads `.afm` metrics off disk, which works locally
+  and fails in a serverless bundle. The cost is WinAnsi: `toWinAnsi()` passes the 0x80–0x9F
+  typographic block through as itself (curly quotes, dashes, £, €, §, ellipsis all survive), maps
+  arrows and ticks, and **drops an emoji rather than throwing** — one lost glyph beats a 500 on
+  "download my briefing" (docs/CLAUDE.md §14).
+
+### Verified, and how
+
+`tsc --noEmit` clean and `next build` clean (the build's TS pass caught an error `tsc --noEmit`
+did not — the two configs do not cover the same files; run both). All three new routes present in
+the build output and answering on a dev server, and `/ideas/create` compiles and renders.
+
+| check | result |
+|---|---|
+| `npm run check:sprint2.5-schema` | 4/4 — columns, enum and client read confirmed **on Neon**, not just "db execute said success" |
+| `npm run check:documents` | 31/31 — parser, WinAnsi guard, both renderers; text extracted **back out** of both files (mammoth / pdf-parse) so "readable" is measured, not asserted; PDF link annotations checked by reloading the file, because object streams make a byte scan pass for the wrong reason |
+| `npm run check:feedback` | 40/40 — 11 categories of deliberately personal input absent from the summary **and** from the stored row; forced mail failure leaves the record with `sendError` set and `sentAt` null |
+| `npm run check:export` | 25/25 — refusal with no briefing, generate, signed URL carries an expiry, **re-run search → stale**, regenerate → fingerprint and timestamp move and the new prose and new source are in the document, no-op when nothing changed |
+
+The last two create a temporary idea and delete it, and their R2 objects, in a `finally`.
+
+### Two things worth carrying forward
+
+1. **The parser found a real defect in itself.** A bullet wrapping onto a second line silently split
+   the list in two and the second half lost its marker. Continuation lines are now folded into the
+   item. Worth remembering whenever stored markdown is re-rendered somewhere new.
+2. **The route layer is the one part not exercised through HTTP end-to-end** — Clerk needs a real
+   session. The libraries beneath it are covered; the handlers are thin, typechecked, and confirmed
+   to load and authorise. Charlie's walk-through is the first true test of the two dialogs.
+
+---
+
 ## SEARCH — index hygiene: 19,161 duplicate and orphaned rows removed from `corpus_fts` (2026-08-05 08:06 UTC)
 
 The 4 Aug id-level reconciliation found three drift modes between `corpus_sections` and

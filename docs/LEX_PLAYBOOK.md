@@ -544,3 +544,77 @@ SUGGESTION — `suggest` never writes; the user accepts or overrides. **EANDCB**
 **14.9 Seeded child records must stay editable.** Cause cards rendered read-only once the loop was
 confirmed, which is why three Lex-seeded road-traffic causes could not be deleted from a
 data-protection idea. Anything Lex creates, the user can edit and delete — at any point.
+
+---
+
+## 15. Sprint 2.5 (§20.5 + §8.2) — feedback capture and document export
+
+Both are **additive surfaces**. Neither touches the field machine, the conductor, canonical state or
+the panels' state handling — that separation is why this sprint could run alongside live Search and
+Ingest sessions, and it is worth preserving.
+
+**15.1 Consent is a shape, not a checkbox.** The feedback API has two actions and the split *is* the
+guarantee: `summarise` writes nothing anywhere, `submit` is only reachable after the user has seen
+the exact text. If you ever find yourself wanting a single "send feedback" call, you have removed
+the guarantee — the user must be able to read what leaves before it leaves.
+
+**15.2 Never trust one redaction pass, and never trust the model's own.** `lib/lex/feedback.ts`
+scrubs deterministically (email, phone, postcode, NI number, card/account digits, dates of birth,
+addresses, handles, the user's own name from their User row) → the model strips what regex cannot
+(third-party names, employer, location, circumstance) → **the model's output is scrubbed again**.
+The NI pattern is deliberately looser than the real NI alphabet: someone typing from memory gets a
+letter wrong, the shape is distinctive, and under-capturing means a real number is emailed.
+
+**15.3 The third scrub is on `submit`, and a difference is a 409, not a fix.** There is an editable
+box between the summary and the send. If the server's scrub changes the submitted text, the send is
+**refused** and the corrected version handed back for a fresh Yes. Silently correcting it would send
+text the user never saw — which breaks the same promise from the other direction.
+
+**15.4 `sendEmail` fails quietly, and that is a trap for any "did it send?" caller.** It returns
+normally when `RESEND_API_KEY` is unset and when the address is suppressed. Wired naively, the
+feedback path would have recorded `sentAt` and told the user their feedback had been passed on.
+`sendLexFeedbackEmail` throws in both cases. **Any new caller that reports an outcome to a user must
+do the same** — a silent no-op is not a success.
+
+**15.5 Persist, then send. Always that order.** The `FeedbackItem` row exists before Resend is
+called; a failure is written to `sendError` and reported honestly ("saved, but the email did not go
+through"). A mail outage must never cost us the feedback.
+
+**15.6 Export is a block model with two renderers, not a briefing exporter.**
+`lib/documents/model.ts` (blocks) + `markdown.ts` (stored markdown → blocks) → `render-docx.ts` and
+`render-pdf.ts`. **A new document type is a new builder, not a new renderer** — that is the whole
+point, and it is how §20-B (the full proposal document) is meant to land. Builders may only arrange
+what is already stored: `build-initial-background.ts` reads the `Document` row and
+`Idea.legislationRefs` and nothing else. No briefing → the export is refused with the reason.
+
+**15.7 Never serve a stale file silently — and treat "unknown" as stale.** Each stored pair carries
+a sha-256 `sourceFingerprint` over exactly what was rendered. Re-running a search moves the live
+fingerprint, so the file is reported stale, the download buttons give way to "Generate the current
+version", and the old file is only handed over through an explicit `allowStale=1`. A file with no
+fingerprint (generated before the column existed) is stale too: *we cannot prove it is current* and
+*it is current* are different sentences.
+
+**15.8 Store the KEY, never the signed URL.** `docxUrl`/`pdfUrl` hold the app download path;
+`docxKey`/`pdfKey` hold the R2 object key; the download route authorises and then mints a fresh 24h
+signed URL (security rule 10). A stored signed URL is a stored expiry.
+
+**15.9 pdf-lib, not pdfkit — and the encoding tax that comes with it.** pdfkit reads `.afm` font
+metrics off disk: fine locally, broken in a serverless bundle. pdf-lib embeds its standard fonts,
+but they are WinAnsi and it **throws** on anything outside. `toWinAnsi()` passes the 0x80–0x9F
+typographic block through as itself (curly quotes, en/em dashes, ellipsis, bullet, £, €, §, ™ all
+survive), maps arrows/ticks/box-drawing to ASCII, and drops anything left over. Degrade one glyph,
+never fail the download (docs/CLAUDE.md §14).
+
+**15.10 Verify a document by reading it back, not by checking it parses.** `check-document-render.ts`
+extracts the text out of both files (mammoth for docx, pdf-parse for PDF) and asserts the prose,
+citations, URLs and provenance line are in there. Two traps it already caught: a **byte scan for
+`/Type /Page` fails on a valid PDF** because pdf-lib writes object streams — reload with the parser
+instead; and a **wrapped bullet was silently splitting the list in two**, which only showed once the
+text came back out.
+
+**15.11 `tsc --noEmit` and `next build` do not cover the same files.** The build's TypeScript pass
+caught an error `tsc --noEmit` had passed. Run both before calling a Lex sprint clean.
+
+**15.12 The checks.** `npm run check:sprint2.5-schema` (proves the SQL landed on Neon, rather than
+that `db execute` said "success"), `check:documents` (no DB), `check:feedback` and `check:export`
+(live DB + live R2; both create a temporary idea and delete it, and its R2 objects, in a `finally`).

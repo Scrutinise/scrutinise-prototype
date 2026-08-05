@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-05 16:55 UTC — ▼ **SEARCH: `corpus_fts` INDEX HYGIENE DONE — 19,161 ROWS
+*Last updated: 2026-08-05 17:30 UTC — ▼ **LEX SPRINT 2.5: FEEDBACK CAPTURE AND DOCUMENT EXPORT
+ARE BUILT AND VERIFIED LIVE.** Executes `docs/BRIEF_SPRINT_2_5.md`; both tasks done, all acceptance
+criteria met. `tsc --noEmit` clean **and** `next build` clean, plus four check scripts run against
+the live app DB and live R2: `check:sprint2.5-schema` 4/4, `check:documents` 31/31,
+`check:feedback` 40/40, `check:export` 25/25. Ran alongside the Search and Ingest threads and
+stayed in its lane: **nothing outside `scrutinise-web/**` and the three shared docs was touched**,
+and nothing in the field machine, the conductor, the canonical-state contract or the panels' state
+handling was modified. **Preview only, NOT promoted** — Charlie's Lex walk-through is unaffected.
+**§20.5 feedback:** a critique of Lex can be passed back, and **nothing is stored or sent until the
+user has seen the exact text and pressed Yes** — the API's `summarise` action writes nothing at all
+and `submit` is only reachable after consent. `FeedbackItem` is on the app Neon DB
+(`ep-old-dust-aboxi69a`/`neondb`, whichdb run first) via additive idempotent SQL
+(`prisma/lex_sprint2_5.sql`, re-run once to prove it) — plus `sentAt`/`sendError`, which the brief's
+field list lacked and "a mail failure must not lose the record" requires. **Personal content is
+stripped three times by two mechanisms**: a deterministic scrub (email, phone, postcode, NI number,
+card digits, DOB, address, handle, and the user's own name from their User row), then the model for
+what regex cannot do (third-party names, employer, location, circumstance), then **the model's own
+output scrubbed again** — it is instructed to strip personal content and not trusted to have done
+it. Because an editable box sits between the summary and the send, `submit` scrubs a **third** time
+server-side and a difference is a **409, not a silent correction** — otherwise we would send text
+the user never saw. ⚠ **A real bug this found:** `sendEmail` returns *quietly* when
+`RESEND_API_KEY` is unset or the address is suppressed, so a naive wiring would have set `sentAt`
+and had Lex tell the user their feedback had been passed on — the exact §19-C 1b failure the brief
+forbids. `sendLexFeedbackEmail` now throws in both cases, and the test **forces** the failure rather
+than trusting the catch block. UI: the disabled "Give feedback" placeholder is live, the same action
+sits permanently above the chat input, and Lex offers it inline on a detected critique. **§8.2
+export:** docx + PDF of the Initial Background, **rendered from stored state only** — no briefing
+means the export is refused with the reason, never invented. Built as a **block model with two
+renderers** (`lib/documents/`), so §20-B's full proposal document is a new *builder*, not a new
+renderer. **Never serves a stale file silently:** each pair carries a sha-256 `sourceFingerprint`
+over exactly what was rendered, so re-running a search marks it out of date, replaces the download
+buttons with "Generate the current version", and only hands over the old file through an explicit
+`allowStale=1`; **an unknown fingerprint counts as stale.** `docxUrl`/`pdfUrl` hold the app download
+path and `docxKey`/`pdfKey` the R2 key — a fresh 24h signed URL is minted per download behind the
+same authorisation (security rule 10), because a stored signed URL is a stored expiry. Downloads
+appear in the legislation panel and in a new **Documents** tab on the idea page, both showing what
+the file was made from and when. Chose **pdf-lib over pdfkit** (pdfkit reads `.afm` metrics off
+disk — fine locally, broken in a serverless bundle); the WinAnsi tax is handled by `toWinAnsi()`,
+which keeps curly quotes, dashes, £, €, § and drops an emoji rather than throwing. ⚠ **Three traps
+recorded in `LEX_PLAYBOOK.md` §15:** `tsc --noEmit` and `next build` do **not** cover the same files
+(the build caught an error tsc passed — run both); a byte scan for `/Type /Page` **fails on a valid
+PDF** because pdf-lib writes object streams, so reload with the parser; and a wrapped bullet was
+silently splitting a list in two, found only by extracting the text back out of the finished files.
+⚠ **The one layer not exercised end-to-end is the HTTP route surface** — Clerk needs a real session,
+so the routes are typechecked and confirmed to load and authorise on a dev server, but the two
+dialogs get their first true test in Charlie's walk-through. ▼ Earlier:
+2026-08-05 16:55 UTC — ▼ **SEARCH: `corpus_fts` INDEX HYGIENE DONE — 19,161 ROWS
 REMOVED, REBUILT, LIVE.** The carried-forward item #1 from the 4 Aug search sprint is CLOSED.
 `corpus_fts` **17,700,664 → 17,681,503**: −13,575 duplicates (every one exactly 2 copies,
 byte-identical across all 11 columns on an 80-id sample, so removal was lossless) and −5,586
