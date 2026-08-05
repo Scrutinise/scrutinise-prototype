@@ -527,6 +527,7 @@ model User {
   referralsReceived         ReferralEvent[]  @relation("ReferredUser")
   legislationCorrections    LegislationCorrection[]
   feedbacks                 Feedback[]
+  lexFeedbackItems          FeedbackItem[]
 
   @@index([clerkId])
   @@index([email])
@@ -698,6 +699,7 @@ model Idea {
   policyOptions             PolicyOption[]
   lexActions                LexCoherentAction[]
   ideaAssumptions           IdeaAssumption[]
+  feedbackItems             FeedbackItem[]
 
   @@index([creatorId])
   @@index([stage])
@@ -1488,6 +1490,43 @@ enum PolicyOptionStatus {
   RULED_OUT
 }
 
+// Which piece of Lex's output the user is critiquing (design §20.5).
+enum FeedbackSurface {
+  BRIEFING
+  CAUSES
+  OPTIONS
+  COSTS
+  OTHER
+}
+
+// §20.5 — a critique of Lex's output, passed back to Scrutinise WITH CONSENT.
+// The user sees `summarisedText` verbatim and answers Yes / Edit / No; nothing is
+// stored or sent before that Yes, so every row here is one the user approved.
+// `originalText` is what they actually said; `summarisedText` is what leaves their
+// control — personal content stripped, and it is the ONLY text that is emailed.
+model FeedbackItem {
+  id              String          @id @default(uuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideaId          String
+  idea            Idea            @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  stage           String          // the Lex page the critique was made on, e.g. "ORIENTATION"
+  surface         FeedbackSurface @default(OTHER)
+  originalText    String          @db.Text
+  summarisedText  String          @db.Text
+  userEdited      Boolean         @default(false) // true when they took the Edit path
+  consentGiven    Boolean         @default(true)  // always true on write; explicit, never implied
+  // Persist-then-send (§20.5): a mail failure must not lose the record. Null until
+  // a send is attempted; set to the failure on error so it is visible, not lost.
+  sentAt          DateTime?
+  sendError       String?
+  createdAt       DateTime        @default(now())
+
+  @@index([ideaId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
 model IdeaFieldState {
   id        String      @id @default(uuid())
   ideaId    String
@@ -1513,8 +1552,20 @@ model Document {
   status    String   @default("pending") // pending | ready
   summary   String?  // short preview text surfaced in the canonical state object
   body      String?  // full prose briefing (stub for now; Word/PDF render later)
+  // Sprint 2.5 (§8.2) — the export pair. `docxUrl`/`pdfUrl` hold the APP download
+  // path (stable, authorised, redirects to a fresh 24h signed URL); `docxKey`/
+  // `pdfKey` hold the R2 object key. A signed URL expires, so it is never stored.
   docxUrl   String?
   pdfUrl    String?
+  docxKey   String?
+  pdfKey    String?
+  // Provenance of the generated pair. `sourceFingerprint` is a sha-256 over the
+  // exact stored state that was rendered; when the live state hashes differently
+  // the file is STALE and the UI says so rather than serving it silently.
+  generatedAt       DateTime?
+  sourceFingerprint String?
+  sourceLabel       String?   // human "generated from …", shown next to the download
+  exportError       String?   // last render/upload failure, surfaced honestly
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
