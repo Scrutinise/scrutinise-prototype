@@ -96,6 +96,12 @@ scripts/ingest/search/.*-service-id
 scripts/ingest/search/.fts-catchup-cache/
 scripts/ingest/search/.fts-index-debt.json
 
+# fts-hygiene working state — the audit manifest, the dry-run transcript and the export receipt.
+# All of it describes ONE point in time on a table that keeps changing, and the copy that matters
+# is on R2 next to the backup it indexes (`_search/hygiene-backup/<stamp>/manifest.json`). A
+# committed copy would be a stale claim about which rows are duplicates, which is worse than none.
+scripts/ingest/search/.fts-hygiene/
+
 # Tier-1 graph sprint — bulk TNA amendments data (large, regenerable via download-graph-sources.ts)
 scripts/ingest/graph/data/
 
