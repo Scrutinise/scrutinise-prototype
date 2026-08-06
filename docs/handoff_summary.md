@@ -49,6 +49,60 @@ data, then a disposable root→branch→sub-branch tree with two real accounts d
 into that shared layer precisely so the test exercises production code rather than a copy of it.
 **REMAINING GATE: Charlie's browser re-test** — the two new panels (Invite people, "Post to") get
 their first click-test from him. ▼ Earlier:
+2026-08-06 11:11 UTC — ▼ **SEARCH: THE FUSION WEIGHT IS 0.5 (MEASURED, NOT CARRIED), AND THE
+COMMITTEES STREAM IS NOW SCOPED AT THE QUERY.** Search thread only; ran alongside CENTRAL and
+LEX and touched nothing outside `scripts/ingest/search/**`, `scrutinise-web/lib/lex/*search*`,
+`query-router.ts` and the shared docs. `tsc --noEmit` clean in **both** workspaces. Full account:
+CHANGE_LOG entries at 09:57 and 11:11 UTC. **Both flags remain OFF; no flag was flipped.**
+**(1) The weight.** Charlie's answer-key validation pass landed 6 Aug, so PROVISIONAL is cleared
+from GOLD_TEST_03–07 — cleared **in `score-stream-fusion.ts`**, not just the five `.md` files, so a
+re-run cannot regenerate it. ⚠ **The drafted-questions caveat is deliberately KEPT on 05/06/07**:
+the pass reviewed the gold set, and the gold set has no questions for committees/caselaw/guidance.
+The first sweep peaked at 0.5 — the *lowest* non-zero weight tested — so the grid was widened to
+`[0,.3,.4,.5,.6,.7,.8,1]` and all five streams re-run; 0.5 survived as an **interior** maximum.
+**0.5 is best-or-joint-best in EVERY one of the five streams** and wins outright on both the
+per-stream and per-query averages, so it is not a compromise and no per-stream table is warranted
+(`GOLD_TEST_08`, regenerable from sidecars by `weight-decision.ts`). legislation 55.7→63.0%,
+debates 80.0→95.0%, macro 87.1→91.6%, micro 76.1→83.1%; **no stream regresses.** ⚠ **On debates,
+the old 0.7 was the WORST fusion weight tested** — 10pp *below* BM25 alone. `VECTOR_WEIGHT`
+default changed in `lib/lex/fusion.ts`; FUSION_REPORT and VECTOR_FULL_RECONFIRM banner-marked
+SUPERSEDED on the weight. ⚠ **Scope the evidence honestly:** committees is flat at every weight and
+contributes nothing; caselaw/guidance only separate BM25 from everything else. The decision rests
+on legislation + debates — the two validated streams, 26 of 38 questions.
+**(2) Committees — better questions will NOT fix it (`GOLD_TEST_09`).** ⚠ **CM1 scores 100% while
+returning zero committee documents.** `committees-reports` is **71.6% correspondence**, and its
+2,575 "Report:" rows span 2,511 distinct titles (~1 row each — stubs, not report bodies), so
+**committee CONCLUSIONS are essentially not ingested**: a "what did the committee conclude"
+question is unanswerable here however worded. Every committee subject is also a Chamber subject and
+Hansard is 85× larger, so subject-vocabulary answer keys are Hansard-dominated; only inquiry jargon
+("breed specific legislation" 184 vs 5) and the written-evidence register (148 vs 5) discriminate.
+**One verified candidate question (CQ1) presented, two with their weakness stated rather than padded
+to three. NOTHING RE-SCORED — awaiting Charlie's yes/no**, plus decisions D1/D2/D3 in GOLD_TEST_09.
+**(3) The committees filtering bug — FIXED AND DEPLOYED (`COMMITTEES_PREFILTER_FIX.md`).** debates
+and committees shared the `parliamentary` tier and were separated *after* retrieval, client-side —
+but retrieval truncates to `limit` first, and committee content is 1.17% of that tier. ⚠ **Ruled IN
+as a SECOND, INDEPENDENT defect:** measured at the real live depth of 60, CM1 got **1** committee
+row of 60 vs **60** prefiltered (59 dropped); totals 87 → 240. **This partly corrects GOLD_TEST_09**,
+which said CM1's 100% was purely Hansard — incomplete; real Carillion committee evidence exists and
+the post-filter was hiding it. Fix is a server-side `SearchScope` (tier/corpora/excludeCorpora)
+through both query services and both adapters, declared per stream; the dense half takes the **same**
+scope (scoping only BM25 would be worse than scoping neither). ⚠ **Also fixed:** `resolveInjections`
+fetched by `id LIKE` with **no scope predicate**, and injections score *above* the BM25 list, so an
+out-of-scope legislation row would have appeared **first**. ⚠ **Deliberate asymmetry:** an unhonoured
+*corpus* scope warns and degrades to the client-side filter (failing closed would have taken both
+parliamentary streams to zero during the independent `fts-serve` deploy window); the *tier* check
+stays fail-closed, since legislation has no `types` backstop. **DEPLOYED AND RE-VERIFIED** — the push
+auto-deployed `fts-serve` (confirmed by polling the live endpoint until it echoed the new parameter,
+not assumed); a live `Carillion` query now returns committee evidence where it returned Hansard;
+all three streams re-verified SCOPING CONFIRMED with no warnings. **Committees returned 0–1 results
+on the probe queries before and returns a full 24 after.**
+**CARRIED FORWARD:** ⚠ **the `vector-query-service.ts` concurrency guard has NOT landed** — checked,
+not assumed (zero matches, no commit touching it). It was a recommendation in
+`VECTOR_DEPLOY_READINESS.md` that was never authorised; nothing is at risk while the vector service
+is undeployed, but it is a prerequisite for deploying it (`fts-query-service` was killed outright at
+15 concurrent requests, and the router fans out to 5). Also carried: a **GOLD_TEST_05 re-score** is
+now worth doing since the stream retrieves very differently — but it needs the answer-key decision
+first, so it was deliberately not done. ▼ Earlier:
 2026-08-05 17:30 UTC — ▼ **LEX SPRINT 2.5: FEEDBACK CAPTURE AND DOCUMENT EXPORT
 ARE BUILT AND VERIFIED LIVE.** Executes `docs/BRIEF_SPRINT_2_5.md`; both tasks done, all acceptance
 criteria met. `tsc --noEmit` clean **and** `next build` clean, plus four check scripts run against
