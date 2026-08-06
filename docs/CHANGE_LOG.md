@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-04 16:53 UTC — SEARCH: post-fix state VERIFIED independently from a cold start — `unindexed=0`, warm p50 1,250ms, live query 0.62s; a duplicate rebuild was avoided by checking `--verify-only` first. Heavy-jobs rule landed as `docs/CLAUDE.md` §17, cross-referenced from INGEST_PLAYBOOK §20 and HEAVY_JOBS.md. Search-thread sprint written to `docs/SPRINT.md`. Earlier: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 09:57 UTC — SEARCH: the fusion weight moves 0.7 -> 0.5, measured not carried. An 8-point sweep over all five streams (38 questions, current index, validated answer key) makes 0.5 the best-or-joint-best weight in EVERY stream and the outright winner on both averages: legislation 55.7->63.0%, debates 80.0->95.0% (0.7 was the WORST fusion weight tested there, 10pp below BM25 alone). PROVISIONAL cleared from GOLD_TEST_03-07. Separately, the committees stream cannot be fixed by better questions: CM1 scores 100% while returning ZERO committee documents, and committees-reports turns out to be 71.6% correspondence with report bodies not ingested at all — an ingest question, not an answer-key one (GOLD_TEST_09). Vector serving is still undeployed and its blockers are written up (VECTOR_DEPLOY_READINESS) — the missing concurrency guard is the one that would take it down. Both flags remain OFF. Earlier: 2026-08-04 16:53 UTC — SEARCH: post-fix state VERIFIED independently from a cold start — `unindexed=0`, warm p50 1,250ms, live query 0.62s; a duplicate rebuild was avoided by checking `--verify-only` first. Heavy-jobs rule landed as `docs/CLAUDE.md` §17, cross-referenced from INGEST_PLAYBOOK §20 and HEAVY_JOBS.md. Search-thread sprint written to `docs/SPRINT.md`. Earlier: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
 engine. The stub fallback is OUT of production (a failed search now stores an honest empty state +
 Retry, and `failed` is threaded distinctly from "found nothing" all the way to the UI); a FACTS OF
 THIS TURN block confines every Lex claim to what the server actually recorded; each stage entry
@@ -46,6 +46,95 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
 
 ---
+
+## SEARCH — the fusion weight, decided across all five streams: 0.7 → 0.5 (2026-08-06 09:57 UTC)
+
+Follows the five per-stream reports (GOLD_TEST_03–07) once Charlie's answer-key validation pass
+landed. Four things, in order of how much they matter.
+
+### 1. The weight is 0.5, and it is measured rather than carried
+
+The first sweep ran `[0, 0.5, 0.6, 0.7, 0.8, 1]` and both streams that can discriminate peaked at
+**0.5 — the lowest non-zero weight tested**. An optimum on the edge of the grid is a boundary, not
+an optimum, so the grid was widened downward to `[0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1]` and all five
+streams re-run. 0.5 survived: it is an interior maximum, not an artefact of where the sweep stopped.
+
+**0.5 is the best-or-joint-best weight in EVERY one of the five streams** and the outright winner
+on both the per-stream and the per-query average — so it is not a compromise, and no per-stream
+weight table is warranted.
+
+| | BM25 | 0.3 | 0.4 | **0.5** | 0.6 | 0.7 (prior) | 0.8 | vector |
+|---|---|---|---|---|---|---|---|---|
+| legislation (16q) | 43.8% | 49.0% | 49.0% | **63.0%** | 57.8% | 55.7% | 55.7% | 52.6% |
+| debates (10q) | 90.0% | 95.0% | 95.0% | **95.0%** | 90.0% | 80.0% | 80.0% | 75.0% |
+| committees (4q) | 100% | 100% | 100% | 100% | 100% | 100% | 100% | 100% |
+| caselaw (4q) | 87.5% | 87.5% | 87.5% | **100%** | 100% | 100% | 100% | 100% |
+| guidance (4q) | 87.5% | 100% | 100% | **100%** | 100% | 100% | 100% | 100% |
+| **macro** | 81.8% | 86.3% | 86.3% | **91.6%** | 89.6% | 87.1% | 87.1% | 85.5% |
+| **micro (per query)** | 71.1% | 75.9% | 75.9% | **83.1%** | 79.6% | 76.1% | 76.1% | 73.5% |
+
+Shipped: `VECTOR_WEIGHT` default 0.7 → 0.5 in `lib/lex/fusion.ts`. No stream regresses; the whole
+effect is legislation (+7.3pp) and debates (+15.0pp).
+
+**On debates, 0.7 was the worst fusion weight tested** — 10pp *below* BM25 alone. The old 0.7 was
+tuned on the 60k-row pilot subset where it genuinely beat equal weight by 3.5pp; it did not
+survive the move to the full corpus and per-stream scoping. `FUSION_REPORT.md` and
+`VECTOR_FULL_RECONFIRM.md` are banner-marked SUPERSEDED on the weight, with what still stands in
+each spelled out.
+
+**Honest scoping of the evidence:** committees is flat at every weight and contributes nothing;
+caselaw and guidance move only between BM25 and everything-else. The decision is genuinely carried
+by legislation and debates — the two streams with validated answer keys, 26 of the 38 questions.
+`GOLD_TEST_08` states this rather than claiming five independent confirmations.
+
+### 2. PROVISIONAL cleared from GOLD_TEST_03–07
+
+The banner was cleared **in `score-stream-fusion.ts`**, not just in the five `.md` files, so a
+re-run does not regenerate "validation outstanding". All five were regenerated from scratch and
+reproduced their prior numbers exactly at the shared weights.
+
+The drafted-questions caveat is **deliberately kept** on 05/06/07: the validation pass reviewed the
+gold set, and the gold set has no questions for committees, caselaw or guidance. One caveat lifted,
+the other not.
+
+Two harness fixes found while doing it: ties are now reported as ties (debates was naming 30/70
+"best" when 30/70, 40/60 and 50/50 all scored 95.0% — an artefact of array order), and the
+"←prior default" marker no longer leaks into comma-joined sentences.
+
+### 3. Committees cannot be fixed with better questions — `GOLD_TEST_09`
+
+The brief asked for candidate questions testing a committee's *conclusion* rather than its subject.
+Five read-only probes say that is not answerable from this corpus:
+
+- **`CM1` scores 100% while returning 0/20 committee documents.** Its answer key is satisfied
+  entirely by Hansard debates *about* Carillion. The stream's 100%-at-every-weight is not
+  "committees works", it is a measurement not attached to committees.
+- All 10 candidate conclusion phrases are absent from committee text — including "recklessness,
+  hubris and greed", which a 2020 Hansard debate quotes verbatim *from the report*.
+- `committees-reports` is **71.6% correspondence**, 10.4% "Report:" — and those 2,575 report rows
+  span 2,511 distinct titles, i.e. ~1 row each. They are stubs, not report bodies.
+- Every committee subject is also a Chamber subject and the Chamber corpus is 85× larger, so any
+  answer key built on subject vocabulary is dominated by Hansard ("Dangerous Dogs Act" 53 vs 129).
+  Only inquiry-specific jargon ("breed specific legislation", 184 vs 5) and the written-evidence
+  register ("written evidence submitted", 148 vs 5) discriminate.
+
+One candidate question is presented verified (CQ1, dangerous dogs); two are presented with their
+weakness stated rather than padded to three. **Nothing re-scored, awaiting Charlie's yes/no.**
+
+Also surfaced, and **not acted on** because it changes what users see: the live committees stream
+*post*-filters `types:['COMMITTEE']` over the whole 14.17M-row parliamentary tier instead of
+prefiltering. Measured yield on the four CM queries: 0/20, 7/20, 4/20, 19/20.
+
+### 4. Vector serving deploy-readiness — `VECTOR_DEPLOY_READINESS.md`
+
+Report only; nothing deployed, no flag flipped. The blocker that matters: `fts-query-service.ts`
+carries a concurrency semaphore added after load-testing killed it outright at 15 concurrent
+requests, and **`vector-query-service.ts` has no such guard** while the router fans out to 5
+concurrent stream calls. Also: a live Gemini embed call per query (a dependency class BM25 does not
+have), memory unmeasured against Railway's 8 GB per-replica cap, and a recommendation *not* to
+rebuild the vector index after the 6,464-row deletion (0.03%, and the rebuild is the 64 GB-class job).
+
+`LEX_SEARCH_VECTOR` and `LEX_VECTOR_STREAMS` both remain OFF.
 
 ## LEX Sprint 2.5 — feedback capture (§20.5) and document export (§8.2) (2026-08-05 17:30 UTC)
 
