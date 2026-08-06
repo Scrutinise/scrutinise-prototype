@@ -7,24 +7,36 @@
 // stream's behaviour changes, which is unprovable if the formula itself has forked.
 //
 // THE FORMULA (docs/FUSION_REPORT.md):
-//   score = w/(k + rank_vec) + (1−w)/(k + rank_bm25),  w = 0.7, k = 60
-// Tuned on the PILOT SUBSET: 70/30 beat naive equal-weight RRF (+3.5pp), vector-alone
-// (+1.9pp) and BM25 (+19.5pp) for gemini, and is the coexistence point where the vector
-// concept-win survives while the BM25 citation resolver still pins exact citations
-// (archetype A stays 100%). Equal weight is NOT the safe default — the pilot showed it drags
-// a strong vector model down.
+//   score = w/(k + rank_vec) + (1−w)/(k + rank_bm25),  w = 0.5, k = 60
 //
-// ⚠ THE WEIGHT IS CURRENTLY UNVALIDATED AGAINST THE LIVE INDEX. 0.7 was measured against an
-// index that has since changed twice: the 4 Aug coverage fix (1,191,345 rows merged) and the
-// 5 Aug dedup/orphan removal (19,161 rows removed, which changed BM25 document frequencies
-// and therefore every BM25 rank this formula consumes). Re-sweeping the weight is deliberately
-// OUT of scope until Charlie's answer-key validation pass lands — see docs/SPRINT.md. Treat
-// 0.7 as a carried-forward placeholder, not a measured value, wherever it appears.
+// THE WEIGHT IS 0.5, MEASURED — changed from 0.7 on 2026-08-06.
+// Evidence: docs/GOLD_TEST_08_fusion_weight_decision.md, computed by
+// scripts/ingest/search/weight-decision.ts from a full 8-point sweep
+// [0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1] run separately over all five streams (38 questions),
+// against the CURRENT index and with Charlie's answer-key validation pass (6 Aug) landed.
+//
+// 0.5 is not a compromise between streams. It is the best-or-joint-best weight in EVERY one of
+// the five, and the outright winner on both the per-stream and per-query averages, so adopting
+// it as a single default trades nothing away and no per-stream weight table is warranted.
+//   legislation  55.7% → 63.0%  (+7.3pp)
+//   debates      80.0% → 95.0%  (+15.0pp — at 0.7, fusion was 10pp WORSE than BM25 alone)
+//   caselaw / guidance / committees   unchanged, already at ceiling
+//
+// WHY THE OLD 0.7 WAS WRONG, since the reasoning it replaces was not silly. 0.7 was tuned on
+// the PILOT SUBSET, where it beat equal-weight RRF by 3.5pp, and the note that "equal weight is
+// NOT the safe default — it drags a strong vector model down" was true of that subset. It did
+// not survive contact with the whole corpus or with per-stream scoping: on debates, 0.7 is the
+// single worst fusion weight tested. The lesson is about the measurement, not the number — a
+// weight tuned on a subset and then carried was always going to need re-deriving, which is why
+// GOLD_TEST_08 is regenerable from sidecars rather than transcribed into prose.
+//
+// Still an offline recall@20 result. It says nothing about precision, latency or cost, and
+// LEX_SEARCH_VECTOR remains OFF by default regardless.
 
 import type { SearchResult } from './page1-config'
 
 export const RRF_K = parseInt(process.env.LEX_FUSION_RRF_K ?? '60', 10)
-export const VECTOR_WEIGHT = parseFloat(process.env.LEX_FUSION_VECTOR_WEIGHT ?? '0.7')
+export const VECTOR_WEIGHT = parseFloat(process.env.LEX_FUSION_VECTOR_WEIGHT ?? '0.5')
 
 /**
  * Fuse a dense ranking with a BM25 ranking. Order within each input IS the rank — callers

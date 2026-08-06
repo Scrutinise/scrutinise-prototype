@@ -256,5 +256,6 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
 // ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────
 // It now has two callers — this legacy whole-query path and query-router.ts's per-stream
 // path — and a ranking formula kept in two places is a ranking formula that will eventually
-// differ in one of them. The weight's provenance and its CURRENTLY-UNVALIDATED status (0.7
-// was measured against an index that has changed twice since) are documented there.
+// differ in one of them. The weight's provenance is documented there: it is 0.5 as of
+// 2026-08-06, measured across all five streams against the current index
+// (docs/GOLD_TEST_08_fusion_weight_decision.md), replacing the pilot-tuned 0.7.

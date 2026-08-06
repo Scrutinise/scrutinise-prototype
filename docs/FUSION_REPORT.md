@@ -1,5 +1,18 @@
 # FUSION TUNING — weighted RRF vs kind-based routing: decision report
 
+> ## ⛔ SUPERSEDED ON THE WEIGHT — 6 Aug 2026. The shipped weight is now **0.5, not 0.7**.
+> See `GOLD_TEST_08_fusion_weight_decision.md`. This report tuned the weight on the **pilot
+> subset** (60k curated rows, exact cosine, n=26). Re-measured on 6 Aug against the current
+> full index, per stream, with a validated answer key and a wider grid, 0.5 is the
+> best-or-joint-best weight in all five streams and 0.7 is the *worst* fusion weight tested on
+> the debates stream (10pp below BM25 alone).
+>
+> **What in here still stands.** The formula itself (weighted RRF, `RRF_K=60`), the finding
+> that routing adds nothing, and the reasoning about the citation-resolver pin. It is the
+> *number* that did not survive the move from a curated subset to the real corpus — and the
+> specific claim below that "equal weight is NOT the safe default" is the sentence that
+> reversed. Read this as the provenance of the method, not as the current setting.
+
 *2026-07-03 22:51 UTC. Follow-up to `PILOT_REPORT.md`: the bake-off found naive equal-weight
 RRF actively hurts strong models (hybrid < vector-alone; voyage B6 collapsed 50%→0%), so the
 vector flag stayed off pending a fusion fix. This sprint tuned the fusion on the same pilot
