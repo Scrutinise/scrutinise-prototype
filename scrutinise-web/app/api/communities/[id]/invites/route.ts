@@ -3,7 +3,8 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityAdmin } from '@/lib/community'
+import { requireCommunityAdmin, getRootCommunityId } from '@/lib/community'
+import { sendCommunityInviteEmail } from '@/lib/email'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -89,9 +90,15 @@ export async function POST(req: Request, { params }: Params) {
 
   const community = await prisma.community.findUnique({
     where: { id: communityId },
-    select: { name: true },
+    select: { name: true, parentCommunityId: true },
   })
   if (!community) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const rootId = await getRootCommunityId(communityId)
+  const rootName =
+    rootId === communityId
+      ? community.name
+      : (await prisma.community.findUniqueOrThrow({ where: { id: rootId }, select: { name: true } })).name
 
   const invite = await prisma.communityInvite.create({
     data: {
@@ -105,10 +112,7 @@ export async function POST(req: Request, { params }: Params) {
     },
   })
 
-  // An invited existing user gets it in their Feed. No email is sent from here
-  // — Central has no mail path yet, and telling the admin "invited" while
-  // nothing was delivered is the failure mode this whole item exists to fix,
-  // so the panel shows the link to pass on either way.
+  // An invited existing user also gets it in their Feed.
   if (userId) {
     await prisma.notification.create({
       data: {
@@ -121,5 +125,25 @@ export async function POST(req: Request, { params }: Params) {
     })
   }
 
-  return NextResponse.json({ invite, targetName, notified: Boolean(userId) }, { status: 201 })
+  // Email whenever the invite is tied to an address, registered or not
+  // (Stage 1.2). The result is REPORTED, never assumed: the invite row is
+  // already valid, so a mail failure must not lose it, and claiming "emailed"
+  // when nothing left the building is the exact failure the invite work exists
+  // to remove. The copy-link panel stays regardless.
+  let emailed: { sent: boolean; reason?: string } | null = null
+  if (email) {
+    emailed = await sendCommunityInviteEmail({
+      toEmail: email,
+      invitedByName: user.name ?? 'Someone',
+      communityName: community.name,
+      isBranch: community.parentCommunityId !== null,
+      rootName,
+      inviteCode: invite.inviteCode,
+    })
+  }
+
+  return NextResponse.json(
+    { invite, targetName, notified: Boolean(userId), emailed },
+    { status: 201 },
+  )
 }

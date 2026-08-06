@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { joinCommunityAndRoot } from '@/lib/community'
 
 const JoinSchema = z.object({ code: z.string().min(1) })
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
   const invite = await prisma.communityInvite.findUnique({
     where: { inviteCode: parsed.data.code },
-    include: { community: { select: { id: true, name: true } } },
+    include: { community: { select: { id: true, name: true, parentCommunityId: true } } },
   })
 
   if (!invite) {
@@ -54,15 +55,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ community: invite.community, alreadyMember: true })
   }
 
-  await prisma.$transaction([
-    prisma.communityMember.create({
-      data: { communityId: invite.communityId, userId: user.id, role: 'MEMBER' },
-    }),
-    prisma.communityInvite.update({
-      where: { id: invite.id },
-      data: { usedCount: { increment: 1 } },
-    }),
-  ])
+  // A branch invite makes you a member of that branch AND of the Community it
+  // sits in (Stage 1.2) — otherwise a branch invitee would never see the
+  // Community-wide board or the rest of the tree.
+  const { rootId } = await joinCommunityAndRoot(user.id, invite.communityId, 'MEMBER')
 
-  return NextResponse.json({ community: invite.community, alreadyMember: false }, { status: 201 })
+  await prisma.communityInvite.update({
+    where: { id: invite.id },
+    data: { usedCount: { increment: 1 } },
+  })
+
+  return NextResponse.json(
+    {
+      community: invite.community,
+      alreadyMember: false,
+      // Drives where JoinButton sends them: a branch invite raises the
+      // switch-or-add chooser, a Community invite lands on "Find your branch".
+      isBranch: invite.community.parentCommunityId !== null,
+      rootId,
+    },
+    { status: 201 },
+  )
 }

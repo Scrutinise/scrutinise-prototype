@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: Params) {
   })
   if (!community) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const tree = await getCommunityTree(id)
+  const tree = await getCommunityTree(id, user.id)
 
   return NextResponse.json({
     community: {
