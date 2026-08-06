@@ -23,7 +23,14 @@ export default function JoinButton({ code }: { code: string }) {
         setMessage(data.error ?? 'Something went wrong — please try again.')
         return
       }
-      router.push(`/communities/${data.community.id}`)
+      // A branch invite arrives with `joined=1`, which raises the switch-or-add
+      // chooser if they already belong to other branches. A Community-level
+      // invite lands on the root, where "Find your branch" is waiting.
+      router.push(
+        data.isBranch && !data.alreadyMember
+          ? `/communities/${data.community.id}?joined=1`
+          : `/communities/${data.community.id}`,
+      )
     } catch {
       setStatus('error')
       setMessage('Network error — please try again.')

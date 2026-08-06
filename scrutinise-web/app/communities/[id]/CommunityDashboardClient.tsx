@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import type { CommunityTreeNode } from '@/lib/community'
 import TeamsTree from './TeamsTree'
 import BulletinBoard from './BulletinBoard'
 import InvitePanel from './InvitePanel'
+import RequestsPanel from './RequestsPanel'
+import MembersPanel from './MembersPanel'
+import SwitchOrAddChooser from './SwitchOrAddChooser'
+import FindYourBranch from './FindYourBranch'
 
 interface Props {
   community: {
@@ -18,10 +23,18 @@ interface Props {
   }
   /** The top-level Community this board belongs to (itself, if top-level). */
   root: { id: string; name: string }
-  myRole: 'OWNER' | 'ADMIN' | 'MEMBER'
+  /** null when the viewer manages this node from above without being a member. */
+  myRole: 'OWNER' | 'ADMIN' | 'MEMBER' | null
   /** OWNER/ADMIN here or anywhere above here in the tree. */
   canManage: boolean
   tree: CommunityTreeNode
+  otherBranches: { id: string; name: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' }[]
+  showSwitchChooser: boolean
+  openPanel: 'requests' | 'members' | null
+  /** Member of the Community root — may request branches and found top-level ones. */
+  isCommunityMember: boolean
+  /** This viewer already has a request waiting on this node. */
+  hasPendingRequest: boolean
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -30,10 +43,53 @@ const ROLE_BADGE: Record<string, string> = {
   MEMBER: 'bg-zinc-100 text-zinc-600',
 }
 
-export default function CommunityDashboardClient({ community, root, myRole, canManage, tree }: Props) {
+export default function CommunityDashboardClient({
+  community,
+  root,
+  myRole,
+  canManage,
+  tree,
+  otherBranches,
+  showSwitchChooser,
+  openPanel,
+  isCommunityMember,
+  hasPendingRequest,
+}: Props) {
+  const router = useRouter()
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [leaveError, setLeaveError] = useState<string | null>(null)
+  const [requestState, setRequestState] = useState<'idle' | 'busy' | 'sent'>(
+    hasPendingRequest ? 'sent' : 'idle',
+  )
+  const [requestMessage, setRequestMessage] = useState('')
+  const [requestError, setRequestError] = useState<string | null>(null)
   const isBranch = community.parent !== null
+  const isMember = myRole !== null
+
+  // Show "Find your branch" on the Community page to anyone not yet in a
+  // branch. Deliberately not a one-shot screen — it stays until it is answered.
+  const topLevelBranches = tree.children
+  const inAnyBranch = otherBranches.length > 0
+  const showFindYourBranch = !isBranch && isMember && !inAnyBranch
+
+  async function handleRequestToJoin() {
+    setRequestState('busy')
+    setRequestError(null)
+    const res = await fetch(`/api/communities/${community.id}/join-requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: requestMessage.trim() || undefined }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setRequestError(typeof data.error === 'string' ? data.error : 'Could not send that request.')
+      setRequestState('idle')
+      return
+    }
+    setRequestState('sent')
+    router.refresh()
+  }
 
   async function handleGenerateInvite() {
     setGenerating(true)
@@ -49,6 +105,17 @@ export default function CommunityDashboardClient({ community, root, myRole, canM
     setGenerating(false)
   }
 
+  async function handleLeave() {
+    setLeaveError(null)
+    const res = await fetch(`/api/communities/${community.id}/leave`, { method: 'POST' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setLeaveError(typeof data.error === 'string' ? data.error : 'Could not leave.')
+      return
+    }
+    router.push(isBranch ? `/communities/${root.id}` : '/communities')
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       {community.parent && (
@@ -61,9 +128,15 @@ export default function CommunityDashboardClient({ community, root, myRole, canM
 
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{community.name}</h1>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_BADGE[myRole]}`}>{myRole}</span>
+            {myRole ? (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_BADGE[myRole]}`}>{myRole}</span>
+            ) : (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                Managing from above
+              </span>
+            )}
             {isBranch && (
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Branch</span>
             )}
@@ -72,17 +145,68 @@ export default function CommunityDashboardClient({ community, root, myRole, canM
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">{community.description}</p>
           )}
         </div>
+        {isMember && myRole !== 'OWNER' && (
+          <div className="text-right">
+            <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={handleLeave}>
+              Leave {isBranch ? 'this branch' : 'this Community'}
+            </Button>
+            {leaveError && <p className="mt-1 max-w-xs text-xs text-red-600">{leaveError}</p>}
+          </div>
+        )}
       </div>
+
+      {showSwitchChooser && (
+        <SwitchOrAddChooser branchName={community.name} otherBranches={otherBranches} />
+      )}
+
+      {showFindYourBranch && <FindYourBranch root={root} branches={topLevelBranches} />}
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-4 text-base font-semibold">Bulletin board</h2>
-          <BulletinBoard
-            communityId={community.id}
-            boardName={community.name}
-            isBranch={isBranch}
-            communityName={root.name}
-          />
+          {isMember ? (
+            <BulletinBoard
+              communityId={community.id}
+              boardName={community.name}
+              isBranch={isBranch}
+              communityName={root.name}
+            />
+          ) : (
+            // Reaching this page is not reading the branch. Two non-member
+            // cases land here, and they need different things: an ancestor
+            // admin is told why the board is closed to them, and a Community
+            // member is given the front door.
+            <div className="rounded-lg border border-dashed border-border p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                {community.name} is invite-only — its board is private to its members.
+              </p>
+              {canManage && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  You manage it from {root.name}, which lets you run it — not read it.
+                </p>
+              )}
+              {isCommunityMember && requestState === 'sent' && (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Your request is with its admins — you’ll hear back in your Feed.
+                </p>
+              )}
+              {isCommunityMember && requestState !== 'sent' && (
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <input
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value)}
+                    placeholder="Say why (optional)"
+                    maxLength={500}
+                    className="w-full max-w-sm rounded border bg-background px-2 py-1.5 text-sm"
+                  />
+                  <Button size="sm" disabled={requestState === 'busy'} onClick={handleRequestToJoin}>
+                    {requestState === 'busy' ? 'Sending…' : 'Request to join'}
+                  </Button>
+                  {requestError && <p className="text-xs text-red-600">{requestError}</p>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-8">
@@ -92,31 +216,40 @@ export default function CommunityDashboardClient({ community, root, myRole, canM
               <TeamsTree
                 communityId={community.id}
                 tree={tree}
-                canManage={canManage}
                 rootIsBranch={isBranch}
+                isCommunityMember={isCommunityMember}
               />
             </div>
           </div>
 
           {canManage && (
-            <div>
-              <h2 className="mb-4 text-base font-semibold">Invite people</h2>
-              <div className="space-y-3 rounded-lg border border-border p-4">
-                <InvitePanel communityId={community.id} />
-                <div className="border-t border-border pt-3">
-                  <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
-                    {generating ? 'Generating…' : 'Or generate a shareable link'}
-                  </Button>
-                  {inviteLink && (
-                    <input
-                      readOnly
-                      value={inviteLink}
-                      onFocus={(e) => e.currentTarget.select()}
-                      className="mt-2 w-full rounded border bg-muted/40 px-2 py-1 text-xs"
-                    />
-                  )}
+            <div className="space-y-3">
+              <h2 className="text-base font-semibold">Managing {community.name}</h2>
+              <RequestsPanel
+                communityId={community.id}
+                communityName={community.name}
+                defaultOpen={openPanel === 'requests'}
+              />
+              <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+              <details className="rounded-lg border border-border p-4">
+                <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
+                <div className="mt-3 space-y-3">
+                  <InvitePanel communityId={community.id} />
+                  <div className="border-t border-border pt-3">
+                    <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
+                      {generating ? 'Generating…' : 'Or generate a shareable link'}
+                    </Button>
+                    {inviteLink && (
+                      <input
+                        readOnly
+                        value={inviteLink}
+                        onFocus={(e) => e.currentTarget.select()}
+                        className="mt-2 w-full rounded border bg-muted/40 px-2 py-1 text-xs"
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
+              </details>
             </div>
           )}
 

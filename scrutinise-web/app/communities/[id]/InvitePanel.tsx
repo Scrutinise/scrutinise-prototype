@@ -29,7 +29,12 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
   const [searched, setSearched] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [issued, setIssued] = useState<{ label: string; link: string; notified: boolean } | null>(null)
+  const [issued, setIssued] = useState<{
+    label: string
+    link: string
+    notified: boolean
+    emailed: { sent: boolean; reason?: string } | null
+  } | null>(null)
 
   useEffect(() => {
     const term = q.trim()
@@ -79,6 +84,7 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
         label,
         link: `${window.location.origin}/community-invite/${data.invite.inviteCode}`,
         notified: Boolean(data.notified),
+        emailed: data.emailed ?? null,
       })
       setQ('')
       setResults([])
@@ -163,7 +169,19 @@ export default function InvitePanel({ communityId }: { communityId: string }) {
             Invite created for <span className="font-medium">{issued.label}</span>
             {issued.notified ? ' — it is waiting in their Feed.' : '.'}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">Send them this link:</p>
+          {/* What actually happened to the email, never an assumption — a mail
+              failure must not read as a delivered invitation. */}
+          {issued.emailed?.sent && (
+            <p className="mt-1 text-xs text-emerald-700">Emailed to them as well.</p>
+          )}
+          {issued.emailed && !issued.emailed.sent && (
+            <p className="mt-1 text-xs text-amber-700">
+              The email did not go out — {issued.emailed.reason}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {issued.emailed?.sent ? 'The link, in case you want to send it yourself:' : 'Send them this link:'}
+          </p>
           <input
             readOnly
             value={issued.link}

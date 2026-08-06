@@ -11,33 +11,33 @@ import type { CommunityTreeNode } from '@/lib/community'
 interface Props {
   communityId: string
   tree: CommunityTreeNode
-  canManage: boolean
   /** True when the board being viewed is itself a branch, not the Community root. */
   rootIsBranch: boolean
+  /** True when the viewer is a member of the Community root — i.e. may request branches. */
+  isCommunityMember: boolean
 }
 
 /**
  * One node of the Teams & branches tree.
  *
- * The 6 Aug user test called the Stage 1 tree "very basic, unclear": every node
- * sat at nearly the same indent and the admin actions were three tiny grey
- * words. This version gives each level a real indent with a connector rail, a
- * level label, and explicit labelled buttons — structure and affordance, not
- * styling. Existing components throughout; no new design system.
+ * Stage 1.1 gave it real nesting and labelled admin buttons. Stage 1.2 adds the
+ * membership affordances: every branch you are not in offers "Request to join",
+ * every branch you are in (and do not own) offers "Leave", and a node you
+ * manage shows how many people are waiting on it.
  */
 function TreeNode({
   node,
   isRoot,
   rootIsBranch,
   currentCommunityId,
-  canManage,
+  isCommunityMember,
   onChanged,
 }: {
   node: CommunityTreeNode
   isRoot: boolean
   rootIsBranch: boolean
   currentCommunityId: string
-  canManage: boolean
+  isCommunityMember: boolean
   onChanged: () => void
 }) {
   const [expanded, setExpanded] = useState(true)
@@ -45,20 +45,28 @@ function TreeNode({
   const [name, setName] = useState(node.name)
   const [addingBranch, setAddingBranch] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [requesting, setRequesting] = useState(false)
+  const [requestMessage, setRequestMessage] = useState('')
   const [branchName, setBranchName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const isCurrent = node.id === currentCommunityId
+  const canManage = node.viewerCanManage
+  const isMember = node.viewerRole !== null
+  // The root is joined by invitation, never by request; only branches below it
+  // take join requests.
+  const isBranchNode = !isRoot || rootIsBranch
 
-  async function send(url: string, method: 'PATCH' | 'POST', payload: unknown): Promise<boolean> {
+  async function send(url: string, method: 'PATCH' | 'POST', payload?: unknown): Promise<boolean> {
     setBusy(true)
     setError(null)
     try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload ?? {}),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -99,11 +107,26 @@ function TreeNode({
     }
   }
 
+  async function handleRequest(e: React.FormEvent) {
+    e.preventDefault()
+    if (await send(`/api/communities/${node.id}/join-requests`, 'POST', { message: requestMessage.trim() || undefined })) {
+      setRequesting(false)
+      setRequestMessage('')
+      setNotice('Request sent — an admin of this branch will decide.')
+      onChanged()
+    }
+  }
+
+  async function handleLeave() {
+    if (await send(`/api/communities/${node.id}/leave`, 'POST')) {
+      setNotice(`You have left ${node.name}.`)
+      onChanged()
+    }
+  }
+
   return (
     <li className="relative">
-      <div
-        className={`rounded-md px-2 py-1.5 ${isCurrent ? 'bg-muted/60' : ''}`}
-      >
+      <div className={`rounded-md px-2 py-1.5 ${isCurrent ? 'bg-muted/60' : ''}`}>
         <div className="flex flex-wrap items-center gap-2">
           {node.children.length > 0 ? (
             <button
@@ -136,6 +159,9 @@ function TreeNode({
           ) : isCurrent ? (
             <span className="text-sm font-semibold">{node.name}</span>
           ) : (
+            // Every node in the tree is reachable by anyone who can see this
+            // tree — they are all in one Community. A branch you are not in
+            // opens on its own page with the front door, not its board.
             <Link href={`/communities/${node.id}`} className="text-sm font-medium hover:underline">
               {node.name}
             </Link>
@@ -144,6 +170,11 @@ function TreeNode({
           <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600">
             {isRoot ? (rootIsBranch ? 'This branch' : 'Community') : `Branch · level ${node.depth}`}
           </span>
+          {node.viewerRole && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+              {node.viewerRole === 'MEMBER' ? 'Member' : node.viewerRole}
+            </span>
+          )}
           <span className="text-xs text-muted-foreground">
             {node.memberCount} member{node.memberCount !== 1 ? 's' : ''}
           </span>
@@ -152,7 +183,61 @@ function TreeNode({
           ) : (
             <span className="text-xs text-muted-foreground">· no manager</span>
           )}
+          {canManage && node.pendingRequestCount > 0 && (
+            <Link
+              href={`/communities/${node.id}?panel=requests`}
+              className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 hover:bg-amber-200"
+            >
+              {node.pendingRequestCount} waiting
+            </Link>
+          )}
         </div>
+
+        {/* Membership affordances — request, or leave. */}
+        {isBranchNode && !renaming && (
+          <div className="ml-6 mt-1.5 flex flex-wrap items-center gap-1.5">
+            {!isMember && isCommunityMember && (
+              node.viewerHasPendingRequest ? (
+                <span className="text-xs text-muted-foreground">Request pending</span>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setRequesting((v) => !v)}
+                >
+                  Request to join
+                </Button>
+              )
+            )}
+            {isMember && node.viewerRole !== 'OWNER' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs text-muted-foreground"
+                disabled={busy}
+                onClick={handleLeave}
+              >
+                Leave
+              </Button>
+            )}
+          </div>
+        )}
+
+        {requesting && (
+          <form onSubmit={handleRequest} className="ml-6 mt-2 flex flex-wrap items-center gap-2">
+            <Input
+              value={requestMessage}
+              onChange={(e) => setRequestMessage(e.target.value)}
+              placeholder="Say why (optional)"
+              className="h-7 w-56 text-sm"
+              maxLength={500}
+              autoFocus
+            />
+            <Button size="sm" type="submit" disabled={busy}>Send request</Button>
+            <Button size="sm" variant="ghost" type="button" onClick={() => setRequesting(false)}>Cancel</Button>
+          </form>
+        )}
 
         {canManage && !renaming && (
           <div className="ml-6 mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -168,7 +253,17 @@ function TreeNode({
           </div>
         )}
 
+        {/* A plain member may found a TOP-LEVEL branch — the growth mechanic. */}
+        {isRoot && !rootIsBranch && !canManage && isCommunityMember && !addingBranch && (
+          <div className="ml-6 mt-1.5">
+            <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setAddingBranch(true)}>
+              Create your own branch
+            </Button>
+          </div>
+        )}
+
         {error && <p className="ml-6 mt-1 text-xs text-red-600">{error}</p>}
+        {notice && <p className="ml-6 mt-1 text-xs text-muted-foreground">{notice}</p>}
 
         {addingBranch && (
           <form onSubmit={handleAddBranch} className="ml-6 mt-2 flex items-center gap-2">
@@ -222,7 +317,7 @@ function TreeNode({
               isRoot={false}
               rootIsBranch={rootIsBranch}
               currentCommunityId={currentCommunityId}
-              canManage={canManage}
+              isCommunityMember={isCommunityMember}
               onChanged={onChanged}
             />
           ))}
@@ -232,7 +327,7 @@ function TreeNode({
   )
 }
 
-export default function TeamsTree({ communityId, tree, canManage, rootIsBranch }: Props) {
+export default function TeamsTree({ communityId, tree, rootIsBranch, isCommunityMember }: Props) {
   const router = useRouter()
   return (
     <ul className="space-y-1">
@@ -241,7 +336,7 @@ export default function TeamsTree({ communityId, tree, canManage, rootIsBranch }
         isRoot
         rootIsBranch={rootIsBranch}
         currentCommunityId={communityId}
-        canManage={canManage}
+        isCommunityMember={isCommunityMember}
         onChanged={() => router.refresh()}
       />
     </ul>
