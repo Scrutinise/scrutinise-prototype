@@ -148,6 +148,91 @@ Accept your invitation: ${url}
   await sendEmail({ to: email, subject, html, text })
 }
 
+/**
+ * Central — a Community/branch invitation tied to an email address.
+ *
+ * Returns a RESULT instead of throwing or returning quietly. `sendEmail` goes
+ * silent when there is no API key and when the address is suppressed, which for
+ * an invite is the worst of both worlds: the invite row is already created and
+ * valid, so a throw would lose it, while a quiet return would let the panel tell
+ * an admin their invitation was emailed when nothing left the building. The
+ * caller reports what actually happened and keeps the copy-link panel either
+ * way — email delivery is never guaranteed (Stage 1.2 brief, item 8).
+ */
+export async function sendCommunityInviteEmail({
+  toEmail,
+  invitedByName,
+  communityName,
+  isBranch,
+  rootName,
+  inviteCode,
+}: {
+  toEmail: string
+  invitedByName: string
+  communityName: string
+  isBranch: boolean
+  rootName: string
+  inviteCode: string
+}): Promise<{ sent: boolean; reason?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    return { sent: false, reason: 'Email is not configured on this deployment — send them the link yourself.' }
+  }
+  if (await isEmailSuppressed(toEmail)) {
+    return { sent: false, reason: `${toEmail} has unsubscribed — send them the link yourself.` }
+  }
+
+  const inviteUrl = `${APP_URL}/community-invite/${inviteCode}`
+  const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
+  const where = isBranch ? `${communityName}, a branch of ${rootName},` : communityName
+
+  const subject = `${invitedByName} has invited you to join ${communityName} on Scrutinise`
+
+  const text = `
+${invitedByName} has invited you to join ${where} on Scrutinise Central.
+
+Open the invitation:
+${inviteUrl}
+
+Central is where people organise, train, debate and run events. Joining a Community
+does not give anyone access to your Ideas — those stay governed by their own permissions.
+
+---
+If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a1a1aa;">Scrutinise Central</p>
+  <h2 style="font-size: 18px; font-weight: 600;">You've been invited to join ${communityName}</h2>
+  <p><strong>${invitedByName}</strong> has invited you to join ${where} on Scrutinise.</p>
+  <p>
+    <a href="${inviteUrl}" style="display: inline-block; padding: 12px 24px; background: #18181b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+      Open the invitation →
+    </a>
+  </p>
+  <p style="color: #71717a; font-size: 12px;">Or paste this link into your browser:<br/>${inviteUrl}</p>
+  <p style="color: #71717a; font-size: 12px;">
+    Joining a Community does not give anyone access to your Ideas — those stay governed by their own permissions.
+  </p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">
+    Scrutinise is a not-for-profit civic technology platform.<br/>
+    <a href="${unsubscribeUrl}" style="color: #71717a;">Unsubscribe</a>
+  </p>
+</body>
+</html>
+`.trim()
+
+  try {
+    await sendEmail({ to: toEmail, subject, html, text })
+    return { sent: true }
+  } catch (err) {
+    return { sent: false, reason: err instanceof Error ? err.message : 'The email could not be sent.' }
+  }
+}
+
 export async function sendContactFormEmail(
   fromEmail: string,
   fromName: string,

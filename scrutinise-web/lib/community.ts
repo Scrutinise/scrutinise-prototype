@@ -104,19 +104,7 @@ export async function getRootCommunityId(communityId: string): Promise<string> {
 
 /** Every node id in the Community tree containing `communityId`, root included. */
 export async function getCommunityTreeIds(communityId: string): Promise<string[]> {
-  const rootId = await getRootCommunityId(communityId)
-  const ids = [rootId]
-  let frontier = [rootId]
-  let guard = 0
-  while (frontier.length > 0 && guard++ < 50) {
-    const children = await prisma.community.findMany({
-      where: { parentCommunityId: { in: frontier } },
-      select: { id: true },
-    })
-    frontier = children.map((c) => c.id)
-    ids.push(...frontier)
-  }
-  return ids
+  return getSubtreeIds(await getRootCommunityId(communityId))
 }
 
 /**
@@ -289,6 +277,300 @@ export async function lookupInviteCandidates(
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 1.2 — membership, join requests and roles.
+// The rules Charlie fixed on 6 Aug 2026, in one place:
+//   · a branch invite makes you a member of that branch AND of the root
+//   · branches are invite-only; a Community member may REQUEST to join one
+//   · anyone with manage rights on a node decides its requests
+//   · multi-branch membership is allowed; leaving is always self-serve
+//   · any Community member may found a TOP-LEVEL branch; sub-branches under an
+//     existing branch stay manage-gated
+// See docs/SCRUTINISE_CENTRAL_SPEC.md §3.2.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const JOIN_REQUEST_STATUSES = ['PENDING', 'APPROVED', 'DECLINED'] as const
+export type JoinRequestStatus = (typeof JOIN_REQUEST_STATUSES)[number]
+
+/** Thrown for a rule violation the caller should see as a 4xx, not a 500. */
+export class CommunityRuleError extends Error {
+  constructor(message: string, readonly status = 400) {
+    super(message)
+    this.name = 'CommunityRuleError'
+  }
+}
+
+/**
+ * Join a node, and the Community root with it.
+ *
+ * Belonging to a branch means belonging to the Community it sits in — otherwise
+ * a branch invitee would never see the Community-wide board or the rest of the
+ * tree. Root membership is added at MEMBER and never overwritten: being OWNER of
+ * a branch does not make you an owner of the whole Community.
+ *
+ * Idempotent — re-joining a node you already belong to leaves your role alone.
+ */
+export async function joinCommunityAndRoot(
+  userId: string,
+  communityId: string,
+  role: CommunityRole = 'MEMBER',
+): Promise<{ joinedNode: boolean; joinedRoot: boolean; rootId: string }> {
+  const rootId = await getRootCommunityId(communityId)
+
+  return prisma.$transaction(async (tx) => {
+    const existingNode = await tx.communityMember.findUnique({
+      where: { communityId_userId: { communityId, userId } },
+    })
+    if (!existingNode) {
+      await tx.communityMember.create({ data: { communityId, userId, role } })
+    }
+
+    let joinedRoot = false
+    if (rootId !== communityId) {
+      const existingRoot = await tx.communityMember.findUnique({
+        where: { communityId_userId: { communityId: rootId, userId } },
+      })
+      if (!existingRoot) {
+        await tx.communityMember.create({ data: { communityId: rootId, userId, role: 'MEMBER' } })
+        joinedRoot = true
+      }
+    }
+
+    return { joinedNode: !existingNode, joinedRoot, rootId }
+  })
+}
+
+/**
+ * Leave a node. Always self-serve.
+ *
+ * An OWNER cannot leave — that would orphan the node with no one able to
+ * administer it; ownership has to move first (not built this sprint).
+ * Leaving the ROOT means leaving the Community, so every branch membership in
+ * that tree goes with it — the alternative would leave branch rows behind that
+ * violate the branch-implies-root invariant above.
+ */
+export async function leaveCommunity(userId: string, communityId: string): Promise<{ leftIds: string[] }> {
+  const membership = await getCommunityMembership(userId, communityId)
+  if (!membership) throw new CommunityRuleError('You are not a member of this Community', 404)
+  if (membership.role === 'OWNER') {
+    throw new CommunityRuleError(
+      'An owner cannot leave — hand ownership to someone else first.',
+      409,
+    )
+  }
+
+  const rootId = await getRootCommunityId(communityId)
+  const targets =
+    rootId === communityId
+      ? await getCommunityTreeIds(communityId) // leaving the Community leaves all of it
+      : [communityId]
+
+  const owned = await prisma.communityMember.findFirst({
+    where: { userId, communityId: { in: targets }, role: 'OWNER' },
+    select: { communityId: true },
+  })
+  if (owned) {
+    throw new CommunityRuleError(
+      'You own a branch inside this Community — hand that branch over before leaving.',
+      409,
+    )
+  }
+
+  const { count } = await prisma.communityMember.deleteMany({
+    where: { userId, communityId: { in: targets } },
+  })
+  return { leftIds: count > 0 ? targets : [] }
+}
+
+/**
+ * Ask to join a branch. Open to members of the Community (i.e. of the root) who
+ * are not already in this node — branches are invite-only, so a request is the
+ * front door for everyone else.
+ *
+ * The duplicate-pending guard is the partial unique index in
+ * prisma/central_stage1_2.sql; this check is the friendly message in front of
+ * it, not the guarantee. Re-requesting after a DECLINE is allowed on purpose —
+ * no permanent block this sprint.
+ */
+export async function createJoinRequest(userId: string, communityId: string, message?: string) {
+  const node = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { id: true, name: true, parentCommunityId: true },
+  })
+  if (!node) throw new CommunityRuleError('Community not found', 404)
+  if (!node.parentCommunityId) {
+    throw new CommunityRuleError('The Community itself is joined by invitation, not by request.', 400)
+  }
+
+  const rootId = await getRootCommunityId(communityId)
+  if (!(await getCommunityMembership(userId, rootId))) {
+    throw new CommunityRuleError('Join the Community first — branches are for its members.', 403)
+  }
+  if (await getCommunityMembership(userId, communityId)) {
+    throw new CommunityRuleError('You are already a member of this branch', 409)
+  }
+
+  const pending = await prisma.communityJoinRequest.findFirst({
+    where: { communityId, userId, status: 'PENDING' },
+  })
+  if (pending) throw new CommunityRuleError('You already have a request waiting on this branch', 409)
+
+  const request = await prisma.communityJoinRequest.create({
+    data: { communityId, userId, message: message?.trim() || null },
+    include: { user: { select: { id: true, name: true, username: true } } },
+  })
+
+  // Tell the people who can actually act on it — the node's own OWNER/ADMINs and
+  // every ancestor admin, which is the same set canManageCommunity() authorises.
+  const managerIds = await getNodeManagerIds(communityId)
+  const requesterName = request.user.name ?? request.user.username
+  if (managerIds.length > 0) {
+    await prisma.notification.createMany({
+      data: managerIds.map((managerId) => ({
+        userId: managerId,
+        type: 'SYSTEM' as const,
+        title: 'Request to join',
+        message: `${requesterName} asked to join ${node.name}`,
+        linkUrl: `/communities/${communityId}?panel=requests`,
+      })),
+    })
+  }
+
+  return request
+}
+
+/** Everyone authorised to manage a node: its OWNER/ADMINs plus ancestor admins. */
+export async function getNodeManagerIds(communityId: string): Promise<string[]> {
+  const scopeIds = [communityId, ...(await getAncestorIds(communityId))]
+  const rows = await prisma.communityMember.findMany({
+    where: { communityId: { in: scopeIds }, role: { in: ADMIN_ROLES } },
+    select: { userId: true },
+  })
+  return [...new Set(rows.map((r) => r.userId))]
+}
+
+/**
+ * Approve or decline a pending request. Approval creates the membership (and
+ * the root membership with it) and tells the requester; a decline tells them
+ * too, rather than leaving them wondering.
+ */
+export async function decideJoinRequest(
+  requestId: string,
+  deciderId: string,
+  decision: 'APPROVED' | 'DECLINED',
+) {
+  const request = await prisma.communityJoinRequest.findUnique({
+    where: { id: requestId },
+    include: { community: { select: { id: true, name: true } } },
+  })
+  if (!request) throw new CommunityRuleError('Request not found', 404)
+  if (request.status !== 'PENDING') {
+    throw new CommunityRuleError(`This request was already ${request.status.toLowerCase()}`, 409)
+  }
+  if (!(await canManageCommunity(deciderId, request.communityId))) {
+    throw new CommunityRuleError('You cannot decide requests for this branch', 403)
+  }
+
+  if (decision === 'APPROVED') {
+    await joinCommunityAndRoot(request.userId, request.communityId, 'MEMBER')
+  }
+
+  const updated = await prisma.communityJoinRequest.update({
+    where: { id: requestId },
+    data: { status: decision, decidedAt: new Date(), decidedByUserId: deciderId },
+  })
+
+  await prisma.notification.create({
+    data: {
+      userId: request.userId,
+      type: 'SYSTEM',
+      title: decision === 'APPROVED' ? 'Request approved' : 'Request declined',
+      message:
+        decision === 'APPROVED'
+          ? `You are now a member of ${request.community.name}`
+          : `Your request to join ${request.community.name} was declined. You can ask again.`,
+      // `joined=1` is what raises the switch-or-add chooser on arrival — see
+      // the note on the branch page. On a decline it points at the branch so
+      // they can re-request from there.
+      linkUrl:
+        decision === 'APPROVED'
+          ? `/communities/${request.communityId}?joined=1`
+          : `/communities/${request.communityId}`,
+    },
+  })
+
+  return updated
+}
+
+/** Pending requests on a node, for its Requests panel. */
+export async function listJoinRequests(communityId: string, status: JoinRequestStatus = 'PENDING') {
+  return prisma.communityJoinRequest.findMany({
+    where: { communityId, status },
+    include: { user: { select: { id: true, name: true, username: true } } },
+    orderBy: { createdAt: 'asc' },
+  })
+}
+
+/**
+ * Promote MEMBER→ADMIN or demote ADMIN→MEMBER on a node.
+ * OWNER is fixed here: it is not a rung on this ladder, and letting a co-admin
+ * demote the owner would make the node takeable.
+ */
+export async function setMemberRole(
+  communityId: string,
+  targetUserId: string,
+  role: 'ADMIN' | 'MEMBER',
+) {
+  const membership = await getCommunityMembership(targetUserId, communityId)
+  if (!membership) throw new CommunityRuleError('That person is not a member of this node', 404)
+  if (membership.role === 'OWNER') {
+    throw new CommunityRuleError('The owner’s role cannot be changed here', 409)
+  }
+  return prisma.communityMember.update({
+    where: { communityId_userId: { communityId, userId: targetUserId } },
+    data: { role },
+  })
+}
+
+/** Remove someone from a node. The OWNER cannot be removed. */
+export async function removeMember(communityId: string, targetUserId: string) {
+  const membership = await getCommunityMembership(targetUserId, communityId)
+  if (!membership) throw new CommunityRuleError('That person is not a member of this node', 404)
+  if (membership.role === 'OWNER') {
+    throw new CommunityRuleError('The owner cannot be removed', 409)
+  }
+
+  // Clear the manager pointer if it named them, so the node doesn't keep
+  // advertising a manager who is no longer in it.
+  await prisma.$transaction([
+    prisma.community.updateMany({
+      where: { id: communityId, managerId: targetUserId },
+      data: { managerId: null },
+    }),
+    prisma.communityMember.delete({
+      where: { communityId_userId: { communityId, userId: targetUserId } },
+    }),
+  ])
+}
+
+/**
+ * Who may create a branch under `parentId`.
+ *
+ * TOP-LEVEL branches (children of the Community root) are open to any member of
+ * that Community — the deliberate growth mechanic: an invitee whose town has no
+ * branch founds it. SUB-branches under an existing branch stay manage-gated,
+ * because that is a structural decision belonging to that branch's admins.
+ */
+export async function canCreateBranchUnder(userId: string, parentId: string): Promise<boolean> {
+  if (await canManageCommunity(userId, parentId)) return true
+  const parent = await prisma.community.findUnique({
+    where: { id: parentId },
+    select: { parentCommunityId: true },
+  })
+  if (!parent || parent.parentCommunityId !== null) return false
+  return (await getCommunityMembership(userId, parentId)) !== null
+}
+
 export type CommunityTreeMember = { userId: string; name: string | null; username: string; role: CommunityRole }
 
 export type CommunityTreeNode = {
@@ -300,43 +582,114 @@ export type CommunityTreeNode = {
   memberCount: number
   /** Members of THIS node — the assign-manager options for it. */
   members: CommunityTreeMember[]
+  /** Viewer context, present when getCommunityTree is given a viewerId. */
+  viewerRole: CommunityRole | null
+  viewerCanManage: boolean
+  viewerHasPendingRequest: boolean
+  /** Pending requests waiting on this node — only filled in for managers. */
+  pendingRequestCount: number
   children: CommunityTreeNode[]
 }
 
 /**
- * Full branch subtree rooted at communityId, for the "Teams & branches"
- * expandable-tree region. Community counts are small at Stage 1 scale, so a
- * plain recursive fetch (no CTE) is fine.
+ * Full branch subtree rooted at communityId, for the "Teams & branches" region.
+ *
+ * Rewritten at Stage 1.2 to load level-by-level and merge the viewer's own
+ * context in bulk, rather than recursing with several queries per node: the
+ * tree now has to answer "am I in this one, can I manage it, have I already
+ * asked" for every node it draws, and doing that per node would be a query
+ * storm on a structure that is meant to grow.
  */
-export async function getCommunityTree(communityId: string, depth = 0): Promise<CommunityTreeNode> {
-  const node = await prisma.community.findUniqueOrThrow({
-    where: { id: communityId },
+export async function getCommunityTree(communityId: string, viewerId?: string): Promise<CommunityTreeNode> {
+  const nodes = await prisma.community.findMany({
+    where: { id: { in: await getSubtreeIds(communityId) } },
     include: {
       manager: { select: { name: true } },
-      children: { select: { id: true }, orderBy: { createdAt: 'asc' } },
       members: {
         include: { user: { select: { name: true, username: true } } },
         orderBy: { joinedAt: 'asc' },
       },
-      _count: { select: { members: true } },
     },
+    orderBy: { createdAt: 'asc' },
   })
+  const nodeIds = nodes.map((n) => n.id)
 
-  const children = await Promise.all(node.children.map((c) => getCommunityTree(c.id, depth + 1)))
+  // Viewer context, three queries for the whole tree rather than three per node.
+  const viewerMemberships = viewerId
+    ? await prisma.communityMember.findMany({
+        where: { userId: viewerId, communityId: { in: nodeIds } },
+        select: { communityId: true, role: true },
+      })
+    : []
+  const viewerRoleByNode = new Map(viewerMemberships.map((m) => [m.communityId, m.role as CommunityRole]))
 
-  return {
-    id: node.id,
-    name: node.name,
-    depth,
-    managerId: node.managerId,
-    managerName: node.manager?.name ?? null,
-    memberCount: node._count.members,
-    members: node.members.map((m) => ({
-      userId: m.userId,
-      name: m.user.name,
-      username: m.user.username,
-      role: m.role as CommunityRole,
-    })),
-    children,
+  const viewerPending = viewerId
+    ? await prisma.communityJoinRequest.findMany({
+        where: { userId: viewerId, communityId: { in: nodeIds }, status: 'PENDING' },
+        select: { communityId: true },
+      })
+    : []
+  const pendingSet = new Set(viewerPending.map((r) => r.communityId))
+
+  const pendingCounts = await prisma.communityJoinRequest.groupBy({
+    by: ['communityId'],
+    where: { communityId: { in: nodeIds }, status: 'PENDING' },
+    _count: { _all: true },
+  })
+  const pendingCountByNode = new Map(pendingCounts.map((p) => [p.communityId, p._count._all]))
+
+  // Manage rights cascade down, so an admin anywhere at or above the subtree
+  // root manages everything in it — resolved once, then inherited.
+  const rootCanManage = viewerId ? await canManageCommunity(viewerId, communityId) : false
+
+  const byParent = new Map<string | null, typeof nodes>()
+  for (const n of nodes) {
+    const key = n.parentCommunityId
+    if (!byParent.has(key)) byParent.set(key, [])
+    byParent.get(key)!.push(n)
   }
+
+  function build(node: (typeof nodes)[number], depth: number, inheritedManage: boolean): CommunityTreeNode {
+    const viewerRole = viewerRoleByNode.get(node.id) ?? null
+    const canManage = inheritedManage || viewerRole === 'OWNER' || viewerRole === 'ADMIN'
+    return {
+      id: node.id,
+      name: node.name,
+      depth,
+      managerId: node.managerId,
+      managerName: node.manager?.name ?? null,
+      memberCount: node.members.length,
+      members: node.members.map((m) => ({
+        userId: m.userId,
+        name: m.user.name,
+        username: m.user.username,
+        role: m.role as CommunityRole,
+      })),
+      viewerRole,
+      viewerCanManage: canManage,
+      viewerHasPendingRequest: pendingSet.has(node.id),
+      pendingRequestCount: canManage ? (pendingCountByNode.get(node.id) ?? 0) : 0,
+      children: (byParent.get(node.id) ?? []).map((c) => build(c, depth + 1, canManage)),
+    }
+  }
+
+  const rootNode = nodes.find((n) => n.id === communityId)
+  if (!rootNode) throw new CommunityRuleError('Community not found', 404)
+  return build(rootNode, 0, rootCanManage)
+}
+
+/** Every node id at or below `communityId` (the subtree, not the whole tree). */
+export async function getSubtreeIds(communityId: string): Promise<string[]> {
+  const ids = [communityId]
+  let frontier = [communityId]
+  let guard = 0
+  while (frontier.length > 0 && guard++ < 50) {
+    const children = await prisma.community.findMany({
+      where: { parentCommunityId: { in: frontier } },
+      select: { id: true },
+    })
+    frontier = children.map((c) => c.id)
+    ids.push(...frontier)
+  }
+  return ids
 }

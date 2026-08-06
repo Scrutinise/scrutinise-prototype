@@ -501,6 +501,8 @@ model User {
   groupMemberships          GroupMember[]
   ownedGroups               Group[]
   communityMemberships      CommunityMember[]
+  communityJoinRequests     CommunityJoinRequest[] @relation("JoinRequester")
+  communityJoinDecisions    CommunityJoinRequest[] @relation("JoinDecider")
   managedCommunities        Community[]         @relation("CommunityManager")
   bulletinPosts             BulletinPost[]
   bulletinVotes             BulletinVote[]
@@ -626,6 +628,12 @@ model Idea {
   // REFERENCES ONLY (id/citation/url/snippet); no corpus full text is copied here.
   // { version, byStage: { <PAGE>: { intent, ranAt, ok, failureReason?, query[], results[] } }, research: [...] }
   stageSearches             Json?
+  // §6d Web + X orientation — the Tier B/C background pass that runs alongside the
+  // Page-1 corpus search. REFERENCES AND EXTRACTS ONLY: dated, attributed items with
+  // their source URL, plus the per-call outcome/latency/cost record. Never a source
+  // of legal claims (Tier A is the corpus); Tier C is quarantined per §6d.3.
+  // { ranAt, recencyDays, recency{…}, comparative[], argumentsMined[], calls[], failed, … }
+  orientation               Json?
   // Lex rebuild — the current Lex PAGE the user has advanced into (§14 / Sprint 2).
   // Distinct from the 5-stage lifecycle `stage`. Advanced explicitly ("Continue to Diagnosis").
   lexPage                   String?         @default("ORIENTATION") // ORIENTATION | DIAGNOSIS | …
@@ -1237,6 +1245,7 @@ model Community {
 
   members           CommunityMember[]
   invites           CommunityInvite[]
+  joinRequests      CommunityJoinRequest[]
   bulletinPosts     BulletinPost[]
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
@@ -1275,6 +1284,38 @@ model CommunityInvite {
   expiresAt       DateTime?
   createdByUserId String
   createdAt       DateTime  @default(now())
+}
+
+// Branches are invite-only; a Community member who does not belong to a branch
+// asks to join it and anyone with manage rights on that node decides
+// (Stage 1.2, docs/SCRUTINISE_CENTRAL_SPEC.md §3.2).
+//
+// `status` is a plain String rather than an enum for the same reason as
+// BulletinPost.scope — no CREATE TYPE runs against a live database — and the
+// value set is validated by Zod at every write boundary.
+//
+// ⚠ The duplicate-pending guard is a PARTIAL unique index that Prisma's schema
+// language cannot express: `CommunityJoinRequest_pending_unique` on
+// (communityId, userId) WHERE status = 'PENDING'. It is created by
+// prisma/central_stage1_2.sql and is NOT visible here, so `prisma migrate diff`
+// will want to drop it — do not let it. A plain @@unique would be wrong: it
+// would make a declined request permanently un-repeatable, and re-requesting
+// after a decline is deliberately allowed.
+model CommunityJoinRequest {
+  id              String    @id @default(uuid())
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id])
+  userId          String
+  user            User      @relation("JoinRequester", fields: [userId], references: [id])
+  status          String    @default("PENDING")
+  message         String?
+  createdAt       DateTime  @default(now())
+  decidedAt       DateTime?
+  decidedByUserId String?
+  decidedBy       User?     @relation("JoinDecider", fields: [decidedByUserId], references: [id])
+
+  @@index([communityId, status])
+  @@index([userId, status])
 }
 
 // Bulletin board — thread + reply share one self-referential table (same
