@@ -15,10 +15,13 @@
  *   tsx search/score-stream-fusion.ts --stream=debates     --out=GOLD_TEST_04_debates_vector.md
  *   ... committees | caselaw | guidance   (these score DRAFT questions — see gold-draft-streams.ts)
  *
- * EVERY NUMBER THIS EMITS IS PROVISIONAL. The answer-key validation pass is outstanding, and
- * the index changed twice this week (coverage fix 4 Aug, dedup 5 Aug). For the three streams
- * with no gold coverage the questions themselves are CC drafts, so those reports are
- * provisional twice over. Nothing here is a live decision: the flag stays OFF.
+ * ANSWER-KEY STATUS (updated 6 Aug 2026). Charlie's validation pass has LANDED, covering
+ * archetypes A, C, D, E and F (B was validated in June/July). Numbers scored against `GOLD`
+ * are therefore CONFIRMED, not provisional. The three streams with no gold coverage
+ * (committees, caselaw, guidance) are still scored on CC-drafted questions — that caveat is
+ * NOT cleared by the validation pass, because the pass reviewed the gold set and the gold set
+ * contains no questions for those streams. Their reports keep the drafted-questions warning.
+ * Nothing here is a live decision either way: the flag stays OFF.
  */
 import fs from 'fs'
 import path from 'path'
@@ -38,8 +41,18 @@ const OUT = arg('out') ?? `GOLD_TEST_${STREAM}.md`
 const CAND_K = parseInt(process.env.STREAM_CAND_K ?? '100', 10)
 const RRF_K = parseInt(process.env.STREAM_RRF_K ?? '60', 10)
 const TOPN = 20
-/** The brief's four, plus the two reference arms that make them interpretable. */
-const WEIGHTS = [0, 0.5, 0.6, 0.7, 0.8, 1] as const
+/**
+ * The brief's four, the two reference arms that make them interpretable, and — added 6 Aug —
+ * 0.3 and 0.4.
+ *
+ * WHY THE GRID WAS WIDENED DOWNWARD. The first sweep ran [0, 0.5, 0.6, 0.7, 0.8, 1] and both
+ * streams that can actually discriminate (legislation, debates) peaked at 0.5 — the LOWEST
+ * non-zero weight tested. An optimum sitting on the edge of the tested grid is not an optimum,
+ * it is a boundary: 0.4 or 0.3 may well be better, and recommending 0.5 as the new carried
+ * default without testing below it would repeat the mistake that put 0.7 in the code (a weight
+ * chosen from a grid that never asked the question).
+ */
+const WEIGHTS = [0, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1] as const
 
 interface StreamSpec { tier: string; archetypes: string[]; draft?: DraftStream; note: string }
 const SPEC: Record<string, StreamSpec> = {
@@ -53,7 +66,21 @@ const SPEC: Record<string, StreamSpec> = {
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`
 const pp = (d: number) => `${d >= 0 ? '+' : ''}${(d * 100).toFixed(1)}pp`
-const wlab = (w: number) => (w === 0 ? 'BM25 only' : w === 1 ? 'vector only' : `${Math.round(w * 100)}/${Math.round((1 - w) * 100)}${w === 0.7 ? ' ←carried' : ''}`)
+/**
+ * 0.7 is pinned as the reference column on purpose, and stays pinned even after the default
+ * moves. It is the weight every earlier number in this project was measured at, so keeping it
+ * visible is what makes a new recommendation comparable to the old one rather than a bare
+ * assertion that something improved. It is labelled by what it WAS, not by what is configured
+ * now — a label wired to `LEX_FUSION_VECTOR_WEIGHT` would silently relabel this column the
+ * moment the app's default changed, and every historical comparison in these reports with it.
+ */
+const PRIOR_CARRIED = 0.7
+/** Bare label. Safe to use mid-sentence. */
+const wlab = (w: number) => (w === 0 ? 'BM25 only' : w === 1 ? 'vector only' : `${Math.round(w * 100)}/${Math.round((1 - w) * 100)}`)
+/** Annotated label — for the sweep table's first column ONLY, where a trailing marker reads
+ *  as a footnote. Used inside a comma-joined list it produced "50/50, 60/40, 70/30 ←prior
+ *  default, 80/20", which parses as a four-item list with a stray annotation. */
+const wlabAnnotated = (w: number) => `${wlab(w)}${w === PRIOR_CARRIED ? ' ←prior default' : ''}`
 
 function fuseWeighted(vec: string[], bm: string[], w: number): string[] {
   const s = new Map<string, number>()
@@ -119,18 +146,31 @@ async function main() {
   }
   const agg = (m: Map<string, number>) => mean(queries.map((q) => m.get(q.id) ?? 0))
 
-  const best = [...WEIGHTS].sort((a, b) => agg(recallByWeight.get(b)!) - agg(recallByWeight.get(a)!))[0]
+  // TIES ARE REPORTED AS TIES. Sorting and taking [0] silently picked whichever tied weight
+  // happened to sort first, which on debates named 30/70 "best" while 30/70, 40/60 and 50/50 all
+  // scored 95.0% — presenting a stream as preferring a different weight from the others when it
+  // is in fact indifferent between them. With only 4-16 queries per stream, exact ties are the
+  // common case, not an edge case, and a cross-stream weight decision made from arbitrarily
+  // broken ties would be an artefact of array order.
+  const bestVal = Math.max(...WEIGHTS.map((w) => agg(recallByWeight.get(w)!)))
+  const bestSet = WEIGHTS.filter((w) => Math.abs(agg(recallByWeight.get(w)!) - bestVal) < 1e-9)
+  const best = bestSet[0]
   const md: string[] = []
   const title = OUT.replace(/\.md$/, '')
   md.push(`# ${title} — ${STREAM} stream, BM25 vs vector vs fusion`, '')
-  md.push(`> ## ⚠ PROVISIONAL — NOT A FINAL NUMBER`)
-  md.push(`> Charlie's answer-key validation pass is **outstanding**, and \`corpus_fts\` changed twice this week`)
-  md.push(`> (coverage fix 4 Aug: 1,191,345 rows merged; dedup 5 Aug: 19,161 rows removed, which moved BM25`)
-  md.push(`> document frequencies). A confirmatory re-score is required once the validation lands.`)
+  md.push(`> ## ✅ ANSWER KEY VALIDATED — 6 Aug 2026`)
+  md.push(`> **Charlie's answer-key validation pass completed 6 Aug 2026.** It covered archetypes A, C, D, E`)
+  md.push(`> and F (B was validated in June/July), and these numbers are **confirmed, not provisional**.`)
+  md.push(`> They are measured against \`corpus_fts\` as it stands AFTER both of this week's index changes —`)
+  md.push(`> the 4 Aug coverage fix (1,191,345 rows merged) and the 5 Aug dedup (19,161 rows removed, which`)
+  md.push(`> moved BM25 document frequencies) — so the re-score those changes required has been done, not`)
+  md.push(`> deferred. The superseded figures in \`VECTOR_FULL_RECONFIRM.md\` do not apply.`)
   if (spec.draft) {
     md.push(`>`)
-    md.push(`> **PROVISIONAL TWICE OVER:** this stream has no gold questions, so the questions below were`)
-    md.push(`> **drafted by CC** and are themselves unvalidated. Review them before trusting any number here.`)
+    md.push(`> **⚠ ONE CAVEAT STILL STANDS, and the validation pass does not clear it.** That pass reviewed`)
+    md.push(`> the GOLD SET, and the gold set contains no questions for this stream. The questions below are`)
+    md.push(`> still **CC drafts, unvalidated by Charlie**. The answer-key caveat is lifted; this one is not.`)
+    md.push(`> Treat the weight sweep as sound and the absolute recall as untrusted.`)
   }
   md.push(`> **The flag stays OFF.** This is measurement, not a live decision.`, '')
   md.push(`*Generated ${new Date().toISOString()}. Offline against the Lance tables (\`${FTS_TABLE}\`, \`${VEC_TABLE}\`) — no HTTP path, nothing deployed. Both arms prefiltered to \`tier='${spec.tier}'\`, matching query-router.ts::fusedStream. CAND_K=${CAND_K}, RRF_K=${RRF_K}, recall@${TOPN}. Model gemini-embedding-001 @768d.*`, '')
@@ -151,22 +191,46 @@ async function main() {
   const base = agg(recallByWeight.get(0)!)
   for (const w of WEIGHTS) {
     const a = agg(recallByWeight.get(w)!)
-    md.push(`| ${wlab(w)} | ${pct(a)}${w === best ? ' **← best**' : ''} | ${w === 0 ? '—' : pp(a - base)} |`)
+    md.push(`| ${wlabAnnotated(w)} | ${pct(a)}${bestSet.includes(w) ? ' **← best**' : ''} | ${w === 0 ? '—' : pp(a - base)} |`)
   }
   md.push('')
-  md.push(`**Best weight in this sweep: ${wlab(best)} at ${pct(agg(recallByWeight.get(best)!))}.** Carried weight 0.7 scores ${pct(agg(recallByWeight.get(0.7)!))} (${pp(agg(recallByWeight.get(0.7)!) - base)} vs BM25 alone).`, '')
+  md.push(`**Best weight in this sweep: ${bestSet.map(wlab).join(', ')}${bestSet.length > 1 ? ' — tied' : ''} at ${pct(bestVal)}.** The prior default 0.7 scores ${pct(agg(recallByWeight.get(PRIOR_CARRIED)!))} (${pp(agg(recallByWeight.get(PRIOR_CARRIED)!) - base)} vs BM25 alone); the best weight beats it by ${pp(agg(recallByWeight.get(best)!) - agg(recallByWeight.get(PRIOR_CARRIED)!))}.`, '')
 
   md.push('## Per query', '')
-  md.push('| id | query | BM25 | vector | 70/30 | best-in-sweep |', '|---|---|---|---|---|---|')
+  md.push('| id | query | BM25 | vector | 70/30 (prior) | best-in-sweep |', '|---|---|---|---|---|---|')
   for (const q of queries) {
     const r = (w: number) => pct(recallByWeight.get(w)!.get(q.id) ?? 0)
-    md.push(`| ${q.id}${q.draft ? ' *(draft)*' : ''} | ${q.query.slice(0, 70)}${q.query.length > 70 ? '…' : ''} | ${r(0)} | ${r(1)} | ${r(0.7)} | ${r(best)} |`)
+    md.push(`| ${q.id}${q.draft ? ' *(draft)*' : ''} | ${q.query.slice(0, 70)}${q.query.length > 70 ? '…' : ''} | ${r(0)} | ${r(1)} | ${r(PRIOR_CARRIED)} | ${r(best)} |`)
   }
   md.push('')
 
   const outPath = path.join(__dirname, '../../../docs', OUT)
   fs.writeFileSync(outPath, md.join('\n'))
   console.log(`[stream-score] wrote ${outPath}`)
+
+  // Machine-readable sidecar, so the cross-stream weight decision (weight-decision.ts) is
+  // computed from the SAME run that produced the report rather than by re-typing numbers out
+  // of five markdown tables. Per-query recalls are kept, not just the aggregate, because the
+  // pooled (per-query) average and the macro (per-stream) average can disagree when the
+  // streams differ in size by 4x — and both belong in the decision.
+  const sidecarDir = path.join(__dirname, '.weight-sweep')
+  fs.mkdirSync(sidecarDir, { recursive: true })
+  fs.writeFileSync(path.join(sidecarDir, `${STREAM}.json`), JSON.stringify({
+    stream: STREAM,
+    tier: spec.tier,
+    generated: new Date().toISOString(),
+    draft: !!spec.draft,
+    candK: CAND_K, rrfK: RRF_K, topN: TOPN,
+    bestValue: bestVal,
+    bestWeights: bestSet,   // ALL tied winners, so a cross-stream decision can see indifference
+    queries: queries.map((q) => ({ id: q.id, draft: q.draft, expected: q.expected.length })),
+    weights: WEIGHTS.map((w) => ({
+      w,
+      aggregate: agg(recallByWeight.get(w)!),
+      perQuery: Object.fromEntries(queries.map((q) => [q.id, recallByWeight.get(w)!.get(q.id) ?? 0])),
+    })),
+  }, null, 2))
+  console.log(`[stream-score] wrote sidecar ${path.join(sidecarDir, `${STREAM}.json`)}`)
   console.log(`[stream-score] BM25=${pct(base)} vec=${pct(agg(recallByWeight.get(1)!))} 0.7=${pct(agg(recallByWeight.get(0.7)!))} best=${wlab(best)} ${pct(agg(recallByWeight.get(best)!))}`)
 }
 

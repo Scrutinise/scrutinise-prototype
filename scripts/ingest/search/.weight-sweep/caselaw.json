@@ -1,0 +1,121 @@
+{
+  "stream": "caselaw",
+  "tier": "caselaw",
+  "generated": "2026-08-06T09:23:55.373Z",
+  "draft": true,
+  "candK": 100,
+  "rrfK": 60,
+  "topN": 20,
+  "bestValue": 1,
+  "bestWeights": [
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    1
+  ],
+  "queries": [
+    {
+      "id": "CL1",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CL2",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CL3",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CL4",
+      "draft": true,
+      "expected": 2
+    }
+  ],
+  "weights": [
+    {
+      "w": 0,
+      "aggregate": 0.875,
+      "perQuery": {
+        "CL1": 0.5,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.3,
+      "aggregate": 0.875,
+      "perQuery": {
+        "CL1": 0.5,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.4,
+      "aggregate": 0.875,
+      "perQuery": {
+        "CL1": 0.5,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.5,
+      "aggregate": 1,
+      "perQuery": {
+        "CL1": 1,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.6,
+      "aggregate": 1,
+      "perQuery": {
+        "CL1": 1,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.7,
+      "aggregate": 1,
+      "perQuery": {
+        "CL1": 1,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 0.8,
+      "aggregate": 1,
+      "perQuery": {
+        "CL1": 1,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    },
+    {
+      "w": 1,
+      "aggregate": 1,
+      "perQuery": {
+        "CL1": 1,
+        "CL2": 1,
+        "CL3": 1,
+        "CL4": 1
+      }
+    }
+  ]
+}

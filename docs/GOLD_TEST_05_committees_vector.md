@@ -1,15 +1,20 @@
 # GOLD_TEST_05_committees_vector — committees stream, BM25 vs vector vs fusion
 
-> ## ⚠ PROVISIONAL — NOT A FINAL NUMBER
-> Charlie's answer-key validation pass is **outstanding**, and `corpus_fts` changed twice this week
-> (coverage fix 4 Aug: 1,191,345 rows merged; dedup 5 Aug: 19,161 rows removed, which moved BM25
-> document frequencies). A confirmatory re-score is required once the validation lands.
+> ## ✅ ANSWER KEY VALIDATED — 6 Aug 2026
+> **Charlie's answer-key validation pass completed 6 Aug 2026.** It covered archetypes A, C, D, E
+> and F (B was validated in June/July), and these numbers are **confirmed, not provisional**.
+> They are measured against `corpus_fts` as it stands AFTER both of this week's index changes —
+> the 4 Aug coverage fix (1,191,345 rows merged) and the 5 Aug dedup (19,161 rows removed, which
+> moved BM25 document frequencies) — so the re-score those changes required has been done, not
+> deferred. The superseded figures in `VECTOR_FULL_RECONFIRM.md` do not apply.
 >
-> **PROVISIONAL TWICE OVER:** this stream has no gold questions, so the questions below were
-> **drafted by CC** and are themselves unvalidated. Review them before trusting any number here.
+> **⚠ ONE CAVEAT STILL STANDS, and the validation pass does not clear it.** That pass reviewed
+> the GOLD SET, and the gold set contains no questions for this stream. The questions below are
+> still **CC drafts, unvalidated by Charlie**. The answer-key caveat is lifted; this one is not.
+> Treat the weight sweep as sound and the absolute recall as untrusted.
 > **The flag stays OFF.** This is measurement, not a live decision.
 
-*Generated 2026-08-06T05:56:13.470Z. Offline against the Lance tables (`corpus_fts`, `corpus_vec`) — no HTTP path, nothing deployed. Both arms prefiltered to `tier='parliamentary'`, matching query-router.ts::fusedStream. CAND_K=100, RRF_K=60, recall@20. Model gemini-embedding-001 @768d.*
+*Generated 2026-08-06T09:22:29.006Z. Offline against the Lance tables (`corpus_fts`, `corpus_vec`) — no HTTP path, nothing deployed. Both arms prefiltered to `tier='parliamentary'`, matching query-router.ts::fusedStream. CAND_K=100, RRF_K=60, recall@20. Model gemini-embedding-001 @768d.*
 
 **Stream note.** No gold coverage exists. Scored on CC-DRAFTED questions — see the review table at the top.
 
@@ -29,17 +34,19 @@ These are CC's drafts, presented here rather than as a separate round-trip so th
 | weight (vector/BM25) | recall@20 | vs BM25-only |
 |---|---|---|
 | BM25 only | 100.0% **← best** | — |
-| 50/50 | 100.0% | +0.0pp |
-| 60/40 | 100.0% | +0.0pp |
-| 70/30 ←carried | 100.0% | +0.0pp |
-| 80/20 | 100.0% | +0.0pp |
-| vector only | 100.0% | +0.0pp |
+| 30/70 | 100.0% **← best** | +0.0pp |
+| 40/60 | 100.0% **← best** | +0.0pp |
+| 50/50 | 100.0% **← best** | +0.0pp |
+| 60/40 | 100.0% **← best** | +0.0pp |
+| 70/30 ←prior default | 100.0% **← best** | +0.0pp |
+| 80/20 | 100.0% **← best** | +0.0pp |
+| vector only | 100.0% **← best** | +0.0pp |
 
-**Best weight in this sweep: BM25 only at 100.0%.** Carried weight 0.7 scores 100.0% (+0.0pp vs BM25 alone).
+**Best weight in this sweep: BM25 only, 30/70, 40/60, 50/50, 60/40, 70/30, 80/20, vector only — tied at 100.0%.** The prior default 0.7 scores 100.0% (+0.0pp vs BM25 alone); the best weight beats it by +0.0pp.
 
 ## Per query
 
-| id | query | BM25 | vector | 70/30 | best-in-sweep |
+| id | query | BM25 | vector | 70/30 (prior) | best-in-sweep |
 |---|---|---|---|---|---|
 | CM1 *(draft)* | What did MPs conclude were the causes of the collapse of Carillion? | 100.0% | 100.0% | 100.0% | 100.0% |
 | CM2 *(draft)* | Why were failures in the Post Office Horizon IT system not addressed f… | 100.0% | 100.0% | 100.0% | 100.0% |

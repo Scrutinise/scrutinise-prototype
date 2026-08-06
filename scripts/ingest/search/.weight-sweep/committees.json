@@ -1,0 +1,124 @@
+{
+  "stream": "committees",
+  "tier": "parliamentary",
+  "generated": "2026-08-06T09:22:29.007Z",
+  "draft": true,
+  "candK": 100,
+  "rrfK": 60,
+  "topN": 20,
+  "bestValue": 1,
+  "bestWeights": [
+    0,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    1
+  ],
+  "queries": [
+    {
+      "id": "CM1",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CM2",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CM3",
+      "draft": true,
+      "expected": 2
+    },
+    {
+      "id": "CM4",
+      "draft": true,
+      "expected": 2
+    }
+  ],
+  "weights": [
+    {
+      "w": 0,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.3,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.4,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.5,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.6,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.7,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 0.8,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    },
+    {
+      "w": 1,
+      "aggregate": 1,
+      "perQuery": {
+        "CM1": 1,
+        "CM2": 1,
+        "CM3": 1,
+        "CM4": 1
+      }
+    }
+  ]
+}

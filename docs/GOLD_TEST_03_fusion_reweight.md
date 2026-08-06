@@ -1,12 +1,15 @@
 # GOLD_TEST_03_fusion_reweight — legislation stream, BM25 vs vector vs fusion
 
-> ## ⚠ PROVISIONAL — NOT A FINAL NUMBER
-> Charlie's answer-key validation pass is **outstanding**, and `corpus_fts` changed twice this week
-> (coverage fix 4 Aug: 1,191,345 rows merged; dedup 5 Aug: 19,161 rows removed, which moved BM25
-> document frequencies). A confirmatory re-score is required once the validation lands.
+> ## ✅ ANSWER KEY VALIDATED — 6 Aug 2026
+> **Charlie's answer-key validation pass completed 6 Aug 2026.** It covered archetypes A, C, D, E
+> and F (B was validated in June/July), and these numbers are **confirmed, not provisional**.
+> They are measured against `corpus_fts` as it stands AFTER both of this week's index changes —
+> the 4 Aug coverage fix (1,191,345 rows merged) and the 5 Aug dedup (19,161 rows removed, which
+> moved BM25 document frequencies) — so the re-score those changes required has been done, not
+> deferred. The superseded figures in `VECTOR_FULL_RECONFIRM.md` do not apply.
 > **The flag stays OFF.** This is measurement, not a live decision.
 
-*Generated 2026-08-06T05:40:46.927Z. Offline against the Lance tables (`corpus_fts`, `corpus_vec`) — no HTTP path, nothing deployed. Both arms prefiltered to `tier='legislation'`, matching query-router.ts::fusedStream. CAND_K=100, RRF_K=60, recall@20. Model gemini-embedding-001 @768d.*
+*Generated 2026-08-06T09:18:14.764Z. Offline against the Lance tables (`corpus_fts`, `corpus_vec`) — no HTTP path, nothing deployed. Both arms prefiltered to `tier='legislation'`, matching query-router.ts::fusedStream. CAND_K=100, RRF_K=60, recall@20. Model gemini-embedding-001 @768d.*
 
 **Stream note.** A citation-lookup, B concept-bridge (the vector target), C policy sweep.
 
@@ -15,17 +18,19 @@
 | weight (vector/BM25) | recall@20 | vs BM25-only |
 |---|---|---|
 | BM25 only | 43.8% | — |
+| 30/70 | 49.0% | +5.2pp |
+| 40/60 | 49.0% | +5.2pp |
 | 50/50 | 63.0% **← best** | +19.3pp |
 | 60/40 | 57.8% | +14.1pp |
-| 70/30 ←carried | 55.7% | +12.0pp |
+| 70/30 ←prior default | 55.7% | +12.0pp |
 | 80/20 | 55.7% | +12.0pp |
 | vector only | 52.6% | +8.9pp |
 
-**Best weight in this sweep: 50/50 at 63.0%.** Carried weight 0.7 scores 55.7% (+12.0pp vs BM25 alone).
+**Best weight in this sweep: 50/50 at 63.0%.** The prior default 0.7 scores 55.7% (+12.0pp vs BM25 alone); the best weight beats it by +7.3pp.
 
 ## Per query
 
-| id | query | BM25 | vector | 70/30 | best-in-sweep |
+| id | query | BM25 | vector | 70/30 (prior) | best-in-sweep |
 |---|---|---|---|---|---|
 | A1 | Section 21 Housing Act 1988 | 100.0% | 50.0% | 100.0% | 100.0% |
 | A2 | What does section 1 of the Theft Act 1968 actually say? | 50.0% | 100.0% | 100.0% | 100.0% |
