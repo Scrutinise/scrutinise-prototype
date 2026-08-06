@@ -47,6 +47,66 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — committees is scoped at the query, not after it (2026-08-06 11:11 UTC)
+
+Search-side only; no ingest, no flag change, no answer key touched.
+
+**The bug.** Four streams were already scoped correctly by `tier` alone. The two sharing the
+`parliamentary` tier — debates and committees — retrieved broadly across all 14.17M rows and were
+separated AFTERWARDS, client-side, by display type. The retrieval is truncated to `limit` before
+the caller can filter, and committee content is 1.17% of that tier, so the cutoff falls almost
+entirely on Hansard.
+
+**Was it contributing to CM1's failure independently of the ingest gap? YES** — measured at the
+real live depth of 60, not the 20 the earlier probe used:
+
+| | post-filter (today) | prefilter (fixed) | dropped by truncation |
+|---|---|---|---|
+| CM1 Carillion | **1** | 60 | **59** |
+| CM2 Post Office Horizon | 15 | 60 | 45 |
+| CM3 two-child limit | 18 | 60 | 42 |
+| CM4 coronavirus | 53 | 60 | 7 |
+
+CM1 got ONE committee row out of 60 candidates. The prefilter recovers the actual Carillion
+inquiry evidence ("Sourcing public services: lessons learned from the collapse of Carillion") —
+BM25 had ranked it; truncation discarded it before the type filter ran.
+
+**This partly corrects GOLD_TEST_09**, which concluded CM1's 100% was purely Hansard satisfying
+its answer key. Incomplete: relevant Carillion committee evidence does exist and the post-filter
+was hiding nearly all of it. Two independent defects, as the brief suspected. GOLD_TEST_09's
+separate finding — that committee *conclusions* are essentially not ingested — stands unchanged;
+the recovered rows are submitted evidence, not the committees' own report.
+
+**The fix.** A server-side corpus prefilter (`SearchScope`: tier / corpora / excludeCorpora) in
+`fts-core.ts`, accepted+validated+echoed by both query services, sent and echo-checked by both
+platform adapters, declared per stream in `query-router.ts` (committees lists its corpora, debates
+the complement). The `types` post-filter stays as a backstop and should now filter nothing. The
+dense half takes the SAME scope — scoping only BM25 would be worse than scoping neither, since an
+unscoped dense half fused into a committee-scoped keyword list is ~99% out-of-stream.
+
+**Also fixed, found on the way:** `resolveInjections` fetched by `id LIKE` with NO scope predicate,
+so a citation-shaped query against a parliamentary stream could inject LEGISLATION rows — and
+injections are scored ABOVE the BM25 list, so an out-of-scope injection would appear first.
+
+**One deliberate asymmetry.** An unhonoured CORPUS scope warns and degrades to the client-side
+filter; an unhonoured TIER still fails closed. `fts-serve` deploys independently, so failing closed
+on corpus would take both parliamentary streams to zero results during the deploy window — an
+outage to prevent what is merely today's behaviour. Safe because correctness rests on the `types`
+backstop, not on this filter: the prefilter is a recall improvement, not a correctness guarantee.
+The tier check must stay closed because legislation has no `types` backstop.
+
+**Verified**, not assumed: `verify-stream-scoping.ts` extended so its stand-in honours AND echoes
+the corpus scope and asserts it reached the wire (without that, the tier check alone is satisfied
+by BOTH parliamentary streams, so a committees run searching the whole tier would still have
+reported success). Run against the live FTS service for committees, legislation and debates —
+all three SCOPING CONFIRMED, exactly one stream changing each time.
+
+**Outstanding:** `fts-serve` must be redeployed for the prefilter to take effect.
+
+**Separately — the vector-query-service concurrency guard has NOT landed.** Checked rather than
+assumed: zero matches in the file and no commit touching it. It was written up as a recommendation
+in VECTOR_DEPLOY_READINESS.md and never authorised, so it remains outstanding.
+
 ## SEARCH — the fusion weight, decided across all five streams: 0.7 → 0.5 (2026-08-06 09:57 UTC)
 
 Follows the five per-stream reports (GOLD_TEST_03–07) once Charlie's answer-key validation pass
