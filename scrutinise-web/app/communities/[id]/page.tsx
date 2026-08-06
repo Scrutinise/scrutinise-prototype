@@ -2,7 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
-import { getCommunityTree } from '@/lib/community'
+import { getCommunityTree, getRootCommunityId, canManageCommunity } from '@/lib/community'
 import CommunityDashboardClient from './CommunityDashboardClient'
 import type { Metadata } from 'next'
 
@@ -31,17 +31,20 @@ export default async function CommunityDashboardPage({ params }: Props) {
 
   const community = await prisma.community.findUnique({
     where: { id },
-    include: {
-      parent: { select: { id: true, name: true } },
-      members: {
-        include: { user: { select: { id: true, name: true, username: true } } },
-        orderBy: { joinedAt: 'asc' },
-      },
-    },
+    include: { parent: { select: { id: true, name: true } } },
   })
   if (!community) notFound()
 
-  const tree = await getCommunityTree(id)
+  const rootId = await getRootCommunityId(id)
+  const root =
+    rootId === id
+      ? { id: community.id, name: community.name }
+      : (await prisma.community.findUniqueOrThrow({ where: { id: rootId }, select: { id: true, name: true } }))
+
+  const [tree, canManage] = await Promise.all([
+    getCommunityTree(id),
+    canManageCommunity(user.id, id),
+  ])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -54,13 +57,9 @@ export default async function CommunityDashboardPage({ params }: Props) {
           parent: community.parent,
           managerId: community.managerId,
         }}
+        root={root}
         myRole={membership.role}
-        members={community.members.map((m) => ({
-          userId: m.userId,
-          name: m.user.name,
-          username: m.user.username,
-          role: m.role,
-        }))}
+        canManage={canManage}
         tree={tree}
       />
     </div>

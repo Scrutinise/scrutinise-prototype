@@ -40,7 +40,36 @@ interface GroupSummary {
   name: string
   subtitle: string | null
   role: string
+  memberCount: number
   href: string
+}
+
+// How many rows each dashboard section shows before the "Show all" toggle —
+// both sections stay scannable as the counts grow (Stage 1.1, 6 Aug 2026).
+const IDEAS_COLLAPSED = 3
+const GROUPS_COLLAPSED = 4
+
+function ShowAllToggle({
+  expanded,
+  total,
+  onToggle,
+  label,
+}: {
+  expanded: boolean
+  total: number
+  onToggle: () => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      className="mt-3 w-full rounded-lg border border-dashed border-border py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+    >
+      {expanded ? `Show fewer ${label}` : `Show all (${total})`}
+    </button>
+  )
 }
 
 interface Props {
@@ -70,6 +99,11 @@ export default function DashboardClient({
   credibilityScore,
 }: Props) {
   const [feedTab, setFeedTab] = useState<'feed' | 'upcoming'>('feed')
+  const [showAllIdeas, setShowAllIdeas] = useState(false)
+  const [showAllGroups, setShowAllGroups] = useState(false)
+
+  const visibleIdeas = showAllIdeas ? ideas : ideas.slice(0, IDEAS_COLLAPSED)
+  const visibleGroups = showAllGroups ? myGroups : myGroups.slice(0, GROUPS_COLLAPSED)
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-8 flex items-center justify-between">
@@ -112,7 +146,7 @@ export default function DashboardClient({
             </div>
           ) : (
             <div className="space-y-3">
-              {ideas.map((idea) => (
+              {visibleIdeas.map((idea) => (
                 <Link
                   key={idea.id}
                   href={`/ideas/${idea.id}`}
@@ -139,6 +173,14 @@ export default function DashboardClient({
                   </span>
                 </Link>
               ))}
+              {ideas.length > IDEAS_COLLAPSED && (
+                <ShowAllToggle
+                  expanded={showAllIdeas}
+                  total={ideas.length}
+                  onToggle={() => setShowAllIdeas((v) => !v)}
+                  label="ideas"
+                />
+              )}
             </div>
           )}
 
@@ -160,23 +202,36 @@ export default function DashboardClient({
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {myGroups.map((g) => (
-                  <Link
-                    key={`${g.kind}-${g.id}`}
-                    href={g.href}
-                    className="flex items-start justify-between rounded-lg border border-border p-3 transition-colors hover:bg-muted/40"
-                  >
-                    <div className="min-w-0 flex-1 pr-3">
-                      <p className="truncate text-sm font-medium">{g.name}</p>
-                      {g.subtitle && <p className="truncate text-xs text-muted-foreground mt-0.5">{g.subtitle}</p>}
-                    </div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${KIND_BADGE[g.kind]}`}>
-                      {KIND_LABEL[g.kind]}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {visibleGroups.map((g) => (
+                    <Link
+                      key={`${g.kind}-${g.id}`}
+                      href={g.href}
+                      className="flex items-start justify-between rounded-lg border border-border p-3 transition-colors hover:bg-muted/40"
+                    >
+                      <div className="min-w-0 flex-1 pr-3">
+                        <p className="truncate text-sm font-medium">{g.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {g.subtitle ? `${g.subtitle} · ` : ''}
+                          {g.memberCount} member{g.memberCount !== 1 ? 's' : ''} · {g.role.toLowerCase()}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${KIND_BADGE[g.kind]}`}>
+                        {KIND_LABEL[g.kind]}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                {myGroups.length > GROUPS_COLLAPSED && (
+                  <ShowAllToggle
+                    expanded={showAllGroups}
+                    total={myGroups.length}
+                    onToggle={() => setShowAllGroups((v) => !v)}
+                    label="Communities and teams"
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

@@ -1,11 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-
-const BULLETIN_CATEGORIES = ['General', 'Announcements', 'Training — offers & requests', 'Questions'] as const
 
 interface Author { id: string; name: string | null; username: string }
 interface Thread {
@@ -14,8 +13,13 @@ interface Thread {
   category: string | null
   body: string
   score: number
+  scope: string
   createdAt: string
   author: Author
+  community: { id: string; name: string }
+  myVote: number
+  isCommunityWide: boolean
+  fromOtherBranch: boolean
   _count?: { replies: number }
 }
 interface Reply {
@@ -27,7 +31,6 @@ interface Reply {
   myVote: number
 }
 interface ThreadDetail extends Thread {
-  myVote: number
   replies: Reply[]
 }
 
@@ -42,59 +45,123 @@ function relativeTime(dateStr: string): string {
   return 'just now'
 }
 
+/**
+ * Vote control. The Stage 1 version was two bare ▲/▼ glyphs in muted grey and
+ * the 6 Aug user test could not find them at all, so this one is a bordered,
+ * labelled control with the count always visible and the caller's own vote
+ * filled in.
+ */
 function VoteControl({
   score,
   myVote,
   onVote,
+  size = 'default',
 }: {
   score: number
   myVote: number
   onVote: (value: 1 | -1) => void
+  size?: 'default' | 'sm'
 }) {
+  const icon = size === 'sm' ? 'size-3.5' : 'size-4'
+  const pad = size === 'sm' ? 'px-1.5 py-0.5' : 'px-2 py-1'
   return (
-    <div className="flex flex-col items-center gap-0.5 shrink-0">
+    <div
+      className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-background"
+      role="group"
+      aria-label="Vote"
+    >
       <button
+        type="button"
         onClick={() => onVote(1)}
-        className={`text-sm leading-none ${myVote === 1 ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground'}`}
-        aria-label="Upvote"
+        aria-label={myVote === 1 ? 'Remove upvote' : 'Upvote'}
+        aria-pressed={myVote === 1}
+        title="Upvote"
+        className={`rounded-l-full ${pad} transition-colors ${
+          myVote === 1 ? 'text-emerald-600' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        }`}
       >
-        ▲
+        <ChevronUp className={icon} strokeWidth={myVote === 1 ? 3 : 2} />
       </button>
-      <span className="text-xs font-medium">{score}</span>
-      <button
-        onClick={() => onVote(-1)}
-        className={`text-sm leading-none ${myVote === -1 ? 'text-red-600 font-bold' : 'text-muted-foreground hover:text-foreground'}`}
-        aria-label="Downvote"
+      <span
+        className={`min-w-[1.25rem] text-center text-xs font-semibold tabular-nums ${
+          myVote === 1 ? 'text-emerald-600' : myVote === -1 ? 'text-red-600' : 'text-foreground'
+        }`}
+        title={`${score} net vote${score === 1 || score === -1 ? '' : 's'}`}
       >
-        ▼
+        {score}
+      </span>
+      <button
+        type="button"
+        onClick={() => onVote(-1)}
+        aria-label={myVote === -1 ? 'Remove downvote' : 'Downvote'}
+        aria-pressed={myVote === -1}
+        title="Downvote"
+        className={`rounded-r-full ${pad} transition-colors ${
+          myVote === -1 ? 'text-red-600' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        }`}
+      >
+        <ChevronDown className={icon} strokeWidth={myVote === -1 ? 3 : 2} />
       </button>
     </div>
   )
 }
 
-export default function BulletinBoard({ communityId }: { communityId: string }) {
+function CommunityWideTag({ from }: { from?: string | null }) {
+  return (
+    <span
+      className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+      title={from ? `Posted to the whole Community from ${from}` : 'Posted to the whole Community'}
+    >
+      Community-wide
+    </span>
+  )
+}
+
+export default function BulletinBoard({
+  communityId,
+  boardName,
+  isBranch,
+  communityName,
+}: {
+  communityId: string
+  boardName: string
+  isBranch: boolean
+  /** Name of the top-level Community this board sits in. */
+  communityName: string
+}) {
   const [threads, setThreads] = useState<Thread[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [categoryDescriptions, setCategoryDescriptions] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState('')
   const [q, setQ] = useState('')
+  const [activeQuery, setActiveQuery] = useState('')
   const [showCompose, setShowCompose] = useState(false)
   const [title, setTitle] = useState('')
-  const [newCategory, setNewCategory] = useState<string>(BULLETIN_CATEGORIES[0])
+  const [newCategory, setNewCategory] = useState('')
+  const [scope, setScope] = useState<'BRANCH' | 'COMMUNITY'>('BRANCH')
   const [body, setBody] = useState('')
   const [expanded, setExpanded] = useState<Record<string, ThreadDetail | undefined>>({})
 
-  const loadThreads = useCallback(async () => {
-    setLoading(true)
-    const params = new URLSearchParams()
-    if (category) params.set('category', category)
-    if (q) params.set('q', q)
-    const res = await fetch(`/api/communities/${communityId}/bulletin?${params.toString()}`)
-    if (res.ok) {
-      const data = await res.json()
-      setThreads(data.threads)
-    }
-    setLoading(false)
-  }, [communityId, category, q])
+  const loadThreads = useCallback(
+    async (searchTerm?: string) => {
+      const term = searchTerm ?? activeQuery
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (category) params.set('category', category)
+      if (term) params.set('q', term)
+      const res = await fetch(`/api/communities/${communityId}/bulletin?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setThreads(data.threads)
+        setCategories(data.categories)
+        setCategoryDescriptions(data.categoryDescriptions ?? {})
+        setNewCategory((c) => (c && data.categories.includes(c) ? c : data.categories[0] ?? ''))
+      }
+      setLoading(false)
+    },
+    [communityId, category, activeQuery],
+  )
 
   useEffect(() => {
     loadThreads()
@@ -102,17 +169,28 @@ export default function BulletinBoard({ communityId }: { communityId: string }) 
     fetch(`/api/communities/${communityId}/read`, { method: 'POST' })
   }, [communityId, loadThreads])
 
+  function runSearch(e: React.FormEvent) {
+    e.preventDefault()
+    setActiveQuery(q.trim())
+  }
+
+  function clearSearch() {
+    setQ('')
+    setActiveQuery('')
+  }
+
   async function handleCreateThread(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !body.trim()) return
     const res = await fetch(`/api/communities/${communityId}/bulletin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title.trim(), category: newCategory, body: body.trim() }),
+      body: JSON.stringify({ title: title.trim(), category: newCategory, body: body.trim(), scope }),
     })
     if (res.ok) {
       setTitle('')
       setBody('')
+      setScope('BRANCH')
       setShowCompose(false)
       loadThreads()
     }
@@ -138,7 +216,9 @@ export default function BulletinBoard({ communityId }: { communityId: string }) 
     })
     if (res.ok) {
       const data = await res.json()
-      setThreads((prev) => prev.map((t) => (t.id === threadId ? { ...t, score: data.score } : t)))
+      setThreads((prev) =>
+        prev.map((t) => (t.id === threadId ? { ...t, score: data.score, myVote: data.myVote } : t)),
+      )
       setExpanded((prev) =>
         prev[threadId] ? { ...prev, [threadId]: { ...prev[threadId]!, score: data.score, myVote: data.myVote } } : prev,
       )
@@ -187,44 +267,113 @@ export default function BulletinBoard({ communityId }: { communityId: string }) 
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+      {/* Search — full width at the top of the board. The Stage 1 version was a
+          narrow box wedged between the category filter and the New-thread
+          button, and the 6 Aug user test never found it. */}
+      <form onSubmit={runSearch} className="mb-3">
+        <label htmlFor="bulletin-search" className="mb-1 block text-xs font-medium text-muted-foreground">
+          Search this Community
+        </label>
         <div className="flex items-center gap-2">
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="text-sm border rounded-md h-9 px-2 bg-background"
-          >
-            <option value="">All categories</option>
-            {BULLETIN_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && loadThreads()}
-            placeholder="Search this Community…"
-            className="w-48 h-9"
-          />
-          <Button size="sm" variant="outline" onClick={loadThreads}>Search</Button>
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="bulletin-search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={`Search posts in ${boardName}…`}
+              className="h-10 pl-9"
+            />
+          </div>
+          <Button type="submit" variant="outline">Search</Button>
         </div>
+      </form>
+
+      {activeQuery && (
+        <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>
+            {threads.length} result{threads.length !== 1 ? 's' : ''} for
+            {' '}<span className="font-medium text-foreground">“{activeQuery}”</span>
+            {' '}— this Community only
+          </span>
+          <button type="button" onClick={clearSearch} className="underline underline-offset-2 hover:text-foreground">
+            Clear
+          </button>
+        </div>
+      )}
+
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Filter by category"
+          className="h-9 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         <Button size="sm" onClick={() => setShowCompose((v) => !v)}>
           {showCompose ? 'Cancel' : 'New thread'}
         </Button>
       </div>
 
       {showCompose && (
-        <form onSubmit={handleCreateThread} className="rounded-lg border border-border p-4 space-y-3 mb-4">
+        <form onSubmit={handleCreateThread} className="mb-4 space-y-3 rounded-lg border border-border p-4">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" maxLength={200} required />
-          <select
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="text-sm border rounded-md h-9 px-2 bg-background w-full"
-          >
-            {BULLETIN_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+
+          <div>
+            <label htmlFor="compose-category" className="mb-1 block text-xs font-medium text-muted-foreground">
+              Category
+            </label>
+            <select
+              id="compose-category"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            {categoryDescriptions[newCategory] && (
+              <p className="mt-1 text-xs text-muted-foreground">{categoryDescriptions[newCategory]}</p>
+            )}
+          </div>
+
+          {/* Post scope. Default is the board being viewed. */}
+          <fieldset>
+            <legend className="mb-1 block text-xs font-medium text-muted-foreground">Post to</legend>
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="scope"
+                  value="BRANCH"
+                  checked={scope === 'BRANCH'}
+                  onChange={() => setScope('BRANCH')}
+                />
+                <span>{isBranch ? `This branch (${boardName})` : `${boardName} only`}</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="scope"
+                  value="COMMUNITY"
+                  checked={scope === 'COMMUNITY'}
+                  onChange={() => setScope('COMMUNITY')}
+                />
+                <span>The whole Community ({communityName})</span>
+              </label>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {scope === 'COMMUNITY'
+                ? `Everyone in ${communityName} sees this on their own board, tagged “Community-wide”.`
+                : `Only people looking at the ${boardName} board see this.`}
+            </p>
+          </fieldset>
+
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What's on your mind?" rows={4} required />
           <Button type="submit" size="sm">Post</Button>
         </form>
@@ -234,7 +383,9 @@ export default function BulletinBoard({ communityId }: { communityId: string }) 
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : threads.length === 0 ? (
         <div className="rounded-lg border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">No threads yet — start the conversation.</p>
+          <p className="text-sm text-muted-foreground">
+            {activeQuery ? 'No posts match that search.' : 'No threads yet — start the conversation.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -245,35 +396,44 @@ export default function BulletinBoard({ communityId }: { communityId: string }) 
                 <div className="flex items-start gap-3">
                   <VoteControl
                     score={detail?.score ?? t.score}
-                    myVote={detail?.myVote ?? 0}
+                    myVote={detail?.myVote ?? t.myVote}
                     onVote={(v) => handleVoteThread(t.id, v)}
                   />
-                  <button className="flex-1 min-w-0 text-left" onClick={() => toggleExpand(t.id)}>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{t.title}</p>
+                  <button className="min-w-0 flex-1 text-left" onClick={() => toggleExpand(t.id)}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-medium">{t.title}</p>
                       {t.category && (
-                        <span className="shrink-0 text-xs bg-zinc-100 text-zinc-600 rounded-full px-2 py-0.5">
+                        <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
                           {t.category}
                         </span>
                       )}
+                      {t.isCommunityWide && (
+                        <CommunityWideTag from={t.fromOtherBranch ? t.community.name : null} />
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {t.author.name ?? t.author.username} · {relativeTime(t.createdAt)}
+                      {t.fromOtherBranch && ` · from ${t.community.name}`}
                       {typeof t._count?.replies === 'number' && ` · ${t._count.replies} repl${t._count.replies === 1 ? 'y' : 'ies'}`}
                     </p>
                   </button>
                 </div>
 
                 {detail && (
-                  <div className="mt-3 ml-8 space-y-3">
-                    <p className="text-sm whitespace-pre-wrap">{detail.body}</p>
-                    <div className="border-t border-border pt-3 space-y-3">
+                  <div className="ml-8 mt-3 space-y-3">
+                    <p className="whitespace-pre-wrap text-sm">{detail.body}</p>
+                    <div className="space-y-3 border-t border-border pt-3">
                       {detail.replies.map((r) => (
                         <div key={r.id} className="flex items-start gap-3">
-                          <VoteControl score={r.score} myVote={r.myVote} onVote={(v) => handleVoteReply(t.id, r.id, v)} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm whitespace-pre-wrap">{r.body}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                          <VoteControl
+                            size="sm"
+                            score={r.score}
+                            myVote={r.myVote}
+                            onVote={(v) => handleVoteReply(t.id, r.id, v)}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="whitespace-pre-wrap text-sm">{r.body}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                               {r.author.name ?? r.author.username} · {relativeTime(r.createdAt)}
                             </p>
                           </div>

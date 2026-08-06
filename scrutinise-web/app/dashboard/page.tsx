@@ -60,15 +60,30 @@ export default async function DashboardPage() {
     prisma.comment.count({ where: { authorId: user.id } }),
     prisma.communityMember.findMany({
       where: { userId: user.id },
-      include: { community: { select: { id: true, name: true } } },
+      include: {
+        community: {
+          select: { id: true, name: true, parentCommunityId: true, _count: { select: { members: true } } },
+        },
+      },
       orderBy: { joinedAt: 'desc' },
-      take: 6,
     }),
-    prisma.groupMember.findMany({
-      where: { userId: user.id },
-      include: { group: { select: { id: true, name: true, ideaId: true, idea: { select: { title: true } } } } },
-      orderBy: { joinedAt: 'desc' },
-      take: 6,
+    // Idea teams. Matched on ownership OR membership: a team's creator was
+    // never written in as a GroupMember, so a membership-only query returned
+    // nothing and the section showed Communities alone (6 Aug 2026 user test).
+    // New teams do get an owner row — this OR keeps the ones made before that
+    // fix visible without a data migration.
+    prisma.group.findMany({
+      where: { OR: [{ ownerId: user.id }, { members: { some: { userId: user.id } } }] },
+      select: {
+        id: true,
+        name: true,
+        ideaId: true,
+        ownerId: true,
+        idea: { select: { title: true } },
+        members: { where: { userId: user.id }, select: { role: true } },
+        _count: { select: { members: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     }),
   ])
 
@@ -84,17 +99,19 @@ export default async function DashboardPage() {
       kind: 'COMMUNITY' as const,
       id: m.community.id,
       name: m.community.name,
-      subtitle: null as string | null,
+      subtitle: m.community.parentCommunityId ? 'Branch' : null,
       role: m.role as string,
+      memberCount: m.community._count.members,
       href: `/communities/${m.community.id}`,
     })),
-    ...groupMemberships.map((m) => ({
+    ...groupMemberships.map((g) => ({
       kind: 'IDEA_TEAM' as const,
-      id: m.group.id,
-      name: m.group.name,
-      subtitle: m.group.idea?.title ?? null,
-      role: m.role as string,
-      href: m.group.ideaId ? `/ideas/${m.group.ideaId}` : '/dashboard',
+      id: g.id,
+      name: g.name,
+      subtitle: g.idea?.title ?? null,
+      role: g.members[0]?.role ?? (g.ownerId === user.id ? 'OWNER' : 'MEMBER'),
+      memberCount: g._count.members,
+      href: g.ideaId ? `/ideas/${g.ideaId}` : '/dashboard',
     })),
   ]
 

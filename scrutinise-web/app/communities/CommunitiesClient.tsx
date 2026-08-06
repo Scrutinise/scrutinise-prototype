@@ -48,7 +48,11 @@ export default function CommunitiesClient({ communities }: { communities: Commun
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">My Communities</h1>
+        <div>
+          {/* The module is Central; the things inside it are Communities. */}
+          <h1 className="text-2xl font-semibold tracking-tight">Central</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Your Communities and branches.</p>
+        </div>
         <div className="flex items-center gap-2">
           <form onSubmit={handleJoin} className="flex items-center gap-2">
             <Input

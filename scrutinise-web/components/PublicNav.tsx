@@ -101,9 +101,11 @@ export default function PublicNav() {
             </>
           )}
 
+          {/* "Central" is the module; "Community" stays the name of the things
+              you create inside it (renamed 6 Aug 2026 after the Stage 1 test). */}
           {isLoaded && isSignedIn && (
             <Link href="/communities" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Communities
+              Central
             </Link>
           )}
 
@@ -197,7 +199,7 @@ export default function PublicNav() {
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Communities
+                Central
               </Link>
             )}
 

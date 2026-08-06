@@ -3,10 +3,11 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import CommunitiesClient from './CommunitiesClient'
+import { countUnreadBulletin } from '@/lib/community'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'My Communities',
+  title: 'Central',
 }
 
 export default async function CommunitiesPage() {
@@ -38,9 +39,9 @@ export default async function CommunitiesPage() {
       memberCount: m.community._count.members,
       branchCount: m.community._count.children,
       isBranch: m.community.parentCommunityId !== null,
-      unreadCount: await prisma.bulletinPost.count({
-        where: { communityId: m.community.id, createdAt: { gt: m.lastReadAt } },
-      }),
+      // Counts what the board actually shows — this node's posts plus
+      // Community-wide posts from elsewhere in the tree.
+      unreadCount: await countUnreadBulletin(m.community.id, m.lastReadAt),
     })),
   )
 
