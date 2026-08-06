@@ -15,6 +15,7 @@
     "check:documents": "tsx scripts/check-document-render.ts",
     "check:feedback": "tsx --env-file=.env scripts/check-feedback-capture.ts",
     "check:export": "tsx --env-file=.env scripts/check-export-e2e.ts",
+    "check:central": "tsx --env-file=.env scripts/check-central-stage1.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
