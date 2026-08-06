@@ -38,6 +38,10 @@ const LIMIT = 8
 let standInHits: { id: string; corpus: string; tier: string; score: number; snippet: string }[] = []
 /** Every tier the stand-in was asked for, so we can prove the scoping reached the wire. */
 const tiersRequested: (string | null)[] = []
+/** Every corpus scope the stand-in was asked for. Since 2026-08-06 the parliamentary tier is
+ *  split server-side by corpus, so "the scoping reached the wire" is no longer answered by the
+ *  tier alone — debates and committees BOTH send tier='parliamentary' and differ only here. */
+const scopesRequested: { corpora: string[] | null; excludeCorpora: string[] | null }[] = []
 
 function startStandIn(): Promise<{ url: string; close: () => void }> {
   return new Promise((resolve) => {
@@ -45,13 +49,22 @@ function startStandIn(): Promise<{ url: string; close: () => void }> {
       let raw = ''
       req.on('data', (c) => { raw += c })
       req.on('end', () => {
-        const { tier } = JSON.parse(raw || '{}')
+        const { tier, corpora, excludeCorpora } = JSON.parse(raw || '{}')
         tiersRequested.push(tier ?? null)
-        // Honour the tier the way the real service does — including echoing it back, which
-        // the adapter now REQUIRES (it refuses unscoped results for a scoped request).
-        const hits = tier ? standInHits.filter((h) => h.tier === tier) : standInHits
+        scopesRequested.push({ corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null })
+        // Honour the scope the way the real service does — including echoing it back, which
+        // the adapter now REQUIRES (it refuses unscoped results for a scoped request). A
+        // stand-in that echoed without filtering would pass the adapter's check while proving
+        // nothing about the filter, so it does both.
+        let hits = tier ? standInHits.filter((h) => h.tier === tier) : standInHits
+        if (corpora?.length) hits = hits.filter((h) => corpora.includes(h.corpus))
+        if (excludeCorpora?.length) hits = hits.filter((h) => !excludeCorpora.includes(h.corpus))
         res.writeHead(200, { 'content-type': 'application/json' })
-        res.end(JSON.stringify({ query: QUERY, tier: tier ?? null, ms: 1, count: hits.length, results: hits }))
+        res.end(JSON.stringify({
+          query: QUERY, tier: tier ?? null,
+          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
+          ms: 1, count: hits.length, results: hits,
+        }))
       })
     })
     server.listen(0, '127.0.0.1', () => {
@@ -130,6 +143,25 @@ async function main() {
     failures++
   } else {
     console.log(`  ✓ the dense service was only ever asked for tier=${target.tier}`)
+  }
+
+  // The corpus scope must also have reached the wire, and must match what the stream declares.
+  // For debates and committees the tier check above is satisfied by BOTH streams, so without
+  // this a committees run that silently searched the whole parliamentary tier would still
+  // report "scoping confirmed".
+  const expectCorpora = target.corpora ?? null
+  const expectExclude = target.excludeCorpora ?? null
+  const sameList = (a: string[] | null, b: string[] | null) =>
+    JSON.stringify(a ? [...a].sort() : null) === JSON.stringify(b ? [...b].sort() : null)
+  const wrongScope = scopesRequested.filter(
+    (s) => !sameList(s.corpora, expectCorpora) || !sameList(s.excludeCorpora, expectExclude),
+  )
+  console.log(`  dense service called with corpus scopes: ${JSON.stringify(scopesRequested.map((s) => s.corpora ?? s.excludeCorpora ?? null).filter((v, i, a) => a.indexOf(v) === i))}`)
+  if (wrongScope.length) {
+    console.log(`  ✗ expected corpora=${JSON.stringify(expectCorpora)} excludeCorpora=${JSON.stringify(expectExclude)}, got ${JSON.stringify(wrongScope[0])} — corpus scoping leaked`)
+    failures++
+  } else {
+    console.log(`  ✓ the dense service was only ever asked for this stream's corpus scope`)
   }
 
   console.log(failures === 0 ? '\nSCOPING CONFIRMED' : `\nSCOPING NOT CONFIRMED — ${failures} failure(s)`)
