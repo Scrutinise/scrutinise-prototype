@@ -1,6 +1,18 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 14:26 UTC — CENTRAL Stage 1.1: the four Stage-1 user-test failures are
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 20:41 UTC — CENTRAL Stage 1.2: the branch-membership model is built —
+join requests with approve/decline, ancestor admins deciding branches they haven't joined, roles
+(promote/demote/remove, OWNER fixed in both directions), multi-branch membership with a switch-or-add
+chooser, top-level branch founding open to any Community member, self-serve leaving, and the invite
+email via Resend. New invariant: belonging to a branch means belonging to its root Community; the
+backfill's effect was predicted before it ran and matched exactly (one row). ⚠ The duplicate-pending
+guard is a PARTIAL unique index Prisma cannot declare, so a future `migrate diff` will want to drop
+it — partial is the point, since a plain unique would make a declined request permanently
+un-repeatable. ⚠ The invite email returns a result rather than going quiet: `sendEmail` is silent
+with no API key and on a suppressed address, which would have told an admin their invitation was
+emailed when nothing left the building. Additive hand-written schema on Neon, 83/83 live checks (up
+from 38), `tsc` and `next build` both clean. Charlie's browser re-test is the remaining gate.
+Earlier: 2026-08-06 14:26 UTC — CENTRAL Stage 1.1: the four Stage-1 user-test failures are
 fixed and the agreed UX corrections applied. **Two of the four "failures" were discoverability, not
 absence** — voting and keyword search were both fully built and neither could be found (0 BulletinVote
 rows in the database is the proof for voting); both now have labelled, prominent controls, and the
@@ -59,6 +71,112 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## CENTRAL Stage 1.2 — membership, join requests & roles (2026-08-06 20:41 UTC)
+
+Executes the "Central Stage 1.2 — membership, join requests & roles" brief (6 Aug 2026), which
+carries Charlie's settled branch-membership model. Central + email only. `tsc --noEmit` and
+`next build` both clean. **83/83 checks pass against the live app DB** (`npm run check:central`,
+extended from 38).
+
+### Schema — additive, hand-written, applied to Neon
+
+`prisma/central_stage1_2.sql`: the `CommunityJoinRequest` table, its indexes, and a backfill.
+**Hand-written rather than taken from `prisma migrate diff`**, per the brief and the drift incident
+(`docs/CLAUDE.md` §16) — that command still wants to drop the 914k-row
+`LegislationSection_DEPRECATED_2026-06-19` table and `specialist_queue`. Column types were read off
+production first (`information_schema`) and matched: TEXT ids, `TIMESTAMP(3)`. Applied after a
+`whichdb` check and re-run once to prove idempotence.
+
+**The duplicate-pending guard is a PARTIAL unique index** — `(communityId, userId) WHERE status =
+'PENDING'` — which Prisma's schema language cannot express, so it exists only in the SQL and is
+flagged in the model comment: a future `migrate diff` will want to drop it. Partial is the point. A
+plain `@@unique` would make a declined request **permanently un-repeatable**, and re-requesting after
+a decline is deliberately allowed this sprint.
+
+### The invariant, and the backfill that established it
+
+Belonging to a branch now means belonging to the Community it sits in — otherwise a branch invitee
+never sees the Community-wide board or the rest of the tree. `joinCommunityAndRoot()` is the only way
+in, and it is idempotent; root membership is written at MEMBER and never overwritten, because owning
+a branch does not make you an owner of the whole Community.
+
+The backfill's effect was **predicted before it ran and matched exactly**: one row, `chas_mn6bxqqn`
+into the root of Reform Branch Community. `lastReadAt` is set to now rather than to `joinedAt`, so a
+backfilled membership does not arrive with a pile of "unread" posts nobody missed.
+
+### Join requests
+
+`createJoinRequest` / `decideJoinRequest` / `listJoinRequests` in `lib/community.ts`, behind
+`/api/communities/[id]/join-requests[/[requestId]]`. Requests reach **everyone who can act on them**
+— the node's own OWNER/ADMINs *and* every ancestor admin, the same set `canManageCommunity()`
+authorises — in a Requests panel on the node and in their Feed. Approve creates the membership and
+tells the requester; decline tells them too. Authorisation for a decision is checked against **the
+request's own node**, not the `[id]` in the URL, so a request id from one branch cannot be decided by
+pointing the route at another node the caller happens to manage.
+
+### The visibility carve-out, stated precisely
+
+Manage rights now open a node's **member list and join requests** — management surfaces — and the
+branch page itself. They do **not** open its board: an ancestor admin sees "you manage it from
+{Community}, which lets you run it, not read it". Separately, a member of the Community can now reach
+a branch page they are not in, because the brief requires the request affordance on the tree **and**
+the branch page — they get the front door, not the board. Everyone else still gets 404, not 403.
+
+### Roles, and what is deliberately immovable
+
+Members panel per node: promote MEMBER→ADMIN, demote, remove. **OWNER is fixed in both directions** —
+a co-admin who could demote the owner could take the node. Removing someone also clears the node's
+`managerId` if it named them, so a node stops advertising a manager who has left.
+
+### Founding branches
+
+`canCreateBranchUnder()`: a **top-level** branch (child of the Community root) is open to any member
+of that Community — the growth mechanic, an invitee whose town has no branch founds it, becoming its
+OWNER. A **sub-branch** under an existing branch stays manage-gated. The refusal is 403 for a member
+and 404 for an outsider, so a Community's shape is not leaked.
+
+### Leaving
+
+Self-serve, always. Two refusals, both to stop something being orphaned: an OWNER must hand over
+first, and leaving the root — which leaves the whole Community, since branch rows cannot outlive the
+root membership they depend on — is refused while you still own a branch inside it.
+
+### Switch-or-add
+
+Raised by a `?joined=1` flag on the link (set by the branch-invite redemption and by the approval
+notification) rather than by guessing whether this is a "first visit": deterministic, and the link can
+be followed again if dismissed. Nothing is ticked by default — the model allows multi-branch
+membership, so doing nothing keeps them all. A branch you own cannot be ticked. The other branches
+offered are **scoped to this Community's tree** — a branch of some unrelated Community is neither
+something to offer leaving here nor a reason to hide "Find your branch".
+
+### Invite email
+
+New `sendCommunityInviteEmail()` returns a **result** rather than throwing or returning quietly.
+`sendEmail` goes silent when there is no API key and when an address is suppressed, which for an
+invite is the worst of both worlds: the invite row is already valid, so a throw would lose it, while a
+quiet return would tell an admin their invitation was emailed when nothing left the building. The
+panel reports what actually happened — "Emailed to them as well" or "The email did not go out —
+{reason}" — and keeps the copy-link either way.
+
+### Verification
+
+`npm run check:central` grew from 38 to **83**. New coverage: the branch-implies-root invariant across
+every live membership row; the partial index's existence *and* its refusal of a duplicate inserted
+raw, bypassing the friendly app check; ancestor approval by someone who is not a member of the node;
+decline-then-re-request; who may found which branch; promote→approve→demote; the OWNER's immovability
+in both directions; and every leaving rule. The invite email is exercised **against a suppressed
+address**, which proves the honest-reporting contract without putting real mail on the wire from a
+test run — a genuine delivery is Charlie's browser check. Teardown now also deletes the notifications
+these flows send to real accounts; residue was verified at zero afterwards.
+
+### Note on the shared tree
+
+Two type errors appeared mid-sprint in `lib/lex/orientation/*`, another thread's untracked
+in-progress work in the same working tree. They were not touched and had cleared by the end.
 
 ---
 

@@ -97,6 +97,53 @@ failures and applies the UX corrections that came out of the test. Full account:
 -   **Dashboard collapse.** "Your ideas" shows 3, "My Communities and teams" shows 4, each with a
     `Show all (N)` toggle.
 
+## 3.3 Stage 1.2 — membership, join requests & roles **[BUILT 6 Aug 2026]**
+
+The branch-membership model, settled by Charlie on 6 Aug and built the same day. The decisions are in
+the decision log (§10, 6 Aug afternoon); this section is how they behave. Full account: `CHANGE_LOG.md`
+"CENTRAL Stage 1.2". Verified by `npm run check:central` (83/83, live DB).
+
+**Membership**
+
+-   `joinCommunityAndRoot()` is the only way in. A branch membership always brings a root membership
+    with it, at MEMBER — owning a branch does not make you an owner of the Community. The invariant
+    is asserted across every live membership row by the check script, not just the ones the migration
+    touched.
+-   Leaving is self-serve and needs nobody's permission. Two refusals, both to stop something being
+    orphaned: an OWNER must hand over first, and leaving the root — which leaves the whole Community
+    — is refused while you still own a branch inside it.
+-   The **switch-or-add chooser** appears on arrival at a branch you have just joined, when you are
+    already in others. It is raised by a `?joined=1` flag on the link (set by the invite redemption
+    and by the approval notification) rather than by guessing at "first visit": deterministic, and
+    the link can be followed again. Nothing is ticked by default — doing nothing keeps every branch.
+
+**Join requests** — `CommunityJoinRequest`
+
+-   Open to members of the Community, for branches they are not in. The Community root itself takes
+    invitations, not requests.
+-   Requests reach everyone who can act on them: the node's own OWNER/ADMINs **and every ancestor
+    admin** — the same set `canManageCommunity()` authorises. They arrive in the Requests panel on
+    the node and in those people's Feed.
+-   Approve creates the membership (and the root membership with it) and tells the requester.
+    Decline tells them too, and they may ask again.
+-   The duplicate-pending guard is a **partial unique index** on (communityId, userId) WHERE
+    status = 'PENDING'. Partial on purpose: a plain unique would make a declined request permanently
+    un-repeatable. Prisma cannot declare it, so it lives in `prisma/central_stage1_2.sql` and is
+    flagged in the model comment — a `migrate diff` will want to drop it.
+
+**Who reaches a branch page**
+
+| | page | board | member list & requests |
+|---|---|---|---|
+| member of the node | ✓ | ✓ | ✓ if they manage it |
+| ancestor admin, not a member | ✓ | ✗ | ✓ |
+| member of the Community, not of this branch | ✓ (front door) | ✗ | ✗ |
+| everyone else | 404 | ✗ | ✗ |
+
+**Roles** — Members panel on any node you manage: promote MEMBER→ADMIN, demote, remove. OWNER is
+fixed in both directions; a co-admin who could demote the owner could take the node. Removing someone
+also clears the node's `managerId` if it named them.
+
 ### Explicitly NOT in Stage 1
 
 -   Structured training marketplace — workaround: seed a **"Training"** bulletin category at launch,
@@ -154,10 +201,34 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 
 ## 10. Decision log
 
+*Chronological, oldest first. (The 6 Aug entries sat above 29 Jul until Stage 1.2 fixed the order.)*
+
 -   **21 Jul** — Module conceived. Surveillance-at-scale review feature cut. Equal-terms-for-all-parties rule adopted. PPERA s.52(1)(g) volunteer carve-out confirmed.
 -   **22 Jul** — "Community" chosen as model name (existing `Group` = Idea sub-teams, untouched). Hierarchy via self-referential parent. No permission crossover. Schema built and validated. Chancellor game cancelled. Central nav: Content / Training / Events tabs, group switcher, content-category cards.
 -   **23 Jul** — 25% pool clarified as redistribution to users, not platform income. Corpus checks: OTS abolished 2023 (any ingested material is historical archive); division lists probably not ingested — verify.
--   **6 Aug** — Stage 1 user test run: 10/13. Stage 1.1 briefed and built (§3.1). Category set agreed
-    and "Announcements" dropped. Post-scope selector agreed. Nav renamed to Central. Hierarchy admin
-    extended to ancestors (management only). Admin category-management UI explicitly deferred.
 -   **29 Jul** — Migration + Stage 1 build briefed to CC. V30 ingest fixes committed. Token split confirmed 75/25/0 on separate keys. Points principles agreed (12/20 per hour anchor, constructive marks follow main system, sub-group heads hold admin over their sub-group). This spec created.
+-   **6 Aug (morning)** — Stage 1 user test run: 10/13. Stage 1.1 briefed and built (§3.1). Category
+    set agreed and "Announcements" dropped. Post-scope selector agreed. Nav renamed to Central.
+    Hierarchy admin extended to ancestors (management only). Admin category-management UI explicitly
+    deferred.
+-   **6 Aug (afternoon)** — Branch-membership model settled; Stage 1.2 briefed and built (§3.3):
+    1.  A branch invite makes you a member of that branch **and** of the root Community.
+    2.  Branches are invite-only; non-members **request to join**, and anyone with manage rights on
+        that node decides — a generalisation of "the branch owner approves", consistent with the
+        co-admin decision below.
+    3.  **Multi-branch membership is allowed.** Joining a new branch interactively offers the choice
+        to also leave existing ones ("switch or add"); the default is add. Leaving is always
+        self-serve.
+    4.  A Community-level invitee lands at the root, then requests an existing branch or founds
+        their own.
+    5.  **Any Community member may found a TOP-LEVEL branch** — the deliberate growth mechanic.
+        Sub-branches under an existing branch stay manage-gated, because that is a structural
+        decision belonging to that branch's admins. A root-admin approval gate can be added later if
+        sprawl appears; not now.
+    6.  Node owners may promote members to ADMIN alongside them, demote, and remove. OWNER is fixed.
+    7.  **Carve-out to the visibility rule:** manage rights include seeing a node's member list and
+        its join requests — those are management surfaces. The node's **board stays
+        membership-gated**.
+    8.  An email-tied invite is emailed via Resend. The copy-link panel stays regardless, because
+        delivery is never guaranteed.
+    9.  Re-requesting after a decline is allowed — no permanent block this sprint.

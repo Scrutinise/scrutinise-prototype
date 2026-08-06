@@ -2,7 +2,51 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-06 14:26 UTC — ▼ **CENTRAL STAGE 1.1: THE FOUR USER-TEST FAILURES ARE
+*Last updated: 2026-08-06 20:41 UTC — ▼ **CENTRAL STAGE 1.2: THE BRANCH-MEMBERSHIP MODEL IS
+BUILT — JOIN REQUESTS, ROLES, MULTI-BRANCH MEMBERSHIP AND THE INVITE EMAIL.** Executes the
+"Central Stage 1.2 — membership, join requests & roles" brief (6 Aug 2026), carrying Charlie's
+settled decisions. Central + email only. `tsc --noEmit` and `next build` both clean; **83/83 checks
+pass against the live app DB** (`npm run check:central`, up from 38). Full account: CHANGE_LOG
+"CENTRAL Stage 1.2" (2026-08-06 20:41 UTC); the model is written up in
+`SCRUTINISE_CENTRAL_SPEC.md` §3.3 with the decision log corrected to chronological order.
+**Schema:** `prisma/central_stage1_2.sql` — `CommunityJoinRequest` + backfill, **hand-written, not
+from `migrate diff`** (that still wants to drop the 914k-row `LegislationSection_DEPRECATED` table
+and `specialist_queue`); column types read off production first and matched; applied after
+`whichdb`, re-run once. ⚠ **The duplicate-pending guard is a PARTIAL unique index Prisma cannot
+declare** — `(communityId, userId) WHERE status='PENDING'` — so it lives only in the SQL and is
+flagged in the model comment: **a future `migrate diff` will want to drop it, don't let it.** Partial
+is the point: a plain `@@unique` would make a declined request permanently un-repeatable, and
+re-requesting after a decline is deliberately allowed. **The invariant this sprint establishes:**
+belonging to a branch means belonging to its root Community — `joinCommunityAndRoot()` is the only
+way in, idempotent, root always at MEMBER (owning a branch ≠ owning the Community). The backfill's
+effect was **predicted before it ran and matched exactly**: one row. **Requests** reach everyone who
+can act on them — the node's own admins *and every ancestor admin* — in a Requests panel and in
+their Feed; a decision is authorised against **the request's own node, not the `[id]` in the URL**,
+so a request from one branch can't be decided by aiming the route at another node the caller
+manages. **The visibility carve-out, precisely:** manage rights open a node's member list, its join
+requests and its page — **not its board** ("you manage it from {Community}, which lets you run it,
+not read it"); and a Community member can now reach a branch page they're not in, because the brief
+requires the request affordance on the tree AND the branch page — they get the front door, not the
+board. Everyone else still 404s. **OWNER is fixed in both directions** (not demotable, not
+removable): a co-admin who could demote the owner could take the node. **Founding:** a top-level
+branch is open to any Community member (the growth mechanic — you become its OWNER); a sub-branch
+under an existing branch stays manage-gated. **Leaving** is self-serve, with two refusals that both
+exist to stop something being orphaned — an OWNER hands over first, and leaving the root is refused
+while you still own a branch in it. **Switch-or-add** is raised by a `?joined=1` flag on the link
+rather than by guessing at "first visit"; nothing is ticked by default, and the branches offered are
+scoped to this Community's tree. ⚠ **Invite email returns a RESULT, never silence:** `sendEmail`
+goes quiet with no API key and on a suppressed address, which for an invite would tell an admin
+their invitation was emailed when nothing left the building — the panel now says "Emailed to them as
+well" or "The email did not go out — {reason}" and keeps the copy-link either way. **Verification**
+now covers the partial index by inserting a duplicate raw (bypassing the friendly app check),
+ancestor approval by a non-member, decline-then-re-request, who may found which branch,
+promote→approve→demote, and every leaving rule; the email is exercised **against a suppressed
+address**, proving the honest-reporting contract without putting real mail on the wire — a genuine
+delivery is Charlie's browser check. Teardown deletes the notifications these flows send to real
+accounts; residue verified at zero. **REMAINING GATE: Charlie's browser re-test.** Note: two type
+errors appeared mid-sprint in `lib/lex/orientation/*`, another thread's untracked work in the same
+tree — not touched, and cleared by the end. ▼ Earlier:
+2026-08-06 14:26 UTC — ▼ **CENTRAL STAGE 1.1: THE FOUR USER-TEST FAILURES ARE
 FIXED AND THE UX CORRECTIONS APPLIED.** Executes the "Central Stage 1.1 — user-test fixes" brief
 (6 Aug 2026). Central + dashboard only; nothing in search/ingest/stats/Lex touched, and the
 board-scoped keyword search deliberately does not reach for the corpus-search stack. `tsc --noEmit`
@@ -730,6 +774,38 @@ unfiltered with the bare query (today's default) — never an empty result.
 - **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C regression — accept it
   as the current 4-stream scope's known cost, or add a `guidance` stream (one config-list entry)
   before flipping. Both `tsc --noEmit` clean.
+
+---
+
+## CURRENT STATE — CENTRAL Stage 1.2: membership, join requests & roles (2026-08-06 20:41 UTC)
+
+**Executes the "Central Stage 1.2" brief (6 Aug 2026) — Charlie's settled branch-membership model.**
+Full account: CHANGE_LOG "CENTRAL Stage 1.2" (2026-08-06 20:41 UTC); the model itself is documented
+in `SCRUTINISE_CENTRAL_SPEC.md` §3.3, and its decisions in §10 under "6 Aug (afternoon)".
+
+- **Scope discipline held:** `scrutinise-web/**` plus the three shared docs. The only file touched
+  outside Central is `lib/email.ts`, which gained one new function and no changes to existing ones.
+- **Schema:** `prisma/central_stage1_2.sql` — `CommunityJoinRequest`, its indexes, the partial
+  pending-unique index, and the root-membership backfill. Hand-written; production column types read
+  first; applied after `whichdb`; re-run once to prove idempotence.
+- **⚠ Carry this forward:** the partial unique index is invisible to `schema.prisma`. Anyone running
+  `prisma migrate diff` will see it as drift to drop. The model comment says so; this is the second
+  place it is recorded.
+- **Where the rules live:** `lib/community.ts`. `joinCommunityAndRoot`, `leaveCommunity`,
+  `createJoinRequest`, `decideJoinRequest`, `setMemberRole`, `removeMember`, `canCreateBranchUnder`,
+  `getNodeManagerIds`. Routes are thin wrappers, which is what lets the check script exercise
+  production code rather than a copy of it.
+- **`getCommunityTree` was rewritten** to load level-by-level and merge the viewer's context in bulk
+  (role, pending request, manage rights, pending count per node). The per-node recursion it replaced
+  would have been a query storm now that the tree answers "am I in this one, can I manage it, have I
+  already asked" for every node it draws.
+- **Verified:** `npm run check:central` — **83/83** against the live app DB, self-cleaning,
+  including the notifications these flows create for real accounts.
+- **REMAINING GATE:** Charlie's browser re-test against his acceptance list. Untested from here (no
+  Clerk session): the HTTP route surface, and **a real invite email leaving the building** — the
+  check proves the honest-reporting contract against a suppressed address, not delivery.
+- **Not built, per the brief:** a permanent block after decline, ownership transfer, and a root-admin
+  approval gate on branch creation (to be added only if sprawl appears).
 
 ---
 
