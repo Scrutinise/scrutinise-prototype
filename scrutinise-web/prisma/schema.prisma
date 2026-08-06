@@ -1226,6 +1226,12 @@ model Community {
   // row on this node for the app layer to actually treat them as an admin here.
   managerId         String?
   manager           User?       @relation("CommunityManager", fields: [managerId], references: [id])
+  // Bulletin-board category set for this Community, in display order. Seeded
+  // from DEFAULT_BULLETIN_CATEGORIES (lib/community.ts) at creation; there is
+  // deliberately NO admin category-management UI at Stage 1.1 — defaults only.
+  // Stored per-Community rather than hardcoded so that UI can be added later
+  // without a second migration.
+  bulletinCategories String[] @default([])
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -1294,6 +1300,15 @@ model BulletinPost {
   title       String?
   category    String?
   body        String
+  // Post reach, chosen in the composer's "Post to" selector (Stage 1.1).
+  // 'BRANCH'    — visible only on the board of `communityId` (the default).
+  // 'COMMUNITY' — visible on every board in the same Community tree, tagged
+  //               "Community-wide". The post still belongs to the node it was
+  //               written on, so authorship and membership stay coherent; only
+  //               its visibility widens. Replies inherit the thread's node.
+  // Plain String, not an enum: no CREATE TYPE needed on a live DB and the
+  // value set is validated by Zod at every write boundary.
+  scope       String   @default("BRANCH")
   // Cached net (upvotes - downvotes), maintained alongside BulletinVote writes
   // — avoids a COUNT aggregate on every thread-list render.
   score       Int      @default(0)
@@ -1304,6 +1319,7 @@ model BulletinPost {
 
   @@index([communityId, parentId])
   @@index([communityId, category])
+  @@index([scope, parentId])
 }
 
 model BulletinVote {
