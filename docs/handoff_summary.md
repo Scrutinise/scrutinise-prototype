@@ -2,7 +2,65 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-06 20:41 UTC — ▼ **CENTRAL STAGE 1.2: THE BRANCH-MEMBERSHIP MODEL IS
+*Last updated: 2026-08-06 20:57 UTC — ▼ **LEX: WEB/X ORIENTATION IS BUILT, MEASURED AND OFF BY
+DEFAULT.** Executes the "CC — Web/X orientation, Stage 0" brief (6 Aug 2026), building
+`SEARCH_STRATEGY` §6d. Full account: CHANGE_LOG "LEX — Web/X orientation, Stage 0"
+(2026-08-06 20:57 UTC); the gold set and the open decisions are
+`docs/GOLD_TEST_10_web_x_orientation.md`. **Scope kept deliberately narrow: the Page-1 initial
+background briefing ONLY**, the same caller Stage-3 expansion targeted first — not idea-chat, not
+every Lex turn. Ran alongside the Central thread and stayed in its lane (`lib/lex/**`, one Prisma
+column, one check script, the shared docs). `tsc --noEmit` and `next build` both clean; **30/30
+checks pass** (`npm run check:orientation`). **`LEX_WEB_ORIENTATION` REMAINS OFF; no flag was
+flipped.** Three passes run **concurrently with the corpus search** and the briefing is written
+once, complete (Charlie's call): Gemini web grounding (Tier B — dated, cited background +
+comparative practice) and two Grok `x_search` calls (Tier C — a 90-day recency scan and an
+explicitly unbounded argument-mining pass, §6d.1's two windows). **Coverage 10/12 signals (83%)
+against a corpus-only control of 1/12 (8%)** on a new five-question gold set **whose answer key
+was written from an independent ordinary web search BEFORE the layer was run against it** —
+scoring a layer against its own output only proves self-agreement. The sharpest case: on
+"enforcement against water companies" the corpus confidently names Ofwat as the regulator and the
+orientation pass reports **Ofwat is being abolished and replaced** — a white paper cannot be in a
+corpus of enacted law, and that is exactly the miss this layer exists to remove. ⚠ **83% is one
+run, not a constant** — an earlier identical run scored WX4 2/3 and WX3 1/2; whether Gemini's
+grounded pass searches deeply enough is non-deterministic on identical input, recorded rather
+than smoothed. ⚠ **TWO PROVIDER PREMISES IN THE DESIGN DOC WERE FALSE, both found by probing:**
+Gemini returns a **hard 400** for grounding + JSON mode (so the web pass is ground-then-structure,
+and the structuring call may cite **only by index into the chunks Google actually returned**, so
+a model-invented URL cannot survive), and **xAI Live Search is DEAD — HTTP 410**, superseded by
+the Agent Tools API (`POST /v1/responses`, `tools:[{type:'x_search'}]`, which unlike Gemini *does*
+combine tools with structured output, and carries the per-tool date bounds §6d.1 needs). ⚠ **The
+grounded call was silently truncating** — `finishReason: MAX_TOKENS` on every call at 4096 tokens,
+and a truncated grounded response sometimes returns **no grounding metadata at all**, which was
+discarding the whole Tier B half and leaving an **all-Tier-C briefing**, the precise state the
+tier design exists to prevent; fixed with caps + an 8192 budget (`STOP` and 28–37 chunks on every
+repeat) plus one logged retry. ⚠ **grok-4.3, not grok-4.5, on measurement:** 21.2s/$0.0344 vs
+57.1s/$0.2322 for comparable output, and **`max_tool_calls` is not honoured** so it is no cost
+control. **QUARANTINE (§6d.3) IS MECHANICAL AND PROVEN ABLE TO FAIL:** Tier C cannot be rendered
+without its marker, attribution and date; a sweep re-reads the **finished** briefing; a planted
+violation is detected (and a separate summary-leak case); a failed sweep **drops the block** rather
+than shipping it. The marker is inline bold, not a blockquote, **because the docx/PDF renderer has
+no blockquote support** and a `>` would look right on screen and export as a stray character.
+⚠ **THE COST OF THE SHAPE CHARLIE CHOSE: 30.8s and $0.0763 per briefing, measured** — the
+"wait for one complete briefing" decision was taken against an estimate of **4–9s**, and §10.4
+records a 1–3s tolerance for this moment. **This is decision D1 and needs his eye**; the two-phase
+alternative is a contained follow-up, not a rebuild. ⚠ **A stage budget was needed and is
+load-bearing:** per-call timeouts do not bound the stage (the web pass is two sequential calls), so
+this could have run to ~120s against `maxDuration: 60` and 504'd the briefing mid-write — the exact
+§19-C failure already paid for once; `ORIENTATION_TOTAL_BUDGET_MS` (45s) bounds it and an overrun is
+reported as an abandonment, not as a provider failure. **Flag-off is proven byte-identical** on the
+real briefing builder every run — which caught a real bug: the render gate keyed off `failed`, and
+with the flag off `runOrientation` returns `failed:false` with no calls, so an empty "current
+context" section would have been rendered into **every** briefing while the flag was off (gate is
+now `calls.length > 0`). Additive `Idea.orientation JSONB` applied to Neon after a whichdb check and
+re-run once to prove idempotence; the record is stored even when the corpus search fails but is
+**not rendered** then — a briefing whose corpus half failed shows the failure and a Retry, never
+Tier B/C standing in for the law. ⚠ **ALSO FOUND, REPORTED NOT FIXED: `grok-3-fast-beta` — Lex's
+hardcoded fallback model in `app/api/ai/[ideaId]/route.ts:561` and `app/api/ai/public/route.ts:148`
+— is no longer in xAI's `/v1/models`**, so that fallback path is presumably dead in production.
+**REMAINING GATES: Charlie's decisions D1–D4 in GOLD_TEST_10**, and `GROK_API_KEY` +
+`LEX_WEB_ORIENTATION` are **not in Vercel** (inert without the flag; the key is needed before it is
+ever turned on there). ▼ Earlier:
+2026-08-06 20:41 UTC — ▼ **CENTRAL STAGE 1.2: THE BRANCH-MEMBERSHIP MODEL IS
 BUILT — JOIN REQUESTS, ROLES, MULTI-BRANCH MEMBERSHIP AND THE INVITE EMAIL.** Executes the
 "Central Stage 1.2 — membership, join requests & roles" brief (6 Aug 2026), carrying Charlie's
 settled decisions. Central + email only. `tsc --noEmit` and `next build` both clean; **83/83 checks
