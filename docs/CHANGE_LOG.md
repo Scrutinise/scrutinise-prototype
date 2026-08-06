@@ -101,7 +101,15 @@ by BOTH parliamentary streams, so a committees run searching the whole tier woul
 reported success). Run against the live FTS service for committees, legislation and debates —
 all three SCOPING CONFIRMED, exactly one stream changing each time.
 
-**Outstanding:** `fts-serve` must be redeployed for the prefilter to take effect.
+**Deployed and re-verified.** The push auto-deployed `fts-serve` (watchPatterns covers
+`scripts/ingest/search/**`); confirmed by polling the live service until it echoed the new
+parameter rather than by assuming. A live `Carillion` query now returns five committee-evidence
+documents where it previously returned Hansard. All three streams re-verified against the
+redeployed service with no degradation warnings. **End-to-end effect on the probe queries: the
+committees stream returned 0–1 results before and returns a full 24 after.**
+
+A re-score of GOLD_TEST_05 is now worth doing — the stream retrieves very differently — but it
+needs the answer-key decision first, so it is deliberately NOT done here.
 
 **Separately — the vector-query-service concurrency guard has NOT landed.** Checked rather than
 assumed: zero matches in the file and no commit touching it. It was written up as a recommendation

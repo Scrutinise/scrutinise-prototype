@@ -99,8 +99,34 @@ Run against the live FTS service for three streams — `committees`, `legislatio
 each **SCOPING CONFIRMED**: exactly the target stream changes, every other stream is byte-identical,
 and the dense service was only ever asked for that stream's own corpus scope.
 
+## Deployed and re-verified — the prefilter is live
+
+`watchPatterns: ['scripts/ingest/search/**']` meant the push auto-deployed `fts-serve`. Confirmed
+by polling the live service until it echoed the parameter rather than by assuming the deploy
+landed:
+
+```
+POST /fts-search {"query":"Carillion","tier":"parliamentary",
+                  "corpora":["committees-reports","committees-evidence"]}
+→ corpora echoed: ['committees-reports','committees-evidence']
+→ committees-evidence:writtenevidence:89668:135044   (Carillion inquiry evidence)
+  committees-evidence:writtenevidence:92252:137079
+  … 3 more
+```
+
+The same query previously returned Hansard. All three streams re-verified against the redeployed
+service — **SCOPING CONFIRMED**, with no degradation warnings.
+
+**Measured end-to-end effect on the probe queries: the committees stream returned 0–1 results
+before and returns a full 24 after.** That is the client-side truncation loss, gone.
+
 ## Still outstanding
 
-`fts-serve` must be **redeployed** for the prefilter to take effect (`watchPatterns:
-['scripts/ingest/search/**']` means the push auto-deploys it — verify, don't assume). Until then
-the warning above fires and behaviour is unchanged from today.
+- **The vector-query-service concurrency guard has not landed** (checked, not assumed: zero
+  matches in the file, no commit touching it). It was a recommendation in
+  `VECTOR_DEPLOY_READINESS.md` that was never authorised. The vector service is not deployed, so
+  nothing is at risk today — but it remains a prerequisite for deploying it.
+- Committee **conclusions** are still not ingested (`GOLD_TEST_09` D3). This fix improves what can
+  be retrieved from the evidence that exists; it does not add reports.
+- A re-score of `GOLD_TEST_05` is now worth doing, since the stream retrieves very differently —
+  but it needs the answer-key decision first, so it is deliberately not done here.
