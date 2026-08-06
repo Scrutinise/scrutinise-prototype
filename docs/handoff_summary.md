@@ -2,7 +2,54 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-05 17:30 UTC — ▼ **LEX SPRINT 2.5: FEEDBACK CAPTURE AND DOCUMENT EXPORT
+*Last updated: 2026-08-06 14:26 UTC — ▼ **CENTRAL STAGE 1.1: THE FOUR USER-TEST FAILURES ARE
+FIXED AND THE UX CORRECTIONS APPLIED.** Executes the "Central Stage 1.1 — user-test fixes" brief
+(6 Aug 2026). Central + dashboard only; nothing in search/ingest/stats/Lex touched, and the
+board-scoped keyword search deliberately does not reach for the corpus-search stack. `tsc --noEmit`
+clean **and** `next build` clean; **38/38 checks pass against the live app DB**
+(`npm run check:central`). Full account: CHANGE_LOG "CENTRAL Stage 1.1" (2026-08-06 14:26 UTC).
+⚠ **Two of the four "failures" were discoverability, not absence — the audit changed the work.**
+Voting and keyword search were both fully built in Stage 1; neither could be found. **0 BulletinVote
+rows exist in the database**, which is the strongest available evidence that nobody ever located the
+two bare ▲/▼ glyphs. Both now have prominent labelled controls — and a real bug surfaced beside
+them: **the thread-list endpoint never returned the caller's own vote**, so the list showed
+`myVote: 0` for everyone until a thread was expanded, i.e. your own vote looked as though it had not
+registered. **The invite lookup failure was real:** `/api/users/search` matched name/username and
+**not email at all**, despite its own comment claiming otherwise. Email now matches **exactly and
+case-insensitively** — substring matching on an address is deliberately refused because it would let
+anyone enumerate accounts from a domain fragment — and an address with no account behind it now
+creates a real `CommunityInvite` against it rather than failing silently (**no email is sent**;
+Central has no mail path, and "invited" with nothing delivered is the exact failure the item
+exists to remove, so the link is always surfaced to pass on). **Idea teams were missing because
+there was nothing to show:** `POST /api/ideas/[id]/groups` created the `Group` but never wrote a
+`GroupMember` row for the creator, so **all 6 teams on the platform had 0 members** and a
+membership-keyed dashboard query returned nothing; fixed at creation, backfilled, and the query
+widened to `ownerId OR members.some`. **UX corrections:** hierarchy tree now genuinely nests
+(indent + rail + `Branch · level N`) with **explicit Add branch / Rename / Assign manager buttons on
+every node** — which required a permission change to work at all, since the admin routes demanded
+OWNER/ADMIN *of the exact node* and the buttons were dead on any branch the caller had not created
+(new `canManageCommunity()` treats ancestor admin as admin; **management only** — board and member
+visibility still need a membership row on the node); 3-item/4-item dashboard collapse with
+`Show all (N)`; nav renamed **"Central"**; the six-category set (Canvassing, Building Members,
+Public Debates, Training, Running Councils, Questions) seeded on new Communities and migrated onto
+all 4 existing ones, "Announcements" gone, `Training` carrying "Offer or request interview/media
+training here" so the Stage 2c behaviour starts unprompted (**no admin category UI**, per brief);
+and a **"Post to" branch/whole-Community selector**. A Community-wide post **stays owned by the node
+it was written on** and only widens its visibility, tagged "Community-wide" on every board in the
+tree. ⚠ **The display rule alone would have been a half-fix** — the detail, vote and reply routes
+all resolved posts by `id + communityId`, so a Community-wide thread would have *rendered* on a
+branch board and then 404'd on every interaction; `findBoardPost()` is the single reachability rule
+all three now share. Additive schema (`prisma/central_stage1_1.sql` — `BulletinPost.scope`,
+`Community.bulletinCategories`) applied to Neon after a `whichdb` check and re-run once to prove
+idempotence. Category migration touched **0 post rows** (the only categorised post was already
+`Questions`); the `Announcements`/`General` → `Questions` mapping is a judgement call and is
+recorded as one. Verification is `scripts/check-central-stage1.ts`: standing assertions over real
+data, then a disposable root→branch→sub-branch tree with two real accounts driven through **the same
+`lib/community.ts` functions the routes call** — the vote transaction and invite lookup were moved
+into that shared layer precisely so the test exercises production code rather than a copy of it.
+**REMAINING GATE: Charlie's browser re-test** — the two new panels (Invite people, "Post to") get
+their first click-test from him. ▼ Earlier:
+2026-08-05 17:30 UTC — ▼ **LEX SPRINT 2.5: FEEDBACK CAPTURE AND DOCUMENT EXPORT
 ARE BUILT AND VERIFIED LIVE.** Executes `docs/BRIEF_SPRINT_2_5.md`; both tasks done, all acceptance
 criteria met. `tsc --noEmit` clean **and** `next build` clean, plus four check scripts run against
 the live app DB and live R2: `check:sprint2.5-schema` 4/4, `check:documents` 31/31,
@@ -629,6 +676,40 @@ unfiltered with the bare query (today's default) — never an empty result.
 - **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C regression — accept it
   as the current 4-stream scope's known cost, or add a `guidance` stream (one config-list entry)
   before flipping. Both `tsc --noEmit` clean.
+
+---
+
+## CURRENT STATE — CENTRAL Stage 1.1: user-test fixes (2026-08-06 14:26 UTC)
+
+**Executes the "Central Stage 1.1 — user-test fixes" brief (6 Aug 2026), after Charlie's Stage 1
+user test passed 10/13.** Full account: CHANGE_LOG "CENTRAL Stage 1.1" (2026-08-06 14:26 UTC).
+Supersedes the Stage 1 section below for everything it touches.
+
+- **Scope discipline held:** `scrutinise-web/**` plus the three shared docs. Nothing in the search,
+  ingest, stats or Lex stacks; the board search is a plain ILIKE and deliberately does not touch the
+  corpus-search stack.
+- **Schema:** `prisma/central_stage1_1.sql` — `BulletinPost.scope`, `Community.bulletinCategories`,
+  plus the `GroupMember` owner backfill. Applied to Neon (`ep-old-dust-aboxi69a`) after `whichdb`,
+  re-run once to prove idempotence. Plain TEXT/TEXT[], no `CREATE TYPE` against a live DB; value sets
+  enforced by Zod at every write boundary.
+- **Audit-first result that changed the work:** A1 (voting) and A2 (search) were **already built** —
+  0 `BulletinVote` rows in the DB is what proves the vote control was never found. They were fixed as
+  discoverability problems, and a genuine bug turned up beside A1 (the thread list never returned the
+  caller's own vote).
+- **A3 and A4 were real defects**, both with causes the brief did not name: `/api/users/search` never
+  matched email despite a comment saying it did, and `POST /api/ideas/[id]/groups` never wrote an
+  owner `GroupMember` row, leaving all 6 teams at 0 members.
+- **One permission change, deliberate and narrow:** `canManageCommunity()` — admin of any ancestor is
+  admin of a node. Without it the per-node tree buttons are dead on every branch the caller did not
+  personally create. **Management only**; viewing a board or its members still requires a membership
+  row on that node.
+- **Verified:** `npm run check:central` — **38/38** against the live app DB, self-cleaning. The vote
+  transaction and invite lookup were moved into `lib/community.ts` so the script exercises the same
+  code the routes run, not a re-implementation.
+- **REMAINING GATE:** Charlie's browser re-test against his acceptance list. Untested from here (no
+  Clerk session available): the HTTP route surface and the two new panels.
+- **Not built, per the brief:** an admin category-management UI. Categories are seeded defaults only,
+  stored per-Community so that UI is a later addition rather than a second migration.
 
 ---
 

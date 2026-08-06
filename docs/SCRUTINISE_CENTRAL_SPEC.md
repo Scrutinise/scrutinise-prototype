@@ -54,9 +54,54 @@ Visual language: existing Scrutinise components throughout; Clerk auth; no new d
 -   [ ] Feed shows recent posts/replies; "Upcoming" shows an intentional empty state, not an error
 -   [ ] Points & leaderboards region visible as a labelled stub
 
+## 3.1 Stage 1.1 — user-test fixes **[BUILT 6 Aug 2026]**
+
+Charlie ran the Stage 1 checklist on 6 Aug 2026: **10/13 passed**. This sub-stage fixes the four
+failures and applies the UX corrections that came out of the test. Full account: `CHANGE_LOG.md`
+"CENTRAL Stage 1.1" (2026-08-06 14:26 UTC). Verified by `npm run check:central` (38/38, live DB).
+
+**The four failures, and what each turned out to be:**
+
+1.  **Vote controls not discoverable** — *already built, never found*. Two bare `▲`/`▼` glyphs in
+    muted grey; **0 `BulletinVote` rows in the database**. Now a bordered, labelled control with the
+    count always visible on every thread and reply. (Real bug found alongside: the thread-list
+    endpoint never returned the caller's own vote.)
+2.  **Keyword search not discoverable** — *already built, never found*. Now a full-width labelled
+    field at the top of the board. Still a plain ILIKE; the corpus-search stack is not involved.
+3.  **Invite lookup failed on email** — *a real defect*. `/api/users/search` matched name and
+    username but not email. Email is now matched **exactly, case-insensitively** — never as a
+    substring, which would let anyone enumerate accounts from a domain fragment. An address with no
+    account behind it creates a `CommunityInvite` against that address.
+4.  **Idea teams missing from the dashboard** — *a real defect, upstream of the dashboard*. Group
+    creation never wrote a `GroupMember` row for the creator, so every team had 0 members and a
+    membership-keyed query returned nothing.
+
+**Agreed model changes:**
+
+-   **Category set (replaces the Stage 1 defaults).** In order: **Canvassing · Building Members ·
+    Public Debates · Training · Running Councils · Questions**. "Announcements" removed. Stored on
+    `Community.bulletinCategories` and seeded at creation; **no admin category-management UI at this
+    stage** — defaults only. `Training` replaces the Stage 1 "Training — offers & requests" workaround
+    and carries the line *"Offer or request interview/media training here"* so the Stage 2c behaviour
+    (§6) starts unprompted.
+-   **Post scope.** `BulletinPost.scope` is `BRANCH` (default — the board being viewed) or
+    `COMMUNITY`. A Community-wide post **stays owned by the node it was written on**; only its
+    visibility widens. Every board in the tree shows it tagged "Community-wide". Replies inherit the
+    thread's node and reach.
+-   **Hierarchy admin.** OWNER/ADMIN of any ancestor may administer a descendant node (add branch,
+    rename, assign manager). This is the minimum that makes per-node tree buttons work. It grants
+    **management only** — viewing a board or its members still requires a membership row on that node,
+    and the no-crossover rule at the Idea boundary (§1) is untouched.
+-   **Nav label.** The module is **Central**; "Community" remains the name of the things created
+    inside it.
+-   **Dashboard collapse.** "Your ideas" shows 3, "My Communities and teams" shows 4, each with a
+    `Show all (N)` toggle.
+
 ### Explicitly NOT in Stage 1
 
--   Structured training marketplace — workaround: seed a **"Training — offers & requests"** bulletin category at launch so the behaviour can start as ordinary posts
+-   Structured training marketplace — workaround: seed a **"Training"** bulletin category at launch,
+    described as "Offer or request interview/media training here", so the behaviour can start as
+    ordinary posts *(Stage 1 seeded this as "Training — offers & requests"; renamed at Stage 1.1)*
 -   Events and `.ics` calendar downloads
 -   Points earning, leaderboards (stub only)
 -   Abuse-reporting workflow, admin analytics, semantic search
@@ -112,4 +157,7 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 -   **21 Jul** — Module conceived. Surveillance-at-scale review feature cut. Equal-terms-for-all-parties rule adopted. PPERA s.52(1)(g) volunteer carve-out confirmed.
 -   **22 Jul** — "Community" chosen as model name (existing `Group` = Idea sub-teams, untouched). Hierarchy via self-referential parent. No permission crossover. Schema built and validated. Chancellor game cancelled. Central nav: Content / Training / Events tabs, group switcher, content-category cards.
 -   **23 Jul** — 25% pool clarified as redistribution to users, not platform income. Corpus checks: OTS abolished 2023 (any ingested material is historical archive); division lists probably not ingested — verify.
+-   **6 Aug** — Stage 1 user test run: 10/13. Stage 1.1 briefed and built (§3.1). Category set agreed
+    and "Announcements" dropped. Post-scope selector agreed. Nav renamed to Central. Hierarchy admin
+    extended to ancestors (management only). Admin category-management UI explicitly deferred.
 -   **29 Jul** — Migration + Stage 1 build briefed to CC. V30 ingest fixes committed. Token split confirmed 75/25/0 on separate keys. Points principles agreed (12/20 per hour anchor, constructive marks follow main system, sub-group heads hold admin over their sub-group). This spec created.

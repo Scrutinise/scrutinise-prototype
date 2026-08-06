@@ -1,6 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 09:57 UTC — SEARCH: the fusion weight moves 0.7 -> 0.5, measured not carried. An 8-point sweep over all five streams (38 questions, current index, validated answer key) makes 0.5 the best-or-joint-best weight in EVERY stream and the outright winner on both averages: legislation 55.7->63.0%, debates 80.0->95.0% (0.7 was the WORST fusion weight tested there, 10pp below BM25 alone). PROVISIONAL cleared from GOLD_TEST_03-07. Separately, the committees stream cannot be fixed by better questions: CM1 scores 100% while returning ZERO committee documents, and committees-reports turns out to be 71.6% correspondence with report bodies not ingested at all — an ingest question, not an answer-key one (GOLD_TEST_09). Vector serving is still undeployed and its blockers are written up (VECTOR_DEPLOY_READINESS) — the missing concurrency guard is the one that would take it down. Both flags remain OFF. Earlier: 2026-08-04 16:53 UTC — SEARCH: post-fix state VERIFIED independently from a cold start — `unindexed=0`, warm p50 1,250ms, live query 0.62s; a duplicate rebuild was avoided by checking `--verify-only` first. Heavy-jobs rule landed as `docs/CLAUDE.md` §17, cross-referenced from INGEST_PLAYBOOK §20 and HEAVY_JOBS.md. Search-thread sprint written to `docs/SPRINT.md`. Earlier: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 14:26 UTC — CENTRAL Stage 1.1: the four Stage-1 user-test failures are
+fixed and the agreed UX corrections applied. **Two of the four "failures" were discoverability, not
+absence** — voting and keyword search were both fully built and neither could be found (0 BulletinVote
+rows in the database is the proof for voting); both now have labelled, prominent controls, and the
+thread list was additionally not returning the caller's own vote, so your own vote looked as if it
+had not registered. The invite lookup genuinely did not search email despite a comment saying it did
+— now an exact, case-insensitive match (never a substring, which would enumerate accounts), with an
+unregistered address creating a real CommunityInvite instead of failing silently. Idea teams were
+missing because `POST /groups` never wrote a GroupMember row for the creator, so all 6 teams on the
+platform had 0 members; fixed, backfilled, and the query widened to owner-or-member. Plus: nesting
++ labelled per-node buttons on the hierarchy tree (which needed ancestor-admin permissions to work
+at all), 3/4-item dashboard collapse, nav renamed to "Central", the six-category set seeded and
+migrated with "Announcements" removed, and a "Post to" branch/whole-Community selector whose
+Community-wide posts stay owned by their node and are reachable — not just visible — from every
+board in the tree. Additive schema on Neon, 38/38 live checks, `tsc` and `next build` both clean.
+Charlie's browser re-test is the remaining gate. Earlier: 2026-08-06 09:57 UTC — SEARCH: the fusion weight moves 0.7 -> 0.5, measured not carried. An 8-point sweep over all five streams (38 questions, current index, validated answer key) makes 0.5 the best-or-joint-best weight in EVERY stream and the outright winner on both averages: legislation 55.7->63.0%, debates 80.0->95.0% (0.7 was the WORST fusion weight tested there, 10pp below BM25 alone). PROVISIONAL cleared from GOLD_TEST_03-07. Separately, the committees stream cannot be fixed by better questions: CM1 scores 100% while returning ZERO committee documents, and committees-reports turns out to be 71.6% correspondence with report bodies not ingested at all — an ingest question, not an answer-key one (GOLD_TEST_09). Vector serving is still undeployed and its blockers are written up (VECTOR_DEPLOY_READINESS) — the missing concurrency guard is the one that would take it down. Both flags remain OFF. Earlier: 2026-08-04 16:53 UTC — SEARCH: post-fix state VERIFIED independently from a cold start — `unindexed=0`, warm p50 1,250ms, live query 0.62s; a duplicate rebuild was avoided by checking `--verify-only` first. Heavy-jobs rule landed as `docs/CLAUDE.md` §17, cross-referenced from INGEST_PLAYBOOK §20 and HEAVY_JOBS.md. Search-thread sprint written to `docs/SPRINT.md`. Earlier: 2026-08-04 13:20 UTC — SEARCH: the FTS index is REBUILT and search is 94x faster (warm p50 26,005ms -> 276ms; the zero-match probe 24.2s -> 1ms). The cause was 1,191,345 un-indexed rows, and the reason three attempts failed is that the job peaks at 19.8 GB against Railway's measured 8 GB per-replica cap. Shipped the Heavy Job Runner (scripts/ops/heavy-job + docs/HEAVY_JOBS.md) that provisions ephemeral compute, verifies, self-destroys and prints the cost — EUR0.049 for this run. FTS_TIMEOUT_MS deliberately NOT raised; the stopgap proved unnecessary. Earlier: 2026-08-02 18:47 UTC — LEX REBUILD Sprint 3-C: truth, stage search and the cost
 engine. The stub fallback is OUT of production (a failed search now stores an honest empty state +
 Retry, and `failed` is threaded distinctly from "found nothing" all the way to the UI); a FACTS OF
 THIS TURN block confines every Lex claim to what the server actually recorded; each stage entry
@@ -44,6 +59,113 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## CENTRAL Stage 1.1 — the four user-test failures fixed, plus the agreed UX corrections (2026-08-06 14:26 UTC)
+
+Executes the "Central Stage 1.1 — user-test fixes" brief (6 Aug 2026), which follows Charlie's
+Stage 1 user test (10/13 checklist items passed). Central/dashboard only — nothing in the search,
+ingest, stats or Lex stacks was touched, and the board-scoped keyword search deliberately does not
+reach for the corpus-search stack. `tsc --noEmit` clean **and** `next build` clean.
+**38/38 checks pass against the live app DB** (`npm run check:central`).
+
+### Schema — additive, applied to Neon (`ep-old-dust-aboxi69a`/`neondb`), re-run once to prove it
+
+`prisma/central_stage1_1.sql`: `BulletinPost.scope` (TEXT, default `'BRANCH'`) and
+`Community.bulletinCategories` (TEXT[]). Plain text rather than enums so no `CREATE TYPE` runs
+against a live DB; the value sets are enforced by Zod at every write boundary. `whichdb` confirmed
+the host before either statement ran.
+
+### A1 — vote controls: built, but invisible
+
+**Audit result: voting was fully implemented and had simply never been found.** The Stage 1 control
+was two bare `▲`/`▼` glyphs in `text-muted-foreground`, and there are **0 BulletinVote rows in the
+database** — the strongest evidence available that nobody, including the tester, ever located it.
+Replaced with a bordered, labelled control carrying the count at all times, on every thread and
+every reply. **A real bug alongside it:** the thread-list endpoint never returned the caller's own
+vote, so the list rendered `myVote: 0` for everyone until a thread was expanded — your own vote
+looked as though it had not registered. The list now returns it.
+
+### A2 — keyword search: built, but buried
+
+Also already implemented, as a `w-48` box wedged between the category filter and the New-thread
+button. It is now a full-width, labelled search field at the top of the board with a result count
+that states "this Community only". Still a plain ILIKE over title+body — the corpus FTS stack is a
+different scale and a different problem.
+
+### A3 — invite lookup failed on email
+
+`/api/users/search` matched name, first name, last name and username — **and not email at all**,
+despite its own comment claiming it did. Email now matches **exactly and case-insensitively**;
+substring matching on an address is deliberately refused, since it would let anyone enumerate
+accounts by typing a common domain fragment. New `lookupInviteCandidates()` behind
+`/api/communities/[id]/invites/lookup`, and a new **Invite people** panel on the Community
+dashboard: an address that matches no account is offered as `canInviteEmail` and creates a real
+`CommunityInvite` against that address, because most invites go to people who are not on the
+platform yet. An invited existing user gets the invite in their Feed. **No email is sent** — Central
+has no mail path yet, and telling an admin "invited" while nothing was delivered is precisely the
+failure this item exists to remove, so the panel always surfaces the link to pass on.
+
+### A4 — idea teams missing from "My Communities and teams"
+
+**The section was not filtering them out; there was nothing to show.** `POST /api/ideas/[id]/groups`
+created the `Group` but never wrote a `GroupMember` row for the creator, so all **6 teams on the
+platform had 0 members** and a membership-keyed query returned nothing. Fixed at creation
+(owner row + `memberCount`), backfilled for the existing 6, and the dashboard query widened to
+`ownerId OR members.some` so the pre-fix teams appear without depending on the backfill. Cards now
+show member count and your role beside the type tag.
+
+### B — the UX corrections
+
+- **Hierarchy tree.** Real nesting: each level indents inside a bordered rail, carries a
+  `Branch · level N` label, member count and manager, and three **explicit labelled buttons** —
+  Add branch / Rename / Assign manager — on every node, admin-only. The assign-manager picker is now
+  per-node (it previously appeared only on the node you were already standing on) and lists that
+  node's own members. **This needed a permission change to work at all:** the admin routes required
+  OWNER/ADMIN *of the exact node*, so the buttons were dead on any branch the caller had not
+  personally created. New `canManageCommunity()` treats admin of any ancestor as admin of the node.
+  Management only — board and member visibility still require a membership row on the node itself.
+- **Dashboard collapse.** "Your ideas" shows 3, "My Communities and teams" shows 4, each with a
+  `Show all (N)` toggle.
+- **Nav label.** "Communities" → **"Central"** (desktop and mobile), and the landing page heads
+  "Central". "Community" remains the name of the things created inside it.
+- **Category set.** `Canvassing, Building Members, Public Debates, Training, Running Councils,
+  Questions` — "Announcements" removed. Seeded onto every new Community and migrated onto all 4
+  existing ones. `Training` carries the line *"Offer or request interview/media training here"* in
+  the composer so the Stage 2c behaviour starts unprompted. **No admin category-management UI**, per
+  the brief. Post-category migration: `Training — offers & requests` → `Training` is an exact
+  rename; `Announcements` and `General` have no successor concept and fall to `Questions`, the
+  nearest general bucket — **a judgement call, recorded because it is one**. It affected **0 rows**:
+  the only categorised post on the platform was already `Questions`.
+- **Post scope.** The composer gets a "Post to" choice — this branch (default, the board you are on)
+  or the whole Community. A `COMMUNITY`-scope post **stays owned by the node it was written on** and
+  widens only its visibility, so authorship and membership stay coherent; every board in the tree
+  shows it tagged "Community-wide", with the originating branch named when it differs. Replies
+  inherit the thread's node and reach, so a reply from a branch to a Community-wide thread does not
+  strand itself. **The display rule alone would have been a half-fix:** the detail, vote and reply
+  routes all resolved posts by `id + communityId`, so a Community-wide thread would have *rendered*
+  on a branch board and then 404'd on every interaction. `findBoardPost()` is the single reachability
+  rule all three now share.
+
+### Verification
+
+`scripts/check-central-stage1.ts` (`npm run check:central`) — 38 assertions, two halves. Standing
+assertions over real data (columns present, all 4 Communities on the six categories, no retired
+category left on any post, every idea team owning a member row, `memberCount` reconciled), then a
+disposable root→branch→sub-branch tree with two real accounts driven through the **same
+`lib/community.ts` functions the routes call**, and deleted in a `finally`. The API routes need a
+Clerk session and cannot be reached from a script, so the vote transaction and the invite lookup
+were **moved into that shared layer** rather than tested by a re-implementation that would prove
+nothing. Covered: scope visibility in all four directions, reply reachability, vote/change/withdraw
+arithmetic from two accounts, exact-email lookup, the anti-enumeration rule, and the unregistered-
+address fallback.
+
+### Still open
+
+Charlie's browser re-test is the remaining gate — the API surface is typechecked, built and
+exercised through its shared layer, but the two new panels (Invite people, the "Post to" selector)
+get their first true click-test from him.
 
 ---
 
