@@ -5,6 +5,8 @@
 // type, takes 2–3 per type and caps ~20; Lex grounds the briefing on these.
 
 import type { SearchResult, SearchResultType } from './page1-config'
+import type { OrientationResult } from './orientation/types'
+import { renderOrientationChecked } from './orientation/render'
 
 const PER_TYPE_CAP = 3
 const TOTAL_CAP = 20
@@ -144,11 +146,20 @@ export function groupForPanel(results: SearchResult[]): SearchResult[] {
   return Array.from(byType.values()).flat().slice(0, TOTAL_CAP)
 }
 
-/** Build the stub Initial Background briefing prose from keywords + grouped refs. */
+/**
+ * Build the Initial Background briefing prose from keywords + grouped refs.
+ *
+ * §6d — when an orientation result is passed, its Tier B/C segments are appended
+ * after the corpus sections. Order is deliberate and is the provenance rule made
+ * visible: the law first, from the corpus; background and circulating argument
+ * after it, badged. The summary stays corpus-only — nothing from orientation may
+ * reach it (quarantine.ts asserts that, it is not left to care).
+ */
 export function buildInitialBackground(
   keywords: string[],
   refs: SearchResult[],
-): { summary: string; body: string } {
+  orientation?: OrientationResult | null,
+): { summary: string; body: string; quarantineOk: boolean } {
   const kw = keywords.length ? keywords.join(', ') : 'this area'
   const acts = refs.filter((r) => r.type === 'PRIMARY_LEGISLATION')
   const sis = refs.filter((r) => r.type === 'STATUTORY_INSTRUMENT')
@@ -161,7 +172,7 @@ export function buildInitialBackground(
     ` Parliament has returned to it repeatedly — ${debates.length} relevant debate(s) and ` +
     `${committees.length} committee report(s) bear on it.`
 
-  const body = [
+  const corpusBody = [
     `## Initial Background — ${kw}`,
     '',
     '### The legal framework',
@@ -184,11 +195,29 @@ export function buildInitialBackground(
     '- Where does the existing framework already cover this, and where does it fall silent?',
     '- Is the gap one of law, of enforcement, or of resourcing?',
     '- Which select committee owns the brief, and when did it last look at this?',
-    '',
-    '_This is a first-pass briefing generated from a keyword search of the corpus. It is a starting point for the diagnosis, not a settled account._',
   ]
     .filter(Boolean)
     .join('\n')
 
-  return { summary, body }
+  // §6d segments, appended after the corpus sections and provenance-checked.
+  let orientationMd = ''
+  let quarantineOk = true
+  // `calls.length` — not `failed` — is the gate, and the distinction matters.
+  // With LEX_WEB_ORIENTATION off, runOrientation attempts nothing and returns
+  // failed:false with no calls; gating on `!failed` would have rendered an empty
+  // "current context" section into every briefing while the flag was off. No
+  // call attempted means no section. All calls attempted and failed means the
+  // section says so.
+  if (orientation && orientation.calls.length > 0) {
+    const rendered = renderOrientationChecked(orientation, summary)
+    orientationMd = rendered.markdown
+    quarantineOk = rendered.quarantineOk
+  }
+
+  const closing =
+    '\n\n_This is a first-pass briefing generated from a keyword search of the corpus' +
+    (orientationMd ? ', plus a web and X orientation pass' : '') +
+    '. It is a starting point for the diagnosis, not a settled account._'
+
+  return { summary, body: corpusBody + orientationMd + closing, quarantineOk }
 }

@@ -19,6 +19,7 @@ import {
   type FieldStatus,
 } from './page1-config'
 import { buildInitialBackground } from './search-stub'
+import { runOrientation } from './orientation'
 import { runSearch } from './search-gateway'
 
 // Prisma enum values mirror our string union.
@@ -306,18 +307,31 @@ export async function fireSearchTrigger(ideaId: string): Promise<{ ok: boolean; 
   // that expansion but never enters the briefing text (grounding guardrail §3).
   const ideaContext = [idea?.ideaNarrative, idea?.youAndIdeaNarrative]
     .filter(Boolean).join(' ').slice(0, 500)
-  const { grouped: refs, failed, failureReason } = await runSearch({
-    keywords,
-    intent: 'BACKGROUND_BRIEFING',
-    ideaContext,
-    limit: 12,
-  })
+
+  // §6d — the orientation stage runs CONCURRENTLY with the corpus search, not
+  // after it: they are independent sources and serialising them would add the
+  // whole of one to the other. Charlie's call (6 Aug) is that the briefing waits
+  // for both and is written once, complete. Orientation cannot reject, and is a
+  // no-op returning an empty result while LEX_WEB_ORIENTATION is off — so with
+  // the flag off this line costs one function call and nothing else.
+  const [searchOut, orientation] = await Promise.all([
+    runSearch({ keywords, intent: 'BACKGROUND_BRIEFING', ideaContext, limit: 12 }),
+    runOrientation({ topic: keywords.join(', '), ideaContext }),
+  ])
+  const { grouped: refs, failed, failureReason } = searchOut
 
   if (failed) {
     // Honest empty state. No references, no prose, and a status the panel renders as
     // "the corpus search didn't complete — Retry".
     console.error('[lex-diag] briefing search FAILED — storing honest empty state', { ideaId, failureReason })
-    await prisma.idea.update({ where: { id: ideaId }, data: { legislationRefs: [] as never } })
+    // The orientation record is still stored: it ran, it cost money, and what it
+    // found is a fact about this run. It is NOT rendered — a briefing whose
+    // corpus half failed shows the failure and a Retry, not Tier B/C content
+    // standing in for the law.
+    await prisma.idea.update({
+      where: { id: ideaId },
+      data: { legislationRefs: [] as never, orientation: orientation as never },
+    })
     await prisma.document.upsert({
       where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
       create: { ideaId, kind: 'INITIAL_BACKGROUND', status: 'failed', summary: null, body: null },
@@ -327,11 +341,11 @@ export async function fireSearchTrigger(ideaId: string): Promise<{ ok: boolean; 
   }
 
   // Briefing prose uses the user's original keywords (not the expanded set) — ground truth only.
-  const { summary, body } = buildInitialBackground(keywords, refs)
+  const { summary, body } = buildInitialBackground(keywords, refs, orientation)
 
   await prisma.idea.update({
     where: { id: ideaId },
-    data: { legislationRefs: refs as never },
+    data: { legislationRefs: refs as never, orientation: orientation as never },
   })
   await prisma.document.upsert({
     where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },

@@ -201,12 +201,21 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       }
     }
 
-    // 3. Web orientation (capability flag; OFF — the search side hasn't shipped it).
-    //    Reserved: a Gemini-grounded current-state pass (SEARCH_STRATEGY §3b). Web
-    //    steers and orients; the corpus is what gets cited as law.
-    if (flags.webOrientation) {
-      // Not wired until the search side ships it; flag exists so only this file changes.
-    }
+    // 3. Web orientation — SHIPPED 2026-08-06, but NOT here. See lib/lex/orientation/.
+    //
+    //    The flag stays declared in this file because it is a search capability and
+    //    this is where capabilities are read. The CALL is not in the gateway, and
+    //    that is deliberate: the gateway's contract is `query → SearchResult[]` and
+    //    it is shared by nine intents, whereas orientation produces briefing
+    //    SEGMENTS (Tier B/C background, §6d.4) and is scoped to exactly one caller
+    //    — the Page-1 background briefing. Running it here would have fired it for
+    //    cause-seeding, ad-hoc research and the three legacy legislation surfaces
+    //    as well, at ~$0.07 and ~25s a time.
+    //
+    //    So `fireSearchTrigger` calls runOrientation() in parallel with runSearch(),
+    //    and this step is intentionally empty. If orientation is later widened to
+    //    steer the QUERY (its other §6d use — web orients, the corpus is cited),
+    //    that half belongs here and this is where it goes.
 
     // 4. Retrieval. The adapter overscans and drops corpus families with no display
     //    type; it also owns the canonical SearchResult[] mapping (§14.4 — the type
