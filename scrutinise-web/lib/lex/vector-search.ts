@@ -49,27 +49,40 @@ function legislationUrl(gid: string, ref: string): string {
   return ref ? `${base}/${ref.replace(/-/g, '/')}` : base
 }
 
-async function callVector(query: string, limit: number): Promise<VecHit[]> {
+async function callVector(query: string, limit: number, tier?: string): Promise<VecHit[]> {
   if (!VECTOR_URL) throw new Error('VECTOR_SEARCH_URL not set')
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), VECTOR_TIMEOUT_MS)
   try {
     const res = await fetch(`${VECTOR_URL.replace(/\/$/, '')}/vector-search`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, limit }), signal: ctrl.signal,
+      body: JSON.stringify({ query, limit, ...(tier ? { tier } : {}) }), signal: ctrl.signal,
     })
     if (!res.ok) throw new Error(`vector ${res.status}: ${await res.text()}`)
-    const json = (await res.json()) as { results?: VecHit[] }
+    const json = (await res.json()) as { results?: VecHit[]; tier?: string | null }
+    // A service too old to know about `tier` would ignore it and return the whole corpus,
+    // which would silently widen a stream-scoped search into an unscoped one. Fail closed:
+    // a scoped call that cannot be proven scoped returns nothing and the BM25 path stands.
+    if (tier && json.tier !== tier) {
+      throw new Error(`vector service did not honour tier="${tier}" (echoed ${JSON.stringify(json.tier)}) — refusing unscoped results`)
+    }
     return json.results ?? []
   } finally { clearTimeout(t) }
 }
 
-/** Dense search → SearchResult[]. Returns [] on any failure or if the flag/URL is unset. */
-export async function runVectorSearch(keywords: string[], limit = 12): Promise<{ results: SearchResult[] }> {
+/**
+ * Dense search → SearchResult[]. Returns [] on any failure or if the flag/URL is unset.
+ *
+ * `tier` scopes the search to one stream. It is a server-side PREfilter over corpus_vec, not a
+ * filter applied to the results here — filtering after the fact would return whatever fraction
+ * of an unscoped ANN result happened to be in-tier (legislation is 8.6% of the index), which
+ * reads as weak recall rather than as a mistake.
+ */
+export async function runVectorSearch(keywords: string[], limit = 12, tier?: string): Promise<{ results: SearchResult[] }> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
   if (!query || !VECTOR_URL) return { results: [] }
   try {
-    const hits = await callVector(query, Math.max(limit * 3, 30))
+    const hits = await callVector(query, Math.max(limit * 3, 30), tier)
     if (!hits.length) return { results: [] }
     const typed = hits
       .map((h) => ({ h, type: corpusToType(h.corpus, h.tier, h.id) }))

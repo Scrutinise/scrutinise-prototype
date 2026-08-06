@@ -19,7 +19,8 @@ import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
 import { expandQuery, routeQuery } from './query-expansion'
-import { runRoutedSearch } from './query-router'
+import { runRoutedSearch, perStreamVectorActive } from './query-router'
+import { fuseWeightedRrf } from './fusion'
 
 // ── Query intent (§14.2) — owned HERE, aligned to the search side's stream taxonomy.
 // Add an intent when a new Lex moment needs retrieval; tell the search side so they
@@ -224,13 +225,24 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //     on the full-corpus ANN index + the gold key is validated (turning it on before
   //     that risks a regression). runVectorSearch also returns [] unless VECTOR_SEARCH_URL
   //     is set, so this is doubly inert.
+  //     SUPERSEDED BY PER-STREAM FUSION (2026-08-06). When LEX_VECTOR_STREAMS names any
+  //     stream, the fusion has already happened inside that stream's own retrieval
+  //     (query-router.ts::fusedStream), scoped to its tier. Running this whole-query fusion
+  //     as well would fuse an already-fused ranking against a second, UNSCOPED dense ranking
+  //     — double-counting the dense signal and, worse, reintroducing exactly the cross-stream
+  //     leakage the per-stream design exists to prevent. So the two are mutually exclusive,
+  //     and the per-stream one wins.
   let results = ftsResults
-  if (flags.vector) {
+  if (flags.vector && !perStreamVectorActive()) {
     const { results: vecResults } = await runVectorSearch(queryKeywords, limit)
     if (vecResults.length) {
       results = fuseWeightedRrf(vecResults, ftsResults)
-      console.log('[search-gateway] vector fusion', { intent: q.intent, fts: ftsResults.length, vector: vecResults.length, fused: results.length })
+      console.log('[search-gateway] vector fusion (whole-query, legacy path)', { intent: q.intent, fts: ftsResults.length, vector: vecResults.length, fused: results.length })
     }
+  } else if (flags.vector) {
+    console.log('[search-gateway] whole-query fusion stood down — per-stream vector is active', {
+      intent: q.intent, streams: process.env.LEX_VECTOR_STREAMS,
+    })
   }
 
   // 5. Group by display type — ≤3/type, ~20 cap. Kept INSIDE the gateway so that
@@ -241,25 +253,8 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   return { intent: q.intent, results, grouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams } }
 }
 
-// ── fusion (§14, vector layer) — the SHIPPED spec from docs/FUSION_REPORT.md ──
-// Weighted reciprocal-rank fusion: score = w/(k+rank_vec) + (1−w)/(k+rank_bm25), with
-// w=0.7 (RRF_K=60). Tuned on the pilot subset: 70/30 beats naive equal-weight RRF
-// (+3.5pp), vector-alone (+1.9pp) and BM25 (+19.5pp) for gemini, and — critically — is
-// the coexistence point where the vector concept-win survives AND the BM25 citation
-// resolver still pins exact citations (A stays 100%). NOT equal-weight (which the pilot
-// showed drags a strong vector model down). Weight is env config so the full-corpus
-// re-measure can adjust without a deploy. The flag stays OFF until 70/30 is re-confirmed
-// on the full-corpus ANN index (see docs/VECTOR_EMBED_REPORT.md §4).
-const RRF_K = parseInt(process.env.LEX_FUSION_RRF_K ?? '60', 10)
-const VECTOR_WEIGHT = parseFloat(process.env.LEX_FUSION_VECTOR_WEIGHT ?? '0.7')
-
-function fuseWeightedRrf(vec: SearchResult[], bm25: SearchResult[]): SearchResult[] {
-  const w = VECTOR_WEIGHT
-  const scores = new Map<string, number>()
-  const byId = new Map<string, SearchResult>()
-  vec.forEach((r, i) => { scores.set(r.id, (scores.get(r.id) ?? 0) + w / (RRF_K + i + 1)); if (!byId.has(r.id)) byId.set(r.id, r) })
-  bm25.forEach((r, i) => { scores.set(r.id, (scores.get(r.id) ?? 0) + (1 - w) / (RRF_K + i + 1)); if (!byId.has(r.id)) byId.set(r.id, r) })
-  return [...scores.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([id, score]) => ({ ...byId.get(id)!, score }))
-}
+// ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────
+// It now has two callers — this legacy whole-query path and query-router.ts's per-stream
+// path — and a ranking formula kept in two places is a ranking formula that will eventually
+// differ in one of them. The weight's provenance and its CURRENTLY-UNVALIDATED status (0.7
+// was measured against an index that has changed twice since) are documented there.

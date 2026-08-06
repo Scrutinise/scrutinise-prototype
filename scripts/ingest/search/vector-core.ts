@@ -40,14 +40,30 @@ export async function embedQuery(text: string): Promise<number[]> {
 
 export interface VecSectionHit { sectionId: string; corpus: string; tier: string; score: number }
 
-/** ANN over corpus_vec → best-similarity section ranking (chunks collapsed to sections). */
-export async function vectorSearchSections(table: lancedb.Table, qvec: number[], limit = 20): Promise<VecSectionHit[]> {
-  const rows = await table.vectorSearch(Float32Array.from(qvec))
+/**
+ * ANN over corpus_vec → best-similarity section ranking (chunks collapsed to sections).
+ *
+ * `tier` restricts the search to one stream (e.g. 'legislation'). It MUST be a PREfilter, and
+ * relies on prefiltering being LanceDB's default here — `postfilter()` is the opt-in. The
+ * distinction is not cosmetic at this ratio: legislation is 1,868,316 of 21,846,364 vectors
+ * (8.6%), so post-filtering an ANN result of ~60-200 chunks would leave a handful of
+ * legislation hits and silently gut recall, in a way that looks like "vector is weak on
+ * legislation" rather than like a filtering bug. Prefiltering searches the legislation
+ * subspace properly and the overscan below then applies WITHIN that subspace.
+ */
+export async function vectorSearchSections(
+  table: lancedb.Table,
+  qvec: number[],
+  limit = 20,
+  tier?: string,
+): Promise<VecSectionHit[]> {
+  let q = table.vectorSearch(Float32Array.from(qvec))
     .distanceType('cosine')
     .nprobes(NPROBES)
     .refineFactor(REFINE)
     .limit(Math.max(limit * CHUNK_OVERSCAN, 60))
-    .toArray() as any[]
+  if (tier) q = q.where(`tier = '${tier.replace(/'/g, "''")}'`)
+  const rows = await q.toArray() as any[]
   // cosine distance → similarity; keep best per section
   const best = new Map<string, VecSectionHit>()
   for (const r of rows) {
