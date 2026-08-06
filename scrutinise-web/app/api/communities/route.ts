@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { countUnreadBulletin } from '@/lib/community'
+import { countUnreadBulletin, DEFAULT_BULLETIN_CATEGORIES } from '@/lib/community'
 
 const CreateCommunitySchema = z.object({
   name: z.string().min(1).max(100),
@@ -63,7 +63,9 @@ export async function POST(req: Request) {
 
   const community = await prisma.$transaction(async (tx) => {
     const created = await tx.community.create({
-      data: { name, description },
+      // Every new Community starts with the agreed six bulletin categories
+      // (Stage 1.1). No admin category-management UI at this stage.
+      data: { name, description, bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES] },
     })
     await tx.communityMember.create({
       data: { communityId: created.id, userId: user.id, role: 'OWNER' },

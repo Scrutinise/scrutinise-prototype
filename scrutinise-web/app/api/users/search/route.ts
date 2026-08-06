@@ -7,8 +7,14 @@ const QuerySchema = z.object({
   q: z.string().min(2).max(100),
 })
 
-// GET /api/users/search?q= — search users by displayName, username, or email
+// GET /api/users/search?q= — search users by name, username, or email.
 // Auth required. Excludes the requesting user. No email returned.
+//
+// Email is matched EXACTLY (case-insensitive), never as a substring: a
+// substring match on an address would let anyone enumerate accounts by typing
+// a common domain fragment. Name/username stay substring matches. Before the
+// Stage 1 user test on 6 Aug 2026 email was not searchable at all, so inviting
+// a known user by their address silently found nothing.
 export async function GET(req: Request) {
   const { error, user } = await getAuthenticatedUser()
   if (error) return error
@@ -31,6 +37,7 @@ export async function GET(req: Request) {
       isHistoricalAccount: false,
       status: 'ACTIVE',
       OR: [
+        { email: { equals: term, mode: 'insensitive' } },
         { name: { contains: term, mode: 'insensitive' } },
         { firstName: { contains: term, mode: 'insensitive' } },
         { lastName: { contains: term, mode: 'insensitive' } },

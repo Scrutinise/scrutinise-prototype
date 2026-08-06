@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { getCommunityMembership, getCommunityTree, requireCommunityRole } from '@/lib/community'
+import { getCommunityMembership, getCommunityTree, requireCommunityAdmin, canManageCommunity } from '@/lib/community'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -39,8 +39,10 @@ export async function GET(_req: Request, { params }: Params) {
       description: community.description,
       parent: community.parent,
       managerId: community.managerId,
+      bulletinCategories: community.bulletinCategories,
     },
     myRole: membership.role,
+    canManage: await canManageCommunity(user.id, id),
     members: community.members.map((m) => ({
       userId: m.userId,
       name: m.user.name,
@@ -65,8 +67,10 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { id } = await params
 
-  const roleCheck = await requireCommunityRole(user.id, id)
-  if (roleCheck.error) return roleCheck.error
+  // Admin of this node OR of any node above it — the tree's per-node "Rename"
+  // button has to work on descendants the caller didn't create.
+  const denied = await requireCommunityAdmin(user.id, id)
+  if (denied) return denied
 
   let body: unknown
   try {

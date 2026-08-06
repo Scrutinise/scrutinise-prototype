@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityRole } from '@/lib/community'
+import { requireCommunityRole, findBoardPost, applyBulletinVote } from '@/lib/community'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 type Params = { params: Promise<{ id: string; postId: string }> }
@@ -43,40 +42,10 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
 
-  const post = await prisma.bulletinPost.findFirst({ where: { id: postId, communityId } })
+  // Reachable from this board: this node's own posts and replies, plus
+  // Community-wide posts from elsewhere in the same tree.
+  const post = await findBoardPost(postId, communityId)
   if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const { value } = parsed.data
-
-  const result = await prisma.$transaction(async (tx) => {
-    const existing = await tx.bulletinVote.findUnique({
-      where: { postId_userId: { postId, userId: user.id } },
-    })
-
-    if (existing && existing.value === value) {
-      await tx.bulletinVote.delete({ where: { id: existing.id } })
-      await tx.bulletinPost.update({ where: { id: postId }, data: { score: { decrement: value } } })
-      return { myVote: 0 }
-    }
-
-    if (existing) {
-      await tx.bulletinVote.update({ where: { id: existing.id }, data: { value } })
-      await tx.bulletinPost.update({
-        where: { id: postId },
-        data: { score: { increment: value - existing.value } },
-      })
-      return { myVote: value }
-    }
-
-    await tx.bulletinVote.create({ data: { postId, userId: user.id, value } })
-    await tx.bulletinPost.update({ where: { id: postId }, data: { score: { increment: value } } })
-    return { myVote: value }
-  })
-
-  const updated = await prisma.bulletinPost.findUniqueOrThrow({
-    where: { id: postId },
-    select: { score: true },
-  })
-
-  return NextResponse.json({ score: updated.score, myVote: result.myVote })
+  return NextResponse.json(await applyBulletinVote(postId, user.id, parsed.data.value))
 }

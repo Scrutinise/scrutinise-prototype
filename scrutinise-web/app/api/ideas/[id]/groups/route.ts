@@ -93,6 +93,10 @@ export async function POST(req: Request, { params }: Params) {
   // Generate a simple unique invite code
   const inviteCode = `${ideaId.slice(0, 8)}-${groupType.toLowerCase()}-${Date.now().toString(36)}`
 
+  // The owner is written in as a member of their own team. Without this a
+  // brand-new team has zero GroupMember rows, which is why idea teams never
+  // appeared in the dashboard's "My Communities and teams" section — the
+  // section reads memberships (6 Aug 2026 user test).
   const group = await prisma.group.create({
     data: {
       ownerId: user.id,
@@ -101,6 +105,8 @@ export async function POST(req: Request, { params }: Params) {
       name,
       description,
       inviteCode,
+      memberCount: 1,
+      members: { create: { userId: user.id, role: 'OWNER' } },
     },
     include: {
       members: {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityRole } from '@/lib/community'
+import { requireCommunityRole, findBoardPost } from '@/lib/community'
 
 type Params = { params: Promise<{ id: string; postId: string }> }
 
@@ -23,10 +23,7 @@ export async function POST(req: Request, { params }: Params) {
   const roleCheck = await requireCommunityRole(user.id, communityId, [...ALL_ROLES])
   if (roleCheck.error) return roleCheck.error
 
-  const parentThread = await prisma.bulletinPost.findFirst({
-    where: { id: postId, communityId, parentId: null },
-    select: { id: true, title: true, authorId: true },
-  })
+  const parentThread = await findBoardPost(postId, communityId, { rootOnly: true })
   if (!parentThread) return NextResponse.json({ error: 'Thread not found' }, { status: 404 })
 
   let body: unknown
@@ -42,8 +39,17 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const [reply] = await prisma.$transaction([
+    // A reply belongs to the thread's node and inherits its reach — so a reply
+    // to a Community-wide thread stays visible (and votable) from every board
+    // that can see the thread, instead of stranding itself on one branch.
     prisma.bulletinPost.create({
-      data: { communityId, parentId: postId, authorId: user.id, body: parsed.data.body },
+      data: {
+        communityId: parentThread.communityId,
+        parentId: postId,
+        authorId: user.id,
+        scope: parentThread.scope,
+        body: parsed.data.body,
+      },
       include: { author: { select: { id: true, name: true, username: true } } },
     }),
     ...(parentThread.authorId !== user.id
@@ -54,7 +60,10 @@ export async function POST(req: Request, { params }: Params) {
               type: 'SYSTEM',
               title: 'New reply',
               message: `${user.name} replied to your thread "${parentThread.title}"`,
-              linkUrl: `/communities/${communityId}?thread=${postId}`,
+              // Point at the thread's own board, not the board the replier
+              // happened to be on — a Community-wide thread can be replied to
+              // from a branch the author may not belong to.
+              linkUrl: `/communities/${parentThread.communityId}?thread=${postId}`,
             },
           }),
         ]

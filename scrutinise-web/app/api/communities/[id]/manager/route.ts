@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityRole } from '@/lib/community'
+import { requireCommunityAdmin } from '@/lib/community'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -19,8 +19,9 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { id } = await params
 
-  const roleCheck = await requireCommunityRole(user.id, id)
-  if (roleCheck.error) return roleCheck.error
+  // Admin of this node OR of any node above it — see requireCommunityAdmin.
+  const denied = await requireCommunityAdmin(user.id, id)
+  if (denied) return denied
 
   let body: unknown
   try {
