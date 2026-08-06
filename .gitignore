@@ -101,6 +101,7 @@ scripts/ingest/search/.fts-index-debt.json
 # is on R2 next to the backup it indexes (`_search/hygiene-backup/<stamp>/manifest.json`). A
 # committed copy would be a stale claim about which rows are duplicates, which is worse than none.
 scripts/ingest/search/.fts-hygiene/
+scripts/ingest/search/.vec-hygiene/
 
 # Tier-1 graph sprint — bulk TNA amendments data (large, regenerable via download-graph-sources.ts)
 scripts/ingest/graph/data/
