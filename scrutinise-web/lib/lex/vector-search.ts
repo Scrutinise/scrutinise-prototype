@@ -49,22 +49,45 @@ function legislationUrl(gid: string, ref: string): string {
   return ref ? `${base}/${ref.replace(/-/g, '/')}` : base
 }
 
-async function callVector(query: string, limit: number, tier?: string): Promise<VecHit[]> {
+/** Server-side stream scope — the dense twin of fts-search.ts's FtsScope. */
+export interface VectorScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }
+
+async function callVector(query: string, limit: number, scope: VectorScope = {}): Promise<VecHit[]> {
   if (!VECTOR_URL) throw new Error('VECTOR_SEARCH_URL not set')
+  const { tier, corpora, excludeCorpora } = scope
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), VECTOR_TIMEOUT_MS)
   try {
     const res = await fetch(`${VECTOR_URL.replace(/\/$/, '')}/vector-search`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, limit, ...(tier ? { tier } : {}) }), signal: ctrl.signal,
+      body: JSON.stringify({
+        query, limit,
+        ...(tier ? { tier } : {}),
+        ...(corpora?.length ? { corpora } : {}),
+        ...(excludeCorpora?.length ? { excludeCorpora } : {}),
+      }), signal: ctrl.signal,
     })
     if (!res.ok) throw new Error(`vector ${res.status}: ${await res.text()}`)
-    const json = (await res.json()) as { results?: VecHit[]; tier?: string | null }
+    const json = (await res.json()) as { results?: VecHit[]; tier?: string | null; corpora?: string[] | null; excludeCorpora?: string[] | null }
     // A service too old to know about `tier` would ignore it and return the whole corpus,
     // which would silently widen a stream-scoped search into an unscoped one. Fail closed:
     // a scoped call that cannot be proven scoped returns nothing and the BM25 path stands.
     if (tier && json.tier !== tier) {
       throw new Error(`vector service did not honour tier="${tier}" (echoed ${JSON.stringify(json.tier)}) — refusing unscoped results`)
+    }
+    // The CORPUS scope degrades rather than failing, unlike the tier check above. Same reasoning
+    // as fts-search.ts: query-router.ts still applies the `types` post-filter to the dense half,
+    // so an unscoped response costs recall, not correctness — whereas an unhonoured TIER can put
+    // another tier's content in front of a user with no backstop at all. Keeping the two
+    // different is deliberate; collapsing them would either weaken the tier guarantee or turn a
+    // service-version skew into an outage.
+    const sameList = (a?: string[] | null, b?: string[]) =>
+      JSON.stringify([...(a ?? [])].sort()) === JSON.stringify([...(b ?? [])].sort())
+    if (corpora?.length && !sameList(json.corpora, corpora)) {
+      console.warn(`[vector-search] service did not honour corpora=${JSON.stringify(corpora)} (echoed ${JSON.stringify(json.corpora)}) — dense half is tier-scoped only; redeploy the vector service`)
+    }
+    if (excludeCorpora?.length && !sameList(json.excludeCorpora, excludeCorpora)) {
+      console.warn(`[vector-search] service did not honour excludeCorpora=${JSON.stringify(excludeCorpora)} — dense half is tier-scoped only; redeploy the vector service`)
     }
     return json.results ?? []
   } finally { clearTimeout(t) }
@@ -78,11 +101,17 @@ async function callVector(query: string, limit: number, tier?: string): Promise<
  * of an unscoped ANN result happened to be in-tier (legislation is 8.6% of the index), which
  * reads as weak recall rather than as a mistake.
  */
-export async function runVectorSearch(keywords: string[], limit = 12, tier?: string): Promise<{ results: SearchResult[] }> {
+export async function runVectorSearch(
+  keywords: string[],
+  limit = 12,
+  /** string = tier only (the original signature); object = full server-side stream scope. */
+  scope?: string | VectorScope,
+): Promise<{ results: SearchResult[] }> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
   if (!query || !VECTOR_URL) return { results: [] }
+  const sc: VectorScope = typeof scope === 'string' ? { tier: scope } : (scope ?? {})
   try {
-    const hits = await callVector(query, Math.max(limit * 3, 30), tier)
+    const hits = await callVector(query, Math.max(limit * 3, 30), sc)
     if (!hits.length) return { results: [] }
     const typed = hits
       .map((h) => ({ h, type: corpusToType(h.corpus, h.tier, h.id) }))

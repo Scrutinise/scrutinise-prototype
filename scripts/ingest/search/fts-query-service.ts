@@ -100,17 +100,31 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
       const tQueueStart = Date.now()
       const release = await acquireSlot()
       try {
-        const { query, tier, limit } = JSON.parse(raw || '{}')
+        // `corpora` / `excludeCorpora` scope a search to ONE stream within a shared tier —
+        // debates and committees both live on `parliamentary`, and separating them after
+        // retrieval is lossy (the result is truncated to `limit` before the caller can filter).
+        const { query, tier, limit, corpora, excludeCorpora } = JSON.parse(raw || '{}')
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
+        if (tier !== undefined && typeof tier !== 'string') return send(res, 400, { error: 'tier must be a string when given' })
+        const okList = (v: unknown) => v === undefined || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
+        if (!okList(corpora) || !okList(excludeCorpora)) return send(res, 400, { error: 'corpora/excludeCorpora must be string arrays when given' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
         const queueMs = Date.now() - tQueueStart
         const t0 = Date.now()
-        const results = await rankedSearch(table, query, { tier, limit: lim, actIndex })
+        const results = await rankedSearch(table, query, { tier, limit: lim, actIndex, corpora, excludeCorpora })
         const ms = Date.now() - t0
         ;(served === 0 ? cold : warm).push(ms)
         served++
+        // Echo the scope back, for the same reason vector-query-service.ts does: a caller that
+        // believes it scoped the search and a service too old to know the field would be
+        // indistinguishable from the outside, and the symptom — a stream quietly serving another
+        // stream's content — is exactly what this parameter exists to prevent.
         // body omitted from the wire payload; snippet is enough for inspection
-        send(res, 200, { query, tier: tier ?? null, ms, queueMs, count: results.length, results: results.map(({ body, ...r }) => r) })
+        send(res, 200, {
+          query, tier: tier ?? null,
+          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
+          ms, queueMs, count: results.length, results: results.map(({ body, ...r }) => r),
+        })
       } catch (e) {
         send(res, 500, { error: (e as Error).message })
       } finally {

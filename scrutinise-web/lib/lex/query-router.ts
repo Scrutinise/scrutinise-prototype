@@ -28,16 +28,42 @@ export interface StreamConfig {
   tier: string
   /** When set, further restricts results to these display types — needed only
    *  when a tier is shared by more than one stream (parliamentary → debates
-   *  vs committees). Absent = every type the tier yields belongs to this stream. */
+   *  vs committees). Absent = every type the tier yields belongs to this stream.
+   *
+   *  KEPT AS A BACKSTOP, NO LONGER THE MECHANISM. Since 2026-08-06 the split is done
+   *  server-side by `corpora`/`excludeCorpora` below; this should now filter nothing
+   *  out. It stays because it is free and it is the assertion that the server-side
+   *  scope did what it claimed. */
   types?: SearchResultType[]
+  /** Server-side corpus PREfilter — the real stream boundary when a tier is shared.
+   *  Must agree with corpus-type-map.ts's mapping for `types`, or the two disagree
+   *  and the backstop silently starts discarding rows the prefilter allowed. */
+  corpora?: string[]
+  /** Server-side corpus prefilter, complement form — for the stream that is "the rest
+   *  of the tier". Preferred over listing 18 corpora that a new ingest would invalidate. */
+  excludeCorpora?: string[]
   /** The stream's own retrieval call. Defaults differ only in tier/types today;
    *  a future non-FTS stream (web/X, graph) would supply a different function. */
   search: (query: string, limit: number) => Promise<SearchResult[]>
 }
 
-function ftsStream(tier: string, types?: SearchResultType[]) {
+/**
+ * COMMITTEE / DEBATE corpora, kept next to each other because they are complements and must
+ * stay so. corpus-type-map.ts maps `corpus.startsWith('committees')` → COMMITTEE within the
+ * parliamentary tier; everything else in that tier is DEBATE apart from a handful of BILL /
+ * TREATY / null corpora, which the debates stream excludes here for the same reason it always
+ * dropped them client-side.
+ *
+ * Listed explicitly rather than by prefix because the filter is a SQL `IN` evaluated in the
+ * index, and because a new `committees-*` corpus should be a deliberate addition here rather
+ * than something that silently joins a stream on the strength of its name.
+ */
+const COMMITTEE_CORPORA = ['committees-reports', 'committees-evidence']
+const NON_DEBATE_PARLIAMENTARY = [...COMMITTEE_CORPORA, 'bills-api', 'uk-treaties', 'tax-treaties-dta', 'members-interests', 'erskine-may']
+
+function ftsStream(tier: string, types?: SearchResultType[], corpora?: string[], excludeCorpora?: string[]) {
   return async (query: string, limit: number): Promise<SearchResult[]> => {
-    const { results } = await runFtsSearch([query], limit, tier)
+    const { results } = await runFtsSearch([query], limit, { tier, corpora, excludeCorpora })
     return types ? results.filter((r) => types.includes(r.type)) : results
   }
 }
@@ -78,12 +104,18 @@ export function perStreamVectorActive(): boolean {
  * normal state today, since `VECTOR_SEARCH_URL` is unset, so this is inert until the vector
  * query service is deployed.
  *
- * The dense call is tier-scoped SERVER-side (a prefilter over corpus_vec). Filtering here
+ * The dense call is scoped SERVER-side (a prefilter over corpus_vec). Filtering here
  * instead would keep whatever fraction of an unscoped ANN result happened to be legislation —
  * 8.6% of the index — and would look like weak recall rather than a scoping bug.
+ *
+ * BOTH HALVES TAKE THE SAME SCOPE. Scoping only the BM25 half would be worse than scoping
+ * neither: the fusion would rank a committee-scoped keyword list against a tier-wide dense
+ * list, so the dense half would contribute Hansard to a committees result and the weighting
+ * would make it look deliberate. Committee content is 1.17% of the parliamentary tier, so an
+ * unscoped dense half is ~99% out-of-stream by construction.
  */
-function fusedStream(name: string, tier: string, types?: SearchResultType[]) {
-  const bm25Only = ftsStream(tier, types)
+function fusedStream(name: string, tier: string, types?: SearchResultType[], corpora?: string[], excludeCorpora?: string[]) {
+  const bm25Only = ftsStream(tier, types, corpora, excludeCorpora)
   return async (query: string, limit: number): Promise<SearchResult[]> => {
     // Keyed on the STREAM NAME, not the tier. `debates` and `committees` both sit on the
     // `parliamentary` tier and are separated downstream by display type, so a tier-keyed flag
@@ -92,12 +124,12 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[]) {
     if (!vectorStreams().has(name)) return bm25Only(query, limit)
     const [bm25, dense] = await Promise.all([
       bm25Only(query, limit),
-      runVectorSearch([query], limit, tier).catch(() => ({ results: [] as SearchResult[] })),
+      runVectorSearch([query], limit, { tier, corpora, excludeCorpora }).catch(() => ({ results: [] as SearchResult[] })),
     ])
     const vec = types ? dense.results.filter((r) => types.includes(r.type)) : dense.results
     if (!vec.length) return bm25
     const fused = fuseWeightedRrf(vec, bm25).slice(0, Math.max(limit, bm25.length))
-    console.log('[query-router] per-stream fusion', { stream: name, tier, bm25: bm25.length, vector: vec.length, fused: fused.length, weight: VECTOR_WEIGHT })
+    console.log('[query-router] per-stream fusion', { stream: name, tier, corpora: corpora ?? null, bm25: bm25.length, vector: vec.length, fused: fused.length, weight: VECTOR_WEIGHT })
     return fused
   }
 }
@@ -107,8 +139,10 @@ export const STREAMS: StreamConfig[] = [
   // An unnamed stream calls exactly the ftsStream it always did (fusedStream delegates
   // straight to it), so "nothing else changed" stays structural rather than a thing to test.
   { name: 'legislation', tier: 'legislation', search: fusedStream('legislation', 'legislation') },
-  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], search: fusedStream('debates', 'parliamentary', ['DEBATE']) },
-  { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], search: fusedStream('committees', 'parliamentary', ['COMMITTEE']) },
+  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY,
+    search: fusedStream('debates', 'parliamentary', ['DEBATE'], undefined, NON_DEBATE_PARLIAMENTARY) },
+  { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], corpora: COMMITTEE_CORPORA,
+    search: fusedStream('committees', 'parliamentary', ['COMMITTEE'], COMMITTEE_CORPORA) },
   { name: 'caselaw', tier: 'caselaw', search: fusedStream('caselaw', 'caselaw') },
   { name: 'guidance', tier: 'guidance', search: fusedStream('guidance', 'guidance') },
 ]

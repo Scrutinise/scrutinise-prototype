@@ -56,13 +56,23 @@ export async function vectorSearchSections(
   qvec: number[],
   limit = 20,
   tier?: string,
+  /** Corpus-level stream scope, the dense twin of fts-core.ts's. Needed because `tier` alone
+   *  cannot separate debates from committees, and an unscoped dense half fused against a
+   *  scoped BM25 half is worse than scoping neither — committee content is 1.17% of the
+   *  parliamentary tier, so ~99% of the dense contribution would be out-of-stream. */
+  scope?: { corpora?: string[]; excludeCorpora?: string[] },
 ): Promise<VecSectionHit[]> {
   let q = table.vectorSearch(Float32Array.from(qvec))
     .distanceType('cosine')
     .nprobes(NPROBES)
     .refineFactor(REFINE)
     .limit(Math.max(limit * CHUNK_OVERSCAN, 60))
-  if (tier) q = q.where(`tier = '${tier.replace(/'/g, "''")}'`)
+  const sql = (s: string) => `'${s.replace(/'/g, "''")}'`
+  const preds: string[] = []
+  if (tier) preds.push(`tier = ${sql(tier)}`)
+  if (scope?.corpora?.length) preds.push(`corpus IN (${scope.corpora.map(sql).join(', ')})`)
+  if (scope?.excludeCorpora?.length) preds.push(`corpus NOT IN (${scope.excludeCorpora.map(sql).join(', ')})`)
+  if (preds.length) q = q.where(preds.join(' AND '))
   const rows = await q.toArray() as any[]
   // cosine distance → similarity; keep best per section
   const best = new Map<string, VecSectionHit>()

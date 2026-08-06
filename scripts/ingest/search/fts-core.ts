@@ -30,6 +30,52 @@ export const LEX_LEG_TIER_BOOST = parseFloat(process.env.FTS_LEX_LEG_TIER_BOOST 
 const RESOLVE_EXACT_MAX = 4
 const RESOLVE_ACTLEVEL_MAX = 12
 
+/**
+ * How a search is SCOPED TO A STREAM, server-side, at the query.
+ *
+ * WHY THIS EXISTS (2026-08-06). Four of the five streams were already scoped correctly by
+ * `tier` alone, because their tier maps to exactly one stream. The two that share the
+ * `parliamentary` tier — debates and committees — were not: they retrieved broadly across the
+ * whole 14.17M-row tier and were separated AFTERWARDS, client-side, by display type in
+ * query-router.ts.
+ *
+ * That is not merely inelegant, it is lossy, and the loss is invisible. `rankedSearch` slices
+ * to `limit` BEFORE returning, so any committee document ranked below the cutoff is gone before
+ * the client-side filter ever sees it. Committee content is 1.17% of the tier, so the cutoff
+ * falls overwhelmingly on Hansard and the surviving committee rows are whatever happened to
+ * rank high — for the Carillion question, nothing at all (GOLD_TEST_09).
+ *
+ * A `corpus` prefilter puts the stream's own subset in front of BM25, so the top-N is computed
+ * WITHIN the stream rather than sampled from outside it. Same argument, and the same wording,
+ * as vector-core.ts's note on why the tier filter must be a prefilter rather than a postfilter.
+ */
+export interface SearchScope {
+  tier?: string
+  /** Restrict to these corpora exactly (server-side prefilter). */
+  corpora?: string[]
+  /** Exclude these corpora (server-side prefilter). The complement form, for debates. */
+  excludeCorpora?: string[]
+}
+
+const sqlStr = (s: string) => `'${s.replace(/'/g, "''")}'`
+
+/**
+ * Scope → a SQL predicate, or null when the scope is empty.
+ *
+ * Returned as ONE clause used by BOTH the BM25 query and the citation resolver's injection
+ * fetch. The resolver previously fetched by `id LIKE` with no scope predicate at all, so a
+ * citation-shaped query against the committees or debates stream could inject LEGISLATION rows
+ * into a parliamentary-scoped result — a scoping hole that would have survived this whole fix
+ * and quietly re-widened the very stream it is meant to narrow.
+ */
+export function scopePredicate(scope: SearchScope): string | null {
+  const parts: string[] = []
+  if (scope.tier) parts.push(`tier = ${sqlStr(scope.tier)}`)
+  if (scope.corpora?.length) parts.push(`corpus IN (${scope.corpora.map(sqlStr).join(', ')})`)
+  if (scope.excludeCorpora?.length) parts.push(`corpus NOT IN (${scope.excludeCorpora.map(sqlStr).join(', ')})`)
+  return parts.length ? parts.join(' AND ') : null
+}
+
 export type Hit = {
   id: string; corpus: string; tier: string; jurisdiction: string
   sectionTitle: string | null; itemDate: string | null; speaker: string | null
@@ -56,7 +102,7 @@ function toHit(r: any, score: number, bodyScore: number, titleBoosted: boolean, 
 /** Known-item citation resolver: parse the query, resolve the act → gid, fetch the
  *  exact section (and a few act-level leaves) by id. Returns [] when the query is
  *  not a citation or the act doesn't resolve. */
-async function resolveInjections(table: lancedb.Table, query: string, actIndex?: ActIndex): Promise<Hit[]> {
+async function resolveInjections(table: lancedb.Table, query: string, actIndex?: ActIndex, scope: SearchScope = {}): Promise<Hit[]> {
   if (!actIndex) return []
   const parsed = parseCitation(query)
   if (!parsed) return []
@@ -65,8 +111,13 @@ async function resolveInjections(table: lancedb.Table, query: string, actIndex?:
   const pats = idPatternsFor(r)
   const out: Hit[] = []
   const seen = new Set<string>()
+  const scoped = scopePredicate(scope)
   const fetch = async (like: string, max: number) => {
-    const rows = (await table.query().where(`id LIKE '${like}'`).limit(max).toArray()) as any[]
+    // Scope the injection the same way the BM25 half is scoped. Without this the resolver is a
+    // hole straight through the stream boundary: it injects rows ABOVE the BM25 list, so an
+    // out-of-scope injection does not merely appear, it appears FIRST.
+    const where = scoped ? `id LIKE '${like}' AND ${scoped}` : `id LIKE '${like}'`
+    const rows = (await table.query().where(where).limit(max).toArray()) as any[]
     for (const row of rows) { if (!seen.has(row.id)) { seen.add(row.id); out.push(toHit(row, 0, 0, false, true)) } }
   }
   if (pats.exact) {
@@ -85,14 +136,16 @@ async function resolveInjections(table: lancedb.Table, query: string, actIndex?:
 export async function rankedSearch(
   table: lancedb.Table,
   query: string,
-  opts: { tier?: string; limit?: number; actIndex?: ActIndex } = {},
+  opts: { tier?: string; limit?: number; actIndex?: ActIndex; corpora?: string[]; excludeCorpora?: string[] } = {},
 ): Promise<Hit[]> {
   const limit = opts.limit ?? 20
   const k = Math.max(limit * OVERSCAN, 100)
+  const scope: SearchScope = { tier: opts.tier, corpora: opts.corpora, excludeCorpora: opts.excludeCorpora }
+  const scoped = scopePredicate(scope)
   // queryType MUST be 'fts' (+ the indexed column) — a string query with the wrong
   // type falls through to vector search ("No embedding functions are defined").
   let q = table.search(query, 'fts', 'body').limit(k)
-  if (opts.tier) q = (q as any).where(`tier = '${opts.tier.replace(/'/g, "''")}'`)
+  if (scoped) q = (q as any).where(scoped)
   const rows = await q.toArray()
 
   const terms = queryTerms(query)
@@ -110,7 +163,7 @@ export async function rankedSearch(
 
   // Known-item resolver: inject exact-citation rows ABOVE the BM25 list. Scored
   // just above the top BM25 hit, preserving the resolver's own order (exact first).
-  const injected = await resolveInjections(table, query, opts.actIndex)
+  const injected = await resolveInjections(table, query, opts.actIndex, scope)
   if (injected.length) {
     const topScore = bm25.length ? bm25[0].score : 1
     injected.forEach((h, i) => { h.score = topScore + (injected.length - i) })

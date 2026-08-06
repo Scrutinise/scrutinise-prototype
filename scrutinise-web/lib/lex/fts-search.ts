@@ -83,7 +83,11 @@ function legislationUrl(gid: string, ref: string): string {
 
 // ── the adapter ──────────────────────────────────────────────────────────────
 
-async function callFts(query: string, limit: number, tier?: string): Promise<FtsHit[]> {
+/** Server-side stream scope. `corpora` restricts, `excludeCorpora` removes; both are
+ *  PREfilters applied at the query, not filters applied to the response. */
+export interface FtsScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }
+
+async function callFts(query: string, limit: number, scope: FtsScope = {}): Promise<FtsHit[]> {
   if (!FTS_URL) throw new Error('FTS_SEARCH_URL not set')
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), FTS_TIMEOUT_MS)
@@ -91,11 +95,41 @@ async function callFts(query: string, limit: number, tier?: string): Promise<Fts
     const res = await fetch(`${FTS_URL.replace(/\/$/, '')}/fts-search`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(tier ? { query, limit, tier } : { query, limit }),
+      body: JSON.stringify({
+        query, limit,
+        ...(scope.tier ? { tier: scope.tier } : {}),
+        ...(scope.corpora?.length ? { corpora: scope.corpora } : {}),
+        ...(scope.excludeCorpora?.length ? { excludeCorpora: scope.excludeCorpora } : {}),
+      }),
       signal: ctrl.signal,
     })
     if (!res.ok) throw new Error(`FTS ${res.status}: ${await res.text()}`)
-    const json = (await res.json()) as { results?: FtsHit[] }
+    const json = (await res.json()) as { results?: FtsHit[]; corpora?: string[] | null; excludeCorpora?: string[] | null }
+
+    // DEGRADE, DO NOT FAIL, on an unhonoured CORPUS scope — deliberately unlike the tier check
+    // in vector-search.ts, and the difference is worth stating because the two look alike.
+    //
+    // `fts-serve` deploys independently of this app, so between shipping this and redeploying
+    // the service there is a window where the service ignores `corpora` and returns the whole
+    // tier. Failing closed there would take the committees AND debates streams down to zero
+    // results for the length of that window — a self-inflicted outage to prevent a defect that
+    // is merely today's behaviour.
+    //
+    // It is safe to degrade because correctness does not rest on this filter: query-router.ts
+    // still applies the `types` post-filter to whatever comes back, so an unscoped response
+    // yields correctly-typed results, just fewer of them — exactly what shipped before this
+    // change. The prefilter is a RECALL improvement, not a correctness guarantee, so its
+    // absence should cost recall and nothing else. (The vector tier check must stay fail-closed:
+    // for legislation there is no `types` backstop, so an unscoped ANN result really would put
+    // another tier's content in front of a user.)
+    const sameList = (a?: string[] | null, b?: string[]) =>
+      JSON.stringify([...(a ?? [])].sort()) === JSON.stringify([...(b ?? [])].sort())
+    if (scope.corpora?.length && !sameList(json.corpora, scope.corpora)) {
+      console.warn(`[fts-search] service did not honour corpora=${JSON.stringify(scope.corpora)} (echoed ${JSON.stringify(json.corpora)}) — falling back to client-side type filtering; REDEPLOY fts-serve to restore the prefilter`)
+    }
+    if (scope.excludeCorpora?.length && !sameList(json.excludeCorpora, scope.excludeCorpora)) {
+      console.warn(`[fts-search] service did not honour excludeCorpora=${JSON.stringify(scope.excludeCorpora)} — falling back to client-side type filtering; REDEPLOY fts-serve`)
+    }
     return json.results ?? []
   } finally {
     clearTimeout(t)
@@ -127,13 +161,20 @@ export interface FtsSearchOutcome {
   reason?: string
 }
 
-export async function runFtsSearch(keywords: string[], limit = 12, tier?: string): Promise<FtsSearchOutcome> {
+export async function runFtsSearch(
+  keywords: string[],
+  limit = 12,
+  /** string = tier only (the original signature, still used by every unscoped caller);
+   *  object = full server-side stream scope. */
+  scope?: string | FtsScope,
+): Promise<FtsSearchOutcome> {
   const query = keywords.map((k) => k.trim()).filter(Boolean).join(' ')
   if (!query) return { results: [] }
+  const sc: FtsScope = typeof scope === 'string' ? { tier: scope } : (scope ?? {})
 
   try {
     // Overscan: nulls (guidance/bill/treaty/EU) get dropped, so ask for more.
-    const hits = await callFts(query, Math.max(limit * 3, 30), tier)
+    const hits = await callFts(query, Math.max(limit * 3, 30), sc)
     if (!hits.length) return { results: [] }
 
     // Keep only hits that map to a Lex type; remember the type per id.

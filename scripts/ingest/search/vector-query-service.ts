@@ -52,20 +52,27 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         // `tier` mirrors fts-query-service.ts's existing tier param, so the two retrieval
         // services take the same shape of request and a stream can be scoped identically on
         // both halves of a fusion. Optional — omitted means search everything, as before.
-        const { query, limit, tier } = JSON.parse(raw || '{}')
+        const { query, limit, tier, corpora, excludeCorpora } = JSON.parse(raw || '{}')
         if (!query || typeof query !== 'string') return send(res, 400, { error: 'query (string) required' })
         if (tier !== undefined && typeof tier !== 'string') return send(res, 400, { error: 'tier must be a string when given' })
+        const okList = (v: unknown) => v === undefined || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
+        if (!okList(corpora) || !okList(excludeCorpora)) return send(res, 400, { error: 'corpora/excludeCorpora must be string arrays when given' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
         const t0 = Date.now()
         const qv = await embedQuery(query)
-        const hits = await vectorSearchSections(vecTbl, qv, lim, tier)
+        const hits = await vectorSearchSections(vecTbl, qv, lim, tier, { corpora, excludeCorpora })
         const snip = await snippets(hits.map((h) => h.sectionId))
         const ms = Date.now() - t0
         warm.push(ms); served++
         // Echo the tier back: a caller that believes it scoped the search and a service that
         // silently ignored the field would be indistinguishable from the outside, and the
         // symptom (a fusion quietly mixing streams) is exactly what this sprint exists to prevent.
-        send(res, 200, { query, tier: tier ?? null, ms, count: hits.length, results: hits.map((h) => ({ id: h.sectionId, corpus: h.corpus, tier: h.tier, score: h.score, snippet: snip.get(h.sectionId) ?? '' })) })
+        send(res, 200, {
+          query, tier: tier ?? null,
+          corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
+          ms, count: hits.length,
+          results: hits.map((h) => ({ id: h.sectionId, corpus: h.corpus, tier: h.tier, score: h.score, snippet: snip.get(h.sectionId) ?? '' })),
+        })
       } catch (e) { send(res, 500, { error: (e as Error).message }) }
     })
     return
