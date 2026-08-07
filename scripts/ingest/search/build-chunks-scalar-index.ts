@@ -38,6 +38,22 @@
  *   npx tsx search/build-chunks-scalar-index.ts --verify-only   # metadata read, costs nothing
  *   npx tsx search/build-chunks-scalar-index.ts                 # build
  */
+// ⚠ MUST be set BEFORE the native module is loaded — Lance reads it when it builds its
+// DataFusion runtime, so a later assignment is ignored. This is why it is here and not in
+// jobs.ts's command string alone.
+//
+// THE FIRST RUN FAILED HERE, AND NOT FOR THE REASON §17 TRAINS YOU TO EXPECT:
+//   LanceError(IO): Resources exhausted: Failed to allocate additional 325.5 KB for
+//   ExternalSorterMerge[0] … 138.4 KB remain available for the total pool
+// on a 32 GB box whose PEAK RSS WAS 42 MB. That is not machine memory — it is DataFusion's
+// internal memory pool, which Lance sizes conservatively by default. A bigger server would
+// have failed in exactly the same way at exactly the same point, which is the trap worth
+// recording: "resources exhausted" during an index build reads like the OOM §17 is about,
+// and here it was a configuration knob costing €0.005 to discover instead of a hardware bill.
+// Sized at 8 GiB: the sort is over 21.8M sectionId strings (~1.5 GB of key+rowid data),
+// and a sort typically wants 2-3x its input. Well inside the 32 GB box.
+process.env.LANCE_MEM_POOL_SIZE ??= String(8 * 1024 * 1024 * 1024)
+
 import { connectLance, lancedb } from './lance'
 import { CHUNKS_TABLE } from './vector-common'
 
