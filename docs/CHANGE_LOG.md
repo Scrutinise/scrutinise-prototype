@@ -96,6 +96,82 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — the chunks index built, latency re-measured, and serving monitored (2026-08-07 13:20 UTC)
+
+### The `corpus_chunks` index — and a failure that looked like an OOM and was not
+
+Built via the Heavy Job Runner (§17 names index builds explicitly). **39.1s, peak RSS 1.72 GB,
+€0.010**, server destroyed in the `finally`, verified by its own `--verify-only` pass.
+
+⚠ **The first attempt failed on a 32 GB box whose peak RSS was 42 MB:**
+`Resources exhausted: Failed to allocate additional 325.5 KB for ExternalSorterMerge[0] …
+138.4 KB remain available for the total pool`. That is DataFusion's **internal memory pool**,
+not machine memory — **a bigger server would have failed identically at the same point.** Fixed
+with `LANCE_MEM_POOL_SIZE=8GiB`, set before the native module loads (Lance reads it when it builds
+its DataFusion runtime, so a later assignment is ignored). Recorded because "resources exhausted"
+during an index build reads exactly like the OOM §17 trains you to expect, and the whole diagnosis
+cost €0.005. `expectedPeakGb` is now 1.72 with its provenance — honestly noted: at that size this
+one would have fitted on Railway, but the peak was not knowable in advance, which is §17's point.
+
+### Latency re-measured — the prediction was half right
+
+Charlie's prediction was that snippets would drop to a small fraction and ANN would become
+dominant. **Snippets fell 74% (7,825ms → 2,036ms mean) but remain the largest phase at 51%; ANN
+did not become dominant (40%).** Total query time fell ~61% (10.4s → 4.0s local).
+
+⚠ The first re-measurement was **biased against the index** and was corrected before reporting:
+`vector-snippet-probe.ts` warmed only the ANN path, which was harmless while `corpus_chunks` was
+unindexed (a full scan has no index pages to warm) but charges a new BTREE for its own cold start.
+Observed 4,883 → 3,821 → 1,693 → 1,308 ms across four consecutive queries on a cold process; a
+dedicated warm-up pass measures 3,193ms then 104ms. The probe now warms both paths.
+
+The residual snippet cost is random-access reads of scattered chunk bodies from R2, which an index
+cannot remove — only relocate.
+
+### B3 answered on Railway under real load
+
+25 concurrent (the router's 5-way fan-out × 5 users), cache bypassed: **0 errors, 0 sheds, service
+alive, peak RSS 809 MB = 10.6% of the 8 GB cap.** Production latency post-index: uncached
+p50 4,603ms, p95 10,364ms; Gemini embed p50 242ms. ⚠ That p95 **breaches the 5s alert threshold**
+set below — expected under a synthetic 25-concurrent burst, and the alert body says so; a breach
+under ordinary traffic would not be expected.
+
+### Monitoring + email alerting for BOTH serve services
+
+`search/serve-observer.ts`, wired into `ops.ts`'s hourly tick beside the embed observer, following
+the same pure-`evaluate()` + `check…()` split so thresholds are testable without waiting for an
+outage. Immediate email on memory >70% of cap, uncached p95 >5s, any crash/restart, Neon >80%,
+rejections >0; daily digest otherwise, to cl@scrutinise.org.
+
+Three deliberate design points: **the digest carries raw counters and a paste-able JSON block, not
+a traffic light** (the brief asked for enough to paste into a conversation and get a read);
+**counters are since-boot and the email says so** (a restart resets `/stats`, and silently
+reporting "served: 12" afterwards would read as a traffic collapse); and **unreachable is a
+CRITICAL event, not a skipped section** — the naive version of this script reports nothing at all
+in exactly the case it exists to catch. A second restart is never deduped away, because a crash
+loop is many restarts.
+
+`fts-query-service.ts` gains the same memory/`started_at`/error instrumentation (observability
+only — its serving behaviour is unchanged). ⚠ Its queue remains **unbounded**, unlike
+vector's, so it reports `rejections: null` and the digest says "cannot refuse — absorbs overload as
+latency" rather than implying it refused nothing. Giving it the bounded queue is a live-behaviour
+change and was not made unasked.
+
+28 checks pass (`check-serve-observer.ts`). Live dry-run against both services surfaced a real
+alert: **Neon is at 15.93 GB of the 17.5 GB ceiling — 91%**, above the 80% threshold.
+
+### Standing decisions recorded
+
+`SEARCH_STRATEGY.md` §6b.2: chunk SIZE and OVERLAP are **permanently fixed**; only `MAX_CHUNKS` is
+ever raised. The two look like sibling tuning knobs and are not — raising the cap appends ($284),
+changing the geometry invalidates every windowed vector at once ($785) *and* costs precision.
+Includes the operational footgun: the geometry is env-overridable and **not recorded in the
+checkpoint**, so it must be pinned explicitly on any future chunk run.
+`fts-query-service.ts` header: the open question that the FTS crash signature looks more like an
+§17 OOM than handle contention — logged, not chased, guard stays.
+
+---
+
 ## SEARCH — vector serving: guard, cache, deploy; and the unindexed scan that costs 76% of a query (2026-08-07 12:49 UTC)
 
 Executes steps 1–4 of the "CC — vector serving" brief, plus Charlie's MAX_CHUNKS cost addendum.

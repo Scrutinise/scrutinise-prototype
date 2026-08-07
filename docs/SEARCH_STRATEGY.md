@@ -170,6 +170,19 @@ Hybrid: vector fused (weighted RRF 70/30) with BM25 — BM25 keeps precision on 
 3.  **Mixed evidence.** Published gains are consistent only against naive fixed-size/no-overlap baselines; against structure-aware chunking *with overlap* (ours), measured gains are small and inconsistent. The 15% overlap already absorbs most boundary-cut damage; BM25 (full body) and the reranker recover the rest. Pilot scored 85.9% vector-alone recall on this chunking.
 4.  **The real exposure is debates** (heterogeneous, multi-topic). Mitigant to verify: Hansard appears ingested at per-contribution (speaker) granularity — naturally semantic units. A granularity report (length distribution, % windowed, % hitting the 8-window cap, ingestion unit per parliamentary corpus) is briefed. **Upgrade path if evidence demands:** structure- aware re-chunk of the debate tier at speaker turns/headings from the source XML (deterministic, free, genuinely semantic), then a targeted re-embed of that tier only; embedding-similarity chunking piloted solely for corpora with no usable structure. Gated on archetype-E results; queued behind the reranker.
 
+#### 6b.2 Chunk geometry is FIXED. Only `MAX_CHUNKS` is ever raised. (Charlie, 7 Aug 2026 — standing decision)
+
+**Chunk SIZE (\~800 tokens / `PILOT_WINDOW_CHARS=3200`) and OVERLAP (\~15% / `PILOT_OVERLAP_CHARS=480`) are permanently fixed, along with `PILOT_WHOLE_CHARS=4096`. This is settled, not open. Do not re-litigate it in a future sprint.**
+
+The asymmetry between the two knobs is the whole reason:
+
+- **Raising `MAX_CHUNKS` is safe and cheap.** It appears in `chunkBody()` in exactly one place — the loop condition. Nothing that determines *where* a boundary falls references it. Verified against the chunks actually stored in `corpus_chunks`: 1,321 stored chunks re-derived from their R2 bodies at a raised cap came back **byte-identical, 0 mismatches**. Existing vectors stay valid; new chunks simply append. Removing truncation entirely is a **\$284 incremental top-up** (`V32_COMMITTEES_AUDIT.md` §4 addendum).
+- **Changing size or overlap is neither.** It shifts *every* boundary in *every* windowed section, invalidating *every* windowed vector at once. That forces the full **\$785** re-embed rather than a top-up — and it also costs retrieval precision, because \~800 tokens was chosen deliberately (§6b.1) and the 15% overlap is what absorbs boundary-cut damage.
+
+So the two look like sibling tuning parameters and are not: one is an append, the other is a rebuild that also risks quality.
+
+**Operational corollary — a live footgun.** All three geometry values are read from the environment (`PILOT_WHOLE_CHARS` / `PILOT_WINDOW_CHARS` / `PILOT_OVERLAP_CHARS`) and **are NOT recorded in the `corpus_chunks` checkpoint**, which stores only phase/lastId/counts. A future chunk run started with different values would silently re-cut the whole corpus and no artefact would record that it had happened. **Pin all three explicitly on any chunk or top-up run**, and re-run `check-chunk-stability.ts` immediately beforehand — it compares against the stored bytes and so catches geometry drift, a changed R2 body, and a changed citation header (the act title is prepended *before* chunking) in one pass.
+
 ### 6c. Reranker (cross-encoder) — next after the flag flip
 
 Re-scores the fused top \~100 against the query directly; typically the single highest-ROI component once retrieval is decent. Config-swappable (small open cross-encoder or a rerank API), scoreable on the gold set.
