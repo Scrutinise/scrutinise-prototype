@@ -96,6 +96,190 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — vector serving: guard, cache, deploy; and the unindexed scan that costs 76% of a query (2026-08-07 12:49 UTC)
+
+Executes steps 1–4 of the "CC — vector serving" brief, plus Charlie's MAX_CHUNKS cost addendum.
+Report of record: `docs/VECTOR_SERVING_STEPS_1_3.md`. `vector-serve` is DEPLOYED and inert —
+`VECTOR_SEARCH_URL` unset everywhere, `LEX_VECTOR_STREAMS` unset, both gates shut.
+
+### The concurrency guard (B1), and two deliberate differences from FTS
+
+`vector-query-service.ts` carries the `fts-query-service.ts` semaphore
+(`VECTOR_MAX_CONCURRENT`, default 4). Verified with the script that killed FTS, extended to
+target either service (`SEARCH_TEST_TARGET=vector`): survived 10 / 15 / 20 / 25 concurrent, 0
+errors, queue high-water 21 so the guard was genuinely exercised. Two differences, both stated in
+the file: the slot is taken **after** the Gemini embed (an HTTPS call is not the hazard the guard
+protects), and the queue is **bounded** (`VECTOR_MAX_QUEUE`, 64) with a counted 503 shed — FTS's
+unbounded queue converts overload into unbounded latency, which is what the historic 226s result
+actually was.
+
+### The handle pool: no — and the first answer was an artefact
+
+A (handles × concurrency) grid first showed a 1.29× gain from 4 handles. **It did not survive the
+control.** All 4-handle cells had run after the 1-handle cells and were warmer; a fresh process
+with the order reversed inverted it to **0.82×** — whichever handle count runs second wins.
+Recorded because the wrong answer was the plausible one. Also measured: a single handle is not a
+serial bottleneck at all (throughput scales ~4× from concurrency 1→8), and 64 concurrent ANN
+queries on one handle did not crash. `VECTOR_MAX_CONCURRENT=4` is therefore a throughput choice,
+not a safety floor; not re-tuned, because the local optimum (~8–16) is not the Railway optimum.
+
+### Result cache — and a correction to the specified key
+
+`query-cache.ts` (new, shared): short-TTL LRU + **single-flight coalescing**, sitting in front of
+the embed so a hit also skips the Gemini call. ⚠ The brief specified `{query, tier, limit}`; that
+key was **not** built. debates and committees both run on `tier='parliamentary'` and are separated
+only by corpus scope, so it would serve one stream's results to the other — the exact failure the
+tier echo exists to prevent, reintroduced behind the check. Key includes the corpus scope, sorted.
+**Hit rate is a model, not a measurement** — there is no query log in this project — so it is
+reported as a sensitivity curve: 0% (all-unique floor) / 45% (Zipf) / 62.5% (one user refining) /
+87.5% (topical day). The model-independent result is coalescing: 25 simultaneous requests for one
+topic became **3 units of database work, not 25**. The real number will come from `/stats`.
+
+### ⚠ Found while measuring: `corpus_chunks` is unindexed, and it dominates latency
+
+**21,839,900 rows, no index of any kind.** Snippet hydration runs `where("sectionId IN (…)")`
+against it on every query. Phase breakdown of a real request: embed 348ms (**3%**), ANN 2,178ms
+(**21%**), **snippet lookup 7,825ms (76%)**. Proven a scan, not a lookup: 1 id costs the same as
+20 (~6s), while the same table with **no predicate** returns in **132ms**. Not fixed in this
+sprint — corpus-wide index work is §17 territory — reported for Charlie's decision, which was to
+do it before any load test.
+
+### B3 (memory): the brief's premise was wrong
+
+"21.8M vectors + 21.8M chunk bodies, both opened at boot" — `openTable()` is a metadata
+operation, not a load. Measured on Railway: **0.242 GB idle with both tables open = 3.0% of the
+8 GB cap**. Local figures agree (201 MB idle, 707 MB peak under 64 concurrent). Peak-under-load on
+Railway still to come, now that the instrument is deployed.
+
+### ⚠ Two Railway traps, both of which reported success while doing nothing
+
+1. **`serviceCreate({ branch, source: { repo } })` no longer creates a repo trigger.** The service
+   came up fully configured and `up` printed success, but `repoTriggers` and `deployments` were
+   both `[]` and the domain served `404 Application not found`. `fts-serve` has a trigger;
+   `vector-serve` did not. This is the same call `fts-serve-run.ts` makes — it would fail the same
+   way today.
+2. **`serviceInstanceRedeploy` is a silent no-op when there is no deployment to re-run.** It
+   re-runs the *latest deployment*; with none, it returns success and does nothing. Now uses
+   `serviceInstanceDeploy(latestCommit: true)`, which works for the first deploy and every later
+   one. `serviceConnect` returns "Not Authorized" for a project token, so `vector-serve` does not
+   auto-deploy on push — deploys are explicit, via the script.
+
+### `vector-serve-run.ts` (new)
+
+Near-copy of `fts-serve-run.ts`. `GEMINI_API_KEY` injected (B2); `NEON_DATABASE_URL` deliberately
+**not** (this service opens no Postgres connection — injecting an unused production credential
+widens where the secret lives for nothing). Adds `plan` (prints what `up` would do, creates
+nothing) and `restart` (`deploymentRedeploy` — same build, fresh `openTable` snapshot, distinct
+from `redeploy`'s rebuild; §17 records why that distinction is load-bearing).
+`RAILWAY_PROJECT_ID` is **not in `.env`**, only in `INGEST_PLAYBOOK.md`, so the bare
+`process.env.RAILWAY_PROJECT_ID!` would have sent `undefined`; defaulted to the value verified
+read-only against the live API.
+
+### MAX_CHUNKS addendum — the "~$600 full re-embed" is refuted
+
+Charlie's hypothesis confirmed. `MAX_CHUNKS` appears in `chunkBody()` only in the loop condition;
+nothing that determines where a boundary falls references it. Verified **against the chunks
+actually stored** rather than a re-run of the function (so it also catches input drift): 1,321
+stored chunks re-derived from R2 at cap 64 — **1,321 byte-identical, 0 mismatched**.
+Incremental top-up, modelled on the real `wordCount` histogram with the >20k-word tail stratified,
+at a measured 6.05 chars/word (model reproduces the live index to 0.4%): **$284 to remove
+truncation entirely**, $157 for cap 32. A genuine full re-embed is $785, of which $501 re-pays for
+still-valid vectors. **The FTS side needs nothing** — `build-fts-index.ts` stores whole section
+bodies and never chunks. Four boundary-shift risks quantified, incl. **47,845 sections recompiled
+since the chunk build** and **41,180 never chunked**. Full write-up: `V32_COMMITTEES_AUDIT.md` §4
+addendum. Decision: deferred until after the committees per-finding re-chunk, so the top-up does
+not pay to embed chunks about to be superseded.
+
+### Also
+
+`concurrency-stress-test.ts` had no import/export, so its `main()` sat in the global TypeScript
+namespace and collided with other import-free scripts in `scripts/ingest`; now a module.
+`check-vector-serving.ts` — 22 checks over the cache (scope separation incl. debates/committees,
+TTL expiry, coalescing, failures-not-cached, bounded LRU, disabled bypass), all passing.
+
+---
+
+## INGEST V32 — the committees gap, audited: the reports were never stubs (2026-08-07 10:46 UTC)
+
+Executes the audit half of `BRIEF_INGEST_committees-content-gap.md` §1–2 and the `_ADDENDUM`
+§A2/§A3/§C. Full account: `docs/V32_COMMITTEES_AUDIT.md`. **Read-only against the corpus — no
+rows written, no index touched, nothing committed.**
+
+**The brief's premise does not survive the audit.** `GOLD_TEST_09` concluded committee report
+bodies "are stubs and front matter" from row *counts* — 2,575 rows over 2,511 titles, "~1 row
+each". The count is right and the inference is wrong: this ingest writes **one section per
+document**, so one row per report is what a *fully* ingested report looks like. The bytes say
+`Report:` rows run to a **7,524-word median, 12,122 mean, 125,347 max**, and only 9 of 2,575 are
+under 500 words. Nobody had read them.
+
+**Three real defects, each enough on its own to produce the symptom:**
+
+1. **Historical gap.** Report bodies effectively start in **2020**; before that the API lists the
+   publication and serves no document. Carillion (May 2018) is missing for this reason.
+2. **One report is one search document** — up to 455,137 characters. BM25 length normalisation
+   buries it, so it never reaches a depth-200 result set to be tested.
+3. **PDF extraction keeps the PDF's line breaks.** The bytes hold `"…public \nhealth failures…"`,
+   so `"most important public health failures"` is *not a substring* though the sentence is.
+
+**So `GOLD_TEST_09`'s "all 10 phrases absent" was partly a measurement artefact. Re-measured
+against the bodies directly: 5 of 10 are already in the corpus** — two of them invisible to a
+literal scan for reason 3. A sixth, `"unimaginable cost"`, **was never in the report at all**
+(the PAC report *is* held, 8,013 words, and says "£37 billion"); it appears to be the Chair's
+press wording. Honest denominator: **9, of which 5 present and 4 blocked on the historical gap.**
+
+**The source has everything, and the route is settled.** Type-filtered walk of
+`/api/Publications`: **7,651** report / government-response / special-report bodies exist at
+source but are not downloadable from the API — **every one carries an `additionalContentUrl`**.
+Both archive hosts sit behind a Cloudflare bot challenge (403 to `fetch` on any UA *and* to
+headless Chromium; a real Chrome passes, so it is fingerprinting not an IP ban). **Wayback works
+programmatically and was proven on the canonical missing document** — the Carillion report, with
+`"recklessness, hubris and greed"` in it. Charlie's call: take the Wayback route.
+
+⚠ **A measurement trap worth keeping.** An *unfiltered* year walk of `/api/Publications` 500s
+partway through most years (2018 died at skip=3700 of 4,191) and **returns a truncated year
+rather than an error** — the first pass of this audit understated the gap that way.
+`listCommitteesApiPage` now takes a `publicationTypeId`; measure the source with it.
+
+**§A3 can be closed — oral evidence is already full transcripts:** 15,264 rows, **median 14,511
+words**, 5 under 500. **§A2 responses are already full bodies too** (3,006/5,476-word medians),
+carrying the same historical gap. **§C: Commons, Lords and Joint are all present in every year** —
+nothing silently dropped. **§B/§D join keys all exist on the listing item** — inquiry id on 46.1%
+of reports (the rest genuinely are not inquiries), report↔response link on 22.3%.
+
+⚠ **REPORTED, NOT ACTED ON (Charlie's call) — this one is corpus-wide, not committees.**
+`chunk.ts` caps at `MAX_CHUNKS = 8` ≈ 3,370 words, silently, with no counter. **242,957 sections
+exceed it, and only 59.4% of the corpus's body words ever reach the vector index** — 24.4% for
+committee reports, 13.4% for `uk-treaties`, 24.8% for `cma-cases`. `LEX_SEARCH_VECTOR` is OFF so
+it serves nobody today, but it is baked into the index a flag flip would switch on.
+
+**Built and verified:** `shared/report-sections.ts`, the per-finding splitter — repairs the
+line-break and justification defects, splits on the report's own numbered findings with a
+sequence guard, and enforces **losslessness as an invariant**: the split is a pure partition and
+`assertLossless` throws rather than write a partial report. `npm run check:report-sections` is
+**19/19**, including four negative controls that exercise the *real* exported assertion (dropped,
+duplicated, edited section) rather than a copy of it, plus a live pass over 120 real bodies. The
+fixtures earned their place: they caught a body whose sentence punctuation had not survived
+extraction collapsing to **one indivisible 15,830-character section** — the exact blob this work
+exists to break up — now fixed and covered. Also built: `v32-rechunk-reports.ts` (dry-run by
+default, R2-before-Neon, attempted-vs-stored reconciliation that exits non-zero on mismatch) and
+the three measurement scripts.
+
+**PREDICTION, recorded before the pass so it can be scored** (`v32-predict-scale.ts`, the real
+splitter over every held body): re-chunking the **3,842** held bodies yields **78,776 sections
+(×20.5)**, 62.3 M tokens, **$4.68** to embed; the **7,651**-document archive backfill projects to
+~156,875 sections, **$9.31**; **combined ~235,651 sections and $13.99** (batch, $0.075/M).
+ADDENDUM §F anchored "low tens of dollars" — measured, it is below that.
+
+**NOT RUN, deliberately.** `--commit` has not been executed. Base brief §6 requires the FTS
+catch-up **and the index merge** to follow the rows, and the merge is a heavy job (19.8 GB peak,
+never Railway, §17) that could not follow in the same session. Landing 74,934 rows and retiring
+3,842 blob rows while Lance still held the superseded blobs would put corpus and index out of
+step — the precise July mistake the brief names. The mutation and the index work should run as
+one operation. Also still open: the Wayback backfill source, the §B/§D metadata pass, the embed
+run, and the §E Carillion loop test (which cannot pass until the backfill lands).
+
+---
+
 ## LEX — Web/X orientation, Stage 0 (2026-08-06 20:57 UTC)
 
 Executes the "CC — Web/X orientation, Stage 0" brief (6 Aug 2026), which builds
