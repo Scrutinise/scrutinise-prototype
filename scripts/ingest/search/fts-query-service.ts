@@ -29,6 +29,23 @@
  * with headroom; re-tune from the p50/p95 /stats endpoint under real load).
  * Excess requests queue FIFO rather than fail — a request under load waits
  * longer, it does not error.
+ *
+ * ⚠ OPEN QUESTION, LOGGED NOT CHASED (7 Aug 2026, Charlie's call — do not spend a sprint
+ * on this without being asked). The diagnosis above — "concurrent native calls against one
+ * handle are unsafe" — did NOT reproduce on the vector path, which has the identical
+ * one-handle-per-table shape. Measured on vector-query-service.ts: 64 concurrent ANN
+ * queries against a single handle survived, and throughput SCALED ~4× from concurrency
+ * 1→8, so a single handle is not a serial bottleneck and concurrency alone did not kill it.
+ * Meanwhile the FTS symptom on record — the process simply dying with no JS-catchable
+ * error — is precisely the signature docs/CLAUDE.md §17 attributes to an **OOM SIGKILL**,
+ * not to handle contention.
+ *
+ * If that is what it was, this semaphore is guarding the wrong variable: it would be
+ * limiting concurrency when the binding constraint is memory, which is why the number 4
+ * "works" without anyone knowing what it is buying. Worth testing properly one day —
+ * instrument peak RSS (now on /stats) and re-run the load that killed it, watching memory
+ * rather than counting requests. Until then the guard STAYS: it is cheap, it demonstrably
+ * prevents the crash, and an unexamined guard that works beats removing it on a hypothesis.
  */
 import http from 'http'
 import { Pool } from 'pg'
@@ -65,6 +82,27 @@ function acquireSlot(): Promise<() => void> {
   })
 }
 
+// ── memory + identity (added for the serve observer, search/serve-observer.ts) ──
+// Observability only — nothing about how this service serves is changed here.
+// Railway's per-replica cap is a MEASURED 8 GB (docs/CLAUDE.md §17) and exceeding it is a
+// silent SIGKILL, so what matters is PEAK, sampled continuously rather than only when
+// someone happens to call /stats.
+const MEM_CAP_BYTES = parseInt(process.env.MEM_CAP_BYTES ?? '8000000000', 10)
+let peakRss = 0
+let peakRssAt = new Date().toISOString()
+function sampleMem() {
+  const rss = process.memoryUsage().rss
+  if (rss > peakRss) { peakRss = rss; peakRssAt = new Date().toISOString() }
+}
+setInterval(sampleMem, 5_000).unref()
+sampleMem()
+const mb = (b: number) => Math.round(b / 1024 / 1024)
+// /stats counters are since-boot (§17), so a restart resets them. Without a boot time a
+// reset counter is indistinguishable from one that never moved — which is exactly the
+// signal the observer needs to report a crash/restart.
+const STARTED_AT = new Date().toISOString()
+let errors = 0
+
 let table: lancedb.Table
 let actIndex: ActIndex | undefined
 
@@ -87,10 +125,28 @@ function send(res: http.ServerResponse, code: number, obj: unknown) {
 async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { ok: true, dataset: `${lanceDbUri()}/${FTS_TABLE}` })
   if (req.method === 'GET' && req.url === '/stats') {
+    sampleMem()
+    const m = process.memoryUsage()
     return send(res, 200, {
-      served, cold_ms: cold[0] ?? null,
+      served, errors, cold_ms: cold[0] ?? null,
       warm_p50_ms: pct(warm, 50), warm_p95_ms: pct(warm, 95), warm_n: warm.length,
-      concurrency: { max: MAX_CONCURRENT, inFlight, queued: waiters.length, queueHighWaterMark },
+      concurrency: {
+        max: MAX_CONCURRENT, inFlight, queued: waiters.length, queueHighWaterMark,
+        // FTS's queue is UNBOUNDED, unlike vector-query-service.ts's. Reported as null
+        // rather than 0 so the observer states "n/a (unbounded queue)" instead of
+        // implying this service refused nothing when in truth it can never refuse —
+        // it absorbs overload as unbounded latency instead. See the observer's note.
+        maxQueue: null, rejections: null,
+      },
+      memory: {
+        rss_mb: mb(m.rss), peak_rss_mb: mb(peakRss), peak_rss_at: peakRssAt,
+        heap_used_mb: mb(m.heapUsed), external_mb: mb(m.external),
+        cap_mb: mb(MEM_CAP_BYTES),
+        pct_of_cap: Math.round((m.rss / MEM_CAP_BYTES) * 1000) / 10,
+        peak_pct_of_cap: Math.round((peakRss / MEM_CAP_BYTES) * 1000) / 10,
+      },
+      uptime_s: Math.round(process.uptime()),
+      started_at: STARTED_AT,
     })
   }
   if (req.method === 'POST' && req.url === '/fts-search') {
@@ -126,6 +182,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
           ms, queueMs, count: results.length, results: results.map(({ body, ...r }) => r),
         })
       } catch (e) {
+        errors++
         send(res, 500, { error: (e as Error).message })
       } finally {
         release()

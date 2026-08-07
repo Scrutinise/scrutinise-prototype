@@ -68,6 +68,7 @@ import {
   type IngestServiceState,
 } from './shared/progress-reporter'
 import { checkEmbedProgress } from './search/embed-observer'
+import { checkServeHealth } from './search/serve-observer'
 import { runCensus, saveToR2 as saveCensusToR2 } from './census/live-census'
 import { clearExpiredSuspensions } from './shared/queue-client'
 import { getNeonPool } from './shared/neon-pool'
@@ -584,6 +585,12 @@ async function runQuarterHour(): Promise<void> {
   // Vector-embed heartbeat/stall watcher (R2-only; edge-triggered emails). No-op when
   // no embed is in progress. Isolated so it can never break the ingest-critical checks.
   await checkEmbedProgress().catch(err => console.error('[ops] embed observer failed:', err))
+  // Serving health for fts-serve + vector-serve: memory vs the 8GB cap, concurrency,
+  // latency, crashes/restarts, Neon storage, cost. Immediate email on breach, daily
+  // digest otherwise. No-op when neither service URL is configured. Isolated for the
+  // same reason as the embed observer — a monitoring failure must not take down the
+  // ingest-critical checks above it.
+  await checkServeHealth().catch(err => console.error('[ops] serve observer failed:', err))
 }
 
 // ── Scheduler loop ────────────────────────────────────────────────────────────
