@@ -6,7 +6,16 @@
     "start": "exec tsx workers/ingest-pool.ts",
     "worker": "exec tsx workers/ingest-pool.ts",
     "scheduler": "exec tsx ops.ts",
-    "ops": "exec tsx ops.ts"
+    "ops": "exec tsx ops.ts",
+    "check:report-sections": "tsx v32-check-report-sections.ts",
+    "audit:committees": "tsx v32-committees-audit.ts",
+    "check:committee-phrases": "tsx v32-committees-phrase-check.ts",
+    "rechunk:reports": "tsx v32-rechunk-reports.ts",
+    "predict:committees": "tsx v32-predict-scale.ts",
+    "check:loop": "tsx v32-loop-test.ts",
+    "check:acceptance": "tsx v32-acceptance-live.ts",
+    "state:committees": "tsx v32-state-check.ts",
+    "backfill:committees": "bash v32-finish-backfill.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

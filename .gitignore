@@ -120,3 +120,7 @@ scripts/operational/sc-log.csv
 
 # Heavy-job runner: rendered cloud-init artefacts (belt-and-braces; plan redacts secrets)
 scripts/ops/heavy-job/.cloud-init-*.rendered.sh
+
+# V32 committees backfill run artefact (long-running driver output, not source)
+scripts/ingest/v32-backfill.log
+scripts/ingest/v32-committees-manifest.json
