@@ -25,6 +25,20 @@
  *   tsx search/concurrency-stress-test.ts
  * Or against a deployed instance: FTS_TEST_URL=https://... tsx search/concurrency-stress-test.ts
  *
+ * VECTOR TARGET (added with the B1 guard, docs/VECTOR_DEPLOY_READINESS.md).
+ * vector-query-service.ts has the identical one-handle-per-table exposure, so it needs
+ * the identical regression check rather than a second, subtly different script — a
+ * separate copy would drift and the two results would stop being comparable. Run it
+ * against the vector service with:
+ *   SEARCH_TEST_TARGET=vector tsx search/concurrency-stress-test.ts
+ *   SEARCH_TEST_TARGET=vector VECTOR_TEST_URL=https://… tsx search/concurrency-stress-test.ts
+ * Defaults are unchanged: with SEARCH_TEST_TARGET unset this is byte-for-byte the same
+ * test against the same FTS endpoint as before.
+ *
+ * NOTE for the vector target: every call costs one live Gemini embed (vector-core.ts
+ * embedQuery). 70 calls across the four rounds, so the spend is negligible — but it is
+ * not zero, and a rate-limit error would show up here as a 500, not as a crash.
+ *
  * Known residual finding (not re-tested every run, noted for awareness): at
  * synthetic loads well beyond production's expected traffic (20-25 concurrent
  * calls from a SINGLE test-client process), some individual requests failed
@@ -35,7 +49,21 @@
  * FTS_MAX_CONCURRENT or seeing unexplained client errors under real load. The
  * important, CONFIRMED result is that the full-process crash is gone.
  */
-const BASE = process.env.FTS_TEST_URL ?? 'http://localhost:8080'
+// Module scope, not global. Without this the file has no import/export and TypeScript
+// puts main()/pct() in the global namespace, where they collide with every other
+// import-free script in scripts/ingest (`error TS2393: Duplicate function
+// implementation`). Nothing is exported — the marker is the point.
+export {}
+
+const TARGET = (process.env.SEARCH_TEST_TARGET ?? 'fts').toLowerCase()
+if (TARGET !== 'fts' && TARGET !== 'vector') {
+  console.error(`[stress] SEARCH_TEST_TARGET must be "fts" or "vector" (got "${TARGET}")`)
+  process.exit(1)
+}
+const BASE = TARGET === 'vector'
+  ? (process.env.VECTOR_TEST_URL ?? 'http://localhost:8081')
+  : (process.env.FTS_TEST_URL ?? 'http://localhost:8080')
+const SEARCH_PATH = TARGET === 'vector' ? '/vector-search' : '/fts-search'
 
 const ROUTER_QUERIES = [
   { query: 'landlord eviction no fault', tier: 'legislation' },
@@ -54,21 +82,38 @@ const USER_QUERIES = [
   'e-scooter regulation',
 ]
 
-async function callOnce(query: string, tier: string): Promise<{ ok: boolean; ms: number; count?: number; err?: string }> {
+interface CallResult { ok: boolean; ms: number; count?: number; err?: string; shed?: boolean }
+
+async function callOnce(query: string, tier: string): Promise<CallResult> {
   const t0 = Date.now()
   try {
-    const res = await fetch(`${BASE}/fts-search`, {
+    const res = await fetch(`${BASE}${SEARCH_PATH}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, tier, limit: 20 }),
+      // Bypass the result cache on the vector target. This is a GUARD regression check:
+      // the rounds repeat queries, so with the cache live every round after the first
+      // would be served from memory and the semaphore would never be exercised — the test
+      // would pass while proving nothing. SEARCH_TEST_CACHE=1 re-enables it for the
+      // separate question of what the cache does to load (vector-cache-replay.ts).
+      body: JSON.stringify({ query, tier, limit: 20, ...(TARGET === 'vector' && process.env.SEARCH_TEST_CACHE !== '1' ? { noCache: true } : {}) }),
     })
     const ms = Date.now() - t0
+    // 503 is the vector guard's BOUNDED-QUEUE shed, not a failure: the service is alive
+    // and deliberately refusing rather than admitting a request whose wait would outlive
+    // the caller. Counted apart from errors so a shed never reads as a crash.
+    if (res.status === 503) return { ok: false, shed: true, ms, err: `HTTP 503 (load shed): ${await res.text()}` }
     if (!res.ok) return { ok: false, ms, err: `HTTP ${res.status}: ${await res.text()}` }
     const json = await res.json() as { results?: unknown[] }
     return { ok: true, ms, count: json.results?.length ?? 0 }
   } catch (e) {
     return { ok: false, ms: Date.now() - t0, err: e instanceof Error ? e.message : String(e) }
   }
+}
+
+function pct(arr: number[], p: number): number | null {
+  if (!arr.length) return null
+  const s = [...arr].sort((a, b) => a - b)
+  return Math.round(s[Math.min(s.length - 1, Math.floor((p / 100) * s.length))])
 }
 
 /** One simulated user's background search trigger: N concurrent stream calls, exactly
@@ -88,7 +133,7 @@ async function health(): Promise<boolean> {
 }
 
 async function main() {
-  console.log(`[stress] target ${BASE}`)
+  console.log(`[stress] target ${TARGET} → ${BASE}${SEARCH_PATH}`)
   console.log(`[stress] pre-flight health check…`)
   if (!(await health())) { console.error('[stress] FATAL — service not reachable before test even started'); process.exit(1) }
   console.log('[stress] healthy. Starting concurrency rounds.')
@@ -96,6 +141,7 @@ async function main() {
   const ROUNDS = 4
   let totalCalls = 0
   let totalErrors = 0
+  let totalShed = 0
   for (let round = 1; round <= ROUNDS; round++) {
     // Simulate N users' background searches firing at once — each itself fanning out
     // to 5 concurrent stream calls against the SAME table handle. This is the exact
@@ -108,10 +154,15 @@ async function main() {
     const ms = Date.now() - t0
     const flat = results.flat()
     totalCalls += flat.length
-    const errors = flat.filter((r) => !r.ok)
+    const shed = flat.filter((r) => r.shed)
+    const errors = flat.filter((r) => !r.ok && !r.shed)
     totalErrors += errors.length
-    console.log(`[stress] round ${round} done in ${ms}ms — ${flat.length} calls, ${errors.length} errors`)
+    totalShed += shed.length
+    const okMs = flat.filter((r) => r.ok).map((r) => r.ms)
+    console.log(`[stress] round ${round} done in ${ms}ms — ${flat.length} calls, ${okMs.length} ok, ${errors.length} errors, ${shed.length} shed(503)`)
+    console.log(`[stress]   latency of successful calls: p50 ${pct(okMs, 50)}ms  p95 ${pct(okMs, 95)}ms  max ${okMs.length ? Math.max(...okMs) : null}ms`)
     for (const e of errors) console.log(`[stress]   ERROR: ${e.err}`)
+    if (shed.length) console.log(`[stress]   ${shed.length} request(s) load-shed with 503 — the bounded queue working as designed, not a failure`)
 
     // Check the service is STILL alive after each round (a native crash kills the
     // process outright — health() would then fail even though no individual fetch
@@ -125,10 +176,17 @@ async function main() {
   }
 
   console.log('')
-  console.log(`[stress] ALL ${ROUNDS} ROUNDS COMPLETE. Total calls: ${totalCalls}, total errors: ${totalErrors}. Service still alive.`)
+  console.log(`[stress] ALL ${ROUNDS} ROUNDS COMPLETE. Total calls: ${totalCalls}, errors: ${totalErrors}, load-shed: ${totalShed}. Service still alive.`)
   console.log(totalErrors === 0
     ? '[stress] RESULT: no crash, no errors — concurrent same-handle access appears SAFE at this scale.'
     : '[stress] RESULT: no crash (the confirmed-fixed failure mode) — some individual calls errored under extreme synthetic load, see above and the file header note.')
+  // Print the service's own view too — the client cannot see queue depth or the
+  // high-water mark, and those are what say whether the guard was actually exercised
+  // or the load simply never reached it.
+  try {
+    const s = await fetch(`${BASE}/stats`)
+    if (s.ok) console.log(`[stress] service /stats: ${JSON.stringify(await s.json())}`)
+  } catch { /* advisory only */ }
 }
 
 main().catch((e) => { console.error('[stress] FATAL', e); process.exit(1) })
