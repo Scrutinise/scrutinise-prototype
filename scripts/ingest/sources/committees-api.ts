@@ -49,20 +49,50 @@ export interface CommitteesApiFile {
   fileDataFormat: 'OriginalFormat' | 'Html' | 'Pdf'
 }
 
+/** A committee. `house` is 'Commons' | 'Lords' | 'Joint'; `category` is Select / General / Other.
+ *  Carried on every Publications listing item — this is what proves (or disproves) the
+ *  ADDENDUM §C claim that all three houses are covered. */
+export interface CommitteesApiCommittee {
+  id?: number
+  name?: string
+  house?: string
+  category?: { id: number; name: string } | null
+}
+
+/** A committee business — an Inquiry, usually. `id` is the STABLE INQUIRY ID the ADDENDUM §B
+ *  join key needs: evidence, report and government response all hang off the same one. */
+export interface CommitteesApiBusiness {
+  id: number
+  title?: string
+  type?: { name: string; isInquiry?: boolean }
+}
+
 export interface CommitteesApiListItem {
   id: number
   // Publications
   description?: string
   publicationStartDate?: string
-  hcNumber?: { number: string } | null
+  hcNumber?: { number: string; sessionDescription?: string } | null
+  hlPaper?: { number: string; sessionDescription?: string } | null
   type?: { name: string }
   documents?: Array<{ documentId: number; files: CommitteesApiFile[] }>
+  businesses?: CommitteesApiBusiness[]
+  // V32: the archive fallback. Pre-2020 publications carry metadata but an EMPTY
+  // documents[]; the body is only reachable at these URLs on publications.parliament.uk
+  // (…/NNN.pdf) or www.parliament.uk/globalassets (…). Both hosts sit behind a Cloudflare
+  // bot challenge — see committees-archive.ts for the route that actually works.
+  additionalContentUrl?: string | null
+  additionalContentUrl2?: string | null
+  // report ↔ government-response linkage (ADDENDUM §A2/§B), both directions
+  governmentResponses?: { publication?: CommitteesApiListItem[] } | null
+  responseToPublicationId?: number | null
+  respondingDepartment?: string | null
   // Evidence
   publicationDate?: string
   document?: { documentId: number; files: CommitteesApiFile[] }
   committeeBusiness?: { title: string } | null
   committees?: Array<{ name: string }>
-  committee?: { name: string } | null
+  committee?: CommitteesApiCommittee | null
   witnesses?: Array<{ name: string | null; organisations: unknown[] }>
   internalReference?: string
 }
@@ -97,11 +127,18 @@ async function apiGet(path: string): Promise<{ status: number; json: unknown | n
 // offsets die server-side (HTTP 500 after ~31s, load-dependent: skip=100000
 // failed on 12 Jun, skip=50000 on 13 Jun); within a date window Skip stays
 // shallow and the same query answers in ~2s.
+// publicationTypeId (V32): Publications only. A YEAR window alone is still not
+// shallow enough on the busy years — an unfiltered 2018 walk 500s at skip=3700
+// of 4,191 and silently returns a TRUNCATED year rather than an error. Adding
+// the type filter keeps the busiest single (year, type) slice under ~750 items,
+// and the walk completes. Measure the source with it; a walk that quietly stops
+// early understates a gap.
 export async function listCommitteesApiPage(kind: CommitteesApiKind, skip: number, take = 100,
-  window?: { start: string; end: string }):
+  window?: { start: string; end: string }, publicationTypeId?: number):
   Promise<{ totalResults: number; items: CommitteesApiListItem[] } | null> {
   const win = window ? `&StartDate=${window.start}&EndDate=${window.end}` : ''
-  const { json } = await apiGet(`/${kind}?Skip=${skip}&Take=${take}${win}`)
+  const typ = publicationTypeId ? `&PublicationTypeIds=${publicationTypeId}` : ''
+  const { json } = await apiGet(`/${kind}?Skip=${skip}&Take=${take}${win}${typ}`)
   if (!json || typeof json !== 'object') return null
   const obj = json as { totalResults?: number; items?: CommitteesApiListItem[] }
   if (typeof obj.totalResults !== 'number' || !Array.isArray(obj.items)) return null
