@@ -2,7 +2,98 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-06 20:57 UTC — ▼ **LEX: WEB/X ORIENTATION IS BUILT, MEASURED AND OFF BY
+*Last updated: 2026-08-07 13:20 UTC — ▼ **SEARCH: `vector-serve` IS DEPLOYED AND INERT, THE
+`corpus_chunks` INDEX IS BUILT, AND BOTH SERVE SERVICES ARE MONITORED.** Executes the "CC — vector
+serving" brief steps 1–6 plus the MAX_CHUNKS cost addendum. Reports:
+`docs/VECTOR_SERVING_STEPS_1_3.md`; CHANGE_LOG entries at 12:49 and 13:20 UTC.
+**BOTH GATES STAY SHUT — `VECTOR_SEARCH_URL` is unset locally and in Vercel, `LEX_VECTOR_STREAMS`
+is unset; nothing routes to the new service.** `vector-serve-production.up.railway.app` is live,
+warm and unreferenced. ⚠ **THE BIGGEST FINDING WAS NOT IN THE BRIEF: `corpus_chunks` (21.8M rows)
+had NO INDEX**, so snippet hydration was a full scan costing **76% of every query** against 21% for
+the ANN search — proven by an IN-list of 1 id costing the same as 20 (~6s) while the same table
+with no predicate returned in 132ms. Index now built via the Heavy Job Runner (**39.1s, 1.72 GB
+peak, €0.010**); snippets fell **74%** (7,825→2,036ms) and total query time ~61% (10.4s→4.0s
+local). ⚠ **Charlie's prediction was half right** — snippets are still the largest phase (51%), ANN
+did not become dominant (40%); the residual is random-access R2 reads an index cannot remove.
+⚠ **The index build's FIRST attempt failed on a 32 GB box whose peak RSS was 42 MB** — DataFusion's
+internal memory pool, not machine memory, so a bigger box would have failed identically; fixed with
+`LANCE_MEM_POOL_SIZE`, diagnosed for €0.005. **B3 answered on Railway under real load: peak RSS
+809 MB = 10.6% of the 8 GB cap** at 25 concurrent, 0 errors, 0 sheds (the brief's "21.8M vectors
+opened at boot" premise was wrong — `openTable` is metadata, not a load); `fts-serve` 13.5%.
+⚠ **THE HANDLE-POOL ANSWER IS NO, AND THE FIRST ANSWER WAS AN ARTEFACT**: a 1.29× "gain" inverted
+to 0.82× when the cell order was reversed — it was cache warming, and one handle already scales ~4×
+with concurrency. ⚠ **The result cache was NOT built to the specified `{query, tier, limit}` key**:
+debates and committees share `tier='parliamentary'` and differ only by corpus scope, so that key
+would serve one stream's results to the other. Hit rate is a **model, not a measurement** (no query
+log exists): 0%/45%/62.5%/87.5% across four stated profiles; the model-independent result is that
+25 simultaneous identical requests became 3 units of database work. **MAX_CHUNKS addendum: the
+"~$600 full re-embed" is refuted** — raising the cap moves no boundary (1,321 stored chunks
+re-derived byte-identical, 0 mismatches), so it is a **$284 incremental top-up**, $157 for cap 32,
+vs $785 for a real re-embed of which $501 re-pays valid vectors; **the FTS side needs nothing at
+all** (it stores whole bodies, never chunks). Top-up **deferred until after the committees
+per-finding re-chunk** so it does not embed chunks about to be superseded. **Monitoring live**:
+`serve-observer.ts` on the ops hourly tick, both services, immediate email on memory >70% / p95 >5s
+/ crash / Neon >80% / rejections >0, daily digest to cl@scrutinise.org; 28 checks pass.
+⚠ **A REAL ALERT IS ALREADY FIRING: Neon is at 15.93 GB of its 17.5 GB ceiling — 91%.**
+⚠ **Two Railway calls report success while doing nothing**: `serviceCreate({branch})` no longer
+creates a repo trigger (the first deploy created a service with no deployment and a 404 domain),
+and `serviceInstanceRedeploy` is a no-op when there is no deployment to re-run —
+`fts-serve-run.ts` makes the same call and would fail the same way. **Standing decision recorded**
+(`SEARCH_STRATEGY.md` §6b.2): chunk SIZE and OVERLAP are permanently fixed, only `MAX_CHUNKS` is
+raised; the geometry is env-overridable and **not recorded in the checkpoint**, so it must be
+pinned on any future chunk run. **REMAINING: step 7** — set `VECTOR_SEARCH_URL` in Vercel, load-test
+at the router's real fan-out, then flip `LEX_VECTOR_STREAMS` one stream at a time, legislation
+first, committees last. ▼ Earlier:
+2026-08-07 10:46 UTC — ▼ **INGEST V32: THE COMMITTEES BRIEF'S PREMISE IS WRONG —
+THE REPORT BODIES WERE NEVER STUBS.** Executes the audit half of
+`BRIEF_INGEST_committees-content-gap.md` §1–2 and the `_ADDENDUM` §A2/§A3/§C. Full account:
+`docs/V32_COMMITTEES_AUDIT.md`; CHANGE_LOG "INGEST V32" (2026-08-07 10:46 UTC).
+**Read-only against the corpus — no rows written, no index touched, nothing committed.**
+`GOLD_TEST_09` inferred "stubs" from row COUNTS (2,575 rows / 2,511 titles); the count is right
+and the inference is wrong, because this ingest writes **one section per document**. The bytes:
+`Report:` rows run to a **7,524-word median, 125,347 max**, 9 of 2,575 under 500 words.
+⚠ **THREE DEFECTS, each enough alone:** (1) report bodies effectively **start in 2020** — pre-2020
+the API lists the publication and serves no document, which is why Carillion (2018) is missing;
+(2) **one report is one search document**, up to 455,137 chars, so BM25 length normalisation
+buries it before a depth-200 probe can test it; (3) **PDF extraction keeps the PDF's line breaks**,
+so `"…public \nhealth failures…"` does not contain `"public health failures"`.
+**So GOLD_TEST_09's "all 10 phrases absent" was partly a MEASUREMENT ARTEFACT — re-measured, 5 of
+10 are already in the corpus**, two invisible to a literal scan; and `"unimaginable cost"` **was
+never in the report at all** (the PAC report is held and says "£37 billion" — the phrase looks
+like the Chair's press wording). Honest denominator **9: five present, four blocked on the
+historical gap**. **THE SOURCE HAS EVERYTHING:** 7,651 report/response bodies exist at source but
+are not API-downloadable, and **every one carries an `additionalContentUrl`**. Both archive hosts
+are behind a Cloudflare bot challenge (403 to `fetch` on any UA *and* to headless Chromium; a real
+Chrome passes — fingerprinting, not an IP ban). **Wayback works programmatically and was proven on
+the Carillion report**, "recklessness, hubris and greed" included — Charlie's call, that is the
+route. ⚠ **MEASUREMENT TRAP:** an unfiltered `/api/Publications` year walk 500s partway through
+most years and **returns a truncated year rather than an error** (2018 died at skip=3700 of 4,191)
+— the first audit pass understated the gap that way; `listCommitteesApiPage` now takes a
+`publicationTypeId`. **§A3 CAN BE CLOSED** — oral evidence is already full transcripts (15,264
+rows, median 14,511 words, 5 under 500). §A2 responses are already full bodies with the same
+historical gap. §C: Commons, Lords and Joint all present every year. §B/§D join keys all exist on
+the listing item (inquiry id on 46.1%; the rest genuinely are not inquiries).
+⚠ **REPORTED NOT FIXED, and it is corpus-wide rather than committees:** `chunk.ts` caps at
+`MAX_CHUNKS=8` ≈ 3,370 words, silently — **242,957 sections exceed it and only 59.4% of the
+corpus's body words ever reach the vector index** (24.4% for committee reports, 13.4% for
+`uk-treaties`). `LEX_SEARCH_VECTOR` is OFF so it serves nobody today, but it is baked into the
+index a flag flip would switch on. Charlie's call: record, don't act.
+**BUILT AND VERIFIED:** `shared/report-sections.ts`, the per-finding splitter, with
+**losslessness as an enforced invariant** — `npm run check:report-sections` is **19/19**,
+including four negative controls that exercise the REAL exported assertion, not a copy, plus a
+live pass over 120 real bodies. The fixtures caught a genuine bug: an unpunctuated body collapsed
+to one indivisible 15,830-char section, the exact blob this work exists to break up.
+`v32-rechunk-reports.ts` is built with an attempted-vs-stored reconciliation that exits non-zero
+on mismatch. **PREDICTION RECORDED BEFORE THE PASS:** 3,842 held bodies → **78,776 sections
+(×20.5), $4.68**; 7,651-document backfill → ~156,875 sections, **$9.31**; **combined ~235,651
+sections, $13.99**.
+⚠ **`--commit` DELIBERATELY NOT RUN.** Base brief §6 requires the FTS catch-up AND the index merge
+to follow the rows, and the merge is a heavy job (19.8 GB, never Railway, §17) that could not
+follow in the same session; landing 74,934 rows while Lance still held the superseded blobs would
+put corpus and index out of step — the July mistake the brief names. **The mutation and the index
+work should run as one operation.** REMAINING: the Wayback backfill source, the §B/§D metadata
+pass, the embed run, and the §E Carillion loop test (blocked on the backfill). ▼ Earlier:
+2026-08-06 20:57 UTC — ▼ **LEX: WEB/X ORIENTATION IS BUILT, MEASURED AND OFF BY
 DEFAULT.** Executes the "CC — Web/X orientation, Stage 0" brief (6 Aug 2026), building
 `SEARCH_STRATEGY` §6d. Full account: CHANGE_LOG "LEX — Web/X orientation, Stage 0"
 (2026-08-06 20:57 UTC); the gold set and the open decisions are
