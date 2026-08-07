@@ -77,9 +77,18 @@ export const JOBS: Record<string, HeavyJob> = {
     // should be much lighter than the 19.8 GB inverted-index build — but "should be" is
     // exactly the reasoning §17 exists to stop, so size generously until measured.
     serverTypes: ['cpx62', 'cpx52', 'ccx43'],
-    // UNMEASURED — deliberately null per this file's own rule. The first run reports its
-    // own peak RSS ("PEAK RSS: … GB"); copy it in here afterwards.
-    expectedPeakGb: null,
+    // MEASURED on the 7 Aug run: 1.72 GB peak at 21,839,900 rows, 39.1s, €0.010.
+    // ⚠ Honest note for whoever sizes this next: at 1.72 GB this one would have fitted on
+    // Railway's 8 GB cap. It is kept here anyway — the run cost a penny, the peak was not
+    // knowable in advance (§17's whole point), and the first attempt DID fail, just not for
+    // a memory reason. cpx62 is over-sized for it; cpx52 would do, and the list already
+    // falls through to it.
+    expectedPeakGb: 1.72,
+    peakSource:
+      '7 Aug 2026, cpx62 (32 GB), 21,839,900 rows, 39.1s → 1.72 GB peak, €0.010. ' +
+      'First attempt failed at 42 MB RSS with a DataFusion ExternalSorterMerge pool exhaustion ' +
+      '("138.4 KB remain available for the total pool") — fixed with LANCE_MEM_POOL_SIZE=8GiB, ' +
+      'NOT with a bigger box. A size increase would have failed identically.',
   },
   'vector-index': {
     name: 'vector-index',

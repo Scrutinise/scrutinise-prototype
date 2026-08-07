@@ -51,8 +51,28 @@ async function main() {
   console.log(`[probe] corpus_chunks rows = ${await chunksTbl.countRows()}`)
   console.log('')
 
-  console.log('[probe] warm-up…')
-  await vectorSearchSections(vecTbl, await embedQuery('warm up'), 5)
+  // Warm BOTH paths, not just the ANN one.
+  //
+  // ⚠ This warm-up used to touch only corpus_vec, which was harmless while corpus_chunks
+  // was unindexed — a full scan has no index pages to warm, so every query paid the same.
+  // Once the BTREE on sectionId exists that stops being true: its pages come from R2 on
+  // first touch, and the first few snippet lookups pay for warming it. Leaving the warm-up
+  // one-sided would therefore charge the index for its own cold start and UNDERSTATE the
+  // improvement it was built to deliver — measured 4,883 → 3,821 → 1,693 → 1,308 ms across
+  // four consecutive queries on a cold process.
+  console.log('[probe] warm-up (ANN + snippet index)…')
+  const wv = await embedQuery('warm up')
+  const wh = await vectorSearchSections(vecTbl, wv, 20)
+  if (wh.length) {
+    const ids = wh.map((h) => h.sectionId)
+    const inList = ids.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
+    // Two touches: the first pulls index pages, the second proves they are resident.
+    for (let i = 0; i < 2; i++) {
+      const t = Date.now()
+      await chunksTbl.query().where(`sectionId IN (${inList})`).select(['sectionId', 'chunkId']).limit(ids.length * 4).toArray()
+      console.log(`  snippet warm-up pass ${i + 1}: ${Date.now() - t}ms`)
+    }
+  }
   console.log('[probe] warm.\n')
 
   const embedT: number[] = [], annT: number[] = [], snipT: number[] = []
