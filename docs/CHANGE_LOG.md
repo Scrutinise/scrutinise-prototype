@@ -96,6 +96,92 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — all three Act-title reads repointed to `corpus_acts`; and what the 12.6 GB in `corpus_sections` actually is (2026-08-07 17:52 UTC)
+
+Executes the "repoint to corpus_acts, then investigate the real storage question" brief.
+Report of record for the storage half: `docs/CORPUS_SECTIONS_STORAGE_AUDIT.md`.
+
+**§1–2 — the repoint (code changed, verified, NOT committed; end-of-sprint `commit-all.sh` per §12).**
+All three search-side Act-title reads now use `corpus_acts.gid` instead of the legacy
+`LegislationItem.legislationGovUkId`:
+
+- `scrutinise-web/lib/lex/vector-search.ts:128` — done **first and alone**, because it is on the
+  path step 7 is about to switch on and leaving it would have added a *new* live caller to a table
+  we intend to drop.
+- `scrutinise-web/lib/lex/fts-search.ts:195` — the live BM25 result path.
+- `scripts/ingest/search/citation-resolver.ts:29` — the 135,531-row ActIndex loaded at **`fts-serve`
+  boot**, the riskiest of the three.
+
+**Verified rather than asserted, at three levels.** Whole-table: 135,531 titled `corpus_acts` rows
+vs 135,531 distinct `LegislationItem` gid→title, **0 gids missing, 0 titles differing**. Hit-shaped:
+12,520 distinct gids taken from real `corpus_sections` ids across all seven legislation corpora —
+**8,569 titled under both, 0 missing, 0 differing, and the same 3,951 gids fall through to the
+`sectionTitle` branch under each**. Boot path: the REAL exported `loadActIndex` was run against Neon
+and produced **135,236 byTitle entries** with citations resolving correctly
+("Section 21 Housing Act 1988" → `ukpga/1988/50` `section-21`). `tsc --noEmit` clean on both the
+web app and the two ingest modules.
+
+⚠ **One real divergence, found by diffing the two indexes rather than trusting the "mechanical swap"
+premise: 95 of 135,236 resolvable titles (0.070%) now resolve to a different gid.** All 95 sit inside
+the **173 normalised titles that carry more than one gid** (468 rows) — devolved/EU twins of the same
+instrument and identically-titled 19th-century Acts. The old code took whatever the plan returned
+first, so the previous choice was arbitrary *and* not reproducible across boots; `loadActIndex` now
+carries `ORDER BY gid` so the choice is at least deterministic. No principal Act moves (Housing 1988,
+Companies 2006, Equality 2010, Theft 1968 all unchanged). **Flagged, not fixed** — which twin should
+win is a policy question for Charlie, not a side-effect of a table swap.
+
+Boot cost of the swap: the ActIndex query goes 384 ms → 743 ms (the sort plus a 250,808-row source
+filtered to 135,531). Once per `fts-serve` boot.
+
+**Still on `LegislationItem`, reported not touched:** `scripts/ingest/search/backfill-citations.ts:48`
+loads the same title map at build time, and the six web-app read paths in `V26_LEGACY_DROP_RECHECK.md`
+§(a) remain — a separate, larger piece of work as the brief specified.
+
+**§3 — the storage investigation. Read-only: no schema changes, no rows written, nothing dropped.**
+
+**The premise the brief was testing is answered: no body text is stored in Neon.** `corpus_sections`
+has no body column — `compiledText` was already dropped and its slot is still visible in the catalogue
+as `........pg.dropped.13........`. Bodies are in R2 only. The 12,915 MB is 7,868 MB heap +
+3,123 MB indexes + 1,922 MB TOAST, over 17,903,304 rows.
+
+⚠ **The biggest single item is an abandoned artefact nothing reads: `ftsVector`, 1,168 MB of column
+data plus a 545 MB GIN index = 1.71 GB — which on its own reclaims about as much as the entire legacy
+DROP (1.73 GB), with no live callers, no FK constraints and no user data to migrate first.** Three
+independent confirmations: a repo-wide grep finds *no* read of `corpus_sections."ftsVector"` (every
+hit is `LegislationSection`/`OperationalSection`); the maintaining trigger was neutered by
+`drop-compiled-text-col.ts` and the live catalogue shows `BEGIN RETURN NEW; END;` — so every insert
+into a 17.9M-row table fires a trigger that does nothing; and only **684,359 rows (3.8%)** carry a
+vector at all, newest dated 2026-06-05 while rows kept arriving to 2026-08-07. `idx_scan = 0`.
+
+Other findings: **`r2Key` is 99.58% derivable from `id`** (17,606,844 of 17,681,740 match
+`{corpus}/{doc-path}/sections/{ref}/compiled.txt`; every one of the 74,896 exceptions is
+`tna-caselaw`), worth 1,018 MB but trading storage for silent-breakage risk on any future corpus.
+**`r2RawKey` (97 MB) is written by ingest and read by nothing.** **866 MB of index serves ~nothing** —
+`fts` 545 MB and `format_idx` 164 MB at 0 scans, `status_idx`/`notes_idx` at one full-scan each.
+`attribution` is NULL on all 17.9M rows and `xmlPreview` on all but 101 — dead, but a NULL costs
+nothing, so they reclaim nothing.
+
+⚠ **Two tempting leads killed by measurement.** (1) **The table is not bloated** — a whole-row datum
+probe gives 7,819 MB live against 7,868 MB of heap, ~99% fill, so `VACUUM FULL` for its own sake
+buys nothing. (2) **`sourceUrl`, the largest column at 1,695 MB, is not the win it looks like** — it is
+neither derivable nor constant per document (6,743,622 distinct URLs; 4,810,362 distinct
+`(parentDocId, sourceUrl)` pairs across 759,543 documents, because a document's sections point at
+different assets), so normalising nets ~900 MB in exchange for a join on every search hydrate.
+
+⚠ **The operational point that changes the running order: `DROP INDEX` returns space immediately and
+`DROP COLUMN` does not.** A dropped column only marks the attribute; the bytes come back on a
+`VACUUM FULL`/`pg_repack` rewrite, which needs room for a second copy of a 12.9 GB table — at 91%
+full that could hit the ceiling instead of relieving it. **Drop the unused indexes first** (709 MB,
+immediate, no rewrite), then the columns, then rewrite.
+
+**Arithmetic against the alert** (`serve-observer` reads `pg_database_size`, today 15.93 GB = 91.0%):
+the four candidates nothing reads or writes are worth **1,974 MB → 14.00 GB = 80.0%**; adding the
+`status`/`notes` indexes gives **13.68 GB = 78.2%**, clearing the threshold; with the legacy DROP as
+well, **11.95 GB = 68.3%**.
+
+**Recommendation recorded: do the four no-reader candidates before the legacy DROP** — they are more
+space for less work and carry no user data. **Nothing dropped. Charlie's call.**
+
 ## V26 §6 legacy DROP — re-audited after the 4 Aug repoint: still blocked, blockers now named (2026-08-07 13:35 UTC)
 
 Triggered by the new serve-observer firing a real alert on its first live run: **Neon at
@@ -306,6 +392,159 @@ not pay to embed chunks about to be superseded.
 namespace and collided with other import-free scripts in `scripts/ingest`; now a module.
 `check-vector-serving.ts` — 22 checks over the cache (scope separation incl. debates/committees,
 TTL expiry, coalescing, failures-not-cached, bounded LRU, disabled bypass), all passing.
+
+---
+
+## INGEST V32 §1 — committee reports are now per-finding, indexed and served (2026-08-07 19:50 UTC)
+
+Executes `BRIEF_CC_V32_committees_completion.md` §1 and §3. §2 (the Wayback backfill) is **running
+as this is written**; §4 is blocked on it. Nothing committed to git.
+
+**The prediction was scored, not reconstructed.** Predicted 78,776 sections from the 3,842 held
+report/response bodies; **actual 78,768** — 0.01% out. Mean 20.4 sections per document.
+
+**Run as one operation, in this order, and the order was load-bearing:**
+
+| step | result |
+|---|---|
+| `v32-rechunk-reports --commit` | 3,555 publications / 3,567 documents → 78,768 sections, **0 lossy, 0 R2 misses, 0 un-retired blobs** |
+| `v32-metadata-pass --commit` (§3) | 86,343 rows given inquiry id / committee / response link; idempotence asserted |
+| `fts-hygiene delete-orphans` | 3,842 superseded blob rows removed from Lance (257 MB safety export to R2 first) |
+| `fts-catchup` | 78,768 rows appended, **0 body misses** |
+| heavy job `fts-index` (Hetzner cpx62) | **unindexed 0**, sample query **5,671ms → 1,661ms**, 671s, **€0.064**, peak RSS **17.9 GB** |
+| `deploymentRedeploy` fts-serve | restarted — otherwise `openTable()` keeps serving the pre-merge snapshot |
+
+⚠ **THREE REAL BUGS, ALL CAUGHT BEFORE THEY CORRUPTED ANYTHING, all by the safety machinery
+rather than by inspection:**
+
+1. **`deleteStaleSections` is scoped by `parentDocId`, and 14 publications hold more than one
+   document.** Processing per-document would have passed keepIds for document A and thereby
+   DELETED document B's rows — silent data loss. Measured first, then the unit of work was
+   changed to the publication.
+2. **`itemDate` came back from node-pg as a JS `Date`**, and `String(date)` is `"Fri May 08"`,
+   which Postgres rejects (22007). It killed the first commit run — and **the R2-before-Neon
+   ordering meant nothing was half-written.**
+3. **A NUL byte in PDF-extracted text reached a `sectionTitle`** and Postgres refused it (22021,
+   `docs/CLAUDE.md` §13's documented contamination class). It killed the full pass at publication
+   275 of 3,802. `unwrap()` now strips C0 controls first — which also closes a latent bug, since a
+   stray U+0001 in source text would otherwise have forged a paragraph break by colliding with
+   the splitter's own sentinel.
+
+Also fixed: the stats counters used `x += await f()`, which is read-await-write and **loses
+increments under concurrency** — the first pilot reported 441 upserts and 21 retirements for 519
+rows and 25 blobs. The DB-side reconciliation was right and the counters were lying, which is the
+worse way round. And the check script's live sample was picking up **its own already-split
+output**, which dropped the observed numbered-finding rate to 12/80 and looked exactly like a
+splitter regression until the sample was scoped.
+
+**ACCEPTANCE, reported honestly: 2 of 5 phrases, and the reason for the other 3 is not ingestion.**
+`v32-acceptance-live.ts` queries the LIVE service (a local Lance handle would have passed while
+users got the old snapshot). Committee report sections now dominate results — 19–41 of every 60 —
+where before the stream returned none. `"gradual and incremental"` returns a **confirmed section at
+rank 1** and `"eye-watering"` at rank 4; both were unreachable before, because each report was one
+document of up to 455,137 characters and BM25 length normalisation buried it.
+
+The other three (`"most important public health failures"`, `"public health failures"`,
+`"measurable difference"`) are **present, split and indexed — verified by direct id lookup in
+`corpus_fts` — but do not enter the top 100 for their own phrase.** The live index is built
+`withPosition: false`, so BM25 cannot reward adjacency and a section containing the exact phrase
+does not outrank sections that merely use its common words more often. **That is a ranking
+question, and it belongs to the search thread.** ⚠ Directly relevant and worth their attention:
+a `corpus_fts_positions` table already exists on R2 with **16,509,051 rows** — `fts-serve` does
+not use it.
+
+**§3 metadata, with the honest denominator:** inquiry id present on **6,224** publications and
+**null on 5,348**, recorded as null rather than invented — the majority of those genuinely are not
+inquiry products (statutory-instrument reports, annual reports, "Documents considered by the
+Committee"). Report↔response link on 4,241. ⚠ **The title enrichment is in Neon but NOT yet in
+Lance** — the catch-up had already appended those rows, and `fts-catchup` only ever appends, it
+never updates. The refresh rides along with the §2 merge; until then the two stores differ on
+`sectionTitle` for the §1 rows, which is recorded here rather than discovered later.
+
+### §2 — the Wayback constraint, and what it actually was
+
+⚠ **THE MOST USEFUL THING MEASURED THIS SPRINT, and it is the opposite of the obvious reading.**
+The backfill kept dying, and the log said `[throttle] rate limited`. It was not being rate limited.
+Measured over three runs: **Wayback NEVER returned 429 or 503 for this workload — not once.** What
+happens is that after roughly 30–50 requests a PROCESS starts getting `TypeError: fetch failed`,
+socket-level drops, and never recovers however long it waits. **A fresh process fetching the same
+URLs scores 10/10 at ~1.5s each with no pacing at all.** So the drops are a stale keep-alive pool
+on our side, not the archive pushing back.
+
+The throttle counts a socket failure as a rate signal, so the first run doubled its way to a 120s
+ceiling and managed **40 documents in 20 minutes** — an ETA in days — while backing off further
+could never reopen a dead socket. The cure is a new process, not a longer wait: the backfill now
+takes `--max N` and exits cleanly so a driver can recycle it. **Slowing down was the wrong response
+to the symptom, and the log message inviting that response is worth remembering.**
+
+Two other measurement corrections in the same area. A first 12-item pilot reported **41.7% archive
+reach and was wrong because it took the FIRST 12** — the manifest is in publication order and the
+oldest items sit disproportionately on `www.parliament.uk/globalassets`, which Wayback never
+crawled (empty CDX index on every probe). Measured host split: **84% `publications.parliament.uk`**,
+which is well archived. An evenly-spaced 40-item pilot then measured **85.0%**. Pilots now sample
+evenly, never the head; and the never-crawled hosts are skipped without a request and recorded as a
+known-unknown rather than attempted 1,225 times against a donated service. Separately, the
+availability-API fallback now runs **only** after a transient failure, never after a clean 404 —
+over a 12-URL probe it rescued nothing 12 times out of 12 while doubling the cost of every miss.
+
+### §4 — the scrutiny loop is proven end-to-end, and Carillion is recovered
+
+**`npm run check:loop` → 5/5.** Rather than wait ~12 hours for the queue to reach 2018, the
+backfill grew an `--only=<ids>` flag and the eleven Carillion publications were pulled ahead:
+**8 of 9 attempted retrieved, 307 sections**. So the canonical missing document is in the corpus:
+
+> `"recklessness, hubris and greed"` — `committees-reports:publication:16614:arc-0002`
+
+the exact phrase `GOLD_TEST_09` used to prove committee conclusions were unreachable. Its evidence
+(34 rows), its report conclusions (307 sections) and the government's response (74 sections) are
+all retrievable, and **two complete inquiry loops** are joined by a shared inquiry id: **5425**
+(the joint BEIS/Work & Pensions inquiry into the collapse) and **5916** (PACAC's "After Carillion").
+
+⚠ **The first version of that §B assertion was wrong and passed 4/5 for the wrong reason.** It
+demanded that every "Carillion" row share ONE inquiry id — but "Carillion" spans two genuinely
+separate inquiries, so a single-id assertion over a SUBJECT could only ever pass by accident. The
+test now groups by inquiry and asserts that *within* one, the report and the response share an id.
+Also stated rather than quietly skipped: **evidence rows do not yet carry an inquiry id** — the §3
+pass covered `committees-reports` only, and evidence↔inquiry needs the API's `committeeBusiness`
+on the evidence items. That is a recorded follow-on, not a silent pass.
+
+▶▶ **IT IS RUNNING DETACHED — no action needed to keep it going.** A ~13-hour driver loop does not
+survive CC's background-command lifetime; it was reaped three times, each time losing only the
+in-flight batch. So it now runs as a detached PowerShell driver that outlives the session —
+`v32-finish-backfill.ps1`, logging to `scripts/ingest/v32-backfill.log` (a run artefact, not for
+commit). Watch with `Get-Content .\v32-backfill.log -Tail 20 -Wait`; stop by killing the
+`v32-backfill` node processes **and** the driver `powershell.exe`, or it starts another batch. The
+log ends with the full hand-off runbook. `v32-finish-backfill.sh` is the bash equivalent.
+
+**Status at hand-off: 166 of ~6,400 archivable publications done** → **8,090 sections**
+(~50/publication, above the §1 rate as predicted), **43 misses recorded honestly** rather than
+dropped. `committees-reports` now holds **107,339** compiled rows, up from 24,876 at the start of
+the sprint. The job is resumable and idempotent — killing it loses only the in-flight batch.
+
+**Still to run when it lands, in this order:** `v32-metadata-pass --commit` (the new rows have no
+join keys yet) → `fts-hygiene` audit/export/delete-orphans → `fts-catchup` (**this is also what
+carries the §3 title enrichment into Lance** — the §1 rows are one revision behind there) →
+heavy-job `fts-index` → redeploy `fts-serve` → `state:committees`, `check:loop`,
+`check:acceptance`. Then the embed, sized at roughly **$15** on the revised section estimate.
+
+**§2 IN FLIGHT.** The manifest is complete — a first walk left **Government Response 2017**
+partial, which a `--repair` mode re-walked to zero rather than leave as a silent undercount.
+**11,572 publications; 7,636 archive-only.** A first 12-item pilot measured 41.7% archive reach and
+**that number was wrong because the pilot took the FIRST 12** — the manifest is in publication
+order, the oldest items are disproportionately `www.parliament.uk/globalassets` URLs, and Wayback
+never crawled that host. Measured host split: **84% `publications.parliament.uk`** (well archived)
+vs 10% globalassets (not archived). An evenly-spaced 40-item pilot then measured **85.0% reach**,
+matching the host prediction. Pilots now sample evenly, never the head.
+
+⚠ **REVISED PREDICTION, before the run finishes:** the pilot yields **~45 sections per document**,
+not the 20.5 the §1 bodies gave — these are older and longer. So ~7,636 × 85% reach × 88% parse ≈
+**5,700 documents → ~256,000 sections**, well above the 156,875 originally predicted, and the
+embed estimate rises with it from $9.31 to roughly **$15**.
+
+**The embed step (§1.3) is deliberately deferred to after §2, not skipped.** Embedding 78,768
+sections now and ~256,000 more in a few hours would pay the chunk+embed+index cost twice, and
+`LEX_SEARCH_VECTOR` is OFF so nothing is being withheld from users meanwhile. `corpus_vec` holds
+21,839,900 rows today.
 
 ---
 
