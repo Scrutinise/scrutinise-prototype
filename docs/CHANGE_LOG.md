@@ -395,6 +395,55 @@ TTL expiry, coalescing, failures-not-cached, bounded LRU, disabled bypass), all 
 
 ---
 
+## INGEST V32 §2 — the backfill was reporting progress and making none (2026-08-07 23:25 UTC)
+
+A bug fix to the §2 backfill committed an hour earlier, found by watching the row counts rather
+than the log. **As committed, §2 would have stalled permanently at 166 of 7,636 publications while
+looking completely healthy** — batches ticking over every few seconds, log being written, throttle
+chattering. Nothing was wrong with any of those signals; the work simply wasn't happening.
+
+**The bug.** The resume filter skipped publications that already had `arc-` sections — and nothing
+else. A publication recorded as an archive MISS was therefore reconsidered on every batch, forever.
+With the early manifest region dense in misses and never-crawled hosts, each batch spent itself
+re-recording the same failures and the queue never advanced. The counters said 25 considered per
+batch and were telling the truth; "considered" just never meant "new".
+
+**The fix, and why it is not simply "skip misses".** A miss has two very different causes and only
+one of them is settled:
+
+- **settled** — no snapshot in the archive, no archive URL, an unparseable document. A retry
+  cannot change this.
+- **retryable** — a socket drop. This says *nothing* about whether a snapshot exists, and the
+  earlier code conflated the two under one message, so treating all misses as done would have
+  silently written off documents that are actually there.
+
+`fetchArchivedDocument` now returns `{ got, settled }`, the note carries a `[settled]` / `[retryable]`
+prefix, and the resume filter skips only the settled ones. `--retry-misses` re-attempts the rest.
+The 52 pre-existing miss rows were reclassified from their wording: **11 retryable, 41 settled.**
+
+**Second fix, same root as the first: the recycle trigger was a guess.** `--max 40` was meant to
+end a process before its socket pool went stale, but 40 documents is 40–80 requests and degradation
+starts around 30–50 — so batches died mid-flight and spent the remainder at the 30s ceiling doing
+nothing. The bail now fires on the *signal*: five consecutive TRANSIENT failures, reset by any
+success or clean 404, so an unarchived stretch cannot trip it. Batch size dropped 40 → 25.
+
+**Also found, and it was making everything worse:** the bash driver loops the harness had "reaped"
+were **still alive at the OS level and still spawning batches** — three concurrent backfills
+competing for the archive, which is exactly the load that triggers the socket degradation. This is
+the `TaskStop`-does-not-kill pattern already on file; killed and verified by process tree, not by
+the tool's success message.
+
+**Measured before and after, same script, same corpus:**
+
+| | before the fix | after |
+|---|---|---|
+| queue | stuck at 166/7,636 | 7,426 remaining and falling |
+| a 25-doc batch | ~5s, 0 new | 3.8 min, **23 fetched, 384 sections** |
+| archive reach | 28–64% (contaminated by re-runs) | **100%** on that batch |
+
+Progress since: **335 publications → 16,901 sections**, `committees-reports` at **116,703**
+compiled rows. Driver relaunched detached; ETA ~19 hours.
+
 ## INGEST V32 §1 — committee reports are now per-finding, indexed and served (2026-08-07 19:50 UTC)
 
 Executes `BRIEF_CC_V32_committees_completion.md` §1 and §3. §2 (the Wayback backfill) is **running

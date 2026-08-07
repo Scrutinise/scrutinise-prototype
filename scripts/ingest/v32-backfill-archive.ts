@@ -40,7 +40,7 @@ import { getNeonPool, endNeonPool } from './shared/neon-pool'
 import { r2Put, compiledKey } from './shared/r2-client'
 import { bulkUpsertSections, upsertSection, deleteStaleSections, sectionId, countWords, SectionMeta } from './shared/db-metadata'
 import { splitReportBody } from './shared/report-sections'
-import { fetchArchivedDocument, looksLikePdf, isArchivableHost } from './sources/committees-archive'
+import { fetchArchivedDocument, looksLikePdf, isArchivableHost, transientStreak } from './sources/committees-archive'
 import { pdfToText, rawToText } from './shared/compile'
 import type { ManifestItem } from './v32-enumerate-committees'
 
@@ -69,10 +69,20 @@ const CONCURRENCY = parseInt(process.env.BACKFILL_CONCURRENCY ?? '4', 10)
  * The script is resumable and idempotent, so recycling costs only process start-up.
  */
 const MAX_DOCS = (() => { const i = process.argv.indexOf('--max'); return i >= 0 ? parseInt(process.argv[i + 1], 10) : Infinity })()
+/**
+ * Exit as soon as the socket pool is provably dead, rather than at a guessed document count.
+ * A run of consecutive TRANSIENT failures is the signature (a clean 404 resets it, so an
+ * unarchived stretch does not trip it). This is the reliable recycle trigger: `--max 40` alone
+ * still degraded mid-batch, because 40 documents is 40-80 requests and degradation starts around
+ * 30-50 — after which the batch just sat at the 30s ceiling doing nothing.
+ */
+const TRANSIENT_BAIL = parseInt(process.env.BACKFILL_TRANSIENT_BAIL ?? '5', 10)
+/** Re-attempt publications whose miss was a socket drop rather than a genuine absence. */
+const RETRY_MISSES = process.argv.includes('--retry-misses')
 
 const stats = {
   considered: 0, alreadyDone: 0, fetched: 0, archiveMiss: 0, unparseable: 0, lossy: 0, notArchivableHost: 0,
-  sectionsWritten: 0, rowsUpserted: 0, markersRetired: 0, missesRecorded: 0,
+  sectionsWritten: 0, rowsUpserted: 0, markersRetired: 0, missesRecorded: 0, retryableMisses: 0, bailedOnSockets: false,
 }
 
 async function mapPool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
@@ -94,8 +104,23 @@ function titleFor(item: ManifestItem, heading: string | null, para: number | nul
   return bits.join(' — ').slice(0, 500)
 }
 
-async function recordMiss(item: ManifestItem, reason: string, url: string | null): Promise<void> {
+/**
+ * A miss is recorded, never dropped — but WHETHER IT IS SETTLED matters as much as the reason.
+ * `settled` misses (no snapshot, no archive URL, an unparseable document) will not change on a
+ * retry; unsettled ones are socket drops and say nothing about whether a snapshot exists. The
+ * note is prefixed accordingly so the resume filter can skip the former and re-attempt the latter.
+ *
+ * Getting this wrong stalled the run: the resume filter originally skipped only publications that
+ * already had `arc-` sections, so every already-missed publication was re-processed on every
+ * batch. The driver span at ~5s per batch, re-recording the same early misses, and never advanced
+ * past 166 of 7,636 while looking entirely healthy.
+ */
+const SETTLED = 'settled'
+const RETRYABLE = 'retryable'
+
+async function recordMiss(item: ManifestItem, reason: string, url: string | null, settled = true): Promise<void> {
   stats.missesRecorded++
+  if (!settled) stats.retryableMisses++
   if (!COMMIT) return
   await upsertSection({
     id: sectionId('committees-reports', `publication:${item.publicationId}`, '1'),
@@ -103,7 +128,7 @@ async function recordMiss(item: ManifestItem, reason: string, url: string | null
     sourceUrl: `https://committees.parliament.uk/publications/${item.publicationId}/`,
     status: 'unavailable',
     availabilityStatus: 'archive-miss',
-    availabilityNote: `${reason}${url ? ` — ${url}` : ''}`,
+    availabilityNote: `[${settled ? SETTLED : RETRYABLE}] ${reason}${url ? ` — ${url}` : ''}`,
     sectionTitle: `${item.type}: ${item.description}`.slice(0, 500),
     itemDate: item.date ?? undefined,
     parentDocId: `publication:${item.publicationId}`,
@@ -124,8 +149,15 @@ async function processItem(item: ManifestItem): Promise<void> {
     return
   }
 
-  const got = await fetchArchivedDocument(url)
-  if (!got) { stats.archiveMiss++; await recordMiss(item, 'not archived by the Wayback Machine', url); return }
+  const outcome = await fetchArchivedDocument(url)
+  if (!outcome.got) {
+    stats.archiveMiss++
+    await recordMiss(item,
+      outcome.settled ? 'no snapshot in the Wayback Machine' : 'transient fetch failure (socket drop) — retryable',
+      url, outcome.settled)
+    return
+  }
+  const got = outcome.got
   stats.fetched++
 
   let text: string | null = null
@@ -194,9 +226,15 @@ async function main() {
 
   // resumable: skip publications that already have arc- sections
   const p = getNeonPool()
+  // Skip what is DONE *and* what is SETTLED-missed. Skipping only the former is what stalled the
+  // first long run — see recordMiss above. `--retry-misses` re-attempts the retryable ones.
   const { rows: done } = await p.query<{ parentDocId: string }>(
     `SELECT DISTINCT "parentDocId" FROM corpus_sections
-     WHERE corpus='committees-reports' AND status='compiled' AND id LIKE '%:arc-%'`)
+     WHERE corpus='committees-reports'
+       AND ( (status='compiled' AND id LIKE '%:arc-%')
+          OR (availability_status='archive-miss'
+              AND ($1::bool OR availability_note NOT LIKE '[retryable]%')) )`,
+    [!RETRY_MISSES ? true : false])
   const doneSet = new Set(done.map(r => r.parentDocId))
   const before = targets.length
   targets = targets.filter(i => !doneSet.has(`publication:${i.publicationId}`))
@@ -221,6 +259,10 @@ async function main() {
     if (stopped) return
     await processItem(item)
     if (stats.considered >= MAX_DOCS) stopped = true
+    if (transientStreak() >= TRANSIENT_BAIL) {
+      stopped = true
+      stats.bailedOnSockets = true
+    }
     if (++n % 25 === 0) {
       const el = (Date.now() - t0) / 1000
       process.stdout.write(`\r   …${n}/${targets.length}  ${(n / Math.max(el, 1)).toFixed(2)}/s  fetched=${stats.fetched} miss=${stats.archiveMiss}`)
@@ -232,7 +274,7 @@ async function main() {
   console.log(`  publications considered     ${stats.considered}`)
   console.log(`  fetched from the archive    ${stats.fetched}`)
   console.log(`  host never crawled (skipped) ${stats.notArchivableHost}`)
-  console.log(`  NOT archived (recorded)     ${stats.archiveMiss}`)
+  console.log(`  NOT archived (recorded)     ${stats.archiveMiss}  (${stats.retryableMisses} retryable, rest settled)`)
   console.log(`  unparseable (recorded)      ${stats.unparseable}`)
   console.log(`  lossy split (recorded)      ${stats.lossy}`)
   console.log(`  sections produced           ${stats.sectionsWritten}`)
@@ -245,7 +287,12 @@ async function main() {
   const reach = attempted > 0 ? ((stats.fetched / attempted) * 100).toFixed(1) : '—'
   console.log(`\n  archive reach: ${reach}% of attempted publications retrieved`)
   console.log(`  elapsed ${((Date.now() - t0) / 1000 / 60).toFixed(1)} min`)
-  if (stopped) console.log(`  --max ${MAX_DOCS} reached — exiting cleanly. Re-run to continue (resumable).`)
+  if (stats.bailedOnSockets) {
+    console.log(`  ⚠ BAILED: ${TRANSIENT_BAIL} consecutive transient failures — this process's sockets are dead.`)
+    console.log(`     Not a rate limit (Wayback returns no 429/503 here). A fresh process recovers immediately.`)
+  } else if (stopped) {
+    console.log(`  --max ${MAX_DOCS} reached — exiting cleanly. Re-run to continue (resumable).`)
+  }
   await endNeonPool()
 }
 main().catch((e) => { console.error('[backfill] FATAL', e); process.exit(1) })

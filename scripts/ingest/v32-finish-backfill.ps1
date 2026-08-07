@@ -25,7 +25,7 @@ $env:BACKFILL_CONCURRENCY = '2'
 "[driver] started $(Get-Date -Format u)" | Out-File -FilePath $log -Append -Encoding utf8
 
 for ($i = 1; $i -le 400; $i++) {
-  & node .\node_modules\tsx\dist\cli.mjs v32-backfill-archive.ts --commit --max 40 *>> $log
+  & node .\node_modules\tsx\dist\cli.mjs v32-backfill-archive.ts --commit --max 25 *>> $log
   if (Select-String -Path $log -Pattern 'publications considered     0' -Quiet -ErrorAction SilentlyContinue) {
     "[driver] all targets processed at batch $i" | Out-File -FilePath $log -Append -Encoding utf8
     break

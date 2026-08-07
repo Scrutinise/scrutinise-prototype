@@ -62,6 +62,19 @@ const throttle = new AdaptiveThrottle({ floor: 1_000, ceiling: 30_000, suspendTh
  * then the availability lookup) and can never succeed, so they are excluded up front and recorded
  * as a known-unknown instead. 6,411 of the 7,636 targets are on the archived host.
  */
+/**
+ * Consecutive TRANSIENT failures — the signature of the stale keep-alive pool described above.
+ * A run of these means this process's sockets are dead and no amount of waiting will revive them;
+ * the caller should exit so a fresh process can take over. Reset by any success or clean 404,
+ * so a genuinely unarchived stretch does not trip it.
+ *
+ * Counting the signal beats guessing a batch size: degradation was observed at ~30-50 requests,
+ * but a --max of 40 documents is 40-80 requests, so a fixed count still degraded mid-batch and
+ * spent the rest of it at the 30s ceiling.
+ */
+let consecutiveTransient = 0
+export function transientStreak(): number { return consecutiveTransient }
+
 export function isArchivableHost(url: string | null | undefined): boolean {
   return /(^|\/\/)(www\.)?publications\.parliament\.uk\//.test(String(url ?? ''))
 }
@@ -116,10 +129,16 @@ export async function resolveSnapshot(originalUrl: string): Promise<{ url: strin
  * rather than two — and falls back to the availability API when that misses. `2020id_` asks for
  * the snapshot closest to 2020, which is the right side of the pre-2020 corpus we are filling.
  */
-export async function fetchArchivedDocument(originalUrl: string): Promise<ArchiveFetch | null> {
+/** Flat, not a discriminated union — the caller reads both fields, and narrowing on `got`
+ *  proved fragile. `settled` is meaningful only when `got` is null: true means the archive
+ *  genuinely has no snapshot (do not retry), false means a socket drop that says nothing about
+ *  whether one exists (retry later). */
+export type ArchiveOutcome = { got: ArchiveFetch | null; settled: boolean }
+
+export async function fetchArchivedDocument(originalUrl: string): Promise<ArchiveOutcome> {
   const isPdf = /\.pdf(\?|$)/i.test(originalUrl)
   const direct = await rawFetch(`https://web.archive.org/web/2020id_/${originalUrl}`)
-  if (direct.outcome === 'ok' && direct.value) return { ...direct.value, kind: isPdf ? 'pdf' : 'html', sourceUrl: originalUrl }
+  if (direct.outcome === 'ok' && direct.value) return { got: { ...direct.value, kind: isPdf ? 'pdf' : 'html', sourceUrl: originalUrl }, settled: true }
 
   // ⚠ The availability-API fallback runs ONLY for a transient failure, never for a clean 404.
   // Measured over a 12-URL probe: whenever the direct form returned 404, the availability API
@@ -127,14 +146,14 @@ export async function fetchArchivedDocument(originalUrl: string): Promise<Archiv
   // is a second request against a donated service on every genuine miss, and misses are ~35% of
   // attempts, so running it unconditionally roughly doubled the cost of the slowest part of the
   // backfill for no recovered documents.
-  if (direct.outcome === 'not-found') return null
+  if (direct.outcome === 'not-found') return { got: null, settled: true }
 
   const snap = await resolveSnapshot(originalUrl)
-  if (!snap) return null
+  if (!snap) return { got: null, settled: false }
   const idForm = snap.url.replace(/\/web\/(\d+)\//, '/web/$1id_/')
   const got = await rawFetch(idForm)
-  if (got.outcome !== 'ok' || !got.value) return null
-  return { ...got.value, kind: isPdf ? 'pdf' : 'html', sourceUrl: originalUrl, timestamp: snap.timestamp }
+  if (got.outcome !== 'ok' || !got.value) return { got: null, settled: got.outcome === 'not-found' }
+  return { got: { ...got.value, kind: isPdf ? 'pdf' : 'html', sourceUrl: originalUrl, timestamp: snap.timestamp }, settled: true }
 }
 
 /** Deliberately NOT a discriminated union on `ok`: a flat record needs no narrowing, and the
@@ -151,14 +170,19 @@ async function rawFetch(url: string): Promise<RawResult> {
   try {
     const res = await fetch(url, { signal, headers: { 'User-Agent': UA } })
     clear()
-      if (res.status === 429 || res.status === 503) { throttle.backoff(); return { outcome: 'transient', value: null } }
+      if (res.status === 429 || res.status === 503) { throttle.backoff(); consecutiveTransient++; return { outcome: 'transient', value: null } }
     // 404 (and Wayback's 403 for an unarchived host) is a settled answer, not a hiccup.
-    if (!res.ok) return { outcome: res.status === 404 || res.status === 403 ? 'not-found' : 'transient', value: null }
+    if (!res.ok) {
+      const settled = res.status === 404 || res.status === 403
+      if (settled) consecutiveTransient = 0; else consecutiveTransient++
+      return { outcome: settled ? 'not-found' : 'transient', value: null }
+    }
     const buffer = Buffer.from(await res.arrayBuffer())
     // Wayback answers 200 with an HTML "not archived" page for some misses; a PDF that is not
     // a PDF is exactly that case, and writing it would put an error page in the corpus.
-    if (buffer.length < 512) return { outcome: 'not-found', value: null }
+    if (buffer.length < 512) { consecutiveTransient = 0; return { outcome: 'not-found', value: null } }
     throttle.success()
+    consecutiveTransient = 0
     return {
       outcome: 'ok',
       value: {
@@ -168,7 +192,7 @@ async function rawFetch(url: string): Promise<RawResult> {
       },
     }
   } catch {
-    clear(); throttle.backoff()
+    clear(); throttle.backoff(); consecutiveTransient++
     return { outcome: 'transient', value: null }
   }
 }

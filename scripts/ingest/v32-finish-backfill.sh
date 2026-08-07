@@ -19,7 +19,7 @@ LOG="${1:-./v32-backfill.log}"
 
 echo "[driver] starting $(date -u +%Y-%m-%dT%H:%MZ) — log: $LOG"
 for i in $(seq 1 400); do
-  BACKFILL_CONCURRENCY=2 ./node_modules/.bin/tsx v32-backfill-archive.ts --commit --max 40 >> "$LOG" 2>&1
+  BACKFILL_CONCURRENCY=2 ./node_modules/.bin/tsx v32-backfill-archive.ts --commit --max 25 >> "$LOG" 2>&1
   # "considered 0" means the resumable filter found nothing left to do.
   if grep -aq "publications considered     0" "$LOG"; then
     echo "[driver] all targets processed at batch $i" | tee -a "$LOG"

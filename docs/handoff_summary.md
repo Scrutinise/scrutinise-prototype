@@ -2,7 +2,32 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-07 19:50 UTC — ▼ **INGEST V32 §1 DONE: COMMITTEE REPORTS ARE NOW
+*Last updated: 2026-08-07 23:25 UTC — ▼ **INGEST V32 §2 FIX: THE BACKFILL WAS REPORTING PROGRESS
+AND MAKING NONE.** Found by watching row counts rather than the log. **As committed an hour
+earlier, §2 would have stalled permanently at 166 of 7,636 while looking completely healthy** —
+batches ticking over, log live, throttle chattering. **The resume filter skipped publications with
+`arc-` sections and nothing else, so every already-MISSED publication was reconsidered on every
+batch, forever.** "considered" was truthful and simply never meant "new".
+**The fix is not just "skip misses":** a miss is either **settled** (no snapshot, no URL,
+unparseable — a retry cannot help) or **retryable** (a socket drop, which says nothing about
+whether a snapshot exists), and the old code conflated them under one message, so writing all
+misses off would have discarded documents that are actually there. `fetchArchivedDocument` now
+returns `{got, settled}`, the note carries a `[settled]`/`[retryable]` prefix, the filter skips
+only settled, and `--retry-misses` sweeps the rest. The 52 existing miss rows were reclassified
+from their wording: **11 retryable, 41 settled.**
+**Second fix, same root cause — the recycle trigger was a guess.** `--max 40` is 40–80 requests but
+socket degradation starts at ~30–50, so batches died mid-flight and sat at the 30s ceiling. The
+bail now fires on the SIGNAL — five consecutive transient failures, reset by any success or clean
+404 — not a document count. Batch 40 → 25.
+⚠ **Also found and making it worse:** the bash driver loops the harness had "reaped" were **still
+alive at OS level and still spawning batches** — three concurrent backfills competing for the
+archive, which is the very load that triggers the degradation. The `TaskStop`-doesn't-kill pattern
+again; killed and verified by process tree, not by the tool's success message.
+**Before → after, same script:** queue stuck at 166 → 7,426 remaining and falling; a 25-doc batch
+~5s/0 new → 3.8 min/**23 fetched, 384 sections**; archive reach → **100%** on that batch.
+Now at **335 publications, 16,901 sections**, `committees-reports` **116,703** compiled rows.
+Driver relaunched detached (see the run instructions below); ETA ~19 hours. ▼ Earlier:
+2026-08-07 19:50 UTC — ▼ **INGEST V32 §1 DONE: COMMITTEE REPORTS ARE NOW
 PER-FINDING, INDEXED AND SERVED. §2 (Wayback backfill) IS RUNNING.** Executes
 `BRIEF_CC_V32_committees_completion.md` §1 and §3; full account in CHANGE_LOG "INGEST V32 §1"
 (2026-08-07 19:50 UTC). Nothing committed to git.
