@@ -62,6 +62,25 @@ export const JOBS: Record<string, HeavyJob> = {
       '4 Aug 2026, cpx62 (32 GB), 17,700,396 rows, 499s → 19.8 GB peak. ' +
       'Confirmed 5 Aug 2026, cpx62, 17,681,503 rows (post index-hygiene), 509s → 19.4 GB peak, €0.049.',
   },
+  'chunks-scalar-index': {
+    name: 'chunks-scalar-index',
+    description:
+      'Build the BTREE scalar index on corpus_chunks.sectionId (21.8M rows, currently NO index). ' +
+      'Snippet hydration does `where("sectionId IN (…)")` on every vector query; unindexed that is a ' +
+      'full scan, measured at 76% of total query latency vs 21% for the ANN search itself.',
+    // createIndex ONLY. optimize() is the pathological v0.30 step that OOM'd the FTS build
+    // repeatedly (§17) — do not add a compaction step here.
+    command: 'R2_MAX_SOCKETS=256 npx tsx search/build-chunks-scalar-index.ts',
+    verify: 'npx tsx search/build-chunks-scalar-index.ts --verify-only',
+    // Same shape as fts-index: shared-vCPU first (no dedicated-core quota, EU stock,
+    // far cheaper), ccx43 as the big hammer. A scalar BTREE over one string column
+    // should be much lighter than the 19.8 GB inverted-index build — but "should be" is
+    // exactly the reasoning §17 exists to stop, so size generously until measured.
+    serverTypes: ['cpx62', 'cpx52', 'ccx43'],
+    // UNMEASURED — deliberately null per this file's own rule. The first run reports its
+    // own peak RSS ("PEAK RSS: … GB"); copy it in here afterwards.
+    expectedPeakGb: null,
+  },
   'vector-index': {
     name: 'vector-index',
     description:
