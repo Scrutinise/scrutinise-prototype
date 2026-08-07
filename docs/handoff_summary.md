@@ -2,7 +2,26 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-07 13:20 UTC — ▼ **SEARCH: `vector-serve` IS DEPLOYED AND INERT, THE
+*Last updated: 2026-08-07 13:35 UTC — ▼ **V26 §6 LEGACY DROP RE-AUDITED: STILL BLOCKED, BUT THE
+BLOCKERS ARE NOW THREE SMALL NAMED PIECES OF WORK.** Report: `docs/V26_LEGACY_DROP_RECHECK.md`;
+CHANGE_LOG (2026-08-07 13:35 UTC). **Report only — nothing dropped.** Triggered by the new
+serve-observer firing a real alert on its first live run: **Neon 15.93 GB / 17.5 GB = 91%.**
+`corpus_acts` was built to replace `LegislationItem`'s Act-title role and the 4 Aug repoint moved
+three call sites — **but nothing was actually switched over.** (a) **Six live web-app read paths
+remain**, the sharpest being `gateway-legacy.ts:287`, which reads `LegislationSection`, is **not
+flag-gated**, and sits on the **Lex chat** route. (b) **All three search paths still read
+`LegislationItem`** — `fts-search.ts:195`, `vector-search.ts:128`, and `citation-resolver.ts:29`
+(the 135,531-row ActIndex loaded at **`fts-serve` boot**); none uses `corpus_acts`. (c) Seven FK
+constraints point at the two tables; six are on empty tables but **`IdeaLegislation` holds ONE row
+of real user data**, so no casual `DROP … CASCADE`, and the *write* paths need repointing too.
+**`corpus_acts` is a verified ZERO-GAP drop-in** — 135,531 vs 135,531, **0 gids missing, 0 titles
+differing** — so the remaining work is mechanical. ⚠ **THE DROP WOULD NOT CLEAR THE ALERT:** 1.73
+GB reclaimable takes Neon **91.0% → 81.1%**, still over the 80% threshold; `corpus_sections`
+(17.9M rows, **12.6 GB of the 15.93**) is where the storage question actually lives.
+⚠ **RECOMMENDED BEFORE STEP 7: repoint `vector-search.ts` to `corpus_acts` first** — it is on the
+path about to be switched on, so leaving it adds a NEW live caller to a table we intend to drop.
+▼ Earlier:
+2026-08-07 13:20 UTC — ▼ **SEARCH: `vector-serve` IS DEPLOYED AND INERT, THE
 `corpus_chunks` INDEX IS BUILT, AND BOTH SERVE SERVICES ARE MONITORED.** Executes the "CC — vector
 serving" brief steps 1–6 plus the MAX_CHUNKS cost addendum. Reports:
 `docs/VECTOR_SERVING_STEPS_1_3.md`; CHANGE_LOG entries at 12:49 and 13:20 UTC.

@@ -96,6 +96,40 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## V26 §6 legacy DROP — re-audited after the 4 Aug repoint: still blocked, blockers now named (2026-08-07 13:35 UTC)
+
+Triggered by the new serve-observer firing a real alert on its first live run: **Neon at
+15.93 GB of a 17.5 GB ceiling (91%)**. Report of record: `docs/V26_LEGACY_DROP_RECHECK.md`.
+**Report only — nothing dropped, nothing altered.**
+
+**Verdict: not clear.** The 4 Aug repoint moved three call sites onto `search-gateway.ts` and
+`corpus_acts` was built to take over `LegislationItem`'s Act-title role — but **nothing was
+actually switched over to it.**
+
+- **(a) Six live web-app read paths remain.** The sharpest is `lib/lex/gateway-legacy.ts:287`,
+  which reads `LegislationSection` and is **not flag-gated** — it fires whenever a hit carries a
+  gid + section number, i.e. normally, on the **Lex chat** route.
+- **(b) All three search paths still read `LegislationItem`**: `fts-search.ts:195`,
+  `vector-search.ts:128`, and `citation-resolver.ts:29` (which loads the 135,531-row ActIndex at
+  **`fts-serve` boot**). None uses `corpus_acts`.
+- **(c) Seven FK constraints point at the two tables. Six are on empty tables; `IdeaLegislation`
+  holds ONE row of real user data** — not a reason to stop, but a reason not to `DROP … CASCADE`
+  casually, and it means the *write* paths need repointing too, not only the reads.
+
+**`corpus_acts` is a verified zero-gap drop-in**, which is what makes the remaining work small:
+135,531 gid→title in `LegislationItem`, 135,531 titled rows in `corpus_acts`, **0 gids missing
+and 0 titles differing**. The swap is mechanical.
+
+⚠ **The DROP would NOT clear the alert.** 1.73 GB reclaimable (`LegislationSection` 1,712 MB +
+`LegislationItem` 61 MB + three empty tables) takes Neon **91.0% → 81.1%**, still above the 80%
+threshold. `corpus_sections` — 17,903,304 rows, **12.6 GB of the 15.93** — is where the storage
+question actually lives. Recorded so the DROP is not planned as a fix for the alert.
+
+⚠ **Recommended before step 7:** repoint `vector-search.ts` to `corpus_acts` first. It is on the
+path about to be switched on, so leaving it adds a *new* live caller to a table we intend to drop.
+
+---
+
 ## SEARCH — the chunks index built, latency re-measured, and serving monitored (2026-08-07 13:20 UTC)
 
 ### The `corpus_chunks` index — and a failure that looked like an OOM and was not
