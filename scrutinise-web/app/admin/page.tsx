@@ -862,6 +862,12 @@ export default function AdminPage() {
               {s.label}
             </button>
           ))}
+          <a
+            href="/admin/lex-general"
+            className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Corpus Chat
+          </a>
           {isSuperAdmin && (
             <a
               href="/admin/invites"

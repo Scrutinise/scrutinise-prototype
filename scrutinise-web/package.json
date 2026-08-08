@@ -18,7 +18,8 @@
     "check:central": "tsx --env-file=.env scripts/check-central-stage1.ts",
     "check:orientation": "tsx --env-file=.env scripts/check-orientation.ts",
     "postinstall": "prisma generate",
-    "check:flags": "tsx scripts/check-flags.ts"
+    "check:flags": "tsx scripts/check-flags.ts",
+    "check:lex-general": "tsx --env-file=.env scripts/check-lex-general.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

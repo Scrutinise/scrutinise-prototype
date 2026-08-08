@@ -32,6 +32,11 @@ export type SearchIntent =
   | 'LEGAL_LANDSCAPE'     // §19-C Task 2 — DIAGNOSIS entry: what law governs this and where it falls short.
   | 'POLICY_ALTERNATIVES' // §19-C Task 2 — GUIDING_POLICY entry: how others have approached this.
   | 'AD_HOC_RESEARCH'     // §19-C Task 1c — the user asked, in chat, for a corpus search.
+  | 'GENERAL_CORPUS_CHAT' // /admin/lex-general — an admin asking the whole corpus a question,
+                          // outside any idea. Untiered by construction, so it exercises the
+                          // ROUTED path (the tier-scoped branch bypasses fusedStream entirely).
+                          // Intent is descriptive here — the gateway logs it and callers key off
+                          // it; it does not select streams, so adding one changes no retrieval.
   // ── The three legacy surfaces, repointed through the gateway (SPRINT §1). Before
   //    this they called `searchLegislation()` / raw SQL directly and never reached
   //    the fast index at all — see lib/lex/gateway-legacy.ts for what each one is.
