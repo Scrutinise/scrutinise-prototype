@@ -23,10 +23,26 @@ instance with every flag's resolved state **plus `VECTOR_SEARCH_URL` / `LEX_VECT
 `GEMINI_API_KEY`** (keys set/unset, never printed). **"Is X live?" is now read, not inferred.**
 (4) **`check:flags`, 44 assertions** — the load-bearing one is the **SOURCE invariant**: 340 files
 scanned, fails if any bare `process.env.<FLAG> ===` returns. **Verified it can fail.**
-⚠ **`bce7818` IS the test for candidate cause 1** — it forces a fresh Vercel build, so the boot
-line now states what the app believes is on, and the fail-open names itself if it fires. **CHARLIE:
-the one line to look for in Vercel Runtime Logs is now `[capabilities] …`.** Re-verification of
-trial 3 (cross-cutting query; `vector-serve` must move past **178**) follows once the deploy lands.
+⚠ **RE-VERIFIED AFTER THE DEPLOY — TRIAL 4, STILL NEGATIVE.** Against the fresh `bce7818` build:
+**`fts-serve` 3 → 4, `vector-serve` 178 → 178.** Same signature, one untiered call and no dense;
+that is **four trials**. Two queries Charlie ran in the same window behave identically (each moved
+`fts-serve` by exactly one), so it is not an artefact of how I drive the browser. **Candidate 1 (a
+stale deployment) is much weaker now** — a fresh build exists since the values were corrected —
+leaving **candidate 2: `routeQuery` failing open**, or the values not applied to the Production
+environment of the deployment actually serving. ⚠ I could NOT confirm from outside which
+deployment is serving (homepage came from CDN cache, `Age: 18029`; Vercel's API is closed to this
+session) — **check the dashboard for which deployment is Current and whether its commit is
+`bce7818` or later.**
+⚠ **CHARLIE — TWO LOG LINES NOW SETTLE IT, both new in `bce7818`, both in Vercel Runtime Logs:**
+(1) **`[capabilities] …`** at boot — states after parsing exactly what is on, plus
+`VECTOR_SEARCH_URL` / `LEX_VECTOR_STREAMS` / `GEMINI_API_KEY`. If it says `QUERY_ROUTER=off` or
+`VECTOR_SEARCH_URL=UNSET`, it is the environment and there is nothing to debug in code.
+(2) **`[query-router] FAIL-OPEN — … (<reason>)`** at error level, `<reason>` ∈ missing-key /
+http-error / timeout / network-error / empty-response / bad-json / no-streams-named.
+**There is no longer an ambiguous state between them.**
+**RE-VERIFICATION when unblocked** (one minute): cross-cutting query on the briefing path →
+**`fts-serve` must jump by ≥2** (per-stream dispatch) **and `vector-serve` must move past 178**
+(dense actually running). 178 remains the clean detector.
 ▼ Earlier:
 2026-08-08 15:04 UTC — ▼ **SEARCH: THE ROUTER HAS NEVER RUN IN PRODUCTION — AND
 DENSE STILL IS NOT ENGAGING AFTER THE `TRUE`→`true` FIX.** Report:

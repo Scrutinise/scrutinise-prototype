@@ -496,3 +496,70 @@ is not doing the thing being watched for. Current state, for the record:
 production load — the queueing only ever appeared under synthetic fan-out. **Gemini embed volume,
 the new cost line, is still zero**: no dense query has been issued from Vercel, so the flip has
 cost nothing yet.
+
+---
+---
+
+# Third follow-up — 2026-08-08 21:10 UTC, after the flag hardening
+
+## 18. Trial 4, against the fresh build: still one untiered call, still no dense
+
+`bce7818` forced a new Vercel deployment at ~21:00 UTC, which was the test for candidate 1 in §14
+(a deployment not carrying the corrected values). Trial 3 was re-run against it at ~21:05:
+
+| | before | after |
+|---|---:|---:|
+| `fts-serve` served | 3 | **4** |
+| `vector-serve` served | 178 | **178** |
+
+**Same signature: one untiered BM25 call, zero dense.** That is now four trials.
+
+Two independent queries Charlie ran in the same window behave identically (they are in the
+`06ca807a` transcript, and each moved `fts-serve` by exactly one), so this is not an artefact of
+how I am driving the browser.
+
+**What this narrows it to.** Candidate 1 is much weaker now — a fresh build has been made since the
+values were corrected. That leaves **candidate 2: `routeQuery` returning null and the gateway
+failing open**, or the corrected values still not being applied to the Production environment of
+the deployment actually serving. Both are now *directly readable* rather than inferable, which is
+the whole point of the work in §19.
+
+⚠ I could not confirm from outside that the new deployment is the one serving: the homepage came
+back from CDN cache with `Age: 18029`, and Vercel's API is closed to this session (§5). That is a
+gap in this measurement, not a conclusion — **check the Vercel dashboard for which deployment is
+Current, and whether its commit is `bce7818` or later.**
+
+## 19. The two log lines that now settle it
+
+Both are new as of `bce7818` and both appear in Vercel → Runtime Logs:
+
+1. **`[capabilities] …`** — emitted once per server instance at boot. It states, after parsing,
+   exactly what the app believes is switched on, e.g.
+
+   ```
+   [capabilities] QUERY_EXPANSION=ON QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=off
+   SEARCH_RERANKER=off SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off |
+   VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=legislation GEMINI_API_KEY=set
+   ```
+
+   If `QUERY_ROUTER=off` or `VECTOR_SEARCH_URL=UNSET` appears, the environment is the problem and
+   there is nothing further to diagnose in code.
+
+2. **`[query-router] FAIL-OPEN — LEX_QUERY_ROUTER is ON but no routing decision was produced
+   (<reason>): <detail>`** — emitted at **error** level whenever the router is on but produces
+   nothing. `<reason>` is one of `missing-key`, `http-error`, `timeout`, `network-error`,
+   `empty-response`, `bad-json`, `no-streams-named`.
+
+**Between them there is no longer an ambiguous state.** Boot line says ON and no fail-open line →
+the router is genuinely dispatching and the problem is dense-side only. Boot line says ON and a
+fail-open line → the reason is printed. Boot line says off → it is the environment.
+
+## 20. Re-verification, when it can be done
+
+The check is unchanged and takes a minute: run the cross-cutting query (naming legislation,
+committees and case law) on the briefing path, and watch two things —
+
+- **`fts-serve` served must jump by 2 or more**, which is per-stream dispatch;
+- **`vector-serve` served must move past 178**, which is dense actually running.
+
+`178` remains the clean detector: it is still exactly and only the load-test traffic from §2.
