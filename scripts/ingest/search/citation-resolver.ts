@@ -9,9 +9,14 @@
  * BM25 at all: parse the citation, resolve the act title → gid, and fetch the
  * exact section by id. This is deterministic and needs no reindex.
  *
- * The act-title→gid map comes from legacy LegislationItem.title (135,531 rows,
- * 100% populated), keyed by legislationGovUkId — the same gid embedded in every
- * corpus_sections id. Built once (loadActIndex) and reused per query.
+ * The act-title→gid map comes from `corpus_acts.title` (135,531 titled rows),
+ * keyed by `gid` — the same gid embedded in every corpus_sections id. Built once
+ * (loadActIndex) and reused per query.
+ *
+ * Was legacy `LegislationItem` until 7 Aug 2026; repointed under V26 §6 because
+ * that table is slated for DROP and this index is loaded at fts-serve BOOT, so a
+ * dropped table would take the whole citation resolver down with it. Verified
+ * zero-gap: same 135,531 gid→title pairs, 0 missing, 0 differing.
  */
 import { Pool } from 'pg'
 
@@ -25,8 +30,14 @@ function normTitle(s: string): string {
 }
 
 export async function loadActIndex(pool: Pool): Promise<ActIndex> {
+  // ORDER BY gid is not cosmetic: "first writer wins" below means an unordered scan
+  // lets the PLAN decide which gid a colliding title resolves to, so the same citation
+  // could resolve differently across boots. 173 normalised titles carry more than one
+  // gid (468 rows) — mostly devolved/EU twins of the same instrument and identically
+  // titled 19th-century Acts — so the collision set is real, not theoretical. Pinning
+  // the order makes the choice reproducible; it does not claim the choice is right.
   const { rows } = await pool.query<{ gid: string; title: string }>(
-    `SELECT "legislationGovUkId" AS gid, title FROM "LegislationItem" WHERE "legislationGovUkId" IS NOT NULL AND title IS NOT NULL`)
+    `SELECT gid, title FROM corpus_acts WHERE gid IS NOT NULL AND title IS NOT NULL ORDER BY gid`)
   const byTitle = new Map<string, string>()
   for (const r of rows) {
     const k = normTitle(r.title)

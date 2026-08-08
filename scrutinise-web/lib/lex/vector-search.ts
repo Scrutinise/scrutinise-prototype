@@ -124,12 +124,21 @@ export async function runVectorSearch(
       prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null }>>`
         SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"
         FROM corpus_sections WHERE id IN (${Prisma.join(ids)})`,
+      // Act titles come from `corpus_acts`, NOT the legacy `LegislationItem`
+      // (V26 §6: that table is to be dropped, and this path is about to go live —
+      // pointing it at LegislationItem would add a new caller to a doomed table).
+      // Verified zero-gap drop-in: 135,531 titled corpus_acts rows vs 135,531
+      // distinct LegislationItem gid→title, 0 gids missing, 0 titles differing.
+      // corpus_acts is a SUPERSET (250,808 rows) whose extra rows carry title NULL,
+      // so `title: { not: null }` reproduces exactly the old result set — the
+      // untitled rows would otherwise arrive as nulls and fall through to the
+      // sectionTitle branch anyway, but filtering keeps the map's type honest.
       gids.length
-        ? prisma.legislationItem.findMany({ where: { legislationGovUkId: { in: gids } }, select: { legislationGovUkId: true, title: true } })
-        : Promise.resolve([] as Array<{ legislationGovUkId: string; title: string }>),
+        ? prisma.corpusAct.findMany({ where: { gid: { in: gids }, title: { not: null } }, select: { gid: true, title: true } })
+        : Promise.resolve([] as Array<{ gid: string; title: string | null }>),
     ])
     const hydrate = new Map(hydrateRows.map((r) => [r.id, r]))
-    const actTitle = new Map(actRows.map((r) => [r.legislationGovUkId, r.title]))
+    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, r.title] as const] : [])))
 
     const results: SearchResult[] = typed.map(({ h, type }) => {
       const meta = hydrate.get(h.id)

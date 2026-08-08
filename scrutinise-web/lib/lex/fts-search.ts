@@ -191,15 +191,20 @@ export async function runFtsSearch(
       prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null }>>`
         SELECT id, "sourceUrl", "itemDate"::text AS "itemDate"
         FROM corpus_sections WHERE id IN (${Prisma.join(ids)})`,
+      // Act titles come from `corpus_acts`, not the legacy `LegislationItem` (V26 §6 —
+      // that table is slated for DROP). Verified zero-gap drop-in: 135,531 titled
+      // corpus_acts rows vs 135,531 distinct LegislationItem gid→title, 0 missing,
+      // 0 differing. corpus_acts is a SUPERSET (250,808 rows) whose extra rows carry
+      // title NULL, so `title: { not: null }` reproduces the old result set exactly.
       gids.length
-        ? prisma.legislationItem.findMany({
-            where: { legislationGovUkId: { in: gids } },
-            select: { legislationGovUkId: true, title: true },
+        ? prisma.corpusAct.findMany({
+            where: { gid: { in: gids }, title: { not: null } },
+            select: { gid: true, title: true },
           })
-        : Promise.resolve([] as Array<{ legislationGovUkId: string; title: string }>),
+        : Promise.resolve([] as Array<{ gid: string; title: string | null }>),
     ])
     const hydrate = new Map(hydrateRows.map((r) => [r.id, r]))
-    const actTitle = new Map(actRows.map((r) => [r.legislationGovUkId, r.title]))
+    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, r.title] as const] : [])))
 
     const results: SearchResult[] = typed.map(({ h, type }) => {
       const meta = hydrate.get(h.id)
