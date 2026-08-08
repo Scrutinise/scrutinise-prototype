@@ -2,7 +2,43 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 21:00 UTC — ▼ **LEX: THE SILENT-FLAG CLASS IS DEAD — parseBool
+*Last updated: 2026-08-08 21:30 UTC — ▼ **LEX: A GENERAL CORPUS CHAT — `/admin/lex-general`.
+ASK THE CORPUS ANYTHING, AND SEE WHAT IT RETRIEVED.** CHANGE_LOG (2026-08-08 21:30 UTC).
+`tsc` clean, `next build` clean, `check:flags` 44/44, new **`npm run check:lex-general` 29/29**
+(19 source invariants + 10 live assertions against the real index and the real model).
+A plain chat window, admin-only, with **no open idea, no on-topic requirement and no field-machine
+state** — which is the point: verifying retrieval no longer means hunting for an idea the question
+happens to be on-topic for (that is how vector-flip trial 1 was lost). It goes through `runSearch()`
+like every other caller — no second retrieval path — and is **UNTIERED by construction**, so it takes
+the routed branch rather than the tier-scoped one that skips `fusedStream` entirely. Every answer
+shows its sources with type, citation, score, id and rank, which streams routed, which flags were on,
+and **how many of the retrieved results were actually put in front of Lex** (16 of 47 on the live
+run). No writes: no `Idea` read, nothing persisted, transcript dies with the tab — asserted by grep,
+not by intention.
+⚠ **IT FOUND A PRODUCTION BUG IN THE ROUTER IN ITS FIRST HOUR — REPORTED, NOT FIXED, FOR THE SEARCH
+THREAD.** With `LEX_QUERY_ROUTER=true`, **two of four real questions failed open with `bad-json`**,
+and the logged payload is **truncated mid-word**. `query-expansion.ts:101` caps the shared Gemini
+JSON call at **`maxOutputTokens: 512`**, and five tailored per-stream queries do not fit; it is NOT
+the thinking-budget bug (already zeroed, line 108), and `callGeminiJson` **never checks
+`finishReason`**, so truncation arrives disguised as a parse failure. `expandQuery` shares the helper
+and the exposure. Reproduction: "data protection" → 1 stream; "select committees / water pollution"
+→ **4 streams**; "regulators compelling disclosure" → **FAIL-OPEN**; "leasehold reform" →
+**FAIL-OPEN**. ⚠ **This does NOT fully explain the production observation** — the router
+demonstrably routes when it parses. But it is a live, reproducible instance of candidate 2. Not
+changed here: it moves ranking and latency on every routed query and belongs in the search thread's
+evidence trail.
+⚠ **`fts-serve` `served` 4 → 14 during this work — ten calls are mine, not users.** That counter is
+the evidence of record; do not read the delta as production traffic. Incidentally it **confirms the
+per-stream detector**: the 4-stream question moved it by exactly 4.
+Incidental, same class in the new file and fixed at source: the answer call died first time on
+`Unterminated string in JSON` (16 sources at 2,048 tokens) — now 8,192, `thinkingBudget: 0`, and
+`finishReason` checked so a truncation names itself. **Third recorded instance** of this failure
+(query-expansion 29 Jul, web-orientation 6 Aug). Also fixed after the live run: `citedIds` came back
+EMPTY under a fully-cited answer, so citations now resolve positionally from the `[n]` markers as
+well, with anything unresolvable shown rather than dropped.
+**Not run: `check:orientation`** — untouched by this work and it costs a real web/X round trip.
+▼ Earlier:
+2026-08-08 21:00 UTC — ▼ **LEX: THE SILENT-FLAG CLASS IS DEAD — parseBool
 EVERYWHERE, A LOUD FAIL-OPEN, AND A BOOT LINE.** Commit `bce7818`; CHANGE_LOG
 (2026-08-08 21:00 UTC). `tsc` clean, `next build` clean, `check:orientation` 15/15, new
 **`npm run check:flags` 44/44**.

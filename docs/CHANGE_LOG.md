@@ -96,6 +96,80 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — a general corpus chat (`/admin/lex-general`): ask the corpus anything, and see what it retrieved (2026-08-08 21:30 UTC)
+
+`tsc` clean, `next build` clean, `check:flags` 44/44, new **`npm run check:lex-general` 29/29**
+(19 source invariants + 10 live-turn assertions, run against the real index and the real model).
+
+**What shipped.** A plain chat window, admin-only, with none of the idea-structure constraints —
+no open idea, no on-topic requirement, no field-machine state. It retrieves through
+`runSearch()` like every other caller (no second retrieval path, so routing, expansion and
+per-stream dense fusion are inherited rather than reimplemented), **untiered by construction**, then
+answers from the retrieved excerpts and shows every one of them with its type, citation, score, id
+and rank.
+
+- `lib/lex/general-chat.ts` — the turn: retrieve → answer → validate the citations.
+- `app/api/admin/lex-general/route.ts` — ADMIN/SUPER_ADMIN, Zod, rate-limited 40/hr.
+- `app/admin/lex-general/page.tsx` + `components/admin/LexGeneralChat.tsx` — the window.
+- New `GENERAL_CORPUS_CHAT` intent on the gateway (descriptive; it selects no streams).
+
+**Untiered is the load-bearing word.** `search-gateway.ts`'s tier-scoped branch calls
+`runFtsSearch` directly and never reaches `fusedStream`, so a tier here would have made the test
+surface exercise the one path it exists to be a control for. `check:lex-general` asserts the file
+never passes a tier, never calls `runFtsSearch`/`runVectorSearch` directly, never imports `prisma`,
+and never mentions `stageSearches` — **the invariants are structural, because a behavioural test
+cannot see any of them.** Two of those assertions have been observed failing, so they are checks
+rather than decoration.
+
+**No writes.** The route reads no `Idea` and writes nothing; the transcript is component state and
+dies with the tab. A surface that bypasses the idea structure must not be able to mark it.
+
+⚠ **THE FIRST LIVE RUN FOUND A PRODUCTION BUG IN THE QUERY ROUTER — reported, NOT fixed.**
+With `LEX_QUERY_ROUTER=true`, **two of four real questions failed open with `bad-json`**, and the
+logged payload shows why: the routing decision was **truncated mid-word**
+(`…service charge administration charges right to ` ⟶ end of string).
+`query-expansion.ts:101` gives the shared Gemini JSON call **`maxOutputTokens: 512`**, and five
+tailored per-stream queries do not fit in 512 tokens. It is not the thinking-budget bug (that is
+already zeroed on line 108) — it is plain output length, and `callGeminiJson` **never checks
+`finishReason`**, so a truncation arrives as a parse failure rather than naming itself. The same
+helper serves `expandQuery`, so expansion has the identical exposure.
+**Reproduction, 2026-08-08 ~21:10 UTC, `LEX_QUERY_ROUTER=true` against the live index:**
+| question | outcome |
+|---|---|
+| "What is the law on data protection?" | dispatched — 1 stream |
+| "How have select committees scrutinised water company pollution?" | dispatched — **4 streams** |
+| "What powers do regulators have to compel disclosure of information from companies…" | **FAIL-OPEN `bad-json`** |
+| "leasehold reform" | **FAIL-OPEN `bad-json`** |
+**This does not fully explain the production observation** — the router demonstrably routes when it
+parses, and the 4-stream case moved `fts-serve` by 4 — but it is a live, reproducible instance of
+handoff candidate 2 (`routeQuery` fails open silently-in-effect), found in the first hour of using
+the new surface. Left for the search thread: it changes ranking and latency for every routed query
+and belongs in their evidence trail, not in a UI sprint.
+
+⚠ **Incidental, and the same class in my own file.** The answer call died on the first live run with
+`Unterminated string in JSON at position 2488` — an answer over sixteen sources at 2,048 output
+tokens. Fixed here at source: 8,192 tokens, `thinkingBudget: 0`, and **`finishReason` checked**, so a
+future truncation says "cut off at maxOutputTokens" instead of looking like a serialiser bug. This
+is the **third** recorded instance of the same failure (query-expansion 29 Jul, web-orientation
+6 Aug), which is why it is written down as a pattern rather than a fix.
+
+⚠ **Also fixed after the first live run: `citedIds` came back EMPTY under a fully-cited answer.**
+The field was optional and the model simply skipped it, so the panel would have said "0 cited"
+about an answer carrying eight `[n]` markers. It is now `required`, and citations resolve **two
+ways** — positionally from the inline `[n]` markers (ours, so they cannot be misremembered; grouped
+`[1, 2]` forms handled) unioned with the model's ids — with anything unresolvable surfaced as
+`citations to ids that were never retrieved` rather than dropped.
+
+**Measured, live:** 47 canonical results in ~1.5–4.2 s, answer in ~2.2–3.7 s, ~3.8–7.5 s wall.
+The panel separates what was retrieved from **what was actually put in front of Lex** (16 of 47) —
+without that line the source list overstates the reading.
+
+⚠ **`fts-serve` `served` moved 4 → 14 during this work.** That counter is the evidence of record for
+whether production traffic reaches the service; ten of those calls are mine. Incidentally it
+**confirms the per-stream detector**: the 4-stream question moved it by 4, one call per stream.
+
+---
+
 ## LEX — the silent-flag class is dead: parseBool everywhere, a loud fail-open, and a boot line (2026-08-08 21:00 UTC)
 
 Commit `bce7818`. `tsc` clean, `next build` clean, `check:orientation` 15/15, new `check:flags`
