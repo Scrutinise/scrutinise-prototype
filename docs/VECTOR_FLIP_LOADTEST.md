@@ -216,3 +216,145 @@ BM25-only until the legacy migration. Deliberate.
 
 **Nothing has been flipped. §2 is complete on the Railway side and blocked on the Vercel side;
 §3 awaits both the token fix and Charlie's explicit word.**
+
+---
+---
+
+# Post-flip follow-up — 2026-08-08 10:02 UTC
+
+*Charlie set `VECTOR_SEARCH_URL`, `LEX_QUERY_ROUTER` and `LEX_VECTOR_STREAMS=legislation` in
+Vercel and redeployed. This section records what happened next.*
+
+## 8. ⚠ The flip is deployed but dense is NOT engaging
+
+**A real search on the live briefing path fired exactly one BM25 call and zero dense calls.**
+
+Method — counters read immediately either side of one authenticated request through
+www.scrutinise.org (Charlie's own logged-in Chrome, his idea
+`f534c43d` "Reforming VAT on Care Home Renovations", Lex workspace):
+
+| | before | after |
+|---|---:|---:|
+| `fts-serve` served | 0 | **1** |
+| `vector-serve` served | 178 | **178** |
+
+`vector-serve`'s 178 is exactly and only my own load-test traffic (70 pre-existing + 18
+`legislation`-mode + 90 `all`-mode), so the counter is a clean detector: **it has still never
+served a single request originating from Vercel.** No errors were raised anywhere — this is the
+"silently inert" failure the brief asked to rule out, and it is not ruled out.
+
+### Three causes produce this exact symptom, and they cannot be told apart from outside
+
+1. **`LEX_QUERY_ROUTER` is not the literal string `true`.** `capabilityFlags()` tests
+   `=== 'true'`, so `TRUE`, `1`, or a trailing space all read as false. Retrieval then takes the
+   non-router branch (`search-gateway.ts:183+`) — **one untiered `runFtsSearch`, which is exactly
+   the one call observed** — and `fusedStream` is never reached. Worse, step 4b then *also* does
+   nothing, because `perStreamVectorActive()` is true (the stream list is set), so the legacy
+   whole-query path stands itself down. Net: no dense, no error. **This is the best fit for
+   one FTS call.**
+2. **`VECTOR_SEARCH_URL` is not reaching the running function** — wrong environment (Production
+   vs Preview), or set after the build that is actually serving. `vector-search.ts:21` reads it
+   at *module load*, so it needs a fresh deployment, not just a saved variable.
+   `runVectorSearch` then returns `[]` on line 111 and the stream silently serves BM25 alone.
+3. **`LEX_VECTOR_STREAMS` does not match the stream name exactly.** `vectorStreams()` splits on
+   commas and trims, but the comparison is case-sensitive: `Legislation` ≠ `legislation`.
+
+All three are silent by design — the fusion is written to degrade to BM25 rather than fail — so
+none of them will ever surface in an alert.
+
+### The two checks that separate them, in order
+
+1. **Vercel → the deployment's Runtime Logs**, filtered for `[search-gateway]` /
+   `[query-router]`. The gateway logs its own branch, so one line settles it:
+   - `router dispatched` → router IS on; the problem is cause 2 or 3.
+   - `no tailored query for tier` / nothing at all → router is off; **cause 1**.
+   - `per-stream fusion` → dense fired and the problem is elsewhere entirely.
+2. **Read the three variable values back** and confirm: `LEX_QUERY_ROUTER` is exactly `true`,
+   `LEX_VECTOR_STREAMS` is exactly `legislation`, `VECTOR_SEARCH_URL` is
+   `https://vector-serve-production.up.railway.app`, all three on **Production**, and that a
+   deployment has been made *since* they were saved.
+
+⚠ **One further caveat on the observation itself:** the click that submitted the query landed
+just before another Chrome extension took over the tab, so I could not read the on-screen
+response to confirm which caller ran. The counters are unambiguous about *dense not firing*;
+they cannot prove *which* caller produced the single BM25 call. A clean re-run — one query, then
+read both counters — settles that too.
+
+## 9. §2 — the p95 metric defect is fixed, deployed and validated
+
+`fts-query-service.ts` now starts its clock before `acquireSlot()`, matching
+`vector-query-service.ts:205`, and reports `queue_p50_ms` / `queue_p95_ms` alongside. The
+observer digest prints the split.
+
+**Validated against the same 10-user load that exposed the defect:**
+
+| | before the fix | after the fix |
+|---|---:|---:|
+| client-measured p95 | 12,176 ms | 13,325 ms |
+| `fts-serve` reported warm_p95 | **1,523 ms** | **13,101 ms** |
+| of which queue p95 | not measured | **12,368 ms (94%)** |
+
+The remaining ~220 ms gap between client and service is the network hop, consistent with the
+~120 ms round trip measured in §5. The observer can now see the thing it exists to catch, and
+the split tells you *which* remedy applies: queue-dominated means raise the cap, service-dominated
+means the index got slower. `check-serve-observer`: 28 passed, 0 failed.
+
+## 10. §3 — the concurrency sweep: 4 was far too tight, and nothing crashed
+
+`scripts/ingest/search/sweep-fts-concurrency.ts` sets the Railway variable, redeploys, waits for
+a boot that *reports the cap it asked for* (so a redeploy that silently kept the old value cannot
+be measured as if it were the new one), then drives the router's real fan-out.
+
+**User-visible p95 (ms), 5 parallel stream calls per user:**
+
+| cap | 5 users | 10 users | queue p95 @10u | peak RSS @10u | errors | verdict |
+|---:|---:|---:|---:|---:|---:|---|
+| **4** (old) | 8,121 | **14,213** | 12,219 | 1,611 MB | 0 | stable |
+| **8** | 5,143 | 8,241 | 6,307 | 1,594 MB | 0 | stable |
+| **16** | 5,191 | **6,161** | 4,096 | 1,841 MB | 0 | stable |
+| **24** | 5,323 | 6,031 | 4,111 | 1,860 MB | 0 | stable |
+
+**Set to 16.** That is a **57% cut in user-visible p95 at 10 users** (14,213 → 6,161 ms) for
+230 MB of extra peak memory — 24.1% of the 7,629 MB cap.
+
+**Why 16 and not 24.** Subtract queue from the service's own internal p95 to get service time per
+call: 1,195 ms at cap 4, 1,106 at 8, 1,146 at 16 — flat — then **1,697 ms at 24**. That is the
+contention knee: past 16, extra concurrency starts making each call slower, and the extra 130 ms
+of p95 it buys at 10 users is inside the noise. 24 remains available if a later measurement wants
+it.
+
+**Note the floor.** At cap 24 / 5 users the queue p95 is **1 ms** — nothing waits at all — yet
+user-visible p95 is still 5,323 ms. So ~5 s is genuine parallel service time at that width, not
+queueing. Below about 8, the cap is the problem; above it, the index is.
+
+### ⚠ The crash question is answered, and the answer changes the standing rule
+
+The cap of 4 exists because concurrent native calls against one shared Lance handle killed the
+process at 15 concurrent — no JS-catchable error, the process simply died.
+
+**That signature did not reproduce.** Caps of 16 and 24, driven at 50 simultaneous in-flight
+requests, produced **0 crashes, 0 errors, 0 restarts** across eight measured levels. The service
+survived load well past the level that used to be fatal.
+
+So the guard's stated justification no longer describes the current build, and the memory-pool
+hypothesis (raised when the index-build OOM turned out to be DataFusion's internal pool rather
+than machine memory) is the better remaining explanation for the original crash. **What has NOT
+been shown** is that no cap is needed: this was a burst test, seconds long, not a soak, and
+`concurrency-stress-test.ts` remains the regression check before anyone raises it further. The
+honest conclusion is narrower than "the guard was wrong" — it is that **4 was not justified by
+anything observable today, and 16 is.**
+
+## 11. §4 — the 24 h watch has not started, and should not yet
+
+Watching for 24 h is only meaningful once dense is actually engaging; today it is not (§8), so a
+clean digest would report success at doing nothing. The watch should start after the flip is
+confirmed live. What to watch is unchanged from §7, with one addition now that the metric is
+honest:
+
+- **`fts-serve` warm_p95 is now trustworthy** — and with the cap at 16 the expected steady-state
+  is well under the 5 s alert threshold at realistic concurrency. A breach now means something
+  real.
+- **`queue_p95` vs `warm_p95`** — if queue is the bulk again, concurrency is the constraint and
+  24 is the next step. If service time is the bulk, it is the index.
+- **`vector-serve` served** — the single clearest signal that dense is alive at all. It should
+  climb roughly one per uncached briefing/research query.

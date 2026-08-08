@@ -96,6 +96,62 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — p95 defect fixed, concurrency cap 4→16 (−57% p95), and the flip is deployed but INERT (2026-08-08 10:02 UTC)
+
+Executes the "verify, then fix the two real problems" brief. Report of record:
+`docs/VECTOR_FLIP_LOADTEST.md` §8–11; scripts `sweep-fts-concurrency.ts`,
+`simulate-router-load.ts`.
+
+⚠ **§1 — THE FLIP IS DEPLOYED BUT DENSE IS NOT ENGAGING.** One real authenticated search on the
+live briefing path (Charlie's logged-in Chrome, his idea `f534c43d`) moved **`fts-serve` served
+0 → 1 and `vector-serve` served 178 → 178.** The 178 is exactly and only my own load-test traffic
+(70 + 18 + 90), so the counter is a clean detector: **`vector-serve` has still never served one
+request originating from Vercel.** No error anywhere — this is precisely the "silently inert"
+failure the brief asked to rule out, and it is not ruled out. **Three causes produce this exact
+symptom and cannot be told apart from outside:** (1) `LEX_QUERY_ROUTER` is not the literal string
+`true` — `capabilityFlags()` tests `=== 'true'`, so retrieval takes the non-router branch and
+makes **one untiered `runFtsSearch`, which is exactly the one call observed**, while step 4b also
+stands down because `perStreamVectorActive()` is true; (2) `VECTOR_SEARCH_URL` is not reaching the
+running function — `vector-search.ts:21` reads it at **module load**, so it needs a deployment
+made *after* the variable was saved; (3) `LEX_VECTOR_STREAMS` does not match `legislation`
+case-sensitively. **Cause 1 is the best fit.** The discriminator is one look at Vercel Runtime
+Logs for `[search-gateway]` / `[query-router]`: `router dispatched` → cause 2 or 3; nothing →
+cause 1. ⚠ Caveat on the observation: another Chrome extension seized the tab immediately after
+the submit click, so the on-screen response could not be read — the counters are unambiguous that
+dense did not fire, but not about which caller produced the single BM25 call.
+
+**§2 — the p95 metric defect is fixed, deployed and validated.** `fts-query-service.ts` now clocks
+from before `acquireSlot()`, matching `vector-query-service.ts:205`, and reports
+`queue_p50_ms`/`queue_p95_ms`; the observer digest prints the split. On the same 10-user load that
+exposed the defect: reported warm_p95 went **1,523 ms → 13,101 ms** against a client-measured
+13,325 ms, **of which queue p95 is 12,368 ms (94%)**. The residual ~220 ms is the network hop,
+consistent with the ~120 ms measured earlier. `check-serve-observer` 28/28.
+
+⚠ **§3 — the sweep says 4 was far too tight, and NOTHING CRASHED.** User-visible p95 at 10
+concurrent users: **cap 4 → 14,213 ms; 8 → 8,241; 16 → 6,161; 24 → 6,031.** **Set to 16 — a 57%
+cut** for 230 MB more peak RSS (24.1% of cap), 0 errors at every level. **16 rather than 24
+because of the contention knee:** internal service time per call is flat at 1,195/1,106/1,146 ms
+for caps 4/8/16 and then jumps to **1,697 ms at 24**, so past 16 extra concurrency makes each call
+slower for 130 ms of p95 that is inside the noise. Note the floor — at cap 24 with 5 users the
+queue p95 is **1 ms** yet user p95 is still 5,323 ms, so ~5 s is genuine parallel service time,
+not queueing.
+⚠ **The crash question is answered and it changes the standing rule.** The cap of 4 exists because
+concurrent native calls against one Lance handle killed the process at 15 concurrent. **That
+signature did not reproduce**: caps 16 and 24 at 50 simultaneous in-flight requests gave 0 crashes,
+0 errors, 0 restarts across eight levels — well past the previously fatal level. The memory-pool
+hypothesis is now the better explanation for the original crash. **What has NOT been shown is that
+no cap is needed** — this was a seconds-long burst, not a soak, and `concurrency-stress-test.ts`
+stays the regression check. The honest conclusion is narrower than "the guard was wrong": **4 was
+not justified by anything observable today, and 16 is.**
+
+**§4 — the 24 h watch has NOT been started, deliberately.** It is only meaningful once dense is
+engaging; today a clean digest would report success at doing nothing.
+
+Incidental, found while building the sweep: **`RAILWAY_PROJECT_ID` is not in `.env`**, and
+`variableUpsert` with `projectId: undefined` fails as an opaque "Problem processing request"
+rather than a missing-argument error — it cost the first sweep run. Both ids are now resolved from
+the project token (`{ projectToken { projectId environmentId } }`), removing the env dependency.
+
 ## SEARCH — load test at the router's real fan-out: the flip is free, the BM25 fan-out is not (2026-08-08 01:09 UTC)
 
 Executes the "commit, load-test, then flip" brief §1–2 and prepares §3. Report of record:

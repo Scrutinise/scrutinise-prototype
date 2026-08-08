@@ -2,7 +2,44 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 01:09 UTC — ▼ **SEARCH: THE FLIP IS FREE; THE BM25 FAN-OUT IS THE
+*Last updated: 2026-08-08 10:02 UTC — ▼ **SEARCH: p95 DEFECT FIXED, CONCURRENCY 4→16 (−57% p95),
+BUT THE FLIP IS DEPLOYED AND INERT — DENSE IS NOT ENGAGING.** Report:
+`docs/VECTOR_FLIP_LOADTEST.md` §8–11; CHANGE_LOG (2026-08-08 10:02 UTC).
+⚠ **CHARLIE — ONE ACTION NEEDED: check Vercel Runtime Logs for `[search-gateway]` /
+`[query-router]`.** One real authenticated search on the live briefing path moved **`fts-serve`
+served 0→1 and `vector-serve` served 178→178**. 178 is exactly and only my own load-test traffic,
+so **`vector-serve` has still never served a request originating from Vercel** — and no error was
+raised anywhere. This is the "silently inert" failure we set out to rule out. **Three causes give
+this identical symptom:** (1) `LEX_QUERY_ROUTER` not the literal string `true` (`=== 'true'`) —
+retrieval then takes the non-router branch making **one untiered `runFtsSearch`, exactly the one
+call seen**, while step 4b also stands down because `perStreamVectorActive()` is true — **best
+fit**; (2) `VECTOR_SEARCH_URL` not reaching the running function (`vector-search.ts:21` reads it
+at **module load**, so it needs a deploy made AFTER the variable was saved); (3)
+`LEX_VECTOR_STREAMS` not matching `legislation` case-sensitively. Log line settles it:
+`router dispatched` → cause 2 or 3; nothing → cause 1.
+✅ **§2 p95 DEFECT FIXED, DEPLOYED, VALIDATED.** `fts-query-service.ts` now clocks from before
+`acquireSlot()` (matching `vector-query-service.ts:205`) and reports `queue_p50/p95_ms`; observer
+digest prints the split. Same 10-user load: reported warm_p95 **1,523 ms → 13,101 ms** vs client
+13,325 ms, **queue p95 12,368 ms = 94%**. 28/28 observer checks.
+✅ **§3 SWEEP — 4 WAS FAR TOO TIGHT AND NOTHING CRASHED. `FTS_MAX_CONCURRENT` is now 16.**
+User p95 at 10 users: cap 4 **14,213 ms** → 8 **8,241** → 16 **6,161** → 24 **6,031**. **57% cut**
+for 230 MB more peak RSS (24.1% of cap), 0 errors anywhere. **16 not 24 because of the contention
+knee** — internal per-call service time is flat at 1,195/1,106/1,146 ms for caps 4/8/16 then jumps
+to **1,697 ms at 24**. Floor note: at cap 24 / 5 users queue p95 is **1 ms** yet user p95 is still
+5,323 ms, so ~5 s is genuine parallel service time, not queueing.
+⚠ **THE CRASH QUESTION IS ANSWERED: the old signature did not reproduce.** Caps 16 and 24 at 50
+simultaneous in-flight requests → 0 crashes, 0 errors, 0 restarts across eight levels, well past
+the 15-concurrent level that used to be fatal. Memory-pool is now the better explanation for the
+original crash. **NOT shown: that no cap is needed** — this was a seconds-long burst, not a soak;
+`concurrency-stress-test.ts` stays the regression check before raising further.
+**§4 THE 24h WATCH HAS NOT STARTED, deliberately** — meaningless until dense engages; a clean
+digest would report success at doing nothing.
+Incidental: **`RAILWAY_PROJECT_ID` is not in `.env`** and `variableUpsert` with an undefined
+projectId fails as an opaque "Problem processing request"; both ids now come from the project
+token. A Chrome tab is left open on the Lex workspace for idea `f534c43d` — another extension
+seized it mid-test, which is why the on-screen response could not be read.
+▼ Earlier:
+2026-08-08 01:09 UTC — ▼ **SEARCH: THE FLIP IS FREE; THE BM25 FAN-OUT IS THE
 LATENCY PROBLEM — AND THE FLIP ITSELF IS BLOCKED ON VERCEL ACCESS.** Report:
 `docs/VECTOR_FLIP_LOADTEST.md`; script `scripts/ingest/search/simulate-router-load.ts`;
 CHANGE_LOG (2026-08-08 01:09 UTC). **Read-only — no flag set, no env changed, NOTHING FLIPPED.**
