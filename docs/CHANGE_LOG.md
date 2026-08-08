@@ -96,6 +96,67 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — load test at the router's real fan-out: the flip is free, the BM25 fan-out is not (2026-08-08 01:09 UTC)
+
+Executes the "commit, load-test, then flip" brief §1–2 and prepares §3. Report of record:
+`docs/VECTOR_FLIP_LOADTEST.md`; script `scripts/ingest/search/simulate-router-load.ts`.
+**Read-only against the deployed services — no flag set, no env changed, nothing flipped.**
+
+**§1 committed and pushed** — four commits, `f28f5a8`…`ba2232c`, verified against the real remote
+ref rather than `git status`. The ingest thread's V32 §2 entry (2026-08-07 23:25 UTC) is preserved
+above ours in both docs.
+
+⚠ **§2 — the headline is that dense retrieval is NOT the latency risk; the BM25 fan-out already
+is.** Load generated at the router's real shape (stream scopes copied from `query-router.ts::STREAMS`,
+every query distinct so the 300s result cache could not flatter the numbers):
+
+| users | `bm25` (today) user p95 | `legislation` (the flip) user p95 | `all` five dense user p95 |
+|---|---|---|---|
+| 3 | 4,946 ms | **4,340 ms** | 10,745 ms |
+| 5 | 7,632 ms | **6,487 ms** | 14,721 ms |
+| 10 | 12,798 ms | **12,566 ms** | 25,119 ms |
+
+**The flip costs nothing measurable** — the dense half returns in 4.3–4.9 s at every level and never
+becomes the critical path; the user waits on the slowest of five BM25 calls either way. ⚠ **But BM25
+alone, with no flag set, is already past the observer's 5 s p95 threshold at 5 concurrent users.**
+`FTS_MAX_CONCURRENT=4` with an unbounded queue is the binding constraint — queue high-water 46 of 50
+in-flight at 10 users, so the service is serialised, not slow (960 ms p50 internally). **`all`-mode is
+the evidence for flipping one stream at a time**: with five streams dense the vector half becomes the
+critical path and doubles user-visible p95. **0 errors and 0 rejections at every level**, and memory
+is a non-issue — `fts-serve` peak 1,592 MB (20.9% of cap), `vector-serve` 1,088 MB (14.3%).
+
+⚠ **A REAL OBSERVABILITY DEFECT, found by the run rather than looked for: `fts-serve` cannot see this
+in its own metrics.** `fts-query-service.ts:168–169` sets `t0` **after** `acquireSlot()`, so its p95
+**excludes the queue wait**; `vector-query-service.ts:205` sets it **before**, so its p95 includes it.
+Measured during the run: **client p95 12,176 ms vs `fts-serve` `/stats` warm_p95 1,523 ms.** `queueMs`
+is computed and echoed in the response but never enters a percentile. So at the load where a user waits
+twelve seconds the observer's `p95 > 5s` alert stays silent, and the two services' p95s in the same
+digest are not comparable. **This directly undermines the brief's §4 "watch the observer for 24h — p95"
+on the FTS side.** Reported, not fixed.
+⚠ **The load test will fire a real observer alert on the next hourly tick** — `vector-serve` now
+reports warm_p95 22,354 ms from the synthetic `all`-mode traffic, not from users.
+
+⚠ **§2 could NOT be completed through Vercel, and §3 cannot be performed from this session — both
+blocked on the same thing.** The `VERCEL_TOKEN` in `.env` authenticates (`/v2/user` resolves) but every
+project-scoped call returns **403 `saml: true`, scope `charlie-leachs-projects`**; `/v2/teams` is empty
+and the account's own `defaultTeamId` is refused too. So `VECTOR_SEARCH_URL` cannot be set, the
+production flag state cannot be read, and the flip cannot be made. **Separately, the untiered gateway
+routes are not load-testable through Vercel without Charlie anyway** — every one is `/api/ideas/[id]/…`
+behind Clerk `authorizeIdea`, rate-limited to 40/hr, and writes to real idea data. The missing hop is
+bounded rather than measured: fixed client→service round trip is **~120 ms** (dns 16 / tcp 38 / tls 80)
+against 4–12 s service times, so 1–3% — an argument from magnitude, not a measurement.
+
+**Verified in passing, and it matters:** tonight's push redeployed `fts-serve` (restart 01:03:33Z) and
+**the repointed boot path works in production** — a citation query returns
+`primary-acts-pre-2000:ukpga/1988/50:section-21` with `resolved = true`, which is only reachable if the
+`corpus_acts` ActIndex loaded at boot. Incidental: Companies Act 2006 s.172 does not resolve because
+**that section is not in `corpus_sections` at all** — a corpus gap, not a resolver regression.
+
+**§3 flip checklist prepared, nothing set:** (1) `VECTOR_SEARCH_URL` — the real master switch, both
+flags inert without it; (2) `LEX_QUERY_ROUTER=true` — `fusedStream` is reachable only via
+`runRoutedSearch`; (3) `LEX_VECTOR_STREAMS=legislation`; (4) **leave `LEX_SEARCH_VECTOR` unset**.
+**Awaiting the token fix and Charlie's word.**
+
 ## SEARCH — legislation truncation measured: the flip is NOT blocked; and the flag question answered (2026-08-07 23:43 UTC)
 
 Executes the "measure legislation truncation BEFORE the vector flip" brief §1–3. Report of record:

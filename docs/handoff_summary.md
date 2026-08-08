@@ -2,7 +2,48 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-07 23:43 UTC — ▼ **SEARCH: THE VECTOR FLIP IS NOT BLOCKED BY TRUNCATION,
+*Last updated: 2026-08-08 01:09 UTC — ▼ **SEARCH: THE FLIP IS FREE; THE BM25 FAN-OUT IS THE
+LATENCY PROBLEM — AND THE FLIP ITSELF IS BLOCKED ON VERCEL ACCESS.** Report:
+`docs/VECTOR_FLIP_LOADTEST.md`; script `scripts/ingest/search/simulate-router-load.ts`;
+CHANGE_LOG (2026-08-08 01:09 UTC). **Read-only — no flag set, no env changed, NOTHING FLIPPED.**
+**§1 COMMITTED AND PUSHED** — four commits `f28f5a8`…`ba2232c`, verified against the real remote
+ref; the ingest thread's V32 §2 entry is preserved above ours.
+⚠ **§2 headline: dense retrieval is NOT the latency risk — the BM25 fan-out already is.**
+User-visible p95 at 3/5/10 concurrent users: today `bm25` **4,946 / 7,632 / 12,798 ms**; with the
+proposed flip (`legislation` dense) **4,340 / 6,487 / 12,566 ms** — i.e. **no measurable cost**, the
+dense half returns in 4.3–4.9 s and never becomes the critical path. ⚠ **But BM25 alone, with no
+flag set, is ALREADY past the observer's 5 s p95 threshold at 5 concurrent users.**
+`FTS_MAX_CONCURRENT=4` + unbounded queue is the constraint — queue high-water 46 of 50 in-flight;
+the service is serialised, not slow (960 ms p50 internally). **All-five-streams-dense doubles user
+p95 to 25,119 ms** — the evidence for flipping one stream at a time. **0 errors, 0 rejections at
+every level**; memory a non-issue (`fts-serve` peak 20.9% of cap, `vector-serve` 14.3%).
+⚠ **OBSERVABILITY DEFECT FOUND BY THE RUN: `fts-serve` cannot see any of this.**
+`fts-query-service.ts:168–169` sets `t0` AFTER `acquireSlot()`, so its p95 **excludes the queue
+wait**; `vector-query-service.ts:205` sets it BEFORE. Measured: **client p95 12,176 ms vs
+`fts-serve` /stats warm_p95 1,523 ms.** `queueMs` is computed and echoed but never enters a
+percentile. **So "watch the observer for 24h — p95" would give FALSE ASSURANCE on the FTS side.**
+Reported, not fixed. ⚠ The load test will fire a real observer alert next tick (`vector-serve`
+warm_p95 22,354 ms) — synthetic traffic, not users.
+⚠ **§2 could NOT be completed through Vercel and §3 CANNOT BE PERFORMED — both blocked on the
+same thing: `VERCEL_TOKEN` authenticates but every project-scoped call returns 403 `saml:true`,
+scope `charlie-leachs-projects`** (`/v2/teams` empty; the account's own `defaultTeamId` refused
+too). So `VECTOR_SEARCH_URL` cannot be set, the production flag state cannot be read, and the flip
+cannot be made. Separately, **the untiered gateway routes are not load-testable through Vercel
+without Charlie anyway** — all are `/api/ideas/[id]/…` behind Clerk, rate-limited 40/hr, writing to
+real idea data. Missing hop is bounded not measured: ~120 ms fixed round trip vs 4–12 s service
+time = 1–3%. **CHARLIE: re-authenticate the Vercel token to the SAML scope, or set
+`VECTOR_SEARCH_URL` in the dashboard and confirm `LEX_QUERY_ROUTER`.**
+✅ **Verified in passing: tonight's push redeployed `fts-serve` (01:03:33Z) and THE REPOINTED BOOT
+PATH WORKS IN PRODUCTION** — a citation query returns `ukpga/1988/50:section-21` with
+`resolved=true`, only reachable if the `corpus_acts` ActIndex loaded at boot. Incidental: Companies
+Act 2006 s.172 doesn't resolve because **that section is not in `corpus_sections` at all** — a
+corpus gap, not a regression.
+**§3 CHECKLIST, NOTHING SET:** (1) `VECTOR_SEARCH_URL` (real master switch — both flags inert
+without it); (2) `LEX_QUERY_ROUTER=true` (`fusedStream` only reachable via `runRoutedSearch`);
+(3) `LEX_VECTOR_STREAMS=legislation`; (4) **leave `LEX_SEARCH_VECTOR` unset**. Awaiting the token
+fix and Charlie's word.
+▼ Earlier:
+2026-08-07 23:43 UTC — ▼ **SEARCH: THE VECTOR FLIP IS NOT BLOCKED BY TRUNCATION,
 AND THE LOAD-BEARING FLAG IS `LEX_VECTOR_STREAMS`.** Report:
 `docs/LEGISLATION_TRUNCATION_AND_FLAG.md`; script
 `scripts/ingest/search/measure-legislation-truncation.ts`; CHANGE_LOG (2026-08-07 23:43 UTC).
