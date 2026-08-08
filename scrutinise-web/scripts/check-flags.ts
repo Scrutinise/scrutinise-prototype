@@ -144,6 +144,15 @@ section('fail-open visibility')
   ok('an empty routing decision is treated as a failure', /no-streams-named/.test(src))
   const gw = fs.readFileSync(path.join(__dirname, '../lib/lex/search-gateway.ts'), 'utf8')
   ok('the gateway fail-open is console.error', /console\.error\('\[search-gateway\] router fail-open/.test(gw))
+
+  // The 2026-08-08 truncation bug: five tailored per-stream queries did not fit in 512 output
+  // tokens, and nothing checked finishReason, so the cut-off arrived disguised as `bad-json`.
+  ok('the output budget is no longer the hardcoded 512', !/maxOutputTokens:\s*512\b/.test(src))
+  ok('the output budget is configurable per call', /maxOutputTokens\?:\s*number/.test(src))
+  ok('finishReason is checked', /finishReason/.test(src))
+  ok('a cut-off names itself rather than looking like bad JSON', /reason: 'truncated'/.test(src))
+  ok('finishReason is checked BEFORE the text is parsed',
+     src.indexOf('finishReason') < src.indexOf("reason: 'empty-response'"))
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`)

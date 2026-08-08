@@ -67,7 +67,7 @@ function parseExpansion(raw: string): QueryExpansion | null {
 // callers degrade to their own fail-open behaviour, never throw.
 /** Why a call produced no usable text. Carried back to the caller so a deliberate degradation
  *  can say WHICH degradation it was — see the fail-open note on routeQuery. */
-export type GeminiFailure = 'http-error' | 'timeout' | 'network-error' | 'empty-response'
+export type GeminiFailure = 'http-error' | 'timeout' | 'network-error' | 'empty-response' | 'truncated' | 'blocked'
 
 // A STRING discriminant, deliberately: this project compiles with `strict: false`, and without
 // strictNullChecks TypeScript will not narrow a union on a boolean literal (`ok: true | false`).
@@ -75,6 +75,20 @@ export type GeminiFailure = 'http-error' | 'timeout' | 'network-error' | 'empty-
 type GeminiJsonResult =
   | { kind: 'ok'; text: string }
   | { kind: 'fail'; reason: GeminiFailure; detail: string }
+
+/**
+ * Output budget. 512 was too small and cost us a live bug: the router emits up to five tailored
+ * per-stream queries of up to 200 chars each, which does not fit, so two of four real questions
+ * came back truncated mid-word on 2026-08-08 and — because nothing checked `finishReason` — the
+ * truncation was reported as `bad-json`, i.e. as a serialiser fault rather than a length limit.
+ *
+ * Output tokens are billed on what is actually generated, so a generous ceiling on a call that
+ * emits a small JSON object costs nothing and removes the failure mode. This is the FOURTH
+ * recorded instance of the same MAX_TOKENS class (query-expansion 29 Jul, web-orientation 6 Aug,
+ * general-chat 8 Aug), which is why the fix is a checked `finishReason` and not just a bigger
+ * number — a bigger number alone would only move the cliff.
+ */
+const DEFAULT_MAX_OUTPUT_TOKENS = 4096
 
 async function callGeminiJson(opts: {
   model: string
@@ -84,6 +98,7 @@ async function callGeminiJson(opts: {
   userMessage: string
   schema: object
   logTag: string
+  maxOutputTokens?: number
 }): Promise<GeminiJsonResult> {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), opts.timeoutMs)
@@ -98,7 +113,7 @@ async function callGeminiJson(opts: {
           contents: [{ role: 'user', parts: [{ text: opts.userMessage }] }],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 512,
+            maxOutputTokens: opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
             responseMimeType: 'application/json',
             responseSchema: opts.schema,
             // Without this, gemini-2.5-flash's default "thinking" mode consumes the
@@ -115,9 +130,24 @@ async function callGeminiJson(opts: {
       const body = await res.text().catch(() => '')
       return { kind: 'fail', reason: 'http-error', detail: `HTTP ${res.status} ${body.slice(0, 200)}`.trim() }
     }
-    type GeminiResp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    type GeminiResp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = await res.json() as GeminiResp
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    const candidate = data?.candidates?.[0]
+    const text = candidate?.content?.parts?.[0]?.text
+
+    // Check finishReason BEFORE parsing. A truncated payload is still syntactically broken JSON,
+    // so parsing first would report `bad-json` and send the reader looking for a serialiser fault
+    // instead of a length limit — which is exactly what happened on 2026-08-08.
+    const finish = candidate?.finishReason
+    if (finish && finish !== 'STOP') {
+      const budget = opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS
+      const tail = typeof text === 'string' ? ` …ends: ${JSON.stringify(text.slice(-80))}` : ''
+      if (finish === 'MAX_TOKENS') {
+        return { kind: 'fail', reason: 'truncated', detail: `cut off at maxOutputTokens=${budget}${tail}` }
+      }
+      return { kind: 'fail', reason: 'blocked', detail: `finishReason=${finish}${tail}` }
+    }
+
     if (typeof text !== 'string') {
       return { kind: 'fail', reason: 'empty-response', detail: 'no candidates[0].content.parts[0].text in the response' }
     }
