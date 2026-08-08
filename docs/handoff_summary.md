@@ -2,7 +2,48 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 10:02 UTC — ▼ **SEARCH: p95 DEFECT FIXED, CONCURRENCY 4→16 (−57% p95),
+*Last updated: 2026-08-08 15:04 UTC — ▼ **SEARCH: THE ROUTER HAS NEVER RUN IN PRODUCTION — AND
+DENSE STILL IS NOT ENGAGING AFTER THE `TRUE`→`true` FIX.** Report:
+`docs/VECTOR_FLIP_LOADTEST.md` §12–17; CHANGE_LOG (2026-08-08 15:04 UTC). Read-only.
+⚠ **THREE CONTROLLED AUTHENTICATED TRIALS, ALL NEGATIVE. `vector-serve` served 178 → 178 → 178** —
+still exactly and only my own load-test traffic, so **no dense query has ever been issued from
+Vercel.** Trials 2 and 3 reached the gateway and returned results, each making **exactly ONE
+`fts-serve` call and ZERO dense**. **Trial 3 is decisive** — it named legislation, committees AND
+case law, so a live router would have dispatched to 2+ streams with legislation among them.
+(Trial 1 never reached the gateway: **Lex refuses an off-topic corpus search for the open idea**,
+so an off-topic benchmark cannot exercise retrieval.)
+⚠ **THE BIG ONE — THE ROUTER AND QUERY EXPANSION HAVE NEVER REACHED A USER.** The flag is tested
+`=== 'true'` (case-sensitive) in **TWO independent places**: `search-gateway.ts:57` and
+**`query-expansion.ts:214`, the first line of `routeQuery` itself** — so `TRUE` disabled it twice.
+`LEX_QUERY_EXPANSION` was capitalised the same way. **The router's +15.3pp / +10.0pp gold-set
+gains and the expansion gains before them were measured offline and never shipped. The 4 Aug
+production improvement must be attributed to the FTS index rebuild and the legacy repoint
+instead.** ⚠ Not establishable from here: the DATE — **check Vercel's env-var history** to fix how
+long both have been dark.
+⚠ **WHY IT STILL ISN'T ROUTING — two candidates, identical symptom:** (1) the running deployment
+doesn't carry the corrected values (env needs a build/boot after saving; `vector-search.ts:21`
+reads `VECTOR_SEARCH_URL` at module load); (2) **`routeQuery` returns null so the gateway FAILS
+OPEN** to one unfiltered `runFtsSearch` (`search-gateway.ts:176–181`) — null on missing
+`GEMINI_API_KEY`, HTTP error, bad JSON, or the 10 s `QUERY_ROUTER_TIMEOUT_MS`. Deliberate and
+correct, but **silent**, and from outside identical to the flag being off. **CHARLIE — one Vercel
+Runtime Log line settles it:** `router fail-open …` → cause 2; `router dispatched` → routing works
+and the problem is dense-side; neither → cause 1.
+⚠ **EIGHT BOOLEAN FLAGS SHARE THIS FRAGILITY and nothing normalises env booleans anywhere:**
+`LEX_QUERY_EXPANSION`, `LEX_QUERY_ROUTER`, `LEX_WEB_ORIENTATION` (2 sites), `LEX_SEARCH_VECTOR`,
+`LEX_SEARCH_RERANKER`, `LEX_SEARCH_GRAPH`, `LEX_COHERENCE_CORPUS`, `LEX_SEARCH_STUB`. **Audit all
+eight in Vercel** — `LEX_WEB_ORIENTATION` especially (Web/X shipped 6 Aug behind this pattern and
+would be equally dark). A `parseBool` helper would kill the class; not changed.
+**§3 benchmark re-run but NOT yet a comparison** — same core answer (UK GDPR + DPA 2018) plus two
+corpus hits, but produced by a single untiered BM25 call with no dense and no routing, so nothing
+is attributable to the flip. Re-run after §14. Also: half that answer comes from the idea's stored
+*Legal landscape* field, not retrieval — a sharper benchmark needs an idea with none.
+**§4 WATCH STILL NOT STARTED** — it would report a healthy system not doing the watched thing.
+State: `fts-serve` 2 served / 0 errors / warm p50 2,550 ms / **queue p95 0 ms at real traffic**
+(cap 16 nowhere near approached — the queueing was only ever synthetic) / RSS 1,243 MB;
+`vector-serve` 178 / 0 errors / 0 rejections / RSS 1,079 MB. **Gemini embed volume — the new cost
+line — is still ZERO: the flip has cost nothing because it has done nothing.**
+▼ Earlier:
+2026-08-08 10:02 UTC — ▼ **SEARCH: p95 DEFECT FIXED, CONCURRENCY 4→16 (−57% p95),
 BUT THE FLIP IS DEPLOYED AND INERT — DENSE IS NOT ENGAGING.** Report:
 `docs/VECTOR_FLIP_LOADTEST.md` §8–11; CHANGE_LOG (2026-08-08 10:02 UTC).
 ⚠ **CHARLIE — ONE ACTION NEEDED: check Vercel Runtime Logs for `[search-gateway]` /

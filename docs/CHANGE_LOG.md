@@ -96,6 +96,65 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — the router has never run in production, and dense still is not engaging (2026-08-08 15:04 UTC)
+
+Verification after Charlie corrected `LEX_QUERY_EXPANSION`/`LEX_QUERY_ROUTER` from `TRUE` to
+`true` and redeployed. Report: `docs/VECTOR_FLIP_LOADTEST.md` §12–17. Read-only measurement.
+
+⚠ **§1 — STILL NOT ENGAGING. Three controlled authenticated trials, all negative.**
+`vector-serve` served is **178 → 178 → 178** — still exactly and only my own load-test traffic, so
+**no dense query has ever been issued from Vercel.** Trial 1 never reached the gateway (Lex
+declines an off-topic corpus search for the open idea — itself worth knowing). Trials 2 and 3 did
+run and Lex confirmed results came back, each producing **exactly ONE `fts-serve` call and ZERO
+dense**. **Trial 3 is decisive**: it names legislation, committees and case law explicitly, so a
+live router would have dispatched to two or more streams with legislation among them — and
+legislation being named is what fires dense. One untiered call came back instead.
+
+⚠ **§2 — THE ROUTER HAS NEVER RUN IN PRODUCTION, AND NEITHER HAS QUERY EXPANSION.** The flag is
+tested with a strict case-sensitive `=== 'true'` in **two independent places** — `search-gateway.ts:57`
+(whether `runRoutedSearch` is called at all) and **`query-expansion.ts:214`, the first line of
+`routeQuery` itself** — so `TRUE` disabled it twice over. `LEX_QUERY_EXPANSION`
+(`search-gateway.ts:56`) was capitalised the same way. **So the recorded gold-set gains — the
+router's +15.3pp on B and +10.0pp on A, and the expansion results before them — have never
+reached a user.** They were measured offline; the production flag that would switch them on has
+been reading false. **The 4 August improvement in production must be attributed to what actually
+shipped: the FTS index rebuild and the legacy repoint.** ⚠ The one thing not establishable from
+here is the DATE — Vercel's environment-variable history will fix how long both capabilities have
+been dark, and it is worth checking.
+
+⚠ **Why it is STILL not routing after the correction — two candidates, identical symptom.**
+(1) The running deployment does not carry the corrected values (env needs a build/boot after
+saving; `vector-search.ts:21` reads `VECTOR_SEARCH_URL` at module load). (2) `routeQuery` is
+returning null so the gateway **fails open** to a single unfiltered `runFtsSearch`
+(`search-gateway.ts:176–181`) — null on missing `GEMINI_API_KEY`, HTTP error, unparseable JSON, or
+the 10 s `QUERY_ROUTER_TIMEOUT_MS`. The fail-open is deliberate and correct, but it is **silent**
+and from outside is indistinguishable from the flag being off. **One Vercel Runtime Log line
+separates them**: `router fail-open …` → candidate 2; `router dispatched` → routing works and the
+problem is dense-side; neither → candidate 1.
+
+⚠ **EVERY OTHER BOOLEAN FLAG HAS THE SAME FRAGILITY — eight of them, and nothing in the codebase
+normalises env booleans** (no `.toLowerCase()` anywhere near these comparisons):
+`LEX_QUERY_EXPANSION`, `LEX_QUERY_ROUTER`, `LEX_WEB_ORIENTATION` (×2 sites), `LEX_SEARCH_VECTOR`,
+`LEX_SEARCH_RERANKER`, `LEX_SEARCH_GRAPH`, `LEX_COHERENCE_CORPUS`, `LEX_SEARCH_STUB`. **All eight
+should be audited in Vercel now** — `LEX_WEB_ORIENTATION` especially, since the Web/X orientation
+layer shipped 6 Aug behind exactly this pattern and would be equally dark. A `parseBool` helper
+would remove the class; not changed here.
+
+**§3 — the 4 Aug benchmark re-run, and why it cannot yet be read as a comparison.** The live
+answer is the same core content (UK GDPR + DPA 2018) plus two corpus hits (`Data protection
+(guidance)`, `Data Protection, Privacy and Electronic Communications (Amendments etc) (EU Exit)
+Regulations 2019`). **But the retrieval behind it was a single untiered BM25 call with no dense
+half and no routing, so there is nothing to attribute to the flip.** Re-run it once the routing is
+resolved. Note too that the older half of the answer comes from the idea's stored *Legal
+landscape* field rather than from retrieval, so a sharper benchmark needs an idea with none.
+
+**§4 — the 24 h watch still not started**, same reasoning: it would report a healthy system not
+doing the thing being watched for. State: `fts-serve` 2 served / 0 errors, warm p50 2,550 ms,
+**queue p95 0 ms at real traffic** (so cap 16 is nowhere near being approached — the queueing was
+only ever synthetic), cap 16, RSS 1,243 MB; `vector-serve` 178 / 0 errors, rejections 0, RSS
+1,079 MB. **Gemini embed volume — the new cost line — is still zero. The flip has cost nothing
+because it has done nothing.**
+
 ## SEARCH — p95 defect fixed, concurrency cap 4→16 (−57% p95), and the flip is deployed but INERT (2026-08-08 10:02 UTC)
 
 Executes the "verify, then fix the two real problems" brief. Report of record:
