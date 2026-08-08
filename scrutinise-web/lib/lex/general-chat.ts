@@ -89,14 +89,9 @@ function toQueryTerms(question: string): string[] {
   return question.split(/\s+/).map((t) => t.trim()).filter(Boolean).slice(0, 32)
 }
 
-/** Recent turns, as steering context for expansion/routing ONLY (never cited). */
-function conversationContext(history: GeneralChatTurn[]): string {
-  return history
-    .slice(-4)
-    .map((t) => `${t.role === 'user' ? 'Q' : 'A'}: ${t.content}`)
-    .join('\n')
-    .slice(0, 500)
-}
+// REMOVED 2026-08-08: conversationContext(), which fed recent turns to the router as steering
+// context. It steered — into the previous question's topic. See the note at the runSearch call.
+// Deleted rather than left unused so nobody reconnects it without reading why it went.
 
 // ── the answer call ──────────────────────────────────────────────────────────
 
@@ -104,13 +99,26 @@ const ANSWER_SCHEMA = {
   type: 'object',
   properties: {
     answer: { type: 'string' },
-    citedIds: { type: 'array', items: { type: 'string' } },
+    citedMarkers: { type: 'array', items: { type: 'integer' } },
   },
-  // citedIds is REQUIRED. Left optional, the first live run simply omitted it — the
-  // answer carried perfectly good [n] markers and the structured field came back
-  // empty, which would have rendered as "0 cited" under a fully-cited answer. An
-  // optional field a model may skip is not a contract.
-  required: ['answer', 'citedIds'],
+  // REQUIRED. Left optional, the first live run simply omitted it — the answer carried
+  // perfectly good [n] markers and the structured field came back empty, which would have
+  // rendered as "0 cited" under a fully-cited answer. An optional field a model may skip
+  // is not a contract.
+  //
+  // ⚠ MARKERS, NOT IDS (changed 2026-08-08). This field used to be `citedIds: string[]`,
+  // which asked the model to echo a long opaque compound id verbatim
+  // (`primary-acts-pre-2000:ukpga/1988/50:section-21`). That is a pure transcription task over
+  // an opaque string, and near-miss transcription — a wrong section number, a dropped
+  // segment — produces something that looks plausible and matches nothing, which then
+  // surfaced as "cited a source that was never retrieved" and read as a grounding failure
+  // when it was a typo in a redundant field.
+  //
+  // The [n] markers are OURS: we numbered the sources, so a marker is a small integer that
+  // either is in range or is not. That removes the mangling class outright rather than
+  // widening the guard against it — and it makes what remains diagnostic, because an
+  // out-of-range marker really is the model pointing at a source it was never given.
+  required: ['answer', 'citedMarkers'],
 }
 
 const ANSWER_SYSTEM = `You are Lex, answering research questions against the Scrutinise corpus of UK primary legislation, statutory instruments, retained EU law, Hansard debates, select-committee reports and evidence, case law, and regulator guidance. British English, plain, FT op-ed register. No emojis. Never say you are an AI or name a model.
@@ -119,7 +127,7 @@ You are given SOURCES retrieved from the corpus for this question. They are the 
 
 RULES, in order of importance:
 - Every claim about what the law says, what was said in Parliament, what a court held or what a regulator published MUST come from a source below. If it is not in a source, you do not have it.
-- Cite as you go, inline, using the source's [n] marker exactly as numbered below, and list the full "id:" string of every source you used in citedIds. Never cite an [n] that is not in the list.
+- Cite as you go, inline, using the source's [n] marker exactly as numbered below, and list those same numbers in citedMarkers. Use ONLY numbers that appear in the source list below — never a number you have not been given, and never an id string.
 - If the sources do not answer the question, say so plainly and say what they DO cover. Do not fill the gap from memory, and do not describe a source you were not given. "The corpus didn't surface anything on this" is a useful answer here; a confident wrong one is not.
 - Do not quote figures that are not in the sources.
 - Distinguish what a source establishes from what it merely suggests. Note when a retrieved provision may have been amended since the retrieved text — say it plainly rather than implying currency you cannot see.
@@ -127,7 +135,8 @@ RULES, in order of importance:
 
 interface AnswerOutput {
   answer: string
-  citedIds: string[]
+  /** 1-based indices into the source list the model was shown. See ANSWER_SCHEMA. */
+  citedMarkers: number[]
 }
 
 function renderSources(results: SearchResult[]): string {
@@ -229,7 +238,10 @@ async function callGeminiForAnswer(
     }
     return {
       answer: parsed.answer.trim(),
-      citedIds: Array.isArray(parsed.citedIds) ? parsed.citedIds.map(String) : [],
+      // Coerce defensively: the schema says integer, but a model that returns "3" should not
+      // be treated as having cited nothing. Non-numeric entries fall through as NaN and are
+      // rejected by the range check at the resolution step, where they are counted.
+      citedMarkers: Array.isArray(parsed.citedMarkers) ? parsed.citedMarkers.map(Number) : [],
     }
   } finally {
     clearTimeout(t)
@@ -263,7 +275,29 @@ export async function runGeneralCorpusChat(input: {
   const search = await runSearch({
     keywords: query,
     intent: 'GENERAL_CORPUS_CHAT',
-    ideaContext: conversationContext(history),
+    // ⚠ DELIBERATELY EMPTY — history must not reach RETRIEVAL on this surface.
+    //
+    // `ideaContext` feeds the router, which writes each stream's tailored search string from it.
+    // On an idea-bound chat that is right: the idea IS the context, and every question is about
+    // it. Here it is wrong, because consecutive questions are routinely unrelated, and the
+    // effect is that every question after the first is dragged toward the last one.
+    //
+    // Measured, not assumed (scripts/probe-context-bleed.ts, 2026-08-08). Same question, one
+    // variable changed:
+    //   cold           legislation → "Enterprise Act 2002 regulatory powers compel information disclosure"
+    //   with history   legislation → "Data Protection Act 2018 investigatory powers disclosure of information"
+    // The anchor Act was swapped for the previous topic's statute — on the legislation stream,
+    // which is the one carrying dense retrieval. Live, that produced 233 data-protection sources
+    // for a question about regulators' disclosure powers.
+    //
+    // The answer call still receives `history` (below), so Lex keeps the thread of the
+    // conversation; only what we go and FETCH is decoupled from it.
+    //
+    // KNOWN COST, accepted: a purely anaphoric follow-up ("tell me more about that") now
+    // retrieves against the pronoun and will do badly. The fix for that is to resolve the
+    // question into a standalone query before retrieval, NOT to feed raw history to the router —
+    // recorded as the next step rather than built here.
+    ideaContext: '',
     limit: input.limit ?? 16,
   }).catch((err: unknown) => {
     const reason = err instanceof Error ? err.message : String(err)
@@ -330,41 +364,47 @@ export async function runGeneralCorpusChat(input: {
   }
   diagnostics.answerMs = Date.now() - t1
 
-  // Resolve citations two ways and take the union, because the two fail differently.
+  // Resolve citations from two places and take the union, because the two go MISSING
+  // differently even though they can no longer be WRONG differently:
   //
-  //   · The inline [n] MARKERS are ours: we numbered the sources, so a marker resolves
-  //     positionally and cannot be misremembered. This is the primary mechanism.
-  //   · citedIds is the model echoing a long opaque id back. It is worth having as a
-  //     cross-check but it is the half that can drift, and on the first live run it
-  //     was simply absent.
+  //   · the inline [n] markers in the prose — present whenever the model cites as it writes;
+  //   · the structured citedMarkers array — present whenever the model fills the field, which
+  //     on the first live run it did not.
   //
-  // Anything that resolves to nothing — an out-of-range marker, an id never shown —
-  // is a citation to something that does not exist, and on a surface built to audit
-  // retrieval that has to be visible, not quietly dropped.
-  const known = new Set(search.results.map((r) => r.id))
+  // Both are now the same kind of thing (a 1-based index into the sources we showed) and both
+  // go through the same range check, so there is no longer a weaker half that can drift.
+  // Anything out of range is the model pointing at a source it was never given, and on a
+  // surface built to audit retrieval that has to be visible, not quietly dropped.
   const dropped: string[] = []
   const citedSet = new Set<string>()
 
-  for (const id of out.citedIds) {
-    if (known.has(id)) citedSet.add(id)
-    else dropped.push(id)
+  /** One range check, used by both paths. `context` is exactly what the model was shown. */
+  const resolveMarker = (n: number) => {
+    const source = Number.isInteger(n) && n >= 1 ? context[n - 1] : undefined
+    if (source) citedSet.add(source.id)
+    else dropped.push(`[${Number.isFinite(n) ? n : 'non-numeric'}]`)
   }
+
+  // The structured field. Now markers rather than ids, so this is the same check as the
+  // inline path — there is no longer a second, weaker way for a citation to be wrong.
+  for (const n of out.citedMarkers) resolveMarker(n)
+
   // `[1, 2]` as well as `[1]` — the model groups markers when a sentence rests on two
   // sources, and the first live run produced both forms in the same answer.
   for (const m of out.answer.matchAll(/\[(\d{1,3}(?:\s*,\s*\d{1,3})*)\]/g)) {
-    for (const part of m[1].split(',')) {
-      const n = parseInt(part.trim(), 10)
-      const source = context[n - 1]
-      if (n >= 1 && source) citedSet.add(source.id)
-      else dropped.push(`[${n}]`)
-    }
+    for (const part of m[1].split(',')) resolveMarker(parseInt(part.trim(), 10))
   }
 
   const cited = search.results.filter((r) => citedSet.has(r.id)).map((r) => r.id) // ranked order
   diagnostics.droppedCitations = [...new Set(dropped)]
   if (diagnostics.droppedCitations.length) {
-    console.error('[lex-general] answer cited sources that were not retrieved', {
+    // Since citations became markers, there is exactly ONE way to land here: the model
+    // pointed at a source number it was never shown. That is a real grounding failure, not a
+    // mistyped id, so the message says so plainly and reports the range it had to work with.
+    console.error('[lex-general] answer cited source numbers it was never shown', {
       dropped: diagnostics.droppedCitations,
+      shown: `[1..${context.length}]`,
+      question: question.slice(0, 120),
     })
   }
 

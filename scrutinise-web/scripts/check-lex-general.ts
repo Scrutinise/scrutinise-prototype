@@ -159,11 +159,20 @@ async function liveTurn() {
     ok('retrieval returned something', d.retrieved > 0, 'the index answered with nothing at all')
     ok('an answer was produced', out.answer !== null, d.answerFailureReason ?? '')
     ok('only sources shown to Lex could be cited', d.contextCount > 0 && d.contextCount <= d.retrieved)
-    // The regression from the first live run: citedIds came back empty under an answer
-    // full of [n] markers, so the UI would have said "0 cited" about a fully-cited answer.
+    // The regression from the first live run: the structured cited field came back empty under
+    // an answer full of [n] markers, so the UI would have said "0 cited" about a fully-cited
+    // answer. (That field is now citedMarkers, not citedIds — see ANSWER_SCHEMA.)
     if (out.answer && /\[\d+\]/.test(out.answer)) {
       ok('an answer with [n] markers resolves to at least one cited source', out.cited.length > 0)
     }
+    // Since citations became markers there is only one way to drop one: pointing at a number
+    // outside the range we showed. Every drop is therefore a real grounding failure and worth
+    // naming in the run, rather than being averaged away.
+    if (d.droppedCitations.length) {
+      console.log(`  ⚠ cited source numbers never shown (range was [1..${d.contextCount}]): ${d.droppedCitations.join(', ')}`)
+    }
+    ok('no citation points outside the sources shown', d.droppedCitations.length === 0,
+       d.droppedCitations.join(', '))
     // Not a pass/fail on routing — the flags are an environment fact, not this
     // module's behaviour — but it is the number the page exists to show.
     console.log(`\n  routing: ${d.routedStreams?.length ? `${d.routedStreams.length} stream(s) dispatched` : 'ROUTER NOT ENGAGED — one untiered call'}`)

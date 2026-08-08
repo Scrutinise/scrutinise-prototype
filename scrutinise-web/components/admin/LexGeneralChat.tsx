@@ -127,7 +127,7 @@ function Diagnostics({ d }: { d: GeneralChatResult['diagnostics'] }) {
       </div>
       {d.droppedCitations.length > 0 && (
         <div className="text-red-700">
-          citations to ids that were never retrieved: {d.droppedCitations.join(', ')}
+          cited source numbers it was never shown: {d.droppedCitations.join(', ')}
         </div>
       )}
     </div>
