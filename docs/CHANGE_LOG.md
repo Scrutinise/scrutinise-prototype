@@ -96,6 +96,68 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — cite by marker not id, general chat stops inheriting history into retrieval, and an ordering-metric proposal (2026-08-08 23:00 UTC)
+
+Commits `336ff52` and the two before it. Report for §3: `docs/ORDERING_METRIC_PROPOSAL.md`.
+
+**§1 — `citedIds` is gone; citations are markers.** The old field asked the model to echo a long
+opaque compound id verbatim (`primary-acts-pre-2000:ukpga/1988/50:section-21`) — a transcription
+task over an opaque string, where a near miss produces something plausible that matches nothing.
+`citedMarkers: number[]`, range-checked against the sources actually shown, replaces it. **Both the
+structured field and the inline `[n]` markers now go through the same range check**, so there is no
+longer a weaker half that can drift. This removes the class rather than widening the guard, and it
+makes what survives diagnostic: **after this change there is exactly ONE way to drop a citation —
+pointing at a source number never shown — which is a real grounding failure.** Log line and UI label
+say that now; `check:lex-general` asserts on it.
+⚠ **On classifying the historical drops: the fix makes it moot going forward but I still cannot read
+Vercel logs, so the pre-fix mix (mangling vs out-of-range vs invention) can only be recovered from
+Charlie's log entries.** Worth pulling 2–3 if the past mix matters; if not, the new metric answers
+the question from here on.
+
+⚠ **§2 — the context bleed is CONFIRMED BY CONTROL and fixed.** `general-chat.ts` passed
+`ideaContext: conversationContext(history)`, and the router writes each stream's tailored query from
+that context. New `scripts/probe-context-bleed.ts` calls `routeQuery` twice with **one variable
+changed** and prints the tailored queries themselves rather than a downstream symptom:
+
+| | legislation stream's tailored query |
+|---|---|
+| cold | `Enterprise Act 2002 regulatory powers compel information disclosure` |
+| with two data-protection turns as history | **`Data Protection Act 2018 investigatory powers disclosure of information`** |
+
+**The anchor Act was swapped for the previous topic's statute — on the legislation stream, the one
+carrying dense retrieval.** Live, that produced 233 data-protection sources for a question about
+regulators' disclosure powers. `ideaContext` is now empty on this surface; the answer call still
+receives `history`, so Lex keeps the thread and only what we FETCH is decoupled.
+`conversationContext()` is **deleted** rather than left unused so nobody reconnects it without
+reading why it went. **Known cost, accepted:** a purely anaphoric follow-up now retrieves against
+the pronoun; the fix for that is resolving the question into a standalone query before retrieval,
+recorded as the next step rather than built.
+*(The browser control Charlie asked for could not be run — the admin page's textarea intermittently
+drops programmatic input, and `form_input` sets the DOM value without updating React state. The
+probe is a better control anyway: it changes one variable instead of two.)*
+
+**§3 — how to measure ORDERING. Proposal only, nothing built.**
+⚠ **MRR is the wrong primary, and our own failure case proves it.** PECR 2003 *is* relevant to
+"what is the law on data protection", so the regression scores **MRR = 1.0** — first result
+relevant, therefore perfect. Precision@k and recall@k are equally blind. Only a metric that
+compares two *relevant* documents to each other can see it.
+**Recommended primary: pairwise preferences** — `prefer?: GoldPreference[]` on `GoldQuery`, each
+pair `{above, below, why}` reusing the existing pattern matcher. Chosen over nDCG@10 because
+**our answer key is admittedly incomplete** (the file says so; several queries are `todo`), and
+nDCG grades every unlisted document 0 — **penalising a reranker for promoting something relevant we
+never enumerated.** A pair constrains two documents we have thought about and leaves the rest
+unconstrained. Scoring rule defined including the asymmetric cases; ⚠ **vacuous pairs excluded from
+the denominator and reported beside the score, or the metric is gameable by retrieving nothing.**
+⚠ **recall@20 stays as a GUARD, not a target: a reranker only reorders, so recall must be
+INVARIANT.** Preference accuracy up while recall@20 falls means it is discarding, not ordering.
+Measure on the fused list **before `groupForPanel`**, which caps ~3/type and would hide exactly the
+legislation-vs-legislation error being measured.
+⚠ **Recommended order puts a BASELINE before the build:** extend the gold set, seed 15–20 pairs from
+failures already observed (authored *before* any reranker exists, or they are fitted to it), then
+**score today's ranking and publish the number.** The reranker is currently justified by one
+observed regression — enough to motivate a metric, not enough to justify a build. If today's
+preference accuracy is already high, we want to know that before spending.
+
 ## SEARCH — THE FLIP IS LIVE: routing and dense retrieval are running in production (2026-08-08 22:09 UTC)
 
 Report of record: `docs/VECTOR_FLIP_LOADTEST.md` §21–27.

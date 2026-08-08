@@ -2,7 +2,42 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 22:09 UTC — ▼ **SEARCH: THE FLIP IS LIVE — ROUTING AND DENSE RETRIEVAL
+*Last updated: 2026-08-08 23:00 UTC — ▼ **LEX: CITATIONS ARE MARKERS NOW, THE CONTEXT BLEED IS
+CONFIRMED AND FIXED, AND THERE IS AN ORDERING-METRIC PROPOSAL FOR THE RERANKER.** Commits through
+`336ff52`; proposal `docs/ORDERING_METRIC_PROPOSAL.md`; CHANGE_LOG (2026-08-08 23:00 UTC).
+`tsc` clean, `next build` clean, `check:lex-general` 19/19, `check:flags` 49/49.
+**§1 `citedIds` → `citedMarkers: number[]`, range-checked.** The old field made the model echo a
+long opaque id verbatim — transcription over an opaque string, where a near miss looks plausible
+and matches nothing. Both the structured field and the inline `[n]` markers now go through **the
+same range check**, so no weaker half can drift. **After this there is exactly ONE way to drop a
+citation — pointing at a source number never shown — which is a real grounding failure.** ⚠ The
+historical mix (mangling vs out-of-range vs invention) can only come from **Charlie's Vercel log
+entries**; I still cannot read them. The fix makes it moot going forward.
+⚠ **§2 CONTEXT BLEED CONFIRMED BY CONTROL, then fixed.** `scripts/probe-context-bleed.ts` calls
+`routeQuery` twice with ONE variable changed: cold, the legislation query is
+**"Enterprise Act 2002 regulatory powers compel information disclosure"**; with two data-protection
+turns as history it becomes **"Data Protection Act 2018 investigatory powers disclosure of
+information"**. **The anchor Act was swapped for the previous topic's statute — on the legislation
+stream, the one carrying dense retrieval.** `ideaContext` is now empty on general chat; the answer
+call still gets `history`, so only what we FETCH is decoupled. `conversationContext()` deleted, not
+left unused. **Known cost, accepted:** anaphoric follow-ups now retrieve against the pronoun — the
+real fix is resolving to a standalone query pre-retrieval, recorded not built. *(The browser control
+could not be run: the admin textarea intermittently drops programmatic input and `form_input` sets
+the DOM value without updating React state. The probe is a better control — one variable, not two.)*
+**§3 ORDERING METRIC — PROPOSAL ONLY, NOTHING BUILT.** ⚠ **MRR is the wrong primary and our own
+failure proves it: PECR 2003 IS relevant, so the regression scores MRR = 1.0.** Recall@k and
+precision@k are equally blind. **Recommended: pairwise preferences** (`prefer?: {above, below, why}`
+on `GoldQuery`, reusing the existing pattern matcher) over nDCG, because **our key is admittedly
+incomplete and nDCG grades every unlisted document 0** — penalising a reranker for promoting
+something relevant we never enumerated. ⚠ **Vacuous pairs excluded from the denominator** or the
+metric is gameable by retrieving nothing. ⚠ **recall@20 stays as a GUARD: a reranker only reorders,
+so recall must be INVARIANT** — accuracy up with recall down means it is discarding. Measure on the
+fused list **before `groupForPanel`** (it caps ~3/type and would hide the very error being measured).
+⚠ **Baseline BEFORE the build:** seed 15–20 pairs from observed failures, authored before any
+reranker exists, then score today's ranking. **One observed regression motivates a metric; it does
+not justify a build** — if today's accuracy is already high we want to know first.
+▼ Earlier:
+2026-08-08 22:09 UTC — ▼ **SEARCH: THE FLIP IS LIVE — ROUTING AND DENSE RETRIEVAL
 ARE BOTH RUNNING IN PRODUCTION.** Report: `docs/VECTOR_FLIP_LOADTEST.md` §21–27; CHANGE_LOG
 (2026-08-08 22:09 UTC).
 **Root cause, found by Charlie: `LEX_QUERY_ROUTER` existed as TWO Vercel variables (Production and
