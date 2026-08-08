@@ -2,7 +2,33 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 15:04 UTC — ▼ **SEARCH: THE ROUTER HAS NEVER RUN IN PRODUCTION — AND
+*Last updated: 2026-08-08 21:00 UTC — ▼ **LEX: THE SILENT-FLAG CLASS IS DEAD — parseBool
+EVERYWHERE, A LOUD FAIL-OPEN, AND A BOOT LINE.** Commit `bce7818`; CHANGE_LOG
+(2026-08-08 21:00 UTC). `tsc` clean, `next build` clean, `check:orientation` 15/15, new
+**`npm run check:flags` 44/44**.
+⚠ **Correction: `bce7818`'s `Date:` trailer says 15:41 UTC; the real time was 21:00 UTC** — a
+stale stamp carried forward instead of reading the clock (CLAUDE.md §Git forbids exactly this).
+Not amended: a force-push to a branch another thread is using is the worse trade. **21:00 UTC is
+the stamp of record.**
+**Four things had to be true for the capitalised-`TRUE` bug to stay invisible; all four are now
+fixed.** (1) **`parseBool`/`flagEnabled`** in `lib/env-flags.ts` — trims, lower-cases, accepts
+`true/1/yes/on`; ⚠ **a value that is SET but unrecognised returns false AND warns once, naming the
+variable and value.** All **ten reads across eight flags** route through it, **including the second
+gate inside `routeQuery`**, which was a separate copy of the same bug and would have kept the
+router dark on its own. (2) **The fail-open is LOUD** — `routeQuery` logs at error level with the
+reason (`missing-key` / `http-error` / `timeout` / `network-error` / `empty-response` / `bad-json` /
+**`no-streams-named`**, the last previously indistinguishable from success); the gateway's line is
+`console.error` too; `expandQuery` likewise. (3) **Boot line** (`instrumentation.ts`) — one line per
+instance with every flag's resolved state **plus `VECTOR_SEARCH_URL` / `LEX_VECTOR_STREAMS` /
+`GEMINI_API_KEY`** (keys set/unset, never printed). **"Is X live?" is now read, not inferred.**
+(4) **`check:flags`, 44 assertions** — the load-bearing one is the **SOURCE invariant**: 340 files
+scanned, fails if any bare `process.env.<FLAG> ===` returns. **Verified it can fail.**
+⚠ **`bce7818` IS the test for candidate cause 1** — it forces a fresh Vercel build, so the boot
+line now states what the app believes is on, and the fail-open names itself if it fires. **CHARLIE:
+the one line to look for in Vercel Runtime Logs is now `[capabilities] …`.** Re-verification of
+trial 3 (cross-cutting query; `vector-serve` must move past **178**) follows once the deploy lands.
+▼ Earlier:
+2026-08-08 15:04 UTC — ▼ **SEARCH: THE ROUTER HAS NEVER RUN IN PRODUCTION — AND
 DENSE STILL IS NOT ENGAGING AFTER THE `TRUE`→`true` FIX.** Report:
 `docs/VECTOR_FLIP_LOADTEST.md` §12–17; CHANGE_LOG (2026-08-08 15:04 UTC). Read-only.
 ⚠ **THREE CONTROLLED AUTHENTICATED TRIALS, ALL NEGATIVE. `vector-serve` served 178 → 178 → 178** —

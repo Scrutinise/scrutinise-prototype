@@ -96,6 +96,60 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX — the silent-flag class is dead: parseBool everywhere, a loud fail-open, and a boot line (2026-08-08 21:00 UTC)
+
+Commit `bce7818`. `tsc` clean, `next build` clean, `check:orientation` 15/15, new `check:flags`
+**44/44**.
+
+⚠ **Correction to that commit's `Date:` trailer.** It reads `2026-08-08 15:41 UTC`; the real time
+was **21:00 UTC**. I carried a stale stamp forward instead of reading the clock, which is exactly
+what CLAUDE.md §Git forbids. Not amended — the commit is pushed to a branch a second thread is
+working on, and a force-push to fix a trailer is a worse trade than recording the error here. **The
+stamp of record for this work is 21:00 UTC.**
+
+**Why this work exists.** A capitalised `TRUE` in Vercel disabled the query router and query
+expansion in production for an unknown period. Four separate things had to be true for that to stay
+invisible: ten read sites each rolled their own `=== 'true'`; nothing normalised env booleans; the
+router's fail-open was silent; and the app never stated what it believed was switched on. Any one
+of them fixed would have made it diagnosable in minutes. All four are now fixed.
+
+**1. `parseBool` / `flagEnabled` (`lib/env-flags.ts`).** Trims, lower-cases, accepts
+`true/1/yes/on` (and `false/0/no/off/''`). ⚠ **A value that is SET but unrecognised returns false
+AND warns once, naming the variable and the value** — "I set the flag and nothing happened" is the
+failure being designed against, so `enabled`, `Y` or a stray space now say so instead of meaning
+false in silence. **All ten reads across eight flags** go through it: `search-gateway` (six),
+`fts-search`, `orchestrator`, `orientation/index`, **and the second gate inside `routeQuery`**,
+which was a separate copy of the same bug and would have kept the router dark on its own.
+
+**2. The fail-open is loud.** `routeQuery` now announces every degradation at **error** level with
+the reason attached — `missing-key`, `http-error`, `timeout`, `network-error`, `empty-response`,
+`bad-json`, or **`no-streams-named`** (parsed fine, chose nothing — previously indistinguishable
+from success). The gateway's own fail-open line is `console.error` too. The degradation stays
+deliberate; it stops being indistinguishable from the flag being off. `expandQuery` got the same
+treatment. `callGeminiJson` returns a discriminated result to carry the reason — with a **string**
+discriminant, because this project compiles `strict: false` and TypeScript will not narrow a union
+on a boolean literal without `strictNullChecks` (found by tsc, not by guessing).
+
+**3. The boot line (`instrumentation.ts`).** One line per server instance with the resolved state
+of every capability flag **plus the three settings that decide whether dense can happen at all** —
+`VECTOR_SEARCH_URL`, `LEX_VECTOR_STREAMS`, `GEMINI_API_KEY` (keys reported set/unset, never
+printed). Example: `[capabilities] QUERY_EXPANSION=off QUERY_ROUTER=off … | VECTOR_SEARCH_URL=UNSET
+LEX_VECTOR_STREAMS=(unset) GEMINI_API_KEY=UNSET`. **"Is X live?" is now read, not inferred.**
+
+⚠ **This deploy is itself the test for candidate cause 1.** The previous diagnosis had two
+suspects — the running deployment not carrying the corrected values, or `routeQuery` failing open
+silently. `bce7818` forces a fresh build, so the boot line in the Vercel logs now states which,
+and the fail-open now names itself if it fires.
+
+**4. `npm run check:flags` — 44 assertions.** The load-bearing one is not the parsing but the
+**SOURCE invariant**: it scans 340 files and fails if any bare `process.env.<FLAG> ===` comparison
+returns. **Verified it can fail** — reintroducing the orchestrator comparison exits 1 and names the
+file and line. It also asserts the fail-open still logs at error level with a reason, and that the
+boot line never prints the API key.
+
+**Not changed:** the two ingest-side booleans (`FTS_SKIP_COMPACT`, `VECTOR_SKIP_COMPACT`) are
+operator-run flags on scripts, not production request paths, and are out of this brief's scope.
+
 ## SEARCH — the router has never run in production, and dense still is not engaging (2026-08-08 15:04 UTC)
 
 Verification after Charlie corrected `LEX_QUERY_EXPANSION`/`LEX_QUERY_ROUTER` from `TRUE` to
