@@ -96,6 +96,72 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — legislation truncation measured: the flip is NOT blocked; and the flag question answered (2026-08-07 23:43 UTC)
+
+Executes the "measure legislation truncation BEFORE the vector flip" brief §1–3. Report of record:
+`docs/LEGISLATION_TRUNCATION_AND_FLAG.md`; script `scripts/ingest/search/measure-legislation-truncation.ts`.
+**Read-only — no rows written, no index touched, no flag set.**
+
+**§1 — the decision rule resolves in favour of proceeding.** The legislation tier embeds **79.2% of
+its body words against a corpus-wide 59.4%** — materially *above*, not below — and the brief's own
+framing of the tier (primary + SI + retained EU) embeds **99.3%**, with **256 truncated sections out
+of 1,188,286**. **8,167 sections truncated tier-wide of 1,615,500 (0.51%)**, against 242,957
+corpus-wide.
+
+⚠ **The premise behind the worry does not hold: long-form UK instruments are not gutted.** **Every
+Finance Act section embeds whole — 0 truncated of 24.** Wider tax family 89.3% of words, Companies/
+Insolvency 96.3%, schedules across all instruments 84.7% (90 truncated of 730). UK legislation is
+drafted in sections and a section is a natural chunk — the median legislation row is 34–78 words.
+The cap only bites where one row holds a whole document.
+
+**Measured, not modelled, and the model checked against it.** The corpus-wide 59.4% is a model over
+the wordCount histogram; this reports both ways so the comparison is like-for-like. Model: 79.4% /
+8,149 truncated at a CPW **measured on 400 real legislation bodies (6.066**, vs 6.05 corpus-wide).
+Measured: **every one of the 21,033 sections that could possibly be truncated had its real R2 body
+read and run through the real exported `chunkBody`** — 79.2% / 8,167. **The two agree to 0.2pp.**
+Three properties make (B) trustworthy: **harness fidelity is enforced on all 21,033 bodies** (the
+offset-tracking chunker is asserted against `chunk.ts` itself, fatal on mismatch); **the ranged read
+cannot manufacture a truncation** (1,322 bodies were re-read in full when the head could not prove
+the case); and **the candidate floor is verified** — the smallest genuinely truncated section is
+2,470 words, 1.65× the 1,500-word floor.
+
+⚠ **The tier average conceals a hard split, and it changes how the flip should be scoped.** UK
+primary and secondary legislation is essentially untouched (97.7–99.9%); **`eur-lex` 57.3%,
+`explanatory-memoranda` 65.8% and `explanatory-notes` 14.3%** carry nearly all the loss. All three
+are *inside* the `legislation` tier, so `LEX_VECTOR_STREAMS=legislation` switches dense on for them
+too. ⚠ **And their damage is not a chunk-cap problem at all — it is a SECTIONING problem.** The worst
+15 sections in the tier are all `eur-lex` single-section rows holding an entire document
+(`eur-lex:32007B0143:1` = **760,509 words, 0.5% embedded**); raising `MAX_CHUNKS` to 64 would still
+leave them embedding a fraction of themselves. Recorded for the ingest thread, **not acted on**.
+
+**§2 — the flag ambiguity is resolved from the code, not inferred.** **`LEX_VECTOR_STREAMS` is
+load-bearing; `LEX_SEARCH_VECTOR` is the superseded whole-query switch and stands *down*
+automatically the moment the stream list is non-empty** (`search-gateway.ts:245`,
+`perStreamVectorActive()`). Setting both is safe but pointless; setting only `LEX_SEARCH_VECTOR`
+would switch dense on for **every stream at once, unscoped** — the opposite of a sequenced flip.
+Two preconditions that are easy to miss: **`VECTOR_SEARCH_URL` is the real master switch** (dense
+returns `[]` without it, so both flags are inert), and **`LEX_VECTOR_STREAMS` only has effect when
+`LEX_QUERY_ROUTER=true`** — `fusedStream` is reachable only via `runRoutedSearch`.
+
+⚠ **A gap in "legislation first" that neither thread had stated: the three legacy legislation
+surfaces will NOT get dense retrieval from `LEX_VECTOR_STREAMS=legislation`.** `gateway-legacy.ts:162`
+passes `tier: 'legislation'`, which takes the **tier-scoped branch** at `search-gateway.ts:140` —
+that branch uses the router only to rewrite the query and then calls `runFtsSearch` **directly**,
+bypassing `fusedStream` and the stream list entirely. The three are `app/api/ai/[ideaId]` (**the Lex
+chat route**), `app/api/search`, and `app/api/ideas/[id]/legislation-search`. Worse, because
+`perStreamVectorActive()` would be true, adding `LEX_SEARCH_VECTOR=true` would not cover them either
+— it would stand itself down. The callers that **would** get dense are the untiered ones:
+`field-machine.ts:318` (Page-1 briefing), `orchestrator.ts:326`/`:478`, `stage-search.ts:130`/`:158`.
+That may well be the right first blast radius, but it should be a decision rather than a surprise.
+**Reported, not changed.**
+
+**§3 — repoint-confirm.** All three Act-title reads are on `corpus_acts` and verified (2026-08-07
+17:52 UTC entry below). ⚠ **The ingest thread must not read this as "safe to DROP":**
+`backfill-citations.ts:48` still reads `LegislationItem` (build-time), and the six web-app paths in
+`V26_LEGACY_DROP_RECHECK.md` §(a) are untouched — including `gateway-legacy.ts:287`, which reads
+`LegislationSection` on the Lex chat route and is not flag-gated — plus the one `IdeaLegislation`
+row of real user data.
+
 ## SEARCH — all three Act-title reads repointed to `corpus_acts`; and what the 12.6 GB in `corpus_sections` actually is (2026-08-07 17:52 UTC)
 
 Executes the "repoint to corpus_acts, then investigate the real storage question" brief.

@@ -2,7 +2,48 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-07 23:25 UTC — ▼ **INGEST V32 §2 FIX: THE BACKFILL WAS REPORTING PROGRESS
+*Last updated: 2026-08-07 23:43 UTC — ▼ **SEARCH: THE VECTOR FLIP IS NOT BLOCKED BY TRUNCATION,
+AND THE LOAD-BEARING FLAG IS `LEX_VECTOR_STREAMS`.** Report:
+`docs/LEGISLATION_TRUNCATION_AND_FLAG.md`; script
+`scripts/ingest/search/measure-legislation-truncation.ts`; CHANGE_LOG (2026-08-07 23:43 UTC).
+**Read-only — nothing written, no flag set.**
+**The legislation tier embeds 79.2% of its body words against corpus-wide 59.4% — materially ABOVE,
+not below** — and the brief's own framing (primary + SI + retained EU) embeds **99.3%**, 256
+truncated of 1,188,286 rows. Tier-wide **8,167 truncated of 1,615,500 (0.51%)** vs 242,957
+corpus-wide. **Decision rule resolves: proceed with the flip, chunking fix follows.**
+⚠ **The premise behind the worry does not hold — long-form UK instruments are not gutted. Every
+Finance Act section embeds whole (0 truncated of 24)**; tax family 89.3% of words, Companies/
+Insolvency 96.3%, schedules 84.7%. UK legislation is drafted in sections and a section is a natural
+chunk (median legislation row 34–78 words); the cap only bites where one row holds a whole document.
+**Measured, not modelled:** all **21,033** sections that could possibly be truncated had their real
+R2 body read and run through the **real exported `chunkBody`**; the model (same method as the 59.4%,
+CPW **measured at 6.066** on 400 real bodies) agrees to **0.2pp**. Harness fidelity asserted against
+`chunk.ts` on all 21,033 bodies; 1,322 bodies re-read in full so a ranged read could never
+manufacture a truncation; smallest truncated section 2,470 words = 1.65× the candidate floor.
+⚠ **The tier average hides a hard split: `eur-lex` 57.3%, `explanatory-memoranda` 65.8%,
+`explanatory-notes` 14.3% carry nearly all the loss, and all three are INSIDE the `legislation`
+tier** that the flag scopes to. ⚠ **Their damage is a SECTIONING problem, not a chunk-cap one** —
+the worst 15 sections in the tier are all `eur-lex` single-section rows holding an entire document
+(`eur-lex:32007B0143:1` = **760,509 words, 0.5% embedded**); cap 64 would not fix them. For the
+ingest thread; not acted on.
+⚠ **FLAG ANSWER, traced in code: `LEX_VECTOR_STREAMS` is load-bearing. `LEX_SEARCH_VECTOR` is the
+superseded whole-query switch and stands DOWN automatically once the stream list is non-empty**
+(`search-gateway.ts:245`). Setting only `LEX_SEARCH_VECTOR` would switch dense on for every stream
+at once, unscoped. **`VECTOR_SEARCH_URL` is the real master switch** (both flags inert without it),
+and **`LEX_VECTOR_STREAMS` needs `LEX_QUERY_ROUTER=true`** to have any effect at all.
+⚠ **GAP NEITHER THREAD HAD STATED: the three legacy legislation surfaces will NOT get dense from
+`LEX_VECTOR_STREAMS=legislation`.** `gateway-legacy.ts:162` passes `tier: 'legislation'` → the
+tier-scoped branch at `search-gateway.ts:140` calls `runFtsSearch` **directly**, bypassing
+`fusedStream`. Those are `app/api/ai/[ideaId]` (**Lex chat**), `app/api/search`,
+`app/api/ideas/[id]/legislation-search` — and adding `LEX_SEARCH_VECTOR=true` would not cover them
+either, since it stands itself down. Dense would reach only the untiered callers (Page-1 briefing,
+cause-seeding, ad-hoc research). **Reported, not changed — Charlie's call whether that is the
+intended blast radius.**
+**§3 repoint-confirm: all three Act-title reads are on `corpus_acts` and verified.** ⚠ **Not the
+same as "safe to DROP"** — `backfill-citations.ts:48` still reads `LegislationItem`, and the six
+web-app paths in `V26_LEGACY_DROP_RECHECK.md` §(a) plus the one `IdeaLegislation` row remain.
+▼ Earlier:
+2026-08-07 23:25 UTC — ▼ **INGEST V32 §2 FIX: THE BACKFILL WAS REPORTING PROGRESS
 AND MAKING NONE.** Found by watching row counts rather than the log. **As committed an hour
 earlier, §2 would have stalled permanently at 166 of 7,636 while looking completely healthy** —
 batches ticking over, log live, throttle chattering. **The resume filter skipped publications with
