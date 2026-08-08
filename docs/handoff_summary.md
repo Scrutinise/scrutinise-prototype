@@ -2,7 +2,47 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 21:30 UTC — ▼ **LEX: A GENERAL CORPUS CHAT — `/admin/lex-general`.
+*Last updated: 2026-08-08 22:09 UTC — ▼ **SEARCH: THE FLIP IS LIVE — ROUTING AND DENSE RETRIEVAL
+ARE BOTH RUNNING IN PRODUCTION.** Report: `docs/VECTOR_FLIP_LOADTEST.md` §21–27; CHANGE_LOG
+(2026-08-08 22:09 UTC).
+**Root cause, found by Charlie: `LEX_QUERY_ROUTER` existed as TWO Vercel variables (Production and
+Preview), both sensitive and unreadable, so only the Preview copy had been corrected.** That
+explains the whole pattern — expansion worked, the router stayed dark. Now one non-sensitive
+variable across both environments.
+✅ **`vector-serve` served has MOVED PAST 178 — now 182.** Three controlled trials via
+`/admin/lex-general` (untiered, so it exercises the routed path): 3-stream question → **fts +3,
+vector +1**; the **4 Aug benchmark** → **all five streams, fts +5, vector +1**, 235 retrieved /
+10 cited; the previously-`bad-json` regulator question → **all five, fts +5, vector +1**.
+**The `fts-serve` delta equals the stream count every time** — dispatch observed, not inferred.
+Resolved flags (gateway snapshot; Vercel logs still unreadable from here): **`expansion router`**.
+✅ **My truncation fix is confirmed live** (`b5319bf`) — the `bad-json` question now dispatches to 5.
+⚠ **The 4 Aug benchmark is NOT a clean win and should not be written up as one.** Retrieval is
+transformed, but the old answer led with UK GDPR + DPA 2018 and the new one leads with PECR 2003,
+reaching UK GDPR at citation [9] — SI detail crowding out the headline statutes. A ranking/synthesis
+question, not a retrieval failure; wants a gold-set look before claiming the *answer* improved.
+⚠ **FUSION IS A CAP, and the log line could never have shown otherwise.** `fuseWeightedRrf` returns
+the **full union, uncapped**; the cap is `query-router.ts:131` `.slice(0, Math.max(limit,
+bm25.length))` = 47. **`fused 47` is guaranteed whenever the union ≥47, whatever the overlap** — zero
+overlap would log the same. **The measured benefit is NOT lost**: the gain is recall@20, the slice
+keeps the top 47 by fused score, every consumer takes ≤20. Leave it, document it.
+⚠ **DROPPED CITATIONS: zero in all three of my trials.** Mechanism is clear though: `[n]` markers are
+**ours** and positional (low risk); `citedIds` makes the model **echo a long opaque id verbatim** —
+**mangled ids, not invented sources, is the likely dominant cause**. And because resolution is a
+**union**, a dropped id whose marker resolved means the claim IS grounded. **Recommendation (not
+widening the guard): replace `citedIds: string[]` with `citedMarkers: number[]`, range-checked** —
+kills the class, makes survivors meaningful. **Need 2–3 real log entries to close it.**
+⚠ **NEW FINDING: conversation history steers retrieval.** `general-chat.ts:266` passes
+`ideaContext: conversationContext(history)`. Trial 3 asked about regulator powers after two
+data-protection turns and retrieved 233 **data-protection** sources. Right for an idea-bound chat,
+wrong for a general one — **and plausibly a cause of the citation problem**, since off-topic
+retrieval is when a model reaches past its sources. Control not run (browser stopped submitting);
+one minute of work: fresh page, ask it first, compare.
+**§4 WATCH NOW MEANINGFUL.** Baseline: `fts-serve` 32 / 0 errors / cap 16 / **queue p95 0 ms at real
+traffic**; `vector-serve` 182 / 0 errors / 0 rejections / **embed p50 228 ms, one Gemini call per
+uncached dense query** — the new cost line. Watch served for liveness, embeds for cost, 3.4–3.8 s
+search latency for drift.
+▼ Earlier:
+2026-08-08 21:30 UTC — ▼ **LEX: A GENERAL CORPUS CHAT — `/admin/lex-general`.
 ASK THE CORPUS ANYTHING, AND SEE WHAT IT RETRIEVED.** CHANGE_LOG (2026-08-08 21:30 UTC).
 `tsc` clean, `next build` clean, `check:flags` 44/44, new **`npm run check:lex-general` 29/29**
 (19 source invariants + 10 live assertions against the real index and the real model).

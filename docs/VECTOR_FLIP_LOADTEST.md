@@ -563,3 +563,182 @@ committees and case law) on the briefing path, and watch two things —
 - **`vector-serve` served must move past 178**, which is dense actually running.
 
 `178` remains the clean detector: it is still exactly and only the load-test traffic from §2.
+
+---
+---
+
+# THE FLIP IS LIVE — 2026-08-08 22:09 UTC
+
+*Charlie found `LEX_QUERY_ROUTER` existed as **two separate Vercel variables** (Production and
+Preview), both marked sensitive and therefore unreadable, so only the Preview copy had been
+corrected. Both deleted and replaced with one non-sensitive variable covering both environments.
+That explains the entire pattern: expansion worked (its variable was correct) while the router
+stayed dark (its Production copy never was).*
+
+## 21. Routing and dense retrieval are both running in production
+
+**`vector-serve` served has moved past 178 — it is now 182.** Four dense queries, all today.
+The first ever was the general-corpus-chat thread's (178 → 179); the three below are mine.
+
+Three controlled trials through `/admin/lex-general`, the untiered surface that exercises the
+routed path and prints its own diagnostics:
+
+| # | question | routed streams | `fts-serve` Δ | `vector-serve` Δ | retrieved | grouped | cited | search | answer |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | Acts/SIs + committees + case law on data protection | legislation, committees, caselaw | **+3** | **+1** | 140 | 14 | 12 | 3,402 ms | 2,971 ms |
+| 2 | **the 4 Aug benchmark** — "what is the law on data protection currently?" | **all five** | **+5** | **+1** | 235 | 20 | 10 | 3,764 ms | 3,224 ms |
+| 3 | regulator powers to compel disclosure | **all five** | **+5** | **+1** | 233 | 20 | 0 | 3,844 ms | 886 ms |
+
+**The `fts-serve` delta equals the stream count in every case** — that is per-stream dispatch,
+observed rather than inferred. Trial 1's three streams are exactly the three the question named.
+
+**Resolved capability state.** I still cannot read Vercel Runtime Logs, so I cannot quote the
+`[capabilities]` boot line itself. But the gateway returns the same resolved snapshot — it comes
+from the very `capabilityFlags()` the boot line renders — on every answer, and it reads:
+
+```
+flags  expansion router
+```
+
+So `LEX_QUERY_EXPANSION` and `LEX_QUERY_ROUTER` are **both ON**, and `webOrientation`, `vector`,
+`reranker`, `graph` are off. `LEX_SEARCH_VECTOR` being off is correct: dense arrives through
+per-stream fusion, and the legacy whole-query path must stay stood down.
+
+## 22. The truncation fix is confirmed live
+
+Trial 3 is one of the two questions that failed open with `bad-json` on 2026-08-08 ~21:10. It now
+**dispatches to all five streams**. The `maxOutputTokens` 512 to 4096 change plus the
+`finishReason` check (commit `b5319bf`) holds against the case that broke it.
+
+Trial 3 also answered well under pressure: it said plainly that the sources did not cover the
+question rather than filling the gap — which is the behaviour §19-C asks for.
+
+## 23. The 4 August benchmark, finally a real comparison
+
+| | 4 Aug | now |
+|---|---|---|
+| retrieval | one untiered BM25 call, no routing, no dense | **five routed streams + dense on legislation** |
+| sources | — | **235 retrieved, 20 grouped, 16 shown to Lex, 10 cited** |
+| answer | "UK GDPR and Data Protection Act 2018" — from the idea's stored *Legal landscape* field | PECR 2003; DPA 2018 Parts 5–7 as applied to PECR enforcement; DPPEC (EU Exit) Regs 2019 substituting "UK GDPR" and inserting a consent definition; Reg (EU) 2016/679; Reg (EU) 2017/1563; Reg (EU) 2015/758 eCall; the DPA 1998 repeal saving — each with an inline source marker |
+
+⚠ **Richer is not automatically better, and this should not be written up as a clean win.** The old
+answer led with the two instruments a reader actually wants first. The new one leads with the PEC
+Regulations and reaches UK GDPR at citation [9] — statutory-instrument detail crowding out the
+headline statutes. That is a *ranking and synthesis* question, not a retrieval failure: the right
+material is present and cited. It is worth a gold-set look before anyone claims the flip improved
+the answer, as distinct from improving the evidence behind it.
+
+## 24. §3 — fusion: it is a CAP, and the log line could never have shown otherwise
+
+`fuseWeightedRrf` (`fusion.ts`) returns the **full union, uncapped** — it builds a score map over
+both lists and returns every id. The cap is in the caller:
+
+```ts
+// query-router.ts:131
+const fused = fuseWeightedRrf(vec, bm25).slice(0, Math.max(limit, bm25.length))
+```
+
+With `limit = 16` (general-chat) and `bm25.length = 47`, that is `slice(0, 47)`. **So `fused 47`
+is guaranteed whenever the union is at least 47, whatever the overlap.** Two 47-item lists with
+*zero* overlap would also have logged `fused 47`. The observation was uninformative, not
+suspicious — and the honest answer to "do the lists genuinely overlap that completely" is that
+**this log cannot tell you, and they almost certainly do not.**
+
+Where 47 comes from: `limit 16` gives `Math.max(16*3, 30) = 48` requested from each service, 47
+surviving the type map.
+
+**Is the measured benefit being lost? No.** The gold-set gain (+7.3pp legislation, +15.0pp debates)
+is **recall@20**. The slice keeps the top 47 *by fused score*, so the top 20 of the fused list is
+exactly the top 20 of the full union. And every consumer downstream takes fewer than that anyway —
+`groupForPanel` caps ~20, general-chat's `ANSWER_CONTEXT_LIMIT` is 16. Nothing that reaches a user
+is affected.
+
+**Recommendation: leave the cap, document it.** It is defensible as written — it holds a fused
+stream's contribution to the same size as the BM25-only path, so the fused stream cannot crowd out
+the others during grouping. It only becomes a real loss if a consumer ever takes more than 47 from
+a single stream, and none does.
+
+## 25. §2 — the dropped citations: mechanism, and what the label overstates
+
+**Zero drops in all three of my controlled trials** (the UI surfaces them explicitly and no such
+line appeared). So I cannot give a frequency from my own sample — Charlie's runs have them and
+mine did not, which itself suggests it is query-dependent rather than constant.
+
+**Two independent citation paths, with very different risk:**
+
+| path | resolved against | how it fails |
+|---|---|---|
+| inline `[n]` markers | `context` — the **16** sources actually shown | only if the model emits `n > 16`. The numbers are **ours**; low risk |
+| `citedIds` | `known` — all **235** retrieved | the model must **echo a long opaque id verbatim**, e.g. `primary-acts-pre-2000:ukpga/1988/50:section-21` |
+
+⚠ **The likely dominant cause is not invented sources — it is mangled ids.** The prompt asks the
+model to "list the full `id:` string of every source you used". That is a pure transcription task
+over opaque compound strings, and near-miss transcription (a wrong section number, a dropped
+segment) is one of the most reliable ways to make a model produce something that looks plausible
+and matches nothing.
+
+⚠ **And the diagnostic label overstates the harm.** Citations resolve as a **union** of the two
+paths. If the inline marker resolved, **the claim is grounded** — only the redundant id echo
+failed. "citations to ids that were never retrieved" reads as an ungrounded claim; often it is a
+typo in a field that carries no weight the markers do not already carry.
+
+**Recommendation — and it is not widening the guard.** *Remove the transcription task.* The `[n]`
+markers are ours, positional, and range-checkable; `citedIds` is redundant to them. Replacing the
+required `citedIds: string[]` with `citedMarkers: number[]` (small integers, validated against
+1..16) eliminates the class outright and makes any surviving drop *meaningful* — an out-of-range
+marker really is the model pointing at a source it was never given.
+
+**What I need to close this properly:** two or three actual entries from
+`[lex-general] answer cited sources that were not retrieved` in the Vercel logs. The shape settles
+it — well-formed-but-unretrieved ids means mangling; `[19]` means out-of-range markers; plausible
+Act names not in the corpus means genuine invention, which is the only one of the three that is a
+real grounding failure.
+
+## 26. ⚠ Found while investigating: conversation history steers retrieval
+
+`general-chat.ts:266` passes `ideaContext: conversationContext(history)` into the gateway, and the
+router uses that context to write its tailored per-stream queries.
+
+Trial 3 is the evidence. Asked about **regulator powers to compel disclosure** immediately after
+two data-protection turns, it retrieved 233 sources and Lex reported they "primarily detail the
+legal framework for data protection" — the previous topic, not the question. Lex handled it
+correctly by declining to answer, but the retrieval had already been dragged off-topic.
+
+On an idea-bound chat that behaviour is right: the idea *is* the context. On a **general** corpus
+chat, where consecutive questions are routinely unrelated, it means every question after the first
+is pulled toward the last one.
+
+**This plausibly feeds §25.** An off-topic retrieval is exactly when a model is under most pressure
+to reach past its sources — so history contamination and invented citations may be the same
+incident seen twice.
+
+⚠ **Not yet controlled.** I tried to re-ask the identical question on a freshly loaded page (the
+transcript is component state, so a reload clears it) and the browser stopped submitting after
+several attempts. **The control is one minute of work for whoever picks this up:** load
+`/admin/lex-general` fresh, ask the regulator question first, and compare the retrieved set against
+trial 3's.
+
+## 27. §4 — the 24 h watch, now genuinely meaningful
+
+Dense is live, so the embed cost line is real for the first time. Baseline as of 22:09 UTC:
+
+| | `fts-serve` | `vector-serve` |
+|---|---|---|
+| served today | 32 | **182** (was pinned at 178 for the whole flip investigation) |
+| errors | 0 | 0 |
+| concurrency cap | **16** | 4 |
+| rejections | n/a (unbounded queue) | 0 |
+| Gemini embed p50 | — | **228 ms**, one call per uncached dense query |
+
+**What to watch, and why each matters now rather than before:**
+
+- **`vector-serve` served** — the liveness signal. It should now climb roughly one per routed
+  query that includes the legislation stream. A flat counter means the flip has silently reverted.
+- **Gemini embed volume** — the new cost line. One embed per *uncached* dense query; the 300 s
+  result cache absorbs repeats and a cache hit costs neither an embed nor a semaphore slot. Hit
+  rate is still a model, not a measurement, and it is what decides the bill.
+- **`fts-serve` warm p95 — and `queue_p95` beside it.** Now honest after the `t0` fix. Real traffic
+  is showing queue p95 of 0 ms against the cap of 16, so any queueing that appears is genuine load
+  rather than the old 4-wide throttle.
+- **Search latency per turn** — 3.4–3.8 s across the three trials, with the answer call adding
+  0.9–3.2 s on top. That is the number a user feels, and it is the one to watch drift on.

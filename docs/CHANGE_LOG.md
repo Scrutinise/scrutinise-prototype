@@ -96,6 +96,76 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH — THE FLIP IS LIVE: routing and dense retrieval are running in production (2026-08-08 22:09 UTC)
+
+Report of record: `docs/VECTOR_FLIP_LOADTEST.md` §21–27.
+
+**Root cause of the whole saga, found by Charlie: `LEX_QUERY_ROUTER` existed as TWO separate Vercel
+variables — Production and Preview — both marked sensitive and therefore unreadable, so only the
+Preview copy had been corrected.** That explains the pattern exactly: expansion worked (its variable
+was correct) while the router stayed dark (its Production copy never was). Both deleted, replaced
+with one non-sensitive variable covering both environments.
+
+✅ **`vector-serve` served has moved past 178 — it is now 182.** Three controlled trials through
+`/admin/lex-general`, the untiered surface that exercises the routed path:
+
+| question | routed streams | fts Δ | vector Δ | retrieved | cited | search | answer |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Acts/SIs + committees + case law | legislation, committees, caselaw | **+3** | **+1** | 140 | 12 | 3,402 ms | 2,971 ms |
+| **4 Aug benchmark** — "what is the law on data protection currently?" | **all five** | **+5** | **+1** | 235 | 10 | 3,764 ms | 3,224 ms |
+| regulator disclosure powers (previously `bad-json`) | **all five** | **+5** | **+1** | 233 | 0 | 3,844 ms | 886 ms |
+
+**The `fts-serve` delta equals the stream count every time** — per-stream dispatch observed, not
+inferred. Resolved capability state (from the gateway's own snapshot, the same `capabilityFlags()`
+the boot line renders, since Vercel logs remain unreadable from here): **`flags: expansion router`**.
+
+✅ **The truncation fix is confirmed live** — the question that failed open with `bad-json` at
+~21:10 now dispatches to all five streams (commit `b5319bf`).
+
+⚠ **The 4 Aug benchmark should NOT be written up as a clean win.** The retrieval is transformed —
+235 sources, five streams, ten cited. But the old answer led with UK GDPR and DPA 2018, the two
+instruments a reader wants first; the new one leads with PECR 2003 and reaches UK GDPR at citation
+[9]. Statutory-instrument detail is crowding out the headline statutes. That is a ranking/synthesis
+question, not a retrieval failure — the right material is present and cited — and it wants a
+gold-set look before anyone claims the flip improved the *answer* as opposed to the *evidence*.
+
+⚠ **§3 FUSION: it is a CAP, and the log line could never have shown otherwise.** `fuseWeightedRrf`
+returns the **full union, uncapped**; the cap is `query-router.ts:131`,
+`.slice(0, Math.max(limit, bm25.length))` = `slice(0, 47)` at `limit 16`. **So `fused 47` is
+guaranteed whenever the union is ≥47, whatever the overlap** — two 47-item lists with *zero* overlap
+would log the same thing. The observation was uninformative rather than suspicious. **The measured
+benefit is NOT lost**: the gold-set gain is recall@20, the slice keeps the top 47 by fused score, and
+every consumer takes fewer (groupForPanel ~20, general-chat 16). Recommendation: leave it, document
+it; it only bites if a consumer ever takes >47 from one stream.
+
+⚠ **§2 DROPPED CITATIONS: zero in all three of my trials**, so no frequency from my sample. The
+mechanism, though, is clear and the label overstates the harm. Two paths resolve citations and they
+fail very differently: inline `[n]` markers are **ours**, positional against the 16 shown, and only
+fail if the model emits n>16; `citedIds` requires the model to **echo a long opaque id verbatim**
+(`primary-acts-pre-2000:ukpga/1988/50:section-21`). **The likely dominant cause is mangled ids, not
+invented sources** — pure transcription over opaque compound strings. And because citations resolve
+as a **union**, a dropped id whose marker resolved means the claim IS grounded and only the
+redundant echo failed. **Recommendation, and it is not widening the guard: remove the transcription
+task** — replace required `citedIds: string[]` with `citedMarkers: number[]`, range-checked 1..16.
+That kills the class and makes any surviving drop meaningful. **To close it properly I need two or
+three real log entries** — well-formed-but-unretrieved ids ⇒ mangling; `[19]` ⇒ out-of-range;
+plausible Act names absent from the corpus ⇒ genuine invention, the only real grounding failure.
+
+⚠ **FOUND WHILE INVESTIGATING: conversation history steers retrieval.** `general-chat.ts:266` passes
+`ideaContext: conversationContext(history)`, and the router writes its per-stream queries from that
+context. Trial 3 asked about regulator disclosure powers after two data-protection turns and
+retrieved 233 **data-protection** sources; Lex correctly declined to answer, but retrieval had
+already been dragged off-topic. Right for an idea-bound chat, wrong for a general corpus chat where
+consecutive questions are unrelated. **This plausibly feeds the citation problem** — an off-topic
+retrieval is exactly when a model reaches past its sources. Control run not completed (the browser
+stopped submitting); it is one minute of work: fresh page, ask the regulator question first, compare.
+
+**§4 — the 24 h watch is now meaningful.** Baseline: `fts-serve` 32 served / 0 errors / cap 16 /
+**queue p95 0 ms at real traffic**; `vector-serve` 182 / 0 errors / 0 rejections / **Gemini embed
+p50 228 ms, one call per uncached dense query** — the new cost line, real for the first time. Watch
+`vector-serve` served for liveness (flat = silent revert), embed volume for cost, and the 3.4–3.8 s
+search latency for drift.
+
 ## LEX — a general corpus chat (`/admin/lex-general`): ask the corpus anything, and see what it retrieved (2026-08-08 21:30 UTC)
 
 `tsc` clean, `next build` clean, `check:flags` 44/44, new **`npm run check:lex-general` 29/29**
