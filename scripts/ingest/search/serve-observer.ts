@@ -69,6 +69,10 @@ export interface ServeStats {
   served?: number; errors?: number
   cold_ms?: number | null
   warm_p50_ms?: number | null; warm_p95_ms?: number | null; warm_n?: number
+  /** fts-serve only, added 2026-08-08 — the queue share of warm_*. Both services now clock
+   *  from before their semaphore, so warm_p95 is total wall time on the wire; this splits out
+   *  how much of it was waiting rather than searching. */
+  queue_p50_ms?: number | null; queue_p95_ms?: number | null
   all_p50_ms?: number | null; all_p95_ms?: number | null; all_n?: number
   embed_p50_ms?: number | null
   concurrency?: { max?: number; maxQueue?: number | null; inFlight?: number; queued?: number; queueHighWaterMark?: number; rejections?: number | null }
@@ -236,7 +240,10 @@ export function renderDigest(obs: Observation[], neon: NeonObservation, nowMs: n
     L.push(`               rejections ${c.rejections == null ? 'n/a (queue is UNBOUNDED — absorbs overload as latency, cannot refuse)' : c.rejections}` +
            (c.maxQueue != null ? ` · queue cap ${c.maxQueue}` : ''))
     L.push(`   throughput  served ${fmtNum(s.served)} · errors ${fmtNum(s.errors)} · cold ${fmtMs(s.cold_ms)}`)
-    L.push(`   latency     uncached p50 ${fmtMs(s.warm_p50_ms)} p95 ${fmtMs(s.warm_p95_ms)} (n=${fmtNum(s.warm_n)})`)
+    L.push(`   latency     uncached p50 ${fmtMs(s.warm_p50_ms)} p95 ${fmtMs(s.warm_p95_ms)} (n=${fmtNum(s.warm_n)}) — queue INCLUDED`)
+    // The split matters operationally: queue-dominated means raise the concurrency cap, while
+    // service-dominated means the index itself got slower. Same p95, opposite remedy.
+    if (s.queue_p95_ms != null) L.push(`               of which queue p50 ${fmtMs(s.queue_p50_ms)} p95 ${fmtMs(s.queue_p95_ms)}`)
     if (s.all_p50_ms != null) L.push(`               all reqs p50 ${fmtMs(s.all_p50_ms)} p95 ${fmtMs(s.all_p95_ms)} (n=${fmtNum(s.all_n)})`)
     if (s.embed_p50_ms != null) L.push(`               gemini embed p50 ${fmtMs(s.embed_p50_ms)}`)
     if (s.cache) {

@@ -106,9 +106,21 @@ let errors = 0
 let table: lancedb.Table
 let actIndex: ActIndex | undefined
 
-// latency bookkeeping (cold = first request after boot; warm = the rest)
+// Latency bookkeeping (cold = first request after boot; warm = the rest).
+//
+// THESE INCLUDE THE QUEUE WAIT, and that is the whole point. Until 2026-08-08 the clock
+// started AFTER acquireSlot(), so the recorded figure was Lance service time only. Under the
+// router's fan-out — one user search becomes 5 parallel stream calls against a 4-wide
+// semaphore — the queue IS the latency: a measured load of 10 concurrent users produced a
+// client-side p95 of 12,176 ms while this service reported warm_p95 = 1,523 ms and the
+// observer's `p95 > 5s` alert stayed silent. A metric that cannot see the dominant term is
+// worse than no metric, because it reads as reassurance. vector-query-service.ts:205 already
+// clocks from before its own semaphore; these two are now measuring the same thing and are
+// comparable in the same digest. `serviceMs` below keeps the old number for diagnosis.
 const cold: number[] = []
 const warm: number[] = []
+/** Queue wait alone, so a slow service and a saturated one stay distinguishable on /stats. */
+const queueWaits: number[] = []
 let served = 0
 
 function pct(arr: number[], p: number): number | null {
@@ -129,7 +141,10 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
     const m = process.memoryUsage()
     return send(res, 200, {
       served, errors, cold_ms: cold[0] ?? null,
+      // Total time on the wire, queue wait included — see the note by `warm`.
       warm_p50_ms: pct(warm, 50), warm_p95_ms: pct(warm, 95), warm_n: warm.length,
+      // The split, so "the index got slower" and "we are saturated" cannot be confused.
+      queue_p50_ms: pct(queueWaits, 50), queue_p95_ms: pct(queueWaits, 95),
       concurrency: {
         max: MAX_CONCURRENT, inFlight, queued: waiters.length, queueHighWaterMark,
         // FTS's queue is UNBOUNDED, unlike vector-query-service.ts's. Reported as null
@@ -165,11 +180,15 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         const okList = (v: unknown) => v === undefined || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
         if (!okList(corpora) || !okList(excludeCorpora)) return send(res, 400, { error: 'corpora/excludeCorpora must be string arrays when given' })
         const lim = Math.min(Math.max(parseInt(limit ?? 20, 10) || 20, 1), 100)
-        const queueMs = Date.now() - tQueueStart
         const t0 = Date.now()
         const results = await rankedSearch(table, query, { tier, limit: lim, actIndex, corpora, excludeCorpora })
-        const ms = Date.now() - t0
+        const serviceMs = Date.now() - t0
+        // Total is measured from tQueueStart, NOT serviceMs + queueMs, so nothing between the
+        // two clocks (JSON.parse, validation) can go unattributed.
+        const ms = Date.now() - tQueueStart
+        const queueMs = ms - serviceMs
         ;(served === 0 ? cold : warm).push(ms)
+        queueWaits.push(queueMs)
         served++
         // Echo the scope back, for the same reason vector-query-service.ts does: a caller that
         // believes it scoped the search and a service too old to know the field would be
@@ -179,7 +198,9 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
         send(res, 200, {
           query, tier: tier ?? null,
           corpora: corpora ?? null, excludeCorpora: excludeCorpora ?? null,
-          ms, queueMs, count: results.length, results: results.map(({ body, ...r }) => r),
+          // `ms` is now TOTAL (queue + service), matching vector-query-service.ts. It used to be
+          // service time alone; no caller read it, so the change is safe as well as necessary.
+          ms, queueMs, serviceMs, count: results.length, results: results.map(({ body, ...r }) => r),
         })
       } catch (e) {
         errors++
