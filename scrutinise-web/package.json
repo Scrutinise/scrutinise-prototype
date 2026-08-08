@@ -17,7 +17,8 @@
     "check:export": "tsx --env-file=.env scripts/check-export-e2e.ts",
     "check:central": "tsx --env-file=.env scripts/check-central-stage1.ts",
     "check:orientation": "tsx --env-file=.env scripts/check-orientation.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "check:flags": "tsx scripts/check-flags.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

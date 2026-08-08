@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SearchResult } from './page1-config'
+import { flagEnabled } from '@/lib/env-flags'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
@@ -50,15 +51,18 @@ export interface CapabilityFlags {
   graph: boolean          // graph/effects layers (not shipped)
 }
 
+// Every read goes through flagEnabled (lib/env-flags.ts), never a bare `=== 'true'`.
+// A capitalised `TRUE` in Vercel silently disabled the router and expansion for an unknown
+// period — see env-flags.ts for the incident. scripts/check-flags.ts enforces this.
 export function capabilityFlags(): CapabilityFlags {
   return {
     // Back-compat: the expansion switch is the existing LEX_QUERY_EXPANSION env.
-    expansion: process.env.LEX_QUERY_EXPANSION === 'true',
-    router: process.env.LEX_QUERY_ROUTER === 'true',
-    webOrientation: process.env.LEX_WEB_ORIENTATION === 'true',
-    vector: process.env.LEX_SEARCH_VECTOR === 'true',
-    reranker: process.env.LEX_SEARCH_RERANKER === 'true',
-    graph: process.env.LEX_SEARCH_GRAPH === 'true',
+    expansion: flagEnabled('LEX_QUERY_EXPANSION'),
+    router: flagEnabled('LEX_QUERY_ROUTER'),
+    webOrientation: flagEnabled('LEX_WEB_ORIENTATION'),
+    vector: flagEnabled('LEX_SEARCH_VECTOR'),
+    reranker: flagEnabled('LEX_SEARCH_RERANKER'),
+    graph: flagEnabled('LEX_SEARCH_GRAPH'),
   }
 }
 
@@ -174,7 +178,9 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       ftsResults = await runRoutedSearch(route, limit)
       console.log('[search-gateway] router dispatched', { intent: q.intent, streams: streamNames })
     } else {
-      console.log('[search-gateway] router fail-open — searching all streams unfiltered', { intent: q.intent })
+      // error, not log: routeQuery has already said WHY on the line above, and this is a real
+      // capability loss for the query — no per-stream scoping and no dense fusion.
+      console.error('[search-gateway] router fail-open — searching all streams unfiltered (reason logged by [query-router] above)', { intent: q.intent })
       const out = await runFtsSearch(keywords, limit, q.tier)
       ftsResults = out.results
       failed = !!out.failed

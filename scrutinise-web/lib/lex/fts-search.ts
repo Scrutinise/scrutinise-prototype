@@ -19,6 +19,7 @@
 
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { flagEnabled } from '@/lib/env-flags'
 import type { SearchResult } from './page1-config'
 import { corpusToType } from './corpus-type-map'
 import { runStubSearch } from './search-stub'
@@ -151,8 +152,7 @@ async function callFts(query: string, limit: number, scope: FtsScope = {}): Prom
  * responsible for saying so. The stub survives only for local development, behind an
  * explicit opt-in (`LEX_SEARCH_STUB=true`), and refuses to arm itself in production.
  */
-const STUB_ENABLED =
-  process.env.LEX_SEARCH_STUB === 'true' && process.env.VERCEL_ENV !== 'production'
+const STUB_ENABLED = flagEnabled('LEX_SEARCH_STUB') && process.env.VERCEL_ENV !== 'production'
 
 export interface FtsSearchOutcome {
   results: SearchResult[]

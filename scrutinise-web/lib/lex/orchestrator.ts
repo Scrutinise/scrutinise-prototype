@@ -19,6 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { flagEnabled } from '@/lib/env-flags'
 import { computeCanonicalState } from './state'
 import { fieldDef, type CanonicalState, type FieldDef } from './page1-config'
 import {
@@ -473,7 +474,7 @@ async function seedCoherenceCheck(ideaId: string, userId: string, def: FieldDef,
   }
 
   let corpusNotes: string[] | undefined
-  if (process.env.LEX_COHERENCE_CORPUS === 'true') {
+  if (flagEnabled('LEX_COHERENCE_CORPUS')) {
     try {
       const { results } = await runSearch({
         keywords: [

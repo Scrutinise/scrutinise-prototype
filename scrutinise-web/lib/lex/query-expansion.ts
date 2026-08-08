@@ -13,6 +13,8 @@
 //   QUERY_EXPANSION_MODEL           Gemini model id (default gemini-2.5-flash)
 //   QUERY_EXPANSION_TIMEOUT_MS      per-call timeout (default 10000)
 
+import { flagEnabled } from '@/lib/env-flags'
+
 export interface QueryExpansion {
   anchors: string[]     // candidate Acts / SIs / retained-EU by full statutory name
   termsOfArt: string[]  // statutory vocabulary for the concept
@@ -63,6 +65,17 @@ function parseExpansion(raw: string): QueryExpansion | null {
 // and result parsing; this only owns the HTTP round-trip and raw-text extraction.
 // Returns null on ANY failure (HTTP error, timeout, abort, malformed response) —
 // callers degrade to their own fail-open behaviour, never throw.
+/** Why a call produced no usable text. Carried back to the caller so a deliberate degradation
+ *  can say WHICH degradation it was — see the fail-open note on routeQuery. */
+export type GeminiFailure = 'http-error' | 'timeout' | 'network-error' | 'empty-response'
+
+// A STRING discriminant, deliberately: this project compiles with `strict: false`, and without
+// strictNullChecks TypeScript will not narrow a union on a boolean literal (`ok: true | false`).
+// A `kind` field narrows correctly either way, so the failure branch stays type-checked.
+type GeminiJsonResult =
+  | { kind: 'ok'; text: string }
+  | { kind: 'fail'; reason: GeminiFailure; detail: string }
+
 async function callGeminiJson(opts: {
   model: string
   apiKey: string
@@ -71,7 +84,7 @@ async function callGeminiJson(opts: {
   userMessage: string
   schema: object
   logTag: string
-}): Promise<string | null> {
+}): Promise<GeminiJsonResult> {
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), opts.timeoutMs)
   try {
@@ -99,16 +112,25 @@ async function callGeminiJson(opts: {
       },
     )
     if (!res.ok) {
-      console.warn(`[${opts.logTag}] gemini HTTP`, res.status)
-      return null
+      const body = await res.text().catch(() => '')
+      return { kind: 'fail', reason: 'http-error', detail: `HTTP ${res.status} ${body.slice(0, 200)}`.trim() }
     }
     type GeminiResp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
     const data = await res.json() as GeminiResp
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    return typeof text === 'string' ? text : null
+    if (typeof text !== 'string') {
+      return { kind: 'fail', reason: 'empty-response', detail: 'no candidates[0].content.parts[0].text in the response' }
+    }
+    return { kind: 'ok', text }
   } catch (err) {
-    console.warn(`[${opts.logTag}] failed:`, err instanceof Error ? err.message : err)
-    return null
+    // An AbortError here is our own timeout firing, not a network fault — worth separating,
+    // because "the model took too long" and "we could not reach the model" have different fixes.
+    const aborted = err instanceof Error && err.name === 'AbortError'
+    return {
+      kind: 'fail',
+      reason: aborted ? 'timeout' : 'network-error',
+      detail: aborted ? `aborted after ${opts.timeoutMs}ms` : (err instanceof Error ? err.message : String(err)),
+    }
   } finally {
     clearTimeout(t)
   }
@@ -119,10 +141,13 @@ async function callGeminiJson(opts: {
  * Returns EMPTY on any failure; the caller falls back to the original keywords only.
  */
 export async function expandQuery(keywords: string[], ideaContext: string): Promise<QueryExpansion> {
-  if (process.env.LEX_QUERY_EXPANSION !== 'true') return EMPTY
+  if (!flagEnabled('LEX_QUERY_EXPANSION')) return EMPTY
 
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return EMPTY
+  if (!apiKey) {
+    console.error('[query-expansion] DEGRADED — LEX_QUERY_EXPANSION is ON but GEMINI_API_KEY is not set; searching with the bare keywords.')
+    return EMPTY
+  }
 
   const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
   const timeoutMs = parseInt(process.env.QUERY_EXPANSION_TIMEOUT_MS ?? '10000', 10)
@@ -132,15 +157,23 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
     ideaContext ? `Idea context: ${ideaContext}` : '',
   ].filter(Boolean).join('\n')
 
-  const text = await callGeminiJson({
+  const res = await callGeminiJson({
     model, apiKey, timeoutMs,
     systemPrompt: SYSTEM_PROMPT,
     userMessage,
     schema: EXPANSION_SCHEMA,
     logTag: 'query-expansion',
   })
-  if (text === null) return EMPTY
-  return parseExpansion(text) ?? EMPTY
+  if (res.kind === 'fail') {
+    console.error(`[query-expansion] DEGRADED — expansion is ON but produced nothing (${res.reason}): ${res.detail}. Searching with the bare keywords.`)
+    return EMPTY
+  }
+  const parsed = parseExpansion(res.text)
+  if (!parsed) {
+    console.error('[query-expansion] DEGRADED — expansion is ON but the model returned unparseable JSON. Searching with the bare keywords.')
+    return EMPTY
+  }
+  return parsed
 }
 
 // ── Query router (generalises the expansion above into per-stream routing) ──
@@ -211,10 +244,12 @@ function parseRoute(raw: string): RouteResult | null {
  * against, so it degrades the same way.
  */
 export async function routeQuery(keywords: string[], ideaContext: string): Promise<RouteResult | null> {
-  if (process.env.LEX_QUERY_ROUTER !== 'true') return null
+  // OFF is not a failure — return quietly. Everything below this line runs only when an operator
+  // has asked for routing, so anything that stops it from happening IS worth shouting about.
+  if (!flagEnabled('LEX_QUERY_ROUTER')) return null
 
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return null
+  if (!apiKey) return routerFailOpen('missing-key', 'GEMINI_API_KEY is not set in this environment')
 
   const model = process.env.QUERY_ROUTER_MODEL ?? 'gemini-2.5-flash'
   const timeoutMs = parseInt(process.env.QUERY_ROUTER_TIMEOUT_MS ?? '10000', 10)
@@ -224,13 +259,40 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
     ideaContext ? `Idea context: ${ideaContext}` : '',
   ].filter(Boolean).join('\n')
 
-  const text = await callGeminiJson({
+  const res = await callGeminiJson({
     model, apiKey, timeoutMs,
     systemPrompt: ROUTER_SYSTEM_PROMPT,
     userMessage,
     schema: ROUTER_SCHEMA,
     logTag: 'query-router',
   })
-  if (text === null) return null
-  return parseRoute(text)
+  if (res.kind === 'fail') return routerFailOpen(res.reason, `${res.detail} (model=${model}, timeout=${timeoutMs}ms)`)
+
+  const parsed = parseRoute(res.text)
+  if (!parsed) return routerFailOpen('bad-json', `model returned unparseable JSON: ${res.text.slice(0, 200)}`)
+  if (Object.keys(parsed).length === 0) {
+    // Parsed fine, named nothing. The caller degrades identically, so it must be as visible —
+    // otherwise a router that has quietly stopped choosing looks exactly like one that is off.
+    return routerFailOpen('no-streams-named', 'the model judged every stream irrelevant')
+  }
+  return parsed
+}
+
+/**
+ * Announce a degradation and return null.
+ *
+ * WHY error level, and why this function exists at all. The fail-open below is deliberate — a
+ * router failure must never mean an empty result — but until 2026-08-08 it was also SILENT, and
+ * from outside the process a failing router is indistinguishable from a disabled one: both
+ * produce exactly one untiered `runFtsSearch` and no error. That ambiguity is what made the
+ * capitalised-`TRUE` incident undiagnosable without counting requests arriving at the search
+ * services. A deliberate degradation should still announce itself, with the reason attached.
+ */
+function routerFailOpen(reason: GeminiFailure | 'missing-key' | 'bad-json' | 'no-streams-named', detail: string): null {
+  console.error(
+    `[query-router] FAIL-OPEN — LEX_QUERY_ROUTER is ON but no routing decision was produced ` +
+    `(${reason}): ${detail}. Falling back to ONE unfiltered search across all streams: ` +
+    `per-stream scoping and dense fusion are BOTH skipped for this query.`,
+  )
+  return null
 }

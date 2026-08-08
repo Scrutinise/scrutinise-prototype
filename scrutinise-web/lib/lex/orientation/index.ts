@@ -40,6 +40,7 @@
 //                                     the corpus search and the writes.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { flagEnabled } from '@/lib/env-flags'
 import type { ArgumentItem, CallOutcome, OrientationResult, RecencyScan } from './types'
 import { emptyOrientation } from './types'
 import { runWebOrientation } from './web-orientation'
@@ -52,7 +53,7 @@ export { assertQuarantine, TIER_C_MARK, TIER_B_MARK, TIER_C_EXPLAINER } from './
 export { noiseFilterEnabled } from './noise-filter'
 
 export function webOrientationEnabled(): boolean {
-  return process.env.LEX_WEB_ORIENTATION === 'true'
+  return flagEnabled('LEX_WEB_ORIENTATION')
 }
 
 export function recencyDays(): number {
