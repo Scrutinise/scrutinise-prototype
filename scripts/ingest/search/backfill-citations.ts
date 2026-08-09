@@ -44,10 +44,23 @@ const SCHEMA_COLS = ['id', 'corpus', 'tier', 'jurisdiction', 'sectionTitle', 'bo
 
 type Row = Record<(typeof SCHEMA_COLS)[number], any>
 
+/**
+ * gid → act title.
+ *
+ * ⚠ Repointed from the legacy `LegislationItem` to `corpus_acts` (V33 §3b). This was the LAST
+ * reference to `LegislationItem` outside `scrutinise-web/`, and `V26_LEGACY_DROP_RECHECK.md`
+ * named it as one of the two things blocking the legacy DROP. The three search-side reads
+ * (`fts-search.ts`, `vector-search.ts`, `citation-resolver.ts`) moved on 7 Aug; this one did not,
+ * because it is build-time rather than serve-time and nobody was looking at it.
+ *
+ * `corpus_acts` is a verified drop-in, measured whole-table: `LegislationItem` has 135,531
+ * distinct gid→title, `corpus_acts` has 135,531 titled rows (of 250,808 — a SUPERSET), 0 gids
+ * missing and 0 titles differing. The column is `gid` rather than `legislationGovUkId`.
+ */
 async function loadTitleMap(): Promise<Map<string, string>> {
   const pool = new Pool({ connectionString: process.env.NEON_DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 2, statement_timeout: 120_000 })
   const { rows } = await pool.query<{ gid: string; title: string }>(
-    `SELECT "legislationGovUkId" AS gid, title FROM "LegislationItem" WHERE "legislationGovUkId" IS NOT NULL AND title IS NOT NULL`)
+    `SELECT gid, title FROM corpus_acts WHERE gid IS NOT NULL AND title IS NOT NULL`)
   await pool.end()
   const m = new Map<string, string>()
   for (const r of rows) m.set(r.gid, r.title)
