@@ -122,12 +122,18 @@ export default function BulletinBoard({
   boardName,
   isBranch,
   communityName,
+  canModerate = false,
+  canPost = true,
 }: {
   communityId: string
   boardName: string
   isBranch: boolean
   /** Name of the top-level Community this board sits in. */
   communityName: string
+  /** Stage 2 admin cascade — may remove posts here without being a member. */
+  canModerate?: boolean
+  /** Managers reading a descendant board may moderate it, but not post to it. */
+  canPost?: boolean
 }) {
   const [threads, setThreads] = useState<Thread[]>([])
   const [categories, setCategories] = useState<string[]>([])
@@ -142,6 +148,7 @@ export default function BulletinBoard({
   const [scope, setScope] = useState<'BRANCH' | 'COMMUNITY'>('BRANCH')
   const [body, setBody] = useState('')
   const [expanded, setExpanded] = useState<Record<string, ThreadDetail | undefined>>({})
+  const [markError, setMarkError] = useState<string | null>(null)
 
   const loadThreads = useCallback(
     async (searchTerm?: string) => {
@@ -209,6 +216,7 @@ export default function BulletinBoard({
   }
 
   async function handleVoteThread(threadId: string, value: 1 | -1) {
+    setMarkError(null)
     const res = await fetch(`/api/communities/${communityId}/bulletin/${threadId}/vote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -222,15 +230,37 @@ export default function BulletinBoard({
       setExpanded((prev) =>
         prev[threadId] ? { ...prev, [threadId]: { ...prev[threadId]!, score: data.score, myVote: data.myVote } } : prev,
       )
+    } else {
+      // Guardrail refusals (own post, daily budget) come back as 4xx with a
+      // message worth showing — silently swallowing them would look like a bug.
+      const data = await res.json().catch(() => ({}))
+      setMarkError(typeof data.error === 'string' ? data.error : 'That mark did not register.')
+    }
+  }
+
+  async function handleRemovePost(threadId: string) {
+    setMarkError(null)
+    const res = await fetch(`/api/communities/${communityId}/bulletin/${threadId}`, { method: 'DELETE' })
+    if (res.ok) {
+      setThreads((prev) => prev.filter((t) => t.id !== threadId))
+      setExpanded((prev) => ({ ...prev, [threadId]: undefined }))
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setMarkError(typeof data.error === 'string' ? data.error : 'Could not remove that post.')
     }
   }
 
   async function handleVoteReply(threadId: string, replyId: string, value: 1 | -1) {
+    setMarkError(null)
     const res = await fetch(`/api/communities/${communityId}/bulletin/${replyId}/vote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value }),
     })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setMarkError(typeof data.error === 'string' ? data.error : 'That mark did not register.')
+    }
     if (res.ok) {
       const data = await res.json()
       setExpanded((prev) => {
@@ -314,10 +344,18 @@ export default function BulletinBoard({
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
-        <Button size="sm" onClick={() => setShowCompose((v) => !v)}>
-          {showCompose ? 'Cancel' : 'New thread'}
-        </Button>
+        {canPost && (
+          <Button size="sm" onClick={() => setShowCompose((v) => !v)}>
+            {showCompose ? 'Cancel' : 'New thread'}
+          </Button>
+        )}
       </div>
+
+      {markError && (
+        <p className="mb-3 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-800">
+          {markError}
+        </p>
+      )}
 
       {showCompose && (
         <form onSubmit={handleCreateThread} className="mb-4 space-y-3 rounded-lg border border-border p-4">
@@ -417,6 +455,16 @@ export default function BulletinBoard({
                       {typeof t._count?.replies === 'number' && ` · ${t._count.replies} repl${t._count.replies === 1 ? 'y' : 'ies'}`}
                     </p>
                   </button>
+                  {canModerate && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePost(t.id)}
+                      className="shrink-0 text-xs text-muted-foreground underline underline-offset-2 hover:text-red-600"
+                      title="Remove this post"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
 
                 {detail && (

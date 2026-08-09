@@ -9,6 +9,7 @@ import {
   getCommunityMembership,
   getCommunityTreeIds,
 } from '@/lib/community'
+import { getUserPoints } from '@/lib/central-points'
 import CommunityDashboardClient from './CommunityDashboardClient'
 import type { Metadata } from 'next'
 
@@ -103,9 +104,12 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
         // deterministic, and the same link can be followed again if they
         // dismiss it. Leaving is available from the page at any time regardless.
         showSwitchChooser={joined === '1' && otherBranches.length > 0}
-        openPanel={panel === 'requests' ? 'requests' : panel === 'members' ? 'members' : null}
+        openPanel={
+          panel === 'requests' ? 'requests' : panel === 'members' ? 'members' : panel === 'claims' ? 'claims' : null
+        }
         isCommunityMember={rootMembership !== null}
         hasPendingRequest={tree.viewerHasPendingRequest}
+        myPoints={await getUserPoints(user.id, rootId)}
       />
     </div>
   )

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
+import { getUserCentralTotal } from '@/lib/central-points'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -76,6 +77,10 @@ export default async function UserProfilePage({ params }: Props) {
     ? Number(user.credibilityScore.totalScore).toFixed(0)
     : null
   const credPhase = user.credibilityScore?.phase ?? 'BUILDING'
+  // Central points are a SEPARATE ledger on the same unit scale. Shown as its
+  // own chip and never added to the credibility score — they measure different
+  // things (docs/SCRUTINISE_CENTRAL_SPEC.md §4).
+  const centralPoints = await getUserCentralTotal(user.id)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -102,6 +107,14 @@ export default async function UserProfilePage({ params }: Props) {
                   {credPhase === 'BUILDING' && (
                     <span className="ml-1 text-muted-foreground">(building)</span>
                   )}
+                </span>
+              )}
+              {centralPoints !== 0 && (
+                <span title="Earned in Scrutinise Central. A separate score from credibility — the two are never added together.">
+                  Central points:{' '}
+                  <strong className={centralPoints < 0 ? 'text-red-600' : 'text-foreground'}>
+                    {centralPoints > 0 ? '+' : ''}{centralPoints}
+                  </strong>
                 </span>
               )}
             </div>

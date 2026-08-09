@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import PublicNav from '@/components/PublicNav'
 import DashboardClient from './DashboardClient'
+import { getUserCentralTotal } from '@/lib/central-points'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -91,6 +92,10 @@ export default async function DashboardPage() {
     ? Math.round(Number(user.credibilityScore.totalScore))
     : 0
 
+  // A separate ledger on the same unit scale — displayed beside the credibility
+  // score, never summed with it (docs/SCRUTINISE_CENTRAL_SPEC.md §4).
+  const centralPoints = await getUserCentralTotal(user.id)
+
   // "My Communities and teams" — Community and Idea-team (Group) memberships
   // shown side by side, tagged by kind rather than merged into one concept
   // (docs/SCRUTINISE_CENTRAL_SPEC.md §3 item 7).
@@ -132,6 +137,7 @@ export default async function DashboardPage() {
         myGroups={myGroups}
         contributionCount={contributionCount}
         credibilityScore={credibilityScore}
+        centralPoints={centralPoints}
       />
     </div>
   )

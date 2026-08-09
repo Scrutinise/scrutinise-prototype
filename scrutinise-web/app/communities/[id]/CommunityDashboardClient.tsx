@@ -12,6 +12,9 @@ import RequestsPanel from './RequestsPanel'
 import MembersPanel from './MembersPanel'
 import SwitchOrAddChooser from './SwitchOrAddChooser'
 import FindYourBranch from './FindYourBranch'
+import ClaimsPanel from './ClaimsPanel'
+import LogActivity from './LogActivity'
+import Leaderboards from './Leaderboards'
 
 interface Props {
   community: {
@@ -30,11 +33,13 @@ interface Props {
   tree: CommunityTreeNode
   otherBranches: { id: string; name: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' }[]
   showSwitchChooser: boolean
-  openPanel: 'requests' | 'members' | null
+  openPanel: 'requests' | 'members' | 'claims' | null
   /** Member of the Community root — may request branches and found top-level ones. */
   isCommunityMember: boolean
   /** This viewer already has a request waiting on this node. */
   hasPendingRequest: boolean
+  /** This viewer's Central points in this Community, all time. */
+  myPoints: number
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -54,6 +59,7 @@ export default function CommunityDashboardClient({
   openPanel,
   isCommunityMember,
   hasPendingRequest,
+  myPoints,
 }: Props) {
   const router = useRouter()
   const [inviteLink, setInviteLink] = useState<string | null>(null)
@@ -164,12 +170,16 @@ export default function CommunityDashboardClient({
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <h2 className="mb-4 text-base font-semibold">Bulletin board</h2>
-          {isMember ? (
+          {isMember || canManage ? (
+            // Stage 2 admin cascade: a manager reads and moderates a descendant
+            // board without joining it, but does not post to it as if they had.
             <BulletinBoard
               communityId={community.id}
               boardName={community.name}
               isBranch={isBranch}
               communityName={root.name}
+              canModerate={canManage}
+              canPost={isMember}
             />
           ) : (
             // Reaching this page is not reading the branch. Two non-member
@@ -230,6 +240,7 @@ export default function CommunityDashboardClient({
                 communityName={community.name}
                 defaultOpen={openPanel === 'requests'}
               />
+              <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
               <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
               <details className="rounded-lg border border-border p-4">
                 <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
@@ -253,14 +264,24 @@ export default function CommunityDashboardClient({
             </div>
           )}
 
-          <div>
-            <h2 className="mb-4 text-base font-semibold">Points &amp; leaderboards</h2>
-            <div className="rounded-lg border border-border p-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Coming soon — points and leaderboards for this Community.
+          {isMember && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-semibold">Points &amp; leaderboards</h2>
+                <Link
+                  href={`/communities/${community.id}/activity`}
+                  className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                >
+                  Activity log
+                </Link>
+              </div>
+              <Leaderboards communityId={community.id} rootName={root.name} />
+              <LogActivity communityId={community.id} communityName={community.name} />
+              <p className="text-xs text-muted-foreground">
+                Your points here: <span className="font-semibold tabular-nums">{myPoints > 0 ? '+' : ''}{myPoints}</span>
               </p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </main>

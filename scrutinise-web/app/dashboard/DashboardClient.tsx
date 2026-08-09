@@ -79,6 +79,8 @@ interface Props {
   myGroups: GroupSummary[]
   contributionCount: number
   credibilityScore: number
+  /** Central's own ledger. Displayed beside credibility, never summed with it. */
+  centralPoints: number
 }
 
 const KIND_BADGE: Record<GroupSummary['kind'], string> = {
@@ -97,6 +99,7 @@ export default function DashboardClient({
   myGroups,
   contributionCount,
   credibilityScore,
+  centralPoints,
 }: Props) {
   const [feedTab, setFeedTab] = useState<'feed' | 'upcoming'>('feed')
   const [showAllIdeas, setShowAllIdeas] = useState(false)
@@ -115,8 +118,9 @@ export default function DashboardClient({
         </Button>
       </div>
 
-      {/* Quick stats */}
-      <div className="mb-8 grid grid-cols-3 gap-4">
+      {/* Quick stats. Central points sit BESIDE the credibility score, never
+          inside it — two separate ledgers measuring different things. */}
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-border p-4 text-center">
           <p className="text-2xl font-bold">{ideas.length}</p>
           <p className="text-xs text-muted-foreground">Ideas created</p>
@@ -128,6 +132,12 @@ export default function DashboardClient({
         <div className="rounded-lg border border-border p-4 text-center">
           <p className="text-2xl font-bold">{credibilityScore}</p>
           <p className="text-xs text-muted-foreground">Credibility score</p>
+        </div>
+        <div className="rounded-lg border border-border p-4 text-center">
+          <p className={`text-2xl font-bold tabular-nums ${centralPoints < 0 ? 'text-red-600' : ''}`}>
+            {centralPoints > 0 ? '+' : ''}{centralPoints}
+          </p>
+          <p className="text-xs text-muted-foreground">Central points</p>
         </div>
       </div>
 
