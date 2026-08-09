@@ -61,7 +61,12 @@ export function fuseWeightedRrf(
     scores.set(r.id, (scores.get(r.id) ?? 0) + (1 - weight) / (k + i + 1))
     if (!byId.has(r.id)) byId.set(r.id, r)
   })
+  // The sort is over the FUSED value computed here, not over any incoming `score` — one
+  // scorer by construction, which is why it is not routed through score-scope's sortByScore.
+  // The `scorer: 'rrf'` stamp is the load-bearing line: it is what makes the overwrite of
+  // `score` visible to anything downstream that might later be tempted to sort a list holding
+  // both these results and an unfused stream's. See lib/lex/score-scope.ts.
   return [...scores.entries()]
     .sort((a, b) => b[1] - a[1])
-    .map(([id, score]) => ({ ...byId.get(id)!, score }))
+    .map(([id, score]) => ({ ...byId.get(id)!, score, scorer: 'rrf' as const }))
 }

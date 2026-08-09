@@ -13,7 +13,12 @@ const TOTAL_CAP = 20
 
 // A realistic sample set (road-safety flavour) so the panel renders something
 // convincing on any idea during Sprint 1. Deterministic — no randomness.
-const STUB_CORPUS: SearchResult[] = [
+//
+// `scorer: 'stub'` is stamped on the whole set at the bottom rather than repeated ten times.
+// It matters that these are NOT labelled 'bm25': the numbers below are hand-written to look
+// plausible, so a list that silently mixed them with real BM25 would sort by which fixture an
+// author liked. score-scope.ts refuses that comparison rather than leaving it to be noticed.
+const STUB_CORPUS: SearchResult[] = ([
   {
     id: 'ukpga-1988-52-s36',
     type: 'PRIMARY_LEGISLATION',
@@ -124,7 +129,7 @@ const STUB_CORPUS: SearchResult[] = [
     url: 'https://caselaw.nationalarchives.gov.uk/ewhc/admin/2017/962',
     date: '2017-04-28',
   },
-]
+] as Omit<SearchResult, 'scorer'>[]).map((r) => ({ ...r, scorer: 'stub' as const }))
 
 /** Mimics the real FTS query/result contract (§8.3). Stub for now. */
 export function runStubSearch(_keywords: string[], limit = 8): { results: SearchResult[] } {
@@ -133,17 +138,45 @@ export function runStubSearch(_keywords: string[], limit = 8): { results: Search
   return { results: STUB_CORPUS.slice(0, limit) }
 }
 
-/** Group by type, take ≤PER_TYPE_CAP per type, cap at TOTAL_CAP, keep score order. */
+/**
+ * Take ≤PER_TYPE_CAP per display type, cap at TOTAL_CAP, PRESERVING THE INCOMING ORDER.
+ *
+ * ⚠ THIS USED TO OPEN WITH `[...results].sort((a, b) => b.score - a.score)`, and that sort was a
+ * landmine with a date on it. `fuseWeightedRrf` OVERWRITES `score` with an RRF value (≈0.01)
+ * while an unfused stream carries raw BM25 (≈5–25), so the moment `LEX_VECTOR_STREAMS` names a
+ * stream, every fused hit sorts BELOW every unfused hit — and the TOTAL_CAP below then clips the
+ * fused stream off the end. Not a truncation bug: a confident ordering with nothing behind it.
+ * Stage 2C turns per-stream vector on for four more streams, i.e. it is precisely the action that
+ * detonates this, so the sort had to go first. lib/lex/score-scope.ts holds the full account and
+ * the assertion that stops it coming back.
+ *
+ * THE FIX IS A DELETION, NOT A NORMALISATION. Nothing replaces the sort, because nothing needs
+ * to: since 2026-08-09 the list arriving here from the routed path is already stream-balanced by
+ * construction (interleave.ts round-robins the streams), and on the unrouted path it arrives in
+ * BM25 rank order — which the old sort reproduced exactly. So for every single-scorer input this
+ * function's output is UNCHANGED; only the mixed-scorer case, which was wrong, moves.
+ *
+ * Two orders are preserved, both of them the incoming one:
+ *   · WITHIN a type — the ≤3 kept are the first 3 to appear, in that order;
+ *   · ACROSS types — the output is emitted in incoming order, NOT as type blocks.
+ * The second half changed with the sort. Type-blocked output made TOTAL_CAP clip whole types off
+ * the tail (≤3 × 9 types = 27 candidates for 20 slots), which is the same "a stream Lex must deny
+ * having found" failure as the `perStream.flat()` slice, one layer down. Emitting in incoming
+ * order makes the 20-cap drop the weakest tail of a balanced list instead. Nothing downstream
+ * wanted type blocks: the panel re-partitions by type itself (`groupLandscape`), and facts.ts
+ * re-buckets before sampling.
+ */
 export function groupForPanel(results: SearchResult[]): SearchResult[] {
-  const byType = new Map<SearchResultType, SearchResult[]>()
-  for (const r of [...results].sort((a, b) => b.score - a.score)) {
-    const arr = byType.get(r.type) ?? []
-    if (arr.length < PER_TYPE_CAP) {
-      arr.push(r)
-      byType.set(r.type, arr)
-    }
+  const perType = new Map<SearchResultType, number>()
+  const kept: SearchResult[] = []
+  for (const r of results) {
+    const n = perType.get(r.type) ?? 0
+    if (n >= PER_TYPE_CAP) continue
+    perType.set(r.type, n + 1)
+    kept.push(r)
+    if (kept.length >= TOTAL_CAP) break
   }
-  return Array.from(byType.values()).flat().slice(0, TOTAL_CAP)
+  return kept
 }
 
 /**

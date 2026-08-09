@@ -302,7 +302,7 @@ async function inertWhenOff(lib: Lib): Promise<void> {
   const refs = [{
     id: 'ukpga-1991-56-s94', type: 'PRIMARY_LEGISLATION' as const,
     title: 'Water Industry Act 1991', citation: 'Water Industry Act 1991, s.94',
-    snippet: 'It shall be the duty of every sewerage undertaker…', score: 12,
+    snippet: 'It shall be the duty of every sewerage undertaker…', score: 12, scorer: 'bm25' as const,
     url: 'https://www.legislation.gov.uk/ukpga/1991/56/section/94', date: '1991-07-25',
   }]
   const before = buildInitialBackground(['sewage'], refs, null)

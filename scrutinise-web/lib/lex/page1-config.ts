@@ -9,6 +9,8 @@
 // See docs/LEX_REBUILD_DESIGN.md §3, §6.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { ScorerId } from './score-scope'
+
 export type FieldType = 'narrative' | 'text' | 'structured' | 'loop' | 'inferred' | 'reference'
 
 /** Where the accepted value is persisted. `idea` → on the Idea; `user` → on the
@@ -384,6 +386,11 @@ export interface SearchResult {
   citation: string
   snippet: string
   score: number
+  /** WHICH scorer produced `score` — bm25 / vector / rrf / stub. REQUIRED, so tsc is what
+   *  enforces that a new retrieval path declares it rather than a lint rule nobody runs.
+   *  Scores are only comparable within one scorer; see lib/lex/score-scope.ts for why, and
+   *  for the only sanctioned way to sort by score. */
+  scorer: ScorerId
   url: string
   date: string
 }

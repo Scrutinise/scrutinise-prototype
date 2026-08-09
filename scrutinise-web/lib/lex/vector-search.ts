@@ -158,7 +158,9 @@ export async function runVectorSearch(
       }
       const url = meta?.sourceUrl ?? (isLeg && gid ? legislationUrl(gid, ref) : '')
       const date = meta?.itemDate ?? ''
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, url, date }
+      // `scorer: 'vector'` — cosine similarity (0..1), not BM25 and not RRF. Distinct from
+      // 'bm25' because a 0.83 and a 12.4 are not two views of the same quantity.
+      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const, url, date }
     })
     return { results: results.slice(0, limit * 3) }
   } catch (err) {

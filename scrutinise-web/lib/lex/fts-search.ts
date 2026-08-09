@@ -230,7 +230,10 @@ export async function runFtsSearch(
         meta?.sourceUrl ?? (isLeg && gid ? legislationUrl(gid, ref) : '')
       const date = meta?.itemDate ?? h.itemDate ?? ''
 
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, url, date }
+      // `scorer: 'bm25'` — raw BM25 from the FTS service, comparable only with other BM25
+      // scores from the same index. score-scope.ts is what stops it being compared with an
+      // RRF score three orders of magnitude smaller.
+      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'bm25' as const, url, date }
     })
 
     return { results: results.slice(0, limit * 3) } // groupForPanel caps downstream
