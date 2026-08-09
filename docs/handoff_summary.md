@@ -2,7 +2,77 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 15:05 UTC — ▼ **INGEST V33: THE LEGISLATION TIER STOPPED HIDING WHOLE
+*Last updated: 2026-08-09 21:55 UTC — ▼ **SEARCH STAGE 2B: THE SCORE LANDMINE IS DEFUSED, AND THE
+CORPUS NOW HAS AN INSTRUMENT SAYING WHAT ANY QUERY CAN REACH.** Executes `BRIEF_SEARCH_S2B.md`
+§0 and §1 in full; §2 carried by design. CHANGE_LOG (2026-08-09 21:55 UTC). `tsc` + `next build`
+clean; new **`check:score-scope` 36/36 with every assertion seen to FAIL first**,
+`check:stream-coverage` 3/3, `check:lex-general` 30/30, `check:flags` 50/50, `check:llm-guards`
+9/9. New: `docs/CORPUS_REACHABILITY.md` + `docs/corpus_reachability.json`.
+⚠ **§0's "report before changing anything" DID NOT COME OUT CLEAN, and the answer is Charlie's to
+finish.** The Vercel token authenticates (`/v2/user` 200) and then **403s on the project scope with
+`"saml": true`** — env, deployments and runtime logs are all unreadable from here. `fts-serve` has
+**served 0 since its 15:08 UTC restart**, so there is no live traffic to observe passively, and
+every production search surface needs auth. **The record's own resolved reading (CHANGE_LOG 8 Aug
+22:09, from `capabilityFlags()`): `flags: expansion router` — so `LEX_SEARCH_VECTOR` is OFF — but
+`vector-serve` served moved +1 on every one of three routed production queries whatever the stream
+count. A +1 that does not scale with streams is per-stream fusion on exactly ONE stream, which
+needs `VECTOR_SEARCH_URL` SET and `LEX_VECTOR_STREAMS` SET.** ⚠ **That contradicts
+`docs/RAILWAY_ROLE.md`, written today** ("`VECTOR_SEARCH_URL` is unset in Vercel"). The 8 Aug claim
+is a measurement (a counter moved); the 9 Aug one is an inference from `vector-search.ts:111`.
+`vector-serve` reads **served 185** today against the 182 recorded on 8 Aug. **I took the
+conservative reading — LIVE defect, pilot blocker — which produces the same fix either way.**
+**One command settles it and nothing else can: `vercel env ls` for `LEX_VECTOR_STREAMS`,
+`LEX_SEARCH_VECTOR`, `VECTOR_SEARCH_URL`. If set, `RAILWAY_ROLE.md` needs correcting.**
+**§0 THE FIX IS THE DELETION THE BRIEF ASKED FOR.** `groupForPanel` no longer sorts by score at
+all; nothing replaces it, because the routed list already arrives stream-balanced and the unrouted
+one already arrives in BM25 rank order. **For every single-scorer input the output is unchanged**,
+asserted not argued. Output is no longer TYPE-BLOCKED either — blocks made the 20-cap clip whole
+types off the tail — and nothing wanted blocks (`groupLandscape` re-partitions, `facts.ts`
+re-buckets). Measured on both functions, same input, with the deleted code kept runnable as
+`groupForPanelPreFix`: today's shape (1 fused + 4 unfused) **first fused hit at position 13 and 0
+in the top 10 → position 1**; and with the unfused side spanning 7 display types, **0 of 6 fused
+hits reach the panel → 3**. That second one is the brief's "clipped out entirely" as a number: it
+needs seven unfused display types, which is **one new stream away**, and Stage 2C walks through it.
+**Every `SearchResult` now carries `scorer: 'bm25'|'vector'|'rrf'|'stub'`, REQUIRED — so tsc is the
+enforcement** for any new retrieval path. `lib/lex/score-scope.ts` owns `assertSingleScorer`
+(throws) and the one sanctioned `sortByScore`; `check:score-scope` asserts no other file sorts by
+`.score` **and proves its detector matches the exact deleted line**. ⚠ Not a boolean `fused`: a
+cosine 0.83 and a BM25 12.4 are as incomparable as either is to an RRF 0.011.
+**§1 — 17,121,546 of 18,383,172 sections (93.1%) are in a collection some stream can select. 70
+collections: 53 reachable, 13 keyword-only, 4 UNREACHABLE, 0 tier-only.**
+⚠ **Tier is READ OUT OF THE LIVE INDEX, never computed from `tierFor()`** — it is baked in at build
+time and the router filters on the index. Computing it would have called `scottish-parliament-or`
+reachable; it sits under `other` where no stream can see it — **1,044,188 sections, 83% of the
+entire gap on its own.** ⚠ **4 collections are UNREACHABLE BY EVERY PATH because `corpusToType`
+returns null** — indexed, retrieved, then dropped by the adapter: `explanatory-notes` (18,801),
+`explanatory-memoranda` (27,428), `erskine-may`, `members-interests`. **Those two explanatory
+corpora are the ones V33 took to 100% embeddable six hours earlier — 24,987 vectors built for
+content no caller can receive.** ⚠ `tier-only` is structurally empty because the only scoped tier
+is `legislation` and that stream owns the whole tier; a second tier-scoped caller changes it.
+Named suspects: treaties `uk-treaties`/`tax-treaties-dta` **keyword-only** (excluded from BOTH
+parliamentary streams by `NON_DEBATE_PARLIAMENTARY`), `uk-treaties-fcdo`/`parliament-treaties`
+reachable; written answers (1.44M) + ministerial statements reachable; HMRC/FCA/quangos/codes/NAO
+reachable, `independent-reviews` + `inquiry-evidence` keyword-only; **impact assessments and
+consultations DO NOT EXIST** (no collection, no `corpus_targets` row); ⚠ **the statistics catalogue
+is not in the searchable corpus at all** — separate DB (`STATS_DATABASE_URL`), so no stream change
+could reach it.
+**§1.2 — 11 of 43 gold questions are satisfied ENTIRELY from outside their declared stream**
+(B2–B5, C1–C4 among them); **4 declare a stream the router does not have** (archetype D, "citation
+graph") — kept separate because it is a missing capability, not a drafting error; **4 are satisfied
+in part by an UNREACHABLE collection** (D2/D3/E3/F3, all `explanatory-notes`), so to that extent the
+recall numbers measure the index rather than the product; **12 in part by a keyword-only
+collection — meaning turning routing ON costs recall on those questions.**
+⚠ **THE COMMITTEES DEFECT NO LONGER REPRODUCES.** GOLD_TEST_09 (6 Aug) had CM1 at 100% with **0/20
+committee documents** against a `committees-reports` of 24,876 rows; it holds **323,922** now.
+Re-measured: **CM1 11/20, CM2 8/20, CM3 4/20, CM4 20/20**, all four now satisfied in part from a
+committee collection. One pass, one retrieval config (deterministic BM25) — it does not say the
+stream is good, and does not touch GOLD_TEST_09's finding that committee CONCLUSIONS are not
+ingested.
+**Refactor this needed: `lib/lex/stream-scopes.ts`** now owns the stream scopes (and
+`RouterStreamName`), so the matrix is computed from the table the router dispatches on rather than
+a copy — a copy is how the matrix keeps saying "reachable" a month after someone narrows a filter.
+▼ Earlier:
+2026-08-09 15:05 UTC — ▼ **INGEST V33: THE LEGISLATION TIER STOPPED HIDING WHOLE
 DOCUMENTS IN SINGLE ROWS.** Executes `BRIEF_CC_V33_ingest_wrapup.md` §1/§3/§4/§5 in full, §2 to a
 running job with a hard ceiling. CHANGE_LOG (2026-08-09 15:05 UTC). `tsc` clean; new
 **`v33-check-legislation-sections` 42/42**. New: `docs/RAILWAY_ROLE.md`.
