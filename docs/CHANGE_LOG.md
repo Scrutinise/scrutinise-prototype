@@ -111,6 +111,135 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH Stage 2A — Lex was answering from one stream in five; it now answers from all of them (2026-08-09 12:10 UTC)
+
+Executes `docs/BRIEF_SEARCH_S2A.md` §1 and §2. **§3 and §4 are NOT executed and are still gated —
+see the end.** `tsc --noEmit` clean, `next build` clean (exit 0), new **`check:stream-coverage`
+3/3 with its failing mode proven first**, `check:flags` **50/50**, `check:llm-guards` 9/9,
+`check:lex-general` 30/30.
+
+### §1 — the audit, before anything was changed
+
+`runRoutedSearch` ended `perStream.flat()`. Streams dispatch in `STREAMS` order, each returning up
+to `limit` hits, so the routed list was **stream-blocked**: positions 1..limit were legislation,
+limit+1..2·limit debates, and so on. Any prefix shorter than one stream's block **was one stream**.
+Eight consumers took such a prefix:
+
+| call site | limit | consumes | takes |
+|---|---|---|---|
+| `general-chat.ts:352` | 16 | `.results` | `slice(0,16)` — **the confirmed bug** |
+| `orchestrator.ts:327` seedCauses | 10 | `.results` | type filter → `slice(0,8)` snippets |
+| `orchestrator.ts:479` coherence notes | 8 | `.results` | type filter → `slice(0,5)` |
+| `scripts/score-ordering.ts:60` | 16 | `.results` | top K=20 — the §4 measurement point |
+| `stage-search.ts:130` / `:158`, `field-machine.ts:318`, `check-orientation.ts:422` | 12–16 | `.grouped` | `groupForPanel` |
+
+`gateway-legacy.ts:158` is NOT affected — the three legacy legislation surfaces set `tier` and
+never fan out.
+
+⚠ **Measured, not argued.** `check:stream-coverage --pre-fix` re-creates the old concatenation and
+reports what the old code did on four multi-stream questions: **1 of 5 streams reached the answer
+context, four times out of four.** 240 documents retrieved, 16 shown to Lex, all legislation. That
+is the direct cause of Lex saying *"the sources do not contain information on what select
+committees have said"* while committees had returned 48 hits.
+
+### §1 — the fix, at the seam
+
+`lib/lex/interleave.ts` round-robins the streams into one list: the floor (≤2 per stream) first,
+then rank 3 from each, then rank 4, skipping exhausted streams. `runRoutedSearch` calls it with a
+budget equal to the TOTAL hit count, so it is a pure **reordering that drops nothing** — truncation
+stays with the caller that knows its own budget, and is now safe because any prefix of an
+interleaved list is stream-balanced. One change fixes all eight consumers. After: **16 documents
+split 4/3/3/3/3 across five streams**, or 6/5/5 across three.
+
+⚠ **A second flat-concatenation slice, found by the audit and not predicted by the brief:**
+`facts.ts` took `.slice(0, 8)` off a stored `grouped` list, which `groupForPanel` returns as TYPE
+BLOCKS concatenated — so a prefix of 8 covered barely three blocks and later types never reached
+Lex. That block is the one telling Lex *"these titles are the ONLY things you may say were found"*,
+so a type missing from it is a type Lex must deny having found. Same helper, floor 1 (a list of
+titles is not answer context — one committee report named beats none).
+
+⚠ **`groupForPanel` already does the global cross-stream score sort the brief argues against**, and
+it becomes actively destructive the moment `LEX_VECTOR_STREAMS` is set: `fuseWeightedRrf`
+**overwrites `score`** with the RRF value (~0.008–0.016) while unfused streams carry raw BM25
+(~5–25), so the fused stream sorts below every other one and can be clipped out of the 20-cap
+entirely. **NOT fixed here** — it is a ranking-policy change and belongs with the ordering
+baseline. Recorded so the reranker decision is not made without it.
+
+### §1 — the budget, priced not decided
+
+**The budget is UNCHANGED at 16.** Three multi-stream questions, budgets run forward then reversed,
+token counts from the API's own `usageMetadata` (now surfaced in the lex-general diagnostics):
+
+| budget | input tokens | answer call | end-to-end |
+|---|---|---|---|
+| 16 | 2,947 | 1,708 ms | 5,438 ms |
+| 24 | 4,198 **(+42%)** | 1,887 ms | 5,345 ms **(−2%)** |
+| 32 | 5,317 **(+80%)** | 2,036 ms | 5,587 ms **(+3%)** |
+
+**Latency is not the constraint — cost is.** Retrieval dominates end-to-end (~3.5s) and swamps the
+answer call's growth, so the three budgets are indistinguishable to a user. Charlie's call.
+
+### §2 — routing, three changes, measured one at a time
+
+New `scripts/measure-routing.ts` over a **fixed 12-query mix, pinned in the file**. The 9 Aug
+"7/12" was 12 calls over a harder 3-query mix that is not in version control, so it cannot be
+re-run; these numbers are comparable to each other and **not** to 7/12.
+
+⚠ **REPEATS ARE NOT OPTIONAL, and the first run proved it.** One pass returned **12/12 full** — on
+the same queries that had failed open minutes earlier. The failure is genuinely intermittent, so a
+single pass measures the sample, not the system, and would have reported "fixed" before anything
+changed. Baseline over 36 calls: **35/36 decided, 1 runaway (2.8%), that one call 14,667 ms.**
+
+At a ~3% event rate nothing can be attributed by waiting, so `QUERY_ROUTER_MAX_TOKENS` makes the
+truncation reproducible on demand (default unchanged). At a forced 60-token ceiling, one variable:
+
+- **salvage OFF → 1/12 decided.** **salvage ON → 12/12** (11 partial, 0 failed).
+
+⚠ **THE BRIEF'S PREMISE ABOUT PROPERTY ORDER IS WRONG, and the measurement is what found it.**
+Every salvaged payload contained `caselaw, committees, debates` and **never `legislation`** —
+Gemini emits **alphabetically**, not in schema-declaration order, so a truncation destroys the two
+alphabetically-last streams. `legislation` is the stream carrying dense retrieval and the one the
+PECR regression was observed on: exactly the wrong one to lose. Adding `propertyOrdering` to the
+response schema took `legislation` from **0/12 to 12/12** in truncated payloads. (This is an
+ordering hint, not a content constraint, which is why it does not carry `maxLength`'s failure mode
+— it was still measured on its own pass.)
+
+§2.2 instructs 6–12 words with three worked examples and applies a **deterministic word cap after
+parsing** (`QUERY_WORD_CAP=12`, ours, unignorable). **The cap fired 0 times in 60 production-budget
+calls** — the prompt alone is holding queries at 6–8 words, so the cap is the floor under it rather
+than the mechanism. Proven able to fire: at cap 3 it cuts and logs what it dropped.
+
+§2.3 emits `route_outcome=full|partial|failed` with the stream list and running totals on **every**
+routing call, including every fail-open. **Exit criterion met: 36/36 decided forward, 24/24
+reversed, zero silent fail-opens.**
+
+⚠ **A side-effect to watch, reported not swallowed:** the few-shot examples make the model omit
+corpora it does not need — `caselaw` selection fell from 36/36 to 22/36. That is cheaper and it is
+what the examples demonstrate, but whether it is *better* is a retrieval-quality question the gold
+set answers, not this sprint.
+
+### A stale check that had been failing against correct code
+
+`check:flags` asserted `reason: 'truncated'` inside `query-expansion.ts`. The 8 Aug refactor moved
+that literal into the shared guard `gemini-finish.ts` and left the assertion pointing at the old
+home, so **it has been failing ever since — `check:flags` was 48/49, not the 49/49 recorded.** Now
+asserted where the rule lives, plus a second assertion that `query-expansion` still delegates to
+the guard. 50/50.
+
+### §3 and §4 — NOT RUN, and why
+
+**Gate 1 is open** (§1 and §2 landed, `check:stream-coverage` passes). **Gate 2 is CLOSED:** there
+is no `corpus_vec` delta-embed completion marker in `handoff_summary.md` or `CHANGE_LOG.md`. Our own
+standing rule is that a baseline gathered across an index change is void, and the delta embed is an
+index change on the legislation stream — the one carrying dense retrieval and the one the PECR
+regression sits on. Measuring now would produce a number to throw away.
+
+**Prediction recorded before measuring, per the brief:** the interleaving fix substantially changes
+the answer text on multi-stream queries, because the old answer was written from legislation-only
+context; the PECR-leading ordering may dissolve entirely. Unscored until Gate 2 opens.
+
+---
+
 ## PUBLIC — "Reading legislation: a working guide" published as a draft seeking correction (2026-08-09 08:45 UTC)
 
 `tsc` clean, `next build` clean, new **`npm run check:legislation-guide` 36/36** (30 invariants

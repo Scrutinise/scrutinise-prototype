@@ -2,7 +2,55 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 08:45 UTC — ▼ **PUBLIC: "READING LEGISLATION: A WORKING GUIDE" IS
+*Last updated: 2026-08-09 12:10 UTC — ▼ **SEARCH STAGE 2A: LEX WAS ANSWERING FROM ONE STREAM IN
+FIVE. IT NOW ANSWERS FROM ALL OF THEM.** Executes `BRIEF_SEARCH_S2A.md` §1+§2; CHANGE_LOG
+(2026-08-09 12:10 UTC). `tsc` + `next build` clean; new **`check:stream-coverage` 3/3 with its
+FAILING mode proven first**, `check:flags` **50/50**, `check:llm-guards` 9/9, `check:lex-general`
+30/30.
+⚠ **THE BUG, MEASURED NOT ARGUED.** `--pre-fix` mode re-creates the old `perStream.flat()` and
+reports what shipped: **1 of 5 streams reached the answer context, 4 times out of 4** — 240
+documents retrieved, 16 shown to Lex, all legislation. That is why Lex said *"the sources do not
+contain information on what select committees have said"* while committees had returned 48 hits.
+After the fix: **16 documents split 4/3/3/3/3 across five streams.**
+**The fix is at the SEAM**: `lib/lex/interleave.ts` round-robins (floor ≤2/stream), and
+`runRoutedSearch` calls it with a budget equal to the TOTAL hit count — a pure REORDERING that
+drops nothing, so all EIGHT audited consumers are fixed by one change and any prefix a caller takes
+is stream-balanced. ⚠ **A SECOND flat-concatenation slice the brief did not predict: `facts.ts`
+sliced 8 off a TYPE-BLOCKED grouped list**, inside the block that tells Lex "these titles are the
+ONLY things you may say were found" — so a missing type was a type Lex had to deny finding. Same
+helper, floor 1.
+⚠ **NOT FIXED, ON RECORD FOR THE RERANKER DECISION: `groupForPanel` already does the global
+cross-stream score sort the brief argues against, and `fuseWeightedRrf` OVERWRITES `score` with an
+RRF value (~0.01) while unfused streams carry raw BM25 (~5–25).** The moment `LEX_VECTOR_STREAMS`
+is set, legislation sorts below every other stream and can be clipped out of the panel's 20-cap
+entirely. It is a ranking-policy change, not a truncation bug.
+**BUDGET PRICED, NOT DECIDED — unchanged at 16. Charlie's call.** Tokens from the API's own
+usageMetadata: **16 → 2,947 in / 5,438ms · 24 → 4,198 (+42%) / 5,345ms · 32 → 5,317 (+80%) /
+5,587ms.** **Latency is NOT the constraint — cost is**; retrieval (~3.5s) swamps the answer call, so
+the three are indistinguishable to a user.
+⚠ **§2 — REPEATS ARE NOT OPTIONAL, and the first run proved it: one pass returned 12/12 on the same
+queries that had failed open minutes earlier.** The runaway is genuinely intermittent (**baseline
+35/36, one 14.7s failure = 2.8%**), so `QUERY_ROUTER_MAX_TOKENS` now makes truncation reproducible
+on demand. At a forced 60-token ceiling, one variable at a time: **salvage OFF 1/12 decided →
+salvage ON 12/12.**
+⚠ **THE BRIEF'S PROPERTY-ORDER PREMISE IS WRONG. Gemini emits ALPHABETICALLY, not in schema order** —
+every salvaged payload held `caselaw,committees,debates` and **never `legislation`**, the stream
+carrying dense retrieval and the one the PECR regression sits on. Adding `propertyOrdering` took
+legislation from **0/12 to 12/12** in truncated payloads.
+**Exit criterion met: 36/36 decided forward, 24/24 reversed, zero silent fail-opens**;
+`route_outcome=full|partial|failed` now logs on every call with running totals. The word cap fired
+**0 times in 60 production-budget calls** (prompt alone holds 6–8 words) and is proven able to fire.
+⚠ **`check:flags` HAD BEEN FAILING SINCE 8 AUG AGAINST CORRECT CODE** — it looked for
+`reason: 'truncated'` in `query-expansion.ts` after the refactor moved it to `gemini-finish.ts`. It
+was 48/49, not the 49/49 recorded. Fixed, 50/50.
+⚠ **§3 AND §4 ARE NOT RUN. Gate 1 open, GATE 2 CLOSED — there is no `corpus_vec` delta-embed
+completion marker anywhere in the docs.** A baseline gathered across an index change is void, and
+the delta embed is an index change on exactly the stream the regression sits on. **Ingest thread:
+stamp the completion here and the benchmark can run.** Prediction recorded before measuring: the
+interleaving fix substantially changes the answer text on multi-stream queries and may dissolve the
+PECR regression entirely, because the old answer was written from legislation-only context.
+▼ Earlier:
+2026-08-09 08:45 UTC — ▼ **PUBLIC: "READING LEGISLATION: A WORKING GUIDE" IS
 PUBLISHED — AS A DRAFT ASKING TO BE CORRECTED.** CHANGE_LOG (2026-08-09 08:45 UTC). `tsc` +
 `next build` clean, new **`check:legislation-guide` 36/36**, and **driven in a browser end to
 end** — page rendered, form submitted, row inspected, row deleted.
