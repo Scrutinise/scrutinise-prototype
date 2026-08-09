@@ -2,7 +2,45 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 07:43 UTC — ▼ **CENTRAL STAGE 2: POINTS & LEADERBOARDS ARE BUILT, ON AN
+*Last updated: 2026-08-09 08:28 UTC — ▼ **SEARCH: THE TRUNCATION CLASS IS DEAD AT SOURCE; AND THE
+ORDERING BASELINE IS BLOCKED — WHICH IS ITSELF THE FINDING.** Report:
+`docs/ORDERING_METRIC_PROPOSAL.md` §A–C; CHANGE_LOG (2026-08-09 08:28 UTC). `tsc` + `next build`
+clean; new **`check:llm-guards` 9/9**, `check:flags` 49/49, `check:lex-general` 19/19.
+⚠ **THE AUDIT FOUND THE CLASS WAS NEVER CONFINED TO THE ROUTER — SEVEN JSON call sites had no
+`finishReason` check** (four in `lex-client` incl. the main Lex turn, plus `feedback` and the tool
+decider). `lib/lex/gemini-finish.ts` is the single guard now. ⚠ **Sharpest find: the tool decider at
+256 tokens — a truncation there does not throw, the `functionCall` part is just absent, so it
+silently returns "no tool wanted" and Lex answers without the figures it should have had. A failure
+wearing the face of a decision.** `check:llm-guards` enforces it as a SOURCE invariant and **caught
+`tool-runner`, which I had misclassified by eye.** **CLAUDE.md §18** is the standing rule.
+⚠ **§3 THE BENCHMARK CANNOT YET BE RE-ESTABLISHED — routing is still intermittent.** Measured on
+`routeQuery`, one variable at a time: after the bad-json fix **8/10, all failures `timeout` at
+10s** (so that fix held); timeout→25s **10/12**; adding `maxLength:200` **3/12 — far WORSE**, model
+degenerating into repetition, **reverted after one measured pass** (Gemini's responseSchema does not
+honour it); current on a harder 3-query mix **7/12**. ⚠ **What remains is a RUNAWAY, not a ceiling**
+— raising 4,096 again would buy a 3,000-char "query" per stream. **Recommended next, NOT built:
+salvage a PARTIAL routing decision** (JSON is emitted in property order, `legislation` first, so a
+truncated payload usually still holds it) — a `parseRoute` change that beats losing scoping AND
+dense for the whole query.
+⚠ **§4 THE 20 PAIRS ARE COMMITTED; THE BASELINE IS DELIBERATELY NOT PUBLISHED.** 20 pairs / 16
+queries, authored **before any reranker**, three **deliberately inverted**. `score-ordering.ts`
+imports the **real `runSearch`**. **With ~40% of queries failing open a baseline would average
+routed and unrouted rankings — a different system, not a worse ordering of the same one.** Proof:
+the fail-open run returned 48 untiered hits with **UK GDPR, DPA 2018 and PECR 2003 ALL ABSENT from
+the top 20.**
+⚠ **TWO ERRORS IN MY OWN PROPOSAL, found by implementing it.** (1) "measure before grouping" is
+wrong for the routed path — `runRoutedSearch` ends `perStream.flat()`, a concatenation with **no
+cross-stream sort**. (2) ⚠ **A REAL BUG: `general-chat` takes `results.slice(0,16)` off that
+concatenation, so Lex sees the front of the FIRST stream (legislation) and the other four streams'
+hits are retrieved, counted, panel-displayed and DROPPED before the answer.** That is exactly why
+Lex said *"the sources do not contain information on what select committees have said"* while the
+committees stream had been routed and had returned hits.
+**IS THE RERANKER STILL THE RIGHT NEXT BUILD? NOT YET.** Order: salvage partial routing → decide
+stream interleaving into the answer context → baseline → then reranker. **The PECR-leading
+regression is still unattributed and the interleaving bug is now the likelier explanation than any
+ranking defect** — and much cheaper to fix.
+▼ Earlier:
+2026-08-09 07:43 UTC — ▼ **CENTRAL STAGE 2: POINTS & LEADERBOARDS ARE BUILT, ON AN
 EVENT LEDGER.** Executes the "Central Stage 2" brief (6 Aug 2026), all design settled by Charlie
 beforehand. `tsc --noEmit` and `next build` clean; **140/140 checks against the live app DB**
 (`npm run check:central`, up from 83). Full account: CHANGE_LOG "CENTRAL Stage 2"

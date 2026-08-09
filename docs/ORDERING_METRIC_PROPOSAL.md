@@ -212,3 +212,111 @@ benchmark also exposed.
 - **It says nothing about the answer**, only the ranking handed to it. The data-protection
   regression is a *synthesis* failure as much as a ranking one — Lex chose to lead with PECR from
   the sources it had. A better ranking makes that less likely; it does not make it impossible.
+
+---
+---
+
+# BASELINE ATTEMPT — 2026-08-09 08:28 UTC. Blocked, and the blocker is the finding.
+
+*§3 and §4 of the "fix the truncation class first" brief. The harness and the pairs are built and
+committed; the baseline is deliberately NOT published, for the reason below.*
+
+## A. Two errors in the proposal above, found by implementing it
+
+**A1. "Measure on the fused list before grouping" is wrong for the routed path.**
+`runRoutedSearch` (`query-router.ts:157`) ends `return perStream.flat()` — a **plain concatenation
+in `STREAMS` order**, with no cross-stream sort. Its own comment says so: "Pure fan-out + concat —
+no ranking judgement here". So before grouping there is **no cross-stream ranking to measure**:
+positions 1..n are simply the legislation block, then debates, then committees, and so on.
+
+The consequence for the metric:
+
+- **within-stream** pairs (UK GDPR vs PECR — both legislation) *are* measurable on the ungrouped
+  list, because a stream's own fused list is a real ranking;
+- **cross-stream** pairs (a committee report vs a statute) are **not** — they can only be judged
+  after `groupForPanel`, which is where scores are compared across streams.
+
+The pair set in `scripts/gold-preferences.ts` deliberately contains both kinds, including three
+inverted pairs. Those inverted ones cannot be scored on the ungrouped list at all. **The metric
+needs to specify a surface per pair**, or score cross-stream pairs on `grouped`. Not yet fixed.
+
+**A2. ⚠ A real bug the same reading exposed: the answer sees a concatenation, not the best hits.**
+`general-chat.ts` takes `search.results.slice(0, 16)` as the context handed to Lex. Since
+`results` is the concatenation, **those 16 come off the front of whichever stream `STREAMS` lists
+first — legislation** — and the other four streams' hits are retrieved, counted in "235
+retrieved", shown in the panel, and then **dropped before the answer**.
+
+That exactly explains the live trial: Lex answered *"The provided sources do not contain
+information on what select committees have said about these instruments or any relevant case
+law"* — while the committees and caselaw streams **had both been routed and had returned hits**.
+It was telling the truth about what it was shown, and what it was shown was one stream.
+
+Reported, not fixed: how to interleave streams into a single ranked context is a design decision
+(round-robin? by fused score? per-stream quotas?) and it changes what every routed answer is built
+from.
+
+## B. §3 — the benchmark cannot yet be re-established, because routing is still intermittent
+
+Measured directly against `routeQuery`, live, one variable at a time:
+
+| state | mix | dispatched | failed open | reason |
+|---|---|---:|---:|---|
+| after the `bad-json` fix (`b5319bf`) | 1 query ×10 | 8/10 | 2/10 | **`timeout` at 10,000 ms** — no bad-json at all, so that fix held |
+| + timeout 10s → 25s | 1 query ×12 | 10/12 | 2/12 | `truncated` at 4,096 |
+| + `maxLength: 200` in the schema | 3 queries ×12 | **3/12** | **9/12** | `truncated`, model **degenerating into repetition** |
+| **reverted, current** | 3 queries ×12 | **7/12** | 5/12 | `truncated` at 4,096 |
+
+**The timeout raise is kept** — it removed the timeout class outright and cost nothing; the
+retrieval that follows already takes 3.4–3.8 s, so 10 s was never protecting the user's latency.
+
+⚠ **`maxLength` was tried and reverted after one measured pass.** Gemini's `responseSchema`
+evidently does not honour `maxLength` on a string, and supplying it *destabilised* generation:
+fail-open went 2/12 → 9/12 and the truncated tails show repetition
+(`…legal rules law OR data protection legal principles law`). A warning comment now sits where the
+constraint would go, so the next person does not repeat it.
+
+**What is left is not a ceiling problem — it is a runaway problem.** The tails show the model
+enumerating without stopping, worst on short vague queries (`leasehold reform` is the reliable
+offender). Raising 4,096 again would buy a 3,000-character "query" per stream, which is useless
+for BM25 anyway — CLAUDE.md §18 rule 5 in action: a bigger number only moves the cliff.
+
+**Recommended next, not built: salvage a PARTIAL routing decision.** The JSON is emitted in
+property order and `legislation` is first, so a truncated payload usually still contains a
+complete `"legislation": "…"` pair. Extracting whatever complete pairs exist beats failing open,
+because a fail-open loses per-stream scoping **and** the dense half for the whole query. That
+turns today's ~40% total loss into a partial one, and it is a change to `parseRoute` alone.
+
+## C. §4 — the pairs are authored; the baseline is deliberately not published
+
+`scripts/gold-preferences.ts` — **20 pairs across 16 queries**, authored **before any reranker
+exists**, seeded from observed failures and from statements about UK law uncontroversial enough to
+assert in advance. Three are **deliberately inverted** (a committee document must outrank the
+statute when the question asks what committees said), so the set cannot be satisfied by a system
+that always prefers legislation.
+
+`scripts/score-ordering.ts` implements the scoring rule, imports the **real `runSearch`** so it
+measures the production ranking rather than a copy, and reports vacuous pairs beside the score.
+
+⚠ **I am not publishing a number, and that is the finding, not a shortfall.** With ~40% of queries
+failing open, a baseline pass would score a *mixture* of routed and unrouted rankings — and an
+unrouted ranking is a different system, not a worse ordering of the same one. The benchmark run
+above shows what that looks like: the fail-open produced 48 untiered hits with **UK GDPR, DPA 2018
+and PECR 2003 all absent from the top 20**, the list dominated by written answers about data
+protection. Averaging that with routed runs would produce a number that means nothing and would
+then be quoted.
+
+**So the honest answer to "is the reranker still the right next build" is: not yet, and we now know
+why.** In order:
+
+1. **Salvage partial routing decisions** (§B) — removes the biggest source of variance.
+2. **Decide how streams are interleaved into the answer context** (§A2) — this is the live bug, and
+   it plausibly explains the PECR-leading observation better than any ranking defect does: Lex was
+   shown one stream's block and wrote the best answer available from it.
+3. **Then** score the baseline, on a system that behaves the same way twice.
+4. **Then** decide about the reranker.
+
+⚠ **On the original question — is the PECR-leading regression real or an artefact?** Still not
+settled, and it is now clear it was never going to be settled by re-running the query while
+routing was intermittent and while the answer context is a single stream's block. §A2 is the more
+likely explanation and it is cheaper to fix than a reranker. **That is the strongest argument yet
+for Charlie's own instruction: one observed regression motivates a metric, not a build.**

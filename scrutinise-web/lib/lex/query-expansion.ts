@@ -206,7 +206,7 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
 //   LEX_QUERY_ROUTER=true      enable (default off — A/B scoreable independently
 //                              of LEX_QUERY_EXPANSION; see search-gateway.ts)
 //   QUERY_ROUTER_MODEL         Gemini model id (default gemini-2.5-flash)
-//   QUERY_ROUTER_TIMEOUT_MS    per-call timeout (default 10000)
+//   QUERY_ROUTER_TIMEOUT_MS    per-call timeout (default 25000 — see the note at the call)
 
 /** The stream names the router can address today (query-router.ts owns the
  *  matching {tier, types, search} config — this file only owns the LLM decision). */
@@ -218,6 +218,12 @@ const ROUTER_STREAMS: RouterStreamName[] = ['legislation', 'debates', 'committee
  *  from the object was judged NOT relevant — the caller skips it entirely. */
 export type RouteResult = Partial<Record<RouterStreamName, string>>
 
+// ⚠ DO NOT add `maxLength` here. Tried 2026-08-09 to stop the model running past the output
+// ceiling: it made things far worse, not better — fail-open went from 2/12 to 9/12, and the
+// truncated tails showed the model degenerating into repetition ("…legal rules law OR data
+// protection legal principles law"). Gemini's responseSchema evidently does not honour maxLength
+// on a string, and supplying it destabilises generation rather than constraining it. Reverted
+// after one measured pass; the length instruction stays in the prompt where it does work.
 const ROUTER_SCHEMA = {
   type: 'object',
   properties: {
@@ -276,7 +282,14 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
   if (!apiKey) return routerFailOpen('missing-key', 'GEMINI_API_KEY is not set in this environment')
 
   const model = process.env.QUERY_ROUTER_MODEL ?? 'gemini-2.5-flash'
-  const timeoutMs = parseInt(process.env.QUERY_ROUTER_TIMEOUT_MS ?? '10000', 10)
+  // 10s was too tight and was the LAST cause of routing being intermittent. Measured 2026-08-09,
+  // 10 consecutive calls with the truncation fix in place: 8 dispatched, 2 failed open, both
+  // `timeout` at exactly 10,000ms — no bad-json at all, so the earlier fix held and this is what
+  // was left. A fail-open costs the whole query its per-stream scoping AND its dense half, which
+  // is a far worse outcome than waiting another few seconds for the one LLM call the routing
+  // depends on. The retrieval that follows already takes 3.4–3.8s, so the ceiling was never the
+  // thing protecting the user's latency.
+  const timeoutMs = parseInt(process.env.QUERY_ROUTER_TIMEOUT_MS ?? '25000', 10)
 
   const userMessage = [
     `Keywords: ${keywords.join(', ')}`,
