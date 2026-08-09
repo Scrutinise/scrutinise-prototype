@@ -2,7 +2,52 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-08 23:00 UTC — ▼ **LEX: CITATIONS ARE MARKERS NOW, THE CONTEXT BLEED IS
+*Last updated: 2026-08-09 02:05 UTC — ▼ **INGEST V32 §2: THE BACKFILL IS DONE AND THE ENTIRE
+POST-BACKFILL CHAIN IS RUN — MERGED, REDEPLOYED, RECONCILED.** CHANGE_LOG (2026-08-09 02:05 UTC);
+new scripts under `scripts/ingest/v32-*`.
+**The backfill drained 12:11 UTC 8 Aug** (batch 400, final batch considered 0 = genuine drain).
+**7,636 archive-only publications: 5,390 fetched · 2,246 settled misses · 0 retryable** — the
+buckets reconcile exactly. **222,315 `arc-` sections / 124.86M words.** Neon 322,117 =
+Lance 322,117, **0 missing · 0 orphans · 0 stale · unindexed 0**.
+⚠ **THE RETRY SWEEP RECOVERED 163 REAL PUBLICATIONS from 218 `[retryable]` misses** (+8,353
+sections). Those were socket drops, not absences — without the settled/retryable split built on
+7 Aug they would all have been written off as permanent corpus gaps.
+⚠ **NEW DEFECT, caught by the metadata pass's own re-run assertion: the title enrichment truncated
+away the name it was adding.** `${title} — ${name}`.slice(0,500) cuts the NAME on overflow, so the
+`includes` guard failed and it re-appended every run. **3,101 rows sat at exactly 500 chars with the
+committee name cut mid-word** — and the name is the only §B join key the FTS layer carries, so all
+3,101 were ingested-but-unfindable (the §D failure). Fixed (reserve room for the name, strip the
+partial tail); 10/10 unit checks; **a re-run now enriches 0**. The OLD assertion was wrong both
+ways — false-positive on 136 natural repetitions, blind to the 3,101 real ones.
+**77,163 index titles refreshed — the §1 entry's recorded pending item, now executed.** No existing
+tool covers this: catch-up only APPENDS, hygiene removes only duplicates/orphans, and the merge
+never re-reads Neon — **a stale title survives all three silently.** 77,163 rewritten, row count
+conserved, 400 re-read all matching, follow-up audit 0 duplicates.
+**Merge + redeploy:** catch-up appended **222,315/222,315** → `corpus_fts` **17,978,744**, leaving
+299,478 unindexed (1.67%); merge cleared it — **unindexed 0, 533s, query 9,850ms → 1,364ms,
+€0.053**, peak RSS 18.0 GB, box auto-destroyed. **`fts-serve` restart PROVEN** (`started_at`
+02:01:30, `served` reset to 0). ⚠ `jobs.ts` `expectedPeakGb` deliberately NOT lowered to 18.0 —
+three runs bracket 18.0–19.8 GB and this one was on a *larger* table; one run under the record is
+noise, not headroom.
+⚠ **ACCEPTANCE 2/5 = EXACTLY the recorded §1 baseline, same three phrases — NOT a regression.**
+Cause unchanged and already documented: the index is `withPosition:false`, so BM25 cannot reward
+adjacency. **What did change is rank — `"gradual and incremental"` 1→6, `"eye-watering"` 4→11** —
+the expected cost of 222,315 new competing sections. Depth 200 returns no more than depth 60, so
+it is ranking, not reach. **Search thread's call; `corpus_fts_positions` (16.5M rows, unused by
+`fts-serve`) remains the obvious lead.** §E loop test **5/5** (Carillion: report, verdict, evidence,
+government response, 2 inquiries with both halves under one id).
+**PREDICTIONS SCORED, both wrong:** completion predicted ~14:30 UTC (range 13:30–15:30), **actual
+12:11 — outside the range** (fetch-attempted count was right at ~2,425 vs 2,431 predicted; the
+rate assumption was the error). Sections predicted 250k–290k, **actual 222,315 — 12–30% over**.
+**OPEN:** (a) **82 publications with no rows at all — all `downloadable`, an API-path backlog for
+the ingest thread, NOT a §2 gap**; zero archive-only-with-URL are unaccounted for. (b) evidence rows
+still lack the inquiry id (§3 covered committees-reports only) — a follow-on pass. (c) 6
+`Correspondence:` titles over the 500-char convention, from the §1 API path, left alone (they carry
+their committee name) and now reported as informational.
+⚠ **`TaskStop` again reported "killed" while the process kept running** — verified by process tree,
+not by the tool's message. Letting it finish was correct.
+▼ Earlier:
+2026-08-08 23:00 UTC — ▼ **LEX: CITATIONS ARE MARKERS NOW, THE CONTEXT BLEED IS
 CONFIRMED AND FIXED, AND THERE IS AN ORDERING-METRIC PROPOSAL FOR THE RERANKER.** Commits through
 `336ff52`; proposal `docs/ORDERING_METRIC_PROPOSAL.md`; CHANGE_LOG (2026-08-08 23:00 UTC).
 `tsc` clean, `next build` clean, `check:lex-general` 19/19, `check:flags` 49/49.

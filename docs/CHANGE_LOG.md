@@ -96,6 +96,100 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V32 §2 — the Wayback backfill is DONE and the whole post-backfill chain is run: merged, redeployed, reconciled (2026-08-09 02:05 UTC)
+
+**The backfill drained at 12:11 UTC on 8 Aug** (batch 400, final batch considered 0 — a genuine
+drain, not a stall). Everything the driver's own exit note listed as "NOT optional and NOT done"
+has now been run to completion: retry sweep → marker cleanup → metadata → hygiene → title refresh →
+catch-up → heavy-job merge → `fts-serve` redeploy → acceptance.
+
+**FINAL §2 POSITION, and the buckets reconcile exactly:** of **7,636** archive-only publications,
+**5,390 fetched · 2,246 settled misses · 0 retryable** = 7,636. **222,315 `arc-` sections,
+124,857,469 words.** Neon 322,117 committees-reports rows = Lance 322,117, **0 missing, 0 orphans,
+0 stale, unindexed 0**.
+
+⚠ **THE RETRY SWEEP WAS WORTH BUILDING, and this is the number that proves it: of 218 `[retryable]`
+misses re-attempted, 163 publications turned out to hold real content** (+8,353 sections). Those
+were socket drops, not absences. Had the settled/retryable distinction not been built on 7 Aug — had
+all misses simply been written off — **163 committee reports would have been recorded as permanent
+corpus gaps that are not gaps at all.** Retryable is now 0.
+
+⚠ **8 `archive-miss` markers were sitting on publications that DO have content**, which is how
+5,390 + 7 + 2,247 came to exceed 7,636. Diagnosed from write timestamps rather than guessed: **all
+8 were written AFTER their content landed, all between 20:04 and 20:59 UTC on 7 Aug** — the window
+when three backfill drivers ran concurrently (the reaped-but-alive incident). One process wrote the
+content and cleared the marker; a second, working the same publication, took a contention-induced
+drop and wrote a fresh marker on top. Removed (`v32-clear-stale-markers.ts`, guarded to abort if the
+matched set ever exceeds 20). A marker on a publication that is not missing overstates the gap.
+
+⚠ **A REAL DEFECT, NEW, AND CAUGHT BY THE SCRIPT'S OWN RE-RUN ASSERTION RATHER THAN BY INSPECTION:
+the title enrichment was not idempotent, and the reason is that it truncated away the very thing it
+was adding.** `${title} — ${committeeName}`.slice(0, 500) cuts the NAME when the result overflows,
+so the guard `!title.includes(name)` found no name next run and appended again. **3,101 rows were
+sitting at exactly 500 characters with the committee name cut mid-word (`… — Se`)** — and the
+committee name is the only §B join key the FTS layer carries, so every one of them was
+ingested-but-unfindable in the committees stream, the exact §D failure the pass exists to prevent.
+Fixed by reserving room for the name and truncating the description instead, plus stripping any
+partial name a previous run left on the tail. 10/10 unit checks; **a second run now enriches 0**
+(was 3,101). ⚠ The old assertion was ALSO wrong in both directions — it counted name occurrences and
+flagged >2, which false-positived on **136** rows whose description legitimately names the committee
+("House of Commons Commission Annual Report … — House of Commons Commission") while missing the
+3,101 real ones entirely. Replaced with the invariant that actually matters: every matched row
+carries its committee name in full.
+
+**77,163 index titles refreshed — the item the §1 entry recorded as pending, now executed.** §1
+recorded that "the title enrichment is in Neon but NOT yet in Lance … the refresh rides along with
+the §2 merge". It did. The mechanism is worth stating because no existing tool covers it:
+`fts-catchup` only APPENDS ids missing from the index, `fts-hygiene` removes only duplicates and
+orphans, and the heavy-job merge rebuilds the inverted index over existing fragments without ever
+re-reading Neon — **so a stale title survives all three, silently.** `v32-refresh-stale-titles.ts`
+reads the full index row, patches `sectionTitle` from Neon, deletes and re-adds (fts-hygiene's
+proven pattern). **77,163 rewritten, table 17,756,429 → 17,756,429 rows conserved, 400 re-read and
+all match Neon**, and the follow-up audit found **0 duplicates** — proof the delete-then-add did not
+double-insert. Reversible throughout: every row has a live `corpus_sections` row and an R2 body.
+
+**Catch-up + merge.** Catch-up appended **222,315 of 222,315** missing rows (exact), taking
+`corpus_fts` to **17,978,744**, and left **299,478 unindexed (1.67%)** = 222,315 appended + 77,163
+re-added. The merge cleared it: **unindexed 0, 533s, sample query 9,850ms → 1,364ms, €0.053**, peak
+RSS **18.0 GB** on cpx62, box destroyed automatically. **`fts-serve` redeployed and the restart is
+PROVEN, not assumed** — `/stats` `started_at` 02:01:30 UTC and `served` reset to 0; without it the
+service holds its boot snapshot and every measurement after a merge is meaningless.
+⚠ **`jobs.ts` `expectedPeakGb` deliberately NOT lowered to 18.0.** Three runs now bracket 18.0–19.8
+GB, and this one hit 18.0 on a *larger* table — one run under the record is noise, not headroom, so
+the same rule that refused to size down in August applies in reverse. 32 GB stays right.
+
+**ACCEPTANCE: 2/5 — which is EXACTLY the recorded §1 baseline, same three phrases. Not a
+regression.** The §1 entry already established the cause and it has not changed: the live index is
+built `withPosition: false`, so BM25 cannot reward adjacency and a section containing the exact
+phrase does not outrank sections using its common words more often. The three are present, split
+and indexed. ⚠ **What did change is rank: `"gradual and incremental"` 1 → 6 and `"eye-watering"`
+4 → 11**, the expected cost of adding 222,315 competing sections. Depth 200 retrieves no more than
+depth 60, so this is ranking, not reach. **Still the search thread's question, and the
+`corpus_fts_positions` table (16,509,051 rows, unused by `fts-serve`) is still the obvious lead.**
+§E loop test **5/5** — Carillion resolves report, verdict, evidence and government response, with
+two inquiries carrying both halves under one id.
+
+**PREDICTIONS SCORED, both wrong, recorded so the method improves:**
+- **Completion time: predicted ~14:30 UTC (range 13:30–15:30); actual 12:11 UTC — outside the
+  range.** Two errors: the fetchable remainder ran at ~550/hr, not the 375/hr measured mid-run, and
+  1,505 of the tail settled cheaply against 1,022 predicted. The fetch-attempted count was good
+  (2,431 predicted, ~2,425 actual) — **the rate assumption was the error, not the arithmetic.**
+- **Final sections: predicted 250k–290k; actual 222,315 — 12–30% over.** Extrapolated ~40
+  sections/publication at ~85% reach onto a tail that delivered smaller documents at 77% reach.
+
+**OPEN, and none of it silent:** (a) **82 publications** in the manifest still have no rows at all —
+all `downloadable`, i.e. an API-path backlog for the ingest thread, not a §2 gap; **zero**
+archive-only-with-URL publications are unaccounted for, so §2 is complete on its own terms (the 83rd
+has no archive URL and never could be fetched). (b) evidence rows still do not carry the inquiry id —
+§3 covered committees-reports only; evidence↔inquiry is a follow-on pass. (c) 6 `Correspondence:`
+titles exceed the 500-char convention, written by the §1 API path and left alone because they carry
+their committee name; reported as informational rather than failed, so it stops crying wolf on every
+future run.
+
+⚠ **`TaskStop` reported "killed" on the title refresh and the process was still alive and still
+writing** — verified by process tree, not by the tool's message. Same pattern as the three
+concurrent drivers on 7 Aug. Letting it run was correct; restarting it would have raced itself.
+
 ## LEX — cite by marker not id, general chat stops inheriting history into retrieval, and an ordering-metric proposal (2026-08-08 23:00 UTC)
 
 Commits `336ff52` and the two before it. Report for §3: `docs/ORDERING_METRIC_PROPOSAL.md`.
