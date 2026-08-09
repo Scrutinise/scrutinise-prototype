@@ -135,8 +135,11 @@ function toUnits(text: string): Array<{ text: string; para: number | null }> {
  * the kind this sprint exists to fix — would come out as one blob again.
  *
  * Operates on the text BEFORE partitioning, so the sections still rejoin to it exactly.
+ *
+ * Exported for `legislation-sections.ts` (V33 §1), which faces the same problem in its most
+ * extreme form: an `eur-lex` body arrives as ONE line of 4.25M characters.
  */
-function splitOversizeLines(text: string, limit: number): string {
+export function splitOversizeLines(text: string, limit: number): string {
   return text.split('\n').flatMap((line) => {
     if (line.length <= limit) return [line]
     const out: string[] = []
