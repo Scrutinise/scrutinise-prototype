@@ -1,5 +1,99 @@
 # V26 §6 legacy DROP — re-audit after the 4 Aug repoint
 
+> ## ⚠ ADDENDUM 2026-08-09 20:54 UTC — READ THIS FIRST. THE AUDIT BELOW IS STALE IN BOTH DIRECTIONS.
+>
+> *Written by the SEARCH thread (a V33 brief was delivered into the search session by mistake).
+> **Report only — nothing was changed, nothing dropped, no schema touched.** Verified against the
+> working tree at commit `972de76` and against live Neon (`neondb`), read-only.*
+>
+> **VERDICT: DO NOT `pg_dump`-ARCHIVE AND DROP YET.** The premise that the DROP is gated only on
+> "six web paths plus one row" no longer holds. Three of the audit's items are already done; three
+> paths it never listed are still live. The real remaining count is **eight**.
+>
+> ### Already repointed — no work left
+>
+> | audit item | state on 9 Aug |
+> |---|---|
+> | `lib/lex/fts-search.ts:195` (path 2) | reads `prisma.corpusAct` ✅ |
+> | `lib/lex/vector-search.ts:128` (path 3) | reads `prisma.corpusAct` ✅ |
+> | `scripts/ingest/search/citation-resolver.ts` (§b) | reads `corpus_acts` ✅ — the boot-critical one |
+>
+> So `fts-serve` will **not** die at boot on the DROP. One stale COMMENT remains at
+> `scripts/ingest/search/fts-query-service.ts:222` claiming the index is "built from
+> LegislationItem"; the code beneath it is correct.
+>
+> ### Still reading the legacy tables — eight, not six
+>
+> (§(a) below is also internally inconsistent: its heading says six, its table lists seven.)
+>
+> | # | Path | Reads | Live? |
+> |---|---|---|---|
+> | A | `lib/lex/gateway-legacy.ts:287` | `LegislationSection` enrichment | Yes — Lex chat, panel, `/api/search` |
+> | B | `app/legislation/[itemId]/page.tsx:13,26` | `LegislationItem` + sections + amendments | **Yes — public page, NOT IN THE AUDIT** |
+> | C | `app/api/legislation/[itemId]/route.ts:9` | same | Yes |
+> | D | `app/api/legislation/test-sections/route.ts:10` | `LegislationSection` | Yes (test route) |
+> | E | `app/api/ideas/[id]/field-approval/route.ts:165` | reads `LegislationItem`, writes `IdeaLegislation` | Yes |
+> | F | `app/api/legislation/link/route.ts:23` | writes `IdeaLegislation.legislationItemId` | Yes |
+> | G | `lib/search.ts:177–178` | raw SQL join | Yes — **filtered `/api/search` is served ONLY by this**, plus `/api/ai/[ideaId]:708` |
+> | H | `app/api/ideas/[id]/legislation-search/route.ts:75–76` | raw SQL join | **Fallback — NOT IN THE AUDIT** |
+>
+> ⚠ **G and H are FALLBACKS, which is the worst shape for this.** They fire only when the gateway
+> has already failed. After the DROP they stop being a degraded answer and become a second
+> exception thrown on top of the first — the failure arrives on the day you least want it.
+>
+> ### The finding that shrinks the job (measured, not estimated)
+>
+> The public browse→detail journey looks like the large blocker. It is not:
+>
+> - **914,274** legacy sections, but only **1,639** renderable (`COMPILED`/`NEEDS_REVIEW`), across
+>   **432 Acts**. Only **24,579** carry a `compiledTextKey`.
+> - `/legislation/[itemId]` therefore serves real content for **432 of 135,531 browsable Acts —
+>   0.3%.** The other 99.7% already render an empty section list today.
+> - **All 432 of those Acts are covered by `corpus_sections`.** Zero gap.
+>
+> So B and C are a much smaller repoint than §(a) implies, and doing them *widens* browse from
+> 135,531 to 250,808 instruments rather than costing anything (the follow-on ACT_METADATA.md
+> already describes).
+>
+> ### Blockers re-confirmed live
+>
+> - **`IdeaLegislation`: still exactly 1 row** — idea `374c54e5-1bf5-42f1-970c-6e19a9b87132`,
+>   `legislationItemId` `2ecb9cd9-fd0f-4d57-958d-cbbac9013370`, **Constitutional Reform Act 2005,
+>   gid `ukpga/2005/4`, `linkType: relevant`.** `corpus_acts` carries that gid, so a gid-based
+>   reference is available.
+> - **Space: 15.79 GiB of 17.5 (90.2%).** `LegislationSection` **1,712 MB** + `LegislationItem`
+>   **61 MB** ≈ **1.73 GB → ~80.3%**. Unchanged conclusion: **headroom, not a solved problem.**
+>   `corpus_sections` is **12 GB** and is where the storage question actually lives.
+> - ⚠ **`pg_stat_user_tables.n_live_tup` is badly stale on this database** — it reports 0 rows for
+>   `LegislationSection` (actual count 914,274), 0 for `IdeaLegislation` (actual count 1), and 480,120 for
+>   `corpus_sections`. `pg_total_relation_size` is reliable; the row estimates are not. Do not size
+>   or verify the DROP off that view.
+>
+> ### Suggested order of work (web side)
+>
+> 1. **Writes and the FK** — D delete, E+F repoint to gid, migrate the one `IdeaLegislation` row.
+>    Needs a Neon migration (gid column on `IdeaLegislation`), so `whichdb` first per CLAUDE.md §16.
+> 2. **B + C** — teach the detail page to resolve a gid and read from `corpus_sections`/R2.
+> 3. **A + G + H** — retire the enrichment read and both fallbacks. Largest, and the only slice with
+>    a user-visible behaviour change.
+>
+> ### Three decisions that block slice 3 — Charlie's, not the threads'
+>
+> 1. When the gateway fails and there is no legacy index, should `/api/search` and the idea
+>    legislation panel **fail honestly** (recommended, consistent with §19-C) or something else?
+>    This is a real reduction in resilience.
+> 2. The one `IdeaLegislation` row — **migrate to a gid reference** (recommended; it is somebody's
+>    saved link) or delete?
+> 3. Filtered search (`type`/`year`/`actId`) is served ONLY by the legacy path. `corpus_acts`
+>    carries `legislation_type`, `year` and `jurisdiction`, so the filters CAN move — but that is a
+>    slice of work, not a line. Move them, or retire the filter UI?
+>
+> **Until 1–3 are answered and the eight paths are cleared, the archive-and-DROP should not run.**
+
+---
+
+## The 7 Aug audit, as written (superseded in part by the addendum above)
+
 *7 Aug 2026. **Report only. Nothing dropped, nothing altered.** Triggered by the new
 serve-observer firing a real alert: Neon at **15.93 GB of a 17.5 GB ceiling (91%)**.*
 
