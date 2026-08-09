@@ -1,6 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-06 20:57 UTC — LEX: Web/X orientation, Stage 0. The Page-1 briefing now runs a
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-09 07:43 UTC — CENTRAL Stage 2: points & leaderboards, built on an EVENT
+LEDGER rather than stored balances — every balance and leaderboard is computed, the ledger only
+appends, and each event stamps the tariff it used, which is what makes "editing a tariff changes only
+subsequent events" true by construction. Mark values were MIRRORED from the main system as briefed,
+not invented: `lib/points.ts` prices a contribution rating at +4/-4 at its base tiers, and a binary
+Central mark maps to exactly those. ⚠ Two settled numbers collide: 10% of a 4-point mark floors to
+zero, so a MARK never pays the referral chain anything — bonuses only appear on claim-sized events.
+That is asserted in the tests rather than hidden, and raising either number is a row edit, Charlie's
+call. Also: the admin cascade now reads and moderates descendant boards (a deliberate reversal of the
+Stage 1.1 join-first gate — you cannot moderate what you cannot see) while posting and marking still
+require membership; the daily marking budget counts from the ledger, not from vote rows, because
+withdrawing a mark would otherwise refund it; branch leaderboards attribute by the node the activity
+happened on, not by current membership; and the Community activity log is visible to every member,
+which is the anti-abuse mechanism. Nothing was backfilled — the one vote on production is a self-mark
+predating the guardrails. Additive hand-written schema on Neon, 140/140 live checks (up from 83),
+`tsc` and `next build` clean. Earlier: 2026-08-06 20:57 UTC — LEX: Web/X orientation, Stage 0. The Page-1 briefing now runs a
 web-grounding and X-search pass alongside the corpus search, so Lex stops visibly missing what an
 ordinary web search finds. **Coverage 10/12 signals (83%) against a corpus-only control of 1/12 (8%)**
 on a new 5-question gold set whose answer key was written from an independent web search BEFORE the
@@ -93,6 +108,113 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## CENTRAL Stage 2 — points & leaderboards, on an event ledger (2026-08-09 07:43 UTC)
+
+Executes the "Central Stage 2 — points & leaderboards" brief (6 Aug 2026), with all design questions
+settled by Charlie beforehand. Central plus two shared display surfaces (dashboard, profile).
+`tsc --noEmit` and `next build` both clean. **140/140 checks pass against the live app DB**
+(`npm run check:central`, up from 83).
+
+### The audit that set the mark values
+
+The brief said to mirror the main system rather than invent numbers, so the first thing done was to
+read it. `lib/points.ts` `POINTS_SCHEDULE` prices a contribution rating at **+4** (3★, the lowest
+positive tier), +8 (4★), +12 (5★) and **−4** (1–2★). A Central mark is **binary** — no quality
+gradation — so it maps to the base positive tier and the negative tier: **+4 / −4**. Symmetric, both
+numbers taken from the main system, and no scaling against the 12 pts/hr anchor was needed (4 points
+≈ 20 minutes of basic work). The check script asserts the equality against `POINTS_SCHEDULE` directly,
+so the two cannot silently drift apart. **If a constructive mark should feel weightier, +8 is the next
+rung the main system already defines — one tariff row, no code.**
+
+### Architecture: an event ledger, never balances
+
+`PointsEvent` is one signed, timestamped, source-tagged row per earning or deduction; every balance
+and every leaderboard is computed from it. **The ledger only appends** — a withdrawn mark adds a
+negative row rather than deleting the original, and a reversal reverses **at the value the original
+award used**, not at today's tariff, so a retune cannot be banked by re-marking. Each event stamps
+`tariffKey`/`tariffPoints`/`tariffId` at write time, which is what makes "editing a tariff changes
+only subsequent events" true by construction rather than by care.
+
+`PointsTariff` and `PointsConfig` hold the numbers; retuning is a row edit. Nothing in
+`lib/central-points.ts` touches `Reputation`, `PointsLedger` or `CredibilityScore` — the two scores
+are displayed side by side and never summed.
+
+### ⚠ A consequence of two settled numbers meeting
+
+**10% of a 4-point mark floors to zero, so a mark never pays the referral chain anything.** Bonuses
+only materialise on claim-sized events (24/40/60). This is not an arithmetic bug — it is what a
+mirrored mark value of 4 and a starter L1 rate of 10% produce together. Flooring is the conservative
+choice (a bonus is a share, never a rounding-up gift). It is **asserted in the check script** so the
+behaviour is recorded rather than discovered later, and it is Charlie's call whether to raise the mark
+value or the L1 rate — both are row edits. The three layers are exercised on a 60-point event, where
+all of L1/L2/L3 land at 6/3/1.
+
+### Schema — additive, hand-written, applied to Neon
+
+`prisma/central_stage2.sql`: five tables (`PointsEvent`, `PointsTariff`, `PointsConfig`,
+`CommunityReferral`, `ActivityClaim`), their indexes and foreign keys, and the starter tariff/config
+seed. Hand-written, not from `migrate diff`; production column types read first and matched. Applied
+after a `whichdb`-equivalent host check and re-run once to prove idempotence.
+
+**Nothing was backfilled into the ledger.** The single bulletin vote on production is a self-mark
+predating the guardrails, so paying it out would have opened the ledger with the exact row the rules
+now forbid. Flagged rather than deleted — it is Charlie's test data.
+
+⚠ Second index Prisma cannot declare, after Stage 1.2's: `ActivityClaim_one_per_day`, an **expression
+partial unique** on (userId, activityType, occurredAt::date) `WHERE status <> 'DECLINED'`. Excluding
+declined rows is deliberate and follows the Stage 1.2 precedent — a flat guard would make a declined
+claim permanently un-correctable, and a declined claim paid nothing.
+
+### The admin cascade, and the gate it reverses
+
+Decision 5 takes all three powers, which means **reading and moderating descendant boards** — a
+deliberate reversal of the Stage 1.1 join-first gate, because you cannot moderate what you cannot see.
+New `canReadBoard()`; the bulletin list and detail routes now admit managers. **Writing did not
+change**: posting, replying and marking still require membership, so an ancestor admin runs a branch
+without participating in it. A new `DELETE` on the post route handles removal, by a manager or the
+author.
+
+**Moderation does not rewrite the ledger.** Removing a post leaves the events its marks produced,
+because a moderator's judgement is not evidence the marks were never cast; clawing points back is a
+separate, deliberate act.
+
+### Claims, and why the log is public
+
+Self-claims only — the claimant comes from the session, never the request body — and you cannot
+approve your own. Approval pays the tariff and emits `CLAIM_APPROVED`; a decline pays nothing. Both
+land in `/communities/[id]/activity`, visible to **every member of the Community, not only admins**.
+That visibility is the anti-abuse mechanism at this stage, and it is what makes a tariff-paying
+approval safe to delegate to branch admins.
+
+### Guardrails v1
+
+No self-marking · one mark per item · 20 distinct items per day. **The budget is counted from the
+ledger, not from live vote rows** — withdrawing a mark deletes its vote, so counting votes would let
+anyone refund their own budget. Counting *distinct items* means changing your mind about something you
+already marked today does not cost a second slot; both properties are tested.
+
+### Leaderboards
+
+Individuals and Branches, window switcher (month/quarter/all-time) as a **viewer** control, branches
+by total or per-member average. Branch attribution is by `sourceCommunityId` — the node the activity
+happened on — not by current membership, which would double-count anyone in two branches and rewrite
+a branch's history whenever someone moved. `sourceCommunityId` is an addition to the brief's field
+list for exactly that reason.
+
+### Verification
+
+`npm run check:central` grew from 83 to **140**. New coverage includes: the mirrored values asserted
+against `POINTS_SCHEDULE`; reversal appending rather than deleting; a score held below zero; the
+21st mark refused and a re-mark not costing a slot; duplicate-claim refusal and re-claiming after a
+decline; approval by an ancestor admin who is not a member of the branch; the activity log showing
+what was paid and by whom; three distinct referral bonus rows with their own stamped rates; decay at
+7/13/60 months including the floor; the one-shot reboost; a tariff retune leaving history untouched
+and pricing the next event; the window filter proved with an 8-month-old event; and a negative score
+ranked last rather than dropped. Teardown removes ledger rows, claims, referrals and the notifications
+sent to real accounts.
 
 ---
 

@@ -2,7 +2,46 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 02:05 UTC — ▼ **INGEST V32 §2: THE BACKFILL IS DONE AND THE ENTIRE
+*Last updated: 2026-08-09 07:43 UTC — ▼ **CENTRAL STAGE 2: POINTS & LEADERBOARDS ARE BUILT, ON AN
+EVENT LEDGER.** Executes the "Central Stage 2" brief (6 Aug 2026), all design settled by Charlie
+beforehand. `tsc --noEmit` and `next build` clean; **140/140 checks against the live app DB**
+(`npm run check:central`, up from 83). Full account: CHANGE_LOG "CENTRAL Stage 2"
+(2026-08-09 07:43 UTC); the design is written up in `SCRUTINISE_CENTRAL_SPEC.md` §4 with the eight
+decisions and the open items. **Architecture: `PointsEvent` is a signed, source-tagged row per
+earning; every balance and leaderboard is COMPUTED and no running total is ever the source of truth.
+The ledger only appends** — a withdrawn mark adds a negative row, and a reversal reverses at the
+value the ORIGINAL award used, not today's tariff, so a retune cannot be banked by re-marking. Each
+event stamps its tariff at write time, which makes "editing a tariff changes only subsequent events"
+true by construction. **Mark values were MIRRORED, not invented, as the brief required:**
+`lib/points.ts` prices a contribution rating at **+4** (3★, base positive) and **−4** (1–2★); a
+Central mark is binary, so it maps to exactly those two, and the check script asserts the equality
+against `POINTS_SCHEDULE` so they cannot drift. ⚠ **A consequence of two settled numbers meeting, and
+Charlie's call: 10% of a 4-point mark floors to zero, so a MARK never pays the referral chain
+anything** — bonuses only materialise on claim-sized events (24/40/60), where L1/L2/L3 land at 6/3/1
+on a 60. Flooring is the conservative choice; raising the mark value (+8 is the main system's next
+rung) or the L1 rate are both row edits. It is asserted in the tests rather than left to be
+discovered. ⚠ **The admin cascade REVERSES the Stage 1.1 join-first gate** for reading and moderating
+descendant boards — you cannot moderate what you cannot see — while **posting and marking still
+require membership**; new `canReadBoard()` and a `DELETE` on the post route. **Moderation does not
+rewrite the ledger:** removing a post leaves the events its marks produced, because a moderator's
+judgement is not evidence the marks were never cast. **The daily marking budget counts from the
+ledger, not from live vote rows** — withdrawing a mark deletes its vote, so counting votes would let
+anyone refund their own budget — and counts distinct items, so changing your mind costs nothing.
+**Branch leaderboards attribute by `sourceCommunityId`, the node the activity happened on**, not by
+current membership, which would double-count anyone in two branches and rewrite a branch's history
+whenever someone moved; that field is an addition to the brief's list for exactly that reason. **The
+Community activity log at `/communities/[id]/activity` is visible to every member, not just admins** —
+that is the anti-abuse mechanism, and what makes tariff-paying approval safe to delegate. ⚠ **A second
+index Prisma cannot declare** (after Stage 1.2's): `ActivityClaim_one_per_day`, an EXPRESSION partial
+unique on (userId, activityType, occurredAt::date) WHERE status <> 'DECLINED' — a `migrate diff` will
+want to drop it. **Nothing was backfilled into the ledger:** the single bulletin vote on production is
+a self-mark predating the guardrails, so paying it out would have opened the ledger with the exact row
+the rules now forbid — flagged, not deleted, since it is Charlie's test data. Central points are
+displayed beside the credibility score on the dashboard and profile and **never summed with it**;
+nothing here writes to `Reputation`, `PointsLedger` or `CredibilityScore`. **Open items recorded, not
+built:** negativity penalties (TBC), collusion analytics, knowledge tests, cross-Community boards.
+**REMAINING GATE: Charlie's browser re-test.** ▼ Earlier:
+2026-08-09 02:05 UTC — ▼ **INGEST V32 §2: THE BACKFILL IS DONE AND THE ENTIRE
 POST-BACKFILL CHAIN IS RUN — MERGED, REDEPLOYED, RECONCILED.** CHANGE_LOG (2026-08-09 02:05 UTC);
 new scripts under `scripts/ingest/v32-*`.
 **The backfill drained 12:11 UTC 8 Aug** (batch 400, final batch considered 0 = genuine drain).
@@ -1444,6 +1483,34 @@ unfiltered with the bare query (today's default) — never an empty result.
 - **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C regression — accept it
   as the current 4-stream scope's known cost, or add a `guidance` stream (one config-list entry)
   before flipping. Both `tsc --noEmit` clean.
+
+---
+
+## CURRENT STATE — CENTRAL Stage 2: points & leaderboards (2026-08-09 07:43 UTC)
+
+**Executes the "Central Stage 2" brief (6 Aug 2026).** Full account: CHANGE_LOG "CENTRAL Stage 2"
+(2026-08-09 07:43 UTC); design and open items in `SCRUTINISE_CENTRAL_SPEC.md` §4.
+
+- **Scope:** `scrutinise-web/**` plus the three shared docs. Outside Central, only two display
+  surfaces were touched — the dashboard stat row and the profile chip — and `lib/points.ts` was
+  **read, never modified**.
+- **The one number that needs Charlie:** a 4-point mark cannot pay a referral chain (10% floors to
+  zero). Everything works; bonuses simply only appear on claim-sized events. Raising the mark to +8
+  (the main system's next rung) or lifting L1 are both single row edits in `PointsTariff` /
+  `PointsConfig`.
+- **Where the rules live:** `lib/central-points.ts` — tariff resolution, event writing, marks,
+  claims, referrals, leaderboards. Routes are thin wrappers, so the check script exercises production
+  code. `applyBulletinMark()` composes guardrails + vote + ledger and lives here rather than in
+  `lib/community.ts` to avoid a cycle, since the engine already depends on that module.
+- **Two things a future reader must not undo:** the ledger appends only (never update a row to
+  "correct" a score), and Central never writes to `Reputation`/`CredibilityScore`.
+- **Carry forward:** `prisma/central_stage2.sql` holds an expression partial unique index invisible
+  to `schema.prisma`. That is now **two** such indexes in Central; both are flagged in their model
+  comments.
+- **Verified:** `npm run check:central` — **140/140** against the live app DB, self-cleaning
+  (including notifications sent to real accounts during the run).
+- **REMAINING GATE:** Charlie's browser re-test against his acceptance list. Untested from here (no
+  Clerk session): the HTTP route surface and every new panel.
 
 ---
 

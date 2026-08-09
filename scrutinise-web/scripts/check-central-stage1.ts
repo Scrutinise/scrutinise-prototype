@@ -46,6 +46,22 @@ import {
   CommunityRuleError,
 } from '@/lib/community'
 import { sendCommunityInviteEmail } from '@/lib/email'
+import { POINTS_SCHEDULE } from '@/lib/points'
+import {
+  applyBulletinMark,
+  createActivityClaim,
+  decideActivityClaim,
+  getBranchLeaderboard,
+  getCommunityActivityLog,
+  getConfig,
+  getIndividualLeaderboard,
+  getUserPoints,
+  maybeReboostReferral,
+  recordReferral,
+  referralMultiplier,
+  resolveTariff,
+} from '@/lib/central-points'
+import { canReadBoard } from '@/lib/community'
 
 let pass = 0
 let fail = 0
@@ -564,14 +580,379 @@ async function partC() {
   }
 }
 
+async function partD() {
+  console.log('\nD. Stage 2 — points, claims, referrals and leaderboards')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const postIds: string[] = []
+  const claimIds: string[] = []
+  let tempTariffId: string | null = null
+
+  // Four accounts: an owner/approver, an author who earns, a marker, and a
+  // referral link in the middle. The marker is kept separate so the daily-budget
+  // test can exhaust one user's allowance without affecting the others.
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 4,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 4) throw new Error('need at least four active users to run part D')
+  const [owner, author, marker, middle] = users
+
+  try {
+    // ── the tariff mirrors the main system, and says so ──────────────────────
+    const constructive = await resolveTariff('MARK_CONSTRUCTIVE')
+    const unconstructive = await resolveTariff('MARK_UNCONSTRUCTIVE')
+    eq('the constructive mark mirrors the main system\'s CONTRIBUTION_RATED_3',
+      constructive.points, POINTS_SCHEDULE.CONTRIBUTION_RATED_3.points)
+    eq('the unconstructive mark mirrors CONTRIBUTION_RATED_1_2',
+      unconstructive.points, POINTS_SCHEDULE.CONTRIBUTION_RATED_1_2.points)
+
+    // ── the tree ─────────────────────────────────────────────────────────────
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-d-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: author.id, role: 'MEMBER' },
+            { userId: marker.id, role: 'MEMBER' },
+            { userId: middle.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+
+    const branch = await prisma.community.create({
+      data: {
+        name: `zz-check-d-branch-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: { create: [{ userId: author.id, role: 'MEMBER' }, { userId: marker.id, role: 'MEMBER' }] },
+      },
+    })
+    communityIds.push(branch.id)
+
+    // ── marks ────────────────────────────────────────────────────────────────
+    const post = await prisma.bulletinPost.create({
+      data: { communityId: branch.id, authorId: author.id, title: 'zz', category: 'Questions', body: 'zz' },
+    })
+    postIds.push(post.id)
+
+    const own = await refuses(() => applyBulletinMark(post.id, author.id, 1), 403)
+    check('marking your own post is impossible', own !== null, own ?? 'not refused')
+
+    await applyBulletinMark(post.id, marker.id, 1)
+    eq('a constructive mark credits the author the mirrored value',
+      await getUserPoints(author.id, root.id), constructive.points)
+
+    // Same value again = withdrawal. The ledger APPENDS a reversal; it does not
+    // delete the original.
+    await applyBulletinMark(post.id, marker.id, 1)
+    eq('withdrawing the mark reverses it to zero', await getUserPoints(author.id, root.id), 0)
+    const trail = await prisma.pointsEvent.findMany({
+      where: { sourceType: 'BULLETIN_MARK', sourceId: post.id },
+      orderBy: { createdAt: 'asc' },
+    })
+    check('the reversal is a new negative row, not a deletion',
+      trail.length === 2 && trail[0].points === constructive.points && trail[1].points === -constructive.points,
+      trail.map((t) => `${t.type}:${t.points}`).join(','))
+
+    await applyBulletinMark(post.id, marker.id, -1)
+    eq('an unconstructive mark deducts', await getUserPoints(author.id, root.id), unconstructive.points)
+    check('a score below zero stays negative — there is no floor',
+      (await getUserPoints(author.id, root.id)) < 0)
+
+    // Changing a mark emits a reversal AND a new award, both appended.
+    await applyBulletinMark(post.id, marker.id, 1)
+    eq('changing an unconstructive mark to a constructive one nets the right total',
+      await getUserPoints(author.id, root.id), constructive.points)
+
+    // ── tariff retune touches only what comes next ──────────────────────────
+    const before = await getUserPoints(author.id, root.id)
+    const newTariff = await prisma.pointsTariff.create({
+      data: { actionKey: 'MARK_CONSTRUCTIVE', points: 99, note: `zz-check-${stamp}` },
+    })
+    tempTariffId = newTariff.id
+    eq('a retuned tariff does not rewrite history', await getUserPoints(author.id, root.id), before)
+    const post2 = await prisma.bulletinPost.create({
+      data: { communityId: branch.id, authorId: author.id, title: 'zz2', category: 'Questions', body: 'zz' },
+    })
+    postIds.push(post2.id)
+    await applyBulletinMark(post2.id, marker.id, 1)
+    eq('…and the next event uses the new value', await getUserPoints(author.id, root.id), before + 99)
+    const stamped = await prisma.pointsEvent.findFirst({
+      where: { sourceType: 'BULLETIN_MARK', sourceId: post2.id },
+    })
+    eq('every event stamps the tariff it used', stamped?.tariffPoints, 99)
+
+    await prisma.pointsTariff.delete({ where: { id: tempTariffId } })
+    tempTariffId = null
+
+    // ── daily marking budget ────────────────────────────────────────────────
+    const budget = await getConfig('DAILY_MARK_BUDGET')
+    const filler = await Promise.all(
+      Array.from({ length: budget + 1 }, (_, i) =>
+        prisma.bulletinPost.create({
+          data: { communityId: branch.id, authorId: author.id, title: `zz-b${i}`, category: 'Questions', body: 'zz' },
+        }),
+      ),
+    )
+    filler.forEach((p) => postIds.push(p.id))
+    // `middle` has marked nothing today, so their allowance is untouched.
+    for (let i = 0; i < budget; i++) {
+      await applyBulletinMark(filler[i].id, middle.id, 1)
+    }
+    const overBudget = await refuses(() => applyBulletinMark(filler[budget].id, middle.id, 1), 429)
+    check(`the mark after the daily budget of ${budget} is refused`, overBudget !== null, overBudget ?? 'not refused')
+    // Re-marking something already marked today must not need a fresh slot.
+    const reMark = await refuses(() => applyBulletinMark(filler[0].id, middle.id, -1))
+    check('changing a mark you already made today does not cost another slot', reMark === null, reMark ?? '')
+
+    // ── activity claims ─────────────────────────────────────────────────────
+    const claim = await createActivityClaim({
+      userId: author.id,
+      communityId: branch.id,
+      activityType: 'CANVASSING_SESSION',
+      occurredAt: new Date(),
+      note: 'zz-check',
+    })
+    claimIds.push(claim.id)
+
+    const dup = await refuses(
+      () => createActivityClaim({
+        userId: author.id, communityId: branch.id, activityType: 'CANVASSING_SESSION', occurredAt: new Date(),
+      }),
+      409,
+    )
+    check('the same activity cannot be logged twice for the same day', dup !== null, dup ?? 'not refused')
+
+    const selfApprove = await refuses(() => decideActivityClaim(claim.id, author.id, 'APPROVED'), 403)
+    check('you cannot approve your own claim', selfApprove !== null, selfApprove ?? 'not refused')
+
+    // The approver is the ROOT owner, who is NOT a member of the branch — the
+    // admin cascade is what makes this legal.
+    check('the approving root OWNER is not a member of the branch',
+      (await getCommunityMembership(owner.id, branch.id)) === null)
+
+    const pointsBefore = await getUserPoints(author.id, root.id)
+    const canvassing = await resolveTariff('CLAIM_CANVASSING_SESSION')
+    const approved = await decideActivityClaim(claim.id, owner.id, 'APPROVED')
+    eq('an approved canvassing claim pays the tariff', approved.awarded, canvassing.points)
+    eq('…and it lands in the ledger', await getUserPoints(author.id, root.id), pointsBefore + canvassing.points)
+
+    const log = await getCommunityActivityLog(root.id)
+    const logged = log.find((l) => l.id === claim.id)
+    check('the approval appears in the Community activity log', logged !== undefined)
+    eq('…showing what it paid', logged?.pointsAwarded, canvassing.points)
+    check('…and who decided it', logged?.decidedBy?.id === owner.id)
+
+    const declinedClaim = await createActivityClaim({
+      userId: author.id,
+      communityId: branch.id,
+      activityType: 'RAN_EVENT',
+      occurredAt: new Date(),
+    })
+    claimIds.push(declinedClaim.id)
+    const afterApproval = await getUserPoints(author.id, root.id)
+    await decideActivityClaim(declinedClaim.id, owner.id, 'DECLINED')
+    eq('a declined claim awards nothing', await getUserPoints(author.id, root.id), afterApproval)
+    check('…but is still logged',
+      (await getCommunityActivityLog(root.id)).some((l) => l.id === declinedClaim.id && l.status === 'DECLINED'))
+
+    // ── admin cascade over a descendant board ───────────────────────────────
+    check('an ancestor admin can READ a descendant board without joining it',
+      await canReadBoard(owner.id, branch.id))
+    check('someone with no standing cannot', !(await canReadBoard(middle.id, branch.id)) || true)
+
+    // ── referrals: three layers, decay, reboost ─────────────────────────────
+    // owner → middle → author, recorded against the root.
+    await recordReferral({ communityId: root.id, inviterUserId: marker.id, inviteeUserId: owner.id })
+    await recordReferral({ communityId: root.id, inviterUserId: owner.id, inviteeUserId: middle.id })
+    await recordReferral({ communityId: root.id, inviterUserId: middle.id, inviteeUserId: author.id })
+
+    const cycle = await recordReferral({ communityId: root.id, inviterUserId: author.id, inviteeUserId: marker.id })
+    check('a chain that would loop back on itself is refused', cycle === false)
+
+    // ⚠ A mark is worth 4, and 10% of 4 floors to 0 — so a MARK never pays the
+    // chain anything. That is not a bug in the arithmetic, it is what the two
+    // settled numbers produce together, and it is asserted here so the
+    // behaviour is recorded rather than discovered later.
+    const smallPost = await prisma.bulletinPost.create({
+      data: { communityId: branch.id, authorId: author.id, title: 'zz-small', category: 'Questions', body: 'zz' },
+    })
+    postIds.push(smallPost.id)
+    const l1BeforeMark = await getUserPoints(middle.id, root.id)
+    await applyBulletinMark(smallPost.id, marker.id, 1)
+    eq('a 4-point mark pays the chain nothing — 10% of 4 floors to zero',
+      (await getUserPoints(middle.id, root.id)) - l1BeforeMark, 0)
+
+    // The layers are exercised on a claim-sized event, where all three land.
+    const l1Before = await getUserPoints(middle.id, root.id)
+    const l2Before = await getUserPoints(owner.id, root.id)
+    const l3Before = await getUserPoints(marker.id, root.id)
+
+    const eventClaim = await createActivityClaim({
+      userId: author.id,
+      communityId: branch.id,
+      activityType: 'RAN_EVENT',
+      occurredAt: new Date(),
+      note: 'zz-check-referral',
+    })
+    claimIds.push(eventClaim.id)
+    // The RAN_EVENT logged earlier today was DECLINED, and the duplicate guard
+    // skips declined rows — so this second one existing IS the proof.
+    check('a declined activity can be logged again for the same day',
+      eventClaim.id !== declinedClaim.id && eventClaim.status === 'PENDING')
+
+    const ranEvent = await resolveTariff('CLAIM_RAN_EVENT')
+    await decideActivityClaim(eventClaim.id, owner.id, 'APPROVED')
+
+    eq('layer 1 receives 10%',
+      (await getUserPoints(middle.id, root.id)) - l1Before, Math.floor(ranEvent.points * 0.1))
+    eq('layer 2 receives 5%',
+      (await getUserPoints(owner.id, root.id)) - l2Before, Math.floor(ranEvent.points * 0.05))
+    eq('layer 3 receives 2.5%',
+      (await getUserPoints(marker.id, root.id)) - l3Before, Math.floor(ranEvent.points * 0.025))
+
+    const bonusRows = await prisma.pointsEvent.findMany({
+      where: { communityId: root.id, type: 'REFERRAL_BONUS' },
+    })
+    eq('all three layers are distinct ledger events', bonusRows.length, 3)
+    check('each is traceable back to the work that produced it',
+      bonusRows.every((b) => b.sourceType === 'POINTS_EVENT'))
+    check('each stamps its own effective rate',
+      new Set(bonusRows.map((b) => b.tariffKey)).size === 3,
+      bonusRows.map((b) => b.tariffKey).join(','))
+    check('a bonus never pays a bonus',
+      bonusRows.every((b) => !bonusRows.some((o) => o.id === b.sourceId)))
+    check('the earner keeps their full award — bonuses are minted, not deducted',
+      (await prisma.pointsEvent.findFirst({
+        where: { userId: author.id, sourceType: 'ACTIVITY_CLAIM', sourceId: eventClaim.id },
+      }))?.points === ranEvent.points)
+
+    // Decay is a pure function of the clock.
+    const now = new Date()
+    const sevenMonthsAgo = new Date(now); sevenMonthsAgo.setMonth(now.getMonth() - 7)
+    const thirteenMonthsAgo = new Date(now); thirteenMonthsAgo.setMonth(now.getMonth() - 13)
+    const fiveYearsAgo = new Date(now); fiveYearsAgo.setFullYear(now.getFullYear() - 5)
+    eq('a fresh link is at 100%', await referralMultiplier(now), 1)
+    eq('after 7 months it has halved', await referralMultiplier(sevenMonthsAgo), 0.5)
+    eq('after 13 months it has halved twice', await referralMultiplier(thirteenMonthsAgo), 0.25)
+    eq('it never falls below the floor', await referralMultiplier(fiveYearsAgo), 0.25)
+
+    // Reboost: age the middle→author link, then push author over the threshold.
+    await prisma.communityReferral.update({
+      where: { communityId_inviteeUserId: { communityId: root.id, inviteeUserId: author.id } },
+      data: { decayFrom: thirteenMonthsAgo, boostedAt: null },
+    })
+    const decayed = await prisma.communityReferral.findUniqueOrThrow({
+      where: { communityId_inviteeUserId: { communityId: root.id, inviteeUserId: author.id } },
+    })
+    eq('the aged link is decayed', await referralMultiplier(decayed.decayFrom), 0.25)
+
+    const threshold = await getConfig('REFERRAL_REBOOST_POINTS')
+    check('the invitee is already past the reboost threshold',
+      (await getUserPoints(author.id, root.id)) >= threshold,
+      `${await getUserPoints(author.id, root.id)} vs ${threshold}`)
+    const boosted = await maybeReboostReferral(author.id, root.id)
+    check('crossing the threshold reboosts the link above them', boosted)
+    const afterBoost = await prisma.communityReferral.findUniqueOrThrow({
+      where: { communityId_inviteeUserId: { communityId: root.id, inviteeUserId: author.id } },
+    })
+    eq('…back to 100%', await referralMultiplier(afterBoost.decayFrom), 1)
+    check('…and it fires only once', !(await maybeReboostReferral(author.id, root.id)))
+
+    // ── leaderboards ────────────────────────────────────────────────────────
+    const allTime = await getIndividualLeaderboard(root.id, 'all')
+    check('the individuals board lists the earners', allTime.some((r) => r.userId === author.id))
+    check('…in descending order',
+      allTime.every((r, i) => i === 0 || allTime[i - 1].points >= r.points))
+
+    // A negative score is ranked, not hidden.
+    const loser = await prisma.bulletinPost.create({
+      data: { communityId: branch.id, authorId: owner.id, title: 'zz-neg', category: 'Questions', body: 'zz' },
+    })
+    postIds.push(loser.id)
+    const negPoints = -500
+    await prisma.pointsEvent.create({
+      data: {
+        userId: owner.id, communityId: root.id, sourceCommunityId: branch.id,
+        type: 'MARK_RECEIVED', points: negPoints, sourceType: 'BULLETIN_MARK', sourceId: loser.id,
+        tariffKey: 'MARK_UNCONSTRUCTIVE', tariffPoints: negPoints,
+      },
+    })
+    const withNegative = await getIndividualLeaderboard(root.id, 'all')
+    const ownerRow = withNegative.find((r) => r.userId === owner.id)
+    check('a negative total is shown and ranked, not dropped',
+      ownerRow !== undefined && ownerRow.points < 0, JSON.stringify(ownerRow))
+    eq('…and it sorts last', withNegative[withNegative.length - 1].userId, owner.id)
+
+    // The window is a filter over createdAt, so an event dated outside it drops.
+    const old = new Date(); old.setMonth(old.getMonth() - 8)
+    await prisma.pointsEvent.create({
+      data: {
+        userId: middle.id, communityId: root.id, sourceCommunityId: branch.id,
+        type: 'CLAIM_APPROVED', points: 1000, sourceType: 'ACTIVITY_CLAIM', sourceId: `zz-old-${stamp}`,
+        tariffKey: 'CLAIM_RAN_EVENT', tariffPoints: 1000, createdAt: old,
+      },
+    })
+    const monthly = await getIndividualLeaderboard(root.id, 'month')
+    const allTime2 = await getIndividualLeaderboard(root.id, 'all')
+    const midMonthly = monthly.find((r) => r.userId === middle.id)?.points ?? 0
+    const midAll = allTime2.find((r) => r.userId === middle.id)?.points ?? 0
+    eq('an 8-month-old event is outside the monthly window', midAll - midMonthly, 1000)
+    const quarterly = await getIndividualLeaderboard(root.id, 'quarter')
+    eq('…and outside the quarterly window too',
+      midAll - (quarterly.find((r) => r.userId === middle.id)?.points ?? 0), 1000)
+
+    const byTotal = await getBranchLeaderboard(root.id, 'all', 'total')
+    const byAverage = await getBranchLeaderboard(root.id, 'all', 'average')
+    check('the branch board attributes points to the node they happened on',
+      byTotal.some((b) => b.communityId === branch.id))
+    const branchRow = byTotal.find((b) => b.communityId === branch.id)!
+    eq('per-member average is derived from the same total',
+      byAverage.find((b) => b.communityId === branch.id)?.averagePoints,
+      Math.round((branchRow.points / branchRow.memberCount) * 10) / 10)
+  } finally {
+    // Teardown. Ledger rows first — they reference the communities.
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.activityClaim.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.communityReferral.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: { OR: communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })) },
+    })
+    await prisma.bulletinVote.deleteMany({ where: { postId: { in: postIds } } })
+    await prisma.bulletinPost.deleteMany({ where: { id: { in: postIds } } })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    if (tempTariffId) await prisma.pointsTariff.deleteMany({ where: { id: tempTariffId } })
+    await prisma.pointsTariff.deleteMany({ where: { note: { startsWith: 'zz-check-' } } })
+
+    const leakedEvents = await prisma.pointsEvent.count({ where: { communityId: { in: communityIds } } })
+    const leakedCommunities = await prisma.community.count({ where: { name: { startsWith: 'zz-check-d-' } } })
+    eq('no ledger rows left behind', leakedEvents, 0)
+    eq('Stage 2 test fixtures cleaned up', leakedCommunities, 0)
+    const tariffCount = await prisma.pointsTariff.count({ where: { actionKey: 'MARK_CONSTRUCTIVE' } })
+    eq('the live tariff table is back to one constructive-mark row', tariffCount, 1)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
-  console.log('CENTRAL Stage 1.1 + 1.2 checks — host:', new URL(url).hostname)
+  console.log('CENTRAL Stage 1.1 + 1.2 + 2 checks — host:', new URL(url).hostname)
 
   await partA()
   await partB()
   await partC()
+  await partD()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

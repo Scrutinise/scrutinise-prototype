@@ -133,12 +133,17 @@ the decision log (§10, 6 Aug afternoon); this section is how they behave. Full 
 
 **Who reaches a branch page**
 
-| | page | board | member list & requests |
-|---|---|---|---|
-| member of the node | ✓ | ✓ | ✓ if they manage it |
-| ancestor admin, not a member | ✓ | ✗ | ✓ |
-| member of the Community, not of this branch | ✓ (front door) | ✗ | ✗ |
-| everyone else | 404 | ✗ | ✗ |
+| | page | read board | post/mark | moderate | member list, requests & claims |
+|---|---|---|---|---|---|
+| member of the node | ✓ | ✓ | ✓ | ✓ if they manage it | ✓ if they manage it |
+| ancestor admin, not a member | ✓ | ✓ *(Stage 2)* | ✗ | ✓ *(Stage 2)* | ✓ |
+| member of the Community, not of this branch | ✓ (front door) | ✗ | ✗ | ✗ | ✗ |
+| everyone else | 404 | ✗ | ✗ | ✗ | ✗ |
+
+⚠ **Stage 2 reversed the Stage 1.1 join-first gate on the board**, deliberately: the admin cascade
+Charlie settled on 6 Aug includes subtree board moderation, and you cannot moderate what you cannot
+see. Reading and removing cascade; **posting and marking still require membership** — an ancestor
+admin runs a branch, they do not participate in it as though they had joined.
 
 **Roles** — Members panel on any node you manage: promote MEMBER→ADMIN, demote, remove. OWNER is
 fixed in both directions; a co-admin who could demote the owner could take the node. Removing someone
@@ -150,19 +155,133 @@ also clears the node's `managerId` if it named them.
     described as "Offer or request interview/media training here", so the behaviour can start as
     ordinary posts *(Stage 1 seeded this as "Training — offers & requests"; renamed at Stage 1.1)*
 -   Events and `.ics` calendar downloads
--   Points earning, leaderboards (stub only)
+-   Points earning, leaderboards (stub only) — *built at Stage 2, §4*
 -   Abuse-reporting workflow, admin analytics, semantic search
 
-## 4. Stage 2 — Points & leaderboards **[DESIGNED in part — under discussion]**
+## 4. Stage 2 — Points & leaderboards **[BUILT 9 Aug 2026]**
 
-Agreed so far (29 Jul 2026):
+Anchor principle (29 Jul): points ≈ value of time. Basic work ≈ 12 points per estimated hour, skilled
+work ≈ 20. **This is a background pricing guide only** — no self-reported time exists anywhere in the
+system, and none is collected. Every award is a fixed tariff per action type.
 
--   Anchor principle: points ≈ value of time. Basic work ≈ 12 points per estimated hour, skilled work ≈ 20; activities we specifically want to incentivise can carry a premium.
--   Constructive/unconstructive marks on content follow the main Scrutinise allocation system, including negatives for low-quality content.
--   Heads of sub-groups (branch chairmen etc.) hold admin rights over the members of the sub-group they head.
--   Central points are a separate ledger from main Scrutinise legislation points, on the same unit scale, so they can be compared or combined later as separate metrics.
+### 4.1 The eight settled decisions (Charlie, 6 Aug 2026)
 
-Open design questions being resolved in conversation before the CC brief: tariff mechanics, quality-bonus split, referral points, offline-activity verification, admin-power cascade, leaderboard windows, negative floors.
+1.  **Tariff-by-action.** Fixed point values per action type; the hour anchor prices them, it does not
+    measure anything.
+2.  **Posts earn nothing on creation.** Points flow only from constructive marks *received*;
+    unconstructive marks deduct.
+3.  **Contingent referrals** — three layers, decaying, reboostable (§4.4).
+4.  **Offline activity via approved claims** — member logs, branch admin approves, tariff pays, every
+    decision visible in the Community activity log.
+5.  **Admin cascade — all three powers:** subtree membership, subtree board moderation, subtree claim
+    approval. This extends the management carve-out to *reading and moderating* descendant boards, a
+    deliberate reversal of the Stage 1.1 join-first gate.
+6.  **The leaderboard window is a viewer control**, not an admin setting: monthly / quarterly /
+    all-time, switchable by any user.
+7.  **Scores can go negative. No floor.**
+8.  Central points remain a **separate ledger** from legislation points, on the same unit scale.
+
+### 4.2 Architecture — an event ledger, never balances
+
+`PointsEvent` records every earning and deduction as one signed, timestamped, source-tagged row.
+Balances and leaderboards are **computed** from it; no running total is ever the source of truth.
+Three consequences, and they are the reason for the choice:
+
+-   any window is a `createdAt` filter, so decision 6 costs nothing to implement;
+-   a mispriced tariff is correctable going forward without rewriting history;
+-   Central points stay arithmetically compatible with, but separate from, legislation points — the
+    source tag keeps them distinguishable, and nothing here writes to `Reputation`, `PointsLedger` or
+    `CredibilityScore`.
+
+**The ledger only appends.** A withdrawn mark adds a negative row rather than deleting the original; a
+reversal reverses *at the value the original award used*, so a retune cannot be banked by re-marking.
+Every event stamps its tariff (`tariffKey`, `tariffPoints`, `tariffId`) at the moment it is written.
+
+`PointsTariff` and `PointsConfig` hold the numbers, so retuning is editing rows rather than shipping
+code.
+
+### 4.3 The tariff, and where the mark values came from
+
+Marks were **mirrored from the main system, not invented** (decision 2). `lib/points.ts` prices a
+contribution rating at **+4** (3★, the lowest positive tier), +8 (4★), +12 (5★) and **−4** (1–2★). A
+Central mark is *binary* — no quality gradation — so it maps to the base positive tier and the
+negative tier:
+
+| action | points | source |
+|---|---|---|
+| Constructive mark received | **+4** | mirrors `CONTRIBUTION_RATED_3` |
+| Unconstructive mark received | **−4** | mirrors `CONTRIBUTION_RATED_1_2` |
+| Canvassing session | 24 | 2h × 12/hr basic |
+| Organised & ran an event | 60 | starter value |
+| Gave a training session | 40 | 2h × 20/hr skilled |
+| Completed training as a trainee | 20 | starter value |
+
+No scaling against the hour anchor was needed: 4 points ≈ 20 minutes of basic work. **If a
+constructive mark should feel weightier, +8 is the next rung the main system already defines** — one
+row edit, no code.
+
+⚠ **A consequence of two settled numbers meeting, flagged not hidden:** 10% of a 4-point mark floors
+to zero, so **a mark never pays the referral chain anything**. Bonuses only materialise on
+claim-sized events (24/40/60). Flooring is the conservative choice — a bonus is a share, never a
+rounding-up gift. Raising the mark value or the L1 rate would change this; both are row edits.
+
+### 4.4 Referrals
+
+A chain link is created **only** by redeeming a specific person's invite, per Community; a join
+request creates none, because nobody introduced them. Cycles are refused at creation.
+
+-   Three layers: **L1 10% · L2 5% · L3 2.5%** of what the invitee earns.
+-   **Decay:** each link starts at 100% and halves every 6 months from its `decayFrom`, floor 25%.
+-   **Reboost:** when an invitee first crosses 50 points, the link *above them* — their inviter's link
+    — resets to 100%. That rewards the person who recruited a producer, which is the point. Fires once.
+-   Bonuses are **minted, never deducted** from the earner. Only positive, non-bonus events pay a
+    chain: a bonus on a bonus would compound the tree, and paying on a deduction would punish an
+    inviter for their invitee's bad post.
+
+🔒 **HARD CONSTRAINT.** Referral layers apply to **reputation points only**. They must never be
+extended to anything monetisable — tokens, credits, or anything in Stage 4.
+
+### 4.5 Guardrails v1
+
+No marking your own content · one mark per user per item (changeable, emitting a reversal plus a new
+event) · a per-user daily budget of **20 distinct items** marked.
+
+The budget is counted **from the ledger, not from live vote rows** — withdrawing a mark deletes its
+vote, so counting votes would let anyone refund their own budget. Counting distinct items means
+changing your mind about something you already marked today does not cost a second slot.
+
+### 4.6 Claims and the activity log
+
+`ActivityClaim`: self-claims only — the claimant is taken from the session, never from the request
+body. You cannot approve your own claim. The duplicate guard is an **expression partial unique index**
+on (userId, activityType, occurredAt::date) `WHERE status <> 'DECLINED'`, which Prisma cannot declare;
+it lives in `prisma/central_stage2.sql`. Scoped to exclude declined rows for the same reason the
+Stage 1.2 join-request guard is partial: a flat guard would make a declined claim permanently
+un-correctable, and a declined claim paid nothing, so nothing is at risk.
+
+`/communities/[id]/activity` shows every decided claim across the tree — who claimed, who decided,
+what it paid — **to every member of the Community, not only admins**. That visibility is the
+anti-abuse mechanism at this stage, and it is what makes tariff-paying approval safe to hand to branch
+admins.
+
+### 4.7 Leaderboards
+
+Per Community only — no cross-Community or global boards. Individuals and Branches tabs, window
+switcher, branches rankable by total or per-member average (both derived, so both are free). Scores
+display signed, and a negative score is **ranked, not hidden**.
+
+Branch attribution is by `PointsEvent.sourceCommunityId`, the node the activity happened on — not by
+current membership. A membership-derived total would double-count anyone in two branches and would
+silently rewrite a branch's history whenever someone joined or left it.
+
+### 4.8 Open items — recorded, not built
+
+-   **Penalties for sustained negativity — TBC.** Scores go negative with no floor and nothing else
+    happens. Deferred by Charlie; nothing built.
+-   **Collusion detection.** Guardrails v1 are the three above; reciprocal-marking and ring analytics
+    are a later item.
+-   **Knowledge tests** — deferred, no content exists to test against yet.
+-   **Cross-Community and global leaderboards** — deliberately out of scope.
 
 ## 5. Stage 2b — Events **[ROADMAP]**
 
@@ -197,6 +316,11 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 -   **The Chancellor** strategy game — dropped for now (scope; design notes retained in conversation).
 -   Real archive footage licensing — deferred indefinitely (cost; real-person depiction risk).
 -   Group-admin analytics/oversight — build only if a group requests and funds it; legally gated on consent structure.
+-   **Penalties for sustained negativity — TBC** (Stage 2 open item, §4.8). Scores go negative with no
+    floor; what, if anything, follows from that is undecided and nothing is built.
+-   **Collusion detection** beyond guardrails v1 — reciprocal-marking and ring analytics (§4.8).
+-   **Knowledge tests** — deferred, no content to test against yet.
+-   **Cross-Community and global leaderboards** — out of scope at Stage 2.
 -   Semantic search on bulletin boards — trigger is observed vocabulary-mismatch failures in real use, not a document count. Design notes recorded: event-triggered embedding per post; confirm ANN index type (HNSW vs IVFFlat) before build; re-validate fusion weighting on this content type; tenant isolation enforced at query level.
 
 ## 10. Decision log
@@ -232,3 +356,13 @@ Shared pattern for all: search the corpus → generate only from what was retrie
     8.  An email-tied invite is emailed via Resend. The copy-link panel stays regardless, because
         delivery is never guaranteed.
     9.  Re-requesting after a decline is allowed — no permanent block this sprint.
+-   **6 Aug (evening)** — Stage 2 points design settled; built 9 Aug (§4). Tariff-by-action, with the
+    12/20 pts-per-hour formula demoted to a background pricing guide (no self-reported time exists).
+    Posts earn nothing on creation — points flow only from marks received. Mark values **mirrored from
+    the main system** rather than invented (+4 / −4). Contingent referrals, three layers, decaying and
+    reboostable, **reputation points only and never anything monetisable**. Offline activity via
+    approved claims, with a Community activity log visible to all members as the anti-abuse mechanism.
+    **Admin cascade takes all three powers**, which reverses the Stage 1.1 join-first gate for reading
+    and moderating descendant boards. Leaderboard window is a viewer control. Scores go negative with
+    no floor; penalties for sustained negativity explicitly deferred. Architecture decided as an
+    **event ledger, never stored balances**.
