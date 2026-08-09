@@ -1,0 +1,264 @@
+{
+  "measuredAt": "2026-08-09T13:27:44.837Z",
+  "cpw": 6.154366887350458,
+  "rate": 0.075,
+  "totals": {
+    "compiledSections": 18166911,
+    "unvectored": 544198,
+    "words": 350067874,
+    "chunks": 740385,
+    "embeddedChars": 1905429839,
+    "tokens": 476357460,
+    "cost": 35.7268095
+  },
+  "band": [
+    {
+      "cpw": 5.538930198615412,
+      "cost": 32.15412855
+    },
+    {
+      "cpw": 6.154366887350458,
+      "cost": 35.7268095
+    },
+    {
+      "cpw": 6.769803576085504,
+      "cost": 39.29949045
+    }
+  ],
+  "perCorpus": [
+    {
+      "corpus": "committees-reports",
+      "tier": "parliamentary",
+      "sections": 323922,
+      "missing": 302888,
+      "words": 164568145,
+      "chunks": 382943,
+      "embChars": 1051238917
+    },
+    {
+      "corpus": "eur-lex",
+      "tier": "legislation",
+      "sections": 241571,
+      "missing": 157941,
+      "words": 91865682,
+      "chunks": 240167,
+      "embChars": 604843782
+    },
+    {
+      "corpus": "explanatory-memoranda",
+      "tier": "legislation",
+      "sections": 21984,
+      "missing": 17422,
+      "words": 7623017,
+      "chunks": 17790,
+      "embChars": 47091654
+    },
+    {
+      "corpus": "explanatory-notes",
+      "tier": "legislation",
+      "sections": 18651,
+      "missing": 18539,
+      "words": 8928485,
+      "chunks": 19560,
+      "embChars": 55439254
+    },
+    {
+      "corpus": "fca-handbook",
+      "tier": "guidance",
+      "sections": 3661,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "ico",
+      "tier": "guidance",
+      "sections": 26562,
+      "missing": 5,
+      "words": 9072,
+      "chunks": 22,
+      "embChars": 63993
+    },
+    {
+      "corpus": "lgsco",
+      "tier": "other",
+      "sections": 40,
+      "missing": 20,
+      "words": 22519,
+      "chunks": 51,
+      "embChars": 148953
+    },
+    {
+      "corpus": "members-interests",
+      "tier": "other",
+      "sections": 3448,
+      "missing": 2768,
+      "words": 171346,
+      "chunks": 2768,
+      "embChars": 1054528
+    },
+    {
+      "corpus": "ofgem",
+      "tier": "other",
+      "sections": 17143,
+      "missing": 1,
+      "words": 567,
+      "chunks": 1,
+      "embChars": 3490
+    },
+    {
+      "corpus": "parliament-treaties",
+      "tier": "parliamentary",
+      "sections": 328,
+      "missing": 328,
+      "words": 64845,
+      "chunks": 349,
+      "embChars": 409157
+    },
+    {
+      "corpus": "petitions",
+      "tier": "other",
+      "sections": 49529,
+      "missing": 47,
+      "words": 5628,
+      "chunks": 47,
+      "embChars": 34639
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "tier": "legislation",
+      "sections": 145704,
+      "missing": 4,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "tier": "legislation",
+      "sections": 165438,
+      "missing": 4,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "pwdata-debates",
+      "tier": "parliamentary",
+      "sections": 6387304,
+      "missing": 9356,
+      "words": 1389394,
+      "chunks": 9965,
+      "embChars": 8804910
+    },
+    {
+      "corpus": "pwdata-lords",
+      "tier": "parliamentary",
+      "sections": 752805,
+      "missing": 2669,
+      "words": 791944,
+      "chunks": 3418,
+      "embChars": 5233416
+    },
+    {
+      "corpus": "pwdata-lordswms",
+      "tier": "parliamentary",
+      "sections": 20932,
+      "missing": 115,
+      "words": 69359,
+      "chunks": 180,
+      "embChars": 458058
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "tier": "parliamentary",
+      "sections": 175560,
+      "missing": 1384,
+      "words": 197109,
+      "chunks": 1385,
+      "embChars": 1213547
+    },
+    {
+      "corpus": "pwdata-westminster",
+      "tier": "parliamentary",
+      "sections": 239262,
+      "missing": 949,
+      "words": 318395,
+      "chunks": 1201,
+      "embChars": 2080485
+    },
+    {
+      "corpus": "pwdata-wms",
+      "tier": "parliamentary",
+      "sections": 23863,
+      "missing": 112,
+      "words": 66067,
+      "chunks": 174,
+      "embChars": 436359
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "tier": "parliamentary",
+      "sections": 1232894,
+      "missing": 5562,
+      "words": 722783,
+      "chunks": 5572,
+      "embChars": 4453055
+    },
+    {
+      "corpus": "quangos-govuk",
+      "tier": "guidance",
+      "sections": 171030,
+      "missing": 45,
+      "words": 527192,
+      "chunks": 231,
+      "embChars": 685910
+    },
+    {
+      "corpus": "regional",
+      "tier": "legislation",
+      "sections": 331124,
+      "missing": 10,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "tier": "other",
+      "sections": 1043264,
+      "missing": 628,
+      "words": 41378,
+      "chunks": 446,
+      "embChars": 255133
+    },
+    {
+      "corpus": "si-2010plus",
+      "tier": "legislation",
+      "sections": 270339,
+      "missing": 27,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-pre-2010",
+      "tier": "legislation",
+      "sections": 419250,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "uk-treaties-fcdo",
+      "tier": "parliamentary",
+      "sections": 23372,
+      "missing": 23372,
+      "words": 72684947,
+      "chunks": 54115,
+      "embChars": 121480599
+    }
+  ]
+}

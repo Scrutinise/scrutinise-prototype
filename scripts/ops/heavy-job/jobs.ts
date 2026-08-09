@@ -61,6 +61,10 @@ export const JOBS: Record<string, HeavyJob> = {
     // (17,978,744 rows, 533s, €0.053). Deliberately NOT lowering the number — the same rule
     // applies in reverse: one run below the record on more data is noise, not headroom, and
     // 32 GB stays the right size. Three runs now bracket 18.0-19.8 GB.
+    // FOURTH measurement, 9 Aug 2026 (V33 §1 re-sectioning merge): 19.3 GB peak on 18,166,926
+    // rows — the largest table yet — in 552s for €0.053, query 5,573ms → 1,508ms, unindexed 0.
+    // Still not lowered: four runs now sit in 18.0-19.8 GB and the trend against row count is
+    // flat, which is the case for keeping the record rather than the mean.
     expectedPeakGb: 19.8,
     peakSource:
       '4 Aug 2026, cpx62 (32 GB), 17,700,396 rows, 499s → 19.8 GB peak. ' +
@@ -104,6 +108,32 @@ export const JOBS: Record<string, HeavyJob> = {
     serverTypes: ['ccx43', 'ccx53', 'cpx51'],
     expectedPeakGb: 32,
     peakSource: 'CHANGE_LOG 2026-07-21: OOM at fragment compaction on a 32 GB box; completed with VECTOR_SKIP_COMPACT',
+  },
+  'vector-reindex': {
+    name: 'vector-reindex',
+    description:
+      'Rebuild ONLY the IVF_PQ ANN index on corpus_vec, absorbing vectors appended by ' +
+      'v33-vec-catchup.ts. The vector twin of `fts-index`: without it every query brute-force ' +
+      'scans the new fragments forever (INGEST_PLAYBOOK §20).',
+    // ⚠ WHY THIS EXISTS RATHER THAN RE-RUNNING `vector-index`. Both of that job's scripts are
+    // checkpointed `phase: "done"` from the 21–22 Jul build, so it would print "already done —
+    // nothing to do" and "DONE", create nothing, and destroy the box — a job that reports
+    // success while doing NOTHING. `--index-only` is the flag that enters the ANN block
+    // regardless of phase. (docs/CLAUDE.md §18's family: a failure wearing the face of a
+    // success.)
+    // VECTOR_SKIP_COMPACT is not optional here: optimize() SIGKILLed twice at 32 GB on 21 Jul
+    // before createIndex() was ever reached, and compaction is a read-efficiency step, not a
+    // correctness requirement — §17's standing workaround, shared with the FTS build.
+    command: 'VECTOR_SKIP_COMPACT=true R2_MAX_SOCKETS=256 npx tsx search/build-vector-index.ts --index-only',
+    verify: 'npx tsx search/check-vector-serving.ts',
+    // Same preference order as `vector-index`: the ANN build over ~22.6M × 768-d float32 is the
+    // memory-hungry half, and it is the half this job runs.
+    serverTypes: ['ccx43', 'ccx53', 'cpx51'],
+    // NOT MEASURED for this exact shape (index-only, no compaction). Inherited from the parent
+    // job rather than guessed downward — leaving it at the parent's number is the conservative
+    // reading of §17's "size from evidence", and the real figure goes here after the first run.
+    expectedPeakGb: 32,
+    peakSource: 'inherited from `vector-index` (21 Jul 2026) — NOT yet measured for the index-only path; replace with the first run\'s own report',
   },
 }
 
