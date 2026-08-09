@@ -1,5 +1,54 @@
 # `corpus_sections` — what the 12.6 GB actually consists of
 
+> ## ▲ V33 §3a UPDATE — 2026-08-09. Acted on: index drops only. Neon 96.2% → 90.2%.
+>
+> *Script of record: `scripts/ingest/v33-neon-reclaim-indexes.ts` (dry-run by default; every
+> dropped index's exact `CREATE INDEX` is printed before it goes, so all of this is reversible).
+> Measurement of record: `scripts/ingest/v33-neon-fill.ts`.*
+>
+> **The alert got worse before it got better.** This audit measured 15.93 GB / 91.0% on 7 Aug.
+> On 9 Aug, before any V33 work, it was **16.77 GB / 95.8%** — the committees backfill and the
+> graph tables had eaten most of the remaining headroom. 0.73 GB of a 17.5 GB ceiling.
+>
+> **⚠ ONE ENTRY IN THIS AUDIT'S LIST HAD FLIPPED, and re-verifying is what caught it.**
+> `idx_corpus_sections_parent` was recorded below at **6 scans** and graded "review / medium
+> risk". It is now at **26,957** — the committees work made `parentDocId` a hot path. Dropping it
+> on the strength of a two-day-old counter would have removed a live index. **KEPT.**
+> `corpus_sections_corpus_idx` likewise (27,965).
+>
+> | action | index | size | scans | result |
+> |---|---|---:|---:|---|
+> | DROP | `corpus_sections_fts` | 0.534 GB | 0 | gone — no code reads `corpus_sections."ftsVector"` (re-grepped 9 Aug) |
+> | DROP | `corpus_sections_format_idx` | 0.172 GB | 1 | gone — 5 distinct values over 18.3M rows |
+> | DROP | `corpus_sections_status_idx` | 0.184 GB | 4 | gone — 3 distinct values over 18.3M rows |
+> | REPLACE | `corpus_sections_notes_idx` | 0.170 GB | 11 | → `corpus_sections_notes_partial_idx` (`WHERE notes IS NOT NULL`), **0.006 GB** — 28× smaller, same 11 scans still served |
+> | KEEP | `idx_corpus_sections_parent` | 0.234 GB | **26,957** | see above |
+> | KEEP | `corpus_sections_corpus_idx` | 0.179 GB | 27,965 | build/audit scans |
+> | KEEP | `corpus_sections_pkey` | 1.683 GB | 4,387,863 | the join key to Lance |
+>
+> **Reclaimed 1.053 GB against a predicted 1.059 GB. Neon 16.839 → 15.785 GB, 96.2% → 90.2%.**
+> `corpus_sections` 13.518 → 12.465 GB.
+>
+> **The column drops (candidates 2, 4, 7, 8) were deliberately NOT taken**, for the reason this
+> audit gives in "How the space actually comes back": `DROP COLUMN` only marks the attribute, and
+> the bytes come back on a rewrite that wants room for a second copy of a 12.5 GB table. At 96%
+> full that is the move most likely to hit the ceiling while trying to relieve it. They also
+> reclaim nothing measurable until there is headroom to repack, and they are irreversible.
+>
+> **One correction to §5 below.** It says `r2RawKey` appears "in no SELECT anywhere". There is
+> one: `scripts/attic/v17-fleet/retry-failed.ts:65`. It is retired code under `scripts/attic/`,
+> so the conclusion stands, but the claim as written was too strong.
+>
+> **Not done, and worth doing next:** the `corpus_sections_fts_trigger` still fires on every
+> INSERT and UPDATE of an 18.3M-row table to run a function whose whole body is `RETURN NEW`
+> (§3 below). Dropping it is free and removes real per-row cost on every ingest pass; it was left
+> alone only because this sprint's remit was the indexes.
+>
+> ⚠ **V33 §1 and §5 added rows while this was going on**: the legislation re-sectioning wrote
+> 193,667 sections and retired 7,769, and the committees backlog added 1,805 — a net +187,703
+> rows, ~0.1 GB, already inside the figures above.
+
+
 *2026-08-07 17:52 UTC. **Report only. No schema changes, no rows written, nothing dropped.**
 Read-only measurement against Neon (`NEON_DATABASE_URL`, the direct endpoint). Companion to
 `docs/V26_LEGACY_DROP_RECHECK.md`, which established that the legacy DROP alone does not clear

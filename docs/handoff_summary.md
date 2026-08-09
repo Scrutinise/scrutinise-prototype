@@ -2,7 +2,83 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 12:10 UTC — ▼ **SEARCH STAGE 2A: LEX WAS ANSWERING FROM ONE STREAM IN
+*Last updated: 2026-08-09 15:05 UTC — ▼ **INGEST V33: THE LEGISLATION TIER STOPPED HIDING WHOLE
+DOCUMENTS IN SINGLE ROWS.** Executes `BRIEF_CC_V33_ingest_wrapup.md` §1/§3/§4/§5 in full, §2 to a
+running job with a hard ceiling. CHANGE_LOG (2026-08-09 15:05 UTC). `tsc` clean; new
+**`v33-check-legislation-sections` 42/42**. New: `docs/RAILWAY_ROLE.md`.
+**§1 — 7,769 rows that each held an ENTIRE document became 193,667 sections. The legislation tier
+went 79.2% → 99.6% of its words embeddable**, measured with the same script that produced the 79.2%
+baseline: `eur-lex` 57.3%→**100%** (6,630 truncated→0), `explanatory-notes` 14.3%→**100%**,
+`explanatory-memoranda` 65.8%→**100%**; 8,167 truncated sections → **381**; 82.1M words never
+embedded → **1.58M**. The worst case was `eur-lex:32007B0143:1` — 760,509 words in one row, 0.5%
+embedded — and no chunk cap could ever have fixed it. Predicted 8,850 docs/200,786 sections; actual
+**7,769/193,667** (−12.2%/−3.5%). Words in/out **99.99%**; 0 lossy splits, 0 un-retired blobs,
+0 orphans. ⚠ **The hard part was telling an article HEADING from an article REFERENCE**: eur-lex
+bodies are ONE line (4.25M chars, no whitespace structure) and `32001L0108` has 57 "Article N" of
+which only 12 open a provision — the rule was tuned against all 57 and gets all 57 right.
+⚠ **385 UK-CLML rows were left out ON PURPOSE and are exactly the 381 that remain truncated**: their
+ids carry a real provision reference that `gateway-legacy.ts` turns into "s.21" and a
+legislation.gov.uk deep link, so a `-0001` suffix would make the citation link to a provision that
+does not exist. Fixing it is two lines in `gateway-legacy.ts` — under `scrutinise-web/`, outside this
+sprint's commit scope. `--include-uk` exists for the follow-on.
+**FTS chain run in full because `fts-serve` is LIVE**: 7,786 orphans exported (653.5 MB) and deleted
+→ catch-up appended **195,968** → `corpus_fts` **18,166,926** → Hetzner merge **552s, unindexed 0,
+query 5,573ms→1,508ms, €0.053, 19.3 GB peak** → **restart PROVEN** (`started_at` 02:01:30→13:41:45).
+Verified live: `"UCITS management company transferable securities"` now returns
+`eur-lex:32009L0065:1-0011 — CELEX 32009L0065 — Article 2`.
+⚠ **§2 IS RUNNING AND IS THE ONE THING TO CHECK FIRST NEXT SESSION.** Delta measured by full scan:
+**544,198 unvectored sections (3.00%)**, priced at **$35.73** (band $32.15–$39.30, CPW measured on 300
+real bodies). Phase 1 done: **768,085 chunks** (+3.7% on prediction), 227 body misses. Phase 2
+embedding under **`--max-cost 45`**, 129 shards, resumable from `_search/v33_vec_catchup.checkpoint.json`
+— **re-run `v33-vec-catchup.ts --embed --max-cost 45` with `VECTOR_SHARD_SIZE=6000 VECTOR_MAX_INFLIGHT=1`
+to continue; the checkpoint refuses a different shard size.** ⚠ **`build-vector-index.ts` must NOT be
+re-planned**: it records DONE SHARD INDICES over the whole sorted chunkId list and its header assumes
+`corpus_chunks` is immutable — appending 768,085 chunks moves every boundary, and a `--reset` re-embeds
+all 21.8M chunks. That is why `v33-vec-catchup.ts` exists. ⚠ Tier PROBED, not assumed: **Tier 2** (4M
+accepted, 8M rejected), and the delta averages **~633 tokens/chunk, double the 310 the July build
+assumed**, so 40,000×8 would have been 99M enqueued and rejected outright.
+⚠ **NOTHING IS WATCHING THIS RUN.** `ops.ts` fires `embed-observer.ts` every 15 minutes, but it
+watches `_search/corpus_vec.checkpoint.json` (`VEC_CHECKPOINT_KEY`) — the MAIN build's checkpoint,
+which the catch-up deliberately does not touch. So a stalled catch-up sends no email. Check the
+checkpoint's `updatedAt` by hand, or teach the observer a second key.
+⚠ **THROUGHPUT, observed rather than promised:** the Batch API polls every 30s with a 24h SLA
+ceiling, and the first 6,000-chunk shard had not returned after 45 minutes. 129 sequential shards at
+that rate is not a session's work. If it needs to go faster the lever is MORE, SMALLER, CONCURRENT
+jobs within the same 5M enqueued-token budget (e.g. `VECTOR_SHARD_SIZE=2000 VECTOR_MAX_INFLIGHT=3`
+≈ 3.8M) — batch latency looks queue-dominated, not size-dominated. Changing it means re-planning the
+checkpoint, which the script refuses to do silently.
+**STILL TO DO for §2:** `vec-hygiene delete-orphans` (**89,377 orphan chunks**) then the new heavy job
+**`vector-reindex`**. ⚠ Re-running the existing `vector-index` job would do **NOTHING** — both its
+scripts are checkpointed `phase:"done"`, so it prints "already done", creates nothing, destroys the box
+and reports success; `--index-only` is the flag that enters the ANN block. **No vector flag was
+touched — the flip is still the search thread's.**
+**§3 — Neon 96.2% → 90.2%** (1.053 GB reclaimed vs 1.059 predicted). ⚠ The alert was WORSE than the
+7 Aug audit said: 91.0% then, **95.8% before any V33 work**. ⚠ **`idx_corpus_sections_parent` was 6
+scans in the audit and is 26,957 now** — graded "review/medium risk" there, which reads as droppable;
+**KEPT**, and re-verifying is the only reason a live index survived. Dropped `corpus_sections_fts`,
+`_format_idx`, `_status_idx`; `_notes_idx` replaced by a partial, **0.170 GB → 0.006 GB**. Column drops
+deliberately NOT taken (they need a rewrite wanting a second copy of a 12.5 GB table — at 96% that is
+the move most likely to hit the ceiling while relieving it).
+⚠ **§3b legacy DROP is BLOCKED and the previous audit's reader list was short by two**:
+`app/api/ideas/[id]/legislation-search/route.ts:75` (the gateway-failure FALLBACK) and
+`app/legislation/[itemId]/page.tsx` are live readers nobody had listed. **Seven live readers, all under
+`scrutinise-web/`**, plus the one `IdeaLegislation` row. What WAS in scope is done:
+**`backfill-citations.ts` repointed to `corpus_acts`** (135,531 = 135,531, 0 missing, 0 differing) —
+the last `LegislationItem` reference outside the web app.
+**§4 — `docs/RAILWAY_ROLE.md` written.** Live: `fts-serve`, `Ops`. Live-but-serving-nobody:
+`vector-serve` (`VECTOR_SEARCH_URL` unset). Dormant: `Ingest` — ⚠ **its last deploy FAILED on 30 Jun
+and nobody noticed** because the queue drained. Stale: `fts-build`, `fts-pilot` (start command `true`).
+Old `scrutinise-db` **archived** to R2 (31 tables, 1,244,339 rows, 611.7 MB gz, **all 54 objects read
+back byte-for-byte**) — ⚠ a DATA archive, not a restorable dump (no `pg_dump` on this machine).
+**NOT cleared, and the blocker is named:** `Ops` and `Ingest` still carry a `DATABASE_URL` pointing at
+it. 64.8 minutes of counter-diffing across the hourly tick shows **no user table scanned by anyone**.
+⚠ **`RAILWAY_API_TOKEN` is a PROJECT token — every existing Railway script sends `Authorization:
+Bearer` and gets `Not Authorized` on every query, including `me`.** It needs `Project-Access-Token`.
+That is why it reads as an expired credential. The two new scripts use the right header; the rest are
+dead until changed.
+**§5 — the 82-publication API backlog is closed, 82/82 accounted:** 81 ingested (**1,805 sections**,
+split per finding), 1 recorded as a known-unknown with its reason. ▼ Earlier:
+2026-08-09 12:10 UTC — ▼ **SEARCH STAGE 2A: LEX WAS ANSWERING FROM ONE STREAM IN
 FIVE. IT NOW ANSWERS FROM ALL OF THEM.** Executes `BRIEF_SEARCH_S2A.md` §1+§2; CHANGE_LOG
 (2026-08-09 12:10 UTC). `tsc` + `next build` clean; new **`check:stream-coverage` 3/3 with its
 FAILING mode proven first**, `check:flags` **50/50**, `check:llm-guards` 9/9, `check:lex-general`

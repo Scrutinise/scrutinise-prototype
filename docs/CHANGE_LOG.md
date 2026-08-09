@@ -111,6 +111,232 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V33 — the legislation tier stopped hiding whole documents in single rows; Neon off the ceiling; Railway finally has a written role (2026-08-09 15:05 UTC)
+
+Executes `docs/BRIEF_CC_V33_ingest_wrapup.md` §1, §3, §4, §5 in full, and §2 to the point where it
+is a long-running job with a hard spend ceiling. `tsc --noEmit` clean for every file written here;
+new **`v33-check-legislation-sections` 42/42** (fixtures + 75 real bodies from three corpora).
+New docs: **`docs/RAILWAY_ROLE.md`**; `CORPUS_SECTIONS_STORAGE_AUDIT.md` carries a V33 §3a update.
+
+### §1 — 7,769 whole documents became 193,667 sections, and the legislation tier went 79.2% → 99.6% embeddable
+
+`LEGISLATION_TRUNCATION_AND_FLAG.md` found the tier's 20.8% loss was not spread thinly: it sat in a
+few rows that each held an entire document, the worst being `eur-lex:32007B0143:1` — **760,509 words
+in ONE row, 0.5% of it embedded.** This is a SECTIONING defect, and the report was right that no
+chunk cap fixes it: even `MAX_CHUNKS=64` leaves a 760k-word row embedding a sliver of itself.
+
+`shared/legislation-sections.ts` splits those rows into their own sub-units. It reuses `unwrap()`
+and **the committee splitter's `assertLossless` itself, not a copy of it** — a document either
+round-trips exactly or it is skipped and counted.
+
+⚠ **The hard part was telling an article HEADING from an article REFERENCE.** `eur-lex` bodies
+arrive as ONE line (4,250,493 characters, no whitespace structure at all), and `32001L0108` contains
+57 occurrences of "Article N" of which only 12 open a provision. The rule — preceded by a sentence
+terminator, followed by a capital or a digit — was tuned against every one of those 57 and gets all
+57 right: `"…laid down in Article 251 of the Treaty"` and `"8. Article 20 shall be deleted"` never
+break; `"…replaced by the following: Article 21 1. The"` does.
+
+⚠ **A defect the check found that reasoning did not:** the committee splitter tests its size ceiling
+on the way OUT, so a nearly-full buffer plus a MAX-sized line yields a section of TARGET+MAX. On 75
+real bodies that produced **20 sections over the ceiling**. Pre-flushing makes "no section exceeds
+MAX_CHARS" true by construction. Same target as committees (2,500 chars) deliberately: **BM25 length
+normalisation is computed across the whole table, not per corpus**, so legislation sections at 12,000
+characters would be systematically penalised against committee findings at 2,500 for every shared query.
+
+**PREDICTED 8,850 documents → 200,786 sections. ACTUAL 7,769 → 193,667** (documents −12.2%, sections
+−3.5%). Words in 108,313,742, out 108,308,169 — **99.99%**, the 5,573-word difference being `unwrap`
+mending hyphenation across line breaks. Reconciliation: 193,667 planned = 193,667 stored, words
+planned = words stored, 400/400 R2 bodies present, **0 un-retired blobs, 0 orphans**.
+
+**Measured with the SAME script that produced the 79.2% baseline:**
+
+| corpus | before | after |
+|---|---:|---:|
+| `eur-lex` | 57.3% | **100.0%** (6,630 truncated → 0) |
+| `explanatory-notes` | 14.3% | **100.0%** (298 → 0) |
+| `explanatory-memoranda` | 65.8% | **100.0%** (858 → 0) |
+| **LEGISLATION TIER** | **79.2%** | **99.6%** |
+| truncated sections | 8,167 | **381** |
+| words never embedded | 82,108,063 | **1,576,400** |
+
+⚠ **385 rows were left out ON PURPOSE, and they are exactly the 381 that remain.** 266 carry a REAL
+provision reference (`section-21`, `schedule-1-paragraph-1`) that `gateway-legacy.ts` parses into the
+panel's "s.21" and into the legislation.gov.uk deep link; `section-21-0001` matches neither pattern,
+so the panel would print "s.section-21-0001" and **the citation would link to a provision that does
+not exist**. The other 119 are `:full-doc-html` whole-document rows that DO match the pathology but
+are recognised by that exact literal, so a suffix defeats it identically. Fixing both is a two-line
+change in `gateway-legacy.ts` — under `scrutinise-web/`, which this sprint's commit scope excludes.
+`--include-uk` exists so the follow-on needs no new script. **A citation that 404s is worse than a
+section that embeds 90% of itself.**
+
+Verified in the LIVE service, not just in the database: `"UCITS management company transferable
+securities"` now returns `eur-lex:32009L0065:1-0011 — CELEX 32009L0065 — Article 2`. Before, that
+Directive was one row that BM25 could not rank. **`eur-lex` rows also had NO `sectionTitle` at all
+(0 of 90,260)**, which is why `displayTitle` had to fall back to "CELEX {id}" to avoid telling a user
+"the law here is eur-lex"; the new rows carry `CELEX {celex} — Article N`.
+
+### THE FTS CHAIN — because `fts-serve` is LIVE and retiring 7,769 rows breaks it
+
+Not optional and not deferrable: catch-up only appends and hygiene only removes, so a re-sectioned
+corpus leaves the old blobs orphaned in the index and the new rows invisible.
+
+hygiene audit (**exhaustive, 0 rows unreached**) → 7,786 orphans exported to R2 in full (653.5 MB,
+the only surviving copy) → deleted → catch-up appended **195,968 rows** → `corpus_fts` **18,166,926**
+= `corpus_sections` compiled 18,166,911 + 15 known stale → merge on Hetzner: **552s, unindexed 0,
+query 5,573ms → 1,508ms, €0.053, peak RSS 19.3 GB**, box auto-destroyed → **`fts-serve` restart
+PROVEN** (`started_at` 02:01:30 → 13:41:45, `served` reset to 0).
+
+⚠ `jobs.ts` `expectedPeakGb` deliberately NOT lowered to 19.3. Four runs now sit in 18.0–19.8 GB on
+tables from 17.68M to 18.17M rows, and the trend against row count is flat — that is the case for
+keeping the record, not the mean.
+
+### §2 — the delta is 544,198 sections, priced at $35.73, chunked, and embedding under a hard ceiling
+
+⚠ **This needed its own path, and the reason is a four-figure trap.** `build-vector-index.ts` builds
+its shard plan by sorting the WHOLE `corpus_chunks` chunkId list and records **DONE SHARD INDICES**;
+its header states the assumption — `corpus_chunks` is immutable post-build. Append 768,085 chunks and
+every boundary moves, so index 417 no longer means the range it meant when it was marked done:
+embedded ranges get skipped and new content goes unembedded, silently. A `--reset` instead re-embeds
+all 21.8M chunks. `v33-vec-catchup.ts` is the vector twin of `fts-catchup.ts`: its own plan, its own
+checkpoint, touching neither.
+
+**The delta, measured not modelled** (`v33-vec-delta.ts`, full scan of all 21,839,900 vectors against
+all 18,166,911 compiled sections): **544,198 unvectored sections (3.00%)**, 350,067,874 words,
+**PREDICTED 740,385 chunks → $35.73** at Batch $0.075/M (band $32.15–$39.30 across ±10% chars-per-word,
+which is measured on 300 real bodies at 6.154, not assumed). Parliamentary $22.42, legislation $13.26.
+**That is inside the brief's stated envelope** ("committee delta ≈ $15 … low tens of dollars"), so the
+run proceeds under the brief's sizing with `--max-cost 45` as a hard stop.
+
+Phase 1 (chunking, no spend) is COMPLETE: **768,085 chunks, +3.7% on the prediction**, 227 body misses
+out of 544,198. Phase 2 is embedding now: **129 shards, resumable from an R2 checkpoint, ceiling $45.**
+
+⚠ **Tier probed rather than assumed: the account is Tier 2** (4M enqueued tokens accepted, 8M
+rejected, 5M documented cap). The delta averages **~633 tokens/chunk — double the 310 the July build
+assumed**, because these are full-size chunks rather than the whole corpus's short-section tail. So
+`VECTOR_SHARD_SIZE=6000, MAX_INFLIGHT=1` (3.84M enqueued), not the 40,000×8 the env defaults to,
+which would have been 99M and rejected outright.
+
+⚠ The canary embedded the first 400 chunks under a 40,000 shard plan. Re-planning at 6,000 puts them
+inside shard 0, so shard 0 was marked ATTEMPTED — the exact signal the catch-up uses to pre-delete
+before re-embedding, so they are replaced, not duplicated. **The $0.019 was NOT reset out of the
+spend counter**: it is real money and the ceiling must count it.
+
+**NOT DONE, and required before the flip:** the ANN rebuild. A new heavy job **`vector-reindex`** is
+registered for it. ⚠ **Re-running the existing `vector-index` job would have done NOTHING** — both of
+its scripts are checkpointed `phase: "done"`, so it prints "already done", creates nothing, destroys
+the box and reports success. `--index-only` is the flag that enters the ANN block regardless of phase.
+Also pending: **89,377 orphan chunks** in `corpus_vec` (the V32 committee rechunk plus this sprint's
+re-sectioning), which `vec-hygiene delete-orphans` clears. No vector flag was touched.
+
+⚠ **Nothing is watching this run.** `ops.ts` fires `embed-observer.ts` every 15 minutes, but it
+watches `VEC_CHECKPOINT_KEY` — the MAIN build's checkpoint, which the catch-up deliberately does not
+touch. A stalled catch-up therefore sends no email. Recorded rather than fixed: teaching the live
+scheduler's watcher a second key at the end of a sprint, untested, is the worse trade.
+⚠ **Throughput, observed rather than promised:** the Batch API polls at 30s against a 24h SLA
+ceiling, and the first 6,000-chunk shard had not returned after 45 minutes. 129 sequential shards at
+that rate is not a session's work. The lever, if it needs one, is MORE, SMALLER, CONCURRENT jobs
+inside the same 5M enqueued-token budget (`VECTOR_SHARD_SIZE=2000 VECTOR_MAX_INFLIGHT=3` ≈ 3.8M) —
+batch latency looks queue-dominated rather than size-dominated. That means re-planning the
+checkpoint, which the script refuses to do silently.
+
+### §3 — Neon 96.2% → 90.2%, and one entry in the audit had flipped
+
+⚠ **The alert was worse than the audit said.** `CORPUS_SECTIONS_STORAGE_AUDIT.md` measured 91.0% on
+7 Aug; before any V33 work it was **95.8%**, and 96.2% by the time the reclaim ran — 0.66 GB of
+headroom on a 17.5 GB ceiling.
+
+⚠ **`idx_corpus_sections_parent` was recorded at 6 scans in the audit and is at 26,957 now** — the
+committees work made `parentDocId` a hot path. The audit graded it "review / medium risk", which
+reads as droppable. **KEPT.** Re-verifying a two-day-old counter is the only reason a live index
+survived (CLAUDE.md §0).
+
+Dropped: `corpus_sections_fts` (0.534 GB, 0 scans, and a fresh repo-wide grep confirms nothing reads
+`corpus_sections."ftsVector"`), `corpus_sections_format_idx` (0.172 GB, 5 distinct values over 18.3M
+rows), `corpus_sections_status_idx` (0.184 GB, 3 distinct values). `corpus_sections_notes_idx`
+REPLACED by a partial on the same column: **0.170 GB → 0.006 GB, 28× smaller, its 11 scans still
+served.** **Reclaimed 1.053 GB against 1.059 predicted. 16.839 → 15.785 GB, 96.2% → 90.2%.** Every
+dropped index's exact `CREATE INDEX` is printed before it goes, so all of it is reversible.
+
+**Column drops deliberately NOT taken.** `DROP COLUMN` only marks the attribute; the bytes return on
+a rewrite that wants room for a second copy of a 12.5 GB table. At 96% that is the move most likely
+to hit the ceiling while trying to relieve it — which is what the audit's own running-order rule says.
+
+**§3b — the legacy DROP is BLOCKED, and the previous audit's reader list was incomplete by two.**
+`V26_LEGACY_DROP_RECHECK.md` §(a) lists the web-app readers; re-grepping found two more:
+`app/api/ideas/[id]/legislation-search/route.ts:75` (the gateway-failure FALLBACK — so dropping the
+tables would break the fallback exactly when the primary path is already failing) and
+`app/legislation/[itemId]/page.tsx:13,26` (the public legislation detail page). With
+`gateway-legacy.ts:287`, `lib/search.ts:177`, `app/api/legislation/[itemId]`, `test-sections` and
+`field-approval`, that is **seven live readers, all under `scrutinise-web/`**, plus the one
+`IdeaLegislation` row. Nothing was dropped.
+
+**What WAS in scope and is now done: `scripts/ingest/search/backfill-citations.ts` is repointed to
+`corpus_acts`** — the last `LegislationItem` reference outside `scrutinise-web/`, and one of the two
+blockers `V26_LEGACY_DROP_RECHECK` named. Re-verified whole-table before switching: 135,531 = 135,531,
+**0 gids missing, 0 titles differing**.
+
+### §4 — Railway has a written role, and the surplus is archived
+
+`docs/RAILWAY_ROLE.md`. Project `miraculous-nature`, 7 services. **LIVE and load-bearing:**
+`fts-serve` (BM25, every search), `Ops` (scheduler/breakers/liveness). **Live but serving nobody:**
+`vector-serve` — deployed and warm, but `VECTOR_SEARCH_URL` is unset so `vector-search.ts:111` returns
+`[]` before it is reached. **Dormant:** `Ingest` (started on demand, ⚠ its last deploy FAILED on
+30 Jun and nobody noticed because the queue drained — the next real backlog is when that gets
+discovered). **Stale:** `fts-build` and `fts-pilot`, both with a start command of literally `true`,
+superseded by the Hetzner runner.
+
+⚠ **`RAILWAY_API_TOKEN` is a PROJECT token and every existing script sends the wrong header.** It is
+a bare 36-char UUID, which Railway authenticates with `Project-Access-Token`; `Authorization: Bearer`
+returns `Not Authorized` on **every** query including `me` and `projects` — which is exactly why it
+reads as an expired credential rather than a wrong header. `check-railway-status.ts`,
+`check-v17-services.ts`, `restart-workers-staggered.ts` and the rest are dead until changed. The two
+new scripts here use the correct header.
+
+**The old `scrutinise-db`:** 1.98 GB, 66 tables, 1,244,339 rows, and every user-data table is matched
+or exceeded by Neon. **Archived** to `r2://…/archive/railway-scrutinise-db/2026-08-09/` — 31 tables,
+611.7 MB gzipped, and **all 54 objects read back from R2 as bytes, gunzipped, and line-counted against
+what was exported.** ⚠ It is a DATA archive, not a restorable dump: there is no `pg_dump` on this
+machine, so it is gzipped JSONL — rows, not DDL, indexes, sequences or constraints.
+
+⚠ **The first attempt died with `RangeError: Invalid string length`** — 914,274 rows of body text
+exceed V8's ~512 MB string cap, so the one table that actually needed archiving was the one that could
+not be built. Fixed by feeding gzip incrementally and counting newline BYTES rather than splitting a
+string.
+
+**Nothing on Railway was dropped, and the blocker is named:** `Ops` and `Ingest` still carry a
+`DATABASE_URL` pointing at the old database. The code does not use it (`ops.ts` connects to Neon only,
+confirmed by grep), but ~20 scripts under `scripts/ingest/` still reach for
+`process.env.DATABASE_URL`, and that is the 29–30 July incident's exact shape. Remove those two
+variables first. **The read test is stronger than a connection sample:** `pg_stat_user_tables` has
+never been reset here, so two snapshots 64.8 minutes apart, spanning the `Ops` hourly tick and four
+15-minute ticks, show **not one user table scanned by anyone.**
+
+### §5 — the 82-publication API backlog is closed, 82/82 accounted
+
+**81 ingested (1,805 sections), 1 recorded as a known-unknown with its reason** (publication 53814, a
+Government Response whose only served document has no Html or Pdf conversion — a marker row, not an
+absence). Report kinds went in **split per finding** using the same committee splitter, so they arrive
+in the shape the rest of the corpus is already in rather than needing a second pass. Reconciliation:
+1,805 written = 1,805 stored, 181/181 sampled R2 bodies present.
+
+All 82 date from 2024–2026, i.e. publications that post-date the enumeration. Six are "Large Print"
+duplicates of reports already in the backlog — **ingested rather than skipped, because 78 of the
+manifest's 84 Large Print publications are already in the corpus** and excluding these six would have
+made the corpus inconsistent with itself. Verified live: `"Black people experiences of homelessness"`
+returns `committees-reports:publication:54237:302190-0004`, ingested today.
+
+### PREDICTIONS SCORED
+
+| prediction | actual | verdict |
+|---|---|---|
+| §1: 8,850 documents re-sectioned | 7,769 | −12.2% |
+| §1: 200,786 sections | 193,667 | −3.5% |
+| §1: lossless on every document | 0 lossy, words 99.99% | held |
+| §3a: 1.059 GB reclaimed | 1.053 GB | −0.6% |
+| §2: 740,385 chunks | 768,085 | +3.7% |
+| §2: $35.73 embed | in flight, ceiling $45 | pending |
+
+
 ## SEARCH Stage 2A — Lex was answering from one stream in five; it now answers from all of them (2026-08-09 12:10 UTC)
 
 Executes `docs/BRIEF_SEARCH_S2A.md` §1 and §2. **§3 and §4 are NOT executed and are still gated —
