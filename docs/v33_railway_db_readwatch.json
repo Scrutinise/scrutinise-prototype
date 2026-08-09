@@ -1,0 +1,570 @@
+{
+  "previous": {
+    "at": "2026-08-09T12:25:21.907Z",
+    "db": {
+      "numbackends": 1,
+      "xact_commit": "480600",
+      "xact_rollback": "151076",
+      "tup_returned": "7125395315",
+      "tup_fetched": "6953948216",
+      "tup_inserted": "458",
+      "tup_updated": "70",
+      "tup_deleted": "23"
+    },
+    "tables": {
+      "AIUsageLog": {
+        "seq": 10,
+        "idx": 0
+      },
+      "ActivityLog": {
+        "seq": 11,
+        "idx": 0
+      },
+      "Amendment": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Attachment": {
+        "seq": 8,
+        "idx": 0
+      },
+      "BulletinPost": {
+        "seq": 9,
+        "idx": 0
+      },
+      "BulletinVote": {
+        "seq": 7,
+        "idx": 0
+      },
+      "CoherentAction": {
+        "seq": 10,
+        "idx": 167
+      },
+      "CoherentActionSection": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Comment": {
+        "seq": 90,
+        "idx": 4
+      },
+      "CommentRating": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Community": {
+        "seq": 8,
+        "idx": 0
+      },
+      "CommunityInvite": {
+        "seq": 6,
+        "idx": 2
+      },
+      "CommunityMember": {
+        "seq": 7,
+        "idx": 1
+      },
+      "ContentReport": {
+        "seq": 9,
+        "idx": 0
+      },
+      "CredibilityScore": {
+        "seq": 12,
+        "idx": 195
+      },
+      "Diagnosis": {
+        "seq": 10,
+        "idx": 123
+      },
+      "DisputedLogicFlag": {
+        "seq": 8,
+        "idx": 0
+      },
+      "DraftsmanEndorsement": {
+        "seq": 8,
+        "idx": 0
+      },
+      "EmailSuppression": {
+        "seq": 8,
+        "idx": 1
+      },
+      "Endorsement": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Evidence": {
+        "seq": 8,
+        "idx": 111
+      },
+      "Feedback": {
+        "seq": 10,
+        "idx": 0
+      },
+      "GeneratedOutput": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Group": {
+        "seq": 10,
+        "idx": 0
+      },
+      "GroupInvite": {
+        "seq": 8,
+        "idx": 0
+      },
+      "GroupMember": {
+        "seq": 8,
+        "idx": 1
+      },
+      "GuidingPolicy": {
+        "seq": 10,
+        "idx": 123
+      },
+      "Idea": {
+        "seq": 59,
+        "idx": 567
+      },
+      "IdeaAlert": {
+        "seq": 8,
+        "idx": 0
+      },
+      "IdeaCollaborator": {
+        "seq": 8,
+        "idx": 145
+      },
+      "IdeaLegislation": {
+        "seq": 12,
+        "idx": 56
+      },
+      "IdeaReview": {
+        "seq": 10,
+        "idx": 0
+      },
+      "Invite": {
+        "seq": 13,
+        "idx": 7
+      },
+      "LegislationAmendment": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationCorrection": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationCrossRef": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationItem": {
+        "seq": 0,
+        "idx": 0
+      },
+      "LegislationSection": {
+        "seq": 0,
+        "idx": 0
+      },
+      "LegislationSection_DEPRECATED_2026-06-19": {
+        "seq": 11,
+        "idx": 11
+      },
+      "LexInsight": {
+        "seq": 19,
+        "idx": 0
+      },
+      "Notification": {
+        "seq": 10,
+        "idx": 4
+      },
+      "OperationalDocument": {
+        "seq": 11,
+        "idx": 16
+      },
+      "OperationalSection": {
+        "seq": 94,
+        "idx": 33
+      },
+      "PartyMembership": {
+        "seq": 8,
+        "idx": 0
+      },
+      "PlatformConfig": {
+        "seq": 10,
+        "idx": 1
+      },
+      "PointsLedger": {
+        "seq": 10,
+        "idx": 22
+      },
+      "ReferralEvent": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Reputation": {
+        "seq": 10,
+        "idx": 2
+      },
+      "Research": {
+        "seq": 13,
+        "idx": 155
+      },
+      "ResourcesCommitted": {
+        "seq": 8,
+        "idx": 0
+      },
+      "RootCause": {
+        "seq": 121,
+        "idx": 0
+      },
+      "StageTransition": {
+        "seq": 10,
+        "idx": 0
+      },
+      "StageTransitionRequest": {
+        "seq": 8,
+        "idx": 0
+      },
+      "TargetOrganisation": {
+        "seq": 8,
+        "idx": 0
+      },
+      "User": {
+        "seq": 478,
+        "idx": 54
+      },
+      "UserInvite": {
+        "seq": 8,
+        "idx": 1
+      },
+      "UserParliamentaryVerification": {
+        "seq": 8,
+        "idx": 0
+      },
+      "UserProfessionalVerification": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Vote": {
+        "seq": 20,
+        "idx": 0
+      },
+      "WordingHistory": {
+        "seq": 8,
+        "idx": 0
+      },
+      "_prisma_migrations": {
+        "seq": 18,
+        "idx": 4
+      },
+      "corpus_sections": {
+        "seq": 17,
+        "idx": 0
+      },
+      "ingest_progress_snapshots": {
+        "seq": 4,
+        "idx": 0
+      },
+      "ingest_queue": {
+        "seq": 38,
+        "idx": 409405122
+      },
+      "scheduler_lock": {
+        "seq": 7,
+        "idx": 0
+      },
+      "source_rate_limits": {
+        "seq": 302146,
+        "idx": 604286
+      },
+      "specialist_queue": {
+        "seq": 5,
+        "idx": 0
+      }
+    },
+    "otherBackends": 0
+  },
+  "latest": {
+    "at": "2026-08-09T13:30:12.578Z",
+    "db": {
+      "numbackends": 1,
+      "xact_commit": "480734",
+      "xact_rollback": "151076",
+      "tup_returned": "7125513164",
+      "tup_fetched": "6953949801",
+      "tup_inserted": "458",
+      "tup_updated": "70",
+      "tup_deleted": "23"
+    },
+    "tables": {
+      "AIUsageLog": {
+        "seq": 10,
+        "idx": 0
+      },
+      "ActivityLog": {
+        "seq": 11,
+        "idx": 0
+      },
+      "Amendment": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Attachment": {
+        "seq": 8,
+        "idx": 0
+      },
+      "BulletinPost": {
+        "seq": 9,
+        "idx": 0
+      },
+      "BulletinVote": {
+        "seq": 7,
+        "idx": 0
+      },
+      "CoherentAction": {
+        "seq": 10,
+        "idx": 167
+      },
+      "CoherentActionSection": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Comment": {
+        "seq": 90,
+        "idx": 4
+      },
+      "CommentRating": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Community": {
+        "seq": 8,
+        "idx": 0
+      },
+      "CommunityInvite": {
+        "seq": 6,
+        "idx": 2
+      },
+      "CommunityMember": {
+        "seq": 7,
+        "idx": 1
+      },
+      "ContentReport": {
+        "seq": 9,
+        "idx": 0
+      },
+      "CredibilityScore": {
+        "seq": 12,
+        "idx": 195
+      },
+      "Diagnosis": {
+        "seq": 10,
+        "idx": 123
+      },
+      "DisputedLogicFlag": {
+        "seq": 8,
+        "idx": 0
+      },
+      "DraftsmanEndorsement": {
+        "seq": 8,
+        "idx": 0
+      },
+      "EmailSuppression": {
+        "seq": 8,
+        "idx": 1
+      },
+      "Endorsement": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Evidence": {
+        "seq": 8,
+        "idx": 111
+      },
+      "Feedback": {
+        "seq": 10,
+        "idx": 0
+      },
+      "GeneratedOutput": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Group": {
+        "seq": 10,
+        "idx": 0
+      },
+      "GroupInvite": {
+        "seq": 8,
+        "idx": 0
+      },
+      "GroupMember": {
+        "seq": 8,
+        "idx": 1
+      },
+      "GuidingPolicy": {
+        "seq": 10,
+        "idx": 123
+      },
+      "Idea": {
+        "seq": 59,
+        "idx": 567
+      },
+      "IdeaAlert": {
+        "seq": 8,
+        "idx": 0
+      },
+      "IdeaCollaborator": {
+        "seq": 8,
+        "idx": 145
+      },
+      "IdeaLegislation": {
+        "seq": 12,
+        "idx": 56
+      },
+      "IdeaReview": {
+        "seq": 10,
+        "idx": 0
+      },
+      "Invite": {
+        "seq": 13,
+        "idx": 7
+      },
+      "LegislationAmendment": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationCorrection": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationCrossRef": {
+        "seq": 4,
+        "idx": 0
+      },
+      "LegislationItem": {
+        "seq": 0,
+        "idx": 0
+      },
+      "LegislationSection": {
+        "seq": 0,
+        "idx": 0
+      },
+      "LegislationSection_DEPRECATED_2026-06-19": {
+        "seq": 11,
+        "idx": 11
+      },
+      "LexInsight": {
+        "seq": 19,
+        "idx": 0
+      },
+      "Notification": {
+        "seq": 10,
+        "idx": 4
+      },
+      "OperationalDocument": {
+        "seq": 11,
+        "idx": 16
+      },
+      "OperationalSection": {
+        "seq": 94,
+        "idx": 33
+      },
+      "PartyMembership": {
+        "seq": 8,
+        "idx": 0
+      },
+      "PlatformConfig": {
+        "seq": 10,
+        "idx": 1
+      },
+      "PointsLedger": {
+        "seq": 10,
+        "idx": 22
+      },
+      "ReferralEvent": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Reputation": {
+        "seq": 10,
+        "idx": 2
+      },
+      "Research": {
+        "seq": 13,
+        "idx": 155
+      },
+      "ResourcesCommitted": {
+        "seq": 8,
+        "idx": 0
+      },
+      "RootCause": {
+        "seq": 121,
+        "idx": 0
+      },
+      "StageTransition": {
+        "seq": 10,
+        "idx": 0
+      },
+      "StageTransitionRequest": {
+        "seq": 8,
+        "idx": 0
+      },
+      "TargetOrganisation": {
+        "seq": 8,
+        "idx": 0
+      },
+      "User": {
+        "seq": 478,
+        "idx": 54
+      },
+      "UserInvite": {
+        "seq": 8,
+        "idx": 1
+      },
+      "UserParliamentaryVerification": {
+        "seq": 8,
+        "idx": 0
+      },
+      "UserProfessionalVerification": {
+        "seq": 8,
+        "idx": 0
+      },
+      "Vote": {
+        "seq": 20,
+        "idx": 0
+      },
+      "WordingHistory": {
+        "seq": 8,
+        "idx": 0
+      },
+      "_prisma_migrations": {
+        "seq": 18,
+        "idx": 4
+      },
+      "corpus_sections": {
+        "seq": 17,
+        "idx": 0
+      },
+      "ingest_progress_snapshots": {
+        "seq": 4,
+        "idx": 0
+      },
+      "ingest_queue": {
+        "seq": 38,
+        "idx": 409405122
+      },
+      "scheduler_lock": {
+        "seq": 7,
+        "idx": 0
+      },
+      "source_rate_limits": {
+        "seq": 302146,
+        "idx": 604286
+      },
+      "specialist_queue": {
+        "seq": 5,
+        "idx": 0
+      }
+    },
+    "otherBackends": 0
+  }
+}

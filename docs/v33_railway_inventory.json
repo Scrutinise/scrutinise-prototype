@@ -1,0 +1,258 @@
+{
+  "measuredAt": "2026-08-09T11:58:50.569Z",
+  "project": {
+    "id": "68707c61-5c68-4f37-88fc-c301fd6b90e7",
+    "name": "miraculous-nature",
+    "createdAt": "2025-11-02T22:43:35.204Z",
+    "environments": {
+      "edges": [
+        {
+          "node": {
+            "id": "991f733c-719c-4217-a6d6-1dbe80642bbe",
+            "name": "production"
+          }
+        }
+      ]
+    },
+    "services": {
+      "edges": [
+        {
+          "node": {
+            "id": "0ef0f6a5-5805-4c92-af69-9ee4d0486356",
+            "name": "fts-build",
+            "createdAt": "2026-06-20T03:52:00.634Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "a66af882-35e3-49e7-8dc8-58fd6a0457d5",
+                    "status": "SUCCESS",
+                    "createdAt": "2026-08-03T12:02:46.566Z",
+                    "staticUrl": null
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "5c592ae0-ef1a-4bab-86e6-6133fc7fe465",
+                    "region": null,
+                    "startCommand": "true",
+                    "numReplicas": 1,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "2f0ef638-332c-4ed6-b8da-13384d90b87f",
+            "name": "scrutinise-db",
+            "createdAt": "2025-11-03T17:12:13.336Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "441a873b-582a-41de-899a-8df42b4adc83",
+                    "status": "SUCCESS",
+                    "createdAt": "2026-06-10T00:44:35.434Z",
+                    "staticUrl": null
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "5681e9a2-56af-40c9-bd26-3207aadbe27f",
+                    "region": null,
+                    "startCommand": null,
+                    "numReplicas": null,
+                    "source": {
+                      "image": "ghcr.io/railwayapp-templates/postgres-ssl:17",
+                      "repo": null
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "a7f4d75f-d844-4e1c-8edf-2569346b31c9",
+            "name": "Ingest",
+            "createdAt": "2026-06-04T08:16:30.167Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "3d150544-1d6c-411a-9147-b38ed0dd9d42",
+                    "status": "FAILED",
+                    "createdAt": "2026-06-30T08:15:34.671Z",
+                    "staticUrl": null
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "0049ae58-d007-4c26-bc76-c7150649ab3b",
+                    "region": null,
+                    "startCommand": "npm run worker",
+                    "numReplicas": null,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "ae95be0a-3140-409a-8b9a-fd9c81229da4",
+            "name": "vector-serve",
+            "createdAt": "2026-08-07T11:58:54.537Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "1f9d8bdc-47ea-4204-8522-577f4ad5dc67",
+                    "status": "SUCCESS",
+                    "createdAt": "2026-08-07T12:58:50.820Z",
+                    "staticUrl": "vector-serve-production.up.railway.app"
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "38ce6225-c5ae-473c-8433-31adaa3b9912",
+                    "region": null,
+                    "startCommand": "sh -c 'VECTOR_PORT=8081 npx tsx search/vector-query-service.ts'",
+                    "numReplicas": 1,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "c268ec09-e489-4cfa-837a-7740d95c24c7",
+            "name": "fts-serve",
+            "createdAt": "2026-06-23T23:33:27.534Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "c0fa3e9e-b158-4877-b60f-fb44707952f7",
+                    "status": "SUCCESS",
+                    "createdAt": "2026-08-09T02:01:13.453Z",
+                    "staticUrl": "fts-serve-production-4cea.up.railway.app"
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "959ab0e3-24da-4bfa-867f-1b0d07818668",
+                    "region": null,
+                    "startCommand": "sh -c 'FTS_PORT=8080 npx tsx search/fts-query-service.ts'",
+                    "numReplicas": 1,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "f3397bee-e588-4b95-921f-2e0f2f169cc5",
+            "name": "Ops",
+            "createdAt": "2026-06-05T01:07:04.054Z",
+            "deployments": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "17abdaba-8107-4c18-b3bf-9912c165ba92",
+                    "status": "SUCCESS",
+                    "createdAt": "2026-08-09T08:47:06.294Z",
+                    "staticUrl": null
+                  }
+                }
+              ]
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "7935e5c6-6cd8-420e-b4fe-87299ef74307",
+                    "region": null,
+                    "startCommand": "npm run scheduler",
+                    "numReplicas": null,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "fdd32248-1bd5-4264-8ab0-54de78545151",
+            "name": "fts-pilot",
+            "createdAt": "2026-06-20T17:34:52.400Z",
+            "deployments": {
+              "edges": []
+            },
+            "serviceInstances": {
+              "edges": [
+                {
+                  "node": {
+                    "id": "25ab8aab-3455-4ccf-98c6-c27f3b0462af",
+                    "region": null,
+                    "startCommand": "true",
+                    "numReplicas": 1,
+                    "source": {
+                      "image": null,
+                      "repo": "Scrutinise/scrutinise-prototype"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
