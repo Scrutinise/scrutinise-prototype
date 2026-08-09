@@ -36,6 +36,41 @@ const BATCH = 500
 
 const stats = { publicationsInManifest: 0, rowsMatched: 0, rowsUpdated: 0, titlesEnriched: 0, withInquiry: 0, withoutInquiry: 0, withResponseLink: 0, unmatchedPublications: 0 }
 
+const SEP = ' — '
+const TITLE_MAX = 500
+
+/**
+ * Fold the committee name into the title so that the NAME SURVIVES THE CAP.
+ *
+ * ⚠ The original did `${title} — ${name}`.slice(0, 500), which cuts the name itself whenever the
+ * result overflows — and the name is the only one of the §B join keys the FTS layer carries, so a
+ * row whose name was cut mid-word ("… — Se") is unfindable by committee in the committees stream,
+ * which is the exact failure §D exists to prevent. It also broke idempotence: with the name no
+ * longer present, the next run's `includes` check failed and it appended again. Caught by this
+ * script's own re-run assertion, not by inspection — 3,101 rows were sitting at exactly 500 chars
+ * with a truncated name.
+ *
+ * So: reserve room for the name FIRST and truncate the description instead, and strip any partial
+ * name a previous run left on the tail before re-appending.
+ */
+export function withCommittee(title: string, name: string): { title: string; changed: boolean } {
+  if (title.includes(name)) return { title, changed: false }
+
+  // Remove a trailing PARTIAL copy left by the old append-then-truncate path. Longest first, so
+  // "… — Secondary Legislation Scrutiny Comm" loses the whole fragment rather than one letter.
+  let base = title
+  for (let n = name.length - 1; n > 0; n--) {
+    const frag = SEP + name.slice(0, n)
+    if (base.endsWith(frag)) { base = base.slice(0, base.length - frag.length); break }
+  }
+
+  const room = TITLE_MAX - SEP.length - name.length
+  // A committee name longer than the whole budget: keep the name, drop the description. Losing the
+  // description costs context; losing the name costs findability.
+  if (room <= 0) return { title: name.slice(0, TITLE_MAX), changed: true }
+  return { title: base.slice(0, room).trimEnd() + SEP + name, changed: true }
+}
+
 function notesFor(m: ManifestItem): string {
   return JSON.stringify({
     inquiryId: m.inquiryId, inquiryTitle: m.inquiryTitle,
@@ -73,10 +108,9 @@ async function main() {
     seenPubs.add(r.parentDocId)
 
     let title = r.sectionTitle
-    if (m.committeeName && title && !title.includes(m.committeeName)) {
-      // insert the committee name after the leading "Type: Description" segment
-      title = `${title} — ${m.committeeName}`.slice(0, 500)
-      stats.titlesEnriched++
+    if (m.committeeName && title) {
+      const folded = withCommittee(title, m.committeeName)
+      if (folded.changed) { title = folded.title; stats.titlesEnriched++ }
     }
     updates.push({ id: r.id, notes: notesFor(m), sectionTitle: title })
   }
@@ -111,15 +145,42 @@ async function main() {
   console.log(`  in manifest but no rows yet     ${stats.unmatchedPublications.toLocaleString()}  (archive-only, awaiting §2)`)
 
   if (COMMIT) {
-    // idempotence check — re-read and confirm no title now contains its committee name twice
-    const { rows: dup } = await p.query<{ n: string }>(
+    /**
+     * The invariant that actually matters, and the one a re-run can be judged against: after a
+     * commit, EVERY matched row carries its committee name in full. If any row does not, the next
+     * run will try to enrich it again — that absence IS the non-idempotence, and it is also the
+     * §D findability failure, so one check covers both.
+     *
+     * ⚠ This replaces an occurrence-COUNT check (">2 copies = accumulated"). That check was a
+     * false positive on 136 rows whose description legitimately names the committee ("Report:
+     * House of Commons Commission Annual Report … — House of Commons Commission") while missing
+     * the real defect entirely — 3,101 rows whose name had been truncated away.
+     */
+    const { rows: missing } = await p.query<{ n: string }>(
       `SELECT count(*)::text AS n FROM corpus_sections
        WHERE corpus='committees-reports' AND "sectionTitle" IS NOT NULL AND notes IS NOT NULL
-         AND (length("sectionTitle") - length(replace("sectionTitle", (notes::json->>'committeeName'), '')))
-             > 2 * length(coalesce(notes::json->>'committeeName',''))
-         AND coalesce(notes::json->>'committeeName','') <> ''`)
-    console.log(`\n  titles containing the committee name more than twice: ${dup[0].n}  ${dup[0].n === '0' ? '✅ idempotent' : '❌ re-run has accumulated'}`)
+         AND coalesce(notes::json->>'committeeName','') <> ''
+         AND position((notes::json->>'committeeName') in "sectionTitle") = 0`)
+    const ok = missing[0].n === '0'
+    console.log(`\n  matched rows MISSING their committee name: ${missing[0].n}  ${ok ? '✅ idempotent + findable' : '❌ a re-run would re-enrich these'}`)
+
+    /**
+     * Over-cap titles are reported, not failed. withCommittee() guarantees <= TITLE_MAX for every
+     * row it touches, so anything over the cap was written by ANOTHER path and left alone here
+     * because its name was already present. Measured 2026-08-09: 6 rows, all `Correspondence:`
+     * from the §1 API path, where the description lists several named signatories. They carry
+     * their committee name, so they are findable; the cap is a convention, not a column limit.
+     * Failing this pass on another path's rows would be a false alarm on every future run.
+     */
+    const { rows: cap } = await p.query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM corpus_sections
+       WHERE corpus='committees-reports' AND length("sectionTitle") > ${TITLE_MAX}`)
+    console.log(`  titles over the ${TITLE_MAX}-char cap: ${cap[0].n}  (informational — not written by this pass)`)
   }
   await endNeonPool()
 }
-main().catch((e) => { console.error('[metadata] FATAL', e); process.exit(1) })
+// Only run when invoked directly. withCommittee() is exported and imported by the unit check, and
+// without this guard that import would silently open a Neon pool and walk 300k rows.
+if (require.main === module) {
+  main().catch((e) => { console.error('[metadata] FATAL', e); process.exit(1) })
+}
