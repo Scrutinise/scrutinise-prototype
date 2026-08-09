@@ -504,6 +504,12 @@ model User {
   communityJoinRequests     CommunityJoinRequest[] @relation("JoinRequester")
   communityJoinDecisions    CommunityJoinRequest[] @relation("JoinDecider")
   managedCommunities        Community[]         @relation("CommunityManager")
+  centralPointsEvents       PointsEvent[]       @relation("CentralPointsEarner")
+  centralPointsCaused       PointsEvent[]       @relation("CentralPointsActor")
+  centralReferralsMade      CommunityReferral[] @relation("CentralReferralInviter")
+  centralReferralsReceived  CommunityReferral[] @relation("CentralReferralInvitee")
+  centralActivityClaims     ActivityClaim[]     @relation("CentralClaimant")
+  centralClaimDecisions     ActivityClaim[]     @relation("CentralClaimDecider")
   bulletinPosts             BulletinPost[]
   bulletinVotes             BulletinVote[]
   partyMemberships          PartyMembership[]
@@ -1247,6 +1253,10 @@ model Community {
   invites           CommunityInvite[]
   joinRequests      CommunityJoinRequest[]
   bulletinPosts     BulletinPost[]
+  pointsEvents      PointsEvent[]       @relation("CentralPointsCommunity")
+  sourcedPointsEvents PointsEvent[]     @relation("CentralPointsSourceCommunity")
+  referrals         CommunityReferral[]
+  activityClaims    ActivityClaim[]
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
 
@@ -1316,6 +1326,140 @@ model CommunityJoinRequest {
 
   @@index([communityId, status])
   @@index([userId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CENTRAL Stage 2 — points & leaderboards.
+//
+// AN EVENT LEDGER, NOT BALANCES. Every earning and deduction is one signed,
+// timestamped, source-tagged row; balances and leaderboards are COMPUTED from
+// it and never stored. Three things fall out of that choice:
+//   · any leaderboard window is just a `createdAt` filter, so the
+//     monthly/quarterly/all-time switcher needs no extra storage
+//   · a mispriced tariff is correctable going forward without rewriting history
+//   · Central points stay arithmetically compatible with, but SEPARATE from,
+//     legislation points — nothing here touches Reputation or CredibilityScore,
+//     and the two are never summed
+// Never add a running total as the source of truth.
+//
+// Statuses and types are plain Strings for the same reason as
+// BulletinPost.scope: no CREATE TYPE against a live database. Zod validates at
+// every write boundary. See docs/SCRUTINISE_CENTRAL_SPEC.md §4.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PointsEvent {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation("CentralPointsEarner", fields: [userId], references: [id])
+  // The ROOT Community this event belongs to — the scope every balance and
+  // leaderboard is computed within.
+  communityId String
+  community   Community @relation("CentralPointsCommunity", fields: [communityId], references: [id])
+  // The NODE the activity actually happened on (the post's branch, the claim's
+  // branch). Not in the brief's field list; added because branch leaderboards
+  // are otherwise derived from current membership, which double-counts anyone
+  // in two branches and silently rewrites history when someone moves.
+  sourceCommunityId String?
+  sourceCommunity   Community? @relation("CentralPointsSourceCommunity", fields: [sourceCommunityId], references: [id])
+  // MARK_RECEIVED | MARK_REMOVED | CLAIM_APPROVED | REFERRAL_BONUS
+  type        String
+  /// Signed. Deductions and reversals are negative rows; the ledger only appends.
+  points      Int
+  sourceType  String
+  sourceId    String
+  /// Who caused this (the marker, the approving admin). Also what the daily
+  /// marking budget is counted from — counting live BulletinVote rows would let
+  /// someone withdraw a mark to refund their budget.
+  actorUserId String?
+  actor       User?     @relation("CentralPointsActor", fields: [actorUserId], references: [id])
+  /// Tariff snapshot, stamped at event time so that retuning a tariff can never
+  /// change what a past event was worth.
+  tariffKey    String
+  tariffPoints Int
+  tariffId     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([communityId, createdAt])
+  @@index([communityId, userId])
+  @@index([sourceCommunityId, createdAt])
+  @@index([sourceType, sourceId])
+  @@index([actorUserId, createdAt])
+}
+
+/// Point values per action, editable by Charlie as rows rather than code.
+/// Resolution: the active row for an actionKey with the latest effectiveFrom
+/// at or before now. Editing inserts/updates a row; events already written keep
+/// their stamped value.
+model PointsTariff {
+  id            String   @id @default(uuid())
+  actionKey     String
+  points        Int
+  effectiveFrom DateTime @default(now())
+  active        Boolean  @default(true)
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([actionKey, active, effectiveFrom])
+}
+
+/// Numeric configuration that is not a point value: referral rates per layer,
+/// decay half-life and floor, the reboost threshold, the daily marking budget.
+model PointsConfig {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  numericValue  Float
+  note          String?
+  updatedAt     DateTime @updatedAt
+}
+
+/// Who introduced whom, PER COMMUNITY. Distinct from User.referredByUserId,
+/// which is the single global chain the main system's Teambuilder cascade uses.
+/// Created only by redeeming a specific person's invite — a join request creates
+/// no chain, because nobody introduced them.
+model CommunityReferral {
+  id             String    @id @default(uuid())
+  communityId    String
+  community      Community @relation(fields: [communityId], references: [id])
+  inviterUserId  String
+  inviter        User      @relation("CentralReferralInviter", fields: [inviterUserId], references: [id])
+  inviteeUserId  String
+  invitee        User      @relation("CentralReferralInvitee", fields: [inviteeUserId], references: [id])
+  /// The decay clock. Starts at the join date and is reset to now by a reboost.
+  decayFrom      DateTime  @default(now())
+  /// Set once, when this invitee first crosses the reboost threshold.
+  boostedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@unique([communityId, inviteeUserId])
+  @@index([communityId, inviterUserId])
+}
+
+/// Offline activity: the member logs it, a manager of that node approves, the
+/// tariff pays out, and every decision appears in the Community activity log.
+/// The visible log IS the anti-abuse mechanism at this stage.
+///
+/// ⚠ The duplicate guard is an EXPRESSION partial unique index Prisma cannot
+/// declare: `ActivityClaim_one_per_day` on (userId, activityType,
+/// (occurredAt::date)) WHERE status <> 'DECLINED'. Created by
+/// prisma/central_stage2.sql — a migrate diff will want to drop it.
+model ActivityClaim {
+  id              String    @id @default(uuid())
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id])
+  userId          String
+  user            User      @relation("CentralClaimant", fields: [userId], references: [id])
+  activityType    String
+  occurredAt      DateTime
+  evidenceUrl     String?
+  note            String?
+  status          String    @default("PENDING")
+  decidedByUserId String?
+  decidedBy       User?     @relation("CentralClaimDecider", fields: [decidedByUserId], references: [id])
+  decidedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([communityId, status])
+  @@index([userId, activityType])
 }
 
 // Bulletin board — thread + reply share one self-referential table (same
@@ -2223,6 +2367,53 @@ model Feedback {
 
   @@index([status, createdAt])
   @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 15b — EXPERT CORRECTIONS TO THE PUBLISHED LEGISLATION GUIDE
+// ─────────────────────────────────────────────────────────────────────────────
+
+// "Reading legislation: a working guide" (/support, lib/reading-legislation-content.ts)
+// is published as a DRAFT seeking correction by practising lawyers. This is where a
+// correction lands.
+//
+// Its own table rather than a `Feedback` row with a special `feedbackType`, because
+// the two are different objects: this one carries a section reference and a claim to
+// expertise, and it has a review lifecycle against a document. Folding it into
+// Feedback would mean packing `credentials` and `sectionKey` into free text, and the
+// whole value of the exercise is being able to work through §5's corrections together.
+//
+// No account required — the people best placed to correct this are the least likely
+// to sign up first — but an email address IS required, because a correction we cannot
+// reply to is worth much less than one we can.
+model LegislationGuideSuggestion {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+
+  name         String
+  email        String                        // required: the point is a reply
+  credentials  String?                       // role / chambers / practice area — self-declared, unverified
+
+  // The STABLE key from lib/reading-legislation-content.ts, never the display title,
+  // so re-titling a section cannot orphan the corrections filed against it. The title
+  // is denormalised alongside it so an old record still reads correctly.
+  sectionKey   String
+  sectionTitle String
+  suggestion   String    @db.Text
+
+  status       String    @default("NEW")     // NEW | ACCEPTED | DECLINED | ACTIONED
+  adminNotes   String?   @db.Text
+
+  // Persist-then-send (the §20.5 rule): the record is written BEFORE the email is
+  // attempted, so a mail failure loses a notification and never a correction.
+  sentAt       DateTime?
+  sendError    String?
+
+  // Abuse triage only. SHA-256, never the raw address (security rule 6).
+  ipHash       String?
+
+  @@index([status, createdAt])
+  @@index([sectionKey])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
