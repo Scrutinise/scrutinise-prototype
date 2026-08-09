@@ -1,0 +1,599 @@
+{
+  "measuredAt": "2026-08-09T12:18:49.796Z",
+  "stats": {
+    "manifestDownloadable": 3934,
+    "withRows": 3852,
+    "backlog": 82,
+    "fetched": 82,
+    "detailFailed": 0,
+    "noDocuments": 0,
+    "noText": 1,
+    "docsLanded": 81,
+    "sectionsPlanned": 1805,
+    "split": 81,
+    "whole": 0,
+    "markers": 1,
+    "r2Written": 1805,
+    "rowsUpserted": 1805,
+    "reconcileRows": 1805,
+    "reconcileR2Ok": 181,
+    "reconcileR2Bad": 0,
+    "reconcileMissing": 0
+  },
+  "outcomes": [
+    {
+      "id": 44220,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 54558,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 64
+    },
+    {
+      "id": 54402,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 37
+    },
+    {
+      "id": 54405,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 42
+    },
+    {
+      "id": 54322,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 54321,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 82
+    },
+    {
+      "id": 54342,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 45
+    },
+    {
+      "id": 54344,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 12
+    },
+    {
+      "id": 54348,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 10
+    },
+    {
+      "id": 54330,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 4
+    },
+    {
+      "id": 54282,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 54286,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 54325,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 16
+    },
+    {
+      "id": 54203,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 50
+    },
+    {
+      "id": 54217,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 16
+    },
+    {
+      "id": 54237,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 43
+    },
+    {
+      "id": 54240,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 45
+    },
+    {
+      "id": 54175,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 77
+    },
+    {
+      "id": 54173,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 33
+    },
+    {
+      "id": 54171,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 16
+    },
+    {
+      "id": 54178,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 31
+    },
+    {
+      "id": 54308,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 14
+    },
+    {
+      "id": 54176,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 14
+    },
+    {
+      "id": 54168,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 45
+    },
+    {
+      "id": 54139,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 52
+    },
+    {
+      "id": 54155,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 61
+    },
+    {
+      "id": 54140,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 54143,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 7
+    },
+    {
+      "id": 54117,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 9
+    },
+    {
+      "id": 54129,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 10
+    },
+    {
+      "id": 54089,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 6
+    },
+    {
+      "id": 54102,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 27
+    },
+    {
+      "id": 54019,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 30
+    },
+    {
+      "id": 54020,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 35
+    },
+    {
+      "id": 53999,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 29
+    },
+    {
+      "id": 54007,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 7
+    },
+    {
+      "id": 53997,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 9
+    },
+    {
+      "id": 54000,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 42
+    },
+    {
+      "id": 53980,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 53984,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 53987,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 78
+    },
+    {
+      "id": 53960,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 7
+    },
+    {
+      "id": 53897,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 13
+    },
+    {
+      "id": 53917,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 29
+    },
+    {
+      "id": 53856,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 53830,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 12
+    },
+    {
+      "id": 53833,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 10
+    },
+    {
+      "id": 53768,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 16
+    },
+    {
+      "id": 53604,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 30
+    },
+    {
+      "id": 53666,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 33
+    },
+    {
+      "id": 53669,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 4
+    },
+    {
+      "id": 53726,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 37
+    },
+    {
+      "id": 53718,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 53710,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 9
+    },
+    {
+      "id": 53697,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 6
+    },
+    {
+      "id": 53709,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 13
+    },
+    {
+      "id": 53602,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 40
+    },
+    {
+      "id": 53567,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 11
+    },
+    {
+      "id": 53842,
+      "type": "Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 54440,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 19
+    },
+    {
+      "id": 54398,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 21
+    },
+    {
+      "id": 54324,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 4
+    },
+    {
+      "id": 54235,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 14
+    },
+    {
+      "id": 54177,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 12
+    },
+    {
+      "id": 54141,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 2
+    },
+    {
+      "id": 54091,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 18
+    },
+    {
+      "id": 54098,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 5
+    },
+    {
+      "id": 54062,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 18
+    },
+    {
+      "id": 54064,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 18
+    },
+    {
+      "id": 53992,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 53986,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 2
+    },
+    {
+      "id": 53836,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 13
+    },
+    {
+      "id": 53781,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 8
+    },
+    {
+      "id": 53754,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 12
+    },
+    {
+      "id": 53727,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 8
+    },
+    {
+      "id": 53696,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 9
+    },
+    {
+      "id": 53609,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 53
+    },
+    {
+      "id": 53592,
+      "type": "Special Report",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 25
+    },
+    {
+      "id": 54262,
+      "type": "Government Response",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 15
+    },
+    {
+      "id": 54254,
+      "type": "Government Response",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 14
+    },
+    {
+      "id": 53814,
+      "type": "Government Response",
+      "outcome": "no-extractable-text",
+      "detail": "1 document(s) served, none produced text (original format unparseable, no Html/Pdf conversion)",
+      "sections": 0
+    },
+    {
+      "id": 53752,
+      "type": "Government Response",
+      "outcome": "ingested",
+      "detail": "1 document(s)",
+      "sections": 32
+    }
+  ]
+}
