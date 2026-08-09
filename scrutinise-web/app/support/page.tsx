@@ -8,6 +8,10 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import PublicNav from '@/components/PublicNav'
 import { MOCK_TRAINING, Stage } from '@/lib/mockData'
 import { FAQ_MARKDOWN } from '@/lib/faq-content'
+import SuggestImprovementDialog from '@/components/SuggestImprovementDialog'
+import {
+  GUIDE_TITLE, GUIDE_STATUS, GUIDE_INTRO, GUIDE_SECTIONS, REVIEWER_QUESTIONS,
+} from '@/lib/reading-legislation-content'
 
 // ─── FAQ Parsing ─────────────────────────────────────────────────────────────
 
@@ -40,6 +44,17 @@ function cleanText(text: string): string {
   return text.replace(/\n\*\*\*\n?/g, '').trim()
 }
 
+// Inline markdown → HTML. Bold FIRST, then italic, so `**x**` is never eaten by the
+// single-asterisk rule. Italic was added for the legislation guide, whose emphasis
+// lines rendered as literal asterisks on the page ("The answer is *not* to replace the
+// statute…") — found by looking at it, not by reading the code. The existing FAQ
+// content contains no single-asterisk runs, so this changes nothing there.
+function inlineMd(s: string): string {
+  return s
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+}
+
 function renderMdText(text: string) {
   const paras = text.split(/\n\n+/).filter(p => p.trim())
   return paras.map((para, i) => {
@@ -49,7 +64,7 @@ function renderMdText(text: string) {
         <ul key={i} className="list-disc list-inside space-y-1 pl-1">
           {lines.map((l, j) => (
             <li key={j} className="text-sm text-muted-foreground">
-              <span dangerouslySetInnerHTML={{ __html: l.replace(/^-\s+/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+              <span dangerouslySetInnerHTML={{ __html: inlineMd(l.replace(/^-\s+/, '')) }} />
             </li>
           ))}
         </ul>
@@ -60,7 +75,7 @@ function renderMdText(text: string) {
         <ol key={i} className="list-decimal list-inside space-y-1 pl-1">
           {lines.map((l, j) => (
             <li key={j} className="text-sm text-muted-foreground">
-              <span dangerouslySetInnerHTML={{ __html: l.replace(/^\d+\.\s+/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+              <span dangerouslySetInnerHTML={{ __html: inlineMd(l.replace(/^\d+\.\s+/, '')) }} />
             </li>
           ))}
         </ol>
@@ -70,7 +85,7 @@ function renderMdText(text: string) {
       <p
         key={i}
         className="text-sm leading-relaxed text-muted-foreground"
-        dangerouslySetInnerHTML={{ __html: para.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
+        dangerouslySetInnerHTML={{ __html: inlineMd(para) }}
       />
     )
   })
@@ -101,7 +116,7 @@ const difficultyColors: Record<string, string> = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const VALID_TABS = ['training', 'faqs', 'feedback'] as const
+const VALID_TABS = ['training', 'faqs', 'reading-legislation', 'feedback'] as const
 type Tab = typeof VALID_TABS[number]
 
 export default function SupportPage() {
@@ -114,6 +129,7 @@ export default function SupportPage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: 'training', label: 'Training' },
     { key: 'faqs', label: 'FAQs' },
+    { key: 'reading-legislation', label: 'Reading legislation' },
     { key: 'feedback', label: 'Feedback' },
   ]
 
@@ -150,6 +166,7 @@ export default function SupportPage() {
 
         {activeTab === 'training' && <TrainingTab />}
         {activeTab === 'faqs' && <FaqsTab />}
+        {activeTab === 'reading-legislation' && <ReadingLegislationTab />}
         {activeTab === 'feedback' && <FeedbackTab />}
       </div>
     </div>
@@ -385,6 +402,109 @@ function FaqsTab() {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ─── Reading legislation tab ──────────────────────────────────────────────────
+//
+// A published DRAFT, and the page has to keep saying so. The draft status is stated
+// three times — at the top as a banner, on the invitation to correct it, and again in
+// the open questions at the end — because the one harm this page can do is read as
+// settled professional guidance when it was written by a non-lawyer.
+//
+// Every section carries its own "Suggest an improvement" link, and the link opens the
+// form with that section already chosen. An expert who spots something wrong in §5
+// should not have to scroll to the top, find a button, and then tell a dropdown where
+// they were.
+
+function ReadingLegislationTab() {
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogSection, setDialogSection] = useState<string | undefined>(undefined)
+
+  function openFor(sectionKey?: string) {
+    setDialogSection(sectionKey)
+    setDialogOpen(true)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">{GUIDE_TITLE}</h2>
+      </div>
+
+      {/* The draft banner. Amber, not grey: it is a caveat, not a footnote. */}
+      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-900/60 dark:bg-amber-950/30">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+          Draft — published for correction
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-amber-900 dark:text-amber-200">{GUIDE_STATUS}</p>
+      </div>
+
+      {/* The ask, up front and hard to miss — this page exists to be corrected. */}
+      <div className="rounded-lg border border-border bg-accent/40 px-4 py-4">
+        <p className="text-sm font-medium">Are you a legislation expert?</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Barrister, solicitor, parliamentary draftsman, legislative clerk, academic, or anyone who
+          works with statute for a living — we would rather be corrected now than be wrong in public.
+          No account needed; it takes a minute.
+        </p>
+        <button
+          onClick={() => openFor(undefined)}
+          className="mt-3 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Are you a legislation expert? Suggest an improvement
+        </button>
+      </div>
+
+      <div className="space-y-3">{renderMdText(GUIDE_INTRO)}</div>
+
+      {GUIDE_SECTIONS.map((section) => (
+        <section key={section.key} id={`guide-${section.key}`} className="border-t border-border pt-5">
+          <h3 className="text-sm font-semibold text-foreground">
+            {section.number}. {section.title}
+          </h3>
+          <div className="mt-2 space-y-3">{renderMdText(section.body)}</div>
+          <button
+            onClick={() => openFor(section.key)}
+            className="mt-3 text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            Suggest an improvement to §{section.number}
+          </button>
+        </section>
+      ))}
+
+      <div className="border-t border-border pt-5">
+        <h3 className="text-sm font-semibold text-foreground">Questions for reviewing counsel</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Corrections anywhere are welcome. These are the ones we know we cannot answer ourselves.
+        </p>
+        <ol className="mt-3 list-decimal space-y-2 pl-5">
+          {REVIEWER_QUESTIONS.map((q, i) => (
+            <li
+              key={i}
+              className="text-sm leading-relaxed text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: inlineMd(q) }}
+            />
+          ))}
+        </ol>
+        <button
+          onClick={() => openFor(undefined)}
+          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Are you a legislation expert? Suggest an improvement
+        </button>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Or write to us directly at{' '}
+          <a href="mailto:cl@scrutinise.org" className="underline underline-offset-2">cl@scrutinise.org</a>.
+        </p>
+      </div>
+
+      <SuggestImprovementDialog
+        open={dialogOpen}
+        initialSectionKey={dialogSection}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   )
 }
