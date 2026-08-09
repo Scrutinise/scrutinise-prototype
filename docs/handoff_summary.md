@@ -2,7 +2,39 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 08:28 UTC — ▼ **SEARCH: THE TRUNCATION CLASS IS DEAD AT SOURCE; AND THE
+*Last updated: 2026-08-09 08:45 UTC — ▼ **PUBLIC: "READING LEGISLATION: A WORKING GUIDE" IS
+PUBLISHED — AS A DRAFT ASKING TO BE CORRECTED.** CHANGE_LOG (2026-08-09 08:45 UTC). `tsc` +
+`next build` clean, new **`check:legislation-guide` 36/36**, and **driven in a browser end to
+end** — page rendered, form submitted, row inspected, row deleted.
+Live at **`/support?tab=reading-legislation`**. Draft status stated three times (banner, invitation,
+closing questions), because the one harm this page can do is read as settled professional guidance.
+The button says exactly what the brief asked — *"Are you a legislation expert? Suggest an
+improvement"* — at the top and at the end, and **every section carries its own link that opens the
+form with that section already chosen**. No login (a sign-up wall would cost us exactly the
+corrections we want); an email address required instead, and the form says why. Two rate limits,
+12/hr per IP and 12/hr per email. New table `LegislationGuideSuggestion`, applied to Neon **after a
+whichdb check** (`ep-old-dust-aboxi69a` / `neondb`) and re-run to prove idempotence.
+⚠ **THE EMAIL PATH IS NOT VERIFIED, AND CANNOT BE FROM HERE — `RESEND_API_KEY` is in NO local
+`.env`.** It exists only in Vercel, so no email path in this codebase is testable on a developer
+machine — that is true of every email feature already shipped, not just this one. The check prints
+**NOT VERIFIED** rather than passing. **The first real submission in production is the test**; the
+`sendError` column on the row is where the answer will be. Persist-then-send already proved itself:
+the browser test stored `sendError: "RESEND_API_KEY not set…"` and the submitter still saw a
+confirmation — correct, because their correction *was* received.
+⚠ **The `<cite index="45-1">` research markers are STRIPPED** — the FAQ renderer uses
+`dangerouslySetInnerHTML`, so publishing them would have put stray markup on a public page. The
+check fails on any HTML tag in the content. ⚠ **Section keys are pinned by the check** because every
+suggestion is stored against one; renaming §5's key in place would orphan its corrections.
+⚠ **Found by LOOKING, not by reading code: `*italic*` rendered as literal asterisks** — the FAQ's
+`renderMdText` only ever handled `**bold**`. Fixed in one place and applied at all four call sites;
+existing FAQ content has no single-asterisk runs, so nothing there changes.
+Not built, offered: an admin view of stored suggestions — today they arrive by email and nothing in
+the app reads the table back.
+Note for the search thread: `general-chat.ts` keeps its own inline `finishReason` check rather than
+`gemini-finish.ts`; `check:llm-guards` passes it (9/9) since it allows the direct form, and I left
+another thread's active refactor alone.
+▼ Earlier:
+2026-08-09 08:28 UTC — ▼ **SEARCH: THE TRUNCATION CLASS IS DEAD AT SOURCE; AND THE
 ORDERING BASELINE IS BLOCKED — WHICH IS ITSELF THE FINDING.** Report:
 `docs/ORDERING_METRIC_PROPOSAL.md` §A–C; CHANGE_LOG (2026-08-09 08:28 UTC). `tsc` + `next build`
 clean; new **`check:llm-guards` 9/9**, `check:flags` 49/49, `check:lex-general` 19/19.

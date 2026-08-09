@@ -111,6 +111,80 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## PUBLIC — "Reading legislation: a working guide" published as a draft seeking correction (2026-08-09 08:45 UTC)
+
+`tsc` clean, `next build` clean, new **`npm run check:legislation-guide` 36/36** (30 invariants
++ a real write and a real read-back against the app database), and the whole thing **driven in a
+browser end to end** — page rendered, form submitted, row inspected, row deleted.
+
+**What shipped.** `docs/FAQ_READING_LEGISLATION.md` is now a public section on `/support`
+(tab: **Reading legislation**, linkable as `/support?tab=reading-legislation`), presented as what
+it is: a draft written by a non-lawyer, published so that people who know the material can correct
+it. The draft status is stated three times — a banner at the top, the invitation itself, and the
+open questions at the end — because the one harm this page can do is read as settled professional
+guidance.
+
+- `lib/reading-legislation-content.ts` — the guide as DATA, section by section.
+- `components/SuggestImprovementDialog.tsx` — name, email, optional credentials, section, suggestion.
+- `app/api/legislation-guide/suggestions/route.ts` — public, Zod, rate-limited, persist-then-send.
+- `LegislationGuideSuggestion` + `prisma/legislation_guide_suggestions.sql` — applied to Neon after
+  a whichdb check, re-run to prove idempotence.
+- `scripts/check-legislation-guide.ts` + `npm run check:legislation-guide`.
+
+**The button says exactly what the brief asked**: *"Are you a legislation expert? Suggest an
+improvement"* — at the top and again at the end. **Every section also carries its own link**, and it
+opens the form with that section already chosen. An expert who spots an error in §5 should not have
+to scroll to the top, find a button, and then tell a dropdown where they were.
+
+**No login; an email address instead.** The people best placed to correct this are the least likely
+to create an account first, so a sign-up wall would cost us exactly the corrections we want. The
+email is required and the form says *why* — so we can write back and ask a follow-up — rather than
+just marking it with an asterisk. Rate limits are **two**, because they stop different things: 12/hr
+per IP and 12/hr per email address. Twelve is deliberate — nine sections plus a general option is
+nine submissions, and the page invites exactly that walk-through.
+
+⚠ **THE `<cite index="45-1">` PROVENANCE MARKERS ARE STRIPPED.** The source document carries CCh's
+research indices inline. The FAQ renderer uses `dangerouslySetInnerHTML`, so publishing them
+verbatim would have put stray markup on a public page. `check:legislation-guide` fails if one ever
+returns, and fails on any HTML tag in the content at all.
+
+⚠ **Section keys are a STORED value and are pinned by the check.** Every suggestion is filed against
+a key, so re-titling §5 must not orphan its corrections. The eight keys are asserted literally;
+renaming one in place fails the check rather than silently breaking the link.
+
+**Persist-then-send, and it earned its keep on the first real submission.** The row is written
+before the email is attempted and the outcome is recorded on the row. The browser test stored
+`sendError: "RESEND_API_KEY not set — the suggestion email was not attempted"` — exactly right, and
+only visible because the sender throws on the two cases where `sendEmail` returns SILENTLY (no API
+key, suppressed address). The submitter still saw a confirmation, which is correct: their correction
+*was* received.
+
+⚠ **THE EMAIL PATH IS NOT VERIFIED — `RESEND_API_KEY` is in no local `.env`.** It exists only in
+Vercel, so no email path in this codebase can be exercised from a developer machine, and that is
+true of every email feature already shipped, not just this one. `check:legislation-guide --live`
+prints **NOT VERIFIED** rather than passing or failing, and the first real submission in production
+is what will confirm it. The `sendError` column is where the answer will be.
+
+⚠ **Found by LOOKING at the page, not by reading the code: `*italic*` rendered as literal
+asterisks.** `renderMdText` in `app/support/page.tsx` only ever handled `**bold**`, and the guide
+uses italics for its emphasis lines — *"The answer is \*not\* to replace the statute…"* appeared with
+the asterisks showing. Fixed in one place (`inlineMd`, bold before italic) and applied at all four
+call sites. The existing FAQ content contains no single-asterisk runs, so nothing there changes.
+
+**Browser-verified end to end** (local dev, real production database): the tab renders, the §1 link
+opens the dialog with §1 pre-selected, the form posts, and the row landed with the right
+`sectionKey`, the credentials, a **64-character SHA-256 `ipHash` and no raw IP** (security rule 6).
+The test row was deleted; the table is back to 0.
+
+**Considered and rejected: a `Feedback` row with a special `feedbackType`.** It would have avoided a
+migration, but `credentials` and `sectionKey` would have had to be packed into free text — and being
+able to work through §5's corrections together is the entire point of the exercise.
+
+Not built, offered: an admin view of the suggestions. Today they arrive by email and live in the
+table; nothing in the app reads them back.
+
+---
+
 ## SEARCH — the truncation class killed at source; and the ordering baseline is BLOCKED, which is the finding (2026-08-09 08:28 UTC)
 
 Report: `docs/ORDERING_METRIC_PROPOSAL.md` §A–C. `tsc` clean, `next build` clean,
