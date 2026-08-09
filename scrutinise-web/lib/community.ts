@@ -161,6 +161,31 @@ export async function canManageCommunity(userId: string, communityId: string): P
   return admin !== null
 }
 
+/**
+ * May the caller READ this node's board?
+ *
+ * ⚠ Stage 2 deliberately REVERSES the Stage 1.1 join-first gate. Manage rights
+ * now carry board read and moderation over descendant nodes, because the admin
+ * cascade Charlie settled on 6 Aug includes subtree board moderation, and you
+ * cannot moderate what you cannot see.
+ *
+ * WRITING is unchanged and still requires membership: an ancestor admin may
+ * read a branch and remove a post from it, but does not post, reply or mark
+ * there as though they belonged to it.
+ */
+export async function canReadBoard(userId: string, communityId: string): Promise<boolean> {
+  if (await getCommunityMembership(userId, communityId)) return true
+  return canManageCommunity(userId, communityId)
+}
+
+/** Guard for board reads. 404 for someone with no standing, so a Community's
+ *  shape is not leaked. */
+export async function requireBoardRead(userId: string, communityId: string): Promise<NextResponse | null> {
+  return (await canReadBoard(userId, communityId))
+    ? null
+    : NextResponse.json({ error: 'Not found' }, { status: 404 })
+}
+
 /** Hierarchy-aware guard for the admin routes. Mirrors requireCommunityRole's
  *  404-not-403 rule for a caller with no standing anywhere in the tree. */
 export async function requireCommunityAdmin(
@@ -195,16 +220,17 @@ export async function applyBulletinVote(
   postId: string,
   userId: string,
   value: 1 | -1,
-): Promise<{ score: number; myVote: number }> {
+): Promise<{ score: number; myVote: number; previousVote: number }> {
   const result = await prisma.$transaction(async (tx) => {
     const existing = await tx.bulletinVote.findUnique({
       where: { postId_userId: { postId, userId } },
     })
+    const previousVote = existing?.value ?? 0
 
     if (existing && existing.value === value) {
       await tx.bulletinVote.delete({ where: { id: existing.id } })
       await tx.bulletinPost.update({ where: { id: postId }, data: { score: { decrement: value } } })
-      return { myVote: 0 }
+      return { myVote: 0, previousVote }
     }
 
     if (existing) {
@@ -213,12 +239,12 @@ export async function applyBulletinVote(
         where: { id: postId },
         data: { score: { increment: value - existing.value } },
       })
-      return { myVote: value }
+      return { myVote: value, previousVote }
     }
 
     await tx.bulletinVote.create({ data: { postId, userId, value } })
     await tx.bulletinPost.update({ where: { id: postId }, data: { score: { increment: value } } })
-    return { myVote: value }
+    return { myVote: value, previousVote }
   })
 
   const updated = await prisma.bulletinPost.findUniqueOrThrow({
@@ -226,7 +252,7 @@ export async function applyBulletinVote(
     select: { score: true },
   })
 
-  return { score: updated.score, myVote: result.myVote }
+  return { score: updated.score, myVote: result.myVote, previousVote: result.previousVote }
 }
 
 /** A pragmatic address shape check — enough to decide whether to offer
