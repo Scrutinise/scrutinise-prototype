@@ -150,7 +150,16 @@ section('fail-open visibility')
   ok('the output budget is no longer the hardcoded 512', !/maxOutputTokens:\s*512\b/.test(src))
   ok('the output budget is configurable per call', /maxOutputTokens\?:\s*number/.test(src))
   ok('finishReason is checked', /finishReason/.test(src))
-  ok('a cut-off names itself rather than looking like bad JSON', /reason: 'truncated'/.test(src))
+  // ⚠ STALE ASSERTION, FIXED 2026-08-09. This looked for `reason: 'truncated'` in
+  // query-expansion.ts. The 8 Aug refactor moved that literal into the shared guard
+  // (lib/lex/gemini-finish.ts) and left the assertion pointing at the old home, so it has been
+  // failing ever since against code that is CORRECT — `check:flags` has been 48/49, not the
+  // 49/49 recorded in the handoff. A check that fails for a stale reason is worse than no check:
+  // it trains you to read a red line as background noise. It now asserts the rule where the rule
+  // lives, and separately that query-expansion still delegates to it.
+  const guard = fs.readFileSync(path.join(__dirname, '../lib/lex/gemini-finish.ts'), 'utf8')
+  ok('a cut-off names itself rather than looking like bad JSON', /reason: 'truncated'/.test(guard))
+  ok('query-expansion routes its finish check through the shared guard', /gemini-finish/.test(src))
   ok('finishReason is checked BEFORE the text is parsed',
      src.indexOf('finishReason') < src.indexOf("reason: 'empty-response'"))
 }
