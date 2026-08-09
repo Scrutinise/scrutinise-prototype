@@ -75,7 +75,11 @@ export type GeminiFailure = 'http-error' | 'timeout' | 'network-error' | 'empty-
 // A `kind` field narrows correctly either way, so the failure branch stays type-checked.
 type GeminiJsonResult =
   | { kind: 'ok'; text: string }
-  | { kind: 'fail'; reason: GeminiFailure; detail: string }
+  // `text` carries the PARTIAL payload on a `truncated` failure. Without it the truncated text was
+  // read by the guard, named in the log, and then thrown away — so a caller that could recover
+  // something from it (routeQuery's salvage, below) never got the chance. Absent on every other
+  // failure reason, where there is no payload to salvage.
+  | { kind: 'fail'; reason: GeminiFailure; detail: string; text?: string }
 
 /**
  * Output budget. 512 was too small and cost us a live bug: the router emits up to five tailored
@@ -140,7 +144,7 @@ async function callGeminiJson(opts: {
     // so parsing first would report `bad-json` and send the reader looking for a serialiser fault
     // instead of a length limit — which is exactly what happened on 2026-08-08.
     const cut = geminiFinishProblem(candidate, opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS, { label: opts.logTag })
-    if (cut) return { kind: 'fail', reason: cut.reason, detail: cut.detail }
+    if (cut) return { kind: 'fail', reason: cut.reason, detail: cut.detail, text: typeof text === 'string' ? text : undefined }
 
     if (typeof text !== 'string') {
       return { kind: 'fail', reason: 'empty-response', detail: 'no candidates[0].content.parts[0].text in the response' }
@@ -224,6 +228,17 @@ export type RouteResult = Partial<Record<RouterStreamName, string>>
 // protection legal principles law"). Gemini's responseSchema evidently does not honour maxLength
 // on a string, and supplying it destabilises generation rather than constraining it. Reverted
 // after one measured pass; the length instruction stays in the prompt where it does work.
+//
+// ⚠ `propertyOrdering` IS DIFFERENT FROM `maxLength`, AND IT IS HERE FOR A MEASURED REASON.
+// The salvage below assumed — as the brief did — that Gemini emits properties in the order this
+// schema declares them, so a truncated payload would still hold `legislation`. It does not.
+// Measured 2026-08-09 by forcing truncation (QUERY_ROUTER_MAX_TOKENS=60, 12 queries): every
+// salvaged payload contained `caselaw, committees, debates` and NEVER `legislation` or
+// `guidance`. Gemini was emitting ALPHABETICALLY, so the two streams a truncation destroys were
+// the alphabetically-last ones — and `legislation` is the stream that carries dense retrieval and
+// the one the ordering regression was observed on. Exactly the wrong one to lose.
+// `propertyOrdering` is an ordering HINT, not a constraint on the content, which is why it does
+// not carry `maxLength`'s failure mode; it was measured on its own pass regardless.
 const ROUTER_SCHEMA = {
   type: 'object',
   properties: {
@@ -233,9 +248,23 @@ const ROUTER_SCHEMA = {
     caselaw: { type: 'string' },
     guidance: { type: 'string' },
   },
+  propertyOrdering: ['legislation', 'debates', 'committees', 'caselaw', 'guidance'],
 }
 
-const ROUTER_SYSTEM_PROMPT = `You are a UK parliamentary research router. Given a set of keywords describing a policy idea, decide which of these corpora are relevant, and write ONE tailored search string for each relevant corpus. Omit a corpus entirely (leave the key out / empty string) if it is not relevant — do not force a query into every corpus.
+// ── measurement switches ─────────────────────────────────────────────────────
+//
+// Two env switches exist ONLY so the three §2 changes can be landed and measured one at a time on
+// the same query mix, which is the sprint's own working rule. Both default to the shipped
+// behaviour; setting either to 'off' restores what the code did before this sprint. They are here
+// rather than in the measurement script because the alternative is a script that reimplements
+// routeQuery — and a benchmark that measures a copy of the thing measures nothing.
+//   QUERY_ROUTER_SALVAGE=off   don't recover streams from a truncated payload (§2.1)
+//   QUERY_ROUTER_FEWSHOT=off   use the old one-line length instruction, no examples (§2.2)
+//   QUERY_ROUTER_WORD_CAP=999  effectively disables the deterministic cap (§2.2)
+const salvageEnabled = () => (process.env.QUERY_ROUTER_SALVAGE ?? 'on') !== 'off'
+const fewShotEnabled = () => (process.env.QUERY_ROUTER_FEWSHOT ?? 'on') !== 'off'
+
+const ROUTER_PROMPT_BASE = `You are a UK parliamentary research router. Given a set of keywords describing a policy idea, decide which of these corpora are relevant, and write ONE tailored search string for each relevant corpus. Omit a corpus entirely (leave the key out / empty string) if it is not relevant — do not force a query into every corpus.
 
 Your output feeds BM25 keyword search only — it is never shown to users or cited as fact. A hallucinated Act name or search term simply scores zero and causes no harm.
 
@@ -248,17 +277,108 @@ Corpora:
 
 SPECIAL CASE — exact statutory citation: if the keywords are already an exact citation (e.g. "Section 21 Housing Act 1988", "Equality Act 2010 section 149"), route ONLY to legislation, and its query string must be the citation EXACTLY AS GIVEN with nothing added, removed, or reworded — any extra term dilutes the exact-match ranking. Do not route a citation query to any other corpus.
 
-UK law/parliament/regulator only. No elaboration. Each query string must be 200 characters or fewer.`
+UK law/parliament/regulator only. No elaboration.`
 
-function parseRoute(raw: string): RouteResult | null {
+/** What shipped before this sprint: a character budget, stated once, at the end. */
+const ROUTER_LENGTH_LEGACY = `\n\nEach query string must be 200 characters or fewer.`
+
+/**
+ * §2.2 — instruct the length and SHOW it. 6–12 words is the shape that produced the measured
+ * gold-set gains, and three worked examples say more about shape than any adjective. The examples
+ * also demonstrate the other thing the model gets wrong: OMITTING a corpus it does not need (the
+ * second example names three streams, not five).
+ */
+const ROUTER_LENGTH_FEWSHOT = `
+
+LENGTH — this is the most common way this task goes wrong. Each query string must be SIX TO TWELVE WORDS. Not a sentence, not a list of alternatives joined by OR, not a paragraph. Six to twelve words is the shape that measurably improved retrieval; longer strings dilute BM25 and score worse. Write the shortest string that names the right thing.
+
+Examples of the right shape:
+
+Keywords: landlords evicting tenants without a reason
+{"legislation":"Housing Act 1988 section 21 assured shorthold tenancy possession","debates":"no fault eviction section 21 abolition renters reform","committees":"select committee evidence private rented sector eviction","caselaw":"section 21 notice validity possession proceedings"}
+
+Keywords: buy now pay later credit checks
+{"legislation":"Consumer Credit Act 1974 regulated agreement exemption","guidance":"FCA buy now pay later affordability assessment guidance","committees":"Treasury Committee evidence unregulated consumer credit"}
+
+Keywords: sewage discharge by water companies
+{"legislation":"Water Industry Act 1991 Environmental Permitting Regulations discharge","debates":"storm overflows sewage discharge water companies","guidance":"Ofwat Environment Agency storm overflow enforcement guidance","caselaw":"water company nuisance discharge judicial review"}`
+
+function routerSystemPrompt(): string {
+  return ROUTER_PROMPT_BASE + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
+}
+
+/**
+ * Hard cap on the words in any one stream query, applied in OUR code after parsing.
+ *
+ * WHY A CAP AND NOT A SCHEMA CONSTRAINT. `maxLength` in the responseSchema was tried on
+ * 2026-08-09 and made things far worse — fail-open went from 2/12 to 9/12 with the model
+ * degenerating into repetition. Gemini does not honour it, and supplying it destabilised
+ * generation. The prompt instruction above does work, but it is an instruction; this is the
+ * deterministic floor under it. Ours, unignorable, and it cannot degrade the generation because
+ * it runs after the generation is over.
+ */
+const QUERY_WORD_CAP = parseInt(process.env.QUERY_ROUTER_WORD_CAP ?? '12', 10)
+
+/** Trim a stream query to the word cap. Returns the string unchanged when it is already short. */
+function capWords(q: string, stream: string): string {
+  const words = q.trim().split(/\s+/).filter(Boolean)
+  if (words.length <= QUERY_WORD_CAP) return words.join(' ')
+  const cut = words.slice(0, QUERY_WORD_CAP).join(' ')
+  console.warn(`[query-router] stream query capped — ${stream}: ${words.length} words → ${QUERY_WORD_CAP}. Dropped: ${JSON.stringify(words.slice(QUERY_WORD_CAP).join(' ').slice(0, 120))}`)
+  return cut
+}
+
+/** How the routing decision was obtained. Logged on every call (§2.3) so the intermittency rate
+ *  is readable from production logs rather than inferred from a test script. */
+export type RouteOutcome = 'full' | 'partial' | 'failed'
+
+/**
+ * Recover every stream whose value closed cleanly out of a payload that will not parse.
+ *
+ * Gemini emits the object in property order, so a truncated payload usually still contains one or
+ * more complete stream entries; the old behaviour threw all of them away and failed open. That is
+ * a bad trade — a fail-open costs the query its stream scoping AND its dense retrieval, whereas a
+ * partial decision costs one stream. This is the cheap floor under every FUTURE truncation, not a
+ * workaround for the current one.
+ *
+ * The regex matches only a value with its closing quote, so the trailing partial is discarded by
+ * construction rather than by a length heuristic. `(?:[^"\\]|\\.)*` steps over escaped quotes, so
+ * a value legitimately containing `\"` is recovered whole rather than cut at it.
+ */
+function salvageRoute(raw: string): RouteResult {
+  const out: RouteResult = {}
+  const re = /"(legislation|debates|committees|caselaw|guidance)"\s*:\s*"((?:[^"\\]|\\.)*)"/g
+  for (const m of raw.matchAll(re)) {
+    let value: string
+    try { value = JSON.parse(`"${m[2]}"`) } catch { continue } // not valid JSON string content — skip it
+    if (value.trim()) out[m[1] as RouterStreamName] = value.trim()
+  }
+  return out
+}
+
+function parseRoute(raw: string): { route: RouteResult; mode: 'full' | 'partial' } | null {
   let obj: unknown
-  try { obj = JSON.parse(raw) } catch { return null }
+  try { obj = JSON.parse(raw) } catch {
+    const salvaged = salvageRoute(raw)
+    return Object.keys(salvaged).length ? { route: capRoute(salvaged), mode: 'partial' } : null
+  }
   if (!obj || typeof obj !== 'object') return null
   const o = obj as Record<string, unknown>
   const out: RouteResult = {}
   for (const stream of ROUTER_STREAMS) {
     const v = o[stream]
     if (typeof v === 'string' && v.trim().length > 0) out[stream] = v.trim()
+  }
+  return { route: capRoute(out), mode: 'full' }
+}
+
+/** Apply the word cap to every stream query. One place, so a salvaged route and a fully parsed
+ *  one cannot end up under different rules. */
+function capRoute(route: RouteResult): RouteResult {
+  const out: RouteResult = {}
+  for (const [stream, q] of Object.entries(route)) {
+    const capped = capWords(q as string, stream)
+    if (capped) out[stream as RouterStreamName] = capped
   }
   return out
 }
@@ -290,6 +410,12 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
   // depends on. The retrieval that follows already takes 3.4–3.8s, so the ceiling was never the
   // thing protecting the user's latency.
   const timeoutMs = parseInt(process.env.QUERY_ROUTER_TIMEOUT_MS ?? '25000', 10)
+  // The output ceiling, overridable ONLY so the truncation can be reproduced on demand. The
+  // default is unchanged at DEFAULT_MAX_OUTPUT_TOKENS and raising it is not the fix — it buys a
+  // longer runaway, as recorded there. What the override buys is a deterministic test: the live
+  // runaway rate on the fixed mix is ~3%, far too rare to attribute a change to, whereas a small
+  // budget truncates every call and makes the salvage measurable in one pass.
+  const maxOutputTokens = parseInt(process.env.QUERY_ROUTER_MAX_TOKENS ?? String(DEFAULT_MAX_OUTPUT_TOKENS), 10)
 
   const userMessage = [
     `Keywords: ${keywords.join(', ')}`,
@@ -298,21 +424,62 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
 
   const res = await callGeminiJson({
     model, apiKey, timeoutMs,
-    systemPrompt: ROUTER_SYSTEM_PROMPT,
+    systemPrompt: routerSystemPrompt(),
     userMessage,
     schema: ROUTER_SCHEMA,
     logTag: 'query-router',
+    maxOutputTokens,
   })
-  if (res.kind === 'fail') return routerFailOpen(res.reason, `${res.detail} (model=${model}, timeout=${timeoutMs}ms)`)
+
+  if (res.kind === 'fail') {
+    // A truncated payload is the ONE failure with something left in it. Salvage before giving up:
+    // the streams that closed cleanly are as usable as they would have been in a whole response.
+    if (res.reason === 'truncated' && res.text && salvageEnabled()) {
+      const salvaged = parseRoute(res.text)
+      if (salvaged && Object.keys(salvaged.route).length) {
+        return routeSucceeded('partial', salvaged.route,
+          `recovered ${Object.keys(salvaged.route).length} stream(s) from a truncated payload; the trailing partial was discarded. ${res.detail}`)
+      }
+    }
+    return routerFailOpen(res.reason, `${res.detail} (model=${model}, timeout=${timeoutMs}ms)`)
+  }
 
   const parsed = parseRoute(res.text)
   if (!parsed) return routerFailOpen('bad-json', `model returned unparseable JSON: ${res.text.slice(0, 200)}`)
-  if (Object.keys(parsed).length === 0) {
+  if (Object.keys(parsed.route).length === 0) {
     // Parsed fine, named nothing. The caller degrades identically, so it must be as visible —
     // otherwise a router that has quietly stopped choosing looks exactly like one that is off.
     return routerFailOpen('no-streams-named', 'the model judged every stream irrelevant')
   }
-  return parsed
+  return routeSucceeded(parsed.mode, parsed.route)
+}
+
+// ── route_outcome, counted and logged (§2.3) ─────────────────────────────────
+//
+// STANDING RULE, from the August flag incident: a flip needs a POSITIVE SIGNAL that proves
+// engagement, not an absence of errors. Until now the intermittency rate was inferred by running
+// a test script; every routing call now says what it produced, and the running totals ride along
+// so a single log line answers "how often is this failing?" without collecting a sample first.
+// In-process counters reset on redeploy, like every other counter we keep — the per-call line is
+// the record, the totals are the convenience.
+const routeCounts: Record<RouteOutcome, number> = { full: 0, partial: 0, failed: 0 }
+
+/** Read-only snapshot for tests and any future /stats surface. */
+export function routeOutcomeCounts(): Record<RouteOutcome, number> {
+  return { ...routeCounts }
+}
+
+function logRouteOutcome(outcome: RouteOutcome, streams: string[], note?: string) {
+  routeCounts[outcome]++
+  const line = `[query-router] route_outcome=${outcome} streams=${streams.length ? streams.join(',') : 'none'} ` +
+    `totals=full:${routeCounts.full}/partial:${routeCounts.partial}/failed:${routeCounts.failed}${note ? ` — ${note}` : ''}`
+  if (outcome === 'failed') console.error(line)
+  else console.log(line)
+}
+
+function routeSucceeded(mode: 'full' | 'partial', route: RouteResult, note?: string): RouteResult {
+  logRouteOutcome(mode, Object.keys(route), note)
+  return route
 }
 
 /**
@@ -331,5 +498,9 @@ function routerFailOpen(reason: GeminiFailure | 'missing-key' | 'bad-json' | 'no
     `(${reason}): ${detail}. Falling back to ONE unfiltered search across all streams: ` +
     `per-stream scoping and dense fusion are BOTH skipped for this query.`,
   )
+  // Every fail-open produces a route_outcome line as well as the sentence above. The sentence
+  // explains; the line counts. Zero SILENT fail-opens is the §2 exit criterion, and it is only
+  // checkable if the counted form exists on every path out of here.
+  logRouteOutcome('failed', [], reason)
   return null
 }
