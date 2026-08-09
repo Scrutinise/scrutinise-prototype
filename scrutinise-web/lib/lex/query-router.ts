@@ -21,46 +21,21 @@ import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, VECTOR_WEIGHT } from './fusion'
 import { interleaveStreams } from './interleave'
+import { STREAM_SCOPES, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
 
-export interface StreamConfig {
-  name: RouterStreamName
-  /** FTS tier value passed to runFtsSearch's server-side tier filter. */
-  tier: string
-  /** When set, further restricts results to these display types — needed only
-   *  when a tier is shared by more than one stream (parliamentary → debates
-   *  vs committees). Absent = every type the tier yields belongs to this stream.
-   *
-   *  KEPT AS A BACKSTOP, NO LONGER THE MECHANISM. Since 2026-08-06 the split is done
-   *  server-side by `corpora`/`excludeCorpora` below; this should now filter nothing
-   *  out. It stays because it is free and it is the assertion that the server-side
-   *  scope did what it claimed. */
-  types?: SearchResultType[]
-  /** Server-side corpus PREfilter — the real stream boundary when a tier is shared.
-   *  Must agree with corpus-type-map.ts's mapping for `types`, or the two disagree
-   *  and the backstop silently starts discarding rows the prefilter allowed. */
-  corpora?: string[]
-  /** Server-side corpus prefilter, complement form — for the stream that is "the rest
-   *  of the tier". Preferred over listing 18 corpora that a new ingest would invalidate. */
-  excludeCorpora?: string[]
+/** A stream's SCOPE (which part of the corpus it may reach — see stream-scopes.ts, where the
+ *  `types` backstop and the corpus prefilters are documented) plus its retrieval call. */
+export interface StreamConfig extends StreamScope {
   /** The stream's own retrieval call. Defaults differ only in tier/types today;
    *  a future non-FTS stream (web/X, graph) would supply a different function. */
   search: (query: string, limit: number) => Promise<SearchResult[]>
 }
 
-/**
- * COMMITTEE / DEBATE corpora, kept next to each other because they are complements and must
- * stay so. corpus-type-map.ts maps `corpus.startsWith('committees')` → COMMITTEE within the
- * parliamentary tier; everything else in that tier is DEBATE apart from a handful of BILL /
- * TREATY / null corpora, which the debates stream excludes here for the same reason it always
- * dropped them client-side.
- *
- * Listed explicitly rather than by prefix because the filter is a SQL `IN` evaluated in the
- * index, and because a new `committees-*` corpus should be a deliberate addition here rather
- * than something that silently joins a stream on the strength of its name.
- */
-const COMMITTEE_CORPORA = ['committees-reports', 'committees-evidence']
-const NON_DEBATE_PARLIAMENTARY = [...COMMITTEE_CORPORA, 'bills-api', 'uk-treaties', 'tax-treaties-dta', 'members-interests', 'erskine-may']
+// The corpus/tier/type scopes moved to ./stream-scopes.ts on 2026-08-09 (S2B §1). They now have
+// a second reader — the corpus reachability matrix, which computes which collections NO stream
+// can select — and a measurement taken against a copy of this table would keep reporting
+// "reachable" for as long as it took anyone to notice the copy had drifted.
 
 function ftsStream(tier: string, types?: SearchResultType[], corpora?: string[], excludeCorpora?: string[]) {
   return async (query: string, limit: number): Promise<SearchResult[]> => {
@@ -135,18 +110,17 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
   }
 }
 
-export const STREAMS: StreamConfig[] = [
-  // Every stream can now fuse, but each is INERT unless LEX_VECTOR_STREAMS names it by name.
-  // An unnamed stream calls exactly the ftsStream it always did (fusedStream delegates
-  // straight to it), so "nothing else changed" stays structural rather than a thing to test.
-  { name: 'legislation', tier: 'legislation', search: fusedStream('legislation', 'legislation') },
-  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY,
-    search: fusedStream('debates', 'parliamentary', ['DEBATE'], undefined, NON_DEBATE_PARLIAMENTARY) },
-  { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], corpora: COMMITTEE_CORPORA,
-    search: fusedStream('committees', 'parliamentary', ['COMMITTEE'], COMMITTEE_CORPORA) },
-  { name: 'caselaw', tier: 'caselaw', search: fusedStream('caselaw', 'caselaw') },
-  { name: 'guidance', tier: 'guidance', search: fusedStream('guidance', 'guidance') },
-]
+// Every stream can now fuse, but each is INERT unless LEX_VECTOR_STREAMS names it by name.
+// An unnamed stream calls exactly the ftsStream it always did (fusedStream delegates straight
+// to it), so "nothing else changed" stays structural rather than a thing to test.
+//
+// The list is BUILT from STREAM_SCOPES rather than restating it: the scope (tier / corpora /
+// excludeCorpora / types) is data, shared with the reachability matrix; the retrieval function
+// is code and stays here.
+export const STREAMS: StreamConfig[] = STREAM_SCOPES.map((s) => ({
+  ...s,
+  search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora),
+}))
 
 /** What a routed search produced, per stream, before and after interleaving. The gateway
  *  puts this on `meta` so a caller — and scripts/check-stream-coverage.ts — can state which

@@ -212,9 +212,11 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
 //   QUERY_ROUTER_MODEL         Gemini model id (default gemini-2.5-flash)
 //   QUERY_ROUTER_TIMEOUT_MS    per-call timeout (default 25000 — see the note at the call)
 
-/** The stream names the router can address today (query-router.ts owns the
- *  matching {tier, types, search} config — this file only owns the LLM decision). */
-export type RouterStreamName = 'legislation' | 'debates' | 'committees' | 'caselaw' | 'guidance'
+/** The stream names the router can address today. Re-exported from stream-scopes.ts, which is
+ *  where they are declared: this file owns only the LLM decision, and the corpus reachability
+ *  matrix needs the name list WITHOUT dragging in a Gemini client. */
+export type { RouterStreamName } from './stream-scopes'
+import type { RouterStreamName } from './stream-scopes'
 
 const ROUTER_STREAMS: RouterStreamName[] = ['legislation', 'debates', 'committees', 'caselaw', 'guidance']
 
