@@ -16,6 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SURFACE_LABELS, type FeedbackSurfaceKey } from './feedback-types'
+import { geminiFinishProblem } from './gemini-finish'
 
 export { FEEDBACK_SURFACES, SURFACE_LABELS } from './feedback-types'
 export type { FeedbackSurfaceKey } from './feedback-types'
@@ -203,8 +204,13 @@ export async function summariseCritique(input: {
       console.warn('[lex-feedback] summarise HTTP', res.status)
       return fallback()
     }
-    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // 600 tokens is the tightest budget of any JSON call in the app, so this is the one most
+    // likely to hit the ceiling. Non-throwing: the fallback() degradation is kept, the guard
+    // only stops the truncation arriving as a parse failure. See gemini-finish.ts.
+    const cut = geminiFinishProblem(data?.candidates?.[0], 600, { label: 'lex-feedback' })
+    if (cut) console.error(`[lex-feedback] summarise ${cut.reason} — ${cut.detail}`)
     const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof raw !== 'string') return fallback()
     const obj = JSON.parse(raw) as { summary?: unknown }

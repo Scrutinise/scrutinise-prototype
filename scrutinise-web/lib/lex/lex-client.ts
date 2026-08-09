@@ -8,6 +8,7 @@
 
 import type { FieldDef } from './page1-config'
 import { methodForStage, methodBlocksFor } from './method'
+import { assertGeminiFinished, geminiFinishProblem } from './gemini-finish'
 
 export interface LexTurnContext {
   preferredName: string
@@ -299,6 +300,9 @@ async function callGemini(systemPrompt: string, userMessage: string, history: { 
     throw e
   }
   const data = await res.json()
+  // Before parsing: a truncated payload is broken JSON, and without this it arrives as a parse
+  // failure rather than as "you ran out of output tokens". See lib/lex/gemini-finish.ts.
+  assertGeminiFinished(data?.candidates?.[0], 2048, 'lex-turn')
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (typeof text !== 'string') {
     const e = new Error('Gemini returned no text part') as LexError
@@ -477,8 +481,13 @@ export async function generateCauseCandidates(input: {
       console.warn('[lex] cause seeding HTTP', res.status)
       return []
     }
-    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
+    // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
+    // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
+    const cut = geminiFinishProblem(data?.candidates?.[0], 1024, { label: 'cause-seeding' })
+    if (cut) console.error(`[lex] cause-seeding ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return []
     const obj = JSON.parse(text) as { causes?: unknown }
@@ -590,8 +599,13 @@ export async function generateCoherenceReview(input: {
       },
     )
     if (!res.ok) { console.warn('[lex] coherence review HTTP', res.status); return null }
-    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
+    // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
+    // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
+    const cut = geminiFinishProblem(data?.candidates?.[0], 2048, { label: 'coherence-review' })
+    if (cut) console.error(`[lex] coherence-review ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return null
     const o = JSON.parse(text) as Partial<CoherenceReview>
@@ -694,8 +708,13 @@ export async function generatePolicyOptions(input: {
       },
     )
     if (!res.ok) { console.warn('[lex] policy seeding HTTP', res.status); return [] }
-    type Resp = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
+    // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
+    // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
+    const cut = geminiFinishProblem(data?.candidates?.[0], 1400, { label: 'policy-seeding' })
+    if (cut) console.error(`[lex] policy-seeding ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return []
     const obj = JSON.parse(text) as { options?: unknown }

@@ -593,3 +593,52 @@ a new script.** The runner provisions → runs → verifies → **destroys** →
 `INGEST_PLAYBOOK.md` §20: **after any backfill or large append, rebuild/merge the index before it serves
 users.** A LanceDB append leaves the new rows searchable by brute-force scan — correct, but every subsequent
 query pays for them forever. That is what made warm p50 26 seconds while everything still "worked".
+
+***
+
+## 18. A TRUNCATED LLM RESPONSE MUST NAME ITSELF AS TRUNCATED, EVERYWHERE (8 Aug 2026)
+
+**The rule: check `finishReason` before you parse, and put the guard in the shared helper, not in
+each caller.** `lib/lex/gemini-finish.ts` is that helper. `npm run check:llm-guards` enforces it.
+
+### Why this is a numbered rule and not a bug fix
+
+Four times, the same failure, each time wearing a different face:
+
+| when | call site | how it presented | what it actually was |
+|---|---|---|---|
+| 29 Jul | `query-expansion` | every call "failed to parse" | thinking mode ate the whole budget |
+| 6 Aug | `web-orientation` | Tier B half silently discarded | truncating on every call |
+| 8 Aug | `general-chat` | `Unterminated string in JSON at position 2488` | 16 sources over a 2,048 ceiling |
+| 8 Aug | `query-router` | fail-open, logged as `bad-json` | five stream queries over a 512 ceiling |
+
+Not one of them said "I ran out of output tokens". Every diagnosis started at the wrong end —
+looking for a fault in the JSON, when the fault was a number in the request. The router instance
+cost most: it made routing intermittent in production, which then made a benchmark regression
+impossible to attribute.
+
+### What the rule requires
+
+1. **Check `finishReason` BEFORE parsing.** A truncated payload is broken JSON, so parsing first
+   converts a length limit into a parse error and hides it. `check:llm-guards` asserts the ordering.
+2. **Name the reason distinctly.** `truncated` (hit `MAX_TOKENS`) is not `bad-json`, and not
+   `blocked` (SAFETY, RECITATION). A caller that degrades gracefully must still log WHICH.
+3. **Report the budget and the tail.** `cut off at maxOutputTokens=512 …ends: "…right to "` is
+   diagnosable at a glance; "parse failed" is not.
+4. **An absent `finishReason` is fine.** Some responses omit it; failing closed on a missing field
+   turns a working call into an outage.
+5. **Size the budget to the output.** Output tokens are billed on what is generated, so a generous
+   ceiling on a call that emits a small JSON object costs nothing. A tight one buys nothing and
+   eventually fires.
+
+### The family this belongs to
+
+The same shape as the **silent stub**, the **placeholder that looked like data**, and the
+**invisible fail-open**: *a failure that looks like something else*. The house rule across all of
+them is the same — **a degradation must announce itself, with its cause attached.** Graceful
+degradation is correct; silent degradation is a bug with a good disguise.
+
+⚠ **Corollary, learned from the router:** when a component can be OFF by configuration and can also
+FAIL, the two must not look identical from outside. The router being disabled and the router failing
+open both produced exactly one untiered search, which is why it took four rounds of measurement to
+tell them apart.

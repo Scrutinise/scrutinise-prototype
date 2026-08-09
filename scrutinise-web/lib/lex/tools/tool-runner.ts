@@ -27,6 +27,7 @@
 
 import { QUERY_STATS, runQueryStats, formatStatsForPrompt, type QueryStatsArgs, type QueryStatsResult } from './query-stats'
 import { statsConfigured } from '@/lib/stats/stats-db'
+import { geminiFinishProblem } from '../gemini-finish'
 
 const MODEL = process.env.LEX_TOOL_MODEL ?? 'gemini-2.5-flash'
 const TIMEOUT_MS = parseInt(process.env.LEX_TOOL_TIMEOUT_MS ?? '10000', 10)
@@ -104,6 +105,13 @@ async function decideToolCall(
       return null
     }
     const data = await res.json()
+    // 256 tokens is the tightest budget in the app. A truncated response here does not throw —
+    // the functionCall part simply is not there — so the decider silently returns "no tool
+    // wanted" and Lex answers without the figures it should have had. That is the same class as
+    // the router's silent fail-open: a failure wearing the face of a decision (CLAUDE.md §18).
+    // Non-throwing, because returning null IS the correct degradation; the guard names the cause.
+    const cut = geminiFinishProblem(data?.candidates?.[0], 256, { label: 'lex-tools' })
+    if (cut) console.error(`[lex-tools] decider ${cut.reason} — ${cut.detail} (no tool will be called this turn)`)
     const parts: GeminiPart[] = data?.candidates?.[0]?.content?.parts ?? []
     const call = parts.find((p) => p.functionCall)?.functionCall
     return call ? { name: call.name, args: call.args ?? {} } : null

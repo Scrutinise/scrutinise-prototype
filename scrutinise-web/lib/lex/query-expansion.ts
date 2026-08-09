@@ -14,6 +14,7 @@
 //   QUERY_EXPANSION_TIMEOUT_MS      per-call timeout (default 10000)
 
 import { flagEnabled } from '@/lib/env-flags'
+import { geminiFinishProblem } from './gemini-finish'
 
 export interface QueryExpansion {
   anchors: string[]     // candidate Acts / SIs / retained-EU by full statutory name
@@ -138,15 +139,8 @@ async function callGeminiJson(opts: {
     // Check finishReason BEFORE parsing. A truncated payload is still syntactically broken JSON,
     // so parsing first would report `bad-json` and send the reader looking for a serialiser fault
     // instead of a length limit — which is exactly what happened on 2026-08-08.
-    const finish = candidate?.finishReason
-    if (finish && finish !== 'STOP') {
-      const budget = opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS
-      const tail = typeof text === 'string' ? ` …ends: ${JSON.stringify(text.slice(-80))}` : ''
-      if (finish === 'MAX_TOKENS') {
-        return { kind: 'fail', reason: 'truncated', detail: `cut off at maxOutputTokens=${budget}${tail}` }
-      }
-      return { kind: 'fail', reason: 'blocked', detail: `finishReason=${finish}${tail}` }
-    }
+    const cut = geminiFinishProblem(candidate, opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS, { label: opts.logTag })
+    if (cut) return { kind: 'fail', reason: cut.reason, detail: cut.detail }
 
     if (typeof text !== 'string') {
       return { kind: 'fail', reason: 'empty-response', detail: 'no candidates[0].content.parts[0].text in the response' }

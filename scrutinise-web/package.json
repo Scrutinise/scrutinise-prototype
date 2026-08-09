@@ -19,7 +19,9 @@
     "check:orientation": "tsx --env-file=.env scripts/check-orientation.ts",
     "postinstall": "prisma generate",
     "check:flags": "tsx scripts/check-flags.ts",
-    "check:lex-general": "tsx --env-file=.env scripts/check-lex-general.ts"
+    "check:lex-general": "tsx --env-file=.env scripts/check-lex-general.ts",
+    "check:legislation-guide": "tsx --env-file=.env scripts/check-legislation-guide.ts",
+    "check:llm-guards": "tsx scripts/check-llm-guards.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
