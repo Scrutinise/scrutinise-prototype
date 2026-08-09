@@ -326,6 +326,10 @@ async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: 
 
     const { results } = await runSearch({ keywords: searchTerms, intent: 'CAUSE_SEEDING', ideaContext: context, limit: 10 })
     diag.results = results.length
+    // `results` is stream-INTERLEAVED on the routed path (query-router.ts::runRoutedSearch), so
+    // this prefix samples every routed stream. Before that fix it was a flat concatenation and
+    // these 8 snippets came off the front of the legislation block — cause seeding was reading
+    // Acts and calling it "what Parliament examined". Do not slice a flat concatenation here.
     const relevant = results.filter((r) => r.type === 'DEBATE' || r.type === 'COMMITTEE' || r.type === 'PRIMARY_LEGISLATION')
     const snippets = relevant.map((r) => `${r.citation}: ${r.snippet}`).slice(0, 8)
     diag.snippets = snippets.length
@@ -485,6 +489,8 @@ async function seedCoherenceCheck(ideaId: string, userId: string, def: FieldDef,
         ideaContext: (acceptedValue(state, 'summaryDiagnosis') as string) ?? '',
         limit: 8,
       })
+      // Same note as seedCauses: the prefix is safe because `results` is interleaved, not
+      // concatenated. See lib/lex/interleave.ts.
       corpusNotes = results
         .filter((r) => r.type === 'COMMITTEE' || r.type === 'DEBATE')
         .slice(0, 5)

@@ -20,6 +20,7 @@ import type { SearchResult, SearchResultType } from './page1-config'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, VECTOR_WEIGHT } from './fusion'
+import { interleaveStreams } from './interleave'
 import type { RouteResult, RouterStreamName } from './query-expansion'
 
 export interface StreamConfig {
@@ -147,15 +148,40 @@ export const STREAMS: StreamConfig[] = [
   { name: 'guidance', tier: 'guidance', search: fusedStream('guidance', 'guidance') },
 ]
 
+/** What a routed search produced, per stream, before and after interleaving. The gateway
+ *  puts this on `meta` so a caller — and scripts/check-stream-coverage.ts — can state which
+ *  streams reached the answer without re-deriving stream membership from corpus names. */
+export interface RoutedSearchResult {
+  /** Every stream's hits, interleaved (see interleave.ts). Nothing is dropped here. */
+  results: SearchResult[]
+  /** Retrieved ids per stream, in that stream's own rank order. */
+  perStream: Array<{ stream: RouterStreamName; ids: string[] }>
+}
+
 /**
- * Dispatch a router decision to only the streams it named, each with its own
- * tailored query. Pure fan-out + concat — no ranking judgement here; the
- * gateway's existing groupForPanel already re-sorts by score and buckets by
- * display type downstream, so cross-stream ordering doesn't need to be decided
- * twice.
+ * Dispatch a router decision to only the streams it named, each with its own tailored query,
+ * then INTERLEAVE the streams into one list.
+ *
+ * ⚠ THIS USED TO END `perStream.flat()`, and that was the bug. A concatenation is stream-blocked:
+ * the first `limit` positions are all legislation, so every downstream consumer that took a
+ * prefix — general-chat's 16-document answer context above all — read one stream and never saw
+ * the other four, which had been routed, retrieved, counted and shown in the source panel. See
+ * interleave.ts for the full account and for why round-robin rather than a cross-stream sort.
+ *
+ * The budget here is the TOTAL number of hits, so this is a pure reordering and drops nothing.
+ * Truncation stays where it belongs — with the caller that knows its own context budget — and is
+ * now safe, because any prefix of an interleaved list is stream-balanced.
  */
-export async function runRoutedSearch(route: RouteResult, limit: number): Promise<SearchResult[]> {
+export async function runRoutedSearch(route: RouteResult, limit: number): Promise<RoutedSearchResult> {
   const active = STREAMS.filter((s) => route[s.name])
   const perStream = await Promise.all(active.map((s) => s.search(route[s.name]!, limit)))
-  return perStream.flat()
+  const total = perStream.reduce((n, s) => n + s.length, 0)
+  const results = interleaveStreams(perStream, total, {
+    names: active.map((s) => s.name),
+    label: 'runRoutedSearch',
+  })
+  return {
+    results,
+    perStream: active.map((s, i) => ({ stream: s.name, ids: perStream[i].map((r) => r.id) })),
+  }
 }

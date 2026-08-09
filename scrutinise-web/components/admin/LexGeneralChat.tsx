@@ -109,6 +109,24 @@ function Diagnostics({ d }: { d: GeneralChatResult['diagnostics'] }) {
           {d.expansionAdded.join(' ')}
         </div>
       )}
+      {/* Per-stream coverage of the answer context. "committees was routed" and "committees
+          reached the model" are different claims, and only the second decides whether Lex can
+          say anything about committees — which is exactly what it got wrong on 9 Aug, when the
+          routed list was a concatenation and the 16-document context was all legislation. A
+          stream at 0 is that bug, so it is coloured, not buried. */}
+      {d.contextStreams && d.contextStreams.length > 0 && (
+        <div>
+          <span className="text-zinc-400">in Lex&rsquo;s context </span>
+          {d.contextStreams.map((s, i) => (
+            <span key={s.stream}>
+              {i > 0 && ' '}
+              <span className={s.inContext === 0 && s.retrieved > 0 ? 'font-semibold text-amber-700' : ''}>
+                {s.stream}&nbsp;{s.inContext}/{s.retrieved}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
       <div>
         <span className="text-zinc-400">retrieved </span>
         {d.retrieved} ({d.grouped} after grouping, {d.contextCount} shown to Lex)
@@ -118,6 +136,14 @@ function Diagnostics({ d }: { d: GeneralChatResult['diagnostics'] }) {
           <>
             <span className="text-zinc-400"> · answer </span>
             {d.answerMs} ms
+          </>
+        )}
+        {d.promptTokens !== undefined && (
+          <>
+            {/* The recurring cost of the context budget, per query, from the API's own
+                usageMetadata rather than an estimate. */}
+            <span className="text-zinc-400"> · tokens in/out </span>
+            {d.promptTokens}/{d.outputTokens ?? '?'}
           </>
         )}
       </div>

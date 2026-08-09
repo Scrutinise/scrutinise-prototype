@@ -64,7 +64,17 @@ export interface GeneralChatDiagnostics {
    *  retrieved and are shown, but the answer could not have used them — a distinction
    *  the debugging view has to make or the source list overstates what was read. */
   contextCount: number
+  /** Per routed stream: how many hits it returned, and how many of them are inside the answer
+   *  context. A stream with `retrieved > 0 && inContext === 0` is the §1 failure — retrieved,
+   *  counted, panel-displayed, and invisible to the answer. Absent on the tier-scoped path,
+   *  which has one stream by contract. */
+  contextStreams?: Array<{ stream: string; retrieved: number; inContext: number }>
   searchMs: number
+  /** Billed tokens for the answer call, from the API's own usageMetadata. Present only when the
+   *  answer call completed. Input tokens scale with the context budget, so this is the number the
+   *  budget decision is made on. */
+  promptTokens?: number
+  outputTokens?: number
   /** Absent when no answer call was made (search failed, or no key configured). */
   answerMs?: number
   answerFailureReason?: string
@@ -137,6 +147,11 @@ interface AnswerOutput {
   answer: string
   /** 1-based indices into the source list the model was shown. See ANSWER_SCHEMA. */
   citedMarkers: number[]
+  /** Billed tokens, straight from the response's usageMetadata — the exact number, not an
+   *  estimate over a reconstructed prompt. The context budget is a direct cost-per-query trade,
+   *  and it cannot be traded without this figure being visible. */
+  promptTokens?: number
+  outputTokens?: number
 }
 
 function renderSources(results: SearchResult[]): string {
@@ -216,6 +231,7 @@ async function callGeminiForAnswer(
     }
     type Resp = {
       candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
+      usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
     }
     const data = (await res.json()) as Resp
     const candidate = data?.candidates?.[0]
@@ -242,6 +258,8 @@ async function callGeminiForAnswer(
       // be treated as having cited nothing. Non-numeric entries fall through as NaN and are
       // rejected by the range check at the resolution step, where they are counted.
       citedMarkers: Array.isArray(parsed.citedMarkers) ? parsed.citedMarkers.map(Number) : [],
+      promptTokens: data.usageMetadata?.promptTokenCount,
+      outputTokens: data.usageMetadata?.candidatesTokenCount,
     }
   } finally {
     clearTimeout(t)
@@ -250,9 +268,27 @@ async function callGeminiForAnswer(
 
 // ── the turn ─────────────────────────────────────────────────────────────────
 
-/** Results handed to the model. Enough to answer from; not so many that the
- *  excerpt block crowds out the question. The panel shows everything retrieved. */
-const ANSWER_CONTEXT_LIMIT = 16
+/**
+ * Results handed to the model. Enough to answer from; not so many that the excerpt block crowds
+ * out the question. The panel shows everything retrieved.
+ *
+ * ⚠ THE PREFIX IS ONLY HONEST BECAUSE THE LIST IS INTERLEAVED. `search.results` on the routed
+ * path used to be `perStream.flat()` — stream-blocked, legislation first — so this slice landed
+ * entirely inside one stream and the other four were dropped before the answer was written. That
+ * is the bug that made Lex say "the sources do not contain information on what select committees
+ * have said" while the committees stream had returned hits. runRoutedSearch now round-robins the
+ * streams (lib/lex/interleave.ts), so a prefix is a balanced sample rather than one stream's
+ * head. Do not reintroduce a slice over a flat concatenation anywhere.
+ *
+ * Read at CALL time from env so the budget can be measured without a code change (16/24/32,
+ * scripts/measure-context-budget.ts). The DEFAULT IS UNCHANGED at 16 — the budget is a direct
+ * cost-per-query trade and is Charlie's to set, not this file's.
+ */
+const DEFAULT_ANSWER_CONTEXT_LIMIT = 16
+function answerContextLimit(): number {
+  const raw = parseInt(process.env.LEX_GENERAL_CONTEXT_LIMIT ?? '', 10)
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_ANSWER_CONTEXT_LIMIT
+}
 
 /**
  * One turn of general corpus chat: retrieve, then answer from what was retrieved.
@@ -349,8 +385,27 @@ export async function runGeneralCorpusChat(input: {
     return { answer: null, results: [], cited: [], diagnostics }
   }
 
-  const context = search.results.slice(0, ANSWER_CONTEXT_LIMIT)
+  const context = search.results.slice(0, answerContextLimit())
   diagnostics.contextCount = context.length
+  // What the answer call can actually see, per stream. The counted thing, not the assumed one:
+  // "committees was routed" and "committees reached the model" are different claims, and the
+  // second is the one that decides whether Lex can say anything about committees.
+  if (search.meta.perStream?.length) {
+    const inContext = new Set(context.map((r) => r.id))
+    diagnostics.contextStreams = search.meta.perStream.map((s) => ({
+      stream: s.stream,
+      retrieved: s.ids.length,
+      inContext: s.ids.filter((id) => inContext.has(id)).length,
+    }))
+    const missing = diagnostics.contextStreams.filter((s) => s.retrieved > 0 && s.inContext === 0)
+    if (missing.length) {
+      console.error('[lex-general] a stream returned hits but reached NONE of the answer context', {
+        missing: missing.map((s) => `${s.stream}(${s.retrieved} hits)`),
+        budget: context.length,
+        coverage: diagnostics.contextStreams,
+      })
+    }
+  }
   const t1 = Date.now()
   let out: AnswerOutput
   try {
@@ -363,6 +418,8 @@ export async function runGeneralCorpusChat(input: {
     return { answer: null, results: search.results, cited: [], diagnostics }
   }
   diagnostics.answerMs = Date.now() - t1
+  diagnostics.promptTokens = out.promptTokens
+  diagnostics.outputTokens = out.outputTokens
 
   // Resolve citations from two places and take the union, because the two go MISSING
   // differently even though they can no longer be WRONG differently:

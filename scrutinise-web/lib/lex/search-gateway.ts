@@ -109,7 +109,17 @@ export interface GatewayResult {
   failed: boolean
   failureReason?: string
   /** Observability: which flags fired + terms the expansion added (query-only). */
-  meta: { flags: CapabilityFlags; expansionAdded: string[]; routedStreams?: string[] }
+  meta: {
+    flags: CapabilityFlags
+    expansionAdded: string[]
+    routedStreams?: string[]
+    /** Retrieved ids per stream, present only on the routed (untiered) path. `results` is the
+     *  interleaved union of these, so a caller taking a prefix can say exactly which streams
+     *  its context covers — which is what scripts/check-stream-coverage.ts asserts and what the
+     *  lex-general debugging view reports. Without it, stream membership has to be re-derived
+     *  from corpus names, i.e. guessed. */
+    perStream?: Array<{ stream: string; ids: string[] }>
+  }
 }
 
 /**
@@ -143,6 +153,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   let failureReason: string | undefined
   let expansionAdded: string[] = []
   let routedStreams: string[] | undefined
+  let perStream: Array<{ stream: string; ids: string[] }> | undefined
   // Used only by the vector-fusion step below (4b), which routing doesn't touch
   // (out of this brief's scope) — defaults to the bare keywords when routed.
   let queryKeywords = keywords
@@ -180,8 +191,17 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     const streamNames = route ? Object.keys(route) : []
     if (route && streamNames.length) {
       routedStreams = streamNames
-      ftsResults = await runRoutedSearch(route, limit)
-      console.log('[search-gateway] router dispatched', { intent: q.intent, streams: streamNames })
+      // `results` arrives INTERLEAVED, not concatenated — see query-router.ts::runRoutedSearch.
+      // Every downstream prefix (general-chat's answer context, the orchestrator's snippets,
+      // score-ordering's top-K) is therefore stream-balanced without each caller re-deciding it.
+      const routed = await runRoutedSearch(route, limit)
+      ftsResults = routed.results
+      perStream = routed.perStream
+      console.log('[search-gateway] router dispatched', {
+        intent: q.intent,
+        streams: streamNames,
+        perStream: Object.fromEntries(routed.perStream.map((s) => [s.stream, s.ids.length])),
+      })
     } else {
       // error, not log: routeQuery has already said WHY on the line above, and this is a real
       // capability loss for the query — no per-stream scoping and no dense fusion.
@@ -252,12 +272,20 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //     — double-counting the dense signal and, worse, reintroducing exactly the cross-stream
   //     leakage the per-stream design exists to prevent. So the two are mutually exclusive,
   //     and the per-stream one wins.
+  //     ⚠ AND IT WOULD ALSO UNDO THE INTERLEAVE. fuseWeightedRrf re-sorts the whole list by a
+  //     fused score, so running it over an interleaved routed list destroys the stream balance
+  //     that check:stream-coverage asserts. Reachable only with LEX_SEARCH_VECTOR=true AND
+  //     LEX_VECTOR_STREAMS unset — a combination the per-stream design already supersedes, and
+  //     which is why this branch logs loudly rather than being left to be discovered.
   let results = ftsResults
   if (flags.vector && !perStreamVectorActive()) {
     const { results: vecResults } = await runVectorSearch(queryKeywords, limit)
     if (vecResults.length) {
       results = fuseWeightedRrf(vecResults, ftsResults)
       console.log('[search-gateway] vector fusion (whole-query, legacy path)', { intent: q.intent, fts: ftsResults.length, vector: vecResults.length, fused: results.length })
+      if (routedStreams) {
+        console.warn('[search-gateway] whole-query fusion re-sorted an INTERLEAVED routed list — stream balance is gone for this query. Set LEX_VECTOR_STREAMS instead of LEX_SEARCH_VECTOR.', { intent: q.intent, streams: routedStreams })
+      }
     }
   } else if (flags.vector) {
     console.log('[search-gateway] whole-query fusion stood down — per-stream vector is active', {
@@ -270,7 +298,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const grouped = groupForPanel(results)
 
   console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null })
-  return { intent: q.intent, results, grouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams } }
+  return { intent: q.intent, results, grouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams, perStream } }
 }
 
 // ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────

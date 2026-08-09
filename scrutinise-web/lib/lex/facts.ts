@@ -17,8 +17,24 @@
 // // Mechanism, not vibes: if Lex can only see the facts, it can only state the facts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CanonicalState } from './page1-config'
+import type { CanonicalState, SearchResult, SearchResultType } from './page1-config'
 import type { StageSearchRecord, ResearchRecord } from './stage-search'
+import { interleaveStreams } from './interleave'
+
+/** How many references the facts block names. Unchanged at 8 — what changed is WHICH 8. */
+const FACTS_LIST_CAP = 8
+
+/** Partition a stored (grouped) result list into one bucket per display type, in first-appearance
+ *  order, so interleaveStreams can sample across the buckets instead of taking a prefix. */
+function byType(results: SearchResult[]): SearchResult[][] {
+  const buckets = new Map<SearchResultType, SearchResult[]>()
+  for (const r of results) {
+    const arr = buckets.get(r.type) ?? []
+    arr.push(r)
+    buckets.set(r.type, arr)
+  }
+  return [...buckets.values()]
+}
 
 export interface TurnFacts {
   /** The active page and the field the platform says is current. */
@@ -62,10 +78,20 @@ function searchSummary(search: TurnFacts['search']): string[] {
     return ['A corpus search ran in this turn and returned NOTHING. Say that it found nothing — not that it failed, and not that results are in the panel.']
   }
   const lines = [`A corpus search ran in this turn and returned ${search.results.length} reference(s), now in the right-hand panel:`]
-  for (const r of search.results.slice(0, 8)) {
+  // ⚠ NOT `.slice(0, 8)`. These records store `grouped`, which groupForPanel returns as TYPE
+  // BLOCKS concatenated (≤3 per type) — so a plain prefix of 8 covers barely three blocks and
+  // the later types never reach Lex at all. It is the same failure as the routed
+  // `perStream.flat()` slice (lib/lex/interleave.ts), one layer down and inside the system
+  // prompt: Lex is told these titles are "the ONLY things you may say were found", so a type
+  // missing here is a type Lex must deny having found. Sampling across the blocks costs nothing
+  // and removes the class.
+  // floor 1, not the default 2: this is a list of titles, not answer context, so one committee
+  // report named beats none named. The reason the default exists is stated in interleave.ts.
+  const shown = interleaveStreams(byType(search.results), FACTS_LIST_CAP, { floor: 1, label: 'facts' })
+  for (const r of shown) {
     lines.push(`  - ${r.citation || r.title} (${r.type.toLowerCase().replace(/_/g, ' ')})`)
   }
-  if (search.results.length > 8) lines.push(`  … and ${search.results.length - 8} more.`)
+  if (search.results.length > shown.length) lines.push(`  … and ${search.results.length - shown.length} more.`)
   lines.push('These titles are the ONLY things you may say were found.')
   return lines
 }
