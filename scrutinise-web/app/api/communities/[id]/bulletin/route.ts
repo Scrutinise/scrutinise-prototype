@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import {
   requireCommunityRole,
+  requireBoardRead,
   getBoardScopeFilter,
   categoriesFor,
   BULLETIN_CATEGORY_DESCRIPTIONS,
@@ -26,8 +27,11 @@ export async function GET(req: Request, { params }: Params) {
 
   const { id: communityId } = await params
 
-  const roleCheck = await requireCommunityRole(user.id, communityId, [...ALL_ROLES])
-  if (roleCheck.error) return roleCheck.error
+  // Members read their own board; managers read descendant boards too, because
+  // Stage 2's admin cascade includes moderating them (lib/community.ts
+  // canReadBoard). Posting, replying and marking still require membership.
+  const denied = await requireBoardRead(user.id, communityId)
+  if (denied) return denied
 
   const community = await prisma.community.findUnique({
     where: { id: communityId },

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { joinCommunityAndRoot } from '@/lib/community'
+import { recordReferral } from '@/lib/central-points'
 
 const JoinSchema = z.object({ code: z.string().min(1) })
 
@@ -59,6 +60,16 @@ export async function POST(req: Request) {
   // sits in (Stage 1.2) — otherwise a branch invitee would never see the
   // Community-wide board or the rest of the tree.
   const { rootId } = await joinCommunityAndRoot(user.id, invite.communityId, 'MEMBER')
+
+  // Stage 2: redeeming a specific person's invite is what creates the referral
+  // chain, per Community. A join request creates none, because nobody
+  // introduced them. Recorded against the ROOT, since that is the scope points
+  // and bonuses are computed in.
+  await recordReferral({
+    communityId: rootId,
+    inviterUserId: invite.createdByUserId,
+    inviteeUserId: user.id,
+  })
 
   await prisma.communityInvite.update({
     where: { id: invite.id },

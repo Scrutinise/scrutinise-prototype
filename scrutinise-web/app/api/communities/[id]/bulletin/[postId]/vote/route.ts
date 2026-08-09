@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { requireCommunityRole, findBoardPost, applyBulletinVote } from '@/lib/community'
+import { requireCommunityRole, findBoardPost, CommunityRuleError } from '@/lib/community'
+import { applyBulletinMark } from '@/lib/central-points'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 type Params = { params: Promise<{ id: string; postId: string }> }
@@ -47,5 +48,15 @@ export async function POST(req: Request, { params }: Params) {
   const post = await findBoardPost(postId, communityId)
   if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  return NextResponse.json(await applyBulletinVote(postId, user.id, parsed.data.value))
+  // Stage 2: a vote IS a constructive/unconstructive mark, so this now runs the
+  // guardrails and appends to the points ledger. The guardrail refusals
+  // (own content, daily budget) are 4xx with a message the UI shows.
+  try {
+    return NextResponse.json(await applyBulletinMark(postId, user.id, parsed.data.value))
+  } catch (e) {
+    if (e instanceof CommunityRuleError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
+  }
 }
