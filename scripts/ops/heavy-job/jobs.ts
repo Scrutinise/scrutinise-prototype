@@ -57,6 +57,10 @@ export const JOBS: Record<string, HeavyJob> = {
     // lucky measurement. Keep the HIGHER of the two: the 5 Aug run was on a slightly
     // smaller table (19,161 rows removed by fts-hygiene), so its lower peak reflects less
     // data, not more headroom. Sizing down on it would be reading noise as a trend.
+    // THIRD measurement, 9 Aug 2026 (V32 §2 merge): 18.0 GB peak on a LARGER table
+    // (17,978,744 rows, 533s, €0.053). Deliberately NOT lowering the number — the same rule
+    // applies in reverse: one run below the record on more data is noise, not headroom, and
+    // 32 GB stays the right size. Three runs now bracket 18.0-19.8 GB.
     expectedPeakGb: 19.8,
     peakSource:
       '4 Aug 2026, cpx62 (32 GB), 17,700,396 rows, 499s → 19.8 GB peak. ' +
