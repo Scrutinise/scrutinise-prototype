@@ -228,6 +228,15 @@ the box and reports success. `--index-only` is the flag that enters the ANN bloc
 Also pending: **89,377 orphan chunks** in `corpus_vec` (the V32 committee rechunk plus this sprint's
 re-sectioning), which `vec-hygiene delete-orphans` clears. No vector flag was touched.
 
+**Its real state is readable, and not from the log** — which is silent between 30s polls — nor from
+the process, which survives a harness kill. `ai.batches.list()` reports the shard's job directly; at
+15:12 UTC shard 0's job (created 14:33:46 UTC) was `JOB_STATE_RUNNING`, i.e. queued, not stuck.
+
+⚠ **`gemini-tier-probe.ts`'s "cancelling keeps spend ≈ $0" is not reliable.** Both accepted probe
+jobs report `JOB_STATE_SUCCEEDED` despite the cancel returning ok, so at ~300k and ~4M tokens the
+probe cost more like **~$0.32 than ~$0**. Small, but the script's claim should not be taken at face
+value when sizing a budget.
+
 ⚠ **Nothing is watching this run.** `ops.ts` fires `embed-observer.ts` every 15 minutes, but it
 watches `VEC_CHECKPOINT_KEY` — the MAIN build's checkpoint, which the catch-up deliberately does not
 touch. A stalled catch-up therefore sends no email. Recorded rather than fixed: teaching the live

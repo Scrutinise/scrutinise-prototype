@@ -37,6 +37,13 @@ re-planned**: it records DONE SHARD INDICES over the whole sorted chunkId list a
 all 21.8M chunks. That is why `v33-vec-catchup.ts` exists. ⚠ Tier PROBED, not assumed: **Tier 2** (4M
 accepted, 8M rejected), and the delta averages **~633 tokens/chunk, double the 310 the July build
 assumed**, so 40,000×8 would have been 99M enqueued and rejected outright.
+**HOW TO SEE ITS REAL STATE** — do not infer it from the log, which is silent between 30s polls, or
+from the process, which survives a harness kill. Ask Google:
+`ai.batches.list()` → the shard's job is `JOB_STATE_RUNNING` / `SUCCEEDED` / `FAILED`. At 15:12 UTC
+the shard-0 job (created 14:33:46 UTC) was **RUNNING** — queued, not stuck.
+⚠ **Two tier-probe jobs report `JOB_STATE_SUCCEEDED` despite being cancelled** (created 14:21:21 and
+14:21:55). `gemini-tier-probe.ts` claims cancelling "keeps spend ≈ $0"; these completed anyway, so at
+~300k and ~4M tokens that is more like **~$0.32, not ~$0**. Do not assume the probe is free.
 ⚠ **NOTHING IS WATCHING THIS RUN.** `ops.ts` fires `embed-observer.ts` every 15 minutes, but it
 watches `_search/corpus_vec.checkpoint.json` (`VEC_CHECKPOINT_KEY`) — the MAIN build's checkpoint,
 which the catch-up deliberately does not touch. So a stalled catch-up sends no email. Check the
