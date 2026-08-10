@@ -34,9 +34,10 @@
  */
 import fs from 'fs'
 import path from 'path'
-import { corpusToType, corpusDisplayName, EXCLUDED_BY_DESIGN } from '../lib/lex/corpus-type-map'
+import { corpusToType, corpusDisplayName, dbTitleSupersedesIndex, EXCLUDED_BY_DESIGN, DEFERRED_TO_GRAPH } from '../lib/lex/corpus-type-map'
 import { STREAM_SCOPES, streamCanSelect, type StreamScope } from '../lib/lex/stream-scopes'
 import { ANNOTATION_CORPORA, annotatedGidFromId, annotationTitle, isAnnotationCorpus } from '../lib/lex/annotation-title'
+import { billDisplayTitle } from '../../scripts/ingest/sources/bills-parliament'
 import type { SearchResultType } from '../lib/lex/page1-config'
 
 const root = path.join(__dirname, '..')
@@ -283,6 +284,90 @@ section('§3 — scottish-parliament-or is in debates, and says which parliament
   ok('…and is not the raw corpus key', fallback !== 'scottish-parliament-or', fallback)
   ok('corpusDisplayName leaves unnamed collections exactly as they are',
      corpusDisplayName('hansard') === 'hansard')
+}
+
+// ── 8. S2C3 §1 — bills-api reaches the legislation stream, and reads as a Bill ───
+section('§1 — bills-api is in the legislation stream, and a Bill cannot read as an Act')
+{
+  const legislation = STREAM_SCOPES.find((s) => s.name === 'legislation')!
+  const debates = STREAM_SCOPES.find((s) => s.name === 'debates')!
+  ok('bills-api types BILL', corpusToType('bills-api', 'parliamentary', 'bills-api:2518:1') === 'BILL')
+  ok('the legislation stream lists bills-api in extraCorpora', !!legislation.extraCorpora?.includes('bills-api'))
+  ok('it is selectable by legislation', streamCanSelect(legislation, 'bills-api', 'parliamentary', 'BILL'))
+  ok('…and would NOT be reachable on tier alone (the extra leg is load-bearing)',
+     legislation.tier !== 'parliamentary')
+  // The debates exclusion stays, and is NOT a contradiction — two streams, two decisions. It is
+  // also belt-and-braces: debates filters types:['DEBATE'] and a Bill types BILL.
+  ok('bills-api remains excluded from the DEBATES stream', !!debates.excludeCorpora?.includes('bills-api'))
+  ok('…and could not reach debates even without that, on type alone',
+     !streamCanSelect({ ...debates, excludeCorpora: undefined }, 'bills-api', 'parliamentary', 'BILL'))
+
+  // The title rule. `bills-api` titles were rewritten in Neon (v34-bills-metadata.ts) but the FTS
+  // index still carries the old ones, so the adapter must prefer the DB value — otherwise the same
+  // Bill is titled differently depending on which retriever found it.
+  ok('the DB title supersedes the index title for bills-api', dbTitleSupersedesIndex('bills-api'))
+  for (const c of ['primary-acts-2000plus', 'hansard', 'explanatory-notes', 'scottish-parliament-or']) {
+    ok(`…and NOT for ${c} (an explicit list, never "always prefer the DB")`, !dbTitleSupersedesIndex(c))
+  }
+  const src = read('lib/lex/fts-search.ts')
+  ok('fts-search.ts hydrates sectionTitle so it has a DB title to prefer', /SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"/.test(src))
+  ok('…and consults dbTitleSupersedesIndex when choosing the title', /dbTitleSupersedesIndex\(h\.corpus\)/.test(src))
+
+  // billDisplayTitle is the thing a user reads. Assert the never-mistake-a-Bill-for-an-Act rule
+  // on every status shape, including the one that matters most: a Bill that BECAME an Act.
+  const base = { billId: 42, shortTitle: 'Assisted Dying Bill', house: 'Commons', lastUpdate: '2026-03-04' }
+  const cases: Array<[string, any, RegExp]> = [
+    ['a live Bill shows its stage', { ...base, stage: 'Committee stage', isAct: false, withdrawn: null, defeated: false }, /Committee stage/],
+    ['a Bill that became an Act SAYS SO', { ...base, stage: 'Royal Assent', isAct: true, withdrawn: null, defeated: false }, /became an Act/],
+    ['a withdrawn Bill shows the date', { ...base, stage: '2nd reading', isAct: false, withdrawn: '2025-09-15', defeated: false }, /withdrawn 2025-09-15/],
+    ['a defeated Bill says so', { ...base, stage: '2nd reading', isAct: false, withdrawn: null, defeated: true }, /defeated/],
+    ['a stageless Bill admits it', { ...base, stage: null, isAct: false, withdrawn: null, defeated: false }, /stage unknown/],
+  ]
+  for (const [label, status, want] of cases) {
+    const t = billDisplayTitle(status)
+    ok(label, want.test(t), t)
+    ok(`  …and still names the Bill: "${t.slice(0, 46)}…"`, t.includes('Assisted Dying Bill'))
+  }
+
+  // ⚠ THE CASE MEASUREMENT FOUND AND REASONING MISSED. Once a Bill receives Royal Assent the
+  // API's shortTitle becomes the ACT's name, so 13 of 15 bills seen on real queries rendered with
+  // no "Bill" anywhere — a bill publication PDF wearing the enacted Act's title. Every status
+  // shape must carry the word, including this one.
+  const actNamed = { billId: 7, shortTitle: 'Leasehold Reform (Ground Rent) Act 2022', house: 'Commons', lastUpdate: '2022-02-08', stage: 'Royal Assent', isAct: true, withdrawn: null, defeated: false }
+  const actTitle = billDisplayTitle(actNamed)
+  ok('an Act-NAMED bill row still reads as a Bill document', /\bBill\b/i.test(actTitle), actTitle)
+  ok('…and still says it became an Act', /became an Act/.test(actTitle), actTitle)
+  for (const [label, status] of cases) {
+    ok(`every status shape carries the word "Bill" — ${label}`, /\bBill\b/i.test(billDisplayTitle(status)), billDisplayTitle(status))
+  }
+  // …and the marker is not added twice when the name already carries it.
+  ok('no duplicated marker when shortTitle already says Bill',
+     !/Bill papers/.test(billDisplayTitle({ ...base, stage: '2nd reading', isAct: false, withdrawn: null, defeated: false })),
+     billDisplayTitle({ ...base, stage: '2nd reading', isAct: false, withdrawn: null, defeated: false }))
+  ok('a Bill with no shortTitle falls back to its id rather than to a blank',
+     billDisplayTitle({ ...base, shortTitle: '', stage: '2nd reading', isAct: false, withdrawn: null, defeated: false }).startsWith('Bill 42'))
+  // ⚠ The phrasing rule: lastUpdate is when the RECORD changed, not when the bill last moved.
+  ok('the stage line says "last updated", never "no progress since"',
+     /last updated/.test(billDisplayTitle({ ...base, stage: '2nd reading', isAct: false, withdrawn: null, defeated: false })) &&
+     !/no progress/.test(billDisplayTitle({ ...base, stage: '2nd reading', isAct: false, withdrawn: null, defeated: false })))
+}
+
+// ── 9. S2C3 §2 — deferred-to-graph is documentation, and says so ─────────────
+section('§2 — early-day-motions and petitions are routed to the graph, not silently dropped')
+{
+  for (const c of ['early-day-motions', 'petitions']) {
+    ok(`${c} is named in DEFERRED_TO_GRAPH`, c in DEFERRED_TO_GRAPH)
+    ok(`…with a reason a reader can act on`, (DEFERRED_TO_GRAPH[c] ?? '').trim().length > 30, DEFERRED_TO_GRAPH[c])
+    // ⚠ NOT enforced — unlike EXCLUDED_BY_DESIGN. These keep their display type and their existing
+    // reachability; the verdict is a statement about their DESTINATION. Asserting the difference
+    // stops a later reader assuming the neighbouring registry's semantics.
+    ok(`…and ${c} still types non-null (this registry changes nothing at runtime)`,
+       corpusToType(c, 'other', `${c}:1:1`) !== null)
+    ok(`…and is NOT in EXCLUDED_BY_DESIGN (the two registries mean different things)`,
+       !(c in EXCLUDED_BY_DESIGN))
+  }
+  ok('the two registries do not overlap',
+     !Object.keys(DEFERRED_TO_GRAPH).some((c) => c in EXCLUDED_BY_DESIGN))
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`)
