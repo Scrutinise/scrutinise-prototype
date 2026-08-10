@@ -38,7 +38,15 @@
  *                   it is an accident of a degraded mode.
  *   tier-only     — reachable only by a caller that passes an explicit tier (gateway-legacy.ts),
  *                   which gets neither routing nor dense retrieval.
- *   UNREACHABLE   — no path at all. Either the display type is null, or nothing selects its tier.
+ *   excluded-by-design — no path at all, ON PURPOSE. The collection is named in
+ *                   `EXCLUDED_BY_DESIGN` (corpus-type-map.ts) with its reason. ⚠ This verdict
+ *                   exists because the first run of this matrix printed UNREACHABLE for
+ *                   `members-interests`, which is deliberately out of general search, right
+ *                   beside three collections that were lost by accident — identical word,
+ *                   opposite meaning. The next person doing a sweep of the nulls would have
+ *                   "fixed" the decision along with the defects.
+ *   UNREACHABLE   — no path at all, and nobody chose that. Either the display type is null for
+ *                   a reason no longer stated anywhere, or nothing selects its tier.
  *
  * §2 — THE GOLD-KEY PROVENANCE CHECK. Four committee gold questions score a flat 100% while
  * returning zero committee documents: Hansard satisfies the key by accident. Restated as a
@@ -65,7 +73,7 @@ import { DRAFT_QUERIES } from './gold-draft-streams'
 // The web app's live mapping + live stream scopes, imported rather than restated. Both are
 // runtime-dependency-free (type-only imports inside), which is what makes this reachable from
 // outside the Next.js path alias.
-import { corpusToType } from '../../../scrutinise-web/lib/lex/corpus-type-map'
+import { corpusToType, EXCLUDED_BY_DESIGN } from '../../../scrutinise-web/lib/lex/corpus-type-map'
 import { STREAM_SCOPES, streamCanSelect } from '../../../scrutinise-web/lib/lex/stream-scopes'
 import type { SearchResultType } from '../../../scrutinise-web/lib/lex/page1-config'
 
@@ -133,9 +141,11 @@ interface Row {
   tier_scoped_callers: string[]
   gold_questions: number
   gold_ids: string[]
-  verdict: 'reachable' | 'keyword-only' | 'tier-only' | 'UNREACHABLE'
+  verdict: 'reachable' | 'keyword-only' | 'tier-only' | 'excluded-by-design' | 'UNREACHABLE'
   note: string | null
 }
+
+const VERDICTS = ['reachable', 'tier-only', 'keyword-only', 'excluded-by-design', 'UNREACHABLE'] as const
 
 // ── Lance: one projected scan per table, aggregated in memory ────────────────
 async function scanCorpusTier(table: string): Promise<Map<string, Map<string, number>>> {
@@ -237,7 +247,15 @@ async function main() {
 
     let verdict: Row['verdict']
     let note: string | null = null
-    if (streams.length) verdict = 'reachable'
+    // Checked BEFORE `streams.length`, not after the null test, so that the verdict states the
+    // DECISION rather than the mechanism that implements it. If the exclusion were ever
+    // implemented some other way — or if a stream were widened to include it by mistake — this
+    // row would still say excluded-by-design, and the check script would catch the contradiction.
+    if (corpus in EXCLUDED_BY_DESIGN) {
+      verdict = 'excluded-by-design'
+      note = `DELIBERATE: ${EXCLUDED_BY_DESIGN[corpus]}` +
+        (streams.length ? ` ⚠ BUT ${streams.join(' + ')} CAN NOW SELECT IT — the exclusion has been broken` : '')
+    } else if (streams.length) verdict = 'reachable'
     else if (typeNull) {
       verdict = 'UNREACHABLE'
       note = ftsRows > 0
@@ -328,7 +346,11 @@ async function main() {
       for (const [corpus, n] of Object.entries(satisfying)) {
         if (inStream(corpus)) inStreamKeyHits += n
         const v = byCollection.get(corpus)?.verdict
-        if (v === 'UNREACHABLE') { undeliverableKeyHits += n; undeliverableFrom.push(corpus) }
+        // `excluded-by-design` counts as undeliverable too: the app really does not deliver it,
+        // and a gold question leaning on it is measuring the index, not the product. The two are
+        // kept distinct in the VERDICT column, where the difference is actionable; here the only
+        // question is whether a user could ever have received the document, and the answer is no.
+        if (v === 'UNREACHABLE' || v === 'excluded-by-design') { undeliverableKeyHits += n; undeliverableFrom.push(corpus) }
         if (v === 'keyword-only') { unroutableKeyHits += n; unroutableFrom.push(corpus) }
         const r = byCollection.get(corpus)
         if (r) { r.gold_questions += r.gold_ids.includes(q.id) ? 0 : 1; if (!r.gold_ids.includes(q.id)) r.gold_ids.push(q.id) }
@@ -399,10 +421,20 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
   md.push('**The one number.** ' +
     `${fmt(reachSections)} of ${fmt(totals.sections)} sections (${(reachSections / totals.sections * 100).toFixed(1)}%) ` +
     `sit in a collection some router stream can select. ` +
-    `${by('UNREACHABLE').length} collections are reachable by no path at all; ` +
+    `${by('UNREACHABLE').length} ${by('UNREACHABLE').length === 1 ? 'collection is' : 'collections are'} ` +
+    `reachable by no path at all and nobody chose that; ` +
+    `${by('excluded-by-design').length} ${by('excluded-by-design').length === 1 ? 'is' : 'are'} unreachable ON PURPOSE, ` +
+    `named in \`EXCLUDED_BY_DESIGN\` with a reason; ` +
     `${by('keyword-only').length} surface only when routing is off or has failed open; ` +
     `${by('tier-only').length} only via an explicit-tier caller.`)
   md.push('')
+  const broken = by('excluded-by-design').filter((r) => r.router_stream !== 'NONE')
+  if (broken.length) {
+    md.push(`⚠ **${broken.length} deliberate exclusion(s) are no longer exclusions** — a stream can now select ` +
+      broken.map((r) => `\`${r.collection}\` (${r.router_stream})`).join(', ') +
+      '. Either the decision changed and this table has not been told, or a stream was widened without noticing it.')
+    md.push('')
+  }
   md.push('`tier` is read OUT OF THE LIVE FTS INDEX, not computed from `corpus-map.ts` — the tier is')
   md.push('baked in at build time, so a collection seeded after the map last changed carries the old')
   md.push('tier in the index and the router filters on the index. `router_stream` is computed by')
@@ -416,7 +448,8 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
     const type = r.type_null ? '**null (dropped)**' : r.types.join(', ')
     const tier = r.tier_split ? `${r.tier} ⚠split` : r.tier
     const callers = r.tier_scoped_callers.length ? `${r.tier_scoped_callers.length} legacy` : '—'
-    const verdict = r.verdict === 'UNREACHABLE' ? '**UNREACHABLE**' : r.verdict
+    const verdict = r.verdict === 'UNREACHABLE' ? '**UNREACHABLE**'
+      : r.verdict === 'excluded-by-design' ? '*excluded-by-design*' : r.verdict
     md.push(`| \`${r.collection}\` | ${fmt(r.sections)} | ${fmt(r.fts_rows)} | ${fmt(r.vec_rows)} | ${type} | ${tier} | ${r.router_stream === 'NONE' ? '**NONE**' : r.router_stream} | ${callers} | ${r.gold_questions || '—'} | ${verdict} |`)
   }
   md.push('')
@@ -426,11 +459,20 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
   md.push('')
   md.push('| verdict | collections | sections | fts_rows |')
   md.push('|---|---:|---:|---:|')
-  for (const v of ['reachable', 'tier-only', 'keyword-only', 'UNREACHABLE'] as const) {
+  for (const v of VERDICTS) {
     const g = by(v)
     md.push(`| ${v} | ${g.length} | ${fmt(g.reduce((n, r) => n + r.sections, 0))} | ${fmt(g.reduce((n, r) => n + r.fts_rows, 0))} |`)
   }
   md.push('')
+  if (by('excluded-by-design').length) {
+    md.push('**The deliberate exclusions, with their reasons** — so that "nobody can reach this" and')
+    md.push('"nobody is meant to reach this" never again print the same word:')
+    md.push('')
+    for (const r of by('excluded-by-design')) {
+      md.push(`- \`${r.collection}\` (${fmt(r.sections)} sections) — ${EXCLUDED_BY_DESIGN[r.collection]}`)
+    }
+    md.push('')
+  }
 
   // ── the named suspects ──
   md.push('## The named suspects, individually')
@@ -569,7 +611,7 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
 
   fs.writeFileSync(path.join(DOCS, 'CORPUS_REACHABILITY.md'), md.join('\n'))
   console.log(`\n[reachability] wrote docs/CORPUS_REACHABILITY.md and docs/corpus_reachability.json`)
-  console.log(`[reachability] ${rows.length} collections · reachable ${by('reachable').length} · tier-only ${by('tier-only').length} · keyword-only ${by('keyword-only').length} · UNREACHABLE ${by('UNREACHABLE').length}`)
+  console.log(`[reachability] ${rows.length} collections · ` + VERDICTS.map((v) => `${v} ${by(v).length}`).join(' · '))
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

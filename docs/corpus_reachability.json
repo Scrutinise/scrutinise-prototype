@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-09 21:43 UTC",
+  "generatedAt": "2026-08-10 00:23 UTC",
   "totals": {
     "collections": 70,
     "sections": 18383172,
     "fts_rows": 18166926,
-    "vec_rows": 22091900
+    "vec_rows": 22151900
   },
   "streams": [
     "legislation",
@@ -155,7 +155,7 @@
       "sections": 344773,
       "compiled": 323922,
       "fts_rows": 323922,
-      "vec_rows": 331924,
+      "vec_rows": 391924,
       "index_tiers": {
         "parliamentary": 323922
       },
@@ -277,14 +277,16 @@
       },
       "tier": "other",
       "tier_split": false,
-      "types": [],
-      "type_null": true,
-      "router_stream": "NONE",
+      "types": [
+        "GUIDANCE"
+      ],
+      "type_null": false,
+      "router_stream": "guidance",
       "tier_scoped_callers": [],
       "gold_questions": 0,
       "gold_ids": [],
-      "verdict": "UNREACHABLE",
-      "note": "indexed and searchable, but corpusToType returns null so the FTS adapter drops every hit before any caller sees it"
+      "verdict": "reachable",
+      "note": null
     },
     {
       "collection": "et-decisions",
@@ -353,14 +355,20 @@
       },
       "tier": "legislation",
       "tier_split": false,
-      "types": [],
-      "type_null": true,
-      "router_stream": "NONE",
-      "tier_scoped_callers": [],
+      "types": [
+        "GUIDANCE"
+      ],
+      "type_null": false,
+      "router_stream": "legislation",
+      "tier_scoped_callers": [
+        "app/api/ai/[ideaId] (Lex chat grounding)",
+        "/api/ideas/[id]/legislation-search (CreateIdea panel)",
+        "POST /api/search"
+      ],
       "gold_questions": 0,
       "gold_ids": [],
-      "verdict": "UNREACHABLE",
-      "note": "indexed and searchable, but corpusToType returns null so the FTS adapter drops every hit before any caller sees it"
+      "verdict": "reachable",
+      "note": null
     },
     {
       "collection": "explanatory-notes",
@@ -375,10 +383,16 @@
       },
       "tier": "legislation",
       "tier_split": false,
-      "types": [],
-      "type_null": true,
-      "router_stream": "NONE",
-      "tier_scoped_callers": [],
+      "types": [
+        "GUIDANCE"
+      ],
+      "type_null": false,
+      "router_stream": "legislation",
+      "tier_scoped_callers": [
+        "app/api/ai/[ideaId] (Lex chat grounding)",
+        "/api/ideas/[id]/legislation-search (CreateIdea panel)",
+        "POST /api/search"
+      ],
       "gold_questions": 4,
       "gold_ids": [
         "D2",
@@ -386,8 +400,8 @@
         "E3",
         "F3"
       ],
-      "verdict": "UNREACHABLE",
-      "note": "indexed and searchable, but corpusToType returns null so the FTS adapter drops every hit before any caller sees it"
+      "verdict": "reachable",
+      "note": null
     },
     {
       "collection": "fca-handbook",
@@ -851,8 +865,8 @@
       "tier_scoped_callers": [],
       "gold_questions": 0,
       "gold_ids": [],
-      "verdict": "UNREACHABLE",
-      "note": "indexed and searchable, but corpusToType returns null so the FTS adapter drops every hit before any caller sees it"
+      "verdict": "excluded-by-design",
+      "note": "DELIBERATE: political-risk / people-graph input, not general search (SEARCH_STRATEGY.md §3.1)"
     },
     {
       "collection": "nao-reports",
@@ -2046,7 +2060,7 @@
         "scottish-parliament-or": 1
       },
       "inStreamKeyHits": 0,
-      "inStreamTop": 0,
+      "inStreamTop": 1,
       "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
       "undeliverableFrom": [],
@@ -2339,11 +2353,9 @@
       },
       "inStreamKeyHits": 0,
       "inStreamTop": 0,
-      "undeliverableKeyHits": 11,
+      "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
-      "undeliverableFrom": [
-        "explanatory-notes"
-      ],
+      "undeliverableFrom": [],
       "unroutableFrom": [],
       "outcome": "no-router-stream"
     },
@@ -2365,11 +2377,9 @@
       },
       "inStreamKeyHits": 0,
       "inStreamTop": 0,
-      "undeliverableKeyHits": 12,
+      "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
-      "undeliverableFrom": [
-        "explanatory-notes"
-      ],
+      "undeliverableFrom": [],
       "unroutableFrom": [],
       "outcome": "no-router-stream"
     },
@@ -2525,11 +2535,9 @@
       },
       "inStreamKeyHits": 0,
       "inStreamTop": 0,
-      "undeliverableKeyHits": 13,
+      "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
-      "undeliverableFrom": [
-        "explanatory-notes"
-      ],
+      "undeliverableFrom": [],
       "unroutableFrom": [],
       "outcome": "off-stream"
     },
@@ -2692,11 +2700,9 @@
       },
       "inStreamKeyHits": 4,
       "inStreamTop": 13,
-      "undeliverableKeyHits": 1,
+      "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
-      "undeliverableFrom": [
-        "explanatory-notes"
-      ],
+      "undeliverableFrom": [],
       "unroutableFrom": [],
       "outcome": "ok"
     },
@@ -2779,7 +2785,7 @@
         "si-2010plus": 6
       },
       "inStreamKeyHits": 0,
-      "inStreamTop": 6,
+      "inStreamTop": 14,
       "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
       "undeliverableFrom": [],
