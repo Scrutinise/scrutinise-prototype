@@ -80,7 +80,12 @@ export interface StreamScope {
 
 export const STREAM_SCOPES: StreamScope[] = [
   { name: 'legislation', tier: 'legislation' },
-  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY },
+  // `scottish-parliament-or` — 1,044,188 sections, 86% of the whole reachability gap S2C measured.
+  // Same shape as erskine-may: already display-typed DEBATE, indexed under tier `other`, so no
+  // stream could select it. Added 2026-08-10 on Charlie's decision (S2C2 §3) and shipped WITH a
+  // before-and-after, not as a config line — it changes what the debates stream returns for every
+  // query. Contamination and latency numbers are in CHANGE_LOG 2026-08-10.
+  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY, extraCorpora: ['scottish-parliament-or'] },
   { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], corpora: COMMITTEE_CORPORA },
   { name: 'caselaw', tier: 'caselaw' },
   // `erskine-may` (1,873 indexed rows) is parliamentary PROCEDURE — what the House can and cannot
