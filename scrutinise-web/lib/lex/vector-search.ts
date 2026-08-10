@@ -14,7 +14,8 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import type { SearchResult } from './page1-config'
-import { corpusToType } from './corpus-type-map'
+import { corpusToType, corpusDisplayName } from './corpus-type-map'
+import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
 
 interface VecHit { id: string; corpus: string; tier: string; score: number; snippet: string }
 
@@ -119,7 +120,13 @@ export async function runVectorSearch(
     if (!typed.length) return { results: [] }
 
     const ids = typed.map((x) => x.h.id)
-    const gids = Array.from(new Set(typed.map((x) => gidFromId(x.h.id)).filter((g): g is string => !!g)))
+    // Same two-source union as fts-search.ts, and for the same reason: the dense path is LIVE on
+    // the legislation stream (LEX_VECTOR_STREAMS=legislation), so an annotation found by the ANN
+    // half must not be titled differently from the same row found by BM25.
+    const gids = Array.from(new Set([
+      ...typed.map((x) => gidFromId(x.h.id)),
+      ...typed.map((x) => (isAnnotationCorpus(x.h.corpus) ? annotatedGidFromId(x.h.id) : null)),
+    ].filter((g): g is string => !!g)))
     const [hydrateRows, actRows] = await Promise.all([
       prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null }>>`
         SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"
@@ -152,8 +159,13 @@ export async function runVectorSearch(
         title = act
         const abbr = refToCitation(ref)
         citation = abbr ? `${act}, ${abbr}` : act
+      } else if (isAnnotationCorpus(h.corpus)) {
+        const annGid = annotatedGidFromId(h.id)
+        const named = annotationTitle(h.corpus, annGid ? actTitle.get(annGid) : null, meta?.sectionTitle ?? corpusDisplayName(h.corpus))
+        title = named.title
+        citation = named.citation
       } else {
-        title = meta?.sectionTitle ?? h.corpus
+        title = meta?.sectionTitle ?? corpusDisplayName(h.corpus)
         citation = meta?.sectionTitle ?? ''
       }
       const url = meta?.sourceUrl ?? (isLeg && gid ? legislationUrl(gid, ref) : '')

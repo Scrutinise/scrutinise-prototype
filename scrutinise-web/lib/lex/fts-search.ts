@@ -21,7 +21,8 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { flagEnabled } from '@/lib/env-flags'
 import type { SearchResult } from './page1-config'
-import { corpusToType } from './corpus-type-map'
+import { corpusToType, corpusDisplayName } from './corpus-type-map'
+import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
 import { runStubSearch } from './search-stub'
 
 // Native shape returned by fts-query-service.ts (body stripped on the wire).
@@ -184,7 +185,15 @@ export async function runFtsSearch(
     if (!typed.length) return { results: [] }
 
     const ids = typed.map((x) => x.h.id)
-    const gids = Array.from(new Set(typed.map((x) => gidFromId(x.h.id)).filter((g): g is string => !!g)))
+    // Two sources of gid, kept apart on purpose. `gidFromId` reads segment 1 and is what every
+    // ordinary legislation result uses; `annotatedGidFromId` reads segment 2 and fires ONLY for
+    // the annotation corpora (S2C2 §2). They are unioned for the single batched title lookup, so
+    // the extra titles cost no extra round-trip — but the two are consumed by different branches
+    // below, and an annotation never takes the `isLeg` path.
+    const gids = Array.from(new Set([
+      ...typed.map((x) => gidFromId(x.h.id)),
+      ...typed.map((x) => (isAnnotationCorpus(x.h.corpus) ? annotatedGidFromId(x.h.id) : null)),
+    ].filter((g): g is string => !!g)))
 
     // ONE batched hydrate (url + date) + the legislation act-title lookup.
     const [hydrateRows, actRows] = await Promise.all([
@@ -221,8 +230,15 @@ export async function runFtsSearch(
         title = act
         const abbr = refToCitation(ref)
         citation = abbr ? `${act}, ${abbr}` : act
+      } else if (isAnnotationCorpus(h.corpus)) {
+        // Name the Act the note explains, not the gid. Falls back to what this branch would
+        // otherwise have produced, so an unresolved gid costs nothing.
+        const annGid = annotatedGidFromId(h.id)
+        const named = annotationTitle(h.corpus, annGid ? actTitle.get(annGid) : null, h.sectionTitle ?? corpusDisplayName(h.corpus))
+        title = named.title
+        citation = named.citation
       } else {
-        title = h.sectionTitle ?? h.corpus
+        title = h.sectionTitle ?? corpusDisplayName(h.corpus)
         citation = h.sectionTitle ?? ''
       }
 
