@@ -378,6 +378,18 @@ export type SearchResultType =
   | 'EU_LEGISLATION' // retained-eu + eur-lex (operative law, neither Act nor SI)
   | 'BILL'           // bills-api (pre-enactment)
   | 'TREATY'         // uk-treaties + tax-treaties-dta
+  // Tenth type (Charlie, 2026-08-10, BRIEF_SEARCH_S2C2 §1). explanatory-notes +
+  // explanatory-memoranda — the departmental statement of what a provision was FOR, laid
+  // alongside an Act or SI. S2C typed them GUIDANCE as an interim and said so; the reason that
+  // could not stand is that "Guidance & regulators" tells a reader they are looking at a
+  // regulator's soft law when they are looking at a statement of legislative intent. Presenting
+  // one evidentiary class in another's costume is a correctness error in a product whose claim
+  // is knowing exactly what the corpus says.
+  // ⚠ NOT a legislation type, and that is load-bearing rather than tidy: `isLeg` in
+  // fts-search.ts / vector-search.ts rewrites the title to the Act's and the URL to a
+  // legislation.gov.uk PROVISION link, which would render an annotation as enacted text — a
+  // worse error than the one this type fixes. `check:corpus-types` asserts it stays out.
+  | 'EXPLANATORY_NOTE'
 
 export interface SearchResult {
   id: string

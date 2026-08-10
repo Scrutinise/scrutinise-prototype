@@ -86,28 +86,26 @@ function doctypeFromGid(id: string): string | null {
 // tier switch because the override runs BEFORE it and so does not depend on the tier the
 // index happens to carry — which is precisely what went wrong with erskine-may.
 //
-//   - explanatory-notes / explanatory-memoranda → GUIDANCE. The plain-English statements of
-//     what a provision was FOR, published alongside Acts and SIs. They sit under the
-//     `legislation` tier in the index, and the `legislation` router stream selects that tier
-//     with no type filter, so typing them non-null is the whole fix: a query about an Act can
-//     now surface the note explaining it. ⚠ They are deliberately NOT typed as
+//   - explanatory-notes / explanatory-memoranda → EXPLANATORY_NOTE. The plain-English
+//     statements of what a provision was FOR, published alongside Acts and SIs. They sit under
+//     the `legislation` tier in the index, and the `legislation` router stream selects that tier
+//     with no type filter, so typing them non-null is the whole reachability fix: a query about
+//     an Act can now surface the note explaining it. ⚠ They are deliberately NOT typed as
 //     PRIMARY_LEGISLATION / STATUTORY_INSTRUMENT — those are `isLeg` in fts-search.ts and
 //     vector-search.ts, which rewrites the title to the Act's title and the URL to a
 //     legislation.gov.uk PROVISION link, i.e. it would present the annotation as the enacted
-//     text. GUIDANCE keeps the note's own title and its own `/notes` URL.
-//     ⚠ GUIDANCE IS AN INTERIM AND IS RECORDED AS ONE. The type's contract is "regulator +
-//     soft-law" and its panel label is "Guidance & regulators"; an explanatory note is
-//     departmental material laid alongside a Bill, not a regulator's. It is the least wrong
-//     of the nine existing types (official, non-binding, explanatory, and free of the isLeg
-//     rewrite), not a good fit. A tenth type — EXPLANATORY_NOTE — is proposed for Charlie in
-//     the S2C report; adding one silently would change every panel's grouping.
+//     text. `check:corpus-types` asserts that property so a later refactor cannot restore it.
+//     ⚠ THE INTERIM IS OVER. S2C typed these GUIDANCE and recorded it as the least-wrong of the
+//     nine types rather than a fit; Charlie approved the tenth type on 2026-08-10 (S2C2 §1) for
+//     the reason the interim note gave — "Guidance & regulators" tells a reader they have a
+//     regulator's soft law in front of them when they have a statement of legislative intent.
 //   - erskine-may → GUIDANCE. Parliamentary procedure: what the House can and cannot do with
 //     a proposal. Typing it is necessary but NOT sufficient — it carries tier `other`, which
 //     no stream selects, so stream-scopes.ts also lists it in the guidance stream's
 //     `extraCorpora`. See that file for why the tier cannot simply be corrected here.
 const CORPUS_DISPLAY_OVERRIDE: Record<string, SearchResultType> = {
-  'explanatory-notes': 'GUIDANCE',
-  'explanatory-memoranda': 'GUIDANCE',
+  'explanatory-notes': 'EXPLANATORY_NOTE',
+  'explanatory-memoranda': 'EXPLANATORY_NOTE',
   'erskine-may': 'GUIDANCE',
   'scottish-parliament-or': 'DEBATE',
   'early-day-motions': 'DEBATE',
@@ -119,6 +117,33 @@ const CORPUS_DISPLAY_OVERRIDE: Record<string, SearchResultType> = {
   'cps-guidance': 'GUIDANCE',
   'inquiry-evidence': 'GUIDANCE',
   'lgsco': 'GUIDANCE',
+}
+
+/**
+ * Last-resort display name for a collection, used when a row has no `sectionTitle` at all and
+ * the adapters would otherwise put the raw corpus KEY in front of a user.
+ *
+ * ⚠ ADDED FOR A CORRECTNESS REQUIREMENT, NOT FOR TIDINESS (S2C2 §3). A reader must be able to
+ * tell Holyrood from Westminster at a glance — someone reading a Scottish Parliament Official
+ * Report believing it to be a Commons debate is a worse outcome than never finding it. 1,043,264
+ * of the 1,044,188 `scottish-parliament-or` rows already carry a `sectionTitle` beginning
+ * "Scottish Parliament: …", so the requirement is met by the data for 99.91% of them; this closes
+ * the 924 that carry no title and would have rendered as the literal string
+ * `scottish-parliament-or`.
+ *
+ * Deliberately a NAMED map with no generic prettifier: a rule that turned any key into title case
+ * would silently rename 70 collections on the strength of a regex. Unnamed collections keep
+ * exactly the behaviour they have today.
+ */
+const CORPUS_DISPLAY_NAME: Record<string, string> = {
+  'scottish-parliament-or': 'Scottish Parliament — Official Report',
+  'explanatory-notes': 'Explanatory Notes',
+  'explanatory-memoranda': 'Explanatory Memorandum',
+  'erskine-may': 'Erskine May — parliamentary procedure',
+}
+
+export function corpusDisplayName(corpus: string): string {
+  return CORPUS_DISPLAY_NAME[corpus] ?? corpus
 }
 
 /**

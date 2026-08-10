@@ -27,6 +27,13 @@ const TYPE_LABELS: Record<SearchResultType, string> = {
   PRIMARY_LEGISLATION: 'Primary legislation',
   STATUTORY_INSTRUMENT: 'Statutory instruments',
   EU_LEGISLATION: 'Retained EU law',
+  // Deliberately NOT "Explanatory notes". The heading has to do its work for a reader with no
+  // legal training, and to that reader "explanatory notes" is an unplaced term of art — it does
+  // not say whether they are about to read the law or something about the law. The function,
+  // stated plainly, does: what the law was FOR is self-evidently not the law itself. The term of
+  // art still appears, one line below, on every card ("Explanatory Notes — Building Safety Act
+  // 2022"), so nothing is lost for a reader who does know it.
+  EXPLANATORY_NOTE: 'What the law was for',
   DEBATE: 'Debates',
   COMMITTEE: 'Committee reports',
   CASE_LAW: 'Case law',
@@ -34,8 +41,14 @@ const TYPE_LABELS: Record<SearchResultType, string> = {
   TREATY: 'Treaties',
   GUIDANCE: 'Guidance & regulators',
 }
+// ⚠ A type missing from this array is INVISIBLE — line 112 renders `TYPE_ORDER.map(...)`, not
+// the results. It is a plain array, so tsc cannot catch an omission the way it catches one in
+// TYPE_LABELS above. `check:corpus-types` asserts the two agree.
+// EXPLANATORY_NOTE sits directly after the three law types because it annotates them: a reader
+// researching an Act wants the note explaining it next to the Act, not at the bottom with the
+// regulators.
 const TYPE_ORDER: SearchResultType[] = [
-  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION',
+  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION', 'EXPLANATORY_NOTE',
   'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 

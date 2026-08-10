@@ -31,6 +31,10 @@ const TYPE_LABEL: Record<SearchResultType, string> = {
   GUIDANCE: 'Guidance',
   BILL: 'Bill',
   TREATY: 'Treaty',
+  // A badge, not a heading — it sits inline beside a title that already reads "Explanatory Notes
+  // — {Act}", so here the term of art is the clearest thing it can say. The plain-English gloss
+  // ("What the law was for") belongs on the panel heading, which has no card title under it.
+  EXPLANATORY_NOTE: 'Explanatory note',
 }
 
 interface Turn {

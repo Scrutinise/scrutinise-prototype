@@ -17,10 +17,15 @@ import { prisma } from '@/lib/prisma'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
 
+// ⚠ `Record<string, string>`, not `Record<SearchResultType, string>` — so tsc does NOT force a
+// new display type to be added here, and TYPE_ORDER below is a plain array for the same reason.
+// A type absent from both is silently missing from the stored briefing. `check:corpus-types`
+// asserts both against the live union; keep them in step with BackgroundPanel.tsx.
 const TYPE_LABELS: Record<string, string> = {
   PRIMARY_LEGISLATION: 'Primary legislation',
   STATUTORY_INSTRUMENT: 'Statutory instruments',
   EU_LEGISLATION: 'Retained EU law',
+  EXPLANATORY_NOTE: 'What the law was for',
   DEBATE: 'Debates',
   COMMITTEE: 'Committee reports',
   CASE_LAW: 'Case law',
@@ -29,7 +34,7 @@ const TYPE_LABELS: Record<string, string> = {
   GUIDANCE: 'Guidance & regulators',
 }
 const TYPE_ORDER = [
-  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION',
+  'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION', 'EXPLANATORY_NOTE',
   'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 
