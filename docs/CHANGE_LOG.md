@@ -111,6 +111,159 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH Stage 2C-3 — Bills become findable AND legible, and the last 0.92% is disposed of by name (2026-08-10 20:42 UTC)
+
+Executes `docs/BRIEF_SEARCH_S2C3.md` §1, §2 and §3 in full. **§4 still NOT run — see the gate
+section below, which is the most important part of this entry.** `tsc` + `next build` clean.
+**`check:corpus-types` 69/69 → 111/111**, mutation-tested against a broken tree (4 planted defects,
+4 caught). `check:annotation-titles` 15/15, `check:stream-coverage` 3/3 live, `check:score-scope`
+36/36, `check:flags` 50/50, `check:llm-guards` 9/9.
+
+**Reachable 99.08% → 99.12%.** What is left outside retrieval is **0.88%**, and none of it is now
+an unexplained residual: 110,266 sections deferred to the position graph, 48,883 deferred pending
+the reranker, 3,448 excluded by design.
+
+### ⚠ THE GATE: the embed FINISHED, and §4 is still not runnable. Read this first.
+
+`v33-vec-catchup.ts --embed` **completed at 16:33 UTC today** — 129/129 shards, **768,085 vectors,
+0 misses, $36.51**, `corpus_vec` now 22,607,985 rows. The process was gone when this session
+started, which is why it was checked rather than assumed.
+
+**But Gate 2 protects "do not measure across an index change", and the index change is only half
+done.** Two facts, both read from live services rather than inferred:
+
+1. **The ANN index has not been rebuilt.** The embed's own closing line says so
+   (`INGEST_PLAYBOOK §20`): without it every query brute-force scans the new fragments forever.
+2. **`vector-serve` has been up since `2026-08-07T12:59:32Z`** (`/stats`, `started_at`) — it calls
+   `openTable()` once at boot with no `readConsistencyInterval`, so it holds a **three-day-old
+   snapshot that contains none of the 768,085 new vectors.**
+
+So a benchmark run now would measure the *old* vector index while looking perfectly stable and
+reproducible — a worse failure than measuring across a running embed, because nothing about it
+would look wrong. **§4 remains blocked, and the block is now one command plus a restart:**
+
+```
+tsx scripts/ops/heavy-job/run.ts run vector-reindex   # already registered; 32 GB class, never Railway
+# then restart vector-serve — openTable() is called once at boot
+```
+
+Not run here: it is production index surgery on rented infrastructure, and V33's embed is the
+ingest thread's lane. Flagged rather than assumed to be search's call.
+
+### §1 — `bills-api` into the legislation stream, and the ingest defect underneath it
+
+**Stream: legislation, via `extraCorpora`.** The reasoning is about the question, not the rows:
+someone asking "what does the law say about X" is asking something a Bill can answer — "one has
+already been introduced and it is at committee stage" changes what a reformer does next more than
+almost anything else the corpus holds. ⚠ `bills-api` **stays** in `NON_DEBATE_PARLIAMENTARY`, and
+that is not a contradiction: it excludes it from the DEBATES stream, which remains right (a bill
+publication PDF is not a debate) and was belt-and-braces anyway, since debates also filters
+`types: ['DEBATE']` and a Bill types BILL.
+
+⚠ **THE COLLECTION WAS UNUSABLE AS STORED, AND THE BRIEF'S OWN REQUIREMENTS COULD NOT BE MET
+WITHOUT FIXING IT.** The brief asked for the stage to be surfaced. The stored rows carried:
+
+| field | as stored |
+|---|---|
+| `sectionTitle` | `Bill 2518 — publication 17` — an internal numeric id and an ordinal |
+| `itemDate` | **null on all 6,574 rows** |
+| stage | absent entirely — 0 rows |
+
+All of it was on the wire and none was kept: `listBillsPage` read `shortTitle` and dropped it,
+`listBillPdfs` returned `title`/`publicationType` which the enqueue step discarded, and
+`processBills` wrote the ordinal title. **Nothing is wrong with the corpus** — the bodies are the
+real bill PDFs, correctly extracted — only with its identifying metadata.
+
+**Fixed at source: `v34-bills-metadata.ts`.** 4,035 bills swept from the public API (41 paged
+requests at the seed-rate-limits interval), joined on `parentDocId`, which already held the billId.
+**Predicted 6,574 rows updated, 0 unmatched; actual 6,574 and 0** — and afterwards 0 still ordinal,
+0 still undated. Dry-run by default so the prediction was recorded before the write; idempotent by
+construction (absolute values from the API), which is how it was safely re-run after the title fix
+below. Neon confirmed by a `whichdb`-style check before writing, per §16.
+
+⚠ **THE FTS INDEX STILL CARRIES THE OLD TITLES**, and `fts-search.ts` reads the title off the FTS
+hit while the dense path hydrates from Neon — so the same Bill would have been titled differently
+depending on which retriever found it. New `dbTitleSupersedesIndex()` names the collections whose
+Neon title wins, and the hydrate query gained one column. **An explicit list, never "always prefer
+the DB"**: that would silently re-title any collection where the two have drifted, which is exactly
+the byte-identity guarantee `check:annotation-titles` exists to hold. Remove the entry after the
+next full FTS rebuild.
+
+⚠ **A DEFECT MEASUREMENT FOUND AND REASONING MISSED.** The first run rendered
+`Leasehold Reform (Ground Rent) Act 2022 — became an Act`, typed BILL — **only 2 of 15 distinct
+Bill titles contained the word "Bill"**, because once a Bill receives Royal Assent the API's
+`shortTitle` becomes the *Act's* name. That is the brief's own requirement failing in the direction
+nobody was watching: not "a Bill mistaken for an Act" but **"a bill publication PDF wearing the
+title of the Act it became"**. A `Bill papers, ` marker is now added whenever the name does not
+already carry the word, and the check asserts it for every status shape. **15/15 after the fix.**
+
+**Measured, before and after** (before = the legislation main leg alone, reproduced from the live
+`StreamScope`):
+
+- **Gold (16 legislation-stream questions): 16/46 keys → 16/46. No answer key stopped being
+  satisfied.** ⚠ Adapter haystack, not the body the gold harness reads from Lance — **not
+  comparable with the gold reports**, only with each other.
+- **Contamination: 0/120 top-20 slots (0.0%)** across 6 questions that plainly want *enacted* law,
+  **0 rows displaced**. Bills appeared on 1 of 16 gold questions (B3, 9/20) — a Bill-shaped
+  question, which is the intended behaviour rather than noise.
+- **Latency: p50 +23ms, p95 −149ms** — inside run-to-run noise, as the extra leg runs in parallel.
+- **Rendering: 15/15 carry the word "Bill", 15/15 carry a stage or status, 0/15 still ordinal**,
+  every one typed BILL.
+
+**The brief predicted no measurable movement and was right on gold, contamination and latency.**
+It was wrong — as was I — about the collection being ready to wire in at all.
+
+### §2 — EDMs and petitions: a third verdict, `deferred-to-graph`
+
+`early-day-motions` (60,737) and `petitions` (49,529) recorded as destined for the position graph
+rather than a retrieval stream: an EDM is thin as a document and dense as data — a named list of
+members endorsing a specific proposition on a date, with no inference required.
+
+⚠ **This registry is DOCUMENTATION, NOT ENFORCEMENT, and the check asserts the difference.**
+`EXCLUDED_BY_DESIGN` is consulted by `corpusToType` and makes a collection unreachable;
+`DEFERRED_TO_GRAPH` changes nothing at runtime — these keep their display type and their existing
+reachability. So the matrix's `note` for each one states **what retrieval still does with them**
+("still returned by the unrouted/fail-open path, as keyword-only"). A verdict that hid that would
+have traded one silent fact for another, which is the failure the verdict vocabulary was invented
+to stop.
+
+⚠ **The brief cites `POSITION_GRAPH_DESIGN.md §3`; that file is not in this repo** (the only graph
+document present is `docs/GRAPH_TIER1_REPORT.md`, the legislation citation graph — a different
+thing). Recorded as given rather than silently corrected or silently dropped, per §19.
+
+### §3 — the rest, deferred with a date on it
+
+New matrix section listing all nine with their sections and verdicts, **computed from the live
+table** so the figures cannot drift from the matrix they sit in: `cma-cases` 22,898, `ofgem` 17,161,
+`ofcom` 4,169, `uk-treaties` 3,264, `independent-reviews` 667, `tax-treaties-dta` 324,
+`cps-guidance` 270, `inquiry-evidence` 90, `lgsco` 40 — **48,883 sections total**. No action;
+revisit after the reranker decision.
+
+### The matrix now
+
+| | S2C2 | S2C3 |
+|---|---:|---:|
+| sections reachable | 18,214,001 (**99.08%**) | 18,220,575 (**99.12%**) |
+| collections reachable | 57 | **58** |
+| keyword-only | 12 | **9** (48,883 sections, 0.27%) |
+| deferred-to-graph | — | **2** (110,266 sections) |
+| excluded-by-design | 1 | 1 |
+| UNREACHABLE | 0 | 0 |
+
+### Reported, not fixed
+
+- **Bill URLs are API download endpoints** (`bills-api.parliament.uk/api/v1/Publications/…/Download`)
+  — a PDF download rather than a page about the Bill. `bills.parliament.uk/bills/{billId}` would be
+  the human page, and `parentDocId` holds the id; it **returned 403 to every probe from here**,
+  which per §0 and the known Cloudflare-blocks-us pattern is more likely a bot block than a wrong
+  URL. Not changed on an unverified premise — the current URL at least points at the exact document
+  ingested.
+- **`scripts/tsconfig.json` has 2 pre-existing type errors** (`ingest/graph/download-graph-sources.ts`,
+  `ops/heavy-job/run.ts`), confirmed present at HEAD with this sprint's changes stashed. Untouched
+  here; `scrutinise-web` — the project Vercel builds — is clean.
+
+---
+
 ## SEARCH Stage 2C-2 — the corpus reaches 99.08%, annotations stop wearing another class's costume, and a million Scottish sections ship with their before-and-after (2026-08-10 09:09 UTC)
 
 Executes `docs/BRIEF_SEARCH_S2C2.md` §1, §2 and §3 in full. **§4 NOT run: Gate 2 still closed.**

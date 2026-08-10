@@ -2,7 +2,66 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-10 09:09 UTC — ▼ **SEARCH STAGE 2C-2: THE CORPUS REACHES 99.08%, AND THE
+*Last updated: 2026-08-10 20:42 UTC — ▼ **SEARCH STAGE 2C-3: BILLS ARE FINDABLE AND LEGIBLE, AND
+THE LAST 0.92% IS DISPOSED OF BY NAME.** Executes `BRIEF_SEARCH_S2C3.md` §1/§2/§3 in full;
+**§4 STILL NOT RUN — read the gate note below, it has changed.** CHANGE_LOG (2026-08-10 20:42 UTC).
+`tsc` + `next build` clean; **`check:corpus-types` 69/69 → 111/111**, mutation-tested (4 planted
+defects, 4 caught); `check:annotation-titles` 15/15, `check:stream-coverage` 3/3 live,
+`check:score-scope` 36/36, `check:flags` 50/50, `check:llm-guards` 9/9.
+⚠⚠ **THE EMBED FINISHED — AND §4 IS STILL BLOCKED. THIS IS THE FIRST THING TO ACT ON.**
+`v33-vec-catchup.ts --embed` **completed 2026-08-10 16:33 UTC: 129/129 shards, 768,085 vectors, 0
+misses, $36.51**, `corpus_vec` 22,607,985 rows. **But Gate 2 protects "do not measure across an
+index change", and the change is HALF DONE:** (1) the **ANN index has not been rebuilt** (the
+embed's own closing line, INGEST_PLAYBOOK §20 — without it every query brute-force scans the new
+fragments forever); (2) **`vector-serve` has been up since 2026-08-07T12:59:32Z** (`/stats`
+`started_at`) and calls `openTable()` once at boot, so it is serving a **three-day-old snapshot
+containing NONE of the 768,085 new vectors.** A benchmark now would measure the OLD index while
+looking perfectly stable — worse than measuring across a running embed, because nothing would look
+wrong. **UNBLOCK = `tsx scripts/ops/heavy-job/run.ts run vector-reindex` (already registered, 32 GB
+class, never Railway) THEN restart `vector-serve`.** Not run here: production index surgery on
+rented infrastructure, and V33 is the ingest thread's lane.
+**REACHABLE 99.08% → 99.12%.** Outside retrieval is now **0.88%, none of it unexplained**: 110,266
+deferred-to-graph, 48,883 deferred pending the reranker, 3,448 excluded-by-design. keyword-only
+12 → **9 collections**.
+**§1 — `bills-api` (6,574) is in the LEGISLATION stream** via `extraCorpora` — a Bill answers "what
+does the law say about X" better than anything else when one already exists. ⚠ It STAYS in
+`NON_DEBATE_PARLIAMENTARY` (that excludes it from *debates*, still right, and belt-and-braces since
+debates filters `types:['DEBATE']`).
+⚠⚠ **THE COLLECTION WAS UNUSABLE AS STORED and the brief's own stage requirement could not be met
+without fixing ingest.** Titles were `Bill 2518 — publication 17`; **`itemDate` was null on all
+6,574 rows**; stage absent entirely. All of it was on the wire and none kept (`listBillsPage` read
+`shortTitle` and dropped it; `processBills` wrote the ordinal). **The corpus is fine — the bodies
+are the real bill PDFs — only the identifying metadata was lost.** New `v34-bills-metadata.ts`
+sweeps 4,035 bills from the API and joins on `parentDocId`: **predicted 6,574 rows/0 unmatched,
+actual 6,574/0**, and 0 still ordinal, 0 still undated. Dry-run default, idempotent, Neon confirmed
+before writing.
+⚠ **The FTS index still carries the OLD titles** (`fts-search.ts` reads the title off the FTS hit;
+the dense path hydrates from Neon) — so new `dbTitleSupersedesIndex()` names the collections whose
+DB title wins. **An explicit list, never "always prefer the DB"**, which would break the S2C2
+byte-identity guarantee. Remove the entry after the next full FTS rebuild.
+⚠⚠ **A DEFECT MEASUREMENT FOUND AND REASONING MISSED: only 2/15 Bill titles contained the word
+"Bill"** — after Royal Assent the API's `shortTitle` becomes the ACT's name, so a bill publication
+PDF rendered as `Leasehold Reform (Ground Rent) Act 2022 — became an Act`, typed BILL. The brief's
+requirement failing in the direction nobody was watching. A `Bill papers, ` marker is added when the
+name lacks the word; **15/15 after the fix**, asserted for every status shape.
+**Measured**: gold **16/46 → 16/46, no key lost**; contamination **0/120 (0.0%)**, 0 displaced;
+latency **p50 +23ms, p95 −149ms** (noise). Bills appear on 1 of 16 gold questions (B3, 9/20) — a
+Bill-shaped question, i.e. intended. ⚠ Gold figures use the adapter haystack, **not comparable with
+the gold reports**.
+**§2 — new third verdict `deferred-to-graph`** for `early-day-motions` (60,737) + `petitions`
+(49,529). ⚠ **DOCUMENTATION, NOT ENFORCEMENT** — unlike `EXCLUDED_BY_DESIGN` it changes nothing at
+runtime, so each `note` states what retrieval still does with them ("still returned by the
+unrouted/fail-open path"). ⚠ The brief cites `POSITION_GRAPH_DESIGN.md §3`; **that file is not in
+this repo** — recorded as given rather than silently corrected (§19).
+**§3 — the remaining nine deferred WITH A DATE**, in a new matrix section computed from the live
+table: `cma-cases` 22,898, `ofgem` 17,161, `ofcom` 4,169, `uk-treaties` 3,264, `independent-reviews`
+667, `tax-treaties-dta` 324, `cps-guidance` 270, `inquiry-evidence` 90, `lgsco` 40 = **48,883**.
+⚠ **Reported not fixed:** Bill URLs are API *download* endpoints; `bills.parliament.uk/bills/{id}`
+would be the human page but **403s every probe from here** (likely a bot block, not a wrong URL —
+not changed on an unverified premise). `scripts/tsconfig.json` has **2 pre-existing type errors**,
+confirmed present at HEAD with this sprint stashed; `scrutinise-web` is clean.
+▼ Earlier:
+2026-08-10 09:09 UTC — ▼ **SEARCH STAGE 2C-2: THE CORPUS REACHES 99.08%, AND THE
 THREE DECISIONS 2C SURFACED ARE BUILT.** Executes `BRIEF_SEARCH_S2C2.md` §1/§2/§3 in full;
 **§4 NOT RUN — Gate 2 STILL closed**, §5 carried. CHANGE_LOG (2026-08-10 09:09 UTC). `tsc` +
 `next build` clean; **`check:corpus-types` 69/69** (was 30/30), new **`check:annotation-titles`

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-10 09:09 UTC",
+  "generatedAt": "2026-08-10 20:40 UTC",
   "totals": {
     "collections": 70,
     "sections": 18383172,
     "fts_rows": 18166926,
-    "vec_rows": 22331900
+    "vec_rows": 22607985
   },
   "streams": [
     "legislation",
@@ -31,12 +31,12 @@
         "BILL"
       ],
       "type_null": false,
-      "router_stream": "NONE",
+      "router_stream": "legislation",
       "tier_scoped_callers": [],
       "gold_questions": 0,
       "gold_ids": [],
-      "verdict": "keyword-only",
-      "note": "in a tier a stream owns, but excluded by that stream's corpus filter — surfaces only on the unrouted/fail-open path"
+      "verdict": "reachable",
+      "note": null
     },
     {
       "collection": "building-regs",
@@ -236,8 +236,8 @@
       "gold_ids": [
         "F4"
       ],
-      "verdict": "keyword-only",
-      "note": "indexed under tier \"other\", which no stream selects — surfaces only on the unrouted/fail-open path"
+      "verdict": "deferred-to-graph",
+      "note": "DESTINED FOR THE POSITION GRAPH, not a retrieval stream: a named list of members endorsing a proposition on a date — a high-confidence position-graph edge, not a document to retrieve and read. Retrieval status unchanged — still returned by the unrouted/fail-open path, as keyword-only."
     },
     {
       "collection": "echr-hudoc",
@@ -322,7 +322,7 @@
       "sections": 241571,
       "compiled": 241571,
       "fts_rows": 241571,
-      "vec_rows": 335477,
+      "vec_rows": 492152,
       "index_tiers": {
         "legislation": 241571
       },
@@ -350,7 +350,7 @@
       "sections": 27428,
       "compiled": 21984,
       "fts_rows": 21984,
-      "vec_rows": 22022,
+      "vec_rows": 39855,
       "index_tiers": {
         "legislation": 21984
       },
@@ -378,7 +378,7 @@
       "sections": 18801,
       "compiled": 18651,
       "fts_rows": 18651,
-      "vec_rows": 2965,
+      "vec_rows": 22517,
       "index_tiers": {
         "legislation": 18651
       },
@@ -590,7 +590,7 @@
       "sections": 26591,
       "compiled": 26562,
       "fts_rows": 26562,
-      "vec_rows": 128800,
+      "vec_rows": 128822,
       "index_tiers": {
         "guidance": 26562
       },
@@ -832,7 +832,7 @@
       "sections": 40,
       "compiled": 40,
       "fts_rows": 40,
-      "vec_rows": 32,
+      "vec_rows": 80,
       "index_tiers": {
         "other": 40
       },
@@ -856,7 +856,7 @@
       "sections": 3448,
       "compiled": 3448,
       "fts_rows": 3448,
-      "vec_rows": 680,
+      "vec_rows": 3448,
       "index_tiers": {
         "other": 3448
       },
@@ -1029,7 +1029,7 @@
       "sections": 17161,
       "compiled": 17143,
       "fts_rows": 17143,
-      "vec_rows": 57999,
+      "vec_rows": 58000,
       "index_tiers": {
         "other": 17143
       },
@@ -1077,7 +1077,7 @@
       "sections": 328,
       "compiled": 328,
       "fts_rows": 328,
-      "vec_rows": 0,
+      "vec_rows": 381,
       "index_tiers": {
         "parliamentary": 328
       },
@@ -1101,7 +1101,7 @@
       "sections": 49529,
       "compiled": 49529,
       "fts_rows": 49529,
-      "vec_rows": 50254,
+      "vec_rows": 50301,
       "index_tiers": {
         "other": 49529
       },
@@ -1125,8 +1125,8 @@
         "F4",
         "F5"
       ],
-      "verdict": "keyword-only",
-      "note": "indexed under tier \"other\", which no stream selects — surfaces only on the unrouted/fail-open path"
+      "verdict": "deferred-to-graph",
+      "note": "DESTINED FOR THE POSITION GRAPH, not a retrieval stream: the same shape as an EDM but for public salience rather than parliamentary position. Retrieval status unchanged — still returned by the unrouted/fail-open path, as keyword-only."
     },
     {
       "collection": "planning-policy",
@@ -1159,7 +1159,7 @@
       "sections": 145767,
       "compiled": 145704,
       "fts_rows": 145704,
-      "vec_rows": 148934,
+      "vec_rows": 148935,
       "index_tiers": {
         "legislation": 145704
       },
@@ -1194,7 +1194,7 @@
       "sections": 172995,
       "compiled": 165438,
       "fts_rows": 165438,
-      "vec_rows": 171636,
+      "vec_rows": 171637,
       "index_tiers": {
         "legislation": 165438
       },
@@ -1226,7 +1226,7 @@
       "sections": 6391345,
       "compiled": 6387304,
       "fts_rows": 6387314,
-      "vec_rows": 7092149,
+      "vec_rows": 7102074,
       "index_tiers": {
         "parliamentary": 6387314
       },
@@ -1268,7 +1268,7 @@
       "sections": 754546,
       "compiled": 752805,
       "fts_rows": 752809,
-      "vec_rows": 936642,
+      "vec_rows": 940041,
       "index_tiers": {
         "parliamentary": 752809
       },
@@ -1304,7 +1304,7 @@
       "sections": 21463,
       "compiled": 20932,
       "fts_rows": 20932,
-      "vec_rows": 27972,
+      "vec_rows": 28160,
       "index_tiers": {
         "parliamentary": 20932
       },
@@ -1330,7 +1330,7 @@
       "sections": 176099,
       "compiled": 175560,
       "fts_rows": 175560,
-      "vec_rows": 175823,
+      "vec_rows": 177208,
       "index_tiers": {
         "parliamentary": 175560
       },
@@ -1366,7 +1366,7 @@
       "sections": 240582,
       "compiled": 239262,
       "fts_rows": 239263,
-      "vec_rows": 315515,
+      "vec_rows": 316710,
       "index_tiers": {
         "parliamentary": 239263
       },
@@ -1402,7 +1402,7 @@
       "sections": 24962,
       "compiled": 23863,
       "fts_rows": 23863,
-      "vec_rows": 31329,
+      "vec_rows": 31508,
       "index_tiers": {
         "parliamentary": 23863
       },
@@ -1429,7 +1429,7 @@
       "sections": 1235159,
       "compiled": 1232894,
       "fts_rows": 1232894,
-      "vec_rows": 1241981,
+      "vec_rows": 1247557,
       "index_tiers": {
         "parliamentary": 1232894
       },
@@ -1472,7 +1472,7 @@
       "sections": 171190,
       "compiled": 171030,
       "fts_rows": 171030,
-      "vec_rows": 609759,
+      "vec_rows": 610006,
       "index_tiers": {
         "guidance": 171030
       },
@@ -1610,7 +1610,7 @@
       "sections": 1044188,
       "compiled": 1043264,
       "fts_rows": 1043264,
-      "vec_rows": 1074340,
+      "vec_rows": 1074786,
       "index_tiers": {
         "other": 1043264
       },
@@ -1688,7 +1688,7 @@
       "sections": 281244,
       "compiled": 270339,
       "fts_rows": 270339,
-      "vec_rows": 286945,
+      "vec_rows": 286946,
       "index_tiers": {
         "legislation": 270339
       },
@@ -1848,7 +1848,7 @@
       "sections": 23372,
       "compiled": 23372,
       "fts_rows": 23372,
-      "vec_rows": 0,
+      "vec_rows": 56215,
       "index_tiers": {
         "parliamentary": 23372
       },
@@ -2218,11 +2218,9 @@
       "inStreamKeyHits": 0,
       "inStreamTop": 0,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 2,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "off-stream"
     },
     {
@@ -2276,11 +2274,9 @@
       "inStreamKeyHits": 0,
       "inStreamTop": 0,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 1,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "off-stream"
     },
     {
@@ -2308,11 +2304,9 @@
       "inStreamKeyHits": 1,
       "inStreamTop": 1,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 1,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2511,11 +2505,9 @@
       "inStreamKeyHits": 20,
       "inStreamTop": 17,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 2,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2575,11 +2567,9 @@
       "inStreamKeyHits": 12,
       "inStreamTop": 17,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 1,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2635,11 +2625,9 @@
       "inStreamKeyHits": 32,
       "inStreamTop": 16,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 8,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2670,11 +2658,9 @@
       "inStreamKeyHits": 15,
       "inStreamTop": 14,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 1,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2737,12 +2723,9 @@
       "inStreamKeyHits": 16,
       "inStreamTop": 18,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 2,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "early-day-motions",
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2766,11 +2749,9 @@
       "inStreamKeyHits": 9,
       "inStreamTop": 12,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 3,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "petitions"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
