@@ -21,6 +21,7 @@ import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, VECTOR_WEIGHT } from './fusion'
 import { interleaveStreams } from './interleave'
+import { sortByScore } from './score-scope'
 import { STREAM_SCOPES, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
 
@@ -42,6 +43,51 @@ function ftsStream(tier: string, types?: SearchResultType[], corpora?: string[],
     const { results } = await runFtsSearch([query], limit, { tier, corpora, excludeCorpora })
     return types ? results.filter((r) => types.includes(r.type)) : results
   }
+}
+
+/** corpus_sections ids are `{corpus}:{…}` — the collection is the first segment. */
+function corpusOf(id: string): string { return id.split(':')[0] }
+
+/**
+ * The EXTRA LEG: a corpus-only retrieval for collections a stream owns that do not sit under its
+ * tier in the built index (stream-scopes.ts `extraCorpora`, which explains why that happens).
+ *
+ * ⚠ THE SERVICE-SIDE CORPUS FILTER IS NOT TRUSTED HERE, and this is the one place that matters.
+ * Both fts-search.ts and vector-search.ts DEGRADE rather than fail when the service does not
+ * honour `corpora` — correct for the main leg, where an unhonoured corpus filter still leaves the
+ * tier prefilter and the `types` backstop standing. This leg passes NO tier, and `guidance` has no
+ * `types`, so a service that ignored `corpora` would return the whole 18.4M-row index as if it
+ * were 1,873 rows of Erskine May. So the collection is re-checked off the id, client-side, where
+ * no deploy skew can reach it. It costs one string split per hit.
+ */
+function extraLeg(
+  fetchLeg: (scope: { corpora: string[] }) => Promise<SearchResult[]>,
+  extraCorpora: string[],
+  types?: SearchResultType[],
+) {
+  return async (): Promise<SearchResult[]> => {
+    const results = await fetchLeg({ corpora: extraCorpora })
+    const scoped = results.filter((r) => extraCorpora.includes(corpusOf(r.id)))
+    if (scoped.length !== results.length) {
+      console.warn(`[query-router] extra leg: dropped ${results.length - scoped.length} of ${results.length} out-of-scope hits — the service did not honour corpora=${JSON.stringify(extraCorpora)}; redeploy it`)
+    }
+    return types ? scoped.filter((r) => types.includes(r.type)) : scoped
+  }
+}
+
+/**
+ * Merge the main leg with the extra leg into one ranking.
+ *
+ * Safe to order by score because both legs come from the SAME scorer: either both raw BM25 from
+ * the same index (so the same IDF statistics — a prefilter selects rows, it does not rescore
+ * them), or both RRF, because `fusedStream` fuses each leg before this runs. `sortByScore`
+ * asserts exactly that and throws if it is ever untrue, which is the whole point of it existing
+ * (score-scope.ts). The two legs are disjoint by construction — `extraCorpora` names collections
+ * outside the stream's tier — so no de-duplication is needed and none is done silently.
+ */
+function mergeLegs(main: SearchResult[], extra: SearchResult[], label: string, limit: number): SearchResult[] {
+  if (!extra.length) return main
+  return sortByScore([...main, ...extra], label).slice(0, Math.max(limit, main.length))
 }
 
 // ── per-stream dense retrieval (LEX_VECTOR_STREAMS) ───────────────────────────
@@ -89,23 +135,48 @@ export function perStreamVectorActive(): boolean {
  * list, so the dense half would contribute Hansard to a committees result and the weighting
  * would make it look deliberate. Committee content is 1.17% of the parliamentary tier, so an
  * unscoped dense half is ~99% out-of-stream by construction.
+ *
+ * ⚠ MERGE FIRST, FUSE ONCE (S2C). With `extraCorpora` a stream has TWO retrieval legs, and the
+ * obvious shape — fuse each leg against its own dense half, then merge — is wrong: whenever one
+ * leg's dense half comes back empty and the other's does not, the merge would compare an RRF
+ * score (~0.01) with a BM25 score (~5–25), which is the exact defect S2B deleted from
+ * `groupForPanel`, rebuilt one function lower down. So the two BM25 legs are merged into one BM25
+ * ranking and the two dense legs into one dense ranking, and fusion happens once, over both. The
+ * result is what a single query over the union of the scopes would have produced, and every list
+ * that reaches `sortByScore` carries one scorer by construction rather than by luck.
  */
-function fusedStream(name: string, tier: string, types?: SearchResultType[], corpora?: string[], excludeCorpora?: string[]) {
+function fusedStream(name: string, tier: string, types?: SearchResultType[], corpora?: string[], excludeCorpora?: string[], extraCorpora?: string[]) {
   const bm25Only = ftsStream(tier, types, corpora, excludeCorpora)
+  const hasExtra = !!extraCorpora?.length
   return async (query: string, limit: number): Promise<SearchResult[]> => {
+    const extraFts = hasExtra
+      ? extraLeg(async (scope) => (await runFtsSearch([query], limit, scope)).results, extraCorpora!, types)()
+      : Promise.resolve([] as SearchResult[])
+
     // Keyed on the STREAM NAME, not the tier. `debates` and `committees` both sit on the
     // `parliamentary` tier and are separated downstream by display type, so a tier-keyed flag
     // could not enable one without the other — and the two streams have entirely different
     // evidence behind them. Name-keying keeps the blast radius one stream wide.
-    if (!vectorStreams().has(name)) return bm25Only(query, limit)
-    const [bm25, dense] = await Promise.all([
+    if (!vectorStreams().has(name)) {
+      const [main, extra] = await Promise.all([bm25Only(query, limit), extraFts])
+      return mergeLegs(main, extra, `${name} bm25 legs`, limit)
+    }
+
+    const [mainB, denseMain, extraB, extraV] = await Promise.all([
       bm25Only(query, limit),
       runVectorSearch([query], limit, { tier, corpora, excludeCorpora }).catch(() => ({ results: [] as SearchResult[] })),
+      extraFts,
+      hasExtra
+        ? extraLeg(async (scope) => (await runVectorSearch([query], limit, scope).catch(() => ({ results: [] as SearchResult[] }))).results, extraCorpora!, types)()
+        : Promise.resolve([] as SearchResult[]),
     ])
-    const vec = types ? dense.results.filter((r) => types.includes(r.type)) : dense.results
+    const denseScoped = types ? denseMain.results.filter((r) => types.includes(r.type)) : denseMain.results
+
+    const bm25 = mergeLegs(mainB, extraB, `${name} bm25 legs`, limit)
+    const vec = mergeLegs(denseScoped, extraV, `${name} vector legs`, limit)
     if (!vec.length) return bm25
     const fused = fuseWeightedRrf(vec, bm25).slice(0, Math.max(limit, bm25.length))
-    console.log('[query-router] per-stream fusion', { stream: name, tier, corpora: corpora ?? null, bm25: bm25.length, vector: vec.length, fused: fused.length, weight: VECTOR_WEIGHT })
+    console.log('[query-router] per-stream fusion', { stream: name, tier, corpora: corpora ?? null, extraCorpora: extraCorpora ?? null, bm25: bm25.length, vector: vec.length, fused: fused.length, weight: VECTOR_WEIGHT })
     return fused
   }
 }
@@ -119,7 +190,7 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
 // is code and stays here.
 export const STREAMS: StreamConfig[] = STREAM_SCOPES.map((s) => ({
   ...s,
-  search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora),
+  search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora, s.extraCorpora),
 }))
 
 /** What a routed search produced, per stream, before and after interleaving. The gateway

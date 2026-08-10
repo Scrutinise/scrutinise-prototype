@@ -58,6 +58,24 @@ export interface StreamScope {
   corpora?: string[]
   /** Server-side corpus prefilter, complement form — "the rest of the tier". */
   excludeCorpora?: string[]
+  /**
+   * Collections this stream also retrieves that DO NOT sit under its `tier` in the built index.
+   * Retrieved by a SECOND, corpus-only prefiltered call, merged with the main leg (query-router.ts).
+   *
+   * ⚠ WHY THIS AXIS HAS TO EXIST, and why it is not just a bad tier map. The tier is BAKED INTO
+   * THE INDEX at build time and the server-side prefilter matches against the index, not against
+   * `tierFor()` as it reads today. So a collection seeded after the tier map last covered it
+   * carries `other` in the index forever, and no stream can select it however the map is edited —
+   * only a full reindex moves it. `CORPUS_DISPLAY_OVERRIDE` in corpus-type-map.ts already corrects
+   * the same staleness on the *display type* axis; this is the same correction on the *prefilter*
+   * axis, and without it a display override produces a correctly-typed row that no stream can
+   * retrieve — which is exactly the state erskine-may was in.
+   *
+   * ⚠ KEEP IT SMALL, AND KEEP IT NAMED. Each entry costs one extra retrieval call on every query
+   * routed to that stream. It is a bridge to the next reindex, not a second way to define a
+   * stream: the durable fix is `tierFor()` plus a rebuild, after which the entry is deleted.
+   */
+  extraCorpora?: string[]
 }
 
 export const STREAM_SCOPES: StreamScope[] = [
@@ -65,18 +83,26 @@ export const STREAM_SCOPES: StreamScope[] = [
   { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY },
   { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], corpora: COMMITTEE_CORPORA },
   { name: 'caselaw', tier: 'caselaw' },
-  { name: 'guidance', tier: 'guidance' },
+  // `erskine-may` (1,873 indexed rows) is parliamentary PROCEDURE — what the House can and cannot
+  // do with a proposal — and answers a narrow but real class of question for someone trying to
+  // move one. It is indexed under tier `other`, so it joins here rather than through the tier.
+  // ⚠ `scottish-parliament-or` is the same shape at 550× the size (1,044,188 sections, 83% of the
+  // whole reachability gap) and is NOT listed: it is display-typed DEBATE, so it would join the
+  // debates stream, and changing what a million sections do to that stream's results is a
+  // measurement and a decision, not a line in a list. S2C reports it; Charlie decides it.
+  { name: 'guidance', tier: 'guidance', extraCorpora: ['erskine-may'] },
 ]
 
 /**
  * Could `stream` return a row of this corpus, sitting under this INDEXED tier, displayed as this
- * type? Pure set arithmetic over the scope — the same three filters the retrieval path applies,
- * in the same order:
- *   1. the server-side tier prefilter,
- *   2. the server-side corpus prefilter (include list or exclude list),
- *   3. the client-side display-type filter (`types`), which is the backstop in query-router.ts.
+ * type? Pure set arithmetic over the scope — the same filters the retrieval path applies, in the
+ * same order:
+ *   1. `extraCorpora` — the second, corpus-only leg, which skips the tier prefilter entirely,
+ *   2. the server-side tier prefilter,
+ *   3. the server-side corpus prefilter (include list or exclude list),
+ *   4. the client-side display-type filter (`types`), which is the backstop in query-router.ts.
  * A null `type` means the FTS adapter dropped the row before any stream saw it, so it is not
- * reachable by anything.
+ * reachable by anything — and that is checked first, because it is true of every stream at once.
  */
 export function streamCanSelect(
   scope: StreamScope,
@@ -85,6 +111,9 @@ export function streamCanSelect(
   type: SearchResultType | null,
 ): boolean {
   if (type === null) return false
+  // The extra leg is corpus-only: it does not pass `tier`, so the indexed tier is irrelevant to
+  // it. `types` still applies — it is a client-side filter over whatever both legs return.
+  if (scope.extraCorpora?.includes(corpus)) return !scope.types || scope.types.includes(type)
   if (indexedTier !== scope.tier) return false
   if (scope.corpora && !scope.corpora.includes(corpus)) return false
   if (scope.excludeCorpora && scope.excludeCorpora.includes(corpus)) return false

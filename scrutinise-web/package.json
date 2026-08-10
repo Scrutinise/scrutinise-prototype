@@ -23,7 +23,8 @@
     "check:legislation-guide": "tsx --env-file=.env scripts/check-legislation-guide.ts",
     "check:llm-guards": "tsx scripts/check-llm-guards.ts",
     "check:stream-coverage": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-stream-coverage.ts",
-    "check:score-scope": "tsx scripts/check-score-scope.ts"
+    "check:score-scope": "tsx scripts/check-score-scope.ts",
+    "check:corpus-types": "tsx scripts/check-corpus-types.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
