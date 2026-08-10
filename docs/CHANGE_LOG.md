@@ -111,6 +111,159 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH Stage 2C-2 — the corpus reaches 99.08%, annotations stop wearing another class's costume, and a million Scottish sections ship with their before-and-after (2026-08-10 09:09 UTC)
+
+Executes `docs/BRIEF_SEARCH_S2C2.md` §1, §2 and §3 in full. **§4 NOT run: Gate 2 still closed.**
+§5 carried. `tsc` + `next build` clean. **`check:corpus-types` 69/69** (was 30/30) and new
+**`check:annotation-titles` 15/15**, both mutation-tested against a deliberately broken tree —
+four planted defects, four caught, the right four. `check:stream-coverage` 3/3 live,
+`check:score-scope` 36/36, `check:flags` 50/50, `check:llm-guards` 9/9.
+
+**Headline: sections a router stream can select went 93.40% → 99.08%** (+1,044,188). What remains
+outside is **0.92%** — 169,171 sections across 13 collections, every one named below.
+
+### §1 — `EXPLANATORY_NOTE`, the tenth display type
+
+Approved on the reasoning S2C's interim note gave: labelling an explanatory note "Guidance &
+regulators" tells a reader they are looking at a regulator's soft law when they are looking at a
+statement of what Parliament meant a provision to do.
+
+**Panel label: "What the law was for"** — deliberately not "Explanatory notes". The heading has to
+work for a reader with no legal training, and to that reader "explanatory notes" is an unplaced
+term of art that does not say whether they are about to read the law or something *about* the law.
+The function, stated plainly, does. The term of art still appears one line below on every card
+("Explanatory Notes — Building Safety Act 2022"), so a reader who knows it loses nothing. The
+compact badge in general chat stays **"Explanatory note"**, where a title sits beside it already.
+Ordered directly after the three law types, because it annotates them.
+
+⚠ **The `isLeg` property is now asserted in both adapters, with the detector proven able to fail.**
+An annotation on that path would have its title rewritten to the Act's and its URL to a
+legislation.gov.uk *provision* link — rendering commentary as enacted text, a worse error than the
+one the type fixes.
+
+⚠ **A trap found while adding it, and fixed as a class.** `BackgroundPanel.tsx` renders
+`TYPE_ORDER.map(...)`, not the results — so a display type missing from that **array** renders
+NOWHERE, and the array is a plain list that tsc cannot check the way it checks the `Record` beside
+it. `build-initial-background.ts` is worse: even its map is `Record<string, string>`. The check now
+parses the live union out of `page1-config.ts` and asserts all three files cover it.
+
+**Panel mix, measured on the same five queries as S2C.** On the legislation stream alone: no change
+— and *saying why* is the point, because the number looks reassuring and is not. That stream
+returns only legislation-tier corpora, so the only thing that was ever GUIDANCE in it was the
+annotations themselves; nothing could be crowded out and the count could not move. The contention
+is in the **routed panel**, where the guidance stream contributes real regulator rows into the same
+≤3 bucket:
+
+| query | before annot / real guidance / total | after |
+|---|---|---|
+| Data Protection Act 2018 … automated decision making | 0 / 3 / 12 | **3 / 3 / 15** |
+| why was the Building Safety Act 2022 introduced | 2 / 1 / 6 | **3 / 3 / 9** |
+| explanatory note on the Online Safety Act duties of care | 2 / 1 / 3 | **3 / 3 / 6** |
+| what problem were the money laundering regulations meant to solve | 0 / 3 / 9 | **3 / 3 / 12** |
+| speed limit enforcement on motorways | 0 / 3 / 8 | **3 / 3 / 11** |
+
+Strictly additive on all five: +3 panel slots each, and neither side loses. On three of the five
+the annotations had been **entirely** crowded out of the shared bucket; on the other two they were
+crowding out real regulator guidance. Both directions were live.
+
+**The WHY/WHAT behaviour is now pinned.** New draft gold **EN1/EN2** in `gold-draft-streams.ts`
+(`DraftStream` gains `legislation`), read as a pair because either alone is satisfied by a system
+that is simply wrong in one direction — always rank notes first, or always drop them. Baseline:
+**EN1 2/2 keys, 20/20 annotations at ranks 1–20**; **EN2 1/2 keys, 0/20 annotations**.
+⚠ **EN2's answer key was rewritten before it shipped.** The first draft asserted "no annotation
+appears", which cannot be expressed in this harness: it asks "did any top-20 hit match", so a
+negative pattern is satisfied by any one non-matching hit and the question would have passed no
+matter how badly the law was buried. It now names the operative instruments — verified present in
+the corpus first (`primary-acts-pre-2000:ukpga/1984/27:section-86`, `uksi/2014/3552`), not recalled
+from memory and not reverse-engineered from what the system returns, which would have made it
+circular. EN2's second key is a plain retrieval miss unrelated to annotations, so the check asserts
+≥1, not 2/2 — a check that fails for the wrong reason is worse than no check.
+
+### §2 — annotations name the Act, not the gid
+
+`Explanatory Notes: ukpga/2022/30 — Article 50 (30)` now reads
+**`Explanatory Notes — Building Safety Act 2022`**, citation *"Explanatory Notes to Building Safety
+Act 2022"*, URL unchanged (`/notes`, never a provision link).
+
+⚠ **Done in `annotation-title.ts` and called from BOTH adapters.** `fts-search.ts` and
+`vector-search.ts` build titles independently, and the dense path is **live** on the legislation
+stream (`LEX_VECTOR_STREAMS=legislation`) — fixing one would have made a row's title depend on
+which retriever found it.
+
+**Byte-identity, asserted not assumed: 356 non-annotation legislation hits over 10 real queries,
+0 drifted.** ⚠ **The "before" was not obtained by diffing two code paths** — the old code is gone,
+and two paths can be wrong together. It is recomputed independently from the primary data the
+adapter reads (`corpus_sections.sectionTitle`, `corpus_acts.title`, the id). The same comparison
+reports **244/244 annotation hits as changed**, which is what stops the byte-identity result being
+vacuous.
+
+**Resolution rate: 43,870 / 46,229 = 94.90%** corpus-wide — notes **18,792/18,801 (99.95%)**,
+memoranda **25,078/27,428 (91.43%)**. The remainder is **2,350 distinct `uksi` gids plus 9 `ukpga`**
+with no title in `corpus_acts`; those keep the string they had. Falls back to the existing title,
+never to a blank and never to a dangling `Explanatory Notes —`, asserted both ways.
+
+### §3 — `scottish-parliament-or` into debates: the numbers, then the decision
+
+Shipped with the before-and-after Charlie required. "Before" is the debates **main leg alone**,
+reproduced from the live `StreamScope`; "after" is the merged stream.
+
+1. **Gold (10 debates-stream questions): 14/20 keys → 14/20. No answer key stopped being
+   satisfied.** ⚠ These run through the product adapter, whose haystack is a SNIPPET, not the body
+   the gold harness reads from Lance — **not comparable with the gold reports and not to be quoted
+   as recall@20.** Both configurations get the identical haystack, so the delta is what is claimed.
+2. **Contamination: 3 of 120 top-20 slots (2.5%)** across 6 plainly-Westminster questions, all
+   three on ONE query — *"Westminster debate on universal credit sanctions"*, top Scottish row at
+   rank 4, *"Scottish Parliament: Universal Credit"*. 3 previously-returned Westminster rows
+   displaced (2.5%). The other five questions returned **0/20**. Universal credit is genuinely
+   debated at Holyrood, so this is arguably a hit rather than noise — reported as a number either
+   way, per the brief.
+3. **Latency (warm, both orders, n=32 each): before p50 2,984ms / p95 3,789ms; after p50 2,958ms /
+   p95 3,643ms.** Delta −26ms / −146ms, i.e. **no measurable cost** — the extra leg runs in
+   parallel with the main leg. The negative sign is run-to-run noise, not an improvement.
+4. **Jurisdiction is visible: 14/14 Scottish rows in the sample name the parliament** in the
+   rendered title (`Scottish Parliament: Climate Emergency`). 1,043,264 of 1,044,188 rows carry
+   that prefix in `sectionTitle`, so the requirement is met by the data for 99.91%; new
+   `corpusDisplayName()` closes the remaining **924** untitled rows, which would otherwise have
+   rendered as the literal string `scottish-parliament-or`.
+
+**No degradation, so no devolution gate is proposed.** The brief's fallback (gate the leg behind a
+devolution filter rather than revert) is not triggered by these numbers; it stays available.
+
+### §1d equivalent — the reachability delta
+
+| | S2C | S2C2 |
+|---|---:|---:|
+| sections reachable | 17,169,813 (**93.40%**) | 18,214,001 (**99.08%**) |
+| collections reachable | 56 | **57** |
+| keyword-only | 13 | 12 |
+| UNREACHABLE | 0 | 0 |
+
+**Everything still outside, by name — 169,171 sections (0.92%):** `early-day-motions` 60,737,
+`petitions` 49,529, `cma-cases` 22,898, `ofgem` 17,161, `bills-api` 6,574, `ofcom` 4,169,
+`members-interests` 3,448 *(by design)*, `uk-treaties` 3,264, `independent-reviews` 667,
+`tax-treaties-dta` 324, `cps-guidance` 270, `inquiry-evidence` 90, `lgsco` 40.
+
+**Gold questions whose recall a ROUTED query cannot reach went 12 → 10** — CM2 and CM3 dropped off,
+because the `scottish-parliament-or` hits satisfying them are now routable. That is the "recall
+lost to scoping" figure §4 must report, and it is now smaller.
+⚠ **EN2 shows as `NOT TESTING ITS OWN STREAM` in the matrix while passing on the product path**,
+and the two are both right: the matrix's gold pass is UNTIERED `rankedSearch` over the whole corpus,
+where `historic-hansard` outranks the Act; the product path is the legislation stream, where the
+RTRA 1984 key is hit. It is the same untiered-vs-routed gap the matrix was built to surface, now
+visible on a question of our own.
+
+### §4 — NOT RUN. Gate 2 still closed, checked directly again
+
+No `corpus_vec` delta-embed completion marker in `handoff_summary.md`. Checked at the machine as
+well: **`v33-vec-catchup.ts --embed --max-cost 45` is still running** — PID 77936, started
+2026-08-09 15:23:39 UTC, **17h 45m elapsed** at 09:09 UTC. Ingest's stated spread was 15–30h, so it
+is inside its own window, not stalled. §1–§3 done, stop — exactly as S2C did.
+
+Carried forward for whoever runs §4: **the ordering baseline excludes 4 questions (D2, D3, D4, D5)**,
+and **recall-lost-to-scoping is now 10 questions, not 12**.
+
+---
+
 ## SEARCH Stage 2C — the four collections no caller could receive, and a deliberate exclusion that stops looking like a defect (2026-08-10 00:16 UTC)
 
 Executes `docs/BRIEF_SEARCH_S2C.md` §0 and §1 in full. **§2 is NOT run: Gate 2 is closed** — see

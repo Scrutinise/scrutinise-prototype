@@ -2,7 +2,62 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-10 00:16 UTC — ▼ **SEARCH STAGE 2C: NO COLLECTION IS UNREACHABLE BY
+*Last updated: 2026-08-10 09:09 UTC — ▼ **SEARCH STAGE 2C-2: THE CORPUS REACHES 99.08%, AND THE
+THREE DECISIONS 2C SURFACED ARE BUILT.** Executes `BRIEF_SEARCH_S2C2.md` §1/§2/§3 in full;
+**§4 NOT RUN — Gate 2 STILL closed**, §5 carried. CHANGE_LOG (2026-08-10 09:09 UTC). `tsc` +
+`next build` clean; **`check:corpus-types` 69/69** (was 30/30), new **`check:annotation-titles`
+15/15**, both mutation-tested against a broken tree (4 planted defects, 4 caught);
+`check:stream-coverage` 3/3 live, `check:score-scope` 36/36, `check:flags` 50/50,
+`check:llm-guards` 9/9.
+⚠ **GATE 2 IS STILL THE FIRST THING TO CHECK NEXT SESSION.** No completion marker; checked at the
+machine too — **`v33-vec-catchup.ts --embed` still running at 09:09 UTC, PID 77936, 17h 45m
+elapsed** (started 2026-08-09 15:23:39 UTC). Ingest's spread was 15–30h, so it is inside its window,
+not stalled. **Ingest thread: stamp the completion here and §4 can run.**
+**REACHABLE 93.40% → 99.08%** (+1,044,188 sections; 56 → 57 collections; UNREACHABLE stays 0).
+**Everything still outside is 0.92% — 169,171 sections:** `early-day-motions` 60,737, `petitions`
+49,529, `cma-cases` 22,898, `ofgem` 17,161, `bills-api` 6,574, `ofcom` 4,169, `members-interests`
+3,448 *(by design)*, `uk-treaties` 3,264, `independent-reviews` 667, `tax-treaties-dta` 324,
+`cps-guidance` 270, `inquiry-evidence` 90, `lgsco` 40.
+**§1 — `EXPLANATORY_NOTE` is the tenth display type.** Panel label **"What the law was for"**, not
+"Explanatory notes": the heading must work for a reader with no legal training, and the term of art
+does not tell them whether they are reading the law or something about it. Badge stays "Explanatory
+note". ⚠ **The `isLeg` exclusion is now ASSERTED in both adapters** (it would rewrite an
+annotation's title to the Act's and its URL to a provision link — commentary rendered as enacted
+text). ⚠ **Trap found and fixed as a class: `TYPE_ORDER` is a plain array and `BackgroundPanel`
+renders `TYPE_ORDER.map(...)`, so a type missing from it renders NOWHERE** and tsc cannot see it;
+the check now parses the live union and asserts all three display files cover it.
+⚠ **The single-stream panel mix does not move, and that number is misleading** — the legislation
+stream has no real GUIDANCE in it, so nothing could be crowded out. In the ROUTED panel
+(legislation + guidance) it is **strictly additive, +3 slots on all five measured queries**:
+annotations 0/2/2/0/0 → 3 and real regulator guidance 3/1/1/3/3 → 3. Both directions of crowding
+were live.
+**New draft gold EN1/EN2 pins the WHY/WHAT behaviour** (EN1 2/2 keys, 20/20 annotations at ranks
+1–20; EN2 1/2 keys, 0/20 annotations). ⚠ EN2's first key asserted "no annotation appears", which
+this harness cannot express — it asks "did any top-20 hit match", so a negative pattern passes on
+any one non-matching hit. Rewritten to name instruments **verified present in the corpus first**.
+**§2 — annotations name the Act.** `Explanatory Notes: ukpga/2022/30 — Article 50 (30)` →
+**`Explanatory Notes — Building Safety Act 2022`**. **94.90% resolve** (notes 99.95%, memoranda
+91.43%; remainder = 2,350 `uksi` gids + 9 `ukpga` with no `corpus_acts` title, which keep their old
+string). ⚠ Done once in `annotation-title.ts` and called from **both** adapters — the dense path is
+LIVE on legislation, so fixing only FTS would make a title depend on which retriever found the row.
+⚠ **Byte-identity proven over 356 non-annotation hits, 0 drifted — and the "before" was RECOMPUTED
+from primary data, not diffed against a second code path** (two paths can be wrong together). The
+same comparison reports 244/244 annotations as changed, which is what stops it being vacuous.
+**§3 — `scottish-parliament-or` (1,044,188 sections) is in the debates stream, with its numbers.**
+Gold **14/20 keys → 14/20, no answer key lost**; contamination **3/120 top-20 slots (2.5%)**, all on
+one query (universal credit, which Holyrood genuinely debates), 0/20 on the other five; latency
+**p50 −26ms, p95 −146ms — no measurable cost**, the extra leg runs in parallel. ⚠ Those gold figures
+use the adapter's SNIPPET haystack, not the body — **not comparable with the gold reports, only with
+each other**. **No degradation → the devolution-gate fallback is not triggered**, and stays
+available.
+⚠ **Jurisdiction is visible: 14/14 sampled Scottish rows read "Scottish Parliament: …"** in the
+title; 99.91% carry that prefix in the data, and new `corpusDisplayName()` closes the 924 untitled
+rows that would have rendered as the raw corpus key.
+**Recall a ROUTED query cannot reach went 12 → 10 questions** (CM2, CM3 now routable) — that is the
+"recall lost to scoping" figure §4 must report separately from ordering. **The ordering baseline
+still excludes 4 questions (D2, D3, D4, D5).**
+▼ Earlier:
+2026-08-10 00:16 UTC — ▼ **SEARCH STAGE 2C: NO COLLECTION IS UNREACHABLE BY
 ACCIDENT ANY MORE, AND THE ONE THAT IS UNREACHABLE ON PURPOSE NOW SAYS SO.** Executes
 `BRIEF_SEARCH_S2C.md` §0 and §1 in full; **§2 NOT RUN — Gate 2 closed**, §3 carried.
 CHANGE_LOG (2026-08-10 00:16 UTC). `tsc` + `next build` clean; new **`check:corpus-types` 30/30,

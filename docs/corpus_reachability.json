@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-10 00:23 UTC",
+  "generatedAt": "2026-08-10 09:09 UTC",
   "totals": {
     "collections": 70,
     "sections": 18383172,
     "fts_rows": 18166926,
-    "vec_rows": 22151900
+    "vec_rows": 22331900
   },
   "streams": [
     "legislation",
@@ -155,7 +155,7 @@
       "sections": 344773,
       "compiled": 323922,
       "fts_rows": 323922,
-      "vec_rows": 391924,
+      "vec_rows": 464790,
       "index_tiers": {
         "parliamentary": 323922
       },
@@ -167,7 +167,7 @@
       "type_null": false,
       "router_stream": "committees",
       "tier_scoped_callers": [],
-      "gold_questions": 15,
+      "gold_questions": 16,
       "gold_ids": [
         "B3",
         "B4",
@@ -183,7 +183,8 @@
         "GD1",
         "GD2",
         "GD3",
-        "GD4"
+        "GD4",
+        "EN1"
       ],
       "verdict": "reachable",
       "note": null
@@ -321,7 +322,7 @@
       "sections": 241571,
       "compiled": 241571,
       "fts_rows": 241571,
-      "vec_rows": 228343,
+      "vec_rows": 335477,
       "index_tiers": {
         "legislation": 241571
       },
@@ -356,7 +357,7 @@
       "tier": "legislation",
       "tier_split": false,
       "types": [
-        "GUIDANCE"
+        "EXPLANATORY_NOTE"
       ],
       "type_null": false,
       "router_stream": "legislation",
@@ -384,7 +385,7 @@
       "tier": "legislation",
       "tier_split": false,
       "types": [
-        "GUIDANCE"
+        "EXPLANATORY_NOTE"
       ],
       "type_null": false,
       "router_stream": "legislation",
@@ -393,12 +394,13 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 4,
+      "gold_questions": 5,
       "gold_ids": [
         "D2",
         "D3",
         "E3",
-        "F3"
+        "F3",
+        "EN1"
       ],
       "verdict": "reachable",
       "note": null
@@ -470,13 +472,14 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 5,
+      "gold_questions": 6,
       "gold_ids": [
         "B5",
         "D4",
         "E2",
         "E4",
-        "F4"
+        "F4",
+        "EN2"
       ],
       "verdict": "reachable",
       "note": null
@@ -1438,7 +1441,7 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 17,
+      "gold_questions": 18,
       "gold_ids": [
         "B4",
         "C2",
@@ -1456,7 +1459,8 @@
         "CM2",
         "GD1",
         "GD2",
-        "GD4"
+        "GD4",
+        "EN1"
       ],
       "verdict": "reachable",
       "note": null
@@ -1616,17 +1620,18 @@
         "DEBATE"
       ],
       "type_null": false,
-      "router_stream": "NONE",
+      "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 4,
+      "gold_questions": 5,
       "gold_ids": [
         "E4",
         "F2",
         "CM2",
-        "CM3"
+        "CM3",
+        "EN1"
       ],
-      "verdict": "keyword-only",
-      "note": "indexed under tier \"other\", which no stream selects — surfaces only on the unrouted/fail-open path"
+      "verdict": "reachable",
+      "note": null
     },
     {
       "collection": "senedd-cofnod",
@@ -2567,14 +2572,13 @@
         "pwdata-lordswrans": 1,
         "scottish-parliament-or": 1
       },
-      "inStreamKeyHits": 11,
-      "inStreamTop": 16,
+      "inStreamKeyHits": 12,
+      "inStreamTop": 17,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 2,
+      "unroutableKeyHits": 1,
       "undeliverableFrom": [],
       "unroutableFrom": [
-        "petitions",
-        "scottish-parliament-or"
+        "petitions"
       ],
       "outcome": "ok"
     },
@@ -2600,7 +2604,7 @@
         "scottish-parliament-or": 1
       },
       "inStreamKeyHits": 10,
-      "inStreamTop": 19,
+      "inStreamTop": 20,
       "undeliverableKeyHits": 0,
       "unroutableKeyHits": 0,
       "undeliverableFrom": [],
@@ -2663,14 +2667,13 @@
         "scottish-parliament-or": 2,
         "pwdata-lords": 1
       },
-      "inStreamKeyHits": 13,
-      "inStreamTop": 12,
+      "inStreamKeyHits": 15,
+      "inStreamTop": 14,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 3,
+      "unroutableKeyHits": 1,
       "undeliverableFrom": [],
       "unroutableFrom": [
-        "petitions",
-        "scottish-parliament-or"
+        "petitions"
       ],
       "outcome": "ok"
     },
@@ -2851,11 +2854,9 @@
       "inStreamKeyHits": 15,
       "inStreamTop": 8,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 6,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "scottish-parliament-or"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -2886,11 +2887,9 @@
       "inStreamKeyHits": 7,
       "inStreamTop": 4,
       "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 8,
+      "unroutableKeyHits": 0,
       "undeliverableFrom": [],
-      "unroutableFrom": [
-        "scottish-parliament-or"
-      ],
+      "unroutableFrom": [],
       "outcome": "ok"
     },
     {
@@ -3151,6 +3150,62 @@
       "unroutableFrom": [
         "ofcom"
       ],
+      "outcome": "off-stream"
+    },
+    {
+      "id": "EN1",
+      "query": "Why was the Building Safety Act 2022 introduced and what problem was it meant to solve?",
+      "intendedStream": "legislation",
+      "draft": true,
+      "keysTotal": 2,
+      "keysHit": 2,
+      "satisfyingCorpora": {
+        "explanatory-notes": 30,
+        "scottish-parliament-or": 1,
+        "pwdata-wrans": 1,
+        "committees-reports": 1
+      },
+      "topCorpora": {
+        "explanatory-notes": 15,
+        "scottish-parliament-or": 1,
+        "pwdata-wrans": 1,
+        "committees-reports": 2,
+        "pwdata-debates": 1
+      },
+      "inStreamKeyHits": 30,
+      "inStreamTop": 15,
+      "undeliverableKeyHits": 0,
+      "unroutableKeyHits": 0,
+      "undeliverableFrom": [],
+      "unroutableFrom": [],
+      "outcome": "ok"
+    },
+    {
+      "id": "EN2",
+      "query": "What is the speed limit for heavy goods vehicles on a dual carriageway?",
+      "intendedStream": "legislation",
+      "draft": true,
+      "keysTotal": 2,
+      "keysHit": 1,
+      "satisfyingCorpora": {
+        "historic-hansard": 5
+      },
+      "topCorpora": {
+        "si-2010plus": 1,
+        "pwdata-lordswrans": 2,
+        "pwdata-wrans": 4,
+        "historic-hansard": 5,
+        "pwdata-lordswms": 1,
+        "pwdata-wms": 1,
+        "pwdata-debates": 4,
+        "petitions": 2
+      },
+      "inStreamKeyHits": 0,
+      "inStreamTop": 1,
+      "undeliverableKeyHits": 0,
+      "unroutableKeyHits": 0,
+      "undeliverableFrom": [],
+      "unroutableFrom": [],
       "outcome": "off-stream"
     }
   ]

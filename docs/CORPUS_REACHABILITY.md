@@ -1,10 +1,10 @@
 # Corpus reachability matrix
 
-*Generated 2026-08-10 00:23 UTC by `scripts/ingest/search/corpus-reachability.ts`. Machine-readable
+*Generated 2026-08-10 09:09 UTC by `scripts/ingest/search/corpus-reachability.ts`. Machine-readable
 twin: `docs/corpus_reachability.json`. Regenerate rather than edit — every number here is
 measured, and a hand-corrected row is a row that will be wrong after the next ingest.*
 
-**The one number.** 17,169,813 of 18,383,172 sections (93.4%) sit in a collection some router stream can select. 0 collections are reachable by no path at all and nobody chose that; 1 is unreachable ON PURPOSE, named in `EXCLUDED_BY_DESIGN` with a reason; 13 surface only when routing is off or has failed open; 0 only via an explicit-tier caller.
+**The one number.** 18,214,001 of 18,383,172 sections (99.1%) sit in a collection some router stream can select. 0 collections are reachable by no path at all and nobody chose that; 1 is unreachable ON PURPOSE, named in `EXCLUDED_BY_DESIGN` with a reason; 12 surface only when routing is off or has failed open; 0 only via an explicit-tier caller.
 
 `tier` is read OUT OF THE LIVE FTS INDEX, not computed from `corpus-map.ts` — the tier is
 baked in at build time, so a collection seeded after the map last changed carries the old
@@ -18,18 +18,18 @@ tier in the index and the router filters on the index. `router_stream` is comput
 | `cma-cases` | 22,898 | 21,525 | 95,863 | GUIDANCE | other | **NONE** | — | — | keyword-only |
 | `college-of-policing` | 332 | 332 | 1,446 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `committees-evidence` | 142,315 | 140,567 | 702,754 | COMMITTEE | parliamentary | committees | — | 13 | reachable |
-| `committees-reports` | 344,773 | 323,922 | 391,924 | COMMITTEE | parliamentary | committees | — | 15 | reachable |
+| `committees-reports` | 344,773 | 323,922 | 464,790 | COMMITTEE | parliamentary | committees | — | 16 | reachable |
 | `cps-guidance` | 270 | 270 | 1,519 | GUIDANCE | other | **NONE** | — | — | keyword-only |
 | `early-day-motions` | 60,737 | 60,737 | 60,737 | DEBATE | other | **NONE** | — | 1 | keyword-only |
 | `echr-hudoc` | 4,460 | 4,410 | 21,883 | CASE_LAW | caselaw | caselaw | — | 1 | reachable |
 | `erskine-may` | 2,038 | 1,873 | 2,130 | GUIDANCE | other | guidance | — | — | reachable |
 | `et-decisions` | 293,403 | 293,399 | 504,686 | CASE_LAW | caselaw | caselaw | — | 1 | reachable |
-| `eur-lex` | 241,571 | 241,571 | 228,343 | EU_LEGISLATION | legislation | legislation | 3 legacy | — | reachable |
-| `explanatory-memoranda` | 27,428 | 21,984 | 22,022 | GUIDANCE | legislation | legislation | 3 legacy | — | reachable |
-| `explanatory-notes` | 18,801 | 18,651 | 2,965 | GUIDANCE | legislation | legislation | 3 legacy | 4 | reachable |
+| `eur-lex` | 241,571 | 241,571 | 335,477 | EU_LEGISLATION | legislation | legislation | 3 legacy | — | reachable |
+| `explanatory-memoranda` | 27,428 | 21,984 | 22,022 | EXPLANATORY_NOTE | legislation | legislation | 3 legacy | — | reachable |
+| `explanatory-notes` | 18,801 | 18,651 | 2,965 | EXPLANATORY_NOTE | legislation | legislation | 3 legacy | 5 | reachable |
 | `fca-handbook` | 3,661 | 3,661 | 7,428 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `govuk-core-docs` | 176 | 175 | 978 | GUIDANCE | guidance | guidance | — | — | reachable |
-| `historic-hansard` | 4,641,117 | 4,641,085 | 5,255,517 | DEBATE | parliamentary | debates | — | 5 | reachable |
+| `historic-hansard` | 4,641,117 | 4,641,085 | 5,255,517 | DEBATE | parliamentary | debates | — | 6 | reachable |
 | `hmrc-ancillary` | 479 | 472 | 1,265 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `hmrc-codes-guidance` | 14,067 | 14,067 | 27,490 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `hmrc-manuals` | 85,197 | 69,136 | 80,154 | GUIDANCE | guidance | guidance | — | 2 | reachable |
@@ -65,13 +65,13 @@ tier in the index and the router filters on the index. `router_stream` is comput
 | `pwdata-lordswrans` | 176,099 | 175,560 | 175,823 | DEBATE | parliamentary | debates | — | 11 | reachable |
 | `pwdata-westminster` | 240,582 | 239,263 | 315,515 | DEBATE | parliamentary | debates | — | 11 | reachable |
 | `pwdata-wms` | 24,962 | 23,863 | 31,329 | DEBATE | parliamentary | debates | — | 2 | reachable |
-| `pwdata-wrans` | 1,235,159 | 1,232,894 | 1,241,981 | DEBATE | parliamentary | debates | — | 17 | reachable |
+| `pwdata-wrans` | 1,235,159 | 1,232,894 | 1,241,981 | DEBATE | parliamentary | debates | — | 18 | reachable |
 | `quangos-govuk` | 171,190 | 171,030 | 609,759 | GUIDANCE | guidance | guidance | — | 2 | reachable |
 | `regional` | 346,274 | 331,124 | 348,558 | STATUTORY_INSTRUMENT | legislation | legislation | 3 legacy | 2 | reachable |
 | `retained-eu` | 308,513 | 187,555 | 197,161 | EU_LEGISLATION | legislation | legislation | 3 legacy | 1 | reachable |
 | `scotlawcom` | 350 | 350 | 2,690 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `scottish-courts` | 13,070 | 13,056 | 86,876 | CASE_LAW | caselaw | caselaw | — | 1 | reachable |
-| `scottish-parliament-or` | 1,044,188 | 1,043,264 | 1,074,340 | DEBATE | other | **NONE** | — | 4 | keyword-only |
+| `scottish-parliament-or` | 1,044,188 | 1,043,264 | 1,074,340 | DEBATE | other | debates | — | 5 | reachable |
 | `senedd-cofnod` | 191,756 | 191,730 | 202,014 | DEBATE | parliamentary | debates | — | — | reachable |
 | `sentencing-council` | 253 | 253 | 1,671 | GUIDANCE | guidance | guidance | — | — | reachable |
 | `si-2010plus` | 281,244 | 270,339 | 286,945 | STATUTORY_INSTRUMENT | legislation | legislation | 3 legacy | 3 | reachable |
@@ -88,9 +88,9 @@ tier in the index and the router filters on the index. `router_stream` is comput
 
 | verdict | collections | sections | fts_rows |
 |---|---:|---:|---:|
-| reachable | 56 | 17,169,813 | 16,955,946 |
+| reachable | 57 | 18,214,001 | 17,999,210 |
 | tier-only | 0 | 0 | 0 |
-| keyword-only | 13 | 1,209,911 | 1,207,532 |
+| keyword-only | 12 | 165,723 | 164,268 |
 | excluded-by-design | 1 | 3,448 | 3,448 |
 | UNREACHABLE | 0 | 0 | 0 |
 
@@ -148,10 +148,10 @@ for the question; "satisfied from" is the collection the documents that actually
 the answer key came from; "in-stream" counts how much of the whole top-20 came from a
 collection the declared stream can select. One pass — a single sample, not a repeat.*
 
-- **11 of 43** questions are satisfied ENTIRELY from outside their declared stream. Those are not testing what they claim to test.
+- **12 of 45** questions are satisfied ENTIRELY from outside their declared stream. Those are not testing what they claim to test.
 - **4** declare a stream that DOES NOT EXIST in the router at all — a missing capability, not a drafting error, and it would have been hidden inside the previous line.
 - **0** are satisfied in part by an UNREACHABLE collection — the scoring harness reads Lance directly, the app's FTS adapter drops those rows for having no display type. To that extent the recall number measures the index rather than the product.
-- **12** are satisfied in part by a keyword-only collection: delivered when the router is off or has failed open, never by a routed query. Turning routing ON therefore *costs* recall on those questions — which is worth knowing before the router's gold-set gain is read as unambiguous.
+- **10** are satisfied in part by a keyword-only collection: delivered when the router is off or has failed open, never by a routed query. Turning routing ON therefore *costs* recall on those questions — which is worth knowing before the router's gold-set gain is read as unambiguous.
 
 | id | intended stream | keys hit | in-stream | satisfied from | outcome |
 |---|---|---:|---:|---|---|
@@ -178,17 +178,17 @@ collection the declared stream can select. One pass — a single sample, not a r
 | E1 | debates | 1/2 | 9/20 | `committees-reports`×5, `pwdata-wrans`×2, `primary-acts-2000plus`×1, `regional`×1, `si-2010plus`×1, `pwdata-debates`×1, `pwdata-lordswrans`×1, `pwdata-wms`×1, `pwdata-lordswms`×1 | ok |
 | E2 | debates | 2/2 | 17/20 | `historic-hansard`×9, `pwdata-wrans`×5, `pwdata-debates`×3, `committees-reports`×2, `pwdata-lords`×2, `petitions`×2 ⚠, `pwdata-lordswrans`×1 | ok (⚠ partly unroutable) |
 | E3 | debates | 2/2 | 0/20 | `explanatory-notes`×13, `committees-reports`×12, `primary-acts-2000plus`×4, `si-2010plus`×2 | **NOT TESTING ITS STREAM** |
-| E4 | debates | 1/2 | 16/20 | `pwdata-debates`×6, `pwdata-lords`×2, `pwdata-wrans`×2, `petitions`×1 ⚠, `committees-evidence`×1, `historic-hansard`×1, `scottish-parliament-or`×1 ⚠ | ok (⚠ partly unroutable) |
-| E5 | debates | 2/2 | 19/20 | `pwdata-wrans`×3, `pwdata-debates`×3, `pwdata-westminster`×3, `pwdata-lords`×1 | ok |
+| E4 | debates | 1/2 | 17/20 | `pwdata-debates`×6, `pwdata-lords`×2, `pwdata-wrans`×2, `petitions`×1 ⚠, `committees-evidence`×1, `historic-hansard`×1, `scottish-parliament-or`×1 | ok (⚠ partly unroutable) |
+| E5 | debates | 2/2 | 20/20 | `pwdata-wrans`×3, `pwdata-debates`×3, `pwdata-westminster`×3, `pwdata-lords`×1 | ok |
 | F1 | bills + debates | 2/2 | 16/20 | `pwdata-wrans`×20, `petitions`×8 ⚠, `pwdata-lordswrans`×8, `pwdata-lords`×2, `pwdata-debates`×2 | ok (⚠ partly unroutable) |
-| F2 | bills + debates | 2/2 | 12/20 | `committees-evidence`×5, `pwdata-westminster`×5, `pwdata-debates`×5, `pwdata-wrans`×2, `scottish-parliament-or`×2 ⚠, `petitions`×1 ⚠, `pwdata-lords`×1 | ok (⚠ partly unroutable) |
+| F2 | bills + debates | 2/2 | 14/20 | `committees-evidence`×5, `pwdata-westminster`×5, `pwdata-debates`×5, `pwdata-wrans`×2, `scottish-parliament-or`×2, `petitions`×1 ⚠, `pwdata-lords`×1 | ok (⚠ partly unroutable) |
 | F3 | bills + debates | 2/2 | 13/20 | `pwdata-wrans`×2, `pwdata-lordswrans`×2, `regional`×1, `committees-evidence`×1, `explanatory-notes`×1 | ok |
 | F4 | bills + debates | 1/2 | 18/20 | `pwdata-debates`×10, `historic-hansard`×4, `pwdata-westminster`×1, `early-day-motions`×1 ⚠, `pwdata-lordswrans`×1, `petitions`×1 ⚠ | ok (⚠ partly unroutable) |
 | F5 | bills + debates | 2/2 | 12/20 | `pwdata-debates`×6, `petitions`×3 ⚠, `pwdata-wrans`×3 | ok (⚠ partly unroutable) |
 | B6 | legislation | 0/6 | 14/20 | — | no key hit |
 | CM1 *(draft)* | committees | 2/2 | 11/20 | `committees-reports`×17, `pwdata-debates`×6, `pwdata-lordswrans`×1, `nao-reports`×1, `pwdata-westminster`×1, `pwdata-wrans`×1 | ok |
-| CM2 *(draft)* | committees | 2/2 | 8/20 | `committees-reports`×10, `scottish-parliament-or`×6 ⚠, `pwdata-wrans`×5, `committees-evidence`×5, `pwdata-debates`×4, `pwdata-lords`×4, `pwdata-wms`×2 | ok (⚠ partly unroutable) |
-| CM3 *(draft)* | committees | 2/2 | 4/20 | `pwdata-debates`×9, `pwdata-lords`×8, `scottish-parliament-or`×8 ⚠, `committees-evidence`×6, `pwdata-westminster`×2, `niassembly-hansard`×2, `committees-reports`×1 | ok (⚠ partly unroutable) |
+| CM2 *(draft)* | committees | 2/2 | 8/20 | `committees-reports`×10, `scottish-parliament-or`×6, `pwdata-wrans`×5, `committees-evidence`×5, `pwdata-debates`×4, `pwdata-lords`×4, `pwdata-wms`×2 | ok |
+| CM3 *(draft)* | committees | 2/2 | 4/20 | `pwdata-debates`×9, `pwdata-lords`×8, `scottish-parliament-or`×8, `committees-evidence`×6, `pwdata-westminster`×2, `niassembly-hansard`×2, `committees-reports`×1 | ok |
 | CM4 *(draft)* | committees | 2/2 | 20/20 | `committees-reports`×26 | ok |
 | CL1 *(draft)* | caselaw | 1/2 | 2/20 | `scottish-courts`×1 | ok |
 | CL2 *(draft)* | caselaw | 0/2 | 0/20 | — | no key hit |
@@ -198,6 +198,8 @@ collection the declared stream can select. One pass — a single sample, not a r
 | GD2 *(draft)* | guidance | 2/2 | 0/20 | `committees-reports`×5, `pwdata-wrans`×3, `committees-evidence`×2, `pwdata-lords`×1 | **NOT TESTING ITS STREAM** |
 | GD3 *(draft)* | guidance | 2/2 | 3/20 | `primary-acts-2000plus`×4, `retained-eu`×3, `committees-reports`×2, `ico`×2, `pwdata-debates`×2, `hmrc-manuals`×1, `committees-evidence`×1 | ok |
 | GD4 *(draft)* | guidance | 2/2 | 0/20 | `ofcom`×4 ⚠, `pwdata-wrans`×3, `committees-evidence`×2, `pwdata-westminster`×2, `echr-hudoc`×2, `committees-reports`×1, `pwdata-lordswrans`×1, `pwdata-lords`×1, `pwdata-debates`×1 | **NOT TESTING ITS STREAM** |
+| EN1 *(draft)* | legislation | 2/2 | 15/20 | `explanatory-notes`×30, `scottish-parliament-or`×1, `pwdata-wrans`×1, `committees-reports`×1 | ok |
+| EN2 *(draft)* | legislation | 1/2 | 1/20 | `historic-hansard`×5 | **NOT TESTING ITS STREAM** |
 
 ✗ marks a satisfying collection with verdict UNREACHABLE — no caller ever receives it.
 ⚠ marks one with verdict keyword-only — only the unrouted/fail-open path delivers it.
