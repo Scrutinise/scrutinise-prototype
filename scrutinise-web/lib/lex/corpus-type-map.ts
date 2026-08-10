@@ -30,6 +30,35 @@ import type { SearchResultType } from './page1-config'
  *
  * Adding an entry here is a product decision, not a mapping decision. Removing one is too.
  */
+/**
+ * Collections whose destination is a DIFFERENT CONSUMER — the position graph — rather than a
+ * retrieval stream. Recorded 2026-08-10 (BRIEF_SEARCH_S2C3 §2).
+ *
+ * ⚠ THIS REGISTRY IS DOCUMENTATION, NOT ENFORCEMENT, and the difference from `EXCLUDED_BY_DESIGN`
+ * above is deliberate. That one is checked by `corpusToType` and makes a collection unreachable.
+ * This one changes NOTHING at runtime: these collections keep their display type, keep whatever
+ * reachability they have, and are still delivered by the unrouted/fail-open path today. It exists
+ * so the reachability matrix can print a third word.
+ *
+ * WHY A THIRD WORD. `excluded-by-design` was added because a collection nobody can reach ON
+ * PURPOSE must not print the same word as one nobody can reach BY MISTAKE. A collection routed to
+ * a different consumer entirely is a third case: it is not a defect, and it is not a decision that
+ * it should never be seen — it is a decision that retrieval is the wrong door for it.
+ *
+ * An EDM is thin as a document to read and dense as DATA: a named list of members who endorsed a
+ * specific proposition on a specific date, with no inference required. That is a position edge of
+ * the highest confidence tier. Petitions are the same shape for public salience.
+ *
+ * ⚠ The brief cites `POSITION_GRAPH_DESIGN.md §3` for the design; **that file is not in this repo
+ * as of 2026-08-10** (the only graph document present is `docs/GRAPH_TIER1_REPORT.md`, which is
+ * the legislation citation graph, a different thing). The reference is recorded as given rather
+ * than silently corrected or silently dropped — see docs/CLAUDE.md §19.
+ */
+export const DEFERRED_TO_GRAPH: Record<string, string> = {
+  'early-day-motions': 'a named list of members endorsing a proposition on a date — a high-confidence position-graph edge, not a document to retrieve and read',
+  'petitions': 'the same shape as an EDM but for public salience rather than parliamentary position',
+}
+
 export const EXCLUDED_BY_DESIGN: Record<string, string> = {
   // SEARCH_STRATEGY.md §3.1: "a political-risk and people-graph input, not searched for its
   // own sake." The rows are named individuals against declared financial interests — 3,448 of
@@ -144,6 +173,32 @@ const CORPUS_DISPLAY_NAME: Record<string, string> = {
 
 export function corpusDisplayName(corpus: string): string {
   return CORPUS_DISPLAY_NAME[corpus] ?? corpus
+}
+
+/**
+ * Collections whose `sectionTitle` in **Neon** supersedes the one baked into the **FTS index**.
+ *
+ * ⚠ WHY THIS IS NEEDED AT ALL. `corpus_fts` carries `sectionTitle` as it stood at index-build
+ * time, and `fts-search.ts` reads the title off the FTS hit — so a title corrected in the database
+ * afterwards is invisible to BM25 until the next full index build, while the DENSE path (which
+ * hydrates from Neon) shows the corrected one immediately. The same row would then be titled
+ * differently depending on which retriever found it. This is the tier-staleness problem
+ * (`CORPUS_DISPLAY_OVERRIDE`, `extraCorpora`) appearing on a third axis.
+ *
+ * ⚠ AN EXPLICIT LIST, NEVER "always prefer the DB". Preferring Neon everywhere would silently
+ * re-title any collection where the two have drifted for any reason, which is precisely the
+ * byte-identity guarantee `check:annotation-titles` was built to hold. Naming the collection makes
+ * it a decision.
+ *
+ * `bills-api` is here because v34-bills-metadata.ts rewrote all 6,574 titles on 2026-08-10: they
+ * had been `Bill 2518 — publication 17` (an internal numeric id and an ordinal) and are now
+ * `Abortion Bill — 2nd reading (last updated 2019)`. Remove this entry after the next full FTS
+ * rebuild, at which point the index carries the corrected titles itself.
+ */
+const TITLE_FROM_DB = new Set(['bills-api'])
+
+export function dbTitleSupersedesIndex(corpus: string): boolean {
+  return TITLE_FROM_DB.has(corpus)
 }
 
 /**

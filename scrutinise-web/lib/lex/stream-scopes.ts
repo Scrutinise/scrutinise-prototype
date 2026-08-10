@@ -79,7 +79,23 @@ export interface StreamScope {
 }
 
 export const STREAM_SCOPES: StreamScope[] = [
-  { name: 'legislation', tier: 'legislation' },
+  // `bills-api` joins LEGISLATION, not debates, and the reasoning is about what the user is asking
+  // rather than about where the rows sit (2026-08-10, S2C3 §1). Someone who asks "what does the
+  // law say about X" is asking a question a Bill can answer — "someone has already introduced
+  // one, and it is at committee stage" changes what they do next more than almost anything else
+  // the corpus holds. That is the same question the legislation stream serves, so it belongs on
+  // that leg.
+  //
+  // ⚠ IT IS NOT A CONTRADICTION THAT `bills-api` STAYS IN `NON_DEBATE_PARLIAMENTARY` BELOW. That
+  // list excludes it from the DEBATES stream, which remains right: a bill publication PDF is not
+  // a debate. Two separate decisions about two separate streams, and the debates exclusion would
+  // have been ineffective anyway — the debates stream also filters `types: ['DEBATE']` and a Bill
+  // types as BILL.
+  //
+  // ⚠ AND IT IS AN EXTRA LEG RATHER THAN A TIER MEMBER because `bills-api` carries tier
+  // `parliamentary` in the built index; the prefilter matches the index, not `tierFor()`. Same
+  // mechanism as erskine-may and scottish-parliament-or, for the same reason.
+  { name: 'legislation', tier: 'legislation', extraCorpora: ['bills-api'] },
   // `scottish-parliament-or` — 1,044,188 sections, 86% of the whole reachability gap S2C measured.
   // Same shape as erskine-may: already display-typed DEBATE, indexed under tier `other`, so no
   // stream could select it. Added 2026-08-10 on Charlie's decision (S2C2 §3) and shipped WITH a

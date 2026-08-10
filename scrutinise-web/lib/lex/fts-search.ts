@@ -21,7 +21,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { flagEnabled } from '@/lib/env-flags'
 import type { SearchResult } from './page1-config'
-import { corpusToType, corpusDisplayName } from './corpus-type-map'
+import { corpusToType, corpusDisplayName, dbTitleSupersedesIndex } from './corpus-type-map'
 import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
 import { runStubSearch } from './search-stub'
 
@@ -197,8 +197,12 @@ export async function runFtsSearch(
 
     // ONE batched hydrate (url + date) + the legislation act-title lookup.
     const [hydrateRows, actRows] = await Promise.all([
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null }>>`
-        SELECT id, "sourceUrl", "itemDate"::text AS "itemDate"
+      // `sectionTitle` is selected as well as the url/date this hydrate has always fetched: for
+      // a few collections the DB title supersedes the one baked into the FTS index
+      // (dbTitleSupersedesIndex — see corpus-type-map.ts). Same query, one more column, no extra
+      // round-trip.
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null }>>`
+        SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"
         FROM corpus_sections WHERE id IN (${Prisma.join(ids)})`,
       // Act titles come from `corpus_acts`, not the legacy `LegislationItem` (V26 §6 —
       // that table is slated for DROP). Verified zero-gap drop-in: 135,531 titled
@@ -238,8 +242,14 @@ export async function runFtsSearch(
         title = named.title
         citation = named.citation
       } else {
-        title = h.sectionTitle ?? corpusDisplayName(h.corpus)
-        citation = h.sectionTitle ?? ''
+        // The DB title wins ONLY for the named collections; everything else reads the index
+        // exactly as it always did, which is what keeps this function byte-identical for every
+        // other corpus (asserted by check:annotation-titles).
+        const preferred = dbTitleSupersedesIndex(h.corpus)
+          ? (meta?.sectionTitle ?? h.sectionTitle)
+          : h.sectionTitle
+        title = preferred ?? corpusDisplayName(h.corpus)
+        citation = preferred ?? ''
       }
 
       const url =
