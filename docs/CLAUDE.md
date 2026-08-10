@@ -642,3 +642,50 @@ degradation is correct; silent degradation is a bug with a good disguise.
 FAIL, the two must not look identical from outside. The router being disabled and the router failing
 open both produced exactly one untiered search, which is why it took four rounds of measurement to
 tell them apart.
+
+***
+
+## 19. A FLAG STATE YOU CANNOT READ IS NOT A FLAG STATE YOU MAY WRITE DOWN (10 Aug 2026)
+
+**The rule: when a fact about production configuration cannot be read from this machine, say so and
+ask for it. Where it has already been inferred, the inference must be labelled as one — in the same
+sentence, not in a footnote.**
+
+### The specific blocker, so it is recognised on sight
+
+`VERCEL_TOKEN` in `scrutinise-web/.env` **authenticates** — `GET /v2/user` returns 200 — and then
+**403s on every project-scoped endpoint with `"saml": true` in the body**. Env vars, deployments and
+runtime logs are all unreadable from here, permanently, until Charlie completes a SAML SSO
+authorisation for the token. **Railway is unaffected** — its token is a separate credential with a
+separate failure mode (`Project-Access-Token`, not `Bearer`; see the Railway Operations section of
+the root `CLAUDE.md`).
+
+**A 200 on `/v2/user` followed by a 403 elsewhere reads exactly like an expired credential.** It is
+not. Do not spend a session rotating tokens.
+
+### What that means for anything written down
+
+`docs/RAILWAY_ROLE.md` (9 Aug) recorded "`VECTOR_SEARCH_URL` is unset in Vercel". Nobody on this
+machine could have known that. It was derived from the local `.env` plus a code read of
+`vector-search.ts:111`, and it was **wrong** — Charlie read the dashboard on 10 Aug and both
+`VECTOR_SEARCH_URL` and `LEX_VECTOR_STREAMS=legislation` were set. The consequence was not
+cosmetic: it made a **live** cross-stream scoring defect look latent for a day.
+
+1. **Ask.** `vercel env ls` run by Charlie, or a screenshot, settles it in seconds. One question
+   beats a day of inference.
+2. **Label the inference where it lives.** "`VECTOR_SEARCH_URL` is unset in Vercel" and
+   "`VECTOR_SEARCH_URL` is unset locally, and I infer Vercel matches — unverified, SAML-blocked"
+   are different claims. Only the second is honest from here.
+3. **Record provenance on the corrected value.** Who read it, from where, on what date. Without
+   that the next reader faces the same unresolvable contradiction and has no way to break the tie.
+4. **Prefer a counter to a config read.** The one thing that *was* readable — `vector-serve`'s
+   `served` counter moving +1 per routed query, and not scaling with stream count — pinned the
+   config exactly. A behavioural measurement taken from a reachable surface beats an unreachable
+   config file every time.
+
+### The family this belongs to
+
+§18's corollary says a component that is OFF and a component that has FAILED must not look
+identical from outside. This is the same rule one level up: **a fact that was measured and a fact
+that was inferred must not look identical on the page.** Both failures are a true-looking sentence
+with its provenance stripped off.

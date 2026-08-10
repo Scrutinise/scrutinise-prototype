@@ -27,11 +27,38 @@ Project `miraculous-nature` (`68707c61-5c68-4f37-88fc-c301fd6b90e7`), one enviro
 |---|---|---|---|
 | **`fts-serve`** | SUCCESS, deployed 2026-08-09 02:01 | `FTS_PORT=8080 tsx search/fts-query-service.ts` — the BM25 query service over the `corpus_fts` Lance table. `https://fts-serve-production-4cea.up.railway.app` | **LIVE, load-bearing.** Every search the app performs goes through it. |
 | **`Ops`** | SUCCESS, deployed 2026-08-09 08:47 | `npm run scheduler` → `scripts/ingest/ops.ts`. Hourly reaper/census/snapshot, 15-minute circuit breakers + ingest liveness + embed heartbeat, daily progress email. | **LIVE, load-bearing.** |
-| **`vector-serve`** | SUCCESS, deployed 2026-08-07 | `VECTOR_PORT=8081 tsx search/vector-query-service.ts`. `https://vector-serve-production.up.railway.app` | **LIVE but serving nobody.** `VECTOR_SEARCH_URL` is unset in Vercel and locally, so `vector-search.ts:111` returns `[]` before it is ever called. It is deployed and warm, waiting on the flip. Keep. |
+| **`vector-serve`** | SUCCESS, deployed 2026-08-07 | `VECTOR_PORT=8081 tsx search/vector-query-service.ts`. `https://vector-serve-production.up.railway.app` | **LIVE AND SERVING** the `legislation` stream in production. `VECTOR_SEARCH_URL` **is set** in Vercel and `LEX_VECTOR_STREAMS=legislation`; it is unset *locally*, which is why a local read of `vector-search.ts:111` shows the inert path. Keep. |
 | **`Ingest`** | **FAILED**, last deploy 2026-06-30 | `npm run worker` — the V17 pool worker. Started on demand by `Ops` when the queue has pending rows; exits on empty. | **Dormant by design, but the last deploy FAILED.** The queue has been drained, so nothing has needed it; that also means the failure has never been exercised. See "what to fix" below. |
 | **`fts-build`** | SUCCESS, 2026-08-03 | start command is literally `true`. The retired Railway index-build service. | **Stale.** Superseded by the Hetzner Heavy Job Runner on 3–4 Aug (CLAUDE.md §17). Costs nothing (it runs `true` and exits) but it is a live-looking service that does nothing. |
 | **`fts-pilot`** | never deployed | start command `true`. | **Stale.** The bake-off scaffolding. |
 | **`scrutinise-db`** | SUCCESS, 2026-06-10 | `postgres-ssl:17`, 1.98 GB. | **SURPLUS — archived, see below.** |
+
+### ⚠ CORRECTION, 2026-08-09 — the `vector-serve` row above was wrong when first written
+
+**What it said (9 Aug, V33 §4):** "LIVE but serving nobody. `VECTOR_SEARCH_URL` is unset in Vercel
+and locally." **What is true:** `VECTOR_SEARCH_URL` **is set** in Vercel, and
+`LEX_VECTOR_STREAMS=legislation`. `LEX_SEARCH_VECTOR` has no entry, so the legacy whole-query
+fusion is off — which is why `capabilityFlags()` reads `flags: expansion router` and looks like
+"vector off" from inside the app.
+
+**How the corrected value was established, and by whom:** **Charlie read the Vercel dashboard
+directly on 10 August 2026** and reported the three values. It was NOT read from this machine, and
+could not be: `VERCEL_TOKEN` authenticates (`/v2/user` 200) and then **403s on every project scope
+with `"saml": true`**, so env, deployments and runtime logs are all unreadable from here. See
+`docs/CLAUDE.md` §19.
+
+**Why the original line was wrong, which matters more than the line:** it was an *inference*
+recorded in the grammar of a *measurement*. `vector-search.ts:111` returns `[]` when
+`VECTOR_SEARCH_URL` is unset; the local `.env` has no such variable; the sentence that reached this
+table asserted the state of Vercel's environment. The contradicting evidence was already on the
+record — S2A measured `vector-serve`'s `served` counter moving **+1 on every routed production
+query** (182 → 185), which is per-stream fusion on exactly one stream and requires both variables
+set. A document asserting a flag state nobody holding the document can verify is the same failure
+class as the flag incident it was written to prevent.
+
+**Consequence, stated plainly:** the cross-stream score defect S2B fixed was **live in production**,
+not latent. Any future claim about Vercel env in this file must carry who read it and on what date,
+or be labelled an inference.
 
 ## Heavy jobs do NOT run here, and this is the reason
 
