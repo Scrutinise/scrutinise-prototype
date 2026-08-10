@@ -29,7 +29,7 @@ import type { GoldQuery } from './gold-queries'
 
 const ci = (...ss: string[]): RegExp[] => ss.map((s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'))
 
-export type DraftStream = 'committees' | 'caselaw' | 'guidance'
+export type DraftStream = 'committees' | 'caselaw' | 'guidance' | 'legislation'
 
 export type DraftQuery = Pick<GoldQuery, 'id' | 'query' | 'expected'> & {
   stream: DraftStream
@@ -155,6 +155,46 @@ export const DRAFT_QUERIES: DraftQuery[] = [
     expected: [
       { label: 'Ofcom Broadcasting Code', patterns: ci('broadcasting code', 'ofcom') },
       { label: 'Section 320 / the political-advertising ban', patterns: ci('political advertising', 'section 321', 'political nature') },
+    ],
+  },
+
+  // ── legislation / explanatory notes — the WHY-vs-WHAT pair (S2C2 §1) ──────────────────────
+  //
+  // ⚠ THESE TWO EXIST TO PIN A BEHAVIOUR THAT WAS MEASURED AND THEN LEFT UNPROTECTED. S2C
+  // measured explanatory notes taking ranks 1-9 on "why was the Building Safety Act 2022
+  // introduced" and sitting BELOW the operative-law hits on "speed limit enforcement on
+  // motorways" — winning on WHY, losing on WHAT. That is exactly the intended behaviour of the
+  // annotation corpora, it was covered by ZERO gold questions, and an unmeasured behaviour is one
+  // any future change can lose in silence.
+  //
+  // They are a PAIR and must be read as one: EN1 fails if the note does not surface, EN2 fails if
+  // it crowds out the law. Either alone can be satisfied by a system that is simply wrong in one
+  // direction — rank annotations top always, or drop them always.
+  {
+    id: 'EN1', stream: 'legislation',
+    query: 'Why was the Building Safety Act 2022 introduced and what problem was it meant to solve?',
+    rationale: 'A WHY question. The statute itself never states its purpose; the explanatory notes do. If the notes do not surface here, the annotation corpora have stopped being reachable — which is precisely the state S2C found them in.',
+    expected: [
+      { label: 'Explanatory Notes to the Building Safety Act 2022', patterns: [/explanatory-notes:en:ukpga\/2022\/30/i, /Explanatory Notes .{0,40}Building Safety Act 2022/i] },
+      { label: 'The policy background the notes state', patterns: ci('grenfell', 'building safety', 'higher-risk building') },
+    ],
+  },
+  {
+    id: 'EN2', stream: 'legislation',
+    query: 'What is the speed limit for heavy goods vehicles on a dual carriageway?',
+    rationale: 'A WHAT question with a determinate answer in operative law. The annotation corpora are plain English and repeat policy vocabulary, so BM25 favours them; this fails if that pull pushes the instruments that actually set the limit out of the top 20. Counterweight to EN1, scored as a pair.',
+    // ⚠ THE KEY IS THE OPERATIVE LAW, NOT "no annotation appeared". A pattern asserting the
+    // ABSENCE of something cannot be expressed in this format — the harness asks "did any top-20
+    // hit match", so a negative pattern is satisfied by any one non-matching hit and the question
+    // would pass no matter how badly the law was buried. Naming the instruments tests the same
+    // property honestly: if annotations crowd the top 20, neither key is hit.
+    // Both verified present in the corpus before being written down (2026-08-10):
+    //   primary-acts-pre-2000:ukpga/1984/27:section-86 "Speed limits for particular classes of
+    //   vehicles." — the RTRA 1984 provision applying the Schedule 6 limits; and uksi/2014/3552,
+    //   The Motor Vehicles (Variation of Speed Limits) (England and Wales) Regulations 2014.
+    expected: [
+      { label: 'RTRA 1984 — the provision setting limits by class of vehicle', patterns: [/ukpga\/1984\/27/i, /Speed limits for particular classes of vehicles/i] },
+      { label: 'The instrument varying the HGV limit', patterns: [/uksi\/2014\/3552/i, /Variation of Speed Limits/i] },
     ],
   },
 ]

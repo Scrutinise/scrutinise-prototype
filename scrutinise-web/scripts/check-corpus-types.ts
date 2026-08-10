@@ -32,9 +32,15 @@
  *
  * Usage: npm run check:corpus-types
  */
-import { corpusToType, EXCLUDED_BY_DESIGN } from '../lib/lex/corpus-type-map'
+import fs from 'fs'
+import path from 'path'
+import { corpusToType, corpusDisplayName, EXCLUDED_BY_DESIGN } from '../lib/lex/corpus-type-map'
 import { STREAM_SCOPES, streamCanSelect, type StreamScope } from '../lib/lex/stream-scopes'
+import { ANNOTATION_CORPORA, annotatedGidFromId, annotationTitle, isAnnotationCorpus } from '../lib/lex/annotation-title'
 import type { SearchResultType } from '../lib/lex/page1-config'
+
+const root = path.join(__dirname, '..')
+const read = (f: string) => fs.readFileSync(path.join(root, f), 'utf8')
 
 let passed = 0
 const failures: string[] = []
@@ -153,6 +159,130 @@ section('the verdict vocabulary — a decision and a defect must not print the s
     ok(`${corpus} is genuinely unreachable (the registry and the streams agree)`,
        STREAM_SCOPES.every((s) => !streamCanSelect(s, corpus, REAL[corpus]?.tier ?? 'other', corpusToType(corpus, REAL[corpus]?.tier ?? 'other', `${corpus}:probe:1`))))
   }
+}
+
+// ── 5. S2C2 §1 — the tenth display type ──────────────────────────────────────
+section('§1 — EXPLANATORY_NOTE, and the isLeg property that must not come back')
+{
+  for (const corpus of ANNOTATION_CORPORA) {
+    const { tier, id } = REAL[corpus]
+    ok(`${corpus} types EXPLANATORY_NOTE`, corpusToType(corpus, tier, id) === 'EXPLANATORY_NOTE',
+       String(corpusToType(corpus, tier, id)))
+  }
+
+  // THE property the brief asked to preserve WITH a check. isLeg rewrites the title to the Act's
+  // and the URL to a legislation.gov.uk PROVISION link; an annotation taking that path would be
+  // rendered as enacted text. Asserted at SOURCE in both adapters, because the value is computed
+  // inline in each and there is no shared constant to import.
+  for (const file of ['lib/lex/fts-search.ts', 'lib/lex/vector-search.ts']) {
+    const src = read(file)
+    const m = src.match(/const isLeg\s*=\s*([^\n]*(?:\n\s*[^\n]*)?)/)
+    ok(`${file} defines isLeg`, !!m)
+    ok(`${file}: isLeg does NOT include EXPLANATORY_NOTE`, !!m && !m[1].includes('EXPLANATORY_NOTE'), m?.[1]?.trim())
+  }
+  // …and prove that detector can fail, against a line that WOULD be the defect.
+  const wouldBeDefect = "const isLeg = type === 'PRIMARY_LEGISLATION' || type === 'EXPLANATORY_NOTE'"
+  ok('the isLeg detector matches a line that would reintroduce it',
+     /const isLeg\s*=\s*([^\n]*)/.exec(wouldBeDefect)![1].includes('EXPLANATORY_NOTE'))
+
+  // ⚠ THE SILENT-INVISIBILITY TRAP. BackgroundPanel renders `TYPE_ORDER.map(...)`, not the
+  // results, so a display type missing from that ARRAY renders nowhere — and the array is a plain
+  // list, which tsc cannot check the way it checks the Record beside it. Same in
+  // build-initial-background.ts, where even the Record is `Record<string, string>`.
+  const UNION = read('lib/lex/page1-config.ts')
+    .split('export type SearchResultType =')[1].split('export interface SearchResult')[0]
+    .match(/'([A-Z_]+)'/g)!.map((s) => s.replace(/'/g, ''))
+  ok('the union parsed sanely (10 types)', UNION.length === 10, UNION.join(','))
+  // Matched against the DECLARATION, not against the first mention of the name — both files
+  // now carry a comment warning about this array, and splitting on the bare word picked up the
+  // comment instead of the code.
+  const declaredList = (src: string, name: string) =>
+    (new RegExp(`const ${name}[^=]*=\\s*\\[([\\s\\S]*?)\\]`).exec(src)?.[1] ?? '')
+      .match(/'([A-Z_]+)'/g)?.map((s) => s.replace(/'/g, '')) ?? []
+  const declaredKeys = (src: string, name: string) =>
+    (new RegExp(`const ${name}[^=]*=\\s*\\{([\\s\\S]*?)\\n\\}`).exec(src)?.[1] ?? '')
+      .match(/^\s*([A-Z_]+):/gm)?.map((s) => s.trim().replace(':', '')) ?? []
+  for (const [file, orderName, labelName] of [
+    ['components/lex/BackgroundPanel.tsx', 'TYPE_ORDER', 'TYPE_LABELS'],
+    ['lib/documents/build-initial-background.ts', 'TYPE_ORDER', 'TYPE_LABELS'],
+    ['components/admin/LexGeneralChat.tsx', '', 'TYPE_LABEL'],
+  ] as const) {
+    const src = read(file)
+    const labels = declaredKeys(src, labelName)
+    const missingLabel = UNION.filter((t) => !labels.includes(t))
+    ok(`${file}: ${labelName} covers every display type`, labels.length > 0 && missingLabel.length === 0,
+       labels.length ? `missing ${missingLabel.join(', ')}` : 'parsed nothing — the detector is broken, not the file')
+    if (!orderName) continue
+    const order = declaredList(src, orderName)
+    const missingOrder = UNION.filter((t) => !order.includes(t))
+    ok(`${file}: ${orderName} covers every display type (a missing entry renders NOWHERE)`,
+       order.length > 0 && missingOrder.length === 0,
+       order.length ? `missing ${missingOrder.join(', ')}` : 'parsed nothing — the detector is broken, not the file')
+  }
+  // Prove THAT can fail: a union with an 11th type must be reported missing.
+  {
+    const order = ['PRIMARY_LEGISLATION']
+    ok('the coverage detector reports a type absent from TYPE_ORDER',
+       ['PRIMARY_LEGISLATION', 'A_NEW_TYPE'].filter((t) => !order.includes(t)).length === 1)
+  }
+  ok('the panel label says it explains the law rather than naming a term of art',
+     /EXPLANATORY_NOTE:\s*'What the law was for'/.test(read('components/lex/BackgroundPanel.tsx')))
+}
+
+// ── 6. S2C2 §2 — annotation titles name the Act, and only annotations do ──────
+section('§2 — the annotation title rule fires for annotations and nothing else')
+{
+  ok('isAnnotationCorpus accepts both annotation corpora',
+     ANNOTATION_CORPORA.every((c) => isAnnotationCorpus(c)))
+  for (const c of ['primary-acts-2000plus', 'si-pre-2010', 'eur-lex', 'hansard', 'erskine-may', 'explanatory-other']) {
+    ok(`…and rejects ${c}`, !isAnnotationCorpus(c))
+  }
+
+  // The gid is segment 2 of a FOUR-part id — segment 1 is the en/em discriminator, which is
+  // exactly why the ordinary gidFromId returns null for these.
+  ok('annotatedGidFromId reads the Act gid off a real note id',
+     annotatedGidFromId('explanatory-notes:en:ukpga/2022/30:1-0030') === 'ukpga/2022/30')
+  ok('…and off a real memorandum id',
+     annotatedGidFromId('explanatory-memoranda:em:uksi/2002/1070:1') === 'uksi/2002/1070')
+  ok('…and returns null for an ordinary 3-part legislation id (no false positives)',
+     annotatedGidFromId('primary-acts-2000plus:ukpga/2022/30:section-1') === null)
+  ok('…and null when segment 2 is not gid-shaped',
+     annotatedGidFromId('explanatory-notes:en:notagid:1') === null)
+
+  // ⚠ FALL BACK TO THE CURRENT STRING, NEVER TO A BLANK OR A PARTIAL. A gid is ugly; an empty
+  // title, or "Explanatory Notes —" with nothing after it, is a defect.
+  const resolved = annotationTitle('explanatory-notes', 'Building Safety Act 2022', 'Explanatory Notes: ukpga/2022/30 (7)')
+  ok('a resolved note names the Act', resolved.title === 'Explanatory Notes — Building Safety Act 2022', resolved.title)
+  const unresolved = annotationTitle('explanatory-notes', null, 'Explanatory Notes: ukpga/1999/16 (1)')
+  ok('an unresolved note keeps the string it had', unresolved.title === 'Explanatory Notes: ukpga/1999/16 (1)', unresolved.title)
+  ok('…and never produces a dangling separator', !/—\s*$/.test(unresolved.title) && !/—\s*$/.test(resolved.title))
+  for (const [label, v] of [['title', unresolved.title], ['citation', unresolved.citation]] as const) {
+    ok(`an unresolved note has a non-empty ${label}`, v.trim().length > 0, JSON.stringify(v))
+  }
+  const noTitleAtAll = annotationTitle('explanatory-memoranda', null, corpusDisplayName('explanatory-memoranda'))
+  ok('a row with no sectionTitle at all still reads as prose, not a corpus key',
+     !noTitleAtAll.title.includes('-'), noTitleAtAll.title)
+}
+
+// ── 7. S2C2 §3 — Holyrood must not be mistakable for Westminster ─────────────
+section('§3 — scottish-parliament-or is in debates, and says which parliament it is')
+{
+  const debates = STREAM_SCOPES.find((s) => s.name === 'debates')!
+  ok('the debates stream lists scottish-parliament-or in extraCorpora',
+     !!debates.extraCorpora?.includes('scottish-parliament-or'))
+  ok('it is selectable by debates', streamCanSelect(debates, 'scottish-parliament-or', 'other', 'DEBATE'))
+  ok('…and NOT by guidance (extraCorpora is per-stream, not global)',
+     !streamCanSelect(STREAM_SCOPES.find((s) => s.name === 'guidance')!, 'scottish-parliament-or', 'other', 'DEBATE'))
+  ok('…and would NOT be reachable on tier alone', debates.tier !== 'other')
+
+  // 1,043,264 of 1,044,188 rows carry a sectionTitle beginning "Scottish Parliament: …", so the
+  // jurisdiction is in the rendered title for 99.91% of them by data. This closes the 924 that
+  // carry no title and would otherwise have rendered as the literal corpus key.
+  const fallback = corpusDisplayName('scottish-parliament-or')
+  ok('an untitled Scottish row names the parliament', /Scottish Parliament/.test(fallback), fallback)
+  ok('…and is not the raw corpus key', fallback !== 'scottish-parliament-or', fallback)
+  ok('corpusDisplayName leaves unnamed collections exactly as they are',
+     corpusDisplayName('hansard') === 'hansard')
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`)
