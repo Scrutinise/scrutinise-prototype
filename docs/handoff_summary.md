@@ -467,6 +467,17 @@ Incidental, same class in the new file and fixed at source: the answer call died
 EMPTY under a fully-cited answer, so citations now resolve positionally from the `[n]` markers as
 well, with anything unresolvable shown rather than dropped.
 **Not run: `check:orientation`** — untouched by this work and it costs a real web/X round trip.
+⚠ **OUTSTANDING — `/admin/lex-general` HAS NEVER BEEN OPENED IN A BROWSER** (recorded 2026-08-10;
+said in chat at the time, never written down, which is how it survived to now). The server path is
+tested end to end by `check:lex-general`; the React rendering is not, under a Clerk admin session or
+any other. Nothing asserts the page renders, that the retrieval block expands, or that the source
+list is readable. **The scepticism is earned:** the very next page built in that session WAS driven
+in a browser, and that is the only reason a `*italic*`-renders-as-literal-asterisks defect was
+caught before it went public. One authenticated pass at `/admin/lex-general` closes this.
+⚠ **SUPERSEDED — the router `bad-json` fail-open above is FIXED**, by the search thread, not here:
+`DEFAULT_MAX_OUTPUT_TOKENS` is now **4096** (was 512), `gemini-finish.ts` is the shared truncation
+guard (`414b6fb`), and `b379ce8` added partial-route salvage plus outcome counting. The paragraph
+above is left standing as the finding-as-made; this line is its disposal.
 ▼ Earlier:
 2026-08-08 21:00 UTC — ▼ **LEX: THE SILENT-FLAG CLASS IS DEAD — parseBool
 EVERYWHERE, A LOUD FAIL-OPEN, AND A BOOT LINE.** Commit `bce7818`; CHANGE_LOG
