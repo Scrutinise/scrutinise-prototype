@@ -45,6 +45,12 @@
  *                   beside three collections that were lost by accident — identical word,
  *                   opposite meaning. The next person doing a sweep of the nulls would have
  *                   "fixed" the decision along with the defects.
+ *   deferred-to-graph — destined for a DIFFERENT CONSUMER (the position graph), so retrieval is
+ *                   the wrong door rather than a broken one. Named in `DEFERRED_TO_GRAPH`.
+ *                   ⚠ Unlike excluded-by-design this is NOT enforced anywhere: these collections
+ *                   keep their display type and their existing reachability. The `note` therefore
+ *                   states what retrieval still does with them, because a verdict that hid "the
+ *                   unrouted path still returns this" would trade one silent fact for another.
  *   UNREACHABLE   — no path at all, and nobody chose that. Either the display type is null for
  *                   a reason no longer stated anywhere, or nothing selects its tier.
  *
@@ -73,7 +79,7 @@ import { DRAFT_QUERIES } from './gold-draft-streams'
 // The web app's live mapping + live stream scopes, imported rather than restated. Both are
 // runtime-dependency-free (type-only imports inside), which is what makes this reachable from
 // outside the Next.js path alias.
-import { corpusToType, EXCLUDED_BY_DESIGN } from '../../../scrutinise-web/lib/lex/corpus-type-map'
+import { corpusToType, EXCLUDED_BY_DESIGN, DEFERRED_TO_GRAPH } from '../../../scrutinise-web/lib/lex/corpus-type-map'
 import { STREAM_SCOPES, streamCanSelect } from '../../../scrutinise-web/lib/lex/stream-scopes'
 import type { SearchResultType } from '../../../scrutinise-web/lib/lex/page1-config'
 
@@ -141,11 +147,11 @@ interface Row {
   tier_scoped_callers: string[]
   gold_questions: number
   gold_ids: string[]
-  verdict: 'reachable' | 'keyword-only' | 'tier-only' | 'excluded-by-design' | 'UNREACHABLE'
+  verdict: 'reachable' | 'keyword-only' | 'tier-only' | 'excluded-by-design' | 'deferred-to-graph' | 'UNREACHABLE'
   note: string | null
 }
 
-const VERDICTS = ['reachable', 'tier-only', 'keyword-only', 'excluded-by-design', 'UNREACHABLE'] as const
+const VERDICTS = ['reachable', 'tier-only', 'keyword-only', 'deferred-to-graph', 'excluded-by-design', 'UNREACHABLE'] as const
 
 // ── Lance: one projected scan per table, aggregated in memory ────────────────
 async function scanCorpusTier(table: string): Promise<Map<string, Map<string, number>>> {
@@ -255,6 +261,17 @@ async function main() {
       verdict = 'excluded-by-design'
       note = `DELIBERATE: ${EXCLUDED_BY_DESIGN[corpus]}` +
         (streams.length ? ` ⚠ BUT ${streams.join(' + ')} CAN NOW SELECT IT — the exclusion has been broken` : '')
+    } else if (corpus in DEFERRED_TO_GRAPH) {
+      // Evaluated BEFORE `streams.length` so the verdict states the DESTINATION, which is the
+      // decision, rather than the retrieval status, which is a consequence. ⚠ The note carries
+      // the retrieval status anyway: this verdict is documentation, not enforcement, and these
+      // collections really are still returned by the unrouted path today. Hiding that behind a
+      // reassuring word would be the same trade the verdict was invented to stop.
+      verdict = 'deferred-to-graph'
+      const retrieval = streams.length ? `⚠ a router stream (${streams.join(' + ')}) CAN currently select it`
+        : ftsRows > 0 ? 'still returned by the unrouted/fail-open path, as keyword-only'
+        : 'not in the FTS index'
+      note = `DESTINED FOR THE POSITION GRAPH, not a retrieval stream: ${DEFERRED_TO_GRAPH[corpus]}. Retrieval status unchanged — ${retrieval}.`
     } else if (streams.length) verdict = 'reachable'
     else if (typeNull) {
       verdict = 'UNREACHABLE'
@@ -471,6 +488,41 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
     for (const r of by('excluded-by-design')) {
       md.push(`- \`${r.collection}\` (${fmt(r.sections)} sections) — ${EXCLUDED_BY_DESIGN[r.collection]}`)
     }
+    md.push('')
+  }
+  if (by('deferred-to-graph').length) {
+    md.push('**Routed to the position graph, not to retrieval** — the third case: not a defect, and')
+    md.push('not a decision that it should never be seen, but a decision that retrieval is the wrong')
+    md.push('door. ⚠ Documentation only: nothing enforces this, and the unrouted path still returns')
+    md.push('these today. See the `note` column for each one\'s actual retrieval status.')
+    md.push('')
+    for (const r of by('deferred-to-graph')) {
+      md.push(`- \`${r.collection}\` (${fmt(r.sections)} sections) — ${DEFERRED_TO_GRAPH[r.collection]}`)
+    }
+    md.push('')
+  }
+
+  // ── §3 of BRIEF_SEARCH_S2C3: deferred, by name, with a date on it ──────────
+  // The point of listing these is that "deferred" should be a decision somebody took on a day,
+  // not an omission nobody owns. Computed from the live table rather than typed out, so the
+  // sections figures cannot drift from the matrix they sit in.
+  const DEFERRED_PENDING_RERANKER = [
+    'cma-cases', 'ofgem', 'ofcom', 'uk-treaties', 'independent-reviews',
+    'tax-treaties-dta', 'cps-guidance', 'inquiry-evidence', 'lgsco',
+  ]
+  const pending = rows.filter((r) => DEFERRED_PENDING_RERANKER.includes(r.collection))
+  if (pending.length) {
+    md.push('## Deferred pending the reranker decision (recorded 2026-08-10, BRIEF_SEARCH_S2C3 §3)')
+    md.push('')
+    md.push('*No action taken on these. Listed so that "deferred" carries a date and an owner rather')
+    md.push('than being an omission nobody owns. Revisit after the reranker decision.*')
+    md.push('')
+    md.push('| collection | sections | verdict | type |')
+    md.push('|---|---:|---|---|')
+    for (const r of pending.sort((a, b) => b.sections - a.sections)) {
+      md.push(`| \`${r.collection}\` | ${fmt(r.sections)} | ${r.verdict} | ${r.types.join(', ') || '**null**'} |`)
+    }
+    md.push(`| **total** | **${fmt(pending.reduce((n, r) => n + r.sections, 0))}** | | |`)
     md.push('')
   }
 
