@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-09 21:55 UTC — ▼ **SEARCH STAGE 2B: THE SCORE LANDMINE IS DEFUSED, AND THE
+*Last updated: 2026-08-10 00:16 UTC — ▼ **SEARCH STAGE 2C: NO COLLECTION IS UNREACHABLE BY
+ACCIDENT ANY MORE, AND THE ONE THAT IS UNREACHABLE ON PURPOSE NOW SAYS SO.** Executes
+`BRIEF_SEARCH_S2C.md` §0 and §1 in full; **§2 NOT RUN — Gate 2 closed**, §3 carried.
+CHANGE_LOG (2026-08-10 00:16 UTC). `tsc` + `next build` clean; new **`check:corpus-types` 30/30,
+mutation-tested against a deliberately broken tree (5 failures, the right 5)**;
+`check:score-scope` 36/36, `check:stream-coverage` **3/3 live**, `check:flags` 50/50,
+`check:llm-guards` 9/9.
+⚠ **GATE 2 IS STILL CLOSED AND THIS IS THE FIRST THING TO CHECK NEXT SESSION.** No `corpus_vec`
+delta-embed completion marker exists; checked directly too — **`v33-vec-catchup.ts --embed
+--max-cost 45` was still running at 00:16 UTC** (PID 77936, started 2026-08-09 15:23:39 UTC).
+**Ingest thread: stamp the completion here and §2 (the benchmark + ordering baseline) can run.**
+**§0 — `RAILWAY_ROLE.md` WAS WRONG AND IS CORRECTED.** Charlie read Vercel: `VECTOR_SEARCH_URL`
+**is set**, `LEX_VECTOR_STREAMS=legislation`, `LEX_SEARCH_VECTOR` absent. **So the S2B
+cross-stream score defect was LIVE, not latent** — the conservative reading was right on the facts.
+The old line was an inference in the grammar of a measurement. New **`docs/CLAUDE.md` §19**: a fact
+that cannot be read from here must be asked for, and where inferred must be labelled as one; the
+`VERCEL_TOKEN` trap (200 on `/v2/user`, then 403 `"saml": true` on every project scope) is named so
+nobody rotates a working token again.
+**§1 — UNREACHABLE 4 → 0. Reachable 93.14% → 93.40% (+48,267 sections), 53 → 56 collections.**
+`explanatory-notes` (18,801) + `explanatory-memoranda` (27,428) → **GUIDANCE**, reachable from the
+**legislation** stream; `erskine-may` (2,038) → GUIDANCE, into **guidance**; `members-interests`
+(3,448) → new verdict **`excluded-by-design`**, the decision recorded in a new `EXCLUDED_BY_DESIGN`
+registry with its reason, checked ahead of everything so a re-tier cannot undo it.
+⚠ **GUIDANCE for the explanatory corpora is an INTERIM and is recorded as one** — a tenth type
+`EXPLANATORY_NOTE` is **proposed for Charlie, not added**. They are deliberately not typed as
+legislation: `isLeg` would rewrite the title to the Act's and the URL to a provision link,
+presenting the annotation as enacted text.
+⚠ **Typing `erskine-may` was NOT sufficient** — it carries tier `other` in the BUILT index and the
+prefilter matches the index, not `tierFor()`. New `StreamScope.extraCorpora` = a second,
+corpus-only retrieval leg. It re-checks the corpus off the id client-side (the adapters *degrade*
+on an unhonoured `corpora`, and this leg has no tier and no `types` backstop), and legs are
+**merged before fusion, never after** — fusing per-leg then merging rebuilds the S2B RRF-vs-BM25
+landmine one function lower.
+**Measured live, not built inert**: 181 explanatory hits over 5 legislation queries, **0 untitled,
+0 without a URL**; they rank 1–9 on "why was this Act introduced" and sit below the first six
+operative-law hits on "speed limit enforcement". Erskine May takes 57/60 of the guidance stream on
+a procedural query, 12/60 **all at rank 48+** on a policy query, 2/60 on an FCA query, **0** on an
+unrelated control — BM25 tails it out on its own, no cap needed.
+⚠ **`scottish-parliament-or` (1,044,188 sections = 86% of the whole remaining 6.60% gap) is the
+same shape as erskine-may and was NOT wired in.** It is typed DEBATE, so `extraCorpora` would put
+it in the **debates** stream, and changing what a million sections do to that stream is a
+measurement and a decision, not a line in a list. **Charlie's call; the mechanism now exists.**
+⚠ **This changes §2's instruction**: gold questions satisfied in part by an undeliverable
+collection went **4 → 0**, so the ordering baseline now excludes **4** questions (D2, D3, D4, D5 —
+archetype D, "citation graph", a stream the router does not have), **not 6**.
+▼ Earlier:
+2026-08-09 21:55 UTC — ▼ **SEARCH STAGE 2B: THE SCORE LANDMINE IS DEFUSED, AND THE
 CORPUS NOW HAS AN INSTRUMENT SAYING WHAT ANY QUERY CAN REACH.** Executes `BRIEF_SEARCH_S2B.md`
 §0 and §1 in full; §2 carried by design. CHANGE_LOG (2026-08-09 21:55 UTC). `tsc` + `next build`
 clean; new **`check:score-scope` 36/36 with every assertion seen to FAIL first**,

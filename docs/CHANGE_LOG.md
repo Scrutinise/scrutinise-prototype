@@ -111,6 +111,152 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH Stage 2C — the four collections no caller could receive, and a deliberate exclusion that stops looking like a defect (2026-08-10 00:16 UTC)
+
+Executes `docs/BRIEF_SEARCH_S2C.md` §0 and §1 in full. **§2 is NOT run: Gate 2 is closed** — see
+below. §3 carried, unchanged. `tsc` + `next build` clean. New **`check:corpus-types` 30/30, every
+assertion carrying a negative control AND the whole check mutation-tested against a deliberately
+broken tree (5 failures, the right 5)**. `check:score-scope` 36/36, `check:stream-coverage` **3/3
+live against `fts-serve`**, `check:flags` 50/50, `check:llm-guards` 9/9.
+
+### §0 — the record corrected, and the rule that stops it recurring
+
+`docs/RAILWAY_ROLE.md` said "`VECTOR_SEARCH_URL` is unset in Vercel". Charlie read the dashboard:
+**it is set, and `LEX_VECTOR_STREAMS=legislation`**, with `LEX_SEARCH_VECTOR` absent. So the
+cross-stream score defect S2B deleted was **live in production, not latent** — the conservative
+reading taken on the evidence was the correct one.
+
+The line was an **inference wearing the grammar of a measurement**: derived from the local `.env`
+plus a code read of `vector-search.ts:111`, and asserted about a machine nobody here can read.
+Corrected, with provenance attached (who read it, from where, on what date). New **`docs/CLAUDE.md`
+§19** records the rule beside §18's OFF-vs-FAILED corollary: *a fact that was measured and a fact
+that was inferred must not look identical on the page* — and names the specific trap, that
+`VERCEL_TOKEN` returns 200 on `/v2/user` and then 403s with `"saml": true` on every project scope,
+which reads exactly like an expired credential and is not.
+
+Worth stating together, because the two halves only make sense as one: general chat was reading
+**only** legislation (S2A) while the panel surfaces sorted legislation **last or off the end**
+(S2B). Opposite symptoms, one root cause — no cross-stream ordering policy existed, so each caller
+improvised one.
+
+### §1 — 4 UNREACHABLE collections → 0, and the four were four different decisions
+
+`corpusToType` returned null for `explanatory-notes`, `explanatory-memoranda`, `erskine-may` and
+`members-interests`. **A null there is a deletion, not a demotion**: the FTS adapter drops the hit
+before any caller sees it, so all four were indexed, searched, retrieved and discarded — and V33
+had built 24,987 vectors for the two explanatory corpora six hours before the matrix said no user
+could receive them. They were fixed as four decisions, not one blanket mapping.
+
+**§1a — explanatory notes + memoranda → `GUIDANCE`, reachable from the `legislation` stream.**
+They sit under the `legislation` tier, which that stream selects with no type filter, so typing
+them non-null is the whole fix. ⚠ **Deliberately NOT typed as PRIMARY_LEGISLATION /
+STATUTORY_INSTRUMENT**: those are `isLeg` in `fts-search.ts`, which rewrites the title to the Act's
+title and the URL to a legislation.gov.uk **provision** link — it would present the annotation as
+the enacted text. ⚠ **GUIDANCE is recorded as an INTERIM, not as a fit.** Its contract is
+"regulator + soft-law" and its panel label is "Guidance & regulators"; an explanatory note is
+departmental material laid alongside a Bill. It is the least wrong of the nine existing types, and
+a tenth — `EXPLANATORY_NOTE` — is **proposed for Charlie, not added**, because adding a type
+silently changes every panel's grouping.
+**Measured live, not asserted**: 181 explanatory hits over 5 legislation-stream queries, **0
+falling back to the corpus name for a title, 0 without a URL**. The rank behaviour is the reason to
+keep it: *"why was the Building Safety Act 2022 introduced"* → 55/60 explanatory, **ranks 1–9**;
+*"speed limit enforcement on motorways"* → 28/60 but the **first six ranks are still operative
+law**. They win where the question is *why*, and sit below the law where the question is *what*.
+
+**§1b — `erskine-may` → `GUIDANCE`, into the `guidance` stream.** ⚠ **Typing it was necessary and
+not sufficient, and this is the general lesson**: it carries tier **`other`** in the built index,
+and the server-side prefilter matches the tier **baked into the index**, not `tierFor()` as it
+reads today. `CORPUS_DISPLAY_OVERRIDE` already corrects that staleness on the *display-type* axis;
+without the same correction on the *prefilter* axis a display override yields a correctly-typed row
+no stream can retrieve. So `StreamScope` gains **`extraCorpora`** — a second, corpus-only retrieval
+leg — and the guidance stream lists `erskine-may` in it.
+⚠ **The extra leg does not trust the service-side corpus filter.** Both search adapters *degrade*
+rather than fail on an unhonoured `corpora`, which is right for the main leg (tier prefilter and
+`types` backstop still stand) and wrong here: this leg passes no tier and `guidance` has no
+`types`, so a stale service would return the whole 18.4M-row index as if it were 1,873 rows of
+Erskine May. The collection is re-checked off the id, client-side.
+⚠ **Merge first, fuse once.** Fusing each leg against its own dense half and then merging would
+compare an RRF ~0.01 with a BM25 ~5–25 whenever one leg's dense half came back empty — the exact
+defect S2B deleted from `groupForPanel`, rebuilt one function lower. The two BM25 legs merge into
+one BM25 ranking, the two dense legs into one dense ranking, and fusion happens once.
+**Measured live**: squarely procedural queries → 57/60 Erskine May at ranks 1–60; policy with
+incidental procedural words → 12/60, **all at rank 48+**; an FCA regulator query → 2/60 at ranks 55
+and 59; an unrelated control → **0**. BM25 sorts it to the tail on its own; no cap is needed.
+
+**§1c — `members-interests` stays out, and now says so.** `SEARCH_STRATEGY.md` §3.1 classes it as
+"a political-risk and people-graph input, not searched for its own sake", and that call stands —
+the 3,448 rows are named individuals against declared financial interests, every one titled
+`{Member} — {category}`. ⚠ **But it had been correct BY ACCIDENT.** It was excluded by a type map
+returning null, indistinguishable from the three defects beside it, and the next person sweeping
+the nulls would have wired it in without anyone deciding to. New **`EXCLUDED_BY_DESIGN`** registry
+in `corpus-type-map.ts` holds the decision with its reason, checked **first — ahead of the tier
+switch and every override — so a re-tier cannot undo it** (asserted across all five tiers). The
+matrix has a new verdict, **`excluded-by-design`**, and will shout if a stream ever starts
+selecting it.
+⚠ Deleted, not moved: `PARLIAMENTARY_NON_DEBATE_NULL` was **dead code that looked live**. It named
+both `members-interests` and `erskine-may`, and ran for neither — both carry tier `other`, so that
+branch is unreachable for them and the `default:` case was doing the excluding, for no stated
+reason at all.
+
+**§1d — the delta.** Re-run of `corpus-reachability.ts` (both full Lance scans clean:
+18,166,926 FTS rows, 22,145,900 vec rows):
+
+| | before | after |
+|---|---:|---:|
+| sections reachable | 17,121,546 (**93.14%**) | 17,169,813 (**93.40%**) |
+| collections reachable | 53 | **56** |
+| **UNREACHABLE** | **4** | **0** |
+| excluded-by-design | — | 1 |
+| keyword-only | 13 | 13 |
+
+**What remains outside, by name, not as a residual** — 1,213,359 sections (6.60%), all
+`keyword-only` bar the one deliberate exclusion: **`scottish-parliament-or` 1,044,188 (86% of the
+whole remainder on its own)**, `early-day-motions` 60,737, `petitions` 49,529, `cma-cases` 22,898,
+`ofgem` 17,161, `bills-api` 6,574, `ofcom` 4,169, `members-interests` 3,448 *(by design)*,
+`uk-treaties` 3,264, `independent-reviews` 667, `tax-treaties-dta` 324, `cps-guidance` 270,
+`inquiry-evidence` 90, `lgsco` 40.
+⚠ **`scottish-parliament-or` is the same shape as `erskine-may` at 550× the size and was NOT
+wired in.** It is display-typed `DEBATE`, so `extraCorpora` would put it in the **debates** stream —
+changing what a million sections do to that stream's results is a measurement and a decision, not a
+line in a list. Flagged for Charlie; `extraCorpora` is now the mechanism that would do it.
+
+**Gold provenance moved too**: questions satisfied in part by a collection **no caller can
+receive** went **4 → 0** (D2, D3, E3, F3 — all `explanatory-notes`). Unchanged, because §1 does not
+touch them: 11 off-stream, 12 satisfied in part by a keyword-only collection, 4 declaring a stream
+the router does not have.
+⚠ **This changes the §2 instruction.** The brief said to exclude both the archetype-D four and the
+UNREACHABLE-satisfied four from the ordering baseline's denominator; those sets overlapped at D2/D3
+for a union of 6. After §1 the second set is empty, so **the exclusion is now 4 questions (D2, D3,
+D4, D5), not 6.**
+
+### §2 — NOT RUN. Gate 2 is closed, and it was checked rather than assumed
+
+There is **no `corpus_vec` delta-embed completion marker in `handoff_summary.md`** — no 10 August
+entry exists at all. Checked directly as well as on the record: **`v33-vec-catchup.ts --embed
+--max-cost 45` is still running** (PID 77936, started 2026-08-09 15:23:39 UTC, ~9h elapsed at time
+of writing), consistent with ingest's predicted midday-10-Aug completion. A baseline gathered
+across an index change is void, and the delta embed is an index change on exactly the stream the
+regression sits on. Per the brief: §1 done, stop.
+
+### Two decisions waiting on Charlie
+
+1. **`EXPLANATORY_NOTE` as a tenth `SearchResultType`**, versus widening the GUIDANCE label from
+   "Guidance & regulators" to something that admits explanatory material, versus leaving it. The
+   type is a ~5-file change (`page1-config.ts`, `BackgroundPanel.tsx`,
+   `build-initial-background.ts`, `LexGeneralChat.tsx`, plus its ordering entries).
+2. **`scottish-parliament-or` into the debates stream** — 1,044,188 sections, 86% of the remaining
+   gap, one `extraCorpora` entry away, and a material change to what every debates query returns.
+
+### Reported, not fixed
+
+Explanatory titles read `Explanatory Notes: ukpga/2022/30 — Article 50 (30)` — the **gid, not the
+Act's name**. The row is usable (correct URL, identifiable) but a reader cannot see *which* Act the
+note explains without following the link. Fixing it means teaching `fts-search.ts` to read the
+Act's gid out of the annotation's 4-part id, which changes a function every legislation result
+passes through. Named here rather than done quietly.
+
+---
+
 ## SEARCH Stage 2B — the cross-stream score landmine is defused, and the corpus is measured for what any query can actually reach (2026-08-09 21:55 UTC)
 
 Executes `docs/BRIEF_SEARCH_S2B.md` §0 and §1 in full. §2 is carried, not closed, by design.
