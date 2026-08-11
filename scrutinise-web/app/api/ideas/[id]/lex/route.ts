@@ -6,9 +6,11 @@ import { authorizeIdea } from '@/lib/lex/authz'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
-import { setProposal, storeExtracted } from '@/lib/lex/field-machine'
+import { setProposal, storeExtracted, addCause, listCauses } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
 import { isContinueIntent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
+import { countProblemPresses } from '@/lib/lex/orchestrator'
+import { PROBLEM_FIELD_KEY } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { buildFactsBlock } from '@/lib/lex/facts'
@@ -17,7 +19,7 @@ type Params = { params: Promise<{ id: string }> }
 
 const BodySchema = z.object({ message: z.string().trim().min(1).max(4000) })
 
-type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string }
 
 // POST /api/ideas/[id]/lex — one Lex turn. Lex returns content only; the
 // platform validates any proposal and sets state. State never half-advances (§4).
@@ -109,6 +111,11 @@ export async function POST(req: Request, { params }: Params) {
     search: research ?? stageStore.byStage[displayStageFor(pre.stage)] ?? null,
   })
 
+  // §19-D Task 1b — the problem gate. Presses are counted from the transcript (every
+  // bubble Lex writes while the problem field is current carries its key), so the gate
+  // spends itself after two and the user is never nagged a third time.
+  const problemPresses = current?.key === PROBLEM_FIELD_KEY ? countProblemPresses(idea.aiChatHistory) : 0
+
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
   const systemPrompt = buildLexSystemPrompt({
     preferredName: user.preferredName ?? user.firstName,
@@ -124,6 +131,7 @@ export async function POST(req: Request, { params }: Params) {
     statsBlock: tools.block ?? null,
     factsBlock,
     acceptedSummary,
+    problemPresses,
   })
 
   let lex
@@ -141,7 +149,20 @@ export async function POST(req: Request, { params }: Params) {
   // chatText is still shown, state never half-advances. On a valid box proposal
   // the field goes AWAITING_CONFIRMATION and the box renders the tidied text.
   let proposalApplied = false
-  if (current && lex.proposal && lex.proposal.fieldKey === current.key) {
+
+  // §19-D Task 9g — a chat-named cause joins the loop instead of the user being asked
+  // to re-type it into the panel. It is the ONE loop that takes a chat proposal, and it
+  // lands as source USER because they are the user's own words, tidied — the panel's
+  // "from past debates" badge belongs only to corpus-seeded rows. The user still
+  // classifies, nests, edits or removes each one; adding it is not accepting it.
+  if (current?.key === 'causes' && lex.proposal?.fieldKey === 'causes' && lex.proposal.valueList?.length) {
+    const named = lex.proposal.valueList.map((c) => c.trim()).filter((c) => c.length >= 8).slice(0, 5)
+    const existing = (await listCauses(id)).map((c) => c.cause.trim().toLowerCase())
+    const fresh = named.filter((c) => !existing.includes(c.toLowerCase()))
+    for (const cause of fresh) await addCause(id, { cause, source: 'USER' })
+    proposalApplied = fresh.length > 0
+    console.log('[lex-diag] causes proposed in chat', { named: named.length, added: fresh.length })
+  } else if (current && lex.proposal && lex.proposal.fieldKey === current.key) {
     // A1: structured fields carry a valueObject (multi-slot); keywords a list; the rest text.
     const rawValue =
       current.type === 'structured' ? lex.proposal.valueObject
@@ -169,6 +190,7 @@ export async function POST(req: Request, { params }: Params) {
     status: pre.currentField?.status ?? null,
     awaiting,
     proposalApplied,
+    ...(current?.key === PROBLEM_FIELD_KEY ? { problemPresses, gateSpent: problemPresses >= 2 } : {}),
   })
 
   // Extracted slots are stored, never carded (§4 extracted).
@@ -184,7 +206,8 @@ export async function POST(req: Request, { params }: Params) {
   const updatedHistory: ChatMsg[] = [
     ...(Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : []),
     { role: 'user', content: message, timestamp: now, stage: pre.stage },
-    { role: 'lex', content: lex.chatText, timestamp: now, stage: pre.stage },
+    // Tagged with the field it was said about — this is what the problem gate counts.
+    { role: 'lex', content: lex.chatText, timestamp: now, stage: pre.stage, field: current?.key },
   ].slice(-60)
   await prisma.idea.update({ where: { id }, data: { aiChatHistory: updatedHistory } })
 

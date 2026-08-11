@@ -24,7 +24,7 @@ import { computeCanonicalState } from './state'
 import { fieldDef, type CanonicalState, type FieldDef } from './page1-config'
 import {
   buildLexSystemPrompt, runLexTurn, generateCauseCandidates, generatePolicyOptions,
-  generateCoherenceReview, formatCoherenceReview,
+  generateCoherenceReview, formatCoherenceReview, generateAnticipatedResponses,
 } from './lex-client'
 import {
   setProposal, storeExtracted, createCauses, buildWhoAffectedSeed,
@@ -34,8 +34,13 @@ import { validateProposal } from './proposal-schema'
 import { runSearch } from './search-gateway'
 import { buildFactsBlock, type TurnFacts } from './facts'
 import { readStageSearches, displayStageFor, type StageSearchRecord } from './stage-search'
+import { PROBLEM_FIELD_KEY, looksLikeASolution } from './method'
 
-type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string }
+// `field` (§19-D Task 1b) tags a Lex bubble with the field it was said ABOUT, so the
+// problem gate can count its own presses without a schema change. Absent on every
+// message written before this sprint, which reads as "no presses yet" — the safe
+// direction: an existing idea gets its full two presses rather than none.
+type ChatMsg = { role: string; content: string; timestamp?: string; stage?: string; field?: string }
 
 function historyOf(raw: unknown): { role: string; content: string }[] {
   return (Array.isArray(raw) ? (raw as ChatMsg[]) : [])
@@ -50,16 +55,24 @@ async function chatHistory(ideaId: string) {
 
 /** Append Lex bubbles to the stored transcript, each tagged with the stage it was
  *  said in (§19-B Task 3 — so the chat's stage dividers survive a page reload). */
-async function pushLex(ideaId: string, content: string | string[], stage?: string) {
+async function pushLex(ideaId: string, content: string | string[], stage?: string, field?: string) {
   const contents = (Array.isArray(content) ? content : [content]).filter((c) => c.trim())
   if (!contents.length) return
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { aiChatHistory: true } })
   const now = new Date().toISOString()
   const updated: ChatMsg[] = [
     ...(Array.isArray(idea?.aiChatHistory) ? (idea!.aiChatHistory as ChatMsg[]) : []),
-    ...contents.map((c) => ({ role: 'lex', content: c, timestamp: now, stage })),
+    ...contents.map((c) => ({ role: 'lex', content: c, timestamp: now, stage, field })),
   ].slice(-60)
   await prisma.idea.update({ where: { id: ideaId }, data: { aiChatHistory: updated } })
+}
+
+/** §19-D Task 1b — how many times Lex has already pressed on the problem statement.
+ *  Counted from the transcript (no schema change): every bubble Lex writes while the
+ *  problem field is current is tagged with it. */
+export function countProblemPresses(history: unknown): number {
+  return (Array.isArray(history) ? (history as ChatMsg[]) : [])
+    .filter((m) => m.role === 'lex' && m.field === PROBLEM_FIELD_KEY).length
 }
 
 // ── canonical helpers (span all pages, not just Page 1) ──────────────────────
@@ -149,7 +162,7 @@ function fallbackValue(defKey: string, state: CanonicalState): unknown {
     case 'title':
       return fallbackTitle(ideaNarrative)
     case 'challenge':
-      return firstSentence(ideaNarrative) || 'The core challenge — please refine this in a sentence.'
+      return firstSentence(ideaNarrative) || 'The problem, in a sentence — please put this in your own words.'
     case 'pivotalObstacle':
       return 'The main thing blocking a workable solution here — please refine this.'
     case 'summaryDiagnosis': {
@@ -170,7 +183,7 @@ function fallbackChat(defKey: string): string {
     case 'title':
       return 'Here’s a working title — change it if you’d prefer, then confirm.'
     case 'challenge':
-      return 'Here’s the challenge in a sentence — accept it or tell me how to sharpen it.'
+      return 'Here’s the problem in a sentence — accept it or tell me how to sharpen it.'
     case 'pivotalObstacle':
       return 'Here’s what looks like the pivotal obstacle — accept it or refine it.'
     case 'summaryDiagnosis':
@@ -277,6 +290,41 @@ async function proposeScalar(
   return honest
 }
 
+/**
+ * §19-D Task 1b — the problem field, with the gate applied on the first pass.
+ *
+ * The source material is whatever the user wrote on Page 1. Where that is a SOLUTION,
+ * Lex must not silently manufacture a problem to sit under it: it proposes the most
+ * likely reading (so agreeing is one click) and says openly that it is a guess, asking
+ * what is actually going wrong. Where it already reads as a problem this behaves
+ * exactly as it did.
+ */
+async function proposeProblem(
+  ideaId: string, userId: string, def: FieldDef, state: CanonicalState,
+): Promise<string> {
+  const source = [
+    (acceptedValue(state, 'ideaNarrative') as string) ?? '',
+    (acceptedValue(state, 'youAndIdeaNarrative') as string) ?? '',
+  ].join(' ').trim()
+  const solutionShaped = looksLikeASolution(source)
+  console.log('[lex-diag] problem gate', {
+    press: 1, solutionShaped, sourceLen: source.length, sample: source.slice(0, 80),
+  })
+
+  const directive = solutionShaped
+    ? `[The user has described what they want DONE, not what is going WRONG. Their words: "${source.slice(0, 400)}". ` +
+      `Apply the problem gate. In chatText: acknowledge the remedy they have in mind in half a sentence, then ask ` +
+      `what is going wrong that it would fix — offering two or three concrete readings of the problem so they can ` +
+      `just pick one. ALSO return a proposal for "${def.key}" with your best reading stated as a problem (what is ` +
+      `wrong, for whom, why it matters), and say in chatText that it is your reading and to correct it if it is not ` +
+      `theirs. Do not lecture, do not use the words "solution" or "problem statement" as jargon, and do not refuse ` +
+      `to proceed.]`
+    : `[Propose THE PROBLEM in one sentence — what is wrong, for whom, and why it matters — drawn from the user's ` +
+      `own words. No remedy in it. proposal.fieldKey "${def.key}", proposal.valueText. One short sentence in chatText.]`
+
+  return proposeScalar(ideaId, userId, def, state, { directive })
+}
+
 /** Tell the user a draft failed, in Lex's voice, grounded in the facts of the turn. */
 async function honestFailureMessage(
   ideaId: string, userId: string, state: CanonicalState, def: FieldDef,
@@ -298,16 +346,58 @@ async function honestFailureMessage(
   }
 }
 
-/** A structured panel box (whoAffectedImpactCost/legalLandscape): seed a proposal so
- *  the panel editor pre-fills, then introduce it in chat. Seeding moves it off EMPTY so
- *  the conductor won't re-seed on the next write. */
+/**
+ * A structured panel box (whoAffectedImpactCost / legalLandscape / anticipatedResponses).
+ *
+ * §19-D Task 2a — THE SEED IS NOT ALWAYS A PROPOSAL. It used to be: every structured
+ * field was pushed to AWAITING_CONFIRMATION with `{slot: ''}` for each slot, and the
+ * panel renders "proposed by Lex" off the status alone. That is how the legal-landscape
+ * box came to carry a "Proposed by Lex" badge over five empty inputs on the 10 Aug
+ * walk-through — Lex proposed nothing and the UI said it had. A field with no content
+ * to offer now stays EMPTY, which is what it is.
+ *
+ * §19-D Task 2c — anticipatedResponses is the field the user is LEAST able to fill from
+ * a blank box and Lex is best placed to draft, so it is generated rather than blanked.
+ */
 async function seedStructured(ideaId: string, userId: string, def: FieldDef, state: CanonicalState): Promise<string> {
+  if (def.key === 'anticipatedResponses') return seedAnticipatedResponses(ideaId, userId, def, state)
+
   const seed =
     def.key === 'whoAffectedImpactCost'
       ? await buildWhoAffectedSeed(ideaId)
       : Object.fromEntries((def.slots ?? []).map((k) => [k, '']))
-  await setProposal(ideaId, def.key, { value: seed })
+
+  // Only claim a proposal when at least one slot actually carries something.
+  const hasContent = Object.values(seed).some((v) => typeof v === 'string' && v.trim())
+  if (hasContent) await setProposal(ideaId, def.key, { value: seed })
+  else console.log('[lex-diag] structured field left EMPTY — nothing to propose', { field: def.key })
+
   return askQuestion(ideaId, userId, def, state)
+}
+
+/** §19-D Task 2c — draft the five anticipated responses so the user sharpens rather
+ *  than invents. A failed draft is REPORTED; it never becomes five empty boxes with a
+ *  "proposed by Lex" badge over them. */
+async function seedAnticipatedResponses(
+  ideaId: string, userId: string, def: FieldDef, state: CanonicalState,
+): Promise<string> {
+  const drafted = await generateAnticipatedResponses({
+    chosenApproach: (acceptedValue(state, 'chosenApproach') as string) ?? '',
+    pivotalObstacle: (acceptedValue(state, 'pivotalObstacle') as string) ?? '',
+    challenge: (acceptedValue(state, 'challenge') as string) ?? '',
+    leverage: (acceptedValue(state, 'leverage') as string) ?? undefined,
+  })
+  const filled = drafted ? Object.values(drafted).filter((v) => v.trim()).length : 0
+  console.log('[lex-diag] anticipated responses seeded', { filled, of: def.slots?.length ?? 5 })
+
+  if (!drafted) return honestFailureMessage(ideaId, userId, state, def)
+
+  await setProposal(ideaId, def.key, { value: drafted })
+  return (
+    `I've had a go at the five responses this approach would provoke — avoidance, gaming, ` +
+    `enforcement burden, legal challenge and the political attack line. They're in the panel as ` +
+    `drafts: sharpen them, cut what's wrong, add what I've missed.`
+  )
 }
 
 /** The causes loop: pre-seed candidates from the corpus (CAUSE_SEEDING), then invite
@@ -334,23 +424,30 @@ async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: 
     const snippets = relevant.map((r) => `${r.citation}: ${r.snippet}`).slice(0, 8)
     diag.snippets = snippets.length
 
-    // Generate — with ONE retry (the generator is resilient→[] and Gemini 429/503 are
-    // common transient causes of "no candidates surfaced").
+    // Generate — with ONE retry. The retry is DELIBERATELY DIFFERENT (fewer, shorter,
+    // no nesting): a second identical call against a deterministic budget wall just
+    // hits the same wall, which is CLAUDE.md §13's "retry is not appropriate for parse
+    // failures" in another costume. That is what happened on 10 Aug.
     let candidates = await generateCauseCandidates({ challenge, context, snippets })
-    if (!candidates.length) candidates = await generateCauseCandidates({ challenge, context, snippets })
+    if (!candidates.length) candidates = await generateCauseCandidates({ challenge, context, snippets, terse: true })
     diag.generated = candidates.length
 
-    // Deterministic corpus-grounded fallback: if the generator yields nothing but the
-    // corpus DID return relevant material, seed a couple of candidates pointing at the
-    // sources so the acceptance ("candidates seeded from the corpus") always holds. The
-    // user edits/keeps/deletes them like any seed.
-    if (!candidates.length && relevant.length) {
-      candidates = relevant.slice(0, 3).map((r) => ({
-        cause: `A factor examined in ${r.citation}`,
-        whyPersisted: undefined,
-        evidence: r.snippet.slice(0, 240),
-      }))
-      diag.fallbackUsed = true
+    // §19-D Task 8 — THE FALLBACK IS GONE, on purpose.
+    //
+    // It used to mint one candidate per corpus hit reading "A factor examined in
+    // <document title>", so that the acceptance "candidates seeded from the corpus"
+    // always held. It held by making the sentence true and the content false: those
+    // rows fail BOTH of Charlie's tests — they are not expressed as causes, and they
+    // have no stated causal relationship to the problem. The 10 Aug walk-through
+    // received exactly two of them, and it is the only thing that reached the panel
+    // because the generator was returning nothing (see the budget fix in lex-client).
+    //
+    // // A corpus hit that fails the causal test is a RELATED DOCUMENT, not a cause.
+    // The documents are not lost: they are already in the right-hand panel, which is
+    // where a document belongs. What the user gets here is either causes or candour.
+    if (!candidates.length) {
+      diag.fallbackUsed = false
+      diag.relevantDocsAvailable = relevant.length
     }
 
     if (candidates.length) {
@@ -363,6 +460,18 @@ async function seedCauses(ideaId: string, userId: string, def: FieldDef, state: 
   console.log('[lex-diag] cause seeding', diag)
   // Mark the loop AWAITING so it stays current while the user curates (and isn't re-seeded).
   await setProposal(ideaId, def.key, { value: '' })
+
+  // §19-C Task 3 / §19-D Task 2 — say what actually happened. The field's configured
+  // question promises seeding ("I'll seed a few that others have identified"), so when
+  // nothing was seeded it must not be the thing the user reads.
+  if (!diag.created) {
+    return (
+      `I couldn't turn what the corpus holds on this into causes I'd stand behind — the material ` +
+      `is there in the panel on the right, but none of it says plainly what is CAUSING your problem, ` +
+      `and I'm not going to dress a document title up as a cause. Let's do it the other way round: ` +
+      `what do you think is causing this, and why has each one persisted? I'll press on each as we go.`
+    )
+  }
   return askQuestion(ideaId, userId, def, state)
 }
 
@@ -378,7 +487,11 @@ async function seedPolicyOptions(ideaId: string, userId: string, def: FieldDef, 
   let created = 0
   try {
     const context = [acceptedValue(state, 'challenge'), acceptedValue(state, 'summaryDiagnosis')].filter(Boolean).join(' ').slice(0, 600)
-    const candidates = await generatePolicyOptions({ pivotalObstacle, materialCauses: causes, context })
+    let candidates = await generatePolicyOptions({ pivotalObstacle, materialCauses: causes, context })
+    // §19-D Task 2b — one retry, as cause seeding has. On 10 Aug this generator
+    // returned nothing (0 LEX-sourced options are in the database for that idea) and
+    // there was no second attempt, so a single transient 429 cost the whole stage.
+    if (!candidates.length) candidates = await generatePolicyOptions({ pivotalObstacle, materialCauses: causes.slice(0, 3), context })
     if (candidates.length) {
       await createPolicyOptions(ideaId, candidates.map((c) => ({ ...c, source: 'LEX' as const })), 'LEX')
       created = candidates.length
@@ -416,7 +529,14 @@ async function seedPolicyOptions(ideaId: string, userId: string, def: FieldDef, 
     const lex = await runLexTurn(prompt, directive, await chatHistory(ideaId))
     if (lex.chatText) return lex.chatText
   } catch { /* fall through */ }
-  return questionFor(def, fresh)
+
+  // §19-D Task 2b — THE FALLBACK MUST NOT PROMISE WHAT DID NOT HAPPEN. This used to
+  // return the field's configured question, which reads "I'll seed a few candidates per
+  // material cause with the case for and against each" — said, on the 10 Aug run, over
+  // an empty options list. The fallback now reports the actual count.
+  return fresh.policyOptions.length
+    ? `There ${fresh.policyOptions.length === 1 ? 'is 1 candidate approach' : `are ${fresh.policyOptions.length} candidate approaches`} in the panel to weigh — argue them, edit them, add your own. A guiding policy is an approach to the obstacle, and choosing one rules the others out.`
+    : `I wasn't able to draft any candidate approaches just then — nothing has been put in the panel. Add the approaches you're weighing and I'll argue each side with you, or say the word and I'll try again.`
 }
 
 /** Page 4 actions loop: no corpus seeding — the user authors actions and Lex helps in
@@ -601,7 +721,14 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
   console.log('[lex-diag] orchestrator advancing', { currentField: def.key, type: def.type, page: state.stage })
 
   let text: string
-  if (def.key === 'coherenceCheck') {
+  if (def.key === PROBLEM_FIELD_KEY) {
+    // §19-D Task 1b — the FIRST press. The problem field is proposed from the user's
+    // own Page-1 words, and on 10 Aug those words were a solution ("I want to change
+    // the amount charged for plastic bags in shops"). Lex quietly turned it into a
+    // problem-shaped sentence of its own invention and moved on, which is how a
+    // strategy comes to rest on a diagnosis nobody made. It now ASKS.
+    text = await proposeProblem(ideaId, userId, def, state)
+  } else if (def.key === 'coherenceCheck') {
     // §19-C Task 5 — the structured reviewer pass, not a generic proposal.
     text = await seedCoherenceCheck(ideaId, userId, def, state)
   } else if (def.key === 'whatItRulesOut' || def.key === 'costSummary') {
@@ -630,6 +757,8 @@ export async function orchestrateAfterWrite(ideaId: string, userId: string): Pro
     return { messages: [] }
   }
 
-  await pushLex(ideaId, text, state.stage)
+  // Tag the bubble with the field it was said about, so the problem gate can count its
+  // own presses (§19-D Task 1b) without a schema change.
+  await pushLex(ideaId, text, state.stage, def.key)
   return { messages: [text] }
 }

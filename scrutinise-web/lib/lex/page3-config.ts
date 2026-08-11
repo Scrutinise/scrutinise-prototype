@@ -28,8 +28,12 @@ export const GUIDING_POLICY_FIELDS: FieldDef[] = [
     type: 'loop',
     scope: 'idea',
     origin: 'box', // curated in the panel; Lex seeds candidates per material cause
+    // §19-D Task 2b — this is a FALLBACK question, and a fallback fires precisely when
+    // something failed. It must therefore not promise seeding: on 10 Aug it announced
+    // "I'll seed a few candidates per material cause" over an empty options list. What
+    // was actually seeded is said by the conductor, which counts the rows first.
     question:
-      'Let’s weigh the approaches. I’ll seed a few candidates per material cause with the case for and against each — add, edit, and argue them.',
+      'Let’s weigh the approaches — add them, edit them, and argue each side. An approach is a way at the obstacle, not a goal and not an action list.',
   },
   {
     key: 'chosenApproach',

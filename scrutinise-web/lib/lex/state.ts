@@ -87,12 +87,25 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   const lexPage = idea.lexPage ?? 'ORIENTATION'
   const activeIndex = Math.max(0, pageSeqIndex(lexPage))
 
+  // §19-D Task 3 — HOW FAR THE USER HAS GOT is no longer the same thing as WHERE THEY
+  // ARE. `Idea.lexPage` can now move backwards (re-entering a completed stage), so the
+  // furthest page reached is DERIVED from the field states rather than read off the
+  // pointer. No column was added: a page has been entered iff any of its fields has
+  // left EMPTY, which is exactly what entering a page does (the conductor seeds the
+  // first field on arrival).
+  const pagesTouched = PAGE_SEQUENCE.map((page) =>
+    page.fields.some((f) => (byKey.get(f.key)?.status ?? 'EMPTY') !== 'EMPTY'))
+  const furthestIndex = Math.max(activeIndex, ...pagesTouched.map((t, i) => (t ? i : -1)))
+
   const pages: CanonicalPage[] = PAGE_SEQUENCE.map((page, i) => {
     const fields = page.fields.map(toCanonicalField)
     const allTerminal = fields.every((f) => TERMINAL.includes(f.status))
     const status: CanonicalPage['status'] =
-      i < activeIndex ? 'complete' : i === activeIndex ? (allTerminal ? 'complete' : 'active') : 'locked'
-    return { key: page.key, label: page.label, status, fields }
+      i === activeIndex ? (allTerminal ? 'complete' : 'active')
+        : allTerminal ? 'complete'
+          : i <= furthestIndex ? 'visited'
+            : 'locked'
+    return { key: page.key, label: page.label, status, reachable: i <= furthestIndex, fields }
   })
 
   // currentField = first non-terminal field of the ACTIVE page (or null when complete).
@@ -116,6 +129,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     key: p.key,
     label: p.label,
     status: 'locked' as const,
+    reachable: false,
     fields: [],
   }))
 

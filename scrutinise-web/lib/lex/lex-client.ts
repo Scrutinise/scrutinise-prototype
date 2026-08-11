@@ -36,6 +36,10 @@ export interface LexTurnContext {
   factsBlock?: string | null
   /** A compact summary of what's already accepted, for grounding. */
   acceptedSummary: string
+  /** §19-D Task 1b — how many times Lex has already pressed on the problem statement.
+   *  At MAX_PROBLEM_PRESSES the gate is replaced by an instruction to accept and move
+   *  on: Lex guides, it does not gatekeep. */
+  problemPresses?: number
 }
 
 export interface LexRawOutput {
@@ -68,6 +72,8 @@ const RESPONSE_SCHEMA = {
             // Page 2 (Diagnosis) — proposed scalars + A1 structured multi-slot fields
             'challenge', 'pivotalObstacle', 'summaryDiagnosis',
             'whoAffectedImpactCost', 'legalLandscape',
+            // §19-D Task 9g — the causes LOOP, proposed as valueList (one per cause).
+            'causes',
             // Page 3 (Guiding Policy) — incl. A1 structured anticipatedResponses
             'whatItRulesOut', 'leverage', 'conditionsForSuccess', 'summaryGuidingPolicy',
             'anticipatedResponses',
@@ -171,6 +177,17 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
                     : field.key === 'actions'
                       ? `They are setting out the COORDINATED actions that execute the policy — each consistent with it and with each other, resources concentrated not smeared. For each action: the practical step, who implements it, and its costs (implementation, enforcement, regulatory friction) and benefits as sourced ranges. Help them concentrate effort and think about sequencing. They add and cost actions in the panel.`
                       : `Help the user complete this in the panel.`
+    // §19-D Task 9g — the causes loop is the ONE loop where a chat answer becomes a
+    // proposal. Everywhere else in this flow, telling Lex something in chat is enough
+    // and Lex tidies it into the field; causes alone made the user re-type into the
+    // panel, which is the exact anti-pattern the platform exists to remove. The other
+    // loops (policyOptions, actions) stay panel-authored: each of their rows carries
+    // several structured fields the user is actively composing, not one sentence.
+    if (field.key === 'causes') {
+      return `${specifics}
+When the user NAMES one or more causes in chat, do not ask them to type it into the panel — RETURN A PROPOSAL: proposal.fieldKey "causes", proposal.valueList = one tidied sentence per cause, in their voice, each a statement of something that is happening which produces the problem (never a topic or a document). The platform adds them to the loop for the user to classify, nest, edit or remove, so your chatText should say you have added them and ask which are material. Only propose causes the user has actually put forward in this conversation — do not invent extras. If they are still thinking aloud, discuss it and emit no proposal.
+Discuss it conversationally in chatText (1–4 sentences). Quietly capture anything useful in "extracted".`
+    }
     return `${specifics}\nDiscuss it conversationally in chatText (1–4 sentences). Do NOT return a proposal for this field — the user fills and Saves it in the panel. Quietly capture anything useful in "extracted".`
   }
 
@@ -181,7 +198,7 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
     case 'keywords':
       return `Propose 4–8 search keywords drawn from everything the user has said. INCLUDE the likely government department as one keyword among the others — do not ask which department. Put them in proposal.valueList with proposal.fieldKey "keywords".`
     case 'challenge':
-      return `Propose the Challenge — the problem in ONE crisp sentence, plain English, no solution in it. Draw on everything the user has said. proposal.valueText, proposal.fieldKey "challenge". In chatText, share it in a sentence and invite them to accept or refine it.`
+      return `Propose THE PROBLEM in ONE crisp sentence, plain English — what is wrong, for whom, and why it matters, with no remedy in it. Draw on everything the user has said. proposal.valueText, proposal.fieldKey "challenge". In chatText, share it in a sentence and invite them to accept or refine it.`
     case 'pivotalObstacle':
       return `Propose the PIVOTAL OBSTACLE — the single most important thing blocking a *solution* (why the problem persists). It is DISTINCT from the root cause (which is why the problem happens): the obstacle may be enforcement difficulty, vested interest, cost, or political will. This is the thing the eventual policy must defeat. ALWAYS ask, in chatText, WHO BENEFITS from things staying as they are (cui bono) — it is frequently the route to the obstacle — and record their answer in extracted.beneficiariesOfStatusQuo. proposal.valueText, proposal.fieldKey "pivotalObstacle". In chatText, name the obstacle in a sentence, ask the cui bono question, and invite them to accept or refine.`
     case 'summaryDiagnosis':
@@ -210,9 +227,15 @@ export function buildLexSystemPrompt(ctx: LexTurnContext): string {
   // Method layer (§16.3): M-GENERAL + the active stage's block, injected per stage.
   // §19-B: keyed off the STATE MACHINE's page, never off the field — so the method
   // in the prompt can never describe a section the user has not been moved into.
-  const method = methodForStage(ctx.activePage)
+  // §19-D Task 1b — the problem gate arms only while the problem field is current, and
+  // spends itself after two presses. Both facts are logged, so "the gate never fired"
+  // and "the gate fired and the user held their ground" are distinguishable.
+  const methodCtx = { currentFieldKey: field?.key ?? null, problemPresses: ctx.problemPresses ?? 0 }
+  const method = methodForStage(ctx.activePage, methodCtx)
   // [lex-diag] — makes it visible in logs which method blocks are in the prompt (acceptance §19).
-  console.log('[lex-diag] method blocks', { page: ctx.activePage, blocks: methodBlocksFor(ctx.activePage) })
+  console.log('[lex-diag] method blocks', {
+    page: ctx.activePage, blocks: methodBlocksFor(ctx.activePage, methodCtx), presses: methodCtx.problemPresses,
+  })
   const fieldBlock = field
     ? `CURRENT FIELD (the platform decides this — you never choose the sequence):
   key:    ${field.key}
@@ -233,7 +256,7 @@ Answer whatever the user just said, briefly and warmly (1–3 sentences), using 
 HARD RULE: do NOT ask any ${ctx.nextPageLabel} question, do NOT begin diagnosing, analysing causes or proposing next-section content, and do NOT claim you have written anything into a box. Emit no proposal.`
       : `Every section is complete. Acknowledge warmly in one or two sentences. Emit no proposal.`
 
-  return `You are Lex, the guide on Scrutinise — a non-partisan platform that helps people turn policy ideas into Parliament-ready proposals. You are warm, curious, plain-spoken, British English, FT op-ed register. No emojis. Never say you are an AI or name a model. "Challenge" not "problem"; "Contributions" not "comments".
+  return `You are Lex, the guide on Scrutinise — a non-partisan platform that helps people turn policy ideas into Parliament-ready proposals. You are warm, curious, plain-spoken, British English, FT op-ed register. No emojis. Never say you are an AI or name a model. "The problem" — never "the challenge" — for the Page 2 problem field; "Contributions" not "comments".
 
 You are NOT in control of the conversation's mechanics. The platform tells you which single field is active and renders confirmation cards. You only: (a) write a short conversational message in chatText, (b) when the active field is one you propose, put your proposal in the proposal object, (c) quietly record anything you learn about the user or idea in extracted.
 
@@ -264,6 +287,12 @@ RULES
 - "extracted" is optional; include only slots you are confident about.`
 }
 
+// Thinking stays ON for the conversational turn (it is a judgement call, not a form
+// fill) — so the ceiling has to cover the thinking pass as well as a 4-sentence
+// chatText plus a proposal. 2048 was the whole budget for both. CLAUDE.md §18 rule 5:
+// output tokens are billed on what is generated, so a generous ceiling costs nothing.
+const LEX_TURN_MAX_TOKENS = parseInt(process.env.LEX_TURN_MAX_TOKENS ?? '4096', 10)
+
 async function callGemini(systemPrompt: string, userMessage: string, history: { role: string; content: string }[]): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY not set')
@@ -284,7 +313,7 @@ async function callGemini(systemPrompt: string, userMessage: string, history: { 
         contents,
         generationConfig: {
           temperature: 0.6,
-          maxOutputTokens: 2048,
+          maxOutputTokens: LEX_TURN_MAX_TOKENS,
           responseMimeType: 'application/json',
           responseSchema: RESPONSE_SCHEMA,
         },
@@ -302,7 +331,7 @@ async function callGemini(systemPrompt: string, userMessage: string, history: { 
   const data = await res.json()
   // Before parsing: a truncated payload is broken JSON, and without this it arrives as a parse
   // failure rather than as "you ran out of output tokens". See lib/lex/gemini-finish.ts.
-  assertGeminiFinished(data?.candidates?.[0], 2048, 'lex-turn')
+  assertGeminiFinished(data?.candidates?.[0], LEX_TURN_MAX_TOKENS, 'lex-turn')
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (typeof text !== 'string') {
     const e = new Error('Gemini returned no text part') as LexError
@@ -417,6 +446,10 @@ const CAUSE_ITEM = {
   required: ['cause'],
 }
 
+// 3–5 causes, each with whyPersisted + evidence + up to 3 sub-causes. 1024 was under
+// half of what the schema can legitimately produce even before thinking took its cut.
+const CAUSES_MAX_TOKENS = parseInt(process.env.LEX_CAUSES_MAX_TOKENS ?? '3000', 10)
+
 const CAUSES_SCHEMA = {
   type: 'object',
   properties: {
@@ -439,21 +472,42 @@ const CAUSES_SCHEMA = {
   required: ['causes'],
 }
 
+/**
+ * §19-D Task 8 — the two logic tests a candidate must pass before it is offered.
+ * Stated to the model, and (for test 2's most visible failure) enforced afterwards.
+ * A corpus hit that fails test 2 is a RELATED DOCUMENT, not a cause.
+ */
+const CAUSE_LOGIC_TESTS =
+  'TWO TESTS, both of which a candidate must pass before you return it. ' +
+  '(1) It must be expressed as a CAUSE — something that is happening in the world which ' +
+  'produces the stated problem — in your own words, as a full sentence with a subject and a ' +
+  'verb. Never a topic, a document, a policy area or a fragment. ' +
+  '"A factor examined in the Environmental Audit Committee report" is NOT a cause; ' +
+  '"retailers face no penalty for absorbing the charge, so the price signal never reaches the ' +
+  'shopper" is. (2) It must have a plausible CAUSAL relationship to THIS problem: if you removed ' +
+  'it, the problem would measurably reduce. Apply that test explicitly to each candidate and ' +
+  'DROP any that fails — returning three good causes is better than five with a passenger. ' +
+  'If the excerpts support none, return an empty list; do not pad it.'
+
 export async function generateCauseCandidates(input: {
   challenge: string
   context: string
   snippets: string[]
+  /** Second pass after an empty first: fewer, shorter, so a budget wall isn't hit twice. */
+  terse?: boolean
 }): Promise<CauseCandidate[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return []
   const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
-  const timeoutMs = parseInt(process.env.LEX_CAUSES_TIMEOUT_MS ?? '15000', 10)
+  const timeoutMs = parseInt(process.env.LEX_CAUSES_TIMEOUT_MS ?? '20000', 10)
 
-  const system = `You are Lex, a UK parliamentary research assistant. Given a policy CHALLENGE and excerpts from past debates, committee reports and legislation, list 3–5 candidate CAUSES of the problem that the material identifies or clearly implies. For each cause return: cause (one sentence, the driver of the problem), whyPersisted (why it has resisted solution), evidence (a short pointer to the kind of source, e.g. "raised in a Transport Committee report"), classification (MATERIAL if removing it would largely dissolve the problem, CONTRIBUTORY if it only worsens it, else UNASSESSED). Where a cause is clearly driven by a deeper cause, nest that under subCauses (at most one level) — "X because Y". UK context only. Ground it in the excerpts; do not fabricate specific citations, numbers or case names.`
+  const system = `You are Lex, a UK parliamentary research assistant. Given a policy PROBLEM and excerpts from past debates, committee reports and legislation, list ${input.terse ? '2–3' : '3–5'} candidate CAUSES of that problem which the material identifies or clearly implies. For each cause return: cause (one sentence, the driver of the problem), whyPersisted (why it has resisted solution), evidence (a short pointer to the source it came from, e.g. "raised in a Transport Committee report"), classification (MATERIAL if removing it would largely dissolve the problem, CONTRIBUTORY if it only worsens it, else UNASSESSED). ${input.terse ? 'Do not nest subCauses.' : 'Where a cause is clearly driven by a deeper cause, nest that under subCauses (at most one level) — "X because Y".'} UK context only. Ground it in the excerpts; do not fabricate specific citations, numbers or case names.
+
+${CAUSE_LOGIC_TESTS}`
   const user = [
-    `Challenge: ${input.challenge || '(not yet stated)'}`,
+    `Problem: ${input.challenge || '(not yet stated)'}`,
     input.context ? `Context: ${input.context}` : '',
-    input.snippets.length ? `Excerpts:\n- ${input.snippets.slice(0, 8).join('\n- ')}` : '',
+    input.snippets.length ? `Excerpts:\n- ${input.snippets.slice(0, input.terse ? 5 : 8).join('\n- ')}` : '',
   ].filter(Boolean).join('\n')
 
   const ctrl = new AbortController()
@@ -469,9 +523,16 @@ export async function generateCauseCandidates(input: {
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 1024,
+            maxOutputTokens: CAUSES_MAX_TOKENS,
             responseMimeType: 'application/json',
             responseSchema: CAUSES_SCHEMA,
+            // §19-D Task 8 / CLAUDE.md §18 rule 5. This call ran at 1024 with thinking
+            // ON, which is the 29 Jul query-expansion failure exactly: the thinking pass
+            // spends the whole budget, nothing is emitted, and the empty return reads as
+            // "the corpus had nothing to say". It is why the 10 Aug walk-through got two
+            // seeded "causes" reading "A factor examined in <report title>" — those come
+            // from the deterministic fallback, which only fires when this returns nothing.
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
         signal: ctrl.signal,
@@ -486,7 +547,7 @@ export async function generateCauseCandidates(input: {
     // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
     // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
     // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
-    const cut = geminiFinishProblem(data?.candidates?.[0], 1024, { label: 'cause-seeding' })
+    const cut = geminiFinishProblem(data?.candidates?.[0], CAUSES_MAX_TOKENS, { label: 'cause-seeding' })
     if (cut) console.error(`[lex] cause-seeding ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return []
@@ -506,13 +567,49 @@ export async function generateCauseCandidates(input: {
         subCauses: subs && subs.length ? subs : undefined,
       }
     }
-    return obj.causes.map(toCandidate).filter((x): x is CauseCandidate => !!x).slice(0, 5)
+    const candidates = obj.causes.map(toCandidate).filter((x): x is CauseCandidate => !!x)
+    const kept = candidates.filter((c) => readsAsACause(c.cause))
+    if (kept.length !== candidates.length) {
+      console.warn('[lex-diag] cause seeding dropped non-causes', {
+        dropped: candidates.filter((c) => !readsAsACause(c.cause)).map((c) => c.cause.slice(0, 80)),
+      })
+    }
+    return kept.slice(0, 5)
   } catch (err) {
     console.warn('[lex] cause seeding failed:', err instanceof Error ? err.message : err)
     return []
   } finally {
     clearTimeout(t)
   }
+}
+
+/**
+ * §19-D Task 8, test 1, enforced rather than merely asked for: does this read as a
+ * CAUSE, or as a topic fragment lifted off a document?
+ *
+ * Deliberately narrow. It cannot judge causality (test 2 — that stays with the model
+ * and with the user's own Material/Contributory call); it only refuses the shapes that
+ * are definitely not statements about the world. Those are the ones that actually
+ * shipped: "A factor examined in Report: 11th Report - Plastic bags (Report, together
+ * with formal minutes…)" was one of the three the walk-through saw.
+ */
+const NOT_A_CAUSE = [
+  /^a?\s*(?:factor|issue|matter|theme|topic|point|question|consideration)s?\s+(?:examined|discussed|raised|considered|mentioned|explored|addressed)\b/i,
+  /^(?:discussion|debate|evidence|report|consideration|correspondence|questions?|inquiry)\s+(?:on|about|of|into|regarding)\b/i,
+  /^(?:see|per|from|in)\s+/i,
+]
+
+export function readsAsACause(text: string): boolean {
+  const t = (text ?? '').trim()
+  if (t.length < 20) return false                    // a fragment, not a statement
+  if (NOT_A_CAUSE.some((re) => re.test(t))) return false
+  // A statement about the world has a verb. Requiring a finite verb outright would be a
+  // parser; requiring that it is not simply a document's title is not — a candidate made
+  // only of Capitalised Words And Numbers is a citation someone pasted.
+  const words = t.split(/\s+/)
+  const capitalised = words.filter((w) => /^[A-Z0-9]/.test(w)).length
+  if (words.length >= 4 && capitalised / words.length > 0.6) return false
+  return true
 }
 
 // ── Coherence review (§18 / §19-C Task 5) ─────────────────────────────────────
@@ -530,6 +627,8 @@ export interface CoherenceReview {
   concentration: string
   defeatsTest: string
 }
+
+const COHERENCE_MAX_TOKENS = parseInt(process.env.LEX_COHERENCE_MAX_TOKENS ?? '4000', 10)
 
 const COHERENCE_SCHEMA = {
   type: 'object',
@@ -592,8 +691,11 @@ export async function generateCoherenceReview(input: {
           system_instruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
-            temperature: 0.4, maxOutputTokens: 2048,
+            temperature: 0.4, maxOutputTokens: COHERENCE_MAX_TOKENS,
             responseMimeType: 'application/json', responseSchema: COHERENCE_SCHEMA,
+            // Six fields, four of them lists, over every action in the plan. Same
+            // budget discipline as the two seeders above (CLAUDE.md §18 rule 5).
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
@@ -604,7 +706,7 @@ export async function generateCoherenceReview(input: {
     // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
     // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
     // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
-    const cut = geminiFinishProblem(data?.candidates?.[0], 2048, { label: 'coherence-review' })
+    const cut = geminiFinishProblem(data?.candidates?.[0], COHERENCE_MAX_TOKENS, { label: 'coherence-review' })
     if (cut) console.error(`[lex] coherence-review ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return null
@@ -648,6 +750,8 @@ export interface PolicyOptionCandidate {
   caseAgainst?: string
   mechanismTypes?: string[]
 }
+
+const POLICY_MAX_TOKENS = parseInt(process.env.LEX_POLICY_MAX_TOKENS ?? '4000', 10)
 
 const POLICY_OPTIONS_SCHEMA = {
   type: 'object',
@@ -699,9 +803,15 @@ export async function generatePolicyOptions(input: {
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
             temperature: 0.5,
-            maxOutputTokens: 1400,
+            maxOutputTokens: POLICY_MAX_TOKENS,
             responseMimeType: 'application/json',
             responseSchema: POLICY_OPTIONS_SCHEMA,
+            // §19-D Task 2b — same fault as cause seeding. 5 approaches × (approach +
+            // caseFor + caseAgainst + mechanisms) does not fit in 1400 even with the
+            // whole budget spent on output, and thinking was taking a share of it first.
+            // The visible symptom was the panel announcing "I'll seed a few candidate
+            // approaches per material cause" and then seeding none.
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
         signal: ctrl.signal,
@@ -713,7 +823,7 @@ export async function generatePolicyOptions(input: {
     // Non-throwing on purpose: this path degrades gracefully and that behaviour is kept. The
     // guard only makes the CAUSE visible — without it a truncation lands as a JSON parse failure
     // and the empty return looks like "the model had nothing to say". See gemini-finish.ts.
-    const cut = geminiFinishProblem(data?.candidates?.[0], 1400, { label: 'policy-seeding' })
+    const cut = geminiFinishProblem(data?.candidates?.[0], POLICY_MAX_TOKENS, { label: 'policy-seeding' })
     if (cut) console.error(`[lex] policy-seeding ${cut.reason} — ${cut.detail}`)
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
     if (typeof text !== 'string') return []
@@ -732,6 +842,121 @@ export async function generatePolicyOptions(input: {
   } catch (err) {
     console.warn('[lex] policy seeding failed:', err instanceof Error ? err.message : err)
     return []
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// ── Anticipated responses (§19-D Task 2c) ─────────────────────────────────────
+// The five slots on the Page-3 `anticipatedResponses` field used to arrive EMPTY:
+// `seedStructured` seeds `{slot: ''}` for every structured field that isn't
+// whoAffectedImpactCost, so the panel offered five blank boxes under a heading that
+// says Lex will propose some. Charlie's point on the walk-through was the right one —
+// "Lex is best placed to fill these in": the user can sharpen an anticipation far
+// more easily than they can produce one from nothing.
+//
+// Resilient by the same rule as the other seeders: on failure this returns null and
+// the conductor SAYS the draft failed, rather than presenting empty boxes as though
+// they were a considered blank.
+
+const ANTICIPATED_MAX_TOKENS = parseInt(process.env.LEX_ANTICIPATED_MAX_TOKENS ?? '3000', 10)
+
+const ANTICIPATED_SCHEMA = {
+  type: 'object',
+  properties: {
+    avoidance: { type: 'string' },
+    gaming: { type: 'string' },
+    enforcementBurden: { type: 'string' },
+    legalChallenge: { type: 'string' },
+    politicalAttack: { type: 'string' },
+  },
+  required: ['avoidance', 'gaming', 'enforcementBurden', 'legalChallenge', 'politicalAttack'],
+}
+
+export interface AnticipatedResponses {
+  avoidance: string
+  gaming: string
+  enforcementBurden: string
+  legalChallenge: string
+  politicalAttack: string
+}
+
+export async function generateAnticipatedResponses(input: {
+  chosenApproach: string
+  pivotalObstacle: string
+  challenge: string
+  leverage?: string
+}): Promise<AnticipatedResponses | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
+  const model = process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  const timeoutMs = parseInt(process.env.LEX_ANTICIPATED_TIMEOUT_MS ?? '20000', 10)
+
+  const system =
+    'You are an experienced UK policy adviser stress-testing a chosen approach before it goes ' +
+    'anywhere near a department. For each of the five headings, write 1–3 sentences naming the ' +
+    'SPECIFIC response this particular approach would provoke — who does it, and how. Generic ' +
+    'text ("some may seek to avoid it") is worthless; name the actor and the move. ' +
+    'avoidance: how those affected legitimately arrange their affairs to fall outside it. ' +
+    'gaming: how they comply in form while defeating the purpose. ' +
+    'enforcementBurden: who has to enforce this, what it costs them in people and attention, and ' +
+    'where enforcement realistically fails. ' +
+    'legalChallenge: the grounds on which this would be challenged and by whom — judicial review, ' +
+    'retained EU law, ECHR, competition, devolution competence, or a straightforward vires point. ' +
+    'politicalAttack: the line of attack an opponent would use, in their words. ' +
+    'UK context. Do not invent case names, statutes or figures.'
+
+  const user = [
+    `Chosen approach: ${input.chosenApproach || '(not stated)'}`,
+    `Pivotal obstacle: ${input.pivotalObstacle || '(not stated)'}`,
+    `The problem: ${input.challenge || '(not stated)'}`,
+    input.leverage ? `Why this approach has leverage: ${input.leverage}` : '',
+  ].filter(Boolean).join('\n')
+
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: user }] }],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: ANTICIPATED_MAX_TOKENS,
+            responseMimeType: 'application/json',
+            responseSchema: ANTICIPATED_SCHEMA,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+      },
+    )
+    if (!res.ok) { console.warn('[lex] anticipated responses HTTP', res.status); return null }
+    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
+    const data = (await res.json()) as Resp
+    const cut = geminiFinishProblem(data?.candidates?.[0], ANTICIPATED_MAX_TOKENS, { label: 'anticipated-responses' })
+    if (cut) console.error(`[lex] anticipated-responses ${cut.reason} — ${cut.detail}`)
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (typeof text !== 'string') return null
+    const o = JSON.parse(text) as Partial<Record<keyof AnticipatedResponses, unknown>>
+    const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+    const out: AnticipatedResponses = {
+      avoidance: str(o.avoidance),
+      gaming: str(o.gaming),
+      enforcementBurden: str(o.enforcementBurden),
+      legalChallenge: str(o.legalChallenge),
+      politicalAttack: str(o.politicalAttack),
+    }
+    // A response object where every slot came back blank is a failure wearing the
+    // shape of a success — report it as one (§19-C 1a).
+    return Object.values(out).some((v) => v) ? out : null
+  } catch (err) {
+    console.warn('[lex] anticipated responses failed:', err instanceof Error ? err.message : err)
+    return null
   } finally {
     clearTimeout(t)
   }

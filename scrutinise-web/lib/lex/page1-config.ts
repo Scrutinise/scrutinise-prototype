@@ -69,7 +69,7 @@ export const ORIENTATION_FIELDS: FieldDef[] = [
     scope: 'idea',
     origin: 'box',
     required: true,
-    question: "What's the problem or challenge you want to address?",
+    question: "What's the problem you want to fix?",
     hints: [
       'what you want to change',
       'the problem as you see it',
@@ -217,7 +217,15 @@ export interface CanonicalField {
 export interface CanonicalPage {
   key: string
   label: string
-  status: 'locked' | 'active' | 'complete'
+  /** §19-D Task 3 — `visited` is new: a page the user has worked in and moved on from
+   *  (or moved back past) which is NOT finished. Before back-navigation existed every
+   *  page behind the pointer was necessarily complete, so the three states sufficed. */
+  status: 'locked' | 'active' | 'visited' | 'complete'
+  /** §19-D Task 3 — may the user move the working context INTO this page? True for the
+   *  active page and every page at or before the furthest one reached. Deliberately
+   *  separate from `status`: a half-finished page the user came back past is reachable
+   *  AND not complete, and conflating the two is what made the flow one-way. */
+  reachable: boolean
   fields: CanonicalField[]
 }
 
