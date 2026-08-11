@@ -165,10 +165,34 @@ The first is a minutes-long experiment; the second is a sprint. **The ladder say
 before considering the second**, and I have deliberately not done either: *"Do not retune anything
 under this brief. Measure and report."*
 
-**The concrete next step, costed.** Measure 64 and 128 probes on the same 58 queries — a second
-`ann-recall-check` run with `--ladder 24,64,128,256`, about 10 minutes and €0.03, because those rungs
-are far cheaper than the 4,096 one that dominated this run. That produces the recall/latency curve
-where the decision actually lives. Then, *if* Charlie wants it, `VECTOR_NPROBES` on `vector-serve` is
+**The concrete next step was then taken, because it cost €0.016 and six minutes.** A second run over
+the same 58 queries with `--ladder 24,64,128,256` (peak RSS 1.8 GB), which is where the decision
+actually lives:
+
+| probes | overlap with the **256** rung | mean ms | p95 ms |
+|---:|---:|---:|---:|
+| **24 — production** | **72.8%** | 736 | 1,581 |
+| 64 | **85.5%** | **675** | 1,035 |
+| 128 | **94.1%** | 904 | 1,700 |
+| 256 | 100% (it is the reference here) | 1,446 | 2,411 |
+
+⚠ **Read the reference rung carefully: this table is against 256, not against exhaustive**, because
+256 was the top of this ladder. The two runs cross-check cleanly — 24-vs-256 at 72.8% here against
+24-vs-4096 at 70.4% and 256-vs-4096 at 96.3% in the first run — which is the consistency you would
+want from two independent runs a day apart, and is a stronger reason to believe either than one run
+would be.
+
+**The striking result is the latency column, not the recall column.** Going 24 → 64 probes gains
+~13pp of recall and costs **nothing measurable** (675 ms against 736 ms — 64 came out *faster* than
+24, which is noise, and that is the point: the difference is inside the noise). The latency curve
+stays flat to about 128 probes and only then starts to climb. So the trade-off the ladder implies is
+not "recall versus speed" across the whole range; below ~128 probes it is closer to free.
+
+⚠ **This is still not a recommendation, and it is not a production latency.** These are single
+sequential queries from a rented box with no cache and no concurrency; `vector-serve` runs 4-way
+concurrency against a query cache, and the p95 under real load is what would actually move. The
+honest form of the finding is: **the cheap experiment is now justified rather than merely plausible**,
+and it should be run as a measured A/B on the product with the pre-change baseline held. Then, *if* Charlie wants it, `VECTOR_NPROBES` on `vector-serve` is
 one variable and one restart, and `check-vector-serving.ts` plus the gold harness measure the effect
 on the product. ⚠ **The restart resets `/stats`**, so the pre-change baseline (p50 3,647 ms, p95
 4,355 ms, 13 served, read 02:31 UTC) is recorded here to be compared like-for-like afterwards —

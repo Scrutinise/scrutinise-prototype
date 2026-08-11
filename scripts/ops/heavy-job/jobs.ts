@@ -206,8 +206,8 @@ export const JOBS: Record<string, HeavyJob> = {
     // (16 GB). Higher than the 5.6 GB of `vector-reindex`, which is the right way round — this job
     // holds probed IVF partitions in the index cache for 58 queries at up to 4,096 probes, where the
     // rebuild streams them once. 16 GB is the right size; the 8 GB Railway cap could not run it.
-    expectedPeakGb: 7.1,
-    peakSource: '11 Aug 2026, cpx42 (8 vCPU shared / 16 GB) in nbg1, 58 queries × 4 rungs, 37.6 min → 7.1 GB peak, €0.099. The run also exposed a log-transport defect that hid its own results — see the runner\'s follow-by-content note.',
+    expectedPeakGb: 7.6,
+    peakSource: '11 Aug 2026, cpx42 (8 vCPU shared / 16 GB) in nbg1, 58 queries × 4 rungs, 37.6 then 36.9 min → 7.1 then 7.6 GB peak, €0.099 + €0.097. A third run with the 4,096 rung REMOVED (--ladder 24,64,128,256) took 6.0 min and peaked at 1.8 GB for €0.016 — the exhaustive rung is essentially the whole cost of this job. The run also exposed a log-transport defect that hid its own results — see the runner\'s follow-by-content note.',
   },
 }
 

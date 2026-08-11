@@ -260,15 +260,21 @@ proposition extraction is proved on a single area.
 None of these was found by review. Each was found by reading what the run actually stored, which is
 the whole reason `report.ts` reads the tables back instead of trusting the sweep's counters.
 
-**1. `A Member of the Public` became a person entity carrying six spellings.** That is an unknown
+**1. `A Member of the Public` became a person entity carrying six spellings — NOW REMOVED.** That is an unknown
 number of unrelated individuals merged into one actor — exactly the invisible, contaminating
 direction the brief rules out. The junk-name filter listed `member of the public`, but the
 normaliser strips a leading "the" and not a leading "a", so `a member of the public` walked through
 an exact-match test. **Fixed** (article-stripping plus narrow patterns, asserted in the self-test on
-the four forms that got through), but the fix landed *after* this run, so **the entity counts below
-still include it and its siblings.** They are removable by name and the next run will not create
-them. Nothing about the *edges* is wrong — those submissions exist and are correctly cited; the
-error is that they are attributed to a person who does not exist.
+the four forms that got through). `clean-nonentities.ts` then found **25 non-actor entities carrying
+63 edges** — `A Member of the Public` (16 edges), `Anonymous Submitter` (17), `Anonymous 1..5`,
+`Anonymous NPS1..5`, `Member of the public 1/2` — logged each one to `graph_merge_log` with its
+surfaces BEFORE deleting, and removed them. **`corpus_sections` was not touched**: the submissions are
+real and stay exactly where they are; only our claim about who made them is gone. After the delete,
+edges without evidence: **0** ✓.
+
+That script is dry-run by default and needs `--apply`. Its own first version timed out at the 60s
+client limit — 85,000 correlated edge-count subqueries — so it now runs a deliberately WIDE SQL
+prefilter (37 candidates) and applies `isUselessName` as the single source of truth over those.
 
 **2. Person name-matching merges distinct people, and the numbers show it.**
 `Mr Andrew Smith` carries `Andrew Smith` / `Dr Andrew Smith` / `Professor Andrew Smith`. Some of

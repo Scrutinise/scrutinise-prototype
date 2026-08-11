@@ -282,6 +282,38 @@ auto-redeployed BOTH `fts-serve` and `vector-serve`** — that path is their Rai
 from the API — so the probe deliberately lives one directory up. A probe must not restart its own
 subject mid-measurement.
 
+### ADDENDUM (2026-08-11 08:50 UTC) — the probe rungs measured, and the junk entities removed
+
+**64 and 128 probes measured** on the same 58 queries (`ANN_LADDER` is now an env override, so this
+was a run rather than a code change): against the 256 rung, **24 → 72.8%, 64 → 85.5%, 128 → 94.1%**,
+at 736 / 675 / 904 ms. ⚠ Reference rung is 256 here, not 4,096 — and the two runs cross-check cleanly
+(24-vs-256 at 72.8% against 24-vs-4096 at 70.4% and 256-vs-4096 at 96.3%), which is a stronger reason
+to believe either than one run would be. **The striking column is latency, not recall: 24 → 64 probes
+gains ~13pp and costs nothing measurable** (675 ms against 736 ms; 64 came out *faster*, which is
+noise, and that is the point — the difference is inside it). The curve stays flat to ~128 probes and
+only then climbs. Still **not a recommendation**: these are sequential queries from a box with no
+cache and no concurrency, while `vector-serve` runs 4-way concurrency behind a 5-minute query cache,
+so the p95 under real load is what would actually move. The honest form is that the cheap experiment
+is now *justified* rather than merely plausible, and it should be run as a measured A/B with the
+pre-change baseline (p50 3,647 ms / p95 4,355 ms) held. 6.0 min, **peak RSS 1.8 GB**, €0.016 — so the
+4,096 rung was essentially the entire cost of the two earlier runs.
+
+**The junk person entities are gone.** `clean-nonentities.ts` (dry-run by default, `--apply` required)
+found **25 non-actor entities carrying 63 edges** — `A Member of the Public` (16 edges),
+`Anonymous Submitter` (17), `Anonymous 1..5`, `Anonymous NPS1..5`, `Member of the public 1/2` — logged
+each one to `graph_merge_log` with its surfaces BEFORE deleting, then removed them (aliases, edges and
+evidence cascade). **`corpus_sections` was not touched**: those submissions are real and stay exactly
+where they are; only our claim about who made them is gone. Edges left without evidence after the
+delete: **0** ✓. ⚠ Its own first version timed out at the 60s client limit — 85,000 correlated
+edge-count subqueries — so it now runs a deliberately WIDE SQL prefilter (37 candidates) and applies
+`isUselessName` as the single source of truth over those. Reading all 25 by hand first mattered: every
+one is a genuine non-identity, so there are no false positives in the delete.
+
+⚠ **The interests re-run was still in flight when the session closed, and that is safe** — every write
+is an upsert on a natural key, so it resumes or repeats without duplicating. `declared-interest` had
+climbed 359 → 418 edges. It also failed once with `Connection terminated due to connection timeout`
+when run concurrently with the cleanup (two writers on one Neon pool), so **run it alone**.
+
 ## INGEST V33 §2 CLOSED — the vector index is current, and three guards that could not fail now can (2026-08-11 01:02 UTC)
 
 Finishes `BRIEF_CC_V33_ingest_wrapup.md` §2, the one section left open at the sprint commit. The
