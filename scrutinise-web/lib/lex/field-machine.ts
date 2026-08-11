@@ -850,10 +850,35 @@ export async function suggestStaffCost(level: StaffLevel, fte: number, months: n
   }
 }
 
-/** Aggregate the per-action §18.2 costs into totals + a plain-English summary set
- *  against the Page 2 problem cost. Every number stays a RANGE (low/high), and each
- *  figure is UPRATED to a common price year via the GDP deflator (COSTING_SCOPE §3)
- *  before totalling, so a 2016 value and a 2024 value can be summed honestly. */
+/**
+ * Aggregate the per-action §18.2 costs into totals + a plain-English summary set
+ * against the Page 2 problem cost. Every number stays a RANGE (low/high), and each
+ * figure is UPRATED to a common price year via the GDP deflator (COSTING_SCOPE §3)
+ * before totalling, so a 2016 value and a 2024 value can be summed honestly.
+ *
+ * §19-D Task 7 — the 10 Aug walk-through produced "£57/year" for an enforcement cost
+ * that could not be right for the inputs given. Tracing the aggregation found the
+ * arithmetic faithful and the SENTENCE dishonest. The single stored line was:
+ *
+ *     "Tax collection cost" · ENFORCEMENT · low=57 · high=NULL · basis=NULL · priceYear=NULL
+ *
+ * Three separate defects, none of them a sum:
+ *
+ *  1. **A one-sided figure was rendered as a range.** `hi = lo` invented an upper
+ *     bound the user never gave, so a single number printed as "£57–57" and then read
+ *     as a settled total. A missing bound is now SAID, not filled in.
+ *  2. **The summary asserted what the data does not support.** It ends "All figures
+ *     are ranges with a stated basis" and "(all figures uprated to 2025 prices)" — over
+ *     a figure with no range, no basis and no price year, which was therefore never
+ *     uprated. That is the §19-C never-claim rule broken by the costing layer.
+ *  3. **There was no way to enter a scale.** The input is labelled "low £", so a user
+ *     who means £57 million has only "57" to type. The panel now carries a units
+ *     selector and echoes the resulting figure, which removes the whole class rather
+ *     than one instance of it.
+ *
+ * `npm run check:cost-summary` pins the arithmetic to known inputs and an expected
+ * total, and asserts each of the three claims above.
+ */
 export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
   const [actions, deflator, lines] = await Promise.all([
     prisma.lexCoherentAction.findMany({
@@ -865,7 +890,10 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     // three-range fields are still summed so nothing captured before this sprint is lost.
     prisma.costLine.findMany({
       where: { action: { ideaId } },
-      select: { category: true, low: true, high: true, priceYear: true },
+      // §19-D Task 7 — `basis` is selected because the summary makes a CLAIM about it
+      // ("with a stated basis"). Before this it was never read, so the claim could
+      // never have been checked against the data even in principle.
+      select: { category: true, low: true, high: true, priceYear: true, basis: true },
     }),
   ])
 
@@ -879,36 +907,59 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     return value * (to / from)
   }
 
-  const sum = (key: 'implementationCost' | 'enforcementCost' | 'regulatoryFriction') => {
-    let low = 0, high = 0, any = false
+  // A category total carries its own PROVENANCE alongside the numbers, because the
+  // sentence written from it has to be true of the figures that went in.
+  //   oneSided    — a figure given as a single number, with no upper bound
+  //   noPriceYear — a figure that could NOT be uprated, whatever the summary says
+  //   noBasis     — a figure with no stated basis (cost lines only; the per-action
+  //                 ranges keep their basis on the range object)
+  interface CatTotal { low: number; high: number; n: number; oneSided: number; noPriceYear: number; noBasis: number }
+  const emptyCat = (): CatTotal => ({ low: 0, high: 0, n: 0, oneSided: 0, noPriceYear: 0, noBasis: 0 })
+
+  const sum = (key: 'implementationCost' | 'enforcementCost' | 'regulatoryFriction'): CatTotal | null => {
+    const t = emptyCat()
     for (const a of actions) {
-      const r = a[key] as { low?: number; high?: number; priceYear?: number | null } | null
-      if (r && (typeof r.low === 'number' || typeof r.high === 'number')) {
-        any = true
-        const lo = typeof r.low === 'number' ? r.low : 0
-        const hi = typeof r.high === 'number' ? r.high : lo
-        low += uprate(lo, r.priceYear)
-        high += uprate(hi, r.priceYear)
-      }
+      const r = a[key] as { low?: number; high?: number; priceYear?: number | null; basis?: string | null } | null
+      if (!r || (typeof r.low !== 'number' && typeof r.high !== 'number')) continue
+      t.n++
+      const lo = typeof r.low === 'number' ? r.low : (r.high as number)
+      const hi = typeof r.high === 'number' ? r.high : lo
+      if (typeof r.low !== 'number' || typeof r.high !== 'number') t.oneSided++
+      if (r.priceYear == null) t.noPriceYear++
+      if (!r.basis?.trim()) t.noBasis++
+      t.low += uprate(lo, r.priceYear)
+      t.high += uprate(hi, r.priceYear)
     }
-    return any ? { low, high } : null
+    return t.n ? t : null
   }
   // Cost lines roll up into the same three categories, uprated the same way.
-  const lineSum = (category: 'IMPLEMENTATION' | 'ENFORCEMENT' | 'FRICTION') => {
-    let low = 0, high = 0, any = false
+  const lineSum = (category: 'IMPLEMENTATION' | 'ENFORCEMENT' | 'FRICTION'): CatTotal | null => {
+    const t = emptyCat()
     for (const l of lines) {
       if (l.category !== category) continue
       if (l.low == null && l.high == null) continue
-      any = true
-      const lo = l.low ?? 0
+      t.n++
+      const lo = l.low ?? (l.high as number)
       const hi = l.high ?? lo
-      low += uprate(lo, l.priceYear)
-      high += uprate(hi, l.priceYear)
+      // A line with only a low is a floor, not a range. `hi = lo` is retained for the
+      // ARITHMETIC (a floor is the best available estimate of the upper bound) but it
+      // is counted, so the prose can say the bound was assumed rather than given.
+      if (l.low == null || l.high == null) t.oneSided++
+      if (l.priceYear == null) t.noPriceYear++
+      if (!l.basis?.trim()) t.noBasis++
+      t.low += uprate(lo, l.priceYear)
+      t.high += uprate(hi, l.priceYear)
     }
-    return any ? { low, high } : null
+    return t.n ? t : null
   }
-  const merge = (a: { low: number; high: number } | null, b: { low: number; high: number } | null) =>
-    a && b ? { low: a.low + b.low, high: a.high + b.high } : a ?? b
+  const merge = (a: CatTotal | null, b: CatTotal | null): CatTotal | null =>
+    a && b
+      ? {
+          low: a.low + b.low, high: a.high + b.high, n: a.n + b.n,
+          oneSided: a.oneSided + b.oneSided, noPriceYear: a.noPriceYear + b.noPriceYear,
+          noBasis: a.noBasis + b.noBasis,
+        }
+      : a ?? b
 
   const impl = merge(sum('implementationCost'), lineSum('IMPLEMENTATION'))
   const enf = merge(sum('enforcementCost'), lineSum('ENFORCEMENT'))
@@ -917,13 +968,37 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { whoAffectedImpactCost: true } })
   const problemCost = (idea?.whoAffectedImpactCost as { cost?: string } | null)?.cost || null
 
-  const gbp = (r: { low: number; high: number } | null) =>
-    r ? `£${Math.round(r.low).toLocaleString()}–${Math.round(r.high).toLocaleString()}` : '—'
+  // §19-D Task 7 — a total whose upper bound was ASSUMED (every contributing figure
+  // one-sided) prints as a floor, not as a range. "£57" and "at least £57" are
+  // different claims and the user is entitled to the one the data supports.
+  const gbp = (r: CatTotal | null) => {
+    if (!r) return '—'
+    const lo = Math.round(r.low).toLocaleString()
+    const hi = Math.round(r.high).toLocaleString()
+    if (lo === hi) return r.oneSided === r.n ? `at least £${lo}` : `£${lo}`
+    return `£${lo}–${hi}`
+  }
   const oneOff = impl ? `${gbp(impl)} one-off (implementation)` : ''
   const ongoing = [enf ? `${gbp(enf)}/yr enforcement` : '', fric ? `${gbp(fric)}/yr compliance friction` : ''].filter(Boolean).join(' + ')
   const parts = [oneOff, ongoing ? `${ongoing} ongoing` : ''].filter(Boolean)
   const planCost = parts.length ? parts.join('; ') : 'not yet estimated'
-  const priceBase = targetYear ? ` (all figures uprated to ${targetYear} prices)` : ''
+
+  // Provenance across every figure that went into the totals.
+  const cats = [impl, enf, fric].filter((c): c is CatTotal => !!c)
+  const figures = cats.reduce((n, c) => n + c.n, 0)
+  const oneSided = cats.reduce((n, c) => n + c.oneSided, 0)
+  const noPriceYear = cats.reduce((n, c) => n + c.noPriceYear, 0)
+  const noBasis = cats.reduce((n, c) => n + c.noBasis, 0)
+  const uprated = figures - noPriceYear
+
+  // The uprating claim now describes what was actually uprated. It used to read "all
+  // figures uprated to 2025 prices" over a figure with no price year — which is not a
+  // rounding problem, it is a statement that is false.
+  const priceBase =
+    !targetYear || !figures ? ''
+      : noPriceYear === 0 ? ` (all figures uprated to ${targetYear} prices)`
+        : uprated === 0 ? ` (no figure carries a price year, so nothing has been uprated — they are summed as entered)`
+          : ` (${uprated} of ${figures} figures uprated to ${targetYear} prices; ${noPriceYear} ${noPriceYear === 1 ? 'carries' : 'carry'} no price year and ${noPriceYear === 1 ? 'is' : 'are'} summed as entered)`
 
   // §19-C Task 6 — the EANDCB threshold: an equivalent annual net direct cost to
   // business beyond ±£5m/yr triggers RPC scrutiny, which changes what the proposal
@@ -935,13 +1010,28 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     ? ` Ongoing friction on business is above £5m a year, so this would fall in scope of RPC scrutiny (an EANDCB assessment) — worth knowing before it reaches a department.`
     : ''
 
+  // §19-D Task 7 — the closing sentence describes THESE figures. It used to assert
+  // "All figures are ranges with a stated basis" unconditionally, which was untrue of
+  // the only figure the walk-through actually entered.
+  const quality = !figures
+    ? ''
+    : oneSided === 0 && noBasis === 0
+      ? ` Every figure is a range with a stated basis — challenge any of them.`
+      : ` ${[
+          oneSided ? `${oneSided} of the ${figures} ${figures === 1 ? 'figure' : 'figures'} ${oneSided === 1 ? 'was' : 'were'} given as a single number rather than a range, so the upper bound is assumed rather than estimated` : '',
+          noBasis ? `${noBasis} ${noBasis === 1 ? 'has' : 'have'} no stated basis` : '',
+        ].filter(Boolean).join(', and ')}. That makes this total weaker than it looks — worth fixing before anyone else reads it. Challenge any figure.`
+
   const summary =
     `The problem costs ${problemCost ? `~${problemCost}` : '(not yet quantified on Page 2)'}. ` +
-    `This plan costs ${planCost}${priceBase}. All figures are ranges with a stated basis — challenge any of them.${eandcbNote}`
+    `This plan costs ${planCost}${priceBase}.${quality}${eandcbNote}`
 
   const totals = {
     implementationCost: impl, enforcementCost: enf, regulatoryFriction: fric,
     problemCost, priceYear: targetYear, costLines: lines.length, eandcbFlag,
+    // §19-D Task 7 — the provenance behind the sentence, so a caller (and the check)
+    // can assert the claim and the data together.
+    figures, oneSided, noBasis, noPriceYear, uprated,
   }
   return { summary, totals }
 }
