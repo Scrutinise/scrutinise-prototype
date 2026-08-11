@@ -1,0 +1,268 @@
+Page 1 of 7 
+Regulatory Impact Assessment (RIA): 
+Authorised Economic Operators 
+(AEOs) 
+Title of proposal 
+This is an initial Regulatory Impact Assessment (RIA) for the amendment to the 
+Council Regulation (EEC) no. 2913/92 establishing the Community Customs Code 
+(CCC) to allow the introduction of Authorised Economic Operators (AEOs). 
+1.  Purpose and intended effect of measure 
+1.1  Background  
+The amendment to the CCC, adopted by the European Parliament on 23.2.2005, 
+allows Customs authorities to grant the status of AEO to any business that satisfies 
+EU criteria. An AEO will be able to benefit from simplified customs controls and 
+procedures. The criteria to be applied and specific simplifications will be set out in the 
+Implementing Provisions (IP) for the CCC 2454/93. As these are not yet available a 
+detailed analysis of the specific costs and benefits has not been possible. 
+1.2  Scope  of  Change  
+This RIA relates to: 
+•
+the introduction of the status of AEOs 
+•
+the AEOs status to be issued by a single MS and recognised by 
+all other MS 
+•
+the provision for an AEO to be a non-EC established entity 
+•
+defining the procedures/ criteria to be applied when granting 
+AEO status to ensure consistency across the community. 
+A separate RIA on ‘Pre-Arrival/Departure Declarations, Data Sharing and Risk 
+Assessment’ covers the other aspects of this Code amendment; copies available on 
+request. 
+
+Page 2 of 7 
+2. Risk Assessment 
+2.1  Current  arrangements  
+Traders wishing to benefit from Customs simplifications or facilitations have to apply 
+to each Member State (MS) in which they operate (the exception to this is the Single 
+European Authorisation (SEA) where the other MS involved have to approve the 
+authorisation, but they are limited in scope, unwieldy and time-consuming to set up). 
+This results in: 
+•
+no EU-wide recognition of trader status 
+•
+different approval criteria and post-approval controls applied 
+•
+traders may qualify for a simplification in one MS but be rejected 
+by another 
+•
+no commonly agreed levels of facilitation for authorised traders - 
+level of simplifications differ across MS 
+•
+multi-national companies have to retain different records/ comply 
+with different operating procedures 
+•
+creation of procedures that are incompatible and systems that 
+are unable to communicate on an EU-wide basis. 
+Different levels of risk assessments, frontier interventions and post-clearance 
+controls are carried out. This results in: 
+•
+inconsistency in treatment for traders 
+•
+uncertainty over delivery timescales for traders operating on a 
+‘just-in-time’ principle. 
+2.2  New  system  
+The detailed criteria and conditions of the AEO scheme are not yet available but the 
+following generic risks have been identified and will be reviewed once the IP are 
+made available: 
+The new system fails to take account of the current capabilities and cultural 
+differences of the various MS. This results in: 
+•
+individual MS opt out, minimise the implementation or fail to 
+recognise the status of AEO assigned to a trader by another MS 
+•
+the scheme will fail to deliver the fullest benefits and costs will 
+escalate for the traders concerned. 
+Inconsistencies across MS in application of controls/approval criteria. This results in:  
+
+Page 3 of 7 
+•
+inconsistency of treatment for the trade 
+•
+increased risks for society in terms of trader compliance and anti-
+smuggling controls in particular (achieving AEO status in any MS 
+does not exempt traders’ consignments from examination at 
+either import or export where there is reason to believe that illicit 
+goods are being carried/concealed) 
+•
+traders migrate to the MS where it is perceived as being easier to 
+gain status having a knock-on impact upon the level of import 
+duties collected by each MS. 
+However, the AEO system is designed to bring about benefits to the trade by offering 
+access to customs simplifications and/or relaxations in security requirements to 
+facilitate quick clearance time from ports. 
+3. Options 
+The tableson the following pages provide an initial assessment of some of the 
+possible impacts and risks resulting from the introduction of AEOs. 
+3.1  Preferred option prior to detailed consultation 
+Option 3 would provide the most benefit to traders, allowing them to apply for AEO 
+status/ simplifications in a single MS for EU-wide validity. There are potential 
+problems, for example, in dealing with, and enforcing, prohibitions and restrictions 
+that vary across the Community. Option 2 would require perhaps only slightly more 
+resources from the trade, but would provide more control for HMRC to fulfil its legal 
+obligations with respect to the new proposals. The option to support is still under 
+discussion at policy level. 
+3.2  Business sectors affected 
+The AEO scheme will be available to all traders involved in import and export 
+activities irrespective of trade sector or size. However, dependent upon the level of 
+criteria/ conditions imposed upon approvals the scheme may not be attractive to 
+Small Businesses. 
+The proposal does not currently state whether the scheme will be restricted to 
+declarants but the UK would wish to see this scheme made available to third parties 
+also as this would provide a more cost-effective route for Small Businesses to benefit 
+from the simplifications. 
+Customs agents/ representatives play a vital role in making simplifications/ 
+facilitations available to smaller businesses. The representative applies for the 
+procedure in their own name and then undertakes the Customs formalities on behalf 
+of the smaller firms allowing them to benefit (via the third party) from using simplified 
+procedures. 
+
+Page 4 of 7 
+An initial analysis of the likely trade sectors that may be affected by this proposal is 
+shown below: 
+Analysis of the likely trade sectors that may be affected 
+Multi-nationals, Other 
+companies importing/ 
+exporting via more than 
+one MS. 
+Need to harmonise procedures/ system 
+requirements across EU. If one-stop shop approval 
+allowed (ie, option 3) greatly simplified approvals 
+process and proportionate reduction in compliance 
+costs. 
+Small Businesses if import 
+/ export is major part of 
+business – although they 
+might want to make use of 
+third party AEOs. 
+Possibility that criteria/ conditions of approval and 
+associated supply chain requirements may make 
+costs of becoming approved disproportionate to 
+benefits. 
+Importers/Exporters. Need to apply for AEO status in order to gain/ retain 
+simplifications. Added layer of bureaucracy. 
+Software Suppliers/ 
+computer bureaux. 
+Amendment of software packages, expansion of 
+clientele population, new markets – supply chain 
+security packages. 
+Customs Brokers/ 
+Consultants. 
+New business opportunities – consultancy on AEO 
+applications, supply chain security, MS 
+administrative procedures. 
+Logistics Operators, 
+Carriers, Freight 
+Forwarders, Couriers, 
+Agents. 
+Requirement to provide supply chain security 
+assurance, high likelihood they would need to 
+become AEO to retain business. 
+Community Service 
+Providers (CSPs)/ Port 
+Authorities. 
+Linked with pre-arrival/departure declaration 
+initiatives – need to cater for new data sets/ 
+additional information requirements, new submission 
+time limits. Also need to cater for AEO specific 
+simplifications alongside standard import/ export 
+requirements. 
+3.3  Issues of equity and fairness 
+It is not envisaged that there will be any issues of inequity or fairness arising from 
+these proposals providing that the AEO scheme is not restricted to a specific trade 
+sector/ type. 
+3.4  Compliance  costs  
+Until the specific details of the approval criteria and conditions, levels of 
+simplifications and waivers to be included within this change are provided it is not 
+possible to quantify the average compliance costs of a business/ trade sector. 
+
+Page 5 of 7 
+3.5  Other  costs.  
+At this point it has not been possible to analyse any hidden costs that could occur as 
+a result of these proposals. 
+4.  Consultation with small business: the Small 
+Firms’ Impact Test 
+At this point, there has been some consultation through working groups and a 
+website, with businesses. There has not been any formal consultation as yet. The 
+Small Firms’ Impact Test has not been carried out at this stage. 
+5. Competition assessment 
+The competition assessment has not been completed at this stage. 
+6.  Enforcement and Sanctions  
+6.1  How will the proposal be enforced? 
+The proposal will be enforced by HMRC – frontier staff/ regional business assurance 
+staff through normal assurance and frontier controls. 
+6.2  Will the legislation impose criminal sanctions for non-
+compliance? 
+There is a civil penalty system in place, which can be used for non-compliance with 
+regards to fiscal matters. Current practice allows for the use of compound penalties 
+and offence action to be taken in the event of illegal imports, prohibition and 
+restriction matters. Initial indications are that these practices would be extended to 
+cover AEO activities. 
+7. Monitoring and review 
+This RIA will be subject to formal evaluation 12-months after the new Regulation 
+comes into force. This will be undertaken in partnership with the Joint Customs 
+Consultative Committee (JCCC) working groups. 
+8. Consultation 
+Consultation has taken place with the Frontiers and International Trade working 
+groups and feedback has been received from BIFA, SITPRO, AICES, ASM, Rolls 
+Royce and Bell Davies. A copy of the initial consultation findings is at Annex 2. 
+Further trade consultation will take place through the JCCC. 
+
+Page 6 of 7 
+Consultation has also been carried out within HMRC, Frontiers and International 
+Trade on this issue and a copy can be found at Annex 2. Future consultation will be 
+carried out via the Customs Code Working Group. 
+9. Summary and recommendation 
+It is envisaged that option 3 would provide the most benefit to traders, allowing them 
+to apply for AEO status/ simplifications in a single MS for EU-wide validity. Until such 
+times as the detailed criteria and conditions are available specific costs and benefits 
+cannot be quantified. There is currently an EU working group examining this issue 
+and they are due to report in the latter half of this year. 
+10. Declaration 
+I have read the regulatory impact assessment and I am satisfied that the benefits 
+justify the costs 
+Signed ................................... 
+Date ..................... 
+Dawn Primarolo, 
+Paymaster General, HM Treasury. 
+Contact point 
+Sanjay Aeri 
+100 Parliament Street 
+London 
+SW1A 2BQ. 
+Telephone: 0207 147 0003 
+Fax: 0207 147 0131 
+Email: Sanjay.Aeri@hmrc.gsi.gov.uk
+Annex 1 - Commission Proposal document 
+Articles covered by this RIA 
+This RIA covers article 5a of the proposal document
+. The ‘Pre-arrival/ Departure 
+Declaration, Data Sharing and Risk Assessment’ RIA covers the remaining articles. 
+Annex 2 - Consultation findings 
+Internal consultation findings
+External consultation findings
+
+Page 7 of 7 
+Annex 3 - Associated papers 
+The RIAs listed below relate to other areas of the Commissions programme of 
+change: 
+•
+General Overview of the Modernisation of the Community 
+Customs Code.
+•
+Pre arrival/ departure declarations, Risk Assessment and Data 
+Sharing.
+•
+SAD Harmonisation.
+•
+Simplified Procedures.
+•
+Special Procedures
+.
+•
+Multi-Annual Strategic Plan (MASP).
+•
+Customs Debt.
+•
+Other Miscellaneous Articles.
+Copies can be provided on request.

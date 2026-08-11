@@ -1,0 +1,297 @@
+[
+  {
+    "value": {
+      "id": 172,
+      "thumbnailUrl": "https://members-api.parliament.uk/api/Members/172/Thumbnail",
+      "partyHistory": [
+        {
+          "startDate": "1987-06-11T00:00:00",
+          "endDate": "2015-03-30T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2015-05-07T00:00:00",
+          "endDate": "2017-05-03T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2017-06-08T00:00:00",
+          "endDate": "2019-11-06T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2019-12-12T00:00:00",
+          "endDate": "2023-04-23T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2023-04-23T00:00:00",
+          "endDate": "2024-05-28T00:00:00",
+          "party": {
+            "id": 8,
+            "name": "Independent",
+            "abbreviation": "Ind",
+            "backgroundColour": "909090",
+            "foregroundColour": "FFFFFF",
+            "isLordsMainParty": false,
+            "isLordsSpiritualParty": false,
+            "governmentType": null,
+            "isIndependentParty": true
+          }
+        },
+        {
+          "startDate": "2024-05-28T00:00:00",
+          "endDate": "2024-05-30T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2024-07-04T00:00:00",
+          "endDate": "2025-07-17T00:00:00",
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": null,
+            "isIndependentParty": false
+          }
+        },
+        {
+          "startDate": "2025-07-17T00:00:00",
+          "endDate": "2026-07-30T00:00:00",
+          "party": {
+            "id": 8,
+            "name": "Independent",
+            "abbreviation": "Ind",
+            "backgroundColour": "909090",
+            "foregroundColour": "FFFFFF",
+            "isLordsMainParty": false,
+            "isLordsSpiritualParty": false,
+            "governmentType": null,
+            "isIndependentParty": true
+          }
+        },
+        {
+          "startDate": "2026-07-30T00:00:00",
+          "endDate": null,
+          "party": {
+            "id": 15,
+            "name": "Labour",
+            "abbreviation": "Lab",
+            "backgroundColour": "d50000",
+            "foregroundColour": "ffffff",
+            "isLordsMainParty": true,
+            "isLordsSpiritualParty": true,
+            "governmentType": 0,
+            "isIndependentParty": false
+          }
+        }
+      ],
+      "houseMembershipHistory": [
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 1332,
+          "house": 1,
+          "membershipStartDate": "1987-06-11T00:00:00",
+          "membershipEndDate": "1992-04-09T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 1332,
+          "house": 1,
+          "membershipStartDate": "1992-04-09T00:00:00",
+          "membershipEndDate": "1997-05-01T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 1333,
+          "house": 1,
+          "membershipStartDate": "1997-05-01T00:00:00",
+          "membershipEndDate": "2001-06-07T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 1333,
+          "house": 1,
+          "membershipStartDate": "2001-06-07T00:00:00",
+          "membershipEndDate": "2005-05-05T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 1333,
+          "house": 1,
+          "membershipStartDate": "2005-05-05T00:00:00",
+          "membershipEndDate": "2010-05-06T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 3506,
+          "house": 1,
+          "membershipStartDate": "2010-05-06T00:00:00",
+          "membershipEndDate": "2015-03-30T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 3506,
+          "house": 1,
+          "membershipStartDate": "2015-05-07T00:00:00",
+          "membershipEndDate": "2017-05-03T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 3506,
+          "house": 1,
+          "membershipStartDate": "2017-06-08T00:00:00",
+          "membershipEndDate": "2019-11-06T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 3506,
+          "house": 1,
+          "membershipStartDate": "2019-12-12T00:00:00",
+          "membershipEndDate": "2024-05-30T00:00:00",
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": 7,
+          "membershipStatus": null
+        },
+        {
+          "membershipFrom": "Hackney North and Stoke Newington",
+          "membershipFromId": 4074,
+          "house": 1,
+          "membershipStartDate": "2024-07-04T00:00:00",
+          "membershipEndDate": null,
+          "membershipEndReason": null,
+          "membershipEndReasonNotes": null,
+          "membershipEndReasonId": null,
+          "membershipStatus": null
+        }
+      ],
+      "nameHistory": [
+        {
+          "startDate": "1953-09-27T00:00:00",
+          "endDate": "2017-02-15T00:00:00",
+          "nameListAs": "Abbott, Ms Diane",
+          "nameDisplayAs": "Ms Diane Abbott",
+          "nameFullTitle": "Ms Diane Abbott",
+          "nameAddressAs": "Ms Abbott"
+        },
+        {
+          "startDate": "2017-02-15T00:00:00",
+          "endDate": null,
+          "nameListAs": "Abbott, Ms Diane",
+          "nameDisplayAs": "Ms Diane Abbott",
+          "nameFullTitle": "Rt Hon Diane Abbott MP",
+          "nameAddressAs": "Ms Abbott"
+        }
+      ]
+    },
+    "links": [
+      {
+        "rel": "self",
+        "href": "/Members/172",
+        "method": "GET"
+      },
+      {
+        "rel": "overview",
+        "href": "/Members/172",
+        "method": "GET"
+      },
+      {
+        "rel": "synopsis",
+        "href": "/Members/172/Synopsis",
+        "method": "GET"
+      },
+      {
+        "rel": "contactInformation",
+        "href": "/Members/172/Contact",
+        "method": "GET"
+      }
+    ]
+  }
+]

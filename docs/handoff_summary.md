@@ -2,7 +2,47 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 04:19 UTC — ▼ **S2C4: THE ANN RETRIEVES 70.4% OF WHAT IT HOLDS, SO §2 DID
+*Last updated: 2026-08-11 18:30 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS BUILT,
+PILOTED, MEASURED AND LICENCE-CHECKED — AND NOTHING IS SEEDED, ON PURPOSE.** Executes
+`BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C. CHANGE_LOG (2026-08-11 18:30 UTC); full detail in
+**`docs/V34_POLITICAL_SOURCES_REPORT.md`**. `tsc` clean bar the documented pre-existing errors.
+⚠ **PAUSED MID-SPRINT AT CHARLIE'S REQUEST. NO GIT HAS RUN. `commit-all.sh` IS WRITTEN AND
+READY BUT NOT EXECUTED — that is the first action next session.**
+⚠ **THE SEEDS ARE POST-PUSH AND MUST NOT RUN BEFORE IT** (`INGEST_PLAYBOOK` §8). Seeding first
+would have the OLD deployed worker mark rows `done`, and a `done` row does not come back. Order
+after push + redeploy: `seed-rate-limits.ts` → `v34-seed-division-votes.ts --seed` (5,645) →
+`v34-seed-impact-assessments.ts --seed` (1,181) → `v34-seed-consultations.ts --seed` (7,447),
+then each `--verify` (attempted-vs-stored, never a SUCCESS line).
+**§A — V28 BUILT THE DIVISION PIPELINE, NEVER RAN IT, AND IT WOULD HAVE INGESTED 25 OF 2,361.**
+The Commons list endpoint hard-caps `take` at 25 (Lords honours any value) and V28 broke out of
+the walk on a short page — a 99% shortfall that reads as success. Also recovered
+`NoVoteRecorded`, which V28 discarded: absence, supplied by the API, present back to 2016-03-09.
+⚠ Lords has NO equivalent, so absence there is `absence_known=false` — a known unknown, said in
+words. ⚠ **The brief's premise that party is not in the division lists is wrong** — it is there,
+and it is AT THE DATE (verified against member 172's two party changes), which takes the Members
+API off the critical path. Both houses enumerated and RECONCILED: **5,645 divisions (Commons
+2,361 from 2016-03-09; Lords 3,284 from 1999-11-24), predicted 2,556,897 `division_votes`.**
+Three new ingest tables created and empty, incl. `stage_outcomes` where "passed without a
+division" is a first-class finding rather than four different things wearing one null.
+**§B — a bulk route nobody had looked for:** legislation.gov.uk `ukia`, **1,181 IAs**, and the
+feed carries the IA→instrument join free. ⚠ Years NOT continuous (none 2008–2016, none
+2024–2025), recorded as known unknowns. Extraction measured on 21 real IAs BEFORE committing
+(20/21 good, mean 120k chars, max 542k over 233p) and sectioned, so it is not the V33
+whole-document-in-one-row trap.
+**§C — 7,447 consultations** (86 open + 1,059 closed + 6,302 outcomes); no bulk route, checked
+first. ⚠ `document_type=consultation` returns 0 — filtering on it is a silent empty ingest.
+Attachments classified so a departmental summary never reads as a quotation.
+⚠ **Charlie's call, blocking nothing today: Public Whip's bulk vote matrices are ODbL
+SHARE-ALIKE** — the first licence that would attach an obligation to our DERIVED database.
+Flagged in `licence-map.ts`, not ingested; Parliament's own APIs already cover the range.
+⚠ ONSPD is OGL v3.0 but **NI "BT" postcodes need a separate Land & Property Services licence**.
+⚠ `stage_outcomes` is deliberately EMPTY: populating it needs a 30s/call Bills API stage crawl
+and a fuzzy title match, and a fuzzy `without-division` row is the false certainty the table
+exists to prevent. ⚠ The brief cites `docs/POSITION_GRAPH_DESIGN.md`, which is not in the repo —
+storage decisions were made from the brief's text. **2D-1 below says the position graph is now
+built; the two should be reconciled before the seeds drain.**
+▼ Earlier:
+2026-08-11 04:19 UTC — ▼ **S2C4: THE ANN RETRIEVES 70.4% OF WHAT IT HOLDS, SO §2 DID
 NOT RUN. 2D-1: THE POSITION GRAPH IS BUILT AND NEEDED NO LLM.** CHANGE_LOG (2026-08-11 04:19 UTC).
 Reports: `docs/SEARCH_S2C4_REPORT.md`, `docs/POSITION_GRAPH_2D1_REPORT.md` + `_TABLES.md`.
 

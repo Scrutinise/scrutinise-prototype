@@ -1,0 +1,233 @@
+[
+  {
+    "y": 2005,
+    "id": "http://www.legislation.gov.uk/id/ukia/2005/1",
+    "chars": 0,
+    "pages": 5,
+    "cpp": 0,
+    "hits": 0,
+    "dept": "Department for Business, Innovation and Skills",
+    "stage": "Final",
+    "instrument": null
+  },
+  {
+    "y": 2006,
+    "id": "http://www.legislation.gov.uk/id/ukia/2006/2",
+    "chars": 11488,
+    "pages": 7,
+    "cpp": 1641,
+    "hits": 1,
+    "dept": "Her Majesty's Revenue and Customs",
+    "stage": "Final",
+    "instrument": null
+  },
+  {
+    "y": 2006,
+    "id": "http://www.legislation.gov.uk/id/ukia/2006/1",
+    "chars": 85540,
+    "pages": 35,
+    "cpp": 2444,
+    "hits": 8,
+    "dept": "Department for Environment, Food and Rural Affairs",
+    "stage": "Consultation",
+    "instrument": null
+  },
+  {
+    "y": 2007,
+    "id": "http://www.legislation.gov.uk/id/ukia/2007/37",
+    "chars": 70301,
+    "pages": 22,
+    "cpp": 3196,
+    "hits": 3,
+    "dept": "Her Majesty's Revenue and Customs",
+    "stage": "Final",
+    "instrument": null
+  },
+  {
+    "y": 2007,
+    "id": "http://www.legislation.gov.uk/id/ukia/2007/36",
+    "chars": 13361,
+    "pages": 6,
+    "cpp": 2227,
+    "hits": 8,
+    "dept": "Her Majesty's Revenue and Customs",
+    "stage": "Final",
+    "instrument": null
+  },
+  {
+    "y": 2017,
+    "id": "http://www.legislation.gov.uk/id/ukia/2017/183",
+    "chars": 33387,
+    "pages": 13,
+    "cpp": 2568,
+    "hits": 1,
+    "dept": "Department for Transport",
+    "stage": "Post Implementation",
+    "instrument": "http://www.legislation.gov.uk/uksi/2011/2632/impacts/2017/183"
+  },
+  {
+    "y": 2017,
+    "id": "http://www.legislation.gov.uk/id/ukia/2017/182",
+    "chars": 542498,
+    "pages": 233,
+    "cpp": 2328,
+    "hits": 9,
+    "dept": "Department for Education",
+    "stage": "Enactment",
+    "instrument": "http://www.legislation.gov.uk/ukpga/2017/29/impacts/2017/182"
+  },
+  {
+    "y": 2018,
+    "id": "http://www.legislation.gov.uk/id/ukia/2018/193",
+    "chars": 133872,
+    "pages": 48,
+    "cpp": 2789,
+    "hits": 9,
+    "dept": "HM Treasury",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2019/407/impacts/2018/193"
+  },
+  {
+    "y": 2018,
+    "id": "http://www.legislation.gov.uk/id/ukia/2018/192",
+    "chars": 133872,
+    "pages": 48,
+    "cpp": 2789,
+    "hits": 9,
+    "dept": "HM Treasury",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2018/1401/impacts/2018/192"
+  },
+  {
+    "y": 2019,
+    "id": "http://www.legislation.gov.uk/id/ukia/2019/175",
+    "chars": 201843,
+    "pages": 59,
+    "cpp": 3421,
+    "hits": 9,
+    "dept": "Department for Environment, Food and Rural Affairs",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2022/481/impacts/2019/175"
+  },
+  {
+    "y": 2019,
+    "id": "http://www.legislation.gov.uk/id/ukia/2019/174",
+    "chars": 131775,
+    "pages": 33,
+    "cpp": 3993,
+    "hits": 9,
+    "dept": "HM Treasury",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/ukdsi/2020/9780348209976/impacts/2019/174"
+  },
+  {
+    "y": 2020,
+    "id": "http://www.legislation.gov.uk/id/ukia/2020/115",
+    "chars": 72326,
+    "pages": 24,
+    "cpp": 3014,
+    "hits": 9,
+    "dept": "Department for Business and Trade",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/ukpga/2021/34/impacts/2020/115"
+  },
+  {
+    "y": 2020,
+    "id": "http://www.legislation.gov.uk/id/ukia/2020/114",
+    "chars": 16740,
+    "pages": 11,
+    "cpp": 1522,
+    "hits": 3,
+    "dept": "Department for Business and Trade",
+    "stage": "Post Implementation",
+    "instrument": "http://www.legislation.gov.uk/uksi/2014/3140/impacts/2020/114"
+  },
+  {
+    "y": 2021,
+    "id": "http://www.legislation.gov.uk/id/ukia/2021/101",
+    "chars": 135539,
+    "pages": 38,
+    "cpp": 3567,
+    "hits": 9,
+    "dept": "Department for Environment, Food and Rural Affairs",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/ukpga/2024/11/impacts/2021/101"
+  },
+  {
+    "y": 2021,
+    "id": "http://www.legislation.gov.uk/id/ukia/2021/100",
+    "chars": 130321,
+    "pages": 38,
+    "cpp": 3430,
+    "hits": 9,
+    "dept": "Maritime and Coastguard Agency",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2022/737/impacts/2021/100"
+  },
+  {
+    "y": 2022,
+    "id": "http://www.legislation.gov.uk/id/ukia/2022/117",
+    "chars": 124638,
+    "pages": 40,
+    "cpp": 3116,
+    "hits": 8,
+    "dept": "Department for Business, Energy and Industrial Strategy",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2025/375/impacts/2022/117"
+  },
+  {
+    "y": 2022,
+    "id": "http://www.legislation.gov.uk/id/ukia/2022/116",
+    "chars": 124638,
+    "pages": 40,
+    "cpp": 3116,
+    "hits": 8,
+    "dept": "Department for Business, Energy and Industrial Strategy",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2025/376/impacts/2022/116"
+  },
+  {
+    "y": 2023,
+    "id": "http://www.legislation.gov.uk/id/ukia/2023/199",
+    "chars": 30439,
+    "pages": 15,
+    "cpp": 2029,
+    "hits": 3,
+    "dept": "Department for Transport",
+    "stage": "Post Implementation",
+    "instrument": "http://www.legislation.gov.uk/uksi/2008/2924/impacts/2023/199"
+  },
+  {
+    "y": 2023,
+    "id": "http://www.legislation.gov.uk/id/ukia/2023/198",
+    "chars": 207868,
+    "pages": 73,
+    "cpp": 2848,
+    "hits": 9,
+    "dept": "",
+    "stage": "",
+    "instrument": "http://www.legislation.gov.uk/ukpga/1967/87/impacts/2023/198"
+  },
+  {
+    "y": 2026,
+    "id": "http://www.legislation.gov.uk/id/ukia/2026/143",
+    "chars": 156309,
+    "pages": 66,
+    "cpp": 2368,
+    "hits": 5,
+    "dept": "Department for Education",
+    "stage": "Final",
+    "instrument": "http://www.legislation.gov.uk/uksi/2026/858/impacts/2026/143"
+  },
+  {
+    "y": 2026,
+    "id": "http://www.legislation.gov.uk/id/ukia/2026/142",
+    "chars": 46854,
+    "pages": 13,
+    "cpp": 3604,
+    "hits": 3,
+    "dept": "Department for Business and Trade",
+    "stage": "Post Implementation",
+    "instrument": "http://www.legislation.gov.uk/ukpga/2018/24/impacts/2026/142"
+  }
+]

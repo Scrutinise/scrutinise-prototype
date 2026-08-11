@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:leg="http://www.legislation.gov.uk/namespaces/legislation" xmlns:ukm="http://www.legislation.gov.uk/namespaces/metadata" xmlns:theme="http://www.legislation.gov.uk/namespaces/theme" xmlns:openSearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:parameters="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/">
+			<id>http://www.legislation.gov.uk/ukia/2023/data.feed</id>
+			<link rel="self" type="application/atom+xml" href="http://www.legislation.gov.uk/ukia/2023/data.feed"/>
+			
+			<link rel="alternate" type="text/csv" href="http://www.legislation.gov.uk/ukia/2023/data.csv"/>
+			<updated>2023-12-19T23:59:59Z</updated>
+			<title>Search Results</title>
+			<openSearch:Query role="request" leg:type="ukia" leg:year="2023"> </openSearch:Query>
+			<openSearch:itemsPerPage>20</openSearch:itemsPerPage>
+			<openSearch:startIndex>1</openSearch:startIndex>
+			<leg:page>1</leg:page>
+			<leg:morePages>10</leg:morePages>
+			<leg:facets>
+
+
+				<leg:facetStages><leg:facetStage type="Enactment" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="1"/><leg:facetStage type="Final" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="156"/><leg:facetStage type="Post Implementation" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="31"/></leg:facetStages>
+
+				<leg:facetYears remove="http://www.legislation.gov.uk/ukia/data.feed"><leg:facetYear year="2026" href="http://www.legislation.gov.uk/ukia/2026/data.feed" total="129"/><leg:facetYear year="2025" href="http://www.legislation.gov.uk/ukia/2025/data.feed" total="210"/><leg:facetYear year="2024" href="http://www.legislation.gov.uk/ukia/2024/data.feed" total="205"/><leg:facetYear year="2023" href="http://www.legislation.gov.uk/ukia/2023/data.feed" total="189" value="189"/><leg:facetYear year="2022" href="http://www.legislation.gov.uk/ukia/2022/data.feed" total="108"/><leg:facetYear year="2021" href="http://www.legislation.gov.uk/ukia/2021/data.feed" total="92"/><leg:facetYear year="2020" href="http://www.legislation.gov.uk/ukia/2020/data.feed" total="103"/><leg:facetYear year="2019" href="http://www.legislation.gov.uk/ukia/2019/data.feed" total="165"/><leg:facetYear year="2018" href="http://www.legislation.gov.uk/ukia/2018/data.feed" total="184"/><leg:facetYear year="2017" href="http://www.legislation.gov.uk/ukia/2017/data.feed" total="171"/><leg:facetYear year="2016" href="http://www.legislation.gov.uk/ukia/2016/data.feed" total="237"/><leg:facetYear year="2015" href="http://www.legislation.gov.uk/ukia/2015/data.feed" total="320"/><leg:facetYear year="2014" href="http://www.legislation.gov.uk/ukia/2014/data.feed" total="394"/><leg:facetYear year="2013" href="http://www.legislation.gov.uk/ukia/2013/data.feed" total="425"/><leg:facetYear year="2012" href="http://www.legislation.gov.uk/ukia/2012/data.feed" total="479"/><leg:facetYear year="2011" href="http://www.legislation.gov.uk/ukia/2011/data.feed" total="664"/><leg:facetYear year="2010" href="http://www.legislation.gov.uk/ukia/2010/data.feed" total="491"/><leg:facetYear year="2009" href="http://www.legislation.gov.uk/ukia/2009/data.feed" total="359"/><leg:facetYear year="2008" href="http://www.legislation.gov.uk/ukia/2008/data.feed" total="363"/><leg:facetYear year="2007" href="http://www.legislation.gov.uk/ukia/2007/data.feed" total="37"/><leg:facetYear year="2006" href="http://www.legislation.gov.uk/ukia/2006/data.feed" total="2"/><leg:facetYear year="2005" href="http://www.legislation.gov.uk/ukia/2005/data.feed" total="1"/></leg:facetYears>
+
+				<leg:facetDepartments><leg:facetDepartment type="Cabinet Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="1"/><leg:facetDepartment type="Department for Business and Trade" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="13"/><leg:facetDepartment type="Department for Business, Energy and Industrial Strategy" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="6"/><leg:facetDepartment type="Department for Education" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="4"/><leg:facetDepartment type="Department for Energy Security and Net Zero" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="15"/><leg:facetDepartment type="Department for Environment, Food and Rural Affairs" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="38"/><leg:facetDepartment type="Department for Infrastructure" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="14"/><leg:facetDepartment type="Department for Levelling Up, Housing and Communities" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="17"/><leg:facetDepartment type="Department for Science, Innovation and Technology" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="3"/><leg:facetDepartment type="Department for the Economy" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="1"/><leg:facetDepartment type="Department for Transport" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="12"/><leg:facetDepartment type="Department for Work and Pensions" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="7"/><leg:facetDepartment type="Department of Finance" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="7"/><leg:facetDepartment type="Department of Health and Social Care" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="12"/><leg:facetDepartment type="Foreign, Commonwealth and Development Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="3"/><leg:facetDepartment type="HM Treasury" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="9"/><leg:facetDepartment type="Home Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="9"/><leg:facetDepartment type="Ministry of Justice" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="9"/><leg:facetDepartment type="Northern Ireland Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="2"/><leg:facetDepartment type="Other (United Kingdom)" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="1"/><leg:facetDepartment type="Scotland Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="1"/><leg:facetDepartment type="The Privy Council Office" href="http://www.legislation.gov.uk/ukia/2023/data.feed" value="4"/></leg:facetDepartments>
+
+			</leg:facets>
+			
+			<openSearch:totalResults>189</openSearch:totalResults>
+			<link rel="first" type="application/atom+xml" href="http://www.legislation.gov.uk/ukia/2023/data.feed"/><link rel="next" type="application/atom+xml" href="http://www.legislation.gov.uk/ukia/2023/data.feed?page=2"/><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/199</id>
+			<title>PIR Merchant Shipping (Prevention of Air Pollution on Ships)</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/199"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/199"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2008/2924/impacts/2023/199"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/199/pdfs/ukia_20230199_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-08-14T23:59:59Z</updated>
+			<published>2023-08-14T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Post Implementation"/><ukm:Year Value="2023"/><ukm:Number Value="199"/><ukm:Department Value="Department for Transport"/><ukm:Date Value="2023-08-14"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/198</id>
+			<title>Permitted locations for abortion treatment</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/198"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/198"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/ukpga/1967/87/impacts/2023/198"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/198/pdfs/ukia_20230198_en.pdf"/>
+			<author><name/></author>
+			<updated>2026-08-11T03:23:22.558823+01:00</updated>
+			<published>2026-08-11T03:23:22.558823+01:00</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:Year Value="2023"/><ukm:Number Value="198"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/197</id>
+			<title>Section 75 Screening - The Gaming (Variation of Monetary Limits) Order (NI) 2025</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/197"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/197"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/nisr/2025/2/impacts/2023/197"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/197/pdfs/ukia_20230197_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-09-04T23:59:59Z</updated>
+			<published>2023-09-04T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="197"/><ukm:Department Value="Other (United Kingdom)"/><ukm:Date Value="2023-09-04"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/196</id>
+			<title>PIR -The Traffic Signs Regulations and General Directions</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/196"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/196"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2016/362/impacts/2023/196"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/196/pdfs/ukia_20230196_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-04-12T23:59:59Z</updated>
+			<published>2023-04-12T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Post Implementation"/><ukm:Year Value="2023"/><ukm:Number Value="196"/><ukm:Department Value="Department for Transport"/><ukm:Date Value="2023-04-12"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/195</id>
+			<title>Amendments to the permitted development right for the change of use of Commercial, Business and Service uses to dwellinghouses</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/195"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/195"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2024/141/impacts/2023/195"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/195/pdfs/ukia_20230195_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-03-04T23:59:59Z</updated>
+			<published>2023-03-04T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="195"/><ukm:Department Value="Department for Levelling Up, Housing and Communities"/><ukm:Date Value="2023-03-04"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/194</id>
+			<title>Wine REUL IA</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/194"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/194"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2023/1362/impacts/2023/194"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/194/pdfs/ukia_20230194_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-09-28T23:59:59Z</updated>
+			<published>2023-09-28T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="194"/><ukm:Department Value="Department for Environment, Food and Rural Affairs"/><ukm:Date Value="2023-09-28"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/193</id>
+			<title>The Works Detrimental to Navigation (Powers and Duties of Inspectors) Regulations 2018 PIR Report</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/193"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/193"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2018/436/impacts/2023/193"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/193/pdfs/ukia_20230193_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-14T23:59:59Z</updated>
+			<published>2023-12-14T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Post Implementation"/><ukm:Year Value="2023"/><ukm:Number Value="193"/><ukm:Department Value="Department for Energy Security and Net Zero"/><ukm:Date Value="2023-12-14"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/192</id>
+			<title>The Offshore Environmental Civil Sanctions Regulations 2018 PIR Report </title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/192"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/192"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2018/800/impacts/2023/192"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/192/pdfs/ukia_20230192_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-14T23:59:59Z</updated>
+			<published>2023-12-14T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Post Implementation"/><ukm:Year Value="2023"/><ukm:Number Value="192"/><ukm:Department Value="Department for Energy Security and Net Zero"/><ukm:Date Value="2023-12-14"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/191</id>
+			<title>The Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/191"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/191"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2023/1426/impacts/2023/191"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/191/pdfs/ukia_20230191_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-19T23:59:59Z</updated>
+			<published>2023-12-19T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="191"/><ukm:Department Value="Department for Business and Trade"/><ukm:Date Value="2023-12-19"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/190</id>
+			<title>The Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/190"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/190"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2023/1426/impacts/2023/190"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/190/pdfs/ukia_20230190_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-19T23:59:59Z</updated>
+			<published>2023-12-19T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="190"/><ukm:Department Value="Department for Business and Trade"/><ukm:Date Value="2023-12-19"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/189</id>
+			<title>The Employment Rights (Amendment, Revocation and Transitional Provision) Regulations 2023</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/189"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/189"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2023/1426/impacts/2023/189"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/189/pdfs/ukia_20230189_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-19T23:59:59Z</updated>
+			<published>2023-12-19T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="189"/><ukm:Department Value="Department for Business and Trade"/><ukm:Date Value="2023-12-19"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/188</id>
+			<title> Post Implementation Review for Nuclear Safeguards 2019</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/188"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/188"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2019/196/impacts/2023/188"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/188/pdfs/ukia_20230188_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-10-13T23:59:59Z</updated>
+			<published>2023-10-13T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Post Implementation"/><ukm:Year Value="2023"/><ukm:Number Value="188"/><ukm:Department Value="Department for Energy Security and Net Zero"/><ukm:Date Value="2023-10-13"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/187</id>
+			<title>Pension Reform – The Nuclear Decommissioning Authority (NDA) Estate.</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/187"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/187"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/ukdsi/2024/9780348255805/impacts/2023/187"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/187/pdfs/ukia_20230187_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-19T23:59:59Z</updated>
+			<published>2023-12-19T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="187"/><ukm:Department Value="Department for Energy Security and Net Zero"/><ukm:Date Value="2023-12-19"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/186</id>
+			<title>The Representation of the People (Overseas Electors etc.) (Amendment) Regulations 2023</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/186"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/186"/>
+			<link rel="alternate" href="http://www.legislation.gov.uk/uksi/2023/1406/impacts/2023/186"/>
+			<link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/ukia/2023/186/pdfs/ukia_20230186_en.pdf"/>
+			<author><name/></author>
+			<updated>2023-12-18T23:59:59Z</updated>
+			<published>2023-12-18T23:59:59Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomImpactAssessment"/><ukm:DocumentStage Value="Final"/><ukm:Year Value="2023"/><ukm:Number Value="186"/><ukm:Department Value="Department for Levelling Up, Housing and Communities"/><ukm:Date Value="2023-12-18"/>
+			<summary type="xhtml"/>
+		</entry><entry idURI="">
+			<id>http://www.legislation.gov.uk/id/ukia/2023/185</id>
+			<title>Post-implementation review of The Child Support (Miscellaneous Amendments) Regulations 2018</title>
+			<link href="http://www.legislation.gov.uk/ukia/2023/185"/>
+			<link rel="self" href="http://www.legislation.gov.uk/ukia/2023/185"/>
+			<link rel="alternate" href

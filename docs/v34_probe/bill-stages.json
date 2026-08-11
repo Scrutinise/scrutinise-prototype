@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "id": 19928,
+      "stageId": 6,
+      "sessionId": 39,
+      "description": "1st reading",
+      "abbreviation": "1R",
+      "house": "Commons",
+      "stageSittings": [
+        {
+          "id": 17031,
+          "stageId": 6,
+          "billStageId": 19928,
+          "billId": 3973,
+          "date": "2025-05-13T00:00:00"
+        }
+      ],
+      "sortOrder": 1
+    },
+    {
+      "id": 19929,
+      "stageId": 7,
+      "sessionId": 39,
+      "description": "2nd reading",
+      "abbreviation": "2R",
+      "house": "Commons",
+      "stageSittings": [
+        {
+          "id": 17032,
+          "stageId": 7,
+          "billStageId": 19929,
+          "billId": 3973,
+          "date": "2025-07-11T00:00:00"
+        }
+      ],
+      "sortOrder": 2
+    }
+  ],
+  "totalResults": 2,
+  "itemsPerPage": 5
+}

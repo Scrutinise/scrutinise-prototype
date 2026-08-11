@@ -1,0 +1,149 @@
+{
+  "results": [
+    {
+      "link": "/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+      "title": "Monitoring air quality and dust on the HS2 Phase One route (May 2026)",
+      "public_timestamp": "2026-08-10T08:58:13Z",
+      "organisations": [
+        {
+          "organisation_type": "executive_ndpb",
+          "organisation_state": "live",
+          "logo_url": "https://assets.publishing.service.gov.uk/media/5ab3c19f40f0b65bb5842b49/gov_uk_logo.jpg",
+          "superseding_organisations": [],
+          "acronym": "HS2 Ltd",
+          "content_id": "b80fab8b-6ed4-426a-bb8d-f4b614437671",
+          "link": "/government/organisations/high-speed-two-limited",
+          "parent_organisations": [
+            "department-for-transport"
+          ],
+          "superseded_organisations": [],
+          "analytics_identifier": "PB460",
+          "title": "High Speed Two (HS2) Limited",
+          "organisation_crest": "custom",
+          "organisation_brand": "department-for-transport",
+          "child_organisations": [],
+          "logo_formatted_title": "High Speed Two Limited",
+          "slug": "high-speed-two-limited",
+          "public_timestamp": "2025-08-12T15:20:19Z"
+        }
+      ],
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    },
+    {
+      "link": "/government/publications/monitoring-noise-and-vibration-on-the-hs2-phase-one-route-may-2026",
+      "title": "Monitoring noise and vibration on the HS2 Phase One route (May 2026)",
+      "public_timestamp": "2026-08-10T08:57:52Z",
+      "organisations": [
+        {
+          "organisation_type": "executive_ndpb",
+          "organisation_state": "live",
+          "logo_url": "https://assets.publishing.service.gov.uk/media/5ab3c19f40f0b65bb5842b49/gov_uk_logo.jpg",
+          "superseding_organisations": [],
+          "acronym": "HS2 Ltd",
+          "content_id": "b80fab8b-6ed4-426a-bb8d-f4b614437671",
+          "link": "/government/organisations/high-speed-two-limited",
+          "parent_organisations": [
+            "department-for-transport"
+          ],
+          "superseded_organisations": [],
+          "analytics_identifier": "PB460",
+          "title": "High Speed Two (HS2) Limited",
+          "organisation_crest": "custom",
+          "organisation_brand": "department-for-transport",
+          "child_organisations": [],
+          "logo_formatted_title": "High Speed Two Limited",
+          "slug": "high-speed-two-limited",
+          "public_timestamp": "2025-08-12T15:20:19Z"
+        }
+      ],
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/publications/monitoring-noise-and-vibration-on-the-hs2-phase-one-route-may-2026",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    },
+    {
+      "link": "/government/publications/airspace-modernisation-air-navigation-directions-and-guidance",
+      "title": "Airspace modernisation, air navigation directions and guidance",
+      "public_timestamp": "2026-08-10T08:30:01Z",
+      "organisations": [
+        {
+          "organisation_type": "ministerial_department",
+          "organisation_state": "live",
+          "superseding_organisations": [],
+          "acronym": "DfT",
+          "content_id": "4c717efc-f47b-478e-a76d-ce1ae0af1946",
+          "link": "/government/organisations/department-for-transport",
+          "parent_organisations": [],
+          "superseded_organisations": [
+            "department-of-the-environment-transport-and-the-regions"
+          ],
+          "analytics_identifier": "D9",
+          "title": "Department for Transport",
+          "organisation_crest": "single-identity",
+          "organisation_brand": "department-for-transport",
+          "child_organisations": [
+            "driver-and-vehicle-licensing-agency",
+            "highways-agency",
+            "maritime-and-coastguard-agency",
+            "vehicle-and-operator-services-agency",
+            "vehicle-certification-agency",
+            "disabled-persons-transport-advisory-committee",
+            "air-accidents-investigation-branch",
+            "rail-accident-investigation-branch",
+            "office-of-rail-regulation",
+            "driving-standards-agency",
+            "directly-operated-railways-limited",
+            "high-speed-two-limited",
+            "british-transport-police-authority",
+            "trinity-house",
+            "northern-lighthouse-board",
+            "passenger-focus",
+            "railway-heritage-committee",
+            "brb-residuary-ltd",
+            "trust-ports",
+            "civil-aviation-authority",
+            "marine-accident-investigation-branch",
+            "london-and-continental-railways-ltd",
+            "airports-commission",
+            "traffic-commissioners",
+            "office-for-low-emission-vehicles",
+            "driver-and-vehicle-standards-agency",
+            "office-of-rail-and-road",
+            "transport-focus",
+            "highways-england",
+            "centre-for-connected-and-autonomous-vehicles",
+            "east-west-railway-company",
+            "network-rail",
+            "dft-olr-holdings-limited",
+            "independent-commission-on-civil-aviation-noise",
+            "crossrail-international",
+            "office-for-zero-emission-vehicles",
+            "national-highways",
+            "active-travel-england",
+            "dft-operator-limited",
+            "platform4"
+          ],
+          "logo_formatted_title": "Department<br/>for Transport",
+          "slug": "department-for-transport",
+          "public_timestamp": "2025-11-27T13:58:13Z"
+        }
+      ],
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/publications/airspace-modernisation-air-navigation-directions-and-guidance",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    }
+  ],
+  "total": 1932,
+  "start": 0,
+  "aggregates": {},
+  "suggested_queries": [],
+  "suggested_autocomplete": [],
+  "es_cluster": "A"
+}

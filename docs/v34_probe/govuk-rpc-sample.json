@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "link": "/government/collections/rpc-opinions",
+      "title": "Regulatory Policy Committee opinions",
+      "content_store_document_type": "document_collection",
+      "public_timestamp": "2026-08-07T10:25:11Z",
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/collections/rpc-opinions",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    },
+    {
+      "link": "/government/publications/rpc-opinion-tobacco-and-vapes-packaging-appearance-and-display",
+      "title": "RPC opinion: tobacco and vapes packaging, appearance and display",
+      "content_store_document_type": "research",
+      "public_timestamp": "2026-08-07T10:23:47Z",
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/publications/rpc-opinion-tobacco-and-vapes-packaging-appearance-and-display",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    },
+    {
+      "link": "/government/news/rpc-statement-impact-of-the-immigration-and-asylum-bill",
+      "title": "RPC statement: impact of the Immigration and Asylum Bill",
+      "content_store_document_type": "news_story",
+      "public_timestamp": "2026-08-06T14:43:00Z",
+      "index": "govuk",
+      "es_score": null,
+      "_id": "/government/news/rpc-statement-impact-of-the-immigration-and-asylum-bill",
+      "elasticsearch_type": "edition",
+      "document_type": "edition"
+    }
+  ],
+  "total": 826,
+  "start": 0,
+  "aggregates": {},
+  "suggested_queries": [],
+  "suggested_autocomplete": [],
+  "es_cluster": "A"
+}

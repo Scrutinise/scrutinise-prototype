@@ -1,0 +1,722 @@
+{
+  "analytics_identifier": null,
+  "base_path": "/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+  "content_id": "b890ab25-1712-467e-add7-8521d8dfbfaf",
+  "description": "Monthly air quality monitoring reports for HS2, taken within local authorities along the Phase One (London to West Midlands) route.",
+  "details": {
+    "attachments": [
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71e983dc689ac736a476b1",
+            "filename": "BC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 10842319,
+        "filename": "BC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434455",
+        "isbn": "",
+        "number_of_pages": 26,
+        "title": "Buckinghamshire Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71e983dc689ac736a476b1/BC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71e9bfde77e2943cd3bb71",
+            "filename": "BCC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 5437701,
+        "filename": "BCC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434456",
+        "isbn": "",
+        "number_of_pages": 12,
+        "title": "Birmingham City Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71e9bfde77e2943cd3bb71/BCC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ea40011ff6453dece4c5",
+            "filename": "CDC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 644167,
+        "filename": "CDC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434463",
+        "isbn": "",
+        "number_of_pages": 8,
+        "title": "Cherwell District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ea40011ff6453dece4c5/CDC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ea578a340ed57ba476b5",
+            "filename": "CoW_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 1235055,
+        "filename": "CoW_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434464",
+        "isbn": "",
+        "number_of_pages": 8,
+        "title": "City of Westminster air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ea578a340ed57ba476b5/CoW_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ea72332792bd88ece4d6",
+            "filename": "LBB_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 782185,
+        "filename": "LBB_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434465",
+        "isbn": "",
+        "number_of_pages": 9,
+        "title": "London Borough of Brent air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ea72332792bd88ece4d6/LBB_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ea91332792bd88ece4d7",
+            "filename": "LBC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 2898019,
+        "filename": "LBC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434468",
+        "isbn": "",
+        "number_of_pages": 28,
+        "title": "London Borough of Camden air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ea91332792bd88ece4d7/LBC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eab18a340ed57ba476b6",
+            "filename": "LBE_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 4952598,
+        "filename": "LBE_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434469",
+        "isbn": "",
+        "number_of_pages": 19,
+        "title": "London Borough of Ealing air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eab18a340ed57ba476b6/LBE_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eacdde77e2943cd3bb73",
+            "filename": "LBH_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 4362894,
+        "filename": "LBH_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434470",
+        "isbn": "",
+        "number_of_pages": 15,
+        "title": "London Borough of Hillingdon air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eacdde77e2943cd3bb73/LBH_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eae9cb98f21529d3bb61",
+            "filename": "LBHF_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 1718378,
+        "filename": "LBHF_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434472",
+        "isbn": "",
+        "number_of_pages": 11,
+        "title": "London Borough of Hammersmith and Fulham air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eae9cb98f21529d3bb61/LBHF_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eb06cb98f21529d3bb62",
+            "filename": "LDC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 3786353,
+        "filename": "LDC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434473",
+        "isbn": "",
+        "number_of_pages": 11,
+        "title": "Lichfield District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eb06cb98f21529d3bb62/LDC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eb22332792bd88ece4d8",
+            "filename": "NWBC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 3387929,
+        "filename": "NWBC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434474",
+        "isbn": "",
+        "number_of_pages": 12,
+        "title": "North Warwickshire Borough Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eb22332792bd88ece4d8/NWBC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eb39332792bd88ece4d9",
+            "filename": "RBKC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 709514,
+        "filename": "RBKC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434475",
+        "isbn": "",
+        "number_of_pages": 7,
+        "title": "Royal Borough of Kensington and Chelsea air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eb39332792bd88ece4d9/RBKC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eb5dde77e2943cd3bb74",
+            "filename": "SMBC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 5163602,
+        "filename": "SMBC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434476",
+        "isbn": "",
+        "number_of_pages": 14,
+        "title": "Solihull Metropolitan Borough Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eb5dde77e2943cd3bb74/SMBC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71eb96dc689ac736a476b2",
+            "filename": "SoADC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 1097242,
+        "filename": "SoADC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434478",
+        "isbn": "",
+        "number_of_pages": 8,
+        "title": "Stratford-on-Avon District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71eb96dc689ac736a476b2/SoADC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ebaf332792bd88ece4da",
+            "filename": "TRDC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 730771,
+        "filename": "TRDC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434490",
+        "isbn": "",
+        "number_of_pages": 8,
+        "title": "Three Rivers District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ebaf332792bd88ece4da/TRDC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ebd2332792bd88ece4dc",
+            "filename": "WDC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 4527046,
+        "filename": "WDC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434492",
+        "isbn": "",
+        "number_of_pages": 15,
+        "title": "Warwick District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ebd2332792bd88ece4dc/WDC_AirQuality_Monthly_Report_May_2026.pdf"
+      },
+      {
+        "accessible": true,
+        "alternative_format_contact_email": "HS2enquiries@hs2.org.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6a71ec188a340ed57ba476b8",
+            "filename": "WNDC_AirQuality_Monthly_Report_May_2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 3494893,
+        "filename": "WNDC_AirQuality_Monthly_Report_May_2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9434493",
+        "isbn": "",
+        "number_of_pages": 12,
+        "title": "West Northamptonshire District Council air quality monthly report (May 2026)",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a71ec188a340ed57ba476b8/WNDC_AirQuality_Monthly_Report_May_2026.pdf"
+      }
+    ],
+    "body": "<div class=\"govspeak\"><p>The reports contain monitoring data and interpretative results, including a summary of the construction activities occurring. This covers any complaints received, data recorded over the monitoring period, and periods which exceeded agreed trigger levels and the results of any investigations. Where High Speed Two (HS2) works have been identified as the source, the reports include actions taken to resolve the issue and to prevent a recurrence.</p>\n\n<p>HS2 Ltd and its contractors are required to undertake air quality and dust monitoring, and produce monthly reports, to comply with the Code of Construction Practice (CoCP). The reports are specific to each local authority area along the Phase One route.</p>\n\n<p>The CoCP forms part of the Environmental Minimum Requirements (EMRs). The EMRs set out high-level environmental and sustainability commitments to be carried out during the planning and implementation of works along the Phase One route.</p>\n</div>",
+    "change_history": [
+      {
+        "note": "First published.",
+        "public_timestamp": "2026-08-10T08:58:13Z"
+      }
+    ],
+    "document_type_label": "Impact assessment",
+    "emphasised_organisations": [
+      "b80fab8b-6ed4-426a-bb8d-f4b614437671"
+    ],
+    "featured_attachments": [
+      "9434455",
+      "9434456",
+      "9434463",
+      "9434464",
+      "9434465",
+      "9434468",
+      "9434469",
+      "9434470",
+      "9434472",
+      "9434473",
+      "9434474",
+      "9434475",
+      "9434476",
+      "9434478",
+      "9434490",
+      "9434492",
+      "9434493"
+    ],
+    "first_public_at": "2026-08-10T09:58:13.000+01:00",
+    "political": false,
+    "tags": {
+      "browse_pages": []
+    }
+  },
+  "document_type": "impact_assessment",
+  "first_published_at": "2026-08-10T09:58:13+01:00",
+  "links": {
+    "available_translations": [
+      {
+        "api_path": "/api/content/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+        "api_url": "https://www.gov.uk/api/content/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+        "base_path": "/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+        "content_id": "b890ab25-1712-467e-add7-8521d8dfbfaf",
+        "document_type": "impact_assessment",
+        "links": {},
+        "locale": "en",
+        "public_updated_at": "2026-08-10T08:58:13Z",
+        "schema_name": "publication",
+        "title": "Monitoring air quality and dust on the HS2 Phase One route (May 2026)",
+        "web_url": "https://www.gov.uk/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+        "withdrawn": false
+      }
+    ],
+    "document_collections": [
+      {
+        "api_path": "/api/content/government/collections/monitoring-the-environmental-effects-of-hs2-2026",
+        "api_url": "https://www.gov.uk/api/content/government/collections/monitoring-the-environmental-effects-of-hs2-2026",
+        "base_path": "/government/collections/monitoring-the-environmental-effects-of-hs2-2026",
+        "content_id": "e122473f-481d-41d4-aaa1-ea50a207661a",
+        "document_type": "document_collection",
+        "links": {
+          "documents": [
+            {
+              "api_path": "/api/content/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+              "api_url": "https://www.gov.uk/api/content/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+              "base_path": "/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+              "content_id": "b890ab25-1712-467e-add7-8521d8dfbfaf",
+              "document_type": "impact_assessment",
+              "links": {},
+              "locale": "en",
+              "public_updated_at": "2026-08-10T08:58:13Z",
+              "schema_name": "publication",
+              "title": "Monitoring air quality and dust on the HS2 Phase One route (May 2026)",
+              "web_url": "https://www.gov.uk/government/publications/monitoring-air-quality-and-dust-on-the-hs2-phase-one-route-may-2026",
+              "withdrawn": false
+            }
+          ]
+        },
+        "locale": "en",
+        "public_updated_at": "2026-08-10T08:59:44Z",
+        "schema_name": "document_collection",
+        "title": "Monitoring the environmental effects of HS2: 2026",
+        "web_url": "https://www.gov.uk/government/collections/monitoring-the-environmental-effects-of-hs2-2026",
+        "withdrawn": false
+      }
+    ],
+    "government": [
+      {
+        "api_path": "/api/content/government/2026-burnham-labour-government",
+        "api_url": "https://www.gov.uk/api/content/government/2026-burnham-labour-government",
+        "base_path": "/government/2026-burnham-labour-government",
+        "content_id": "1fb8162a-7f42-4a44-ae9b-42e8d8f36807",
+        "details": {
+          "current": true,
+          "ended_on": null,
+          "started_on": "2026-07-20T00:00:00+00:00"
+        },
+        "document_type": "government",
+        "links": {},
+        "locale": "en",
+        "title": "2026 Burnham Labour government",
+        "web_url": "https://www.gov.uk/government/2026-burnham-labour-government"
+      }
+    ],
+    "organisations": [
+      {
+        "analytics_identifier": "PB460",
+        "api_path": "/api/content/government/organisations/high-speed-two-limited",
+        "api_url": "https://www.gov.uk/api/content/government/organisations/high-speed-two-limited",
+        "base_path": "/government/organisations/high-speed-two-limited",
+        "content_id": "b80fab8b-6ed4-426a-bb8d-f4b614437671",
+        "details": {
+          "acronym": "HS2 Ltd",
+          "brand": "department-for-transport",
+          "default_news_image": {
+            "high_resolution_url": "https://assets.publishing.service.gov.uk/media/5a37daf2ed915d5a62fdc710/s960_s300_Default_News_Image.jpg",
+            "url": "https://assets.publishing.service.gov.uk/media/5a37daf1ed915d5a62fdc70f/s300_s300_Default_News_Image.jpg"
+          },
+          "logo": {
+            "crest": "custom",
+            "formatted_title": "High Speed Two Limited",
+            "image": {
+              "alt_text": "High Speed Two (HS2) Limited",
+              "url": "https://assets.publishing.service.gov.uk/media/5ab3c19f40f0b65bb5842b49/gov_uk_logo.jpg"
+            }
+          },
+          "organisation_govuk_status": {
+            "status": "live",
+            "updated_at": null,
+            "url": null
+          }
+        },
+        "document_type": "organisation",
+        "links": {},
+        "locale": "en",
+        "schema_name": "organisation",
+        "title": "High Speed Two (HS2) Limited",
+        "web_url": "https://www.gov.uk/government/organisations/high-speed-two-limited",
+        "withdrawn": false
+      }
+    ],
+    "primary_publishing_organisation": [
+      {
+        "analytics_identifier": "PB460",
+        "api_path": "/api/content/government/organisations/high-speed-two-limited",
+        "api_url": "https://www.gov.uk/api/content/government/organisations/high-speed-two-limited",
+        "base_path": "/government/organisations/high-speed-two-limited",
+        "content_id": "b80fab8b-6ed4-426a-bb8d-f4b614437671",
+        "details": {
+          "acronym": "HS2 Ltd",
+          "brand": "department-for-transport",
+          "default_news_image": {
+            "high_resolution_url": "https://assets.publishing.service.gov.uk/media/5a37daf2ed915d5a62fdc710/s960_s300_Default_News_Image.jpg",
+            "url": "https://assets.publishing.service.gov.uk/media/5a37daf1ed915d5a62fdc70f/s300_s300_Default_News_Image.jpg"
+          },
+          "logo": {
+            "crest": "custom",
+            "formatted_title": "High Speed Two Limited",
+            "image": {
+              "alt_text": "High Speed Two (HS2) Limited",
+              "url": "https://assets.publishing.service.gov.uk/media/5ab3c19f40f0b65bb5842b49/gov_uk_logo.jpg"
+            }
+          },
+          "organisation_govuk_status": {
+            "status": "live",
+            "updated_at": null,
+            "url": null
+          }
+        },
+        "document_type": "organisation",
+        "links": {},
+        "locale": "en",
+        "schema_name": "organisation",
+        "title": "High Speed Two (HS2) Limited",
+        "web_url": "https://www.gov.uk/government/organisations/high-speed-two-limited",
+        "withdrawn": false
+      }
+    ],
+    "taxons": [
+      {
+        "api_path": "/api/content/transport/hs2-and-the-environment",
+        "api_url": "https://www.gov.uk/api/content/transport/hs2-and-the-environment",
+        "base_path": "/transport/hs2-and-the-environment",
+        "content_id": "a2a21bb3-15bf-4347-b4db-ceaaabfd9715",
+        "description": "Minimising the environmental impact of HS2 including, noise, air quality, building materials and the impact on biodiversity and communities.",
+        "details": {
+          "internal_name": "HS2 and the environment",
+          "notes_for_editors": "",
+          "visible_to_departmental_editors": false
+        },
+        "document_type": "taxon",
+        "links": {
+          "parent_taxons": [
+            {
+              "api_path": "/api/content/transport/hs2",
+              "api_url": "https://www.gov.uk/api/content/transport/hs2",
+              "base_path": "/transport/hs2",
+              "content_id": "0398a361-7c0d-49dd-beb3-4e405571f627",
+              "description": "HS2 Phase one, Phase 2a and Phase 2b planning, design, maps, property compensation schemes.",
+              "details": {
+                "internal_name": "HS2",
+                "notes_for_editors": "",
+                "visible_to_departmental_editors": false
+              },
+              "document_type": "taxon",
+              "links": {
+                "parent_taxons": [
+                  {
+                    "api_path": "/api/content/transport/rail",
+                    "api_url": "https://www.gov.uk/api/content/transport/rail",
+                    "base_path": "/transport/rail",
+                    "content_id": "13d01427-33b5-4ca4-bf7a-68425f54e236",
+                    "description": "Rail network, franchising, procurement, trains and stations, passenger experience, ticketing and fares, safety and security, accessibility, Crossrail and interoperability.",
+                    "details": {
+                      "internal_name": "Rail",
+                      "notes_for_editors": "",
+                      "visible_to_departmental_editors": false
+                    },
+                    "document_type": "taxon",
+                    "links": {
+                      "parent_taxons": [
+                        {
+                          "api_path": "/api/content/transport",
+                          "api_url": "https://www.gov.uk/api/content/transport",
+                          "base_path": "/transport",
+                          "content_id": "a4038b29-b332-4f13-98b1-1c9709e216bc",
+                          "description": "Aviation, roads, rail, maritime, driving, freight, public transport, safety, environment and transport accessibility.",
+                          "details": {
+                            "internal_name": "Transport",
+                            "notes_for_editors": "",
+                            "visible_to_departmental_editors": true
+                          },
+                          "document_type": "taxon",
+                          "links": {
+                            "root_taxon": [
+                              {
+                                "api_path": "/api/content/",
+                                "api_url": "https://www.gov.uk/api/content/",
+                                "base_path": "/",
+                                "content_id": "f3bbdec2-0e62-4520-a7fd-6ffd5d36e03a",
+                                "document_type": "homepage",
+                                "links": {},
+                                "locale": "en",
+                                "public_updated_at": "2026-02-18T13:00:23Z",
+                                "schema_name": "homepage",
+                                "title": "GOV.UK homepage",
+                                "web_url": "https://www.gov.uk/",
+                                "withdrawn": false
+                              }
+                            ]
+                          },
+                          "locale": "en",
+                          "phase": "live",
+                          "public_updated_at": "2018-06-15T14:31:46Z",
+                          "schema_name": "taxon",
+                          "title": "Transport",
+                          "web_url": "https://www.gov.uk/transport",
+                          "withdrawn": false
+                        }
+                      ]
+                    },
+                    "locale": "en",
+                    "phase": "live",
+                    "public_updated_at": "2018-06-14T09:27:11Z",
+                    "schema_name": "taxon",
+                    "title": "Rail",
+                    "web_url": "https://www.gov.uk/transport/rail",
+                    "withdrawn": false
+                  }
+                ]
+              },
+              "locale": "en",
+              "phase": "live",
+              "public_updated_at": "2018-06-14T09:27:11Z",
+              "schema_name": "taxon",
+              "title": "HS2",
+              "web_url": "https://www.gov.uk/transport/hs2",
+              "withdrawn": false
+            }
+          ]
+        },
+        "locale": "en",
+        "phase": "live",
+        "public_updated_at": "2018-06-14T09:27:12Z",
+        "schema_name": "taxon",
+        "title": "HS2 and the environment",
+        "web_url": "https://www.gov.uk/transport/hs2-and-the-environment",
+        "withdrawn": false
+      }
+    ]
+  },
+  "locale": "en",
+  "phase": "live",
+  "public_updated_at": "2026-08-10T09:58:13+01:00",
+  "publishing_app": "whitehall",
+  "publishing_request_id": "21-1786352293.496-10.13.20.239-2635",
+  "publishing_scheduled_at": null,
+  "rendering_app": "frontend",
+  "scheduled_publishing_delay_seconds": null,
+  "schema_name": "publication",
+  "title": "Monitoring air quality and dust on the HS2 Phase One route (May 2026)",
+  "updated_at": "2026-08-10T09:59:45+01:00",
+  "withdrawn_notice": {}
+}

@@ -1,0 +1,347 @@
+[
+  {
+    "DivisionId": 1515,
+    "Date": "2023-03-29T18:03:00",
+    "PublicationUpdated": "2023-04-04T14:29:55",
+    "Number": 208,
+    "IsDeferred": false,
+    "EVELType": "",
+    "EVELCountry": "",
+    "Title": "Finance (No. 2) Bill: Reasoned Amendment to Second Reading motion",
+    "AyeCount": 211,
+    "NoCount": 289,
+    "DoubleMajorityAyeCount": null,
+    "DoubleMajorityNoCount": null,
+    "AyeTellers": [
+      {
+        "MemberId": 4618,
+        "Name": "Liz Twist",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Blaydon",
+        "ListAs": "Twist, Liz",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4378,
+        "Name": "Colleen Fletcher",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Coventry North East",
+        "ListAs": "Fletcher, Colleen",
+        "ProxyName": null
+      }
+    ],
+    "NoTellers": [
+      {
+        "MemberId": 4384,
+        "Name": "Mike Wood",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Dudley South",
+        "ListAs": "Wood, Mike",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4768,
+        "Name": "Julie Marson",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Hertford and Stortford",
+        "ListAs": "Marson, Julie",
+        "ProxyName": null
+      }
+    ],
+    "Ayes": [],
+    "Noes": [],
+    "FriendlyDescription": null,
+    "FriendlyTitle": null,
+    "NoVoteRecorded": [],
+    "RemoteVotingStart": null,
+    "RemoteVotingEnd": null
+  },
+  {
+    "DivisionId": 1514,
+    "Date": "2023-03-28T20:37:00",
+    "PublicationUpdated": "2023-03-30T15:37:18",
+    "Number": 207,
+    "IsDeferred": false,
+    "EVELType": "",
+    "EVELCountry": "",
+    "Title": "Illegal Migration Bill: Committee of the whole House: New Clause 27",
+    "AyeCount": 248,
+    "NoCount": 301,
+    "DoubleMajorityAyeCount": null,
+    "DoubleMajorityNoCount": null,
+    "AyeTellers": [
+      {
+        "MemberId": 4618,
+        "Name": "Liz Twist",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Blaydon",
+        "ListAs": "Twist, Liz",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4126,
+        "Name": "Mary Glindon",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "North Tyneside",
+        "ListAs": "Glindon, Mary",
+        "ProxyName": null
+      }
+    ],
+    "NoTellers": [
+      {
+        "MemberId": 4768,
+        "Name": "Julie Marson",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Hertford and Stortford",
+        "ListAs": "Marson, Julie",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4384,
+        "Name": "Mike Wood",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Dudley South",
+        "ListAs": "Wood, Mike",
+        "ProxyName": null
+      }
+    ],
+    "Ayes": [],
+    "Noes": [],
+    "FriendlyDescription": null,
+    "FriendlyTitle": null,
+    "NoVoteRecorded": [],
+    "RemoteVotingStart": null,
+    "RemoteVotingEnd": null
+  },
+  {
+    "DivisionId": 1513,
+    "Date": "2023-03-28T20:25:00",
+    "PublicationUpdated": "2023-03-29T12:15:59",
+    "Number": 206,
+    "IsDeferred": false,
+    "EVELType": "",
+    "EVELCountry": "",
+    "Title": "Illegal Migration Bill: Committee of the whole House: New Clause 21",
+    "AyeCount": 249,
+    "NoCount": 301,
+    "DoubleMajorityAyeCount": null,
+    "DoubleMajorityNoCount": null,
+    "AyeTellers": [
+      {
+        "MemberId": 4618,
+        "Name": "Liz Twist",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Blaydon",
+        "ListAs": "Twist, Liz",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4126,
+        "Name": "Mary Glindon",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "North Tyneside",
+        "ListAs": "Glindon, Mary",
+        "ProxyName": null
+      }
+    ],
+    "NoTellers": [
+      {
+        "MemberId": 4768,
+        "Name": "Julie Marson",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Hertford and Stortford",
+        "ListAs": "Marson, Julie",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4384,
+        "Name": "Mike Wood",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Dudley South",
+        "ListAs": "Wood, Mike",
+        "ProxyName": null
+      }
+    ],
+    "Ayes": [],
+    "Noes": [],
+    "FriendlyDescription": null,
+    "FriendlyTitle": null,
+    "NoVoteRecorded": [],
+    "RemoteVotingStart": null,
+    "RemoteVotingEnd": null
+  },
+  {
+    "DivisionId": 1512,
+    "Date": "2023-03-28T20:13:00",
+    "PublicationUpdated": "2023-03-29T12:15:05",
+    "Number": 205,
+    "IsDeferred": false,
+    "EVELType": "",
+    "EVELCountry": "",
+    "Title": "Illegal Migration Bill: Committee of the whole House: Amendment 288",
+    "AyeCount": 248,
+    "NoCount": 299,
+    "DoubleMajorityAyeCount": null,
+    "DoubleMajorityNoCount": null,
+    "AyeTellers": [
+      {
+        "MemberId": 4618,
+        "Name": "Liz Twist",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Blaydon",
+        "ListAs": "Twist, Liz",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4126,
+        "Name": "Mary Glindon",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "North Tyneside",
+        "ListAs": "Glindon, Mary",
+        "ProxyName": null
+      }
+    ],
+    "NoTellers": [
+      {
+        "MemberId": 4768,
+        "Name": "Julie Marson",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Hertford and Stortford",
+        "ListAs": "Marson, Julie",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4384,
+        "Name": "Mike Wood",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Dudley South",
+        "ListAs": "Wood, Mike",
+        "ProxyName": null
+      }
+    ],
+    "Ayes": [],
+    "Noes": [],
+    "FriendlyDescription": null,
+    "FriendlyTitle": null,
+    "NoVoteRecorded": [],
+    "RemoteVotingStart": null,
+    "RemoteVotingEnd": null
+  },
+  {
+    "DivisionId": 1511,
+    "Date": "2023-03-28T20:01:00",
+    "PublicationUpdated": "2023-03-29T11:13:54",
+    "Number": 204,
+    "IsDeferred": false,
+    "EVELType": "",
+    "EVELCountry": "",
+    "Title": "Illegal Migration Bill: Committee of the whole House: Clause 11 stand part",
+    "AyeCount": 302,
+    "NoCount": 242,
+    "DoubleMajorityAyeCount": null,
+    "DoubleMajorityNoCount": null,
+    "AyeTellers": [
+      {
+        "MemberId": 4768,
+        "Name": "Julie Marson",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Hertford and Stortford",
+        "ListAs": "Marson, Julie",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4384,
+        "Name": "Mike Wood",
+        "Party": "Conservative",
+        "SubParty": null,
+        "PartyColour": "0063ba",
+        "PartyAbbreviation": "Con",
+        "MemberFrom": "Dudley South",
+        "ListAs": "Wood, Mike",
+        "ProxyName": null
+      }
+    ],
+    "NoTellers": [
+      {
+        "MemberId": 4618,
+        "Name": "Liz Twist",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "Blaydon",
+        "ListAs": "Twist, Liz",
+        "ProxyName": null
+      },
+      {
+        "MemberId": 4126,
+        "Name": "Mary Glindon",
+        "Party": "Labour",
+        "SubParty": null,
+        "PartyColour": "d50000",
+        "PartyAbbreviation": "Lab",
+        "MemberFrom": "North Tyneside",
+        "ListAs": "Glindon, Mary",
+        "ProxyName": null
+      }
+    ],
+    "Ayes": [],
+    "Noes": [],
+    "FriendlyDescription": null,
+    "FriendlyTitle": null,
+    "NoVoteRecorded": [],
+    "RemoteVotingStart": null,
+    "RemoteVotingEnd": null
+  }
+]

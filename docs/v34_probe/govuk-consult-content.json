@@ -1,0 +1,534 @@
+{
+  "analytics_identifier": null,
+  "base_path": "/government/consultations/changes-to-the-air-navigation-directions-and-air-navigation-guidance",
+  "content_id": "c2d57f2c-bb96-4b8a-8254-bec69e02d0fe",
+  "description": "Proposed changes to the air navigation directions and air navigation guidance to support  the airspace modernisation programme.",
+  "details": {
+    "attachments": [
+      {
+        "accessible": false,
+        "alternative_format_contact_email": "webmasterdft@dft.gov.uk",
+        "assets": [
+          {
+            "asset_manager_id": "696f44eb091f0cc41e81a2ae",
+            "filename": "air-navigation-directions-and-air-navigation-guidance-consultation.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 391342,
+        "filename": "air-navigation-directions-and-air-navigation-guidance-consultation.pdf",
+        "hoc_paper_number": "",
+        "id": "9407383",
+        "isbn": "",
+        "number_of_pages": 38,
+        "title": "Air navigation directions and air navigation guidance consultation",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/696f44eb091f0cc41e81a2ae/air-navigation-directions-and-air-navigation-guidance-consultation.pdf"
+      },
+      {
+        "accessible": false,
+        "alternative_format_contact_email": "webmasterdft@dft.gov.uk",
+        "assets": [
+          {
+            "asset_manager_id": "6924975d053e434aa90262a7",
+            "filename": "the-civil-aviation-authority-air-navigation-directions-2026.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 269210,
+        "filename": "the-civil-aviation-authority-air-navigation-directions-2026.pdf",
+        "hoc_paper_number": "",
+        "id": "9407384",
+        "isbn": "",
+        "number_of_pages": 13,
+        "title": "The Civil Aviation Authority (air navigation) directions 2026",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6924975d053e434aa90262a7/the-civil-aviation-authority-air-navigation-directions-2026.pdf"
+      },
+      {
+        "accessible": false,
+        "alternative_format_contact_email": "webmasterdft@dft.gov.uk",
+        "assets": [
+          {
+            "asset_manager_id": "69249805053e434aa90262a8",
+            "filename": "air-navigation-guidance-proposed-2026-version.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 247257,
+        "filename": "air-navigation-guidance-proposed-2026-version.pdf",
+        "id": "9407385",
+        "isbn": "",
+        "number_of_pages": 24,
+        "title": "Air navigation guidance: proposed 2026 version",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/69249805053e434aa90262a8/air-navigation-guidance-proposed-2026-version.pdf"
+      },
+      {
+        "accessible": false,
+        "alternative_format_contact_email": "webmasterdft@dft.gov.uk",
+        "assets": [
+          {
+            "asset_manager_id": "692979cd9c1eda2cdf034271",
+            "filename": "options-assessment-air-navigation-directions-and-air-navigation-guidance.pdf"
+          }
+        ],
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 595132,
+        "filename": "options-assessment-air-navigation-directions-and-air-navigation-guidance.pdf",
+        "hoc_paper_number": "",
+        "id": "9407386",
+        "isbn": "",
+        "number_of_pages": 47,
+        "title": "Options Assessment: air navigation directions and air navigation guidance",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/692979cd9c1eda2cdf034271/options-assessment-air-navigation-directions-and-air-navigation-guidance.pdf"
+      },
+      {
+        "accessible": false,
+        "alternative_format_contact_email": "webmasterdft@dft.gov.uk",
+        "attachment_type": "file",
+        "command_paper_number": "",
+        "content_type": "application/pdf",
+        "file_size": 659084,
+        "filename": "air-navigation-directions-and-guidance-consultation-response.pdf",
+        "hoc_paper_number": "",
+        "id": "9407395",
+        "isbn": "",
+        "number_of_pages": 51,
+        "title": "Air navigation directions and guidance consultation response ",
+        "unique_reference": "",
+        "unnumbered_command_paper": false,
+        "unnumbered_hoc_paper": false,
+        "url": "https://assets.publishing.service.gov.uk/media/6a6c4c07cceb23e867897751/air-navigation-directions-and-guidance-consultation-response.pdf"
+      }
+    ],
+    "body": "<div class=\"govspeak\"><p>We are seeking views on proposed policy changes to the <a rel=\"external\" href=\"https://www.caa.co.uk/media/lzrl3drs/caa-air-navigation-directions-2023.pdf\">air navigation directions (<abbr title=\"air navigation directions\">AND</abbr>)</a> and <a href=\"https://www.gov.uk/government/publications/uk-air-navigation-guidance-2017\">air navigation guidance (<abbr title=\"air navigation guidance\">ANG</abbr>)</a>.</p>\n\n<p>The <abbr title=\"air navigation directions\">AND</abbr> and <abbr title=\"air navigation guidance\">ANG</abbr> are statutory documents issued to the Civil Aviation Authority (CAA) to inform them how to carry out their air navigation function. They were last updated in 2023 and 2017 respectively.</p>\n\n<p>We are consulting on several proposed policy changes, with the aim of:</p>\n\n<ul>\n  <li>outlining our priorities and policies for designing new airspace</li>\n  <li>streamlining processes to improve the implementation of the <a href=\"https://www.gov.uk/government/publications/airspace-modernisation\">airspace modernisation programme</a>\n</li>\n</ul>\n\n<p>The proposed changes include:</p>\n\n<ul>\n  <li>providing clear priorities for the design of airspace, including the altitude at which noise and carbon are prioritised</li>\n  <li>implementing new time limits on the call-in process</li>\n  <li>updating guidance on the engagement and consultation process</li>\n  <li>removing the need for environmental assessments for unmanned aerial systems trials</li>\n  <li>improving the overall usability of the information</li>\n</ul>\n\n</div>",
+    "change_history": [
+      {
+        "note": "Response to consultation published.",
+        "public_timestamp": "2026-08-10T08:30:01Z"
+      },
+      {
+        "note": "Consultation extended to 26 January 2026.",
+        "public_timestamp": "2026-01-19T10:34:06Z"
+      },
+      {
+        "note": "First published.",
+        "public_timestamp": "2025-11-25T15:00:00Z"
+      }
+    ],
+    "closing_date": "2026-01-27T00:00:00.000+00:00",
+    "emphasised_organisations": [
+      "4c717efc-f47b-478e-a76d-ce1ae0af1946"
+    ],
+    "featured_attachments": [
+      "9407383",
+      "9407384",
+      "9407385",
+      "9407386"
+    ],
+    "final_outcome_attachments": [
+      "9407395"
+    ],
+    "final_outcome_detail": "<div class=\"govspeak\"><p>This document provides the government response to the consultation.</p>\n\n<p>As a result of the consultation, we have also published:</p>\n\n<ul>\n  <li><a href=\"https://www.gov.uk/government/publications/uk-air-navigation-directions-2026\">UK air navigation directions 2026</a></li>\n  <li><a href=\"https://www.gov.uk/government/publications/uk-air-navigation-guidance-2026\">UK air navigation guidance 2026</a></li>\n  <li><a href=\"https://www.gov.uk/government/publications/airspace-modernisation-air-navigation-directions-and-guidance\">an impact assessment on options for supporting the <abbr title=\"Civil Aviation Authority\">CAA</abbr> to deliver the airspace modernisation programme</a></li>\n</ul>\n\n</div>",
+    "first_public_at": "2025-11-25T15:00:00.000+00:00",
+    "opening_date": "2025-11-25T00:00:00.000+00:00",
+    "political": false,
+    "tags": {
+      "browse_pages": []
+    }
+  },
+  "document_type": "consultation_outcome",
+  "first_published_at": "2025-11-25T15:00:04+00:00",
+  "links": {
+    "available_translations": [
+      {
+        "api_path": "/api/content/government/consultations/changes-to-the-air-navigation-directions-and-air-navigation-guidance",
+        "api_url": "https://www.gov.uk/api/content/government/consultations/changes-to-the-air-navigation-directions-and-air-navigation-guidance",
+        "base_path": "/government/consultations/changes-to-the-air-navigation-directions-and-air-navigation-guidance",
+        "content_id": "c2d57f2c-bb96-4b8a-8254-bec69e02d0fe",
+        "document_type": "consultation_outcome",
+        "links": {},
+        "locale": "en",
+        "public_updated_at": "2026-08-10T08:30:01Z",
+        "schema_name": "consultation",
+        "title": "Changes to the air navigation directions and air navigation guidance",
+        "web_url": "https://www.gov.uk/government/consultations/changes-to-the-air-navigation-directions-and-air-navigation-guidance",
+        "withdrawn": false
+      }
+    ],
+    "government": [
+      {
+        "api_path": "/api/content/government/2024-starmer-labour-government",
+        "api_url": "https://www.gov.uk/api/content/government/2024-starmer-labour-government",
+        "base_path": "/government/2024-starmer-labour-government",
+        "content_id": "9dbff654-cdeb-4ebe-9a12-cd4cc20a033e",
+        "details": {
+          "current": false,
+          "ended_on": "2026-07-20T00:00:00+00:00",
+          "started_on": "2024-07-05T00:00:00+00:00"
+        },
+        "document_type": "government",
+        "links": {},
+        "locale": "en",
+        "title": "2024 to 2026 Starmer Labour government",
+        "web_url": "https://www.gov.uk/government/2024-starmer-labour-government"
+      }
+    ],
+    "organisations": [
+      {
+        "analytics_identifier": "D9",
+        "api_path": "/api/content/government/organisations/department-for-transport",
+        "api_url": "https://www.gov.uk/api/content/government/organisations/department-for-transport",
+        "base_path": "/government/organisations/department-for-transport",
+        "content_id": "4c717efc-f47b-478e-a76d-ce1ae0af1946",
+        "details": {
+          "acronym": "DfT",
+          "brand": "department-for-transport",
+          "default_news_image": {
+            "high_resolution_url": "https://assets.publishing.service.gov.uk/media/654bbccfe2e16a000d42abe1/s960_dft-gmh-960.jpg",
+            "url": "https://assets.publishing.service.gov.uk/media/654bbccfe70413000dfc4a51/s300_dft-gmh-960.jpg"
+          },
+          "logo": {
+            "crest": "single-identity",
+            "formatted_title": "Department<br/>for Transport"
+          },
+          "organisation_govuk_status": {
+            "status": "live",
+            "updated_at": null,
+            "url": null
+          }
+        },
+        "document_type": "organisation",
+        "links": {},
+        "locale": "en",
+        "schema_name": "organisation",
+        "title": "Department for Transport",
+        "web_url": "https://www.gov.uk/government/organisations/department-for-transport",
+        "withdrawn": false
+      }
+    ],
+    "primary_publishing_organisation": [
+      {
+        "analytics_identifier": "D9",
+        "api_path": "/api/content/government/organisations/department-for-transport",
+        "api_url": "https://www.gov.uk/api/content/government/organisations/department-for-transport",
+        "base_path": "/government/organisations/department-for-transport",
+        "content_id": "4c717efc-f47b-478e-a76d-ce1ae0af1946",
+        "details": {
+          "acronym": "DfT",
+          "brand": "department-for-transport",
+          "default_news_image": {
+            "high_resolution_url": "https://assets.publishing.service.gov.uk/media/654bbccfe2e16a000d42abe1/s960_dft-gmh-960.jpg",
+            "url": "https://assets.publishing.service.gov.uk/media/654bbccfe70413000dfc4a51/s300_dft-gmh-960.jpg"
+          },
+          "logo": {
+            "crest": "single-identity",
+            "formatted_title": "Department<br/>for Transport"
+          },
+          "organisation_govuk_status": {
+            "status": "live",
+            "updated_at": null,
+            "url": null
+          }
+        },
+        "document_type": "organisation",
+        "links": {},
+        "locale": "en",
+        "schema_name": "organisation",
+        "title": "Department for Transport",
+        "web_url": "https://www.gov.uk/government/organisations/department-for-transport",
+        "withdrawn": false
+      }
+    ],
+    "taxons": [
+      {
+        "api_path": "/api/content/transport/air-navigation",
+        "api_url": "https://www.gov.uk/api/content/transport/air-navigation",
+        "base_path": "/transport/air-navigation",
+        "content_id": "ef9e3404-3771-4077-8f76-ad20b8d27bd5",
+        "description": "Managing and reforming airspace, air navigation and air traffic.",
+        "details": {
+          "internal_name": "Air navigation",
+          "notes_for_editors": "",
+          "visible_to_departmental_editors": false
+        },
+        "document_type": "taxon",
+        "links": {
+          "parent_taxons": [
+            {
+              "api_path": "/api/content/transport/aviation",
+              "api_url": "https://www.gov.uk/api/content/transport/aviation",
+              "base_path": "/transport/aviation",
+              "content_id": "51efa3dd-e9bc-42b2-aa26-06bf5f543015",
+              "description": "Aviation and airspace policy, airport expansion, airline routes, passenger experience and air accidents.",
+              "details": {
+                "internal_name": "Aviation",
+                "notes_for_editors": "",
+                "visible_to_departmental_editors": false
+              },
+              "document_type": "taxon",
+              "links": {
+                "parent_taxons": [
+                  {
+                    "api_path": "/api/content/transport",
+                    "api_url": "https://www.gov.uk/api/content/transport",
+                    "base_path": "/transport",
+                    "content_id": "a4038b29-b332-4f13-98b1-1c9709e216bc",
+                    "description": "Aviation, roads, rail, maritime, driving, freight, public transport, safety, environment and transport accessibility.",
+                    "details": {
+                      "internal_name": "Transport",
+                      "notes_for_editors": "",
+                      "visible_to_departmental_editors": true
+                    },
+                    "document_type": "taxon",
+                    "links": {
+                      "root_taxon": [
+                        {
+                          "api_path": "/api/content/",
+                          "api_url": "https://www.gov.uk/api/content/",
+                          "base_path": "/",
+                          "content_id": "f3bbdec2-0e62-4520-a7fd-6ffd5d36e03a",
+                          "document_type": "homepage",
+                          "links": {},
+                          "locale": "en",
+                          "public_updated_at": "2026-02-18T13:00:23Z",
+                          "schema_name": "homepage",
+                          "title": "GOV.UK homepage",
+                          "web_url": "https://www.gov.uk/",
+                          "withdrawn": false
+                        }
+                      ]
+                    },
+                    "locale": "en",
+                    "phase": "live",
+                    "public_updated_at": "2018-06-15T14:31:46Z",
+                    "schema_name": "taxon",
+                    "title": "Transport",
+                    "web_url": "https://www.gov.uk/transport",
+                    "withdrawn": false
+                  }
+                ]
+              },
+              "locale": "en",
+              "phase": "live",
+              "public_updated_at": "2018-06-14T09:27:19Z",
+              "schema_name": "taxon",
+              "title": "Aviation",
+              "web_url": "https://www.gov.uk/transport/aviation",
+              "withdrawn": false
+            }
+          ]
+        },
+        "locale": "en",
+        "phase": "live",
+        "public_updated_at": "2018-06-14T09:27:19Z",
+        "schema_name": "taxon",
+        "title": "Air navigation",
+        "web_url": "https://www.gov.uk/transport/air-navigation",
+        "withdrawn": false
+      },
+      {
+        "api_path": "/api/content/transport/airport-capacity-and-expansion",
+        "api_url": "https://www.gov.uk/api/content/transport/airport-capacity-and-expansion",
+        "base_path": "/transport/airport-capacity-and-expansion",
+        "content_id": "23941096-abfd-4997-8111-646a7c5e9813",
+        "description": "Increasing airport capacity in the south-east of England, including Heathrow and Gatwick airports.",
+        "details": {
+          "internal_name": "Airport capacity and expansion",
+          "notes_for_editors": "",
+          "visible_to_departmental_editors": false
+        },
+        "document_type": "taxon",
+        "links": {
+          "parent_taxons": [
+            {
+              "api_path": "/api/content/transport/aviation",
+              "api_url": "https://www.gov.uk/api/content/transport/aviation",
+              "base_path": "/transport/aviation",
+              "content_id": "51efa3dd-e9bc-42b2-aa26-06bf5f543015",
+              "description": "Aviation and airspace policy, airport expansion, airline routes, passenger experience and air accidents.",
+              "details": {
+                "internal_name": "Aviation",
+                "notes_for_editors": "",
+                "visible_to_departmental_editors": false
+              },
+              "document_type": "taxon",
+              "links": {
+                "parent_taxons": [
+                  {
+                    "api_path": "/api/content/transport",
+                    "api_url": "https://www.gov.uk/api/content/transport",
+                    "base_path": "/transport",
+                    "content_id": "a4038b29-b332-4f13-98b1-1c9709e216bc",
+                    "description": "Aviation, roads, rail, maritime, driving, freight, public transport, safety, environment and transport accessibility.",
+                    "details": {
+                      "internal_name": "Transport",
+                      "notes_for_editors": "",
+                      "visible_to_departmental_editors": true
+                    },
+                    "document_type": "taxon",
+                    "links": {
+                      "root_taxon": [
+                        {
+                          "api_path": "/api/content/",
+                          "api_url": "https://www.gov.uk/api/content/",
+                          "base_path": "/",
+                          "content_id": "f3bbdec2-0e62-4520-a7fd-6ffd5d36e03a",
+                          "document_type": "homepage",
+                          "links": {},
+                          "locale": "en",
+                          "public_updated_at": "2026-02-18T13:00:23Z",
+                          "schema_name": "homepage",
+                          "title": "GOV.UK homepage",
+                          "web_url": "https://www.gov.uk/",
+                          "withdrawn": false
+                        }
+                      ]
+                    },
+                    "locale": "en",
+                    "phase": "live",
+                    "public_updated_at": "2018-06-15T14:31:46Z",
+                    "schema_name": "taxon",
+                    "title": "Transport",
+                    "web_url": "https://www.gov.uk/transport",
+                    "withdrawn": false
+                  }
+                ]
+              },
+              "locale": "en",
+              "phase": "live",
+              "public_updated_at": "2018-06-14T09:27:19Z",
+              "schema_name": "taxon",
+              "title": "Aviation",
+              "web_url": "https://www.gov.uk/transport/aviation",
+              "withdrawn": false
+            }
+          ]
+        },
+        "locale": "en",
+        "phase": "live",
+        "public_updated_at": "2018-06-14T09:27:19Z",
+        "schema_name": "taxon",
+        "title": "Airport capacity and expansion",
+        "web_url": "https://www.gov.uk/transport/airport-capacity-and-expansion",
+        "withdrawn": false
+      },
+      {
+        "api_path": "/api/content/transport/new-aviation-technology",
+        "api_url": "https://www.gov.uk/api/content/transport/new-aviation-technology",
+        "base_path": "/transport/new-aviation-technology",
+        "content_id": "ef67434e-e406-4b3f-ad51-65e08cbdd291",
+        "description": "Drones, space, experimental aircraft and aviation fuel.",
+        "details": {
+          "internal_name": "New aviation technology",
+          "notes_for_editors": "",
+          "visible_to_departmental_editors": false
+        },
+        "document_type": "taxon",
+        "links": {
+          "parent_taxons": [
+            {
+              "api_path": "/api/content/transport/aviation",
+              "api_url": "https://www.gov.uk/api/content/transport/aviation",
+              "base_path": "/transport/aviation",
+              "content_id": "51efa3dd-e9bc-42b2-aa26-06bf5f543015",
+              "description": "Aviation and airspace policy, airport expansion, airline routes, passenger experience and air accidents.",
+              "details": {
+                "internal_name": "Aviation",
+                "notes_for_editors": "",
+                "visible_to_departmental_editors": false
+              },
+              "document_type": "taxon",
+              "links": {
+                "parent_taxons": [
+                  {
+                    "api_path": "/api/content/transport",
+                    "api_url": "https://www.gov.uk/api/content/transport",
+                    "base_path": "/transport",
+                    "content_id": "a4038b29-b332-4f13-98b1-1c9709e216bc",
+                    "description": "Aviation, roads, rail, maritime, driving, freight, public transport, safety, environment and transport accessibility.",
+                    "details": {
+                      "internal_name": "Transport",
+                      "notes_for_editors": "",
+                      "visible_to_departmental_editors": true
+                    },
+                    "document_type": "taxon",
+                    "links": {
+                      "root_taxon": [
+                        {
+                          "api_path": "/api/content/",
+                          "api_url": "https://www.gov.uk/api/content/",
+                          "base_path": "/",
+                          "content_id": "f3bbdec2-0e62-4520-a7fd-6ffd5d36e03a",
+                          "document_type": "homepage",
+                          "links": {},
+                          "locale": "en",
+                          "public_updated_at": "2026-02-18T13:00:23Z",
+                          "schema_name": "homepage",
+                          "title": "GOV.UK homepage",
+                          "web_url": "https://www.gov.uk/",
+                          "withdrawn": false
+                        }
+                      ]
+                    },
+                    "locale": "en",
+                    "phase": "live",
+                    "public_updated_at": "2018-06-15T14:31:46Z",
+                    "schema_name": "taxon",
+                    "title": "Transport",
+                    "web_url": "https://www.gov.uk/transport",
+                    "withdrawn": false
+                  }
+                ]
+              },
+              "locale": "en",
+              "phase": "live",
+              "public_updated_at": "2018-06-14T09:27:19Z",
+              "schema_name": "taxon",
+              "title": "Aviation",
+              "web_url": "https://www.gov.uk/transport/aviation",
+              "withdrawn": false
+            }
+          ]
+        },
+        "locale": "en",
+        "phase": "live",
+        "public_updated_at": "2018-06-14T09:27:19Z",
+        "schema_name": "taxon",
+        "title": "New aviation technology",
+        "web_url": "https://www.gov.uk/transport/new-aviation-technology",
+        "withdrawn": false
+      }
+    ]
+  },
+  "locale": "en",
+  "phase": "live",
+  "public_updated_at": "2026-08-10T09:30:01+01:00",
+  "publishing_app": "whitehall",
+  "publishing_request_id": "21-1786021298.480-10.13.22.240-2589",
+  "publishing_scheduled_at": "2026-08-10T09:30:00+01:00",
+  "rendering_app": "frontend",
+  "scheduled_publishing_delay_seconds": 2,
+  "schema_name": "consultation",
+  "title": "Changes to the air navigation directions and air navigation guidance",
+  "updated_at": "2026-08-10T09:30:02+01:00",
+  "withdrawn_notice": {}
+}

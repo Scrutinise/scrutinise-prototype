@@ -111,6 +111,81 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V34 — the political-evidence layer: three sources verified, and the one that was already built was ingesting 1% of itself (2026-08-11 18:30 UTC)
+
+Executes `BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C to built-piloted-measured-licensed.
+**Nothing seeded — that is `INGEST_PLAYBOOK` §8's ordering (new sourceType seeds POST-PUSH),
+not an unfinished job.** Full detail: `docs/V34_POLITICAL_SOURCES_REPORT.md`.
+`tsc --noEmit` clean over `scripts/ingest` bar the documented pre-existing errors.
+
+**§A — V28 BUILT THE DIVISION PIPELINE, NEVER RAN IT, AND IT WOULD HAVE INGESTED 25 OF 2,361.**
+Checked directly: 0 queue rows, 0 `corpus_targets`, 0 sections for both division corpora.
+⚠ **The Commons list endpoint hard-caps `take` at 25** (measured: 26/40/50/100/200 all return
+25; Lords honours every value). V28 asked for 100 then `if (page.length < take) break` — page 1,
+25 < 100, stop, report success. The replacement breaks on an EMPTY page, dedupes, guards a
+non-advancing `skip`, reconciles against `searchTotalResults`, and `--seed` **refuses** an
+unreconciled walk. ⚠ **`NoVoteRecorded` was being discarded** — the third member array, present on
+every division back to 2016-03-09 (2411→210, 605→310, 2→281), which is the brief's
+absent-vs-not-a-member distinction handed over by the API. ⚠ **Lords publishes no equivalent**
+(159 of ~800 eligible on the sampled division), so absence is `absence_known=false` — a known
+unknown, said in words in the compiled text, never a measured zero.
+⚠ **The brief's premise on party is wrong in our favour**: Commons division records DO carry
+`Party`/`MemberFrom`, **as at the division** — verified against member 172's two party changes
+(Labour 2023-04-19 → **Independent** 2024-04-30 → Labour 2025-02-26, matching `partyHistory`
+exactly). Members API is a cross-check, not a dependency: ~2.3M lookups off the critical path.
+**Measured and RECONCILED both houses: Commons 2,361 (2016-03-09→, 95 pages/700s), Lords 3,284
+(1999-11-24→, 33 pages/359s) = 5,645 divisions; PREDICTED 2,556,897 `division_votes` rows**
+(recorded so the actual can be scored). ⚠ Commons ids are SPARSE (1, 3, 1500, 2412, 2500 all 404)
+— walk the list, never 1..N. Three new ingest tables (migration run, additive, idempotent):
+`divisions` (bill/stage/amendment as SEPARATE columns + `context_provenance`, because the parent
+Bill's title can be actively misleading about what was voted on), `division_votes` (one row per
+member per division, party+constituency at the date, **no `not-a-member` value — that state is the
+absence of a row**), `stage_outcomes` (created EMPTY: `outcome` ∈ divided/without-division/unknown
+with `method`, so "passed without a division" is a finding rather than four different things
+wearing one null). ⚠ Neither votes API names the Bill; the Bills API has **no divisions route**
+(404) and is 30s/call — so the link is PARSED, from Commons titles and from Lords
+`amendmentMotionNotes` (present 50/50 sampled). ⚠ `lda-*divisions` are NOT a backfill: result
+stubs of 16 and 8 mean words, no roll-call, no dates. ⚠ **Public Whip bulk exists
+(`votematrix-1992..2024` + lords) and is FLAGGED NOT INGESTED — its data is ODbL, share-alike**,
+verified at `faq.php#legal`: the first licence we hold that would attach an obligation to the
+DERIVED database. Charlie's call, IMF-flag treatment; nothing depends on it. ⚠ ONSPD is OGL v3.0
+with triple attribution, **but NI "BT" postcodes need a separate Land & Property Services licence
+for commercial users**.
+
+**§B — THE BULK ROUTE NOBODY HAD LOOKED FOR.** legislation.gov.uk publishes IAs as a first-class
+type, `ukia`, with per-year Atom feeds that also carry the **IA→instrument join for free**
+(`<link rel="alternate" .../uksi/2008/2924/impacts/2023/199>` + `ukm:DocumentStage`/`Department`/
+`Date`; 16/21 sampled had it). ⚠ Take the PDF url FROM THE FEED — the natural guess
+(`ukia2023199_en.pdf`) 404s; it is `ukia_20230199_en.pdf`. **1,181 IAs over 2005–2026 with the
+years NOT continuous: nothing 2008–2016, nothing 2024–2025** — recorded as known unknowns in three
+places, a fact about this source and not a claim that none were published. gov.uk holds 1,932
+typed `impact_assessment` (⚠ NOISY — HS2 air-quality reports carry that type) and RPC 826; the
+**overlap is unmeasured and said to be**. **Extraction measured on 21 real IAs spread across every
+year with content BEFORE committing**: 20/21 >1k chars, 1 scanned, 0 fetch failures, mean 120,180
+chars, max 542,498 over 233 pages, mean 6.6/9 proforma fields. ⚠ The proforma score splits by
+STAGE and that is the documents, not a defect — Final/Enactment 9/9, Post-Implementation reviews
+3/9 (different template). ⚠ At 120k mean, one row per IA is the **V33 trap** (eur-lex 760,509 words
+in one row, 0.5% embedded) — so sectioned on the proforma with a paragraph fallback and a 12k
+ceiling; piloted 5–27 sections per IA, **RPC opinion isolated as its own section**. Scanned IAs →
+`availability_status='pdf-only'` with the char count: a classified gap, never a drop.
+
+**§C — NO BULK ROUTE, CHECKED FIRST, SO THE API BY ELIMINATION.** **7,447 consultations: 86 open
++ 1,059 closed + 6,302 outcomes**; pilot reached one opened **2000-10-25**. ⚠ `document_type=
+consultation` returns **0** — not a real type; filtering on it is a silent empty ingest. Every
+attachment CLASSIFIED (`individual-response` vs `summarised-responses` vs `government-response` …)
+and rendered WITH its kind, because a department's characterisation of what somebody said must not
+sit on the same footing as what they said. Raw organisation string never overwritten; normalisation
+deliberately conservative (no acronym expansion, no fuzzy matching — those merges belong where they
+can be reviewed). Dates on everything; `itemDate` prefers the closing date. Committee consultations
+NOT duplicated. Fixed in pilot: `final_outcome_attachments` placeholders with no title and no url
+were rendering as blank `[government-response]` lines — a document that does not exist, presented
+as the government's response.
+
+**COSTS IN FULL** — ~257 MB R2 (~$0.004/mo), ~22,500 Class A writes (~$0.10 one-off), **~500 MB
+Neon (~$0.18/mo, almost all `division_votes`)**, **~64 M tokens to embed**. ⚠ The embedding line is
+given as a TOKEN COUNT not a pound figure: §1a prices Railway/Neon/R2 and **not** embedding, and
+inventing a rate would be worse than saying so. Run it under V33's `--max-cost` ceiling.
+
 ## SEARCH Stage 2C-4 + GRAPH Stage 2D-1 — the ANN retrieves 70.4% of what it holds, and the position graph needs no LLM (2026-08-11 04:19 UTC)
 
 **Two sprints, one session.** `BRIEF_SEARCH_S2C4.md` and `BRIEF_GRAPH_2D1.md`. Reports:
