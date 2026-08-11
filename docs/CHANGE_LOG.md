@@ -207,8 +207,19 @@ rather than a fault). **14,274 pending rows.** Breakers clean on all three new s
 ⚠ Ops declined to restart `Ingest` on its 18:45:32 UTC cycle and that was CORRECT — the heartbeat
 was 7 min stale against a 10-min threshold. The system was working; the impatience was mine.
 
-**COSTS IN FULL** — ~257 MB R2 (~$0.004/mo), ~22,500 Class A writes (~$0.10 one-off), **~500 MB
-Neon (~$0.18/mo, almost all `division_votes`)**, **~64 M tokens to embed**. ⚠ The embedding line is
+**DRAINING FROM 19:00 UTC, 0 FAILURES**, all three sources in parallel; `division_votes` carries
+`absent` rows from the first division, so the `NoVoteRecorded` recovery holds in production and not
+just in the pilot. **First predictions scored** (171 divisions / 35 IAs / 138 consultations):
+member rows per Commons division predicted 649, measured **648** ✓ — but ⚠ **sections per impact
+assessment predicted 8, measured 23.1, out by 2.9×**, so the IA corpus is **~27,300 sections not
+~9,400**. That is exactly why that `corpus_targets` row went in as `est_is_confirmed=false`, and it
+must be re-baselined from the real count after the drain rather than left to read as confirmed once
+nobody remembers. Consultations went the other way — 307 words each, not ~1,200.
+
+**COSTS IN FULL, REVISED ON THE MEASURED RATES** — ~335 MB R2 (~$0.005/mo), ~40,400 Class A writes
+(~$0.18 one-off), **~500 MB Neon (~$0.18/mo, almost all `division_votes`)**, **~73 M tokens to
+embed** (§B is two-thirds of that on its own). The pre-drain estimates were ~257 MB / ~22,500 /
+~64 M, built on the 8-sections-per-IA figure that turned out to be wrong. ⚠ The embedding line is
 given as a TOKEN COUNT not a pound figure: §1a prices Railway/Neon/R2 and **not** embedding, and
 inventing a rate would be worse than saying so. Run it under V33's `--max-cost` ceiling.
 ⚠ **Stamp correction:** the fix commit `0ee4158` carries `Date: 2026-08-11 18:47 UTC`; the real

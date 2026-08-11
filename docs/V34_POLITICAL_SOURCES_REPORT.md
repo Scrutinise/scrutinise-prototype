@@ -429,6 +429,41 @@ The consultation `+1` is the reconciliation tolerance doing its job rather than 
 search index shifts under a deep walk, which is why the check allows 2% drift and why an
 *exact* match was never the test.
 
+### The drain, and the first predictions scored against it
+
+`Ops` started `Ingest` at 19:00 UTC and all three sources drain in parallel. **0 failures**, and
+`division_votes` carries `absent` rows from the first division, so the `NoVoteRecorded` recovery
+works in production and not just in the pilot.
+
+First measured sample (171 divisions, 35 IAs, 138 consultations):
+
+| | predicted | measured | verdict |
+|---|---|---|---|
+| member rows per division (Commons) | 649 | **648** | ✓ |
+| **sections per impact assessment** | **8** | **23.1** | ✗ **out by 2.9×** |
+| words per impact assessment | — | 28,628 | — |
+| words per consultation | ~1,200 | **307** | ✗ 4× smaller |
+
+⚠ **The impact-assessment section estimate was wrong, and wrong in the expensive direction.**
+1,181 IAs × 23.1 ≈ **27,300 sections**, not the ~9,400 seeded into `corpus_targets`. That is why
+that row went in as `est_is_confirmed = false`, and it must be re-baselined from the real count
+after the drain rather than left as a number that will read as confirmed once nobody remembers.
+
+**Revised costs from the measured rates** (superseding the estimates below, which were built on
+the 8-sections figure):
+
+| | §A divisions | §B impact assessments | §C consultations |
+|---|---|---|---|
+| sections | 5,645 | **~27,300** (was ~9,400) | 7,448 |
+| mean section size | ~21 KB | ~7.4 KB | **~1.9 KB** (was ~7 KB) |
+| R2 storage | ~119 MB | **~202 MB** (was ~103 MB) | **~14 MB** (was ~52 MB) |
+| R2 Class A writes | 5,645 | **~27,300** | 7,448 |
+| tokens to embed | ~25 M | **~45 M** (was ~26 M) | **~3.5 M** (was ~13 M) |
+
+**Revised totals: ~335 MB R2 (~$0.005/month), ~40,400 Class A writes (~$0.18 one-off), ~73 M
+tokens to embed.** The embedding line moved less than the section count did, because §B grew and
+§C shrank against each other — but §B is now two-thirds of it on its own.
+
 ---
 
 ## What has NOT happened, and why
