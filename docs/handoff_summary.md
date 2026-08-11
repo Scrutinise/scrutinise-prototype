@@ -25,11 +25,19 @@ sitting as a `failed` queue row, i.e. invisible to every corpus-level gap report
 silent absence the brief forbids. 404/410 now writes a classified `no-pdf` section carrying the
 advertised URL and closes the row; only network faults and 5xx retry. 1 in the first 470. Two
 scanned IAs are already stored as `pdf-only`, so the classified-gap path was otherwise working.
-⚠ **Commons drains before Lords** (seed order), so at the time of writing `divisions` holds Commons
-only. The Lords path — the one the teller fix was for — is **proven against the real tables** by
-`v34-dv-smoke.ts` (division 3698 → 159 rows, division 19 → 332 rows, written and read back), and
-the deployed worker runs that exact commit; production confirmation lands when the queue reaches
-Lords. **If Lords rows start failing, that is the teller duplicate and the fix did not deploy.**
+✅ **LORDS CONFIRMED LIVE — the teller fix holds in production.** 0 failures, and the decisive
+measurement is the stored roll-call against the House's own count: **Lords 132 of 136 exact, 0 at
++2**; **Commons 704 at +2/+2, as it should be** (Commons tellers are excluded from the lobby
+totals, Lords tellers are included). Had the duplication survived, every Lords division would have
+failed outright rather than matching.
+⚠ **NEW: PARLIAMENT'S OWN TALLY DISAGREES WITH ITS OWN ROLL-CALL ON 10 HISTORIC LORDS DIVISIONS**,
+by ±1 in both directions — never ±2, which is what makes it clearly not the teller bug. Div 1068
+reports `authoritativeNotContentCount: 227` against a `notContents` array of **226**; div 1092
+reports 409 against **410**. I assumed a peer listed in both lobbies and checked instead of
+asserting — **wrong: 0 duplicates, 0 cross-lobby members.** The source is internally inconsistent.
+**This is the argument for keeping BOTH numbers**: `aye_count`/`no_count` is the official result to
+quote, `division_votes` is the roll-call to count over. Store one and the disagreement is invisible,
+and any "78% of their party voted for" silently inherits whichever is wrong.
 **SEEDED AND RECONCILED:** `commons-divisions-votes` **2,361** ✓ exact · `lords-divisions-votes`
 **3,284** ✓ exact · `impact-assessments` **1,181** ✓ exact · `consultations` **7,448** (+1 on the
 measured 7,447 — published between measure and seed; that is the 2% tolerance working, not a

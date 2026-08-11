@@ -207,6 +207,20 @@ rather than a fault). **14,274 pending rows.** Breakers clean on all three new s
 ⚠ Ops declined to restart `Ingest` on its 18:45:32 UTC cycle and that was CORRECT — the heartbeat
 was 7 min stale against a 10-min threshold. The system was working; the impatience was mine.
 
+✅ **LORDS CONFIRMED LIVE — the teller fix holds in production, 0 failures.** The decisive
+measurement is the stored roll-call vs the House's own count: **Lords 132/136 exact, 0 at +2**;
+**Commons 704 at +2/+2**, which is correct because Commons tellers are EXCLUDED from the lobby
+totals and Lords tellers are INCLUDED. Had the duplication survived, every Lords division would
+have failed outright rather than matching.
+⚠ **AND IT EXPOSED A SOURCE INCONSISTENCY: Parliament's own tally disagrees with its own roll-call
+on 10 historic Lords divisions**, by ±1 in both directions — never ±2, which is what marks it as
+NOT the teller bug. Div 1068 reports `authoritativeNotContentCount: 227` against a `notContents`
+array of **226**; div 1092 reports 409 against **410**. I assumed a peer listed in both lobbies and
+checked instead of asserting — **wrong: 0 duplicates, 0 cross-lobby members**; the source simply
+disagrees with itself. **This is the argument for storing BOTH**: the official count is the figure
+to quote, the roll-call is the thing to count over, and keeping one would make the disagreement
+invisible while any party-percentage silently inherited whichever was wrong.
+
 **DRAINING FROM 19:00 UTC, 0 FAILURES**, all three sources in parallel; `division_votes` carries
 `absent` rows from the first division, so the `NoVoteRecorded` recovery holds in production and not
 just in the pilot. **First predictions scored** (171 divisions / 35 IAs / 138 consultations):

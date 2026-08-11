@@ -429,6 +429,42 @@ The consultation `+1` is the reconciliation tolerance doing its job rather than 
 search index shifts under a deep walk, which is why the check allows 2% drift and why an
 *exact* match was never the test.
 
+### The Lords path, confirmed live — and a source inconsistency it exposed
+
+Lords divisions store cleanly in production: **0 failures**, and the decisive measurement is the
+stored member list against the House's own count.
+
+| house | divisions checked | member list == official count | member list == official + 2 |
+|---|---:|---:|---:|
+| commons | 2,355 | 208 | **704** |
+| lords | 136 | **132** | **0** |
+
+That is exactly the shape the fix predicts and the bug would have destroyed. Lords tellers *are*
+counted in the totals, so after dedupe the roll-call equals the official figure — **132 of 136
+exact, 0 at +2**. Commons tellers are *not* counted, so 704 sit at +2/+2. Had the teller
+duplication survived, every Lords division would have failed outright rather than matching.
+
+⚠ **The 10 Lords divisions that do not match are a fault in the SOURCE, not in the storage**, and
+the difference is always ±1 — never ±2, which is what makes it clearly not the teller bug:
+
+| division | date | official | stored |
+|---|---|---|---|
+| 1068 Armed Forces Bill | 2006-11-06 | 60/**227** | 60/**226** |
+| 1092 House of Lords Reform (option 4) | 2007-03-14 | 46/**409** | 46/**410** |
+| 1112 Serious Crime Bill [HL] | 2007-04-25 | **182**/121 | **183**/121 |
+| 1183 Parliamentary Voting System | 2011-02-08 | **262**/266 | **261**/266 |
+
+I assumed a peer listed in both lobbies and checked instead of asserting. **Wrong: there are no
+duplicates and no cross-lobby members.** On division 1068 the API reports
+`authoritativeNotContentCount: 227` while the `notContents` array it serves holds **226 peers**;
+on 1092 it reports 409 against an array of 410. Parliament's own recorded tally disagrees with its
+own roll-call, in both directions, on historic divisions.
+
+**This is why both figures are stored rather than one.** `aye_count`/`no_count` is the official
+result — the number to quote. The `division_votes` rows are the roll-call — the thing to count
+over. Had the schema kept only one, this disagreement would be invisible, and any "78% of their
+party voted for" computed from it would silently inherit whichever of the two happened to be wrong.
+
 ### The drain, and the first predictions scored against it
 
 `Ops` started `Ingest` at 19:00 UTC and all three sources drain in parallel. **0 failures**, and
