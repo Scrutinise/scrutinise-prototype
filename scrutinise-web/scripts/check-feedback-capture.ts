@@ -62,6 +62,34 @@ async function main() {
   ok('scrub reports what it removed', scrubbed.redactions.length >= 6,
     scrubbed.redactions.map((r) => `${r.kind}×${r.count}`).join(', '))
 
+  // ── 1b. §19-D Task 6 — NAMES, deterministically ───────────────────────────
+  //
+  // The 10 Aug walk-through stripped the email and left the name in. The diagnosis:
+  // the deterministic pass only knew the user's OWN identifiers, so a third party's
+  // name had exactly one line of defence — the model — and the model let it through.
+  // These assertions are the reason the deterministic pass now owns names too, and
+  // they run with NO model and NO database.
+  console.log('\n  names (deterministic pass only):')
+  const nameCases: { input: string; gone: string[]; kept: string[] }[] = [
+    { input: 'Sarah Ellis in our team said the costs are wrong.', gone: ['Sarah Ellis'], kept: ['costs'] },
+    { input: 'I raised it with Dr Priya Nair at the trust.', gone: ['Priya Nair', 'Dr'], kept: ['trust'] },
+    { input: 'My wife Priya has the same problem.', gone: ['Priya'], kept: ['same problem'] },
+    { input: 'Baroness Kidron made this point in the Lords.', gone: ['Kidron'], kept: ['Lords'] },
+    { input: 'Sarah Ellis MP has campaigned on it for years.', gone: ['Sarah Ellis'], kept: ['campaigned'] },
+    // The other half of the job: a rule that eats policy language is useless.
+    { input: 'The Environment Act 2021 and the Data Protection Act are the relevant law.',
+      gone: [], kept: ['Environment Act 2021', 'Data Protection Act'] },
+    { input: 'This affects Northern Ireland and the Isle of Man differently.',
+      gone: [], kept: ['Northern Ireland', 'Isle of Man'] },
+    { input: 'Will this apply in May? Mark my words, the Bill is rushed.',
+      gone: [], kept: ['Will this apply in May', 'Mark my words'] },
+  ]
+  for (const c of nameCases) {
+    const r = scrubPersonal(c.input, [])
+    for (const g of c.gone) ok(`removes "${g}" from: ${c.input.slice(0, 40)}…`, !r.text.includes(g), r.text)
+    for (const k of c.kept) ok(`keeps "${k}"`, r.text.includes(k), r.text)
+  }
+
   // ── 2. the full summarise path (model + scrub, or the fallback) ────────────
   const summarised = await summariseCritique({
     text: PERSONAL, surface: 'COSTS', stage: 'COHERENT_ACTIONS', identities: IDENTITIES,
@@ -71,13 +99,10 @@ async function main() {
   for (const needle of MUST_NOT_APPEAR) {
     ok(`summary is free of: ${needle}`, !summarised.summarisedText.includes(needle))
   }
-  // The third-party name is the model's job, not the regex's — assert it only
-  // when the model actually ran, and say so rather than pretending otherwise.
-  if (!summarised.usedFallback) {
-    ok('summary drops the third party’s name (model pass)', !summarised.summarisedText.includes('Priya'))
-  } else {
-    console.log('… skipped: third-party name check needs the model, which did not run')
-  }
+  // §19-D Task 6 — this was previously asserted ONLY when the model ran, because the
+  // third-party name was the model's job alone. It is now the deterministic pass's job
+  // too, so it is asserted unconditionally: with or without the model, the name goes.
+  ok('summary drops the third party’s name', !summarised.summarisedText.includes('Priya'))
 
   // ── 3. persist-then-send, with the send forced to fail ────────────────────
   const owner = await prisma.user.findFirst({ select: { id: true }, orderBy: { createdAt: 'asc' } })

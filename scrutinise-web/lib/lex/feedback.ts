@@ -72,7 +72,108 @@ const RULES: { kind: string; re: RegExp; to: string }[] = [
   },
   { kind: 'long reference number', re: /\b\d{8,}\b/g, to: '[number removed]' },
   { kind: 'social handle', re: /(^|[\s(])@[A-Za-z0-9_]{2,30}\b/g, to: '$1[handle removed]' },
+  // ── §19-D Task 6 — PERSONAL NAMES ────────────────────────────────────────────
+  //
+  // The 10 Aug walk-through: email addresses were stripped, the name was not. The
+  // diagnosis is that NEITHER layer owned it. The deterministic pass only ever knew
+  // the user's OWN identifiers (`identities`), by design; third-party names were left
+  // wholly to the model pass, which is instructed to strip them and — being a model —
+  // sometimes doesn't. So a name had exactly one line of defence, and it was the
+  // probabilistic one. That is the wrong way round for the layer that decides whether
+  // personal data leaves the database.
+  //
+  // These rules give names a deterministic line too. They are deliberately narrow —
+  // over-redacting a critique is a nuisance, under-redacting a name is a data breach,
+  // but a rule that eats "Environment Act 2021" makes the feature useless. Each fires
+  // only on a shape that is a person and not much else.
+  {
+    // An honorific always introduces a person: "Dr Sarah Ellis", "Baroness Kidron".
+    kind: 'name',
+    re: /\b(?:Mr|Mrs|Ms|Miss|Mx|Dr|Prof(?:essor)?|Sir|Dame|Lord|Lady|Baroness|Baron|Rt Hon|Rev(?:erend)?)\.?\s+[A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){0,2}/g,
+    to: '[name removed]',
+  },
+  {
+    // "Sarah Ellis MP", "Ellis MP" — the postnominal names the person before it.
+    kind: 'name',
+    re: /\b[A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){0,2}\s+(?:MP|MSP|MS|AM)\b/g,
+    to: '[name removed]',
+  },
 ]
+
+/**
+ * Common given names, used ONLY to recognise the "Given Surname" shape. Matching the
+ * first token against this list is what stops "Environment Act", "Data Protection" and
+ * "Northern Ireland" being read as people — a bare two-capitalised-words rule redacts
+ * half of every policy critique ever written.
+ *
+ * Coverage, not completeness: this cannot know every name, which is exactly why it is
+ * the SECOND line and not the only one. The model pass still runs, and the scrub runs
+ * again on its output and a third time on submit.
+ */
+const GIVEN_NAMES = new Set<string>([
+  'adam', 'adrian', 'aisha', 'alan', 'alex', 'alexander', 'alice', 'alison', 'amanda', 'amelia',
+  'amy', 'andrew', 'angela', 'ann', 'anna', 'anne', 'anthony', 'antonio', 'arthur', 'ashley',
+  'barbara', 'barry', 'ben', 'benjamin', 'bernard', 'beth', 'bethany', 'brian', 'bruce', 'bryan',
+  'caroline', 'catherine', 'charles', 'charlie', 'charlotte', 'chris', 'christine', 'christopher',
+  'claire', 'clare', 'colin', 'craig', 'daniel', 'danny', 'darren', 'david', 'dean', 'deborah',
+  'declan', 'denise', 'dennis', 'diane', 'dominic', 'donald', 'donna', 'doreen', 'douglas',
+  'edward', 'eileen', 'elaine', 'eleanor', 'elizabeth', 'ellie', 'emily', 'emma', 'eric', 'erin',
+  'esther', 'eva', 'evelyn', 'fiona', 'francis', 'frances', 'freddie', 'frederick', 'gareth',
+  'gary', 'gavin', 'geoffrey', 'george', 'georgia', 'gerald', 'gillian', 'gordon', 'graham',
+  'hannah', 'harriet', 'harry', 'heather', 'helen', 'henry', 'hilary', 'holly', 'hugh', 'iain',
+  'ian', 'imran', 'irene', 'isabel', 'isabella', 'jack', 'jacob', 'jacqueline', 'james', 'jamie',
+  'jane', 'janet', 'jason', 'jean', 'jennifer', 'jeremy', 'jessica', 'joan', 'joanna', 'joe',
+  'john', 'jonathan', 'jordan', 'joseph', 'josephine', 'joshua', 'julia', 'julian', 'julie',
+  'justin', 'karen', 'katherine', 'kathleen', 'katie', 'keith', 'kelly', 'kenneth', 'kevin',
+  'kieran', 'kim', 'kirsty', 'laura', 'lauren', 'lawrence', 'lee', 'leon', 'lewis', 'liam',
+  'linda', 'lindsay', 'lisa', 'liz', 'louise', 'lucy', 'luke', 'lydia', 'madeleine', 'malcolm',
+  'mandy', 'marcus', 'margaret', 'maria', 'marian', 'marie', 'marilyn', 'marion', 'martin',
+  'mary', 'matthew', 'maureen', 'megan', 'melanie', 'michael', 'michelle', 'mohammed', 'muhammad',
+  'nadia', 'naomi', 'natalie', 'nathan', 'neil', 'nicholas', 'nicola', 'nigel', 'noel', 'norman',
+  'oliver', 'olivia', 'owen', 'pamela', 'patricia', 'patrick', 'paul', 'paula', 'pauline', 'peter',
+  'philip', 'phillip', 'phoebe', 'priya', 'rachel', 'raymond', 'rebecca', 'rhys', 'richard',
+  'robert', 'robin', 'roger', 'ronald', 'rosemary', 'ross', 'roy', 'russell', 'ruth', 'ryan',
+  'sabina', 'sally', 'sam', 'samantha', 'samuel', 'sandra', 'sara', 'sarah', 'scott', 'sean',
+  'shane', 'sharon', 'sheila', 'shirley', 'simon', 'sonia', 'sophie', 'stephanie', 'stephen',
+  'steven', 'stewart', 'stuart', 'susan', 'suzanne', 'sylvia', 'tanya', 'teresa', 'theresa',
+  'thomas', 'timothy', 'tina', 'tom', 'tony', 'tracy', 'trevor', 'valerie', 'vanessa', 'vicky',
+  'victoria', 'vincent', 'vivienne', 'walter', 'wayne', 'wendy', 'wesley', 'william', 'yasmin',
+  'yvonne', 'zoe',
+])
+
+/**
+ * Given names that are ALSO ordinary English words. A bare "Mark", "Will" or "May" at
+ * the start of a sentence is almost never a person, so these are recognised only when
+ * a capitalised surname follows.
+ */
+const AMBIGUOUS_GIVEN_NAMES = new Set<string>([
+  'april', 'art', 'bill', 'brook', 'dawn', 'drew', 'faith', 'frank', 'grace', 'guy', 'hope',
+  'jack', 'joy', 'june', 'mark', 'may', 'mercy', 'noel', 'olive', 'pat', 'rose', 'sonny',
+  'summer', 'will', 'sue', 'bob', 'don', 'rob', 'ray', 'earl', 'king', 'lily', 'daisy', 'ruby',
+])
+
+/**
+ * Redact "Given Surname" and (for unambiguous given names) a bare first name. Runs as a
+ * pass rather than a RULES entry because the decision needs the token AFTER the match.
+ */
+function redactPersonNames(text: string): { text: string; count: number } {
+  let count = 0
+  const out = text.replace(
+    /\b([A-Z][a-z'’-]{1,15})(\s+([A-Z][a-z'’-]{1,20}))?/g,
+    (whole, first: string, _tail: string | undefined, second: string | undefined) => {
+      const key = first.toLowerCase()
+      const known = GIVEN_NAMES.has(key)
+      const ambiguous = AMBIGUOUS_GIVEN_NAMES.has(key)
+      if (!known && !ambiguous) return whole
+      // A known given name followed by a capitalised word: a full name — take both.
+      if (second) { count++; return '[name removed]' }
+      // A bare first name: take it only when the word is not also ordinary English.
+      if (known) { count++; return '[name removed]' }
+      return whole
+    },
+  )
+  return { text: out, count }
+}
 
 /** Escape a literal for use inside a RegExp. */
 function esc(s: string): string {
@@ -106,6 +207,17 @@ export function scrubPersonal(input: string, identities: (string | null | undefi
     .sort((a, b) => b.length - a.length)
   for (const n of new Set(names)) {
     apply('name', new RegExp(`\\b${esc(n)}\\b`, 'gi'), '[name removed]')
+  }
+
+  // §19-D Task 6 — third-party names, deterministically. Runs LAST so the honorific and
+  // MP rules above have already taken the forms they own, and so the user's own name is
+  // gone whether or not it happens to be in the gazetteer.
+  const people = redactPersonNames(text)
+  if (people.count > 0) {
+    text = people.text
+    const existing = redactions.find((r) => r.kind === 'name')
+    if (existing) existing.count += people.count
+    else redactions.push({ kind: 'name', count: people.count })
   }
 
   return { text: text.replace(/[ \t]{2,}/g, ' ').trim(), redactions }
