@@ -192,7 +192,12 @@ export const JOBS: Record<string, HeavyJob> = {
     // IO-bound, not memory-bound: the work is pulling PQ codes for up to 4,096 partitions out of
     // R2. Shared vCPU is right (no dedicated-core quota — that has now blocked a vector job twice)
     // and 16 GB is chosen for the index cache, not for the job's own allocations.
-    serverTypes: ['cpx41', 'cpx51', 'cpx31'],
+    // ⚠ cpx42, not cpx41. The CPX line has been RENUMBERED — Hetzner now offers
+    // cpx12/22/32/42/52/62 and the odd-numbered names this file's other jobs were written against
+    // (cpx41, cpx51, cpx31) no longer exist in fsn1/nbg1/hel1. The runner's availability read
+    // caught it and refused before creating anything, which is the behaviour that turned a stale
+    // constant into a 10-second correction instead of a failed run.
+    serverTypes: ['cpx42', 'cpx52', 'cpx32'],
     extraEnv: ['GEMINI_API_KEY'], // every query has to be embedded before it can be searched
     // MEASURED locally first, which is why this is a box job at all: one query's exhaustive rung
     // took 150s from a home connection (~15 MB/s against ~2.2 GB of PQ codes). 58 queries × 4 rungs
