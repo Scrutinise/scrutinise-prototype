@@ -158,6 +158,63 @@ way).
 speeches and is a stable publicwhip person key**, which is the difference between name-matching
 8.8 million speeches and joining them.
 
+### 1f-bis. Early day motions — do the rows carry signatory names structurally? (Amendment 1)
+
+Requested as an addition to §1's survey, with the edge explicitly **not** to be built this sprint.
+
+⚠ **First, a provenance note.** I could not find the amendment file: nothing in `docs/` contains
+"signed-motion" and no file named for an amendment exists in the tree. This section therefore answers
+the instruction **as Charlie stated it in chat**, which is complete on its own. If the file exists
+elsewhere it should be added, because its reasoning about petitions being "a different shape" is not
+recoverable from the summary.
+
+**In our corpus — the PRIMARY SPONSOR is structural, and nothing else is.**
+
+| `early-day-motions` | 60,737 rows |
+|---|---|
+| `sectionTitle` | 60,737 (100%) — the motion title, e.g. `LAND VALUE CAPTURE` |
+| `speaker` | **60,737 (100%)** — and this is the **primary sponsor's name** |
+| `itemDate` | 60,737 (100%), range **1989-11-21 → 2026-06-18** |
+| `parentDocId` | 60,737 (100%) |
+
+Most-frequent `speaker` values are exactly what a primary-sponsor column should look like: Jim Shannon
+934 motions, Jeremy Corbyn 871, John McDonnell 824, Paul Flynn 800, Keith Vaz 742.
+
+So a `signed-motion` edge for the **primary sponsor** is available now, from columns we already hold,
+for 60,737 motions across 37 years — no sweep required. That is the cheapest edge in the design.
+
+**But the other signatories are not available structurally at all, and that is the load-bearing
+finding.** Measured against the live API (`oralquestionsandmotions-api.parliament.uk`):
+
+- The list item carries `MemberId`, `SponsorsCount`, and a `PrimarySponsor` object with an **`MnisId`**
+  (a stable Parliament member ID, e.g. 4394 for Imran Hussain) plus party and constituency. **Our
+  ingest keeps only the display name and drops the MnisId** — the same shape of loss as everywhere
+  else in this sprint, and the same cheap repair.
+- **`Sponsors` is absent from the list item.** On a motion with **59 signatures** the payload is
+  1,644 bytes and contains no signatory array.
+- `parameters.includeSponsors=true` changes nothing, and **seven candidate endpoints all 404**:
+  `/EarlyDayMotions/EarlyDayMotion/{id}`, `/EarlyDayMotions/{id}/sponsors`,
+  `/EarlyDayMotions/sponsors`, `/EarlyDayMotionSponsors/list`, `/Sponsors/list`,
+  `/EarlyDayMotions/signatures`, and the `edmId`-filtered list.
+- There is **no swagger/OpenAPI document** on that host (`/swagger/v1/swagger.json`, `/swagger/index.html`
+  and `/openapi.json` all 404), so the endpoint set cannot be enumerated — the seven above are probes,
+  not an exhaustive list, and that limit is stated rather than glossed.
+
+⚠ **What I could NOT establish, and what would settle it.** `edm.parliament.uk` — where signatories are
+displayed to the public — **403s every programmatic fetch from here**, both the motion page and a
+`/signatures` sub-path. That is the same bot-block pattern this project has hit on
+`committees.parliament.uk` and `bills.parliament.uk`. I tried to check it in a real browser, which is
+the documented workaround, but the Chrome extension is not connected in this session. **So whether the
+full signatory list is publicly available as HTML is unverified from this machine** — it is not an
+inference I am willing to record as a fact either way.
+
+**The consequence for the design, stated so the next sprint is not planned against capability we do
+not have:** `signed-motion` splits into two very different jobs. **Primary sponsor → motion is free**
+and could ship from existing columns. **Full signatory → motion needs a source we have not
+established exists** — an HTML scrape if the page carries them (with its own licence and bot-block
+questions), and nothing at all if it does not. A `SponsorsCount` tells you 59 people signed; it cannot
+tell you which 59, and the count is already in the compiled body text.
+
 ### 1g. Members' interests — the person → organisation → category triple
 
 - **person:** `member.id` — the **Parliament member ID** — on **100%** of sampled interests, with

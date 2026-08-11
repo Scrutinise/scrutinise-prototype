@@ -499,6 +499,50 @@ text. Each time the repair was manual. The reliable route, used for this entry, 
 content to a file first and have the script read it — the same lesson as the PowerShell pipeline
 truncation already in the memory file, one layer up.
 
+### ADDENDUM 3 (2026-08-11 20:22 UTC) — Amendment 1's EDM survey: the primary sponsor is free, the other signatories may not exist
+
+Requested as one addition to §1's corpus survey, with the `signed-motion` edge explicitly **not** to be
+built this sprint. It is not built.
+
+⚠ **Provenance first: I could not find the amendment file.** Nothing in `docs/` contains
+"signed-motion" and no amendment-named file is in the tree, so this answers the instruction as given in
+chat. That is complete for the survey, but the file's reasoning about *why petitions are a different
+shape* is not recoverable from the summary and should be added.
+
+**In our corpus, the primary sponsor is already structural on every row.** `early-day-motions`:
+**60,737 rows, and `sectionTitle` / `speaker` / `itemDate` / `parentDocId` are each 100% populated**,
+range **1989-11-21 → 2026-06-18**. `speaker` holds the **primary sponsor's name** — top values are Jim
+Shannon (934 motions), Jeremy Corbyn (871), John McDonnell (824), Paul Flynn (800), Keith Vaz (742),
+which is exactly the distribution a primary-sponsor column should have. So **`signed-motion` for the
+primary sponsor is the cheapest edge in the design**: 60,737 motions over 37 years, from columns we
+already hold, no sweep at all.
+
+**The other signatories are a different matter, and the finding is negative.** Measured against
+`oralquestionsandmotions-api.parliament.uk`:
+
+- the list item carries `MemberId`, `SponsorsCount` and a `PrimarySponsor` object with an **`MnisId`**
+  (stable Parliament member ID — 4394 for Imran Hussain) plus party and constituency. **Our ingest
+  keeps the display name and drops the MnisId**, the same loss and the same cheap repair as everywhere
+  else in this sprint;
+- **`Sponsors` is absent from the list item** — on a motion with **59 signatures** the whole payload is
+  1,644 bytes with no signatory array;
+- `parameters.includeSponsors=true` changes nothing, and **seven candidate endpoints 404**
+  (`/EarlyDayMotions/EarlyDayMotion/{id}`, `/EarlyDayMotions/{id}/sponsors`, `/EarlyDayMotions/sponsors`,
+  `/EarlyDayMotionSponsors/list`, `/Sponsors/list`, `/EarlyDayMotions/signatures`, `edmId`-filtered list);
+- and there is **no swagger/OpenAPI document on that host** (three paths, all 404), so the endpoint set
+  cannot be enumerated. The seven are probes, not proof of absence, and that limit is stated.
+
+⚠ **What is NOT established: `edm.parliament.uk` 403s every programmatic fetch from here**, both the
+motion page and a `/signatures` sub-path — the same bot-block seen on `committees.parliament.uk` and
+`bills.parliament.uk`. The documented workaround is to look in a real browser, and the Chrome extension
+is not connected in this session, so **whether the full signatory list is publicly available as HTML is
+unverified from this machine.** It is not recorded as a fact in either direction.
+
+**So `signed-motion` splits into two jobs of very different cost:** primary sponsor → motion is
+effectively free from existing columns; full signatory → motion depends on a source whose existence has
+not been established, and would be an HTML scrape with its own licence and bot-block questions if it
+does exist. A `SponsorsCount` says 59 people signed; it cannot say which 59.
+
 ## INGEST V33 §2 CLOSED — the vector index is current, and three guards that could not fail now can (2026-08-11 01:02 UTC)
 
 Finishes `BRIEF_CC_V33_ingest_wrapup.md` §2, the one section left open at the sprint commit. The
