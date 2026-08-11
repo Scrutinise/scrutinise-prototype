@@ -2536,14 +2536,42 @@ async function processImpactAssessments(row: QueueRow): Promise<void> {
   if (await r2Exists(probe)) { await markDone(row.id, 'pdf'); return }
 
   let buf: Buffer | null = null
+  let httpStatus: number | null = null
   try {
     const res = await fetch(pdfUrl, {
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (+https://scrutinise.org; contact cl@scrutinise.org)' },
       signal: AbortSignal.timeout(120_000),
     })
+    httpStatus = res.status
     if (res.ok) buf = Buffer.from(await res.arrayBuffer())
-  } catch { /* handled below */ }
-  if (!buf) { await markFailed(row.id, `impact-assessments ${docKey}: PDF fetch failed ${pdfUrl}`); return }
+  } catch { /* httpStatus stays null — a network fault, not an answer */ }
+
+  if (!buf) {
+    // ⚠ A 404 HERE IS A SOURCE GAP, NOT A FAILURE TO RETRY. The ukia feed
+    // advertises a PDF that legislation.gov.uk does not serve — ukia/2018/42
+    // (uksi/2018/237, DWP) 404s deterministically on every attempt. Left as a
+    // `failed` queue row it is invisible to every corpus-level gap report,
+    // which is the silent absence the brief forbids: "Where a provision has
+    // none, that must be surfaced as a known absence, not silently omitted."
+    // So a deterministic absence is RECORDED and closed; only a transient
+    // fault (network error, 5xx) is retried.
+    if (httpStatus === 404 || httpStatus === 410) {
+      await upsertSection({
+        id: sectionId(row.corpus, docKey, '1'),
+        corpus: row.corpus,
+        sourceUrl: `https://www.legislation.gov.uk/ukia/${year}/${number}`,
+        status: 'unavailable',
+        availabilityStatus: 'no-pdf',
+        availabilityNote: `feed advertises ${pdfUrl} but the source returns HTTP ${httpStatus}`,
+        itemDate: date || undefined,
+        parentDocId: instrumentId || undefined,
+      })
+      await markDone(row.id)
+      return
+    }
+    await markFailed(row.id, `impact-assessments ${docKey}: PDF fetch failed (HTTP ${httpStatus ?? 'network'}) ${pdfUrl}`)
+    return
+  }
 
   const text = await pdfToText(buf, pdfUrl)
   const sections = text ? sectionImpactAssessment(text) : []
