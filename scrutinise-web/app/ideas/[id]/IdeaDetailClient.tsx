@@ -278,7 +278,7 @@ function IdeaOriginBanner({ idea }: { idea: Idea }) {
 
 function Stage2GateCard({ idea, onTakePublic }: { idea: Idea; onTakePublic: () => void }) {
   const checks = [
-    { label: 'Challenge / diagnosis completed', met: !!idea.diagnosis?.trim() },
+    { label: 'Problem / diagnosis completed', met: !!idea.diagnosis?.trim() },
     { label: 'Guiding policy completed', met: !!idea.guidingPolicy?.trim() },
     { label: 'At least 1 Coherent Action added', met: idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim() },
     {
@@ -1198,7 +1198,7 @@ function IdeaTab({
               <div className="mt-5 space-y-4">
                 {idea.summaryDiagnosis && (
                   <div>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Challenge (summary)</p>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Problem (summary)</p>
                     <p className="text-sm text-zinc-700">{idea.summaryDiagnosis}</p>
                   </div>
                 )}
@@ -1250,7 +1250,7 @@ function IdeaTab({
       {/* Sub-tab: Diagnosis */}
       {subTab === 'diagnosis' && (
         <div>
-          <FieldDisplay label="What's the Challenge?" value={localDiagnosis?.text} placeholder="Not yet completed — describe the challenge in 3–5 sentences" canEdit={canEdit} fieldKey="diagnosis.text" ideaId={idea.id} onSaved={v => updateDiagnosisField('text', v)} />
+          <FieldDisplay label="What's the Problem?" value={localDiagnosis?.text} placeholder="Not yet completed — describe the problem in 3–5 sentences" canEdit={canEdit} fieldKey="diagnosis.text" ideaId={idea.id} onSaved={v => updateDiagnosisField('text', v)} />
           <FieldDisplay label="The Obstacle" value={localDiagnosis?.obstacleDefined} placeholder="Not yet completed — define the specific obstacle preventing resolution" canEdit={canEdit} fieldKey="diagnosis.obstacleDefined" ideaId={idea.id} onSaved={v => updateDiagnosisField('obstacleDefined', v)} />
           <FieldDisplay label="Who Is Affected?" value={localDiagnosis?.whoAffected} placeholder="Not yet completed — name the groups, communities or institutions affected" canEdit={canEdit} fieldKey="diagnosis.whoAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('whoAffected', v)} />
           <FieldDisplay label="How Are They Affected?" value={localDiagnosis?.howAffected} placeholder="Not yet completed — describe the practical impact on those affected" canEdit={canEdit} fieldKey="diagnosis.howAffected" ideaId={idea.id} onSaved={v => updateDiagnosisField('howAffected', v)} />
@@ -1404,7 +1404,7 @@ function OverviewTab({ idea }: { idea: Idea }) {
       {idea.diagnosis && (
         <section>
           <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            The Challenge
+            The Problem
           </h3>
           <p className="text-sm leading-relaxed sm:text-base">{idea.diagnosis}</p>
         </section>
@@ -1684,7 +1684,19 @@ function TeamTab({
     }
   }
 
-  const groupTypes = ['MY_TEAM', 'COMMUNICATIONS', 'POLICY_DEVELOPMENT']
+  // §19-D Task 9b — "Communications" and "Policy Development" are removed from the Team
+  // page. Charlie's read: they sound like PERMISSIONS you grant someone after inviting
+  // them, not roles you pick from before you have. §22.4 specifies the role model that
+  // replaces them — Owner / Editor / Reviewer / Contributor — and this page should be
+  // aligned with it when the team feature is next properly touched.
+  //
+  // The two group types are NOT deleted from the schema, `GROUP_TYPE_LABELS`, or the
+  // /groups route: existing groups of either type keep working and keep rendering
+  // (`groups.filter` below is by type, and any group not in this list simply isn't
+  // OFFERED). Per the root CLAUDE.md §11 rule, nothing is removed from the data model
+  // without Charlie's explicit instruction; this brief asked to remove them from the
+  // page, which is what this does.
+  const groupTypes = ['MY_TEAM']
 
   return (
     <div className="space-y-6">
@@ -1861,8 +1873,10 @@ function TeamTab({
         )}
       </div>
 
-      {/* Groups */}
-      {loaded && groupTypes.map(groupType => {
+      {/* Groups. §19-D Task 9b — the OFFERED types are `groupTypes`; any group that
+          already exists of a retired type still renders, so removing the option from
+          the page never hides a team somebody has already built. */}
+      {loaded && [...groupTypes, ...groups.map(g => g.groupType).filter(t => !groupTypes.includes(t))].map(groupType => {
         const existing = groups.find(g => g.groupType === groupType)
 
         return (

@@ -62,7 +62,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
     "where we'll place relevant legislation for review once we have enough information to source data that's " +
     'helpful. You can answer the questions here in the chat, or type directly into the form in the second panel ' +
     'if you don\'t need my help. For a quick introduction if you don\'t know what to do, click “How this works” above.'
-  const FIRST_QUESTION = "What's the problem or challenge you want to address?"
+  const FIRST_QUESTION = "What's the problem you want to fix?"
 
   let openingBubbles: string[]
   let isFirstIdea = false

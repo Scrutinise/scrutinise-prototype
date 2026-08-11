@@ -48,7 +48,17 @@ const SURFACE_BY_STAGE: Record<string, FeedbackSurfaceKey> = {
   COHERENT_ACTIONS: 'COSTS',
 }
 
-const DEFAULT_OPENING = ["I'm Lex, your researcher and guide. What's the challenge you want to fix?"]
+const DEFAULT_OPENING = ["I'm Lex, your researcher and guide. What's the problem you want to fix?"]
+
+/** §19-D Task 9a — the exit save takes a few seconds; silence read as "nothing happened". */
+function Spinner() {
+  return (
+    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  )
+}
 
 type Tab = 'chat' | 'fields' | 'background'
 
@@ -243,6 +253,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // "Continue to …" — advance the Lex page (→ /page).
   const advancePage = useCallback(() => post('/page', { action: 'advance' }), [post])
 
+  // §19-D Task 3 — move the working context back into a stage already reached. The
+  // server owns the move; this is one POST answered with fresh canonical state, so the
+  // three panels follow automatically (the component holds no progress state of its own).
+  const goToPage = useCallback((page: string) => post('/page', { action: 'goto', page }), [post])
+
   // §19-C Task 1a — re-run the current stage's search after an honest failure.
   const retrySearch = useCallback(() => post('/search', { action: 'retry' }), [post])
 
@@ -287,17 +302,54 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // user's Save (a Lex proposal awaiting confirmation); everything else is already
   // server-side the moment it's saved, so there is nothing to lose by leaving.
   const [exitPrompt, setExitPrompt] = useState(false)
+  const [leaving, setLeaving] = useState(false)
   const unsavedField = state?.pages
     .flatMap((p) => p.fields)
     .find((f) => f.status === 'AWAITING_CONFIRMATION') ?? null
   const unsavedLabel = unsavedField?.label ?? null
   const leaveNow = useCallback(() => {
+    // The navigation itself takes a few seconds (a full page load of the idea view).
+    // Say so — the silence is what made "Save & exit" look like it had done nothing.
+    setLeaving(true)
     window.location.href = ideaId ? `/ideas/${ideaId}` : '/dashboard'
   }, [ideaId])
   const handleExit = useCallback(() => {
     if (unsavedField) setExitPrompt(true)
     else leaveNow()
   }, [unsavedField, leaveNow])
+
+  // §19-D Task 9a — "SAVE & EXIT" DID NOT EXIT. It closed the dialog and switched to the
+  // Fields tab: it neither saved nor left, and Charlie had to press Discard to get out.
+  // It now does both, in order — accept the pending proposal, wait for the write, then
+  // leave — with the button showing it is working rather than sitting silent for ~5s.
+  const saveAndExit = useCallback(async () => {
+    if (!ideaId) return
+    setLeaving(true)
+    try {
+      if (unsavedField) {
+        const res = await fetch(`/api/ideas/${ideaId}/fields`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fieldKey: unsavedField.key, action: 'accept' }),
+        })
+        // A failed save must not be followed by a silent exit — that loses the draft
+        // while looking like it saved it. Keep them here and say so.
+        if (!res.ok) {
+          setLeaving(false)
+          setExitPrompt(false)
+          setError('That didn’t save, so I’ve kept you here. Try Save again, or Discard to leave anyway.')
+          setTab('fields')
+          return
+        }
+      }
+      leaveNow()
+    } catch {
+      setLeaving(false)
+      setExitPrompt(false)
+      setError('That didn’t save, so I’ve kept you here. Try Save again, or Discard to leave anyway.')
+      setTab('fields')
+    }
+  }, [ideaId, unsavedField, leaveNow])
 
   // The accept CARD lives in chat for Lex-PROPOSED scalars (title/keywords/challenge/
   // pivotalObstacle/summaryDiagnosis). Box-authored fields (narrative/structured/loop/
@@ -352,16 +404,17 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 : 'You have edits that haven’t been saved yet.'}
             </p>
             <div className="flex flex-wrap gap-2 mt-4">
-              <button onClick={() => { setExitPrompt(false); setTab('fields') }}
-                className="text-sm font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90">
-                Save &amp; exit
+              <button onClick={saveAndExit} disabled={leaving}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-60 inline-flex items-center gap-2">
+                {leaving && <Spinner />}
+                {leaving ? 'Saving…' : 'Save & exit'}
               </button>
-              <button onClick={leaveNow}
-                className="text-sm font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50">
+              <button onClick={leaveNow} disabled={leaving}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-60">
                 Discard
               </button>
-              <button onClick={() => setExitPrompt(false)}
-                className="text-sm font-medium px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50">
+              <button onClick={() => setExitPrompt(false)} disabled={leaving}
+                className="text-sm font-medium px-3 py-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 disabled:opacity-60">
                 Stay
               </button>
             </div>
@@ -437,6 +490,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onAcceptOutput={(key, value) => transition(key, 'accept', value)}
                 onSkip={(key) => transition(key, 'skip')}
                 onReopen={(key) => transition(key, 'reopen')}
+                onGoToPage={goToPage}
                 causesApi={causesApi}
                 policyApi={policyApi}
                 actionsApi={actionsApi}
@@ -452,6 +506,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 legislationRefs={state.legislationRefs}
                 stageSearch={state.stageSearch}
                 research={state.research}
+                stage={state.stage}
                 stageLabel={state.pages.find((p) => p.key === state.stage)?.label ?? state.stage}
                 stageAccent={accentFor(state.stage)}
                 nextPage={state.nextPage}

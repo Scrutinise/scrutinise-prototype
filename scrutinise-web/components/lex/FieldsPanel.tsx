@@ -311,13 +311,29 @@ function StructuredField({
   useEffect(() => { setDraft(baseline) }, [field.status, JSON.stringify(source)]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const terminal = isTerminal(field)
-  const seeded = field.status === 'AWAITING_CONFIRMATION'
+  // §19-D Task 2a — THE BADGE FOLLOWS THE CONTENT, NOT THE STATUS.
+  //
+  // This read `field.status === 'AWAITING_CONFIRMATION'` alone, and the conductor put
+  // every structured field into that status even when it seeded `{currentLaw: '',
+  // whereItFails: ''}`. Result on the 10 Aug walk-through: the legal-landscape box
+  // carried "Proposed by Lex" over two empty inputs. Lex proposed nothing; the UI said
+  // it had. That is the §19-C never-claim invariant broken by the panel itself.
+  //
+  // `awaiting` still drives the Save-&-accept affordance (the field IS awaiting the
+  // user); only the CLAIM about Lex having proposed something is now content-gated.
+  const awaiting = field.status === 'AWAITING_CONFIRMATION'
+  const hasProposedContent =
+    awaiting &&
+    !!field.proposal &&
+    Object.values((field.proposal.value ?? {}) as Record<string, unknown>)
+      .some((v) => typeof v === 'string' && v.trim())
+  const seeded = awaiting
 
   return (
-    <div className={`rounded-lg border p-3 ${seeded ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
+    <div className={`rounded-lg border p-3 ${hasProposedContent ? 'border-blue-300 bg-blue-50/40' : 'border-zinc-200'}`}>
       <FieldHeader
         field={field}
-        right={seeded ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex — refine</span> : undefined}
+        right={hasProposedContent ? <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">proposed by Lex — refine</span> : undefined}
       />
       {terminal ? (
         <div className="ml-6 space-y-1">
@@ -381,22 +397,35 @@ const CLASS_STYLE: Record<CauseClassification, string> = {
 }
 
 // Material / contributory chips (§16.1). Material is visually distinct (amber).
+//
+// §19-D Task 9e — Charlie could not find how to classify a cause. It WAS built: two
+// 10px outline chips in a row of five grey text links, indistinguishable from labels.
+// An affordance nobody can see is not an affordance. Unclassified causes now carry the
+// question in words, and the choice reads as a choice.
 function ClassChips({ cause, busy, api }: { cause: CanonicalCause; busy: boolean; api: CausesApi }) {
-  const opts: { key: CauseClassification; label: string }[] = [
-    { key: 'MATERIAL', label: 'Material' },
-    { key: 'CONTRIBUTORY', label: 'Contributory' },
+  const opts: { key: CauseClassification; label: string; hint: string }[] = [
+    { key: 'MATERIAL', label: 'Material', hint: 'Remove it and the problem largely goes away — decisive' },
+    { key: 'CONTRIBUTORY', label: 'Contributory', hint: 'Worsens it, but not decisive' },
   ]
+  const unassessed = cause.classification === 'UNASSESSED'
   return (
-    <div className="flex gap-1">
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {unassessed && (
+        <span className="text-[11px] text-zinc-500">Is this material or contributory?</span>
+      )}
       {opts.map((o) => {
         const on = cause.classification === o.key
         return (
           <button key={o.key} disabled={busy} onClick={() => api.classify(cause.id, on ? 'UNASSESSED' : o.key)}
-            title={o.key === 'MATERIAL' ? 'Remove it and the problem largely goes away' : 'Worsens it, but not decisive'}
-            className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border disabled:opacity-40 ${
+            title={o.hint}
+            className={`text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 ${
               on
-                ? o.key === 'MATERIAL' ? 'border-amber-400 bg-amber-100 text-amber-800' : 'border-zinc-400 bg-zinc-100 text-zinc-700'
-                : 'border-zinc-200 text-zinc-400 hover:border-zinc-300'
+                ? o.key === 'MATERIAL'
+                  ? 'border-amber-400 bg-amber-100 text-amber-800 font-semibold'
+                  : 'border-zinc-400 bg-zinc-100 text-zinc-700 font-semibold'
+                : unassessed
+                  ? 'border-blue-300 bg-white text-blue-700 hover:bg-blue-50'
+                  : 'border-zinc-200 bg-white text-zinc-400 hover:border-zinc-300'
             }`}>
             {o.label}
           </button>
@@ -451,9 +480,12 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
           <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from past debates</span>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+      {/* §19-D Task 9e — the classification is a decision, so it gets its own line
+          above the incidental actions rather than sitting in a row of grey links. */}
+      <div className="mt-2">
         <ClassChips cause={cause} busy={busy} api={api} />
-        <span className="text-zinc-200">|</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 mt-1.5">
         <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
         {canGoDeeper ? (
           <button disabled={busy} onClick={() => setAdding((a) => !a)} className="text-[11px] text-zinc-400 hover:text-zinc-700">+ cause beneath</button>
@@ -669,11 +701,19 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
   const chosen = option.status === 'CHOSEN'
   const accent = accentFor('GUIDING_POLICY')
   const hasDetail = !!(option.caseFor || option.caseAgainst || option.ruleOutReason || option.mechanismTypes.length)
+  // §19-D Task 9f — the cards did not visibly collapse to their title, and there were
+  // two reasons. (1) The +/− toggle only appeared when the option had a case for or
+  // against, and the 10 Aug options were user-added with neither — so there was nothing
+  // to press. (2) The Edit / Rule out / Delete row rendered BELOW the title whether the
+  // card was expanded or not, so even a collapsed card was three lines tall and never
+  // read as collapsed. The toggle is now unconditional and the actions live inside the
+  // expanded body: collapsed means title, status and chevron. Nothing else.
   return (
     <div className={`rounded-lg border ${chosen ? `${accent.border} ${accent.bg} border-2` : 'border-zinc-200 bg-white'}`}>
       <button
-        onClick={() => hasDetail && setExpanded((e) => !e)}
-        className={`w-full text-left p-2 flex items-start gap-2 ${hasDetail ? 'cursor-pointer' : 'cursor-default'}`}
+        onClick={() => setExpanded((e) => !e)}
+        className="w-full text-left p-2 flex items-start gap-2 cursor-pointer"
+        aria-expanded={expanded}
       >
         <p className={`flex-1 text-sm ${chosen ? `font-semibold ${accent.text}` : 'text-zinc-800'}`}>
           {option.approach}
@@ -681,35 +721,42 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
         <span className={`shrink-0 text-[9px] font-semibold uppercase tracking-wide ${chosen ? accent.text : badge.cls}`}>
           {badge.label}
         </span>
-        {hasDetail && <span className="shrink-0 text-[11px] text-zinc-400 w-3 text-center">{expanded ? '−' : '+'}</span>}
+        <span className="shrink-0 text-[11px] text-zinc-400 w-3 text-center">{expanded ? '−' : '+'}</span>
       </button>
 
       {expanded && (
-        <div className="px-2 pb-2 space-y-1">
-          {option.mechanismTypes.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {option.mechanismTypes.map((m) => <span key={m} className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">{m}</span>)}
+        <>
+          <div className="px-2 pb-2 space-y-1">
+            {option.mechanismTypes.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {option.mechanismTypes.map((m) => <span key={m} className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">{m}</span>)}
+              </div>
+            )}
+            {option.caseFor && <p className="text-[11px] text-green-800"><span className="font-semibold">For:</span> {option.caseFor}</p>}
+            {option.caseAgainst && <p className="text-[11px] text-red-800"><span className="font-semibold">Against:</span> {option.caseAgainst}</p>}
+            {option.ruleOutReason && <p className="text-[11px] text-zinc-500 italic">Ruled out: {option.ruleOutReason}</p>}
+            {!hasDetail && (
+              <p className="text-[11px] text-zinc-400">
+                No case for or against yet — an approach nobody has argued against hasn’t been weighed. Edit to add both.
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 px-2 pb-2">
+            {option.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
+            <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
+            <button disabled={busy} onClick={() => setRuling((r) => !r)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Rule out</button>
+            <button disabled={busy} onClick={() => api.remove(option.id)} className="text-[11px] text-zinc-400 hover:text-red-600">Delete</button>
+          </div>
+          {ruling && (
+            <div className="px-2 pb-2 flex gap-1.5">
+              <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why rule it out?"
+                className="flex-1 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+              <button disabled={busy} onClick={() => { api.ruleOut(option.id, reason.trim()); setRuling(false) }}
+                className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Set</button>
             </div>
           )}
-          {option.caseFor && <p className="text-[11px] text-green-800"><span className="font-semibold">For:</span> {option.caseFor}</p>}
-          {option.caseAgainst && <p className="text-[11px] text-red-800"><span className="font-semibold">Against:</span> {option.caseAgainst}</p>}
-          {option.ruleOutReason && <p className="text-[11px] text-zinc-500 italic">Ruled out: {option.ruleOutReason}</p>}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2 px-2 pb-2">
-        {option.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
-        <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
-        <button disabled={busy} onClick={() => setRuling((r) => !r)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Rule out</button>
-        <button disabled={busy} onClick={() => api.remove(option.id)} className="text-[11px] text-zinc-400 hover:text-red-600">Delete</button>
-      </div>
-      {ruling && (
-        <div className="px-2 pb-2 flex gap-1.5">
-          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why rule it out?"
-            className="flex-1 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-          <button disabled={busy} onClick={() => { api.ruleOut(option.id, reason.trim()); setRuling(false) }}
-            className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Set</button>
-        </div>
+        </>
       )}
     </div>
   )
@@ -812,6 +859,13 @@ function CostRangeEditor({
 }) {
   const v = value ?? { low: null, high: null, unit: null, basis: null, benchmarkId: null, userOverride: false }
   const set = (patch: Partial<CostRange>) => onChange({ ...v, ...patch })
+  // §19-D Task 7 — the same scale control as the cost-line adder. Typed amounts are
+  // held separately from the stored value, which is always whole pounds.
+  // Seeded from whatever is already stored (in pounds, so scale starts at 1). The
+  // editor remounts each time an action is opened for editing, so this is enough.
+  const [rawLow, setRawLow] = useState(value?.low != null ? String(value.low) : '')
+  const [rawHigh, setRawHigh] = useState(value?.high != null ? String(value.high) : '')
+  const [scale, setScale] = useState(1)
   return (
     <div className="rounded border border-zinc-200 p-1.5">
       <div className="flex items-center justify-between">
@@ -819,19 +873,39 @@ function CostRangeEditor({
         <span className="text-[9px] text-zinc-400">on {fallsOn}</span>
       </div>
       <div className="flex gap-1 mt-1">
-        <input type="number" value={v.low ?? ''} disabled={busy} placeholder="low"
-          onChange={(e) => set({ low: e.target.value === '' ? null : Number(e.target.value), userOverride: true })}
-          className="w-16 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-        <input type="number" value={v.high ?? ''} disabled={busy} placeholder="high"
-          onChange={(e) => set({ high: e.target.value === '' ? null : Number(e.target.value), userOverride: true })}
-          className="w-16 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+        <input type="number" value={rawLow} disabled={busy} placeholder="low"
+          onChange={(e) => { setRawLow(e.target.value); set({ low: e.target.value === '' ? null : Number(e.target.value) * scale, userOverride: true }) }}
+          className="w-14 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+        <input type="number" value={rawHigh} disabled={busy} placeholder="high"
+          onChange={(e) => { setRawHigh(e.target.value); set({ high: e.target.value === '' ? null : Number(e.target.value) * scale, userOverride: true }) }}
+          className="w-14 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+        <select value={scale} disabled={busy}
+          onChange={(e) => {
+            const s = Number(e.target.value)
+            setScale(s)
+            set({
+              low: rawLow === '' ? null : Number(rawLow) * s,
+              high: rawHigh === '' ? null : Number(rawHigh) * s,
+              userOverride: true,
+            })
+          }}
+          className="text-[11px] p-1 rounded border border-zinc-200 bg-white">
+          <option value={1}>£</option>
+          <option value={1000}>£k</option>
+          <option value={1000000}>£m</option>
+          <option value={1000000000}>£bn</option>
+        </select>
         <input value={v.unit ?? ''} disabled={busy} placeholder="unit"
           onChange={(e) => set({ unit: e.target.value || null })}
-          className="w-16 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
+          className="w-14 text-xs p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <select disabled={busy} value={v.benchmarkId ?? ''}
           onChange={(e) => {
             const b = benchmarks.find((x) => x.id === e.target.value)
             if (!b) { set({ benchmarkId: null }); return }
+            // Keep the typed boxes in step with the benchmark's own figures.
+            setScale(1)
+            setRawLow(b.low != null ? String(b.low) : '')
+            setRawHigh(b.high != null ? String(b.high) : '')
             onChange({
               low: b.low, high: b.high, unit: b.unit,
               basis: `${b.metric} — ${b.source}${b.priceYear ? ` (${b.priceYear} prices)` : ''}`,
@@ -857,6 +931,11 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
   const [open, setOpen] = useState(false)
   const [d, setD] = useState<CostLineDraft>({ label: '', costType: 'STAFF', category: 'IMPLEMENTATION', staffLevel: 'MID' })
   const [suggesting, setSuggesting] = useState(false)
+  // §19-D Task 7 — the amount as typed, kept apart from the amount as stored. The
+  // stored value is always in whole pounds; `scale` is only ever a multiplier on entry.
+  const [rawLow, setRawLow] = useState('')
+  const [rawHigh, setRawHigh] = useState('')
+  const [scale, setScale] = useState(1)
   const set = (p: Partial<CostLineDraft>) => setD((x) => ({ ...x, ...p }))
 
   if (!open) {
@@ -903,7 +982,14 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
               setSuggesting(true)
               const s = await api.suggest(d.staffLevel as 'JUNIOR' | 'MID' | 'SENIOR', d.fteCount!, d.durationMonths!)
               setSuggesting(false)
-              if (s) set({ low: s.low, high: s.high, basis: s.basis, benchmarkId: s.benchmarkId, priceYear: s.priceYear })
+              if (s) {
+                set({ low: s.low, high: s.high, basis: s.basis, benchmarkId: s.benchmarkId, priceYear: s.priceYear })
+                // Keep the typed-amount fields in step with the suggestion, in whole
+                // pounds — otherwise the boxes show the old figures over new values.
+                setScale(1)
+                setRawLow(s.low != null ? String(Math.round(s.low)) : '')
+                setRawHigh(s.high != null ? String(Math.round(s.high)) : '')
+              }
             }}
             className="text-[11px] px-1.5 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40">
             {suggesting ? '…' : 'suggest from ASHE'}
@@ -911,18 +997,51 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
         </div>
       )}
 
-      <div className="flex gap-1">
-        <input type="number" value={d.low ?? ''} placeholder="low £" disabled={busy}
-          onChange={(e) => set({ low: e.target.value === '' ? null : Number(e.target.value) })}
+      {/* §19-D Task 7 — a scale, and a live echo of what was actually entered.
+          The 10 Aug run stored `low=57` against "Tax collection cost" and the summary
+          reported "£57/year" for an enforcement cost. The arithmetic was right; the
+          user had no way to say "million" and no read-back to notice it by. */}
+      <div className="flex gap-1 items-center">
+        <input type="number" value={rawLow} placeholder="low £" disabled={busy}
+          onChange={(e) => { setRawLow(e.target.value); set({ low: e.target.value === '' ? null : Number(e.target.value) * scale }) }}
           className="w-20 text-[11px] p-1 rounded border border-zinc-200" />
-        <input type="number" value={d.high ?? ''} placeholder="high £" disabled={busy}
-          onChange={(e) => set({ high: e.target.value === '' ? null : Number(e.target.value) })}
+        <input type="number" value={rawHigh} placeholder="high £" disabled={busy}
+          onChange={(e) => { setRawHigh(e.target.value); set({ high: e.target.value === '' ? null : Number(e.target.value) * scale }) }}
           className="w-20 text-[11px] p-1 rounded border border-zinc-200" />
+        <select value={scale} disabled={busy}
+          onChange={(e) => {
+            const s = Number(e.target.value)
+            setScale(s)
+            set({
+              low: rawLow === '' ? null : Number(rawLow) * s,
+              high: rawHigh === '' ? null : Number(rawHigh) * s,
+            })
+          }}
+          className="text-[11px] p-1 rounded border border-zinc-200 bg-white">
+          <option value={1}>£</option>
+          <option value={1000}>£ thousand</option>
+          <option value={1000000}>£ million</option>
+          <option value={1000000000}>£ billion</option>
+        </select>
       </div>
+      {(d.low != null || d.high != null) && (
+        <p className="text-[10px] text-zinc-500">
+          That’s {d.low != null ? `£${Math.round(d.low).toLocaleString()}` : '?'}
+          {d.high != null && d.high !== d.low ? `–£${Math.round(d.high).toLocaleString()}` : ''}
+          {d.high == null && d.low != null ? ' — no upper bound given, so it will be treated as a floor' : ''}.
+        </p>
+      )}
       <input value={d.basis ?? ''} onChange={(e) => set({ basis: e.target.value })} placeholder="basis / assumption — where does this number come from?"
         className="w-full text-[11px] p-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
       <div className="flex gap-2">
-        <button disabled={busy || !d.label.trim()} onClick={() => { api.add(actionId, d); setD({ label: '', costType: 'STAFF', category: 'IMPLEMENTATION', staffLevel: 'MID' }); setOpen(false) }}
+        <button disabled={busy || !d.label.trim()} onClick={() => {
+          // §19-D Task 7 — `staffLevel` used to travel with a non-staff line: the draft
+          // defaults it to MID and nothing cleared it when the type changed, which is
+          // how a CAPITAL line came to be stored with staffLevel=MID.
+          api.add(actionId, d.costType === 'STAFF' ? d : { ...d, staffLevel: null, fteCount: null, durationMonths: null })
+          setD({ label: '', costType: 'STAFF', category: 'IMPLEMENTATION', staffLevel: 'MID' })
+          setRawLow(''); setRawHigh(''); setScale(1); setOpen(false)
+        }}
           className={saveClass(!!d.label.trim())}>Add cost</button>
         <button disabled={busy} onClick={() => setOpen(false)}
           className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">Cancel</button>
@@ -1076,7 +1195,8 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
 // A3: on Save the next active field scrolls to the top of the panel.
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
-  onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, causesApi, policyApi, actionsApi, costLinesApi,
+  onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
+  causesApi, policyApi, actionsApi, costLinesApi,
 }: {
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
@@ -1093,6 +1213,8 @@ export default function FieldsPanel({
   onAcceptOutput: (key: string, value: string | string[]) => void
   onSkip: (key: string) => void
   onReopen: (key: string) => void
+  /** §19-D Task 3 — move the working context into an already-reached stage. */
+  onGoToPage: (pageKey: string) => void
   causesApi: CausesApi
   policyApi: PolicyApi
   actionsApi: ActionsApi
@@ -1139,8 +1261,13 @@ export default function FieldsPanel({
         const isLocked = page.status === 'locked'
         const isActive = page.status === 'active'
         const accent = accentFor(page.key)
+        // §19-D Task 3 — a stage the user has already reached but isn't in. Clicking
+        // "Work on this" moves chat, panel and the save path there together; the header
+        // click keeps its old job (expand/collapse), because conflating "let me look at
+        // that" with "take me back there" is how you lose your place by accident.
+        const canReEnter = page.reachable && !isActive
         // A2: a completed stage collapses under its title unless the user expands it.
-        const collapsible = page.status === 'complete'
+        const collapsible = page.status === 'complete' || page.status === 'visited'
         const collapsed = collapsible && !manualExpanded.has(page.key)
         const toggle = () => setManualExpanded((s) => { const n = new Set(s); n.has(page.key) ? n.delete(page.key) : n.add(page.key); return n })
         // §19-B Task 3: within the ACTIVE stage, everything past the current field is
@@ -1163,6 +1290,16 @@ export default function FieldsPanel({
               </span>
               {!isLocked && total > 0 && <span className="text-[11px] text-zinc-400">{done} of {total}</span>}
               {isLocked && <span className="text-[11px] text-zinc-300">soon</span>}
+              {canReEnter && (
+                <button
+                  disabled={busy}
+                  onClick={(e) => { e.stopPropagation(); onGoToPage(page.key) }}
+                  title="Move back into this section — Lex, the research panel and your edits all follow. Nothing later is lost."
+                  className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border border-zinc-300 text-zinc-500 hover:border-blue-400 hover:text-blue-600 disabled:opacity-40"
+                >
+                  Work on this
+                </button>
+              )}
               {collapsible && <span className="text-[11px] text-zinc-400 w-3 text-center">{collapsed ? '+' : '−'}</span>}
             </div>
 
