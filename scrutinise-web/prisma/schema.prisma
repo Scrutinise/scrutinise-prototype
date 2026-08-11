@@ -2597,6 +2597,103 @@ model CorpusAct {
   @@map("corpus_acts")
 }
 
+// ── POSITION GRAPH (Stage 2D sprint 1, BRIEF_GRAPH_2D1) ──────────────────────
+// The entity spine and the OBSERVED edges: who gave evidence to which inquiry, who
+// declared an interest in which organisation. DDL of record is
+// scripts/ingest/position-graph/schema.sql, applied by that directory's setup.ts —
+// those files, not these models, are what gets applied.
+//
+// Declared here for the same single reason as CorpusAct above: without a model,
+// `prisma migrate diff` sees five tables the schema does not know about and proposes
+// DROPPING them. Nothing reads these through the Prisma client; the sweeps and the
+// report use raw SQL (multi-row upserts with ON CONFLICT arbitration that Prisma
+// cannot express). These models exist to protect the tables, not to query them.
+//
+// NOT the citation graph. `scripts/ingest/graph/` and its edges table are the Tier-1
+// legislation graph (an Act cites/amends an Act). This is the POSITION graph: what an
+// actor demonstrably did. Two different things, deliberately not merged.
+model GraphEntity {
+  id               BigInt    @id @default(autoincrement())
+  kind             String
+  canonicalName    String    @map("canonical_name")
+  nameNorm         String    @map("name_norm")
+  companiesHouseNo String?   @map("companies_house_no")
+  charityNo        String?   @map("charity_no")
+  parlMemberId     Int?      @map("parl_member_id")
+  parlCisId        Int?      @map("parl_cis_id")
+  parlIdmsId       String?   @map("parl_idms_id")
+  twfyPersonId     String?   @map("twfy_person_id")
+  keySource        String    @map("key_source")
+  confidence       Float     @default(1.0)
+  firstSeen        DateTime? @map("first_seen") @db.Date
+  lastSeen         DateTime? @map("last_seen") @db.Date
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@map("graph_entity")
+}
+
+model GraphAlias {
+  id          BigInt    @id @default(autoincrement())
+  entityId    BigInt    @map("entity_id")
+  surface     String
+  surfaceNorm String    @map("surface_norm")
+  source      String
+  nSeen       Int       @default(1) @map("n_seen")
+  firstSeen   DateTime? @map("first_seen") @db.Date
+  lastSeen    DateTime? @map("last_seen") @db.Date
+
+  @@unique([entityId, surface, source])
+  @@index([surfaceNorm])
+  @@map("graph_alias")
+}
+
+model GraphEdge {
+  id             BigInt    @id @default(autoincrement())
+  subjectId      BigInt    @map("subject_id")
+  predicate      String
+  objectKind     String    @map("object_kind")
+  objectEntityId BigInt?   @map("object_entity_id")
+  objectRef      String    @map("object_ref")
+  objectLabel    String?   @map("object_label")
+  firstSeen      DateTime? @map("first_seen") @db.Date
+  lastSeen       DateTime? @map("last_seen") @db.Date
+  nEvidence      Int       @default(0) @map("n_evidence")
+
+  @@unique([subjectId, predicate, objectKind, objectRef])
+  @@index([subjectId, predicate])
+  @@index([objectKind, objectRef])
+  @@index([predicate])
+  @@map("graph_edge")
+}
+
+model GraphEvidence {
+  id         BigInt    @id @default(autoincrement())
+  edgeId     BigInt    @map("edge_id")
+  sectionId  String    @map("section_id")
+  sourceUrl  String?   @map("source_url")
+  extract    String?
+  observedOn DateTime? @map("observed_on") @db.Date
+
+  @@unique([edgeId, sectionId])
+  @@index([sectionId])
+  @@map("graph_evidence")
+}
+
+model GraphMergeLog {
+  id            BigInt   @id @default(autoincrement())
+  kind          String
+  keptEntityId  BigInt?  @map("kept_entity_id")
+  mergedSurface String   @map("merged_surface")
+  mergedNorm    String   @map("merged_norm")
+  reason        String
+  confidence    Float
+  source        String
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([keptEntityId])
+  @@map("graph_merge_log")
+}
+
 // Central ingest work queue — workers claim rows atomically via FOR UPDATE SKIP LOCKED.
 // Populated by queue-populator.ts before workers start.
 model IngestQueue {
