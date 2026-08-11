@@ -49,10 +49,15 @@ import type { SearchResultType } from './page1-config'
  * specific proposition on a specific date, with no inference required. That is a position edge of
  * the highest confidence tier. Petitions are the same shape for public salience.
  *
- * ⚠ The brief cites `POSITION_GRAPH_DESIGN.md §3` for the design; **that file is not in this repo
- * as of 2026-08-10** (the only graph document present is `docs/GRAPH_TIER1_REPORT.md`, which is
- * the legislation citation graph, a different thing). The reference is recorded as given rather
- * than silently corrected or silently dropped — see docs/CLAUDE.md §19.
+ * The design lives in `docs/POSITION_GRAPH_DESIGN.md` §3 ("Nodes and edges"). ⚠ That file did not
+ * exist in this working tree when the deferral was made on 2026-08-10 and arrived shortly after;
+ * the original note said so rather than citing a document nobody here could open (docs/CLAUDE.md
+ * §19). It is "design only, nothing built", with implementation slated for Stage 2D.
+ *
+ * ⚠ As of 2026-08-11 its §3 edge list does NOT name an EDM-derived edge — it carries
+ * `declared-interest`, `voted`, `gave-evidence-to` and others. So the destination is real but the
+ * specific edge these two collections are being held for is not yet written down there. If that
+ * is still true when Stage 2D starts, one of the two documents is wrong and this is the seam.
  */
 export const DEFERRED_TO_GRAPH: Record<string, string> = {
   'early-day-motions': 'a named list of members endorsing a proposition on a date — a high-confidence position-graph edge, not a document to retrieve and read',

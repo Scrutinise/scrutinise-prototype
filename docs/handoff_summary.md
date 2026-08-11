@@ -50,6 +50,14 @@ THE LAST 0.92% IS DISPOSED OF BY NAME.** Executes `BRIEF_SEARCH_S2C3.md` §1/§2
 `tsc` + `next build` clean; **`check:corpus-types` 69/69 → 111/111**, mutation-tested (4 planted
 defects, 4 caught); `check:annotation-titles` 15/15, `check:stream-coverage` 3/3 live,
 `check:score-scope` 36/36, `check:flags` 50/50, `check:llm-guards` 9/9.
+⚠⚠ **SUPERSEDED — GATE 2 IS OPEN. Do not act on the gate paragraph below; the top section of this
+file is authoritative and INGEST V33 §2 (11 Aug 01:02 UTC) did both missing steps.** The ANN index
+was rebuilt to `unindexed=0` and `vector-serve` restarted (`started_at` 11 Aug 00:44, confirmed
+live). **`vector-reindex` is DONE — do not re-run it.** ⚠ The finish time below is also wrong and
+the error is mine: the checkpoint says **15:33 UTC**; I wrote 16:33, which is that instant in BST
+labelled UTC. Corrected totals of record are ingest's: 25.0h elapsed, and `corpus_vec` reconciles
+at **22,518,608** after orphan hygiene, not the 22,607,985 below. Kept unedited beneath this marker
+because the CHANGE_LOG is an audit trail, not a draft.
 ⚠⚠ **THE EMBED FINISHED — AND §4 IS STILL BLOCKED. THIS IS THE FIRST THING TO ACT ON.**
 `v33-vec-catchup.ts --embed` **completed 2026-08-10 16:33 UTC: 129/129 shards, 768,085 vectors, 0
 misses, $36.51**, `corpus_vec` 22,607,985 rows. **But Gate 2 protects "do not measure across an
@@ -93,8 +101,11 @@ the gold reports**.
 **§2 — new third verdict `deferred-to-graph`** for `early-day-motions` (60,737) + `petitions`
 (49,529). ⚠ **DOCUMENTATION, NOT ENFORCEMENT** — unlike `EXCLUDED_BY_DESIGN` it changes nothing at
 runtime, so each `note` states what retrieval still does with them ("still returned by the
-unrouted/fail-open path"). ⚠ The brief cites `POSITION_GRAPH_DESIGN.md §3`; **that file is not in
-this repo** — recorded as given rather than silently corrected (§19).
+unrouted/fail-open path"). ⚠ The brief cites `POSITION_GRAPH_DESIGN.md §3`, which was not in the
+tree at the time — **it has since arrived**, §3 is "Nodes and edges", so the citation was right and
+the file simply had not reached here. ⚠ **But its §3 edge list does not yet name an EDM-derived
+edge** (`declared-interest`, `voted`, `gave-evidence-to`, …), so the destination is real while the
+specific edge these two collections are held for is unwritten. **Seam to resolve at Stage 2D.**
 **§3 — the remaining nine deferred WITH A DATE**, in a new matrix section computed from the live
 table: `cma-cases` 22,898, `ofgem` 17,161, `ofcom` 4,169, `uk-treaties` 3,264, `independent-reviews`
 667, `tax-treaties-dta` 324, `cps-guidance` 270, `inquiry-evidence` 90, `lgsco` 40 = **48,883**.
