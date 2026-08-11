@@ -2,17 +2,35 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 18:30 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS BUILT,
-PILOTED, MEASURED AND LICENCE-CHECKED — AND NOTHING IS SEEDED, ON PURPOSE.** Executes
-`BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C. CHANGE_LOG (2026-08-11 18:30 UTC); full detail in
-**`docs/V34_POLITICAL_SOURCES_REPORT.md`**. `tsc` clean bar the documented pre-existing errors.
-⚠ **PAUSED MID-SPRINT AT CHARLIE'S REQUEST. NO GIT HAS RUN. `commit-all.sh` IS WRITTEN AND
-READY BUT NOT EXECUTED — that is the first action next session.**
-⚠ **THE SEEDS ARE POST-PUSH AND MUST NOT RUN BEFORE IT** (`INGEST_PLAYBOOK` §8). Seeding first
-would have the OLD deployed worker mark rows `done`, and a `done` row does not come back. Order
-after push + redeploy: `seed-rate-limits.ts` → `v34-seed-division-votes.ts --seed` (5,645) →
-`v34-seed-impact-assessments.ts --seed` (1,181) → `v34-seed-consultations.ts --seed` (7,447),
-then each `--verify` (attempted-vs-stored, never a SUCCESS line).
+*Last updated: 2026-08-11 19:05 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS PUSHED
+AND SEEDED — 14,274 ROWS PENDING — AND THE SMOKE TEST CAUGHT A BUG THAT WOULD HAVE FAILED
+EVERY LORDS DIVISION.** Executes `BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C in full.
+CHANGE_LOG (2026-08-11 18:30 UTC); full detail in **`docs/V34_POLITICAL_SOURCES_REPORT.md`**.
+`tsc` clean bar the documented pre-existing errors. Pushed `6759dea..deddb38` then `0ee4158`;
+`Ingest` + `Ops` redeployed 18:36 UTC; seeds run only after that.
+⚠ **THE DRAIN IS THE OPEN ITEM. Next session: run the three `--verify` modes and score the
+actual against the prediction** — `v34-seed-division-votes.ts --verify`,
+`v34-seed-impact-assessments.ts --verify`, `v34-seed-consultations.ts --verify`. Nothing else
+is outstanding on the brief.
+**SEEDED AND RECONCILED:** `commons-divisions-votes` **2,361** ✓ exact · `lords-divisions-votes`
+**3,284** ✓ exact · `impact-assessments` **1,181** ✓ exact · `consultations` **7,448** (+1 on the
+measured 7,447 — published between measure and seed; that is the 2% tolerance working, not a
+fault). Breakers clean on all three new sources.
+⚠ **THE SMOKE TEST EARNED ITS KEEP: two write-path bugs survived a clean `tsc` and four passing
+pilots.** (1) **The Lords lists every teller TWICE** — division 3698 gives 64+2+95+2 = 163 rows
+for 159 actual peers; **Commons does it 0 times**. That duplicate `member_id` made Postgres
+reject the entire roll-call, so **one duplicate would have failed all 3,284 Lords divisions**.
+Deduped at the source; the member list now matches the API's authoritative counts exactly.
+⚠ Commons tellers are EXCLUDED from the lobby totals, Lords tellers are INCLUDED — a real
+difference between the Houses, and my own §A pilot's Lords figures were the double-counted ones.
+(2) `division_date` interpolated to a bare `''::date` on a dateless division, which Postgres
+rejects. Corrected prediction **~2.55M** `division_votes`.
+⚠ **Ops declining to restart `Ingest` on its 18:45:32 cycle was CORRECT** — the heartbeat was 7
+min stale against a 10-min threshold. If the queue looks stalled, read the threshold before
+reaching for a manual `serviceInstanceRedeploy`.
+⚠ **Stamp correction: commit `0ee4158` says `Date: 2026-08-11 18:47 UTC`; the real clock was
+18:36.** Not amended — `Main` is shared with concurrent sessions and force-pushing risks their
+work. Noted so history still lines up.
 **§A — V28 BUILT THE DIVISION PIPELINE, NEVER RAN IT, AND IT WOULD HAVE INGESTED 25 OF 2,361.**
 The Commons list endpoint hard-caps `take` at 25 (Lords honours any value) and V28 broke out of
 the walk on a short page — a 99% shortfall that reads as success. Also recovered

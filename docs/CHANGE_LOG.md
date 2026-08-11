@@ -181,10 +181,39 @@ NOT duplicated. Fixed in pilot: `final_outcome_attachments` placeholders with no
 were rendering as blank `[government-response]` lines — a document that does not exist, presented
 as the government's response.
 
+**⚠ THE WRITE PATH HAD TWO BUGS A tsc-CLEAN BUILD AND FOUR PASSING PILOTS HID COMPLETELY**, both
+found by `v34-dv-smoke.ts` writing to the REAL tables and reading back BEFORE the drain — the
+"built inert hides write-path bugs" check done first rather than discovered at row 3,000.
+**(1) THE LORDS LISTS EVERY TELLER TWICE** — once in `contents`/`notContents`, again in
+`contentTellers`/`notContentTellers`. Division 3698: 64+2+95+2 = **163 rows for 159 actual peers**,
+4 members duplicated; **Commons does this 0 times** (same check, division 2411). That is a
+duplicate `member_id` inside one division, so Postgres rejected the whole roll-call —
+*"ON CONFLICT DO UPDATE command cannot affect row a second time"*. **One duplicate would have
+failed EVERY Lords division, all 3,284**, and it double-counted tellers in the compiled text.
+Deduped at the source with the teller flag merged, so text and structured rows agree; after the
+fix the member list matches the API's own authoritative counts EXACTLY (3698→64/95, 19→164/168).
+⚠ **The houses differ for a real reason, now documented not smoothed**: Commons tellers are
+EXCLUDED from the lobby totals, Lords tellers are INCLUDED. My own §A pilot figures for Lords
+(aye=66/no=97 on 3698) were the double-counted ones. **(2) `division_date` interpolated to a bare
+`''::date`** on a dateless division, which Postgres rejects — `NULLIF`, with a synthetic null-date
+case now in the smoke test. Corrected prediction: **~2.55M** `division_votes`, not 2.56M.
+
+**SEEDED, after the push and the redeploy and in that order** — Ops starts `Ingest` the moment
+pending > 0, so seeding first would have run Lords rows against the pre-fix worker:
+`commons-divisions-votes` **2,361** (95 pages) ✓ exact · `lords-divisions-votes` **3,284**
+(33 pages) ✓ exact · `impact-assessments` **1,181** ✓ exact · `consultations` **7,448** (+1 vs the
+measured 7,447 — published between the two runs, which is the 2% reconciliation tolerance working
+rather than a fault). **14,274 pending rows.** Breakers clean on all three new sources.
+⚠ Ops declined to restart `Ingest` on its 18:45:32 UTC cycle and that was CORRECT — the heartbeat
+was 7 min stale against a 10-min threshold. The system was working; the impatience was mine.
+
 **COSTS IN FULL** — ~257 MB R2 (~$0.004/mo), ~22,500 Class A writes (~$0.10 one-off), **~500 MB
 Neon (~$0.18/mo, almost all `division_votes`)**, **~64 M tokens to embed**. ⚠ The embedding line is
 given as a TOKEN COUNT not a pound figure: §1a prices Railway/Neon/R2 and **not** embedding, and
 inventing a rate would be worse than saying so. Run it under V33's `--max-cost` ceiling.
+⚠ **Stamp correction:** the fix commit `0ee4158` carries `Date: 2026-08-11 18:47 UTC`; the real
+clock was **18:36**. Not amended because `Main` is shared with concurrent sessions and a
+force-push there risks their work. Recorded here so the history can still be lined up.
 
 ## SEARCH Stage 2C-4 + GRAPH Stage 2D-1 — the ANN retrieves 70.4% of what it holds, and the position graph needs no LLM (2026-08-11 04:19 UTC)
 

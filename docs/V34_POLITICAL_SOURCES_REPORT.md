@@ -366,6 +366,71 @@ hours); consultations ~35 min at 500ms/3 workers.
 
 ---
 
+## The write path had two bugs a clean build hid — found before the drain, not during it
+
+`tsc` was clean, the pilots all passed, and the structured write path was still broken in two
+ways. Both were found by `v34-dv-smoke.ts`, which writes to the **real** `divisions` /
+`division_votes` tables, reads back, and deletes what it wrote — the
+"built-inert-hides-write-path-bugs" check done *before* 5,645 rows go through it.
+
+**1. The Lords lists every teller twice.** Once in `contents`/`notContents`, and again in
+`contentTellers`/`notContentTellers`. Measured on division 3698:
+
+| array | rows |
+|---|---:|
+| `contents` | 64 |
+| `contentTellers` | 2 |
+| `notContents` | 95 |
+| `notContentTellers` | 2 |
+| **total concatenated** | **163** |
+| **actual distinct peers** | **159** |
+
+Four members appear in two arrays each. **The Commons does not do this** — the same check on
+division 2411 found zero. Concatenating produced a duplicate `member_id` inside a single
+division, so Postgres rejected the entire roll-call with *"ON CONFLICT DO UPDATE command
+cannot affect row a second time"*. **One duplicate would have failed every Lords division —
+all 3,284 of them.** It also double-counted tellers in the compiled text, rendering aye/no
+totals above the official ones.
+
+Deduped at the source so the text and the structured rows agree, with the teller flag merged
+rather than a second row appended. After the fix the member list matches the API's own
+authoritative counts exactly — division 3698 → 64/95, division 19 → 164/168.
+
+⚠ **The two houses differ for a real reason, now documented rather than smoothed over:**
+Commons tellers are *excluded* from the lobby totals and appear only in the teller arrays;
+Lords tellers are *included* in the totals and appear in both. My earlier Lords figures in
+the §A pilot (aye=66, no=97 on division 3698) were the double-counted ones.
+
+**2. `division_date` was interpolated as a bare `''::date` when a division had no date**,
+which Postgres rejects outright. Fixed with `NULLIF`, and the smoke test carries a synthetic
+null-date division so the case stays covered.
+
+Corrected prediction: the Lords member-row estimate was inflated by roughly the teller count
+per division (~4), so **~2.55M rather than 2.56M** — under 1%, but the number to score
+against is the corrected one.
+
+---
+
+## What actually happened when it was seeded
+
+Pushed (`6759dea..deddb38`, then the fix as `0ee4158`), Railway redeployed `Ingest` and `Ops`
+at 18:36 UTC, and only then were the seeds run — in that order, because Ops starts `Ingest`
+as soon as pending > 0 and seeding first would have run Lords rows against the pre-fix worker.
+
+| corpus | predicted | seeded | reconciled |
+|---|---:|---:|---|
+| `commons-divisions-votes` | 2,361 | **2,361** (95 pages) | ✓ exact |
+| `lords-divisions-votes` | 3,284 | **3,284** (33 pages) | ✓ exact |
+| `impact-assessments` | 1,181 | **1,181** | ✓ exact |
+| `consultations` | 7,447 | **7,448** | ✓ +1 published between the measure and the seed |
+| **total pending** | | **14,274** | |
+
+The consultation `+1` is the reconciliation tolerance doing its job rather than a fault: the
+search index shifts under a deep walk, which is why the check allows 2% drift and why an
+*exact* match was never the test.
+
+---
+
 ## What has NOT happened, and why
 
 **Nothing is seeded.** That is the playbook's own ordering, not an unfinished job:
