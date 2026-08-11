@@ -8,10 +8,22 @@ EVERY LORDS DIVISION.** Executes `BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C
 CHANGE_LOG (2026-08-11 18:30 UTC); full detail in **`docs/V34_POLITICAL_SOURCES_REPORT.md`**.
 `tsc` clean bar the documented pre-existing errors. Pushed `6759dea..deddb38` then `0ee4158`;
 `Ingest` + `Ops` redeployed 18:36 UTC; seeds run only after that.
-⚠ **THE DRAIN IS THE OPEN ITEM. Next session: run the three `--verify` modes and score the
-actual against the prediction** — `v34-seed-division-votes.ts --verify`,
-`v34-seed-impact-assessments.ts --verify`, `v34-seed-consultations.ts --verify`. Nothing else
-is outstanding on the brief.
+⚠ **THE DRAIN IS THE OPEN ITEM — IT IS RUNNING AND HEALTHY, NOT FINISHED.** Started 19:00 UTC,
+**0 failures**, all three sources in parallel at ~108 divisions/min. Next session: confirm it
+drained, then run the three `--verify` modes and score actual against prediction —
+`v34-seed-division-votes.ts --verify`, `v34-seed-impact-assessments.ts --verify`,
+`v34-seed-consultations.ts --verify`. Nothing else on the brief is outstanding.
+⚠ **RE-BASELINE `impact-assessments.est_sections` AFTER THE DRAIN.** Predicted 8 sections per IA,
+**measured 23.1** — out by 2.9×, so the corpus is **~27,300 sections not the ~9,400 seeded**. The
+row is deliberately `est_is_confirmed=false`; fix it from the real count before that number starts
+reading as confirmed. Costs revised on measured rates: **~335 MB R2, ~40,400 Class A writes,
+~73 M tokens to embed** (§B is two-thirds of the embedding on its own). Consultations went the
+other way — 307 words each, not ~1,200.
+⚠ **Commons drains before Lords** (seed order), so at the time of writing `divisions` holds Commons
+only. The Lords path — the one the teller fix was for — is **proven against the real tables** by
+`v34-dv-smoke.ts` (division 3698 → 159 rows, division 19 → 332 rows, written and read back), and
+the deployed worker runs that exact commit; production confirmation lands when the queue reaches
+Lords. **If Lords rows start failing, that is the teller duplicate and the fix did not deploy.**
 **SEEDED AND RECONCILED:** `commons-divisions-votes` **2,361** ✓ exact · `lords-divisions-votes`
 **3,284** ✓ exact · `impact-assessments` **1,181** ✓ exact · `consultations` **7,448** (+1 on the
 measured 7,447 — published between measure and seed; that is the 2% tolerance working, not a
@@ -64,27 +76,31 @@ built; the two should be reconciled before the seeds drain.**
 NOT RUN. 2D-1: THE POSITION GRAPH IS BUILT AND NEEDED NO LLM.** CHANGE_LOG (2026-08-11 04:19 UTC).
 Reports: `docs/SEARCH_S2C4_REPORT.md`, `docs/POSITION_GRAPH_2D1_REPORT.md` + `_TABLES.md`.
 
-⚠⚠ **SESSION PAUSED MID-SPRINT at Charlie's request (laptop closing), 04:19 UTC. Nothing is running
-and nothing is billing** — verified against Hetzner (no server exists) and the local process table
-(no writer). Safe to close.
 
-**⚠ THE FIRST THREE THINGS TO DO NEXT, in order:**
-1. **Re-run the interests sweep** — `npx tsx position-graph/sweep-interests.ts` (from
-   `scripts/ingest`). The first run silently covered **695 of 3,415 interests (20.4%)**: the API caps
-   a page at 20 whatever `Take` asks, and the run passed 100 while advancing `Skip` by 100, so it read
-   20 and skipped 80 — reporting all 695 as a clean success. `TAKE` is now 20. **Do not quote any
-   `declared-interest` count until this has re-run** (currently 359 edges; expect several times that).
-   ~10 min. Idempotent.
-2. **Delete the junk person entities the tightened filter now refuses.** `A Member of the Public`
-   became one person entity carrying six spellings — many unrelated individuals merged into one actor.
-   The filter is fixed and self-tested, but **this run's rows still contain it**; they are removable by
-   name. Their *edges* are sound (the submissions exist and are correctly cited); the attribution is
-   to a person who does not exist.
-3. **S2C4 §1's decision is Charlie's**, and the cheap experiment is costed: measure 64 and 128 probes
-   (`--ladder 24,64,128,256`, ~10 min, ~€0.03) before considering any change. `VECTOR_NPROBES` is a
-   **query-time env var** — no rebuild — so raising it is one Railway variable and a restart; the
+
+**BOTH SPRINTS ARE NOW COMPLETE.** Nothing is running, nothing is billing (verified against the
+Hetzner API and the process table).
+
+**⚠ WHAT IS OPEN, AND WHOSE IT IS:**
+1. **S2C4 §2/§3 remain closed by §1's gate, and that is the brief's instruction, not an omission.** No
+   ordering baseline and no reranker number exist. `caselaw` 36/36 → 22/36 stays open with them,
+   because the brief puts its answer in §2's gold run.
+2. **The nprobes decision is Charlie's, and the price list is now measured.** Against the 256 rung:
+   **24 → 72.8%, 64 → 85.5%, 128 → 94.1%**, at 736 / 675 / 904 ms on a rented box. ⚠ **24 → 64 gains
+   ~13pp and costs nothing measurable** (64 came out *faster* than 24 — noise, which is the point).
+   `VECTOR_NPROBES` is a query-time env var: no rebuild, one Railway variable and a restart. The
    restart resets `/stats`, so the pre-change baseline of record is **p50 3,647 ms / p95 4,355 ms,
-   read 02:31 UTC**.
+   read 02:31 UTC**. Run it as a measured A/B, not as a settings change.
+3. **⚠ FOR CC-INGEST: all 15,806 oral-evidence sections have NO `sectionTitle` (0.0%).**
+   `processCommitteesApi` builds the title from `committeeBusiness?.title` + `internalReference`, and
+   oral evidence has neither — its inquiry is `committeeBusinesses` (an **array**). Both undefined →
+   empty join → NULL. Those sections are findable but render with no heading. **Not fixed here on
+   purpose**: `workers/process-row.ts` is in CC-Ingest's lane and being modified by that thread. Fix
+   is a fallback to `committeeBusinesses[0]?.title` plus a backfill.
+4. **Next for the graph, in the design's own order:** `spoke-in` needs a `person_id` sweep of the
+   pwdata XML (present on 98.5% of speeches at source, never parsed) — bounded by file count, not by
+   speech count, and scoped to the current Parliament first. Witness `personId` would do the same for
+   the 45,860 person entities still resting on a name match at 0.7 confidence.
 
 **SEARCH S2C4 — measured, 58 queries:** production probes **24 of 4,096 partitions (0.59%)** and
 retrieves **70.4%** of the exhaustive result (section-level 70.6%). At 256 probes it is **96.3%**. The
@@ -95,9 +111,10 @@ norm is simply under-probed. Controls: shuffle 0.0%, sensitivity 20.6% vs 70.4%,
 agreement 100.0%** (the box measures what production serves), true exact KNN puts all-partitions at
 97.5% of the true top-20 so **PQ costs ~2.5pp**, mirror guard 5/5. Nothing was retuned.
 
-**GRAPH 2D-1 — built, in Neon:** `graph_entity` / `graph_alias` / `graph_edge` / `graph_evidence` /
-`graph_merge_log`. **85,941 entities** (39,766 orgs · 46,175 people), **163,052 edges**, **178,832
-evidence rows**, **100% of edges carry evidence**, 30.6% on a stable key. Committees sweep 48.3 min,
+**GRAPH 2D-1 — COMPLETE, in Neon:** `graph_entity` / `graph_alias` / `graph_edge` / `graph_evidence` /
+`graph_merge_log`. **86,816 entities** (40,518 orgs · 46,298 people), **164,135 edges** (162,630 gave-evidence-to +
+1,505 declared-interest), **179,916 evidence rows**, **100% evidence coverage on both predicates**,
+all 8 integrity checks passing, 30.6% on a stable key. Interests re-run covered 3,415 of 3,415 (100%). Committees sweep 48.3 min,
 **0 gaps**, 99.8% of held items attached. **Zero LLM spend**: every identity was already structured at
 source and merely absent from our columns, so this was a metadata sweep. ⚠ **`spoke-in` is NOT built**
 — Hansard speakers are name strings here and `person_id` (on 98.5% of speeches at source) was never
