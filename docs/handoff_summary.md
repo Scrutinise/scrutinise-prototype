@@ -19,6 +19,12 @@ row is deliberately `est_is_confirmed=false`; fix it from the real count before 
 reading as confirmed. Costs revised on measured rates: **~335 MB R2, ~40,400 Class A writes,
 ~73 M tokens to embed** (§B is two-thirds of the embedding on its own). Consultations went the
 other way — 307 words each, not ~1,200.
+⚠ **NEW SOURCE-QUALITY FACT: the `ukia` feed advertises PDFs legislation.gov.uk does not serve.**
+`ukia/2018/42` (uksi/2018/237, DWP) 404s deterministically — 3 attempts, same answer. It was
+sitting as a `failed` queue row, i.e. invisible to every corpus-level gap report, which is the
+silent absence the brief forbids. 404/410 now writes a classified `no-pdf` section carrying the
+advertised URL and closes the row; only network faults and 5xx retry. 1 in the first 470. Two
+scanned IAs are already stored as `pdf-only`, so the classified-gap path was otherwise working.
 ⚠ **Commons drains before Lords** (seed order), so at the time of writing `divisions` holds Commons
 only. The Lords path — the one the teller fix was for — is **proven against the real tables** by
 `v34-dv-smoke.ts` (division 3698 → 159 rows, division 19 → 332 rows, written and read back), and
