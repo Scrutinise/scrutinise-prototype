@@ -2,7 +2,49 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-10 20:42 UTC — ▼ **SEARCH STAGE 2C-3: BILLS ARE FINDABLE AND LEGIBLE, AND
+*Last updated: 2026-08-11 01:02 UTC — ▼ **INGEST V33 §2 IS CLOSED: THE VECTOR INDEX IS CURRENT AND
+SERVING IT. SEARCH'S GATE 2 IS OPEN.** CHANGE_LOG (2026-08-11 01:02 UTC).
+**The embed finished 2026-08-10 15:33 UTC** — 129/129 shards, **768,085 vectors, 0 misses,
+$36.51** against $35.73 predicted (+2.2%), 25.0h against a predicted 15–30h.
+⚠ **Stage 2C-3 records that finish as "16:33 UTC"; the checkpoint says `15:33:23.243Z`. 16:33 is
+BST.** Root CLAUDE.md bans exactly this mixup — corrected here so one event does not circulate
+with two times.
+**Then the three steps that actually deliver it:** 89,377 orphan chunks exported (611 MB, verified)
+and deleted — `corpus_vec` and `corpus_chunks` both reconcile at **22,518,608**; the ANN rebuilt on
+Hetzner (**29.5 min, €0.145, peak 5.6 GB**) to **`indexed=22,518,608 unindexed=0`**, from 768,085 /
+3.41% brute-forced per query; and **`vector-serve` restarted and PROVEN** (`started_at` 07 Aug
+12:59 → 11 Aug 00:44). ⚠ **It had been up 3.4 days on a 7 August snapshot containing NONE of the
+new vectors — the restart is the moment this work reached production.**
+**ACCEPTANCE: 18,166,684 of 18,166,911 compiled sections have a vector. The 227 that do not all
+have `wordCount = 0`** — nothing to embed, matching the chunk phase's 227 body misses exactly.
+Latency moved 5,936→3,529ms p50 and 21,383→3,750ms p95, ⚠ **indicative only** — the baseline is
+187 samples of real concurrent production traffic, the after is 11 sequential synthetic queries.
+The clean fact is `unindexed 0`.
+⚠ **THREE CHECKS THAT COULD NOT FAIL, ALL NOW FIXED — this is the part worth reading.**
+(1) `delete-orphans --apply` was guarded by `fs.existsSync('export.json')` alone; that marker is not
+stamped per run, and a **6 Aug file for 6,464 unrelated rows** was on disk while this run's
+89,377-row export was four parts from finishing. It would have authorised the irreversible delete.
+`assertSafetyExport()` now checks stamp + row count + object presence; **5/5 negative control**.
+(2) `vector-reindex`'s verify was a pure-logic unit test with no Lance — it would have passed on the
+attempt that aborted 84 seconds in. `search/verify-vector-index.ts` replaces it and was **proven
+able to fail before being trusted**. (3) My own negative control reported **0/5 against a guard that
+was refusing correctly** — `execFileSync` cannot run a Windows `.cmd` without `shell: true`.
+⚠ **Two failed rebuild attempts (€0.007) taught three things now in `jobs.ts`:** all dedicated
+placements were refused (the dedicated-core quota, second time it has blocked a vector rebuild);
+`build-vector-index.ts` asserts the checkpoint shard size BEFORE branching on `--index-only`, so
+`VECTOR_SHARD_SIZE=12000` must be pinned; and **the runner executes the GITHUB CLONE, not the local
+tree** — a script a job names must be pushed first.
+⚠ **A delete costs per PREDICATE, not per row.** No scalar index on `chunkId`, so each
+`delete(… IN (…))` scans all 22.5M rows — ~22.5s per batch whatever it holds. 400 → 17.8 rows/s
+(138 min); 2,000 → 100 rows/s (25 min). Now `VEC_HYGIENE_ID_CHUNK`-tunable. `export` has the same
+constant and the same easy win, untouched.
+⚠ **`expectedPeakGb` for `vector-reindex`: 32 (inherited) → 5.6 (MEASURED).** The 64 GB belonged to
+compaction, which this job skips. Not dropped further on one run.
+⚠ **Lead for the search thread, NOT a diagnosis:** the ANN build logged repeated `KMeans: more than
+10% of clusters are empty` / `too small to have a meaningful index (1529 < 4096)`. July's
+unexplained recall regression (71.2%→70.5%) may be unrelated, but the 4,096-partition setting has
+never been re-tuned against a corpus that has grown. ▼ Earlier:
+2026-08-10 20:42 UTC — ▼ **SEARCH STAGE 2C-3: BILLS ARE FINDABLE AND LEGIBLE, AND
 THE LAST 0.92% IS DISPOSED OF BY NAME.** Executes `BRIEF_SEARCH_S2C3.md` §1/§2/§3 in full;
 **§4 STILL NOT RUN — read the gate note below, it has changed.** CHANGE_LOG (2026-08-10 20:42 UTC).
 `tsc` + `next build` clean; **`check:corpus-types` 69/69 → 111/111**, mutation-tested (4 planted

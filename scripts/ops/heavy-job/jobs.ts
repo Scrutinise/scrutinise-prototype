@@ -153,11 +153,18 @@ export const JOBS: Record<string, HeavyJob> = {
     // half the price (€0.2942/h vs €0.6259/h) and draws no dedicated-core quota. Same list
     // `fts-index` uses, which has succeeded four times.
     serverTypes: ['cpx62', 'cpx52', 'ccx43'],
-    // NOT MEASURED for this exact shape (index-only, no compaction). 32 is carried over from the
-    // parent as an upper bound rather than guessed downward; replace it with the first run's own
-    // reported peak.
-    expectedPeakGb: 32,
-    peakSource: 'inherited from `vector-index` (21 Jul 2026), where 32 GB completed once compaction was skipped — NOT yet measured for the index-only path; replace with the first run\'s own report',
+    // MEASURED 11 Aug 2026, first successful run: **5.6 GB peak** at 22,518,608 rows, 29.5 min,
+    // €0.145 — against the 32 GB inherited from the parent. The gap is the whole point of §17's
+    // "size from evidence": compaction, not the ANN build, was what needed 64 GB.
+    // ⚠ Deliberately NOT dropped to ~8 GB on one run. `chunks-scalar-index` sets the precedent —
+    // it measured 1.72 GB and stayed on a 32 GB box, because the peak was not knowable in advance
+    // and the run costs pennies. Record the measurement, keep the headroom; revisit after a
+    // second run agrees, and remember the table only grows.
+    // ⚠ And 5.6 GB does NOT mean "this could go back on Railway". It would fit the 8 GB
+    // per-replica cap today, but the margin is one corpus growth spurt wide, and the runner is
+    // the standard home for this class of work.
+    expectedPeakGb: 5.6,
+    peakSource: '11 Aug 2026, cpx62 (32 GB shared), 22,518,608 rows, 29.5 min → 5.6 GB peak, €0.145, unindexed 0. Two earlier attempts the same night cost €0.007 and never reached the build: all dedicated placements refused (quota), then the shard-size assertion aborted it in 84s.',
   },
 }
 

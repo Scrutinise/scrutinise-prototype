@@ -111,6 +111,160 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V33 §2 CLOSED — the vector index is current, and three guards that could not fail now can (2026-08-11 01:02 UTC)
+
+Finishes `BRIEF_CC_V33_ingest_wrapup.md` §2, the one section left open at the sprint commit. The
+search thread's Stage 2C-3 entry names this as its Gate-2 blocker and explicitly defers it here
+("production index surgery on rented infrastructure… V33's embed is the ingest thread's work").
+**Gate 2 is now open.**
+
+### The embed, final
+
+**129/129 shards, 768,085 vectors, 0 misses, $36.51** against $35.73 predicted (**+2.2%**), under
+the $45 ceiling. Ran 25.0 hours — predicted ~22h with a stated 15–30h range, so inside it.
+
+⚠ **Timestamp correction.** Stage 2C-3 records the finish as "16:33 UTC". The checkpoint says
+`2026-08-10T15:33:23.243Z` — **15:33 UTC, which is 16:33 BST.** The BST value was labelled UTC.
+Root `CLAUDE.md` bans exactly this ("a BST↔UTC mixup once caused a false 'build hung' diagnosis;
+UTC-only removes that whole class of error"), so it is corrected here rather than left to
+circulate as two different times for one event.
+
+### Orphans removed, and the safety guard that would not have stopped a mistake
+
+89,377 orphan chunks — `eur-lex` 53,040, `committees-reports` 27,089 (V32's rechunk),
+`explanatory-memoranda` 6,864, `explanatory-notes` 2,384 — deleted from **both** `corpus_vec` and
+`corpus_chunks` after a full-row export to R2.
+
+Before deleting, the orphan list was re-verified against Neon **on the day of deletion, not the day
+of the audit**: all 11,628 distinct sectionIds behind those chunks are still absent, 0 have
+returned, and none of the chunkIds carries the V33 `-NNNN` marker — so no overlap with the 768,085
+just written.
+
+⚠ **`delete-orphans --apply` was guarded by `fs.existsSync('export.json')` and nothing else.**
+That marker is not stamped per run. A 6 August file (stamp `2026-08-06T05-22-55-495Z`, **6,464
+rows**) was sitting on disk while this run's 89,377-row export was still four parts from finishing.
+Existence-as-proof would have authorised an irreversible delete of 89,377 rows backed by a safety
+record of 6,464 unrelated ones — **the guard was exactly as strong as no guard at the one moment it
+mattered.** `assertSafetyExport()` now checks three things: the marker's stamp matches the audit
+being deleted against, its row count matches the manifest's orphan count, and every object it names
+is really in R2. Proven on both sides: it passed live (`safety export verified: stamp
+2026-08-09T13-04-26-205Z, 89,377 rows, 10/10 objects present`) and refuses a planted stale marker.
+
+Same family as §18/§19: a signal that looks like a measurement but carries no provenance.
+
+### ⚠ A delete costs per PREDICATE, not per row — 138 minutes became 25
+
+Neither `corpus_vec` nor `corpus_chunks` has a scalar index on `chunkId`, so every
+`delete(chunkId IN (…))` scans the whole 22.5M-row table: **~22.5 seconds per batch whatever the
+batch holds.** At the hard-coded `ID_CHUNK = 400` that is 448 scans for 89,377 rows across two
+tables — measured at **17.8 rows/s, 138 minutes**. Raising it to 2,000 cut the scan count fivefold
+and measured **100 rows/s — 5.6× faster, 25 minutes**. `ID_CHUNK` is now
+`VEC_HYGIENE_ID_CHUNK`-tunable with 400 kept as the default, because the safe ceiling depends on a
+predicate parser nobody has probed.
+
+The same shape is available to `export`, which uses the same constant and took ~70 minutes for the
+same 89,377 rows. Not changed in this pass — it had already run.
+
+### ⚠ The rebuild's verify could not fail, which is not a verify
+
+`vector-reindex` was registered with `check-vector-serving.ts` as its verify step. That is a
+pure-logic unit check — no Lance, no network — so it passes in under a second whether or not an
+index was built. **A check that cannot fail for the reason the job exists is a second success
+message.** It is the same shape as the defect this job was created to avoid: re-running the old
+`vector-index` job would print "already done", create nothing, destroy the box and report success.
+
+`search/verify-vector-index.ts` replaces it — it reads the ANN index stats and fails on a missing
+index, on any unindexed row, or on indexed+unindexed not reconciling with the table's row count.
+**It was proven able to fail before being trusted**: run against the pre-rebuild table it reported
+
+```
+vector_idx (IVF_PQ) on [vector]: indexed=21,763,900 unindexed=768,085 (3.41% brute-force scanned per query)
+❌ 768,085 unindexed rows exceeds the allowed 0 — the rebuild did not absorb the appended vectors
+```
+
+which is both the negative control and the exact "before" figure.
+
+### The rebuild and the restart
+
+**`vector-reindex` succeeded on the third attempt: 29.5 min, €0.145, peak RSS 5.6 GB**, box
+auto-destroyed. `corpus_vec` 22,518,608 rows, and the new verify reports
+**`indexed=22,518,608 unindexed=0 (0.00% brute-force scanned per query)`** — against 768,085 /
+3.41% before.
+
+⚠ **Two failed attempts first, costing €0.007 between them, and both were sizing/plumbing errors
+of mine rather than anything about the data.**
+1. **Every dedicated placement refused** — ccx43@nbg1, ccx43@hel1, ccx53@nbg1, ccx53@hel1. The
+   per-account dedicated-core quota `jobs.ts` already warns about, blocking a vector rebuild for
+   the second time (first: 21 Jul). I had inherited the parent job's server list without noticing
+   its 64 GB was for the COMPACTION step this job skips. Moved to shared vCPU, `cpx62` first.
+2. **`build-vector-index.ts` asserts `cp.shardSize === SHARD_SIZE` at the top of `main()`, before
+   it branches on `--index-only`** — so the env default of 40,000 against the checkpoint's 12,000
+   aborted, in 84 seconds, a run that processes no shards at all. `VECTOR_SHARD_SIZE=12000` is now
+   pinned in the command.
+
+⚠ **And the runner executes the GITHUB CLONE, not the local working tree.** The second attempt lost
+its verify to `Cannot find module .../verify-vector-index.ts` because that file was still only
+local. Any script a job names must be committed and pushed first. Recorded in `jobs.ts`.
+
+⚠ **`expectedPeakGb` 32 → 5.6, measured.** Not dropped further on one run: `chunks-scalar-index`
+sets the precedent (measured 1.72 GB, kept a 32 GB box) and the table only grows. 5.6 GB would fit
+Railway's 8 GB per-replica cap today — that is not an argument for moving it back; the margin is
+one growth spurt wide.
+
+**`vector-serve` restarted and PROVEN** — `started_at` 2026-08-07T12:59:32Z → 2026-08-11T00:44:21Z,
+counters reset. It had been up 3.4 days, so it was serving a 7 August snapshot containing **none**
+of the 768,085 new vectors; the restart is what actually delivers this sprint's work to production.
+
+| | before (7 Aug snapshot) | after |
+|---|---:|---:|
+| unindexed rows | 768,085 (3.41% per query) | **0** |
+| warm p50 | 5,936 ms | **3,529 ms** |
+| warm p95 | 21,383 ms | **3,750 ms** |
+| embed p50 | 229 ms | 241 ms |
+
+⚠ **The latency rows are INDICATIVE, not like-for-like, and should not be quoted as a controlled
+result.** The baseline is 187 warm samples from 3.4 days of real production traffic, including
+concurrency (queue high-water 46 against a cap of 4); the after is 11 sequential synthetic queries
+on the legislation tier. A sequential test cannot reproduce queueing, so most of the p95 collapse
+is the method, not the index. **The clean, non-comparative fact is `unindexed 0`.** 12/12 queries
+returned 20 hits with 0 errors.
+
+⚠ **One observation for the search thread, offered as a lead and not a diagnosis:** the ANN build
+logged repeated `KMeans: more than 10% of clusters are empty` warnings with
+`dataset is too small to have a meaningful index (1529 < 4096)`. The July rebuild left an
+unexplained recall regression (vector-alone 71.2% → 70.5%, reproduced twice). These may be
+unrelated — the warnings concern sub-partition training and the index covers every row — but the
+partition count has never been re-tuned against a corpus that has grown, and that is worth a look
+before the regression is blamed on ranking.
+
+### ACCEPTANCE — every section that has text now has a vector
+
+Full re-scan of all 22,518,608 vectors against all 18,166,911 compiled sections:
+
+```
+compiled sections   18,166,911
+WITH a vector       18,166,684
+⇒ UNVECTORED             227  (0.00%)
+words to embed             0
+chunks to embed            0
+```
+
+**The 227 are not a gap and not a residual to chase: every one has `wordCount = 0`.** The per-corpus
+counts match the zero-word counts exactly — `scottish-parliament-or` 183, `si-2010plus` 26,
+`regional` 10, `primary-acts-*` 3 each, `fca-handbook` 1, `si-pre-2010` 1. `chunkBody('')` returns
+no chunks, so there is nothing to embed; they are the same 227 the chunking phase reported as body
+misses. Recorded as a known-unknown rather than left as an unexplained 0.00%.
+
+### PREDICTIONS SCORED
+
+| prediction | actual | verdict |
+|---|---|---|
+| §2 embed cost $35.73 | **$36.51** | +2.2% |
+| §2 embed duration ~22h (15–30h) | **25.0h** | inside the range |
+| §2 chunks 740,385 | 768,085 | +3.7% |
+| delete at ID_CHUNK=400: 138 min | — | superseded; 25 min at 2,000 |
+
+
 ## SEARCH Stage 2C-3 — Bills become findable AND legible, and the last 0.92% is disposed of by name (2026-08-10 20:42 UTC)
 
 Executes `docs/BRIEF_SEARCH_S2C3.md` §1, §2 and §3 in full. **§4 still NOT run — see the gate
