@@ -235,8 +235,18 @@ async function main() {
     // ── integrity: the things that would make the above meaningless ─────────────────────────────
     say('## integrity checks')
     say()
+    // ⚠ The dangling-section check is done in TWO cheap parts, not as a 178k × 22M LEFT JOIN — that
+    // join timed out at the 60s client limit and took the whole report down with it. The FK is the
+    // real guarantee (Postgres cannot let a dangling row exist while it is enabled and VALID), so
+    // assert the constraint, then spot-check a bounded sample in case someone ever drops it.
     const checks: Array<[string, string]> = [
-      ['every evidence row points at a section that exists', `SELECT COUNT(*)::text AS c FROM graph_evidence v LEFT JOIN corpus_sections s ON s.id = v.section_id WHERE s.id IS NULL`],
+      ['the graph_evidence → corpus_sections FK exists and is validated (this is what makes a dangling section impossible)',
+        `SELECT COUNT(*)::text AS c FROM pg_constraint
+          WHERE conrelid = 'graph_evidence'::regclass AND contype = 'f' AND confrelid = 'corpus_sections'::regclass
+            AND convalidated` /* inverted below: 0 would be the failure, so count the MISSING case */],
+      ['no dangling section in a bounded 5,000-row sample',
+        `SELECT COUNT(*)::text AS c FROM (SELECT section_id FROM graph_evidence LIMIT 5000) v
+           WHERE NOT EXISTS (SELECT 1 FROM corpus_sections s WHERE s.id = v.section_id)`],
       ['no entity has an empty normal form', `SELECT COUNT(*)::text AS c FROM graph_entity WHERE name_norm = '' OR name_norm IS NULL`],
       ['no edge points at itself', `SELECT COUNT(*)::text AS c FROM graph_edge WHERE object_entity_id = subject_id`],
       ['every declared-interest edge has an entity object', `SELECT COUNT(*)::text AS c FROM graph_edge WHERE predicate = 'declared-interest' AND object_entity_id IS NULL`],
@@ -246,7 +256,10 @@ async function main() {
     ]
     for (const [label, sql] of checks) {
       const { rows: [r] } = await pool.query<{ c: string }>(sql)
-      say(`- ${+r.c === 0 ? '✓' : `✗ **${n(r.c)}**`} ${label}`)
+      // The FK check is the one where a count of ONE is the pass; every other check passes on zero.
+      const isFkCheck = label.startsWith('the graph_evidence')
+      const pass = isFkCheck ? +r.c > 0 : +r.c === 0
+      say(`- ${pass ? '✓' : `✗ **${n(r.c)}**`} ${label}`)
     }
 
     if (MD) {
