@@ -429,6 +429,62 @@ is an upsert on a natural key, so it resumes or repeats without duplicating. `de
 climbed 359 → 418 edges. It also failed once with `Connection terminated due to connection timeout`
 when run concurrently with the cleanup (two writers on one Neon pool), so **run it alone**.
 
+### ADDENDUM 2 (2026-08-11 19:02 UTC) — the interests sweep completed, and an untitled-oral-evidence defect found on the way
+
+**Stage 2D-1 is now COMPLETE.** Final counts, read back from the tables: **86,816 entities** (40,518
+organisations · 46,298 people) · **164,135 edges** (162,630 `gave-evidence-to` + **1,505**
+`declared-interest`) · **179,916 evidence rows** · **100% of edges carry evidence on both predicates**
+· 30.6% of entities on a stable external key · **all 8 integrity checks pass**.
+
+**The interests sweep ran to completion after the page-size fix: 3,415 of 3,415 interests (100%)**, all
+attached to a held section, 0 without a member id. `declared-interest` 359 → **1,505 edges**; people
+keyed on a Parliament member ID 192 → **438**. It needed an in-run entity cache to be practical — the
+register is ~3,415 interests over a few hundred members, so the same person was being re-resolved from
+the database repeatedly at 2–3 round trips each. ⚠ It also failed once with `Connection terminated due
+to connection timeout` when run **concurrently with the cleanup script** — two writers on one Neon
+pool, so run it alone.
+
+⚠ **1,593 of 3,415 interests (46.6%) name no counterparty, and that is CORRECT rather than missing.**
+Probed rather than assumed: the categories that yield nothing are **`Visits outside the UK`** (fields
+`Purpose` / `StartDate` / `EndDate` / `Appg` only) and **`Miscellaneous`** (`Description` /
+`MiscellaneousInterestType` / `AroseOn`). In both the counterparty sits in free text, and mining prose
+is what this sprint refuses — so they are recorded as having no *structured* counterparty rather than
+being attributed to whatever a summary string happened to contain. (Noted for §6: the visits category
+carries an `Appg` field, which is a free join to the APPG register when that lands.)
+
+### ⚠ AND A CORPUS DEFECT FOR THE INGEST THREAD: every oral-evidence section is untitled
+
+Found by reading `verify-edges.ts` output rather than by looking for it — the oral rows printed their
+`sectionTitle` as null. Split by kind, this is not a scattered 12%:
+
+| kind | rows | with a `sectionTitle` |
+|---|---:|---:|
+| writtenevidence | 126,509 | 125,303 (99.0%) |
+| **oralevidence** | **15,806** | **0 (0.0%)** |
+
+**All 15,806 oral-evidence sections in the corpus have no title.** The cause is the *same field-name
+confusion that broke my own probe earlier in this sprint*, which is why it is worth recording as a
+class: `processCommitteesApi` builds an evidence title from
+`[item.committeeBusiness?.title, item.internalReference]`, and oral evidence has **neither** — its
+inquiry is `committeeBusinesses` (an array) and it carries no `internalReference`. Both are undefined,
+the join yields an empty string, and `title || undefined` stores NULL.
+
+Consequence: 15,806 sections are findable but render with no heading, in a panel that displays
+`sectionTitle`. ⚠ **Not fixed here, deliberately** — `workers/process-row.ts` is in CC-Ingest's lane
+and is being modified by that thread right now, so a one-line fix from me would collide. The fix is to
+fall back to `committeeBusinesses[0]?.title`, plus a backfill for the existing rows.
+
+**Verification widened.** `verify-edges.ts` now covers six bodies across two runs — LGA, Which?,
+Shelter, CBI, TUC — and **15 of 15 inquiry ids resolved at the source to the title we stored**, with
+every cited section present and a live URL. Age UK has no entity row, which is a real (and expected)
+absence rather than a failure: it does not appear as a *submitter* in the windows swept.
+
+⚠ **A process note on my own working.** Three times in this session I mangled a document by piping
+backtick-containing markdown through `bash -c "node -e ..."`, which ate every `identifier` in the
+text. Each time the repair was manual. The reliable route, used for this entry, is to write the
+content to a file first and have the script read it — the same lesson as the PowerShell pipeline
+truncation already in the memory file, one layer up.
+
 ## INGEST V33 §2 CLOSED — the vector index is current, and three guards that could not fail now can (2026-08-11 01:02 UTC)
 
 Finishes `BRIEF_CC_V33_ingest_wrapup.md` §2, the one section left open at the sprint commit. The

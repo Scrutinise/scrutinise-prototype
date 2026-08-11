@@ -2,13 +2,13 @@
 
 **Executes:** `docs/BRIEF_GRAPH_2D1.md` (build steps 1 and 2 of `POSITION_GRAPH_DESIGN.md` §8)
 **Written:** 11 August 2026
-**Status:** the committees sweep is COMPLETE (48.3 min, 0 gaps); the interests sweep must be RE-RUN
-(see defect 3 below). Session paused here at Charlie's request with nothing running and nothing
-billing — verified: no Hetzner server exists, no sweep process is writing.
+**Status:** COMPLETE. Committees sweep 48.3 min with 0 gaps; interests sweep re-run to 3,415 of 3,415
+interests (100%) after the page-size defect below was fixed.
 
-**Headline counts, read back from the tables:** 85,941 entities (39,766 organisations · 46,175
-people) · 163,052 edges · 178,832 evidence rows · **100% of edges carry evidence** · 30.6% of
-entities rest on a stable external key.
+**Headline counts, read back from the tables:** **86,816 entities** (40,518 organisations · 46,298
+people) · **164,135 edges** (162,630 `gave-evidence-to` + 1,505 `declared-interest`) · **179,916
+evidence rows** · **100% of edges carry evidence** on both predicates · 30.6% of entities rest on a
+stable external key · all 8 integrity checks pass.
 
 **Prediction vs actual**, recorded before the run: predicted 143,986 items at source and ~162,000
 submitter mentions; actual **143,674 items (99.8%) and 184,693 mentions (+14%)**. 140,315 of 140,567
@@ -91,6 +91,41 @@ written evidence carries `committeeBusiness` (an object) and oral carries `commi
 array). Reading the wrong key made a source that identifies **every** inquiry look like one that
 identifies none — which would have redirected the whole sprint. Fixed, re-measured, 100% both ways.
 
+### 1c-bis. ⚠ A CORPUS DEFECT THIS SPRINT FOUND BY ACCIDENT — for the ingest thread, not fixed here
+
+§1b reports `sectionTitle` at **88.0%** on committees-evidence. That 12% is not scattered. Split by
+kind:
+
+| kind | rows | with a `sectionTitle` | with an `itemDate` |
+|---|---:|---:|---:|
+| writtenevidence | 126,509 | 125,303 (99.0%) | 125,303 |
+| **oralevidence** | **15,806** | **0 (0.0%)** | 15,264 |
+
+**Every oral-evidence section in the corpus is untitled.** Not most — all 15,806.
+
+The cause is the *same field-name confusion that broke my own probe*, which is why it is worth writing
+down as a class rather than as a one-off. `processCommitteesApi` in `workers/process-row.ts` builds an
+evidence title as:
+
+```ts
+[item.committeeBusiness?.title, item.internalReference].filter(Boolean).join(' — ')
+```
+
+Oral evidence carries neither of those fields — its inquiry is `committeeBusinesses` (an **array**) and
+it has no `internalReference` — so both are `undefined`, the join yields `''`, and `title || undefined`
+stores NULL. Written evidence has both, hence 99.0%.
+
+Consequences worth knowing before someone reads a search result:
+- **15,806 oral-evidence sections have no heading to display**, in a corpus where the panel renders
+  `sectionTitle`. They are findable but unlabelled.
+- The inquiry association was never stored for oral evidence either, which is why this sprint takes it
+  from the API rather than from our own columns.
+
+⚠ **Not fixed here, deliberately.** `process-row.ts` is in CC-Ingest's lane and is being modified by
+that thread right now; a one-line fix from me would collide. The fix is to read
+`committeeBusinesses[0]?.title` when `committeeBusiness` is absent — and it needs a re-process or a
+metadata sweep to backfill the 15,806 existing rows.
+
 ### 1d. Question 2 — can a submission be joined to its inquiry and committee?
 
 **Yes, by a stable numeric inquiry id.** Every sampled item carries `committeeBusiness.id` with
@@ -165,6 +200,25 @@ dropping tables it does not know about** — the `CorpusAct` precedent. Nothing 
 client.
 
 `graph_entity` · `graph_alias` · `graph_edge` · `graph_evidence` · `graph_merge_log`
+
+### ⚠ Reconciliation with V34, which CC-Ingest asked for in the same handoff
+
+That thread's V34 entry notes it made storage decisions without `POSITION_GRAPH_DESIGN.md` to hand and
+flags that "the two should be reconciled". Checked against the live database, they are **disjoint and
+complementary**:
+
+| table | owner | what it is |
+|---|---|---|
+| `graph_entity` / `_alias` / `_edge` / `_evidence` / `_merge_log` | this sprint | actors and what they demonstrably did |
+| `divisions` / `division_votes` | V34 | how each member voted in each division |
+| `stage_outcomes` | V34 | deliberately empty — see their note on why a fuzzy match would be false certainty |
+| `legislation_edges` | Graph Tier 1 (July) | the citation graph: an Act cites/amends an Act |
+
+**No name collision, and nothing to migrate.** Better than that, V34 has built the source for a
+predicate this sprint could not: the design's §3 lists `voted` — MP → division — and `division_votes`
+is exactly that, keyed on member. Joining it needs the same `parl_member_id` this sprint already
+populates on 438 people, so the two threads meet cleanly at that column. It is the cheapest remaining
+edge type in the design, and it is now unblocked.
 
 Three design points worth defending:
 
@@ -285,13 +339,20 @@ problem**: witness `personId` is available on the committees API and is the fix,
 the organisation `cisId` that worked. It was not wired in this sprint. **Until it is, person entities
 should be treated as name clusters rather than as people.**
 
-**3. The interests sweep silently covered 20% of the register.** The API caps a page at 20 items
-whatever `Take` requests; the run passed `Take=100` and advanced `Skip` by 100, so it read 20 and
-skipped 80 — **695 of 3,415 interests (20.4%)**, and it reported every one of those 695 as a clean
-success with no error anywhere. That is why `declared-interest` shows only 359 edges below. Fixed
-(`TAKE=20`) and **the sweep must be re-run** before any `declared-interest` count is quoted. Same
-family as a truncated LLM response, §18: a page size that is not the page size you asked for is a
-failure wearing the face of a clean run.
+**3. The interests sweep silently covered 20% of the register — NOW FIXED AND RE-RUN.** The API
+caps a page at 20 items whatever `Take` requests; the first run passed `Take=100` and advanced `Skip`
+by 100, so it read 20 and skipped 80 — **695 of 3,415 interests (20.4%)** — and reported every
+one of those 695 as a clean success with no error anywhere. Same family as §18: a page size that is not
+the page size you asked for is a failure wearing the face of a clean run.
+
+**Re-run to completion: 3,415 of 3,415 interests (100%), all 3,415 attached to a held section, 0
+without a member id.** `declared-interest` went 359 → **1,505 edges**, and people keyed on a
+Parliament member ID went 192 → **438**. The re-run also needed an in-run entity cache to be practical:
+the register is ~3,415 interests over a few hundred members, so the same person was being re-resolved
+from the database again and again at 2–3 round trips a time.
+
+⚠ **And it failed once before that, with `Connection terminated due to connection timeout`, when run
+concurrently with the cleanup script** — two writers on one Neon pool. Run it alone.
 
 ---
 
@@ -311,12 +372,21 @@ Stated so the next sprint is not designed against capability we do not have.
    are §6 of the design and were not in this sprint. Until they are, an organisation's identity is
    Parliament's view of it, not a legal entity.
 3. **No `holds-position` edge exists**, by design. Nothing in this sprint infers what anyone thinks.
-4. **The register is a lower bound, not a census.** We hold **3,448** interests where the live API now
+4. **1,593 of 3,415 interests (46.6%) name no counterparty, and that is correct rather than missing.**
+   The counterparty is read ONLY from named fields (`DonorCompanyName`, `DonorName`, `PayerName`,
+   `ClientName`, `OrganisationName`, `SponsorName`). Probing the categories that yielded nothing
+   shows why: **`Visits outside the UK`** carries only `Purpose` / `StartDate` / `EndDate` / `Appg`,
+   and **`Miscellaneous`** only `Description` / `MiscellaneousInterestType` / `AroseOn`. In both, the
+   counterparty is inside free text, and mining prose is what this sprint refuses. So those interests
+   are recorded as having no *structured* counterparty rather than being silently attributed to
+   whatever a summary string happened to contain. (⚠ Noted for §6: the visits category carries an
+   `Appg` field, which is a free join to the APPG register when that lands.)
+5. **The register is a lower bound, not a census.** We hold **3,448** interests where the live API now
    returns **3,415** — the corpus outlives entries the register drops. That is information, not error,
    and it is why "no evidence" must remain an output rather than becoming "no interest".
-5. **Our committees corpus stops at 2026-06-12** (range 2012-12-07 → 2026-06-12), so items published
+6. **Our committees corpus stops at 2026-06-12** (range 2012-12-07 → 2026-06-12), so items published
    since are at source but unheld. The sweep writes no edge for them, deliberately.
-6. **Anonymous submissions are never attributed**, whatever a witness field contains.
+7. **Anonymous submissions are never attributed**, whatever a witness field contains.
 
 ### And the thing that is not a count: three organisations read by hand
 

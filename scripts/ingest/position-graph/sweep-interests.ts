@@ -113,6 +113,12 @@ export function parseInterest(raw: any): ParsedInterest {
   }
 }
 
+/** (kind:norm) or (m:memberId) → entity id, for this run only. Never persisted, never a substitute
+ *  for the unique indexes — those remain the guarantee; this only avoids asking twice. */
+const entityCache = new Map<string, number>()
+/** (entityId|surface) already upserted this run, so a repeated alias costs nothing. */
+const aliasSeen = new Set<string>()
+
 /** Resolve one entity by a stable key if there is one, else by conservative name match. */
 async function resolveEntity(
   pool: ReturnType<typeof getNeonPool>,
@@ -125,9 +131,22 @@ async function resolveEntity(
   const norm = kind === 'person' ? normalisePersonName(name) : normaliseName(name)
   if (!norm) throw new Error(`empty normal form for "${name}"`)
 
+  // ⚠ IN-RUN CACHE, and it is the difference between 30 minutes and 10. This register is ~3,415
+  // interests over roughly 650 members, so the same person is resolved again and again; without a
+  // cache each repeat costs 2-3 Neon round trips for an answer already known. The FIRST run of this
+  // sweep spent ~0.5s per interest almost entirely on that. Correctness is untouched — a cache hit
+  // returns the same id the query would have.
+  const cacheKey = memberId !== null ? `m:${memberId}` : `${kind}:${norm}`
+  const hit = entityCache.get(cacheKey)
+  if (hit !== undefined) {
+    await addAlias(pool, hit, name, norm, source, date)
+    return { id: hit, created: false, matchedByName: memberId === null }
+  }
+
   if (memberId !== null) {
     const { rows } = await pool.query<{ id: string }>(`SELECT id FROM graph_entity WHERE parl_member_id = $1`, [memberId])
     if (rows.length) {
+      entityCache.set(cacheKey, Number(rows[0].id))
       await addAlias(pool, Number(rows[0].id), name, norm, source, date)
       return { id: Number(rows[0].id), created: false, matchedByName: false }
     }
@@ -144,6 +163,7 @@ async function resolveEntity(
         `INSERT INTO graph_merge_log (kind, kept_entity_id, merged_surface, merged_norm, reason, confidence, source)
          VALUES ($1,$2,$3,$4,'parl-member-id',1.0,$5)`, [kind, id, name.slice(0, 500), norm, source])
     }
+    entityCache.set(cacheKey, id)
     await addAlias(pool, id, name, norm, source, date)
     return { id, created: false, matchedByName: memberId === null }
   }
@@ -157,11 +177,17 @@ async function resolveEntity(
      RETURNING id`,
     [kind, name.slice(0, 500), norm, memberId, memberId !== null ? 'parl-member-id' : 'singleton', memberId !== null ? 1.0 : 0.7, date])
   const id = Number(made[0].id)
+  entityCache.set(cacheKey, id)
   await addAlias(pool, id, name, norm, source, date)
   return { id, created: true, matchedByName: false }
 }
 
 async function addAlias(pool: ReturnType<typeof getNeonPool>, entityId: number, surface: string, norm: string, source: string, date: string | null) {
+  // n_seen would over-count on a re-run anyway (it is an upsert that increments), so skipping a
+  // repeat within one run loses nothing that was reliable to begin with.
+  const k = entityId + '|' + surface
+  if (aliasSeen.has(k)) return
+  aliasSeen.add(k)
   await pool.query(
     `INSERT INTO graph_alias (entity_id, surface, surface_norm, source, n_seen, first_seen, last_seen)
      VALUES ($1,$2,$3,$4,1,$5,$5)

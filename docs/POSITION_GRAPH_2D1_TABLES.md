@@ -1,4 +1,4 @@
-# Position graph — what is stored (2026-08-11 04:24 UTC)
+# Position graph — what is stored (2026-08-11 19:01 UTC)
 
 Read back from `ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech`. Every number below is a `COUNT(*)`, not a sweep counter.
 
@@ -6,18 +6,18 @@ Read back from `ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech`. Every number belo
 
 | entity kind | rows |
 |---|---:|
-| person | 46,175 |
-| organisation | 39,766 |
-| **total entities** | **85,941** |
+| person | 46,298 |
+| organisation | 40,518 |
+| **total entities** | **86,816** |
 
-Aliases 100,205 · edges 163,052 · evidence rows 178,832 · merge-log rows 7,302
+Aliases 101,333 · edges 164,135 · evidence rows 179,916 · merge-log rows 7,427
 
 ### edges by predicate, with evidence coverage
 
 | predicate | edges | with evidence | evidence rows | first seen | last seen |
 |---|---:|---:|---:|---|---|
-| `gave-evidence-to` | 162,693 | 162,693 (100.0%) | 178,435 | 2012-12-07 | 2026-07-22 |
-| `declared-interest` | 359 | 359 (100.0%) | 397 | 2013-09-07 | 2026-07-13 |
+| `gave-evidence-to` | 162,630 | 162,630 (100.0%) | 178,094 | 2012-12-07 | 2026-07-22 |
+| `declared-interest` | 1,505 | 1,505 (100.0%) | 1,822 | 2012-12-13 | 2026-07-13 |
 
 ✓ **Every edge has at least one evidence row.** An edge without one is a claim we cannot show our working for, so this is a constraint, not a statistic.
 ✓ `n_evidence` matches the stored evidence rows on every edge.
@@ -27,29 +27,29 @@ Aliases 100,205 · edges 163,052 · evidence rows 178,832 · merge-log rows 7,30
 | kind | identity established by | entities | mean confidence |
 |---|---|---:|---:|
 | organisation | `parl-cis-id` | 26,111 | 1.00 |
-| organisation | `singleton` | 13,655 | 0.70 |
-| person | `singleton` | 45,983 | 0.70 |
-| person | `parl-member-id` | 192 | 1.00 |
+| organisation | `singleton` | 14,407 | 0.70 |
+| person | `singleton` | 45,860 | 0.70 |
+| person | `parl-member-id` | 438 | 1.00 |
 
-- **93,640 distinct raw surface strings** were seen, resolving to **85,941 entities**.
-- **6,499 entities carry more than one spelling.** Each of those is a name match — a judgement, not a key.
-- **26,303 of 85,941 entities (30.6%) rest on a stable external key**; the rest are name-matched or singletons at confidence 0.7.
-- `graph_merge_log` holds 7,302 rows, so every fold can be undone. Two rows for one body is visible and fixable; one row for two bodies is neither.
+- **94,574 distinct raw surface strings** were seen, resolving to **86,816 entities**.
+- **6,560 entities carry more than one spelling.** Each of those is a name match — a judgement, not a key.
+- **26,549 of 86,816 entities (30.6%) rest on a stable external key**; the rest are name-matched or singletons at confidence 0.7.
+- `graph_merge_log` holds 7,427 rows, so every fold can be undone. Two rows for one body is visible and fixable; one row for two bodies is neither.
 
 ### the widest name matches — read these by hand, they are where contamination would live
 
 - **EEF, the manufacturers' organisation** (organisation, 12 forms): EEF - The Manufacturers' Organisation | EEF - the manufacturers' organisation | EEF The Manufacturers' Organisation | EEF, The Manufacturers' Organisation | EEF, The Manufacturers' Organisation. | EEF, the manufacturers organisation | EEF, the manufacturers' organisation | EEF, the manufacturers’ or
 - **Department for Business, Innovation and Skills** (organisation, 10 forms): Department For Business Innovation & Skills | Department For Business Innovation And Skills | Department For Business, Innovation And Skills | Department For Business, Innovation and Skills | Department for Business Innovation & Skills | Department for Business Innovation and Skills | Department for
-- **Mr Andrew Smith** (person, 6 forms): Andrew Smith | Dr Andrew Smith | Dr. Andrew Smith | Mr Andrew Smith | Professor Andrew  Smith | Professor Andrew Smith
+- **Professor Suresh  Renukappa** (person, 6 forms): Dr  Suresh Renukappa | Dr Suresh Renukappa | Professor  Suresh  Renukappa | Professor  Suresh Renukappa | Professor Suresh  Renukappa | Professor Suresh Renukappa
 - **Dr Mark Ryan** (person, 6 forms): Dr  Mark  Ryan | Dr  Mark Ryan | Dr Mark Ryan | Dr mark ryan | Mark Ryan | Mr Mark Ryan
-- **Prof Colin Murray** (person, 6 forms): Colin Murray | Dr Colin Murray | Mr Colin  Murray | Mr Colin Murray | Prof Colin Murray | Professor Colin Murray
-- **A Member of the Public** (person, 6 forms): A Member Of the Public | A Member of The Public | A Member of the Public | A Member of the public | A member of the Public | A member of the public
+- **Mr Andrew Smith** (person, 6 forms): Andrew Smith | Dr Andrew Smith | Dr. Andrew Smith | Mr Andrew Smith | Professor Andrew  Smith | Professor Andrew Smith
 - **mr john phillips** (person, 6 forms): John Phillips | Mr JOHN PHILLIPS | Mr John Phillips | Mr john phillips | john phillips | mr john phillips
+- **Prof Colin Murray** (person, 6 forms): Colin Murray | Dr Colin Murray | Mr Colin  Murray | Mr Colin Murray | Prof Colin Murray | Professor Colin Murray
 - **Professor Cristina  Leston-Bandeira** (person, 6 forms): Cristina Leston-Bandeira | Dr Cristina  Leston-Bandeira | Dr Cristina Leston-Bandeira | Prof Cristina Leston-Bandeira | Professor Cristina  Leston-Bandeira | Professor Cristina Leston-Bandeira
 - **Katy Hayward** (person, 6 forms): Dr Katy Hayward | Katy Hayward | Prof Katy Hayward | Prof. Katy Hayward | Professor Katy  Hayward | Professor Katy Hayward
-- **Professor Suresh  Renukappa** (person, 6 forms): Dr  Suresh Renukappa | Dr Suresh Renukappa | Professor  Suresh  Renukappa | Professor  Suresh Renukappa | Professor Suresh  Renukappa | Professor Suresh Renukappa
 - **Professor Laurence  Ferry** (person, 5 forms): Dr Laurence Ferry | Mr Laurence Ferry | Professor  Laurence Ferry | Professor Laurence  Ferry | Professor Laurence Ferry
 - **Professor Alistair Clark** (person, 5 forms): Alistair Clark | Dr Alistair Clark | Dr. Alistair Clark | Professor Alistair  Clark | Professor Alistair Clark
+- **Professor Aileen  Murphie** (person, 5 forms): Dr Aileen Murphie | Ms Aileen  Murphie | Ms Aileen Murphie | Professor  Aileen  Murphie | Professor Aileen  Murphie
 
 ## §4 — the policy-area candidate table
 
@@ -58,29 +58,29 @@ rather than ours: the brief rules out picking an area by intuition, and any clus
 inquiry titles we invented would be exactly that curation act. The committee is carried on
 every evidence item at source, on 100% of the items sampled in §1.
 
-Edges whose label yielded no committee: **571 of 162,693** (0.4%).
+Edges whose label yielded no committee: **571 of 162,630** (0.4%).
 
 | policy area (committee) | inquiries | orgs | **orgs in >1 inquiry** | people | submissions | subs/inquiry |
 |---|---:|---:|---:|---:|---:|---:|
 | Health and Social Care Committee | 130 | 3,480 | **794** | 2,619 | 8,973 | 69.0 |
-| Environmental Audit Committee | 152 | 3,360 | **754** | 1,634 | 7,365 | 48.5 |
+| Environmental Audit Committee | 152 | 3,358 | **754** | 1,634 | 7,363 | 48.4 |
 | Education Committee | 134 | 3,458 | **729** | 3,306 | 9,154 | 68.3 |
 | Housing, Communities and Local Government Committee | 117 | 3,114 | **686** | 2,499 | 7,531 | 64.4 |
-| Work and Pensions Committee | 139 | 2,273 | **643** | 2,131 | 6,785 | 48.8 |
-| Public Accounts Committee | 639 | 2,472 | **599** | 1,653 | 6,212 | 9.7 |
-| Transport Committee | 169 | 2,505 | **594** | 1,864 | 6,551 | 38.8 |
+| Work and Pensions Committee | 139 | 2,273 | **643** | 2,130 | 6,783 | 48.8 |
+| Public Accounts Committee | 639 | 2,472 | **599** | 1,651 | 6,210 | 9.7 |
+| Transport Committee | 169 | 2,505 | **594** | 1,862 | 6,548 | 38.7 |
 | Science, Innovation and Technology Committee | 167 | 2,911 | **568** | 2,241 | 7,321 | 43.8 |
-| Business and Trade Committee | 135 | 2,316 | **553** | 776 | 4,499 | 33.3 |
-| Environment, Food and Rural Affairs Committee | 147 | 2,499 | **548** | 2,340 | 6,696 | 45.6 |
-| Women and Equalities Committee | 109 | 2,168 | **454** | 3,340 | 6,809 | 62.5 |
-| Treasury Committee | 302 | 2,049 | **419** | 1,893 | 5,473 | 18.1 |
-| Justice Committee | 179 | 1,563 | **404** | 1,340 | 4,258 | 23.8 |
+| Business and Trade Committee | 135 | 2,316 | **553** | 775 | 4,498 | 33.3 |
+| Environment, Food and Rural Affairs Committee | 147 | 2,499 | **548** | 2,338 | 6,692 | 45.5 |
+| Women and Equalities Committee | 109 | 2,168 | **454** | 3,337 | 6,794 | 62.3 |
+| Treasury Committee | 302 | 2,049 | **419** | 1,890 | 5,466 | 18.1 |
+| Justice Committee | 179 | 1,563 | **404** | 1,339 | 4,256 | 23.8 |
 | Culture, Media and Sport Committee | 97 | 2,402 | **403** | 1,167 | 4,482 | 46.2 |
 | Home Affairs Committee | 168 | 2,091 | **402** | 1,801 | 5,030 | 29.9 |
-| International Development Committee | 139 | 1,534 | **365** | 973 | 4,124 | 29.7 |
+| International Development Committee | 139 | 1,534 | **365** | 972 | 4,123 | 29.7 |
 | Energy Security and Net Zero Committee | 31 | 1,025 | **256** | 668 | 2,414 | 77.9 |
-| Foreign Affairs Committee | 132 | 1,339 | **246** | 1,552 | 3,735 | 28.3 |
-| Communications and Digital Committee | 38 | 886 | **222** | 744 | 2,177 | 57.3 |
+| Foreign Affairs Committee | 132 | 1,339 | **246** | 1,551 | 3,733 | 28.3 |
+| Communications and Digital Committee | 38 | 886 | **222** | 739 | 2,171 | 57.1 |
 | Energy and Climate Change Committee | 57 | 810 | **220** | 396 | 1,784 | 31.3 |
 
 **Ranked by organisations appearing in more than one inquiry** — the brief's own primary
