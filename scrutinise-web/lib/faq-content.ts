@@ -5,7 +5,7 @@ export const FAQ_MARKDOWN = `# Scrutinise — Frequently Asked Questions
 
 Welcome. Scrutinise is a tool and collaboration platform that helps you turn a policy idea into a structured, evidence-based, Parliament-ready proposal. You work with Lex, our AI guide, and with the people you invite to scrutinise your thinking.
 
-You'll start by stating the problem or challenge you want to fix. From there, you and Lex will investigate the causes, develop the policy approach to address those causes, and define the specific actions you propose. Lex will help you identify and analyse the legislation that needs to change, and support you with research to build your evidence base.
+You'll start by stating the problem you want to fix. From there, you and Lex will investigate the causes, develop the policy approach to address those causes, and define the specific actions you propose. Lex will help you identify and analyse the legislation that needs to change, and support you with research to build your evidence base.
 
 Once you've laid out your proposal in detail, you can invite specialists and friends to help you scrutinise it — finding the embarrassing errors and practical hurdles as early as possible. Once your idea has been fully scrutinised there are tools to help you promote it and earn parliamentary and specialist endorsements.
 
@@ -132,6 +132,16 @@ Several things, all imperfect, all designed to nudge in the right direction:
 - Anti-gaming limits cap how much any one user can vote, upload, or propose in a given period
 - Moderation combines AI checks (for ad hominem attacks, abuse, incoherent replies, and contributions that don't engage with the point) with human judgement for the calls that need it
 
+## Reading legislation
+
+### How do I read a piece of legislation?
+
+Scrutiny starts with being able to read the thing you are scrutinising, and UK legislation is written to be precise rather than to be read. There's a full guide on this page — open the **Reading legislation** tab at the top.
+
+It covers how an Act is put together and what each part is for; how to follow a section that later Acts have amended, and why the version you're looking at may not be the version in force; how to tell a definition from an obligation from a power; where the real effect of a provision often hides — commencement, schedules, and regulation-making powers; and the questions worth asking of any provision you're reviewing.
+
+You don't need legal training to use it, and you don't need to read it end to end. It's written to be dipped into at the point where you hit something you can't parse.
+
 ## Points, credibility, and recognition
 
 ### What are the point categories?
@@ -245,7 +255,7 @@ At Stage 1, only you. At Stage 2, only people you've invited. At Stage 3 and bey
 
 ### Can Scrutinise staff read my work?
 
-Administrators have access for moderation and support purposes, but every time anyone with admin rights opens an idea that isn't theirs, it's logged with a written comment stating the reason. As the owner, you can see in your idea's Privacy Log whether any administrative access has happened, and why. The promise is: all internal human access is logged and visible to you in real time.
+Administrators have access for moderation (investigating reports of abuse) and support purposes (at your specific invitation). This is managed through transparency. Every time anyone with admin rights opens an idea that isn't theirs, it's logged with a written comment stating the reason. As the owner, you can see in your idea's Privacy Log whether any administrative access has happened, and why. The promise is: all internal human access is logged and visible to you in real time.
 
 ### Do you have specific security requirements?
 
