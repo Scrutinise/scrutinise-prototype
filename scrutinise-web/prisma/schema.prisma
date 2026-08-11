@@ -510,6 +510,14 @@ model User {
   centralReferralsReceived  CommunityReferral[] @relation("CentralReferralInvitee")
   centralActivityClaims     ActivityClaim[]     @relation("CentralClaimant")
   centralClaimDecisions     ActivityClaim[]     @relation("CentralClaimDecider")
+  questionsAsked            Question[]          @relation("QuestionAuthor")
+  questionVotes             QuestionVote[]      @relation("QuestionVoter")
+  answersGiven              Answer[]            @relation("AnswerAuthor")
+  answerVotes               AnswerVote[]        @relation("AnswerVoter")
+  answerFavourites          AnswerFavourite[]   @relation("AnswerFavouriter")
+  answerFlagsSet            AnswerFlag[]        @relation("AnswerFlagger")
+  editSuggestions           EditSuggestion[]    @relation("EditSuggester")
+  questionPacks             Pack[]              @relation("PackOwner")
   bulletinPosts             BulletinPost[]
   bulletinVotes             BulletinVote[]
   partyMemberships          PartyMembership[]
@@ -1257,6 +1265,10 @@ model Community {
   sourcedPointsEvents PointsEvent[]     @relation("CentralPointsSourceCommunity")
   referrals         CommunityReferral[]
   activityClaims    ActivityClaim[]
+  questions         Question[]          @relation("QuestionCommunity")
+  branchQuestions   Question[]          @relation("QuestionBranch")
+  questionPacks     Pack[]              @relation("PackCommunity")
+  questionTags      QuestionTag[]       @relation("QuestionTagCommunity")
   // Ideas that originated in this Community — informational/display only, see note above.
   ideas             Idea[]
 
@@ -1460,6 +1472,209 @@ model ActivityClaim {
 
   @@index([communityId, status])
   @@index([userId, activityType])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CENTRAL Stage 2b — the question library.
+//
+// A library of the hard questions members actually get asked, with
+// community-rated answers, and a pack builder that turns a filtered slice into
+// a field aid. docs/SCRUTINISE_CENTRAL_SPEC.md §5.
+//
+// Three vote-ish things that are deliberately NOT the same mechanism:
+//   · QuestionVote  — up only. Means "I get asked this too": it records
+//     FREQUENCY, not quality, which is why self-voting is allowed (the asker
+//     demonstrably was asked) and why there is no downvote.
+//   · AnswerVote    — up or down, mutually exclusive, self-voting refused,
+//     consistent with the Stage 2 no-marking-own-content rule.
+//   · AnswerFavourite — PRIVATE. No count, no ranking effect, never aggregated
+//     or exposed anywhere, including admin views.
+//
+// Enum-ish columns are plain Strings for the same reason as the rest of
+// Central: no CREATE TYPE against a live database, Zod at every boundary.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Question {
+  id          String    @id @default(uuid())
+  /// The ROOT Community. Everything in the library is scoped to one Community.
+  communityId String
+  community   Community @relation("QuestionCommunity", fields: [communityId], references: [id])
+  authorId    String
+  author      User      @relation("QuestionAuthor", fields: [authorId], references: [id])
+  text        String
+  /// COMMUNITY (the default) | BRANCH
+  scope       String    @default("COMMUNITY")
+  /// The author's branch. Recorded even when scope is COMMUNITY, so "which
+  /// branch is asking this" stays answerable for filtering and for the
+  /// across-branches view.
+  branchId    String?
+  branch      Community? @relation("QuestionBranch", fields: [branchId], references: [id])
+  /// Where the question gets asked (Doorstep, Media interview, …) and what it
+  /// is about (Local finance, Housing, …). Free-form arrays: the topic list is
+  /// admin-extendable, so a fixed enum would need a migration per new topic.
+  contextTags String[]  @default([])
+  topicTags   String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  answers   Answer[]
+  votes     QuestionVote[]
+
+  @@index([communityId, createdAt])
+  @@index([communityId, scope])
+  @@index([branchId])
+}
+
+model Answer {
+  id           String   @id @default(uuid())
+  questionId   String
+  question     Question @relation(fields: [questionId], references: [id])
+  authorId     String
+  author       User     @relation("AnswerAuthor", fields: [authorId], references: [id])
+  body         String
+  /// Links backing the answer up. A list, so the UI can render them as sources.
+  sources      String[] @default([])
+  /// "This worked on my patch" — rendered as its own teal block, deliberately
+  /// distinct from sources.
+  localExample String?
+  /// Managers can hide an answer outright as well as flagging it.
+  hidden       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  votes       AnswerVote[]
+  favourites  AnswerFavourite[]
+  flags       AnswerFlag[]
+  suggestions EditSuggestion[]
+
+  @@index([questionId, hidden])
+  @@index([authorId])
+}
+
+/// "I've been asked this too." Up only; frequency, not quality.
+model QuestionVote {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  userId     String
+  user       User     @relation("QuestionVoter", fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([questionId, userId])
+  @@index([questionId])
+}
+
+model AnswerVote {
+  id        String   @id @default(uuid())
+  answerId  String
+  answer    Answer   @relation(fields: [answerId], references: [id])
+  userId    String
+  user      User     @relation("AnswerVoter", fields: [userId], references: [id])
+  /// UP | DOWN. Mutually exclusive — switching withdraws the previous vote
+  /// rather than stacking, so the displayed count moves by 2.
+  direction String
+  /// Reserved for credibility-weighted voting. Defaulted to 1.0 and APPLIED in
+  /// the sort, but NO weighting logic is implemented this sprint — flat votes
+  /// for the pilot. The column exists so weighting can be switched on later
+  /// without a migration.
+  voteWeight Float   @default(1.0)
+  createdAt DateTime @default(now())
+
+  @@unique([answerId, userId])
+  @@index([answerId])
+}
+
+/// PRIVATE. Never counted, never ranked, never shown to anyone but its owner —
+/// including admins, and including the across-branches view.
+model AnswerFavourite {
+  id        String   @id @default(uuid())
+  answerId  String
+  answer    Answer   @relation(fields: [answerId], references: [id])
+  userId    String
+  user      User     @relation("AnswerFavouriter", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([answerId, userId])
+  @@index([userId])
+}
+
+/// A manager's warning on an answer. DO_NOT_USE excludes it from packs;
+/// USE_WITH_CARE stays packable and the reason travels into the output.
+model AnswerFlag {
+  id          String   @id @default(uuid())
+  answerId    String
+  answer      Answer   @relation(fields: [answerId], references: [id])
+  /// DO_NOT_USE | USE_WITH_CARE
+  level       String
+  /// Required. A flag without a stated reason is an unaccountable veto.
+  reason      String
+  setByUserId String
+  setBy       User     @relation("AnswerFlagger", fields: [setByUserId], references: [id])
+  setAt       DateTime @default(now())
+
+  @@unique([answerId])
+  @@index([answerId])
+}
+
+/// A reader's proposed rewording. Goes to the ANSWER'S AUTHOR, who applies or
+/// dismisses it. There is deliberately no admin path: an edit suggestion is a
+/// conversation between two members, not a moderation action.
+model EditSuggestion {
+  id                String   @id @default(uuid())
+  answerId          String
+  answer            Answer   @relation(fields: [answerId], references: [id])
+  suggestedByUserId String
+  suggestedBy       User     @relation("EditSuggester", fields: [suggestedByUserId], references: [id])
+  suggestedBody     String
+  /// PENDING | APPLIED | DISMISSED
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  decidedAt         DateTime?
+
+  @@index([answerId, status])
+  @@index([suggestedByUserId])
+}
+
+/// A saved slice of the library, built into a field aid.
+model Pack {
+  id          String    @id @default(uuid())
+  ownerId     String
+  owner       User      @relation("PackOwner", fields: [ownerId], references: [id])
+  communityId String
+  community   Community @relation("PackCommunity", fields: [communityId], references: [id])
+  name        String
+  /// The library filter this pack was built from, stored whole so "Change
+  /// filters" round-trips and the pack can be rebuilt as the library moves.
+  filter      Json      @default("{}")
+  size        Int       @default(10)
+  /// Pinned ids hold their position when the ranking moves; removed ids stay
+  /// out. Ordered, hence arrays rather than a join table.
+  pinnedQuestionIds  String[] @default([])
+  removedQuestionIds String[] @default([])
+  /// GLANCE | FLASHCARD | LIST | PRINT
+  outputFormat String   @default("GLANCE")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([communityId, ownerId])
+}
+
+/// The admin-extendable topic list, and which tags are promoted to a visible
+/// filter chip. Unpromoted tags live in the dropdown, so the chip row stays
+/// short as tags multiply.
+model QuestionTag {
+  id          String    @id @default(uuid())
+  communityId String
+  community   Community @relation("QuestionTagCommunity", fields: [communityId], references: [id])
+  /// CONTEXT_EXTERNAL | CONTEXT_INTERNAL | TOPIC
+  kind        String
+  label       String
+  promoted    Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@unique([communityId, kind, label])
+  @@index([communityId, kind])
 }
 
 // Bulletin board — thread + reply share one self-referential table (same
