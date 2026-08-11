@@ -43,7 +43,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise-web/.
 import { Pool } from 'pg'
 import { connectLance } from './lance'
 import { VEC_TABLE, CHUNKS_TABLE } from './vector-common'
-import { r2Put } from '../shared/r2-client'
+import { r2Put, r2List } from '../shared/r2-client'
 
 const CMD = process.argv[2] ?? 'audit'
 const APPLY = process.argv.includes('--apply')
@@ -55,7 +55,20 @@ const CORPUS_ARG = arg('corpus')
 
 const STATE_DIR = path.join(__dirname, '.vec-hygiene')
 const MANIFEST_PATH = path.join(STATE_DIR, 'manifest.json')
-const ID_CHUNK = 400
+/**
+ * Ids per `IN (…)` predicate.
+ *
+ * ⚠ MEASURED 11 Aug 2026: the cost of a delete is per-PREDICATE, not per-row. `corpus_chunks` and
+ * `corpus_vec` have no scalar index on `chunkId`, so every `delete(chunkId IN (…))` scans the
+ * whole 22.5M-row table — **~22.5 seconds per batch whatever the batch holds.** At 400 that made
+ * 89,377 orphans × 2 tables = 448 scans = 138 minutes. Raising the batch cuts the number of scans
+ * proportionally; the predicate string is the only thing that grows (~45 bytes per id, so 2,000
+ * ids ≈ 90 KB, which DataFusion parses without complaint).
+ *
+ * Env-tunable rather than simply raised, because the safe ceiling depends on the predicate parser
+ * and nobody has probed where it breaks. 400 stays the default so existing behaviour is unchanged.
+ */
+const ID_CHUNK = parseInt(process.env.VEC_HYGIENE_ID_CHUNK ?? '400', 10)
 const PART_BYTES = 32 * 1024 * 1024
 
 const log = (m: string) => console.log(`[vec-hygiene] ${m}`)
@@ -258,11 +271,56 @@ async function exportSafetyRecord(): Promise<void> {
   log(`exported ${rowsOut} orphan chunk rows in ${part} parts (${(bytesOut / 1024 / 1024).toFixed(1)} MB) → _search/vec-hygiene-backup/${stamp}/`)
 }
 
-async function deleteOrphans(): Promise<void> {
-  const m = readManifest()
-  if (APPLY && !fs.existsSync(path.join(STATE_DIR, 'export.json'))) {
+/**
+ * The safety export must belong to THE AUDIT BEING DELETED AGAINST, and must be complete.
+ *
+ * ⚠ This guard used to be `fs.existsSync(export.json)` and nothing more. `export.json` is not
+ * stamped per run, so a marker left by ANY previous export satisfied it. On 10 Aug 2026 a 6 Aug
+ * marker (stamp 2026-08-06T05-22-55-495Z, 6,464 rows) sat on disk while a 89,377-row export was
+ * still four parts from finishing — existence-as-proof would have authorised an irreversible
+ * delete of 89,377 rows backed by a safety record of 6,464 unrelated ones. The guard was exactly
+ * as strong as no guard at the one moment it mattered.
+ *
+ * Same family as docs/CLAUDE.md §18/§19: a signal that looks like a measurement but carries no
+ * provenance. Three things are checked, not one — whose export it is, whether it covers every row,
+ * and whether the objects it names are really in R2.
+ */
+async function assertSafetyExport(m: Manifest): Promise<void> {
+  const markerPath = path.join(STATE_DIR, 'export.json')
+  if (!fs.existsSync(markerPath)) {
     throw new Error('no safety export — run `vec-hygiene.ts export` first')
   }
+  let marker: { stamp?: string; rows?: number; keys?: string[] }
+  try { marker = JSON.parse(fs.readFileSync(markerPath, 'utf8')) } catch (e) {
+    throw new Error(`safety export marker is unreadable (${(e as Error).message}) — re-run \`export\``)
+  }
+  const wantStamp = m.auditedAt.replace(/[:.]/g, '-')
+  if (marker.stamp !== wantStamp) {
+    throw new Error(
+      `safety export is for a DIFFERENT audit: marker stamp ${marker.stamp ?? '(none)'}, ` +
+      `this manifest ${wantStamp}. Re-run \`vec-hygiene.ts export\` — refusing to delete ` +
+      `${m.orphans.length.toLocaleString()} rows against someone else's backup.`)
+  }
+  if (marker.rows !== m.orphans.length) {
+    throw new Error(
+      `safety export is INCOMPLETE: it records ${Number(marker.rows ?? 0).toLocaleString()} rows, ` +
+      `the manifest has ${m.orphans.length.toLocaleString()} orphans. Re-run \`export\`.`)
+  }
+  const named = marker.keys ?? []
+  if (!named.length) throw new Error('safety export names no objects — re-run `export`')
+  const present = new Set(await r2List(`_search/vec-hygiene-backup/${wantStamp}/`))
+  const missing = named.filter((k) => !present.has(k))
+  if (missing.length) {
+    throw new Error(
+      `safety export names ${named.length} objects but ${missing.length} are NOT in R2 ` +
+      `(e.g. ${missing[0]}). Re-run \`export\`.`)
+  }
+  log(`safety export verified: stamp ${marker.stamp}, ${Number(marker.rows).toLocaleString()} rows, ${named.length}/${named.length} objects present in R2`)
+}
+
+async function deleteOrphans(): Promise<void> {
+  const m = readManifest()
+  if (APPLY) await assertSafetyExport(m)
   const conn = await connectLance()
   const ids = m.orphans.map((o) => o.chunkId)
   log(`orphan chunks to remove: ${ids.length.toLocaleString()} (from BOTH ${VEC_TABLE} and ${CHUNKS_TABLE})`)

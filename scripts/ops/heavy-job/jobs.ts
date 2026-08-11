@@ -124,16 +124,40 @@ export const JOBS: Record<string, HeavyJob> = {
     // VECTOR_SKIP_COMPACT is not optional here: optimize() SIGKILLed twice at 32 GB on 21 Jul
     // before createIndex() was ever reached, and compaction is a read-efficiency step, not a
     // correctness requirement — §17's standing workaround, shared with the FTS build.
-    command: 'VECTOR_SKIP_COMPACT=true R2_MAX_SOCKETS=256 npx tsx search/build-vector-index.ts --index-only',
-    verify: 'npx tsx search/check-vector-serving.ts',
-    // Same preference order as `vector-index`: the ANN build over ~22.6M × 768-d float32 is the
-    // memory-hungry half, and it is the half this job runs.
-    serverTypes: ['ccx43', 'ccx53', 'cpx51'],
-    // NOT MEASURED for this exact shape (index-only, no compaction). Inherited from the parent
-    // job rather than guessed downward — leaving it at the parent's number is the conservative
-    // reading of §17's "size from evidence", and the real figure goes here after the first run.
+    // ⚠ VECTOR_SHARD_SIZE=12000 is REQUIRED even though --index-only processes no shards.
+    // build-vector-index.ts asserts `cp.shardSize === SHARD_SIZE` at the top of main(), BEFORE it
+    // branches on --index-only, so the env default of 40000 against the 21 Jul checkpoint's 12000
+    // aborts a run that was never going to touch a shard. Measured 11 Aug 2026: the job died in
+    // 84 seconds on exactly this.
+    // ⚠ AND: the runner executes the GitHub clone, not the local working tree. Any script named
+    // here — command or verify — must be COMMITTED AND PUSHED first. The same run lost its verify
+    // step to `Cannot find module .../verify-vector-index.ts` because that file was still local.
+    command: 'VECTOR_SHARD_SIZE=12000 VECTOR_SKIP_COMPACT=true R2_MAX_SOCKETS=256 npx tsx search/build-vector-index.ts --index-only',
+    // ⚠ NOT `check-vector-serving.ts`, which this job originally named: that is a pure-logic unit
+    // check with no Lance and no network, so it passes in a second whether or not an index was
+    // built. A verify that cannot fail for the reason the job exists is a second success message,
+    // not a check — the same shape as the no-op `vector-index` run this job replaced.
+    // `verify-vector-index.ts` reads the index stats and fails on a missing index or any
+    // unindexed row.
+    verify: 'npx tsx search/verify-vector-index.ts',
+    // ⚠ SHARED vCPU FIRST, and this is a correction. This job first inherited `vector-index`'s
+    // ['ccx43','ccx53','cpx51'] and every dedicated placement was REFUSED — ccx43@nbg1,
+    // ccx43@hel1, ccx53@nbg1, ccx53@hel1 — on 11 Aug 2026. That is the per-account dedicated-core
+    // quota this file already warns about, and it is the second time it has blocked a vector
+    // rebuild (CHANGE_LOG 2026-07-21).
+    //
+    // 32 GB shared is the EVIDENCED size, not a hopeful downgrade. The parent job's own peakSource
+    // records the 21 Jul failure as "OOM at fragment COMPACTION on a 32 GB box; completed with
+    // VECTOR_SKIP_COMPACT" — i.e. the 64 GB requirement belonged to the compaction step, and this
+    // job sets VECTOR_SKIP_COMPACT=true, so it is not doing that step. cpx62 is also less than
+    // half the price (€0.2942/h vs €0.6259/h) and draws no dedicated-core quota. Same list
+    // `fts-index` uses, which has succeeded four times.
+    serverTypes: ['cpx62', 'cpx52', 'ccx43'],
+    // NOT MEASURED for this exact shape (index-only, no compaction). 32 is carried over from the
+    // parent as an upper bound rather than guessed downward; replace it with the first run's own
+    // reported peak.
     expectedPeakGb: 32,
-    peakSource: 'inherited from `vector-index` (21 Jul 2026) — NOT yet measured for the index-only path; replace with the first run\'s own report',
+    peakSource: 'inherited from `vector-index` (21 Jul 2026), where 32 GB completed once compaction was skipped — NOT yet measured for the index-only path; replace with the first run\'s own report',
   },
 }
 
