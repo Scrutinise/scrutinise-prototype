@@ -608,3 +608,79 @@ Reply to this email to answer them directly.
 
   await sendEmail({ to: adminEmail, subject, html, text, replyTo: email })
 }
+
+/**
+ * Central — a Community admin's broadcast to every branch manager.
+ *
+ * Returns a RESULT rather than throwing or going quiet, for the same reason as
+ * sendCommunityInviteEmail: the notification has already been written, so a
+ * throw would abort the rest of the run, while a silent return would let the
+ * composer report "sent to 6 managers" when nothing left the building. The
+ * caller counts successes and lists the failures by name.
+ */
+export async function sendBranchManagerBroadcastEmail({
+  toEmail,
+  toName,
+  fromName,
+  communityName,
+  communityId,
+  subject,
+  message,
+}: {
+  toEmail: string
+  toName: string
+  fromName: string
+  communityName: string
+  communityId: string
+  subject: string
+  message: string
+}): Promise<{ sent: boolean; reason?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    return { sent: false, reason: 'email not configured on this deployment' }
+  }
+  if (await isEmailSuppressed(toEmail)) {
+    return { sent: false, reason: 'has unsubscribed' }
+  }
+
+  const url = `${APP_URL}/communities/${communityId}`
+  const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
+  const escaped = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const text = `
+Hi ${toName},
+
+${fromName} has sent this to every branch manager in ${communityName}:
+
+${message}
+
+Open ${communityName}: ${url}
+
+---
+If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
+`.trim()
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
+  <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a1a1aa;">Scrutinise Central · ${communityName}</p>
+  <h2 style="font-size: 18px; font-weight: 600;">${subject}</h2>
+  <p style="color: #71717a; font-size: 13px;">From ${fromName}, to every branch manager.</p>
+  <p style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${escaped}</p>
+  <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #18181b; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Open ${communityName}</a></p>
+  <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0;" />
+  <p style="color: #71717a; font-size: 12px;">
+    Scrutinise is a not-for-profit civic technology platform.<br/>
+    <a href="${unsubscribeUrl}" style="color: #71717a;">Unsubscribe</a>
+  </p>
+</body>
+</html>
+`.trim()
+
+  try {
+    await sendEmail({ to: toEmail, subject: `[${communityName}] ${subject}`, html, text })
+    return { sent: true }
+  } catch (err) {
+    return { sent: false, reason: err instanceof Error ? err.message : 'send failed' }
+  }
+}
