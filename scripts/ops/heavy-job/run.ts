@@ -79,9 +79,11 @@ async function hz<T>(method: string, pathname: string, body?: unknown): Promise<
   return (text ? JSON.parse(text) : {}) as T
 }
 
-function collectEnv(): Record<string, string> {
+function collectEnv(job?: HeavyJob): Record<string, string> {
   const out: Record<string, string> = {}
-  for (const k of NEEDED) {
+  // A job's own extras are required just as strictly as the standard set: a box that boots without
+  // the one credential its job needs fails on the first call, minutes and euros in.
+  for (const k of [...NEEDED, ...(job?.extraEnv ?? [])]) {
     const v = process.env[k]
     if (!v) {
       if (k === 'CLOUDFLARE_R2_BUCKET_NAME') continue // r2-client defaults
@@ -226,14 +228,14 @@ async function readLog(logKey: string): Promise<string | null> {
 // ── commands ─────────────────────────────────────────────────────────────────
 function list() {
   for (const j of Object.values(JOBS)) {
-    console.log(`${j.name.padEnd(14)} ${j.serverType ?? 'ccx43'}  peak=${j.expectedPeakGb ?? '?'}GB  ${j.description.split('.')[0]}`)
+    console.log(`${j.name.padEnd(18)} ${(j.serverTypes?.[0]) ?? 'ccx43'}  peak=${j.expectedPeakGb ?? '?'}GB  ${j.description.split('.')[0]}`)
   }
 }
 
 /** INERT — validates everything and renders the cloud-init. Creates nothing, spends nothing. */
 async function plan(jobName: string) {
   const job = getJob(jobName)
-  const env = collectEnv()
+  const env = collectEnv(job)
   const candidates = typesFor(job)
   const st = await serverTypeInfo(candidates[0])
   const hourly = hourlyGross(st)
@@ -256,7 +258,7 @@ async function plan(jobName: string) {
 
 async function run(jobName: string, keep: boolean) {
   const job = getJob(jobName)
-  const env = collectEnv()
+  const env = collectEnv(job)
   const candidates = typesFor(job)
   const started = Date.now()
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')

@@ -26,6 +26,13 @@ export interface HeavyJob {
    * bindings are not exercised on ARM (cax*), so it is not worth discovering that here.
    */
   serverTypes?: string[]
+  /**
+   * Credentials this job needs BEYOND the runner's standard set (Neon + R2). Per-job rather than
+   * added to the shared list, so a key one job wants cannot become a boot requirement for the
+   * four that do not want it. Named here, resolved from scrutinise-web/.env, and missing → refuse
+   * before spending anything.
+   */
+  extraEnv?: string[]
   /** Highest RSS actually observed, in GB — evidence for the size choice. */
   expectedPeakGb: number | null
   /** Where the job's peak was measured, so the number can be re-checked. */
@@ -165,6 +172,32 @@ export const JOBS: Record<string, HeavyJob> = {
     // the standard home for this class of work.
     expectedPeakGb: 5.6,
     peakSource: '11 Aug 2026, cpx62 (32 GB shared), 22,518,608 rows, 29.5 min → 5.6 GB peak, €0.145, unindexed 0. Two earlier attempts the same night cost €0.007 and never reached the build: all dedicated placements refused (quota), then the shard-size assertion aborted it in 84s.',
+  },
+  'ann-recall-check': {
+    name: 'ann-recall-check',
+    description:
+      'Measure what the IVF_PQ ANN index actually retrieves: top-20 overlap between production ' +
+      'nprobes=24 and an exhaustive 4,096-partition probe, over the gold + ordering query sets ' +
+      '(BRIEF_SEARCH_S2C4 §1). Settles whether dense recall is degraded BEFORE the ordering ' +
+      'baseline is read, so a clustering parameter cannot be mistaken for a reranker case.',
+    // ⚠ NOT under scripts/ingest/search/. That path is the WATCH PATTERN on both fts-serve and
+    // vector-serve (read from the Railway API, 11 Aug 2026), so a push there auto-redeploys and
+    // restarts the two services this sprint is trying to measure. A probe must not move its own
+    // subject: this file sits one directory up for exactly that reason.
+    command: 'R2_MAX_SOCKETS=256 LANCE_INCLUDE_VECTOR_CENTROIDS=false npx tsx ann-recall-check.ts --ladder 1,24,256,4096 --exact 2 --live 6',
+    // The mirror guard, watched failing on 5 planted defects. It asserts the probe still describes
+    // the retrieval in vector-core.ts — if that file changes, this job fails instead of quietly
+    // measuring a system nobody serves. No Lance, no network: it costs a second.
+    verify: 'npx tsx ann-recall-check.ts --self-test',
+    // IO-bound, not memory-bound: the work is pulling PQ codes for up to 4,096 partitions out of
+    // R2. Shared vCPU is right (no dedicated-core quota — that has now blocked a vector job twice)
+    // and 16 GB is chosen for the index cache, not for the job's own allocations.
+    serverTypes: ['cpx41', 'cpx51', 'cpx31'],
+    extraEnv: ['GEMINI_API_KEY'], // every query has to be embedded before it can be searched
+    // MEASURED locally first, which is why this is a box job at all: one query's exhaustive rung
+    // took 150s from a home connection (~15 MB/s against ~2.2 GB of PQ codes). 58 queries × 4 rungs
+    // would have been three hours here. Peak RSS stays null until the box reports it.
+    expectedPeakGb: null,
   },
 }
 
