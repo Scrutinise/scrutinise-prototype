@@ -53,7 +53,7 @@ function getStatusMessage(idea: WhatNextPanelProps['idea']): string {
   const hasActions = coherentActions.length > 0
 
   if (!diagnosisComplete) {
-    return "The next step is to complete your Diagnosis. Click Edit to describe the challenge you want to address and work with Lex to identify its root causes."
+    return "The next step is to complete your Diagnosis. Click Edit to describe the problem you want to address and work with Lex to identify its root causes."
   }
 
   if (diagnosisComplete && !guidingPolicyComplete) {
@@ -132,8 +132,8 @@ export default function WhatNextPanel({ idea, isOpen, onClose }: WhatNextPanelPr
         {journeyOpen && (
           <div className="mt-2 text-xs text-zinc-600 space-y-2">
             <p>You are currently building your idea to the point where it is robust enough for public scrutiny. This requires three main elements:</p>
-            <p><strong>1. The Diagnosis</strong> — getting complete clarity on the challenge and its causes. Until this is clear, it is hard to form an effective policy. The key to solving any challenge or problem is figuring out what&apos;s causing it. This is critically important because if we identify the wrong causes we&apos;ll end up with the wrong solution.</p>
-            <p><strong>2. The Guiding Policy</strong> — stating in broad terms what approach will overcome the challenge. You need a guiding policy because you need a set of principles and goals to judge your specific actions against. Without these, you won&apos;t know whether your actions will actually solve the problem.</p>
+            <p><strong>1. The Diagnosis</strong> — getting complete clarity on the problem and its causes. Until this is clear, it is hard to form an effective policy. The key to solving any challenge or problem is figuring out what&apos;s causing it. This is critically important because if we identify the wrong causes we&apos;ll end up with the wrong solution.</p>
+            <p><strong>2. The Guiding Policy</strong> — stating in broad terms what approach will overcome the problem. You need a guiding policy because you need a set of principles and goals to judge your specific actions against. Without these, you won&apos;t know whether your actions will actually solve the problem.</p>
             <p><strong>3. Coherent Actions</strong> — the specific changes you want to make, such as legislation changes or organisational reforms. These should be made as robust as possible with research, evidence, and honest analysis of costs and opposition.</p>
           </div>
         )}

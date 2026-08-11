@@ -12,7 +12,7 @@ export interface LexMessage {
 export const LEX_JOURNEY_1_SCRIPT: LexMessage[] = [
   {
     role: 'lex',
-    content: `I'm Lex, your researcher and guide. What's the challenge you want to fix?`
+    content: `I'm Lex, your researcher and guide. What's the problem you want to fix?`
   },
   {
     role: 'user',

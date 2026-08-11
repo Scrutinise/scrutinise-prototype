@@ -2,7 +2,7 @@ export interface FieldStep {
   key: string           // fieldUpdates key (e.g. 'diagnosis.obstacleDefined')
   label: string         // display label (e.g. '6. The Obstacle')
   section: string       // section key (e.g. 'diagnosis')
-  sectionLabel: string  // section heading (e.g. 'Diagnosis — The Challenge')
+  sectionLabel: string  // section heading (e.g. 'Diagnosis — The Problem')
   isLexGenerated?: boolean  // if true, Lex generates without asking user
   isLoop?: boolean          // if true (coherent actions), loop resumes after completion
 }
@@ -32,14 +32,14 @@ export const FIELD_SEQUENCE: FieldStep[] = [
   ...STAGE_1_FIELDS,
 
   // Diagnosis
-  { key: 'diagnosis.text',              label: "5. What's the Challenge?", section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.obstacleDefined',   label: '6. The Obstacle',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.whoAffected',       label: "7. Who's Affected?",        section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.howAffected',       label: '8. How Are They Affected?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.whyPersisted',      label: '9. Why Has This Persisted?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.impactDescription', label: '10. Impact',                section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'diagnosis.impactCost',        label: '11. Impact Cost',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge' },
-  { key: 'summaryDiagnosis',            label: 'Summary: The Challenge',    section: 'diagnosis', sectionLabel: 'Diagnosis — The Challenge', isLexGenerated: true },
+  { key: 'diagnosis.text',              label: "5. What's the Problem?", section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.obstacleDefined',   label: '6. The Obstacle',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.whoAffected',       label: "7. Who's Affected?",        section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.howAffected',       label: '8. How Are They Affected?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.whyPersisted',      label: '9. Why Has This Persisted?', section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.impactDescription', label: '10. Impact',                section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'diagnosis.impactCost',        label: '11. Impact Cost',           section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem' },
+  { key: 'summaryDiagnosis',            label: 'Summary: The Problem',    section: 'diagnosis', sectionLabel: 'Diagnosis — The Problem', isLexGenerated: true },
 
   // Guiding Policy
   { key: 'guidingPolicy.text',                 label: '12. How Will We Solve It?',       section: 'guidingPolicy', sectionLabel: 'Guiding Policy — Your Approach' },
@@ -110,8 +110,8 @@ export const FIELD_LABELS: Record<string, { sectionHeading?: string; userLabel: 
   ideaType:           { userLabel: '4. Idea Type' },
 
   // Diagnosis
-  diagnosisTitle:         { sectionHeading: 'Diagnosis — The Challenge',    userLabel: '5. What\'s the Challenge?' },
-  diagnosisDescription:   {                                                   userLabel: 'Describe the Challenge' },
+  diagnosisTitle:         { sectionHeading: 'Diagnosis — The Problem',    userLabel: '5. What\'s the Problem?' },
+  diagnosisDescription:   {                                                   userLabel: 'Describe the Problem' },
   obstacleDefined:        {                                                   userLabel: '6. The Obstacle' },
   whoAffected:            {                                                   userLabel: '7. Who Is Affected' },
   howAffected:            {                                                   userLabel: '8. How They\'re Affected' },
@@ -200,9 +200,9 @@ export const SIDEBAR_SECTIONS = [
   },
   {
     key: 'diagnosis',
-    heading: 'Diagnosis — The Challenge',
+    heading: 'Diagnosis — The Problem',
     fields: [
-      { key: 'diagnosisText',              label: "5. What's the Challenge?" },
+      { key: 'diagnosisText',              label: "5. What's the Problem?" },
       { key: 'diagnosisObstacleDefined',   label: '6. The Obstacle' },
       { key: 'diagnosisWhoAffected',       label: "7. Who's Affected?" },
       { key: 'diagnosisHowAffected',       label: '8. How Are They Affected?' },

@@ -39,13 +39,20 @@ export const SLOT_LABELS: Record<string, string> = {
 
 export const DIAGNOSIS_FIELDS: FieldDef[] = [
   {
+    // §19-D Task 1a — the STORED key stays `challenge` (it is mirrored onto
+    // `Idea.challenge`, referenced by the search-query builder and by every stored
+    // field-state row; renaming it would be a migration for no user-visible gain).
+    // Everything the user reads says "The problem", here and everywhere else.
+    //
+    // // A vague label invites a vague answer. "Challenge" let a solution in.
     key: 'challenge',
-    label: 'Challenge',
+    label: 'The problem',
     type: 'text',
     scope: 'idea',
     origin: 'proposed', // Lex proposes a one-sentence statement; inline confirm in chat
     required: true,
-    question: 'In one sentence, what exactly is the challenge?',
+    question:
+      'In one sentence, what is the problem — what is going wrong, for whom, and why does it matter?',
   },
   {
     key: 'whoAffectedImpactCost',
@@ -66,8 +73,9 @@ export const DIAGNOSIS_FIELDS: FieldDef[] = [
     type: 'loop',
     scope: 'idea',
     origin: 'box', // the causes loop editor in the panel (add / edit / remove)
-    question:
-      'What are the causes of this problem, and why has each persisted? I’ll seed a few that others have identified.',
+    // §19-D Task 2/8 — no promise of seeding here either. This text is the fallback,
+    // and the conductor reports the actual number of candidates it managed to seed.
+    question: 'What are the causes of this problem, and why has each one persisted?',
   },
   {
     key: 'rootCause',

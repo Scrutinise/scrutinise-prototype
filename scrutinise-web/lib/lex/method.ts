@@ -23,6 +23,39 @@ export const M_GENERAL =
   'with no leverage). Watch for these in the user’s input and in your own drafts; name them kindly ' +
   'and push for the sharper version. Never let a list substitute for a choice.'
 
+// ─── M-PROBLEM-GATE (Page 2, the `challenge` field) ──────────────────────────
+//
+// §19-D Task 1b — the headline finding of the 10 Aug walk-through. Charlie entered
+// "I want to change the amount charged for plastic bags in shops" — a SOLUTION — as
+// the problem, and it was accepted and carried forward. His words: "Without a problem
+// we can have no strategy and the whole logical structure breaks down. At the moment I
+// can put anything in and it's accepted, and none of it makes sense."
+//
+// // Every downstream stage inherits this field. A solution entered here makes the
+// // whole kernel incoherent.
+//
+// Rumelt at the root: a diagnosis that never names a problem cannot produce a guiding
+// policy. But Lex GUIDES, it does not gatekeep — the press is capped at two, and a
+// user who insists is allowed through with the disagreement on the record. The
+// deepening stage returns to it.
+export const M_PROBLEM_GATE =
+  'THE PROBLEM GATE. Before you accept anything as "the problem", test it: is it stated as a ' +
+  'PROBLEM (something wrong in the world — a harm, a failure, a cost, a gap, happening to ' +
+  'someone) or as a SOLUTION (a thing to do — change, ban, introduce, raise, require, fund)? ' +
+  'A sentence whose main verb is an action the user wants taken is a solution, however strongly ' +
+  'they feel it.\n' +
+  'If it is a solution, DO NOT REJECT IT and do not lecture. Ask what problem it solves, and ' +
+  'propose the problem statement back so they only have to agree or correct it. For "change the ' +
+  'charge for plastic bags": "What\'s going wrong that a change in the charge would fix? Is the ' +
+  'problem that too many bags are still used, that the current charge is too low to change ' +
+  'behaviour, that the money raised isn\'t reaching charities — or something else?" Offer the ' +
+  'most likely reading as a proposal so agreeing is one click.\n' +
+  'Accept only once there is a statement of WHAT IS WRONG, FOR WHOM, and WHY IT MATTERS. ' +
+  'AT MOST TWO PRESSES. If after two the user gives you the same answer or tells you to move on, ' +
+  'accept what they have given, say plainly and without reproach that you have recorded it as ' +
+  'they put it and that you will come back to it when the causes are on the table, and move on. ' +
+  'A third press is nagging, and it is not your call to make.'
+
 // M-DIAGNOSIS (Page 2).
 export const M_DIAGNOSIS =
   'A diagnosis is a simplification that names what is pivotal — not an inventory of everything wrong. ' +
@@ -61,19 +94,76 @@ const STAGE_BLOCK: Record<string, string> = {
   COHERENT_ACTIONS: M_COHERENT_ACTIONS,
 }
 
-/** Short label of the blocks active for a page — for [lex-diag] observability. */
-export function methodBlocksFor(pageKey: string | null | undefined): string[] {
-  const blocks = ['M-GENERAL']
-  if (pageKey && STAGE_BLOCK[pageKey]) blocks.push('M-' + pageKey.replace('_', '-'))
-  return blocks
+/** The field whose method block is the problem gate. Stored key, user-visible label
+ *  "The problem" (§19-D Task 1a — the key was NOT renamed; see page2-config). */
+export const PROBLEM_FIELD_KEY = 'challenge'
+
+/** Two presses, then Lex accepts what the user gives. Guiding, not gatekeeping. */
+export const MAX_PROBLEM_PRESSES = 2
+
+export interface MethodContext {
+  /** The field the platform says is current — the gate only arms on the problem. */
+  currentFieldKey?: string | null
+  /** How many times Lex has already pressed on this problem statement. */
+  problemPresses?: number
 }
 
 /**
- * The method text injected into Lex's system prompt for the active stage:
- * M-GENERAL plus the active page's stage block (if any). ORIENTATION gets
- * M-GENERAL only — the kernel framing without a stage-specific method.
+ * A deterministic reading of "is this a solution rather than a problem?".
+ *
+ * NOT a gate on its own — the model makes the judgement, because "the charge is too
+ * low" and "raise the charge" differ by more than a verb. This exists so the decision
+ * is VISIBLE in `[lex-diag]` and testable in `check:problem-gate`: without it, whether
+ * the gate fired at all is unobservable from outside, which is the §18 corollary
+ * failure (a component that is off and a component that failed must not look alike).
  */
-export function methodForStage(pageKey: string | null | undefined): string {
+const SOLUTION_OPENERS =
+  /^\s*(?:i\s+(?:want|would like|'d like|wish|propose|suggest|think we should|believe we should)\s+to\s+|we\s+(?:should|must|need to|ought to)\s+|let'?s\s+|my\s+(?:idea|proposal|plan)\s+is\s+to\s+|(?:to\s+)?(?:change|raise|lower|increase|reduce|ban|abolish|introduce|create|require|mandate|fund|scrap|extend|legalise|criminalise|tax|subsidise)\b)/i
+const SOLUTION_VERBS =
+  /\b(?:should|must|need to|ought to)\s+(?:be\s+)?(?:changed|raised|lowered|increased|reduced|banned|abolished|introduced|created|required|mandated|funded|scrapped|extended)\b/i
+const PROBLEM_MARKERS =
+  /\b(?:is failing|are failing|fails|failing to|not working|doesn'?t work|too (?:many|much|few|little|high|low|slow|expensive)|cannot|can'?t|unable|no one|nobody|lack of|lacks|shortage|gap|harm|harmed|suffer|suffering|cost(?:s|ing)? (?:the|us|them|£)|is not|are not|isn'?t|aren'?t|leaves|leaving|means that|risk|unsafe|unfair|delay)\b/i
+
+export function looksLikeASolution(text: string): boolean {
+  const t = (text ?? '').trim()
+  if (!t) return false
+  const solutionShaped = SOLUTION_OPENERS.test(t) || SOLUTION_VERBS.test(t)
+  if (!solutionShaped) return false
+  // "We should ban X because Y is killing people" names a problem as well as a remedy;
+  // the gate is for statements that name ONLY the remedy.
+  return !PROBLEM_MARKERS.test(t)
+}
+
+/** Short label of the blocks active for a page — for [lex-diag] observability. */
+export function methodBlocksFor(pageKey: string | null | undefined, ctx: MethodContext = {}): string[] {
+  const blocks = ['M-GENERAL']
+  if (pageKey && STAGE_BLOCK[pageKey]) blocks.push('M-' + pageKey.replace('_', '-'))
+  if (ctx.currentFieldKey === PROBLEM_FIELD_KEY) {
+    blocks.push((ctx.problemPresses ?? 0) >= MAX_PROBLEM_PRESSES ? 'M-PROBLEM-GATE(spent)' : 'M-PROBLEM-GATE')
+  }
+  return blocks
+}
+
+/** The instruction that ENDS the press, so two really means two. */
+const GATE_SPENT =
+  'THE PROBLEM GATE IS SPENT. You have already pressed twice on how this problem is stated. ' +
+  'Do not press again, do not re-ask, and do not imply the answer is inadequate. Take what the ' +
+  'user has given you, propose it back as their problem statement in their own words tidied to ' +
+  'one sentence, note in ONE short clause that you would like to sharpen it once the causes are ' +
+  'on the table, and move on. The user is allowed to proceed.'
+
+/**
+ * The method text injected into Lex's system prompt for the active stage:
+ * M-GENERAL plus the active page's stage block (if any), plus — while the problem
+ * field is the current one — the problem gate (§19-D Task 1b). ORIENTATION gets
+ * M-GENERAL only.
+ */
+export function methodForStage(pageKey: string | null | undefined, ctx: MethodContext = {}): string {
   const stage = pageKey ? STAGE_BLOCK[pageKey] : undefined
-  return stage ? `${M_GENERAL}\n\n${stage}` : M_GENERAL
+  const parts = [M_GENERAL]
+  if (stage) parts.push(stage)
+  if (ctx.currentFieldKey === PROBLEM_FIELD_KEY) {
+    parts.push((ctx.problemPresses ?? 0) >= MAX_PROBLEM_PRESSES ? GATE_SPENT : M_PROBLEM_GATE)
+  }
+  return parts.join('\n\n')
 }

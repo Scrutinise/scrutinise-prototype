@@ -99,7 +99,7 @@ Stage 1 — CREATE: Owner develops basic idea and strategic kernel with Lex. Vis
 -   Comments in UI = **Contributions** (DB field stays "comment")
 -   Voting = hidden at Stages 1, 2, 3. Visible only from **Stage 4**
 -   Group types = MY_TEAM / COMMUNICATIONS / POLICY_DEVELOPMENT
--   "Problem" in UI = **Challenge** (DB field name stays "diagnosis" — UI label only changes)
+-   The Page-2 diagnosis field in UI = **The problem** (never "Challenge"). **REVERSED on 11 Aug 2026 by §19-D Task 1a** — this line previously read *"Problem" in UI = **Challenge***, and that label is what let a user enter a *solution* ("I want to change the amount charged for plastic bags in shops") and have it accepted as the diagnosis. *A vague label invites a vague answer.* DB field names are unchanged: `Idea.diagnosis` (legacy surface) and `Idea.challenge` / field key `challenge` (Lex rebuild) both stay as they are — this is a label change only.
 -   Lex AI mode default = **Collaborative** (not Socratic)
 -   Points = Strategist, Thinker, Rallymaster, Rainmaker, Teambuilder (never "Dealweaver")
 

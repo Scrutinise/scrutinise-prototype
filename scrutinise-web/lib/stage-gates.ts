@@ -112,7 +112,7 @@ export async function checkStage2to3Gate(ideaId: string): Promise<string | null>
 
   const errors: string[] = []
 
-  if (!idea.diagnosis?.trim()) errors.push('Challenge / diagnosis must be completed')
+  if (!idea.diagnosis?.trim()) errors.push('Problem / diagnosis must be completed')
   if (!idea.guidingPolicy?.trim()) errors.push('Guiding policy must be completed')
   const hasCoherentAction =
     idea.coherentActions.length >= 1 || !!idea.summaryCoherentActions?.trim()
