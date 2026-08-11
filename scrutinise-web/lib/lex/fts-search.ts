@@ -23,6 +23,7 @@ import { flagEnabled } from '@/lib/env-flags'
 import type { SearchResult } from './page1-config'
 import { corpusToType, corpusDisplayName, dbTitleSupersedesIndex } from './corpus-type-map'
 import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
+import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 import { runStubSearch } from './search-stub'
 
 // Native shape returned by fts-query-service.ts (body stripped on the wire).
@@ -46,42 +47,11 @@ const FTS_URL = process.env.FTS_SEARCH_URL // e.g. https://fts-serve-production-
 // boot (fts-query-service.ts) so this is belt-and-braces for the redeploy window.
 const FTS_TIMEOUT_MS = parseInt(process.env.FTS_TIMEOUT_MS ?? '25000', 10)
 
-// ── citation/url derivation for legislation (mirrors scripts/ingest/search/citation.ts) ──
-
-/** corpus_sections id `{corpus}:{gid}:{ref}` → gid (`ukpga/1988/52`) or null. */
-function gidFromId(id: string): string | null {
-  const parts = id.split(':')
-  const gid = parts.length >= 2 ? parts[1] : null
-  return gid && gid.includes('/') ? gid : null
-}
-
-/** id → section ref token, e.g. `section-21`, `regulation-4`, or '' for whole-act. */
-function refFromId(id: string): string {
-  const parts = id.split(':')
-  if (parts.length < 3) return ''
-  const ref = parts.slice(2).join(':').trim()
-  return !ref || ref === 'full' ? '' : ref.replace(/[.\s]+$/g, '')
-}
-
-const REF_ABBR: Record<string, string> = { section: 's.', regulation: 'reg.', article: 'art.', schedule: 'sch.', paragraph: 'para.' }
-
-/** `section-21` → "s.21"; `schedule-2-paragraph-12` → "sch.2 para.12"; '' → ''. */
-function refToCitation(ref: string): string {
-  if (!ref) return ''
-  const segs = ref.split('-')
-  const out: string[] = []
-  for (let i = 0; i < segs.length; i++) {
-    const abbr = REF_ABBR[segs[i].toLowerCase()]
-    if (abbr && i + 1 < segs.length) { out.push(abbr + segs[i + 1]); i++ }
-  }
-  return out.join(' ')
-}
-
-/** gid + ref → legislation.gov.uk URL. `section-21` → /section/21. */
-function legislationUrl(gid: string, ref: string): string {
-  const base = `https://www.legislation.gov.uk/${gid}`
-  return ref ? `${base}/${ref.replace(/-/g, '/')}` : base
-}
+// ── citation/url derivation for legislation ──────────────────────────────────
+// §19-D Task 5: this moved to lib/lex/legislation-url.ts, shared with
+// vector-search.ts and covered by `npm run check:legislation-urls`. The stored
+// `sourceUrl` on the legislation corpora 404s (it pastes the hyphenated ref token
+// straight onto the act URL), so for those types the DERIVED url now wins.
 
 // ── the adapter ──────────────────────────────────────────────────────────────
 
@@ -252,8 +222,11 @@ export async function runFtsSearch(
         citation = preferred ?? ''
       }
 
-      const url =
-        meta?.sourceUrl ?? (isLeg && gid ? legislationUrl(gid, ref) : '')
+      // §19-D Task 5 — for legislation the derived URL WINS over the stored one.
+      // `sourceUrl` is non-null on 100% of legislation rows and 404s on ~92% of
+      // them (measured), so the old `sourceUrl ?? derived` could never reach the
+      // working form. Every other corpus keeps its stored url untouched.
+      const url = resolveResultUrl(type, h.id, meta?.sourceUrl)
       const date = meta?.itemDate ?? h.itemDate ?? ''
 
       // `scorer: 'bm25'` — raw BM25 from the FTS service, comparable only with other BM25

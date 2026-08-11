@@ -16,6 +16,7 @@ import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import type { Block, DocumentModel, SourceRef } from './model'
 import { markdownToBlocks } from './markdown'
+import { repairRefUrl } from '@/lib/lex/legislation-url'
 
 // ⚠ `Record<string, string>`, not `Record<SearchResultType, string>` — so tsc does NOT force a
 // new display type to be added here, and TYPE_ORDER below is a plain array for the same reason.
@@ -116,7 +117,10 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
       const sources: SourceRef[] = g.items.map((r) => ({
         title: r.title?.trim() || 'Untitled source',
         citation: r.citation?.trim() || '',
-        url: r.url?.trim() || '',
+        // §19-D Task 5 — repaired on the way out, so briefings exported before the
+        // fix (and every ref already stored on an idea) carry links that open. It
+        // changes the fingerprint, which correctly marks a stored export stale.
+        url: repairRefUrl(r.type, r.id, r.url)?.trim() || '',
         snippet: r.snippet?.trim() || undefined,
         date: r.date?.trim() || undefined,
       }))
@@ -144,7 +148,7 @@ export async function buildInitialBackground(ideaId: string): Promise<BuildResul
       title: idea.title,
       summary: doc.summary ?? '',
       body: doc.body,
-      refs: refs.map((r) => [r.id ?? '', r.type ?? '', r.title ?? '', r.citation ?? '', r.url ?? '']),
+      refs: refs.map((r) => [r.id ?? '', r.type ?? '', r.title ?? '', r.citation ?? '', repairRefUrl(r.type, r.id, r.url)]),
     }))
     .digest('hex')
 

@@ -116,8 +116,22 @@ export async function runStageSearch(ideaId: string, pageKey: string): Promise<S
 
   const query = await buildStageQuery(ideaId, pageKey)
   if (!query.length) {
+    // §19-D Task 4 — RECORD THE SKIP. This used to `return null` and store nothing,
+    // and a stage with no stored record is indistinguishable, in the panel, from a
+    // stage that never had a search: `briefingIsCurrent = !stageSearch` sent the user
+    // back to the Orientation briefing as though it were this stage's research. Same
+    // family as CLAUDE.md §18's corollary — a search that did not RUN and a search
+    // that was never DUE must not look identical from outside.
     console.log('[lex-diag] stage search skipped — no query signals yet', { pageKey })
-    return null
+    const skipped: StageSearchRecord = {
+      intent, ranAt: new Date().toISOString(), ok: false,
+      failureReason: 'no query signals yet — nothing accepted for this stage to search on',
+      query: [], results: [],
+    }
+    const store0 = await loadStageSearches(ideaId)
+    store0.byStage[pageKey] = skipped
+    await saveStageSearches(ideaId, store0)
+    return skipped
   }
 
   const idea = await prisma.idea.findUnique({

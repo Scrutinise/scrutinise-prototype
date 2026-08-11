@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import DocumentExports from '@/components/documents/DocumentExports'
+import { repairRefUrl } from '@/lib/lex/legislation-url'
 import type { CanonicalState, SearchResult, SearchResultType } from '@/lib/lex/page1-config'
 
 // The Initial Background body is markdown (stub now, Lex-generated later). Render
@@ -55,9 +56,15 @@ const TYPE_ORDER: SearchResultType[] = [
 // Panel 3 — Legislation. Pure renderer of initialBackground + legislationRefs[] (+ the
 // page-transition CTA once the briefing is ready).
 // One reference card — the same shape wherever references appear.
+//
+// §19-D Task 5: the url is repaired at render. New searches already store the
+// working form, but every reference stored before the fix holds a legislation.gov.uk
+// address that 404s, and those live in `stageSearches`/`legislationRefs` on ideas
+// people are mid-way through. Repairing here means no data migration.
 function RefCard({ r }: { r: SearchResult }) {
+  const href = repairRefUrl(r.type, r.id, r.url)
   return (
-    <a href={r.url} target="_blank" rel="noopener noreferrer"
+    <a href={href} target="_blank" rel="noopener noreferrer"
       className="block rounded-lg border border-zinc-200 p-2.5 hover:border-blue-300 hover:bg-blue-50/30 transition-colors">
       <div className="text-sm font-medium text-zinc-800">{r.title}</div>
       <div className="text-[11px] text-zinc-500 mt-0.5">{r.citation}</div>
@@ -94,6 +101,7 @@ export default function BackgroundPanel({
   legislationRefs,
   stageSearch,
   research,
+  stage,
   stageLabel,
   stageAccent,
   nextPage,
@@ -110,6 +118,11 @@ export default function BackgroundPanel({
   stageSearch: CanonicalState['stageSearch']
   /** §19-C Task 1c — searches the user asked for in chat. */
   research: CanonicalState['research']
+  /** §19-D Task 4 — the state machine's page. "Is the briefing current?" is a fact
+   *  about WHICH STAGE the user is on, not about whether a search record happens to
+   *  exist; deriving it from the record is what sent Guiding Policy back to the
+   *  Orientation briefing whenever the stage search hadn't stored. */
+  stage: string
   stageLabel: string
   stageAccent: { text: string; border: string; bg: string }
   nextPage: CanonicalState['nextPage']
@@ -132,8 +145,12 @@ export default function BackgroundPanel({
   // the briefing being "ready" — a failed corpus search must not trap the user (§19-C 1a).
   const showCta = !!nextPage
   const searchFailed = initialBackground?.status === 'failed' || (stageSearch && !stageSearch.ok)
-  // Once a later stage has its own search, the Orientation briefing folds away.
-  const briefingIsCurrent = !stageSearch
+  // §19-D Task 4 — the briefing is current on ORIENTATION and nowhere else. Past that
+  // it folds, whether or not this stage's own search has managed to store anything.
+  const briefingIsCurrent = stage === 'ORIENTATION'
+  // A later stage with no stored search at all: say so and offer to run it. Never
+  // silently hand back the Orientation briefing in its place.
+  const stageSearchMissing = !briefingIsCurrent && !stageSearch
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
@@ -181,6 +198,24 @@ export default function BackgroundPanel({
           <button onClick={onRetrySearch} disabled={busy}
             className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
             Retry the search
+          </button>
+        </div>
+      )}
+
+      {/* §19-D Task 4 — this stage has no search on record. State it; do not fall back
+          to the previous stage's material and let it read as current. */}
+      {stageSearchMissing && (
+        <div className={`rounded-xl border ${stageAccent.border} ${stageAccent.bg} p-3`}>
+          <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${stageAccent.text}`}>
+            {stageLabel} — what’s out there
+          </div>
+          <p className="text-sm text-zinc-600">
+            This section’s own search hasn’t run yet, so there’s nothing here for it. The earlier
+            research is still below — it just isn’t this section’s.
+          </p>
+          <button onClick={onRetrySearch} disabled={busy}
+            className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">
+            Run this section’s search
           </button>
         </div>
       )}
@@ -246,6 +281,16 @@ export default function BackgroundPanel({
                 <ReactMarkdown components={MD_COMPONENTS}>{initialBackground.body}</ReactMarkdown>
               </div>
             )}
+            {/* §19-D Task 9h — a quiet way to ask again, deliberately not a button.
+                The only retry control used to live inside the stage-search block, so
+                on Page 1 (where the briefing IS the research) there was no way to
+                re-run it unless it had already failed. */}
+            <div className="px-3 pb-2">
+              <button onClick={onRetrySearch} disabled={busy}
+                className="text-[11px] text-zinc-400 hover:text-zinc-700 disabled:opacity-40">
+                Run this search again
+              </button>
+            </div>
           </div>
         ) : (
           <Fold title="The Basic Idea — initial background" subtitle="from earlier">

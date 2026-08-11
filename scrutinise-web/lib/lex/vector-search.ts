@@ -16,39 +16,14 @@ import { prisma } from '@/lib/prisma'
 import type { SearchResult } from './page1-config'
 import { corpusToType, corpusDisplayName } from './corpus-type-map'
 import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
+// §19-D Task 5 — one shared derivation with fts-search.ts. It used to be copied into
+// both files, so the 404 bug was present twice and fixable only twice.
+import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 
 interface VecHit { id: string; corpus: string; tier: string; score: number; snippet: string }
 
 const VECTOR_URL = process.env.VECTOR_SEARCH_URL
 const VECTOR_TIMEOUT_MS = parseInt(process.env.VECTOR_TIMEOUT_MS ?? '25000', 10)
-
-// ── citation/url derivation (identical to fts-search.ts) ──────────────────────
-function gidFromId(id: string): string | null {
-  const parts = id.split(':')
-  const gid = parts.length >= 2 ? parts[1] : null
-  return gid && gid.includes('/') ? gid : null
-}
-function refFromId(id: string): string {
-  const parts = id.split(':')
-  if (parts.length < 3) return ''
-  const ref = parts.slice(2).join(':').trim()
-  return !ref || ref === 'full' ? '' : ref.replace(/[.\s]+$/g, '')
-}
-const REF_ABBR: Record<string, string> = { section: 's.', regulation: 'reg.', article: 'art.', schedule: 'sch.', paragraph: 'para.' }
-function refToCitation(ref: string): string {
-  if (!ref) return ''
-  const segs = ref.split('-')
-  const out: string[] = []
-  for (let i = 0; i < segs.length; i++) {
-    const abbr = REF_ABBR[segs[i].toLowerCase()]
-    if (abbr && i + 1 < segs.length) { out.push(abbr + segs[i + 1]); i++ }
-  }
-  return out.join(' ')
-}
-function legislationUrl(gid: string, ref: string): string {
-  const base = `https://www.legislation.gov.uk/${gid}`
-  return ref ? `${base}/${ref.replace(/-/g, '/')}` : base
-}
 
 /** Server-side stream scope — the dense twin of fts-search.ts's FtsScope. */
 export interface VectorScope { tier?: string; corpora?: string[]; excludeCorpora?: string[] }
@@ -168,7 +143,8 @@ export async function runVectorSearch(
         title = meta?.sectionTitle ?? corpusDisplayName(h.corpus)
         citation = meta?.sectionTitle ?? ''
       }
-      const url = meta?.sourceUrl ?? (isLeg && gid ? legislationUrl(gid, ref) : '')
+      // §19-D Task 5 — derived wins for legislation; see legislation-url.ts.
+      const url = resolveResultUrl(type, h.id, meta?.sourceUrl)
       const date = meta?.itemDate ?? ''
       // `scorer: 'vector'` — cosine similarity (0..1), not BM25 and not RRF. Distinct from
       // 'bm25' because a 0.83 and a 12.4 are not two views of the same quantity.
