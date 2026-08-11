@@ -83,7 +83,7 @@ failures and applies the UX corrections that came out of the test. Full account:
     `Community.bulletinCategories` and seeded at creation; **no admin category-management UI at this
     stage** — defaults only. `Training` replaces the Stage 1 "Training — offers & requests" workaround
     and carries the line *"Offer or request interview/media training here"* so the Stage 2c behaviour
-    (§6) starts unprompted.
+    (§8) starts unprompted.
 -   **Post scope.** `BulletinPost.scope` is `BRANCH` (default — the board being viewed) or
     `COMMUNITY`. A Community-wide post **stays owned by the node it was written on**; only its
     visibility widens. Every board in the tree shows it tagged "Community-wide". Replies inherit the
@@ -100,7 +100,7 @@ failures and applies the UX corrections that came out of the test. Full account:
 ## 3.3 Stage 1.2 — membership, join requests & roles **[BUILT 6 Aug 2026]**
 
 The branch-membership model, settled by Charlie on 6 Aug and built the same day. The decisions are in
-the decision log (§10, 6 Aug afternoon); this section is how they behave. Full account: `CHANGE_LOG.md`
+the decision log (§12, 6 Aug afternoon); this section is how they behave. Full account: `CHANGE_LOG.md`
 "CENTRAL Stage 1.2". Verified by `npm run check:central` (83/83, live DB).
 
 **Membership**
@@ -283,15 +283,143 @@ silently rewrite a branch's history whenever someone joined or left it.
 -   **Knowledge tests** — deferred, no content exists to test against yet.
 -   **Cross-Community and global leaderboards** — deliberately out of scope.
 
-## 5. Stage 2b — Events **[ROADMAP]**
+## 5. Stage 2b — Question library **[BUILT 11 Aug 2026]**
+
+A library of the hard questions members actually get asked, with community-rated answers, and a pack
+builder that turns a filtered slice into a field aid. Built to the CD handoff in
+`docs/design_handoff_central_question_library/`, which is the visual source of truth. Full account:
+`CHANGE_LOG.md` "CENTRAL Stage 2b". Verified by `npm run check:central` (189/189, live DB).
+
+### 5.1 Three vote-ish mechanisms, deliberately not one
+
+The single most important thing to preserve here is that these are **different mechanisms** and must
+not be collapsed into a shared one:
+
+| | direction | self-vote | visible to others | affects ranking |
+|---|---|---|---|---|
+| **QuestionVote** — "I get asked this too" | up only | **allowed** | yes, as a count | orders the library |
+| **AnswerVote** — quality | up **or** down, mutually exclusive | **refused** | yes, as a net score | orders the answers |
+| **AnswerFavourite** — a private shortlist | n/a | n/a | **never, to anyone** | **never** |
+
+A question vote records **frequency, not quality** — which is why there is no downvote, and why the
+asker may vote for their own question: they demonstrably were asked it. An answer vote records
+quality, so self-voting is refused under the Stage 2 no-marking-own-content rule, and switching
+direction **withdraws** the previous vote rather than stacking (the count moves by two).
+
+🔒 **Favourites are private and must stay private.** No count, no ranking effect, no aggregation, no
+exposure through any admin view including §5.6. The only place a favourite surfaces is the owner's own
+pack. If a change ever makes a favourite countable, that is a privacy regression, not a feature.
+
+`AnswerVote.voteWeight` exists, defaults to `1.0` and **is applied in the sort**, but no weighting
+logic is implemented: flat votes for the pilot. The column is there so credibility weighting can be
+switched on later without a migration.
+
+**Vote recency: no expiry.** "Top this month" filters on *when the vote was cast*, rather than
+decaying old votes — a question asked constantly last year and not since should drop out of the
+monthly view, not linger at a discount.
+
+### 5.2 Scope
+
+Questions default to **COMMUNITY** and are always tagged with the author's branch, recorded even on a
+Community-scoped question so "which branch is asking this" stays answerable. A **BRANCH**-scoped
+question is visible only within that branch's tree — so from a sibling branch it does not exist, and
+from the root it does, because the root's subtree is the whole Community.
+
+Promotion to Community scope: the question's **author**, or anyone with manage rights. One-way by
+design — a question other branches have already answered should not vanish from under them.
+
+### 5.3 Flags, hiding and edit suggestions
+
+-   **AnswerFlag** — `DO_NOT_USE` or `USE_WITH_CARE`, with a **required reason**. A flag without a
+    stated reason is an unaccountable veto. Settable only by branch managers and Community admins.
+    The author is told, and told why.
+-   `DO_NOT_USE` answers are **excluded from packs**. `USE_WITH_CARE` answers stay packable and the
+    **flag and reason travel with them into the output**, in every format.
+-   Managers can also **hide** an answer outright — the heavier alternative to a flag.
+-   **EditSuggestion** goes to the **answer's author**, who applies or dismisses it. There is
+    deliberately **no admin path**: a suggested rewording is a conversation between two members, not a
+    moderation action. A Community admin trying to decide one is refused.
+
+### 5.4 The near-match step
+
+The lookup runs **live as the user types**, so step 2 is never a surprise when they reach it. Jaccard
+overlap on content words against that Community's questions — deliberately not the corpus-search
+stack, which is a different scale and a different problem.
+
+The framing is a **shortcut, never a rejection**: "your answer is worth more on a question people are
+already reading". The escape — "Mine is different — carry on" — sits at equal visual weight, and
+nothing blocks posting. That copy carries the product's intent and should not be softened.
+
+### 5.5 Packs
+
+Built from the library's current filter rather than a re-specified one. Sizes 10 / 25 / 50, with the
+request reconciled against reality ("6 of a possible 10"). Pinned questions **hold their position as
+the ranking moves**; removed ones stay out.
+
+**Favourites in a pack are ADDITIVE, not substitutive** (a correction to the CD pack, per the brief).
+Where the member has favourited a different answer, the pack carries **both** the community's
+top-voted answer and theirs. It never silently replaces the community's choice with a private one —
+that would make two members' packs differ without either knowing why.
+
+Four outputs: glance cards, answer-first flashcards, continuous list, and the A4 print sheet. **Every
+one carries the line "Community-rated answers, not official positions."** — a single exported
+constant, so no format can quietly omit it.
+
+### 5.6 Across branches (Community admins)
+
+Participation counts and per-branch top-voted and rising questions. **Participation figures only** —
+no per-member activity is computed, let alone displayed, and favourites are not read at all. Quiet
+branches are marked neutrally, not in red. A broadcast composer messages every branch manager by
+notification **and** email; both outcomes are reported per recipient, because a mail failure must
+never read as delivery.
+
+### 5.7 Tags
+
+Context tags are fixed and split two ways, which is what the toggle above the chips switches between:
+
+-   **Out in the world** — Doorstep · Media interview · Hustings · University AMA · Council chamber
+-   **Behind the scenes** — How-to · Party process · Tools & tech
+
+Topics are an **admin-extendable** list, seeded with Local finance · Local services · Organising ·
+Energy · Immigration · Housing. Admins can **promote** a tag to a visible filter chip; unpromoted tags
+live in the dropdown only, so the chip row stays short as tags multiply.
+
+### 5.8 Sub-tabs
+
+Central's "in the community" areas are sub-tabs: **Questions** (default), Board, Training,
+Leaderboard. **Board is hidden for the pilot** (Charlie, 11 Aug) — the bulletin-board code is
+untouched and still renders if reached directly, it is simply not linked. Restoring it is deleting one
+`hidden` flag in the `TABS` array.
+
+Groups and points stay at the **Central level, above the sub-tabs**: managing which branches you are
+in is a personal concern, not one of the in-community areas.
+
+## 6. Central visual language **[ADOPTED 11 Aug 2026]**
+
+Three departures from the generic V0-derived styling, taken from the CD handoff and adopted across
+**all of Central**, not only the Questions screens:
+
+1.  **12px card radius, one hairline border, no nested boxes.** Panels that previously wrapped their
+    rows in a second bordered div now use a fill-only inset.
+2.  **Teal is promoted from animation-only to the live-state accent** — voted, pinned, local example,
+    rising, step-completed. **Navy remains the primary action colour**; teal never marks a call to
+    action.
+3.  **All counts in tabular figures**, so numbers do not jitter as they change.
+
+Nothing else in the palette or type stack changes. Implemented as Central-scoped utilities in
+`globals.css` (`.central-card`, `.central-inset`, `.central-live`, `.tabular`) rather than by changing
+`--radius`: a global change would restyle Ideas, Lex and the rest of the app, which this sprint has no
+mandate to touch.
+
+## 7. Stage 2c — Events **[ROADMAP]**
 
 Create an event within a Community or branch: title, date/time, location or online link, description, downloadable `.ics` file (the standard calendar format Google/Outlook/Apple all import). "Upcoming" dashboard panel populates from this. Event-materials packs (how to run a pub parliament, campus AMA, etc.) live as knowledge-base content, not a separate system.
 
-## 6. Stage 2c — Training marketplace **[ROADMAP]**
+## 8. Stage 2d — Training marketplace **[ROADMAP]**
 
 Structured request/offer posts (replacing the Stage 1 bulletin-category workaround), browsable within a Community and optionally across the network. Matching stays human and informal — participants arrange their own calls (WhatsApp/Zoom between themselves). Confidentiality rules for practice sessions stated up front. Calendar/Zoom API integration deliberately deferred.
 
-## 7. Stage 3 — Corpus-powered AI features **[DESIGNED]**
+## 9. Stage 3 — Corpus-powered AI features **[DESIGNED]**
 
 Shared pattern for all: search the corpus → generate only from what was retrieved → state plainly when the corpus doesn't cover something → citations required per claim.
 
@@ -303,7 +431,7 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 -   **[GATED] Clause-level voting statistics** ("majority of Party X voted for this sub-clause") — requires division-list ingestion joined to specific clauses. First step: CC to verify whether division lists are in the corpus at all.
 -   **[GATED] Pledge delivery tracker** — pledge vs. legislative/spending/outcome record. Requires an outcome-statistics ingestion strand not currently in the corpus.
 
-## 8. Stage 4 — Token economy **[ROADMAP — accountant question first]**
+## 10. Stage 4 — Token economy **[ROADMAP — accountant question first]**
 
 -   Split: **75%** usable by the purchasing Community · **25%** to the general Scrutinise pool (any user) · **0%** personal use.
 -   Runs on a dedicated API key set used for nothing else.
@@ -311,7 +439,7 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 -   Sequencing rule: build only once Stage 3 features exist and show real usage — there is nothing to meter before then.
 -   Open items before build: accountant question on turnover/disbursement treatment; FCA payment-intermediary check.
 
-## 9. Deferred or dropped
+## 11. Deferred or dropped
 
 -   **The Chancellor** strategy game — dropped for now (scope; design notes retained in conversation).
 -   Real archive footage licensing — deferred indefinitely (cost; real-person depiction risk).
@@ -323,7 +451,7 @@ Shared pattern for all: search the corpus → generate only from what was retrie
 -   **Cross-Community and global leaderboards** — out of scope at Stage 2.
 -   Semantic search on bulletin boards — trigger is observed vocabulary-mismatch failures in real use, not a document count. Design notes recorded: event-triggered embedding per post; confirm ANN index type (HNSW vs IVFFlat) before build; re-validate fusion weighting on this content type; tenant isolation enforced at query level.
 
-## 10. Decision log
+## 12. Decision log
 
 *Chronological, oldest first. (The 6 Aug entries sat above 29 Jul until Stage 1.2 fixed the order.)*
 
@@ -366,3 +494,23 @@ Shared pattern for all: search the corpus → generate only from what was retrie
     and moderating descendant boards. Leaderboard window is a viewer control. Scores go negative with
     no floor; penalties for sustained negativity explicitly deferred. Architecture decided as an
     **event ledger, never stored balances**.
+-   **11 Aug** — Question library designed (CD handoff) and built as **Stage 2b** (§5). Stages
+    renumbered: question library 2b, Events 2c, training marketplace 2d.
+    1.  **Three vote-ish mechanisms stay separate.** A question vote is **up only** and records
+        *frequency* — self-voting allowed, because the asker demonstrably was asked. An answer vote is
+        up/down, mutually exclusive, self-voting refused. A favourite is **private**.
+    2.  🔒 **Favourites are never counted, ranked, aggregated or shown to anyone else** — including
+        admins and the across-branches view.
+    3.  `AnswerVote.voteWeight` ships defaulted to 1.0 and applied in the sort, with **no weighting
+        logic**: flat votes for the pilot, so weighting is a later switch rather than a migration.
+    4.  **Vote recency: no expiry.** "Top this month" filters on when the vote was cast.
+    5.  **Flags need a reason.** `DO_NOT_USE` is excluded from packs; `USE_WITH_CARE` stays packable
+        and its reason travels into every output. Managers may also hide outright.
+    6.  **Edit suggestions have no admin path** — the answer's author decides, full stop.
+    7.  **Favourites in packs are ADDITIVE, not substitutive** (a correction to the CD pack): the
+        pack carries the community's top answer *and* the member's, never one instead of the other.
+    8.  **Every pack output carries "Community-rated answers, not official positions."**
+    9.  **Across branches is participation only** — no per-member activity, ever.
+    10. **Board is hidden for the pilot.** The code stays; only the tab link goes. One-line reversal.
+    11. **The CD visual upgrade is adopted across all of Central** (§6), scoped as Central-only
+        utilities rather than a global `--radius` change.

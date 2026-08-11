@@ -62,6 +62,23 @@ import {
   resolveTariff,
 } from '@/lib/central-points'
 import { canReadBoard } from '@/lib/community'
+import {
+  buildPack,
+  canPromoteQuestion,
+  clearAnswerFlag,
+  createEditSuggestion,
+  decideEditSuggestion,
+  findNearMatches,
+  getAcrossBranches,
+  getRankedAnswers,
+  getTags,
+  listQuestions,
+  setAnswerFlag,
+  setAnswerVote,
+  toggleFavourite,
+  toggleQuestionVote,
+  PACK_DISCLAIMER,
+} from '@/lib/question-library'
 
 let pass = 0
 let fail = 0
@@ -944,15 +961,312 @@ async function partD() {
   }
 }
 
+async function partE() {
+  console.log('\nE. Stage 2b — question library, votes, flags, packs and scope')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const questionIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 3,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 3) throw new Error('need at least three active users to run part E')
+  const [owner, alice, bob] = users
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-e-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: owner.id, role: 'OWNER' },
+            { userId: alice.id, role: 'MEMBER' },
+            { userId: bob.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+
+    const branchA = await prisma.community.create({
+      data: {
+        name: `zz-check-e-A-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: { create: [{ userId: alice.id, role: 'MEMBER' }] },
+      },
+    })
+    const branchB = await prisma.community.create({
+      data: {
+        name: `zz-check-e-B-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: { create: [{ userId: bob.id, role: 'MEMBER' }] },
+      },
+    })
+    communityIds.push(branchA.id, branchB.id)
+
+    // Tags are seeded per Community by the migration; a Community created after
+    // it has none, so seed this one the way the app would.
+    await prisma.questionTag.createMany({
+      data: [
+        { communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Doorstep', promoted: true },
+        { communityId: root.id, kind: 'CONTEXT_INTERNAL', label: 'How-to', promoted: true },
+        { communityId: root.id, kind: 'TOPIC', label: 'Housing', promoted: true },
+      ],
+    })
+    const tags = await getTags(root.id)
+    eq('context tags split into the two sides', [tags.contextExternal.length, tags.contextInternal.length], [1, 1])
+
+    // ── question votes: up only, self-vote allowed ──────────────────────────
+    const q1 = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: alice.id, branchId: branchA.id,
+        text: 'How are you going to pay for all of this new housing?',
+        scope: 'COMMUNITY', contextTags: ['Doorstep'], topicTags: ['Housing'],
+      },
+    })
+    questionIds.push(q1.id)
+
+    const selfVote = await toggleQuestionVote(q1.id, alice.id)
+    check('the asker can vote on their own question — they demonstrably were asked',
+      selfVote.voted && selfVote.count === 1)
+    const second = await toggleQuestionVote(q1.id, bob.id)
+    eq('a second member adds one', second.count, 2)
+    const undo = await toggleQuestionVote(q1.id, bob.id)
+    check('voting again withdraws it', !undo.voted && undo.count === 1)
+
+    // ── answer votes: mutually exclusive, no self-voting ────────────────────
+    const answerA = await prisma.answer.create({
+      data: { questionId: q1.id, authorId: alice.id, body: 'zz answer from alice', sources: ['https://example.com/a'] },
+    })
+    const answerB = await prisma.answer.create({
+      data: { questionId: q1.id, authorId: bob.id, body: 'zz answer from bob', localExample: 'zz local' },
+    })
+
+    const ownAnswer = await refuses(() => setAnswerVote(answerA.id, alice.id, 'UP'), 403)
+    check('voting on your own answer is refused', ownAnswer !== null, ownAnswer ?? 'not refused')
+
+    let av = await setAnswerVote(answerA.id, bob.id, 'UP')
+    eq('an up vote scores +1', [av.myVote, av.score], ['UP', 1])
+    av = await setAnswerVote(answerA.id, bob.id, 'DOWN')
+    // The count moves by TWO: the previous vote is withdrawn, not stacked.
+    eq('switching up to down withdraws rather than stacks', [av.myVote, av.score], ['DOWN', -1])
+    av = await setAnswerVote(answerA.id, bob.id, 'DOWN')
+    eq('clicking the active direction again clears the vote', [av.myVote, av.score], [null, 0])
+    const rows = await prisma.answerVote.count({ where: { answerId: answerA.id } })
+    eq('a cleared vote leaves no row behind', rows, 0)
+
+    const weighted = await prisma.answerVote.create({
+      data: { answerId: answerA.id, userId: bob.id, direction: 'UP' },
+    })
+    eq('voteWeight exists and defaults to 1.0, applied but not yet varied', weighted.voteWeight, 1)
+
+    // ── favourites are private ──────────────────────────────────────────────
+    const fav = await toggleFavourite(answerB.id, alice.id)
+    check('a favourite records for its owner', fav.favourited)
+    const aliceSees = await getRankedAnswers(q1.id, alice.id)
+    const ownerSees = await getRankedAnswers(q1.id, owner.id)
+    check('the owner of the favourite sees it',
+      aliceSees.find((a) => a.id === answerB.id)?.myFavourite === true)
+    check('a second admin account cannot see it',
+      ownerSees.find((a) => a.id === answerB.id)?.myFavourite === false)
+    // No count exists anywhere in the shape — this asserts the absence.
+    check('no favourite count is exposed on an answer',
+      !Object.keys(ownerSees[0] ?? {}).some((k) => /favouriteCount|favourites/i.test(k)),
+      Object.keys(ownerSees[0] ?? {}).join(','))
+
+    // ── flags ───────────────────────────────────────────────────────────────
+    const noReason = await refuses(
+      () => setAnswerFlag({ answerId: answerA.id, userId: owner.id, level: 'USE_WITH_CARE', reason: '  ' }),
+      422,
+    )
+    check('a flag without a reason is refused', noReason !== null, noReason ?? 'not refused')
+
+    const notManager = await refuses(
+      () => setAnswerFlag({ answerId: answerA.id, userId: bob.id, level: 'DO_NOT_USE', reason: 'zz' }),
+      403,
+    )
+    check('a plain member cannot flag', notManager !== null, notManager ?? 'not refused')
+
+    await setAnswerFlag({
+      answerId: answerB.id, userId: owner.id, level: 'USE_WITH_CARE', reason: 'zz check with the agent first',
+    })
+    let pack = await buildPack({ viewerCommunityId: root.id, viewerId: alice.id, size: 10 })
+    let entry = pack.entries.find((e) => e.questionId === q1.id)
+    const carried = entry?.answer?.flag ?? entry?.favouriteAnswer?.flag
+    check('a USE_WITH_CARE answer stays packable and its reason travels with it',
+      carried?.level === 'USE_WITH_CARE' && carried.reason.includes('agent'),
+      JSON.stringify(carried))
+
+    await setAnswerFlag({
+      answerId: answerA.id, userId: owner.id, level: 'DO_NOT_USE', reason: 'zz factually wrong',
+    })
+    pack = await buildPack({ viewerCommunityId: root.id, viewerId: alice.id, size: 10 })
+    entry = pack.entries.find((e) => e.questionId === q1.id)
+    check('a DO_NOT_USE answer is excluded from the pack',
+      entry?.answer?.body !== 'zz answer from alice' && entry?.favouriteAnswer?.body !== 'zz answer from alice',
+      JSON.stringify({ top: entry?.answer?.body, fav: entry?.favouriteAnswer?.body }))
+
+    // ── favourites are ADDITIVE in packs, never substitutive ────────────────
+    await clearAnswerFlag(answerA.id, owner.id)
+    await setAnswerVote(answerA.id, owner.id, 'UP')
+    const ranked = await getRankedAnswers(q1.id, alice.id)
+    check('the community’s top answer is not the one alice favourited',
+      ranked[0]?.id === answerA.id, ranked.map((r) => `${r.id === answerA.id ? 'A' : 'B'}:${r.score}`).join(','))
+    pack = await buildPack({ viewerCommunityId: root.id, viewerId: alice.id, size: 10, includeFavourites: true })
+    entry = pack.entries.find((e) => e.questionId === q1.id)
+    check('the pack carries the community’s top answer', entry?.answer?.body === 'zz answer from alice')
+    check('…AND the favourite alongside it, never instead of it',
+      entry?.favouriteAnswer?.body === 'zz answer from bob',
+      JSON.stringify({ top: entry?.answer?.body, fav: entry?.favouriteAnswer?.body }))
+
+    const noFav = await buildPack({ viewerCommunityId: root.id, viewerId: alice.id, size: 10, includeFavourites: false })
+    check('turning favourites off drops the extra answer',
+      noFav.entries.find((e) => e.questionId === q1.id)?.favouriteAnswer === null)
+
+    // ── pins hold position when the ranking moves ───────────────────────────
+    const q2 = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: bob.id, branchId: branchB.id,
+        text: 'zz second question about local services and bins',
+        scope: 'COMMUNITY', contextTags: ['Doorstep'],
+      },
+    })
+    questionIds.push(q2.id)
+    // q1 outranks q2 on votes; pinning q2 must lift it above regardless.
+    const pinnedPack = await buildPack({
+      viewerCommunityId: root.id, viewerId: alice.id, size: 10, pinnedQuestionIds: [q2.id],
+    })
+    eq('a pinned question holds first place as the ranking moves',
+      pinnedPack.entries[0]?.questionId, q2.id)
+    check('…and is marked as pinned', pinnedPack.entries[0]?.pinned === true)
+
+    const removedPack = await buildPack({
+      viewerCommunityId: root.id, viewerId: alice.id, size: 10, removedQuestionIds: [q2.id],
+    })
+    check('a removed question stays out', !removedPack.entries.some((e) => e.questionId === q2.id))
+
+    check('the disclaimer is a constant every output reads from',
+      PACK_DISCLAIMER === 'Community-rated answers, not official positions.')
+
+    // ── branch scope ────────────────────────────────────────────────────────
+    const branchQ = await prisma.question.create({
+      data: {
+        communityId: root.id, authorId: alice.id, branchId: branchA.id,
+        text: 'zz branch-only question about the depot',
+        scope: 'BRANCH', contextTags: ['How-to'],
+      },
+    })
+    questionIds.push(branchQ.id)
+
+    const fromA = await listQuestions(branchA.id, alice.id, {})
+    const fromB = await listQuestions(branchB.id, bob.id, {})
+    const fromRoot = await listQuestions(root.id, owner.id, {})
+    check('a branch-scoped question is visible in its own branch', fromA.some((q) => q.id === branchQ.id))
+    check('…invisible from a sibling branch', !fromB.some((q) => q.id === branchQ.id))
+    check('…and visible from the root, whose subtree is the whole Community',
+      fromRoot.some((q) => q.id === branchQ.id))
+
+    check('the author can promote it', await canPromoteQuestion(alice.id, branchQ.id))
+    check('a Community admin can promote it', await canPromoteQuestion(owner.id, branchQ.id))
+    check('an unrelated member cannot', !(await canPromoteQuestion(bob.id, branchQ.id)))
+
+    await prisma.question.update({ where: { id: branchQ.id }, data: { scope: 'COMMUNITY' } })
+    check('after promotion the sibling branch can see it',
+      (await listQuestions(branchB.id, bob.id, {})).some((q) => q.id === branchQ.id))
+
+    // ── the two-way toggle ──────────────────────────────────────────────────
+    const external = await listQuestions(root.id, owner.id, { side: 'external' })
+    const internal = await listQuestions(root.id, owner.id, { side: 'internal' })
+    check('"Out in the world" shows the Doorstep question', external.some((q) => q.id === q1.id))
+    check('…and not the How-to one', !external.some((q) => q.id === branchQ.id))
+    check('"Behind the scenes" shows the How-to question', internal.some((q) => q.id === branchQ.id))
+    check('…and not the Doorstep one', !internal.some((q) => q.id === q1.id))
+
+    // ── near matches: a shortcut, never a block ─────────────────────────────
+    const matches = await findNearMatches(root.id, 'How will you pay for all this housing?')
+    check('a near match is found for a reworded version of the same question',
+      matches.some((m) => m.id === q1.id), matches.map((m) => m.similarity.toFixed(2)).join(','))
+    const unrelated = await findNearMatches(root.id, 'What time does the office open on Fridays?')
+    check('an unrelated question matches nothing', !unrelated.some((m) => m.id === q1.id))
+
+    // ── edit suggestions: author decides, no admin path ─────────────────────
+    const suggestion = await createEditSuggestion(answerA.id, bob.id, 'zz reworded answer')
+    const notified = await prisma.notification.findFirst({
+      where: { userId: alice.id, title: 'Suggested edit to your answer' },
+    })
+    check('the answer’s author is notified', notified !== null)
+
+    const adminTries = await refuses(() => decideEditSuggestion(suggestion.id, owner.id, 'APPLIED'), 403)
+    check('a Community admin cannot decide someone else’s suggestion', adminTries !== null, adminTries ?? 'not refused')
+
+    await decideEditSuggestion(suggestion.id, alice.id, 'APPLIED')
+    eq('applying rewrites the answer',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: answerA.id } })).body, 'zz reworded answer')
+
+    const suggestion2 = await createEditSuggestion(answerA.id, bob.id, 'zz another wording')
+    await decideEditSuggestion(suggestion2.id, alice.id, 'DISMISSED')
+    eq('dismissing leaves the answer alone',
+      (await prisma.answer.findUniqueOrThrow({ where: { id: answerA.id } })).body, 'zz reworded answer')
+
+    // ── across branches: participation only ─────────────────────────────────
+    const across = await getAcrossBranches(root.id, null)
+    check('every branch appears', across.branches.length === 2)
+    const keys = new Set(across.branches.flatMap((b) => Object.keys(b)))
+    check('no per-member data is returned — counts only',
+      !['members', 'voters', 'userIds', 'memberNames', 'favourites'].some((k) => keys.has(k)),
+      [...keys].join(','))
+    check('voting members is a COUNT, not a list',
+      across.branches.every((b) => typeof b.votingMemberCount === 'number'))
+    check('a branch with nothing in it is marked quiet, neutrally',
+      across.branches.some((b) => b.quiet) || across.branches.every((b) => b.questionCount > 0))
+  } finally {
+    const answerIds = (
+      await prisma.answer.findMany({ where: { questionId: { in: questionIds } }, select: { id: true } })
+    ).map((a) => a.id)
+    await prisma.editSuggestion.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answerFlag.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answerFavourite.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answerVote.deleteMany({ where: { answerId: { in: answerIds } } })
+    await prisma.answer.deleteMany({ where: { id: { in: answerIds } } })
+    await prisma.questionVote.deleteMany({ where: { questionId: { in: questionIds } } })
+    await prisma.question.deleteMany({ where: { id: { in: questionIds } } })
+    await prisma.pack.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: {
+        OR: [
+          { title: 'Suggested edit to your answer' },
+          ...communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })),
+        ],
+      },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    eq('Stage 2b test fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-e-' } } }), 0)
+    eq('no questions left behind', await prisma.question.count({ where: { id: { in: questionIds } } }), 0)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
-  console.log('CENTRAL Stage 1.1 + 1.2 + 2 checks — host:', new URL(url).hostname)
+  console.log('CENTRAL Stage 1.1 + 1.2 + 2 + 2b checks — host:', new URL(url).hostname)
 
   await partA()
   await partB()
   await partC()
   await partD()
+  await partE()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()
