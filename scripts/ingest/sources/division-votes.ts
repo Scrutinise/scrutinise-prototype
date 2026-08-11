@@ -114,11 +114,19 @@ export interface DivisionDetail {
   number: number | null
   date: string | null            // ISO YYYY-MM-DD
   title: string
-  /** The DIVISION RESULT as stated by the House — tellers excluded, because
-   *  tellers are not counted in the lobby totals. So `members.filter(aye)` is
-   *  normally ayeCount + 2, and that is correct rather than a discrepancy.
-   *  Both are kept: the official figure is the one to quote, the member list is
-   *  the one to count over. */
+  /** The DIVISION RESULT as stated by the House. ⚠ THE TWO HOUSES DIFFER AND
+   *  THE DIFFERENCE IS REAL, not a data fault:
+   *
+   *  - Commons: tellers are NOT counted in the lobby totals and appear only in
+   *    `AyeTellers`/`NoTellers`. So `members.filter(aye).length` is normally
+   *    `ayeCount + 2`.
+   *  - Lords: tellers ARE counted, and appear in `contents`/`notContents` AND
+   *    AGAIN in `contentTellers`/`notContentTellers`. So the counts already
+   *    include them, and the raw arrays contain duplicates.
+   *
+   *  Both figures are kept: the official count is the one to quote, the member
+   *  list is the one to count over. `members` is deduplicated (see below), so
+   *  after dedupe the Lords member list matches the official count exactly. */
   ayeCount: number
   noCount: number
   /** Members who sat and did not vote. Empty AND `absenceKnown: false` for
@@ -301,11 +309,43 @@ function lordsMembers(arr: any[] | undefined, vote: VoteState, teller: boolean):
   }))
 }
 
+/**
+ * Collapse the per-array member lists into ONE ROW PER MEMBER.
+ *
+ * ⚠ THE LORDS LISTS ITS TELLERS TWICE — once in `contents`/`notContents` and
+ * again in `contentTellers`/`notContentTellers`. Measured on division 3698:
+ * 4 members appear in two arrays each (contents 64 + contentTellers 2 +
+ * notContents 95 + notContentTellers 2 = 163 rows for 159 actual peers). The
+ * Commons does not do this — the same check on division 2411 found 0.
+ *
+ * Concatenating the arrays therefore produced a duplicate `member_id` within a
+ * single division, which is:
+ *   - a primary-key collision on `division_votes` — Postgres rejects the whole
+ *     roll-call with "ON CONFLICT DO UPDATE command cannot affect row a second
+ *     time", so ONE Lords division would have failed EVERY Lords division;
+ *   - a double-count in the compiled text, listing tellers twice and inflating
+ *     the rendered aye/no totals above the official ones.
+ *
+ * Later entries merge into earlier ones rather than replacing them: the vote
+ * comes from the main array (which is authoritative on how they voted) and the
+ * teller arrays only set the flag.
+ */
+function dedupeMembers(members: DivisionMember[]): DivisionMember[] {
+  const byId = new Map<number, DivisionMember>()
+  for (const m of members) {
+    const existing = byId.get(m.memberId)
+    if (!existing) { byId.set(m.memberId, { ...m }); continue }
+    // Seen already: keep the recorded vote, raise the teller flag if either says so.
+    existing.teller = existing.teller || m.teller
+  }
+  return [...byId.values()]
+}
+
 export async function fetchDivisionDetail(house: House, id: number): Promise<DivisionDetail | null> {
   if (house === 'commons') {
     const d = await getJson(`${COMMONS}/data/division/${id}.json`)
     if (!d || d.DivisionId == null) return null
-    const members = [
+    const rawMembers = [
       ...commonsMembers(d.Ayes, 'aye', false),
       ...commonsMembers(d.AyeTellers, 'aye', true),
       ...commonsMembers(d.Noes, 'no', false),
@@ -313,6 +353,7 @@ export async function fetchDivisionDetail(house: House, id: number): Promise<Div
       // FAULT 2 fixed: the third array. Members who sat and did not vote.
       ...commonsMembers(d.NoVoteRecorded, 'absent', false),
     ]
+    const members = dedupeMembers(rawMembers)
     const title = (d.Title ?? '').trim()
     return {
       house, divisionId: d.DivisionId, number: d.Number ?? null,
@@ -331,12 +372,12 @@ export async function fetchDivisionDetail(house: House, id: number): Promise<Div
   } else {
     const d = await getJson(`${LORDS}/data/Divisions/${id}`)
     if (!d || d.divisionId == null) return null
-    const members = [
+    const members = dedupeMembers([
       ...lordsMembers(d.contents, 'aye', false),
       ...lordsMembers(d.contentTellers, 'aye', true),
       ...lordsMembers(d.notContents, 'no', false),
       ...lordsMembers(d.notContentTellers, 'no', true),
-    ]
+    ])
     const title = (d.title ?? '').trim()
     const motionNotes = d.amendmentMotionNotes ?? null
     return {

@@ -2443,7 +2443,10 @@ async function writeDivisionStructured(d: import('../sources/division-votes').Di
   const tuples = d.members.map((m, i) => {
     const b = i * 9
     vals.push(d.house, d.divisionId, m.memberId, m.name, m.party, m.partyAbbreviation, m.constituency, m.vote, m.teller)
-    return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},'${d.date ?? ''}'::date)`
+    // NULLIF, not a bare literal: a division with no date would otherwise
+    // interpolate to ''::date and Postgres rejects that, failing the whole
+    // roll-call insert on a field that is allowed to be null.
+    return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},NULLIF('${d.date ?? ''}','')::date)`
   })
   await pool.query(`
     INSERT INTO division_votes (house, division_id, member_id, member_name, party,
