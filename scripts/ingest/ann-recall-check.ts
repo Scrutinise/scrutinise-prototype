@@ -310,11 +310,14 @@ async function main() {
   console.log('    of the recall/latency trade-off, not as a production number.')
 
   // ── controls ──────────────────────────────────────────────────────────────────────────────
+  /** Collected rather than only printed, so the R2 artefact carries them too. */
+  const controls: Record<string, unknown> = {}
   console.log('\n════ CONTROLS ════')
   const lowRung = LADDER.filter((p) => p < PROD_NPROBES).sort((a, b) => a - b)[0]
   if (lowRung !== undefined) {
     const lo = mean(chunkOv[lowRung]), prod = mean(chunkOv[PROD_NPROBES])
     const sensitive = lo < prod - 0.05
+    controls.sensitivity = { lowRung, lowOverlap: lo, prodOverlap: prod, pass: sensitive }
     console.log(`  sensitivity  rung ${lowRung} = ${pctS(lo)} vs rung ${PROD_NPROBES} = ${pctS(prod)} → ${sensitive ? '✓ the comparison responds to probe count' : '✗ NO RESPONSE — the ladder is measuring nothing'}`)
   } else console.log('  sensitivity  not run (no rung below production in the ladder)')
 
@@ -329,6 +332,7 @@ async function main() {
       shuffled.push(overlap(mine, refChunks.get(qs[(i + 1) % qs.length].id)!))
     }
     const sh = mean(shuffled)
+    controls.shuffle = { overlap: sh, pass: sh < 0.05 }
     console.log(`  shuffle      query i's rung-${PROD_NPROBES} hits vs query j's exhaustive hits = ${pctS(sh)} → ${sh < 0.05 ? '✓ ~0, as it must be' : '✗ NOT ~0 — the overlap metric is not discriminating'}`)
   }
 
@@ -342,6 +346,7 @@ async function main() {
       const boxProd = collapse(await annRows(tbl, vecs.get(q.id)!, { nprobes: PROD_NPROBES }))
       agree.push(overlap(boxProd, live))
     }
+    controls.liveService = { n: agree.length, meanOverlap: agree.length ? mean(agree) : null }
     console.log(`  live service ${agree.length} queries re-asked at ${LIVE_URL} → mean overlap with this box's rung-${PROD_NPROBES} sections = ${agree.length ? pctS(mean(agree)) : 'n/a'}`)
     console.log('               (a low number here means the box and production are not the same measurement — read it before reading anything else)')
   }
@@ -361,6 +366,7 @@ async function main() {
       vsExhaustive.push(overlap(refChunks.get(q.id)!, exTop))
       console.log(`  exact scan   ${q.id} in ${((Date.now() - t1) / 1000).toFixed(0)}s: rung-${PROD_NPROBES} ${pctS(vsProd.at(-1)!)}, rung-${EXHAUSTIVE} ${pctS(vsExhaustive.at(-1)!)} of the true top-${TOP_K}`)
     }
+    controls.exactScan = { n: vsProd.length, prodVsTrue: vsProd.length ? mean(vsProd) : null, exhaustiveVsTrue: vsExhaustive.length ? mean(vsExhaustive) : null }
     if (vsProd.length) {
       console.log(`  exact scan   n=${vsProd.length}: production ${pctS(mean(vsProd))} of true top-${TOP_K}; all-partitions ${pctS(mean(vsExhaustive))}`)
       console.log('               (the gap between these two is PQ quantisation, which no probe count can recover)')
@@ -370,6 +376,29 @@ async function main() {
   // ── the verdict the brief asks for ─────────────────────────────────────────────────────────
   const headline = mean(chunkOv[PROD_NPROBES])
   const headlineSect = mean(sectOv[PROD_NPROBES])
+
+  // ⚠ WRITE THE RESULT SOMEWHERE DURABLE BEFORE PRINTING IT. The first run computed every number
+  // here and then lost the whole block: the heavy-job runner followed a SLIDING 96 KB log tail by
+  // line index, so once Lance's deprecation warnings pushed the log past the window, nothing further
+  // was ever shown. The runner is fixed, but a measurement that exists only in a log tail is a
+  // measurement that can be lost, and this one costs €0.10 and 38 minutes to repeat.
+  try {
+    const { r2Put } = require(path.join(__dirname, 'shared/r2-client')) as { r2Put: (k: string, b: string | Buffer, ct?: string) => Promise<unknown> }
+    const key = `_ops/ann-recall/result-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+    await r2Put(key, JSON.stringify({
+      measuredAt: new Date().toISOString(),
+      table: VEC_TABLE, rows, queries: qs.length, ladder: LADDER, exhaustiveRung: EXHAUSTIVE,
+      production: { nprobes: PROD_NPROBES, overscan: PROD_OVERSCAN, refine: PROD_REFINE, topK: TOP_K },
+      meanChunkOverlap: Object.fromEntries(LADDER.map((p) => [p, mean(chunkOv[p])])),
+      meanSectionOverlap: Object.fromEntries(LADDER.map((p) => [p, mean(sectOv[p])])),
+      meanMs: Object.fromEntries(LADDER.map((p) => [p, mean(rungMs[p])])),
+      perQuery: perQuery.map((q) => ({ id: q.id, query: q.query, chunk: q.chunk, section: q.sect })),
+      controls, gate: GATE, headline, headlineSect,
+    }, null, 1), 'application/json')
+    console.log(`
+[ann-recall] result artefact → r2://${key}`)
+  } catch (e) { console.log(`
+[ann-recall] ⚠ could not write the R2 artefact (${(e as Error).message}) — the log is the only record`) }
   console.log('\n════ §1 VERDICT ════')
   console.log(`  queries                       ${qs.length}`)
   console.log(`  mean overlap, chunk top-20    ${pctS(headline)}   ← ANN recall proper`)

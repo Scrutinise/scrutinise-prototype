@@ -312,14 +312,34 @@ async function run(jobName: string, keep: boolean) {
   let peakMb = 0
   try {
     const deadlineMs = parseInt(process.env.HEAVY_JOB_TIMEOUT_MIN ?? '120', 10) * 60_000
-    let seen = 0
+    // ⚠ FOLLOW BY CONTENT, NOT BY LINE INDEX. `hetzner-logtail.ts` uploads a SLIDING 96 KB tail, so
+    // once a job's stdout passes 96 KB the object's first line is no longer the log's first line —
+    // and a `lines.slice(seen)` on a line COUNT then prints nothing while the job keeps talking.
+    // That is not hypothetical: the 11 Aug ann-recall-check run lost its entire results block
+    // (the ladder table, the controls, the live-service cross-check) to exactly this, because Lance
+    // deprecation warnings pushed the log past the window mid-run. The job succeeded and its
+    // headline numbers were simply never shown — a silent loss, which is the worst kind.
+    let lastLine: string | null = null
+    let lostWindows = 0
     while (Date.now() - started < deadlineMs) {
       await sleep(20_000)
       const text = await readLog(logKey)
       if (text) {
         const lines = text.split('\n')
-        for (const l of lines.slice(seen)) if (l.trim()) console.log(`   ${l}`)
-        seen = lines.length
+        let from = 0
+        if (lastLine !== null) {
+          const idx = lines.lastIndexOf(lastLine)
+          if (idx >= 0) from = idx + 1
+          else {
+            // The window advanced past everything we had printed. Say so — a gap that announces
+            // itself can be recovered from a durable artefact; a silent one cannot.
+            lostWindows++
+            log(`  !! log window advanced past the last line printed — some output was NOT shown (occurrence ${lostWindows}). The job's own artefact, if it writes one, is the record.`)
+          }
+        }
+        for (const l of lines.slice(from)) if (l.trim()) console.log(`   ${l}`)
+        const printable = lines.filter((l) => l.trim())
+        if (printable.length) lastLine = printable[printable.length - 1]
         for (const m of text.matchAll(/peak-rss (\d+)MB/g)) peakMb = Math.max(peakMb, parseInt(m[1], 10))
         const code = text.match(/EXIT_CODE=(\d+)/)
         if (code) { exitCode = parseInt(code[1], 10); break }
@@ -327,6 +347,7 @@ async function run(jobName: string, keep: boolean) {
         log(`  … waiting for the box (${Math.round((Date.now() - started) / 1000)}s)`)
       }
     }
+    if (lostWindows) log(`!! ${lostWindows} log window(s) advanced faster than the 20s poll — output was lost in transit, not by the job`)
     if (exitCode === null) log(`!! no terminal marker within the timeout — treating as FAILED`)
   } finally {
     const minutes = (Date.now() - started) / 60_000
