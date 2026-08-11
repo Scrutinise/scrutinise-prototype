@@ -83,11 +83,11 @@ export default function ClaimsPanel({
   }
 
   return (
-    <details open={defaultOpen || claims.length > 0} className="rounded-lg border border-border p-4">
+    <details open={defaultOpen || claims.length > 0} className="central-card p-4">
       <summary className="cursor-pointer text-sm font-medium">
         Activity to approve
         {claims.length > 0 && (
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+          <span className="tabular ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
             {claims.length}
           </span>
         )}
@@ -105,7 +105,7 @@ export default function ClaimsPanel({
           claims.map((c) => {
             const who = c.user.name ?? c.user.username
             return (
-              <div key={c.id} className="rounded border border-border p-2">
+              <div key={c.id} className="central-inset p-2">
                 <p className="text-sm font-medium">{LABELS[c.activityType] ?? c.activityType}</p>
                 <p className="text-xs text-muted-foreground">
                   {who} · {new Date(c.occurredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}

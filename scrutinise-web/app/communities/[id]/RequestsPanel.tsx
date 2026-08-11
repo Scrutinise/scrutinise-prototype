@@ -76,11 +76,11 @@ export default function RequestsPanel({
   }
 
   return (
-    <details open={defaultOpen || requests.length > 0} className="rounded-lg border border-border p-4">
+    <details open={defaultOpen || requests.length > 0} className="central-card p-4">
       <summary className="cursor-pointer text-sm font-medium">
         Requests to join
         {requests.length > 0 && (
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+          <span className="tabular ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
             {requests.length}
           </span>
         )}
@@ -98,7 +98,7 @@ export default function RequestsPanel({
           requests.map((r) => {
             const who = r.user.name ?? r.user.username
             return (
-              <div key={r.id} className="rounded border border-border p-2">
+              <div key={r.id} className="central-inset p-2">
                 <p className="text-sm font-medium">{who}</p>
                 <p className="text-xs text-muted-foreground">@{r.user.username}</p>
                 {r.message && <p className="mt-1 text-xs italic text-muted-foreground">“{r.message}”</p>}

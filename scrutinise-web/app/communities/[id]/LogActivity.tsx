@@ -65,7 +65,7 @@ export default function LogActivity({ communityId, communityName }: { communityI
   }
 
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="central-card p-4">
       <h3 className="text-sm font-medium">Log offline activity</h3>
       <p className="mt-1 text-xs text-muted-foreground">
         Canvassing, events and training you did for {communityName}. An admin approves it, and every

@@ -77,7 +77,7 @@ export default function FindYourBranch({
   }
 
   return (
-    <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4">
+    <div className="mb-6 central-card bg-muted/30 p-4">
       <h2 className="text-sm font-semibold">Find your branch</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         You’re a member of {root.name}. Branches are where the local work happens — ask to join one,
@@ -98,7 +98,7 @@ export default function FindYourBranch({
             return (
               <div
                 key={b.id}
-                className="flex items-center justify-between gap-2 rounded border border-border bg-background px-2 py-1.5"
+                className="central-inset flex items-center justify-between gap-2 bg-background px-2 py-1.5"
               >
                 <span className="min-w-0 truncate text-sm">
                   {b.name}

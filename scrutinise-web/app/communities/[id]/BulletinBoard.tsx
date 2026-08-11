@@ -83,7 +83,7 @@ function VoteControl({
         <ChevronUp className={icon} strokeWidth={myVote === 1 ? 3 : 2} />
       </button>
       <span
-        className={`min-w-[1.25rem] text-center text-xs font-semibold tabular-nums ${
+        className={`min-w-[1.25rem] text-center text-xs font-semibold tabular ${
           myVote === 1 ? 'text-emerald-600' : myVote === -1 ? 'text-red-600' : 'text-foreground'
         }`}
         title={`${score} net vote${score === 1 || score === -1 ? '' : 's'}`}
@@ -358,7 +358,7 @@ export default function BulletinBoard({
       )}
 
       {showCompose && (
-        <form onSubmit={handleCreateThread} className="mb-4 space-y-3 rounded-lg border border-border p-4">
+        <form onSubmit={handleCreateThread} className="mb-4 space-y-3 central-card p-4">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" maxLength={200} required />
 
           <div>
@@ -420,7 +420,7 @@ export default function BulletinBoard({
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : threads.length === 0 ? (
-        <div className="rounded-lg border border-border p-8 text-center">
+        <div className="central-card p-8 text-center">
           <p className="text-sm text-muted-foreground">
             {activeQuery ? 'No posts match that search.' : 'No threads yet — start the conversation.'}
           </p>
@@ -430,7 +430,7 @@ export default function BulletinBoard({
           {threads.map((t) => {
             const detail = expanded[t.id]
             return (
-              <div key={t.id} className="rounded-lg border border-border p-3">
+              <div key={t.id} className="central-card p-3">
                 <div className="flex items-start gap-3">
                   <VoteControl
                     score={detail?.score ?? t.score}

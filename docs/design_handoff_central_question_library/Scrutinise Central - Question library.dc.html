@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+<style>
+  body { margin:0; font-family:'DM Sans', system-ui, sans-serif; background:oklch(0.955 0.004 250); color:oklch(0.15 0.01 250); -webkit-font-smoothing:antialiased; }
+  a { color:oklch(0.45 0.12 250); text-decoration:none; }
+  a:hover { color:oklch(0.35 0.12 250); text-decoration:underline; text-underline-offset:2px; }
+  * { box-sizing:border-box; }
+  ::selection { background:#14b8a633; }
+</style>
+</helmet>
+
+<div style="display:flex; min-height:100vh; align-items:stretch">
+
+  <div style="width:236px; flex:none; background:oklch(0.15 0.01 250); color:oklch(0.99 0 0); padding:22px 16px; display:flex; flex-direction:column; gap:26px; position:sticky; top:0; height:100vh; overflow:auto">
+    <div style="display:flex; flex-direction:column; gap:4px">
+      <div style="font-size:13px; font-weight:600; letter-spacing:-0.01em">Scrutinise Central</div>
+      <div style="font-size:11px; color:oklch(0.7 0.01 250)">Question library — hi-fi prototype</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:oklch(0.6 0.01 250); margin-bottom:2px">Screens</div>
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="6">
+        <button onClick="{{ item.go }}" style="{{ item.style }}">
+          <span style="font-size:10px; opacity:0.55; width:14px; flex:none; text-align:right">{{ item.n }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:oklch(0.6 0.01 250)">Viewport</div>
+      <div style="display:flex; gap:6px">
+        <button onClick="{{ setDesktop }}" style="{{ desktopBtn }}">Desktop</button>
+        <button onClick="{{ setMobile }}" style="{{ mobileBtn }}">Mobile</button>
+      </div>
+    </div>
+
+    <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px; border-top:1px solid oklch(0.3 0.01 250); padding-top:14px">
+      <div style="font-size:11px; line-height:1.5; color:oklch(0.7 0.01 250)">Built on the real tokens in scrutinise-web: DM Sans, navy primary, hairline borders. Cards move to 12px and teal becomes a live accent, per the brief.</div>
+    </div>
+  </div>
+
+  <div style="flex:1; min-width:0; padding:28px 32px 80px; display:flex; flex-direction:column; align-items:center; gap:18px">
+
+    <div style="width:100%; max-width:1180px; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:oklch(0.45 0.01 250)">{{ screenKicker }}</div>
+        <div style="font-size:22px; font-weight:600; letter-spacing:-0.015em; margin-top:3px">{{ screenTitle }}</div>
+      </div>
+      <div style="font-size:12px; color:oklch(0.45 0.01 250); max-width:460px; text-align:right; line-height:1.5">{{ screenNote }}</div>
+    </div>
+
+    <div style="width:100%; display:flex; justify-content:center">
+    <div style="{{ frameStyle }}">
+
+      <!-- ── app chrome ─────────────────────────────────────── -->
+      <sc-if value="{{ showChrome }}" hint-placeholder-val="{{ true }}">
+        <div style="border-bottom:1px solid oklch(0.90 0.005 250); background:oklch(1 0 0 / 0.95); backdrop-filter:blur(4px); position:sticky; top:0; z-index:5">
+          <div style="max-width:1024px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px">
+            <div style="font-size:19px; font-weight:600; letter-spacing:-0.02em; flex:none">Scrutinise</div>
+            <sc-if value="{{ showDesktopNav }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; align-items:center; gap:20px; min-width:0; flex:0 1 auto">
+                <sc-for list="{{ topNav }}" as="t" hint-placeholder-count="5">
+                  <div style="{{ t.style }}">{{ t.label }}</div>
+                </sc-for>
+                <div style="display:flex; align-items:center; gap:12px; flex:none">
+                  <span style="width:32px; height:32px; border-radius:999px; background:#1a7a6e; color:#ffffff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex:none">AM</span>
+                  <button style="height:32px; padding:0 12px; border-radius:6px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:13px; font-weight:500; color:oklch(0.15 0.01 250); cursor:pointer; white-space:nowrap">Sign out</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+              <button aria-label="Toggle menu" style="width:44px; height:44px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none; color:oklch(0.15 0.01 250)">
+                <span style="display:flex; flex-direction:column; gap:4px; width:18px">
+                  <span style="height:1.5px; background:currentColor; border-radius:2px"></span>
+                  <span style="height:1.5px; background:currentColor; border-radius:2px"></span>
+                  <span style="height:1.5px; background:currentColor; border-radius:2px"></span>
+                </span>
+              </button>
+            </sc-if>
+          </div>
+          <div style="max-width:1024px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:14px; border-top:1px solid oklch(0.955 0.004 250)">
+            <sc-if value="{{ showDesktopNav }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; align-items:center; gap:7px; flex:none; padding:8px 0">
+                <span style="font-size:13px; font-weight:600; letter-spacing:-0.01em; white-space:nowrap">Riverside</span>
+                <span style="font-size:10px; font-weight:500; padding:2px 7px; border-radius:999px; background:oklch(0.965 0.004 250); color:oklch(0.45 0.01 250)">Branch</span>
+              </div>
+            </sc-if>
+            <div style="display:flex; gap:4px; overflow:auto; padding:6px 0; flex:1 1 auto; min-width:0">
+              <sc-for list="{{ subTabs }}" as="s" hint-placeholder-count="4">
+                <div style="{{ s.style }}">{{ s.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── 1. library ─────────────────────────────────────── -->
+      <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:20px 20px 40px; display:flex; flex-direction:column; gap:18px">
+
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap">
+            <div style="max-width:520px; display:flex; flex-direction:column; gap:4px">
+              <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Questions</div>
+              <div style="font-size:13px; color:oklch(0.45 0.01 250); line-height:1.5">Hard questions members meet in public life, with the answers the community rates highest.</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex:none">
+              <button onClick="{{ goAdd }}" style="min-height:40px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:13px; font-weight:500; color:oklch(0.15 0.01 250); cursor:pointer; white-space:nowrap" style-hover="background:oklch(0.97 0.003 250)">Add a question</button>
+              <button onClick="{{ goPack }}" style="min-height:40px; padding:0 16px; border-radius:8px; border:1px solid oklch(0.45 0.12 250); background:oklch(0.45 0.12 250); font:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer; white-space:nowrap" style-hover="background:oklch(0.39 0.12 250)">Build a pack</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:44px 28px; display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center">
+              <div style="width:44px; height:44px; border-radius:12px; background:#14b8a614; border:1px solid #14b8a63d; display:flex; align-items:center; justify-content:center; font-size:18px; color:#0f8b7f; font-weight:600">?</div>
+              <div style="font-size:17px; font-weight:600; letter-spacing:-0.015em; max-width:420px">No questions here yet</div>
+              <div style="font-size:13px; color:oklch(0.45 0.01 250); line-height:1.6; max-width:430px">The library fills up from the doorstep. Add the last question that caught you out, and the answer everyone settles on will be written by the people who had to give one.</div>
+              <button onClick="{{ goAdd }}" style="margin-top:4px; height:44px; padding:0 18px; border-radius:8px; border:1px solid oklch(0.45 0.12 250); background:oklch(0.45 0.12 250); font:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer">Add the first question</button>
+              <div style="font-size:12px; color:oklch(0.55 0.01 250); margin-top:6px">Or copy 10 starter questions from Scrutinise's shared set</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isPopulated }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:14px">
+
+              <div style="display:flex; flex-direction:column; gap:10px; padding-bottom:14px; border-bottom:1px solid oklch(0.90 0.005 250)">
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+                  <input placeholder="Search questions" style="height:38px; flex:1 1 220px; min-width:180px; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:0 12px; font:inherit; font-size:13px; background:#ffffff; color:oklch(0.15 0.01 250); outline:none" style-focus="border-color:oklch(0.45 0.12 250); box-shadow:0 0 0 3px oklch(0.45 0.12 250 / 0.12)" />
+                  <select style="height:38px; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:0 10px; font:inherit; font-size:13px; background:#ffffff; color:oklch(0.15 0.01 250)">
+                    <option>All topics</option>
+                    <option>Local finance</option>
+                    <option>Local services</option>
+                    <option>Organising</option>
+                    <option>Party</option>
+                  </select>
+                  <select style="height:38px; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:0 10px; font:inherit; font-size:13px; background:#ffffff; color:oklch(0.15 0.01 250)">
+                    <option>Top this month</option>
+                    <option>Top all time</option>
+                    <option>Newest</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap">
+                  <sc-for list="{{ contexts }}" as="c" hint-placeholder-count="6">
+                    <button onClick="{{ c.go }}" style="{{ c.style }}">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+                <div style="font-size:12px; color:oklch(0.45 0.01 250)">{{ resultLine }}</div>
+                <div style="font-size:12px; color:oklch(0.45 0.01 250)">Top this month</div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:10px">
+                <sc-for list="{{ questions }}" as="q" hint-placeholder-count="6">
+                  <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; display:flex; gap:14px; padding:14px; align-items:flex-start" style-hover="border-color:oklch(0.78 0.01 250); box-shadow:0 1px 3px oklch(0.15 0.01 250 / 0.06)">
+                    <div onMouseEnter="{{ q.hoverOn }}" onMouseLeave="{{ q.hoverOff }}" style="{{ q.voteWrapStyle }}">
+                      <button onClick="{{ q.vote }}" style="{{ q.voteStyle }}" style-hover="border-color:oklch(0.45 0.12 250)">
+                        <span style="font-size:11px; line-height:1">▲</span>
+                        <span style="font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1.1">{{ q.votes }}</span>
+                      </button>
+                      <div style="{{ q.tipStyle }}">{{ q.tipText }}</div>
+                    </div>
+                    <div style="min-width:0; display:flex; flex-direction:column; gap:8px; flex:1">
+                      <a href="#" onClick="{{ q.open }}" style="font-size:15px; font-weight:600; letter-spacing:-0.01em; line-height:1.4; color:oklch(0.15 0.01 250); text-wrap:pretty">{{ q.text }}</a>
+                      <sc-if value="{{ q.preview }}" hint-placeholder-val="{{ true }}">
+                        <div style="font-size:13px; color:oklch(0.42 0.01 250); line-height:1.55; text-wrap:pretty; border-left:2px solid oklch(0.90 0.005 250); padding-left:10px">{{ q.preview }}</div>
+                      </sc-if>
+                      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center">
+                        <sc-for list="{{ q.tags }}" as="tag" hint-placeholder-count="2">
+                          <span style="font-size:11px; font-weight:500; padding:3px 9px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.35 0.02 250)">{{ tag }}</span>
+                        </sc-for>
+                        <span style="font-size:12px; color:oklch(0.5 0.01 250); margin-left:2px; font-variant-numeric:tabular-nums">{{ q.answerLine }}</span>
+                        <sc-if value="{{ q.hasSources }}" hint-placeholder-val="{{ true }}">
+                          <span style="font-size:11px; font-weight:500; color:oklch(0.42 0.01 250); display:inline-flex; align-items:center; gap:4px"><span style="width:5px; height:5px; border-radius:999px; background:oklch(0.45 0.12 250)"></span>Has sources</span>
+                        </sc-if>
+                        <sc-if value="{{ q.localExample }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size:11px; font-weight:500; color:#0f8b7f; display:inline-flex; align-items:center; gap:4px"><span style="width:5px; height:5px; border-radius:999px; background:#14b8a6"></span>Local example</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+                <div style="position:sticky; bottom:0; padding:12px 0 4px; background:linear-gradient(to top, #ffffff 55%, transparent); display:flex; gap:8px">
+                  <button onClick="{{ goPack }}" style="flex:1; height:48px; border-radius:10px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer; box-shadow:0 2px 8px oklch(0.45 0.12 250 / 0.28)">Build a pack</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <div style="display:flex; gap:8px; align-items:center; padding-top:6px">
+            <button onClick="{{ toggleEmpty }}" style="height:30px; padding:0 10px; border-radius:6px; border:1px dashed oklch(0.82 0.01 250); background:transparent; font:inherit; font-size:11px; color:oklch(0.45 0.01 250); cursor:pointer">{{ emptyToggleLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── 2. detail ──────────────────────────────────────── -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 20px 48px; display:flex; flex-direction:column; gap:20px">
+          <a href="#" onClick="{{ goLibrary }}" style="font-size:12px; color:oklch(0.45 0.01 250)">← Questions</a>
+
+          <div style="display:flex; flex-direction:column; gap:12px; padding-bottom:18px; border-bottom:1px solid oklch(0.90 0.005 250)">
+            <div style="display:flex; gap:14px; align-items:flex-start">
+              <div style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 10px; border:1px solid oklch(0.90 0.005 250); border-radius:10px; min-width:52px; flex:none">
+                <span style="font-size:11px; color:oklch(0.45 0.01 250)">▲</span>
+                <span style="font-size:18px; font-weight:600; font-variant-numeric:tabular-nums">51</span>
+                <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:oklch(0.5 0.01 250)">votes</span>
+              </div>
+              <h1 style="margin:0; font-size:24px; font-weight:600; letter-spacing:-0.025em; line-height:1.3; text-wrap:pretty">How do I actually read our council’s accounts to find waste?</h1>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center">
+              <span style="font-size:11px; font-weight:500; padding:3px 9px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.35 0.02 250)">Council chamber</span>
+              <span style="font-size:11px; font-weight:500; padding:3px 9px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.35 0.02 250)">Local finance</span>
+              <span style="font-size:12px; color:oklch(0.5 0.01 250); margin-left:4px">2 answers · whole Community</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+            <div style="font-size:13px; font-weight:600">Answers</div>
+            <div style="font-size:12px; color:oklch(0.45 0.01 250)">Ranked by weighted votes</div>
+          </div>
+
+          <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:16px; display:flex; gap:14px; align-items:flex-start">
+            <div onMouseEnter="{{ answerHoverOn }}" onMouseLeave="{{ answerHoverOff }}" style="flex:none; position:relative; display:flex; flex-direction:column; align-items:center; gap:4px">
+              <button onClick="{{ voteAnswerUp }}" style="{{ answerUpStyle }}">▲</button>
+              <span style="font-size:15px; font-weight:600; font-variant-numeric:tabular-nums">{{ answerVotes }}</span>
+              <button onClick="{{ voteAnswerDown }}" style="{{ answerDownStyle }}">▼</button>
+              <div style="{{ answerTipStyle }}">Click arrows to vote up or down</div>
+            </div>
+            <div style="min-width:0; display:flex; flex-direction:column; gap:14px; flex:1">
+              <div style="display:flex; align-items:center; gap:8px">
+                <span style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0f8b7f; padding:3px 7px; border-radius:5px; background:#14b8a614; border:1px solid #14b8a63d">Top answer</span>
+                <span style="font-size:12px; color:oklch(0.5 0.01 250)">Riverside branch · 3 weeks ago</span>
+              </div>
+              <p style="margin:0; font-size:16px; line-height:1.6; text-wrap:pretty">Start with the outturn statement, not the budget — the variance column is where…</p>
+
+              <div style="display:flex; flex-direction:column; gap:6px; border-top:1px solid oklch(0.95 0.004 250); padding-top:12px">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:oklch(0.45 0.01 250)">Sources</div>
+                <a href="#" style="font-size:13px; line-height:1.5">Statement of accounts 2024/25 — audited (PDF)</a>
+                <a href="#" style="font-size:13px; line-height:1.5">Revenue outturn report, cabinet papers, June 2025</a>
+              </div>
+
+              <div style="border:1px solid #14b8a64d; border-left:3px solid #14b8a6; background:#14b8a60f; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:6px">
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0b6f66">Local example</div>
+                <div style="font-size:13px; color:oklch(0.3 0.01 250); line-height:1.55">Added by a member of Riverside branch — a worked example from their own council’s outturn statement.</div>
+                <a href="#" style="font-size:13px; font-weight:500; color:#0b6f66">Read the example</a>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:10px; padding-top:2px; flex-wrap:wrap">
+                <button onClick="{{ favA }}" style="{{ favAStyle }}">
+                  <span style="font-size:13px; line-height:1">{{ favAIcon }}</span>
+                  <span>{{ favALabel }}</span>
+                </button>
+                <span style="font-size:11px; color:oklch(0.55 0.01 250)">Private to you</span>
+                <span style="flex:1"></span>
+                <button style="height:32px; padding:0 10px; border-radius:6px; border:1px solid oklch(0.92 0.004 250); background:#ffffff; font:inherit; font-size:12px; color:oklch(0.35 0.01 250); cursor:pointer">Suggest an edit</button>
+                <a href="#" style="font-size:12px; color:oklch(0.55 0.01 250)">Report</a>
+              </div>
+            </div>
+          </div>
+
+          <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:14px 16px; display:flex; gap:14px; align-items:center">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:2px; flex:none; min-width:44px">
+              <span style="font-size:11px; color:oklch(0.5 0.01 250)">▲</span>
+              <span style="font-size:15px; font-weight:600; font-variant-numeric:tabular-nums">12</span>
+            </div>
+            <div style="flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+              <div style="display:flex; flex-direction:column; gap:3px">
+                <div style="font-size:13px; font-weight:500">Second answer · cites 1 source</div>
+                <div style="font-size:12px; color:oklch(0.5 0.01 250)">Northgate branch · 5 weeks ago</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center">
+                <button onClick="{{ favB }}" style="{{ favBStyle }}">
+                  <span style="font-size:13px; line-height:1">{{ favBIcon }}</span>
+                  <span>{{ favBLabel }}</span>
+                </button>
+                <button style="height:34px; padding:0 12px; border-radius:7px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:12px; font-weight:500; cursor:pointer; color:oklch(0.15 0.01 250)">Show answer</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:oklch(0.985 0.002 250); padding:16px; display:flex; flex-direction:column; gap:12px">
+            <div style="font-size:13px; font-weight:600">Add an answer</div>
+            <textarea placeholder="What works when this comes up? Keep it to what you would actually say." rows="3" style="width:100%; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:10px 12px; font:inherit; font-size:14px; line-height:1.55; background:#ffffff; color:oklch(0.15 0.01 250); resize:vertical; outline:none" style-focus="border-color:oklch(0.45 0.12 250); box-shadow:0 0 0 3px oklch(0.45 0.12 250 / 0.12)"></textarea>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between">
+              <div style="display:flex; gap:8px; flex-wrap:wrap">
+                <button style="height:34px; padding:0 11px; border-radius:7px; border:1px dashed oklch(0.85 0.01 250); background:#ffffff; font:inherit; font-size:12px; color:oklch(0.35 0.01 250); cursor:pointer">+ Add a source</button>
+                <button style="height:34px; padding:0 11px; border-radius:7px; border:1px dashed #14b8a680; background:#ffffff; font:inherit; font-size:12px; color:#0b6f66; cursor:pointer">+ Add a local example</button>
+              </div>
+              <button style="height:38px; padding:0 16px; border-radius:8px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer">Post answer</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── 3. add a question ──────────────────────────────── -->
+      <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 20px 48px; display:flex; flex-direction:column; gap:20px">
+          <a href="#" onClick="{{ goLibrary }}" style="font-size:12px; color:oklch(0.45 0.01 250)">← Questions</a>
+
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+            <sc-for list="{{ addSteps }}" as="s" hint-placeholder-count="4">
+              <div style="{{ s.style }}">{{ s.label }}</div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ addStep1 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:16px; max-width:640px">
+              <div style="display:flex; flex-direction:column; gap:5px">
+                <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">What were you asked?</div>
+                <div style="font-size:13px; color:oklch(0.45 0.01 250); line-height:1.55">Write it the way it was put to you, not the tidied-up version.</div>
+              </div>
+              <textarea rows="2" style="width:100%; border:1px solid oklch(0.45 0.12 250); box-shadow:0 0 0 3px oklch(0.45 0.12 250 / 0.12); border-radius:10px; padding:14px; font:inherit; font-size:18px; line-height:1.45; background:#ffffff; color:oklch(0.15 0.01 250); resize:vertical; outline:none">Why should my council tax go up when serv</textarea>
+              <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#0b6f66">
+                <span style="width:6px; height:6px; border-radius:999px; background:#14b8a6"></span>
+                Checking the library as you type
+              </div>
+              <div style="display:flex; gap:8px">
+                <button onClick="{{ nextAddStep }}" style="height:44px; padding:0 18px; border-radius:8px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer">Continue</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ addStep2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:18px; max-width:680px">
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Good news — three people have already been asked this</div>
+                <div style="font-size:14px; color:oklch(0.4 0.01 250); line-height:1.6; text-wrap:pretty">Your answer is worth more on a question people are already reading. Add it to one of these, or carry on and post yours as new.</div>
+              </div>
+
+              <div style="border:1px solid oklch(0.92 0.004 250); border-radius:12px; background:#ffffff; overflow:hidden">
+                <div style="padding:10px 14px; background:#14b8a60f; border-bottom:1px solid #14b8a633; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0b6f66">Close matches</div>
+                <sc-for list="{{ nearMatches }}" as="m" hint-placeholder-count="3">
+                  <div style="padding:14px; border-bottom:1px solid oklch(0.955 0.004 250); display:flex; gap:14px; align-items:center">
+                    <div style="flex:none; width:46px; display:flex; flex-direction:column; align-items:center; gap:1px">
+                      <span style="font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; color:oklch(0.35 0.01 250)">{{ m.votes }}</span>
+                      <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:oklch(0.55 0.01 250)">votes</span>
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:5px">
+                      <div style="font-size:14px; font-weight:600; line-height:1.4; text-wrap:pretty">{{ m.text }}</div>
+                      <div style="font-size:12px; color:oklch(0.5 0.01 250)">{{ m.meta }}</div>
+                    </div>
+                    <button onClick="{{ goDetail }}" style="flex:none; height:38px; padding:0 13px; border-radius:8px; border:1px solid oklch(0.45 0.12 250); background:#ffffff; font:inherit; font-size:12px; font-weight:600; color:oklch(0.45 0.12 250); cursor:pointer" style-hover="background:oklch(0.45 0.12 250); color:#ffffff">Answer this one</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+                <button onClick="{{ nextAddStep }}" style="height:42px; padding:0 16px; border-radius:8px; border:1px solid oklch(0.85 0.01 250); background:#ffffff; font:inherit; font-size:13px; font-weight:500; color:oklch(0.15 0.01 250); cursor:pointer">Mine is different — carry on</button>
+                <div style="font-size:12px; color:oklch(0.5 0.01 250)">Nothing is lost either way; you can move an answer later.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ addStep3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:640px">
+              <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Where does this question come up?</div>
+
+              <div style="display:flex; flex-direction:column; gap:9px">
+                <div style="font-size:12px; font-weight:600; color:oklch(0.35 0.01 250)">Context</div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap">
+                  <sc-for list="{{ contextTags }}" as="t" hint-placeholder-count="5">
+                    <div style="{{ t.style }}">{{ t.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:9px">
+                <div style="font-size:12px; font-weight:600; color:oklch(0.35 0.01 250)">Topic</div>
+                <select style="height:40px; max-width:280px; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:0 10px; font:inherit; font-size:13px; background:#ffffff; color:oklch(0.15 0.01 250)">
+                  <option>Local finance</option>
+                  <option>Local services</option>
+                  <option>Organising</option>
+                  <option>Party</option>
+                </select>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:9px">
+                <div style="font-size:12px; font-weight:600; color:oklch(0.35 0.01 250)">Who can see it</div>
+                <div style="display:flex; flex-direction:column; gap:8px">
+                  <label style="display:flex; gap:11px; align-items:flex-start; border:1px solid oklch(0.45 0.12 250); background:oklch(0.45 0.12 250 / 0.05); border-radius:10px; padding:12px 14px; cursor:pointer">
+                    <input type="radio" name="scope" checked="checked" style="margin-top:2px; accent-color:oklch(0.45 0.12 250)" />
+                    <span style="display:flex; flex-direction:column; gap:3px">
+                      <span style="font-size:14px; font-weight:500">The whole Community</span>
+                      <span style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5">Every branch sees it and can answer.</span>
+                    </span>
+                  </label>
+                  <label style="display:flex; gap:11px; align-items:flex-start; border:1px solid oklch(0.90 0.005 250); border-radius:10px; padding:12px 14px; cursor:pointer">
+                    <input type="radio" name="scope" style="margin-top:2px; accent-color:oklch(0.45 0.12 250)" />
+                    <span style="display:flex; flex-direction:column; gap:3px">
+                      <span style="font-size:14px; font-weight:500">Riverside branch only</span>
+                      <span style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5">For questions that are specific to this patch.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; align-items:center; border-top:1px solid oklch(0.92 0.004 250); padding-top:16px">
+                <button onClick="{{ goLibrary }}" style="height:44px; padding:0 18px; border-radius:8px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:14px; font-weight:600; color:#ffffff; cursor:pointer">Post question</button>
+                <button onClick="{{ resetAdd }}" style="height:44px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:13px; color:oklch(0.35 0.01 250); cursor:pointer">Back to the start</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ── 4a. pack builder ───────────────────────────────── -->
+      <sc-if value="{{ isBuilder }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 20px 48px; display:flex; flex-direction:column; gap:18px">
+          <a href="#" onClick="{{ goLibrary }}" style="font-size:12px; color:oklch(0.45 0.01 250)">← Questions</a>
+
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap">
+            <div style="display:flex; flex-direction:column; gap:4px">
+              <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Build a pack</div>
+              <div style="font-size:13px; color:oklch(0.45 0.01 250)">A top-N selection of the library, for training or the doorstep.</div>
+            </div>
+            <button onClick="{{ goOutput }}" style="height:40px; padding:0 16px; border-radius:8px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer; flex:none">Preview pack</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:16px; align-items:start">
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:16px; display:flex; flex-direction:column; gap:12px">
+                <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:oklch(0.45 0.01 250)">Filters carried over</div>
+                <div style="display:flex; flex-direction:column; gap:8px; font-size:13px">
+                  <div style="display:flex; justify-content:space-between; gap:10px"><span style="color:oklch(0.45 0.01 250)">Context</span><span style="font-weight:500">Doorstep</span></div>
+                  <div style="display:flex; justify-content:space-between; gap:10px"><span style="color:oklch(0.45 0.01 250)">Topic</span><span style="font-weight:500">All topics</span></div>
+                  <div style="display:flex; justify-content:space-between; gap:10px"><span style="color:oklch(0.45 0.01 250)">Ranked by</span><span style="font-weight:500">Top this month</span></div>
+                  <div style="display:flex; justify-content:space-between; gap:10px"><span style="color:oklch(0.45 0.01 250)">Scope</span><span style="font-weight:500">Whole Community</span></div>
+                </div>
+                <a href="#" onClick="{{ goLibrary }}" style="font-size:12px">Change filters</a>
+              </div>
+
+              <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:16px; display:flex; flex-direction:column; gap:12px">
+                <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:oklch(0.45 0.01 250)">Pack size</div>
+                <div style="display:flex; gap:6px">
+                  <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="3">
+                    <button onClick="{{ s.go }}" style="{{ s.style }}">{{ s.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.55">{{ sizeNote }}</div>
+              </div>
+
+              <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:16px; display:flex; flex-direction:column; gap:10px">
+                <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:oklch(0.45 0.01 250)">Include with each question</div>
+                <label style="display:flex; gap:9px; align-items:center; font-size:13px; cursor:pointer"><input type="checkbox" checked="checked" style="accent-color:oklch(0.45 0.12 250)" />Top answer</label>
+                <label style="display:flex; gap:9px; align-items:center; font-size:13px; cursor:pointer"><input type="checkbox" checked="checked" style="accent-color:oklch(0.45 0.12 250)" />Sources</label>
+                <label style="display:flex; gap:9px; align-items:center; font-size:13px; cursor:pointer"><input type="checkbox" style="accent-color:oklch(0.45 0.12 250)" />Local examples</label>
+                <label style="display:flex; gap:9px; align-items:flex-start; font-size:13px; cursor:pointer; border-top:1px solid oklch(0.955 0.004 250); padding-top:10px; margin-top:2px">
+                  <input type="checkbox" checked="{{ favOption }}" onChange="{{ toggleFavOption }}" style="accent-color:oklch(0.45 0.12 250); margin-top:2px" />
+                  <span style="display:flex; flex-direction:column; gap:3px">
+                    <span>Favourite answers</span>
+                    <span style="font-size:11px; color:oklch(0.5 0.01 250); line-height:1.5">Where you’ve favourited an answer, yours is used instead of the top-voted one. Private to you — nobody else sees which you picked.</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div style="grid-column:span 2; min-width:0; border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; overflow:hidden">
+              <div style="padding:12px 16px; border-bottom:1px solid oklch(0.92 0.004 250); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+                <div style="font-size:13px; font-weight:600">Live preview — {{ packCount }} questions</div>
+                <div style="font-size:12px; color:oklch(0.45 0.01 250)">{{ pinnedNote }}</div>
+              </div>
+              <sc-for list="{{ packItems }}" as="p" hint-placeholder-count="6">
+                <div style="{{ p.rowStyle }}">
+                  <span style="flex:none; width:22px; font-size:12px; font-variant-numeric:tabular-nums; color:oklch(0.55 0.01 250); text-align:right">{{ p.n }}</span>
+                  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:4px">
+                    <div style="font-size:14px; font-weight:500; line-height:1.4; text-wrap:pretty">{{ p.text }}</div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                      <span style="font-size:12px; color:oklch(0.5 0.01 250)">{{ p.meta }}</span>
+                      <sc-if value="{{ p.usesFavourite }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:11px; font-weight:600; padding:2px 7px; border-radius:999px; background:oklch(0.45 0.12 250 / 0.08); border:1px solid oklch(0.45 0.12 250 / 0.3); color:oklch(0.45 0.12 250); white-space:nowrap">★ Your favourite answer</span>
+                      </sc-if>
+                    </div>
+                  </div>
+                  <div style="flex:none; display:flex; gap:6px">
+                    <button onClick="{{ p.pin }}" style="{{ p.pinStyle }}">{{ p.pinLabel }}</button>
+                    <button onClick="{{ p.remove }}" style="height:32px; padding:0 9px; border-radius:7px; border:1px solid oklch(0.92 0.004 250); background:#ffffff; font:inherit; font-size:12px; color:oklch(0.5 0.01 250); cursor:pointer" style-hover="border-color:oklch(0.55 0.22 25); color:oklch(0.55 0.22 25)">Remove</button>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="padding:12px 16px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:oklch(0.985 0.002 250)">
+                <div style="font-size:12px; color:oklch(0.45 0.01 250)">Pinned questions stay put when the ranking moves.</div>
+                <button onClick="{{ resetPack }}" style="height:32px; padding:0 10px; border-radius:7px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:12px; color:oklch(0.35 0.01 250); cursor:pointer">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── 4b. pack output ───────────────────────────────── -->
+      <sc-if value="{{ isOutput }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 20px 48px; display:flex; flex-direction:column; gap:20px">
+          <a href="#" onClick="{{ goPack }}" style="font-size:12px; color:oklch(0.45 0.01 250)">← Pack builder</a>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Pack output — three directions</div>
+            <div style="font-size:13px; color:oklch(0.45 0.01 250); line-height:1.6; max-width:620px">Same pack, three field behaviours. A is question-first and glanceable, B is answer-first flashcards, C is a dense continuous list. The print sheet below serves all three.</div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; align-items:start">
+
+            <!-- direction A -->
+            <div id="4a" style="display:flex; flex-direction:column; gap:10px">
+              <div style="display:flex; align-items:baseline; gap:8px">
+                <span style="font-size:11px; font-weight:700; padding:3px 7px; border-radius:5px; background:oklch(0.15 0.01 250); color:#ffffff">A</span>
+                <span style="font-size:14px; font-weight:600">Glance cards</span>
+              </div>
+              <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5; min-height:34px">One question per screen. Answer opening visible without tapping; swipe sideways to move on.</div>
+              <div style="width:100%; max-width:340px; border:10px solid oklch(0.2 0.01 250); border-radius:32px; overflow:hidden; background:#ffffff; box-shadow:0 8px 24px oklch(0.15 0.01 250 / 0.14)">
+                <div style="height:26px; background:oklch(0.2 0.01 250)"></div>
+                <div style="padding:14px 16px 20px; display:flex; flex-direction:column; gap:14px; min-height:470px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px; color:oklch(0.5 0.01 250)">
+                    <span>Doorstep pack · top 10</span>
+                    <span style="font-variant-numeric:tabular-nums">2 / 10</span>
+                  </div>
+                  <div style="height:2px; background:oklch(0.93 0.004 250); border-radius:999px; overflow:hidden"><div style="width:20%; height:100%; background:#14b8a6"></div></div>
+                  <div style="font-size:22px; font-weight:600; letter-spacing:-0.02em; line-height:1.3; text-wrap:pretty">Why should my council tax go up when services are getting worse?</div>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap">
+                    <span style="font-size:10px; font-weight:500; padding:3px 8px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.35 0.02 250)">Doorstep</span>
+                    <span style="font-size:10px; font-weight:500; padding:3px 8px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.35 0.02 250)">Local finance</span>
+                  </div>
+                  <div style="border-top:1px solid oklch(0.93 0.004 250); padding-top:14px; display:flex; flex-direction:column; gap:8px">
+                    <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0b6f66">Best answer</div>
+                    <div style="font-size:16px; line-height:1.55; text-wrap:pretty">Start from the shared ground — nobody thinks they’re getting value right now…</div>
+                  </div>
+                  <div style="margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:16px">
+                    <button style="height:44px; width:44px; border-radius:12px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font-size:14px; color:oklch(0.45 0.01 250); cursor:pointer">←</button>
+                    <span style="font-size:11px; color:oklch(0.55 0.01 250)">Local example ready</span>
+                    <button style="height:44px; width:44px; border-radius:12px; border:none; background:oklch(0.45 0.12 250); font-size:14px; color:#ffffff; cursor:pointer">→</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- direction B -->
+            <div id="4b" style="display:flex; flex-direction:column; gap:10px">
+              <div style="display:flex; align-items:baseline; gap:8px">
+                <span style="font-size:11px; font-weight:700; padding:3px 7px; border-radius:5px; background:oklch(0.15 0.01 250); color:#ffffff">B</span>
+                <span style="font-size:14px; font-weight:600">Answer-first flashcards</span>
+              </div>
+              <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5; min-height:34px">The line you would say is the whole card. Question in small type above; tap to see sources.</div>
+              <div style="width:100%; max-width:340px; border:10px solid oklch(0.2 0.01 250); border-radius:32px; overflow:hidden; background:oklch(0.15 0.01 250); box-shadow:0 8px 24px oklch(0.15 0.01 250 / 0.14)">
+                <div style="height:26px; background:oklch(0.2 0.01 250)"></div>
+                <div style="padding:14px 14px 18px; display:flex; flex-direction:column; gap:12px; min-height:470px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px; color:oklch(0.65 0.01 250)">
+                    <span>Doorstep pack</span>
+                    <span style="font-variant-numeric:tabular-nums">2 / 10</span>
+                  </div>
+                  <div style="flex:1; background:#ffffff; border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:14px">
+                    <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.45; text-wrap:pretty">Why should my council tax go up when services are getting worse?</div>
+                    <div style="height:1px; background:oklch(0.93 0.004 250)"></div>
+                    <div style="font-size:19px; font-weight:500; line-height:1.5; text-wrap:pretty">Start from the shared ground — nobody thinks they’re getting value right now…</div>
+                    <div style="margin-top:auto; display:flex; gap:6px; flex-wrap:wrap; align-items:center">
+                      <span style="font-size:10px; font-weight:600; padding:3px 8px; border-radius:999px; background:#14b8a614; border:1px solid #14b8a63d; color:#0b6f66">Local example</span>
+                      <span style="font-size:11px; color:oklch(0.5 0.01 250)">4 answers · 38 votes</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:8px">
+                    <button style="flex:1; height:48px; border-radius:12px; border:1px solid oklch(0.32 0.01 250); background:transparent; font:inherit; font-size:13px; font-weight:500; color:#ffffff; cursor:pointer">Sources</button>
+                    <button style="flex:2; height:48px; border-radius:12px; border:none; background:#14b8a6; font:inherit; font-size:13px; font-weight:600; color:oklch(0.15 0.01 250); cursor:pointer">Next question</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- direction C -->
+            <div id="4c" style="display:flex; flex-direction:column; gap:10px">
+              <div style="display:flex; align-items:baseline; gap:8px">
+                <span style="font-size:11px; font-weight:700; padding:3px 7px; border-radius:5px; background:oklch(0.15 0.01 250); color:#ffffff">C</span>
+                <span style="font-size:14px; font-weight:600">Continuous list</span>
+              </div>
+              <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5; min-height:34px">The whole pack on one thumb. Numbered, scannable, expands in place — closest to the print sheet.</div>
+              <div style="width:100%; max-width:340px; border:10px solid oklch(0.2 0.01 250); border-radius:32px; overflow:hidden; background:#ffffff; box-shadow:0 8px 24px oklch(0.15 0.01 250 / 0.14)">
+                <div style="height:26px; background:oklch(0.2 0.01 250)"></div>
+                <div style="min-height:470px; display:flex; flex-direction:column">
+                  <div style="padding:12px 14px; border-bottom:1px solid oklch(0.92 0.004 250); display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:0; background:#ffffff">
+                    <span style="font-size:13px; font-weight:600">Doorstep pack</span>
+                    <span style="font-size:11px; color:oklch(0.5 0.01 250); font-variant-numeric:tabular-nums">10 questions</span>
+                  </div>
+                  <sc-for list="{{ listPack }}" as="l" hint-placeholder-count="5">
+                    <div style="padding:12px 14px; border-bottom:1px solid oklch(0.955 0.004 250); display:flex; gap:10px">
+                      <span style="flex:none; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; color:oklch(0.55 0.01 250); padding-top:2px">{{ l.n }}</span>
+                      <div style="min-width:0; display:flex; flex-direction:column; gap:5px">
+                        <div style="font-size:14px; font-weight:600; line-height:1.35; text-wrap:pretty">{{ l.text }}</div>
+                        <sc-if value="{{ l.preview }}" hint-placeholder-val="{{ true }}">
+                          <div style="font-size:12px; color:oklch(0.45 0.01 250); line-height:1.5; text-wrap:pretty">{{ l.preview }}</div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <div style="margin-top:auto; padding:10px 14px; border-top:1px solid oklch(0.92 0.004 250); display:flex; gap:8px; background:oklch(0.985 0.002 250)">
+                    <button style="flex:1; height:44px; border-radius:10px; border:1px solid oklch(0.90 0.005 250); background:#ffffff; font:inherit; font-size:13px; cursor:pointer; color:oklch(0.15 0.01 250)">Jump to…</button>
+                    <button style="flex:1; height:44px; border-radius:10px; border:none; background:oklch(0.45 0.12 250); font:inherit; font-size:13px; font-weight:600; color:#ffffff; cursor:pointer">Save offline</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- print sheet -->
+          <div style="display:flex; flex-direction:column; gap:12px; padding-top:16px; border-top:1px solid oklch(0.90 0.005 250)">
+            <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap">
+              <div style="font-size:16px; font-weight:600; letter-spacing:-0.015em">Print sheet — A4</div>
+              <div style="font-size:12px; color:oklch(0.45 0.01 250)">For handing out at a training session</div>
+            </div>
+            <div style="width:100%; max-width:794px; background:#ffffff; border:1px solid oklch(0.90 0.005 250); box-shadow:0 4px 20px oklch(0.15 0.01 250 / 0.08); padding:56px 64px; display:flex; flex-direction:column; gap:26px">
+              <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px; border-bottom:2px solid oklch(0.15 0.01 250); padding-bottom:12px">
+                <div style="display:flex; flex-direction:column; gap:3px">
+                  <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:oklch(0.45 0.01 250)">Scrutinise Central · Riverside branch</div>
+                  <div style="font-size:26px; font-weight:600; letter-spacing:-0.025em">Doorstep pack — top 6</div>
+                </div>
+                <div style="font-size:11px; color:oklch(0.45 0.01 250); text-align:right; line-height:1.6">Top this month<br />9 August 2026</div>
+              </div>
+
+              <sc-for list="{{ printPack }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex; gap:20px; padding-bottom:20px; border-bottom:1px solid oklch(0.92 0.004 250)">
+                  <div style="flex:none; width:34px; font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; color:oklch(0.78 0.01 250); line-height:1.1">{{ p.n }}</div>
+                  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:8px">
+                    <div style="font-size:16px; font-weight:600; line-height:1.4; letter-spacing:-0.01em; text-wrap:pretty">{{ p.text }}</div>
+                    <sc-if value="{{ p.preview }}" hint-placeholder-val="{{ true }}">
+                      <div style="font-size:14px; line-height:1.6; color:oklch(0.3 0.01 250); text-wrap:pretty">{{ p.preview }}</div>
+                    </sc-if>
+                    <div style="font-size:11px; color:oklch(0.5 0.01 250); letter-spacing:0.02em">{{ p.meta }}</div>
+                  </div>
+                </div>
+              </sc-for>
+
+              <div style="font-size:10px; color:oklch(0.55 0.01 250); line-height:1.6; padding-top:4px">Private to this Community. Answers are community-rated, not official positions.</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── 5. across branches ────────────────────────────── -->
+      <sc-if value="{{ isBranches }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 20px 48px; display:flex; flex-direction:column; gap:20px">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap">
+            <div style="display:flex; flex-direction:column; gap:4px">
+              <div style="font-size:20px; font-weight:600; letter-spacing:-0.02em">Across branches</div>
+              <div style="font-size:13px; color:oklch(0.45 0.01 250); line-height:1.55; max-width:520px">What each branch is valuing this week. Community admins only.</div>
+            </div>
+            <select style="height:38px; border:1px solid oklch(0.90 0.005 250); border-radius:8px; padding:0 10px; font:inherit; font-size:13px; background:#ffffff; color:oklch(0.15 0.01 250); flex:none">
+              <option>This week</option>
+              <option>This month</option>
+              <option>This quarter</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:24px; flex-wrap:wrap; padding:16px 0; border-top:1px solid oklch(0.90 0.005 250); border-bottom:1px solid oklch(0.90 0.005 250)">
+            <sc-for list="{{ overview }}" as="o" hint-placeholder-count="4">
+              <div style="display:flex; flex-direction:column; gap:3px; min-width:96px">
+                <div style="font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-0.02em">{{ o.value }}</div>
+                <div style="font-size:12px; color:oklch(0.45 0.01 250)">{{ o.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px">
+            <sc-for list="{{ branches }}" as="b" hint-placeholder-count="4">
+              <div style="border:1px solid oklch(0.90 0.005 250); border-radius:12px; background:#ffffff; padding:16px; display:flex; flex-direction:column; gap:14px">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px">
+                  <div style="display:flex; flex-direction:column; gap:2px">
+                    <div style="font-size:14px; font-weight:600">{{ b.name }}</div>
+                    <div style="font-size:12px; color:oklch(0.5 0.01 250); font-variant-numeric:tabular-nums">{{ b.stats }}</div>
+                  </div>
+                  <sc-if value="{{ b.quiet }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:10px; font-weight:500; padding:3px 8px; border-radius:999px; background:oklch(0.965 0.004 250); border:1px solid oklch(0.92 0.004 250); color:oklch(0.45 0.01 250); white-space:nowrap">Quiet week</span>
+                  </sc-if>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px">
+                  <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:oklch(0.5 0.01 250)">Top voted</div>
+                  <div style="font-size:13px; line-height:1.45; text-wrap:pretty">{{ b.top }}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; border-top:1px solid oklch(0.955 0.004 250); padding-top:12px">
+                  <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0b6f66">Rising</div>
+                  <div style="font-size:13px; line-height:1.45; color:oklch(0.3 0.01 250); text-wrap:pretty">{{ b.rising }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="font-size:12px; color:oklch(0.5 0.01 250); line-height:1.6; max-width:560px">Counts are participation only. No per-member activity is shown here, and nothing on this page is visible outside the admin group.</div>
+        </div>
+      </sc-if>
+
+    </div>
+    </div>
+
+    <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+      <div style="width:100%; max-width:1180px; display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid #14b8a64d; border-left:3px solid #14b8a6; border-radius:10px; background:#14b8a60a">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:#0b6f66">What this changes elsewhere</div>
+        <div style="font-size:13px; color:oklch(0.3 0.01 250); line-height:1.65; text-wrap:pretty">{{ noteText }}</div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showUpgradeNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const NAVY = 'oklch(0.45 0.12 250)';
+const INK = 'oklch(0.15 0.01 250)';
+const MUTED = 'oklch(0.45 0.01 250)';
+const BORDER = 'oklch(0.90 0.005 250)';
+
+const QS = [
+  { text: 'How do I actually read our council’s accounts to find waste?', tags: ['Council chamber', 'Local finance'], votes: 51, answers: 2, hasSources: true, localExample: false, preview: 'Start with the outturn statement, not the budget — the variance column is where…' },
+  { text: 'Why should my council tax go up when services are getting worse?', tags: ['Doorstep', 'Local finance'], votes: 38, answers: 4, hasSources: false, localExample: true, preview: 'Start from the shared ground — nobody thinks they’re getting value right now…' },
+  { text: 'Isn’t your party just a protest vote?', tags: ['Media interview', 'Party'], votes: 29, answers: 6, hasSources: false, localExample: false, preview: 'Fair question — here’s what we’ve actually done where we run things…' },
+  { text: 'What are you actually going to do about potholes?', tags: ['Doorstep', 'Local services'], votes: 24, answers: 3, hasSources: true, localExample: false, preview: '' },
+  { text: 'How do we recruit volunteers who actually turn up?', tags: ['Hustings', 'Organising'], votes: 19, answers: 5, hasSources: false, localExample: false, preview: '' },
+  { text: 'Where does the council’s money actually go?', tags: ['University AMA', 'Local finance'], votes: 16, answers: 2, hasSources: true, localExample: false, preview: '' },
+];
+
+const SCREENS = {
+  library:  { kicker: 'Screen 1', title: 'Question library', note: 'Populated and empty states. Vote control sits left and stays in thumb reach on mobile.' },
+  detail:   { kicker: 'Screen 2', title: 'Question detail', note: 'Answers ranked by weighted votes, with sources and a visually distinct local example.' },
+  add:      { kicker: 'Screen 3', title: 'Add a question', note: 'Three steps. The near-match step is framed as a shortcut, never a rejection.' },
+  builder:  { kicker: 'Screen 4a', title: 'Pack builder', note: 'Filters carried over, size selector, live preview with pin and remove.' },
+  output:   { kicker: 'Screen 4b', title: 'Pack output', note: 'Three mobile directions plus the A4 print sheet.' },
+  branches: { kicker: 'Screen 5', title: 'Across branches', note: 'A calm overview for Community admins. Participation counts, no per-member surveillance.' },
+};
+
+class Component extends DCLogic {
+  state = {
+    screen: 'library', device: 'desktop', empty: false, context: 'All',
+    addStep: 1, size: 10, votes: {}, pinned: { 1: true }, removed: {}, answerVote: 0,
+    hoverTip: null, answerTip: false, favourites: { a1: true }, favOption: true,
+  };
+
+  set(k, v) { this.setState({ [k]: v }); }
+
+  favStyle(on, h) {
+    return {
+      minHeight: h + 'px', padding: '0 11px', borderRadius: '7px', font: 'inherit', fontSize: '12px',
+      display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', whiteSpace: 'nowrap',
+      fontWeight: on ? 600 : 500,
+      border: '1px solid ' + (on ? NAVY : BORDER),
+      background: on ? 'oklch(0.45 0.12 250 / 0.07)' : '#fff',
+      color: on ? NAVY : 'oklch(0.35 0.01 250)',
+    };
+  }
+
+  tip(visible, extra) {
+    return {
+      position: 'absolute', zIndex: 20, width: '178px', padding: '8px 10px', borderRadius: '8px',
+      background: INK, color: '#fff', fontSize: '11px', fontWeight: 500, lineHeight: 1.45, textAlign: 'left',
+      pointerEvents: 'none', transition: 'opacity 120ms ease',
+      opacity: visible ? 1 : 0,
+      boxShadow: '0 4px 14px oklch(0.15 0.01 250 / 0.22)',
+      ...extra,
+    };
+  }
+
+  chipStyle(active) {
+    const base = {
+      minHeight: '34px', padding: '0 13px', borderRadius: '999px', font: 'inherit', fontSize: '12px',
+      cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    };
+    return active
+      ? { ...base, border: '1px solid ' + NAVY, background: NAVY, color: '#fff', fontWeight: 600 }
+      : { ...base, border: '1px solid ' + BORDER, background: '#fff', color: 'oklch(0.3 0.01 250)', fontWeight: 500 };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isMobile = s.device === 'mobile';
+    const sc = SCREENS[s.screen] || SCREENS.library;
+    const go = (screen) => () => this.setState({ screen });
+
+    const navItems = [
+      ['1', 'Question library', 'library'], ['2', 'Question detail', 'detail'], ['3', 'Add a question', 'add'],
+      ['4a', 'Pack builder', 'builder'], ['4b', 'Pack output', 'output'], ['5', 'Across branches', 'branches'],
+    ];
+
+    const filtered = QS
+      .filter((q) => s.context === 'All' || q.tags.includes(s.context))
+      .filter((q, i) => !s.removed[i] || s.screen !== 'builder');
+
+    const questions = QS
+      .filter((q) => s.context === 'All' || q.tags.includes(s.context))
+      .map((q, i) => {
+        const bumped = !!s.votes[q.text];
+        return {
+          ...q,
+          votes: q.votes + (bumped ? 1 : 0),
+          answerLine: q.answers + ' answers',
+          vote: () => this.setState((st) => ({ votes: { ...st.votes, [q.text]: !st.votes[q.text] } })),
+          hoverOn: () => this.set('hoverTip', q.text),
+          hoverOff: () => this.set('hoverTip', null),
+          voteWrapStyle: { flex: 'none', position: 'relative', display: 'flex', zIndex: s.hoverTip === q.text ? 20 : 1 },
+          tipText: bumped ? 'You’ve told us you’ve been asked this. Click to undo.' : 'Click if you’ve been asked this question too',
+          tipStyle: this.tip(s.hoverTip === q.text, { left: 0, top: 'calc(100% + 8px)' }),
+          open: (e) => { if (e) e.preventDefault(); this.setState({ screen: 'detail' }); },
+          voteStyle: {
+            position: 'relative', width: '48px', minHeight: '48px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: '2px', cursor: 'pointer', font: 'inherit',
+            borderRadius: '10px', border: '1px solid ' + (bumped ? NAVY : BORDER),
+            background: bumped ? 'oklch(0.45 0.12 250 / 0.07)' : '#fff',
+            color: bumped ? NAVY : 'oklch(0.3 0.01 250)',
+          },
+        };
+      });
+
+    const packSource = QS.filter((q, i) => !s.removed[i]);
+    const packItems = packSource.map((q, i) => {
+      const idx = QS.indexOf(q);
+      const pinned = !!s.pinned[idx];
+      return {
+        n: i + 1, text: q.text,
+        meta: q.tags.join(' · ') + ' · ' + q.votes + ' votes · ' + q.answers + ' answers',
+        usesFavourite: s.favOption && idx === 0 && !!s.favourites.a1,
+        pinLabel: pinned ? 'Pinned' : 'Pin',
+        pin: () => this.setState((st) => ({ pinned: { ...st.pinned, [idx]: !st.pinned[idx] } })),
+        remove: () => this.setState((st) => ({ removed: { ...st.removed, [idx]: true } })),
+        rowStyle: {
+          padding: '12px 16px', borderBottom: '1px solid oklch(0.955 0.004 250)', display: 'flex',
+          gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap',
+          background: pinned ? '#14b8a60a' : '#fff',
+        },
+        pinStyle: {
+          height: '32px', padding: '0 10px', borderRadius: '7px', font: 'inherit', fontSize: '12px', cursor: 'pointer',
+          border: '1px solid ' + (pinned ? '#14b8a6' : BORDER),
+          background: pinned ? '#14b8a614' : '#fff',
+          color: pinned ? '#0b6f66' : 'oklch(0.3 0.01 250)', fontWeight: pinned ? 600 : 500,
+        },
+      };
+    });
+
+    const tabStyle = (active) => ({
+      padding: '7px 11px', borderRadius: '7px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap',
+      fontWeight: active ? 600 : 500,
+      background: active ? 'oklch(0.955 0.004 250)' : 'transparent',
+      color: active ? INK : MUTED,
+      boxShadow: active ? 'inset 0 0 0 1px ' + BORDER : 'none',
+    });
+
+    const stepStyle = (n) => ({
+      minHeight: '28px', padding: '3px 11px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center',
+      whiteSpace: 'nowrap', fontSize: '12px', fontWeight: s.addStep === n ? 600 : 500,
+      background: s.addStep === n ? NAVY : (s.addStep > n ? '#14b8a614' : 'oklch(0.965 0.004 250)'),
+      color: s.addStep === n ? '#fff' : (s.addStep > n ? '#0b6f66' : MUTED),
+      border: '1px solid ' + (s.addStep === n ? NAVY : (s.addStep > n ? '#14b8a63d' : BORDER)),
+    });
+
+    const railStyle = (active) => ({
+      display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left',
+      padding: '8px 10px', borderRadius: '7px', border: 'none', font: 'inherit', fontSize: '12.5px',
+      cursor: 'pointer', fontWeight: active ? 600 : 400,
+      background: active ? 'oklch(0.28 0.02 250)' : 'transparent',
+      color: active ? '#fff' : 'oklch(0.75 0.01 250)',
+    });
+
+    const devBtn = (active) => ({
+      flex: 1, height: '32px', borderRadius: '7px', font: 'inherit', fontSize: '12px', cursor: 'pointer',
+      fontWeight: active ? 600 : 400,
+      border: '1px solid ' + (active ? 'transparent' : 'oklch(0.32 0.01 250)'),
+      background: active ? '#fff' : 'transparent',
+      color: active ? INK : 'oklch(0.75 0.01 250)',
+    });
+
+    const isOutput = s.screen === 'output';
+    const frameW = isOutput ? 1180 : (isMobile ? 402 : 1180);
+
+    return {
+      nav: navItems.map(([n, label, key]) => ({ n, label, go: go(key), style: railStyle(s.screen === key) })),
+      setDesktop: () => this.set('device', 'desktop'), setMobile: () => this.set('device', 'mobile'),
+      desktopBtn: devBtn(!isMobile), mobileBtn: devBtn(isMobile),
+
+      screenKicker: sc.kicker, screenTitle: sc.title, screenNote: sc.note,
+      frameStyle: {
+        width: frameW + 'px', maxWidth: '100%', background: '#fff', borderRadius: '14px',
+        border: '1px solid ' + BORDER, boxShadow: '0 6px 28px oklch(0.15 0.01 250 / 0.08)',
+        overflow: 'hidden', minHeight: '600px',
+      },
+
+      showChrome: !isOutput,
+      showDesktopNav: !isMobile,
+      // Labels, order and account affordance from components/PublicNav.tsx.
+      topNav: [['Create', false], ['Browse', false], ['Support', false], ['About', false], ['Central', true]]
+        .map(([label, a]) => ({
+          label,
+          style: {
+            fontSize: '14px', whiteSpace: 'nowrap', cursor: 'pointer',
+            fontWeight: a ? 600 : 400,
+            color: a ? INK : MUTED,
+          },
+        })),
+      subTabs: [['Questions', true], ['Board', false], ['Training', false], ['Leaderboard', false]].map(([label, a]) => ({ label, style: tabStyle(a) })),
+
+      isLibrary: s.screen === 'library', isDetail: s.screen === 'detail', isAdd: s.screen === 'add',
+      isBuilder: s.screen === 'builder', isOutput, isBranches: s.screen === 'branches',
+      isMobile,
+
+      isEmpty: s.empty, isPopulated: !s.empty,
+      toggleEmpty: () => this.set('empty', !s.empty),
+      emptyToggleLabel: s.empty ? 'Show the populated state' : 'Show the new-community empty state',
+
+      contexts: ['All', 'Doorstep', 'Media interview', 'Hustings', 'University AMA', 'Council chamber']
+        .map((label) => ({ label, go: () => this.set('context', label), style: this.chipStyle(s.context === label) })),
+      resultLine: questions.length + (questions.length === 1 ? ' question' : ' questions') + (s.context === 'All' ? '' : ' in ' + s.context.toLowerCase()),
+      questions,
+
+      favA: () => this.setState((st) => ({ favourites: { ...st.favourites, a1: !st.favourites.a1 } })),
+      favB: () => this.setState((st) => ({ favourites: { ...st.favourites, a2: !st.favourites.a2 } })),
+      favAStyle: this.favStyle(!!s.favourites.a1, 32),
+      favBStyle: this.favStyle(!!s.favourites.a2, 34),
+      favAIcon: s.favourites.a1 ? '★' : '☆',
+      favBIcon: s.favourites.a2 ? '★' : '☆',
+      favALabel: s.favourites.a1 ? 'Favourited' : 'Favourite',
+      favBLabel: s.favourites.a2 ? 'Favourited' : 'Favourite',
+      favOption: s.favOption,
+      toggleFavOption: () => this.set('favOption', !s.favOption),
+
+      answerVotes: 39 + s.answerVote,
+      answerHoverOn: () => this.set('answerTip', true),
+      answerHoverOff: () => this.set('answerTip', false),
+      answerTipStyle: this.tip(s.answerTip, { left: 'calc(100% + 8px)', top: '6px', width: '152px' }),
+      voteAnswerUp: () => this.setState((st) => ({ answerVote: st.answerVote === 1 ? 0 : 1 })),
+      voteAnswerDown: () => this.setState((st) => ({ answerVote: st.answerVote === -1 ? 0 : -1 })),
+      answerUpStyle: {
+        width: '44px', height: '36px', borderRadius: '8px 8px 4px 4px', cursor: 'pointer', fontSize: '11px',
+        border: '1px solid ' + (s.answerVote === 1 ? NAVY : BORDER),
+        background: s.answerVote === 1 ? 'oklch(0.45 0.12 250 / 0.08)' : '#fff',
+        color: s.answerVote === 1 ? NAVY : 'oklch(0.35 0.01 250)',
+      },
+      answerDownStyle: {
+        width: '44px', height: '36px', borderRadius: '4px 4px 8px 8px', cursor: 'pointer', fontSize: '11px',
+        border: '1px solid ' + (s.answerVote === -1 ? 'oklch(0.55 0.22 25)' : BORDER),
+        background: s.answerVote === -1 ? 'oklch(0.55 0.22 25 / 0.07)' : '#fff',
+        color: s.answerVote === -1 ? 'oklch(0.55 0.22 25)' : 'oklch(0.55 0.01 250)',
+      },
+
+      goLibrary: (e) => { if (e) e.preventDefault(); this.setState({ screen: 'library' }); },
+      goDetail: (e) => { if (e) e.preventDefault(); this.setState({ screen: 'detail' }); },
+      goAdd: () => this.setState({ screen: 'add', addStep: 1 }),
+      goPack: (e) => { if (e) e.preventDefault(); this.setState({ screen: 'builder' }); },
+      goOutput: () => this.setState({ screen: 'output' }),
+
+      addSteps: [[1, 'Write it'], [2, 'Near matches'], [3, 'Tags and scope']].map(([n, label]) => ({ label, style: stepStyle(n) })),
+      addStep1: s.addStep === 1, addStep2: s.addStep === 2, addStep3: s.addStep === 3,
+      nextAddStep: () => this.setState((st) => ({ addStep: Math.min(3, st.addStep + 1) })),
+      resetAdd: () => this.setState({ addStep: 1 }),
+      nearMatches: [
+        { votes: 38, text: QS[1].text, meta: 'Doorstep · Local finance · 4 answers' },
+        { votes: 16, text: QS[5].text, meta: 'University AMA · Local finance · 2 answers' },
+        { votes: 51, text: QS[0].text, meta: 'Council chamber · Local finance · 2 answers' },
+      ],
+      contextTags: ['Doorstep', 'Media interview', 'Hustings', 'University AMA', 'Council chamber']
+        .map((label) => ({ label, style: { ...this.chipStyle(label === 'Doorstep'), minHeight: '32px' } })),
+
+      sizes: [10, 25, 50].map((n) => ({
+        label: 'Top ' + n, go: () => this.set('size', n),
+        style: { ...this.chipStyle(s.size === n), borderRadius: '8px', flex: 1 },
+      })),
+      sizeNote: 'The library holds ' + QS.length + ' questions matching these filters, so this pack is ' + QS.length + ' of a possible ' + s.size + '.',
+      packCount: packSource.length,
+      pinnedNote: Object.values(s.pinned).filter(Boolean).length + ' pinned',
+      packItems,
+      resetPack: () => this.setState({ removed: {}, pinned: { 1: true } }),
+
+      listPack: QS.slice(0, 5).map((q, i) => ({ n: i + 1, text: q.text, preview: q.preview })),
+      printPack: QS.map((q, i) => ({
+        n: i + 1, text: q.text, preview: q.preview,
+        meta: q.tags.join(' · ') + ' · ' + q.answers + ' answers' + (q.hasSources ? ' · sources cited' : '') + (q.localExample ? ' · local example' : ''),
+      })),
+
+      overview: [
+        { value: '6', label: 'Branches active' }, { value: '41', label: 'Questions live' },
+        { value: '118', label: 'Answers posted' }, { value: '63%', label: 'Members voting' },
+      ],
+      branches: [
+        { name: 'Riverside', stats: '14 members · 9 questions · 31 votes', top: QS[0].text, rising: QS[3].text, quiet: false },
+        { name: 'Northgate', stats: '11 members · 7 questions · 24 votes', top: QS[1].text, rising: QS[4].text, quiet: false },
+        { name: 'Eastfield', stats: '9 members · 5 questions · 12 votes', top: QS[2].text, rising: QS[5].text, quiet: false },
+        { name: 'Milbrook', stats: '6 members · 2 questions · 3 votes', top: QS[5].text, rising: 'Nothing rising this week', quiet: true },
+      ],
+
+      showNotes: this.props.showUpgradeNotes ?? true,
+      noteText: 'Three moves carry across the signed-in site: cards go to 12px with a single hairline border and no inner boxes; teal stops being animation-only and becomes the live-state accent (voted, pinned, local example, rising); and numbers everywhere set in tabular figures. Applied to the existing community dashboard, that means the bulletin board, teams tree and leaderboard panels lose their nested borders and share one card shell. Nothing in the palette or the type stack changes — DM Sans and the navy primary stay as they are.',
+    };
+  }
+}
+</script>
+</body>
+</html>

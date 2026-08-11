@@ -15,6 +15,24 @@ import FindYourBranch from './FindYourBranch'
 import ClaimsPanel from './ClaimsPanel'
 import LogActivity from './LogActivity'
 import Leaderboards from './Leaderboards'
+import QuestionLibrary, { type QuestionRow, type TagSet } from './questions/QuestionLibrary'
+
+export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard'
+
+/**
+ * Central's sub-tabs.
+ *
+ * BOARD IS HIDDEN FOR THE PILOT (Charlie, 11 Aug 2026). The bulletin board code
+ * is untouched and still renders when `tab=board` is reached directly — it is
+ * simply not linked here. Putting it back is deleting the `hidden` flag on one
+ * entry in this array, which is the one-line reversal that was asked for.
+ */
+const TABS: { key: CentralTab; label: string; hidden?: boolean }[] = [
+  { key: 'questions', label: 'Questions' },
+  { key: 'board', label: 'Board', hidden: true },
+  { key: 'training', label: 'Training' },
+  { key: 'leaderboard', label: 'Leaderboard' },
+]
 
 interface Props {
   community: {
@@ -24,22 +42,21 @@ interface Props {
     parent: { id: string; name: string } | null
     managerId: string | null
   }
-  /** The top-level Community this board belongs to (itself, if top-level). */
   root: { id: string; name: string }
-  /** null when the viewer manages this node from above without being a member. */
   myRole: 'OWNER' | 'ADMIN' | 'MEMBER' | null
-  /** OWNER/ADMIN here or anywhere above here in the tree. */
   canManage: boolean
+  /** Manage rights over the ROOT — the Community-admin powers. */
+  isCommunityAdmin: boolean
   tree: CommunityTreeNode
   otherBranches: { id: string; name: string; role: 'OWNER' | 'ADMIN' | 'MEMBER' }[]
   showSwitchChooser: boolean
   openPanel: 'requests' | 'members' | 'claims' | null
-  /** Member of the Community root — may request branches and found top-level ones. */
   isCommunityMember: boolean
-  /** This viewer already has a request waiting on this node. */
   hasPendingRequest: boolean
-  /** This viewer's Central points in this Community, all time. */
   myPoints: number
+  tab: CentralTab
+  questionTags: TagSet
+  initialQuestions: QuestionRow[]
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -53,6 +70,7 @@ export default function CommunityDashboardClient({
   root,
   myRole,
   canManage,
+  isCommunityAdmin,
   tree,
   otherBranches,
   showSwitchChooser,
@@ -60,6 +78,9 @@ export default function CommunityDashboardClient({
   isCommunityMember,
   hasPendingRequest,
   myPoints,
+  tab,
+  questionTags,
+  initialQuestions,
 }: Props) {
   const router = useRouter()
   const [inviteLink, setInviteLink] = useState<string | null>(null)
@@ -73,8 +94,6 @@ export default function CommunityDashboardClient({
   const isBranch = community.parent !== null
   const isMember = myRole !== null
 
-  // Show "Find your branch" on the Community page to anyone not yet in a
-  // branch. Deliberately not a one-shot screen — it stays until it is answered.
   const topLevelBranches = tree.children
   const inAnyBranch = otherBranches.length > 0
   const showFindYourBranch = !isBranch && isMember && !inAnyBranch
@@ -132,7 +151,7 @@ export default function CommunityDashboardClient({
         </p>
       )}
 
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{community.name}</h1>
@@ -148,142 +167,174 @@ export default function CommunityDashboardClient({
             )}
           </div>
           {community.description && (
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">{community.description}</p>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground pretty">{community.description}</p>
           )}
         </div>
-        {isMember && myRole !== 'OWNER' && (
-          <div className="text-right">
+        <div className="flex items-center gap-3">
+          {isMember && (
+            <span className="text-xs text-muted-foreground">
+              Your points:{' '}
+              <span className="tabular font-semibold text-foreground">
+                {myPoints > 0 ? '+' : ''}{myPoints}
+              </span>
+            </span>
+          )}
+          {isMember && myRole !== 'OWNER' && (
             <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={handleLeave}>
               Leave {isBranch ? 'this branch' : 'this Community'}
             </Button>
-            {leaveError && <p className="mt-1 max-w-xs text-xs text-red-600">{leaveError}</p>}
-          </div>
-        )}
+          )}
+        </div>
       </div>
+      {leaveError && <p className="mb-4 text-xs text-red-600">{leaveError}</p>}
 
       {showSwitchChooser && (
         <SwitchOrAddChooser branchName={community.name} otherBranches={otherBranches} />
       )}
-
       {showFindYourBranch && <FindYourBranch root={root} branches={topLevelBranches} />}
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      {/* Groups and points sit at the Central level, ABOVE the sub-tabs —
+          managing which branches you're in is a personal concern, not one of
+          the "in the community" areas. */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <h2 className="mb-4 text-base font-semibold">Bulletin board</h2>
-          {isMember || canManage ? (
-            // Stage 2 admin cascade: a manager reads and moderates a descendant
-            // board without joining it, but does not post to it as if they had.
-            <BulletinBoard
+          <h2 className="mb-2 text-sm font-semibold">Teams &amp; branches</h2>
+          <div className="central-card p-4">
+            <TeamsTree
               communityId={community.id}
-              boardName={community.name}
-              isBranch={isBranch}
-              communityName={root.name}
-              canModerate={canManage}
-              canPost={isMember}
+              tree={tree}
+              rootIsBranch={isBranch}
+              isCommunityMember={isCommunityMember}
             />
-          ) : (
-            // Reaching this page is not reading the branch. Two non-member
-            // cases land here, and they need different things: an ancestor
-            // admin is told why the board is closed to them, and a Community
-            // member is given the front door.
-            <div className="rounded-lg border border-dashed border-border p-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                {community.name} is invite-only — its board is private to its members.
-              </p>
-              {canManage && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  You manage it from {root.name}, which lets you run it — not read it.
-                </p>
-              )}
-              {isCommunityMember && requestState === 'sent' && (
-                <p className="mt-4 text-sm text-muted-foreground">
-                  Your request is with its admins — you’ll hear back in your Feed.
-                </p>
-              )}
-              {isCommunityMember && requestState !== 'sent' && (
-                <div className="mt-4 flex flex-col items-center gap-2">
-                  <input
-                    value={requestMessage}
-                    onChange={(e) => setRequestMessage(e.target.value)}
-                    placeholder="Say why (optional)"
-                    maxLength={500}
-                    className="w-full max-w-sm rounded border bg-background px-2 py-1.5 text-sm"
-                  />
-                  <Button size="sm" disabled={requestState === 'busy'} onClick={handleRequestToJoin}>
-                    {requestState === 'busy' ? 'Sending…' : 'Request to join'}
-                  </Button>
-                  {requestError && <p className="text-xs text-red-600">{requestError}</p>}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-8">
-          <div>
-            <h2 className="mb-4 text-base font-semibold">Teams &amp; branches</h2>
-            <div className="rounded-lg border border-border p-4">
-              <TeamsTree
-                communityId={community.id}
-                tree={tree}
-                rootIsBranch={isBranch}
-                isCommunityMember={isCommunityMember}
-              />
-            </div>
           </div>
-
-          {canManage && (
-            <div className="space-y-3">
-              <h2 className="text-base font-semibold">Managing {community.name}</h2>
-              <RequestsPanel
-                communityId={community.id}
-                communityName={community.name}
-                defaultOpen={openPanel === 'requests'}
-              />
-              <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
-              <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
-              <details className="rounded-lg border border-border p-4">
-                <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
-                <div className="mt-3 space-y-3">
-                  <InvitePanel communityId={community.id} />
-                  <div className="border-t border-border pt-3">
-                    <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
-                      {generating ? 'Generating…' : 'Or generate a shareable link'}
-                    </Button>
-                    {inviteLink && (
-                      <input
-                        readOnly
-                        value={inviteLink}
-                        onFocus={(e) => e.currentTarget.select()}
-                        className="mt-2 w-full rounded border bg-muted/40 px-2 py-1 text-xs"
-                      />
-                    )}
-                  </div>
+        </div>
+        {canManage && (
+          <div className="space-y-2.5">
+            <h2 className="text-sm font-semibold">Managing {community.name}</h2>
+            <RequestsPanel
+              communityId={community.id}
+              communityName={community.name}
+              defaultOpen={openPanel === 'requests'}
+            />
+            <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
+            <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+            <details className="central-card p-4">
+              <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
+              <div className="mt-3 space-y-3">
+                <InvitePanel communityId={community.id} />
+                <div className="border-t border-border pt-3">
+                  <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
+                    {generating ? 'Generating…' : 'Or generate a shareable link'}
+                  </Button>
+                  {inviteLink && (
+                    <input
+                      readOnly
+                      value={inviteLink}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="mt-2 w-full rounded-lg border bg-muted/40 px-2 py-1 text-xs"
+                    />
+                  )}
                 </div>
-              </details>
-            </div>
-          )}
-
-          {isMember && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold">Points &amp; leaderboards</h2>
-                <Link
-                  href={`/communities/${community.id}/activity`}
-                  className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                >
-                  Activity log
-                </Link>
               </div>
-              <Leaderboards communityId={community.id} rootName={root.name} />
-              <LogActivity communityId={community.id} communityName={community.name} />
-              <p className="text-xs text-muted-foreground">
-                Your points here: <span className="font-semibold tabular-nums">{myPoints > 0 ? '+' : ''}{myPoints}</span>
-              </p>
+            </details>
+            {isCommunityAdmin && (
+              <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Sub-tabs — the "in the community" areas. */}
+      <div className="mb-5 flex flex-wrap gap-1 border-b border-border pb-2">
+        {TABS.filter((t) => !t.hidden).map((t) => (
+          <Link
+            key={t.key}
+            href={`/communities/${community.id}?tab=${t.key}`}
+            aria-current={tab === t.key ? 'page' : undefined}
+            className={`rounded-[7px] px-3 py-1.5 text-[13px] transition-colors ${
+              tab === t.key
+                ? 'bg-[oklch(0.955_0.004_250)] font-semibold text-foreground ring-1 ring-inset ring-border'
+                : 'font-medium text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {!isMember && !canManage ? (
+        <div className="central-card border-dashed p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {community.name} is invite-only — its content is private to its members.
+          </p>
+          {isCommunityMember && requestState === 'sent' && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Your request is with its admins — you’ll hear back in your Feed.
+            </p>
+          )}
+          {isCommunityMember && requestState !== 'sent' && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <input
+                value={requestMessage}
+                onChange={(e) => setRequestMessage(e.target.value)}
+                placeholder="Say why (optional)"
+                maxLength={500}
+                className="w-full max-w-sm rounded-lg border bg-background px-2 py-1.5 text-sm"
+              />
+              <Button size="sm" disabled={requestState === 'busy'} onClick={handleRequestToJoin}>
+                {requestState === 'busy' ? 'Sending…' : 'Request to join'}
+              </Button>
+              {requestError && <p className="text-xs text-red-600">{requestError}</p>}
             </div>
           )}
         </div>
-      </div>
+      ) : tab === 'questions' ? (
+        <QuestionLibrary
+          communityId={community.id}
+          tags={questionTags}
+          initialQuestions={initialQuestions}
+        />
+      ) : tab === 'board' ? (
+        // Reachable only by URL while the tab is hidden. Untouched.
+        <BulletinBoard
+          communityId={community.id}
+          boardName={community.name}
+          isBranch={isBranch}
+          communityName={root.name}
+          canModerate={canManage}
+          canPost={isMember}
+        />
+      ) : tab === 'training' ? (
+        <div className="central-card p-8 text-center">
+          <h2 className="text-[17px] font-semibold">Training</h2>
+          <p className="mx-auto mt-2 max-w-[430px] text-[13px] text-muted-foreground pretty">
+            The structured training marketplace arrives at Stage 2d. Until then, training offers and
+            requests live as ordinary posts under the <strong>Training</strong> category, and anything
+            tagged <strong>How-to</strong> in the question library is the written version.
+          </p>
+          <Button asChild variant="outline" className="mt-4 h-10 rounded-lg">
+            <Link href={`/communities/${community.id}?tab=questions`}>Browse how-to questions</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Points &amp; leaderboards</h2>
+              <Link
+                href={`/communities/${community.id}/activity`}
+                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                Activity log
+              </Link>
+            </div>
+            <Leaderboards communityId={community.id} rootName={root.name} />
+          </div>
+          <LogActivity communityId={community.id} communityName={community.name} />
+        </div>
+      )}
     </main>
   )
 }

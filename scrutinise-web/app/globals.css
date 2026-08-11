@@ -176,3 +176,89 @@
     black 100%
   );
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SCRUTINISE CENTRAL — visual language (Stage 2b, CD handoff)
+
+   Three departures from the generic V0-derived styling, adopted across all of
+   Central rather than only the Questions screens (Charlie, 11 Aug 2026):
+
+     1. Cards take a 12px radius with ONE hairline border and no nested boxes.
+     2. Teal is promoted from animation-only to the LIVE-STATE accent — voted,
+        pinned, local example, rising, step-completed. Navy stays the primary
+        action colour.
+     3. Every count is set in tabular figures so numbers don't jitter.
+
+   Scoped to Central deliberately: `--radius` stays 0.375rem globally, because
+   changing it would restyle Ideas, Lex and the rest of the app, which this
+   sprint has no mandate to touch. Buttons and inputs keep their 8px.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --central-radius-card: 12px;
+  --central-radius-inset: 10px;
+  --central-teal: #14b8a6;
+  --central-teal-text: #0f8b7f;
+  --central-teal-text-deep: #0b6f66;
+  --central-teal-fill-faint: #14b8a60a;
+  --central-teal-fill: #14b8a60f;
+  --central-teal-fill-strong: #14b8a614;
+  --central-teal-border: #14b8a64d;
+  --central-teal-border-soft: #14b8a633;
+  --central-border-hover: oklch(0.78 0.01 250);
+  --central-recessed: oklch(0.985 0.002 250);
+  --central-chip-fill: oklch(0.965 0.004 250);
+}
+
+/* One card shell for the whole module. No nested boxes inside — panels that
+   used to wrap their contents in a second bordered div now use .central-inset,
+   which is a fill and a radius, never another border. */
+.central-card {
+  border-radius: var(--central-radius-card);
+  border: 1px solid var(--border);
+  background: #ffffff;
+}
+.central-card-hover:hover {
+  border-color: var(--central-border-hover);
+  box-shadow: 0 1px 3px oklch(0.15 0.01 250 / 0.06);
+}
+.central-inset {
+  border-radius: var(--central-radius-inset);
+  background: var(--central-recessed);
+}
+
+/* Live state. Used for a cast vote, a pinned pack row, a local example, and a
+   completed step — never for a call to action, which stays navy. */
+.central-live {
+  color: var(--central-teal-text);
+  background: var(--central-teal-fill-strong);
+  border-color: var(--central-teal-border);
+}
+.central-live-block {
+  border-radius: var(--central-radius-inset);
+  background: var(--central-teal-fill);
+  border: 1px solid var(--central-teal-border);
+  border-left-width: 3px;
+  border-left-color: var(--central-teal);
+}
+.central-teal-text { color: var(--central-teal-text); }
+.central-teal-text-deep { color: var(--central-teal-text-deep); }
+.central-teal-dot { background: var(--central-teal); }
+
+/* Counts. Applied to every number that can change under the reader. */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Prose that wraps like prose. */
+.pretty { text-wrap: pretty; }
+
+.central-chip {
+  border-radius: 999px;
+  min-height: 34px;
+  white-space: nowrap;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-sheet { box-shadow: none !important; margin: 0 !important; }
+  @page { size: A4; margin: 0; }
+}

@@ -27,7 +27,7 @@ const WINDOWS = [
 function Score({ points }: { points: number }) {
   return (
     <span
-      className={`tabular-nums text-sm font-semibold ${
+      className={`tabular text-sm font-semibold ${
         points < 0 ? 'text-red-600' : points > 0 ? 'text-emerald-700' : 'text-muted-foreground'
       }`}
     >
@@ -76,7 +76,7 @@ export default function Leaderboards({
   }, [load])
 
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="central-card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex gap-1 rounded-md border border-border p-0.5">
           {(['individuals', 'branches'] as const).map((t) => (
@@ -132,7 +132,7 @@ export default function Leaderboards({
             {individuals.map((i, idx) => (
               <li key={i.userId} className="flex items-center justify-between gap-2 text-sm">
                 <span className="min-w-0 truncate">
-                  <span className="mr-2 text-xs tabular-nums text-muted-foreground">{idx + 1}</span>
+                  <span className="mr-2 text-xs tabular text-muted-foreground">{idx + 1}</span>
                   {i.name ?? i.username}
                 </span>
                 <Score points={i.points} />
@@ -147,7 +147,7 @@ export default function Leaderboards({
           {branches.map((b, idx) => (
             <li key={b.communityId} className="flex items-center justify-between gap-2 text-sm">
               <span className="min-w-0 truncate">
-                <span className="mr-2 text-xs tabular-nums text-muted-foreground">{idx + 1}</span>
+                <span className="mr-2 text-xs tabular text-muted-foreground">{idx + 1}</span>
                 <Link href={`/communities/${b.communityId}`} className="hover:underline">
                   {b.name}
                 </Link>

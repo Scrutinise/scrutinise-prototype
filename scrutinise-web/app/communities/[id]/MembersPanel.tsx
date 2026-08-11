@@ -83,10 +83,10 @@ export default function MembersPanel({
     act(userId, () => fetch(`/api/communities/${communityId}/members/${userId}`, { method: 'DELETE' }))
 
   return (
-    <details open={defaultOpen} className="rounded-lg border border-border p-4">
+    <details open={defaultOpen} className="central-card p-4">
       <summary className="cursor-pointer text-sm font-medium">
         Members
-        {!loading && <span className="ml-2 text-xs text-muted-foreground">{members.length}</span>}
+        {!loading && <span className="tabular ml-2 text-xs text-muted-foreground">{members.length}</span>}
       </summary>
 
       <div className="mt-3 space-y-1.5">
@@ -97,7 +97,7 @@ export default function MembersPanel({
           <p className="text-xs text-muted-foreground">No one has joined this branch yet.</p>
         ) : (
           members.map((m) => (
-            <div key={m.userId} className="rounded border border-border px-2 py-1.5">
+            <div key={m.userId} className="central-inset px-2 py-1.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="min-w-0 truncate text-sm">
                   {m.name ?? m.username}
