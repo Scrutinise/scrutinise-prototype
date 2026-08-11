@@ -85,7 +85,18 @@ async function benchmark() {
 }
 
 async function scorePreferences() {
-  console.log(`scoring ${PREFERENCES.length} preference pairs over ${PREFERENCE_QUERIES.length} queries, k=${K}\n`)
+  // ── S2C5 §2: a pair is scored only where its order is a RANKING DECISION ────────────────────
+  // The 5 cross-stream pairs are excluded, not silently mis-scored. Round-robin interleaving is
+  // stream-balanced by construction, and `groupForPanel` is a stable filter over that list (its
+  // global cross-stream sort was deleted 2026-08-09), so between two streams there is no surface
+  // anywhere in the product whose order reflects relevance. Scoring them would measure the
+  // `STREAMS` declaration order and report it as ranking quality.
+  const scoreable = PREFERENCES.filter((p) => p.surface === 'within-stream')
+  const excluded = PREFERENCES.filter((p) => p.surface !== 'within-stream')
+  console.log(`pairs: ${PREFERENCES.length} authored — ${scoreable.length} scoreable (within-stream), ${excluded.length} EXCLUDED (cross-stream)`)
+  console.log('  excluded, and why — these are not deleted; they are the ready-made acceptance test for a reranker:')
+  for (const p of excluded) console.log(`   · ${p.above.label} > ${p.below.label}  [${p.query.slice(0, 56)}]`)
+  console.log(`\nscoring ${scoreable.length} pairs over ${PREFERENCE_QUERIES.length} queries, k=${K}\n`)
 
   const rankings = new Map<string, { results: SearchResult[]; streams?: string[] }>()
   for (const q of PREFERENCE_QUERIES) {
@@ -103,7 +114,7 @@ async function scorePreferences() {
   let pass = 0, fail = 0, vacuous = 0
   const failed: Array<{ p: GoldPreference; a: number; b: number }> = []
   console.log('\npairs:')
-  for (const p of PREFERENCES) {
+  for (const p of scoreable) {
     const ranking = rankings.get(p.query)?.results ?? []
     const a = rankOf(p.above, ranking)
     const b = rankOf(p.below, ranking)
@@ -123,6 +134,7 @@ async function scorePreferences() {
   const denom = pass + fail
   console.log('\n════ BASELINE ════')
   console.log(`  preference accuracy   ${denom ? ((100 * pass) / denom).toFixed(1) + '%' : 'n/a'}  (${pass}/${denom})`)
+  console.log(`  cross-stream excluded ${excluded.length}  ← no product surface orders two streams by relevance; scoring them would measure the STREAMS declaration order`)
   console.log(`  vacuous (excluded)    ${vacuous}  ← neither side retrieved; a shrinking denominator is a warning, not a win`)
   if (failed.length) {
     console.log('\n  failures, most-wrong first:')

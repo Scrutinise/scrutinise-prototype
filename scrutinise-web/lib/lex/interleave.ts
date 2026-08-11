@@ -22,12 +22,19 @@
 // Once the ordering baseline exists and a reranker exists, a real cross-stream ordering can
 // replace this — scored against a metric rather than assumed.
 //
-// ⚠ NOT FIXED HERE, AND ON RECORD: `groupForPanel` (search-stub.ts) still does exactly the
-// global cross-stream score sort argued against above, then caps at 20. That is the panel path,
-// it is a ranking-policy change rather than a truncation bug, and it belongs with the ordering
-// baseline. It becomes actively destructive the moment LEX_VECTOR_STREAMS is set, because
-// fuseWeightedRrf OVERWRITES `score` with the RRF value and the fused stream then sorts below
-// every unfused one.
+// ✅ FIXED SINCE, and this comment is corrected rather than deleted because it was right when
+// written. It used to read "NOT FIXED HERE: `groupForPanel` still does exactly the global
+// cross-stream score sort argued against above". That sort was DELETED on 2026-08-09 (see
+// score-scope.ts, which also holds the assertion that stops it coming back): `groupForPanel` is now
+// a stable filter — per-type caps, incoming order preserved, no sort. The danger it flagged was
+// real and is retired: `fuseWeightedRrf` overwrites `score` with the RRF value, so once
+// LEX_VECTOR_STREAMS was set the fused stream would have sorted below every unfused one.
+//
+// ⚠ Corrected on 2026-08-12 because the stale version was actively misleading: reading it, S2C5 §2
+// concluded that a cross-stream ordering surface existed and nearly scored five preference pairs
+// against it. A comment describing a fix that has landed is not harmless — it is a false map.
+// The live consequence for the ordering metric: there is NO surface in the product where two
+// streams are ordered by relevance, so cross-stream pairs cannot be scored at all.
 
 import type { SearchResult } from './page1-config'
 
