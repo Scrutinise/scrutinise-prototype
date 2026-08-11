@@ -131,6 +131,133 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH Stage 2C-5 — probes up, metric honest, and the reranker NOT authorised because the denominator says the problem is recall (2026-08-11 23:15 UTC)
+
+Executes `BRIEF_SEARCH_S2C5.md` §1/§2/§3 in full. §4 recorded and not started; §5 deliberately
+untouched. Full detail: **`docs/SEARCH_S2C5_REPORT.md`**. Total spend **€0.030**.
+
+### §1 — `VECTOR_NPROBES` is 64 in production, verified from the process itself
+
+⚠ **The brief's baseline was stale, which is exactly why it said to re-read it.** At 22:31 UTC the same
+process read **p50 2,957 / p95 5,447 ms** against the brief's 3,647 / 4,355. And **28 warm samples
+cannot carry a p95** — it is one or two data points, and a restart zeroes the counters, so comparing a
+fresh 28-sample p95 against it would be two pieces of noise with a percentage between them. So the A/B
+uses `vector-latency-ab.ts`: the same 20 queries, same order, sequential, `noCache`, `/stats` captured
+either side rather than instead.
+
+**Engagement verified POSITIVELY, as required.** The setting could not be read from outside the process
+at all, so "it took effect" would have been an inference. `vector-core` now exports `retrievalConfig()`,
+`/stats` serves it and the service logs it at boot. Sequence: deploy instrumentation → `/stats` reads
+**nprobes 24** (the OLD value, which is what makes the next reading mean anything) → set 64 → restart →
+`/stats` reads **nprobes 64**.
+
+**Latency, same 20 queries:** uncached p50 **2,763 → 3,148 ms (+13.9%)**, p95 **5,615 → 3,874 ms
+(−31.0%)**, mean +9.1%, cached repeat p50 733 → 766 ms, 0 failures both sides. **Inside the revert
+criterion** (which was fixed at +50% of 5,615 = 8,423 ms BEFORE the change). ⚠ Do not bank the p95
+improvement: a p95 over 20 samples moves with one outlier and the before-run had one. Defensible
+statement: **p50 up ~14%, tail unchanged within this sample's resolution.**
+
+**Recall, gold set against the real indexes, same harness twice, only nprobes differing** (2 × cpx42,
+5.1 + 6.4 min, €0.013 + €0.017, peak 2.5 / 3.0 GB): BM25-alone **62.2% → 62.2%** — a clean negative
+control proving the harness deterministic — **vector-alone 69.2% → 68.6% (−0.6pp)**, fused@0.7 67.3% →
+68.6% (+1.3pp). By archetype: A 90→90, **B 25.0→30.6**, C 80→80, **D 93.3→86.7**, E 90→90, F 60→60.
+⚠ Each archetype holds 5–6 queries, so one query is worth ±17–20pp: B and D each moved about one
+query's worth. **Gold recall did not materially change in either direction.**
+
+⚠⚠ **TWO METRICS WERE CONFLATED AND ONE WAS MINE TO KEEP STRAIGHT.** S2C4 measured **overlap with an
+exhaustive probe** — 70.4% at 24 probes, ~85% at 64 — and the brief reasonably read that as "+12.7pp of
+dense recall". **It is not gold recall, and the two did not move together**: candidate-set fidelity rose
+substantially while gold recall@20 moved −0.6pp. The mechanism is mechanical — more probes surface more
+near-neighbours, and a larger candidate set can push a gold document out of a fixed top-20 as easily as
+pull one in. **A better candidate set is necessary for better answers, not sufficient.** So we are now
+paying ~14% p50 for a better candidate set whose benefit at gold is undemonstrated. Not reverted: the
+brief decided to run it, the revert trigger was explicit and unmet, and undoing an instructed change on
+a different criterion than the one set would be worse than reporting it. One variable and one restart to
+put back.
+
+⚠ **vector-serve DOES NOT AUTO-DEPLOY FROM GITHUB, and that had been silently true for days.** The push
+touched `scripts/ingest/search/**` — the watch pattern on both serve services. **fts-serve deployed
+(SUCCESS 22:36:32Z, commit 69775e5); vector-serve created no deployment at all** and its uptime kept
+climbing. That is why it had been serving **7 August** code while fts-serve tracked Main. It needs an
+explicit `vector-serve-run.ts redeploy`. Cause not established. ⚠ Also NOT established: what actually
+restarted the process — the explicit `restart` returned "Cannot redeploy yet, please wait for the
+original deployment to finish building" and the service came up moments later with nprobes 64, so the
+in-flight code deploy most likely carried it. Recorded as confounded rather than asserted.
+✅ **A rebuild could not have confounded the A/B, and this was checked:** all five files making up
+vector-serve's runtime were **byte-identical** between its running build `e04a2a7` and HEAD.
+
+### §2 — the ordering metric now scores only where an ordering decision exists
+
+Landed on its own, no baseline number, per the brief. **20 pairs → 15 scoreable (within-stream), 5
+EXCLUDED (cross-stream) and named in the output.** The five are excluded because **no product surface
+orders two streams by relevance**, verified by reading both candidates: `results` is round-robin, so
+between streams position is the `STREAMS` declaration order by construction; `grouped` is a stable
+filter over that list. Scoring them would have measured a construction artefact and reported it as
+ranking quality.
+
+⚠ **A stale comment nearly produced the opposite conclusion.** `interleave.ts` still read "NOT FIXED
+HERE: `groupForPanel` still does exactly the global cross-stream score sort" — and on the strength of it
+I was about to score all five pairs against that surface. **The sort was deleted on 2026-08-09**
+(`score-scope.ts` holds the account and the assertion against its return). Comment corrected in place
+with a note on why: *a comment describing a fix that has already landed is not harmless, it is a false
+map.* The five pairs are not deleted; they are the ready-made acceptance test for a reranker.
+
+### §3 — the regression does not reproduce, and the reranker is not authorised
+
+**Benchmark on the product path** (routed, per-stream fused, interleaved, pre-grouping): **DPA 2018 at
+rank 2, PECR 2003 absent from the top 20, UK GDPR absent.** → **a principal instrument outranks PECR;
+the 4 August regression does NOT reproduce.** Both predictions confirmed. ⚠ UK GDPR's absence is its own
+retrieval finding: the amending SI `uksi/2019/419` is at 16 while the instrument it amends never arrives.
+
+⚠⚠ **A HARNESS DEFECT FOUND BY RUNNING IT, WHICH WOULD HAVE PRODUCED THE OPPOSITE CONCLUSION.** The
+first attempt printed **"PECR still leads the principal instruments. The ordering problem is REAL."**
+from a ranking of **ZERO documents**: `DATABASE_URL` was absent, `prisma.$queryRaw` threw, `fts-search`
+returned empty "NOT a stub" exactly as designed, and the verdict logic converted that emptiness into the
+most alarming available conclusion — because with nothing retrieved, neither principal instrument
+outranks PECR. **Reported, that run would have been evidence for building a reranker, manufactured from
+a missing environment variable.** Fixed: an empty ranking now refuses to conclude and exits non-zero;
+all-three-absent reports VACUOUS as a retrieval finding. Same family as the invisible fail-open (§18).
+
+**The baseline: preference accuracy 66.7% (6/9)** — 20 authored, 5 cross-stream excluded, 15 scoreable,
+**6 vacuous**, denominator **9**. The proposal's own warning is the headline: *a shrinking denominator is
+a warning, not a win.* Decomposed, as "recall lost reported separately from ordering changed" requires:
+
+| outcome | n | what it is |
+|---|---:|---|
+| both retrieved, order correct | **2** | a genuine ordering PASS |
+| both retrieved, order wrong | **2** | a genuine ordering FAIL |
+| preferred retrieved, dispreferred absent | 4 | scored pass — a **recall** win |
+| preferred absent, dispreferred retrieved | 1 | scored fail — a **recall** loss |
+| neither retrieved | 6 | a **recall** gap, excluded |
+
+**Only 4 of 15 pairs compared two documents the system actually returned; on those the split is 2/4.
+Eleven of fifteen turned on whether a document was retrieved at all.** Failures: HSWA 1974 (11) vs
+sector SIs (2) — real, and nine places wrong; LTA 1985 (2) vs HA 1988 (1) — real but adjacent; UK GDPR
+(absent) vs DPPEC (16) — a recall miss wearing an ordering fail.
+
+**THE RERANKER IS NOT AUTHORISED.** The regression that motivated it does not reproduce; the
+genuine-ordering evidence is four pairs; and eleven of fifteen pairs turned on retrieval. A reranker
+reorders the set it is given and cannot promote a document that never arrived. **The binding constraint
+is recall.** Recommended next on this evidence: raise the candidate count reaching the scorer — the
+vacuous six are the target — and re-measure with this same harness.
+
+**Not measured, and not fudged:** "recall lost to scoping = 10 questions" is **carried, not re-measured**
+(it needs a routed-vs-unrouted run; I measured the routed path only). **`caselaw` 36/36 → 22/36 is still
+open** — neither harness run measures router stream selection over that 36-query set. The archetype-D
+exclusion does not bite: the preference set contains no D query.
+
+**Which path each number came from**, per the brief: §1's gold table is the **ingest-side untiered**
+harness on the real indexes; §3's benchmark and baseline are the **routed product path**. Different
+measurements, not comparable — the EN2 finding is why that sentence exists.
+
+### §4 / §5
+
+§4 (legacy DROP unblock) **not started** — it follows §3 in the brief's own order and touches a DROP, a
+row migration and a repoint-confirm to the ingest thread; that belongs at the start of a session, not
+the end of a long one. Its two updates are recorded: **decision 3 confirmed (MOVE the filters onto
+`corpus_acts`, do not retire the UI)**, and the `callGeminiJson` guard + cross-stream scoring items are
+already closed and must not be redone. §5 (routed-gateway migration) deliberately untouched.
+
 ## CENTRAL Stage 2b — the question library (2026-08-11 20:24 UTC)
 
 Executes the "Central Stage 2b — question library" brief (11 Aug 2026), built to the CD handoff in

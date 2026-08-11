@@ -191,7 +191,8 @@ export const JOBS: Record<string, HeavyJob> = {
     // 7.6 GB at 4,096 probes. This runs at 24-64 probes over ~36 queries plus a BM25 arm, so it should
     // sit well below that — but "should" is what §17 exists to stop, so the size is unchanged and the
     // number will be filled in from the run's own report.
-    expectedPeakGb: null,
+    expectedPeakGb: 3.0,
+    peakSource: '12 Aug 2026, cpx42, two runs: nprobes=24 → 5.1 min / 2.5 GB / EUR 0.013; nprobes=64 → 6.4 min / 3.0 GB / EUR 0.017. Higher rung = more probed partitions held, so the peak tracks nprobes.',
   },
   'ann-recall-check': {
     name: 'ann-recall-check',

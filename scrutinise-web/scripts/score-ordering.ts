@@ -78,10 +78,34 @@ async function benchmark() {
   console.log('\nthe 4 Aug question, answered:')
   const fmt = (n: number) => (n < 0 ? 'absent' : `rank ${n + 1}`)
   console.log(`  UK GDPR  ${fmt(gdpr)}\n  DPA 2018 ${fmt(dpa)}\n  PECR 2003 ${fmt(pecr)}`)
+
+  // ⚠ A CONCLUSION MAY NOT BE DRAWN FROM AN ABSENCE OF DATA, and this printed one for a week.
+  // With an empty ranking every rank is -1, so `principalFirst` was false for both instruments and
+  // the else-branch fired: "PECR still leads the principal instruments. The ordering problem is
+  // REAL." — the most alarming available verdict, reported from ZERO retrieved documents. It
+  // happened for real on 2026-08-12: `DATABASE_URL` was absent, `prisma.$queryRaw` threw,
+  // `fts-search` returned empty "NOT a stub" as designed, and the harness turned that into
+  // evidence for building a reranker. Same family as the invisible fail-open (docs/CLAUDE.md §18):
+  // a failure wearing the face of a result.
+  if (!results.length) {
+    console.log('\n  ⚠ NOTHING WAS RETRIEVED — no conclusion is available, and the absence of a')
+    console.log('    principal instrument is NOT evidence about ordering. Check FTS_SEARCH_URL,')
+    console.log('    DATABASE_URL (the FTS adapter hydrates titles through Prisma) and GEMINI_API_KEY.')
+    process.exitCode = 1
+    return
+  }
+  if (pecr < 0 && gdpr < 0 && dpa < 0) {
+    console.log('\n  · VACUOUS: none of the three instruments appears in the top ' + K + '. The')
+    console.log('    benchmark cannot speak to their relative order. This is a retrieval finding,')
+    console.log('    not an ordering one, and it is reported as such rather than scored.')
+    return
+  }
   const principalFirst = (n: number) => n >= 0 && (pecr < 0 || n < pecr)
   console.log(principalFirst(gdpr) || principalFirst(dpa)
     ? '  → a principal instrument OUTRANKS PECR. The observed regression does NOT reproduce.'
-    : '  → PECR still leads the principal instruments. The ordering problem is REAL.')
+    : pecr >= 0
+      ? '  → PECR still leads the principal instruments. The ordering problem is REAL.'
+      : '  → inconclusive: PECR is absent and so are both principal instruments above it.')
 }
 
 async function scorePreferences() {
