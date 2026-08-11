@@ -21,6 +21,19 @@ const CHUNK_OVERSCAN = parseInt(process.env.VECTOR_CHUNK_OVERSCAN ?? '5', 10) //
 const NPROBES = parseInt(process.env.VECTOR_NPROBES ?? '24', 10)              // IVF probe count (recall/latency knob)
 const REFINE = parseInt(process.env.VECTOR_REFINE_FACTOR ?? '2', 10)          // re-rank top matches with exact distance
 
+/**
+ * The retrieval parameters actually in force, for `/stats` and the boot log.
+ *
+ * ⚠ WHY THIS IS EXPORTED. `nprobes` is the single biggest lever on dense recall — measured 11 Aug,
+ * 24 probes of 4,096 returns **70.4%** of what the same index returns fully probed — and until now its
+ * live value could not be read from outside the process at all. Changing it and then asserting the new
+ * value had taken effect would have been an inference dressed as a measurement, which docs/CLAUDE.md
+ * §19 exists to stop. A setting you cannot read is a setting you cannot A/B.
+ */
+export function retrievalConfig() {
+  return { nprobes: NPROBES, chunkOverscan: CHUNK_OVERSCAN, refineFactor: REFINE, distance: 'cosine' as const, model: VECTOR_MODEL, dims: VECTOR_DIMS }
+}
+
 let _ai: GoogleGenAI | null = null
 function ai(): GoogleGenAI {
   if (!_ai) { const k = process.env.GEMINI_API_KEY; if (!k) throw new Error('GEMINI_API_KEY not set'); _ai = new GoogleGenAI({ apiKey: k }) }

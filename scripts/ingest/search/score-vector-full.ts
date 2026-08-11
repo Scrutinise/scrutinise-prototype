@@ -24,7 +24,7 @@ import { connectLance, FTS_TABLE } from './lance'
 import { rankedSearch, Hit } from './fts-core'
 import { loadActIndex } from './citation-resolver'
 import { GOLD, GoldQuery, ARCHETYPE_META } from './gold-queries'
-import { embedQuery, vectorSearchSections } from './vector-core'
+import { embedQuery, vectorSearchSections, retrievalConfig } from './vector-core'
 import { VEC_TABLE } from './vector-common'
 
 const CAND_K = parseInt(process.env.RECONFIRM_CAND_K ?? '100', 10)
@@ -176,6 +176,16 @@ async function main() {
 
   console.log('')
   console.log(`[reconfirm] HEADLINE excl-floor (n=${exIds.length}): BM25-alone=${pct(atBm25)} vector-alone=${pct(atVecAlone)} fused-0.7=${pct(at07)}`)
+  // ⚠ Printed as well as written, because an nprobes A/B needs the PER-STREAM number and the box that
+  // runs this is destroyed with its filesystem. A table that exists only in a file on a dead machine
+  // is a measurement you cannot read.
+  console.log(`[reconfirm] nprobes in force: ${JSON.stringify(retrievalConfig())}`)
+  console.log('[reconfirm] by archetype at w=0.7:')
+  for (const a of archetypes) {
+    const ids = idsOf(a)
+    console.log(`[reconfirm]   ${String(a).padEnd(3)} ${String(ARCHETYPE_META[a]?.stream ?? '').padEnd(28)} recall@20=${pct(agg(m07, ids))} n=${ids.length}`)
+  }
+  console.log(`[reconfirm] vector-alone by archetype: ${archetypes.map((a) => `${a}=${pct(agg(recallByWeight.get(1)!, idsOf(a)))}`).join(' ')}`)
   if (pilotAt07 !== null) console.log(`[reconfirm] vs pilot subset: BM25 ${pct(pilotBm25!)} vector ${pct(pilotVecAlone!)} fused-0.7 ${pct(pilotAt07)}`)
   console.log(`[reconfirm] wrote ${OUT_MD} + ${OUT_JSON}`)
 }

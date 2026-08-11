@@ -39,7 +39,7 @@
 import http from 'http'
 import { connectLance, lancedb } from './lance'
 import { CHUNKS_TABLE, VEC_TABLE } from './vector-common'
-import { embedQuery, vectorSearchSections } from './vector-core'
+import { embedQuery, vectorSearchSections, retrievalConfig } from './vector-core'
 import { QueryCache } from './query-cache'
 
 const PORT = parseInt(process.env.VECTOR_PORT ?? '8081', 10)
@@ -178,6 +178,11 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
       concurrency: { max: MAX_CONCURRENT, maxQueue: MAX_QUEUE, inFlight, queued: waiters.length, queueHighWaterMark, rejections },
       cache: cache.stats(),
       memory: memoryReport(),
+      // The retrieval parameters IN FORCE in this process. Without these, an nprobes A/B could only
+      // be verified by inferring it from latency — and "the setting probably took effect" is not a
+      // measurement. Reading 24 here before the change is what makes reading 64 afterwards mean
+      // something (BRIEF_SEARCH_S2C5 §1: verify engagement positively, never by absence of errors).
+      config: retrievalConfig(),
       uptime_s: Math.round(process.uptime()),
       started_at: STARTED_AT,
     })
@@ -267,6 +272,9 @@ async function main() {
   vecTbl = await conn.openTable(VEC_TABLE)
   chunksTbl = await conn.openTable(CHUNKS_TABLE)
   console.log(`[vector-query] open. vec rows=${await vecTbl.countRows()}. max_concurrent=${MAX_CONCURRENT} max_queue=${MAX_QUEUE}`)
+  // Printed at boot as well as served on /stats, so a deploy log alone answers "what is it set to?"
+  const rc = retrievalConfig()
+  console.log(`[vector-query] retrieval config: nprobes=${rc.nprobes} overscan=x${rc.chunkOverscan} refine=x${rc.refineFactor} ${rc.distance} ${rc.model}@${rc.dims}d`)
   try {
     const t0 = Date.now()
     const qv = await embedQuery('legislation')

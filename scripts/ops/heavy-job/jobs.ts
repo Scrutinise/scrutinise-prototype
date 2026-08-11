@@ -173,6 +173,26 @@ export const JOBS: Record<string, HeavyJob> = {
     expectedPeakGb: 5.6,
     peakSource: '11 Aug 2026, cpx62 (32 GB shared), 22,518,608 rows, 29.5 min → 5.6 GB peak, €0.145, unindexed 0. Two earlier attempts the same night cost €0.007 and never reached the build: all dedicated placements refused (quota), then the shard-size assertion aborted it in 84s.',
   },
+  'vector-gold-reconfirm': {
+    name: 'vector-gold-reconfirm',
+    description:
+      'Score the gold set against the REAL corpus_fts + corpus_vec indexes at a given VECTOR_NPROBES, ' +
+      'and print the per-archetype recall so an nprobes A/B has a recall half as well as a latency half ' +
+      '(BRIEF_SEARCH_S2C5 §1). Run twice — VECTOR_NPROBES=24 then 64 — and compare the printed tables.',
+    // NPROBES comes from the environment so the same registered job measures both rungs; nothing about
+    // the harness changes between runs, which is what makes the comparison a single-variable one.
+    command: `R2_MAX_SOCKETS=256 LANCE_INCLUDE_VECTOR_CENTROIDS=false VECTOR_NPROBES=${process.env.GOLD_NPROBES ?? '24'} npx tsx search/score-vector-full.ts`,
+    // ⚠ No verify step. The job's product is a printed table, and the only honest check on it is a
+    // human reading two runs side by side. A verify that re-ran the same script would just be a second
+    // opinion from the same source — the shape of check this project has already been bitten by.
+    serverTypes: ['cpx42', 'cpx52', 'cpx32'],
+    extraEnv: ['GEMINI_API_KEY'], // every gold query is embedded live, RETRIEVAL_QUERY
+    // Same class of work as ann-recall-check (Lance reads from R2, one process), and that measured
+    // 7.6 GB at 4,096 probes. This runs at 24-64 probes over ~36 queries plus a BM25 arm, so it should
+    // sit well below that — but "should" is what §17 exists to stop, so the size is unchanged and the
+    // number will be filled in from the run's own report.
+    expectedPeakGb: null,
+  },
   'ann-recall-check': {
     name: 'ann-recall-check',
     description:
