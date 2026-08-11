@@ -13,6 +13,7 @@ import {
 } from '../shared/queue-client'
 import { r2Exists as _r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
 import { rawToText, pdfToText } from '../shared/compile'
+import { getNeonPool } from '../shared/neon-pool'
 import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSections, deleteStaleSections, deleteSupersededVersionSections, sectionId, countWords, SectionMeta } from '../shared/db-metadata'
 
 // Track sections written this process lifetime — the pool worker reports this
@@ -144,6 +145,8 @@ async function dispatchRow(row: QueueRow): Promise<void> {
     case 'scottish-courts':     return processScottishCourts(row)
     case 'ico':                 return processIco(row)
     case 'division-votes':      return processDivisionVotes(row)
+    case 'impact-assessments':  return processImpactAssessments(row)
+    case 'consultations':       return processConsultations(row)
     case 'scottish-parliament-or': return processScottishParliamentOr(row)
     case 'erskine-may':         return processErskineMay(row)
     case 'early-day-motions':   return processEarlyDayMotions(row)
@@ -2400,11 +2403,59 @@ async function processIco(row: QueueRow): Promise<void> {
   await markDone(row.id, metas[0].format)
 }
 
-// ── Per-member division voting records (V28 §3 — Commons/Lords Votes, OPL) ────
-// docId = "{house}:{divisionId}" (house = commons|lords). One section per
-// division carrying the full roll-call (aye/no member lists with party +
-// constituency) as searchable text. Divisions are immutable once recorded, so
-// an existing R2 object short-circuits (idempotent reseed).
+// ── Per-member division voting records (V28 §3, reworked V34 §A — OPL v3.0) ───
+// docId = "{house}:{divisionId}" (house = commons|lords).
+//
+// TWO WRITES PER DIVISION, deliberately:
+//   1. one `corpus_sections` row — the searchable roll-call (retrieval unit)
+//   2. one `divisions` row + N `division_votes` rows — the countable facts
+//      ("your MP voted against; 78% of their party voted for" is an aggregate
+//      no amount of BM25 over a roll-call can produce)
+//
+// Divisions are immutable once recorded, so an existing R2 object
+// short-circuits the fetch — but the structured write is still reconciled,
+// because the V28 code shipped without it and a reseed must be able to fill
+// the gap without re-downloading 5,645 payloads.
+
+async function writeDivisionStructured(d: import('../sources/division-votes').DivisionDetail): Promise<number> {
+  const pool = getNeonPool()
+  await pool.query(`
+    INSERT INTO divisions (house, division_id, division_number, division_date, title,
+      bill_title, stage, amendment, context_provenance, motion_notes,
+      aye_count, no_count, absent_count, absence_known, source_url)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+    ON CONFLICT (house, division_id) DO UPDATE SET
+      division_number = EXCLUDED.division_number, division_date = EXCLUDED.division_date,
+      title = EXCLUDED.title, bill_title = EXCLUDED.bill_title, stage = EXCLUDED.stage,
+      amendment = EXCLUDED.amendment, context_provenance = EXCLUDED.context_provenance,
+      motion_notes = EXCLUDED.motion_notes, aye_count = EXCLUDED.aye_count,
+      no_count = EXCLUDED.no_count, absent_count = EXCLUDED.absent_count,
+      absence_known = EXCLUDED.absence_known, source_url = EXCLUDED.source_url
+  `, [d.house, d.divisionId, d.number, d.date, d.title,
+      d.context.billTitle, d.context.stage, d.context.amendment, d.context.provenance, d.motionNotes,
+      d.ayeCount, d.noCount, d.absentCount, d.absenceKnown,
+      `https://votes.parliament.uk/Votes/${d.house === 'commons' ? 'Commons' : 'Lords'}/Division/${d.divisionId}`])
+
+  if (d.members.length === 0) return 0
+  // One multi-row INSERT: a division is up to ~650 members and a per-member
+  // round-trip would hold a pool connection for the whole roll-call.
+  const vals: any[] = []
+  const tuples = d.members.map((m, i) => {
+    const b = i * 9
+    vals.push(d.house, d.divisionId, m.memberId, m.name, m.party, m.partyAbbreviation, m.constituency, m.vote, m.teller)
+    return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},'${d.date ?? ''}'::date)`
+  })
+  await pool.query(`
+    INSERT INTO division_votes (house, division_id, member_id, member_name, party,
+      party_abbrev, constituency, vote, teller, division_date)
+    VALUES ${tuples.join(',')}
+    ON CONFLICT (house, division_id, member_id) DO UPDATE SET
+      member_name = EXCLUDED.member_name, party = EXCLUDED.party,
+      party_abbrev = EXCLUDED.party_abbrev, constituency = EXCLUDED.constituency,
+      vote = EXCLUDED.vote, teller = EXCLUDED.teller, division_date = EXCLUDED.division_date
+  `, vals)
+  return d.members.length
+}
 
 async function processDivisionVotes(row: QueueRow): Promise<void> {
   const { fetchDivisionDetail, compileDivisionText } = await import('../sources/division-votes')
@@ -2416,7 +2467,13 @@ async function processDivisionVotes(row: QueueRow): Promise<void> {
   }
 
   const cKey = compiledKey(row.corpus, String(id), '1')
-  if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+  // V34: the R2 short-circuit no longer implies the structured rows exist —
+  // V28 shipped without them. Skip the fetch only when BOTH are present.
+  if (await r2Exists(cKey)) {
+    const { rows: have } = await getNeonPool().query(
+      `SELECT 1 FROM divisions WHERE house = $1 AND division_id = $2`, [house, id])
+    if (have.length) { await markDone(row.id, 'html'); return }
+  }
 
   const detail = await fetchDivisionDetail(house, id)
   if (!detail) { await markFailed(row.id, `division-votes ${row.docId}: detail fetch failed`); return }
@@ -2450,6 +2507,125 @@ async function processDivisionVotes(row: QueueRow): Promise<void> {
     sectionTitle: detail.title || `Division ${detail.number ?? id}`,
     itemDate: detail.date ?? undefined,
     parentDocId: String(id),
+  })
+  await writeDivisionStructured(detail)
+  await markDone(row.id, 'html')
+}
+
+// ── Impact assessments (V34 §B — legislation.gov.uk `ukia` + gov.uk, OGL 3.0) ─
+// docId = "ukia|{year}|{number}|{pdfUrl}|{instrumentId}|{stage}|{department}|{date}"
+// The feed metadata is carried on the queue row rather than re-fetched, because
+// the year feed is one request for 20 items and the per-item page is one
+// request each — re-deriving it per row would multiply the walk by 20×.
+//
+// ⚠ SECTIONED, not one row per document. Mean 120k chars, max measured 542k.
+// One row per IA is the V33 trap (eur-lex:32007B0143:1 — 760,509 words in a
+// single row, 0.5% of it embedded). See sectionImpactAssessment.
+
+async function processImpactAssessments(row: QueueRow): Promise<void> {
+  const { sectionImpactAssessment } = await import('../sources/impact-assessments')
+  const f = row.docId.split('|')
+  if (f[0] !== 'ukia' || f.length < 5) { await markFailed(row.id, `bad impact-assessments docId: ${row.docId}`); return }
+  const [, year, number, pdfUrl, instrumentId, stage, department, date] = f
+  const docKey = `${year}-${number}`
+
+  const probe = compiledKey(row.corpus, docKey, '1')
+  if (await r2Exists(probe)) { await markDone(row.id, 'pdf'); return }
+
+  let buf: Buffer | null = null
+  try {
+    const res = await fetch(pdfUrl, {
+      headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (+https://scrutinise.org; contact cl@scrutinise.org)' },
+      signal: AbortSignal.timeout(120_000),
+    })
+    if (res.ok) buf = Buffer.from(await res.arrayBuffer())
+  } catch { /* handled below */ }
+  if (!buf) { await markFailed(row.id, `impact-assessments ${docKey}: PDF fetch failed ${pdfUrl}`); return }
+
+  const text = await pdfToText(buf, pdfUrl)
+  const sections = text ? sectionImpactAssessment(text) : []
+  if (!sections.length) {
+    // A scanned IA is a REAL, REPORTABLE absence — 1 of 21 sampled was one.
+    // Marked unavailable, never retried, and never silently dropped.
+    await upsertSection({
+      id: sectionId(row.corpus, docKey, '1'),
+      corpus: row.corpus,
+      sourceUrl: `https://www.legislation.gov.uk/ukia/${year}/${number}`,
+      status: 'unavailable',
+      // 'pdf-only' in the existing vocabulary: the document exists and is
+      // reachable, but no text could be extracted from it. Recorded as a
+      // classified gap so it shows up in a gap report — never dropped.
+      availabilityStatus: 'pdf-only',
+      availabilityNote: `PDF yielded ${text?.length ?? 0} chars — image-only/scanned impact assessment`,
+      itemDate: date || undefined,
+      parentDocId: instrumentId || undefined,
+    })
+    await markDone(row.id)
+    return
+  }
+
+  const metas: SectionMeta[] = []
+  for (const s of sections) {
+    const key = compiledKey(row.corpus, docKey, String(s.n))
+    await r2Put(key, s.text)
+    metas.push({
+      id: sectionId(row.corpus, docKey, String(s.n)),
+      corpus: row.corpus,
+      sourceUrl: `https://www.legislation.gov.uk/ukia/${year}/${number}`,
+      r2Key: key,
+      wordCount: countWords(s.text),
+      status: 'compiled',
+      format: 'pdf',
+      sectionTitle: s.title,
+      itemDate: date || undefined,
+      // The join the brief wants: which instrument this IA belongs to.
+      // Empty string in the docId means the feed gave no alternate link — a
+      // real gap, stored as null rather than as a fabricated parent.
+      parentDocId: instrumentId || undefined,
+      attribution: [department, stage].filter(Boolean).join(' — ') || undefined,
+    })
+  }
+  await bulkUpsertSections(metas)
+  await markDone(row.id, 'pdf')
+}
+
+// ── Consultations (V34 §C — GOV.UK Search + Content API, OGL 3.0) ─────────────
+// docId = "{type}|{path}". One section per consultation: the consultation's own
+// text, the government response where published, and the document list WITH
+// each attachment's kind, so a summarised response can never be read as a
+// quotation of what a respondent actually said.
+
+async function processConsultations(row: QueueRow): Promise<void> {
+  const { fetchConsultation, compileConsultationText, CONSULTATION_TYPES } = await import('../sources/consultations')
+  const bar = row.docId.indexOf('|')
+  const type = row.docId.slice(0, bar) as any
+  const path = row.docId.slice(bar + 1)
+  if (!CONSULTATION_TYPES.includes(type) || !path.startsWith('/')) {
+    await markFailed(row.id, `bad consultations docId: ${row.docId}`); return
+  }
+  const docKey = path.replace(/^\//, '').replace(/\//g, '_')
+
+  const cKey = compiledKey(row.corpus, docKey, '1')
+  if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+
+  const c = await fetchConsultation(path, type)
+  if (!c) { await markFailed(row.id, `consultations ${path}: content fetch failed`); return }
+
+  const text = compileConsultationText(c)
+  await r2Put(cKey, text)
+  await upsertSection({
+    id: sectionId(row.corpus, docKey, '1'),
+    corpus: row.corpus,
+    sourceUrl: `https://www.gov.uk${path}`,
+    r2Key: cKey,
+    wordCount: countWords(text),
+    status: 'compiled',
+    format: 'html',
+    sectionTitle: c.title,
+    // Dates on everything, so a position attaches to a moment. Closing date is
+    // preferred over first-published: it is when the positions were fixed.
+    itemDate: c.closingDate ?? c.firstPublishedAt ?? undefined,
+    attribution: c.organisations.join(', ') || undefined,
   })
   await markDone(row.id, 'html')
 }

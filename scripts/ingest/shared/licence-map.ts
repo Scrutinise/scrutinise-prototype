@@ -175,6 +175,15 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // APIs). Parliamentary material under the Open Parliament Licence v3.0.
   'commons-divisions-votes': OPL3,
   'lords-divisions-votes': OPL3,
+
+  // V34 §B/§C — Crown copyright, OGL v3.0. `ukia` is served by
+  // legislation.gov.uk under the same contributors statement as the rest of
+  // that site; gov.uk under gov.uk/help/terms-conditions. Both already
+  // VERIFIED for other corpora on this map, so no new licence question.
+  'impact-assessments': OGL3,
+  'impact-assessments-govuk': OGL3,
+  'rpc-opinions': OGL3,
+  'consultations': OGL3,
   // V28 §5: Commons/Lords Library research briefings — BUILT TO THE GATE
   // (Cloudflare managed-challenge on the content endpoints; seeds nothing yet).
   // Expected Open Parliament Licence v3.0 (the T&Cs page could not be loaded
@@ -289,6 +298,28 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // *.parliament.uk API family (id.parliament.uk URIs) as bills-api /
   // committees-api / erskine-may / division-votes, all OPL v3.0 above.
   'parliament-treaties': OPL3,
+
+  // ── V34 §A — PUBLIC WHIP: FLAGGED, NOT INGESTED ────────────────────────────
+  // Public Whip publishes bulk vote matrices (votematrix-{1992..2024}.dat plus
+  // votematrix-lords) — the raw historical division records that would backfill
+  // Commons before 2016-03-09, where the Commons Votes API begins.
+  //
+  // ⚠ ITS DATA IS ODbL, WHICH IS SHARE-ALIKE. VERIFIED at the licence page
+  // (publicwhip.org.uk/faq.php#legal, 10 Aug 2026), not from a footer: "an
+  // attribution, share-alike license… if you build on this data, you must also
+  // share the result under a compatible open data license." Every other corpus
+  // on this map is attribution-only (OGL/OPL) or non-commercial-restricted; this
+  // is the first that would attach an obligation to the DERIVED DATABASE — i.e.
+  // potentially to Scrutinise's own corpus. Not-for-profit is not the same
+  // question as share-alike, and it is Charlie's call, not an ingest decision.
+  //
+  // Same treatment as the IMF flag: recorded, seeded blocked, decided by a human.
+  // Note the parliamentary APIs already cover Commons 2016→ and Lords 1999→
+  // under OPL v3.0, so nothing currently depends on resolving this.
+  'publicwhip-divisions': {
+    licence: 'odbl-1.0-FLAGGED',
+    attributionBoilerplate: 'Contains data from The Public Whip (publicwhip.org.uk), licensed under the Open Database License (ODbL) — ATTRIBUTION AND SHARE-ALIKE. Do not ingest before Charlie has ruled on the share-alike obligation on the derived database.',
+  },
 }
 
 export function licenceForCorpus(corpus: string): string | null {
