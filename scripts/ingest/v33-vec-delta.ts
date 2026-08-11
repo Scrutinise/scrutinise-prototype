@@ -21,6 +21,14 @@
  * than assumed, and the cost is reported across a CPW band so the answer is not hostage to one
  * constant. Overlap is counted: overlapping text is embedded twice and therefore paid for twice.
  *
+ * ⚠ IT OVERWRITES `docs/v33_vec_delta.json` EVERY RUN, and the before/after runs are not versions
+ * of one measurement — they are two different facts. The 9 Aug run is the PREDICTION the CHANGE_LOG
+ * scores against (544,198 unvectored, 740,385 chunks, $35.73); the 11 Aug re-run is the ACCEPTANCE
+ * measurement (227 unvectored, 0 chunks). Re-running post-embed silently replaced the first with
+ * the second and left the repo asserting a number that had stopped being true. The acceptance copy
+ * is kept as `docs/v33_vec_delta_acceptance.json`; if you re-run this, save the output under a
+ * distinct name rather than letting it clobber a prediction someone is still scoring.
+ *
  * Usage:
  *   tsx v33-vec-delta.ts --calibrate 300            # measure CPW, then report the delta + cost
  *   tsx v33-vec-delta.ts --calibrate 300 --write    # + write the work list for the catch-up

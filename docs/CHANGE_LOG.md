@@ -249,6 +249,12 @@ words to embed             0
 chunks to embed            0
 ```
 
+Two artefacts, deliberately kept apart: `docs/v33_vec_delta.json` is the **prediction** (9 Aug —
+544,198 unvectored, 740,385 chunks, $35.73) and `docs/v33_vec_delta_acceptance.json` is the
+**acceptance** (11 Aug — 227, 0, $0). ⚠ The script writes a fixed path, so the post-embed re-run
+silently overwrote the prediction the entry above scores against; caught at the end-of-session
+check, and the hazard is now in the script's header.
+
 **The 227 are not a gap and not a residual to chase: every one has `wordCount = 0`.** The per-corpus
 counts match the zero-word counts exactly — `scottish-parliament-or` 183, `si-2010plus` 26,
 `regional` 10, `primary-acts-*` 3 each, `fca-handbook` 1, `si-pre-2010` 1. `chunkBody('')` returns
@@ -278,6 +284,20 @@ an unexplained residual: 110,266 sections deferred to the position graph, 48,883
 the reranker, 3,448 excluded by design.
 
 ### ⚠ THE GATE: the embed FINISHED, and §4 is still not runnable. Read this first.
+
+> **⚠⚠ THIS SECTION WAS OVERTAKEN WITHIN FOUR HOURS AND IS SUPERSEDED. Added 2026-08-11 01:20 UTC.**
+> **Gate 2 is now OPEN.** INGEST V33 §2 (CHANGE_LOG 2026-08-11 01:02 UTC) did both missing steps:
+> the ANN index was rebuilt on Hetzner to `unindexed=0`, and `vector-serve` was restarted and
+> proven (`started_at` 07 Aug 12:59 → **11 Aug 00:44**, confirmed live). **Do NOT run
+> `vector-reindex` on the strength of the paragraphs below — it is done.** §4 is runnable.
+>
+> **⚠ And one number below is MINE and WRONG: the embed finished `2026-08-10T15:33:23.243Z`, i.e.
+> 15:33 UTC. I recorded 16:33, which is the BST reading of the same instant labelled UTC** — the
+> exact mixup the root `CLAUDE.md` bans, and it made one event circulate with two times until the
+> ingest thread caught it. The corrected figures of record are theirs: **25.0h elapsed against a
+> predicted 15–30h, $36.51 against $35.73 predicted (+2.2%)**, and `corpus_vec`/`corpus_chunks`
+> both reconcile at **22,518,608** after 89,377 orphan chunks were exported and deleted — not the
+> 22,607,985 quoted below, which was the pre-hygiene count.
 
 `v33-vec-catchup.ts --embed` **completed at 16:33 UTC today** — 129/129 shards, **768,085 vectors,
 0 misses, $36.51**, `corpus_vec` now 22,607,985 rows. The process was gone when this session
@@ -381,9 +401,17 @@ reachability. So the matrix's `note` for each one states **what retrieval still 
 have traded one silent fact for another, which is the failure the verdict vocabulary was invented
 to stop.
 
-⚠ **The brief cites `POSITION_GRAPH_DESIGN.md §3`; that file is not in this repo** (the only graph
-document present is `docs/GRAPH_TIER1_REPORT.md`, the legislation citation graph — a different
-thing). Recorded as given rather than silently corrected or silently dropped, per §19.
+⚠ **The brief cites `POSITION_GRAPH_DESIGN.md §3`; that file was not in the repo when this ran**
+(the only graph document present was `docs/GRAPH_TIER1_REPORT.md`, the legislation citation graph —
+a different thing). Recorded as given rather than silently corrected or silently dropped, per §19.
+> **Update, 2026-08-11 01:20 UTC: `docs/POSITION_GRAPH_DESIGN.md` now EXISTS** (untracked at time
+> of writing; "design only, nothing here is built", implementation slated for Stage 2D). Its **§3 is
+> "Nodes and edges"**, so the brief's citation was right and the file simply had not reached this
+> working tree yet. The registry comment in `corpus-type-map.ts` has been corrected to match.
+> ⚠ Worth noting for its own sake: **the §3 edge list does not currently name an EDM edge** — it
+> has `declared-interest`, `voted`, `gave-evidence-to` and others. So the *deferral* is sound and
+> the *destination document* is real, but the specific `holds-position`-from-EDM edge this sprint
+> deferred to is not yet written down there. Flagged rather than assumed to be an oversight.
 
 ### §3 — the rest, deferred with a date on it
 

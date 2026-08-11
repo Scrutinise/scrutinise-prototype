@@ -1,0 +1,93 @@
+{
+  "measuredAt": "2026-08-11T01:01:38.414Z",
+  "cpw": 6.05,
+  "rate": 0.075,
+  "totals": {
+    "compiledSections": 18166911,
+    "unvectored": 227,
+    "words": 0,
+    "chunks": 0,
+    "embeddedChars": 0,
+    "tokens": 0,
+    "cost": 0
+  },
+  "band": [
+    {
+      "cpw": 5.445,
+      "cost": 0
+    },
+    {
+      "cpw": 6.05,
+      "cost": 0
+    },
+    {
+      "cpw": 6.655,
+      "cost": 0
+    }
+  ],
+  "perCorpus": [
+    {
+      "corpus": "fca-handbook",
+      "tier": "guidance",
+      "sections": 3661,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "tier": "legislation",
+      "sections": 145704,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "tier": "legislation",
+      "sections": 165438,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "regional",
+      "tier": "legislation",
+      "sections": 331124,
+      "missing": 10,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "tier": "other",
+      "sections": 1043264,
+      "missing": 183,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-2010plus",
+      "tier": "legislation",
+      "sections": 270339,
+      "missing": 26,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-pre-2010",
+      "tier": "legislation",
+      "sections": 419250,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    }
+  ]
+}
