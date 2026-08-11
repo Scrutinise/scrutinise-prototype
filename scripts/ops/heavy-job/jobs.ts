@@ -201,8 +201,13 @@ export const JOBS: Record<string, HeavyJob> = {
     extraEnv: ['GEMINI_API_KEY'], // every query has to be embedded before it can be searched
     // MEASURED locally first, which is why this is a box job at all: one query's exhaustive rung
     // took 150s from a home connection (~15 MB/s against ~2.2 GB of PQ codes). 58 queries × 4 rungs
-    // would have been three hours here. Peak RSS stays null until the box reports it.
-    expectedPeakGb: null,
+    // would have been three hours here.
+    // MEASURED on the box, 11 Aug 2026: 7.1 GB peak at 22,518,608 rows, 37.6 min, €0.099 on a cpx42
+    // (16 GB). Higher than the 5.6 GB of `vector-reindex`, which is the right way round — this job
+    // holds probed IVF partitions in the index cache for 58 queries at up to 4,096 probes, where the
+    // rebuild streams them once. 16 GB is the right size; the 8 GB Railway cap could not run it.
+    expectedPeakGb: 7.1,
+    peakSource: '11 Aug 2026, cpx42 (8 vCPU shared / 16 GB) in nbg1, 58 queries × 4 rungs, 37.6 min → 7.1 GB peak, €0.099. The run also exposed a log-transport defect that hid its own results — see the runner\'s follow-by-content note.',
   },
 }
 
