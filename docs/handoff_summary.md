@@ -2,7 +2,74 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 19:05 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS PUSHED
+*Last updated: 2026-08-11 20:25 UTC — ▼ **LEX SPRINT 3-D (§19-D) IS BUILT: THE PROBLEM GATE, AND
+FOUR "SEPARATE" BUGS THAT WERE ONE MISSING CONFIG LINE.** Executes `docs/SPRINT_3D_BRIEF.md` in
+full. CHANGE_LOG (2026-08-11 20:25 UTC); full detail in **`docs/LEX_PLAYBOOK.md` §16**.
+`tsc --noEmit` clean and **`next build` passes**.
+⚠⚠ **NOT BROWSER-VERIFIED, AND THE BRIEF REQUIRES IT.** The Claude-in-Chrome extension reports no
+connected browser (`list_connected_browsers` → `[]`) and the create flow is behind Clerk, so it
+cannot be checked over plain HTTP either. **First thing next session: walk the UI.** Specifically
+9a (Save & exit now saves, waits, then leaves, with a spinner), 9e (material/contributory reads as a
+choice), 9f (option cards collapse to title + status + chevron), 9g (a cause named in chat appears on
+the loop), 9h (the quiet retry link under the briefing), the new **"Work on this"** control on a
+completed stage (Task 3), and that no "proposed by Lex" badge appears over empty boxes (2a).
+**⚠ Task 1a REVERSES `docs/CLAUDE.md` §4** — the user now reads **"The problem"**, never
+"Challenge". That old rule is what let a solution be entered as the diagnosis and accepted. The
+stored key `challenge` is unchanged everywhere; this is a label change, not a migration.
+**⚠ The single most useful finding: Tasks 2b and 8 were the same bug.** `generateCauseCandidates`,
+`generatePolicyOptions` and `generateCoherenceReview` all ran gemini-2.5-flash **with thinking on**
+and budgets of 1024/1400/2048 — CLAUDE.md §18's 29 Jul failure exactly. The database proved it:
+**0 `PolicyOption` rows with `source='LEX'`** and two causes reading *"A factor examined in …"*
+(the deterministic fallback, which only fires when the generator returns nothing). All three now set
+`thinkingConfig: { thinkingBudget: 0 }`, and the retry is deliberately DIFFERENT from the first
+attempt rather than the same call into the same wall.
+**⚠ Legislation links: measured 3/40 opening before, 40/40 after.** `corpus_sections.sourceUrl`
+pastes the hyphenated ref token onto the act URL (`/ukpga/1995/46/section-288AB`) where
+legislation.gov.uk wants `/section/288AB`. The correct derivation already existed but sat behind
+`sourceUrl ?? …`, and sourceUrl is non-null on 100% of 1.32M rows, so it was unreachable.
+**The stored `sourceUrl` is still wrong at rest — an INGEST-side defect, for that thread.**
+**⚠ "£57/year" was faithful arithmetic in a dishonest sentence** — the line was `low=57, high=NULL,
+basis=NULL, priceYear=NULL` and the summary called it a range with a stated basis uprated to 2025
+prices. `basis` was not even selected in the query. Fixed, plus a units selector so a user meaning
+£57m can say so.
+**Four new checks, each watched failing before being trusted:** `check:problem-gate`,
+`check:never-claim`, `check:legislation-urls` (`--live` actually fetches), `check:cost-summary`
+(which caught the unselected `basis` on its first run). All pre-existing checks still pass.
+⚠ **This tree is shared with a concurrent session** (communities/*, `lib/email.ts`, `globals.css`,
+`scripts/check-central-stage1.ts` are theirs, not this sprint's) — `commit-all.sh` stages only the
+files listed in it.
+▼ Earlier: 2026-08-11 20:24 UTC — ▼ **CENTRAL STAGE 2b: THE QUESTION LIBRARY IS BUILT.** Executes
+the "Central Stage 2b" brief (11 Aug), built to the CD handoff in
+`docs/design_handoff_central_question_library/`. `tsc --noEmit` and `next build` clean;
+**189/189 checks against the live app DB** (`npm run check:central`, up from 140). Design written up
+in `SCRUTINISE_CENTRAL_SPEC.md` §5–§6, decision log §12. **The thing to preserve: three vote-ish
+mechanisms that must not collapse into one.** A QUESTION vote is up-only and **self-voting is
+allowed** — it records *frequency*, not quality, so the asker voting for their own question is right,
+not a bug. An ANSWER vote is up/down, mutually exclusive, self-voting refused; switching **withdraws**
+rather than stacks, so the count moves by two. A FAVOURITE is **private** — never counted, ranked,
+aggregated or visible to anyone including admins and the across-branches view; the check asserts that
+*absence* (a second admin cannot see it, and no count-shaped key exists on the payload) rather than
+trusting the UI not to render one. ⚠ **One deliberate correction to the design pack, per the brief:
+favourites in packs are ADDITIVE, not substitutive** — the CD copy said "instead of", the brief
+reverses it, and the pack now carries the community's top answer AND the member's. Silently swapping
+in a private pick would make two members' packs differ with neither knowing why. **Flags need a
+reason** (a flag without one is an unaccountable veto); `DO_NOT_USE` is excluded from packs,
+`USE_WITH_CARE` stays packable and its reason travels into every output. **Edit suggestions have no
+admin path** — the answer's author decides and a Community admin is refused (tested). All four pack
+outputs carry "Community-rated answers, not official positions." from one exported constant, so no
+format can quietly omit it. **Across-branches is participation only** — no per-member activity is
+computed, favourites are not read at all — and the broadcast reports notification and email outcomes
+separately, because a mail failure must not read as delivery. `AnswerVote.voteWeight` ships at 1.0 and
+**is applied in the sort** with no weighting logic, so credibility weighting is a later switch rather
+than a migration. **Schema:** `prisma/central_stage2b.sql`, eight tables, hand-written, types read off
+production first, re-run once — and unlike Stage 1.2 and Stage 2, **nothing in it is invisible to
+`schema.prisma`**; every uniqueness rule is a plain composite. **Visual:** the CD upgrade (12px cards,
+one hairline border and no nested boxes, teal promoted to the live-state accent, tabular counts)
+adopted across all of Central, as Central-scoped utilities rather than a global `--radius` change,
+which would have restyled Ideas and Lex. **Board tab hidden for the pilot** — code untouched, one
+`hidden` flag to restore. Stages renumbered: question library **2b**, Events **2c**, training
+marketplace **2d**. **REMAINING GATE: Charlie's browser re-test.** ▼ Earlier:
+2026-08-11 19:05 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS PUSHED
 AND SEEDED — 14,274 ROWS PENDING — AND THE SMOKE TEST CAUGHT A BUG THAT WOULD HAVE FAILED
 EVERY LORDS DIVISION.** Executes `BRIEF_INGEST_POLITICAL_SOURCES.md` §A/§B/§C in full.
 CHANGE_LOG (2026-08-11 18:30 UTC); full detail in **`docs/V34_POLITICAL_SOURCES_REPORT.md`**.
@@ -2113,6 +2180,31 @@ unfiltered with the bare query (today's default) — never an empty result.
 - **NEXT:** `LEX_QUERY_ROUTER` stays OFF pending Charlie's read of the C regression — accept it
   as the current 4-stream scope's known cost, or add a `guidance` stream (one config-list entry)
   before flipping. Both `tsc --noEmit` clean.
+
+---
+
+## CURRENT STATE — CENTRAL Stage 2b: question library (2026-08-11 20:24 UTC)
+
+**Executes the "Central Stage 2b" brief (11 Aug 2026), built to the CD handoff.** Full account:
+CHANGE_LOG "CENTRAL Stage 2b"; design in `SCRUTINISE_CENTRAL_SPEC.md` §5–§6, decisions in §12.
+
+- **Scope:** `scrutinise-web/**` plus the three shared docs. `lib/email.ts` gained one function; no
+  existing one was changed.
+- **Where the rules live:** `lib/question-library.ts` — visibility, near matches, ranking, the three
+  vote mechanisms, flags, suggestions, packs, across-branches. Routes are thin wrappers, so the check
+  script exercises production code.
+- **Four invariants a future change must not quietly break:**
+  1. a question vote is frequency (up-only, self-vote allowed); an answer vote is quality (no
+     self-vote); they are not the same mechanism;
+  2. favourites are private — never counted, ranked, aggregated or exposed;
+  3. favourites in packs are additive, never substitutive;
+  4. every pack output carries the "not official positions" line, from one constant.
+- **Verified:** `npm run check:central` — **189/189** against the live app DB, self-cleaning
+  (including the notifications these flows send to real accounts).
+- **REMAINING GATE:** Charlie's browser re-test. Untested from here (no Clerk session): the HTTP route
+  surface, all five screens, and the print sheet's actual A4 output.
+- **Not built, per the brief:** vote weighting (the column exists, the logic does not), an admin tag
+  editor beyond the promoted flag, and the Board tab's return.
 
 ---
 

@@ -618,3 +618,167 @@ caught an error `tsc --noEmit` had passed. Run both before calling a Lex sprint 
 **15.12 The checks.** `npm run check:sprint2.5-schema` (proves the SQL landed on Neon, rather than
 that `db execute` said "success"), `check:documents` (no DB), `check:feedback` and `check:export`
 (live DB + live R2; both create a temporary idea and delete it, and its R2 objects, in a `finally`).
+
+---
+
+## 16. Sprint 3-D (§19-D) — the problem gate, and four bugs that were all one bug
+
+*Written 2026-08-11 after the 10 Aug end-to-end walk-through, the first time anyone had run the
+complete flow — corpus chat, legislation guide, feedback, export and all four kernel pages — in
+one sitting. Much of it worked. What follows is what didn't, and what it turned out to be.*
+
+**16.1 The headline: a field label is a specification.** The Page-2 diagnosis field was labelled
+**"Challenge"**, on a rule in `docs/CLAUDE.md` §4 that read *"Problem" in UI = **Challenge***.
+Charlie entered *"I want to change the amount charged for plastic bags in shops"* — a **solution** —
+and Lex accepted it and carried on. His words: *"Without a problem we can have no strategy and the
+whole logical structure breaks down. At the moment I can put anything in and it's accepted, and none
+of it makes sense."*
+
+That §4 rule is now **reversed**: the user reads **"The problem"**, everywhere. The stored key stays
+`challenge` (mirrored to `Idea.challenge`, read by `buildStageQuery`, present on every
+`IdeaFieldState` row) — a label change, not a migration. `npm run check:problem-gate` asserts no
+user-visible string in the create flow contains the word, scanning **string literals only**, because
+the identifier is still everywhere in the code and a noisy check gets switched off.
+
+**16.2 The gate presses twice and then stops.** `M_PROBLEM_GATE` (`lib/lex/method.ts`) is injected
+**only while the problem field is current**, and is replaced by `GATE_SPENT` once
+`problemPresses >= MAX_PROBLEM_PRESSES` (2). It tells Lex to test problem-vs-solution, and — when it
+is a solution — *not to reject it*: ask what problem it solves and **propose the problem back**, so
+agreeing is one click. Presses are counted **from the transcript**: every Lex bubble now carries the
+`field` it was said about (`pushLex(..., def.key)` and the `/lex` route's own append), so no column
+was added. **A message written before this sprint has no `field`, which reads as zero presses** —
+an existing idea gets its full two rather than none, which is the right way for that to fail.
+
+⚠ `looksLikeASolution()` is a **diagnostic, not a gate**. The model makes the call; the regex exists
+so `[lex-diag] problem gate` records what the platform thought, and so the behaviour is testable
+without a model. It deliberately does not fire on "we should ban X **because** Y is killing people"
+— that names a problem as well as a remedy.
+
+**16.3 One root cause behind three separate symptoms: `thinkingConfig` was missing.**
+`generateCauseCandidates` (1024 tokens), `generatePolicyOptions` (1400) and `generateCoherenceReview`
+(2048) all called gemini-2.5-flash **with thinking on**, which is CLAUDE.md §18's 29 Jul
+query-expansion failure exactly: the thinking pass spends the budget, no output is emitted, the
+`JSON.parse` throws, and the empty return reads as *"the corpus had nothing to say"*. The evidence
+was in the database:
+
+| symptom (brief) | what the DB held for the plastic-bag idea |
+|---|---|
+| Task 2b — "I'll seed a few candidate approaches… and then seeded none" | **0** rows with `source='LEX'` in `PolicyOption` |
+| Task 8 — "seeded causes aren't causes" | 2 rows reading `A factor examined in <report title>` — the **deterministic fallback**, which only fires when the generator returns nothing |
+
+All three now set `thinkingConfig: { thinkingBudget: 0 }` and carry budgets sized to the schema
+(3000 / 4000 / 4000, each an env-overridable const shared with its `geminiFinishProblem` call so the
+guard can never drift from the request). **The retry is now DIFFERENT from the first attempt**
+(`terse: true` — fewer, shorter, no nesting): retrying identical parameters against a deterministic
+budget wall is CLAUDE.md §13's "retry is not appropriate for parse failures" in another costume, and
+it is what happened on 10 Aug.
+
+**16.4 The corpus-grounded cause fallback is deleted, on purpose.** It minted one candidate per
+corpus hit reading *"A factor examined in <document>"* so the acceptance *"candidates seeded from
+the corpus"* always held. It held by making the sentence true and the content false. Charlie's two
+tests: **(1) is it expressed as a problem/cause at all, (2) does it have a plausible causal
+relationship — would removing it reduce the problem?** Those rows fail both.
+
+> **A corpus hit that fails the causal test is a RELATED DOCUMENT, not a cause.**
+
+The documents are not lost — they are in the right-hand panel, which is where a document belongs.
+`readsAsACause()` enforces test 1 on whatever the model returns (it cannot judge causality; test 2
+stays with the model and with the user's Material/Contributory call). When nothing survives, Lex
+says so and asks the user instead.
+
+**16.5 Never-claim, third time. The rule is fine; the affordances weren't.** §19-C wrote the rule
+for Lex's prose. Three of the violations found on 10 Aug were in the **platform**, not in a Lex
+sentence:
+
+- **The badge rendered off STATUS.** `seedStructured` pushed every structured field to
+  `AWAITING_CONFIRMATION` with `{slot: ''}` and `StructuredField` showed "proposed by Lex" for any
+  awaiting field. Empty legal-landscape box, confident badge. The badge is now gated on **actual slot
+  content**; a field with nothing to offer stays `EMPTY`, which is what it is.
+- **A fallback promised work.** A field's configured `question` is the deterministic fallback — it
+  is spoken *precisely when something failed* — and `policyOptions`' read *"I'll seed a few
+  candidates per material cause…"*. Fallback copy may never describe work as done or promised;
+  `check:never-claim` greps the page configs for that shape.
+- **`anticipatedResponses` was five empty boxes** under a heading saying Lex would propose some.
+  Charlie: *"Lex is best placed to fill these in."* Now generated (`generateAnticipatedResponses`),
+  and a failed draft is **reported**, never rendered as blanks with a badge over them.
+
+`npm run check:never-claim` is a source invariant in the shape of `check-llm-guards.ts`, plus unit
+assertions on the render decision itself. **It was watched failing on all three defects before being
+trusted to pass.**
+
+**16.6 The panel fell back to the briefing whenever a stage search hadn't stored.**
+`briefingIsCurrent = !stageSearch` — so *"this stage has no search record"* rendered as *"here is the
+Orientation briefing"*, which is the §18 corollary failure one level up: **a search that did not run
+and a search that was never due must not look identical from outside.** Two changes:
+`runStageSearch` now **records the skip** (`ok:false`, reason `no query signals yet`) instead of
+returning `null` and storing nothing; and `briefingIsCurrent` is `stage === 'ORIENTATION'`, the
+honest definition. A later stage with no record gets its own block saying so, with a button to run it.
+
+⚠ **What could not be established from here:** the plastic-bag idea now HAS a `GUIDING_POLICY`
+record (`ok:true`, 7 results, ran 2026-08-10 19:20:47 UTC), so whether the 10 Aug panel showed the
+briefing because the record was absent at that moment or because it was written later is not
+decidable from the database. The `[lex-diag] stage advance` line records `searchRan/searchOk/results`
+and would settle it — **Vercel runtime logs are unreadable from this machine** (root CLAUDE.md §19,
+SAML). The fix above closes both branches, and the skip record makes the two distinguishable next time.
+
+**16.7 Legislation links: the URL we stored could never have worked.** Debates, committee reports and
+"anything else relevant" all opened; legislation 404'd. `corpus_sections.sourceUrl` for the
+legislation corpora pastes the section id's **hyphenated** ref token onto the act URL —
+`/ukpga/1995/46/section-288AB` — and legislation.gov.uk addresses a provision with **slash-separated
+keyword/number pairs**: `/section/288AB`. `fts-search.ts` already had a correct `legislationUrl()`,
+but it sat behind `meta?.sourceUrl ?? …` and `sourceUrl` is non-null on **100%** of 1.32M legislation
+rows, so the working branch was unreachable.
+
+Measured: the stored form opens **3/40**; the derived form opens **40/40**. `lib/lex/legislation-url.ts`
+is now the single derivation (it was copy-pasted into `fts-search.ts` and `vector-search.ts`, so the
+bug existed twice), the derived URL **wins** for the three gid-bearing types, and `repairRefUrl()`
+fixes refs already stored on ideas at render — no data migration. `npm run check:legislation-urls --live`
+actually fetches. ⚠ **The stored `sourceUrl` is still wrong at rest** — an ingest-side defect, flagged
+for that thread, not fixed here.
+
+**16.8 "£57/year" was arithmetic telling the truth inside a sentence that wasn't.** The single stored
+line was `low=57, high=NULL, basis=NULL, priceYear=NULL`, and the summary described it as a range,
+with a stated basis, uprated to 2025 prices. Three claims, none true of that figure. `basis` wasn't
+even **selected** in the query, so the claim could not have been checked in principle. Now:
+`computeCostSummary` carries provenance (`figures / oneSided / noBasis / noPriceYear / uprated`)
+beside the totals and writes the sentence from it; a total whose upper bound was assumed prints as
+**"at least £X"**; and the panel has a **units selector (£ / k / m / bn) with a live read-back**,
+because a user who means £57m had only "57" to type and nothing to notice it by.
+`npm run check:cost-summary` pins known inputs to an expected total — and **caught the unselected
+`basis` on its first run**.
+
+**16.9 Deepening is iterative, so the pointer moves both ways.** `Idea.lexPage` was forward-only.
+`performStageReentry` (`lib/lex/stage.ts`) + `POST /page {action:'goto'}` move it back to any page
+already reached; chat, panel and the save path all follow because they already key off `lexPage`
+(`displayStageFor`, `assertWritableField`). **Nothing is reset** — field states, causes, options,
+actions and every stage's stored search stay exactly as they are. How far the user has got is now
+**derived**, not read off the pointer: `CanonicalPage.reachable` and the new `visited` status come
+from *has any field on this page left EMPTY*, so no column was added.
+
+**16.10 The two-line fixes that were not bugs in the code they appeared to be in.**
+- **"Save & exit" (9a)** closed the dialog and switched tab. It neither saved nor exited — Charlie
+  had to press Discard to leave. It now accepts the pending proposal, **waits for the write**, then
+  navigates, with a spinner; a failed save keeps the user on the page and says so, because exiting
+  after a failed save loses the draft while looking like it saved it.
+- **Material/contributory (9e)** *was* built — two 10px outline chips in a row of five grey text
+  links. **An affordance nobody can see is not an affordance.** Unclassified causes now ask the
+  question in words, on their own line.
+- **Option cards (9f)** did collapse — but the toggle only appeared when the option had a case for or
+  against (the 10 Aug ones had neither), and the Edit/Rule-out/Delete row rendered below the title
+  either way, so a "collapsed" card was still three lines tall. Toggle unconditional; actions inside
+  the expanded body.
+- **Retry search (9h)** existed, inside the stage-search block — so on Page 1, where the briefing IS
+  the research, there was no way to re-run it unless it had already failed. A quiet link now sits
+  under the briefing too.
+
+**16.11 Causes are the one loop that takes a chat proposal (9g).** Everywhere else in this flow,
+telling Lex something is enough; causes alone made the user re-type into the panel. `proposal.fieldKey
+"causes"` + `valueList` → rows added with `source: 'USER'` (they are the user's words, tidied — the
+"from past debates" badge belongs to corpus rows only). `policyOptions` and `actions` stay
+panel-authored: each of their rows carries several structured fields being composed, not one sentence.
+
+**16.12 The checks.** `check:problem-gate` and `check:never-claim` need neither model nor database.
+`check:legislation-urls` is pure by default and fetches with `--live N`. `check:cost-summary` creates
+a temporary idea + action + cost lines and deletes them in a `finally`. `check:feedback` now asserts
+the third-party name unconditionally — it used to be skipped whenever the model didn't run, which is
+precisely when the deterministic pass matters.

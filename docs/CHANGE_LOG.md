@@ -1,6 +1,26 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-09 07:43 UTC — CENTRAL Stage 2: points & leaderboards, built on an EVENT
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
+handoff. The core of it is three vote-ish mechanisms that must not collapse into one: a QUESTION vote
+is up-only and self-voting is ALLOWED because it records frequency ("I get asked this too"), not
+quality; an ANSWER vote is up/down, mutually exclusive and self-voting is refused; a FAVOURITE is
+private and is never counted, ranked, aggregated or shown to anyone, admins included — the check
+asserts that absence rather than trusting it. ⚠ One deliberate correction to the design pack, per the
+brief: favourites in packs are ADDITIVE, not substitutive — the pack carries the community's top
+answer AND the member's, because silently swapping in a private pick would make two members' packs
+differ with neither knowing why. Flags carry a required reason (a flag without one is an
+unaccountable veto); DO_NOT_USE is excluded from packs while USE_WITH_CARE stays packable with its
+reason travelling into every output. Edit suggestions have no admin path at all — the answer's author
+decides. Every one of the four pack outputs carries "Community-rated answers, not official positions."
+from a single constant. Across-branches is participation only, and the broadcast reports notification
+and email outcomes separately. `voteWeight` ships at 1.0 and applied-in-the-sort with no weighting
+logic, so weighting is a later switch rather than a migration. The CD visual upgrade (12px cards, one
+hairline border, teal as the live-state accent, tabular counts) is adopted across all of Central as
+Central-scoped utilities — not a global `--radius` change, which would have restyled Ideas and Lex.
+Board tab hidden for the pilot; the code is untouched and it is one flag to restore. Stages renumbered:
+question library 2b, Events 2c, training marketplace 2d. Additive hand-written schema on Neon, 189/189
+live checks (up from 140), `tsc` and `next build` clean. Charlie's browser re-test is the remaining
+gate. Earlier: 2026-08-09 07:43 UTC — CENTRAL Stage 2: points & leaderboards, built on an EVENT
 LEDGER rather than stored balances — every balance and leaderboard is computed, the ledger only
 appends, and each event stamps the tariff it used, which is what makes "editing a tariff changes only
 subsequent events" true by construction. Mark values were MIRRORED from the main system as briefed,
@@ -108,6 +128,250 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## CENTRAL Stage 2b — the question library (2026-08-11 20:24 UTC)
+
+Executes the "Central Stage 2b — question library" brief (11 Aug 2026), built to the CD handoff in
+`docs/design_handoff_central_question_library/`. `tsc --noEmit` and `next build` both clean.
+**189/189 checks pass against the live app DB** (`npm run check:central`, up from 140).
+
+### Three vote-ish mechanisms that must not become one
+
+The core of this sprint is that these are different things wearing similar clothes, and the code keeps
+them apart:
+
+- **QuestionVote** — up only, **self-voting allowed**. It records *frequency* ("I get asked this
+  too"), not quality, so a downvote would be meaningless and the asker voting for their own question
+  is correct rather than an oversight.
+- **AnswerVote** — up or down, mutually exclusive, **self-voting refused** under the Stage 2
+  no-marking-own-content rule. Switching direction withdraws the previous vote rather than stacking,
+  so the count moves by two — asserted in the tests, because "moves by 1" is the easy bug.
+- **AnswerFavourite** — **private**. No count, no ranking effect, no aggregation, no admin view. The
+  check script asserts the *absence*: a second admin account cannot see another member's favourite,
+  and no `favouriteCount`-shaped key exists on the answer payload.
+
+`voteWeight` ships defaulted to 1.0 and **is applied in the sort** with no weighting logic behind it —
+flat votes for the pilot, so switching weighting on later is a data change, not a migration.
+
+### ⚠ One correction to the design pack, per the brief
+
+**Favourites in packs are ADDITIVE, not substitutive.** The CD pack's builder copy said a favourited
+answer is used *instead of* the top-voted one; the brief reverses that, and the implementation carries
+**both**. Silently replacing the community's top answer with a private pick would make two members'
+packs differ with neither knowing why. Tested in both directions: the community's answer is present,
+the favourite is present alongside it, and turning the option off drops only the extra.
+
+### Schema
+
+`prisma/central_stage2b.sql` — eight tables, hand-written, production column types read first,
+applied after a host check and re-run once to prove idempotence. **Nothing invisible to
+`schema.prisma` this time**: every uniqueness rule here is a plain composite, unlike the partial and
+expression indexes Stage 1.2 and Stage 2 had to hide in SQL.
+
+### Scope, flags and edit suggestions
+
+A BRANCH-scoped question is invisible from a sibling branch and visible from the root, because the
+root's subtree is the whole Community — enforced by one visibility filter every read path shares, not
+by the UI. Promotion is author-or-admin and deliberately one-way.
+
+Flags carry a **required reason** — a flag without a stated reason is an unaccountable veto — and the
+author is told what it says. `DO_NOT_USE` is excluded from packs; `USE_WITH_CARE` stays packable and
+its reason travels into every output format. **Edit suggestions have no admin path at all**: the
+answer's author applies or dismisses, and a Community admin attempting it is refused (tested).
+
+### The near-match step
+
+Jaccard overlap on content words, running live as the user types so step 2 is never a surprise —
+deliberately not the corpus-search stack, which is a different scale and a different problem. The
+framing stays a shortcut: the escape sits at equal weight and nothing blocks posting.
+
+### Packs and outputs
+
+Filter carried over from the library, sizes reconciled against reality ("6 of a possible 10"), pins
+that hold position as the ranking moves. Four outputs — glance cards, answer-first flashcards,
+continuous list, A4 print sheet — and **every one carries "Community-rated answers, not official
+positions."** from a single exported constant, so no format can quietly omit it.
+
+### Across branches, and the constraint that survived
+
+Participation counts only. No per-member activity is computed, let alone returned; favourites are not
+read at all. The check asserts the shape contains no member-level keys rather than trusting the page
+not to render them. The broadcast composer reaches every branch manager by notification **and** email,
+and reports both outcomes per recipient — a mail failure must never read as delivery.
+
+### Visual language
+
+The three CD departures — 12px cards with one hairline border and no nested boxes, teal promoted from
+animation-only to the live-state accent, tabular figures on every count — adopted across **all** of
+Central, including the bulletin board, teams tree and leaderboard panels. Implemented as
+Central-scoped utilities rather than by changing `--radius` globally, which would have restyled Ideas
+and Lex; those are out of this sprint's mandate. A first pass nested the new card class inside itself
+in four panels, which is precisely what the handoff forbids — those inner rows are fill-only insets.
+
+### Board tab
+
+Hidden for the pilot. The bulletin-board code is untouched and still renders when reached directly;
+only the tab link is gone. Restoring it is deleting one `hidden` flag in the `TABS` array.
+
+---
+
+## LEX SPRINT 3-D (§19-D) — the problem gate, and four "separate" bugs that were one missing config line (2026-08-11 20:25 UTC)
+
+Executes `docs/SPRINT_3D_BRIEF.md` in full: the fixes from Charlie's 10 Aug end-to-end walk-through,
+the first time the complete flow had been run in one sitting. Full detail in **`docs/LEX_PLAYBOOK.md` §16**.
+`tsc --noEmit` clean; **`next build` passes**. Four new checks, each watched failing before being
+trusted: `check:problem-gate`, `check:never-claim`, `check:legislation-urls`, `check:cost-summary`.
+
+⚠ **NOT browser-verified.** The brief requires it and I could not do it: the Claude-in-Chrome
+extension reports no connected browser (`list_connected_browsers` → `[]`), and the create flow is
+behind Clerk auth so it cannot be checked over plain HTTP either. What WAS verified without a
+browser: the production build compiles every route; the FAQ section list renders with **Reading
+legislation** as its own section (fetched from a running dev server); 40/40 sampled legislation URLs
+open; the cost and feedback checks run against the live Neon database. **The UI items — 9a, 9e, 9f,
+9g, 9h, the stage re-entry control and the badge change — need Charlie's eyes.**
+
+### Task 1 — the problem gate (the headline)
+
+*"Without a problem we can have no strategy and the whole logical structure breaks down. At the
+moment I can put anything in and it's accepted, and none of it makes sense."* — Charlie, having
+entered **"I want to change the amount charged for plastic bags in shops"**, a solution, as the
+problem, and had it accepted.
+
+- **1a.** `challenge` → **"The problem"** in every user-visible string: the field label and question,
+  Lex's per-field prompt, the conductor's fallback copy, the opening bubbles, the legacy AI routes'
+  system prompts, `field-labels.ts`, the idea-detail page, the stage-gate error and the FAQ.
+  **The stored key is unchanged** — `Idea.challenge`, field key `challenge`, every
+  `IdeaFieldState` row, `buildStageQuery` — so there is no migration.
+- ⚠ **`docs/CLAUDE.md` §4 is REVERSED.** It read *"Problem" in UI = **Challenge***. That rule is what
+  let a solution in: *a vague label invites a vague answer.* The line now says the opposite and
+  carries the reason, so it is not quietly re-reversed by the next reader.
+- **1b.** `M_PROBLEM_GATE` in the method layer, armed **only while the problem field is current** and
+  replaced by `GATE_SPENT` after **two presses**. On a solution Lex must not reject it: ask what
+  problem it solves and **propose the problem back** so agreeing is one click. Presses counted from
+  the transcript — Lex bubbles now carry the `field` they were said about, so **no column was added**;
+  a pre-sprint message has no tag and reads as zero presses, so an existing idea gets its full two.
+- The conductor's FIRST proposal of the problem now applies the gate too, rather than silently
+  inventing a problem-shaped sentence to sit under the user's remedy (which is what happened: the
+  stored `challenge` for that idea is a problem statement **nobody wrote**).
+
+### Task 8 + Task 2b — one root cause, in a config line nobody had added
+
+**`generateCauseCandidates` (1024 tokens), `generatePolicyOptions` (1400) and `generateCoherenceReview`
+(2048) all ran gemini-2.5-flash with thinking ON.** That is CLAUDE.md §18's 29 Jul query-expansion
+failure exactly — the thinking pass spends the budget, nothing is emitted, `JSON.parse` throws, and
+the empty return reads as *"the corpus had nothing to say"*. The database held the proof for the
+plastic-bag idea: **0 `PolicyOption` rows with `source='LEX'`**, and two `DiagnosisCause` rows reading
+**"A factor examined in Report: 11th Report - Plastic bags…"** — which is the deterministic fallback,
+and it only fires when the generator returns nothing.
+
+- All three now set `thinkingConfig: { thinkingBudget: 0 }` with budgets sized to their schemas
+  (3000 / 4000 / 4000), each an env-overridable const **shared with its `geminiFinishProblem` call**
+  so the guard can never drift from the request.
+- **The retry is now different from the first attempt** (`terse: true`). Retrying identical
+  parameters against a deterministic budget wall is §13's "retry is not appropriate for parse
+  failures" wearing another costume — and it is what ran on 10 Aug, twice, to the same wall.
+- ⚠ **The "A factor examined in …" fallback is DELETED.** It made the acceptance *"candidates seeded
+  from the corpus"* true by making the content false. Those rows fail both of Charlie's tests — not
+  expressed as causes, no causal relation to the problem. **A corpus hit that fails the causal test
+  is a related document, not a cause**, and the documents are already in the right-hand panel where
+  documents belong. `readsAsACause()` enforces test 1 on whatever the model returns; when nothing
+  survives, Lex says so and asks the user instead of offering topic fragments.
+
+### Task 2 — three never-claim violations, all in the PLATFORM, not in Lex's prose
+
+- **2a.** "Proposed by Lex" rendered off field **status**: `seedStructured` pushed every structured
+  field to `AWAITING_CONFIRMATION` with `{slot: ''}`, so an empty legal-landscape box carried a
+  confident badge. The badge is now gated on **actual slot content**, and a field with nothing to
+  offer stays `EMPTY`.
+- **2b.** The promise *"I'll seed a few candidate approaches per material cause"* lives in the
+  field's configured `question` — which is the **deterministic fallback**, spoken precisely when
+  something failed. Rewritten so it promises nothing; the conductor reports the count it can see.
+- **2c.** `anticipatedResponses` arrived as five empty boxes. Now generated
+  (`generateAnticipatedResponses` — avoidance, gaming, enforcement burden, legal challenge, political
+  attack), and a failed draft is **reported**, never rendered as blanks under a badge.
+- `npm run check:never-claim` is a source invariant plus unit assertions on the render decision.
+  **Watched failing on all three defects before being trusted to pass.**
+
+### Task 3 — the flow is no longer one-way
+
+`Idea.lexPage` was forward-only, so after moving to Guiding Policy Charlie could not get back to add
+causes, and could not reach Coherent Actions at all — which is why the coherence check was never
+tested. `performStageReentry` + `POST /page {action:'goto'}` move the pointer back to any page
+already reached; chat, panel and the save path follow because they already key off `lexPage`.
+**Nothing later is discarded.** How far the user has got is now **derived** (`CanonicalPage.reachable`,
+new `visited` status, from *has any field on this page left EMPTY*) rather than read off the pointer —
+so again, no column.
+
+### Task 4 — the panel reverting to the briefing
+
+`briefingIsCurrent = !stageSearch` meant *"this stage has no search record"* rendered as *"here is the
+Orientation briefing"*. `runStageSearch` now **records the skip** instead of returning null and
+storing nothing, and `briefingIsCurrent` is `stage === 'ORIENTATION'`. A later stage with no record
+gets a block saying so and a button to run it. ⚠ **Which of the two branches actually fired on 10 Aug
+is not decidable from here**: the idea now has a `GUIDING_POLICY` record (ok, 7 results, 19:20:47 UTC),
+and the `[lex-diag]` line that would settle it is in Vercel runtime logs, which are unreadable from
+this machine (root CLAUDE.md §19). The fix closes both branches.
+
+### Task 5 — every legislation link 404'd, and the working code could never be reached
+
+`corpus_sections.sourceUrl` for the legislation corpora pastes the id's **hyphenated** ref token onto
+the act URL — `/ukpga/1995/46/section-288AB` — where legislation.gov.uk wants **slash-separated
+keyword/number pairs**, `/section/288AB`. `fts-search.ts` already had a correct `legislationUrl()`,
+behind `meta?.sourceUrl ?? …`, and `sourceUrl` is non-null on **100%** of the 1.32M legislation rows.
+
+**Measured: the stored form opens 3/40; the derived form opens 40/40.** One shared
+`lib/lex/legislation-url.ts` (it had been copy-pasted into `fts-search.ts` and `vector-search.ts`, so
+the bug existed twice); the derived URL wins for the three gid-bearing types; `repairRefUrl()` fixes
+refs already stored on ideas at render, so no data migration. ⚠ **The stored `sourceUrl` is still
+wrong at rest — an ingest-side defect, for that thread.**
+
+### Task 6 — the feedback scrub left the name in
+
+The diagnosis is that **neither layer owned it**: the deterministic pass only ever knew the user's own
+identifiers, so a third party's name had exactly one line of defence and it was the probabilistic one.
+Names now have a deterministic rule too — honorifics, the `… MP` postnominal, and a given-name
+gazetteer used only to recognise the "Given Surname" shape (a bare two-capitalised-words rule would
+redact "Environment Act 2021"). Ambiguous given names (Mark, Will, May, Grace…) fire only with a
+surname after them. The check asserts both directions: **names go, policy language stays**, and the
+third-party name is now asserted **unconditionally** rather than only when the model happened to run.
+
+### Task 7 — "£57/year" was faithful arithmetic inside a dishonest sentence
+
+The stored line was `low=57, high=NULL, basis=NULL, priceYear=NULL`, and the summary called it a
+range, with a stated basis, uprated to 2025 prices. ⚠ **`basis` was not even selected in the query**,
+so that claim could not have been checked in principle. Now `computeCostSummary` carries provenance
+(`figures / oneSided / noBasis / noPriceYear / uprated`) beside the totals and writes the sentence
+from it; a total whose upper bound was assumed prints **"at least £X"**; and the panel gains a
+**units selector (£ / k / m / bn) with a live read-back**, because a user meaning £57m had only "57"
+to type and nothing to notice it by. `check:cost-summary` pins known inputs to an expected total and
+**caught the unselected `basis` on its first run**. Also fixed: `staffLevel` no longer travels with a
+non-staff cost line (a CAPITAL line was stored with `staffLevel=MID`).
+
+### Task 9 — the smaller items
+
+- **9a** "Save & exit" neither saved nor exited — it closed the dialog and switched tab. It now
+  accepts the pending proposal, waits for the write, then navigates, with a spinner; a failed save
+  keeps the user on the page and says so.
+- **9b** Communications and Policy Development removed from the Team page's offered group types.
+  ⚠ Nothing is deleted from the schema (root CLAUDE.md §11) and **any group that already exists of
+  those types still renders**, so removing the option hides nobody's team. §22.4's role model
+  (Owner / Editor / Reviewer / Contributor) is noted in the code for when the feature is next touched.
+- **9c** **Reading legislation** is now its own FAQ section, after the scrutiny section that opens
+  with "What's scrutiny and why does it matter?", pointing at the existing guide tab.
+- **9d** The staff-access answer replaced verbatim.
+- **9e** Material/contributory *was* built — as two 10px chips in a row of grey text links.
+  **An affordance nobody can see is not an affordance.** Unclassified causes now ask the question in
+  words, on their own line.
+- **9f** Option cards *did* collapse, but the toggle only appeared when the option had a case for or
+  against (10 Aug's had neither) and the action row rendered below the title regardless — so a
+  "collapsed" card was three lines tall. Toggle unconditional, actions inside the body.
+- **9g** Causes named in chat become rows on the loop (`source: 'USER'`) instead of Lex asking the
+  user to type them into the panel. The only loop that takes a chat proposal, and the reason is
+  stated in the code.
+- **9h** A quiet "Run this search again" link under the briefing — the existing one lived inside the
+  stage-search block, so on Page 1 there was no way to re-run it unless it had already failed.
 
 ---
 

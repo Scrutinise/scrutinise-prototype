@@ -25,7 +25,11 @@
     "check:stream-coverage": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-stream-coverage.ts",
     "check:score-scope": "tsx scripts/check-score-scope.ts",
     "check:corpus-types": "tsx scripts/check-corpus-types.ts",
-    "check:annotation-titles": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-annotation-titles.ts"
+    "check:annotation-titles": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-annotation-titles.ts",
+    "check:never-claim": "tsx scripts/check-never-claim.ts",
+    "check:problem-gate": "tsx scripts/check-problem-gate.ts",
+    "check:legislation-urls": "tsx --env-file=.env scripts/check-legislation-urls.ts",
+    "check:cost-summary": "tsx --env-file=.env scripts/check-cost-summary.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
