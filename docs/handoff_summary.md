@@ -2,7 +2,53 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 01:02 UTC — ▼ **INGEST V33 §2 IS CLOSED: THE VECTOR INDEX IS CURRENT AND
+*Last updated: 2026-08-11 04:19 UTC — ▼ **S2C4: THE ANN RETRIEVES 70.4% OF WHAT IT HOLDS, SO §2 DID
+NOT RUN. 2D-1: THE POSITION GRAPH IS BUILT AND NEEDED NO LLM.** CHANGE_LOG (2026-08-11 04:19 UTC).
+Reports: `docs/SEARCH_S2C4_REPORT.md`, `docs/POSITION_GRAPH_2D1_REPORT.md` + `_TABLES.md`.
+
+⚠⚠ **SESSION PAUSED MID-SPRINT at Charlie's request (laptop closing), 04:19 UTC. Nothing is running
+and nothing is billing** — verified against Hetzner (no server exists) and the local process table
+(no writer). Safe to close.
+
+**⚠ THE FIRST THREE THINGS TO DO NEXT, in order:**
+1. **Re-run the interests sweep** — `npx tsx position-graph/sweep-interests.ts` (from
+   `scripts/ingest`). The first run silently covered **695 of 3,415 interests (20.4%)**: the API caps
+   a page at 20 whatever `Take` asks, and the run passed 100 while advancing `Skip` by 100, so it read
+   20 and skipped 80 — reporting all 695 as a clean success. `TAKE` is now 20. **Do not quote any
+   `declared-interest` count until this has re-run** (currently 359 edges; expect several times that).
+   ~10 min. Idempotent.
+2. **Delete the junk person entities the tightened filter now refuses.** `A Member of the Public`
+   became one person entity carrying six spellings — many unrelated individuals merged into one actor.
+   The filter is fixed and self-tested, but **this run's rows still contain it**; they are removable by
+   name. Their *edges* are sound (the submissions exist and are correctly cited); the attribution is
+   to a person who does not exist.
+3. **S2C4 §1's decision is Charlie's**, and the cheap experiment is costed: measure 64 and 128 probes
+   (`--ladder 24,64,128,256`, ~10 min, ~€0.03) before considering any change. `VECTOR_NPROBES` is a
+   **query-time env var** — no rebuild — so raising it is one Railway variable and a restart; the
+   restart resets `/stats`, so the pre-change baseline of record is **p50 3,647 ms / p95 4,355 ms,
+   read 02:31 UTC**.
+
+**SEARCH S2C4 — measured, 58 queries:** production probes **24 of 4,096 partitions (0.59%)** and
+retrieves **70.4%** of the exhaustive result (section-level 70.6%). At 256 probes it is **96.3%**. The
+brief's gate is 0.9 and its instruction on a miss is stop-and-report, so **no ordering baseline and no
+reranker number is published** — §2 and §3 remain open, and `caselaw` 36/36 → 22/36 stays open with
+them. ⚠ **This is NOT the KMeans mis-partitioning the ingest thread flagged**: 0.59% against a 1–5%
+norm is simply under-probed. Controls: shuffle 0.0%, sensitivity 20.6% vs 70.4%, **live-service
+agreement 100.0%** (the box measures what production serves), true exact KNN puts all-partitions at
+97.5% of the true top-20 so **PQ costs ~2.5pp**, mirror guard 5/5. Nothing was retuned.
+
+**GRAPH 2D-1 — built, in Neon:** `graph_entity` / `graph_alias` / `graph_edge` / `graph_evidence` /
+`graph_merge_log`. **85,941 entities** (39,766 orgs · 46,175 people), **163,052 edges**, **178,832
+evidence rows**, **100% of edges carry evidence**, 30.6% on a stable key. Committees sweep 48.3 min,
+**0 gaps**, 99.8% of held items attached. **Zero LLM spend**: every identity was already structured at
+source and merely absent from our columns, so this was a metadata sweep. ⚠ **`spoke-in` is NOT built**
+— Hansard speakers are name strings here and `person_id` (on 98.5% of speeches at source) was never
+parsed; name-matching 8.8M speeches would merge distinct people. ⚠ **99.6% of person entities rest on
+a name match at 0.7 confidence — treat them as name clusters, not people.** ⚠ Two Prisma models
+groups were added to `schema.prisma` purely so `migrate diff` cannot propose dropping the new tables;
+**no migration was generated and none should be.**
+
+▼ Earlier: 2026-08-11 01:02 UTC — ▼ **INGEST V33 §2 IS CLOSED: THE VECTOR INDEX IS CURRENT AND
 SERVING IT. SEARCH'S GATE 2 IS OPEN.** CHANGE_LOG (2026-08-11 01:02 UTC).
 **The embed finished 2026-08-10 15:33 UTC** — 129/129 shards, **768,085 vectors, 0 misses,
 $36.51** against $35.73 predicted (+2.2%), 25.0h against a predicted 15–30h.
