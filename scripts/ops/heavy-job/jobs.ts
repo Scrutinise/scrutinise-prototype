@@ -184,7 +184,7 @@ export const JOBS: Record<string, HeavyJob> = {
     // vector-serve (read from the Railway API, 11 Aug 2026), so a push there auto-redeploys and
     // restarts the two services this sprint is trying to measure. A probe must not move its own
     // subject: this file sits one directory up for exactly that reason.
-    command: 'R2_MAX_SOCKETS=256 LANCE_INCLUDE_VECTOR_CENTROIDS=false npx tsx ann-recall-check.ts --ladder 1,24,256,4096 --exact 2 --live 6',
+    command: `R2_MAX_SOCKETS=256 LANCE_INCLUDE_VECTOR_CENTROIDS=false npx tsx ann-recall-check.ts --ladder ${process.env.ANN_LADDER ?? '1,24,256,4096'} --exact ${process.env.ANN_EXACT ?? '2'} --live ${process.env.ANN_LIVE ?? '6'}`,
     // The mirror guard, watched failing on 5 planted defects. It asserts the probe still describes
     // the retrieval in vector-core.ts — if that file changes, this job fails instead of quietly
     // measuring a system nobody serves. No Lance, no network: it costs a second.
