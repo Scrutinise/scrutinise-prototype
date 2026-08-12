@@ -38,7 +38,7 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../../scrutinise
 
 import {
   claimNextFromSources, loadRateLimitConfigs, listPendingSourceTypes,
-  countPendingRows, disconnectQueue, markFailed,
+  countPendingRows, disconnectQueue, markFailed, markRetryable,
 } from '../shared/queue-client'
 import { getNeonPool } from '../shared/neon-pool'
 import { rateLimiter } from '../shared/rate-limiter'
@@ -254,8 +254,20 @@ async function runLoop(loopId: number): Promise<void> {
         rateLimiter.suspend(row.sourceType, 5 * 60_000)
         console.warn(`${tag} ${row.sourceType}: upstream ${/429/.test(errStr) ? '429' : '503'} — source suspended 5 min`)
       }
-      await markFailed(row.id, errStr).catch(e => console.warn(`${tag} markFailed error: ${e}`))
-      stats.failed++
+      // V36: a RetryableSourceError says the SOURCE could not answer, not that the row
+      // is bad. Marking it `failed` fed ops' five-consecutive-failures breaker, which
+      // parked all 39,964 pending rows of the recovery as `blocked` minutes into the
+      // run. Return it to `pending` instead — and back off, because five of these in a
+      // row means TNA is throttling and hammering it harder is the wrong answer.
+      if (/RetryableSourceError/.test(errStr)) {
+        const outcome = await markRetryable(row.id, errStr).catch(() => 'failed' as const)
+        rateLimiter.suspend(row.sourceType, 60_000)
+        console.warn(`${tag} ${row.sourceType}: retryable source failure — row returned to ${outcome}, source backed off 60s`)
+        if (outcome === 'failed') stats.failed++
+      } else {
+        await markFailed(row.id, errStr).catch(e => console.warn(`${tag} markFailed error: ${e}`))
+        stats.failed++
+      }
     } finally {
       // Without this the loser timer rejects 5 min later with no listener —
       // an unhandled rejection after every successful row.

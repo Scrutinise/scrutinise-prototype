@@ -146,6 +146,36 @@ export async function markFailed(id: string, error: string): Promise<void> {
   `, [id, error])
 }
 
+/**
+ * Return a row to `pending` because the SOURCE was temporarily unable to answer —
+ * a 429, a 503, a 5xx, a network drop. Not a failure of the row.
+ *
+ * ⚠ THIS EXISTS BECAUSE THE FIX FOR ONE DEFECT CAUSED ANOTHER. V36 made
+ * `enumerateSections` throw `RetryableSourceError` rather than write a transient
+ * fetch failure down as a permanent "this instrument has no text" marker. The worker
+ * caught it and called `markFailed` — and ops' failure breaker trips on five
+ * consecutive failures, so a short burst of TNA throttling parked all 39,964 pending
+ * rows of the recovery as `blocked` within minutes of the run starting. The breaker
+ * was right: it is built for DETERMINISTIC failures, which must never be retried. A
+ * retryable failure is the opposite kind and must not be counted as one.
+ *
+ * Capped by `attempts` so a row that always fails this way cannot spin forever: past
+ * the cap it becomes a real `failed`, visible with its reason, and the breaker may
+ * legitimately count it.
+ */
+export async function markRetryable(id: string, error: string, maxAttempts = 5): Promise<'pending' | 'failed'> {
+  const { rows } = await getPool().query<{ status: string }>(`
+    UPDATE ingest_queue
+    SET status      = CASE WHEN attempts >= $3 THEN 'failed' ELSE 'pending' END,
+        "lastError" = $2,
+        "claimedBy" = NULL,
+        "claimedAt" = NULL
+    WHERE id = $1
+    RETURNING status
+  `, [id, error, maxAttempts])
+  return (rows[0]?.status as 'pending' | 'failed') ?? 'failed'
+}
+
 export async function markSkipped(id: string): Promise<void> {
   await getPool().query(`
     UPDATE ingest_queue SET status = 'skipped', "completedAt" = NOW() WHERE id = $1
