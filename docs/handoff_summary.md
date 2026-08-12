@@ -71,6 +71,7 @@ precisely the untitled EU material (`celex` 90,260, `eur` 25,248). A type/year f
 returns up to 46% untitled rows. **Charlie's call before the repoint, not inside it.**
 
 ▼ Earlier:
+2026-08-11 20:25 UTC — ▼ **LEX SPRINT 3-D (§19-D) IS BUILT: THE PROBLEM GATE, AND
 FOUR "SEPARATE" BUGS THAT WERE ONE MISSING CONFIG LINE.** Executes `docs/SPRINT_3D_BRIEF.md` in
 full. CHANGE_LOG (2026-08-11 20:25 UTC); full detail in **`docs/LEX_PLAYBOOK.md` §16**.
 `tsc --noEmit` clean and **`next build` passes**.
