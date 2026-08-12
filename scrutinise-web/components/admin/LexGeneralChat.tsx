@@ -35,6 +35,13 @@ const TYPE_LABEL: Record<SearchResultType, string> = {
   // — {Act}", so here the term of art is the clearest thing it can say. The plain-English gloss
   // ("What the law was for") belongs on the panel heading, which has no card title under it.
   EXPLANATORY_NOTE: 'Explanatory note',
+  // Badges, not headings — inline beside a title that already reads "Division — {question}
+  // (Lords, 2025-07-16)" or "Impact Assessment — {instrument} — Costs and benefits", so here the
+  // term of art is the clearest thing they can say. The plain-English glosses ("How they voted",
+  // "What it was expected to cost") belong on the panel headings, which have no card title.
+  DIVISION: 'Division',
+  IMPACT_ASSESSMENT: 'Impact assessment',
+  CONSULTATION: 'Consultation',
 }
 
 interface Turn {

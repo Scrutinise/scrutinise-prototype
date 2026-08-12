@@ -398,6 +398,31 @@ export type SearchResultType =
   // legislation.gov.uk PROVISION link, which would render an annotation as enacted text — a
   // worse error than the one this type fixes. `check:corpus-types` asserts it stays out.
   | 'EXPLANATORY_NOTE'
+  // Eleventh, twelfth and thirteenth (CC-Search, 2026-08-12, BRIEF_SEARCH_S2C6 §1) — the four
+  // V34 political-evidence corpora, taken as FOUR decisions rather than one sweep because they
+  // are four different kinds of document that happen to have arrived together.
+  //
+  // ⚠ THE TEST APPLIED TO EACH WAS THE ONE THE TENTH TYPE ESTABLISHED: not "which existing label
+  // is least wrong" but "would a reader shown this label form a false belief about what they are
+  // reading". Three times the answer was yes, so three types.
+  //
+  // DIVISION — commons-divisions-votes + lords-divisions-votes. A roll-call: the named list of
+  // who voted which way, with party at the date. The obvious home was DEBATE, and it fails on the
+  // data: a Lords division's stored title is the bare bill name ("Employment Rights Bill"), so
+  // under "Debates" it reads as a debate about that bill rather than the record of a vote on it.
+  // A user citing it as "what was said" when it is "what was done" is the error.
+  | 'DIVISION'
+  // IMPACT_ASSESSMENT — the government's own statement of the problem, the options it weighed and
+  // the effects it expected, laid alongside an instrument. GUIDANCE is wrong for the same reason
+  // it was wrong for explanatory notes; and it is emphatically NOT a legislation type — see the
+  // EXPLANATORY_NOTE note above, which applies here verbatim and is asserted the same way. An IA
+  // is what a provision was PREDICTED to do; the note beside it is what it was FOR; the enacted
+  // text is what it says. Three different claims, three different labels.
+  | 'IMPACT_ASSESSMENT'
+  // CONSULTATION — who was asked, what they said, and what the department did about it, before
+  // the law existed. Distinct from an IA in kind and in the data: 0% carry a parent instrument
+  // against the IA's 94.7%, because most consultations never become anything.
+  | 'CONSULTATION'
 
 export interface SearchResult {
   id: string

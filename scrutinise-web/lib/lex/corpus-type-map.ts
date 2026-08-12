@@ -151,6 +151,23 @@ const CORPUS_DISPLAY_OVERRIDE: Record<string, SearchResultType> = {
   'cps-guidance': 'GUIDANCE',
   'inquiry-evidence': 'GUIDANCE',
   'lgsco': 'GUIDANCE',
+
+  // ── S2C6 §1 additions (2026-08-12) — the four V34 political-evidence corpora ────
+  // Mapped HERE rather than in the tier switch below, even though this is the one time the
+  // indexed tier will be right from day one (the FTS/vector build that carries them is being
+  // run in the same sprint as this map, so `tierFor()` and the index agree). The override is
+  // still the right home: it is the axis that does not depend on the tier the index happens to
+  // hold, and every previous collection that relied on the switch eventually drifted off it.
+  //
+  // Reasoning per collection is in page1-config.ts beside the type declarations; the one-line
+  // version is that each of the three labels answers a different question — DIVISION is what
+  // Parliament DID, IMPACT_ASSESSMENT is what the government PREDICTED, CONSULTATION is what
+  // the public SAID — and collapsing any of them into DEBATE or GUIDANCE tells a reader
+  // something false about the document in front of them.
+  'commons-divisions-votes': 'DIVISION',
+  'lords-divisions-votes': 'DIVISION',
+  'impact-assessments': 'IMPACT_ASSESSMENT',
+  'consultations': 'CONSULTATION',
 }
 
 /**
@@ -174,6 +191,12 @@ const CORPUS_DISPLAY_NAME: Record<string, string> = {
   'explanatory-notes': 'Explanatory Notes',
   'explanatory-memoranda': 'Explanatory Memorandum',
   'erskine-may': 'Erskine May — parliamentary procedure',
+  // S2C6 §1. The last-resort floor for the V34 corpora; the real naming is in
+  // political-title.ts, which never returns one of these unless the row has no title at all.
+  'commons-divisions-votes': 'House of Commons division',
+  'lords-divisions-votes': 'House of Lords division',
+  'impact-assessments': 'Impact Assessment',
+  'consultations': 'Government consultation',
 }
 
 export function corpusDisplayName(corpus: string): string {

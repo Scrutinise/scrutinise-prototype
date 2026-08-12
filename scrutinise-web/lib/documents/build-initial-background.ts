@@ -27,7 +27,10 @@ const TYPE_LABELS: Record<string, string> = {
   STATUTORY_INSTRUMENT: 'Statutory instruments',
   EU_LEGISLATION: 'Retained EU law',
   EXPLANATORY_NOTE: 'What the law was for',
+  IMPACT_ASSESSMENT: 'What it was expected to cost',
   DEBATE: 'Debates',
+  DIVISION: 'How they voted',
+  CONSULTATION: 'Who was asked',
   COMMITTEE: 'Committee reports',
   CASE_LAW: 'Case law',
   BILL: 'Bills',
@@ -36,7 +39,8 @@ const TYPE_LABELS: Record<string, string> = {
 }
 const TYPE_ORDER = [
   'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION', 'EXPLANATORY_NOTE',
-  'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
+  'IMPACT_ASSESSMENT', 'DEBATE', 'DIVISION', 'COMMITTEE', 'CONSULTATION',
+  'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 
 interface StoredRef {

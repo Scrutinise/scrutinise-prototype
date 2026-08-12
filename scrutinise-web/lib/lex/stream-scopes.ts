@@ -101,7 +101,43 @@ export const STREAM_SCOPES: StreamScope[] = [
   // stream could select it. Added 2026-08-10 on Charlie's decision (S2C2 §3) and shipped WITH a
   // before-and-after, not as a config line — it changes what the debates stream returns for every
   // query. Contamination and latency numbers are in CHANGE_LOG 2026-08-10.
-  { name: 'debates', tier: 'parliamentary', types: ['DEBATE'], excludeCorpora: NON_DEBATE_PARLIAMENTARY, extraCorpora: ['scottish-parliament-or'] },
+  // `types: ['DEBATE', 'DIVISION']` — S2C6 §1, 2026-08-12. The debates stream is the only
+  // parliamentary stream the router addresses, so a roll-call typed DIVISION and left out of this
+  // list would be correctly labelled and retrievable by nothing: the exact UNREACHABLE state S2C
+  // spent three sprints clearing, arrived at by being careful about the label. Adding the type to
+  // an existing stream costs nothing; a sixth stream would cost a sixth ANN search per query
+  // against a concurrency cap of 4 (S2C6 §4).
+  //
+  // ⚠ AND IT IS NOT A CONTRADICTION WITH THE TYPE DECISION. Refusing to LABEL a roll-call
+  // "Debates" and refusing to RETRIEVE it for someone asking what Parliament has done about X are
+  // different questions with different answers. Someone asking the second wants both; the type is
+  // what stops them confusing the two once they arrive.
+  //
+  // ⚠⚠ THE ROLL-CALLS ARE SELECTABLE HERE AND STILL DO NOT ARRIVE, AND `extraCorpora` DOES NOT
+  // FIX IT — measured 2026-08-12, not reasoned. Typing them DIVISION and admitting the type to
+  // this stream makes them *reachable*; the debates stream nonetheless returned 60 hits and ZERO
+  // divisions for "how did MPs vote on the assisted dying bill", and zero again for a query
+  // containing the literal words "division ayes noes". Corpus-scoped, the same index returns
+  // "Division — Assisted Dying Bill [HL] (Lords, 2015-01-16)" at rank 1.
+  //
+  // The cause is scale: 5,645 roll-calls share the parliamentary tier with ~12M Hansard sections
+  // that use the identical vocabulary — "division", "ayes", "noes" and every bill name appear
+  // constantly in debate text. This is the scottish-parliament-or problem inverted: there a
+  // million rows joined a stream, here five thousand are drowned by it.
+  //
+  // ⚠ AND ADDING THEM TO `extraCorpora` WAS TRIED AND REVERTED, because it does not do what it
+  // looks like it does. The extra leg guarantees a separate RETRIEVAL CALL, not slots:
+  // `mergeLegs` sorts the two legs together by score, and BM25 scores ARE comparable across them
+  // (a prefilter selects rows, it does not rescore them), so the roll-calls lose the merge for
+  // exactly the reason they lost the main leg. Measured with the entry in place: still 0 of 60.
+  // It was removed rather than left in, because each entry costs one extra retrieval call on
+  // every query routed to this stream and this one bought nothing.
+  //
+  // The mechanism that WOULD work is the round-robin interleave, which allocates slots per
+  // stream by construction — i.e. a dedicated `divisions` stream. That costs a sixth stream
+  // against `vector-serve`'s concurrency cap of 4 (S2C6 §4), so it is Charlie's decision with a
+  // measurement attached, not a line added here. Written up in docs/SEARCH_S2C6_REPORT.md §1.
+  { name: 'debates', tier: 'parliamentary', types: ['DEBATE', 'DIVISION'], excludeCorpora: NON_DEBATE_PARLIAMENTARY, extraCorpora: ['scottish-parliament-or'] },
   { name: 'committees', tier: 'parliamentary', types: ['COMMITTEE'], corpora: COMMITTEE_CORPORA },
   { name: 'caselaw', tier: 'caselaw' },
   // `erskine-may` (1,873 indexed rows) is parliamentary PROCEDURE — what the House can and cannot

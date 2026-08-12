@@ -35,7 +35,16 @@ const TYPE_LABELS: Record<SearchResultType, string> = {
   // art still appears, one line below, on every card ("Explanatory Notes — Building Safety Act
   // 2022"), so nothing is lost for a reader who does know it.
   EXPLANATORY_NOTE: 'What the law was for',
+  // Same rule as EXPLANATORY_NOTE above — the heading states the FUNCTION, because that is what
+  // a reader with no legal training can act on. "Impact assessments" is a term of art; "what it
+  // was expected to cost" is the thing they came for. The term of art still appears on every
+  // card ("Impact Assessment — {instrument} — Costs and benefits").
+  IMPACT_ASSESSMENT: 'What it was expected to cost',
   DEBATE: 'Debates',
+  // Not "Votes". A division IS a vote, but "Votes" beside "Debates" reads as a tally, and what
+  // is actually here is the named list of who voted which way — which is the useful thing.
+  DIVISION: 'How they voted',
+  CONSULTATION: 'Who was asked',
   COMMITTEE: 'Committee reports',
   CASE_LAW: 'Case law',
   BILL: 'Bills',
@@ -48,9 +57,14 @@ const TYPE_LABELS: Record<SearchResultType, string> = {
 // EXPLANATORY_NOTE sits directly after the three law types because it annotates them: a reader
 // researching an Act wants the note explaining it next to the Act, not at the bottom with the
 // regulators.
+// IMPACT_ASSESSMENT sits with EXPLANATORY_NOTE, after the three law types, for the same reason:
+// both annotate a specific instrument and a reader researching it wants them beside it. DIVISION
+// follows DEBATE (what Parliament did, after what it said) and CONSULTATION follows COMMITTEE —
+// the pre-legislative record, before the regulators.
 const TYPE_ORDER: SearchResultType[] = [
   'PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION', 'EXPLANATORY_NOTE',
-  'DEBATE', 'COMMITTEE', 'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
+  'IMPACT_ASSESSMENT', 'DEBATE', 'DIVISION', 'COMMITTEE', 'CONSULTATION',
+  'CASE_LAW', 'BILL', 'TREATY', 'GUIDANCE',
 ]
 
 // Panel 3 — Legislation. Pure renderer of initialBackground + legislationRefs[] (+ the

@@ -30,6 +30,13 @@ const TIER_EXACT: Record<string, Tier> = {
   'eur-lex': 'legislation',
   'explanatory-notes': 'legislation',
   'explanatory-memoranda': 'legislation',
+  // V35/S2C6 §1 — an impact assessment is the government's own case for a PROVISION: what
+  // problem it was solving, what it expected to cost, what it predicted would happen. 17,769 of
+  // its 18,756 sections (94.7%) carry a `parentDocId` naming the instrument they assess, which is
+  // the evidence for putting them here rather than under `guidance`: they are attached to a
+  // specific piece of law the way an explanatory note is, and they answer the same question the
+  // legislation stream serves. Consultations are the deliberate contrast — see below.
+  'impact-assessments': 'legislation',
 
   // caselaw  (tax-tribunals→caselaw, flagged debatable in the build doc)
   'tna-caselaw': 'caselaw',
@@ -53,6 +60,13 @@ const TIER_EXACT: Record<string, Tier> = {
   'tax-treaties-dta': 'parliamentary',
   'uk-treaties-fcdo': 'parliamentary', // V31 STEP 1 — same family as uk-treaties
   'parliament-treaties': 'parliamentary', // V31 STEP 2 — CRaG 2010 scrutiny layer
+  // V35/S2C6 §1 — roll-calls. Parliamentary by tier and DIVISION by display type, which is not
+  // the same decision: the tier is retrieval scope (the debates stream is the only parliamentary
+  // stream the router addresses), the type is what a reader is told they are looking at. A Lords
+  // division's stored `sectionTitle` is the bare bill name — "Employment Rights Bill" — so under
+  // the DEBATE label it would be indistinguishable from a Lords debate on that bill.
+  'commons-divisions-votes': 'parliamentary',
+  'lords-divisions-votes': 'parliamentary',
 
   // guidance  (law-commission reports→guidance, flagged debatable)
   'fca-handbook': 'guidance',
@@ -70,6 +84,16 @@ const TIER_EXACT: Record<string, Tier> = {
   'building-regs': 'guidance',
   'planning-policy': 'guidance',
   'ico': 'guidance', // V27
+  // V35/S2C6 §1 — a consultation is the record of who was asked and what they said BEFORE the law
+  // existed. It sits here rather than under `legislation` on the evidence: 0 of its 7,448 sections
+  // carry a `parentDocId`, against 94.7% of impact assessments. They are not attached to an
+  // instrument, and the guidance tier is where the corpus already keeps government material that
+  // is ABOUT policy rather than being law (NAO, inquiry reports, the law commissions).
+  // ⚠ The tier is not the label. Consultations display as CONSULTATION, never GUIDANCE — the
+  // "Guidance & regulators" heading would tell a reader they have a regulator's soft law in front
+  // of them when they have a department asking the public a question. That is exactly the error
+  // the tenth type was created to fix (S2C2 §1).
+  'consultations': 'guidance',
 }
 
 export function tierFor(corpus: string): Tier {
