@@ -37,6 +37,7 @@ import path from 'path'
 import { corpusToType, corpusDisplayName, dbTitleSupersedesIndex, EXCLUDED_BY_DESIGN, DEFERRED_TO_GRAPH } from '../lib/lex/corpus-type-map'
 import { STREAM_SCOPES, streamCanSelect, type StreamScope } from '../lib/lex/stream-scopes'
 import { ANNOTATION_CORPORA, annotatedGidFromId, annotationTitle, isAnnotationCorpus } from '../lib/lex/annotation-title'
+import { isPoliticalCorpus, politicalTitle } from '../lib/lex/political-title'
 import { billDisplayTitle } from '../../scripts/ingest/sources/bills-parliament'
 import type { SearchResultType } from '../lib/lex/page1-config'
 
@@ -193,7 +194,7 @@ section('§1 — EXPLANATORY_NOTE, and the isLeg property that must not come bac
   const UNION = read('lib/lex/page1-config.ts')
     .split('export type SearchResultType =')[1].split('export interface SearchResult')[0]
     .match(/'([A-Z_]+)'/g)!.map((s) => s.replace(/'/g, ''))
-  ok('the union parsed sanely (10 types)', UNION.length === 10, UNION.join(','))
+  ok('the union parsed sanely (13 types)', UNION.length === 13, UNION.join(','))
   // Matched against the DECLARATION, not against the first mention of the name — both files
   // now carry a comment warning about this array, and splitting on the bare word picked up the
   // comment instead of the code.
@@ -310,7 +311,9 @@ section('§1 — bills-api is in the legislation stream, and a Bill cannot read 
     ok(`…and NOT for ${c} (an explicit list, never "always prefer the DB")`, !dbTitleSupersedesIndex(c))
   }
   const src = read('lib/lex/fts-search.ts')
-  ok('fts-search.ts hydrates sectionTitle so it has a DB title to prefer', /SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"/.test(src))
+  // The hydrate gained an aliased LEFT JOIN in S2C6 §1 (the IA→instrument title), so the match is
+  // on the columns it must still select rather than on the literal old SELECT list.
+  ok('fts-search.ts hydrates sectionTitle so it has a DB title to prefer', /s\."sectionTitle"/.test(src))
   ok('…and consults dbTitleSupersedesIndex when choosing the title', /dbTitleSupersedesIndex\(h\.corpus\)/.test(src))
 
   // billDisplayTitle is the thing a user reads. Assert the never-mistake-a-Bill-for-an-Act rule
@@ -368,6 +371,107 @@ section('§2 — early-day-motions and petitions are routed to the graph, not si
   }
   ok('the two registries do not overlap',
      !Object.keys(DEFERRED_TO_GRAPH).some((c) => c in EXCLUDED_BY_DESIGN))
+}
+
+// ── 10. S2C6 §1 — the four V34 corpora are typed, reachable, and say what they are ──
+section('§1 — the V34 political-evidence corpora: typed, reachable, and honestly titled')
+{
+  // Real INDEXED tiers. Unlike every earlier entry in REAL, these are the tiers `tierFor()`
+  // computes TODAY, because the index that carries them is being built in this same sprint —
+  // the one time the map and the index are known to agree. Asserted rather than assumed below.
+  const V34: Array<{ corpus: string; tier: string; id: string; type: SearchResultType; stream: string }> = [
+    { corpus: 'commons-divisions-votes', tier: 'parliamentary', id: 'commons-divisions-votes:2058:1', type: 'DIVISION', stream: 'debates' },
+    { corpus: 'lords-divisions-votes', tier: 'parliamentary', id: 'lords-divisions-votes:603:1', type: 'DIVISION', stream: 'debates' },
+    { corpus: 'impact-assessments', tier: 'legislation', id: 'impact-assessments:2019-41:9', type: 'IMPACT_ASSESSMENT', stream: 'legislation' },
+    { corpus: 'consultations', tier: 'guidance', id: 'consultations:government_consultations_x:1', type: 'CONSULTATION', stream: 'guidance' },
+  ]
+  for (const { corpus, tier, id, type, stream } of V34) {
+    ok(`${corpus} types ${type}`, corpusToType(corpus, tier, id) === type, String(corpusToType(corpus, tier, id)))
+    const streams = streamsFor(corpus, tier)
+    ok(`${corpus} is selectable by the ${stream} stream`, streams.includes(stream), `streams=[${streams.join(', ')}]`)
+  }
+
+  // ⚠ THE FAILURE THIS SECTION EXISTS FOR. A correct label plus a stream that filters it out is
+  // UNREACHABLE arrived at by being careful — the roll-calls type DIVISION, and the debates
+  // stream filtered `types: ['DEBATE']` until this sprint. Assert the leg is load-bearing.
+  const debates = STREAM_SCOPES.find((s) => s.name === 'debates')!
+  ok('the debates stream admits DIVISION', !!debates.types?.includes('DIVISION'))
+  ok('…and it is load-bearing: drop it and no stream can select a roll-call',
+     !STREAM_SCOPES.map((s) => (s.name === 'debates' ? { ...s, types: ['DEBATE'] as SearchResultType[] } : s))
+       .some((s) => streamCanSelect(s, 'commons-divisions-votes', 'parliamentary', 'DIVISION')))
+  ok('the debates stream still admits DEBATE (the addition did not replace it)',
+     !!debates.types?.includes('DEBATE'))
+  // The roll-calls must NOT have been swept into the non-debate exclusion list on their way in.
+  for (const c of ['commons-divisions-votes', 'lords-divisions-votes']) {
+    ok(`${c} is not in NON_DEBATE_PARLIAMENTARY`, !debates.excludeCorpora?.includes(c))
+  }
+
+  // ⚠ SELECTABLE IS NOT RETRIEVABLE, and this check must not be read as claiming otherwise.
+  // Measured 2026-08-12: the debates stream returns 0 divisions in 60 hits for "how did MPs vote
+  // on the assisted dying bill" — the roll-calls are correctly typed, correctly titled and
+  // correctly admitted, and are out-ranked to invisibility by ~12M Hansard sections sharing their
+  // vocabulary. Adding them to `extraCorpora` was tried and does NOT fix it (mergeLegs is
+  // score-ordered), so the entry was reverted. Asserted here so nobody re-adds it believing it
+  // works. The fix is a dedicated stream — Charlie's decision, see SEARCH_S2C6_REPORT.md §1.
+  for (const c of ['commons-divisions-votes', 'lords-divisions-votes']) {
+    ok(`${c} is deliberately NOT in the debates extraCorpora (it was measured not to help)`,
+       !debates.extraCorpora?.includes(c))
+  }
+  ok('…and scottish-parliament-or keeps its leg', !!debates.extraCorpora?.includes('scottish-parliament-or'))
+
+  // An IA is not legislation, for exactly the reason an annotation is not — asserted the same way.
+  ok('impact-assessments is NOT typed as legislation (isLeg would rewrite title + URL to the instrument)',
+     !LEGISLATION_TYPES.includes(corpusToType('impact-assessments', 'legislation', V34[2].id) as SearchResultType))
+  for (const file of ['lib/lex/fts-search.ts', 'lib/lex/vector-search.ts']) {
+    const m = read(file).match(/const isLeg\s*=\s*([^\n]*(?:\n\s*[^\n]*)?)/)
+    ok(`${file}: isLeg does NOT include IMPACT_ASSESSMENT`, !!m && !m[1].includes('IMPACT_ASSESSMENT'), m?.[1]?.trim())
+  }
+
+  // ── the correctness requirement: a roll-call must not read as a debate, an IA not as the law ──
+  // These are the real stored strings, read off Neon on 2026-08-12 (v35-inspect-corpora.ts).
+  ok('a Lords roll-call no longer reads as a debate on the bill',
+     politicalTitle('lords-divisions-votes', 'Employment Rights Bill', { date: '2025-07-16' })!.title
+       === 'Division — Employment Rights Bill (Lords, 2025-07-16)',
+     politicalTitle('lords-divisions-votes', 'Employment Rights Bill', { date: '2025-07-16' })!.title)
+  ok('a Commons roll-call names the House and the question',
+     /^Division — Crime and Policing Bill.*\(Commons, 2025-06-17\)$/.test(
+       politicalTitle('commons-divisions-votes', 'Crime and Policing Bill Report Stage: New Clause 1', { date: '2025-06-17' })!.title))
+  ok('an impact assessment names the instrument it assesses, not just its own heading',
+     politicalTitle('impact-assessments', 'Costs and benefits', { parentTitle: 'The Ivory Act 2018 (Commencement) Regulations 2020', attribution: 'Defra — Final' })!.title
+       === 'Impact Assessment — The Ivory Act 2018 (Commencement) Regulations 2020 — Costs and benefits')
+  ok('…and falls back to the DEPARTMENT when the instrument does not resolve (30% of them do not)',
+     politicalTitle('impact-assessments', 'Summary', { parentTitle: null, attribution: 'Department for Transport — Final' })!.title
+       === 'Impact Assessment (Department for Transport) — Summary')
+  ok('…and never renders the bare internal heading, which 1,024 rows carry as the single word "Summary"',
+     politicalTitle('impact-assessments', 'Summary', {})!.title !== 'Summary')
+  ok('a consultation says it is a consultation',
+     politicalTitle('consultations', 'Corporation Tax: response to accounting changes for insurance contracts', { attribution: 'HM Revenue & Customs' })!.title
+       === 'Consultation — Corporation Tax: response to accounting changes for insurance contracts')
+  ok('…and does not say it twice when the title already carries the word',
+     politicalTitle('consultations', 'Consultation on the future of the railways', {})!.title
+       === 'Consultation on the future of the railways')
+
+  // No branch may emit a dangling separator or an empty string — the annotation rule's floor.
+  for (const [corpus, current] of [
+    ['lords-divisions-votes', ''], ['commons-divisions-votes', ''],
+    ['impact-assessments', ''], ['consultations', ''],
+  ] as const) {
+    const t = politicalTitle(corpus, current || corpusDisplayName(corpus), {})!
+    ok(`${corpus} with no usable title still reads as prose`, t.title.trim().length > 0 && !/[—–-]\s*$/.test(t.title), JSON.stringify(t.title))
+    ok(`…and its citation is non-empty`, t.citation.trim().length > 0, JSON.stringify(t.citation))
+  }
+
+  // …and prove the rule FIRES ONLY for these four, so every other collection is byte-identical.
+  for (const c of ['hansard', 'primary-acts-2000plus', 'explanatory-notes', 'lda-commonsdivisions', 'nao-reports']) {
+    ok(`politicalTitle does not fire for ${c}`, politicalTitle(c, 'whatever', {}) === null)
+    ok(`…and isPoliticalCorpus rejects it`, !isPoliticalCorpus(c))
+  }
+  // ⚠ `lda-commonsdivisions` above is not an arbitrary negative. It is a DIFFERENT collection
+  // whose name would be caught by any `*divisions*` prefix rule — 5,553 rows, mean 16 words, no
+  // sectionTitle and no itemDate, already typed DEBATE and already in the debates stream. It is
+  // reported in the V35 report as a live finding; it must not be captured by this rule silently.
+  ok('the four are exactly the four (no prefix rule widened them)',
+     ['commons-divisions-votes', 'lords-divisions-votes', 'impact-assessments', 'consultations'].every(isPoliticalCorpus))
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`)
