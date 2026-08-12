@@ -48,9 +48,18 @@ export const AVAILABILITY_NOTES: Record<NoProvisionsClass, string> = {
     'This instrument was revoked or repealed. Metadata is held but the full text ' +
     'has not been digitised. The original may be available in parliamentary archives ' +
     'or the British Library. Case law may refer to this instrument.',
+  // V36: this note used to read "The text of this instrument exists as a PDF on
+  // legislation.gov.uk but has not yet been extracted. It is queued for PDF
+  // processing." BOTH halves were false for every one of 52 randomly sampled
+  // instruments carrying this status: no PDF exists at the address the classifier
+  // probed, and `specialist_queue` — where the "queued" rows go — has one writer,
+  // no consumer, and 117,667 rows that have been `pending` since June 2026.
+  // Telling a user their document is queued for processing that nobody performs is
+  // the never-claim discipline broken in the quietest possible way.
   'pdf-only':
-    'The text of this instrument exists as a PDF on legislation.gov.uk but has not ' +
-    'yet been extracted. It is queued for PDF processing.',
+    'legislation.gov.uk holds no structured text for this instrument. A scanned or ' +
+    'PDF version may exist on the source site; we have not been able to retrieve one. ' +
+    'The title, number and date are held.',
   'metadata-only':
     'Only the title, number, and date of this instrument are held. No text has been ' +
     'digitised. This is typically the case for instruments made before 1980 that were ' +
@@ -58,6 +67,21 @@ export const AVAILABILITY_NOTES: Record<NoProvisionsClass, string> = {
   'no-provisions':
     'This instrument exists in the legislation database but contains no structured text. ' +
     'It may be a very short instrument (a single sentence) or may require manual review.',
+}
+
+/**
+ * Thrown when every format for an instrument came back empty AND at least one of
+ * those non-answers was retryable (429/503/5xx/network/timeout).
+ *
+ * The worker loop catches it and marks the queue row `failed` with this message,
+ * which is a state we can see and re-run. The alternative — the behaviour this
+ * replaces — was an `unavailable` section row claiming the instrument has no text,
+ * which is indistinguishable from a genuine `NumberOfProvisions="0"` and which the
+ * reseed dedup treats as work already done.
+ */
+export class RetryableSourceError extends Error {
+  readonly retryable = true
+  constructor(message: string) { super(message); this.name = 'RetryableSourceError' }
 }
 
 // ── HTTP helpers ───────────────────────────────────────────────────────────────
@@ -100,6 +124,11 @@ async function fetchText(url: string): Promise<string | null> {
   return (await fetchTextWithStatus(url)).text
 }
 
+// ⚠ UNUSED since V36, and kept only so the next person does not reinvent it:
+// legislation.gov.uk answers HEAD on data.pdf with **405 Method Not Allowed**, so
+// this returns false for every instrument whether or not a PDF exists. It cannot
+// be used as an existence probe against TNA. Use pdfExists() below, which GETs a
+// 1KB range and checks the %PDF- magic.
 async function headRequest(url: string): Promise<boolean> {
   await throttle.wait()
   const { signal, clear } = withTimeout(HEAD_TIMEOUT_MS)
@@ -119,7 +148,10 @@ async function headRequest(url: string): Promise<boolean> {
   }
 }
 
-async function fetchBinary(url: string): Promise<Buffer | null> {
+// Binary twin of fetchTextWithStatus. V36: enumerateSections needs the retryable
+// flag from the PDF leg too — a 429 on data.pdf was the last of the three
+// non-answers that let a rate limit be recorded as "this instrument has no text".
+async function fetchBinaryWithStatus(url: string): Promise<{ buf: Buffer | null; retryable: boolean }> {
   await throttle.wait()
   const { signal, clear } = withTimeout(FETCH_TIMEOUT_MS)
   try {
@@ -128,16 +160,20 @@ async function fetchBinary(url: string): Promise<Buffer | null> {
       headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)' },
     })
     clear()
-    if (res.status === 404 || res.status === 410) return null
-    if (res.status === 429 || res.status === 503) { throttle.backoff(); return null }
-    if (!res.ok) return null
+    if (res.status === 404 || res.status === 410) return { buf: null, retryable: false }
+    if (res.status === 429 || res.status === 503) { throttle.backoff(); return { buf: null, retryable: true } }
+    if (!res.ok) return { buf: null, retryable: true }
     throttle.success()
-    return Buffer.from(await res.arrayBuffer())
+    return { buf: Buffer.from(await res.arrayBuffer()), retryable: false }
   } catch (err) {
     clear()
     console.warn(`[tna] fetch error ${url}: ${err}`)
-    return null
+    return { buf: null, retryable: true }
   }
+}
+
+async function fetchBinary(url: string): Promise<Buffer | null> {
+  return (await fetchBinaryWithStatus(url)).buf
 }
 
 // ── Format discovery ──────────────────────────────────────────────────────────
@@ -465,11 +501,47 @@ export async function classifyNoProvisionsItem(
   // Pre-digitisation threshold — pre-1980 items rarely have text
   if (year !== undefined && year < 1980) return 'metadata-only'
 
-  // Check if PDF exists on TNA (lightweight HEAD request, no body fetch)
-  const hasPdf = await headRequest(`${TNA_BASE}/${docId}/data.pdf`)
-  if (hasPdf) return 'pdf-only'
+  // Does a PDF actually exist? V36: this was a HEAD request, and TNA answers HEAD
+  // on data.pdf with **405 Method Not Allowed** — so the probe cannot distinguish
+  // "there is a PDF" from anything else. 117,667 instruments are already classified
+  // `pdf-only` on its say-so, and a random sample of 52 of them found **0 with a
+  // PDF**: /{id}/data.pdf 301s to /{id}/made/data.pdf, which 404s. The user-facing
+  // note for `pdf-only` told readers "The text of this instrument exists as a PDF
+  // on legislation.gov.uk", which for those 52 is a claim about a file that is not
+  // there.
+  //
+  // A real GET, checking the content type of what actually arrives, is the only
+  // probe that answers the question. It costs a request; a wrong classification
+  // costs a false statement to a user, which is the more expensive of the two.
+  if (await pdfExists(docId)) return 'pdf-only'
 
   return 'no-provisions'
+}
+
+/** True only when a GET returns a body that is actually a PDF — redirects followed,
+ *  content type checked, and a zero-length body rejected. */
+async function pdfExists(docId: string): Promise<boolean> {
+  await throttle.wait()
+  const { signal, clear } = withTimeout(HEAD_TIMEOUT_MS)
+  try {
+    const res = await fetch(`${TNA_BASE}/${docId}/data.pdf`, {
+      signal,
+      headers: { 'User-Agent': 'Scrutinise-Ingest/1.0 (legal corpus research)', Range: 'bytes=0-1023' },
+    })
+    clear()
+    if (res.status === 429 || res.status === 503) { throttle.backoff(); return false }
+    if (!res.ok && res.status !== 206) return false
+    throttle.success()
+    const ct = (res.headers.get('content-type') ?? '').toLowerCase()
+    if (!ct.includes('pdf')) return false
+    const head = Buffer.from(await res.arrayBuffer())
+    // %PDF- magic. A 200 that serves an HTML error page with a PDF content type is
+    // exactly the shape of miss this whole comment exists about.
+    return head.length > 4 && head.subarray(0, 5).toString('latin1') === '%PDF-'
+  } catch {
+    clear()
+    return false
+  }
 }
 
 export function extractSectionMetadata(
@@ -517,10 +589,14 @@ function extractClmlSections(xml: string): TnaSection[] {
 
 export async function enumerateSections(actId: string): Promise<TnaSection[]> {
   // Kick off CLML and effects feed in parallel — saves one RTT per act
-  const [fullXml, effectsXml] = await Promise.all([
-    fetchText(`${TNA_BASE}/${actId}/data.xml`),
+  const [clml, effectsXml] = await Promise.all([
+    fetchTextWithStatus(`${TNA_BASE}/${actId}/data.xml`),
     fetchText(`${TNA_BASE}/${actId}/effects/data.feed`),
   ])
+  const fullXml = clml.text
+  // V36: carried all the way to the fallback so a rate limit cannot be written
+  // down as a property of the instrument. See RetryableSourceError below.
+  let anyRetryable = clml.retryable
 
   const sections: TnaSection[] = []
 
@@ -564,7 +640,9 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
 
   // HTML/PDF fallback — runs only when CLML was entirely absent (no XML returned)
   if (sections.length === 0) {
-    const rawHtml = await fetchText(`${TNA_BASE}/${actId}/data.htm`)
+    const htm = await fetchTextWithStatus(`${TNA_BASE}/${actId}/data.htm`)
+    const rawHtml = htm.text
+    anyRetryable = anyRetryable || htm.retryable
     // V19 guard: data.htm on acts with no digitised text redirects to the act's
     // landing page — site chrome with zero body text. 5,840 pre-1963 acts were
     // silently ingested as ~834 words of boilerplate each (uniform wordCount was
@@ -577,10 +655,26 @@ export async function enumerateSections(actId: string): Promise<TnaSection[]> {
       sections.push({ sectionRef: 'full-doc-html', format: 'html', rawHtml })
     } else {
       if (rawHtml && !hasLegContent) console.log(`[tna] ${actId}: data.htm is chrome-only (no Leg* body markers) — trying PDF`)
-      const pdfBuffer = await fetchBinary(`${TNA_BASE}/${actId}/data.pdf`)
+      const pdf = await fetchBinaryWithStatus(`${TNA_BASE}/${actId}/data.pdf`)
+      const pdfBuffer = pdf.buf
+      anyRetryable = anyRetryable || pdf.retryable
       if (pdfBuffer && pdfBuffer.length > 0) {
         console.log(`[tna] ${actId}: PDF fallback (${pdfBuffer.length} bytes)`)
         sections.push({ sectionRef: 'full-doc-pdf', format: 'pdf', pdfBuffer })
+      } else if (anyRetryable) {
+        // V36. THE DIFFERENCE THIS MAKES, measured: 8,583 instruments carry
+        // `No CLML/HTML/PDF found on TNA`, all written during the June 2026 sweep
+        // at a steady 1–2.5% of every SI year — and 27.5% of a random sample of
+        // them returns real CLML on a plain re-fetch today. The marker was never a
+        // fact about the instrument; it was the fetch outcome of one minute,
+        // written into corpus_sections where the reseed dedup then saw a row and
+        // never came back. Throwing hands the row to the worker's catch, which
+        // marks it `failed` with the reason — visible in the queue and retryable,
+        // instead of invisible and permanent. §18's rule, applied to a fetch: a
+        // degradation must announce itself, with its cause attached.
+        throw new RetryableSourceError(
+          `${actId}: no CLML/HTML/PDF, and at least one format failed RETRYABLY ` +
+          `(429/503/5xx/network) — refusing to record "unavailable" for what may be a rate limit`)
       } else {
         console.log(`[tna] ${actId}: no CLML/HTML/PDF — marking unavailable`)
         sections.push({ sectionRef: 'unavailable', format: 'unavailable', errorMsg: 'No CLML/HTML/PDF found on TNA' })

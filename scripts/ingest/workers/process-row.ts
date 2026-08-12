@@ -12,9 +12,9 @@ import {
   updateFormatsAvailable, insertSpecialistQueueRow, QueueRow,
 } from '../shared/queue-client'
 import { r2Exists as _r2Exists, r2Put, caselawKey, caselawRawKey, bailiiKey, hansardKey, compiledKey, rawKey } from '../shared/r2-client'
-import { rawToText, pdfToText } from '../shared/compile'
+import { rawToText, pdfToText, isRepealedPlaceholder } from '../shared/compile'
 import { getNeonPool } from '../shared/neon-pool'
-import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSections, deleteStaleSections, deleteSupersededVersionSections, sectionId, countWords, SectionMeta } from '../shared/db-metadata'
+import { upsertSection as _upsertSection, bulkUpsertSections as _bulkUpsertSections, deleteStaleSections, deleteSupersededVersionSections, deleteSectionById, sectionId, countWords, SectionMeta } from '../shared/db-metadata'
 
 // Track sections written this process lifetime — the pool worker reports this
 // in its exit summary, and it is the ground truth for "sections, not statuses".
@@ -238,9 +238,23 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
     const sourceUrl = `https://www.legislation.gov.uk/${actId}/${section.sectionRef}`
 
     if (section.format === 'clml' || section.format === 'clml-unparsed') {
+      const compiled = rawToText(section.xml!)
+      // V36: the source renders a repealed provision as ". . . . . . . ." and we were
+      // storing that as compiled text — 137 sections of it for uksi/1999/303 alone.
+      // Recorded, not dropped (known unknowns beat silent absences), but not as text:
+      // status 'unavailable' keeps it out of the chunker, the FTS build and the embed.
+      if (isRepealedPlaceholder(compiled)) {
+        await upsertSection({
+          id: secId, corpus: row.corpus, sourceUrl,
+          status: 'unavailable', format: 'unavailable',
+          availabilityStatus: 'revoked',
+          availabilityNote: 'legislation.gov.uk publishes this provision as repealed — the revised text is a dot-leader placeholder, not words.',
+          errorMsg: 'repealed placeholder (dot-leader text in revised CLML)',
+        })
+        continue
+      }
       const rKey = rawKey(row.corpus, actId, section.sectionRef, 'xml')
       await r2Put(rKey, section.xml!, 'application/xml')
-      const compiled = rawToText(section.xml!)
       await r2Put(cKey, compiled)
       await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled', format: section.format })
     } else if (section.format === 'html') {
@@ -259,6 +273,16 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
         await upsertSection({ id: secId, corpus: row.corpus, sourceUrl, r2Key: cKey, r2RawKey: rKey, wordCount: 0, status: 'compiled', format: 'pdf', notes: 'pdf-ocr-needed' })
       }
     }
+  }
+
+  // V36: a re-run that recovers text must retract the marker that said there was
+  // none. The `:unavailable` row is written under its own sectionRef, so nothing
+  // above overwrites it — without this an instrument ends up holding 2,093 real
+  // sections AND a row asserting "No CLML/HTML/PDF found on TNA", and every
+  // coverage report has to decide which to believe.
+  if (sections.some(s => s.format !== 'unavailable' && s.format !== 'effects')) {
+    const cleared = await deleteSectionById(sectionId(row.corpus, actId, 'unavailable'))
+    if (cleared) console.log(`[pool] ${actId}: cleared stale unavailable marker`)
   }
 
   await markDone(row.id, sections[0]?.format)

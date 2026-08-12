@@ -141,6 +141,19 @@ export async function bulkUpsertSections(metas: SectionMeta[], chunkSize = 200):
   return written
 }
 
+/**
+ * Delete one section row by id. Returns true if a row was actually removed.
+ *
+ * V36: used to retract an `unavailable` marker when a later run recovers real text
+ * for the same instrument. Returning the count rather than void is deliberate —
+ * the caller logs only when something was cleared, so "cleared stale marker" in a
+ * log means a row went, not that a DELETE ran.
+ */
+export async function deleteSectionById(id: string): Promise<boolean> {
+  const res = await getNeonPool().query(`DELETE FROM corpus_sections WHERE id = $1`, [id])
+  return (res.rowCount ?? 0) > 0
+}
+
 // Remove sections of a parent doc that a re-parse no longer produced — keeps
 // re-processing consistent instead of leaving stale high-seq rows behind.
 export async function deleteStaleSections(corpus: string, parentDocId: string, keepIds: string[]): Promise<number> {
