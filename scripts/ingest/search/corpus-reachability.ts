@@ -445,6 +445,21 @@ function writeOutputs(rows: Row[], gold: GoldProvenance[]) {
     `${by('keyword-only').length} surface only when routing is off or has failed open; ` +
     `${by('tier-only').length} only via an explicit-tier caller.`)
   md.push('')
+  // V37 §2. This warning goes in the header of the matrix ITSELF, not in a companion
+  // file, because the failure it names is that this table's headline number gets read
+  // as a health score. It is not one. It says a query can REACH the collection; it
+  // says nothing about whether the collection contains what it claims to — and for
+  // two sprints "99.12% reachable" was quoted while `primary-acts-pre-2000` held 21%
+  // of the Acts legislation.gov.uk publishes.
+  md.push('⚠ **REACHABILITY IS NOT COMPLETENESS, AND THE NUMBER ABOVE IS ONLY THE FIRST.** A')
+  md.push('collection that is 60% ingested and 100% reachable reports as healthy on this table. That')
+  md.push('sentence is the whole lesson of V36, and it belongs here rather than somewhere more')
+  md.push('tactful: 17,261 instruments — including the Companies Act 2006 and UK GDPR — were absent')
+  md.push('for months while this matrix read 99.12%, and they were found by accident. The companion')
+  md.push('measurements are **`CORPUS_COMPLETENESS.md`** (does the collection hold what the publisher')
+  md.push('publishes) and **`CORPUS_CITATION_GAPS.md`** (does the corpus cite instruments it does not')
+  md.push('hold). **Quote all three or none.**')
+  md.push('')
   const broken = by('excluded-by-design').filter((r) => r.router_stream !== 'NONE')
   if (broken.length) {
     md.push(`⚠ **${broken.length} deliberate exclusion(s) are no longer exclusions** — a stream can now select ` +
