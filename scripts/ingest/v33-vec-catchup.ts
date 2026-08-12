@@ -355,8 +355,17 @@ async function main() {
   if (cp.phase === 'done') {
     console.log('\n  NEXT — the ANN index must be rebuilt or every query pays a brute-force scan')
     console.log('  over the new fragments forever (INGEST_PLAYBOOK §20):')
-    console.log('    tsx ../ops/heavy-job/run.ts run vector-index   # 32 GB class — never Railway')
-    console.log('    restart vector-serve                            # openTable() is called once at boot')
+    // ⚠ `vector-reindex`, NOT `vector-index` — this line said `vector-index` until 2026-08-12 and
+    // following it would have produced a job that REPORTS SUCCESS AND BUILDS NOTHING. Both of
+    // `vector-index`'s scripts are checkpointed `phase: "done"` from the 21–22 Jul build, so it
+    // prints "already done — nothing to do", creates no index, and destroys the box.
+    // `vector-reindex` exists precisely for this and passes `--index-only`, the flag that enters
+    // the ANN block regardless of phase. jobs.ts says all of this at its definition; this line
+    // was pointing away from it.
+    console.log('    tsx ../ops/heavy-job/run.ts plan vector-reindex   # prices it, creates nothing')
+    console.log('    tsx ../ops/heavy-job/run.ts run  vector-reindex   # ~5.6 GB peak, ~30 min, ~€0.15')
+    console.log('    tsx search/vector-serve-run.ts redeploy           # it does NOT auto-deploy from GitHub,')
+    console.log('                                                     # and openTable() is called once at boot')
   }
   await pool.end()
 }
