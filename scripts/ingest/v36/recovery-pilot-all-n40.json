@@ -1,0 +1,433 @@
+{
+ "seed": 1,
+ "type": null,
+ "n": 40,
+ "recovered": 11,
+ "stillEmpty": 29,
+ "threw": 0,
+ "sections": 324,
+ "results": [
+  {
+   "gid": "uksi/2008/1212",
+   "corpus": "si-pre-2010",
+   "legacy_sections": 2,
+   "usable": 3,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1367
+  },
+  {
+   "gid": "ssi/2024/290",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2363
+  },
+  {
+   "gid": "eur/1987/1516",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2537
+  },
+  {
+   "gid": "eur/2004/1441",
+   "corpus": "retained-eu",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1287
+  },
+  {
+   "gid": "eudn/1984/561",
+   "corpus": "retained-eu",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1239
+  },
+  {
+   "gid": "eur/1992/1770",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2295
+  },
+  {
+   "gid": "ssi/2008/171",
+   "corpus": "regional",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1333
+  },
+  {
+   "gid": "eur/2000/183",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2362
+  },
+  {
+   "gid": "eur/1987/2586",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2390
+  },
+  {
+   "gid": "uksi/2013/2765",
+   "corpus": "si-2010plus",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2380
+  },
+  {
+   "gid": "eur/1981/1194",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2679
+  },
+  {
+   "gid": "eur/1997/371",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2425
+  },
+  {
+   "gid": "uksi/2002/3019",
+   "corpus": "si-pre-2010",
+   "legacy_sections": 46,
+   "usable": 37,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1412
+  },
+  {
+   "gid": "eur/1986/656",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2338
+  },
+  {
+   "gid": "eudn/1991/109",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2410
+  },
+  {
+   "gid": "eur/1974/2605",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as metadata-only / metadata-only",
+   "ms": 1560
+  },
+  {
+   "gid": "eur/1988/3294",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2553
+  },
+  {
+   "gid": "eur/2000/1303",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2391
+  },
+  {
+   "gid": "eur/2015/293",
+   "corpus": "retained-eu",
+   "legacy_sections": 3,
+   "usable": 3,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1255
+  },
+  {
+   "gid": "eur/1984/138",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2333
+  },
+  {
+   "gid": "eur/1983/85",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2425
+  },
+  {
+   "gid": "eur/2000/951",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2368
+  },
+  {
+   "gid": "uksi/2016/1107",
+   "corpus": "si-2010plus",
+   "legacy_sections": 80,
+   "usable": 264,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1843
+  },
+  {
+   "gid": "uksi/2011/1717",
+   "corpus": "si-2010plus",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1246
+  },
+  {
+   "gid": "nisr/1976/115",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as metadata-only / metadata-only",
+   "ms": 1464
+  },
+  {
+   "gid": "ssi/2024/294",
+   "corpus": "regional",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1267
+  },
+  {
+   "gid": "eur/1992/943",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2298
+  },
+  {
+   "gid": "eur/1983/2475",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2386
+  },
+  {
+   "gid": "uksi/2022/1321",
+   "corpus": "si-2010plus",
+   "legacy_sections": 2,
+   "usable": 2,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1323
+  },
+  {
+   "gid": "eur/1997/1637",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2362
+  },
+  {
+   "gid": "nisr/1978/269",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as metadata-only / metadata-only",
+   "ms": 1354
+  },
+  {
+   "gid": "nisr/1990/151",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2370
+  },
+  {
+   "gid": "nisr/1982/5",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2362
+  },
+  {
+   "gid": "eur/1978/692",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as metadata-only / metadata-only",
+   "ms": 1342
+  },
+  {
+   "gid": "eur/1998/2542",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2301
+  },
+  {
+   "gid": "eur/1984/1940",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2375
+  },
+  {
+   "gid": "eudn/2001/141",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2400
+  },
+  {
+   "gid": "nisr/2020/305",
+   "corpus": "regional",
+   "legacy_sections": 5,
+   "usable": 5,
+   "formats": [
+    "clml"
+   ],
+   "outcome": "RECOVERED",
+   "reason": null,
+   "ms": 1337
+  },
+  {
+   "gid": "eudn/2002/688",
+   "corpus": "retained-eu",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2339
+  },
+  {
+   "gid": "nisr/1988/141",
+   "corpus": "regional",
+   "legacy_sections": null,
+   "usable": 0,
+   "formats": [],
+   "outcome": "still-empty",
+   "reason": "hasNoProvisions — classified as no-provisions / no-provisions",
+   "ms": 2392
+  }
+ ]
+}

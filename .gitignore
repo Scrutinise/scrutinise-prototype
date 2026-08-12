@@ -129,3 +129,11 @@ scripts/ingest/v32-committees-manifest.json
 # point-in-time sample of a live service, so a committed copy goes stale the moment the
 # setting or the index moves. The numbers that matter are quoted in docs/SEARCH_S2C5_REPORT.md.
 scripts/ingest/.vector-ab/
+
+# V36 source walk artefacts — legislation.gov.uk's published id set, ~30MB and
+# regenerable: `v36-source-census.ts --enumerate` is checkpointed per (type, year)
+# and resumes, and `v36-reconcile.ts` rebuilds the work list from it. The SUMMARY
+# that the findings rest on is committed as docs/v36_reconciliation.json.
+scripts/ingest/v36/source-entries.json
+scripts/ingest/v36/worklist.jsonl
+scripts/ingest/v36/enumerate.log

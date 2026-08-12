@@ -1,0 +1,281 @@
+{
+ "seed": 7,
+ "n": 25,
+ "results": [
+  {
+   "gid": "eur/2009/655",
+   "title": "Commission Regulation (EC) No 655/2009 of 23 July 2009 fixin",
+   "year": 2009,
+   "legacy_sections": 2,
+   "legacy_chars": 633,
+   "source_sections": 2,
+   "source_xml_chars": 1953,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1989/439",
+   "title": "The Valuation and Community Charge Tribunals Regulations 198",
+   "year": 1989,
+   "legacy_sections": 33,
+   "legacy_chars": 31792,
+   "source_sections": 39,
+   "source_xml_chars": 87618,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1989/157",
+   "title": "The Copyright (International Conventions) (Amendment) Order ",
+   "year": 1989,
+   "legacy_sections": 4,
+   "legacy_chars": 1847,
+   "source_sections": 4,
+   "source_xml_chars": 3176,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "nisr/2022/158",
+   "title": "The County Courts (Financial Limits) Order (Northern Ireland",
+   "year": 2022,
+   "legacy_sections": 3,
+   "legacy_chars": 463,
+   "source_sections": 3,
+   "source_xml_chars": 1037,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "ssi/2005/482",
+   "title": "The Advice and Assistance (Assistance by Way of Representati",
+   "year": 2005,
+   "legacy_sections": 3,
+   "legacy_chars": 1041,
+   "source_sections": 6,
+   "source_xml_chars": 3007,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "eur/2010/1033",
+   "title": "Commission Regulation (EU) No 1033/2010 of 15 November 2010 ",
+   "year": 2010,
+   "legacy_sections": 2,
+   "legacy_chars": 370,
+   "source_sections": 2,
+   "source_xml_chars": 2103,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "ssi/2002/568",
+   "title": "Act of Sederunt (Fees of Solicitors in the Sheriff Court) (A",
+   "year": 2002,
+   "legacy_sections": 4,
+   "legacy_chars": 2414,
+   "source_sections": 20,
+   "source_xml_chars": 12971,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1993/236",
+   "title": "The Finance (No. 2) Act 1992, Schedule 9, (Appointed Day) Or",
+   "year": 1993,
+   "legacy_sections": 2,
+   "legacy_chars": 211,
+   "source_sections": 2,
+   "source_xml_chars": 641,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/2005/564",
+   "title": "The Justices of the Peace (Training and Appraisal) Rules 200",
+   "year": 2005,
+   "legacy_sections": 21,
+   "legacy_chars": 16573,
+   "source_sections": 24,
+   "source_xml_chars": 7828,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1996/532",
+   "title": "The Local Government Reorganisation (Wales) (Property etc.) ",
+   "year": 1996,
+   "legacy_sections": 22,
+   "legacy_chars": 17028,
+   "source_sections": 37,
+   "source_xml_chars": 45689,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "eur/2010/401",
+   "title": "Commission Regulation (EU) No 401/2010 of 7 May 2010 amendin",
+   "year": 2010,
+   "legacy_sections": 1,
+   "legacy_chars": 312,
+   "source_sections": 2,
+   "source_xml_chars": 3042,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1987/33",
+   "title": "The Statutory Sick Pay (Rate of Payment) Regulations 1987",
+   "year": 1987,
+   "legacy_sections": 3,
+   "legacy_chars": 2128,
+   "source_sections": 3,
+   "source_xml_chars": 5211,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "ukpga/1936/39",
+   "title": "Firearms (Amendment) Act 1936",
+   "year": 1936,
+   "legacy_sections": 16,
+   "legacy_chars": 29983,
+   "source_sections": 25,
+   "source_xml_chars": 65631,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "eur/1996/2275",
+   "title": "Council Regulation (EC) No 2275/96 of 22 November 1996 intro",
+   "year": 1996,
+   "legacy_sections": 1,
+   "legacy_chars": 73,
+   "source_sections": 6,
+   "source_xml_chars": 2880,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "eur/2009/781",
+   "title": "Commission Regulation (EC) No 781/2009 of 27 August 2009 ame",
+   "year": 2009,
+   "legacy_sections": 1,
+   "legacy_chars": 73,
+   "source_sections": 2,
+   "source_xml_chars": 956,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "ukpga/1877/2",
+   "title": "Treasury Bills Act 1877",
+   "year": 1877,
+   "legacy_sections": 12,
+   "legacy_chars": 2496,
+   "source_sections": 12,
+   "source_xml_chars": 6778,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/2002/560",
+   "title": "The North West Anglia Health Care National Health Service Tr",
+   "year": 2002,
+   "legacy_sections": 2,
+   "legacy_chars": 1214,
+   "source_sections": 2,
+   "source_xml_chars": 2734,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1989/305",
+   "title": "The Merchant Shipping (Light Dues) Regulations 1989",
+   "year": 1989,
+   "legacy_sections": 11,
+   "legacy_chars": 8108,
+   "source_sections": 18,
+   "source_xml_chars": 21398,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "eur/2010/340",
+   "title": "Commission Regulation (EU) No 340/2010 of 22 April 2010 gran",
+   "year": 2010,
+   "legacy_sections": 2,
+   "legacy_chars": 357,
+   "source_sections": 2,
+   "source_xml_chars": 1011,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "eur/2014/1107",
+   "title": "Commission Regulation (EU) No 1107/2014 of 16 October 2014 e",
+   "year": 2014,
+   "legacy_sections": 3,
+   "legacy_chars": 774,
+   "source_sections": 3,
+   "source_xml_chars": 1602,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1995/337",
+   "title": "The A3 Trunk Road (Kingston upon Thames) Red Route (Clearway",
+   "year": 1995,
+   "legacy_sections": 11,
+   "legacy_chars": 10564,
+   "source_sections": 11,
+   "source_xml_chars": 23555,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "ukpga/1916/60",
+   "title": "Sailors and Soldiers (Gifts for Land Settlement) Act 1916 (r",
+   "year": 1916,
+   "legacy_sections": 2,
+   "legacy_chars": 242,
+   "source_sections": 2,
+   "source_xml_chars": 674,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "ukpga/1946/54",
+   "title": "Housing (Financial Provisions) (Scotland) Act 1946",
+   "year": 1946,
+   "legacy_sections": 4,
+   "legacy_chars": 2319,
+   "source_sections": 4,
+   "source_xml_chars": 5233,
+   "verdict": "equal section count",
+   "note": ""
+  },
+  {
+   "gid": "uksi/1996/476",
+   "title": "The Gas (Applications for Licences and Extensions and Restri",
+   "year": 1996,
+   "legacy_sections": 8,
+   "legacy_chars": 9234,
+   "source_sections": 39,
+   "source_xml_chars": 62548,
+   "verdict": "source RICHER than legacy (legacy is a stale snapshot)",
+   "note": ""
+  },
+  {
+   "gid": "uksi/2002/2",
+   "title": "The Import and Export Restrictions (Foot-And-Mouth Disease) ",
+   "year": 2002,
+   "legacy_sections": 29,
+   "legacy_chars": 50415,
+   "source_sections": 29,
+   "source_xml_chars": 125630,
+   "verdict": "equal section count",
+   "note": ""
+  }
+ ]
+}
