@@ -16,6 +16,7 @@ import { prisma } from '@/lib/prisma'
 import type { SearchResult } from './page1-config'
 import { corpusToType, corpusDisplayName } from './corpus-type-map'
 import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
+import { isPoliticalCorpus, politicalTitle } from './political-title'
 // §19-D Task 5 — one shared derivation with fts-search.ts. It used to be copied into
 // both files, so the 404 bug was present twice and fixable only twice.
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
@@ -103,9 +104,15 @@ export async function runVectorSearch(
       ...typed.map((x) => (isAnnotationCorpus(x.h.corpus) ? annotatedGidFromId(x.h.id) : null)),
     ].filter((g): g is string => !!g)))
     const [hydrateRows, actRows] = await Promise.all([
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null }>>`
-        SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"
-        FROM corpus_sections WHERE id IN (${Prisma.join(ids)})`,
+      // The S2C6 §1 columns, identical to fts-search.ts's hydrate — see the note there. Kept in
+      // step deliberately: a division found by the ANN half must not be titled differently from
+      // the same row found by BM25, which is the whole reason political-title.ts is one file.
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; parentTitle: string | null }>>`
+        SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
+               s.attribution, a.title AS "parentTitle"
+        FROM corpus_sections s
+        LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
+        WHERE s.id IN (${Prisma.join(ids)})`,
       // Act titles come from `corpus_acts`, NOT the legacy `LegislationItem`
       // (V26 §6: that table is to be dropped, and this path is about to go live —
       // pointing it at LegislationItem would add a new caller to a doomed table).
@@ -137,6 +144,12 @@ export async function runVectorSearch(
       } else if (isAnnotationCorpus(h.corpus)) {
         const annGid = annotatedGidFromId(h.id)
         const named = annotationTitle(h.corpus, annGid ? actTitle.get(annGid) : null, meta?.sectionTitle ?? corpusDisplayName(h.corpus))
+        title = named.title
+        citation = named.citation
+      } else if (isPoliticalCorpus(h.corpus)) {
+        const named = politicalTitle(h.corpus, meta?.sectionTitle ?? corpusDisplayName(h.corpus), {
+          parentTitle: meta?.parentTitle, attribution: meta?.attribution, date: meta?.itemDate,
+        })!
         title = named.title
         citation = named.citation
       } else {

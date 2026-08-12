@@ -23,6 +23,7 @@ import { flagEnabled } from '@/lib/env-flags'
 import type { SearchResult } from './page1-config'
 import { corpusToType, corpusDisplayName, dbTitleSupersedesIndex } from './corpus-type-map'
 import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annotation-title'
+import { isPoliticalCorpus, politicalTitle } from './political-title'
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 import { runStubSearch } from './search-stub'
 
@@ -171,9 +172,17 @@ export async function runFtsSearch(
       // a few collections the DB title supersedes the one baked into the FTS index
       // (dbTitleSupersedesIndex — see corpus-type-map.ts). Same query, one more column, no extra
       // round-trip.
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null }>>`
-        SELECT id, "sourceUrl", "itemDate"::text AS "itemDate", "sectionTitle"
-        FROM corpus_sections WHERE id IN (${Prisma.join(ids)})`,
+      // ⚠ `attribution` and the joined parent title are for the S2C6 §1 collections and cost
+      // nothing here: same round-trip, three more columns, and the LEFT JOIN is on
+      // `corpus_acts.gid`, which is indexed. It is a JOIN rather than a second lookup because
+      // an impact assessment's instrument gid lives in `parentDocId` — it is not derivable from
+      // the id the way an annotation's is, so it cannot be known before this query returns.
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; parentTitle: string | null }>>`
+        SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
+               s.attribution, a.title AS "parentTitle"
+        FROM corpus_sections s
+        LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
+        WHERE s.id IN (${Prisma.join(ids)})`,
       // Act titles come from `corpus_acts`, not the legacy `LegislationItem` (V26 §6 —
       // that table is slated for DROP). Verified zero-gap drop-in: 135,531 titled
       // corpus_acts rows vs 135,531 distinct LegislationItem gid→title, 0 missing,
@@ -209,6 +218,16 @@ export async function runFtsSearch(
         // otherwise have produced, so an unresolved gid costs nothing.
         const annGid = annotatedGidFromId(h.id)
         const named = annotationTitle(h.corpus, annGid ? actTitle.get(annGid) : null, h.sectionTitle ?? corpusDisplayName(h.corpus))
+        title = named.title
+        citation = named.citation
+      } else if (isPoliticalCorpus(h.corpus)) {
+        // S2C6 §1. The stored `sectionTitle` on these four is an INTERNAL heading — "Summary",
+        // or a bare bill name — so it is read here and rewritten rather than shown. The DB title
+        // is preferred over the index's for the same reason `dbTitleSupersedesIndex` exists:
+        // these rows were seeded days before the index that carries them.
+        const named = politicalTitle(h.corpus, meta?.sectionTitle ?? h.sectionTitle ?? corpusDisplayName(h.corpus), {
+          parentTitle: meta?.parentTitle, attribution: meta?.attribution, date: meta?.itemDate ?? h.itemDate,
+        })!
         title = named.title
         citation = named.citation
       } else {
