@@ -43,7 +43,18 @@ export type SearchIntent =
   | 'IDEA_CHAT_GROUNDING' // app/api/ai/[ideaId] — legislation context for the Lex turn.
   | 'LEGISLATION_PANEL'   // /api/ideas/[id]/legislation-search — the CreateIdea side panel.
   | 'LEGISLATION_SEARCH'  // POST /api/search — the general search endpoint.
-  // Reserved, later: 'AMENDABLE_SECTION' | 'COMPARATIVE_LAW'
+  // ── The Deepening (§22 Pilot A, BRIEF_DEEPENING_RESTART §2.3). DESCRIPTIVE, like
+  //    GENERAL_CORPUS_CHAT: these route like any other query and select no streams, so
+  //    adding them changes no retrieval for anyone. They exist so a Deepening gather can
+  //    be told apart from a stage entry in the logs and in what a pass records it searched.
+  | 'PRECEDENT'         // has this been tried — what was it FOR (explanatory notes), what was
+                        // PREDICTED (impact assessments), what actually HAPPENED (PIRs).
+  | 'CAUSAL_EVIDENCE'   // is the problem real and measured — and does the evidence SUPPORT or
+                        // CONTRADICT the diagnosis. Silence becomes a known unknown.
+  | 'DEVOLUTION_SCOPE'  // is the subject reserved or devolved, and what follows for the vehicle.
+  // Reserved, later: 'AMENDABLE_SECTION' | 'COMPARATIVE_LAW' | 'MECHANISM_ANALOGUE'
+  // ⚠ MECHANISM_ANALOGUE stays reserved deliberately — the brief keeps mechanism analogues
+  // and the full claims-check OUT of Pilot A. Naming it here is not scheduling it.
 
 // ── Capability flags (§14.3). Each search capability is adopted behind a flag,
 // switched on when the search side ships it AND the gold set rewards it. Default OFF.
