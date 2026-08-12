@@ -128,6 +128,29 @@ const HTML_ENTITIES: Record<string, string> = {
   frac12: '½', frac14: '¼', frac34: '¾',
 }
 
+/**
+ * True when a compiled section carries no words — only the punctuation and numbering
+ * legislation.gov.uk uses to render a REPEALED provision in the revised CLML.
+ *
+ * V36. `uksi/1999/303` ingested as 137 sections and 4,521 "words", every one of them
+ * a dot: the source publishes `<Text>. . . . . . . .</Text>` for each repealed
+ * regulation, and `rawToText` faithfully returned it. Across the pilots, 44 of 113
+ * sampled sections were this, and one instrument in fourteen was ENTIRELY this. The
+ * ingest is not wrong — the corpus is: each of those becomes a chunk that is
+ * embedded at full price and is retrievable as a document that says nothing. Same
+ * family as the placeholder that looked like data.
+ *
+ * Strict on purpose. A section number followed by dots ("1 . . . .") must match; a
+ * section number followed by any real word ("1 This Order may be cited") must not,
+ * which is what the two-letter-run test below guarantees.
+ */
+export function isRepealedPlaceholder(text: string): boolean {
+  const t = text.trim()
+  if (!t) return false                    // empty is a different state — not this one
+  if (!/[.·…]/.test(t)) return false      // no dot leader at all
+  return !/[A-Za-z]{2}/.test(t)           // no word of two or more letters anywhere
+}
+
 export function rawToText(input: string): string {
   return input
     .replace(/<[^>]+>/g, ' ')   // remove all XML/HTML tags
