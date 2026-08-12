@@ -124,3 +124,8 @@ scripts/ops/heavy-job/.cloud-init-*.rendered.sh
 # V32 committees backfill run artefact (long-running driver output, not source)
 scripts/ingest/v32-backfill.log
 scripts/ingest/v32-committees-manifest.json
+
+# S2C5 latency A/B samples (vector-latency-ab.ts). Run artefacts, not source: each is a
+# point-in-time sample of a live service, so a committed copy goes stale the moment the
+# setting or the index moves. The numbers that matter are quoted in docs/SEARCH_S2C5_REPORT.md.
+scripts/ingest/.vector-ab/
