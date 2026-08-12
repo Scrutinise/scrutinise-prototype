@@ -1,0 +1,398 @@
+{
+  "_meta": {
+    "title": "Scrutinise Central — pilot seed set",
+    "prepared": "2026-08-12",
+    "sourceMaterial": [
+      "Hard Questions Training Pack (July 2026) — questions and technique guidance",
+      "Reform UK Harrogate & Knaresborough soft-tone sheets (undated) — questions only"
+    ],
+    "rules": [
+      "Every answer in this file is authorType AI, attributed to Claude. No member-authored answers are seeded.",
+      "AI answers mint no PointsEvent when marked, per the Stage 2c brief.",
+      "Answers here are technique guidance — how to handle a question — never a party position or a line to take.",
+      "Questions with no answer are deliberate: they invite the first member answer.",
+      "Import is dry-run by default. Charlie reviews before --apply."
+    ],
+    "topicTagsToCreate": [
+      "Immigration", "Economy", "Energy", "Law & rights", "Local finance",
+      "Local services", "Party conduct", "Social issues", "Media skills", "Organising"
+    ]
+  },
+
+  "questions": [
+
+    {
+      "text": "Net migration was over 700,000 at its peak — what's the figure now, and has any government actually brought it down?",
+      "context": "Media interview",
+      "topics": ["Immigration"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Check the current published ONS figure the same day, not from memory — this number moves and candidates get caught out far more often on a stale statistic than on ideology. State whether it has fallen and by how much, and separate temporary post-Covid and post-Ukraine spikes from structural policy change. If you are not certain of the figure, say 'the last confirmed ONS figure was X, and here is the trend' rather than guessing. Be ready to talk about the mechanics of what previous attempts did, why they did not work, and what you would do differently — that is a stronger answer than a target number.",
+        "sources": ["https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration"]
+      }]
+    },
+
+    {
+      "text": "How would you actually pay for the tax cuts and spending increases you're promising?",
+      "context": "Media interview",
+      "topics": ["Economy"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Name specific savings or revenue measures rather than asserting affordability in general terms. Acknowledge honestly where costings are contested by independent bodies such as the IFS or OBR — an interviewer will have that rebuttal ready, and pre-empting it is stronger than being corrected. Do not claim a fully audited number if one does not exist. Vague reassurance on arithmetic gets dismantled in the follow-up; specificity that includes acknowledged uncertainty survives it.",
+        "sources": ["https://ifs.org.uk/", "https://obr.uk/"]
+      }]
+    },
+
+    {
+      "text": "Doesn't leaving the ECHR put the UK alongside Russia and Belarus as the only European states outside it?",
+      "context": "Media interview",
+      "topics": ["Law & rights"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Answer the specific legal point rather than the guilt-by-association framing. Conceding the factual detail while rejecting the implied comparison is stronger than disputing the fact itself. Then make the argument on its own terms: which specific rulings or mechanisms you object to and why, rather than a blanket rejection of human rights protection, which is what the question is inviting you to appear to do."
+      }]
+    },
+
+    {
+      "text": "If you scrap Net Zero targets, what's your answer to rising sea levels and extreme weather?",
+      "context": "Media interview",
+      "topics": ["Energy"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Keep two things visibly separate: what the science says, and what the policy should be. Conflating 'we disagree with this policy' with 'we doubt the science' is the single most damaging error on this topic, because it lets the interviewer move the conversation from cost and sequencing — where you have an argument — to credibility, where you do not. Make the case about cost, timing, grid readiness or energy security as a disagreement about means."
+      }]
+    },
+
+    {
+      "text": "Is your party a racist party — yes or no?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "A flat, calm 'no' — stated once, without hedging — then move immediately to substance. Long or aggrieved denials read to a neutral viewer as protesting too much. Do not repeat the accusation's own language: answering 'I'm not racist, but…' still puts the word in the clip that gets used. Reframe in your own words and get to what your actual position is on the underlying issue."
+      }]
+    },
+
+    {
+      "text": "Isn't wanting to reduce immigration inherently racist?",
+      "context": "Media interview",
+      "topics": ["Immigration"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Distinguish the capacity argument from an identity one explicitly, because the question deliberately conflates them. Give a concrete, non-racial reason — a housing waiting list number, a local service capacity figure — rather than an abstract defence of principle. Specifics land; assertions of principle sound defensive."
+      }]
+    },
+
+    {
+      "text": "Your leader has praised authoritarian figures abroad — what does that say about your party's values?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "If the remark is real, do not deny it happened. Say plainly whether you personally agree or disagree, and do not outsource the answer to 'that's not my view, that's his' without also saying what your own view is. Voters read dodging a direct question about the leader as evasive regardless of party. A candidate who says 'I disagree with him on that, and here's why' reads as independent-minded, which helps rather than hurts."
+      }]
+    },
+
+    {
+      "text": "Isn't 'take back control' a dog whistle?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Reject the premise briefly and confidently, then state what the phrase actually means to you. Explaining at length why something is not a dog whistle tends to read as confirming there is something to explain away. Short rejection, then substance."
+      }]
+    },
+
+    {
+      "text": "If your party isn't racist, why are almost all your candidates and voters white?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "This is one of the two or three questions with no clever answer available, and the honest version lands better than any deflection. If the party is working from a smaller base and a shorter track record than parties with a century of community organising, say so, and say specifically what is being done to recruit more widely — or say honestly that it is not yet being done. Do not claim a diversity record that does not exist; it is checkable in minutes."
+      }]
+    },
+
+    {
+      "text": "Do you believe in the 'Great Replacement' theory?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "A direct, unhedged 'no' is the only workable answer. Any hedging on this specific question — 'well, there is something to demographic change…' — will be the clip that gets used. Then explain the actual, non-conspiratorial concern you do have (integration, service capacity, community cohesion) so the answer is not a bare denial with nothing behind it. As a general rule for this whole category: never voice a conspiracy theory on the record, even conversationally."
+      }]
+    },
+
+    {
+      "text": "Aren't you using the grooming gangs scandal to demonise a whole community rather than deal with the actual failures?",
+      "context": "Media interview",
+      "topics": ["Social issues"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Separate the two things explicitly. Name the specific institutional failures — policing, social services, prosecutorial reluctance — that are the real subject, and state plainly that collective blame on an ethnic or religious group is wrong. Detail is what distinguishes this answer from the thing the question accuses you of; a vague answer here sounds exactly like what is being alleged. Lead with one sentence of genuine acknowledgment of the harm done to victims before any pivot."
+      }]
+    },
+
+    {
+      "text": "Your leader has shared platforms with figures linked to far-right movements — does that concern you?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "If the association is real, do not deny it happened. Say plainly whether you think it was a mistake. Candidates who can hold a personal view slightly at odds with the leadership on a specific factual matter, while remaining loyal to the party overall, read as more credible than those who defend every decision uniformly."
+      }]
+    },
+
+    {
+      "text": "Councillors elected this year turned out to have racist or extremist posting histories — how can voters trust your vetting?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "This is a question with a real, damaging answer and no available spin, and treating it as media smearing makes it worse. Do not minimise the number or dispute that it happened. State plainly that vetting failed in specific documented cases, what happened to those individuals, and concretely what has changed since — a named review, an accountable person, or an honest 'this is still being fixed' if that is the truth. Concede what is true and dispute only what is unfair; defending the indefensible destroys your credibility on everything else you say."
+      }]
+    },
+
+    {
+      "text": "Why is it always journalists and campaign groups who find this material, rather than your own vetting team?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "This is a competence question dressed as an ideology question, and answering it as a resourcing and process question defuses the framing. Be honest about vetting capacity against the scale of candidate recruitment, and say whether that is a resourcing problem, a process problem, or both. Do not claim parity with journalists' investigative reach if it does not exist."
+      }]
+    },
+
+    {
+      "text": "What happens if something from your own past resurfaces during this campaign?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "This should never be answered live for the first time. Audit your own public social media history before agreeing to stand, and have a specific, rehearsed account of what is there rather than a generic reassurance. If there is something, the plain version told first by you is survivable; the same thing found by someone else usually is not."
+      }]
+    },
+
+    {
+      "text": "You've got no experience in government — why should anyone trust you with real decisions?",
+      "context": "Hustings",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Reframe experience as a genuine trade-off rather than denying the gap. Say what outside experience you bring — business, professional, military, community — and be honest that governing experience is built on the job, as it is for any new representative of any party. Every first-time candidate in every party faces this; the non-defensive answer works better than pretending inexperience is not a real consideration for voters."
+      }]
+    },
+
+    {
+      "text": "Who's actually funding your campaign, and what do they expect in return?",
+      "context": "Media interview",
+      "topics": ["Party conduct"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Know the specific disclosable answer for both your local campaign and the national party before anyone asks, and give it plainly. If particular donors have been publicly reported and criticised, do not claim ignorance of the reporting. Not knowing your own campaign's funding when asked is a bigger problem than almost any answer about the money itself."
+      }]
+    },
+
+    {
+      "text": "You promise to cut taxes and increase spending at the same time — how is that not fantasy economics?",
+      "context": "Hustings",
+      "topics": ["Economy"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Give the specific mechanism the costings rely on — growth assumptions, reallocation, named savings — rather than asserting affordability in general terms, and be honest about which parts independent bodies dispute. Confidence alone does not survive a follow-up question; specificity, including acknowledged uncertainty, does."
+      }]
+    },
+
+    {
+      "text": "Immigration policy isn't set by the council — so what would you actually do for me as a councillor?",
+      "context": "Doorstep",
+      "topics": ["Local services"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Have three concrete, local, deliverable commitments ready — a specific road, a specific service, a specific budget line — rather than restating national positions the council has no power over. A candidate who cannot name three purely local commitments off the top of their head loses this conversation regardless of party."
+      }]
+    },
+
+    {
+      "text": "How will you pay for what you're promising locally, given the state of council finances?",
+      "context": "Doorstep",
+      "topics": ["Local finance"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Know the council's actual current budget position and the size of any gap before the campaign starts. Be honest about which promises come from existing budget, which require cuts elsewhere, and which are aspirational asks to central government. This is checkable in minutes by any local journalist, so an answer that does not match the published budget will be found out quickly."
+      }]
+    },
+
+    {
+      "text": "Bins, potholes and social care are what this council actually does — do you know anything about them?",
+      "context": "Doorstep",
+      "topics": ["Local services"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Come with the specific current local figures on the two or three services that dominate complaints — missed collections, road repair backlog, adult social care waiting times. This is the most common and most damaging local gotcha, and it is entirely avoidable with an hour spent reading council committee papers."
+      }]
+    },
+
+    {
+      "text": "Why should we deport people who've risked everything to get here?",
+      "context": "Doorstep",
+      "topics": ["Immigration"],
+      "answers": []
+    },
+
+    {
+      "text": "Aren't renewables the answer to high energy bills?",
+      "context": "Doorstep",
+      "topics": ["Energy"],
+      "answers": []
+    },
+
+    {
+      "text": "What's wrong with the BBC and the licence fee?",
+      "context": "Doorstep",
+      "topics": ["Social issues"],
+      "answers": []
+    },
+
+    {
+      "text": "What would you actually do about the shops closing on our high street?",
+      "context": "Doorstep",
+      "topics": ["Economy", "Local services"],
+      "answers": []
+    },
+
+    {
+      "text": "Wouldn't a single-sex spaces policy cost local businesses money to implement?",
+      "context": "Doorstep",
+      "topics": ["Social issues"],
+      "answers": []
+    },
+
+    {
+      "text": "That all seems quite harsh — is there no compassion in your position?",
+      "context": "Doorstep",
+      "topics": ["Media skills"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Praise the instinct behind the objection before answering it — the person is telling you what they value, not attacking you. Acknowledge in one sentence, bring it back to a local consequence they can see, and land on fairness. Do not argue emotion with logic: someone who says 'that seems harsh' is describing a feeling, and a statistic is not a reply to a feeling."
+      }]
+    },
+
+    {
+      "text": "How do I answer a question when I have no idea whether the claim in it is true?",
+      "context": "How-to",
+      "topics": ["Media skills"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Do not accept the premise and do not guess at the fact. Say what you do know, name plainly what you would need to check, and undertake to come back on it — 'I have not seen that figure, and I would not want to comment on something I cannot verify. What I can tell you is…'. Never say 'no comment': answer the honest version of the question instead. Guessing at a number you are unsure of is the most reliable way to end up in a correction story, and it costs more credibility than the admission ever would."
+      }]
+    },
+
+    {
+      "text": "How long should an answer be in a broadcast interview or on the doorstep?",
+      "context": "How-to",
+      "topics": ["Media skills"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Twenty to thirty seconds for broadcast and doorstep; up to forty-five for a hustings rebuttal. Anything longer reads as evasive whatever the content. Three beats and stop: acknowledge the question in one sentence, pivot to your actual point, land on a clear closing line."
+      }]
+    },
+
+    {
+      "text": "How do I run a mock interview drill with a colleague?",
+      "context": "How-to",
+      "topics": ["Media skills", "Organising"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "One person plays the hostile questioner and reads each question aloud cold, without warning which is coming next. Time every answer. Film it on a phone and watch it back, looking for four specific failures: repeating the accusation's own words, over-explaining, visible defensiveness, and trailing off. Run the whole set cold first with no coaching to find the real weak points, then discuss, then run it again. Model answers are frameworks, not scripts — anyone reciting them verbatim will sound rehearsed."
+      }]
+    },
+
+    {
+      "text": "What should I check the morning of a media appearance?",
+      "context": "How-to",
+      "topics": ["Media skills"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "Six things. The current headline statistic for your main topic, checked the same day. Your council's current budget position and the two or three most-complained-about local services. An honest personal position on the leadership's most recent controversial remark. A completed self-audit of your own public social media. The three local deliverable commitments you can name unprompted. And the one or two questions you know have no spin available, rehearsed as plain honest answers rather than scripted evasions."
+      }]
+    },
+
+    {
+      "text": "What's different about answering in a Question Time studio versus a hustings or the doorstep?",
+      "context": "How-to",
+      "topics": ["Media skills"],
+      "answers": [{
+        "authorType": "AI",
+        "aiModel": "Claude",
+        "body": "In a studio the audience member asking has usually rehearsed their question and wants a reaction rather than a dialogue — answer to the wider audience and the camera, not just to them, and correct a hostile framing in one sentence rather than arguing with it. At a hustings, rebuttal time is short and clock-driven, so decide in advance which single point is worth the slot, and stay visibly calm under heckling because the audience judges composure as much as content. On the doorstep, assume every conversation may be filmed and could become public, and expect locally specific questions rather than ideological ones."
+      }]
+    },
+
+    {
+      "text": "How do I read our council's accounts to find waste?",
+      "context": "How-to",
+      "topics": ["Local finance"],
+      "answers": []
+    },
+
+    {
+      "text": "What technology are councils using that actually works for potholes?",
+      "context": "Tools & tech",
+      "topics": ["Local services"],
+      "answers": []
+    },
+
+    {
+      "text": "How do I get campaign material approved before I use it?",
+      "context": "Party process",
+      "topics": ["Organising"],
+      "answers": []
+    },
+
+    {
+      "text": "How do we recruit volunteers who actually turn up?",
+      "context": "How-to",
+      "topics": ["Organising"],
+      "answers": []
+    }
+  ],
+
+  "trainingSessions": [
+    {
+      "topic": "Question Time — hard questions drill",
+      "date": "2026-07-20",
+      "status": "COMPLETED",
+      "trainerName": "Charlie Leach",
+      "traineeName": "Richard Ross",
+      "notes": "Live drill over video call using the Hard Questions Training Pack. Charlie read the questioner script cold; Richard answered under time. Covered factual and policy, identity and ideology, vetting, and character and money sections.",
+      "_importNote": "trainerName and traineeName must be mapped to real User records before import. Both participants need platform accounts, since a completed session is the evidence for both Stage 2 activity claims (trainer 40 points, trainee 20). Do not create placeholder users. If Richard Ross is not yet a member, hold this record until he is."
+    }
+  ]
+}
