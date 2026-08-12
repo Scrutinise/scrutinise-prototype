@@ -131,6 +131,42 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V36 §2 — THE RECOVERY PREDICTION, recorded before the run (2026-08-12 23:10 UTC)
+
+Executes `ADDENDUM_V36_SEED_ORDER.md`. **This entry is written BEFORE the seed**, per the standing
+predict-measure-commit rule, so it can be scored afterwards rather than rationalised.
+
+**Seeded in DESCENDING citation-reference order**, per addendum §1. ⚠ The file's sort order is not
+the claim order — `claimRow` is `ORDER BY priority ASC, id ASC`, so sorting the work list and
+seeding it flat would have produced exactly the arbitrary tenth the ordering exists to avoid, while
+looking correct in the log. Citation rank is encoded INTO `priority`, in bands of 50. First five:
+`ukpga/2006/46` (7,354 refs) · `uksi/1996/207` (6,242) · `uksi/1987/1971` (4,070) ·
+`uksi/1981/238` (3,627) · `uksi/2006/213` (3,084). **22,644 instruments carry ≥1 reference; 19,269
+are uncited and seeded LAST, not never** — the value of fetching a Georgian local Act is not its
+text but that a silent absence becomes a classified known unknown.
+
+**THE PREDICTION, to be scored:**
+
+| | |
+|---|---|
+| instruments seeded | **41,913** |
+| expected to yield text | **7,868** (stratified: `unseen:1987+` 91.7% n=12 · `classb:*` 27.5% n=40 · `classb:ukpga` 16.7% n=12 · `unseen:pre-1987` 0% n=26 · `unseen:ukpga:pre-1850` 0% n=12) |
+| expected sections | **~45,636** at 5.8/instrument; range 27,539–232,115 across strata |
+| expected wall clock | **~7.0 h** at the TNA politeness budget ⚠ (not the ~5 h estimated before the full work list existed) |
+| fetch cost | **£0** — legislation.gov.uk is OGL v3.0 |
+| R2 Class A writes | 55,078–464,229 |
+| LLM cost | **£0** — this run does not chunk or embed. That is a separate, separately-priced step. |
+
+**Scope decisions recorded as TARGETS, deliberately NOT seeded** (addendum §2 — "folding a new
+source into a recovery sprint is how a run stops being attributable"): `apni` (Acts of the
+Parliament of Northern Ireland 1921–1972 — fifty years of NI primary legislation, 2,602 references),
+`ukcm` (Church Measures, which carry the force of an Act, 6,803 references) and `ukci` (Church
+Instruments). `est_sections` left NULL with `est_is_confirmed=false`, because no pilot has run and a
+guessed estimate in that column is the placeholder-that-looked-like-data again. Verified: 3 target
+rows, **0 queue rows**.
+
+---
+
 ## INGEST V37 — the corpus audits itself, and the check puts the Companies Act at rank 1 (2026-08-12 22:55 UTC)
 
 Executes `BRIEF_INGEST_V37_CORPUS_INTEGRITY.md` §1 and §2 in full, §4 partially, **§3 not started**.

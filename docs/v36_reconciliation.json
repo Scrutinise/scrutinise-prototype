@@ -1,0 +1,6565 @@
+{
+ "generated_from": "legislation.gov.uk year feeds (v36/source-entries.json)",
+ "years_enumerated": 805,
+ "per_type": {
+  "ukpga": {
+   "published": 17560,
+   "present": 4493,
+   "presentViaCalendar": 1612,
+   "absentClassB": 259,
+   "absentClassA": 7279,
+   "absentUnseen": 5529,
+   "years": 226
+  },
+  "uksi": {
+   "published": 109190,
+   "present": 73558,
+   "presentViaCalendar": 0,
+   "absentClassB": 809,
+   "absentClassA": 8219,
+   "absentUnseen": 26604,
+   "years": 79
+  },
+  "ssi": {
+   "published": 11402,
+   "present": 8499,
+   "presentViaCalendar": 0,
+   "absentClassB": 924,
+   "absentClassA": 1947,
+   "absentUnseen": 32,
+   "years": 28
+  },
+  "asp": {
+   "published": 402,
+   "present": 401,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 1,
+   "years": 28
+  },
+  "wsi": {
+   "published": 6763,
+   "present": 4694,
+   "presentViaCalendar": 0,
+   "absentClassB": 120,
+   "absentClassA": 1941,
+   "absentUnseen": 8,
+   "years": 28
+  },
+  "anaw": {
+   "published": 44,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0,
+   "years": 15
+  },
+  "asc": {
+   "published": 34,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0,
+   "years": 7
+  },
+  "nisr": {
+   "published": 18527,
+   "present": 11572,
+   "presentViaCalendar": 0,
+   "absentClassB": 500,
+   "absentClassA": 6413,
+   "absentUnseen": 42,
+   "years": 105
+  },
+  "nia": {
+   "published": 236,
+   "present": 233,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 3,
+   "years": 27
+  },
+  "nisi": {
+   "published": 691,
+   "present": 673,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 18,
+   "absentUnseen": 0,
+   "years": 55
+  },
+  "eur": {
+   "published": 124855,
+   "present": 22980,
+   "presentViaCalendar": 0,
+   "absentClassB": 4263,
+   "absentClassA": 95842,
+   "absentUnseen": 1770,
+   "years": 69
+  },
+  "eudn": {
+   "published": 30750,
+   "present": 13478,
+   "presentViaCalendar": 0,
+   "absentClassB": 969,
+   "absentClassA": 16303,
+   "absentUnseen": 0,
+   "years": 69
+  },
+  "eudr": {
+   "published": 4168,
+   "present": 2610,
+   "presentViaCalendar": 0,
+   "absentClassB": 80,
+   "absentClassA": 1478,
+   "absentUnseen": 0,
+   "years": 69
+  }
+ },
+ "per_year": {
+  "ukpga/1925": {
+   "published": 86,
+   "present": 23,
+   "presentViaCalendar": 23,
+   "absentClassB": 0,
+   "absentClassA": 63,
+   "absentUnseen": 0
+  },
+  "ukpga/1801": {
+   "published": 125,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 120
+  },
+  "ukpga/1802": {
+   "published": 121,
+   "present": 1,
+   "presentViaCalendar": 1,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 120
+  },
+  "ukpga/1803": {
+   "published": 162,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 157
+  },
+  "ukpga/1804": {
+   "published": 93,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 89
+  },
+  "ukpga/1805": {
+   "published": 127,
+   "present": 1,
+   "presentViaCalendar": 1,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 126
+  },
+  "ukpga/1806": {
+   "published": 158,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 157
+  },
+  "ukpga/1807": {
+   "published": 134,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 134
+  },
+  "ukpga/1808": {
+   "published": 152,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 145
+  },
+  "ukpga/1809": {
+   "published": 129,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 125
+  },
+  "ukpga/1810": {
+   "published": 119,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 119
+  },
+  "ukpga/1811": {
+   "published": 128,
+   "present": 1,
+   "presentViaCalendar": 1,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 127
+  },
+  "ukpga/1812": {
+   "published": 181,
+   "present": 1,
+   "presentViaCalendar": 1,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 180
+  },
+  "ukpga/1813": {
+   "published": 189,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 189
+  },
+  "ukpga/1814": {
+   "published": 161,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 159
+  },
+  "ukpga/1815": {
+   "published": 182,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 180
+  },
+  "ukpga/1816": {
+   "published": 142,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 137
+  },
+  "ukpga/1817": {
+   "published": 132,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 126
+  },
+  "ukpga/1818": {
+   "published": 101,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 99
+  },
+  "ukpga/1819": {
+   "published": 147,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 141
+  },
+  "ukpga/1820": {
+   "published": 124,
+   "present": 1,
+   "presentViaCalendar": 1,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 123
+  },
+  "ukpga/1821": {
+   "published": 123,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 120
+  },
+  "ukpga/1822": {
+   "published": 127,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 125
+  },
+  "ukpga/1823": {
+   "published": 100,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 95
+  },
+  "ukpga/1824": {
+   "published": 115,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 110
+  },
+  "ukpga/1825": {
+   "published": 134,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 129
+  },
+  "ukpga/1826": {
+   "published": 82,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 79
+  },
+  "ukpga/1827": {
+   "published": 72,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 71
+  },
+  "ukpga/1828": {
+   "published": 95,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 88
+  },
+  "ukpga/1829": {
+   "published": 63,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 59
+  },
+  "ukpga/1830": {
+   "published": 81,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 76
+  },
+  "ukpga/1831": {
+   "published": 81,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 76
+  },
+  "ukpga/1832": {
+   "published": 127,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 119
+  },
+  "ukpga/1833": {
+   "published": 106,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 94
+  },
+  "ukpga/1834": {
+   "published": 96,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 94
+  },
+  "ukpga/1835": {
+   "published": 84,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 80
+  },
+  "ukpga/1836": {
+   "published": 117,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 110
+  },
+  "ukpga/1837": {
+   "published": 98,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 1,
+   "absentClassA": 0,
+   "absentUnseen": 91
+  },
+  "ukpga/1838": {
+   "published": 113,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 8,
+   "absentClassA": 0,
+   "absentUnseen": 102
+  },
+  "ukpga/1839": {
+   "published": 97,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 91
+  },
+  "ukpga/1840": {
+   "published": 113,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 101
+  },
+  "ukpga/1841": {
+   "published": 72,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 67
+  },
+  "ukpga/1842": {
+   "published": 123,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 65,
+   "absentUnseen": 51
+  },
+  "ukpga/1843": {
+   "published": 99,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 90
+  },
+  "ukpga/1844": {
+   "published": 113,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 102
+  },
+  "ukpga/1845": {
+   "published": 130,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 113
+  },
+  "ukpga/1846": {
+   "published": 117,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 110
+  },
+  "ukpga/1847": {
+   "published": 115,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 103
+  },
+  "ukpga/1848": {
+   "published": 133,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 123
+  },
+  "ukpga/1849": {
+   "published": 111,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 103
+  },
+  "ukpga/1850": {
+   "published": 116,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 111,
+   "absentUnseen": 0
+  },
+  "ukpga/1851": {
+   "published": 106,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 97,
+   "absentUnseen": 0
+  },
+  "ukpga/1852": {
+   "published": 92,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 85,
+   "absentUnseen": 0
+  },
+  "ukpga/1853": {
+   "published": 133,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 122,
+   "absentUnseen": 0
+  },
+  "ukpga/1854": {
+   "published": 125,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 19,
+   "absentClassA": 98,
+   "absentUnseen": 0
+  },
+  "ukpga/1855": {
+   "published": 134,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 122,
+   "absentUnseen": 0
+  },
+  "ukpga/1856": {
+   "published": 120,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 111,
+   "absentUnseen": 0
+  },
+  "ukpga/1857": {
+   "published": 105,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 97,
+   "absentUnseen": 0
+  },
+  "ukpga/1858": {
+   "published": 110,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 99,
+   "absentUnseen": 0
+  },
+  "ukpga/1859": {
+   "published": 100,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 88,
+   "absentUnseen": 0
+  },
+  "ukpga/1860": {
+   "published": 154,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 22,
+   "absentClassA": 122,
+   "absentUnseen": 0
+  },
+  "ukpga/1861": {
+   "published": 134,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 122,
+   "absentUnseen": 0
+  },
+  "ukpga/1862": {
+   "published": 114,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 103,
+   "absentUnseen": 0
+  },
+  "ukpga/1863": {
+   "published": 125,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 117,
+   "absentUnseen": 0
+  },
+  "ukpga/1864": {
+   "published": 121,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 21,
+   "absentClassA": 95,
+   "absentUnseen": 0
+  },
+  "ukpga/1865": {
+   "published": 127,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 111,
+   "absentUnseen": 0
+  },
+  "ukpga/1866": {
+   "published": 122,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 114,
+   "absentUnseen": 0
+  },
+  "ukpga/1867": {
+   "published": 152,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 136,
+   "absentUnseen": 0
+  },
+  "ukpga/1868": {
+   "published": 124,
+   "present": 25,
+   "presentViaCalendar": 25,
+   "absentClassB": 0,
+   "absentClassA": 99,
+   "absentUnseen": 0
+  },
+  "ukpga/1869": {
+   "published": 117,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 20,
+   "absentClassA": 86,
+   "absentUnseen": 0
+  },
+  "ukpga/1870": {
+   "published": 112,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 102,
+   "absentUnseen": 0
+  },
+  "ukpga/1871": {
+   "published": 117,
+   "present": 18,
+   "presentViaCalendar": 18,
+   "absentClassB": 0,
+   "absentClassA": 99,
+   "absentUnseen": 0
+  },
+  "ukpga/1872": {
+   "published": 98,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 87,
+   "absentUnseen": 0
+  },
+  "ukpga/1873": {
+   "published": 91,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 81,
+   "absentUnseen": 0
+  },
+  "ukpga/1874": {
+   "published": 96,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 84,
+   "absentUnseen": 0
+  },
+  "ukpga/1875": {
+   "published": 96,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 40,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "ukpga/1876": {
+   "published": 81,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 70,
+   "absentUnseen": 0
+  },
+  "ukpga/1877": {
+   "published": 69,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 59,
+   "absentUnseen": 0
+  },
+  "ukpga/1878": {
+   "published": 79,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 69,
+   "absentUnseen": 0
+  },
+  "ukpga/1879": {
+   "published": 78,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 68,
+   "absentUnseen": 0
+  },
+  "ukpga/1880": {
+   "published": 67,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 60,
+   "absentUnseen": 0
+  },
+  "ukpga/1881": {
+   "published": 72,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 63,
+   "absentUnseen": 0
+  },
+  "ukpga/1882": {
+   "published": 82,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 66,
+   "absentUnseen": 0
+  },
+  "ukpga/1883": {
+   "published": 62,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 20,
+   "absentClassA": 36,
+   "absentUnseen": 0
+  },
+  "ukpga/1884": {
+   "published": 83,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 74,
+   "absentUnseen": 0
+  },
+  "ukpga/1885": {
+   "published": 75,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 66,
+   "absentUnseen": 0
+  },
+  "ukpga/1886": {
+   "published": 61,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 55,
+   "absentUnseen": 0
+  },
+  "ukpga/1887": {
+   "published": 65,
+   "present": 15,
+   "presentViaCalendar": 15,
+   "absentClassB": 0,
+   "absentClassA": 50,
+   "absentUnseen": 0
+  },
+  "ukpga/1888": {
+   "published": 66,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 58,
+   "absentUnseen": 0
+  },
+  "ukpga/1889": {
+   "published": 76,
+   "present": 14,
+   "presentViaCalendar": 14,
+   "absentClassB": 0,
+   "absentClassA": 62,
+   "absentUnseen": 0
+  },
+  "ukpga/1890": {
+   "published": 74,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 20,
+   "absentClassA": 44,
+   "absentUnseen": 0
+  },
+  "ukpga/1891": {
+   "published": 74,
+   "present": 17,
+   "presentViaCalendar": 17,
+   "absentClassB": 0,
+   "absentClassA": 57,
+   "absentUnseen": 0
+  },
+  "ukpga/1892": {
+   "published": 65,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 49,
+   "absentUnseen": 0
+  },
+  "ukpga/1893": {
+   "published": 70,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 63,
+   "absentUnseen": 0
+  },
+  "ukpga/1894": {
+   "published": 63,
+   "present": 15,
+   "presentViaCalendar": 15,
+   "absentClassB": 0,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "ukpga/1895": {
+   "published": 50,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 41,
+   "absentUnseen": 0
+  },
+  "ukpga/1896": {
+   "published": 59,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 53,
+   "absentUnseen": 0
+  },
+  "ukpga/1897": {
+   "published": 67,
+   "present": 13,
+   "presentViaCalendar": 13,
+   "absentClassB": 0,
+   "absentClassA": 54,
+   "absentUnseen": 0
+  },
+  "ukpga/1898": {
+   "published": 62,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 51,
+   "absentUnseen": 0
+  },
+  "ukpga/1899": {
+   "published": 54,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "ukpga/1900": {
+   "published": 65,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 20,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1901": {
+   "published": 40,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 38,
+   "absentUnseen": 0
+  },
+  "ukpga/1902": {
+   "published": 42,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 36,
+   "absentUnseen": 0
+  },
+  "ukpga/1903": {
+   "published": 47,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 41,
+   "absentUnseen": 0
+  },
+  "ukpga/1904": {
+   "published": 36,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 34,
+   "absentUnseen": 0
+  },
+  "ukpga/1905": {
+   "published": 21,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 18,
+   "absentUnseen": 0
+  },
+  "ukpga/1906": {
+   "published": 58,
+   "present": 15,
+   "presentViaCalendar": 15,
+   "absentClassB": 0,
+   "absentClassA": 43,
+   "absentUnseen": 0
+  },
+  "ukpga/1907": {
+   "published": 56,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 46,
+   "absentUnseen": 0
+  },
+  "ukpga/1908": {
+   "published": 68,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 57,
+   "absentUnseen": 0
+  },
+  "ukpga/1909": {
+   "published": 49,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1910": {
+   "published": 38,
+   "present": 2,
+   "presentViaCalendar": 2,
+   "absentClassB": 0,
+   "absentClassA": 36,
+   "absentUnseen": 0
+  },
+  "ukpga/1911": {
+   "published": 58,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 49,
+   "absentUnseen": 0
+  },
+  "ukpga/1912": {
+   "published": 20,
+   "present": 3,
+   "presentViaCalendar": 3,
+   "absentClassB": 0,
+   "absentClassA": 17,
+   "absentUnseen": 0
+  },
+  "ukpga/1913": {
+   "published": 48,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 44,
+   "absentUnseen": 0
+  },
+  "ukpga/1914": {
+   "published": 110,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 98,
+   "absentUnseen": 0
+  },
+  "ukpga/1915": {
+   "published": 76,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 64,
+   "absentUnseen": 0
+  },
+  "ukpga/1916": {
+   "published": 74,
+   "present": 13,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 61,
+   "absentUnseen": 0
+  },
+  "ukpga/1917": {
+   "published": 55,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 47,
+   "absentUnseen": 0
+  },
+  "ukpga/1918": {
+   "published": 73,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 0,
+   "absentClassA": 66,
+   "absentUnseen": 0
+  },
+  "ukpga/1919": {
+   "published": 102,
+   "present": 19,
+   "presentViaCalendar": 19,
+   "absentClassB": 20,
+   "absentClassA": 63,
+   "absentUnseen": 0
+  },
+  "ukpga/1920": {
+   "published": 82,
+   "present": 20,
+   "presentViaCalendar": 20,
+   "absentClassB": 0,
+   "absentClassA": 62,
+   "absentUnseen": 0
+  },
+  "ukpga/1921": {
+   "published": 67,
+   "present": 13,
+   "presentViaCalendar": 13,
+   "absentClassB": 0,
+   "absentClassA": 54,
+   "absentUnseen": 0
+  },
+  "ukpga/1922": {
+   "published": 67,
+   "present": 7,
+   "presentViaCalendar": 7,
+   "absentClassB": 12,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "ukpga/1923": {
+   "published": 42,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 2,
+   "absentClassA": 30,
+   "absentUnseen": 0
+  },
+  "ukpga/1924": {
+   "published": 46,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "ukpga/1926": {
+   "published": 63,
+   "present": 18,
+   "presentViaCalendar": 18,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1927": {
+   "published": 43,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 34,
+   "absentUnseen": 0
+  },
+  "ukpga/1928": {
+   "published": 52,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 40,
+   "absentUnseen": 0
+  },
+  "ukpga/1929": {
+   "published": 46,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1930": {
+   "published": 43,
+   "present": 5,
+   "presentViaCalendar": 5,
+   "absentClassB": 0,
+   "absentClassA": 38,
+   "absentUnseen": 0
+  },
+  "ukpga/1931": {
+   "published": 54,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "ukpga/1932": {
+   "published": 50,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 1,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1933": {
+   "published": 53,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 14,
+   "absentClassA": 27,
+   "absentUnseen": 0
+  },
+  "ukpga/1934": {
+   "published": 57,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1935": {
+   "published": 52,
+   "present": 6,
+   "presentViaCalendar": 6,
+   "absentClassB": 0,
+   "absentClassA": 46,
+   "absentUnseen": 0
+  },
+  "ukpga/1936": {
+   "published": 54,
+   "present": 12,
+   "presentViaCalendar": 12,
+   "absentClassB": 1,
+   "absentClassA": 41,
+   "absentUnseen": 0
+  },
+  "ukpga/1937": {
+   "published": 71,
+   "present": 13,
+   "presentViaCalendar": 13,
+   "absentClassB": 7,
+   "absentClassA": 51,
+   "absentUnseen": 0
+  },
+  "ukpga/1938": {
+   "published": 69,
+   "present": 17,
+   "presentViaCalendar": 17,
+   "absentClassB": 0,
+   "absentClassA": 52,
+   "absentUnseen": 0
+  },
+  "ukpga/1939": {
+   "published": 120,
+   "present": 26,
+   "presentViaCalendar": 26,
+   "absentClassB": 2,
+   "absentClassA": 92,
+   "absentUnseen": 0
+  },
+  "ukpga/1940": {
+   "published": 59,
+   "present": 9,
+   "presentViaCalendar": 9,
+   "absentClassB": 0,
+   "absentClassA": 50,
+   "absentUnseen": 0
+  },
+  "ukpga/1941": {
+   "published": 49,
+   "present": 4,
+   "presentViaCalendar": 4,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1942": {
+   "published": 39,
+   "present": 8,
+   "presentViaCalendar": 8,
+   "absentClassB": 0,
+   "absentClassA": 31,
+   "absentUnseen": 0
+  },
+  "ukpga/1943": {
+   "published": 49,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 39,
+   "absentUnseen": 0
+  },
+  "ukpga/1944": {
+   "published": 47,
+   "present": 10,
+   "presentViaCalendar": 10,
+   "absentClassB": 0,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1945": {
+   "published": 62,
+   "present": 15,
+   "presentViaCalendar": 15,
+   "absentClassB": 0,
+   "absentClassA": 47,
+   "absentUnseen": 0
+  },
+  "ukpga/1946": {
+   "published": 66,
+   "present": 21,
+   "presentViaCalendar": 21,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1947": {
+   "published": 64,
+   "present": 25,
+   "presentViaCalendar": 25,
+   "absentClassB": 0,
+   "absentClassA": 39,
+   "absentUnseen": 0
+  },
+  "ukpga/1948": {
+   "published": 64,
+   "present": 24,
+   "presentViaCalendar": 24,
+   "absentClassB": 0,
+   "absentClassA": 40,
+   "absentUnseen": 0
+  },
+  "ukpga/1949": {
+   "published": 93,
+   "present": 44,
+   "presentViaCalendar": 44,
+   "absentClassB": 0,
+   "absentClassA": 49,
+   "absentUnseen": 0
+  },
+  "ukpga/1950": {
+   "published": 50,
+   "present": 11,
+   "presentViaCalendar": 11,
+   "absentClassB": 0,
+   "absentClassA": 39,
+   "absentUnseen": 0
+  },
+  "ukpga/1951": {
+   "published": 64,
+   "present": 21,
+   "presentViaCalendar": 21,
+   "absentClassB": 3,
+   "absentClassA": 40,
+   "absentUnseen": 0
+  },
+  "ukpga/1952": {
+   "published": 64,
+   "present": 20,
+   "presentViaCalendar": 20,
+   "absentClassB": 3,
+   "absentClassA": 41,
+   "absentUnseen": 0
+  },
+  "ukpga/1953": {
+   "published": 55,
+   "present": 18,
+   "presentViaCalendar": 18,
+   "absentClassB": 0,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1954": {
+   "published": 66,
+   "present": 24,
+   "presentViaCalendar": 24,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "ukpga/1955": {
+   "published": 49,
+   "present": 16,
+   "presentViaCalendar": 16,
+   "absentClassB": 0,
+   "absentClassA": 33,
+   "absentUnseen": 0
+  },
+  "ukpga/1956": {
+   "published": 59,
+   "present": 15,
+   "presentViaCalendar": 15,
+   "absentClassB": 0,
+   "absentClassA": 44,
+   "absentUnseen": 0
+  },
+  "ukpga/1957": {
+   "published": 62,
+   "present": 20,
+   "presentViaCalendar": 20,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "ukpga/1958": {
+   "published": 77,
+   "present": 32,
+   "presentViaCalendar": 32,
+   "absentClassB": 0,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "ukpga/1959": {
+   "published": 73,
+   "present": 25,
+   "presentViaCalendar": 25,
+   "absentClassB": 0,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "ukpga/1960": {
+   "published": 66,
+   "present": 24,
+   "presentViaCalendar": 24,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "ukpga/1961": {
+   "published": 65,
+   "present": 28,
+   "presentViaCalendar": 28,
+   "absentClassB": 0,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1962": {
+   "published": 60,
+   "present": 29,
+   "presentViaCalendar": 29,
+   "absentClassB": 0,
+   "absentClassA": 31,
+   "absentUnseen": 0
+  },
+  "ukpga/1963": {
+   "published": 59,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 20,
+   "absentUnseen": 0
+  },
+  "ukpga/1964": {
+   "published": 98,
+   "present": 61,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 37,
+   "absentUnseen": 0
+  },
+  "ukpga/1965": {
+   "published": 83,
+   "present": 48,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 35,
+   "absentUnseen": 0
+  },
+  "ukpga/1966": {
+   "published": 31,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1967": {
+   "published": 91,
+   "present": 57,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 34,
+   "absentUnseen": 0
+  },
+  "ukpga/1968": {
+   "published": 77,
+   "present": 53,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 23,
+   "absentUnseen": 0
+  },
+  "ukpga/1969": {
+   "published": 43,
+   "present": 42,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "ukpga/1970": {
+   "published": 58,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 14,
+   "absentUnseen": 0
+  },
+  "ukpga/1971": {
+   "published": 81,
+   "present": 55,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 26,
+   "absentUnseen": 0
+  },
+  "ukpga/1972": {
+   "published": 80,
+   "present": 58,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 22,
+   "absentUnseen": 0
+  },
+  "ukpga/1973": {
+   "published": 69,
+   "present": 50,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 19,
+   "absentUnseen": 0
+  },
+  "ukpga/1974": {
+   "published": 58,
+   "present": 43,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 15,
+   "absentUnseen": 0
+  },
+  "ukpga/1975": {
+   "published": 83,
+   "present": 64,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 19,
+   "absentUnseen": 0
+  },
+  "ukpga/1976": {
+   "published": 86,
+   "present": 64,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 22,
+   "absentUnseen": 0
+  },
+  "ukpga/1977": {
+   "published": 53,
+   "present": 38,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 15,
+   "absentUnseen": 0
+  },
+  "ukpga/1978": {
+   "published": 59,
+   "present": 52,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 7,
+   "absentUnseen": 0
+  },
+  "ukpga/1979": {
+   "published": 60,
+   "present": 50,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 10,
+   "absentUnseen": 0
+  },
+  "ukpga/1980": {
+   "published": 68,
+   "present": 55,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 13,
+   "absentUnseen": 0
+  },
+  "ukpga/1981": {
+   "published": 72,
+   "present": 63,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 9,
+   "absentUnseen": 0
+  },
+  "ukpga/1982": {
+   "published": 57,
+   "present": 48,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 9,
+   "absentUnseen": 0
+  },
+  "ukpga/1983": {
+   "published": 59,
+   "present": 53,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 6,
+   "absentUnseen": 0
+  },
+  "ukpga/1984": {
+   "published": 62,
+   "present": 55,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 7,
+   "absentUnseen": 0
+  },
+  "ukpga/1985": {
+   "published": 76,
+   "present": 70,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 6,
+   "absentUnseen": 0
+  },
+  "ukpga/1986": {
+   "published": 68,
+   "present": 63,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 5,
+   "absentUnseen": 0
+  },
+  "ukpga/1987": {
+   "published": 57,
+   "present": 52,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 5,
+   "absentUnseen": 0
+  },
+  "ukpga/1988": {
+   "published": 55,
+   "present": 55,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1989": {
+   "published": 46,
+   "present": 46,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1990": {
+   "published": 46,
+   "present": 46,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1991": {
+   "published": 69,
+   "present": 69,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1992": {
+   "published": 61,
+   "present": 61,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1993": {
+   "published": 52,
+   "present": 52,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1994": {
+   "published": 41,
+   "present": 41,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1995": {
+   "published": 54,
+   "present": 54,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1996": {
+   "published": 63,
+   "present": 62,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1997": {
+   "published": 69,
+   "present": 69,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1998": {
+   "published": 49,
+   "present": 49,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/1999": {
+   "published": 35,
+   "present": 35,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2000": {
+   "published": 45,
+   "present": 45,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2001": {
+   "published": 25,
+   "present": 25,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2002": {
+   "published": 44,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2003": {
+   "published": 45,
+   "present": 45,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2004": {
+   "published": 38,
+   "present": 38,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2005": {
+   "published": 24,
+   "present": 24,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2006": {
+   "published": 55,
+   "present": 54,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2007": {
+   "published": 31,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2008": {
+   "published": 33,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2009": {
+   "published": 27,
+   "present": 27,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2010": {
+   "published": 41,
+   "present": 41,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2011": {
+   "published": 25,
+   "present": 25,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2012": {
+   "published": 23,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2013": {
+   "published": 33,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2014": {
+   "published": 30,
+   "present": 30,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2015": {
+   "published": 37,
+   "present": 37,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2016": {
+   "published": 25,
+   "present": 25,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2017": {
+   "published": 35,
+   "present": 35,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2018": {
+   "published": 34,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2019": {
+   "published": 31,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2020": {
+   "published": 29,
+   "present": 29,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2021": {
+   "published": 35,
+   "present": 35,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2022": {
+   "published": 48,
+   "present": 48,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2023": {
+   "published": 57,
+   "present": 57,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2024": {
+   "published": 25,
+   "present": 25,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2025": {
+   "published": 36,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ukpga/2026": {
+   "published": 27,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 4
+  },
+  "uksi/1948": {
+   "published": 1263,
+   "present": 585,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 678
+  },
+  "uksi/1949": {
+   "published": 1097,
+   "present": 512,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 585
+  },
+  "uksi/1950": {
+   "published": 981,
+   "present": 452,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 529
+  },
+  "uksi/1951": {
+   "published": 859,
+   "present": 479,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 379
+  },
+  "uksi/1952": {
+   "published": 834,
+   "present": 463,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 371
+  },
+  "uksi/1953": {
+   "published": 717,
+   "present": 397,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 320
+  },
+  "uksi/1954": {
+   "published": 648,
+   "present": 373,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 274
+  },
+  "uksi/1955": {
+   "published": 618,
+   "present": 401,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 217
+  },
+  "uksi/1956": {
+   "published": 672,
+   "present": 435,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 237
+  },
+  "uksi/1957": {
+   "published": 654,
+   "present": 457,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 197
+  },
+  "uksi/1958": {
+   "published": 651,
+   "present": 457,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 193
+  },
+  "uksi/1959": {
+   "published": 639,
+   "present": 444,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 194
+  },
+  "uksi/1960": {
+   "published": 685,
+   "present": 466,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 219
+  },
+  "uksi/1961": {
+   "published": 748,
+   "present": 494,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 254
+  },
+  "uksi/1962": {
+   "published": 736,
+   "present": 532,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 204
+  },
+  "uksi/1963": {
+   "published": 763,
+   "present": 440,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 323
+  },
+  "uksi/1964": {
+   "published": 836,
+   "present": 445,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 390
+  },
+  "uksi/1965": {
+   "published": 898,
+   "present": 489,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 409
+  },
+  "uksi/1966": {
+   "published": 791,
+   "present": 359,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 1,
+   "absentUnseen": 428
+  },
+  "uksi/1967": {
+   "published": 952,
+   "present": 433,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 518
+  },
+  "uksi/1968": {
+   "published": 911,
+   "present": 445,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 466
+  },
+  "uksi/1969": {
+   "published": 924,
+   "present": 427,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 497
+  },
+  "uksi/1970": {
+   "published": 1042,
+   "present": 498,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 544
+  },
+  "uksi/1971": {
+   "published": 1114,
+   "present": 505,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 609
+  },
+  "uksi/1972": {
+   "published": 1128,
+   "present": 490,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 638
+  },
+  "uksi/1973": {
+   "published": 1541,
+   "present": 569,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 970
+  },
+  "uksi/1974": {
+   "published": 1504,
+   "present": 550,
+   "presentViaCalendar": 0,
+   "absentClassB": 11,
+   "absentClassA": 0,
+   "absentUnseen": 943
+  },
+  "uksi/1975": {
+   "published": 1730,
+   "present": 553,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 1176
+  },
+  "uksi/1976": {
+   "published": 1445,
+   "present": 524,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 921
+  },
+  "uksi/1977": {
+   "published": 1465,
+   "present": 552,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 913
+  },
+  "uksi/1978": {
+   "published": 1395,
+   "present": 484,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 911
+  },
+  "uksi/1979": {
+   "published": 1221,
+   "present": 411,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 810
+  },
+  "uksi/1980": {
+   "published": 1507,
+   "present": 513,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 6,
+   "absentUnseen": 988
+  },
+  "uksi/1981": {
+   "published": 1305,
+   "present": 469,
+   "presentViaCalendar": 0,
+   "absentClassB": 11,
+   "absentClassA": 1,
+   "absentUnseen": 824
+  },
+  "uksi/1982": {
+   "published": 1329,
+   "present": 485,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 843
+  },
+  "uksi/1983": {
+   "published": 1129,
+   "present": 512,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 617
+  },
+  "uksi/1984": {
+   "published": 1312,
+   "present": 518,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 6,
+   "absentUnseen": 788
+  },
+  "uksi/1985": {
+   "published": 1446,
+   "present": 542,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 903
+  },
+  "uksi/1986": {
+   "published": 1565,
+   "present": 604,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 2,
+   "absentUnseen": 947
+  },
+  "uksi/1987": {
+   "published": 1446,
+   "present": 1237,
+   "presentViaCalendar": 0,
+   "absentClassB": 6,
+   "absentClassA": 0,
+   "absentUnseen": 203
+  },
+  "uksi/1988": {
+   "published": 1534,
+   "present": 1361,
+   "presentViaCalendar": 0,
+   "absentClassB": 23,
+   "absentClassA": 1,
+   "absentUnseen": 149
+  },
+  "uksi/1989": {
+   "published": 1516,
+   "present": 1308,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 1,
+   "absentUnseen": 195
+  },
+  "uksi/1990": {
+   "published": 1630,
+   "present": 1457,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 0,
+   "absentUnseen": 161
+  },
+  "uksi/1991": {
+   "published": 1739,
+   "present": 1509,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 0,
+   "absentUnseen": 209
+  },
+  "uksi/1992": {
+   "published": 1902,
+   "present": 1698,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 0,
+   "absentUnseen": 183
+  },
+  "uksi/1993": {
+   "published": 1868,
+   "present": 1678,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 0,
+   "absentUnseen": 169
+  },
+  "uksi/1994": {
+   "published": 1833,
+   "present": 1693,
+   "presentViaCalendar": 0,
+   "absentClassB": 17,
+   "absentClassA": 0,
+   "absentUnseen": 123
+  },
+  "uksi/1995": {
+   "published": 1848,
+   "present": 1665,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 0,
+   "absentUnseen": 164
+  },
+  "uksi/1996": {
+   "published": 2045,
+   "present": 1775,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 2,
+   "absentUnseen": 249
+  },
+  "uksi/1997": {
+   "published": 1818,
+   "present": 1597,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 0,
+   "absentUnseen": 202
+  },
+  "uksi/1998": {
+   "published": 1804,
+   "present": 1675,
+   "presentViaCalendar": 0,
+   "absentClassB": 25,
+   "absentClassA": 0,
+   "absentUnseen": 104
+  },
+  "uksi/1999": {
+   "published": 1934,
+   "present": 1817,
+   "presentViaCalendar": 0,
+   "absentClassB": 17,
+   "absentClassA": 1,
+   "absentUnseen": 99
+  },
+  "uksi/2000": {
+   "published": 1739,
+   "present": 1635,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 0,
+   "absentUnseen": 92
+  },
+  "uksi/2001": {
+   "published": 2038,
+   "present": 1812,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 0,
+   "absentUnseen": 219
+  },
+  "uksi/2002": {
+   "published": 1734,
+   "present": 1538,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 0,
+   "absentUnseen": 182
+  },
+  "uksi/2003": {
+   "published": 1610,
+   "present": 1409,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 0,
+   "absentUnseen": 182
+  },
+  "uksi/2004": {
+   "published": 1588,
+   "present": 1441,
+   "presentViaCalendar": 0,
+   "absentClassB": 10,
+   "absentClassA": 0,
+   "absentUnseen": 137
+  },
+  "uksi/2005": {
+   "published": 1664,
+   "present": 1389,
+   "presentViaCalendar": 0,
+   "absentClassB": 9,
+   "absentClassA": 0,
+   "absentUnseen": 266
+  },
+  "uksi/2006": {
+   "published": 1532,
+   "present": 1347,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 0,
+   "absentUnseen": 170
+  },
+  "uksi/2007": {
+   "published": 1628,
+   "present": 1465,
+   "presentViaCalendar": 0,
+   "absentClassB": 10,
+   "absentClassA": 0,
+   "absentUnseen": 153
+  },
+  "uksi/2008": {
+   "published": 1481,
+   "present": 1368,
+   "presentViaCalendar": 0,
+   "absentClassB": 13,
+   "absentClassA": 0,
+   "absentUnseen": 100
+  },
+  "uksi/2009": {
+   "published": 1815,
+   "present": 1431,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 0,
+   "absentUnseen": 382
+  },
+  "uksi/2010": {
+   "published": 2801,
+   "present": 1569,
+   "presentViaCalendar": 0,
+   "absentClassB": 70,
+   "absentClassA": 1162,
+   "absentUnseen": 0
+  },
+  "uksi/2011": {
+   "published": 2808,
+   "present": 1397,
+   "presentViaCalendar": 0,
+   "absentClassB": 70,
+   "absentClassA": 1341,
+   "absentUnseen": 0
+  },
+  "uksi/2012": {
+   "published": 3002,
+   "present": 1517,
+   "presentViaCalendar": 0,
+   "absentClassB": 75,
+   "absentClassA": 1410,
+   "absentUnseen": 0
+  },
+  "uksi/2013": {
+   "published": 2969,
+   "present": 1598,
+   "presentViaCalendar": 0,
+   "absentClassB": 49,
+   "absentClassA": 1322,
+   "absentUnseen": 0
+  },
+  "uksi/2014": {
+   "published": 3128,
+   "present": 1713,
+   "presentViaCalendar": 0,
+   "absentClassB": 78,
+   "absentClassA": 1337,
+   "absentUnseen": 0
+  },
+  "uksi/2015": {
+   "published": 1739,
+   "present": 1353,
+   "presentViaCalendar": 0,
+   "absentClassB": 26,
+   "absentClassA": 360,
+   "absentUnseen": 0
+  },
+  "uksi/2016": {
+   "published": 947,
+   "present": 861,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 79,
+   "absentUnseen": 0
+  },
+  "uksi/2017": {
+   "published": 992,
+   "present": 903,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 86,
+   "absentUnseen": 0
+  },
+  "uksi/2018": {
+   "published": 1127,
+   "present": 1033,
+   "presentViaCalendar": 0,
+   "absentClassB": 4,
+   "absentClassA": 90,
+   "absentUnseen": 0
+  },
+  "uksi/2019": {
+   "published": 1134,
+   "present": 1027,
+   "presentViaCalendar": 0,
+   "absentClassB": 11,
+   "absentClassA": 96,
+   "absentUnseen": 0
+  },
+  "uksi/2020": {
+   "published": 1275,
+   "present": 1231,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 44,
+   "absentUnseen": 0
+  },
+  "uksi/2021": {
+   "published": 1078,
+   "present": 998,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 78,
+   "absentUnseen": 0
+  },
+  "uksi/2022": {
+   "published": 1108,
+   "present": 972,
+   "presentViaCalendar": 0,
+   "absentClassB": 17,
+   "absentClassA": 119,
+   "absentUnseen": 0
+  },
+  "uksi/2023": {
+   "published": 1139,
+   "present": 971,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 156,
+   "absentUnseen": 0
+  },
+  "uksi/2024": {
+   "published": 1127,
+   "present": 952,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 172,
+   "absentUnseen": 0
+  },
+  "uksi/2025": {
+   "published": 1120,
+   "present": 895,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 223,
+   "absentUnseen": 0
+  },
+  "uksi/2026": {
+   "published": 895,
+   "present": 499,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 112,
+   "absentUnseen": 284
+  },
+  "ssi/1999": {
+   "published": 124,
+   "present": 117,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2000": {
+   "published": 281,
+   "present": 281,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2001": {
+   "published": 398,
+   "present": 398,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2002": {
+   "published": 395,
+   "present": 368,
+   "presentViaCalendar": 0,
+   "absentClassB": 27,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2003": {
+   "published": 407,
+   "present": 385,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2004": {
+   "published": 420,
+   "present": 420,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2005": {
+   "published": 477,
+   "present": 472,
+   "presentViaCalendar": 0,
+   "absentClassB": 5,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2006": {
+   "published": 435,
+   "present": 318,
+   "presentViaCalendar": 0,
+   "absentClassB": 117,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "ssi/2007": {
+   "published": 582,
+   "present": 185,
+   "presentViaCalendar": 0,
+   "absentClassB": 395,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "ssi/2008": {
+   "published": 441,
+   "present": 301,
+   "presentViaCalendar": 0,
+   "absentClassB": 84,
+   "absentClassA": 56,
+   "absentUnseen": 0
+  },
+  "ssi/2009": {
+   "published": 455,
+   "present": 353,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 90,
+   "absentUnseen": 0
+  },
+  "ssi/2010": {
+   "published": 471,
+   "present": 368,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 103,
+   "absentUnseen": 0
+  },
+  "ssi/2011": {
+   "published": 458,
+   "present": 351,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 85,
+   "absentUnseen": 0
+  },
+  "ssi/2012": {
+   "published": 360,
+   "present": 276,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 72,
+   "absentUnseen": 0
+  },
+  "ssi/2013": {
+   "published": 364,
+   "present": 286,
+   "presentViaCalendar": 0,
+   "absentClassB": 10,
+   "absentClassA": 68,
+   "absentUnseen": 0
+  },
+  "ssi/2014": {
+   "published": 377,
+   "present": 299,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 78,
+   "absentUnseen": 0
+  },
+  "ssi/2015": {
+   "published": 447,
+   "present": 324,
+   "presentViaCalendar": 0,
+   "absentClassB": 34,
+   "absentClassA": 89,
+   "absentUnseen": 0
+  },
+  "ssi/2016": {
+   "published": 438,
+   "present": 303,
+   "presentViaCalendar": 0,
+   "absentClassB": 38,
+   "absentClassA": 97,
+   "absentUnseen": 0
+  },
+  "ssi/2017": {
+   "published": 463,
+   "present": 300,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 163,
+   "absentUnseen": 0
+  },
+  "ssi/2018": {
+   "published": 393,
+   "present": 230,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 149,
+   "absentUnseen": 0
+  },
+  "ssi/2019": {
+   "published": 435,
+   "present": 285,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 138,
+   "absentUnseen": 0
+  },
+  "ssi/2020": {
+   "published": 472,
+   "present": 387,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 84,
+   "absentUnseen": 0
+  },
+  "ssi/2021": {
+   "published": 497,
+   "present": 388,
+   "presentViaCalendar": 0,
+   "absentClassB": 11,
+   "absentClassA": 98,
+   "absentUnseen": 0
+  },
+  "ssi/2022": {
+   "published": 387,
+   "present": 265,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 122,
+   "absentUnseen": 0
+  },
+  "ssi/2023": {
+   "published": 390,
+   "present": 245,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 131,
+   "absentUnseen": 0
+  },
+  "ssi/2024": {
+   "published": 389,
+   "present": 187,
+   "presentViaCalendar": 0,
+   "absentClassB": 74,
+   "absentClassA": 128,
+   "absentUnseen": 0
+  },
+  "ssi/2025": {
+   "published": 411,
+   "present": 257,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 154,
+   "absentUnseen": 0
+  },
+  "ssi/2026": {
+   "published": 235,
+   "present": 150,
+   "presentViaCalendar": 0,
+   "absentClassB": 13,
+   "absentClassA": 40,
+   "absentUnseen": 32
+  },
+  "asp/1999": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2000": {
+   "published": 12,
+   "present": 12,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2001": {
+   "published": 15,
+   "present": 15,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2002": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2003": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2004": {
+   "published": 12,
+   "present": 12,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2005": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2006": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2007": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2008": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2009": {
+   "published": 12,
+   "present": 12,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2010": {
+   "published": 18,
+   "present": 18,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2011": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2012": {
+   "published": 11,
+   "present": 11,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2013": {
+   "published": 14,
+   "present": 13,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 1
+  },
+  "asp/2014": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2015": {
+   "published": 13,
+   "present": 13,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2016": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2017": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2018": {
+   "published": 15,
+   "present": 15,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2019": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2020": {
+   "published": 18,
+   "present": 18,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2021": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2022": {
+   "published": 10,
+   "present": 10,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2023": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2024": {
+   "published": 15,
+   "present": 15,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2025": {
+   "published": 15,
+   "present": 15,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asp/2026": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/1999": {
+   "published": 28,
+   "present": 28,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2000": {
+   "published": 122,
+   "present": 122,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2001": {
+   "published": 241,
+   "present": 241,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2002": {
+   "published": 212,
+   "present": 210,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2003": {
+   "published": 215,
+   "present": 215,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2004": {
+   "published": 192,
+   "present": 192,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2005": {
+   "published": 191,
+   "present": 191,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2006": {
+   "published": 221,
+   "present": 221,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2007": {
+   "published": 215,
+   "present": 215,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2008": {
+   "published": 181,
+   "present": 181,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2009": {
+   "published": 191,
+   "present": 191,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2010": {
+   "published": 166,
+   "present": 166,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "wsi/2011": {
+   "published": 323,
+   "present": 175,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 145,
+   "absentUnseen": 0
+  },
+  "wsi/2012": {
+   "published": 325,
+   "present": 150,
+   "presentViaCalendar": 0,
+   "absentClassB": 17,
+   "absentClassA": 158,
+   "absentUnseen": 0
+  },
+  "wsi/2013": {
+   "published": 321,
+   "present": 162,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 159,
+   "absentUnseen": 0
+  },
+  "wsi/2014": {
+   "published": 350,
+   "present": 168,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 170,
+   "absentUnseen": 0
+  },
+  "wsi/2015": {
+   "published": 314,
+   "present": 163,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 139,
+   "absentUnseen": 0
+  },
+  "wsi/2016": {
+   "published": 295,
+   "present": 147,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 148,
+   "absentUnseen": 0
+  },
+  "wsi/2017": {
+   "published": 296,
+   "present": 138,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 158,
+   "absentUnseen": 0
+  },
+  "wsi/2018": {
+   "published": 259,
+   "present": 128,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 128,
+   "absentUnseen": 0
+  },
+  "wsi/2019": {
+   "published": 274,
+   "present": 176,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 84,
+   "absentUnseen": 0
+  },
+  "wsi/2020": {
+   "published": 343,
+   "present": 220,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 120,
+   "absentUnseen": 0
+  },
+  "wsi/2021": {
+   "published": 385,
+   "present": 261,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 110,
+   "absentUnseen": 0
+  },
+  "wsi/2022": {
+   "published": 271,
+   "present": 172,
+   "presentViaCalendar": 0,
+   "absentClassB": 11,
+   "absentClassA": 88,
+   "absentUnseen": 0
+  },
+  "wsi/2023": {
+   "published": 259,
+   "present": 119,
+   "presentViaCalendar": 0,
+   "absentClassB": 6,
+   "absentClassA": 134,
+   "absentUnseen": 0
+  },
+  "wsi/2024": {
+   "published": 234,
+   "present": 121,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 106,
+   "absentUnseen": 0
+  },
+  "wsi/2025": {
+   "published": 225,
+   "present": 116,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 94,
+   "absentUnseen": 0
+  },
+  "wsi/2026": {
+   "published": 114,
+   "present": 105,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 0,
+   "absentUnseen": 8
+  },
+  "anaw/2012": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2013": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2014": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2015": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2016": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2017": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2018": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2019": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2020": {
+   "published": 3,
+   "present": 3,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2021": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2022": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2023": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2024": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2025": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "anaw/2026": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2020": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2021": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2022": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2023": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2024": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2025": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "asc/2026": {
+   "published": 11,
+   "present": 11,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1922": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1923": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1924": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1925": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1926": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1927": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1928": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1929": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1930": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1931": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1932": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1933": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1934": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1935": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1936": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1937": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1938": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1939": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1940": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1941": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1942": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1943": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1944": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1945": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1946": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1947": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1948": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1949": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1950": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1951": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1952": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1953": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1954": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1955": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1956": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1957": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1958": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1959": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1960": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1961": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1962": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1963": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1964": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1965": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1966": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1967": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1968": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1969": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1970": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1971": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1972": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1973": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1974": {
+   "published": 294,
+   "present": 80,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 214,
+   "absentUnseen": 0
+  },
+  "nisr/1975": {
+   "published": 334,
+   "present": 80,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 254,
+   "absentUnseen": 0
+  },
+  "nisr/1976": {
+   "published": 351,
+   "present": 88,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 242,
+   "absentUnseen": 0
+  },
+  "nisr/1977": {
+   "published": 314,
+   "present": 81,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 233,
+   "absentUnseen": 0
+  },
+  "nisr/1978": {
+   "published": 331,
+   "present": 88,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 221,
+   "absentUnseen": 0
+  },
+  "nisr/1979": {
+   "published": 392,
+   "present": 100,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 292,
+   "absentUnseen": 0
+  },
+  "nisr/1980": {
+   "published": 368,
+   "present": 100,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 246,
+   "absentUnseen": 0
+  },
+  "nisr/1981": {
+   "published": 342,
+   "present": 94,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 248,
+   "absentUnseen": 0
+  },
+  "nisr/1982": {
+   "published": 348,
+   "present": 101,
+   "presentViaCalendar": 0,
+   "absentClassB": 20,
+   "absentClassA": 227,
+   "absentUnseen": 0
+  },
+  "nisr/1983": {
+   "published": 330,
+   "present": 100,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 230,
+   "absentUnseen": 0
+  },
+  "nisr/1984": {
+   "published": 304,
+   "present": 102,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 202,
+   "absentUnseen": 0
+  },
+  "nisr/1985": {
+   "published": 276,
+   "present": 80,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 175,
+   "absentUnseen": 0
+  },
+  "nisr/1986": {
+   "published": 278,
+   "present": 82,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 196,
+   "absentUnseen": 0
+  },
+  "nisr/1987": {
+   "published": 372,
+   "present": 102,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 270,
+   "absentUnseen": 0
+  },
+  "nisr/1988": {
+   "published": 366,
+   "present": 101,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 243,
+   "absentUnseen": 0
+  },
+  "nisr/1989": {
+   "published": 377,
+   "present": 101,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 276,
+   "absentUnseen": 0
+  },
+  "nisr/1990": {
+   "published": 353,
+   "present": 100,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 231,
+   "absentUnseen": 0
+  },
+  "nisr/1991": {
+   "published": 440,
+   "present": 155,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 285,
+   "absentUnseen": 0
+  },
+  "nisr/1992": {
+   "published": 442,
+   "present": 142,
+   "presentViaCalendar": 0,
+   "absentClassB": 20,
+   "absentClassA": 280,
+   "absentUnseen": 0
+  },
+  "nisr/1993": {
+   "published": 397,
+   "present": 131,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 266,
+   "absentUnseen": 0
+  },
+  "nisr/1994": {
+   "published": 407,
+   "present": 126,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 262,
+   "absentUnseen": 0
+  },
+  "nisr/1995": {
+   "published": 409,
+   "present": 126,
+   "presentViaCalendar": 0,
+   "absentClassB": 17,
+   "absentClassA": 266,
+   "absentUnseen": 0
+  },
+  "nisr/1996": {
+   "published": 532,
+   "present": 528,
+   "presentViaCalendar": 0,
+   "absentClassB": 4,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1997": {
+   "published": 427,
+   "present": 427,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1998": {
+   "published": 321,
+   "present": 321,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/1999": {
+   "published": 372,
+   "present": 370,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2000": {
+   "published": 282,
+   "present": 281,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "nisr/2001": {
+   "published": 324,
+   "present": 324,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2002": {
+   "published": 317,
+   "present": 317,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2003": {
+   "published": 456,
+   "present": 456,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2004": {
+   "published": 386,
+   "present": 383,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 3,
+   "absentUnseen": 0
+  },
+  "nisr/2005": {
+   "published": 462,
+   "present": 462,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2006": {
+   "published": 426,
+   "present": 426,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2007": {
+   "published": 410,
+   "present": 410,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisr/2008": {
+   "published": 361,
+   "present": 359,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "nisr/2009": {
+   "published": 342,
+   "present": 329,
+   "presentViaCalendar": 0,
+   "absentClassB": 3,
+   "absentClassA": 10,
+   "absentUnseen": 0
+  },
+  "nisr/2010": {
+   "published": 431,
+   "present": 341,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 90,
+   "absentUnseen": 0
+  },
+  "nisr/2011": {
+   "published": 442,
+   "present": 334,
+   "presentViaCalendar": 0,
+   "absentClassB": 8,
+   "absentClassA": 100,
+   "absentUnseen": 0
+  },
+  "nisr/2012": {
+   "published": 462,
+   "present": 351,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 111,
+   "absentUnseen": 0
+  },
+  "nisr/2013": {
+   "published": 308,
+   "present": 228,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 68,
+   "absentUnseen": 0
+  },
+  "nisr/2014": {
+   "published": 324,
+   "present": 246,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 78,
+   "absentUnseen": 0
+  },
+  "nisr/2015": {
+   "published": 424,
+   "present": 347,
+   "presentViaCalendar": 0,
+   "absentClassB": 5,
+   "absentClassA": 72,
+   "absentUnseen": 0
+  },
+  "nisr/2016": {
+   "published": 427,
+   "present": 340,
+   "presentViaCalendar": 0,
+   "absentClassB": 1,
+   "absentClassA": 86,
+   "absentUnseen": 0
+  },
+  "nisr/2017": {
+   "published": 241,
+   "present": 166,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 75,
+   "absentUnseen": 0
+  },
+  "nisr/2018": {
+   "published": 211,
+   "present": 116,
+   "presentViaCalendar": 0,
+   "absentClassB": 66,
+   "absentClassA": 29,
+   "absentUnseen": 0
+  },
+  "nisr/2019": {
+   "published": 237,
+   "present": 185,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 52,
+   "absentUnseen": 0
+  },
+  "nisr/2020": {
+   "published": 347,
+   "present": 229,
+   "presentViaCalendar": 0,
+   "absentClassB": 98,
+   "absentClassA": 20,
+   "absentUnseen": 0
+  },
+  "nisr/2021": {
+   "published": 344,
+   "present": 276,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 66,
+   "absentUnseen": 0
+  },
+  "nisr/2022": {
+   "published": 295,
+   "present": 189,
+   "presentViaCalendar": 0,
+   "absentClassB": 91,
+   "absentClassA": 15,
+   "absentUnseen": 0
+  },
+  "nisr/2023": {
+   "published": 219,
+   "present": 181,
+   "presentViaCalendar": 0,
+   "absentClassB": 2,
+   "absentClassA": 36,
+   "absentUnseen": 0
+  },
+  "nisr/2024": {
+   "published": 226,
+   "present": 158,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 68,
+   "absentUnseen": 0
+  },
+  "nisr/2025": {
+   "published": 196,
+   "present": 146,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 50,
+   "absentUnseen": 0
+  },
+  "nisr/2026": {
+   "published": 150,
+   "present": 86,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 22,
+   "absentUnseen": 42
+  },
+  "nia/2000": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2001": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2002": {
+   "published": 14,
+   "present": 14,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2003": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2004": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2005": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2006": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2007": {
+   "published": 3,
+   "present": 3,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2008": {
+   "published": 13,
+   "present": 13,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2009": {
+   "published": 9,
+   "present": 9,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2010": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2011": {
+   "published": 29,
+   "present": 29,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2012": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2013": {
+   "published": 10,
+   "present": 10,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2014": {
+   "published": 12,
+   "present": 12,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2015": {
+   "published": 10,
+   "present": 10,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2016": {
+   "published": 30,
+   "present": 30,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2017": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2018": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2019": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2020": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2021": {
+   "published": 8,
+   "present": 8,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2022": {
+   "published": 31,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2023": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2024": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2025": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nia/2026": {
+   "published": 7,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 3
+  },
+  "nisi/1972": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1973": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1974": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1975": {
+   "published": 21,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "nisi/1976": {
+   "published": 28,
+   "present": 24,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "nisi/1977": {
+   "published": 25,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "nisi/1978": {
+   "published": 28,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 6,
+   "absentUnseen": 0
+  },
+  "nisi/1979": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1980": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1981": {
+   "published": 25,
+   "present": 24,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "nisi/1982": {
+   "published": 23,
+   "present": 21,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "nisi/1983": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1984": {
+   "published": 15,
+   "present": 15,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1985": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1986": {
+   "published": 25,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "nisi/1987": {
+   "published": 23,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1988": {
+   "published": 24,
+   "present": 24,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1989": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1990": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1991": {
+   "published": 25,
+   "present": 25,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1992": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1993": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1994": {
+   "published": 17,
+   "present": 17,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1995": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1996": {
+   "published": 26,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1997": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1998": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/1999": {
+   "published": 11,
+   "present": 11,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2000": {
+   "published": 3,
+   "present": 3,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2001": {
+   "published": 3,
+   "present": 3,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2002": {
+   "published": 9,
+   "present": 9,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2003": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2004": {
+   "published": 23,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2005": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2006": {
+   "published": 22,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2007": {
+   "published": 11,
+   "present": 11,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2008": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2009": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2010": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2011": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2012": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2013": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2014": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2015": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2016": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2017": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2018": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2019": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2020": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2021": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2022": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2023": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2024": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2025": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "nisi/2026": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1952": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1953": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1954": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1955": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1956": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1957": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1958": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1959": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1960": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1961": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1962": {
+   "published": 19,
+   "present": 19,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1963": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1964": {
+   "published": 9,
+   "present": 9,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1965": {
+   "published": 10,
+   "present": 10,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/1966": {
+   "published": 22,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "eur/1967": {
+   "published": 83,
+   "present": 24,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 59,
+   "absentUnseen": 0
+  },
+  "eur/1968": {
+   "published": 150,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 117,
+   "absentUnseen": 0
+  },
+  "eur/1969": {
+   "published": 169,
+   "present": 28,
+   "presentViaCalendar": 0,
+   "absentClassB": 13,
+   "absentClassA": 128,
+   "absentUnseen": 0
+  },
+  "eur/1970": {
+   "published": 235,
+   "present": 27,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 208,
+   "absentUnseen": 0
+  },
+  "eur/1971": {
+   "published": 299,
+   "present": 27,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 272,
+   "absentUnseen": 0
+  },
+  "eur/1972": {
+   "published": 410,
+   "present": 29,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 359,
+   "absentUnseen": 0
+  },
+  "eur/1973": {
+   "published": 3583,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 126,
+   "absentClassA": 3424,
+   "absentUnseen": 0
+  },
+  "eur/1974": {
+   "published": 3266,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 135,
+   "absentClassA": 3105,
+   "absentUnseen": 0
+  },
+  "eur/1975": {
+   "published": 3398,
+   "present": 37,
+   "presentViaCalendar": 0,
+   "absentClassB": 135,
+   "absentClassA": 3226,
+   "absentUnseen": 0
+  },
+  "eur/1976": {
+   "published": 3195,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 132,
+   "absentClassA": 3029,
+   "absentUnseen": 0
+  },
+  "eur/1977": {
+   "published": 2981,
+   "present": 32,
+   "presentViaCalendar": 0,
+   "absentClassB": 111,
+   "absentClassA": 2838,
+   "absentUnseen": 0
+  },
+  "eur/1978": {
+   "published": 3095,
+   "present": 40,
+   "presentViaCalendar": 0,
+   "absentClassB": 113,
+   "absentClassA": 2942,
+   "absentUnseen": 0
+  },
+  "eur/1979": {
+   "published": 3007,
+   "present": 30,
+   "presentViaCalendar": 0,
+   "absentClassB": 112,
+   "absentClassA": 2865,
+   "absentUnseen": 0
+  },
+  "eur/1980": {
+   "published": 1834,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 69,
+   "absentClassA": 1729,
+   "absentUnseen": 0
+  },
+  "eur/1981": {
+   "published": 2699,
+   "present": 37,
+   "presentViaCalendar": 0,
+   "absentClassB": 108,
+   "absentClassA": 2554,
+   "absentUnseen": 0
+  },
+  "eur/1982": {
+   "published": 3513,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 127,
+   "absentClassA": 3347,
+   "absentUnseen": 0
+  },
+  "eur/1983": {
+   "published": 3628,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 127,
+   "absentClassA": 3462,
+   "absentUnseen": 0
+  },
+  "eur/1984": {
+   "published": 3663,
+   "present": 38,
+   "presentViaCalendar": 0,
+   "absentClassB": 132,
+   "absentClassA": 3493,
+   "absentUnseen": 0
+  },
+  "eur/1985": {
+   "published": 3781,
+   "present": 42,
+   "presentViaCalendar": 0,
+   "absentClassB": 132,
+   "absentClassA": 3607,
+   "absentUnseen": 0
+  },
+  "eur/1986": {
+   "published": 2928,
+   "present": 35,
+   "presentViaCalendar": 0,
+   "absentClassB": 117,
+   "absentClassA": 2776,
+   "absentUnseen": 0
+  },
+  "eur/1987": {
+   "published": 4113,
+   "present": 56,
+   "presentViaCalendar": 0,
+   "absentClassB": 131,
+   "absentClassA": 3926,
+   "absentUnseen": 0
+  },
+  "eur/1988": {
+   "published": 4253,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 153,
+   "absentClassA": 4061,
+   "absentUnseen": 0
+  },
+  "eur/1989": {
+   "published": 4045,
+   "present": 50,
+   "presentViaCalendar": 0,
+   "absentClassB": 245,
+   "absentClassA": 3750,
+   "absentUnseen": 0
+  },
+  "eur/1990": {
+   "published": 3933,
+   "present": 61,
+   "presentViaCalendar": 0,
+   "absentClassB": 132,
+   "absentClassA": 3740,
+   "absentUnseen": 0
+  },
+  "eur/1991": {
+   "published": 3890,
+   "present": 57,
+   "presentViaCalendar": 0,
+   "absentClassB": 154,
+   "absentClassA": 3679,
+   "absentUnseen": 0
+  },
+  "eur/1992": {
+   "published": 3918,
+   "present": 96,
+   "presentViaCalendar": 0,
+   "absentClassB": 156,
+   "absentClassA": 3666,
+   "absentUnseen": 0
+  },
+  "eur/1993": {
+   "published": 3675,
+   "present": 81,
+   "presentViaCalendar": 0,
+   "absentClassB": 130,
+   "absentClassA": 3464,
+   "absentUnseen": 0
+  },
+  "eur/1994": {
+   "published": 3361,
+   "present": 97,
+   "presentViaCalendar": 0,
+   "absentClassB": 112,
+   "absentClassA": 3152,
+   "absentUnseen": 0
+  },
+  "eur/1995": {
+   "published": 3082,
+   "present": 95,
+   "presentViaCalendar": 0,
+   "absentClassB": 111,
+   "absentClassA": 2876,
+   "absentUnseen": 0
+  },
+  "eur/1996": {
+   "published": 2505,
+   "present": 106,
+   "presentViaCalendar": 0,
+   "absentClassB": 90,
+   "absentClassA": 2309,
+   "absentUnseen": 0
+  },
+  "eur/1997": {
+   "published": 2636,
+   "present": 111,
+   "presentViaCalendar": 0,
+   "absentClassB": 110,
+   "absentClassA": 2415,
+   "absentUnseen": 0
+  },
+  "eur/1998": {
+   "published": 2852,
+   "present": 122,
+   "presentViaCalendar": 0,
+   "absentClassB": 89,
+   "absentClassA": 2641,
+   "absentUnseen": 0
+  },
+  "eur/1999": {
+   "published": 2802,
+   "present": 90,
+   "presentViaCalendar": 0,
+   "absentClassB": 110,
+   "absentClassA": 2602,
+   "absentUnseen": 0
+  },
+  "eur/2000": {
+   "published": 2781,
+   "present": 112,
+   "presentViaCalendar": 0,
+   "absentClassB": 112,
+   "absentClassA": 2557,
+   "absentUnseen": 0
+  },
+  "eur/2001": {
+   "published": 2599,
+   "present": 113,
+   "presentViaCalendar": 0,
+   "absentClassB": 89,
+   "absentClassA": 2397,
+   "absentUnseen": 0
+  },
+  "eur/2002": {
+   "published": 2370,
+   "present": 114,
+   "presentViaCalendar": 0,
+   "absentClassB": 87,
+   "absentClassA": 2169,
+   "absentUnseen": 0
+  },
+  "eur/2003": {
+   "published": 2335,
+   "present": 147,
+   "presentViaCalendar": 0,
+   "absentClassB": 87,
+   "absentClassA": 2101,
+   "absentUnseen": 0
+  },
+  "eur/2004": {
+   "published": 2263,
+   "present": 1438,
+   "presentViaCalendar": 0,
+   "absentClassB": 56,
+   "absentClassA": 769,
+   "absentUnseen": 0
+  },
+  "eur/2005": {
+   "published": 2181,
+   "present": 2125,
+   "presentViaCalendar": 0,
+   "absentClassB": 55,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "eur/2006": {
+   "published": 2019,
+   "present": 1947,
+   "presentViaCalendar": 0,
+   "absentClassB": 52,
+   "absentClassA": 20,
+   "absentUnseen": 0
+  },
+  "eur/2007": {
+   "published": 1561,
+   "present": 1532,
+   "presentViaCalendar": 0,
+   "absentClassB": 25,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "eur/2008": {
+   "published": 1342,
+   "present": 1316,
+   "presentViaCalendar": 0,
+   "absentClassB": 25,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "eur/2009": {
+   "published": 1291,
+   "present": 505,
+   "presentViaCalendar": 0,
+   "absentClassB": 13,
+   "absentClassA": 0,
+   "absentUnseen": 773
+  },
+  "eur/2010": {
+   "published": 1258,
+   "present": 261,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 997
+  },
+  "eur/2011": {
+   "published": 1383,
+   "present": 1354,
+   "presentViaCalendar": 0,
+   "absentClassB": 29,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2012": {
+   "published": 1266,
+   "present": 1252,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2013": {
+   "published": 1409,
+   "present": 1379,
+   "presentViaCalendar": 0,
+   "absentClassB": 30,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2014": {
+   "published": 1384,
+   "present": 1354,
+   "presentViaCalendar": 0,
+   "absentClassB": 30,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2015": {
+   "published": 1287,
+   "present": 1257,
+   "presentViaCalendar": 0,
+   "absentClassB": 30,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2016": {
+   "published": 1166,
+   "present": 1137,
+   "presentViaCalendar": 0,
+   "absentClassB": 29,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2017": {
+   "published": 1168,
+   "present": 1153,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2018": {
+   "published": 891,
+   "present": 865,
+   "presentViaCalendar": 0,
+   "absentClassB": 26,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2019": {
+   "published": 871,
+   "present": 859,
+   "presentViaCalendar": 0,
+   "absentClassB": 12,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eur/2020": {
+   "published": 975,
+   "present": 962,
+   "presentViaCalendar": 0,
+   "absentClassB": 13,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1952": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1953": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1954": {
+   "published": 3,
+   "present": 3,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1955": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1956": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1957": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1958": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1959": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1960": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1961": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1962": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1963": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1964": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1965": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1966": {
+   "published": 5,
+   "present": 5,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1967": {
+   "published": 7,
+   "present": 7,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1968": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1969": {
+   "published": 16,
+   "present": 16,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/1970": {
+   "published": 29,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 9,
+   "absentUnseen": 0
+  },
+  "eudn/1971": {
+   "published": 33,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 13,
+   "absentUnseen": 0
+  },
+  "eudn/1972": {
+   "published": 51,
+   "present": 21,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 30,
+   "absentUnseen": 0
+  },
+  "eudn/1973": {
+   "published": 239,
+   "present": 27,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 212,
+   "absentUnseen": 0
+  },
+  "eudn/1974": {
+   "published": 346,
+   "present": 28,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 296,
+   "absentUnseen": 0
+  },
+  "eudn/1975": {
+   "published": 375,
+   "present": 41,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 334,
+   "absentUnseen": 0
+  },
+  "eudn/1976": {
+   "published": 459,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 404,
+   "absentUnseen": 0
+  },
+  "eudn/1977": {
+   "published": 471,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 23,
+   "absentClassA": 412,
+   "absentUnseen": 0
+  },
+  "eudn/1978": {
+   "published": 607,
+   "present": 42,
+   "presentViaCalendar": 0,
+   "absentClassB": 42,
+   "absentClassA": 523,
+   "absentUnseen": 0
+  },
+  "eudn/1979": {
+   "published": 664,
+   "present": 33,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 609,
+   "absentUnseen": 0
+  },
+  "eudn/1980": {
+   "published": 811,
+   "present": 46,
+   "presentViaCalendar": 0,
+   "absentClassB": 23,
+   "absentClassA": 742,
+   "absentUnseen": 0
+  },
+  "eudn/1981": {
+   "published": 557,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 504,
+   "absentUnseen": 0
+  },
+  "eudn/1982": {
+   "published": 553,
+   "present": 60,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 471,
+   "absentUnseen": 0
+  },
+  "eudn/1983": {
+   "published": 503,
+   "present": 38,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 443,
+   "absentUnseen": 0
+  },
+  "eudn/1984": {
+   "published": 484,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 23,
+   "absentClassA": 425,
+   "absentUnseen": 0
+  },
+  "eudn/1985": {
+   "published": 471,
+   "present": 56,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 415,
+   "absentUnseen": 0
+  },
+  "eudn/1986": {
+   "published": 472,
+   "present": 46,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 404,
+   "absentUnseen": 0
+  },
+  "eudn/1987": {
+   "published": 442,
+   "present": 63,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 357,
+   "absentUnseen": 0
+  },
+  "eudn/1988": {
+   "published": 518,
+   "present": 57,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 439,
+   "absentUnseen": 0
+  },
+  "eudn/1989": {
+   "published": 533,
+   "present": 65,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 446,
+   "absentUnseen": 0
+  },
+  "eudn/1990": {
+   "published": 525,
+   "present": 62,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 456,
+   "absentUnseen": 0
+  },
+  "eudn/1991": {
+   "published": 492,
+   "present": 53,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 424,
+   "absentUnseen": 0
+  },
+  "eudn/1992": {
+   "published": 509,
+   "present": 60,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 427,
+   "absentUnseen": 0
+  },
+  "eudn/1993": {
+   "published": 658,
+   "present": 79,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 557,
+   "absentUnseen": 0
+  },
+  "eudn/1994": {
+   "published": 979,
+   "present": 100,
+   "presentViaCalendar": 0,
+   "absentClassB": 44,
+   "absentClassA": 835,
+   "absentUnseen": 0
+  },
+  "eudn/1995": {
+   "published": 527,
+   "present": 71,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 434,
+   "absentUnseen": 0
+  },
+  "eudn/1996": {
+   "published": 655,
+   "present": 84,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 549,
+   "absentUnseen": 0
+  },
+  "eudn/1997": {
+   "published": 797,
+   "present": 106,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 670,
+   "absentUnseen": 0
+  },
+  "eudn/1998": {
+   "published": 633,
+   "present": 99,
+   "presentViaCalendar": 0,
+   "absentClassB": 21,
+   "absentClassA": 513,
+   "absentUnseen": 0
+  },
+  "eudn/1999": {
+   "published": 721,
+   "present": 75,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 624,
+   "absentUnseen": 0
+  },
+  "eudn/2000": {
+   "published": 701,
+   "present": 88,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 591,
+   "absentUnseen": 0
+  },
+  "eudn/2001": {
+   "published": 755,
+   "present": 99,
+   "presentViaCalendar": 0,
+   "absentClassB": 44,
+   "absentClassA": 612,
+   "absentUnseen": 0
+  },
+  "eudn/2002": {
+   "published": 823,
+   "present": 107,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 694,
+   "absentUnseen": 0
+  },
+  "eudn/2003": {
+   "published": 748,
+   "present": 115,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 611,
+   "absentUnseen": 0
+  },
+  "eudn/2004": {
+   "published": 753,
+   "present": 389,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 342,
+   "absentUnseen": 0
+  },
+  "eudn/2005": {
+   "published": 741,
+   "present": 631,
+   "presentViaCalendar": 0,
+   "absentClassB": 23,
+   "absentClassA": 87,
+   "absentUnseen": 0
+  },
+  "eudn/2006": {
+   "published": 790,
+   "present": 655,
+   "presentViaCalendar": 0,
+   "absentClassB": 33,
+   "absentClassA": 102,
+   "absentUnseen": 0
+  },
+  "eudn/2007": {
+   "published": 730,
+   "present": 642,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 74,
+   "absentUnseen": 0
+  },
+  "eudn/2008": {
+   "published": 740,
+   "present": 675,
+   "presentViaCalendar": 0,
+   "absentClassB": 18,
+   "absentClassA": 47,
+   "absentUnseen": 0
+  },
+  "eudn/2009": {
+   "published": 716,
+   "present": 656,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 45,
+   "absentUnseen": 0
+  },
+  "eudn/2010": {
+   "published": 671,
+   "present": 618,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 38,
+   "absentUnseen": 0
+  },
+  "eudn/2011": {
+   "published": 757,
+   "present": 699,
+   "presentViaCalendar": 0,
+   "absentClassB": 15,
+   "absentClassA": 43,
+   "absentUnseen": 0
+  },
+  "eudn/2012": {
+   "published": 672,
+   "present": 639,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 19,
+   "absentUnseen": 0
+  },
+  "eudn/2013": {
+   "published": 639,
+   "present": 626,
+   "presentViaCalendar": 0,
+   "absentClassB": 7,
+   "absentClassA": 6,
+   "absentUnseen": 0
+  },
+  "eudn/2014": {
+   "published": 781,
+   "present": 758,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "eudn/2015": {
+   "published": 774,
+   "present": 752,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/2016": {
+   "published": 743,
+   "present": 720,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "eudn/2017": {
+   "published": 734,
+   "present": 710,
+   "presentViaCalendar": 0,
+   "absentClassB": 20,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "eudn/2018": {
+   "published": 696,
+   "present": 677,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudn/2019": {
+   "published": 805,
+   "present": 787,
+   "presentViaCalendar": 0,
+   "absentClassB": 16,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "eudn/2020": {
+   "published": 763,
+   "present": 743,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "eudr/1952": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1953": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1954": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1955": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1956": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1957": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1958": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1959": {
+   "published": 1,
+   "present": 1,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1960": {
+   "published": 2,
+   "present": 2,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1961": {
+   "published": 0,
+   "present": 0,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1962": {
+   "published": 4,
+   "present": 4,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1963": {
+   "published": 6,
+   "present": 6,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1964": {
+   "published": 13,
+   "present": 13,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1965": {
+   "published": 8,
+   "present": 8,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1966": {
+   "published": 10,
+   "present": 10,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1967": {
+   "published": 11,
+   "present": 11,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1968": {
+   "published": 20,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/1969": {
+   "published": 23,
+   "present": 20,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 3,
+   "absentUnseen": 0
+  },
+  "eudr/1970": {
+   "published": 24,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 2,
+   "absentUnseen": 0
+  },
+  "eudr/1971": {
+   "published": 27,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 4,
+   "absentUnseen": 0
+  },
+  "eudr/1972": {
+   "published": 36,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 10,
+   "absentUnseen": 0
+  },
+  "eudr/1973": {
+   "published": 38,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 15,
+   "absentUnseen": 0
+  },
+  "eudr/1974": {
+   "published": 57,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 26,
+   "absentUnseen": 0
+  },
+  "eudr/1975": {
+   "published": 57,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 31,
+   "absentUnseen": 0
+  },
+  "eudr/1976": {
+   "published": 72,
+   "present": 40,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 32,
+   "absentUnseen": 0
+  },
+  "eudr/1977": {
+   "published": 57,
+   "present": 30,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 27,
+   "absentUnseen": 0
+  },
+  "eudr/1978": {
+   "published": 86,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 52,
+   "absentUnseen": 0
+  },
+  "eudr/1979": {
+   "published": 72,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 19,
+   "absentClassA": 27,
+   "absentUnseen": 0
+  },
+  "eudr/1980": {
+   "published": 86,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 50,
+   "absentUnseen": 0
+  },
+  "eudr/1981": {
+   "published": 58,
+   "present": 22,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 36,
+   "absentUnseen": 0
+  },
+  "eudr/1982": {
+   "published": 71,
+   "present": 23,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "eudr/1983": {
+   "published": 63,
+   "present": 28,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 35,
+   "absentUnseen": 0
+  },
+  "eudr/1984": {
+   "published": 72,
+   "present": 26,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 46,
+   "absentUnseen": 0
+  },
+  "eudr/1985": {
+   "published": 89,
+   "present": 28,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 61,
+   "absentUnseen": 0
+  },
+  "eudr/1986": {
+   "published": 84,
+   "present": 31,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 53,
+   "absentUnseen": 0
+  },
+  "eudr/1987": {
+   "published": 72,
+   "present": 30,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "eudr/1988": {
+   "published": 82,
+   "present": 29,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 53,
+   "absentUnseen": 0
+  },
+  "eudr/1989": {
+   "published": 113,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 22,
+   "absentClassA": 47,
+   "absentUnseen": 0
+  },
+  "eudr/1990": {
+   "published": 94,
+   "present": 46,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 48,
+   "absentUnseen": 0
+  },
+  "eudr/1991": {
+   "published": 106,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 62,
+   "absentUnseen": 0
+  },
+  "eudr/1992": {
+   "published": 122,
+   "present": 52,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 70,
+   "absentUnseen": 0
+  },
+  "eudr/1993": {
+   "published": 118,
+   "present": 59,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 59,
+   "absentUnseen": 0
+  },
+  "eudr/1994": {
+   "published": 79,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 40,
+   "absentUnseen": 0
+  },
+  "eudr/1995": {
+   "published": 72,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 38,
+   "absentUnseen": 0
+  },
+  "eudr/1996": {
+   "published": 96,
+   "present": 38,
+   "presentViaCalendar": 0,
+   "absentClassB": 20,
+   "absentClassA": 38,
+   "absentUnseen": 0
+  },
+  "eudr/1997": {
+   "published": 80,
+   "present": 27,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 53,
+   "absentUnseen": 0
+  },
+  "eudr/1998": {
+   "published": 101,
+   "present": 49,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 52,
+   "absentUnseen": 0
+  },
+  "eudr/1999": {
+   "published": 102,
+   "present": 41,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 61,
+   "absentUnseen": 0
+  },
+  "eudr/2000": {
+   "published": 83,
+   "present": 36,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 47,
+   "absentUnseen": 0
+  },
+  "eudr/2001": {
+   "published": 103,
+   "present": 44,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 59,
+   "absentUnseen": 0
+  },
+  "eudr/2002": {
+   "published": 97,
+   "present": 55,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 42,
+   "absentUnseen": 0
+  },
+  "eudr/2003": {
+   "published": 123,
+   "present": 48,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 75,
+   "absentUnseen": 0
+  },
+  "eudr/2004": {
+   "published": 112,
+   "present": 66,
+   "presentViaCalendar": 0,
+   "absentClassB": 14,
+   "absentClassA": 32,
+   "absentUnseen": 0
+  },
+  "eudr/2005": {
+   "published": 92,
+   "present": 91,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "eudr/2006": {
+   "published": 140,
+   "present": 139,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 1,
+   "absentUnseen": 0
+  },
+  "eudr/2007": {
+   "published": 76,
+   "present": 76,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2008": {
+   "published": 126,
+   "present": 126,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2009": {
+   "published": 164,
+   "present": 164,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2010": {
+   "published": 91,
+   "present": 86,
+   "presentViaCalendar": 0,
+   "absentClassB": 5,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2011": {
+   "published": 99,
+   "present": 99,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2012": {
+   "published": 52,
+   "present": 52,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2013": {
+   "published": 64,
+   "present": 64,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2014": {
+   "published": 112,
+   "present": 112,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2015": {
+   "published": 39,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2016": {
+   "published": 39,
+   "present": 39,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2017": {
+   "published": 34,
+   "present": 34,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2018": {
+   "published": 42,
+   "present": 42,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2019": {
+   "published": 67,
+   "present": 67,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  },
+  "eudr/2020": {
+   "published": 29,
+   "present": 29,
+   "presentViaCalendar": 0,
+   "absentClassB": 0,
+   "absentClassA": 0,
+   "absentUnseen": 0
+  }
+ }
+}

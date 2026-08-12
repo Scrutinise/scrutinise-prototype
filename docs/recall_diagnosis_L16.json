@@ -1,15 +1,15 @@
 {
-  "measuredAt": "2026-08-12T11:59:56.544Z",
+  "measuredAt": "2026-08-12T18:19:38.202Z",
   "L": 16,
   "K": 20,
   "WIDE": 120,
   "tally": {
-    "IN_TOP_K": 13,
-    "RANKING": 5,
-    "CANDIDATES": 3,
+    "IN_TOP_K": 12,
+    "RANKING": 2,
+    "CANDIDATES": 5,
     "ROUTING": 0,
     "TYPING": 0,
-    "ABSENT": 9
+    "ABSENT": 11
   },
   "findings": [
     {
@@ -102,8 +102,8 @@
       "label": "DPPEC (EU Exit) Regs 2019",
       "role": "below",
       "why": "the amending SI is only meaningful via the instrument it amends — the amended regime should lead",
-      "rankInTopK": 16,
-      "rankInFull": 16,
+      "rankInTopK": null,
+      "rankInFull": null,
       "routed": [
         "legislation",
         "debates",
@@ -112,7 +112,7 @@
         "guidance"
       ],
       "returned": 240,
-      "verdict": "IN_TOP_K"
+      "verdict": "ABSENT"
     },
     {
       "query": "what are the rules on unfair dismissal?",
@@ -147,7 +147,7 @@
       ],
       "returned": 240,
       "foundInStream": "legislation",
-      "foundAtWideRank": 41,
+      "foundAtWideRank": 52,
       "verdict": "CANDIDATES"
     },
     {
@@ -173,7 +173,7 @@
       "role": "below",
       "why": "commencement and consequential instruments carry no substantive rule; the Act does",
       "rankInTopK": null,
-      "rankInFull": 26,
+      "rankInFull": null,
       "routed": [
         "legislation",
         "debates",
@@ -182,7 +182,7 @@
         "guidance"
       ],
       "returned": 240,
-      "verdict": "RANKING"
+      "verdict": "ABSENT"
     },
     {
       "query": "what are a landlord's repairing obligations?",
@@ -292,7 +292,7 @@
       "role": "above",
       "why": "compulsory information-gathering powers are competition/regulatory; DPA 2018 constrains processing, it does not confer them",
       "rankInTopK": null,
-      "rankInFull": 46,
+      "rankInFull": 156,
       "routed": [
         "legislation",
         "debates",
@@ -328,7 +328,7 @@
       "role": "above",
       "why": "FSMA Part XI is an actual information-gathering power; PECR is not about regulator powers at all",
       "rankInTopK": null,
-      "rankInFull": 131,
+      "rankInFull": null,
       "routed": [
         "legislation",
         "debates",
@@ -337,7 +337,9 @@
         "guidance"
       ],
       "returned": 240,
-      "verdict": "RANKING"
+      "foundInStream": "legislation",
+      "foundAtWideRank": 7,
+      "verdict": "CANDIDATES"
     },
     {
       "query": "what powers do regulators have to compel disclosure of information from companies?",
@@ -389,7 +391,7 @@
       ],
       "returned": 240,
       "foundInStream": "legislation",
-      "foundAtWideRank": 25,
+      "foundAtWideRank": 27,
       "verdict": "CANDIDATES"
     },
     {
@@ -398,7 +400,7 @@
       "role": "above",
       "why": "water-quality offences and discharge consents are WRA 1991; EPA 1990 is the general pollution-control frame",
       "rankInTopK": null,
-      "rankInFull": 211,
+      "rankInFull": null,
       "routed": [
         "legislation",
         "debates",
@@ -407,7 +409,9 @@
         "guidance"
       ],
       "returned": 240,
-      "verdict": "RANKING"
+      "foundInStream": "legislation",
+      "foundAtWideRank": 86,
+      "verdict": "CANDIDATES"
     },
     {
       "query": "what is the law on water pollution from sewage discharge?",
@@ -496,8 +500,8 @@
       "label": "any other EqA 2010 section",
       "role": "below",
       "why": "the public sector equality duty is a named, frequently-cited provision; it must pin exactly",
-      "rankInTopK": 14,
-      "rankInFull": 14,
+      "rankInTopK": 13,
+      "rankInFull": 13,
       "routed": [
         "legislation"
       ],
