@@ -2417,6 +2417,14 @@ async function processIco(row: QueueRow): Promise<void> {
 // because the V28 code shipped without it and a reseed must be able to fill
 // the gap without re-downloading 5,645 payloads.
 
+/** Does the metadata row for this section already exist? Pairs with r2Exists on
+ *  any "already done, skip the fetch" short-circuit: the object and the row are
+ *  two writes, and a process can die between them. */
+async function sectionExists(id: string): Promise<boolean> {
+  const { rows } = await getNeonPool().query(`SELECT 1 FROM corpus_sections WHERE id = $1 LIMIT 1`, [id])
+  return rows.length > 0
+}
+
 async function writeDivisionStructured(d: import('../sources/division-votes').DivisionDetail): Promise<number> {
   const pool = getNeonPool()
   await pool.query(`
@@ -2532,8 +2540,18 @@ async function processImpactAssessments(row: QueueRow): Promise<void> {
   const [, year, number, pdfUrl, instrumentId, stage, department, date] = f
   const docKey = `${year}-${number}`
 
+  // ⚠ AN R2 OBJECT DOES NOT PROVE A SECTION ROW EXISTS. The write is r2Put THEN
+  // upsertSection, so a process killed between the two (SIGTERM on redeploy,
+  // OOM, crash) leaves the object present and the row absent. On retry a
+  // bare r2Exists short-circuit then marks the row `done` and the section is
+  // never written — a silent hole that reconciles as success.
+  // Measured: 2 consultations lost exactly this way to a mid-drain redeploy on
+  // 11 Aug 2026 (`attempts: 2`, `lastError: reclaimed by ops — process SIGTERM`).
+  // So the short-circuit checks BOTH.
   const probe = compiledKey(row.corpus, docKey, '1')
-  if (await r2Exists(probe)) { await markDone(row.id, 'pdf'); return }
+  if (await r2Exists(probe) && await sectionExists(sectionId(row.corpus, docKey, '1'))) {
+    await markDone(row.id, 'pdf'); return
+  }
 
   let buf: Buffer | null = null
   let httpStatus: number | null = null
@@ -2636,8 +2654,12 @@ async function processConsultations(row: QueueRow): Promise<void> {
   }
   const docKey = path.replace(/^\//, '').replace(/\//g, '_')
 
+  // Both, not just R2 — see the note on processImpactAssessments. This is the
+  // exact pair of rows that hole was found on.
   const cKey = compiledKey(row.corpus, docKey, '1')
-  if (await r2Exists(cKey)) { await markDone(row.id, 'html'); return }
+  if (await r2Exists(cKey) && await sectionExists(sectionId(row.corpus, docKey, '1'))) {
+    await markDone(row.id, 'html'); return
+  }
 
   const c = await fetchConsultation(path, type)
   if (!c) { await markFailed(row.id, `consultations ${path}: content fetch failed`); return }
