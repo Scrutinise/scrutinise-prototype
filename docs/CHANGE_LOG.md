@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-12 17:36 UTC — LEX: **the Sprint 3-D walk is done — 7 of 9 items pass, and the two that failed were SECOND INSTANCES of the defects 3-D had just fixed, both now fixed with a guard (`check:panel-claims`) whose every assertion was watched failing first.** `keywords` is declared `structured` with no slots, so the panel drew "PROPOSED BY LEX — REFINE" over a literally empty card whose Save would have written `{}` over Lex's keywords; and "Save & exit" POSTed `accept` to a route that 422s child-entity fields, so it could not save on any page from Diagnosis onwards — the two copies of `CHILD_ENTITY_FIELDS` had drifted, and the dialog was also calling already-persisted PolicyOption rows an unsaved draft. Task 1's problem gate holds in two presses; legislation links 5/5 → 200; Task 3, 9e, 9f, 9g and 9h all pass. **And the Deepening (§22 Pilot A) is built:** three additive tables on Neon (applied, then re-applied to prove idempotence), four passes as pure configuration — `check:deepening` asserts no pass key exists outside the config file — background runs that persist incrementally, supersede older PROPOSED items and provably never touch an ACCEPTED one, and a separate evidence layer whose "never writes a canonical field" invariant is enforced by grep with exactly one allowed line, not by intention. ⚠ **§3's instruction was overtaken mid-sprint** — Search made the Impact Assessment corpus reachable the same afternoon (confirmed behaviourally in the briefing panel, not by reading their code) — so known unknowns are COMPUTED from each run and a hardcoded gap string is forbidden by the check. No thermometer, no stars, counts only (§24). ⚠ NOT yet browser-verified — it has not been pushed. ⚠ `check:score-scope` fails on the concurrent Central session's `lib/question-library.ts`, reported not edited. Earlier: 2026-08-12 17:12 UTC — INGEST V35 COMPLETE on both halves: embed **95,044 vectors, 0 misses, $4.87 against $4.50 predicted (+8.2%)**, inside the CPW band; `corpus_vec` = `corpus_chunks` = 22,613,652 exactly; FTS 31,849 rows; **ANN `unindexed=0`** with the verify watched FAILING first at 95,044 unindexed, €0.101, box destroyed; `vector-serve` redeployed (`started_at` moved, it does NOT auto-deploy). ⚠ `v33-vec-catchup.ts` was telling the next reader to run `vector-index`, which reports success and builds NOTHING (both its scripts are checkpointed `phase:"done"`) — `vector-reindex` is the one; fixed. Earlier: 2026-08-12 12:39 UTC — SEARCH S2C-6 + INGEST V35: the four V34 corpora are TYPED (three new display types — IMPACT_ASSESSMENT, CONSULTATION, DIVISION; union 10→13; check:corpus-types 153/153 with every new assertion watched failing first) and HONESTLY TITLED (all four failed the brief's correctness requirement — a Lords roll-call rendered as the bare bill name, and **1,024 impact-assessment rows are titled the single word "Summary"**; fixed at display in one file for both adapters). ⚠ **The ingest brief's sequencing note is wrong — the typing gates the EMBED too**, because the catch-up bakes `tierFor()` into every chunk and vector-search prefilters on it server-side; embedding first would have made 95,044 paid-for chunks unreachable. ⚠⚠ **The recall constraint is not retrieval tuning: 17,261 instruments known to the legacy table are ABSENT from `corpus_sections`** — 77,000 sections, 61.2M characters, including the **Companies Act 2006** and **UK GDPR** — which is why UK GDPR cannot be retrieved at any probe count, and why the V26 §6 DROP **must not proceed**: the legacy path returns CA 2006 at RANK 1 and UK GDPR at RANKS 2 and 7 on the very queries the corpus path reports absent. §3 repoints STOPPED on that evidence. A recall diagnosis separating the five loss modes says the brief's own lever (candidate count) fixes **3 of 17** missing documents against ABSENT 9 and RANKING 5. **`caselaw` 36/36→22/36 RETIRED after five sprints** — there was never a 36-query set (it was a count of routing CALLS) and the gold set has no caselaw archetype at all; measured directly, the router selects caselaw 8/8 when right and 1/8 when wrong. ⚠ **A network fault that is not one:** Node happy-eyeballs racing unroutable IPv6 against a cold Neon compute fails every address while PowerShell reaches the same IP — `--no-network-family-autoselection`. Earlier: 2026-08-12 12:21 UTC — LEX §1: **the Sprint 3-D browser walk cannot run, because www.scrutinise.org has not deployed since 6–9 August** — measured off the running product by three independent probes (the `/ideas/create` opening bubble is still the pre-3-D wording; `/support` has no Reading-legislation section; a Community page still says points and leaderboards are "coming soon"), while Stage 1.2's controls from 6 Aug ARE live, which brackets the deployed build between 6 Aug 20:41 and 9 Aug 07:43 UTC. Nothing is unpushed (`ls-remote` = local HEAD) and `tsc` is clean, so this is Vercel-side and Charlie must read the dashboard — the token here is SAML-blocked. ⚠ Consequence beyond §1: every "Charlie's browser re-test is the remaining gate" note since 9 Aug was untestable. Also: §3's dependency question is answered — `explanatory-notes` (18,801 sections/560 docs) and `explanatory-memoranda` (27,428/10,864) both exist and are reachable, but there is **no separate PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`, so legs 2 and 3 of the triangulation are locked in the same un-indexed box; and `ftsVector` is NULL on 100% of every corpus including searchable ones, so it is not the searchability signal. Plus the blocker that had to be cleared first: Node's happy-eyeballs cannot reach Neon by hostname on this machine (`NODE_OPTIONS=--no-network-family-autoselection`), and `scripts/whichdb.ts` — the check §16 makes mandatory — could not run at all; a runnable one is now at `scrutinise-web/scripts/whichdb.ts`. Earlier: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-12 22:55 UTC — INGEST V37: **the corpus now audits itself, and the check puts the Companies Act 2006 at RANK 1 with 7,354 references — it would have found V36's gap months ago, from the 2.36M-edge citation graph we already had.** It is a query, not a build. ⚠ The brief said not to start until V36's recovery landed; it has not — but §1 asks for the pre-V36 proof and **right now IS the pre-V36 corpus**, so the proof was available then and gone forever afterwards. Negative control (`ukpga/2010/4`, 2,817 sections held) correctly absent, and `--self-test` empties the held set so the control MUST fire, exiting 0 only when the validation FAILS. **80,805 of 151,612 referred-to instruments are held nowhere**, all classified — and **`needs-a-decision` (1,509) exists because the alternative was guessing**: a first draft asserted `mwa` was "superseded by anaw" when the corpus holds 22 `mwa` instruments and 1,446 sections. Flagged for Charlie: **`apni`** — fifty years of NI primary legislation (1921–1972), 2,602 references — and **`ukcm`**, Church Measures, 6,803 references. **1,227 false gaps** resolved by regnal/calendar and prefix aliases (`eud/1999/468` 404s at source while `eudn/1999/468` is a live document we hold). ✅ **Citation ranking beats completeness sweeping, measured:** the citation queue's top entry is the Companies Act; V36's completeness list is 95% Georgian local Acts yielding no text. **§2 completed with the walk: 804 feeds, 0 throttled, 324,622 instruments — the corpus holds 44.1% of what its source publishes** (`primary-acts-2000plus` 99.5%, `retained-eu` 24.5%, `primary-acts-pre-2000` 21.4%), though 139,440 of the 181,353 absences are CLML-fetched `NumberOfProvisions="0"`, so the recoverable list is **41,913**. The "60% ingested and 100% reachable reports as healthy" warning now sits in the reachability matrix's OWN header. **§4: the six highest-value gaps cost 5.6 pence to embed**; sizing is exact because the fetch is free; the £15 gate tests batch PLUS month-to-date from a ledger, since a threshold checked only against the current job is one a loop defeats. ⚠ **The gate passes and the filler still refuses to run (exit 3)**, listing the six unwired steps including the service restarts — a gap half-filled stops appearing in the report while still missing from the answers. ❌ **Not done: §3 entirely, monthly scheduling, the filler's end-to-end run** — two of six §5 criteria, scored in the report. Earlier: 2026-08-12 18:03 UTC — INGEST V36 §1 (reported before ingesting, as the brief required, and §1 changed §2): **the corpus holds 24.8% of the UK public general Acts legislation.gov.uk publishes — 4,302 of 17,367 — and the 17,261 is wrong in BOTH directions.** It overstates by ≥1,610, because pre-1963 Acts are cited by REGNAL session and the source's canonical id follows (`ukpga/Geo5/15-16/20`) while `LegislationItem` uses the calendar id — so **the Law of Property Act 1925 and the Merchant Shipping Act 1894, both named in the brief as missing, are IN the corpus**; and it understates by thousands, because 5,536 published Acts were never seen by anything and have no legacy row to be counted from. Per collection: `primary-acts-2000plus` **99.9%**, `primary-acts-pre-2000` **21.4%**. ⚠ **"77,000 sections" belongs to 9,859 of the 17,261; the other 7,402 have NO legacy text at all.** §1.4 settles the route by measurement — n=25 gap instruments with legacy text: **25/25 fetch from the source today, source richer in 11, legacy richer in 0** (Companies Act 2006 is 2,093 sections at source vs 1,665 legacy; UK GDPR 140 vs 61) — so **re-fetch, do not migrate**, and the DROP stays blocked as a fallback rather than because the legacy copy is good. ⚠ **A live defect made part of the gap and would have remade it:** `enumerateSections` discarded the retryable/deterministic split, so a 429 or a timeout was written down as `No CLML/HTML/PDF found on TNA` — a permanent claim about a document built from one minute's fetch outcome — on **8,583 instruments**, spread evenly at 1–2.5% of every SI year across 2,027 minutes; **27.5% of a random n=40 return real CLML on a plain re-fetch** (six hand-picked ids had all recovered — the random draw is what corrected that). Fixed with `RetryableSourceError`, guard watched failing first **2/4 → 4/4**. ⚠⚠ **Bigger than the brief and NOT fixed: `specialist_queue` holds 117,667 `pdf-only` rows, pending since June, with one writer and NO consumer** — the classification came from a HEAD request and **TNA answers HEAD on data.pdf with 405**, so **0 of 52 sampled actually have a PDF**, and the note Lex showed users ("the text exists as a PDF… queued for PDF processing") was false in both halves. Probe and note fixed (**3/5 → 5/5**, watched failing first); the 117,667 rows still carry the false label and re-verifying them is the next sprint. ⚠⚠⚠ **AND THE LARGEST FINDING CAME LAST: ~9.75% of the ALREADY-INDEXED legislation corpus is dot leaders.** `uksi/1999/303` was the pilot's best result at 137 sections / 4,521 words — every one of them `1 . . . . . . . .`, which is how the source renders a REPEALED provision; 139 of the 210 sections the pilots wrote (66.2%) were this. Fixed, retro-fixed (139 flipped, verified by reading back), guard watched failing first **12/14 → 14/14** with one test case CORRECTED rather than the rule. Then 400 random already-compiled sections were read out of R2: **39/400 = 9.75%** — `primary-acts-pre-2000` **22.5%**, `regional` **18.6%** — **extrapolating to ~171,700 sections already chunked, already embedded at full price, already retrievable as documents that say nothing**, nearly a quarter of the pre-2000 primary Acts corpus and larger than everything else in this sprint combined. **NOT fixed deliberately: an extrapolation from 400 samples is not grounds for flipping 171,700 rows.** ⚠ Three of the sprint's findings are corrections to results already reported — the hand-picked pilot said 6/6 until a random draw said 27.5%, the `unseen` rate said 1.0 until it met the real work list and said 0/12, and the 1987+ yield said 16.9 sections until the R2 objects were read back and said 5.8. **Every correction came from reading the artefact rather than the counter.** ✅ **§5 shipped — `docs/CORPUS_COMPLETENESS.md`**: 74 collections, **2 reconciled, 56 target-only, 16 NOT RECONCILED**, and NOT RECONCILED is stated to mean *unmeasured*, not incomplete. ⚠ The source walk is **still running** (ukpga done, uksi onward pending) and no coverage figure should be quoted for a type until its walk completes; `<openSearch:totalResults>` is NOT a usable denominator (absent on bucketed year feeds — 226 ukpga years recorded, zero uksi). Earlier: 2026-08-12 17:36 UTC — LEX: **the Sprint 3-D walk is done — 7 of 9 items pass, and the two that failed were SECOND INSTANCES of the defects 3-D had just fixed, both now fixed with a guard (`check:panel-claims`) whose every assertion was watched failing first.** `keywords` is declared `structured` with no slots, so the panel drew "PROPOSED BY LEX — REFINE" over a literally empty card whose Save would have written `{}` over Lex's keywords; and "Save & exit" POSTed `accept` to a route that 422s child-entity fields, so it could not save on any page from Diagnosis onwards — the two copies of `CHILD_ENTITY_FIELDS` had drifted, and the dialog was also calling already-persisted PolicyOption rows an unsaved draft. Task 1's problem gate holds in two presses; legislation links 5/5 → 200; Task 3, 9e, 9f, 9g and 9h all pass. **And the Deepening (§22 Pilot A) is built:** three additive tables on Neon (applied, then re-applied to prove idempotence), four passes as pure configuration — `check:deepening` asserts no pass key exists outside the config file — background runs that persist incrementally, supersede older PROPOSED items and provably never touch an ACCEPTED one, and a separate evidence layer whose "never writes a canonical field" invariant is enforced by grep with exactly one allowed line, not by intention. ⚠ **§3's instruction was overtaken mid-sprint** — Search made the Impact Assessment corpus reachable the same afternoon (confirmed behaviourally in the briefing panel, not by reading their code) — so known unknowns are COMPUTED from each run and a hardcoded gap string is forbidden by the check. No thermometer, no stars, counts only (§24). ⚠ NOT yet browser-verified — it has not been pushed. ⚠ `check:score-scope` fails on the concurrent Central session's `lib/question-library.ts`, reported not edited. Earlier: 2026-08-12 17:12 UTC — INGEST V35 COMPLETE on both halves: embed **95,044 vectors, 0 misses, $4.87 against $4.50 predicted (+8.2%)**, inside the CPW band; `corpus_vec` = `corpus_chunks` = 22,613,652 exactly; FTS 31,849 rows; **ANN `unindexed=0`** with the verify watched FAILING first at 95,044 unindexed, €0.101, box destroyed; `vector-serve` redeployed (`started_at` moved, it does NOT auto-deploy). ⚠ `v33-vec-catchup.ts` was telling the next reader to run `vector-index`, which reports success and builds NOTHING (both its scripts are checkpointed `phase:"done"`) — `vector-reindex` is the one; fixed. Earlier: 2026-08-12 12:39 UTC — SEARCH S2C-6 + INGEST V35: the four V34 corpora are TYPED (three new display types — IMPACT_ASSESSMENT, CONSULTATION, DIVISION; union 10→13; check:corpus-types 153/153 with every new assertion watched failing first) and HONESTLY TITLED (all four failed the brief's correctness requirement — a Lords roll-call rendered as the bare bill name, and **1,024 impact-assessment rows are titled the single word "Summary"**; fixed at display in one file for both adapters). ⚠ **The ingest brief's sequencing note is wrong — the typing gates the EMBED too**, because the catch-up bakes `tierFor()` into every chunk and vector-search prefilters on it server-side; embedding first would have made 95,044 paid-for chunks unreachable. ⚠⚠ **The recall constraint is not retrieval tuning: 17,261 instruments known to the legacy table are ABSENT from `corpus_sections`** — 77,000 sections, 61.2M characters, including the **Companies Act 2006** and **UK GDPR** — which is why UK GDPR cannot be retrieved at any probe count, and why the V26 §6 DROP **must not proceed**: the legacy path returns CA 2006 at RANK 1 and UK GDPR at RANKS 2 and 7 on the very queries the corpus path reports absent. §3 repoints STOPPED on that evidence. A recall diagnosis separating the five loss modes says the brief's own lever (candidate count) fixes **3 of 17** missing documents against ABSENT 9 and RANKING 5. **`caselaw` 36/36→22/36 RETIRED after five sprints** — there was never a 36-query set (it was a count of routing CALLS) and the gold set has no caselaw archetype at all; measured directly, the router selects caselaw 8/8 when right and 1/8 when wrong. ⚠ **A network fault that is not one:** Node happy-eyeballs racing unroutable IPv6 against a cold Neon compute fails every address while PowerShell reaches the same IP — `--no-network-family-autoselection`. Earlier: 2026-08-12 12:21 UTC — LEX §1: **the Sprint 3-D browser walk cannot run, because www.scrutinise.org has not deployed since 6–9 August** — measured off the running product by three independent probes (the `/ideas/create` opening bubble is still the pre-3-D wording; `/support` has no Reading-legislation section; a Community page still says points and leaderboards are "coming soon"), while Stage 1.2's controls from 6 Aug ARE live, which brackets the deployed build between 6 Aug 20:41 and 9 Aug 07:43 UTC. Nothing is unpushed (`ls-remote` = local HEAD) and `tsc` is clean, so this is Vercel-side and Charlie must read the dashboard — the token here is SAML-blocked. ⚠ Consequence beyond §1: every "Charlie's browser re-test is the remaining gate" note since 9 Aug was untestable. Also: §3's dependency question is answered — `explanatory-notes` (18,801 sections/560 docs) and `explanatory-memoranda` (27,428/10,864) both exist and are reachable, but there is **no separate PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`, so legs 2 and 3 of the triangulation are locked in the same un-indexed box; and `ftsVector` is NULL on 100% of every corpus including searchable ones, so it is not the searchability signal. Plus the blocker that had to be cleared first: Node's happy-eyeballs cannot reach Neon by hostname on this machine (`NODE_OPTIONS=--no-network-family-autoselection`), and `scripts/whichdb.ts` — the check §16 makes mandatory — could not run at all; a runnable one is now at `scrutinise-web/scripts/whichdb.ts`. Earlier: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
 handoff. The core of it is three vote-ish mechanisms that must not collapse into one: a QUESTION vote
 is up-only and self-voting is ALLOWED because it records frequency ("I get asked this too"), not
 quality; an ANSWER vote is up/down, mutually exclusive and self-voting is refused; a FAVOURITE is
@@ -128,6 +128,235 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## INGEST V37 — the corpus audits itself, and the check puts the Companies Act at rank 1 (2026-08-12 22:55 UTC)
+
+Executes `BRIEF_INGEST_V37_CORPUS_INTEGRITY.md` §1 and §2 in full, §4 partially, **§3 not started**.
+Full detail: **`docs/V37_CORPUS_INTEGRITY_REPORT.md`**.
+
+⚠ **The brief's precondition was not met and running anyway was right.** V37 says do not start until
+V36's recovery has landed; it has not. But §1 asks to run the check *"against the pre-V36 corpus…
+if this check would have surfaced the Companies Act, that is the proof it works"* — and **right now
+IS the pre-V36 corpus.** Once the recovery lands, that proof is gone for good.
+
+### §1 — the validation lands, with a negative control
+
+The `legislation_edges` table already held **2.36 M edges / 938 MB** from the Tier-1 graph. Nobody
+had asked it the one question that has an external referent: **of every instrument our corpus refers
+to, how many do we hold?** It is a query, not a build.
+
+```
+POSITIVE  ukpga/2006/46  Companies Act 2006  →  RANK 1, 7,354 references (547 from our own documents)
+POSITIVE  eur/2016/679   UK GDPR             →  rank 29, 473 references
+NEGATIVE  ukpga/2010/4   (2,817 sections held) →  correctly ABSENT
+```
+
+**This check would have found the Companies Act months ago, at the top of a self-prioritising
+queue, from data we already had.** `--self-test` empties the held set so the negative control must
+fire; it writes nothing and exits 0 only when the validation FAILS — a validation block never seen
+to fail is the same always-passing suite this sprint exists to replace.
+
+**80,805 of 151,612 referred-to instruments are held nowhere**, every one classified: `never-seen`
+38,316 · `no-ingest-route` 29,359 · `known-no-text` 11,621 · **`needs-a-decision` 1,509**.
+
+⚠ **`needs-a-decision` exists because the alternative was guessing.** A first draft of the scope
+list asserted `mwa` was "superseded by anaw" — the corpus holds **22 `mwa` instruments and 1,446
+sections**, so that entry would have relabelled real coverage as out of scope. Scope is now derived
+from what the corpus demonstrably holds (exactly 15 doctypes), and what is absent with no recorded
+reason is flagged for Charlie rather than assigned one: **`apni`** (1,264 instruments, 2,602
+references — **fifty years of NI primary legislation, 1921–1972**, with `nia` 2000+ and `nisi` held
+and nothing between) and **`ukcm`** (245, 6,803 references — **Church Measures are primary
+legislation**; `ukcm/1969/2` alone carries 1,108).
+
+⚠ **1,227 false gaps resolved by two alias classes**: regnal/calendar (a citation to `ukpga/1925/20`
+against a corpus holding `ukpga/Geo5/15-16/20`), and prefix/zero-padding — **`eud/1999/468` 404s at
+the source while `eudn/1999/468` is a live document we hold.** Checked against the source, not
+assumed.
+
+✅ **Citation ranking beats completeness sweeping, and it is now measured rather than argued:** the
+citation queue's top entry is the Companies Act; V36's completeness work list is 95% 1800–1849
+Georgian local Acts that yield no text. Same corpus, same gap, opposite ends of the queue.
+
+### §2 — completeness, completed
+
+The source walk finished: **804 year-feeds, 0 throttled, 324,622 instruments**. **The corpus holds
+44.1% of what its own source publishes.** `primary-acts-2000plus` **99.5%** · `regional` 68.6% ·
+`si-2010plus` 68.6% · `si-pre-2010` 66.9% · `retained-eu` **24.5%** · `primary-acts-pre-2000`
+**21.4%**. ⚠ 139,440 of the 181,353 absences are class (a) — CLML fetched, `NumberOfProvisions="0"`
+— so the recoverable list is **41,913**, not 181,353.
+
+The *"a collection 60% ingested and 100% reachable reports as healthy"* warning now lives in
+**`CORPUS_REACHABILITY.md`'s own header**, not a companion file, because the failure being guarded
+against is that matrix's headline being read as a health score. ❌ **Monthly scheduling not wired.**
+⚠ The `unverifiable` vs `NOT RECONCILED` split is **named but not drawn** — deciding which
+publishers have authoritative totals by guessing would be the `mwa` mistake again.
+
+### §4 — detect → size → price → and refuse to half-fill
+
+**The six highest-value gaps in the corpus cost 5.6 pence to embed** — 3,129 sections, 955,542
+tokens, $0.0717. Against a brief anticipating $12–15 for the whole recovery: the money was never the
+constraint, and the ranking is what makes a tiny spend buy the Companies Act rather than an 1823
+turnpike Act. **Sizing is exact, not estimated** — the fetch is free (OGL v3.0) so the price comes
+from real tokens; extrapolation is how "77,000 sections" was attached to the wrong population.
+The £15 gate tests **this batch plus month-to-date** from a `gap_filler_spend` ledger, because a
+threshold checked only against the current job is one a loop defeats. Dot leaders are excluded from
+the price, so the Companies Act sizes at **1,968** storable sections rather than 2,093 — V36's fix,
+visible in the invoice.
+
+⚠ **The gate PASSES and the filler still refuses to run, exit 3**, printing the six steps it has not
+wired: fetch→store · chunk+embed · keyword index · semantic index · **restart both serves** · verify
+through the product. **A gap half-filled is worse than a gap** — it stops appearing in the report
+while still missing from the answers. ✅ One thing checked rather than assumed: I suspected the batch
+cap could not propagate into the embed because the catch-ups are corpus-wide delta processors.
+**Wrong** — `v33-vec-catchup.ts` reads a per-`--run <tag>` work list, so the cap is real.
+
+**Scored honestly: two of six §5 criteria not done, one partial.** §3 (live miss logging) not
+started; monthly scheduling not wired; the filler's end-to-end run blocked on the same precondition
+V37 opened with.
+
+---
+
+## INGEST V36 §1 — the 17,261 is the wrong number in both directions, and the route is re-fetch, not migrate (2026-08-12 18:03 UTC)
+
+Executes `BRIEF_INGEST_V36_MISSING_INSTRUMENTS.md` §1 in full, and §5. **§2 and §3 are deliberately
+not started** — the brief said *"Report before ingesting. The route depends entirely on what §1
+finds"*, and §1 changed the route, the size and the shape of the work. Full detail:
+**`docs/V36_INGEST_REPORT.md`**.
+
+### The measurement the brief most wanted: reconcile against the source, not against the legacy table
+
+`corpus_acts` was rebuilt first (it was 8 days stale; the rebuild reconciles exactly — 250,808
+rows, 1,760,981 sections, **0 unattributed**) and confirms the 17,261. Then legislation.gov.uk's
+own `ukpga` year feeds were walked, 221 years, **17,367 published Acts**:
+
+| | instruments |
+|---|---:|
+| published by the source | **17,367** |
+| corpus holds text for | **4,302 — 24.8%** |
+| …held ONLY under a regnal id | **1,610** |
+| absent, CLML declares 0 provisions | 7,257 |
+| absent, fetch-outcome marker | 272 |
+| absent, never seen by anything | **5,536** |
+
+Per collection: **`primary-acts-2000plus` 99.9% (744/745)**, **`primary-acts-pre-2000` 21.4%
+(3,558/16,622)**. Modern primary legislation is essentially complete. The historic corpus is a
+fifth ingested.
+
+⚠ **The 17,261 overstates AND understates, and the errors do not cancel.** Pre-1963 Acts are cited
+by regnal session and the source's canonical id follows (`ukpga/Geo5/15-16/20`) while
+`LegislationItem` uses the calendar id (`ukpga/1925/20`). The corpus holds **1,610 instruments /
+33,231 sections under regnal ids, none with a `LegislationItem` row** — so **the Law of Property
+Act 1925 and the Merchant Shipping Act 1894, both named in the brief as missing, are in the
+corpus** (matched by section count: 245 and 391). Meanwhile 5,536 published Acts were never seen by
+anything and mostly have no legacy row, so no `LegislationItem`-keyed audit could have counted
+them.
+
+⚠ **"77,000 sections" belongs to 9,859 of the 17,261.** The other **7,402 have no legacy text at
+all** — 7,276 of them `ukpga`. Migration could never have recovered those.
+
+### §1.4 — the route, settled by measurement
+
+n=25 random gap instruments that DO have legacy text: **25/25 fetch from the source today**, source
+**richer in 11**, legacy richer in **0**, source empty in **0**. Companies Act 2006 is **2,093
+sections at the source against 1,665 in the legacy table**; UK GDPR **140 against 61**.
+**Re-fetch, do not migrate.** The V26 §6 DROP stays blocked — but as a fallback during the repair,
+not because `LegislationSection` holds anything better.
+
+### The defect that made part of the gap, fixed
+
+`enumerateSections` reached TNA through a helper that discards the retryable/deterministic split,
+so a 429, a 503 or a timeout arrived looking exactly like a 404, and the instrument was stamped
+`No CLML/HTML/PDF found on TNA` with `availability_status='no-provisions'` — **a permanent claim
+about the document, made out of one minute's fetch outcome** — then skipped forever by the reseed
+dedup. **8,583 instruments carry that marker**, all written in June 2026, spread evenly at 1–2.5%
+of every SI year across **2,027 distinct minutes**, so it was a per-request failure rate and not
+one outage. On a random n=40 sample, **27.5% return real CLML on a plain re-fetch today**; the
+other 72.5% come back correctly classified as genuine no-provisions, which repairs the record
+rather than losing them. ⚠ Six hand-picked ids had all recovered — the random draw is what
+corrected that, and it is why the pilot was re-run rather than believed.
+
+**Fix:** `fetchBinaryWithStatus` added, the retryable flag carried through all three format
+attempts, and `RetryableSourceError` thrown when everything is empty and any leg failed retryably.
+The worker's existing catch marks the row `failed` **with its reason** — visible and re-runnable.
+`processTnaLegislation` also now retracts the stale `:unavailable` row when a re-run recovers text.
+**Guard watched failing first: 2/4 against the old code, 4/4 with the fix**, with two control
+scenarios (a genuine 404, and real CLML) that fail if the fix is over-applied.
+
+### ⚠⚠ Bigger than the brief, and NOT fixed: 117,667 instruments carry a promise nobody can keep
+
+`specialist_queue` holds **117,667 `pdf-only` rows, all `pending` since June 2026**, with exactly
+one writer (`process-row.ts:214`) and **no consumer anywhere**. The classification came from
+`headRequest('{id}/data.pdf')` — and **legislation.gov.uk answers HEAD on that path with `405
+Method Not Allowed`**, so the probe cannot return true. On a random sample of **52**, **0 have a
+PDF**: `/data.pdf` 301s to `/made/data.pdf`, which 404s. The note Lex showed a user for one of
+these instruments read *"The text of this instrument exists as a PDF on legislation.gov.uk but has
+not yet been extracted. It is queued for PDF processing."* — **false in both halves**.
+
+Probe replaced with a ranged GET that follows redirects, checks content type and verifies the
+`%PDF-` magic (the source honours `Range`, so it costs 1 KB rather than the 23 MB the Companies Act
+PDF actually is); note rewritten to claim nothing; `headRequest` kept, unused, with a comment on
+why it cannot be used against TNA. **Check watched failing first: 3/5 against the old probe — both
+positive controls failed, including the Companies Act's 23 MB PDF — and 5/5 with the new one.**
+⚠ **The 117,667 existing rows still carry the false classification** (89,129 of them `retained-eu`).
+Re-verifying is ~117,667 ranged GETs, about 6.5 h on the fleet, no LLM cost. Next sprint.
+
+### ⚠⚠ The pilot's best-looking instrument was 137 sections of nothing — and ~9.75% of the corpus is
+
+`uksi/1999/303` recovered **137 sections and 4,521 words**, the largest yield in the sample and the
+reason the mean was 16.9. Reading the R2 objects back rather than the row count, every one is
+`1 . . . . . . . .` — how legislation.gov.uk renders a **repealed** provision in the revised CLML.
+Across everything the pilots wrote, **139 of 210 sections (66.2%) were dot leaders**. Each would
+have been chunked, **embedded at full price**, and retrievable as a document that says nothing.
+
+**Fixed** (`isRepealedPlaceholder`): recorded as `unavailable`/`revoked` with a note — out of the
+chunker, the FTS build and the embed, R2 writes skipped. **Watched failing first, weighted toward
+FALSE positives** because the danger is throwing away real law: **12/14 under a naive "any letter"
+rule, 14/14 with the two-letter rule**; the discriminating cases are lettered section numbers
+(`5A . . . .`). ⚠ One case had to be **corrected rather than the rule** — `1 . . . a . . .` was
+asserted not-a-placeholder, failed, and the implementation was right: a lone letter among dots is
+sub-paragraph `(a)` with its text repealed. **Retro-fixed** (`v36-retract-placeholders.ts`, needed
+because `processTnaLegislation` short-circuits on `r2Exists` before the check): **139 rows flipped,
+verified by reading back — 139 revoked, 0 still compiled.**
+
+⚠⚠⚠ **AND IT IS NOT CONFINED TO THE RECOVERY.** 400 random ALREADY-COMPILED legislation sections
+read out of R2: **39/400 = 9.75% are dot leaders** — `primary-acts-pre-2000` **22.5%** · `regional`
+**18.6%** · `si-2010plus` 7.9% · `primary-acts-2000plus` 5.9% · `si-pre-2010` 4.0% · `retained-eu`
+0%. **Extrapolated over 1,760,981 compiled legislation sections: ~171,700 already chunked, already
+embedded at full price, already retrievable as documents that say nothing** — nearly a quarter of
+the pre-2000 primary Acts corpus, and larger than everything else in this sprint combined. It bears
+on search directly, because those sections occupy candidate slots against real provisions, and **a
+share of the ABSENT/RANKING counts may be real provisions displaced by empty ones — a HYPOTHESIS,
+testable by re-running `diagnose-recall.ts` after a corpus-wide retraction.** **NOT fixed
+deliberately:** the pass means reading 1.76M R2 objects, and **an extrapolation from 400 samples is
+not grounds for flipping 171,700 rows.**
+
+⚠ **Found, measured, NOT fixed — a lead, not a diagnosis:** `ukpga/Vict/1-2/118` holds two sections
+whose entire body is a number (`"1"`, `"28"`) with malformed `sectionRef`s (`126.`, `2835.`),
+pointing at `CLML_SECTION_RX`'s nested-element boundary problem rather than at the source. Two rows
+inspected is not a root cause (§13).
+
+### §5 — reachability is not completeness
+
+`docs/CORPUS_COMPLETENESS.md` + `scripts/ingest/search/corpus-completeness.ts`. 74 collections:
+**2 reconciled against their publisher, 56 confirmed-section-target only, 16 NOT RECONCILED**. The
+file states in terms that NOT RECONCILED means *unmeasured*, not incomplete, and that no coverage
+figure should be quoted for those rows — the failure mode this instrument exists to prevent is a
+60%-ingested collection reporting as healthy because it is 100% reachable.
+
+### Still running, and what the next session does first
+
+The source walk is **incomplete**: `ukpga` done, `uksi` in progress, then eur/eudn/eudr/ssi/nisr/
+wsi/asp/nia/nisi/anaw/asc. Checkpointed per year in `scripts/ingest/v36/source-entries.json`;
+re-running resumes. **No coverage figure for a type until its walk finishes.** Then
+`v36-reconcile.ts` → `v36-seed-recovery.ts` (dry-run prints the prediction; **record it here before
+the run**) → **push before seeding**, because the workers execute pushed code and seeding an
+unpushed fix recreates the defect (playbook §8, V19 recurrence).
+⚠ **`<openSearch:totalResults>` is not a usable denominator**: legislation.gov.uk omits it on
+bucketed year feeds. `ukpga/1925` has it; `uksi/2010`, `ssi/2010` and `eur/2016` do not. A first
+pass recorded 226 `ukpga` years and **zero** `uksi` years. Reconcile off the entry walk, which
+yields ids and so supports a diff rather than a comparison of two numbers.
 
 ---
 
@@ -267,10 +496,44 @@ check's file scope rather than a defect — but it is the Central thread's call,
 reported rather than edited. All other checks pass: `problem-gate`, `never-claim`, `llm-guards` 9/9,
 `flags` 50/50, `corpus-types` 156/156, `panel-claims`, `deepening`.
 
-⚠ **NOT YET BROWSER-VERIFIED**, and the standing rule requires it: the two §1 fixes and the whole
-Deepening feature are on disk and unverified against the running site, because production deploys
-from `Main` and this has not been pushed. **First thing after the deploy: re-walk 2a (keywords) and
-9a (Save & exit on Guiding Policy), then run one pass end to end.**
+### ✅ BROWSER-VERIFIED, end to end (2026-08-12 21:50 UTC, after Charlie deployed by hand)
+
+⚠ **The deploy did not happen on the push** — again. It landed only after Charlie triggered it by
+hand, ~40 minutes later. Twice in one day. **`vercel.json`/GitHub auto-deploy for this project should
+be treated as not working until someone proves otherwise**, and the proof has to be a string read
+back off the running site.
+
+- **2a ✅** the Keywords card renders its keywords in an editable list; the badge sits over real
+  content, and the terminal card reads them back correctly.
+- **9a ✅** Exit with Candidate approaches awaiting now **leaves straight to the idea page** — no
+  dialog, no failed-save banner.
+- **The kernel was driven to 4/4 stages** to unlock the Deepening. Two more 3-D behaviours confirmed
+  in passing: `anticipatedResponses` came back with **all five slots filled** by Lex (Task 2c), and
+  the cost summary said **"This plan costs not yet estimated"** rather than inventing a total.
+- **One pass run live — `EVIDENCE_PRECEDENT`: RUN, 8 findings, 4 issues, 4 known unknowns, 32
+  references.** The **first finding is a CONTRADICTS** ("No statutory estimate of plastic pollution in
+  waterways and rivers"), surfaced at the top rather than filtered. Sources by type on the facts
+  strip: statutory instrument 2 · guidance 2 · **impact assessment 2** · debate 1 · primary
+  legislation 1 — so the V34/V35 corpora are genuinely feeding the triangulation.
+- **The known unknowns are the ones that matter**, including *"No post-implementation review or
+  evaluation of the 2015 or 2021 English plastic bag charge was found"* — the third leg of the
+  triangulation, **declared as a gap rather than fabricated**, which is the whole point of the
+  invariant.
+- **The deterministic template fired correctly:** `no-quantified-scale` raised *"No retrieved source
+  quantifies the scale of the problem…"*.
+- **Accept ✅** (the CONTRADICTS finding took an ACCEPTED chip). **Dismiss ✅** — the button is
+  disabled with an empty reason, and the dismissed issue **stays visible** with its reason and a
+  Reopen control.
+- **Re-run verified in the database, not by eye:** `runVersion` 1 → 2; run 1's **7 PROPOSED → REJECTED
+  with note "Superseded by run 2"**; the **ACCEPTED item untouched** (still run 1, note null); 11 new
+  PROPOSED on run 2; the 9 open issues from run 1 not cleared; canonical fields unchanged.
+
+⚠ **AND THE VERIFICATION FOUND A REAL DEFECT THAT NO CHECK COULD HAVE.** `Idea.guidingPolicy` is
+**null on every rebuild idea** — the chosen approach lives in a `PolicyOption` row with status
+`CHOSEN` — so the gather's context contained no guiding policy at all. The pass still completed and
+still produced good findings, which is exactly why this would have gone unnoticed: it degrades
+quality silently and fails nothing. `loadIdeaContext` now reads the chosen approach and the ruled-out
+ones from `PolicyOption`. **This is the argument for running the thing rather than only checking it.**
 
 ---
 

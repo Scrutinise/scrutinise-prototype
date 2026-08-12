@@ -505,13 +505,24 @@ async function loadIdeaContext(ideaId: string): Promise<IdeaContext> {
     return ''
   }
 
+  const chosen = idea.policyOptions.find((o) => o.status === 'CHOSEN')
+  const ruledOut = idea.policyOptions.filter((o) => o.status === 'RULED_OUT')
+
   const summaryParts = [
     idea.title && `Title: ${idea.title}`,
     idea.challenge && `The problem: ${idea.challenge}`,
     asText(idea.whoAffectedImpactCost) && `Who is affected / impact / cost: ${asText(idea.whoAffectedImpactCost)}`,
     idea.pivotalObstacle && `Pivotal obstacle: ${idea.pivotalObstacle}`,
     asText(idea.legalLandscape) && `Legal landscape as stated: ${asText(idea.legalLandscape)}`,
+    // ⚠ BOTH, and the second one is the live source. `Idea.guidingPolicy` is the LEGACY
+    // column and is null on every rebuild idea — the chosen approach lives in a
+    // PolicyOption row with status CHOSEN. The 12 Aug verification run found this the
+    // honest way: the pass completed and its context simply had no guiding policy in it,
+    // which would have quietly weakened FINANCIAL and POLITICAL_RISK for every idea built
+    // since the rebuild without ever failing.
     idea.guidingPolicy && `Guiding policy: ${idea.guidingPolicy}`,
+    chosen && `Chosen approach: ${chosen.approach}`,
+    ruledOut.length && `Approaches ruled out: ${ruledOut.map((o) => o.approach).join('; ')}`,
     idea.lexActions.length && `Actions: ${idea.lexActions.map((a) => a.practicalStep).join('; ')}`,
   ].filter(Boolean) as string[]
 
@@ -524,7 +535,7 @@ async function loadIdeaContext(ideaId: string): Promise<IdeaContext> {
     summary: summaryParts.join('\n'),
     costLines,
     hasCostLines: costLines.length > 0,
-    hasChosenApproach: idea.policyOptions.some((o) => o.status === 'CHOSEN'),
+    hasChosenApproach: !!chosen,
     // A crude but honest test, and stated as such in the issue it drives: it asks whether the
     // proposal SAYS anything about extent, not whether the answer is right.
     jurisdictionMentioned: /\b(England|Wales|Scotland|Northern Ireland|UK-wide|United Kingdom|devolved|reserved)\b/i.test(allText),

@@ -2,18 +2,217 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 17:36 UTC — ▼ **LEX: the 3-D walk is DONE and the DEEPENING is BUILT — but
-neither is browser-verified yet, because it has not been pushed.** Earlier threads follow.*
+*Last updated: 2026-08-12 22:55 UTC — ▼ **INGEST V37: the corpus now audits itself, and the check
+puts the Companies Act at RANK 1 — it would have found V36's gap months ago from data we already
+had.** V36 §1 is complete below it. The LEX thread's 17:36 entry follows and is equally current.*
 
+2026-08-12 22:55 UTC — ▼ **INGEST V37 §1 + §2 — THE CORPUS AUDITS ITSELF.** Executes
+`BRIEF_INGEST_V37_CORPUS_INTEGRITY.md` §1 and §2 in full, §4 partially, **§3 not started**. Full
+detail **`docs/V37_CORPUS_INTEGRITY_REPORT.md`**. `tsc` clean bar the documented pre-existing error.
+
+⚠ **THE BRIEF'S PRECONDITION WAS NOT MET AND RUNNING ANYWAY WAS RIGHT.** V37 says do not start
+until V36's recovery has landed. It has not. But §1 asks to *"run it once against the pre-V36
+corpus… if this check would have surfaced the Companies Act, that is the proof it works"* — and
+**right now IS the pre-V36 corpus.** Once the recovery lands that proof is gone forever.
+
+✅✅ **THE VALIDATION LANDS:** `ukpga/2006/46` Companies Act 2006 → **RANK 1, 7,354 references**
+(547 from our own documents) · `eur/2016/679` UK GDPR → rank 29 · **NEGATIVE CONTROL**
+`ukpga/2010/4` (2,817 sections held) → **correctly absent**. **This check would have found the
+Companies Act months ago, at the top of a self-prioritising queue, from the 2.36M-edge citation
+graph we already had.** It is a query, not a build. `--self-test` empties the held set so the
+negative control MUST fire, and exits 0 only when the validation FAILS.
+**80,805 of 151,612 referred-to instruments are held nowhere.** Classified: `never-seen` 38,316 ·
+`no-ingest-route` 29,359 · `known-no-text` 11,621 · **`needs-a-decision` 1,509**.
+⚠ **`needs-a-decision` is Charlie's, and it exists because the alternative was guessing** — a first
+draft asserted `mwa` was "superseded by anaw" when the corpus holds 22 `mwa` instruments and 1,446
+sections. Flagged: **`apni`** (1,264 instruments, 2,602 refs — **fifty years of NI primary
+legislation, 1921–1972**; we hold `nia` 2000+ and `nisi` and nothing between) and **`ukcm`** (245,
+6,803 refs — **Church Measures are primary legislation**; `ukcm/1969/2` alone carries 1,108 refs).
+⚠ **1,227 FALSE gaps resolved by two alias classes** — regnal/calendar, and prefix/zero-padding
+(`eud/1999/468` **404s at source** while `eudn/1999/468` is a live document we hold).
+✅ **Citation ranking beats completeness sweeping, measured:** the citation queue surfaces the
+Companies Act; V36's completeness work list is 95% Georgian local Acts that yield no text. Same
+corpus, opposite ends of the queue.
+
+✅ **§4 filler: detect → size → price → gate.** **The six highest-value gaps cost 5.6 pence to
+embed** (3,129 sections, 955,542 tokens, $0.0717). Sizing is EXACT — the fetch is free (OGL) so the
+price comes from real tokens, nothing extrapolated. The £15 gate tests **this batch PLUS
+month-to-date** from a `gap_filler_spend` ledger, because a threshold checked only against the
+current job is one a loop defeats. Dot leaders excluded from the price, so the Companies Act sizes
+at 1,968 storable sections not 2,093 — V36's fix visible in the invoice.
+⚠ **The gate PASSES and the filler still refuses to run, at exit 3**, printing the six steps it has
+not wired (fetch→store · chunk+embed · keyword index · semantic index · **RESTART BOTH SERVES** ·
+verify through the product). **A gap half-filled is worse than a gap.** ✅ One thing checked rather
+than assumed: I suspected the batch cap could not reach the embed since the catch-ups are
+corpus-wide — **wrong**, `v33-vec-catchup.ts` reads a per-`--run <tag>` work list, so the cap is
+real.
+❌ **NOT DONE: §3 (live miss logging) entirely; monthly scheduling of §2; the filler's full-scope
+run.** Scored honestly in the report: two of six §5 criteria not done, one partial.
+
+▼ **INGEST V36 §1 — COMPLETE. THE WALK FINISHED: 804 year-feeds, 0 throttled, 324,622 instruments.**
+
+2026-08-12 18:03 UTC — ▼ **INGEST V36 §1 — REPORTED BEFORE INGESTING, AS THE BRIEF REQUIRED, AND
+§1 CHANGED §2.** Executes `BRIEF_INGEST_V36_MISSING_INSTRUMENTS.md` §1 in full and §5; §2/§3 not
+started, and the reason is below. Full detail **`docs/V36_INGEST_REPORT.md`**. `tsc` clean in
+`scripts/` bar the documented pre-existing `download-graph-sources.ts` error.
+
+⚠⚠ **THE CORPUS HOLDS 44.1% OF WHAT ITS OWN SOURCE PUBLISHES — 143,269 of 324,622 instruments**,
+measured by walking legislation.gov.uk's year feeds, not by counting `LegislationItem`. By type:
+`eur` **18.4%** · `ukpga` **25.6%** · `eudn` 43.8% · `nisr` 62.5% · `eudr` 62.6% · `uksi` 67.4% ·
+`wsi` 69.4% · `ssi` 74.5% · `nisi` 97.4% · `nia` 98.7% · `asp` 99.8% · `anaw`/`asc` **100%**.
+By collection: `primary-acts-2000plus` **99.5%** · `regional` 68.6% · `si-2010plus` 68.6% ·
+`si-pre-2010` 66.9% · `retained-eu` **24.5%** · `primary-acts-pre-2000` **21.4%**.
+⚠ **Read the columns before the headline: 139,440 of the 181,353 absences are class (a)** — the
+CLML WAS fetched and declares `NumberOfProvisions="0"`, overwhelmingly `eur` (95,842) and `eudn`
+(16,303). Not a fetch failure. **The recoverable work list is 41,913** (33,989 never seen + 7,924
+class-b fetch outcomes).
+
+**The 17,261 is wrong in both directions, and the two errors do not cancel.**
+- **Overstates by ≥1,610.** Pre-1963 Acts are cited by REGNAL session and legislation.gov.uk's
+  canonical id follows (`ukpga/Geo5/15-16/20`); `LegislationItem` uses the CALENDAR id
+  (`ukpga/1925/20`). The corpus holds **1,610 instruments / 33,231 sections under regnal ids, none
+  with a `LegislationItem` row**. ⚠ **The Law of Property Act 1925 and the Merchant Shipping Act
+  1894 are named in the brief as missing and are both IN the corpus.**
+- **Understates by thousands.** 5,536 published `ukpga` were never seen by anything, most with no
+  legacy row at all, so no `LegislationItem`-keyed audit could ever have counted them.
+
+⚠ **"77,000 sections" belongs to 9,859 of the 17,261, not to all of them.** The other **7,402 have
+no legacy text at all** (7,276 `ukpga`) — migration could never have recovered them.
+
+⚠ **A LIVE DEFECT PRODUCED PART OF THE GAP AND WOULD HAVE REPRODUCED IT.** `enumerateSections`
+fetched through a helper that discards the retryable/deterministic split, so a 429, a 503 or a
+timeout looked exactly like a 404 and the instrument was stamped `No CLML/HTML/PDF found on TNA`
+with `availability_status='no-provisions'` — **a permanent claim about a document made out of one
+minute's fetch outcome**, then skipped forever by the reseed dedup. **8,583 instruments carry it**,
+all written in June 2026, spread evenly at 1–2.5% of every SI year (2,027 distinct minutes — not
+one outage). **27.5% of a random n=40 sample return real CLML on a plain re-fetch today**; the
+other 72.5% come back correctly classified, which is a repair to the record. **Fixed**: it now
+throws `RetryableSourceError`, the worker marks the row `failed` with its reason, and a re-run that
+recovers text retracts the stale marker. Guard watched failing first: **2/4 before, 4/4 after.**
+
+⚠⚠ **BIGGER THAN THE BRIEF, AND NOT FIXED: 117,667 instruments carry a promise nobody can keep.**
+`specialist_queue` is 117,667 `pdf-only` rows, all `pending` since June 2026, with one writer and
+**no consumer**. The classification comes from a HEAD request, and **TNA answers HEAD on
+`data.pdf` with 405** — so the probe cannot say yes. **0 of 52 randomly sampled `pdf-only`
+instruments have a PDF** (`/data.pdf` 301s to `/made/data.pdf`, which 404s). The note Lex showed
+users — *"The text of this instrument exists as a PDF… It is queued for PDF processing"* — was
+false in both halves. **Probe and note both fixed** (ranged GET + `%PDF-` magic; check 3/5 before,
+5/5 after). **The 117,667 existing rows still carry the false classification** — re-verifying them
+is ~6.5 h of ranged GETs on the fleet, no LLM cost, and it should be the next sprint.
+
+✅ **§1.4 settles the route: RE-FETCH, DO NOT MIGRATE.** n=25 random gap instruments with legacy
+text: **25/25 fetch from the source today**, source **richer in 11**, legacy richer in **0**,
+source empty in **0**. Companies Act 2006 is **2,093 sections at source against 1,665 legacy**;
+UK GDPR **140 against 61**. `LegislationSection` is a stale snapshot — so the V26 §6 DROP is still
+blocked, but as a *fallback during the repair*, not because it is the only good copy.
+
+✅✅ **THE SHARPEST RESULT OF THE SPRINT: THE RECOVERABLE POPULATION IS INSTRUMENTS FROM 1987
+ONWARDS THAT WERE NEVER ENUMERATED. NOTHING ELSE IN THE WORK LIST YIELDS TEXT.** 1987 is
+legislation.gov.uk's digitisation boundary and it was **measured, not read off a docs page** —
+`unseen` uksi **1980–1986: 0/14** · **1987+: 12/12, mean 16.9 sections**. Everything earlier returns
+CLML declaring `NumberOfProvisions="0"`. Full strata, each with its denominator:
+`unseen:1987+` **91.7% (n=12), mean 5.8 REAL sections** · `unseen:pre-1987` **0% (n=26)** ·
+`unseen:ukpga:pre-1850` **0% (n=12)** · `classb:ukpga` **16.7% (n=12)** · `classb:*` **27.5%
+(n=40)**. ⚠ **The 1987+ row first read 100% at a mean of 16.9 and BOTH halves were wrong** — both
+were carried by `uksi/1999/303`, whose 137 sections were all dot leaders (below). Re-derived from
+`corpus_sections` over all 51 instruments the pilots touched: **13 with real text, 71 real
+sections, mean 5.5 overall**. The first figure came from a counter, and a counter cannot know that
+what it counted was dots.
+
+⚠⚠ **§2's PILOT CORRECTED MY OWN PREDICTION, AND THIS IS THE TRAP TO REMEMBER.** The first version
+used an `unseen` rate of **1.0**, taken from the n=25 freshness sample — but that sample was drawn
+from gap instruments *that have legacy text*, a population **selected for having text**. Against
+the real work list the yield is **0 of 12**, because 5,546 of the 5,808 ukpga items are 1800–1849
+local and personal Acts. A uniform draw over a work list measures whichever stratum dominates it
+and reports that as the whole. `v36-seed-recovery.ts` now carries strata and **prints UNMEASURED
+rather than folding an unpiloted one in at an assumed rate**.
+
+**PREDICTION on the work list as it stands (PARTIAL — walk incomplete), to be scored after:**
+**31,057 instruments · 2,618 expected to yield text · ~15,183 sections at 5.8/instrument (range
+9,162–77,223) · 5.2 h wall clock · £0 fetch** (OGL v3.0; the spend is R2 writes and the later
+embed). ⚠ **For scale: the brief anticipated ~77,000 sections and a $12–15 embed.** The sections
+were never where the instrument count suggested; predict the embed against the final list, not
+against either figure. ⚠ **The ukpga half contributes almost nothing to recall** — its value is that ~28,000
+silent absences become classified known unknowns. **The recall win is the 2,718 modern
+instruments**, and that number grows when the walk reaches `uksi` 2008–2026 and the `eur` family.
+
+⚠ **`uksi` is a different gap from `ukpga`.** Source publishes 69,483 for 1948–2002, corpus holds
+**44,208 (63.6%)**, **24,967 never seen** — and class (a) is **6**. The uksi absence is almost
+purely un-enumerated, not fetched-and-empty.
+✅ **The two new code paths are proven live**: the retraction logged `cleared stale unavailable
+marker` on exactly the two instruments that recovered and no others, verified by reading
+`corpus_sections` back rather than trusting the return value.
+
+⚠⚠ **THE PILOT'S BEST-LOOKING INSTRUMENT WAS 137 SECTIONS OF NOTHING.** `uksi/1999/303` recovered
+**137 sections / 4,521 words** — the largest yield in the sample and the reason the mean was 16.9.
+Reading the R2 objects back rather than the row count, every one is `1 . . . . . . . .`: that is how
+legislation.gov.uk renders a **repealed** provision in the revised CLML. Across everything the
+pilots wrote, **139 of 210 sections (66.2%) were dot leaders**. Each would have been chunked,
+**embedded at full price** and retrievable as a document that says nothing. **Fixed**
+(`isRepealedPlaceholder`): recorded as `unavailable`/`revoked` with a note, out of the chunker, FTS
+and embed, R2 writes skipped. Watched failing first — **12/14 under a naive "any letter" rule,
+14/14 with the two-letter rule**; the discriminating cases are lettered section numbers
+(`5A . . . .`). ⚠ One test case had to be **corrected rather than the rule**. **Retro-fixed** with
+`v36-retract-placeholders.ts` (needed because `processTnaLegislation` short-circuits on
+`r2Exists(compiledKey)` before the check, so a re-run skips the instrument): **139 rows flipped,
+verified by reading back — 139 revoked, 0 still compiled.**
+⚠⚠⚠ **AND IT IS NOT CONFINED TO THE RECOVERY — THIS MAY BE THE LARGEST FINDING OF THE SPRINT.**
+400 random ALREADY-COMPILED legislation sections read out of R2 and run through the detector:
+**39/400 = 9.75% are dot leaders**, by corpus `primary-acts-pre-2000` **22.5%** · `regional`
+**18.6%** · `si-2010plus` 7.9% · `si-pre-2010` 4.0% · `primary-acts-2000plus` 5.9% · `retained-eu`
+0%. **Extrapolated over 1,760,981 compiled legislation sections: ~171,700 already chunked, already
+embedded at full price, already retrievable as documents that say nothing** — nearly a quarter of
+the pre-2000 primary Acts corpus. It bears directly on search, because those sections occupy
+candidate slots against real provisions, and **a share of the ABSENT/RANKING counts in
+`diagnose-recall.ts` may be real provisions displaced by empty ones — a HYPOTHESIS, testable by
+re-running it after a corpus-wide retraction.** **NOT fixed deliberately:** the pass means reading
+1.76M R2 objects (Railway-scale) and **an extrapolation from 400 samples is not grounds for
+flipping 171,700 rows**. Tool ready (`v36-retract-placeholders.ts --sample N` reports,
+`--apply` acts); scoped next sprint.
+
+⚠ **Found, measured, NOT fixed — a lead for the next sprint:** `ukpga/Vict/1-2/118` holds two
+sections whose entire body is a number (`"1"`, `"28"`) with malformed `sectionRef`s (`126.`,
+`2835.`), pointing at `CLML_SECTION_RX`'s nested-element boundary problem rather than at the
+source. Two rows inspected is a lead, not a root cause (§13).
+
+⚠ **NEXT SESSION STARTS HERE.** The source walk is **COMPLETE** (804 feeds, 0 throttled, 324,622
+instruments; checkpoint `scripts/ingest/v36/source-entries.json`, gitignored, ~30 MB, regenerable).
+`v36-reconcile.ts` has been re-run against the whole of it and the work list is **41,913**
+instruments. Remaining sequence, in this order and no other:
+**1. Run `commit-all.sh`** (7 commits, `bash -n` clean) — **the push MUST precede the seed**,
+because `Ops` wakes `Ingest` within ~25 min of work appearing and `Ingest` runs PUSHED code; seeding
+first hands the whole list to the version of `enumerateSections` that writes a 429 down as a
+permanent "no text" marker (playbook §8, V19 recurrence).
+**2. `v36-seed-recovery.ts`** — dry-run prints the stratified prediction; record it in CHANGE_LOG
+before the run, score it after.
+**3. Drain, then §3's index work**, predicting the embed against the real section count.
+⚠ `--totals` is NOT the instrument: legislation.gov.uk omits `<openSearch:totalResults>` on
+bucketed year feeds — `ukpga/1925` has it, `uksi/2010`/`ssi/2010`/`eur/2016` do not. A first pass
+recorded 226 `ukpga` years and **zero** `uksi` years. Reconcile off the entry walk.
+✅ **§5 shipped: `docs/CORPUS_COMPLETENESS.md`** — reachability is not completeness. 74
+collections: **2 reconciled, 56 confirmed-target-only, 16 NOT RECONCILED**. NOT RECONCILED means
+unmeasured, not incomplete, and the file says so.
+
+▼ Earlier (LEX thread, same day):
 2026-08-12 17:36 UTC — ▼ **LEX: SPRINT 3-D IS WALKED (7 PASS, 2 FAIL, BOTH FIXED) AND THE DEEPENING
 (§22 PILOT A) IS BUILT.** Executes `BRIEF_DEEPENING_RESTART.md` §1/§2/§3 in full. CHANGE_LOG
 (2026-08-12 17:36 UTC). `tsc` clean, `next build` passes.
 
-⚠⚠ **FIRST THING NEXT SESSION: THIS IS NOT BROWSER-VERIFIED.** The two §1 fixes and the entire
-Deepening feature are on disk, unpushed and therefore untested against the running site. Re-walk
-**2a** (the Keywords card must show its keywords, not a badge over an empty box), **9a** (Save & exit
-on Guiding Policy must actually leave), then **run one Deepening pass end to end** and check that
-findings carry citations, a known-unknowns block renders, and dismissing an issue demands a reason.
+✅ **BROWSER-VERIFIED END TO END** after Charlie deployed. 2a and 9a both re-walked and fixed; the
+kernel driven to 4/4 to unlock the Deepening; **one pass run live — RUN, 8 findings, 4 issues, 4
+known unknowns, 32 references**, with a **CONTRADICTS finding first**, impact assessments among the
+sources, and the missing PIR **declared as a known unknown rather than invented**. Accept, dismiss
+(reason enforced, dismissed stays visible) and **re-run all verified — the last one in the database:
+runVersion 1→2, 7 PROPOSED superseded with a note, the ACCEPTED item untouched.**
+
+⚠ **THE DEPLOY DID NOT HAPPEN ON THE PUSH — TWICE IN ONE DAY.** Both times it took Charlie
+triggering it by hand. **Treat GitHub auto-deploy for this project as not working until proven
+otherwise**, and prove a deploy only by reading a string back off the running site.
+
+⚠ **Running it found a defect no check could have.** `Idea.guidingPolicy` is **null on every rebuild
+idea** (the chosen approach is a `PolicyOption` row with status `CHOSEN`), so the gather's context had
+no guiding policy in it. The pass completed and produced good findings anyway — which is precisely
+why it would never have surfaced: it degrades quality silently and fails nothing. Fixed.
 
 ⚠ **§1's blocker was real and is worth remembering: production had not deployed since 6–9 August.**
 Measured off the running product by three probes, not inferred (Vercel is SAML-blocked here). Charlie
