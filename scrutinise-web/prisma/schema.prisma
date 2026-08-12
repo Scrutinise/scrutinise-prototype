@@ -722,6 +722,11 @@ model Idea {
   lexActions                LexCoherentAction[]
   ideaAssumptions           IdeaAssumption[]
   feedbackItems             FeedbackItem[]
+  // The Deepening (§22). A SEPARATE EVIDENCE LAYER: these reference canonical fields,
+  // they never carry a field's value. See prisma/lex_deepening.sql for why.
+  deepeningPasses           DeepeningPass[]
+  evidenceItems             EvidenceItem[]
+  deepeningIssues           DeepeningIssue[]
 
   @@index([creatorId])
   @@index([stage])
@@ -2979,4 +2984,131 @@ model SchedulerLock {
   processId String
 
   @@map("scheduler_lock")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE DEEPENING (§22, Pilot A)
+//
+// The kernel produces a skeleton. Deepening turns it into something that survives
+// scrutiny: Lex does the heavy lifting, the user does the judging. Each PASS runs as
+// a background gather over corpus + statistics and produces FINDINGS (evidence,
+// precedents, comparisons) and ISSUES (specific, addressable gaps).
+//
+// ⚠ THE INVARIANT: this is a SEPARATE EVIDENCE LAYER. An EvidenceItem REFERENCES a
+// canonical field via `fieldRef`; it never holds that field's value, and no field-write
+// path reads these tables. Changing what a field SAYS goes through the normal save path
+// (proposal → AWAITING_CONFIRMATION → the user's Save). Mixing them would reintroduce
+// the multi-source-of-truth condition the rebuild removed. `check:deepening` asserts it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// One row per (idea, passKey). Holds the run's status, its version, and — as
+/// first-class output, not a footnote — what the pass searched for and could not find.
+model DeepeningPass {
+  id            String              @id @default(uuid())
+  ideaId        String
+  idea          Idea                @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  passKey       String
+  status        DeepeningPassStatus @default(NOT_RUN)
+  runVersion    Int                 @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  /// Set whenever status = FAILED. A partial run keeps what it managed and says so —
+  /// silence about a partial result is the failure mode §18 exists to prevent.
+  failureReason String?
+  /// Always an array once a run has happened. `[]` renders as "nothing was unfindable",
+  /// which is information; a missing block is not.
+  knownUnknowns Json                @default("[]")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([ideaId, passKey])
+}
+
+/// A finding. PROPOSED until the user accepts or rejects it. Accepting attaches it to
+/// the field named by `fieldRef` as read-only evidence — it does NOT edit that field.
+model EvidenceItem {
+  id         String         @id @default(uuid())
+  ideaId     String
+  idea       Idea           @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  passKey    String
+  runVersion Int            @default(1)
+  /// A reference, never a write: "challenge", "causes:<id>", "actions:<id>", or null
+  /// for evidence about the idea at large.
+  fieldRef   String?
+  /// SUPPORTS and CONTRADICTS are distinct on purpose. A CONTRADICTS finding is as
+  /// valuable as a SUPPORTS one and is never filtered out of a list.
+  kind       EvidenceKind   @default(FINDING)
+  title      String
+  body       String
+  sourceType String?
+  sourceId   String?
+  citation   String?
+  url        String?
+  status     EvidenceStatus @default(PROPOSED)
+  /// Why it was rejected, or why a re-run superseded it.
+  note       String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  resolves   DeepeningIssue[] @relation("IssueResolution")
+
+  @@index([ideaId, passKey])
+  @@index([ideaId, fieldRef])
+  @@index([ideaId, status])
+}
+
+/// A specific, addressable gap. The user works through these: address, defer, or
+/// dismiss with a reason. A dismissed issue stays visible with its reason attached —
+/// what was considered and set aside is a strength, not something to hide.
+model DeepeningIssue {
+  id                   String               @id @default(uuid())
+  ideaId               String
+  idea                 Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  passKey              String
+  runVersion           Int                  @default(1)
+  text                 String
+  status               DeepeningIssueStatus @default(OPEN)
+  /// Required by the application when status = DISMISSED. A dismissal without a stated
+  /// reason is an unaccountable veto.
+  dismissReason        String?
+  resolutionNote       String?
+  resolutionEvidenceId String?
+  resolutionEvidence   EvidenceItem?        @relation("IssueResolution", fields: [resolutionEvidenceId], references: [id], onDelete: SetNull)
+  /// §24.3-ready and deliberately unused today: review findings land on this same list.
+  /// The column exists now so building §24 is an insert, not a migration of live rows.
+  reviewFindingId      String?
+  createdAt            DateTime             @default(now())
+  resolvedAt           DateTime?
+  updatedAt            DateTime             @updatedAt
+
+  @@index([ideaId, passKey])
+  @@index([ideaId, status])
+}
+
+enum DeepeningPassStatus {
+  NOT_RUN
+  RUNNING
+  RUN
+  FAILED
+}
+
+enum EvidenceKind {
+  FINDING
+  PRECEDENT
+  SUPPORTS
+  CONTRADICTS
+  COMPARISON
+}
+
+enum EvidenceStatus {
+  PROPOSED
+  ACCEPTED
+  REJECTED
+}
+
+enum DeepeningIssueStatus {
+  OPEN
+  ADDRESSED
+  DEFERRED
+  DISMISSED
 }
