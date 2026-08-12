@@ -2,7 +2,48 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 23:25 UTC — ▼ SEARCH Stage 2C-5 (below). Earlier threads follow.*
+*Last updated: 2026-08-12 07:50 UTC — ▼ **INGEST V34 IS COMPLETE AND DRAINED.** Earlier threads follow.*
+
+2026-08-12 07:50 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS INGESTED. 14,274/14,274
+ROWS, 0 FAILED, 31,852 SECTIONS, 34.5M WORDS.** Executes `BRIEF_INGEST_POLITICAL_SOURCES.md`
+§A/§B/§C in full. CHANGE_LOG (2026-08-11 18:30 UTC); full detail
+**`docs/V34_POLITICAL_SOURCES_REPORT.md`**. `tsc` clean bar the documented pre-existing errors.
+**Nothing is left running** — the queue is empty and `Ingest` has exited on empty as designed.
+`commons-divisions-votes` **2,361** · `lords-divisions-votes` **3,284** · `impact-assessments`
+**18,759** sections from 1,181 documents · `consultations` **7,448**. `division_votes`
+**2,528,032 rows** (1,061,541 aye / 1,067,572 no / **398,919 absent**) — predicted 2,556,897,
+**within 1.1%**. All four `--verify` reconciliations pass exactly.
+⚠ **NEXT: THESE FOUR CORPORA ARE NOT SEARCHABLE YET.** They are in `corpus_sections` but not in the
+FTS or vector indexes, and `corpus-map.ts` has no entry for them — so `corpusToType` returns null
+and the adapter would drop every row (the exact UNREACHABLE condition Stage 2C spent a sprint
+clearing). **Typing them + an index build is the follow-on**, and it is a Search-thread decision:
+divisions are arguably DEBATE, impact assessments and consultations arguably GUIDANCE, and a
+tenth type may be the honest answer. Do not seed a type without a before-and-after measurement.
+⚠ **THREE BUGS THAT A CLEAN `tsc` AND PASSING PILOTS ALL HID**, each found by a check rather than a
+failure: **(1) the Commons list endpoint caps `take` at 25** and V28's enumerator broke on a short
+page — it would have ingested **25 of 2,361** and reported success; **(2) the Lords lists every
+teller twice**, a duplicate `member_id` that would have failed **all 3,284** Lords divisions;
+**(3) an R2 object does not prove a section row exists** — 2 consultations were SIGTERM'd between
+`r2Put` and `upsertSection` by my own mid-drain redeploy, and the bare `r2Exists` short-circuit
+then marked them `done` with no section. Caught only because `done=7448` read against 7,446
+sections. **Both processors now require the object AND the row.** ⚠ **Do not push mid-drain.**
+⚠ **`impact-assessments.est_sections` re-baselined 9,448 → 18,759 (`est_is_confirmed=true`).**
+Predicted 8 sections/IA, actual 15.9 — and my mid-drain revision to 23.1 was **also wrong**,
+because IAs drain in feed order, not size order. Both discarded figures are in the `corpus_targets`
+note so neither is mistaken for a measurement later. Costs: ~250 MB R2, ~31,900 Class A writes,
+**~46 M tokens to embed** (predicted 64 M).
+⚠ **STILL CHARLIE'S CALL, BLOCKING NOTHING:** Public Whip's bulk vote matrices are **ODbL
+share-alike** — the first licence that would attach an obligation to our *derived* database;
+flagged in `licence-map.ts`, not ingested. And ONSPD is OGL v3.0 but **NI "BT" postcodes need a
+separate Land & Property Services licence** for the constituency feature.
+⚠ `stage_outcomes` exists and is **deliberately EMPTY** — populating "passed without a division"
+needs a 30s/call Bills API stage crawl and a fuzzy title match, and a fuzzy row there is the false
+certainty the table exists to prevent. Lords absence stays a known unknown (`absence_known=false`
+on all 3,284) until the Members API eligible-peer roll is built.
+⚠ Parliament's own tally disagrees with its own roll-call by ±1 on 10 historic Lords divisions —
+which is why both `aye_count`/`no_count` and the `division_votes` rows are stored.
+
+*Earlier: 2026-08-11 23:25 UTC — ▼ SEARCH Stage 2C-5 (below). Earlier threads follow.*
 
 2026-08-11 23:25 UTC — ▼ **SEARCH STAGE 2C-5: PROBES UP, METRIC HONEST, AND THE RERANKER IS NOT
 AUTHORISED — BECAUSE THE DENOMINATOR SAYS THE PROBLEM IS RECALL.** Executes `BRIEF_SEARCH_S2C5.md`

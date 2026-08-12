@@ -502,6 +502,73 @@ tokens to embed.** The embedding line moved less than the section count did, bec
 
 ---
 
+## THE DRAIN IS COMPLETE — final numbers, and every prediction scored
+
+All 14,274 rows processed. **0 failed rows.**
+
+| corpus | documents | sections | words | reconciled |
+|---|---:|---:|---:|---|
+| `commons-divisions-votes` | 2,361 | 2,361 | 8,521,953 | ✓ 2,361/2,361 |
+| `lords-divisions-votes` | 3,284 | 3,284 | 6,558,318 | ✓ 3,284/3,284 |
+| `impact-assessments` | 1,181 | **18,759** | 17,302,731 | ✓ |
+| `consultations` | 7,448 | 7,448 | 2,098,490 | ✓ |
+| **total** | **14,274** | **31,852** | **34,481,492** | |
+
+`division_votes`: **2,528,032 rows** — 1,061,541 aye, 1,067,572 no, **398,919 absent**.
+Commons `absence_known` on all 2,361; Lords on 0 of 3,284, as designed.
+Bill titles parsed on 1,617 of 2,361 Commons and **2,968 of 3,284 Lords** divisions.
+Impact assessments link to **1,049 distinct instruments**.
+
+**Predictions scored:**
+
+| prediction | actual | verdict |
+|---|---|---|
+| 5,645 divisions | 5,645 | ✓ exact |
+| ~2,556,897 `division_votes` | **2,528,032** | ✓ within 1.1% |
+| 649 member rows per Commons division | 648 | ✓ |
+| **8 sections per impact assessment** | **15.9** | ✗ out by 2× |
+| *(mid-drain revision: 23.1/IA → ~27,300)* | *18,759* | ✗ **that revision was also wrong**, in the other direction |
+| ~64 M tokens to embed | **~46 M** | over-estimated |
+
+⚠ **I revised the IA estimate mid-drain off an early sample and the revision was wrong too** —
+23.1 sections/IA measured on the first 35 documents, 15.9 across all 1,181. Early IAs drain in feed
+order, not in size order, so a partial sample is not a small version of the whole. `est_sections`
+is now **re-baselined to the real 18,759 with `est_is_confirmed = true`**; both the original 9,448
+and the 27,300 revision are recorded in the `corpus_targets` note so neither can be mistaken for a
+measurement later.
+
+**Revised-again costs, from the completed drain:** ~250 MB R2, ~31,900 Class A writes (~$0.14
+one-off), ~500 MB Neon (~$0.18/month, almost all `division_votes`), **~46 M tokens to embed**.
+
+### Three classified gaps, surfaced rather than dropped
+
+`impact-assessments` holds 3 sections with `status = 'unavailable'`: **2 scanned image-only PDFs**
+(`pdf-only`, with the extracted char count) and **1 PDF the feed advertises that the source 404s**
+(`no-pdf`, with the URL and status). Each is a countable, reportable absence rather than a missing
+row — which is the whole point of the classification.
+
+### And one more bug, found by the reconciliation rather than by a failure
+
+The queue read `consultations done=7448` against **7,446 sections**. Two rows short, and nothing
+had failed.
+
+Both had been SIGTERM'd mid-write by my own mid-drain redeploy — `attempts: 2`,
+`lastError: "reclaimed by ops — process SIGTERM or crash"`. The write order is `r2Put` **then**
+`upsertSection`, so a process killed between the two leaves **the R2 object present and the
+metadata row absent**. On retry the `r2Exists` short-circuit saw the object, marked the row `done`,
+and the section was never written. The queue then reconciles as complete while the corpus is
+quietly short — a silent hole that looks exactly like success.
+
+The gov.uk content for both still returns HTTP 200 with `details`, so nothing about the source was
+wrong; only the resume logic was. **Both processors now require the R2 object AND the
+`corpus_sections` row before skipping.** `processDivisionVotes` already did the equivalent against
+the `divisions` table, which is why not one division was lost to the same redeploy.
+
+⚠ **This is the argument against pushing mid-drain**, which I did and should not have. It cost a
+container restart and put two rows in a state only a reconciliation would have caught.
+
+---
+
 ## What has NOT happened, and why
 
 **Nothing is seeded.** That is the playbook's own ordering, not an unfinished job:

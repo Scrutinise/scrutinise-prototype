@@ -624,6 +624,31 @@ rather than a fault). **14,274 pending rows.** Breakers clean on all three new s
 ⚠ Ops declined to restart `Ingest` on its 18:45:32 UTC cycle and that was CORRECT — the heartbeat
 was 7 min stale against a 10-min threshold. The system was working; the impatience was mine.
 
+✅ **THE DRAIN IS COMPLETE. 14,274/14,274 rows, 0 FAILED.** `commons-divisions-votes` **2,361**
+sections / 8,521,953 words · `lords-divisions-votes` **3,284** / 6,558,318 · `impact-assessments`
+**18,759** / 17,302,731 · `consultations` **7,448** / 2,098,830. **31,852 sections, 34.5M words.**
+`division_votes` **2,528,032 rows** (1,061,541 aye / 1,067,572 no / **398,919 absent**) — predicted
+2,556,897, **actual within 1.1%**. Bill titles parsed on 1,617/2,361 Commons and **2,968/3,284**
+Lords; IAs link to **1,049 distinct instruments**. **3 classified gaps** on IAs (2 scanned
+image-only PDFs, 1 advertised PDF the source 404s) — countable absences, not missing rows.
+⚠ **`impact-assessments.est_sections` RE-BASELINED 9,448 → 18,759, `est_is_confirmed=true`.**
+Predicted 8 sections/IA, actual **15.9** — and ⚠ **my mid-drain revision to 23.1 (→ ~27,300) was
+ALSO wrong, in the other direction**: IAs drain in feed order, not size order, so the first 35 were
+not a small version of the whole. Both discarded figures are recorded in the `corpus_targets` note
+so neither can later be mistaken for a measurement. Costs revised again: ~250 MB R2, ~31,900 Class
+A writes, **~46 M tokens to embed** (predicted 64 M).
+⚠ **ONE MORE BUG, FOUND BY THE RECONCILIATION AND NOT BY ANY FAILURE: `done=7448` against 7,446
+sections.** Two consultations were SIGTERM'd mid-write by **my own mid-drain redeploy**
+(`attempts: 2`, `lastError: reclaimed by ops — process SIGTERM or crash`). The write order is
+`r2Put` THEN `upsertSection`, so a kill between them leaves **the R2 object present and the
+metadata row absent**; on retry the bare `r2Exists` short-circuit marked the row `done` and the
+section was never written — the queue reconciles as complete while the corpus is quietly short.
+gov.uk still served both with HTTP 200 + `details`, so the source was fine and only our resume
+logic was wrong. **Both processors now require the R2 object AND the `corpus_sections` row before
+skipping**; `processDivisionVotes` already did the equivalent against `divisions`, which is why
+**not one division was lost to the same redeploy**. Re-queued and healed to 7,448/7,448.
+⚠ **This is the argument against pushing mid-drain, which I did and should not have.**
+
 ✅ **LORDS CONFIRMED LIVE — the teller fix holds in production, 0 failures.** The decisive
 measurement is the stored roll-call vs the House's own count: **Lords 132/136 exact, 0 at +2**;
 **Commons 704 at +2/+2**, which is correct because Commons tellers are EXCLUDED from the lobby
