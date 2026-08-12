@@ -173,6 +173,30 @@ export const PROPOSABLE_KEYS = new Set(ALL_FIELDS.filter((f) => f.origin === 'pr
 export const BOX_KEYS = new Set(ALL_FIELDS.filter((f) => f.origin === 'box').map((f) => f.key))
 export const STRUCTURED_KEYS = new Set(ALL_FIELDS.filter((f) => f.type === 'structured').map((f) => f.key))
 
+/**
+ * Fields whose CONTENT lives in child-entity tables (Cause / PolicyOption / Action) and is
+ * written by their own endpoints — `/causes`, `/policy-options`, `/actions` — never by
+ * `POST /fields`, which 422s them.
+ *
+ * ⚠ DEFINED HERE, AND IMPORTED BY BOTH SIDES, BECAUSE THE TWO COPIES DRIFTED APART.
+ * `app/api/ideas/[id]/fields/route.ts` had this set privately, and the create client did not
+ * know about it at all — so §19-D Task 9a's "Save & exit" cheerfully POSTed
+ * `{fieldKey: 'policyOptions', action: 'accept'}` to `/fields` and took the 422 as a failed
+ * save. Walk-through, 12 Aug: pressing **Save & exit** on the Guiding Policy page produced
+ * *"That didn't save, so I've kept you here"* and the user could not leave except by Discard —
+ * which is the exact symptom 9a was written to fix, moved one page along.
+ *
+ * ⚠ AND THE DIALOG WAS SAYING SOMETHING FALSE. *"'Candidate approaches' is waiting for you to
+ * Save. Leave now and that draft is lost."* — the three approaches were already PolicyOption
+ * rows in the database, and leaving loses nothing. `AWAITING_CONFIRMATION` on a loop field does
+ * not mean "unsaved"; it means the user has not yet declared the list complete, which is a
+ * decision to take on the way IN, not on the way out. So these fields are excluded from the
+ * unsaved-draft test rather than given a save path: exiting must not silently advance a stage.
+ */
+export const CHILD_ENTITY_FIELDS: ReadonlySet<string> = new Set([
+  'causes', 'rootCause', 'policyOptions', 'chosenApproach', 'actions',
+])
+
 // ── Behind-the-box slots Lex extracts (§6.1). Stored, not carded. ────────────
 // Idea-scoped slots seed Page 2 and calibrate Lex; user-scoped slots are reused.
 export const IDEA_SLOT_KEYS = [

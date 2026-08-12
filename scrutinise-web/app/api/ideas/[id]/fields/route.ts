@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { computeCanonicalState } from '@/lib/lex/state'
-import { fieldDef } from '@/lib/lex/page1-config'
+import { fieldDef, CHILD_ENTITY_FIELDS } from '@/lib/lex/page1-config'
 import { validateFieldValue } from '@/lib/lex/proposal-schema'
 import {
   submitBox,
@@ -20,7 +20,10 @@ type Params = { params: Promise<{ id: string }> }
 
 // Child-entity fields are mutated via their own endpoints, not here:
 //   causes/rootCause → /causes · policyOptions/chosenApproach → /policy-options · actions → /actions
-const CHILD_ENTITY_FIELDS = new Set(['causes', 'rootCause', 'policyOptions', 'chosenApproach', 'actions'])
+// ⚠ The set now lives in page1-config.ts and is imported. It used to be declared privately here,
+// and the create client's "Save & exit" — which has to know the same thing — did not have it,
+// so it POSTed a child-entity field to this route and took the 422 as a failed save (see
+// CHILD_ENTITY_FIELDS for the walk-through that found it).
 
 const BodySchema = z.object({
   fieldKey: z.string().min(1),

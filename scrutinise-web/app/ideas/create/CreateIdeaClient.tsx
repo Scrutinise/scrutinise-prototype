@@ -16,10 +16,11 @@ import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
 import type { CausesApi, PolicyApi, ActionsApi, CostLinesApi } from '@/components/lex/FieldsPanel'
 import { accentFor } from '@/lib/lex/stage-accents'
-import { acceptSurfaceOf, fieldDef, type CanonicalState, type CanonicalField } from '@/lib/lex/page1-config'
+import { acceptSurfaceOf, fieldDef, CHILD_ENTITY_FIELDS, type CanonicalState, type CanonicalField, type SearchResult } from '@/lib/lex/page1-config'
 
 // "Say the word" — a conservative match for a user asking to be shown how the
 // platform works, so the intro's offer opens the tour rather than a Lex round-trip.
@@ -303,9 +304,40 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   // server-side the moment it's saved, so there is nothing to lose by leaving.
   const [exitPrompt, setExitPrompt] = useState(false)
   const [leaving, setLeaving] = useState(false)
+
+  // ── The Deepening (§22) ────────────────────────────────────────────────────
+  // Unlocks once the kernel's four stages are complete. Deepening a skeleton that does
+  // not exist yet produces findings about nothing — and, worse, issues about nothing,
+  // which is a to-do list the user cannot act on.
+  const kernelComplete = !!state?.pages.length && state.pages.every((p) => p.status === 'complete')
+  const [openDeepeningPass, setOpenDeepeningPass] =
+    useState<{ label: string; results: SearchResult[] } | null>(null)
+  /**
+   * "Work on this with Lex" — the issue goes into the ordinary chat as the user's own
+   * message, carrying its own context. Deliberately NOT a separate thread object: a second
+   * conversation store beside `aiChatHistory` is a second source of truth about what was
+   * said, which is the condition the rebuild removed.
+   */
+  const discussIssue = useCallback((issueText: string, passLabel: string) => {
+    setTab('chat')
+    void sendMessage(
+      `From the ${passLabel} deepening pass, this issue was raised against my proposal:\n\n` +
+      `“${issueText}”\n\n` +
+      `Help me work through it. Tell me what would actually answer it, and what you can and cannot find in the corpus to support an answer.`,
+    )
+    // sendMessage is defined below and is stable for the component's life.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  // §19-D Task 9a, second instance — found on the 12 Aug walk.
+  //
+  // A CHILD-ENTITY field (causes / rootCause / policyOptions / chosenApproach / actions) sits at
+  // AWAITING_CONFIRMATION while its rows are ALREADY PERSISTED in their own tables. It is not an
+  // unsaved draft, `POST /fields` refuses to write it (422), and prompting to "save" it therefore
+  // produced a dialog that could not succeed — Save & exit failed, and the only way out was
+  // Discard. See CHILD_ENTITY_FIELDS for the full note.
   const unsavedField = state?.pages
     .flatMap((p) => p.fields)
-    .find((f) => f.status === 'AWAITING_CONFIRMATION') ?? null
+    .find((f) => f.status === 'AWAITING_CONFIRMATION' && !CHILD_ENTITY_FIELDS.has(f.key)) ?? null
   const unsavedLabel = unsavedField?.label ?? null
   const leaveNow = useCallback(() => {
     // The navigation itself takes a few seconds (a full page load of the idea view).
@@ -495,6 +527,14 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 policyApi={policyApi}
                 actionsApi={actionsApi}
                 costLinesApi={costLinesApi}
+                deepening={
+                  <DeepeningPanel
+                    ideaId={state.ideaId}
+                    unlocked={kernelComplete}
+                    onOpenPass={setOpenDeepeningPass}
+                    onDiscussIssue={discussIssue}
+                  />
+                }
               />
             </div>
 
@@ -515,6 +555,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onAskLex={askLex}
                 onRetrySearch={retrySearch}
                 onGiveFeedback={() => openFeedback('BRIEFING')}
+                deepeningPass={openDeepeningPass}
               />
             </div>
           </div>

@@ -211,7 +211,11 @@ function OutputField({
 }) {
   const accepted = field.status === 'ACCEPTED'
   const terminal = isTerminal(field)
-  const isList = field.key === 'keywords'
+  // The SAME test AcceptCard.tsx uses (`field.type === 'structured'`), deliberately, so the
+  // two accept surfaces for one field cannot disagree about whether its value is a list.
+  // Only SLOTLESS structured fields reach this component — renderField sends slotted ones to
+  // StructuredField — so `structured` here means exactly "a comma-separated list".
+  const isList = field.type === 'structured'
   const asText = (v: unknown) => (Array.isArray(v) ? (v as string[]).join(', ') : ((v as string | null) ?? ''))
 
   const proposed = field.status === 'AWAITING_CONFIRMATION' ? asText(field.proposal?.value) : ''
@@ -1196,7 +1200,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
 export default function FieldsPanel({
   pages, causes, policyOptions, actions, costLines, benchmarks, busy, currentFieldKey,
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
-  causesApi, policyApi, actionsApi, costLinesApi,
+  causesApi, policyApi, actionsApi, costLinesApi, deepening,
 }: {
   pages: CanonicalState['pages']
   causes: CanonicalCause[]
@@ -1219,6 +1223,8 @@ export default function FieldsPanel({
   policyApi: PolicyApi
   actionsApi: ActionsApi
   costLinesApi: CostLinesApi
+  /** The Deepening stage section, rendered after the four kernel pages (§22). */
+  deepening?: ReactNode
 }) {
   const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
   const activeRef = useRef<HTMLDivElement>(null)
@@ -1240,7 +1246,26 @@ export default function FieldsPanel({
 
   const renderField = (f: CanonicalField) => {
     if (f.type === 'narrative') return <BoxField field={f} busy={busy} onSubmitBox={onSubmitBox} onSkip={onSkip} />
-    if (f.type === 'structured') return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
+    // §19-D Task 2a, second instance — found on the 12 Aug walk, not by a type error.
+    //
+    // `keywords` is declared `type: 'structured'` (page1-config.ts) and carries NO `slots`,
+    // because "structured" is what AcceptCard keys off to render it as chips in the chat.
+    // This line sent it to StructuredField anyway, which renders one input PER SLOT — so with
+    // zero slots it drew a card containing a "proposed by Lex — refine" badge, a Save & accept
+    // button, and nothing else. A confident claim over a literally empty box: the exact defect
+    // 2a fixed for legalLandscape, surviving in a second place, on the same walk-through.
+    //
+    // Worse than cosmetic: `baseline` is `Object.fromEntries([])` = `{}`, so pressing the
+    // panel's Save & accept would have written an EMPTY OBJECT over Lex's proposed keywords —
+    // silently discarding them while reporting success.
+    //
+    // A slotless structured field falls through to OutputField, which already has `isList` for
+    // precisely this and emits `string[]` — byte-identical to what the chat AcceptCard sends.
+    // Guarding on slots rather than special-casing the key means the next slotless structured
+    // field cannot reintroduce the empty claim either.
+    if (f.type === 'structured' && (fieldDef(f.key)?.slots?.length ?? 0) > 0) {
+      return <StructuredField field={f} busy={busy} onAccept={onAcceptStructured} onSkip={onSkip} />
+    }
     if (f.type === 'loop') {
       if (f.key === 'policyOptions') return <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} />
       if (f.key === 'actions') return <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi} />
@@ -1318,6 +1343,14 @@ export default function FieldsPanel({
           </div>
         )
       })}
+
+      {/* The Deepening (§22) sits AFTER the kernel's four stages — it is not a fifth page
+          of the state machine and deliberately does not join PAGE_SEQUENCE. The kernel
+          produces the skeleton; this is what turns it into something that survives
+          scrutiny, and it is optional, re-runnable and enterable in any order, which the
+          one-way page machine cannot express. Passed in as a node so the panel stays a
+          pure renderer of canonical state. */}
+      {deepening}
     </div>
   )
 }
