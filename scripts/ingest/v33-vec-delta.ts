@@ -48,8 +48,15 @@ export {}
 
 const CALIBRATE = (() => { const i = process.argv.indexOf('--calibrate'); return i >= 0 ? parseInt(process.argv[i + 1], 10) : 0 })()
 const WRITE = process.argv.includes('--write')
-const OUT = path.join(__dirname, 'v33-vec-delta.jsonl')
-const REPORT = path.join(__dirname, '../../docs/v33_vec_delta.json')
+// ⚠ `--run <tag>` EXISTS BECAUSE THE HEADER'S WARNING WAS NOT ENOUGH (V35, 2026-08-12). The note
+// above asks the next caller to save the output under a distinct name; asking is not a mechanism,
+// and the 11 Aug re-run had already silently replaced the 9 Aug prediction once. The tag now
+// names the run in every path this script writes, so a second run CANNOT overwrite a first one's
+// prediction unless it is deliberately given the same tag. Default `v33` = the historical paths,
+// byte-identical, so nothing that reads them moves.
+const RUN = (() => { const i = process.argv.indexOf('--run'); return i >= 0 ? process.argv[i + 1] : 'v33' })()
+const OUT = path.join(__dirname, `${RUN}-vec-delta.jsonl`)
+const REPORT = path.join(__dirname, `../../docs/${RUN}_vec_delta.json`)
 /** Gemini Batch API, gemini-embedding-001 @768-d. Sync is 2x. */
 const BATCH_RATE = parseFloat(process.env.EMBED_RATE_PER_M ?? '0.075')
 const n = (v: number) => Number(v).toLocaleString('en-GB')
@@ -181,7 +188,11 @@ async function main() {
     totals: { compiledSections: grandSections, unvectored: grandMissing, words: grandWords, chunks: grandChunks, embeddedChars: grandEmb, tokens, cost },
     band, perCorpus: per,
   }, null, 2))
-  console.log(`\n  report → docs/v33_vec_delta.json${WRITE ? `\n  work list → ${OUT}` : '   (pass --write for the catch-up work list)'}`)
+  // ⚠ This line was hardcoded to `docs/v33_vec_delta.json` and kept saying so after `--run` made
+  // the path variable — it printed "report → docs/v33_vec_delta.json" for a report written to
+  // v35. A message naming a file the code did not write is the same defect class as a comment
+  // describing a fix that has landed: it is a false map, and the reader has no way to know.
+  console.log(`\n  report → ${path.relative(path.join(__dirname, '../..'), REPORT).replace(/\\/g, '/')}${WRITE ? `\n  work list → ${OUT}` : '   (pass --write for the catch-up work list)'}`)
 
   await pool.end()
 }

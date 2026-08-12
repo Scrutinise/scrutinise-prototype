@@ -63,8 +63,16 @@ const CANARY = process.argv.includes('--canary')
 const argN = (f: string, d: number) => { const i = process.argv.indexOf(f); return i >= 0 ? parseFloat(process.argv[i + 1]) : d }
 const MAX_COST = argN('--max-cost', Infinity)
 const CANARY_N = parseInt(process.env.VEC_CATCHUP_CANARY_N ?? '400', 10)
-const WORKLIST = path.join(__dirname, 'v33-vec-delta.jsonl')
-const CKPT_KEY = '_search/v33_vec_catchup.checkpoint.json'
+// ⚠ `--run <tag>` IS A SAFETY MECHANISM, NOT A CONVENIENCE (V35, 2026-08-12). The V33 checkpoint
+// is `phase: "done"` with 62 `doneShards` recorded as INDICES. A second delta re-uses this script
+// against a DIFFERENT work list, which produces a different shard numbering — so shard 7 of the
+// V35 delta would be skipped because shard 7 of the V33 delta was done. That is the identical
+// failure this script's own header describes for `build-vector-index.ts`, one level down, and it
+// would be silent: the run would report success having embedded a subset.
+// The tag names the work list AND the checkpoint. Default `v33` = the historical paths.
+const RUN = (() => { const i = process.argv.indexOf('--run'); return i >= 0 ? process.argv[i + 1] : 'v33' })()
+const WORKLIST = path.join(__dirname, `${RUN}-vec-delta.jsonl`)
+const CKPT_KEY = `_search/${RUN}_vec_catchup.checkpoint.json`
 const CHUNK_BATCH = parseInt(process.env.VEC_CATCHUP_CHUNK_BATCH ?? '2000', 10)
 const R2_CONCURRENCY = parseInt(process.env.FTS_R2_CONCURRENCY ?? '24', 10)
 const RATE = parseFloat(process.env.EMBED_RATE_PER_M ?? '0.075')
@@ -125,6 +133,7 @@ async function loadTitleMap(pool: Pool): Promise<Map<string, string>> {
 }
 
 async function main() {
+  console.log(`[vec-catchup] run=${RUN} worklist=${path.basename(WORKLIST)} checkpoint=${CKPT_KEY}`)
   console.log(`[vec-catchup] mode=${EMBED_MODE} model=${VECTOR_MODEL} dims=${VECTOR_DIMS} shard=${SHARD_SIZE} inflight=${MAX_INFLIGHT_SHARDS}`)
   const items = await readWorkList()
   console.log(`[vec-catchup] work list: ${n(items.length)} sections with no vector`)
@@ -193,7 +202,28 @@ async function main() {
         }))
       })
 
-      if (records.length) await chunksTbl.add(records)
+      // ⚠ RETRIED, because this line killed a 32,113-section run at section 10,000 on 2026-08-12
+      // with `Generic S3 error: Error performing PUT … partNumber=2 … in 60ms - HTTP error: error
+      // sending request`. That is a transient network fault on an R2 multipart upload, which is
+      // exactly the class CLAUDE.md §13 says to retry — and phase 2 already retries its embed
+      // calls three times while phase 1 had no retry at all, so a blip here cost the whole phase.
+      // Safe to repeat: the batch's chunks were deleted immediately above, so a partial append
+      // followed by a retry cannot duplicate, and the checkpoint has not moved yet.
+      if (records.length) {
+        let lastErr: unknown
+        for (let a = 0; a < RETRIES; a++) {
+          try { await chunksTbl.add(records); lastErr = null; break }
+          catch (e) {
+            lastErr = e
+            const w = Math.min(60_000, 5000 * 2 ** a)
+            console.warn(`[vec-catchup] chunk append at ${n(cp.chunkCursor)} attempt ${a + 1}/${RETRIES}: ${(e as Error).message.slice(0, 160)} — retrying in ${w / 1000}s`)
+            await new Promise((r) => setTimeout(r, w))
+            // Clear whatever the failed attempt may have committed before trying again.
+            await chunksTbl.delete(`sectionId IN (${slice.map((s) => `'${esc(s.id)}'`).join(',')})`).catch(() => {})
+          }
+        }
+        if (lastErr) throw lastErr
+      }
       cp.chunkCursor += slice.length
       cp.chunksWritten += records.length
       cp.bodyMisses += misses
@@ -240,7 +270,7 @@ async function main() {
   let stopped = false
 
   async function processShard(s: { i: number; ids: string[] }) {
-    const tag = `v33-shard-${String(s.i).padStart(5, '0')}`
+    const tag = `${RUN}-shard-${String(s.i).padStart(5, '0')}`
     const rows: any[] = []
     for (let i = 0; i < s.ids.length; i += 2000) {
       const part = s.ids.slice(i, i + 2000)
