@@ -2,30 +2,36 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 12:55 UTC — ▼ **SEARCH S2C-6 + INGEST V35: the four corpora are TYPED and
-INDEXED for keyword search; the embed is STILL RUNNING; and the recall constraint turns out to be
-17,261 instruments that were never ingested.** Earlier threads follow.*
+*Last updated: 2026-08-12 17:12 UTC — ▼ **SEARCH S2C-6 + INGEST V35 ARE BOTH COMPLETE: the four
+corpora are typed, titled, keyword-indexed and vector-indexed, nothing is left running — and the
+recall constraint turns out to be 17,261 instruments that were never ingested.** Earlier threads
+follow.*
 
-2026-08-12 12:55 UTC — ▼ **SEARCH S2C-6 + INGEST V35.** Executes `BRIEF_SEARCH_S2C6.md` §1 and §2
+2026-08-12 17:12 UTC — ▼ **SEARCH S2C-6 + INGEST V35.** Executes `BRIEF_SEARCH_S2C6.md` §1 and §2
 in full, §3 **STOPPED on evidence**; `BRIEF_INGEST_V35_SEARCHABILITY.md` §0–§2, §3 blocked on §1.
 CHANGE_LOG (2026-08-12 12:39 UTC); full detail **`docs/SEARCH_S2C6_REPORT.md`** and
 **`docs/V35_SEARCHABILITY_REPORT.md`**. `tsc` clean in both projects bar the one documented
 pre-existing `download-graph-sources.ts` error.
 
-⚠⚠ **PICK UP HERE — TWO THINGS ARE STILL RUNNING OR UNDONE:**
-1. **The embed is NOT finished.** 95,044 chunks are written to `corpus_chunks` (phase 1 complete,
-   227 body misses = the zero-word stragglers). Shards 0 and 1 are in flight and grinding through
-   Gemini **429 quota-bucket backoff** (7 and 6 sequential sub-jobs); **shard 2 FAILED at job
-   creation before any spend** and needs a re-run. `spent=$0.00` and `doneShards=[]`, so re-running
-   picks up exactly what is missing:
-   `NODE_OPTIONS="--no-network-family-autoselection --dns-result-order=ipv4first" tsx
-   v33-vec-catchup.ts --run v35 --embed --max-cost 8.00`
-2. **V35 §3 (ANN rebuild + `vector-serve` redeploy + `verify-vector-index.ts`) IS NOT STARTED** and
-   is blocked on (1). `vector-serve` **does not auto-deploy from GitHub** — it needs an explicit
-   `vector-serve-run.ts redeploy`. BEFORE `/stats`: `started_at 2026-08-11T22:46:25.910Z`,
-   `config.nprobes 64`, served 95.
+✅ **V35 IS COMPLETE ON BOTH HALVES — nothing is left running.**
+- **Embed: 95,044 vectors, 0 misses, $4.87 against $4.50 predicted (+8.2%)**, inside the CPW band
+  (top $4.94). `corpus_vec` 22,613,652 = `corpus_chunks` 22,613,652, exactly +95,044; checkpoint
+  `phase: "done"`. ⚠ Shard 2 failed at *job creation* on the first pass (no spend lost) and the
+  re-run did only the missing shard — which is exactly what the `--run <tag>` checkpoint
+  separation was added for.
+- **FTS: 31,849 rows, 0 body misses**, all four corpora from `fts=0`.
+- **ANN: `unindexed=0`**, and the verify was watched **failing first** at
+  `unindexed=95,044 (0.42% brute-force per query)`. Rebuild 1,130s, **€0.101**, peak RSS 5.8 GB,
+  box destroyed. `expectedPeakGb` 5.6 → 5.8 in `jobs.ts`; size deliberately not reduced.
+- **`vector-serve` redeployed**: `started_at` 2026-08-11T22:46:25.910Z → **2026-08-12T17:08:24.979Z**,
+  `nprobes` 64 both sides. It still does not auto-deploy from GitHub.
+- ⚠ **After-latency is deliberately blank, not zero** — `served: 0` on a fresh boot means the
+  since-boot counters are empty, and a p50 off an empty sample is not a measurement. Needs traffic.
 
-✅ **FTS IS DONE: 31,849 rows written, 0 body misses**, all four corpora from `fts=0`.
+⚠⚠ **`v33-vec-catchup.ts` was telling the next reader to run the WRONG heavy job** — `vector-index`,
+whose scripts are both checkpointed `phase:"done"`, so it reports success, builds nothing and
+destroys the box. `vector-reindex` is the one (it passes `--index-only`). Fixed, but worth knowing
+the class exists: `jobs.ts` documented the trap correctly and the hint pointed away from it.
 ⚠ **The after-measurement needed an `fts-serve` restart to mean anything** — the first `after` run
 came back BYTE-IDENTICAL to `before` (0/620 slots, 6/6 on-target ABSENT) because `fts-serve` calls
 `openTable()` once at boot and was serving the 2026-08-11T22:37 snapshot. Exactly the trap

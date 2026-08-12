@@ -84,7 +84,31 @@ at all**, so one network blip cost the whole phase. Now retried with the same ba
 repeat because the batch's chunks are deleted immediately before the append. Resumed cleanly from
 the checkpoint at 10,000 and completed: **95,044 chunks, 227 body misses.**
 
-### ⚠ Status: shards 0 and 1 in flight, shard 2 FAILED and needs a re-run
+### COMPLETE — 95,044 vectors, 0 misses, **$4.87 against $4.50 predicted (+8.2%)**
+
+| shard | vectors | misses | cost |
+|---|---:|---:|---:|
+| v35-shard-00001 | 40,000 | 0 | $1.951 |
+| v35-shard-00000 | 40,000 | 0 | $2.072 |
+| v35-shard-00002 | 15,044 | 0 | $0.844 |
+| **total** | **95,044** | **0** | **$4.87** |
+
+**The prediction is scored: $4.50 predicted, $4.87 actual, +8.2% — inside the CPW sensitivity band
+whose top was $4.94.** The V33 pro-rata cross-check ($4.28) was 12% low; the token model was the
+better of the two, as it should be, since it counts the chunker's real geometry rather than
+assuming chunks are the same size across corpora.
+
+**The reconciliation closes exactly**, which is the acceptance test rather than the shard log:
+`corpus_vec` **22,613,652** = `corpus_chunks` **22,613,652**; 95,044 chunks in, 95,044 vectors out,
+0 misses; checkpoint `phase: "done"`. `corpus_vec` moved 22,518,608 → 22,613,652, exactly +95,044.
+
+⚠ **Shard 2 failed on the first pass and needed an explicit re-run** — it died at *job creation*
+(the network fault below), so no spend was lost and `doneShards`/`spentUsd` were untouched. The
+re-run planned 3 shards, found 2 done, and did only the third. **This is what the `--run <tag>`
+checkpoint separation bought:** against the V33 checkpoint the same re-run would have read
+`phase: "done"` and shard indices from a different work list.
+
+### The first pass — kept, because it is the evidence for the retry rule
 
 3 shards at 40,000 chunks. Shard 2 failed at **job creation** (before any spend) with `fetch
 failed` on all 3 retries — the same network fault as below. Shards 0 and 1 were submitted and are
@@ -168,38 +192,90 @@ a stream decision rather than a config line.
 
 ---
 
-## §3 — ANN rebuild + `vector-serve` restart — NOT DONE, blocked on §1
+## §3 — ANN rebuild + `vector-serve` restart — DONE
 
-Both halves still required once the embed completes:
+**The verify was watched FAILING first, which is what makes its pass mean anything.** Immediately
+after the embed and before the rebuild:
 
 ```
-tsx ../ops/heavy-job/run.ts run vector-index      # 32 GB class — never Railway (CLAUDE.md §17)
-tsx search/vector-serve-run.ts redeploy           # it does NOT auto-deploy from GitHub
-tsx search/verify-vector-index.ts                 # expect unindexed = 0
+[verify-vec] vector_idx (IVF_PQ): indexed=22,518,608 unindexed=95,044 (0.42% brute-force per query)
+[verify-vec] ❌ 95,044 unindexed rows exceeds the allowed 0 — the rebuild did not absorb the appended vectors
 ```
+
+Then `heavy-job run vector-reindex`:
+
+```
+[vec-index]  ANN index built in 1130.3s
+[vec-index]  DONE. corpus_vec rows=22613652 (vectors=21846364, misses=0)
+[verify-vec] vector_idx (IVF_PQ): indexed=22,613,652 unindexed=0 (0.00% brute-force per query)
+[verify-vec] ✅ ANN index present and covers all 22,613,652 rows
+[heavy-job]  server 161891851 destroyed
+[heavy-job]  COST: cpx62 × 20.5 min @ €0.2942/h = €0.101
+[heavy-job]  PEAK RSS: 5.8 GB
+```
+
+Placement succeeded first time (`cpx62@nbg1`) — the dedicated-core quota that refused every
+placement on 11 Aug did not bite, because this job's `serverTypes` were corrected to shared-vCPU
+first. **`expectedPeakGb` updated 5.6 → 5.8** in `jobs.ts` from this second measurement; the box
+size is deliberately NOT reduced, per the note there — two agreeing measurements justify recording
+the number, not shrinking the headroom, and the table only grows.
+
+⚠ **`vector-reindex`, NOT `vector-index` — and this script's own closing hint said the wrong one.**
+`v33-vec-catchup.ts` printed `run.ts run vector-index`, which would have reported success and
+built nothing: both of that job's scripts are checkpointed `phase: "done"` from the July build, so
+it prints "already done", creates no index, and destroys the box. `jobs.ts` documents exactly this
+at the `vector-reindex` definition; the hint was pointing away from it. Fixed.
+
+**`vector-serve` redeployed** (it does not auto-deploy from GitHub — the 11 Aug finding held):
+
+| | before | after |
+|---|---|---|
+| `started_at` | 2026-08-11T22:46:25.910Z | **2026-08-12T17:08:24.979Z** |
+| `config.nprobes` | 64 | **64** |
+| `served` | 153 | 0 (fresh boot) |
+
+The `started_at` moved, so the service is on a new snapshot and any measurement taken against it
+is about the rebuilt index rather than the 11 Aug one.
 
 ---
 
 ## §4 — Report
 
-**`vector-serve` /stats BEFORE (2026-08-12 11:35 UTC):**
+Everything §4 asks for, in one place.
 
-```
-started_at 2026-08-11T22:46:25.910Z   uptime 42,275 s   served 95   errors 0
-config.nprobes 64   chunkOverscan 5   refineFactor 2   distance cosine
-model gemini-embedding-001   dims 768
-warm_p50 2,423 ms   warm_p95 3,843 ms   memory rss 1,697 MB / cap 7,629 MB
-```
+**Sections indexed per corpus:**
 
-`started_at` is the S2C5 restart, i.e. the service has not been redeployed since. **AFTER is
-outstanding** — it must be taken after the redeploy in §3, and the `started_at` must have moved,
-or the restart did not happen and any after-measurement is meaningless.
+| corpus | before | after |
+|---|---:|---:|
+| commons-divisions-votes | 0 | **2,361** |
+| lords-divisions-votes | 0 | **3,284** |
+| impact-assessments | 0 | **18,756** |
+| consultations | 0 | **7,448** |
+| | | **31,849, 0 body misses** |
 
-**Sections indexed per corpus** — before is in §2; after is outstanding.
+**Embed cost predicted vs actual: $4.50 → $4.87 (+8.2%)**, inside the CPW band (top $4.94).
+95,044 vectors, 0 misses.
 
-**Embed cost predicted vs actual** — predicted $4.50; actual outstanding.
+**ANN unindexed count: 0** — `indexed=22,613,652 unindexed=0 (0.00% brute-force per query)`, and
+the same check was watched reporting `unindexed=95,044 (0.42%)` beforehand.
 
-**ANN unindexed count** — outstanding, expect 0.
+**`vector-serve` /stats:**
+
+| | BEFORE (11:35 UTC) | AFTER (17:09 UTC) |
+|---|---|---|
+| `started_at` | 2026-08-11T22:46:25.910Z | **2026-08-12T17:08:24.979Z** |
+| `config.nprobes` | **64** | **64** |
+| served / errors | 153 / 0 | 0 / 0 (fresh boot) |
+| warm p50 / p95 | 2,423 / 3,843 ms | — (no traffic yet) |
+
+⚠ The before `started_at` is the S2C5 restart — the service had not been redeployed since 11 Aug,
+which is the auto-deploy gap V35 §3 flagged. It moved only because of an explicit
+`vector-serve-run.ts redeploy`.
+
+⚠ **Latency after is deliberately blank rather than 0.** `served: 0` on a fresh boot means the
+counters are since-boot and there is nothing in them; quoting a p50 off an empty sample would be
+the shape of number this project has already been burned by. The comparable measurement needs
+traffic first.
 
 ---
 
