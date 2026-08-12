@@ -49,6 +49,34 @@ real.
 ❌ **NOT DONE: §3 (live miss logging) entirely; monthly scheduling of §2; the filler's full-scope
 run.** Scored honestly in the report: two of six §5 criteria not done, one partial.
 
+2026-08-12 22:37 UTC — ▼ **CENTRAL: THE PILOT SEED SET IS LOADED — 36 QUESTIONS, 27 ANSWERS, LIVE
+IN THE QUESTION LIBRARY.** `docs/central_seed_set.json` imported into **Reform Branch Community**
+(`28c84ed1…`) on Neon production by a new re-runnable
+`scrutinise-web/scripts/import-central-seed.ts` (**dry run by default, `--apply` to write**, as the
+file's own rules ask). CHANGE_LOG (2026-08-12 22:37 UTC). `whichdb` checked first; library was empty
+before; `tsc` clean. Nine questions are deliberately unanswered — that is the file's design, not a
+gap. Read back field by field from the database (36/36, 27/27, 10 topics × 4 nodes) and verified
+through the app's own `listQuestions` / `getRankedAnswers` / `buildPack`, not a bespoke query. A
+second `--apply` writes **0 rows**.
+⚠ **`authorType` / `aiModel` HAVE NOWHERE TO LIVE.** The seed file marks every answer authorType AI,
+aiModel Claude; `Answer` has neither column at Stage 2b. Provenance is carried by a seed author
+account **`lex`** (`clerkId: seed_central_lex`, `isHistoricalAccount`, **not a Community member**) —
+attributing them to Charlie would have barred the owner from voting on all 27, since self-voting is
+refused. **The answer card renders no author name at all**, so an AI answer currently looks exactly
+like a member's on screen. A Stage 2c decision, reported not taken.
+⚠ **THE CHIP ROW NOW READS ODDLY, DELIBERATELY.** The five new topics (Economy, Law & rights, Media
+skills, Party conduct, Social issues) were created on all 4 nodes **unpromoted**, per
+`central_stage2b.sql`'s rule for later additions — so the promoted chips still offer **Housing (0
+questions)** while **Party conduct (11)** sits in the dropdown. A 20-row `UPDATE` to flip;
+**Charlie's call.**
+⚠ The one `trainingSessions` record is **HELD, not imported** — no `TrainingSession` model exists,
+`ActivityClaim` pays points on approval, and the file itself says hold until both participants have
+accounts. **Richard Ross has no account.**
+✅ The importer's unknown-context guard was **watched failing** before being trusted: run with
+`--apply` on a doctored copy it refused and wrote nothing. ⚠ Minor, before any demo: with no votes
+cast, pack ranking falls back to newest, so a pack built today leads with the *unanswered*
+questions.
+
 ▼ **INGEST V36 §1 — COMPLETE. THE WALK FINISHED: 804 year-feeds, 0 throttled, 324,622 instruments.**
 
 2026-08-12 18:03 UTC — ▼ **INGEST V36 §1 — REPORTED BEFORE INGESTING, AS THE BRIEF REQUIRED, AND
@@ -213,6 +241,18 @@ otherwise**, and prove a deploy only by reading a string back off the running si
 idea** (the chosen approach is a `PolicyOption` row with status `CHOSEN`), so the gather's context had
 no guiding policy in it. The pass completed and produced good findings anyway — which is precisely
 why it would never have surfaced: it degrades quality silently and fails nothing. Fixed.
+
+⚠ **AND RE-READING §24 AGAINST WHAT SHIPPED FOUND TWO MORE — both named in the brief's §2.5 and both
+simply not done** (a thing that was never built fails nothing, so no check could have caught either):
+the **§24.1 progress label did not exist**, and the **§24.2 facts strip was in the create flow rather
+than on the idea header**, i.e. visible only to whoever was already deepening the idea. Both now sit
+on the idea header, quieter than the five-stage badge because Skeleton → Deepened is a *parallel*
+track. **DEEPENED requires a pass RUN *and* its issues triaged** — one run with ten open issues is a
+to-do list, not depth, and collapsing work-started into work-done is the exact failure the thermometer
+§24 removed used to have. Team-reviewed / Published are deliberately absent until §22.4 and §20.3
+exist. Owner-visible only until §20-D and the review instrument make §24.7's public panel honest.
+**Nothing else in §24 is outstanding** — the rest is sequenced by §24.9 after §20-B/C/D, and its one
+hook (`DeepeningIssue.reviewFindingId`) is already in the schema, unused.
 
 ⚠ **§1's blocker was real and is worth remembering: production had not deployed since 6–9 August.**
 Measured off the running product by three probes, not inferred (Vercel is SAML-blocked here). Charlie

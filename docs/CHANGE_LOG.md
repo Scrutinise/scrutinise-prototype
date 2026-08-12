@@ -218,6 +218,62 @@ V37 opened with.
 
 ---
 
+## CENTRAL — the pilot seed set is in the question library, and the AI attribution it carries has nowhere to live (2026-08-12 22:37 UTC)
+
+`docs/central_seed_set.json` uploaded into **Reform Branch Community**
+(`28c84ed1-4cde-400c-b8c3-cefd6afd66f9`) on Neon production, via a new, re-runnable
+`scrutinise-web/scripts/import-central-seed.ts` — **dry run by default, `--apply` to write**, as the
+seed file's own rules ask. `whichdb` read `ep-old-dust-aboxi69a` before anything was written; the
+library was empty beforehand (0 questions, 0 answers). `tsc --noEmit` clean.
+
+**Written: 36 questions, 27 answers, 20 topic-tag rows.** Nine questions are deliberately
+unanswered — the seed file leaves them open to invite the first member answer, and they imported as
+such rather than being padded. Every row is `scope: COMMUNITY`, `branchId: null`.
+
+⚠ **`authorType` and `aiModel` are not columns, and the seed file is built around them.** Every
+answer in the file is marked authorType AI / aiModel Claude; `Answer` at Stage 2b has neither field.
+Rather than invent a schema on the way past, provenance is carried by the **author account**: a
+single seed user `lex` (`clerkId: seed_central_lex`, `isHistoricalAccount: true`) that is
+deliberately **not a Community member**. Two reasons it is not attributed to a real person:
+self-voting on an answer is refused, so attributing 27 answers to Charlie would have barred the
+Community owner from voting on any of them in a two-member pilot; and a member-attributed AI answer
+misstates who wrote it. ⚠ **Consequence to know:** the answer card renders no author name at all
+(only branch and age), so on screen an AI answer is indistinguishable from a member's. Making AI
+provenance visible is a Stage 2c product decision, reported here, not taken.
+
+⚠ **The five new topics went in unpromoted, and the chip row is now wrong-looking.**
+`prisma/central_stage2b.sql` says a topic added after the seeded six is unpromoted and lives in the
+dropdown, and that rule was followed: Economy, Law & rights, Media skills, Party conduct and Social
+issues were created on all 4 Community nodes (5 × 4 = 20 rows) with `promoted=false`. The result is
+that the promoted chip row still offers **Housing, which has 0 questions**, while **Party conduct,
+which has 11**, sits in the dropdown. Flipping it is a 20-row `UPDATE` (or `--promote-new-topics` on
+a fresh Community) — **Charlie's call, not made here.**
+
+⚠ **The one `trainingSessions` record is HELD, not imported.** There is no `TrainingSession` model at
+this stage; the nearest fit, `ActivityClaim`, pays points on approval; and the file's own import note
+says to hold the record until both participants have real accounts and never to create placeholder
+users — **Richard Ross has no account on production**. Nothing was written for it.
+
+**The import guard was watched failing before it was trusted.** An unknown context tag aborts the
+import, because a context's kind (`CONTEXT_EXTERNAL` / `CONTEXT_INTERNAL` — the "out in the world" /
+"behind the scenes" toggle) cannot be inferred from a question. Run with `--apply` against a doctored
+copy renaming Hustings to "Zoom town hall", it refused and **wrote nothing** (question count still 0
+afterwards). All six contexts the real file uses already existed.
+
+**Reconciliation is a read-back, not the write's own return value:** every seeded question and answer
+was re-queried from the database and compared field by field — 36/36 questions, 27/27 answers,
+author id, context tags, topic tags and sources all matching, 10 topics present on each of 4 nodes.
+A second `--apply` wrote **0 rows** — the importer is idempotent on question text and answer body.
+
+**Verified through the app's own functions, not a bespoke query:** `listQuestions` returns 36 (27
+with an answer preview, 2 with sources — only two answers in the file carry links); the
+external/internal toggle splits 27/9; the `Party conduct` topic filter returns 11; `getRankedAnswers`
+and `buildPack` both serve the seeded rows. ⚠ Minor, expected, worth knowing before a demo: with no
+votes cast yet, `top-month` has nothing to rank on and falls back to newest, so a pack built today
+leads with the unanswered questions.
+
+---
+
 ## INGEST V36 §1 — the 17,261 is the wrong number in both directions, and the route is re-fetch, not migrate (2026-08-12 18:03 UTC)
 
 Executes `BRIEF_INGEST_V36_MISSING_INSTRUMENTS.md` §1 in full, and §5. **§2 and §3 are deliberately
@@ -534,6 +590,49 @@ back off the running site.
 still produced good findings, which is exactly why this would have gone unnoticed: it degrades
 quality silently and fails nothing. `loadIdeaContext` now reads the chosen approach and the ruled-out
 ones from `PolicyOption`. **This is the argument for running the thing rather than only checking it.**
+
+### §24.1 and §24.2 — two things the brief asked for that the first build did not do (2026-08-12 22:37 UTC)
+
+Found by re-reading `LEX_DESIGN_ADDENDUM_24.md` against what had actually shipped, after Charlie
+asked whether anything in it still needed doing. **Neither could have been caught by a check: a thing
+that was never built fails nothing.** Both were named in `BRIEF_DEEPENING_RESTART.md` §2.5, so both
+were in scope and simply missed.
+
+1. **The §24.1 progress label did not exist.** The brief: *"the stage label per §24.1 moves Skeleton →
+   Deepened when at least one pass is RUN and its issues triaged."* Nothing in the codebase referenced
+   it.
+2. **The §24.2 facts strip was in the wrong place.** The brief says *on the idea header*; it was
+   rendering inside the Deepening section of the create flow — visible only to someone already
+   deepening the idea, which is the person who least needs telling.
+
+Both now live on the idea header (`components/lex/EvidenceFactsStrip.tsx`), **below the five-stage
+badge and visually quieter than it**. Skeleton → Deepened is a SECOND, PARALLEL track; two things
+both called "stage" at the same weight is how a reader concludes an idea is further along than it is.
+
+⚠ **DEEPENED REQUIRES BOTH HALVES**, and this is the substantive design point rather than a detail: a
+pass RUN **and its issues triaged**. A pass that ran and left ten issues open has not deepened
+anything — it has produced a to-do list. Collapsing work-STARTED into work-DONE is exactly what the
+1–5 thermometer §24 removed used to do, and it would have crept straight back in as "one pass run =
+Deepened". The live test idea correctly reads **Skeleton** on one completed run with nine open issues.
+
+⚠ **Team-reviewed and Published are deliberately NOT offered.** §22.4's team roles and §20.3's
+publication do not exist, and a ladder whose top rungs can never be climbed is a promise the product
+does not keep. `check:deepening` asserts they stay absent until they are real.
+
+⚠ **Owner-visible only.** §24.7's public credibility panel needs versioning (§20-D) and the review
+instrument, and half of that panel — the reviews and the endorsements — is unbuilt. Counts shown
+publicly on their own would read as the finished signal when they are one column of it.
+
+**Nothing else in §24 is outstanding.** "Claims backed %" (§24.2) is correctly absent — it comes from
+§22's claims-check pass, which the brief keeps out of Pilot A. §24.3–§24.8 (the review instrument,
+version pinning, rating the reviewer, endorsement-vs-review, the public panel) are sequenced by §24.9
+*after* §20-B/C/D; the one hook they need is already in place, `DeepeningIssue.reviewFindingId`,
+unused, so building §24 is an insert rather than a migration of live rows. §24.9's instruction to the
+§22 brief — specify the per-pass workflow state and the evidence facts, omit the thermometer and star
+rating entirely — is done and enforced by grep.
+
+Six new assertions in `check:deepening`; the triage one was watched failing first. `tsc` clean,
+`next build` passes.
 
 ---
 
