@@ -173,6 +173,29 @@ for (const f of [PANEL, ENGINE, CONFIG]) {
 ok('the facts type carries counts and a date, and nothing that sums them',
   /issuesRaised: number/.test(read(ENGINE)) && !/score/i.test(read(ENGINE).match(/interface EvidenceFacts[\s\S]{0,600}?\}/)?.[0] ?? ''))
 
+// ── §24.1 progress label + §24.2 facts ON THE IDEA, not only in the create flow ──
+// ⚠ BOTH OF THESE WERE MISSED IN THE FIRST BUILD and found by re-reading §24 against
+// what shipped, not by any check — which is why they are asserted now. The facts were
+// rendering only inside the Deepening section of the create flow (visible to someone
+// already deepening the idea, i.e. the person who least needs telling), and the progress
+// label did not exist at all.
+console.log('\n§24.1/§24.2 — the progress label and the facts live on the idea')
+const STRIP = 'components/lex/EvidenceFactsStrip.tsx'
+const DETAIL = 'app/ideas/[id]/IdeaDetailClient.tsx'
+const strip = code(STRIP)
+ok('there is a progress label deriving Skeleton → Deepened',
+  /deepeningProgressLabel/.test(strip) && /'Skeleton'/.test(strip) && /'Deepened'/.test(strip))
+ok('...and Deepened requires a RUN pass whose issues are TRIAGED, not merely a run',
+  /status === 'RUN'/.test(strip) && /i\.status !== 'OPEN'/.test(strip))
+ok('the idea header renders the strip', /<EvidenceFactsStrip/.test(code(DETAIL)))
+ok('...owner-gated, because §24.7 needs versioning and reviews before it faces a stranger',
+  /isOwner=\{isOwner\}/.test(code(DETAIL)) && /if \(!isOwner\)/.test(strip))
+ok('the strip carries no score vocabulary either', !SCORE_WORDS.test(strip),
+  strip.match(SCORE_WORDS)?.[0])
+// The unreachable rungs must not be displayed as if they were reachable.
+ok('Team-reviewed / Published are NOT offered as labels yet (§22.4 and §20.3 unbuilt)',
+  !/'Team-reviewed'|'Published'/.test(strip))
+
 // ── 9. a fifth pass is configuration ─────────────────────────────────────────
 console.log('\n§4 — adding a fifth pass is configuration, not construction')
 const NON_CONFIG = [ENGINE, CLIENT, SETTLE, PANEL, ...ROUTES]

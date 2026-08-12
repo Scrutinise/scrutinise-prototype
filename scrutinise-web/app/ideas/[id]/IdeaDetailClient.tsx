@@ -15,6 +15,7 @@ import AmendmentsTab from './AmendmentsTab'
 import CampaignTab from './CampaignTab'
 import DocumentExports from '@/components/documents/DocumentExports'
 import WhatNextPanel from '@/components/WhatNextPanel'
+import EvidenceFactsStrip from '@/components/lex/EvidenceFactsStrip'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -2370,6 +2371,13 @@ export default function IdeaDetailClient({
               {stageLabel}
             </span>
           </div>
+
+          {/* §24.1 + §24.2 — the progress label and the evidence facts, owner-visible.
+              Deliberately BELOW the five-stage badge and visually quieter than it: this
+              is a second, parallel track (Skeleton → Deepened), and two things both
+              called "stage" competing at the same weight is how a reader ends up
+              believing an idea is further along than it is. */}
+          <EvidenceFactsStrip ideaId={idea.id} isOwner={isOwner} />
 
           <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
             {idea.title || 'Untitled idea'}
