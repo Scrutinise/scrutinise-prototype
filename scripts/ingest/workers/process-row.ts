@@ -233,7 +233,15 @@ async function processTnaLegislation(row: QueueRow): Promise<void> {
       continue
     }
 
-    if (await r2Exists(cKey)) continue
+    // V36: an R2 object does not prove a section row exists. V34 found this exact
+    // defect in the consultations and impact-assessment processors — two rows were
+    // SIGTERM'd between `r2Put` and `upsertSection` by a mid-drain redeploy, and the
+    // bare `r2Exists` short-circuit then marked them done with no section, forever.
+    // Both of those were fixed to require the object AND the row; the legislation
+    // processor was not, and it is the one now running a 41,913-row recovery that a
+    // deploy will restart. Requiring both makes a mid-drain restart survivable
+    // instead of silently lossy.
+    if (await r2Exists(cKey) && await sectionExists(secId)) continue
 
     const sourceUrl = `https://www.legislation.gov.uk/${actId}/${section.sectionRef}`
 

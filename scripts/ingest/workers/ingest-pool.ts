@@ -49,7 +49,24 @@ const CONCURRENCY = (() => {
   return isNaN(n) || n < 1 ? 20 : n
 })()
 
-const ROW_TIMEOUT_MS       = 5 * 60_000  // hard ceiling per row — protects against any source hanging
+/**
+ * Hard ceiling per row — protects against any source hanging.
+ *
+ * ⚠ RAISED 5 min → 30 min, V36, and the reason is worth keeping. The recovery run is
+ * seeded in DESCENDING citation order, so the biggest, most-referenced instruments go
+ * first — and those are precisely the ones that cannot finish in 5 minutes. The first
+ * two rows of the run both failed with `row timeout after 300s`, and one of them was
+ * **ukpga/2006/46, the Companies Act 2006**: 15 MB of CLML, ~2,000 sections, ~4,000
+ * R2 puts. The single instrument the whole sprint exists to recover was the first
+ * thing the timeout threw away, and a flat ordering would have hidden that behind
+ * thousands of small successes.
+ *
+ * 30 minutes stays well inside the 90-minute stale-claim reclaim in
+ * progress-reporter.ts, which is the real backstop for a genuinely stuck row. A
+ * 5-minute ceiling was 18× tighter than the mechanism already guarding the same
+ * failure.
+ */
+const ROW_TIMEOUT_MS       = Number(process.env.ROW_TIMEOUT_MS ?? 30 * 60_000)
 const EMPTY_SWEEP_GAP_MS   = 30_000      // gap between exit-on-empty sweeps
 const EMPTY_SWEEPS_TO_EXIT = 3           // consecutive empty sweeps before exit(0)
 const SOURCE_REFRESH_MS    = 15_000      // how often the shared pending-source list refreshes
