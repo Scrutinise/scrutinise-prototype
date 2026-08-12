@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-12 17:12 UTC — INGEST V35 COMPLETE on both halves: embed **95,044 vectors, 0 misses, $4.87 against $4.50 predicted (+8.2%)**, inside the CPW band; `corpus_vec` = `corpus_chunks` = 22,613,652 exactly; FTS 31,849 rows; **ANN `unindexed=0`** with the verify watched FAILING first at 95,044 unindexed, €0.101, box destroyed; `vector-serve` redeployed (`started_at` moved, it does NOT auto-deploy). ⚠ `v33-vec-catchup.ts` was telling the next reader to run `vector-index`, which reports success and builds NOTHING (both its scripts are checkpointed `phase:"done"`) — `vector-reindex` is the one; fixed. Earlier: 2026-08-12 12:39 UTC — SEARCH S2C-6 + INGEST V35: the four V34 corpora are TYPED (three new display types — IMPACT_ASSESSMENT, CONSULTATION, DIVISION; union 10→13; check:corpus-types 153/153 with every new assertion watched failing first) and HONESTLY TITLED (all four failed the brief's correctness requirement — a Lords roll-call rendered as the bare bill name, and **1,024 impact-assessment rows are titled the single word "Summary"**; fixed at display in one file for both adapters). ⚠ **The ingest brief's sequencing note is wrong — the typing gates the EMBED too**, because the catch-up bakes `tierFor()` into every chunk and vector-search prefilters on it server-side; embedding first would have made 95,044 paid-for chunks unreachable. ⚠⚠ **The recall constraint is not retrieval tuning: 17,261 instruments known to the legacy table are ABSENT from `corpus_sections`** — 77,000 sections, 61.2M characters, including the **Companies Act 2006** and **UK GDPR** — which is why UK GDPR cannot be retrieved at any probe count, and why the V26 §6 DROP **must not proceed**: the legacy path returns CA 2006 at RANK 1 and UK GDPR at RANKS 2 and 7 on the very queries the corpus path reports absent. §3 repoints STOPPED on that evidence. A recall diagnosis separating the five loss modes says the brief's own lever (candidate count) fixes **3 of 17** missing documents against ABSENT 9 and RANKING 5. **`caselaw` 36/36→22/36 RETIRED after five sprints** — there was never a 36-query set (it was a count of routing CALLS) and the gold set has no caselaw archetype at all; measured directly, the router selects caselaw 8/8 when right and 1/8 when wrong. ⚠ **A network fault that is not one:** Node happy-eyeballs racing unroutable IPv6 against a cold Neon compute fails every address while PowerShell reaches the same IP — `--no-network-family-autoselection`. Earlier: 2026-08-12 12:21 UTC — LEX §1: **the Sprint 3-D browser walk cannot run, because www.scrutinise.org has not deployed since 6–9 August** — measured off the running product by three independent probes (the `/ideas/create` opening bubble is still the pre-3-D wording; `/support` has no Reading-legislation section; a Community page still says points and leaderboards are "coming soon"), while Stage 1.2's controls from 6 Aug ARE live, which brackets the deployed build between 6 Aug 20:41 and 9 Aug 07:43 UTC. Nothing is unpushed (`ls-remote` = local HEAD) and `tsc` is clean, so this is Vercel-side and Charlie must read the dashboard — the token here is SAML-blocked. ⚠ Consequence beyond §1: every "Charlie's browser re-test is the remaining gate" note since 9 Aug was untestable. Also: §3's dependency question is answered — `explanatory-notes` (18,801 sections/560 docs) and `explanatory-memoranda` (27,428/10,864) both exist and are reachable, but there is **no separate PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`, so legs 2 and 3 of the triangulation are locked in the same un-indexed box; and `ftsVector` is NULL on 100% of every corpus including searchable ones, so it is not the searchability signal. Plus the blocker that had to be cleared first: Node's happy-eyeballs cannot reach Neon by hostname on this machine (`NODE_OPTIONS=--no-network-family-autoselection`), and `scripts/whichdb.ts` — the check §16 makes mandatory — could not run at all; a runnable one is now at `scrutinise-web/scripts/whichdb.ts`. Earlier: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-12 17:36 UTC — LEX: **the Sprint 3-D walk is done — 7 of 9 items pass, and the two that failed were SECOND INSTANCES of the defects 3-D had just fixed, both now fixed with a guard (`check:panel-claims`) whose every assertion was watched failing first.** `keywords` is declared `structured` with no slots, so the panel drew "PROPOSED BY LEX — REFINE" over a literally empty card whose Save would have written `{}` over Lex's keywords; and "Save & exit" POSTed `accept` to a route that 422s child-entity fields, so it could not save on any page from Diagnosis onwards — the two copies of `CHILD_ENTITY_FIELDS` had drifted, and the dialog was also calling already-persisted PolicyOption rows an unsaved draft. Task 1's problem gate holds in two presses; legislation links 5/5 → 200; Task 3, 9e, 9f, 9g and 9h all pass. **And the Deepening (§22 Pilot A) is built:** three additive tables on Neon (applied, then re-applied to prove idempotence), four passes as pure configuration — `check:deepening` asserts no pass key exists outside the config file — background runs that persist incrementally, supersede older PROPOSED items and provably never touch an ACCEPTED one, and a separate evidence layer whose "never writes a canonical field" invariant is enforced by grep with exactly one allowed line, not by intention. ⚠ **§3's instruction was overtaken mid-sprint** — Search made the Impact Assessment corpus reachable the same afternoon (confirmed behaviourally in the briefing panel, not by reading their code) — so known unknowns are COMPUTED from each run and a hardcoded gap string is forbidden by the check. No thermometer, no stars, counts only (§24). ⚠ NOT yet browser-verified — it has not been pushed. ⚠ `check:score-scope` fails on the concurrent Central session's `lib/question-library.ts`, reported not edited. Earlier: 2026-08-12 17:12 UTC — INGEST V35 COMPLETE on both halves: embed **95,044 vectors, 0 misses, $4.87 against $4.50 predicted (+8.2%)**, inside the CPW band; `corpus_vec` = `corpus_chunks` = 22,613,652 exactly; FTS 31,849 rows; **ANN `unindexed=0`** with the verify watched FAILING first at 95,044 unindexed, €0.101, box destroyed; `vector-serve` redeployed (`started_at` moved, it does NOT auto-deploy). ⚠ `v33-vec-catchup.ts` was telling the next reader to run `vector-index`, which reports success and builds NOTHING (both its scripts are checkpointed `phase:"done"`) — `vector-reindex` is the one; fixed. Earlier: 2026-08-12 12:39 UTC — SEARCH S2C-6 + INGEST V35: the four V34 corpora are TYPED (three new display types — IMPACT_ASSESSMENT, CONSULTATION, DIVISION; union 10→13; check:corpus-types 153/153 with every new assertion watched failing first) and HONESTLY TITLED (all four failed the brief's correctness requirement — a Lords roll-call rendered as the bare bill name, and **1,024 impact-assessment rows are titled the single word "Summary"**; fixed at display in one file for both adapters). ⚠ **The ingest brief's sequencing note is wrong — the typing gates the EMBED too**, because the catch-up bakes `tierFor()` into every chunk and vector-search prefilters on it server-side; embedding first would have made 95,044 paid-for chunks unreachable. ⚠⚠ **The recall constraint is not retrieval tuning: 17,261 instruments known to the legacy table are ABSENT from `corpus_sections`** — 77,000 sections, 61.2M characters, including the **Companies Act 2006** and **UK GDPR** — which is why UK GDPR cannot be retrieved at any probe count, and why the V26 §6 DROP **must not proceed**: the legacy path returns CA 2006 at RANK 1 and UK GDPR at RANKS 2 and 7 on the very queries the corpus path reports absent. §3 repoints STOPPED on that evidence. A recall diagnosis separating the five loss modes says the brief's own lever (candidate count) fixes **3 of 17** missing documents against ABSENT 9 and RANKING 5. **`caselaw` 36/36→22/36 RETIRED after five sprints** — there was never a 36-query set (it was a count of routing CALLS) and the gold set has no caselaw archetype at all; measured directly, the router selects caselaw 8/8 when right and 1/8 when wrong. ⚠ **A network fault that is not one:** Node happy-eyeballs racing unroutable IPv6 against a cold Neon compute fails every address while PowerShell reaches the same IP — `--no-network-family-autoselection`. Earlier: 2026-08-12 12:21 UTC — LEX §1: **the Sprint 3-D browser walk cannot run, because www.scrutinise.org has not deployed since 6–9 August** — measured off the running product by three independent probes (the `/ideas/create` opening bubble is still the pre-3-D wording; `/support` has no Reading-legislation section; a Community page still says points and leaderboards are "coming soon"), while Stage 1.2's controls from 6 Aug ARE live, which brackets the deployed build between 6 Aug 20:41 and 9 Aug 07:43 UTC. Nothing is unpushed (`ls-remote` = local HEAD) and `tsc` is clean, so this is Vercel-side and Charlie must read the dashboard — the token here is SAML-blocked. ⚠ Consequence beyond §1: every "Charlie's browser re-test is the remaining gate" note since 9 Aug was untestable. Also: §3's dependency question is answered — `explanatory-notes` (18,801 sections/560 docs) and `explanatory-memoranda` (27,428/10,864) both exist and are reachable, but there is **no separate PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`, so legs 2 and 3 of the triangulation are locked in the same un-indexed box; and `ftsVector` is NULL on 100% of every corpus including searchable ones, so it is not the searchability signal. Plus the blocker that had to be cleared first: Node's happy-eyeballs cannot reach Neon by hostname on this machine (`NODE_OPTIONS=--no-network-family-autoselection`), and `scripts/whichdb.ts` — the check §16 makes mandatory — could not run at all; a runnable one is now at `scrutinise-web/scripts/whichdb.ts`. Earlier: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
 handoff. The core of it is three vote-ish mechanisms that must not collapse into one: a QUESTION vote
 is up-only and self-voting is ALLOWED because it records frequency ("I get asked this too"), not
 quality; an ANSWER vote is up/down, mutually exclusive and self-voting is refused; a FAVOURITE is
@@ -128,6 +128,149 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## LEX — the 3-D walk is DONE (7 pass, 2 fail, both fixed), and the Deepening is built (2026-08-12 17:36 UTC)
+
+Executes `BRIEF_DEEPENING_RESTART.md` §1, §2 and §3 in full. §1's blocker — production three days
+stale — is recorded in the entry below and was cleared by Charlie; both probes were re-read off the
+running site before the walk started (`/support` now has its **Reading legislation** tab, and the
+opening bubble is the post-3-D wording).
+
+### §1 — the walk, item by item
+
+| item | result |
+|---|---|
+| **Task 1** — a solution entered as the problem | ✅ **PASS, in two presses.** "I want to change the amount charged for plastic bags in shops" → Lex asks what problem it solves → the user answers → Lex drafts the *problem* back. It never accepted the solution as a diagnosis. |
+| **9e** material/contributory | ✅ PASS — asked in words on its own line, two visible pill controls, click selects. |
+| **9f** option cards collapse | ✅ PASS — collapsed = title + `CANDIDATE` + chevron; Edit / Rule out / Delete are inside the expanded body, not below the title. |
+| **9g** a cause named in chat | ✅ PASS — landed on the loop as a proposal. |
+| **9h** the quiet retry link | ✅ PASS — "Run this search again" under the briefing, and again under each stage search. |
+| **Task 3** "Work on this" | ✅ PASS — chat, right panel and save path move together; returning left Diagnosis at 2 of 7 with its cause and classification intact. |
+| **legislation links** | ✅ PASS — **5 of 5 → HTTP 200**, including the `/section/1` form the 3-D fix produces, an explanatory-note `/notes` link and an `ukia/…` impact assessment. |
+| **2a** no badge over an empty box | ⚠️ **FAIL — a second instance. Fixed.** |
+| **9a** Save & exit | ⚠️ **FAIL — a second instance. Fixed.** |
+
+⚠ **2a, again: `keywords` rendered "PROPOSED BY LEX — REFINE" over a completely empty card.** It is
+declared `type: 'structured'` in `page1-config.ts` — because `structured` is what `AcceptCard` keys
+off to draw the chips in chat — and it carries **no `slots`**. `FieldsPanel` dispatched it to
+`StructuredField`, which renders one input PER SLOT, so with zero slots it drew a confident badge, a
+Save button, and nothing in between. **Worse than cosmetic:** `baseline` is `Object.fromEntries([])`
+= `{}`, so pressing that Save would have written an **empty object over Lex's proposed keywords** and
+reported success. The dispatcher is now gated on the field actually having slots, so a slotless
+structured field falls through to `OutputField` — which already had `isList` for exactly this — and
+`isList` now uses the SAME test as `AcceptCard` (`field.type === 'structured'`), so the two accept
+surfaces for one field cannot disagree about whether its value is a list.
+
+⚠ **9a, again: "Save & exit" could not save, on every page from Diagnosis onwards.** It POSTed
+`{action:'accept'}` to `/fields` for whatever field was `AWAITING_CONFIRMATION`; for a child-entity
+field (`causes` · `rootCause` · `policyOptions` · `chosenApproach` · `actions`) that route **422s by
+design**, so the honest failure banner 3-D built fired every time and the only way out was Discard —
+9a's original symptom, one page along. **The two copies of the rule had drifted:** the route held
+`CHILD_ENTITY_FIELDS` privately and the create client had never heard of it. It now lives in
+`page1-config.ts` and both import it. **And the dialog was saying something false** — *"'Candidate
+approaches' is waiting for you to Save. Leave now and that draft is lost"* — when the three
+approaches were already `PolicyOption` rows and leaving loses nothing. `AWAITING_CONFIRMATION` on a
+loop field does not mean *unsaved*; it means *not yet declared complete*, which is a decision to take
+on the way in, not on the way out. So they are excluded from the unsaved-draft test rather than given
+a save path: **exiting must not silently advance a stage.**
+
+✅ **`npm run check:panel-claims`** is the new guard, and every assertion was **watched failing
+first**: restoring the un-gated dispatcher, the hardcoded `isList` key and the un-excluded
+`unsavedField` each fails its own line, and all three pass again when restored.
+
+✅ **Also confirmed working by the walk, and worth recording because it is the behaviour 3-C/3-D were
+built for:** Lex **refused to seed causes**, saying *"none of it says plainly what is CAUSING your
+problem, and I'm not going to dress a document title up as a cause"* — an honest empty state rather
+than a fabricated one. And `generatePolicyOptions` produced **3 `source='LEX'` options** where the
+database previously held **zero**, which is the thinking-budget fix landing.
+
+### §2 — the Deepening, Pilot A
+
+**Schema** (`prisma/lex_deepening.sql`, additive and idempotent — applied to Neon after a `whichdb`
+check, then **re-applied to prove idempotence**): `DeepeningPass` (11 cols, unique on
+`ideaId+passKey`), `EvidenceItem` (16), `DeepeningIssue` (13), four enums, six indexes. Prisma models
+match; `prisma validate` and `generate` clean.
+
+**⚠ The invariant, and it is enforced rather than intended.** Deepening writes `EvidenceItem` rows
+that **reference** canonical fields through a plain TEXT `fieldRef`. **Nothing in the feature writes
+a field's value** — `check:deepening` greps every Deepening module and route for
+`prisma.idea.update` / `submitBox` / `acceptField` and allows **exactly one**, by line, the
+references store. A blanket per-file exemption would have let the next one through unnoticed. The
+brief asked for this to be "checked by a script, not by intention"; it is.
+
+**Four passes, as configuration.** `EVIDENCE_PRECEDENT` · `LEGAL` · `FINANCIAL` · `POLITICAL_RISK`,
+each a method block + intent set + issue templates in `deepening-config.ts`. The check asserts the
+mechanism claim directly: **no pass key appears anywhere outside the config file**, the engine
+iterates `PASSES` rather than switching on a key, and the route validates through `isPassKey`. Adding
+a fifth pass is one array entry. Three descriptive gateway intents added (`PRECEDENT`,
+`CAUSAL_EVIDENCE`, `DEVOLUTION_SCOPE`); `MECHANISM_ANALOGUE` stays reserved and the check asserts it
+is not wired.
+
+**⚠ §3's instruction was overtaken within the sprint, and the design changed because of it.** The
+brief says to declare the Impact Assessment gap as a known unknown on every `EVIDENCE_PRECEDENT` run
+until Search closes it. Search closed it *the same afternoon* (`db49b3f`, S2C6 §1) — and the walk
+confirmed it behaviourally, not by reading their code: the briefing panel rendered **"WHAT IT WAS
+EXPECTED TO COST"** with a real DEFRA Impact Assessment, and a **post-implementation review** under
+Guidance. So known unknowns are **computed from the run** — the pass's `mustAnswer` questions minus
+the ones it reports answering, plus any intent whose retrieval actually failed — and never from a
+constant. `check:deepening` forbids a hardcoded "IA corpus unavailable" string outright. **A
+hardcoded gap is a lie with a delay on it.**
+
+**Run mechanics.** `POST /api/ideas/{id}/deepening/{passKey}/run`, `maxDuration = 300`. The pass is
+claimed in ONE conditional `updateMany` whose `count` is checked, so two concurrent POSTs cannot both
+start it. Findings and issues are persisted **one row at a time**, so a timeout loses the tail rather
+than the run, and `settle` is guarded on `runVersion` so a slow run cannot overwrite a newer one's
+status. A re-run increments `runVersion`, supersedes older **PROPOSED** items with a note saying why,
+and **provably cannot touch an ACCEPTED one** — the check asserts `'ACCEPTED'` appears nowhere in the
+supersede predicate. ⚠ **A run killed by the platform is settled by WRITING the row to FAILED, not by
+displaying something different** (`deepening-settle.ts`): the status shown has to be the status
+stored, or a dead run shows a spinner for ever.
+
+**Never-claim, in full.** A finding whose `sourceId` is not in what *this run* retrieved is dropped
+before it can be persisted, and the citation and URL are taken from the retrieved result rather than
+from the model — so a fabricated citation cannot survive even if one is produced. Zero retrieved =
+**no model call at all**, and the whole pass becomes known unknowns. A truncated gather is a FAILED
+run, not a partial one, and `finishReason` is checked **before** parsing (CLAUDE.md §18) with
+`thinkingBudget: 0` (§19-D Task 2b).
+
+**UI.** A Deepening section after Coherent Actions, locked until the four kernel stages are complete.
+Per pass: collapsible training panel (§2.6 copy verbatim), workflow chip (*Not run · Running · Run —
+n findings, m issues open*), Run / Re-run, findings with source + citation and Accept / Reject,
+issues with **Work on this with Lex** / Mark addressed / Defer / **Dismiss (reason required at the
+API, not just the form)**, and a **known-unknowns block that renders even when empty** — "nothing was
+unfindable" is information, and an absent block reads as "not checked". The check asserts that block
+is not wrapped in a non-empty guard. While a pass is open its retrieval leads the right-hand panel
+through the same `RefCard` and type grouping as everything else.
+
+⚠ **CONTRADICTS is styled to stand out, not to warn.** It is the most useful thing a pass returns,
+and colouring it as an error teaches the user to skim past it. The check asserts nothing filters it
+out of either the list or the persist path.
+
+⚠ **§24 supersedes §22.3, so there is no thermometer and no star rating anywhere.** The facts strip
+is counts and a date — issues raised/resolved/open, known unknowns declared, sources by type, last
+run — and `check:deepening` greps the panel, engine and config for
+`star|rating|thermometer|qualityScore|completeness` so a later "helpful" total fails the build.
+
+**⚠ One negative control did not fire on its first attempt and had to be redone.** Of the three
+invariants deliberately broken to prove `check:deepening` can fail, the injected field-write and the
+injected `qualityScore` both failed their lines immediately — the known-unknowns guard did not,
+because the `perl` substitution silently did not match and the file was never modified. Re-done with
+a substitution that provably landed (`grep -c` before running), it fails correctly. *A negative
+control you did not watch land is not a negative control* — see `feedback-checks-that-cannot-fail`.
+
+`tsc --noEmit` clean; `next build` passes. ⚠ **`check:score-scope` FAILS, and it is NOT this sprint's
+code** — `lib/question-library.ts:244` and `:327`, from the concurrent Central session's `3444f3d`.
+Its `score` is a vote tally, not a retrieval score, so this is very likely a false positive from the
+check's file scope rather than a defect — but it is the Central thread's call, not mine, and it is
+reported rather than edited. All other checks pass: `problem-gate`, `never-claim`, `llm-guards` 9/9,
+`flags` 50/50, `corpus-types` 156/156, `panel-claims`, `deepening`.
+
+⚠ **NOT YET BROWSER-VERIFIED**, and the standing rule requires it: the two §1 fixes and the whole
+Deepening feature are on disk and unverified against the running site, because production deploys
+from `Main` and this has not been pushed. **First thing after the deploy: re-walk 2a (keywords) and
+9a (Save & exit on Guiding Policy), then run one pass end to end.**
 
 ---
 

@@ -29,7 +29,10 @@
     "check:never-claim": "tsx scripts/check-never-claim.ts",
     "check:problem-gate": "tsx scripts/check-problem-gate.ts",
     "check:legislation-urls": "tsx --env-file=.env scripts/check-legislation-urls.ts",
-    "check:cost-summary": "tsx --env-file=.env scripts/check-cost-summary.ts"
+    "check:cost-summary": "tsx --env-file=.env scripts/check-cost-summary.ts",
+    "check:panel-claims": "tsx scripts/check-panel-claims.ts",
+    "check:deepening": "tsx scripts/check-deepening.ts",
+    "whichdb": "tsx --env-file=.env scripts/whichdb.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

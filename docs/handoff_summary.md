@@ -2,7 +2,70 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 17:12 UTC — ▼ **SEARCH S2C-6 + INGEST V35 ARE BOTH COMPLETE: the four
+*Last updated: 2026-08-12 17:36 UTC — ▼ **LEX: the 3-D walk is DONE and the DEEPENING is BUILT — but
+neither is browser-verified yet, because it has not been pushed.** Earlier threads follow.*
+
+2026-08-12 17:36 UTC — ▼ **LEX: SPRINT 3-D IS WALKED (7 PASS, 2 FAIL, BOTH FIXED) AND THE DEEPENING
+(§22 PILOT A) IS BUILT.** Executes `BRIEF_DEEPENING_RESTART.md` §1/§2/§3 in full. CHANGE_LOG
+(2026-08-12 17:36 UTC). `tsc` clean, `next build` passes.
+
+⚠⚠ **FIRST THING NEXT SESSION: THIS IS NOT BROWSER-VERIFIED.** The two §1 fixes and the entire
+Deepening feature are on disk, unpushed and therefore untested against the running site. Re-walk
+**2a** (the Keywords card must show its keywords, not a badge over an empty box), **9a** (Save & exit
+on Guiding Policy must actually leave), then **run one Deepening pass end to end** and check that
+findings carry citations, a known-unknowns block renders, and dismissing an issue demands a reason.
+
+⚠ **§1's blocker was real and is worth remembering: production had not deployed since 6–9 August.**
+Measured off the running product by three probes, not inferred (Vercel is SAML-blocked here). Charlie
+cleared it; both probes were re-read before the walk began. **Every "Charlie's browser re-test is the
+remaining gate" note since 9 Aug had been untestable** — Central Stage 2, Central 2b, Lex 3-C, 3-D.
+**A push is not a deploy, and the only honest proof of a deploy is a string read back off the site.**
+
+**§1 — 7 of 9 pass.** Task 1's problem gate holds **in two presses** (a solution entered as the
+problem is never accepted as one); 9e, 9f, 9g, 9h and Task 3 all pass; legislation links **5/5 →
+200**. Also seen working: Lex **refused to seed causes** rather than dressing a document title up as
+one, and `generatePolicyOptions` produced **3 LEX options** where the database held zero.
+
+⚠ **THE TWO FAILURES WERE SECOND INSTANCES OF THE DEFECTS 3-D HAD JUST FIXED.** **2a:** `keywords` is
+`type:'structured'` with **no slots**, so `FieldsPanel` sent it to the slot renderer and drew
+"PROPOSED BY LEX — REFINE" over an empty card — whose Save would have written `{}` **over Lex's
+proposed keywords**. **9a:** "Save & exit" POSTed `accept` to `/fields`, which **422s child-entity
+fields by design**, so it could not save on any page from Diagnosis onwards; the two copies of
+`CHILD_ENTITY_FIELDS` had drifted and the dialog was calling already-persisted `PolicyOption` rows an
+unsaved draft. Both fixed; `check:panel-claims` guards them and **every assertion was watched failing
+first**.
+
+**§2 — the Deepening.** Three additive tables on Neon (`whichdb` first, then re-applied to prove
+idempotence). Four passes as **pure configuration** — the check asserts **no pass key appears outside
+`deepening-config.ts`**, so a fifth pass is one array entry. Background runs persist incrementally, a
+re-run supersedes older PROPOSED items and **provably cannot touch an ACCEPTED one**, and a run
+killed by the platform is settled by **writing** the row to FAILED rather than displaying something
+different. Never-claim in full: a finding whose source is not in what the run retrieved is dropped
+before it can be stored; zero retrieved means **no model call at all**.
+
+⚠ **§3's premise expired mid-sprint.** The brief said to declare the Impact Assessment gap on every
+`EVIDENCE_PRECEDENT` run; **Search closed it the same afternoon** (`db49b3f`), and the walk confirmed
+it *behaviourally* — the briefing panel rendered "WHAT IT WAS EXPECTED TO COST" with a real DEFRA
+Impact Assessment and a post-implementation review. So known unknowns are **computed per run** and a
+hardcoded gap string is **forbidden by the check**. §3's other answer: `explanatory-notes` (18,801
+sections / 560 docs) and `explanatory-memoranda` (27,428 / 10,864) both exist; there is **no separate
+PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`.
+
+⚠ **§24 supersedes §22.3:** no thermometer, no star rating, counts only — and the check greps for the
+vocabulary so a later total fails.
+
+⚠ **`check:score-scope` FAILS on `lib/question-library.ts` (Central's `3444f3d`), not on this
+sprint's code.** Its `score` is a vote tally, not a retrieval score, so it looks like a false positive
+from the check's file scope — but that is the Central thread's call. **Reported, not edited.**
+
+⚠ **Two environment facts that cost real time and will recur:** Node cannot reach Neon by hostname on
+this machine (happy-eyeballs + a cold compute) — every DB command needs
+`NODE_OPTIONS=--no-network-family-autoselection`, and without it `next build` fails locally for a
+network reason while being fine on Vercel. And `scripts/whichdb.ts`, the check §16 makes MANDATORY,
+**could not run at all** (no root `node_modules`); a runnable one is now `npm run whichdb`.
+
+▼ Earlier:
+*2026-08-12 17:12 UTC — ▼ **SEARCH S2C-6 + INGEST V35 ARE BOTH COMPLETE: the four
 corpora are typed, titled, keyword-indexed and vector-indexed, nothing is left running — and the
 recall constraint turns out to be 17,261 instruments that were never ingested.** Earlier threads
 follow.*
