@@ -124,6 +124,7 @@ export default function BackgroundPanel({
   onAskLex,
   onRetrySearch,
   onGiveFeedback,
+  deepeningPass,
 }: {
   ideaId: string
   initialBackground: CanonicalState['initialBackground']
@@ -146,6 +147,9 @@ export default function BackgroundPanel({
   onRetrySearch: () => void
   /** §20.5 — opens the feedback consent flow, pre-set to the briefing. */
   onGiveFeedback: () => void
+  /** §22 — while a Deepening pass is open, ITS retrieval leads this panel, through the
+   *  same grouped renderer as everything else. Null when no pass is open. */
+  deepeningPass?: { label: string; results: SearchResult[] } | null
 }) {
   const [open, setOpen] = useState(true)
 
@@ -175,6 +179,36 @@ export default function BackgroundPanel({
           Once you’ve confirmed keywords, Lex pulls an initial background briefing from the corpus and it appears here.
           Each new section then runs its own focused search.
         </p>
+      )}
+
+      {/* §22 — the open Deepening pass's own retrieval, leading the panel. Same RefCard,
+          same type grouping and same ordering as every other block here, so a source found
+          by a pass and a source found by a stage search are read the same way. It sits
+          ABOVE the stage search because while a pass is open, the pass IS what the user is
+          working on. */}
+      {deepeningPass && (
+        <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide flex-1 text-violet-700">
+              {deepeningPass.label} — what this pass found
+            </span>
+            <span className="text-[11px] text-zinc-400">{deepeningPass.results.length} references</span>
+          </div>
+          {deepeningPass.results.length === 0 ? (
+            <p className="text-xs text-zinc-500">
+              This pass hasn’t retrieved anything yet. Run it and its sources appear here.
+            </p>
+          ) : (
+            TYPE_ORDER.map((t) => ({ type: t, items: deepeningPass.results.filter((r) => r.type === t) }))
+              .filter((g) => g.items.length > 0)
+              .map((g) => (
+                <div key={g.type}>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">{TYPE_LABELS[g.type]}</div>
+                  <div className="space-y-1.5">{g.items.map((r) => <RefCard key={r.id} r={r} />)}</div>
+                </div>
+              ))
+          )}
+        </div>
       )}
 
       {/* Page-transition CTA (design §14 / Sprint 2 Task 4). */}
