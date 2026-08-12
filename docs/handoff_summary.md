@@ -2,7 +2,75 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-11 20:25 UTC — ▼ **LEX SPRINT 3-D (§19-D) IS BUILT: THE PROBLEM GATE, AND
+*Last updated: 2026-08-11 23:25 UTC — ▼ SEARCH Stage 2C-5 (below). Earlier threads follow.*
+
+2026-08-11 23:25 UTC — ▼ **SEARCH STAGE 2C-5: PROBES UP, METRIC HONEST, AND THE RERANKER IS NOT
+AUTHORISED — BECAUSE THE DENOMINATOR SAYS THE PROBLEM IS RECALL.** Executes `BRIEF_SEARCH_S2C5.md`
+§1/§2/§3 in full; §4's two unknowns settled but its eight repoints deliberately NOT done; §5 untouched.
+CHANGE_LOG (2026-08-11 23:15 UTC); full detail **`docs/SEARCH_S2C5_REPORT.md`**. Spend **€0.030**.
+`tsc` clean in both projects.
+
+**§1 — `VECTOR_NPROBES` IS 64 IN PRODUCTION**, and engagement was verified POSITIVELY: `/stats` now
+serves `retrievalConfig()`, it read **nprobes 24** before the change and **64** after. Latency, same 20
+queries same order `noCache`: p50 **2,763 → 3,148 ms (+13.9%)**, p95 5,615 → 3,874 (−31.0%, ⚠ do not
+bank it — one outlier moves a 20-sample p95), 0 failures. Inside the revert criterion, fixed at 8,423 ms
+BEFORE the change. ⚠ **The brief's baseline was stale** (p50 3,647→2,957, p95 4,355→5,447 at the 22:31
+re-read), which is why it said to re-read.
+
+⚠⚠ **THE RECALL JUSTIFICATION DID NOT MATERIALISE, and two metrics were conflated — one of them mine to
+keep straight.** Gold, same harness twice, only nprobes differing: BM25-alone **62.2% → 62.2%** (a clean
+negative control proving the harness deterministic), **vector-alone 69.2% → 68.6%**, fused 67.3% → 68.6%.
+S2C4 measured **overlap with an exhaustive probe** (70.4% → ~85%), which is candidate-set fidelity, **not
+gold recall** — and they did not move together, because more probes surface more near-neighbours and a
+larger candidate set can push a gold document out of a fixed top-20 as easily as pull one in. **So we now
+pay ~14% p50 for a better candidate set whose benefit at gold is undemonstrated.** NOT reverted — the
+brief decided to run it and its explicit trigger was unmet; it is one variable and one restart to undo.
+
+⚠ **`vector-serve` DOES NOT AUTO-DEPLOY FROM GITHUB**, and that had been silently true for days: the same
+push deployed fts-serve (SUCCESS) and produced **no vector-serve deployment at all**, which is why it had
+been serving **7 August** code. It needs an explicit `vector-serve-run.ts redeploy`. ✅ A rebuild could
+not have confounded the A/B — all five runtime files were byte-identical between its running build and
+HEAD, checked not assumed.
+
+**§2 — the ordering metric now scores only where an ordering decision exists.** 20 pairs → **15
+scoreable, 5 cross-stream EXCLUDED** (no product surface orders two streams by relevance: `results` is
+round-robin, `grouped` is a stable filter over it). ⚠ A **stale comment** in `interleave.ts` claimed
+`groupForPanel` still did a cross-stream score sort — deleted 9 Aug — and on its strength I nearly scored
+all five against a surface that does not exist. Corrected in place.
+
+**§3 — THE PECR REGRESSION DOES NOT REPRODUCE**: DPA 2018 **rank 2**, PECR **absent from the top 20**.
+Both predictions confirmed. ⚠ UK GDPR is also absent — its own retrieval finding, since the amending SI
+`uksi/2019/419` is at 16 while the instrument it amends never arrives.
+
+⚠⚠ **AND THE HARNESS WOULD HAVE SAID THE OPPOSITE FROM NO DATA.** Its first run printed *"PECR still
+leads — the ordering problem is REAL"* from **ZERO retrieved documents** (`DATABASE_URL` absent → prisma
+threw → `fts-search` returned empty as designed → with nothing retrieved, neither principal instrument
+outranks PECR). Reported, that would have been evidence for building a reranker manufactured from a
+missing env var. Now refuses to conclude on an empty ranking and exits non-zero.
+
+**BASELINE: preference accuracy 66.7% (6/9) — and the DENOMINATOR is the finding.** Only **4 of 15**
+scoreable pairs compared two documents the system actually returned (**2 right, 2 wrong**); **11 turned on
+whether a document was retrieved at all**, including 6 vacuous. **THE RERANKER IS NOT AUTHORISED:** the
+regression motivating it does not reproduce, the genuine-ordering evidence is four pairs, and a reranker
+cannot promote a document that never arrived. **The binding constraint is recall.** Recommended next:
+raise the candidate count reaching the scorer (the vacuous six are the target) and re-measure on this
+same harness.
+
+⚠ **Not fudged:** "recall lost to scoping = 10 questions" is **carried, NOT re-measured** (needs a
+routed-vs-unrouted run). **`caselaw` 36/36 → 22/36 is STILL OPEN** — neither harness measures router
+stream selection over that 36-query set. The archetype-D exclusion does not bite (no D query in the
+preference set).
+
+**§4 — both unknowns settled, the eight repoints deliberately NOT done.** All eight legacy readers are
+still live (re-audited). **The `IdeaLegislation` row → MIGRATE:** "Abolish the Supreme Court" → CRA 2005,
+added by the idea's own creator — the Act that created the Supreme Court, so a considered legal link, not
+a fixture; `corpus_acts` carries the gid. **The filters → `corpus_acts` needs NO new indexes** (250,808
+rows, `leg_type` 100%, six indexes including a browse composite and a title trigram). ⚠ **But `title` is
+populated on only 135,531 of 250,808 (54%) — exactly the legacy count** — so the +85% coverage is
+precisely the untitled EU material (`celex` 90,260, `eur` 25,248). A type/year filter moved across as-is
+returns up to 46% untitled rows. **Charlie's call before the repoint, not inside it.**
+
+▼ Earlier:
 FOUR "SEPARATE" BUGS THAT WERE ONE MISSING CONFIG LINE.** Executes `docs/SPRINT_3D_BRIEF.md` in
 full. CHANGE_LOG (2026-08-11 20:25 UTC); full detail in **`docs/LEX_PLAYBOOK.md` §16**.
 `tsc --noEmit` clean and **`next build` passes**.

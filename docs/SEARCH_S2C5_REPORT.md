@@ -275,16 +275,74 @@ show it.
 
 ---
 
-## §4 — The legacy DROP unblock
+## §4 — The legacy DROP unblock: its two unknowns are now settled, the repoints are not done
 
-Not started. §1–§3 consumed the session, and §4 explicitly follows §3 in the brief's own order. The two
-updates the brief makes to `BRIEF_CC_SEARCH_legacy-drop-unblock.md` are recorded here so they are not
-lost: **decision 3 confirmed — MOVE the type/year/actId filters onto `corpus_acts`, do not retire the
-UI**; and **two items in it are already closed** (the `callGeminiJson` truncation-guard class landed in
-S2A, cross-stream scoring in S2B) and must not be redone.
+**The eight read paths are all still live.** Re-audited rather than assumed — the tree has moved a great
+deal since the 9 August brief, so several might have been repointed in passing. None have:
 
-⚠ It touches a DROP, one `IdeaLegislation` row migration, and a repoint-confirm to the ingest thread —
-work that should start on a fresh session rather than at the end of a long one.
+| # | path | reads |
+|---|---|---|
+| A | `lib/lex/gateway-legacy.ts:287` | `legislationSection.findMany` — Lex chat, panel, `/api/search` |
+| B | `app/legislation/[itemId]/page.tsx:13,26` | `legislationItem.findUnique` — public page |
+| C | `app/api/legislation/[itemId]/route.ts:9` | same |
+| D | `app/api/legislation/test-sections/route.ts:10` | `legislationSection.findMany` |
+| E | `app/api/ideas/[id]/field-approval/route.ts:165` | `legislationItem.findUnique` |
+| F | `app/api/legislation/link/route.ts` | writes `IdeaLegislation` |
+| G | `lib/search.ts:177–178` | raw SQL join — filtered `/api/search` is served ONLY by this |
+| H | `app/api/ideas/[id]/legislation-search/route.ts:75–76` | raw SQL join, the fallback |
+
+**I have NOT repointed them.** That is a deliberate stop, not an oversight: eight runtime paths across
+Lex chat, a public page and five API routes, each needing rendered-output verification, ending in a
+repoint-confirm that authorises an irreversible 1.73 GB DROP. Starting that at the end of a long session
+is the wrong trade, and the brief's own ordering puts it after §3 precisely so it gets a clean run.
+
+**What I did instead was settle its two open unknowns, read-only, so the next session starts with them
+in hand rather than spending its first hour finding them.**
+
+### The `IdeaLegislation` row — MIGRATE, and the evidence says why
+
+One row, unchanged since 29 May 2026:
+
+```
+IdeaLegislation  linkType 'relevant'  addedBy 32c15f4f…  createdAt 2026-05-29T00:43:23Z
+  Idea  374c54e5…  "Abolish the Supreme Court"  STAGE_1  creator 32c15f4f…
+  →  LegislationItem 2ecb9cd9…  ukpga/2005/4  "Constitutional Reform Act 2005"
+  →  corpus_acts     ukpga/2005/4  "Constitutional Reform Act 2005"  leg_type ukpga  year 2005  ✓ present
+```
+
+**This is real user work, not test junk, and the content is what proves it:** the Constitutional Reform
+Act 2005 is the Act that *created* the Supreme Court, linked from an idea called "Abolish the Supreme
+Court" by the idea's own creator fourteen minutes after making it. That is a considered, substantively
+correct legal link — no random fixture produces that. **Decision 2 applies: migrate to the gid form**,
+and `corpus_acts` carries the gid, so the target exists. One row, one `UPDATE`.
+
+### The filters — `corpus_acts` can already serve them, with one caveat that needs a decision
+
+The brief's decision 3 is confirmed and the fields exist. Measured:
+
+| | |
+|---|---|
+| `corpus_acts` rows | **250,808** |
+| `leg_type` populated | **250,808 (100%)** |
+| `year` populated | 249,198 (99.4%) |
+| `title` populated | **135,531 (54.0%)** |
+| existing indexes | `corpus_acts_year_idx`, `corpus_acts_leg_type_idx`, `corpus_acts_browse_idx`, `corpus_acts_title_trgm_idx`, `corpus_acts_jurisdiction_idx`, `corpus_acts_in_corpus_idx` |
+| legacy `LegislationItem` rows | 135,531 |
+
+**No new indexes are needed** — the brief's "index them if needed" is already satisfied, including a
+composite `browse_idx` and a trigram index on title.
+
+⚠ **But "wider coverage" needs reading carefully before it ships.** Coverage moves 135,531 → 250,808
+(+85%), and **the titled subset of `corpus_acts` is exactly 135,531 — the same number as the legacy
+table.** So the extra 115,277 instruments are precisely the ones with **no title**: `celex` 90,260,
+`eur` 25,248, `eudn` 13,897 dominate them — EU-derived material. A type/year filter moved onto
+`corpus_acts` as-is would therefore return up to 46% untitled rows.
+
+That does not undo decision 3 — filtering by type and year over the full instrument set is still the
+better feature, and `leg_type` is 100% populated — but **it is a product decision the brief did not
+have the number for**: either render untitled instruments with their gid as the display label, or
+filter to `title IS NOT NULL` and accept the legacy coverage. **Charlie's call, and it is the first
+thing §4 should settle** rather than being discovered halfway through the repoint.
 
 ---
 

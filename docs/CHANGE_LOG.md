@@ -250,13 +250,39 @@ exclusion does not bite: the preference set contains no D query.
 harness on the real indexes; §3's benchmark and baseline are the **routed product path**. Different
 measurements, not comparable — the EN2 finding is why that sentence exists.
 
-### §4 / §5
+### §4 — the DROP unblock's two unknowns are SETTLED; the eight repoints are deliberately not done
 
-§4 (legacy DROP unblock) **not started** — it follows §3 in the brief's own order and touches a DROP, a
-row migration and a repoint-confirm to the ingest thread; that belongs at the start of a session, not
-the end of a long one. Its two updates are recorded: **decision 3 confirmed (MOVE the filters onto
-`corpus_acts`, do not retire the UI)**, and the `callGeminiJson` guard + cross-stream scoring items are
-already closed and must not be redone. §5 (routed-gateway migration) deliberately untouched.
+**All eight legacy read paths are still live** — re-audited rather than assumed, since the tree has moved
+a great deal since the 9 Aug brief and some might have been repointed in passing. None have: A
+`gateway-legacy.ts:287`, B `app/legislation/[itemId]/page.tsx`, C `api/legislation/[itemId]`, D
+`api/legislation/test-sections`, E `field-approval:165`, F `api/legislation/link`, G `lib/search.ts:177`
+(the ONLY server of filtered `/api/search`), H `legislation-search:75` (the fallback).
+
+**Not repointed, and that is a deliberate stop.** Eight runtime paths across Lex chat, a public page and
+five API routes, each needing rendered-output verification, ending in a repoint-confirm that authorises
+an irreversible 1.73 GB DROP. That belongs at the start of a session. Instead both of its open unknowns
+were settled read-only, so the next session does not spend its first hour finding them.
+
+**The `IdeaLegislation` row → MIGRATE, and the content is what proves it.** One row, 29 May 2026,
+`linkType 'relevant'`: Idea `374c54e5…` **"Abolish the Supreme Court"** (STAGE_1) → `ukpga/2005/4`
+**Constitutional Reform Act 2005**, added by the idea's own creator fourteen minutes after creating it.
+The CRA 2005 is the Act that *created* the Supreme Court — a substantively correct legal link that no
+random fixture produces. Real user work, so decision 2 applies. `corpus_acts` carries that gid, so the
+target exists: one row, one UPDATE.
+
+**The filters → `corpus_acts` can already serve them, and needs NO new indexes.** Measured: 250,808 rows,
+`leg_type` **100%** populated, `year` 99.4%, and six existing indexes including a composite
+`corpus_acts_browse_idx` and a trigram index on title. Decision 3 confirmed.
+
+⚠ **But one number the brief did not have changes how it should ship.** `title` is populated on
+**135,531 of 250,808 (54.0%)** — and 135,531 is *exactly* the legacy `LegislationItem` count. So the
++85% "wider coverage" is precisely the untitled instruments: `celex` 90,260, `eur` 25,248, `eudn` 13,897
+— EU-derived material. A type/year filter moved across as-is would return up to 46% untitled rows. That
+does not undo decision 3, but it is a product decision (render the gid as the label, or filter to
+`title IS NOT NULL`) and it should be settled BEFORE the repoint rather than discovered inside it.
+
+§5 (routed-gateway migration) deliberately untouched, per the brief.
+
 
 ## CENTRAL Stage 2b — the question library (2026-08-11 20:24 UTC)
 
