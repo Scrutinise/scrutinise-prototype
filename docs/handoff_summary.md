@@ -2,8 +2,97 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 07:50 UTC — ▼ **INGEST V34 IS COMPLETE AND DRAINED.** Earlier threads follow.*
+*Last updated: 2026-08-12 12:55 UTC — ▼ **SEARCH S2C-6 + INGEST V35: the four corpora are TYPED and
+INDEXED for keyword search; the embed is STILL RUNNING; and the recall constraint turns out to be
+17,261 instruments that were never ingested.** Earlier threads follow.*
 
+2026-08-12 12:55 UTC — ▼ **SEARCH S2C-6 + INGEST V35.** Executes `BRIEF_SEARCH_S2C6.md` §1 and §2
+in full, §3 **STOPPED on evidence**; `BRIEF_INGEST_V35_SEARCHABILITY.md` §0–§2, §3 blocked on §1.
+CHANGE_LOG (2026-08-12 12:39 UTC); full detail **`docs/SEARCH_S2C6_REPORT.md`** and
+**`docs/V35_SEARCHABILITY_REPORT.md`**. `tsc` clean in both projects bar the one documented
+pre-existing `download-graph-sources.ts` error.
+
+⚠⚠ **PICK UP HERE — TWO THINGS ARE STILL RUNNING OR UNDONE:**
+1. **The embed is NOT finished.** 95,044 chunks are written to `corpus_chunks` (phase 1 complete,
+   227 body misses = the zero-word stragglers). Shards 0 and 1 are in flight and grinding through
+   Gemini **429 quota-bucket backoff** (7 and 6 sequential sub-jobs); **shard 2 FAILED at job
+   creation before any spend** and needs a re-run. `spent=$0.00` and `doneShards=[]`, so re-running
+   picks up exactly what is missing:
+   `NODE_OPTIONS="--no-network-family-autoselection --dns-result-order=ipv4first" tsx
+   v33-vec-catchup.ts --run v35 --embed --max-cost 8.00`
+2. **V35 §3 (ANN rebuild + `vector-serve` redeploy + `verify-vector-index.ts`) IS NOT STARTED** and
+   is blocked on (1). `vector-serve` **does not auto-deploy from GitHub** — it needs an explicit
+   `vector-serve-run.ts redeploy`. BEFORE `/stats`: `started_at 2026-08-11T22:46:25.910Z`,
+   `config.nprobes 64`, served 95.
+
+✅ **FTS IS DONE: 31,849 rows written, 0 body misses**, all four corpora from `fts=0`.
+⚠ **The after-measurement needed an `fts-serve` restart to mean anything** — the first `after` run
+came back BYTE-IDENTICAL to `before` (0/620 slots, 6/6 on-target ABSENT) because `fts-serve` calls
+`openTable()` once at boot and was serving the 2026-08-11T22:37 snapshot. Exactly the trap
+`docs/CLAUDE.md` §17 records. Redeploy triggered; **re-run
+`scripts/measure-political-corpora.ts --label after` once `started_at` has moved.**
+
+**§1 — THE TYPING IS COMMITTED: three new display types, union 10 → 13.**
+`impact-assessments` → **IMPACT_ASSESSMENT** (tier legislation, legislation stream) ·
+`consultations` → **CONSULTATION** (tier guidance, guidance stream) · `commons-`/
+`lords-divisions-votes` → **DIVISION** (tier parliamentary, debates stream, which now admits the
+type). `check:corpus-types` **153/153**, every new assertion **watched failing first** against
+three deliberate breaks. **The evidence that made it four decisions not one sweep:** IAs carry a
+`parentDocId` naming the instrument they assess on **94.7%** of rows; consultations on **0%**.
+⚠ **V35 §0's sequencing note is WRONG — the typing gates the EMBED too**, because
+`v33-vec-catchup.ts` bakes `tier: tierFor(corpus)` into every chunk and `vector-search.ts`
+prefilters on it server-side. Embedding first would have written `other` into 95,044 paid-for,
+unreachable chunks. Tiers verified in `corpus_chunks` before any spend, with a negative control.
+⚠ **All four collections failed the brief's correctness requirement.** A Lords roll-call's stored
+title is the bare bill name (`Employment Rights Bill`); **1,024 IA rows are titled the single word
+"Summary"**. `lib/lex/political-title.ts` fixes it at display, one file, both adapters.
+⚠ **`lda-commonsdivisions` (5,553) / `lda-lordsdivisions` (2,089) are a live finding, reported not
+fixed** — a different, near-empty division collection (mean 16 and 8 words, no title, no date)
+already typed DEBATE and already in the debates stream, rendering as the raw corpus key.
+
+**§2 — THE BINDING RECALL CONSTRAINT IS INGEST, AND IT HAS A NUMBER.** A diagnosis separating the
+five loss modes (`scripts/diagnose-recall.ts`) over the 15 within-stream pairs: **IN_TOP_K 13 ·
+ABSENT 9 · RANKING 5 · CANDIDATES 3 · ROUTING 0 · TYPING 0.** The brief's own lever (candidate
+count) fixes **3 of 17**. ⚠⚠ **17,261 instruments known to the legacy `LegislationItem` table are
+ABSENT from `corpus_sections`** — ukpga 8,896 · uksi 4,668 · eur 2,268 · ssi 732 — carrying
+**77,000 sections / 61.2 M characters**, including the **Companies Act 2006** (1,665 sections) and
+**UK GDPR** (61). That is why UK GDPR cannot be retrieved at any probe count. **Ingesting them is
+the next INGEST task and it closes the SEARCH problem too.**
+✅ **`caselaw` 36/36 → 22/36 is RETIRED after five sprints, and the premise was wrong.** There is
+no 36-query set — it was the count of forward-decided routing CALLS in S2B §2.3 — and
+`gold-queries.ts` has **no caselaw archetype at all**, so the gold set could never have answered
+it. Measured directly: caselaw selected **8/8 when right, 1/8 when wrong, 0/16 unstable, 0/48
+fail-opens**. The fall was the router discriminating. **Do not carry it again.**
+
+**§3 — STOPPED, AND THIS IS THE ONE TO READ FIRST: THE V26 §6 DROP MUST NOT PROCEED.**
+`LegislationSection` holds the only copy of those 77,000 sections / 61.2 M characters.
+`corpus_acts` is a verified superset for METADATA; `corpus_sections` is **not** a superset for
+TEXT. And the legacy path is live coverage, not dead weight: the exact query shape `lib/search.ts`
+uses returns **Companies Act 2006 s.656 at RANK 1** and **UK GDPR Articles 9 and 6 at RANKS 2 and
+7** — the very documents the corpus path reports absent. **No repoints made** (paths A/D/G/H would
+silently narrow coverage by 77,000 sections). The four metadata-only paths (B/C/E/F) stay safe but
+buy nothing until the DROP is possible. Charlie's `title IS NOT NULL` answer is recorded and still
+right for when it happens.
+⚠ **§5's own rule now points at reverting `VECTOR_NPROBES` to 24** — it says revert if §2 finds no
+recall gain traceable to candidate quality, and candidate quality accounts for 3 of 17. Charlie's
+call, with the number the rule asks for.
+
+⚠⚠ **A NETWORK FAULT THAT IS NOT ONE, AND IT WILL RECUR.** Mid-sprint, every Neon connection and
+every Gemini `fetch` failed on all six resolved addresses while PowerShell `Test-NetConnection` to
+the same IP returned True. **Cause: Node ≥20 happy-eyeballs (`autoSelectFamily`) racing an
+unroutable IPv6 against an IPv4 connect that takes ~10 s because Neon's compute auto-suspended.**
+Fix, verified three times: `NODE_OPTIONS="--no-network-family-autoselection
+--dns-result-order=ipv4first"`. It is intermittent by construction and looks exactly like an
+expired credential.
+⚠ **Two `v33-vec-*` tooling traps closed before the run:** `--run <tag>` now names the delta report
+AND the catch-up checkpoint (the V33 checkpoint is `phase:"done"` with `doneShards` as INDICES —
+re-used against a different work list it would have silently skipped shards), and a hardcoded log
+line that printed `docs/v33_vec_delta.json` for a file written to v35 is fixed. Phase 1 also had
+**no retry** and died at section 10,000 on a transient R2 multipart PUT; now retried.
+⚠ **This tree is shared with a concurrent session** (a LEX thread updated CHANGE_LOG at 12:21 UTC).
+`commit-all.sh` stages only the files listed in it.
+
+▼ Earlier:
 2026-08-12 07:50 UTC — ▼ **INGEST V34: THE POLITICAL-EVIDENCE LAYER IS INGESTED. 14,274/14,274
 ROWS, 0 FAILED, 31,852 SECTIONS, 34.5M WORDS.** Executes `BRIEF_INGEST_POLITICAL_SOURCES.md`
 §A/§B/§C in full. CHANGE_LOG (2026-08-11 18:30 UTC); full detail

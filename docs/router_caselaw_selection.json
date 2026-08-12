@@ -1,0 +1,406 @@
+{
+  "measuredAt": "2026-08-12T12:31:19.957Z",
+  "repeats": 3,
+  "recall": 8,
+  "wants": 8,
+  "falsePos": 1,
+  "doesNot": 8,
+  "flaky": 0,
+  "totalFailOpen": 0,
+  "rows": [
+    {
+      "query": "what have the courts held about the reasonableness of service charges under section 19",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "caselaw"
+        ],
+        [
+          "legislation",
+          "caselaw"
+        ],
+        [
+          "legislation",
+          "caselaw"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "case law on whether a gig economy driver is a worker or self-employed",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "how have judges interpreted the public sector equality duty in judicial review",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "court decisions on the scope of legal professional privilege in regulatory investigations",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "what did the Supreme Court decide about prorogation of Parliament",
+      "wants": true,
+      "calls": [
+        [
+          "caselaw"
+        ],
+        [
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "caselaw"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "judicial interpretation of \"reasonable adjustments\" under the Equality Act",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "leading authority on the duty of care owed by a local authority to children in care",
+      "wants": true,
+      "calls": [
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ],
+        [
+          "caselaw"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "how have tribunals applied the test for unfair dismissal in redundancy cases",
+      "wants": true,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "what is the current rate of the plastic bag charge and which regulations set it",
+      "wants": false,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "how many MPs voted for the assisted dying bill at second reading",
+      "wants": false,
+      "calls": [
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ],
+        [
+          "debates"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "what did the government estimate the Ivory Act would cost business",
+      "wants": false,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "what is the procedure for a private members bill to get a second reading",
+      "wants": false,
+      "calls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "which department is responsible for water quality regulation and what guidance has it issued",
+      "wants": false,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "what does the ICO say about the lawful basis for processing employee data",
+      "wants": false,
+      "calls": [
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ],
+        [
+          "legislation",
+          "debates",
+          "committees",
+          "caselaw",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 3,
+      "failOpens": 0
+    },
+    {
+      "query": "how much does the UK spend on social protection each year",
+      "wants": false,
+      "calls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    },
+    {
+      "query": "what were the responses to the consultation on leasehold reform",
+      "wants": false,
+      "calls": [
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        [
+          "debates",
+          "committees",
+          "guidance"
+        ]
+      ],
+      "caselawCount": 0,
+      "failOpens": 0
+    }
+  ]
+}

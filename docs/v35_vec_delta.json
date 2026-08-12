@@ -1,0 +1,147 @@
+{
+  "measuredAt": "2026-08-12T10:52:59.298Z",
+  "cpw": 6.161161349652953,
+  "rate": 0.075,
+  "totals": {
+    "compiledSections": 18198797,
+    "unvectored": 32113,
+    "words": 34486186,
+    "chunks": 90008,
+    "embeddedChars": 239755612,
+    "tokens": 59938903,
+    "cost": 4.495417725
+  },
+  "band": [
+    {
+      "cpw": 5.545045214687658,
+      "cost": 4.045875975
+    },
+    {
+      "cpw": 6.161161349652953,
+      "cost": 4.495417725
+    },
+    {
+      "cpw": 6.777277484618248,
+      "cost": 4.94495955
+    }
+  ],
+  "perCorpus": [
+    {
+      "corpus": "commons-divisions-votes",
+      "tier": "parliamentary",
+      "sections": 2361,
+      "missing": 2361,
+      "words": 8521953,
+      "chunks": 18888,
+      "embChars": 59920422
+    },
+    {
+      "corpus": "consultations",
+      "tier": "guidance",
+      "sections": 7448,
+      "missing": 7448,
+      "words": 2098830,
+      "chunks": 7844,
+      "embChars": 13064432
+    },
+    {
+      "corpus": "fca-handbook",
+      "tier": "guidance",
+      "sections": 3661,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "impact-assessments",
+      "tier": "legislation",
+      "sections": 18756,
+      "missing": 18756,
+      "words": 17302731,
+      "chunks": 47434,
+      "embChars": 120370526
+    },
+    {
+      "corpus": "lords-divisions-votes",
+      "tier": "parliamentary",
+      "sections": 3284,
+      "missing": 3284,
+      "words": 6558318,
+      "chunks": 15805,
+      "embChars": 46373406
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "tier": "legislation",
+      "sections": 145704,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "tier": "legislation",
+      "sections": 165438,
+      "missing": 3,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "tier": "parliamentary",
+      "sections": 175563,
+      "missing": 3,
+      "words": 357,
+      "chunks": 3,
+      "embChars": 2199
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "tier": "parliamentary",
+      "sections": 1232928,
+      "missing": 34,
+      "words": 3997,
+      "chunks": 34,
+      "embChars": 24627
+    },
+    {
+      "corpus": "regional",
+      "tier": "legislation",
+      "sections": 331124,
+      "missing": 10,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "tier": "other",
+      "sections": 1043264,
+      "missing": 183,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-2010plus",
+      "tier": "legislation",
+      "sections": 270339,
+      "missing": 26,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-pre-2010",
+      "tier": "legislation",
+      "sections": 419250,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    }
+  ]
+}

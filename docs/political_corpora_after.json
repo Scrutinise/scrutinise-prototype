@@ -1,0 +1,549 @@
+{
+  "label": "after",
+  "measuredAt": "2026-08-12T12:46:59.015Z",
+  "ftsStartedAt": "2026-08-12T12:45:59.251Z",
+  "gold": {
+    "legislation": {
+      "queries": 16,
+      "keys": 16,
+      "total": 46,
+      "keyPct": 34.8,
+      "newRows": 24,
+      "slots": 320,
+      "per": [
+        {
+          "id": "A1",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "HA 1988 s.21 text",
+            "HA 1988 prospective abolition (Renters’ Rights Act 2025) [INFORCE]"
+          ]
+        },
+        {
+          "id": "A2",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "TA 1968 s.1"
+          ]
+        },
+        {
+          "id": "A3",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "SI 1998/1833",
+            "reg 4 / regs 13–13A"
+          ]
+        },
+        {
+          "id": "A4",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 8,
+          "satisfied": [
+            "EqA 2010 s.149 (PSED)"
+          ]
+        },
+        {
+          "id": "A5",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Motor Vehicles (Wearing of Seat Belts) Regs 1993"
+          ]
+        },
+        {
+          "id": "B1",
+          "keys": 0,
+          "of": 4,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": []
+        },
+        {
+          "id": "B2",
+          "keys": 0,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": []
+        },
+        {
+          "id": "B3",
+          "keys": 0,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": []
+        },
+        {
+          "id": "B4",
+          "keys": 0,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": []
+        },
+        {
+          "id": "B5",
+          "keys": 1,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Noise Act 1996"
+          ]
+        },
+        {
+          "id": "C1",
+          "keys": 1,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Levelling-up and Regeneration Act 2023"
+          ]
+        },
+        {
+          "id": "C2",
+          "keys": 2,
+          "of": 3,
+          "hits": 20,
+          "newRows": 2,
+          "satisfied": [
+            "Electrically Assisted Pedal Cycles Regs 1983",
+            "e-scooter trial SIs (2020–)"
+          ]
+        },
+        {
+          "id": "C3",
+          "keys": 0,
+          "of": 3,
+          "hits": 20,
+          "newRows": 3,
+          "satisfied": []
+        },
+        {
+          "id": "C4",
+          "keys": 2,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Water Industry Act 1991 (s.94 etc.)",
+            "Environment Act 2021 storm overflow duties"
+          ]
+        },
+        {
+          "id": "C5",
+          "keys": 3,
+          "of": 3,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Mobile Homes Act 1983",
+            "Mobile Homes Act 2013",
+            "Caravan Sites Act 1968"
+          ]
+        },
+        {
+          "id": "B6",
+          "keys": 0,
+          "of": 6,
+          "hits": 20,
+          "newRows": 11,
+          "satisfied": []
+        }
+      ]
+    },
+    "debates": {
+      "queries": 10,
+      "keys": 14,
+      "total": 20,
+      "keyPct": 70,
+      "newRows": 0,
+      "slots": 200,
+      "per": [
+        {
+          "id": "E1",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Welfare Reform Act 2012"
+          ]
+        },
+        {
+          "id": "E2",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Finance Act 2017 Part 2 (Soft Drinks Industry Levy)",
+            "Budget 2016 / Finance Bill 2017 debate"
+          ]
+        },
+        {
+          "id": "E3",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Investigatory Powers Act 2016",
+            "Hansard double-lock / IPC oversight"
+          ]
+        },
+        {
+          "id": "E4",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "2005–06 debate on scope/exemptions"
+          ]
+        },
+        {
+          "id": "E5",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Hunting Act 2004 ss.1–6",
+            "Hansard 2003–04 enforcement passages"
+          ]
+        },
+        {
+          "id": "F1",
+          "keys": 2,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Plastics / Wet Wipes PMBs",
+            "EPA 1990 s.140 SIs (straws/stirrers/plates)"
+          ]
+        },
+        {
+          "id": "F2",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Repeated Fireworks Bills"
+          ]
+        },
+        {
+          "id": "F3",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Dogs and Domestic Animals (Accommodation) Bill"
+          ]
+        },
+        {
+          "id": "F4",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "PR / PMB attempts"
+          ]
+        },
+        {
+          "id": "F5",
+          "keys": 1,
+          "of": 2,
+          "hits": 20,
+          "newRows": 0,
+          "satisfied": [
+            "Emergency First Aid Education Bill 2015"
+          ]
+        }
+      ]
+    },
+    "guidance": {
+      "queries": 5,
+      "keys": 5,
+      "total": 15,
+      "keyPct": 33.3,
+      "newRows": 16,
+      "slots": 100,
+      "per": [
+        {
+          "id": "C1",
+          "keys": 1,
+          "of": 3,
+          "hits": 20,
+          "newRows": 4,
+          "satisfied": [
+            "FHL tax treatment (Finance Act)"
+          ]
+        },
+        {
+          "id": "C2",
+          "keys": 1,
+          "of": 3,
+          "hits": 20,
+          "newRows": 3,
+          "satisfied": [
+            "e-scooter trial SIs (2020–)"
+          ]
+        },
+        {
+          "id": "C3",
+          "keys": 0,
+          "of": 3,
+          "hits": 20,
+          "newRows": 3,
+          "satisfied": []
+        },
+        {
+          "id": "C4",
+          "keys": 1,
+          "of": 3,
+          "hits": 20,
+          "newRows": 3,
+          "satisfied": [
+            "Environment Act 2021 storm overflow duties"
+          ]
+        },
+        {
+          "id": "C5",
+          "keys": 2,
+          "of": 3,
+          "hits": 20,
+          "newRows": 3,
+          "satisfied": [
+            "Mobile Homes Act 1983",
+            "Mobile Homes Act 2013"
+          ]
+        }
+      ]
+    }
+  },
+  "offTarget": [
+    {
+      "stream": "legislation",
+      "q": "what does the Data Protection Act 2018 say about subject access requests",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "legislation",
+      "q": "the statutory duty on landlords to carry out gas safety checks",
+      "hits": 20,
+      "contaminating": 5,
+      "top": {
+        "rank": 14,
+        "id": "impact-assessments:2018-25:4",
+        "title": "Impact Assessment — The Gas Safety (Installation and Use) (Amendment) Regulations 2018 — Problem under consideration"
+      }
+    },
+    {
+      "stream": "legislation",
+      "q": "section 21 no fault eviction notice requirements",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "debates",
+      "q": "what did the minister say about water company sewage discharges",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "debates",
+      "q": "second reading debate on the Renters Reform Bill",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "debates",
+      "q": "what was said about HS2 cancellation in the Commons",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "guidance",
+      "q": "ICO guidance on lawful basis for processing personal data",
+      "hits": 20,
+      "contaminating": 0,
+      "top": null
+    },
+    {
+      "stream": "guidance",
+      "q": "FCA handbook rules on treating customers fairly",
+      "hits": 20,
+      "contaminating": 1,
+      "top": {
+        "rank": 2,
+        "id": "consultations:government_consultations_fca-competition-concurrency-guidance-and-handbook-amendments:1",
+        "title": "Consultation — FCA competition concurrency guidance and handbook amendments"
+      }
+    }
+  ],
+  "onTarget": [
+    {
+      "stream": "debates",
+      "q": "how did MPs vote on the assisted dying bill",
+      "want": "commons-divisions-votes",
+      "hits": 20,
+      "found": 0,
+      "firstRank": null,
+      "firstTitle": null
+    },
+    {
+      "stream": "debates",
+      "q": "which peers voted against the Employment Rights Bill",
+      "want": "lords-divisions-votes",
+      "hits": 20,
+      "found": 0,
+      "firstRank": null,
+      "firstTitle": null
+    },
+    {
+      "stream": "legislation",
+      "q": "what did the government estimate the Ivory Act would cost business",
+      "want": "impact-assessments",
+      "hits": 20,
+      "found": 20,
+      "firstRank": 1,
+      "firstTitle": "Impact Assessment (HM Treasury) — Wider impacts (part 7)"
+    },
+    {
+      "stream": "legislation",
+      "q": "expected costs and benefits of the plastic bag charge regulations",
+      "want": "impact-assessments",
+      "hits": 20,
+      "found": 12,
+      "firstRank": 1,
+      "firstTitle": "Impact Assessment — The Single Use Carrier Bags Charges (England) (Amendment) Order 2021 — Risks and assumptions (part 2)"
+    },
+    {
+      "stream": "guidance",
+      "q": "government consultation on leasehold reform and ground rents",
+      "want": "consultations",
+      "hits": 20,
+      "found": 9,
+      "firstRank": 2,
+      "firstTitle": "Consultation — Modern leasehold: restricting ground rent for existing leases"
+    },
+    {
+      "stream": "guidance",
+      "q": "who responded to the consultation on special educational needs",
+      "want": "consultations",
+      "hits": 20,
+      "found": 9,
+      "firstRank": 1,
+      "firstTitle": "Consultation — Special educational needs (SEN) code of practice and regulations"
+    }
+  ],
+  "latency": {
+    "legislation": {
+      "n": 10,
+      "p50": 2153,
+      "p95": 3556,
+      "max": 3556
+    },
+    "debates": {
+      "n": 10,
+      "p50": 2806,
+      "p95": 2978,
+      "max": 2978
+    },
+    "guidance": {
+      "n": 8,
+      "p50": 1762,
+      "p95": 2030,
+      "max": 2030
+    }
+  },
+  "titles": [
+    {
+      "corpus": "impact-assessments",
+      "type": "IMPACT_ASSESSMENT",
+      "title": "Impact Assessment (HM Treasury) — Wider impacts (part 7)",
+      "citation": "Impact Assessment (HM Treasury)",
+      "url": "https://www.legislation.gov.uk/ukia/2022/62"
+    },
+    {
+      "corpus": "impact-assessments",
+      "type": "IMPACT_ASSESSMENT",
+      "title": "Impact Assessment — The Money Laundering and Terrorist Financing (Amendment) (No. 2) Regulations 2022 — Wider impacts (part 7)",
+      "citation": "Impact Assessment to The Money Laundering and Terrorist Financing (Amendment) (No. 2) Regulations 2022",
+      "url": "https://www.legislation.gov.uk/ukia/2022/70"
+    },
+    {
+      "corpus": "impact-assessments",
+      "type": "IMPACT_ASSESSMENT",
+      "title": "Impact Assessment (Department for Environment, Food and Rural Affairs) — Risks and assumptions (part 2)",
+      "citation": "Impact Assessment (Department for Environment, Food and Rural Affairs)",
+      "url": "https://www.legislation.gov.uk/ukia/2021/4"
+    },
+    {
+      "corpus": "impact-assessments",
+      "type": "IMPACT_ASSESSMENT",
+      "title": "Impact Assessment (Department for Environment, Food and Rural Affairs) — Risks and assumptions (part 2)",
+      "citation": "Impact Assessment (Department for Environment, Food and Rural Affairs)",
+      "url": "https://www.legislation.gov.uk/ukia/2021/11"
+    },
+    {
+      "corpus": "consultations",
+      "type": "CONSULTATION",
+      "title": "Consultation — Modern leasehold: restricting ground rent for existing leases",
+      "citation": "Consultation — Modern leasehold: restricting ground rent for existing leases (department-for-levelling-up-housing-and-communities, ministry-of-housing-communities-local-government)",
+      "url": "https://www.gov.uk/government/consultations/modern-leasehold-restricting-ground-rent-for-existing-leases"
+    },
+    {
+      "corpus": "consultations",
+      "type": "CONSULTATION",
+      "title": "Consultation — Implementing reforms to the leasehold system",
+      "citation": "Consultation — Implementing reforms to the leasehold system (ministry-of-housing-communities-and-local-government-2018-2021)",
+      "url": "https://www.gov.uk/government/consultations/implementing-reforms-to-the-leasehold-system"
+    },
+    {
+      "corpus": "consultations",
+      "type": "CONSULTATION",
+      "title": "Consultation — Special educational needs (SEN) code of practice and regulations",
+      "citation": "Consultation — Special educational needs (SEN) code of practice and regulations (department-for-education, department-of-health-and-social-care)",
+      "url": "https://www.gov.uk/government/consultations/special-educational-needs-sen-code-of-practice-and-regulations"
+    },
+    {
+      "corpus": "consultations",
+      "type": "CONSULTATION",
+      "title": "Local area SEND consultation",
+      "citation": "Local area SEND consultation (ofsted, care-quality-commission)",
+      "url": "https://www.gov.uk/government/consultations/local-area-send-consultation"
+    }
+  ],
+  "contamination": {
+    "slotsTaken": 6,
+    "slots": 160,
+    "pct": 3.8
+  }
+}

@@ -1,0 +1,508 @@
+{
+  "measuredAt": "2026-08-12T11:59:56.544Z",
+  "L": 16,
+  "K": 20,
+  "WIDE": 120,
+  "tally": {
+    "IN_TOP_K": 13,
+    "RANKING": 5,
+    "CANDIDATES": 3,
+    "ROUTING": 0,
+    "TYPING": 0,
+    "ABSENT": 9
+  },
+  "findings": [
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "Data Protection Act 2018",
+      "role": "above",
+      "why": "a reader asking what the law IS wants the principal statute before a sector-specific SI made under a different regime",
+      "rankInTopK": 2,
+      "rankInFull": 2,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "PECR 2003 (SI 2003/2426)",
+      "role": "below",
+      "why": "a reader asking what the law IS wants the principal statute before a sector-specific SI made under a different regime",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "UK GDPR (Reg (EU) 2016/679)",
+      "role": "above",
+      "why": "UK GDPR is the general data-protection regime; PECR is the electronic-communications overlay",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "PECR 2003 (SI 2003/2426)",
+      "role": "below",
+      "why": "UK GDPR is the general data-protection regime; PECR is the electronic-communications overlay",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "UK GDPR (Reg (EU) 2016/679)",
+      "role": "above",
+      "why": "the amending SI is only meaningful via the instrument it amends — the amended regime should lead",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "what is the law on data protection currently?",
+      "label": "DPPEC (EU Exit) Regs 2019",
+      "role": "below",
+      "why": "the amending SI is only meaningful via the instrument it amends — the amended regime should lead",
+      "rankInTopK": 16,
+      "rankInFull": 16,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what are the rules on unfair dismissal?",
+      "label": "Employment Rights Act 1996",
+      "role": "above",
+      "why": "the right and its qualifying conditions sit in the Act; tribunal procedure is downstream of it",
+      "rankInTopK": 2,
+      "rankInFull": 2,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what are the rules on unfair dismissal?",
+      "label": "Employment Tribunals procedure rules",
+      "role": "below",
+      "why": "the right and its qualifying conditions sit in the Act; tribunal procedure is downstream of it",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "foundInStream": "legislation",
+      "foundAtWideRank": 41,
+      "verdict": "CANDIDATES"
+    },
+    {
+      "query": "what protection does the law give against discrimination at work?",
+      "label": "Equality Act 2010",
+      "role": "above",
+      "why": "commencement and consequential instruments carry no substantive rule; the Act does",
+      "rankInTopK": 1,
+      "rankInFull": 1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what protection does the law give against discrimination at work?",
+      "label": "Equality Act 2010 commencement/consequential SIs",
+      "role": "below",
+      "why": "commencement and consequential instruments carry no substantive rule; the Act does",
+      "rankInTopK": null,
+      "rankInFull": 26,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "RANKING"
+    },
+    {
+      "query": "what are a landlord's repairing obligations?",
+      "label": "Landlord and Tenant Act 1985",
+      "role": "above",
+      "why": "the repairing covenant is LTA 1985 s.11; HA 1988 governs the tenancy type, not the repair duty",
+      "rankInTopK": 2,
+      "rankInFull": 2,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what are a landlord's repairing obligations?",
+      "label": "Housing Act 1988",
+      "role": "below",
+      "why": "the repairing covenant is LTA 1985 s.11; HA 1988 governs the tenancy type, not the repair duty",
+      "rankInTopK": 1,
+      "rankInFull": 1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what duties do employers have for health and safety?",
+      "label": "Health and Safety at Work etc. Act 1974",
+      "role": "above",
+      "why": "the general duties in ss.2–3 are the frame every sector regulation hangs off",
+      "rankInTopK": 11,
+      "rankInFull": 11,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what duties do employers have for health and safety?",
+      "label": "sector-specific safety regulations",
+      "role": "below",
+      "why": "the general duties in ss.2–3 are the frame every sector regulation hangs off",
+      "rankInTopK": 2,
+      "rankInFull": 2,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "what are directors duties under company law?",
+      "label": "Companies Act 2006",
+      "role": "above",
+      "why": "the general duties are CA 2006 ss.171–177; insolvency duties are a distinct, later-stage regime",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "what are directors duties under company law?",
+      "label": "Insolvency Act 1986",
+      "role": "below",
+      "why": "the general duties are CA 2006 ss.171–177; insolvency duties are a distinct, later-stage regime",
+      "rankInTopK": null,
+      "rankInFull": 46,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "RANKING"
+    },
+    {
+      "query": "what powers do regulators have to compel disclosure of information from companies?",
+      "label": "Enterprise Act 2002",
+      "role": "above",
+      "why": "compulsory information-gathering powers are competition/regulatory; DPA 2018 constrains processing, it does not confer them",
+      "rankInTopK": null,
+      "rankInFull": 46,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "RANKING"
+    },
+    {
+      "query": "what powers do regulators have to compel disclosure of information from companies?",
+      "label": "Data Protection Act 2018",
+      "role": "below",
+      "why": "compulsory information-gathering powers are competition/regulatory; DPA 2018 constrains processing, it does not confer them",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "foundInStream": "legislation",
+      "foundAtWideRank": 118,
+      "verdict": "CANDIDATES"
+    },
+    {
+      "query": "what powers do regulators have to compel disclosure of information from companies?",
+      "label": "FSMA 2000",
+      "role": "above",
+      "why": "FSMA Part XI is an actual information-gathering power; PECR is not about regulator powers at all",
+      "rankInTopK": null,
+      "rankInFull": 131,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "RANKING"
+    },
+    {
+      "query": "what powers do regulators have to compel disclosure of information from companies?",
+      "label": "PECR 2003 (SI 2003/2426)",
+      "role": "below",
+      "why": "FSMA Part XI is an actual information-gathering power; PECR is not about regulator powers at all",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "how can the public get information held by a public authority?",
+      "label": "Freedom of Information Act 2000",
+      "role": "above",
+      "why": "FOIA is the access regime; DPA/UK GDPR governs personal data and is the exception, not the route",
+      "rankInTopK": 1,
+      "rankInFull": 1,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "how can the public get information held by a public authority?",
+      "label": "Data Protection Act 2018",
+      "role": "below",
+      "why": "FOIA is the access regime; DPA/UK GDPR governs personal data and is the exception, not the route",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "foundInStream": "legislation",
+      "foundAtWideRank": 25,
+      "verdict": "CANDIDATES"
+    },
+    {
+      "query": "what is the law on water pollution from sewage discharge?",
+      "label": "Water Resources Act 1991",
+      "role": "above",
+      "why": "water-quality offences and discharge consents are WRA 1991; EPA 1990 is the general pollution-control frame",
+      "rankInTopK": null,
+      "rankInFull": 211,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "RANKING"
+    },
+    {
+      "query": "what is the law on water pollution from sewage discharge?",
+      "label": "Environmental Protection Act 1990",
+      "role": "below",
+      "why": "water-quality offences and discharge consents are WRA 1991; EPA 1990 is the general pollution-control frame",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "returned": 240,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "Section 21 Housing Act 1988",
+      "label": "HA 1988 s.21 itself",
+      "role": "above",
+      "why": "an exact citation must pin the cited section above its neighbours — this is what the resolver exists for",
+      "rankInTopK": 1,
+      "rankInFull": 1,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "Section 21 Housing Act 1988",
+      "label": "any other HA 1988 section",
+      "role": "below",
+      "why": "an exact citation must pin the cited section above its neighbours — this is what the resolver exists for",
+      "rankInTopK": 11,
+      "rankInFull": 11,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "section 172 Companies Act 2006",
+      "label": "CA 2006 s.172 itself",
+      "role": "above",
+      "why": "same rule, different Act — a citation query that returns the right Act but the wrong section has failed",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "section 172 Companies Act 2006",
+      "label": "any other CA 2006 section",
+      "role": "below",
+      "why": "same rule, different Act — a citation query that returns the right Act but the wrong section has failed",
+      "rankInTopK": null,
+      "rankInFull": null,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "ABSENT"
+    },
+    {
+      "query": "Equality Act 2010 section 149",
+      "label": "EqA 2010 s.149 (PSED)",
+      "role": "above",
+      "why": "the public sector equality duty is a named, frequently-cited provision; it must pin exactly",
+      "rankInTopK": 1,
+      "rankInFull": 1,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "IN_TOP_K"
+    },
+    {
+      "query": "Equality Act 2010 section 149",
+      "label": "any other EqA 2010 section",
+      "role": "below",
+      "why": "the public sector equality duty is a named, frequently-cited provision; it must pin exactly",
+      "rankInTopK": 14,
+      "rankInFull": 14,
+      "routed": [
+        "legislation"
+      ],
+      "returned": 48,
+      "verdict": "IN_TOP_K"
+    }
+  ]
+}

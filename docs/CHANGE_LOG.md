@@ -1,6 +1,6 @@
 # SCRUTINISE — CHANGE LOG
 
-*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
+*Pending and applied changes to all spec documents.* *PENDING section: cleared after each batch application.* *APPLIED section: permanent audit trail, never deleted.* *Last updated: 2026-08-12 12:39 UTC — SEARCH S2C-6 + INGEST V35: the four V34 corpora are TYPED (three new display types — IMPACT_ASSESSMENT, CONSULTATION, DIVISION; union 10→13; check:corpus-types 153/153 with every new assertion watched failing first) and HONESTLY TITLED (all four failed the brief's correctness requirement — a Lords roll-call rendered as the bare bill name, and **1,024 impact-assessment rows are titled the single word "Summary"**; fixed at display in one file for both adapters). ⚠ **The ingest brief's sequencing note is wrong — the typing gates the EMBED too**, because the catch-up bakes `tierFor()` into every chunk and vector-search prefilters on it server-side; embedding first would have made 95,044 paid-for chunks unreachable. ⚠⚠ **The recall constraint is not retrieval tuning: 17,261 instruments known to the legacy table are ABSENT from `corpus_sections`** — 77,000 sections, 61.2M characters, including the **Companies Act 2006** and **UK GDPR** — which is why UK GDPR cannot be retrieved at any probe count, and why the V26 §6 DROP **must not proceed**: the legacy path returns CA 2006 at RANK 1 and UK GDPR at RANKS 2 and 7 on the very queries the corpus path reports absent. §3 repoints STOPPED on that evidence. A recall diagnosis separating the five loss modes says the brief's own lever (candidate count) fixes **3 of 17** missing documents against ABSENT 9 and RANKING 5. **`caselaw` 36/36→22/36 RETIRED after five sprints** — there was never a 36-query set (it was a count of routing CALLS) and the gold set has no caselaw archetype at all; measured directly, the router selects caselaw 8/8 when right and 1/8 when wrong. ⚠ **A network fault that is not one:** Node happy-eyeballs racing unroutable IPv6 against a cold Neon compute fails every address while PowerShell reaches the same IP — `--no-network-family-autoselection`. Earlier: 2026-08-12 12:21 UTC — LEX §1: **the Sprint 3-D browser walk cannot run, because www.scrutinise.org has not deployed since 6–9 August** — measured off the running product by three independent probes (the `/ideas/create` opening bubble is still the pre-3-D wording; `/support` has no Reading-legislation section; a Community page still says points and leaderboards are "coming soon"), while Stage 1.2's controls from 6 Aug ARE live, which brackets the deployed build between 6 Aug 20:41 and 9 Aug 07:43 UTC. Nothing is unpushed (`ls-remote` = local HEAD) and `tsc` is clean, so this is Vercel-side and Charlie must read the dashboard — the token here is SAML-blocked. ⚠ Consequence beyond §1: every "Charlie's browser re-test is the remaining gate" note since 9 Aug was untestable. Also: §3's dependency question is answered — `explanatory-notes` (18,801 sections/560 docs) and `explanatory-memoranda` (27,428/10,864) both exist and are reachable, but there is **no separate PIR corpus** — the "what actually happened" leg is 1,235 sections *inside* `impact-assessments`, so legs 2 and 3 of the triangulation are locked in the same un-indexed box; and `ftsVector` is NULL on 100% of every corpus including searchable ones, so it is not the searchability signal. Plus the blocker that had to be cleared first: Node's happy-eyeballs cannot reach Neon by hostname on this machine (`NODE_OPTIONS=--no-network-family-autoselection`), and `scripts/whichdb.ts` — the check §16 makes mandatory — could not run at all; a runnable one is now at `scrutinise-web/scripts/whichdb.ts`. Earlier: 2026-08-11 23:25 UTC — SEARCH Stage 2C-5: `VECTOR_NPROBES` is 64 in production and engagement was verified POSITIVELY (`/stats` read 24 before the change, 64 after) — but ⚠ **the recall justification did not materialise at gold** (vector-alone 69.2% → 68.6%, BM25-alone identical at 62.2% as a negative control), because S2C4 measured OVERLAP WITH AN EXHAUSTIVE PROBE, which is candidate-set fidelity and not gold recall; the two do not move together. p50 +13.9%, inside the revert criterion fixed before the change. ⚠ **vector-serve does not auto-deploy from GitHub** — the same push deployed fts-serve and produced no vector-serve deployment at all, which is why it had been serving 7 August code. The ordering metric now scores only where an ordering decision exists (15 of 20 pairs; 5 cross-stream excluded because `results` is round-robin and `grouped` is a stable filter over it). **The PECR regression does NOT reproduce** (DPA 2018 rank 2, PECR absent from the top 20) — and ⚠ the harness would have concluded the opposite from ZERO retrieved documents until that was fixed. **The reranker is NOT authorised:** preference accuracy 66.7% but only 4 of 15 pairs compared two documents the system actually returned; 11 turned on retrieval, so the binding constraint is recall. §4's two unknowns settled (the IdeaLegislation row → MIGRATE; `corpus_acts` needs no new indexes, but `title` is populated on only 54% of its rows) and its eight repoints deliberately not started. Earlier: 2026-08-11 20:24 UTC — CENTRAL Stage 2b: the question library, built to the CD
 handoff. The core of it is three vote-ish mechanisms that must not collapse into one: a QUESTION vote
 is up-only and self-voting is ALLOWED because it records frequency ("I get asked this too"), not
 quality; an ANSWER vote is up/down, mutually exclusive and self-voting is refused; a FAVOURITE is
@@ -128,6 +128,284 @@ scheduler, Lex query layer), verified against real live sources (all licences co
 v3.0 at source), measured via a no-DB-writes pilot (4,081 series / 28,866 observations on the
 ingested slice) — **no database provisioned, Charlie's DB-choice call still pending.** Earlier:
 2026-07-30 04:32 UTC — SEARCH: query router — guidance added as 5th stream (B now +15.3pp, A holds +10.0pp, C partially recovers -20.0→-13.3pp), the flagged fts-query-service.ts concurrency risk CONFIRMED and FIXED (direct load-test crashed the live service at 15 concurrent requests — the exact load the router's 5-stream fan-out produces; a global semaphore now caps concurrent Lance calls, re-tested clean), and LEX_QUERY_ROUTER is recommended for production flip. Earlier: 2026-07-29 19:25 UTC — SEARCH: query router built + measured (LEX_QUERY_ROUTER, OFF) — per-stream routing generalises Stage-3 expansion; gold-set B +12.5pp, A +10.0pp (not diluted), C -20.0pp (guidance stream not yet routed, expected cost). Earlier: 2026-07-29 14:16 UTC — INGEST V30 tidy-up: two silent data-correctness bugs fixed — LGSCO fake pagination (was re-discovering the same 10 rows forever, never actually archiving) and members-interests-api Take=20 server cap (was silently dropping 80% of every requested window). Committed with companion one-off reseed scripts. Earlier: 2026-07-22 — SEARCH VECTOR: rebuild on a 128GB Vultr box (proper compaction, no OOM) did NOT recover the recall regression (vector-alone 70.5% post-rebuild vs 71.2% pre-, reproduced twice) — the original compaction-skip diagnosis is REVERSED; the cause is now an open search-quality question, not infrastructure. Positions-rider bonus ABANDONED (hard R2 10,000-part multipart-upload limit, non-retryable, stopped per spec). Flag stays OFF. Earlier same day: recall re-confirm + nprobes diagnostic first surfaced the regression and (wrongly, in hindsight) pointed at compaction.*
+
+---
+
+## LEX §1 — the 3-D walk CANNOT run: production has not deployed since 6–9 August (2026-08-12 12:21 UTC)
+
+`BRIEF_DEEPENING_RESTART.md` §1 makes the browser walk of Sprint 3-D blocking. The extension
+connected on the second attempt (Charlie reconnected it; `list_connected_browsers` returned one
+Windows browser) and the walk still cannot run — **because www.scrutinise.org is not serving Sprint
+3-D, and has not been serving anything merged since roughly 9 August.**
+
+**This is measured from the rendered product, not inferred from a config I cannot read** (`docs/CLAUDE.md`
+§19 — `VERCEL_TOKEN` is SAML-blocked, so the deployment list is unreadable from this machine). Three
+independent probes, each a string or a surface that a specific commit introduced:
+
+| probe | expected at HEAD | production serves | introduced by |
+|---|---|---|---|
+| `/ideas/create` opening bubble | "What's the problem you want to fix?" | **"What's the problem or challenge you want to address?"** | `04b0283` (3-D, 11 Aug) |
+| `/support` FAQ | a **Reading legislation** section | absent | `1d92038` (11 Aug) |
+| a Community page | points & leaderboards, Questions library | **"Coming soon — points and leaderboards for this Community."** | Central Stage 2 (`9 Aug`), 2b (`11 Aug`) |
+
+The same page **does** show Stage 1.2's join-requests / members / invite controls, which shipped
+2026-08-06 20:41 UTC. So the deployed build sits **between 6 Aug 20:41 and 9 Aug 07:43 UTC** — three
+days and at least five sprints behind `origin/Main`.
+
+⚠ **The cause is not in this repository.** `git ls-remote origin Main` and local `HEAD` are the same
+commit (`dbce0b0`), so nothing is unpushed. `tsc --noEmit` is clean. `npm run build` fails **locally
+only**, and for a network reason, not a code one — `/sitemap.xml` prerenders from the database (see
+the IPv6 note below), which is fine on Vercel. **Charlie has to read the Vercel dashboard**: either
+the production deployments are failing, or they are succeeding and not being promoted to the alias.
+
+⚠ **What this costs beyond §1.** Every sprint since 9 August closed with "Charlie's browser re-test is
+the remaining gate" — Central Stage 2, Central 2b, Lex 3-C and 3-D. **None of those gates could have
+passed**, because the code behind them was never on the site being tested. This is the same shape as
+`vector-serve` on 11 Aug (S2C5 §1): a deploy silently not happening, and every measurement taken
+downstream of it quietly describing older code. **A push is not a deploy, and the only honest proof of
+a deploy is a string read back off the running product.**
+
+### The blocker that had to be cleared first: Node cannot reach Neon by hostname on this machine
+
+Unrelated to the deploy, and it would have stopped every database step in this brief. Every
+`tsx`/`prisma`/`next build` call that opens a Postgres connection died with
+`AggregateError [ETIMEDOUT]` — `ENETUNREACH` on the IPv6 addresses, `ETIMEDOUT` on all three IPv4
+ones. **Connecting to those same IPv4 addresses directly succeeds.** The machine has no IPv6 route,
+so every IPv6 attempt fails instantly; Node ≥20 enables `autoSelectFamily` (happy-eyeballs) by
+default and races the families with a short per-attempt window, and when Neon's compute has
+auto-suspended the IPv4 connect needs ~10s to wake it — far past the window — so the whole connect
+is abandoned and `pg` reports the aggregate as though nothing were reachable. **That is why it is
+intermittent**: one run early in this session succeeded, immediately after raw TCP probes had warmed
+the compute.
+
+- `node --no-network-family-autoselection` → connects, 3 runs of 3.
+- `node --dns-result-order=ipv4first` alone → **still fails**; ordering does not help, because the
+  AAAA stays inside the autoselect group.
+
+So `NODE_OPTIONS=--no-network-family-autoselection` is required for anything that touches the app
+database from this machine. ⚠ The symptom is indistinguishable from a suspended Neon project, an
+IP-allowlist rejection or an ISP block, and production is unaffected throughout — which is exactly
+why one wrong provisional conclusion (that the Bash sandbox blocks 5432) got as far as being written
+down before a single unsandboxed retry disproved it. The one probe that separates the cases is raw
+TCP **to a resolved A record** versus **to the hostname**: IP OK + hostname FAIL is this bug.
+
+⚠ **`scripts/whichdb.ts` — the check `docs/CLAUDE.md` §16 makes MANDATORY before any DDL — cannot
+run at all.** There is no root `node_modules`, so it dies on `Cannot find module '@prisma/client'`
+before it prints a thing. A mandatory check that cannot execute is the `feedback-checks-that-cannot-fail`
+pattern in its purest form. A runnable one now lives at `scrutinise-web/scripts/whichdb.ts` (plain
+`pg`, no generated client needed) and reports host, database, user and the last five
+`_prisma_migrations` rows. Its output for this session: `ep-old-dust-aboxi69a-pooler.eu-west-2.aws.neon.tech`
+/ `neondb` / `neondb_owner` — Neon, production, as §16 requires.
+
+### §3's dependency question, answered: the triangulation is **three-legged, but two legs are locked in the same box**
+
+`BRIEF_DEEPENING_RESTART.md` §3 asks whether `explanatory-notes` and any PIR/evaluation corpora exist.
+Counted directly in `corpus_sections`:
+
+| corpus | sections | documents | the leg it serves |
+|---|---|---|---|
+| `explanatory-notes` | **18,801** | 560 | what the measure was **for** (Acts) |
+| `explanatory-memoranda` | **27,428** | 10,864 | what the measure was **for** (SIs) |
+| `impact-assessments` | **18,759** | 1,049 | what was **predicted** |
+| …of which titled as a post-implementation review | **1,235** | — | what actually **happened** |
+
+- **`explanatory-notes` exists** — and so does the SI equivalent, `explanatory-memoranda`, which the
+  brief did not ask about and which is the larger of the two by document count. Both are typed
+  `EXPLANATORY_NOTE` (the tenth display type, S2C2) and reachable today.
+- **There is no separate PIR or evaluation corpus.** The third leg is *inside* `impact-assessments`:
+  1,235 of its sections are titled as post-implementation reviews. So legs 2 and 3 are the same
+  ingest, and both are gated on the same unblocking. Nothing else comes close — the other title
+  matches are incidental mentions in debates (`pwdata-debates` 50) and committee reports (11).
+- ⚠ **`ftsVector` is NULL on 100% of every corpus checked, `committees-reports` included** — and that
+  collection is demonstrably searchable. So the Postgres tsvector column is *not* the searchability
+  signal; FTS is served by the external Lance index. A "0 of 344,773 have ftsVector" reading is not
+  evidence of anything, and would have been reported as a finding if I had stopped one query earlier.
+
+⚠ **The gap the brief tells me to declare may be closing while I write this.** A concurrent
+Search/Ingest session is working in this shared tree right now: `lib/lex/corpus-type-map.ts` already
+carries uncommitted S2C6 §1 entries dated 2026-08-12 typing `impact-assessments` → `IMPACT_ASSESSMENT`
+and `consultations` → `CONSULTATION`, and `INGEST V35 §1` above records the embedding prediction for
+the index build that makes them retrievable. **The Deepening build must still declare the IA gap as a
+known unknown per §3** — but it must read the gap at *run time* from what search actually returns, not
+bake in a constant that a sprint landing this afternoon makes into a lie.
+
+---
+
+## SEARCH Stage 2C-6 + INGEST V35 — the four corpora are typed and honestly titled; and the recall constraint turns out to be 17,261 instruments that were never ingested (2026-08-12 12:39 UTC)
+
+Executes `BRIEF_SEARCH_S2C6.md` §1 in full and §2 in full; §3 **STOPPED on evidence**. Executes
+`BRIEF_INGEST_V35_SEARCHABILITY.md` §0–§2, with §3 blocked on §1. Full detail:
+**`docs/SEARCH_S2C6_REPORT.md`** and **`docs/V35_SEARCHABILITY_REPORT.md`**.
+
+### §1 — three new display types, and the sequencing note in the ingest brief was wrong
+
+`impact-assessments` → **IMPACT_ASSESSMENT** (tier legislation, legislation stream) ·
+`consultations` → **CONSULTATION** (tier guidance, guidance stream) · `commons-` and
+`lords-divisions-votes` → **DIVISION** (tier parliamentary, debates stream, which now admits the
+type). Union 10 → 13 types. `check:corpus-types` **153/153**, every new assertion **watched
+failing first** against three deliberate breaks.
+
+**The evidence that made it four decisions and not one sweep is a single asymmetry in the data:**
+impact assessments carry a `parentDocId` naming the instrument they assess on **94.7%** of rows;
+consultations carry one on **0%**. One is attached to a specific piece of law the way an
+explanatory note is; the other is the record of a question asked before any law existed.
+
+⚠ **V35 §0 says the typing gates only the FTS build. It gates the embed too**, and that was worth
+catching: `v33-vec-catchup.ts` bakes `tier: tierFor(corpus)` into every chunk and
+`vector-search.ts` uses `tier` as a **server-side prefilter**, refusing results the service does
+not echo back. Embedding first would have written `other` into **95,044 chunks** that no stream
+selects — the same UNREACHABLE state, through the vector half. Tiers verified in `corpus_chunks`
+before any spend, with a negative control.
+
+⚠ **All four collections failed the brief's one correctness requirement, three of them badly.**
+A Lords roll-call's stored title is the bare bill name (`Employment Rights Bill`) — under a
+"Debates" label it reads as a debate about that bill. **1,024 impact-assessment rows are titled
+the single word "Summary".** The cause is the same each time: the stored title is an *internal
+heading*, written for a reader who already knows which document they opened, and a search result
+has no such reader. `lib/lex/political-title.ts` fixes it at display in one place for both
+adapters (mirroring `annotation-title.ts`), resolving the instrument from `corpus_acts` for 70% of
+IAs and falling back to the department — never to a bare heading, never to a dangling separator.
+
+⚠ **`lda-commonsdivisions` (5,553) and `lda-lordsdivisions` (2,089) are a live finding, reported
+not fixed:** a *different*, near-empty division collection — mean 16 and 8 words, no title, no
+date — already typed DEBATE and already in the debates stream, rendering as the raw corpus key.
+The check asserts the new title rule does not capture them.
+
+**The `before` measurement is also a clean negative control:** 0 of 620 top-20 slots from the new
+collections, 0/160 contamination, and 6 of 6 on-target questions ABSENT. The UNREACHABLE state
+measured rather than asserted.
+
+### §2 — the brief's own recommendation addresses 3 of 17 missing documents
+
+The candidate-count chain is now written down stage by stage (gateway L → per-stream `max(3L,30)`
+→ fusion ≈3L → interleave 3L×streams → **scorer reads K=20**). Rather than raise a number, I built
+`diagnose-recall.ts`, which separates the five ways a document fails to reach the scorer — because
+only one is fixed by a bigger candidate set and a single "vacuous" count collapses all five. Over
+the 15 within-stream pairs (30 sides):
+
+**IN_TOP_K 13 · ABSENT 9 · RANKING 5 · CANDIDATES 3 · ROUTING 0 · TYPING 0.**
+
+ROUTING and TYPING at zero is the S2C→S2C5 work holding. **CANDIDATES — the lever the brief names
+— is the smallest of the three real buckets.**
+
+⚠⚠ **UK GDPR was the right thing to chase, and it is not a retrieval defect. It is not in the
+corpus.** `eur/2016/679`: `in_corpus = false`, zero sections under every legislation prefix, 61
+sections in the legacy table. Same for the **Companies Act 2006** (1,665 sections). And it is not
+two instruments: **17,261 instruments known to the legacy table are absent from `corpus_sections`**
+(ukpga 8,896 · uksi 4,668 · eur 2,268 · ssi 732), carrying **77,000 sections and 61.2 M
+characters** — the Law of Property Act 1925, the Housing Benefit Regulations 2006, the
+Jobseeker's Allowance Regulations 1996 among them. **The binding constraint on recall is INGEST,
+not search tuning.**
+
+**`caselaw` 36/36 → 22/36 is RETIRED after five sprints, and the premise was wrong.** There is no
+36-query set: the number is the count of forward-decided routing CALLS in S2B §2.3's
+exit-criterion run, not a re-runnable fixture — and the gold set could never have answered it
+either, because **`gold-queries.ts` contains no caselaw archetype at all**. The question it stood
+in for is now answered directly (`measure-router-caselaw.ts`, 8 wants + 8 does-not, 3 repeats):
+**caselaw selected 8/8 when it is the right answer, 1/8 when it is not, 0/16 unstable, 0/48
+fail-opens.** The fall was the router discriminating, not losing recall. Do not carry it again.
+
+### §3 — STOPPED: the DROP would destroy the only copy of 61.2 M characters of legislation
+
+The repoint-confirm §3 ends with authorises an irreversible DROP of `LegislationItem` /
+`LegislationSection`. **`corpus_acts` is a verified superset for metadata; `corpus_sections` is
+NOT a superset for text** — it is missing the 77,000 sections above. And the legacy path is not
+redundant coverage: running the exact query shape `lib/search.ts` uses returns **Companies Act
+2006 s.656 at RANK 1** for "directors duties company", and **UK GDPR Articles 9 and 6 at RANKS 2
+and 7** for "personal data processing lawful basis" — precisely the documents §2 found ABSENT
+from the corpus path. Repointing paths A/D/G/H would silently narrow coverage by 77,000 sections
+and present it as a modernisation.
+
+**No repoints made. Not an oversight — a stop, of the same shape as S2C5 stopping the reranker.**
+The four metadata-only paths (B/C/E/F) remain safe but buy nothing until the DROP is possible.
+The unblock is now an ingest task with a number on it, and it closes the §2 recall problem at the
+same time.
+
+⚠ **§5's decision rule now points at reverting `VECTOR_NPROBES`.** The brief says revert to 24 if
+§2 finds no recall improvement traceable to candidate quality. Candidate quality accounts for 3 of
+17. A better candidate set cannot consume what is not in the index. **Charlie's call, with the
+number the rule asks for.**
+
+### V35 §1/§2 — status, said plainly
+
+**Chunking complete: 95,044 chunks, 227 body misses** (the 264 zero-word stragglers). **Embed
+shards 0 and 1 in flight; shard 2 FAILED at job creation before any spend and needs a re-run.**
+FTS catchup running; before-counts are `fts=0` on all four corpora, 31,849 missing, index coverage
+`unindexed=0` beforehand. **§3 (ANN rebuild + `vector-serve` redeploy) not started, blocked on §1.**
+
+⚠ **Phase 1 had no retry and died at section 10,000 of 32,113** on a transient R2 multipart PUT —
+while phase 2 retried its embed calls three times. Now retried with the same backoff; resumed from
+the checkpoint and completed.
+
+⚠⚠ **A network fault that is not a network fault, and will recur.** Every Neon connection and
+every Gemini `fetch` began failing on all six resolved addresses while PowerShell
+`Test-NetConnection` to the same IP returned True. **Cause: Node ≥20's happy-eyeballs
+(`autoSelectFamily`) racing an unroutable IPv6 against an IPv4 connect that takes ~10 s because
+Neon's compute has auto-suspended.** The race window expires and the whole connect is abandoned.
+Fix, verified three times: `NODE_OPTIONS="--no-network-family-autoselection
+--dns-result-order=ipv4first"`. It is intermittent by construction — it works whenever the compute
+is warm — and looks exactly like an expired credential or a suspended project.
+
+---
+
+## INGEST V35 §1 — the embed PREDICTION, recorded before a penny is spent (2026-08-12 11:50 UTC)
+
+Written **before** the run, per `BRIEF_INGEST_V35_SEARCHABILITY.md` §1 and the standing
+predict-then-measure rule, so the actual has something to be scored against that was not written
+after the fact.
+
+**The delta, measured not assumed** (`v33-vec-delta.ts --run v35 --calibrate 300 --write`;
+report `docs/v35_vec_delta.json`, work list `scripts/ingest/v35-vec-delta.jsonl`):
+
+| | |
+|---|---|
+| compiled sections in the corpus | 18,198,797 |
+| already carrying a vector | 18,166,684 |
+| **unvectored — the delta** | **32,113 (0.18%)** |
+| words to embed | 34,486,186 |
+| chunks to embed | **90,008** |
+| characters embedded (overlap counted — paid for twice) | 239,755,612 |
+| estimated tokens (`chars/4`, a deliberate over-estimate) | **59,938,903** |
+| CPW, measured on 300 real bodies | **6.161** |
+| **PREDICTED COST at Batch $0.075/M** | **$4.50** |
+| sensitivity across the CPW band | 5.55 → $4.05 · 6.16 → $4.50 · 6.78 → $4.94 |
+
+Per tier: legislation 47,434 chunks/$2.26 · parliamentary 34,730/$1.99 · guidance 7,844/$0.24.
+`--max-cost 8.00` is the hard ceiling for the run — roughly 1.8× the prediction, so it stops a
+blowout without stopping the job for being 10% wrong.
+
+**A second, independent basis agrees, which is why this is stated as a prediction rather than an
+estimate.** V33 embedded 768,085 chunks for $36.51. Pro-rata on chunk count, 90,008 chunks is
+**$4.28**. The two bases are computed from different quantities (tokens vs chunks) and land 5%
+apart.
+
+⚠ **V34's own forecast of "~46 M tokens" is 23% LOW against the 59.9 M measured here**, and the
+gap is not an error in either number — V34 counted words and this counts `chars/4` with chunk
+overlap included, and overlapping text is embedded twice. Recorded so the discrepancy is not
+rediscovered as a fault later. The cost consequence is trivial either way.
+
+**The delta is the V34 material and essentially nothing else**, which is itself the acceptance
+check on V33's closing claim that the vector index was current: 31,849 of the 32,113 rows are the
+four V34 collections (impact-assessments 18,756 · consultations 7,448 · lords-divisions-votes
+3,284 · commons-divisions-votes 2,361). The remaining **264 are zero-word sections** scattered
+across seven older collections (183 `scottish-parliament-or`, 34 `pwdata-wrans`, …) which model to
+**0 chunks** and will cost nothing — they are empty rows, not missed work.
+
+⚠ **Two tooling traps were closed before the run, not after it.** `v33-vec-delta.ts` and
+`v33-vec-catchup.ts` both took `--run <tag>` (default `v33`, so every historical path is
+byte-identical):
+
+1. The delta script **overwrites its own report every run**, and its header says so and asks the
+   next caller to save elsewhere. Asking is not a mechanism, and it had already silently replaced
+   the 9 Aug prediction with the 11 Aug acceptance measurement once. The tag now names the file.
+2. **The catch-up checkpoint is the dangerous one.** `_search/v33_vec_catchup.checkpoint.json` is
+   `phase: "done"` with its `doneShards` recorded as **indices**. Run against a different work
+   list, the shard numbering differs — so V35's shard 7 would be skipped because V33's shard 7 was
+   done, and the run would report success having embedded a subset. That is precisely the failure
+   this script's own header describes for `build-vector-index.ts`, one level down.
+3. And a third, found by reading the output: `--run` correctly wrote `docs/v35_vec_delta.json`
+   while the console **printed "report → docs/v33_vec_delta.json"**, a hardcoded literal beside a
+   variable path. A message naming a file the code did not write is a false map. Fixed.
 
 ---
 
