@@ -137,3 +137,7 @@ scripts/ingest/.vector-ab/
 scripts/ingest/v36/source-entries.json
 scripts/ingest/v36/worklist.jsonl
 scripts/ingest/v36/enumerate.log
+
+# V37 repeal census — live run state, rewritten every page, resumable by design.
+scripts/ingest/v36/repeal-census-checkpoint.json
+scripts/ingest/v36/repeal-census.log
