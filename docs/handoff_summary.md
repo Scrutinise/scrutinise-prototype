@@ -2,9 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 22:55 UTC — ▼ **INGEST V37: the corpus now audits itself, and the check
+*Last updated: 2026-08-12 23:45 UTC — ▼ **THE V36 RECOVERY IS SEEDED AND DRAINING: 41,913
+instruments in citation order, and the first two rows found two defects that would have wrecked the
+run.** V37 and V36 §1 follow. The LEX thread's 17:36 entry is further down and equally current.*
+
+2026-08-12 23:45 UTC — ▼ **V36 §2 IS RUNNING — SEEDED, DRAINING, AND TWICE REPAIRED IN THE FIRST
+QUARTER-HOUR.** Executes `ADDENDUM_V36_SEED_ORDER.md`. Ten commits pushed
+(`fd00fef..16484bd`). ⚠ **`commit-all.sh` was DELETED mid-session by the concurrent LEX/CENTRAL
+thread**, which ran its own file of the same name and removed it per protocol; verified none of its
+9 commits touched `scripts/ingest`, and rebuilt. **A shared filename in a shared tree — run it
+promptly, don't leave it lying about.**
+
+✅ **SEEDED: 41,913 rows, all pending, in DESCENDING citation order.** ⚠ **The file's sort order is
+not the claim order** — `claimRow` is `ORDER BY priority ASC, id ASC`, so sorting the work list and
+seeding it flat would have produced exactly the arbitrary tenth the ordering exists to prevent,
+while looking right in the log. Citation rank is encoded INTO `priority`, bands of 50. Head of
+queue: `ukpga/2006/46` (7,354 refs) → `uksi/1996/207` → `uksi/1987/1971` → `uksi/1981/238`.
+**22,644 carry ≥1 reference; 19,269 uncited, seeded LAST not never.**
+✅ **Gate enforced before seeding**: `v36-verify-deploy.ts` refuses unless `Ingest`'s latest
+deployment SHA equals local HEAD **and** is SUCCESS — a SUCCESS deploy of the PREVIOUS commit is
+exactly the failure it guards and looks healthy from every other angle.
+
+⚠⚠ **TWO DEFECTS, BOTH FOUND BY WATCHING THE FIRST MINUTES RATHER THAN TRUSTING THE RUN:**
+1. **`ROW_TIMEOUT_MS` was 5 minutes and it threw away the Companies Act — the first row of the
+   run.** 15 MB of CLML, ~2,000 sections, ~4,000 R2 puts cannot finish in 300s. Both initial
+   failures were the two largest instruments. **Citation order surfaced this in the first minute; a
+   flat order would have buried it under thousands of small successes.** Raised to 30 min, well
+   inside the 90-minute stale-claim reclaim that is the real backstop — the old ceiling was 18×
+   tighter than the mechanism already guarding the same failure.
+2. **The legislation processor short-circuited on `r2Exists` ALONE** — V34's exact defect, fixed
+   then in the consultations and IA processors and never in this one, which is the processor now
+   running a 41,913-row recovery that any deploy restarts. Now requires object AND row, via V34's
+   own `sectionExists` helper.
+
+⚠⚠⚠ **AND THE THIRD WAS MINE: THE V36 FIX TRIPPED THE BREAKER AND PARKED ALL 39,964 PENDING ROWS.**
+`RetryableSourceError` was caught by the worker and marked `failed`; ops' breaker trips on **five
+consecutive failures**, so a short burst of TNA throttling blocked the entire source eleven minutes
+into the run, with 1,901 done. **The breaker was right** — it exists for DETERMINISTIC failures,
+which must never be retried; a retryable failure is the opposite kind and must not be counted as
+one. `markRetryable()` now returns the row to `pending`, records the reason and backs the source off
+60s, capped at 5 attempts before becoming a real `failed`. Breaker cleared, 39,964 rows un-parked,
+`source_status` back to `ok`.
+
+⚠ **IF THE RUN IS DEAD IN THE MORNING, CHECK THIS FIRST:**
+`SELECT state, trip_reason FROM source_status WHERE source_key='tna-legislation'` — if `tripped`,
+clear with `UPDATE source_status SET state='ok', trip_reason=NULL WHERE source_key='tna-legislation'`
+then `UPDATE ingest_queue SET status='pending', "lastError"=NULL, "claimedBy"=NULL, "claimedAt"=NULL
+WHERE "sourceType"='tna-legislation' AND status IN ('blocked','failed')`. Status at a glance:
+**`tsx v36-drain-status.ts`** (it withholds an ETA until the hour holds 500+ completions, because
+the first reading after seeding said "837 h remaining" off a minute-old window).
+
+▼ **RUNNING IN PARALLEL: the repeal census** (`v37-repeal-census.ts`, checkpointed and resumable).
+Reads every compiled legislation object out of R2 and counts dot-leader placeholders properly
+instead of extrapolating from 400 samples — **and writes each one to `section_repeals` as structured
+data**, joined against the `repeals` edges so the dots say THAT a provision was repealed and the
+edges say BY WHAT. At 305,000 read it stands at **17.49%**, well above the 9.75% the sample
+suggested, with **15,100 of 46,949 carrying a known repealing instrument**. That is the addendum's
+extension: the platform could not previously tell a user a section is no longer in force.
+
+2026-08-12 22:55 UTC — ▼ **INGEST V37: the corpus now audits itself, and the check
 puts the Companies Act at RANK 1 — it would have found V36's gap months ago from data we already
-had.** V36 §1 is complete below it. The LEX thread's 17:36 entry follows and is equally current.*
+had.** V36 §1 is complete below it.
 
 2026-08-12 22:55 UTC — ▼ **INGEST V37 §1 + §2 — THE CORPUS AUDITS ITSELF.** Executes
 `BRIEF_INGEST_V37_CORPUS_INTEGRITY.md` §1 and §2 in full, §4 partially, **§3 not started**. Full

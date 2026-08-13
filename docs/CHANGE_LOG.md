@@ -131,6 +131,56 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V36 §2 — the run is live, and the first quarter-hour found three defects (2026-08-12 23:45 UTC)
+
+Ten commits pushed, `fd00fef..16484bd`. ⚠ **`commit-all.sh` was deleted mid-session** by the
+concurrent LEX/CENTRAL thread, which ran its own file at the same path and removed it per protocol
+(9 commits). Verified before rebuilding that none of them touched `scripts/ingest` and that every
+change of mine was still on disk. A shared filename in a shared tree: run it promptly.
+
+**Seeded 41,913 rows in descending citation order**, head of queue `ukpga/2006/46` (7,354
+references). Gate enforced first — `v36-verify-deploy.ts` refuses to let a seed proceed unless
+`Ingest`'s deployed SHA equals local HEAD and is SUCCESS, because a SUCCESS deployment of the
+PREVIOUS commit is precisely the failure mode and looks healthy from every other angle.
+
+### Three defects, none of which a passing test would have shown
+
+1. **`ROW_TIMEOUT_MS` was 5 minutes, and it threw away the Companies Act — the first row of the
+   run.** 15 MB of CLML, ~2,000 sections, ~4,000 R2 puts do not finish in 300 s; both initial
+   failures were the two largest instruments. **The citation ordering earned its keep in the first
+   minute**: a flat seed order would have buried this under thousands of small successes and left
+   the most-referenced instruments quietly missing. Raised to 30 min — the old ceiling was 18×
+   tighter than the 90-minute stale-claim reclaim that already guards a genuinely stuck row.
+
+2. **The legislation processor short-circuited on `r2Exists` alone.** V34 found this exact defect in
+   the consultations and impact-assessment processors — rows SIGTERM'd between `r2Put` and
+   `upsertSection` by a mid-drain redeploy, then marked done with no section row, permanently. Those
+   two were fixed; `tna-legislation` was not, and it is the processor now running a 41,913-row
+   recovery that any deploy restarts. Now requires object AND row.
+
+3. **The V36 fix itself parked the entire run.** `RetryableSourceError` — added so a transient fetch
+   failure could not be written down as a permanent "this instrument has no text" — was caught by
+   the worker and marked `failed`, and ops' breaker trips on five consecutive failures. A short
+   burst of TNA throttling blocked all 39,964 pending rows eleven minutes in, with 1,901 done.
+   **The breaker was right.** It exists for deterministic failures, which must never be retried; a
+   retryable failure is the opposite kind and must not be counted as one. `markRetryable()` returns
+   the row to `pending`, records the reason, backs the source off 60 s, and caps at 5 attempts
+   before a real `failed`. Breaker cleared, rows un-parked, `source_status` back to `ok`.
+
+**All three were found by reading the queue rather than by trusting that a run which started is a
+run that is running.**
+
+### Running in parallel: the repeal census, which is a capability not a cleanup
+
+`v37-repeal-census.ts` reads every compiled legislation object out of R2 and counts dot-leader
+placeholders properly rather than extrapolating from 400 samples — **and writes each to
+`section_repeals` as structured data**, joined against the `repeals` edges, so the dots say THAT a
+provision was repealed and the edges say BY WHAT. At 305,000 sections read it stands at **17.49%**,
+well above the 9.75% the sample suggested, with **15,100 of 46,949 carrying a known repealing
+instrument**. The platform could not previously tell a user that a section is no longer in force.
+
+---
+
 ## INGEST V36 §2 — THE RECOVERY PREDICTION, recorded before the run (2026-08-12 23:10 UTC)
 
 Executes `ADDENDUM_V36_SEED_ORDER.md`. **This entry is written BEFORE the seed**, per the standing
