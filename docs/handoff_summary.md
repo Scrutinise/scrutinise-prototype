@@ -2,9 +2,72 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-12 23:45 UTC — ▼ **THE V36 RECOVERY IS SEEDED AND DRAINING: 41,913
-instruments in citation order, and the first two rows found two defects that would have wrecked the
-run.** V37 and V36 §1 follow. The LEX thread's 17:36 entry is further down and equally current.*
+*Last updated: 2026-08-13 09:14 UTC — ▼ **THE V36 RECOVERY DRAINED OVERNIGHT (88% at 09:10, ~1.2 h
+left, 2 failures in 41,913) AND THE REPEAL CENSUS COMPLETED — at 11.44%, not the 17.49% its own
+mid-run reading said.** V36 §2, V37 and V36 §1 follow. The LEX thread's 17:36 entry is further down
+and equally current.*
+
+2026-08-13 09:14 UTC — ▼ **MORNING CHECK ON THE OVERNIGHT RUNS. Both healthy; one number retracted;
+one new defect found and fixed.**
+
+✅✅ **V36 §2 IS COMPLETE — 41,911 done, 2 failed, of 41,913.** Last completion **2026-08-13
+10:33:12 UTC**. It never tripped; the breaker check the last session flagged as "check this first in
+the morning" came back clean and no un-parking was needed.
+
+**THE PREDICTION, SCORED** (`v36-score-prediction.ts`, read-only):
+
+| | predicted | actual | |
+|---|---|---|---|
+| instruments seeded | 41,913 | **41,913** | +0.0% |
+| instruments yielding text | 7,868 | **8,187** | **+4.1%** |
+| sections of real text | 45,636 | **73,467** | +61.0% — but **inside** the stated 27,539–232,115 range |
+| wall clock | 7.0 h | **11.6 h** | +65.7% |
+
+**The stratified yield model was the good part of the prediction (+4.1% on instruments); the
+sections-per-instrument constant was the weak part.** 5.8 was assumed, 8.97 was measured
+(73,467/8,187). Both errors are in the estimate's own recorded range, which is the argument for
+publishing a range rather than a point.
+Also written: **34,791 `unavailable` markers** — a recorded fact about an instrument, NOT yield, and
+deliberately excluded from the section score. Formats: `clml` 73,454 · `html` 9 · `clml-unparsed` 4.
+
+⚠ **One scoring bug caught before it was reported:** the first pass counted
+`count(DISTINCT "sourceUrl")` as instruments and scored the yield at **+833.7%**. `sourceUrl` is per
+SECTION, so it returned the row count exactly. The instrument is the R2 key prefix
+(`{id}/sections/{N}`), and the script now prints a key-shape sample so the count is auditable rather
+than asserted.
+⚠ **Unexplained, and flagged rather than guessed at:** the DB's last completion is 10:33 UTC but the
+watching monitor only reported COMPLETE at **11:26** — a ~53-minute detection lag with no
+`PROBE-FAILED` events in its log. The queue state is authoritative; the monitor's timing is not, and
+I have not established why.
+
+✅ **The repeal census COMPLETED at 02:16 UTC** — `cursor exhausted`, 1,563,090 sections read. The
+checkpoint sitting seven hours cold is a **finished** run, not a dead one.
+⚠⚠ **AND ITS OWN MID-RUN FIGURE WAS THE WRONG ONE. The final rate is 11.44% (178,826), not 17.49%.**
+The census walks in corpus order, and at 305,000 sections it was still inside the two heaviest
+strata (`primary-acts-pre-2000` 21.48%, `regional` 16.84%) before reaching `si-pre-2010` 7.60% and
+`retained-eu` 0.01% — together 41% of the corpus. **A progress reading over a non-randomly-ordered
+cursor is the leading stratum's rate wearing the whole corpus's label.** The 400-sample 9.75% was
+the closer guess, and closer *by accident*: it was random, which the mid-run reading was not.
+**25,138 of the 178,826 carry a known repealing instrument.** The capability stands: the platform
+can now say a section is no longer in force.
+
+⚠ **A FOURTH DEFECT, same family as the other three: HTTP 300 was being retried as a rate limit.**
+Both failed rows (`ukpga/Geo5Sess2/13/3` and `/4`) burned all five attempts under
+`RetryableSourceError … (429/503/5xx/network)`. Neither was any of those: the source answers
+`data.xml` with **300 Multiple Choices** and a disambiguation list, because the regnal id is
+ambiguous between `Geo5/13/3` and `Geo5Sess2/13/3`. `if (!res.ok) retryable = true` swept 300 in
+with 5xx. **An ambiguity does not resolve by asking again.** Fixed in both fetch helpers, scenario
+added to `v36-check-retryable-guard.ts` and **watched failing first** (`expected=unavailable
+got=throw` with the fix reverted — the production symptom exactly), 5/5 restored.
+✅ **Blast radius measured, not assumed: exactly 2 rows.** All 5,779 regnal rows are done, 0 pending,
+and 134 of 136 `Sess` ids resolved on attempt 1. Not worth chasing the two Appropriation Acts
+themselves; worth the fix for the next run.
+
+▶ **NEXT, AND IT IS THE THING THAT MAKES THIS RUN REACH USERS:** the 93,014+ new sections are
+written but **not indexed**. Per root `CLAUDE.md` §17 and `INGEST_PLAYBOOK.md` §20, a large append
+must be chunked, embedded, keyword- and semantic-indexed, and **both serves restarted**, or the rows
+are searchable only by brute-force scan and every later query pays for them forever. That is the
+next task once the drain lands.
 
 2026-08-12 23:45 UTC — ▼ **V36 §2 IS RUNNING — SEEDED, DRAINING, AND TWICE REPAIRED IN THE FIRST
 QUARTER-HOUR.** Executes `ADDENDUM_V36_SEED_ORDER.md`. Ten commits pushed

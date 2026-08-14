@@ -131,6 +131,107 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V36 §2 — THE RECOVERY IS COMPLETE, AND THE PREDICTION IS SCORED (2026-08-14 17:57 UTC)
+
+**41,911 done · 2 failed · of 41,913 seeded — 100% resolved.** Last completion **2026-08-13
+10:33:12 UTC**. The run never tripped the breaker; the "check this first in the morning" state left
+by the previous session came back clean and nothing needed un-parking.
+
+**Scored against the prediction recorded BEFORE the seed** (`v36-score-prediction.ts`, read-only):
+
+| | predicted | actual | |
+|---|---|---|---|
+| instruments seeded | 41,913 | **41,913** | +0.0% |
+| instruments yielding text | 7,868 | **8,187** | **+4.1%** |
+| sections of real text | 45,636 | **73,467** | +61.0%, **inside** the 27,539–232,115 range |
+| wall clock | 7.0 h | **11.6 h** | +65.7% |
+| fetch cost | £0 | **£0** | OGL v3.0, as predicted |
+
+**The stratified yield model was the good half of the prediction and the per-instrument constant was
+the weak half.** 5.8 sections/instrument was assumed; 8.97 was measured. The point estimate missed
+by 61% and the *range* held — which is the whole argument for publishing a band rather than a
+number, and it is the second time this week a point estimate has been the misleading artefact.
+
+Also written: **34,791 `unavailable` markers**, excluded from the section score deliberately —
+a recorded fact about an instrument is not yield, and counting it as yield is how a run reports
+success for finding nothing. Formats: `clml` 73,454 · `html` 9 · `clml-unparsed` 4.
+
+⚠ **A scoring bug caught before the number was reported, not after.** The first pass counted
+`count(DISTINCT "sourceUrl")` as instruments and scored the yield at **+833.7%**. `sourceUrl` is per
+SECTION, so it returned the row count exactly — and a 9× "win" is precisely the shape of result that
+gets believed. The instrument is the R2 key prefix (`{id}/sections/{N}`); the script now prints a
+key-shape sample on every run so the count is auditable rather than asserted.
+
+⚠ **Unexplained and recorded as such:** the queue's last completion is 10:33 UTC, but the watching
+monitor reported COMPLETE at **11:26** — a ~53-minute detection lag with no `PROBE-FAILED` events in
+its log. The queue state is authoritative; the monitor's timing is not, and no cause has been
+established. Do not read notification timestamps as event timestamps.
+
+⚠ **Left for the next session, and it is the step that decides whether any of this reaches users:**
+the 73,467 sections are written but **NOT INDEXED**. Per root `CLAUDE.md` §17 and
+`INGEST_PLAYBOOK.md` §20 a large append is searchable only by brute-force scan until it is chunked,
+embedded, keyword- and semantic-indexed and **both serves restarted** — which is what made warm p50
+26 seconds while everything still "worked".
+
+---
+
+## INGEST — the repeal census COMPLETED, and its own mid-run figure was the wrong one (2026-08-13 09:14 UTC)
+
+`v37-repeal-census.ts` ran to `cursor exhausted — census COMPLETE` at **2026-08-13 02:16 UTC**. It
+was not interrupted; the checkpoint sitting seven hours cold is a finished run, not a dead one.
+
+**The measured result, superseding both earlier numbers:**
+
+| | sampled/partial | **FINAL** |
+|---|---|---|
+| sections read | 400 (sample) → 305,000 (mid-run) | **1,563,090** |
+| dot-leader repeals | 9.75% → 17.49% | **11.44%** (178,826) |
+| with a known repealing instrument | 15,100 of 46,949 | **25,138 of 178,826** |
+
+Per corpus: `primary-acts-pre-2000` **21.48%** (35,606/165,746) · `regional` **16.84%**
+(56,659/336,425) · `primary-acts-2000plus` **12.61%** (18,567/147,194) · `si-2010plus` **12.49%**
+(34,014/272,242) · `si-pre-2010` **7.60%** (33,953/446,946) · `retained-eu` **0.01%** (27/194,537).
+
+⚠ **The 17.49% recorded in the entry below was a partial-cursor artefact and should not be quoted.**
+The census walks in corpus order, and at 305,000 sections it was inside the two heaviest strata
+(`primary-acts-pre-2000` at 21.5%, `regional` at 16.8%) before reaching `si-pre-2010` at 7.6% and
+`retained-eu` at 0.01%, which together are 41% of the corpus and pull the mean down. **A progress
+reading taken mid-walk over a non-randomly-ordered cursor is not an estimate of the whole** — it is
+the leading stratum's rate wearing the whole corpus's label. The 400-sample extrapolation (9.75%)
+was the closer of the two guesses, and it was closer by accident: it was random, which the mid-run
+reading was not.
+
+The direction of the headline is unchanged and the capability is the point — **178,826 sections are
+now recorded in `section_repeals` as structured data, 25,138 of them joined to the instrument that
+repealed them.** The platform could not previously tell a user that a section is no longer in force.
+
+### The morning-after check on the V36 run, and a fourth defect
+
+The recovery drained overnight without tripping: `source_status` = `ok`, heartbeat fresh, **2 failed
+rows out of 41,913**. Both failures were the 5-attempt retryable cap doing its job — and both were
+**misclassified**.
+
+`ukpga/Geo5Sess2/13/3` and `/4` were recorded as `RetryableSourceError … (429/503/5xx/network)`.
+They are neither. legislation.gov.uk answers `data.xml` for those ids with **HTTP 300 Multiple
+Choices** and a two-item disambiguation list — the regnal id is ambiguous between `Geo5/13/3`
+(Appropriation Act 1922) and `Geo5Sess2/13/3` (Appropriation (Session 2) Act 1922). The classifier's
+`if (!res.ok) retryable = true` swept 300 in with 5xx, so a **deterministic** answer was retried to
+the cap and then filed under the one cause it could not have been: a rate limit. **An ambiguity does
+not resolve by asking again.**
+
+Fixed in both `fetchTextWithStatus` and `fetchBinaryWithStatus` — 300 now sits with 404/410 on the
+deterministic side. The scenario was added to `v36-check-retryable-guard.ts` and **watched failing
+first**: with the fix reverted the new case fails as `expected=unavailable got=throw`, reproducing
+the production symptom exactly, and 5/5 passes with it restored.
+
+⚠ **Blast radius measured before changing anything, not assumed: exactly 2 rows.** All 5,779 regnal
+rows are `done`, 0 regnal rows remain pending, and 134 of the 136 ids carrying a `Sess` suffix
+resolved on attempt 1. This is the fourth face of V36's recurring failure — *a failure that looks
+like a different failure* — and it is worth the fix for the next run rather than for these two
+Appropriation Acts, whose text is a spending authorisation of no reference value.
+
+---
+
 ## INGEST V36 §2 — the run is live, and the first quarter-hour found three defects (2026-08-12 23:45 UTC)
 
 Ten commits pushed, `fd00fef..16484bd`. ⚠ **`commit-all.sh` was deleted mid-session** by the
@@ -178,6 +279,11 @@ placeholders properly rather than extrapolating from 400 samples — **and write
 provision was repealed and the edges say BY WHAT. At 305,000 sections read it stands at **17.49%**,
 well above the 9.75% the sample suggested, with **15,100 of 46,949 carrying a known repealing
 instrument**. The platform could not previously tell a user that a section is no longer in force.
+
+> ⚠ **SUPERSEDED — the 17.49% in this paragraph is wrong.** The census completed at 2026-08-13
+> 02:16 UTC on 1,563,090 sections and the final figure is **11.44%** (178,826). 17.49% was a
+> mid-walk reading over a corpus-ordered cursor sitting inside the two heaviest strata. See the
+> 2026-08-13 09:14 UTC entry above.
 
 ---
 
