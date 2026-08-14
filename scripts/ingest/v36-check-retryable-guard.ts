@@ -38,6 +38,12 @@ const SCENARIOS: Scenario[] = [
   { name: 'all formats 503 (rate limited)', status: 503, expect: 'throw' },
   { name: 'all formats 500 (upstream error)', status: 500, expect: 'throw' },
   { name: 'all formats 404 (genuine miss)', status: 404, expect: 'unavailable' },
+  // V36 morning-after: `ukpga/Geo5Sess2/13/3` burned all five attempts and was
+  // recorded as a rate-limit failure. It was a 300 Multiple Choices — the regnal id
+  // is ambiguous between `Geo5/13/3` and `Geo5Sess2/13/3`, and the body says so.
+  // `!res.ok` had swept it in with 5xx. An ambiguity never resolves by retrying, so
+  // 300 belongs with 404 on the deterministic side.
+  { name: 'all formats 300 (ambiguous id)', status: 300, expect: 'unavailable' },
   { name: 'CLML returns real content', status: 'clml', expect: 'sections' },
 ]
 

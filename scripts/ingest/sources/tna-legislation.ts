@@ -110,6 +110,12 @@ async function fetchTextWithStatus(url: string): Promise<{ text: string | null; 
     clear()
     if (res.status === 404 || res.status === 410) return { text: null, retryable: false }
     if (res.status === 429 || res.status === 503) { throttle.backoff(); return { text: null, retryable: true } }
+    // 300 Multiple Choices is an ANSWER, not a non-answer: the id is ambiguous and
+    // the body carries the disambiguation list. `!res.ok` below would sweep it in
+    // with 5xx and retry it to the attempt cap, which is what recorded
+    // `ukpga/Geo5Sess2/13/3` as a rate-limit failure after five tries. An ambiguity
+    // is deterministic — the same request returns the same 300 forever.
+    if (res.status === 300) return { text: null, retryable: false }
     if (!res.ok) return { text: null, retryable: true }
     throttle.success()
     return { text: await res.text(), retryable: false }
@@ -162,6 +168,7 @@ async function fetchBinaryWithStatus(url: string): Promise<{ buf: Buffer | null;
     clear()
     if (res.status === 404 || res.status === 410) return { buf: null, retryable: false }
     if (res.status === 429 || res.status === 503) { throttle.backoff(); return { buf: null, retryable: true } }
+    if (res.status === 300) return { buf: null, retryable: false }  // see fetchTextWithStatus
     if (!res.ok) return { buf: null, retryable: true }
     throttle.success()
     return { buf: Buffer.from(await res.arrayBuffer()), retryable: false }
