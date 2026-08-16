@@ -26,6 +26,7 @@ import fs from 'fs'
 import path from 'path'
 import { PASSES, PASS_KEYS, passDef, isPassKey, type IssueContext } from '../lib/lex/deepening-config'
 import { readKnownUnknowns } from '../lib/lex/deepening'
+import { SIFT_CANDIDATE_TARGET } from '../lib/lex/deepening-sift'
 
 const ROOT = path.join(__dirname, '..')
 let fail = 0
@@ -285,6 +286,71 @@ for (const p of PASSES) {
     ok(`${p.key}/${t.id} names something addressable`, t.text.length > 60 && !/^consider /i.test(t.text))
   }
 }
+
+// ── §19-E Task 3 — the sift ──────────────────────────────────────────────────
+console.log('\n§19-E Task 3 — sift, don\'t rank-and-dump')
+const SIFT = 'lib/lex/deepening-sift.ts'
+const sift = code(SIFT)
+ok('the pass reads the UNGROUPED results, not the panel-grouped ~20',
+  /retrieved\.push\(\.\.\.res\.results\)/.test(engine) && !/retrieved\.push\(\.\.\.res\.grouped\)/.test(engine),
+  'groupForPanel caps at 3 per display type — a presentation rule, not a candidate set')
+ok('the candidate target is ~100, not the old 14',
+  /SIFT_CANDIDATE_TARGET/.test(engine) && SIFT_CANDIDATE_TARGET >= 60, `${SIFT_CANDIDATE_TARGET}`)
+ok('a kept candidate must carry a reason, and one without is DISCARDED',
+  /reason\.length < 12/.test(sift) && /keep discarded/.test(read(SIFT)))
+ok('a keep for an id not in the candidate list is dropped',
+  /const src = byId\.get\(k\.id\.trim\(\)\)/.test(sift) && /if \(!src \|\| judgements\.has\(src\.id\)\) continue/.test(sift))
+ok('the precedent test is separate from relevance', /isPrecedent/.test(sift) && /PRECEDENT TEST/.test(read(SIFT)))
+ok('...and the engine ENFORCES it, downgrading rather than trusting the gather',
+  /kind === 'PRECEDENT' && judged && !judged\.isPrecedent/.test(engine) && /kind = 'FINDING'/.test(engine))
+ok('...without deleting the finding — only the word "precedent" is withdrawn',
+  !/if \(judged && !judged\.isPrecedent\) continue/.test(engine))
+ok('a sift that cannot run returns the ranked set MARKED, never an empty pass',
+  /skipped: true/.test(sift) && /const passthrough =/.test(sift))
+ok('finishReason is checked BEFORE parsing (CLAUDE.md §18.1)',
+  sift.indexOf('geminiFinishProblem') < sift.indexOf('JSON.parse'))
+ok('a truncated sift is a passthrough, not a partial keep-list',
+  /if \(cut\) \{[\s\S]{0,220}return passthrough/.test(sift))
+
+console.log('\n§19-E Task 3 — the discard count is REPORTED, not hidden')
+ok('the counts are persisted on the pass row',
+  /candidatesReviewed/.test(engine) && /candidatesKept/.test(engine) && /siftSkipped/.test(engine))
+ok('...in the same guarded write as the status', /candidatesReviewed: sift\.reviewed/.test(engine))
+ok('the schema carries all three columns',
+  ['candidatesReviewed', 'candidatesKept', 'siftSkipped'].every((c) => new RegExp(c).test(read('prisma/schema.prisma'))))
+ok('...and the SQL delta is idempotent (ADD COLUMN IF NOT EXISTS)',
+  (read('prisma/lex_deepening_sift.sql').match(/ADD COLUMN IF NOT EXISTS/g) ?? []).length >= 5)
+ok('the panel renders the sift line', /p\.sift &&/.test(code(PANEL)) && /p\.sift\.line/.test(code(PANEL)))
+ok('...and marks a SKIPPED sift differently from a real one, so they are not confused',
+  /p\.sift\.skipped/.test(code(PANEL)) && /did not run on this pass/.test(read(SIFT)))
+ok('the panel shows the sift\'s reason on each finding', /f\.siftReason/.test(code(PANEL)))
+// The three silences. "The search broke", "the corpus is silent", and "we reviewed 104
+// and none bore on this" are different findings about the world.
+ok('"reviewed N and none bore on this" is distinguished from "nothing was retrieved"',
+  /none of them bore on this proposal's problem/.test(read(ENGINE)) &&
+  /returned no material on this idea/.test(read(ENGINE)))
+ok('...and the panel says which of the two happened', /none of them bore on your proposal/.test(read(PANEL)))
+
+// ── §19-E Task 4 — the issues come from a different vantage point ────────────
+console.log('\n§19-E Task 4 — self-critique from a different angle')
+const ADV = 'lib/lex/deepening-adversarial.ts'
+const adv = code(ADV)
+ok('there is a SEPARATE call for the issues', /export async function generateAdversarialIssues/.test(adv))
+ok('...with an adversarial brief', /COMMITTEE CLERK/.test(read(ADV)) && /where is this proposal weakest/i.test(read(ADV)))
+ok('...that is given the findings to read critically', /findings: RawFinding\[\]/.test(adv))
+ok('the engine uses it in place of the gather\'s own issues',
+  /const issueTexts = adversarial \?\? gathered\.issues/.test(engine))
+ok('...and says so when it fell back, rather than degrading silently',
+  /adversarial issues call failed/.test(read(ENGINE)) && /adversarialIssues/.test(engine))
+ok('the DETERMINISTIC templates still run — they fired correctly and a model is the wrong instrument',
+  /raiseTemplateIssues\(ideaId, def, runVersion/.test(engine))
+ok('finishReason is checked BEFORE parsing here too',
+  adv.indexOf('geminiFinishProblem') < adv.indexOf('JSON.parse'))
+ok('a one-clause "issue" is rejected rather than shown', /s\.length >= 40/.test(adv))
+ok('the panel names whose reading the issues are',
+  /hostile committee clerk/.test(read(PANEL)))
+ok('the adversarial reading never invents a citation',
+  /NEVER invent a citation/.test(read(ADV)))
 
 // ── readKnownUnknowns tolerates the shapes a JSONB column can actually hold ──
 console.log('\nstored-shape tolerance')

@@ -31,6 +31,8 @@ import type { SearchResult } from './page1-config'
 import { runSearch } from './search-gateway'
 import { PASSES, passDef, type IssueContext, type PassDef } from './deepening-config'
 import { generateDeepeningFindings, type RawFinding } from './deepening-client'
+import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep } from './deepening-sift'
+import { generateAdversarialIssues } from './deepening-adversarial'
 
 /** A declared gap. Always carries WHAT was looked for, not just that something is missing. */
 export interface KnownUnknown {
@@ -54,6 +56,9 @@ export interface PassState {
   issues: IssueView[]
   /** The retrieval this pass's own run produced, for the right-hand panel. */
   references: SearchResult[]
+  /** §19-E Task 3 — the sift, reported: "reviewed 104 sources; 12 bore on this proposal."
+   *  Null before a run has happened. A discard count nobody sees is the same as no sift. */
+  sift: { reviewed: number; kept: number; skipped: boolean; line: string } | null
 }
 
 export interface EvidenceView {
@@ -68,6 +73,11 @@ export interface EvidenceView {
   status: string
   note: string | null
   runVersion: number
+  /** §19-E Task 3 — why the sift kept the source this finding cites. Null on findings
+   *  written before the sift existed; the panel renders its absence rather than faking it. */
+  siftReason: string | null
+  /** Did this source satisfy the precedent test? Null = not assessed (pre-sift row). */
+  precedentTestPassed: boolean | null
 }
 
 export interface IssueView {
@@ -123,6 +133,16 @@ export async function deepeningState(ideaId: string): Promise<{ passes: PassStat
       findings: mine.map(toEvidenceView),
       issues: issues.filter((i) => i.passKey === def.key).map(toIssueView),
       references: refs[def.key] ?? [],
+      // Only after a run: "reviewed 0 sources" before one has happened would be a
+      // statement about a search that never ran.
+      sift: row && row.status !== 'NOT_RUN'
+        ? {
+            reviewed: row.candidatesReviewed,
+            kept: row.candidatesKept,
+            skipped: row.siftSkipped,
+            line: siftSummaryLine(row.candidatesReviewed, row.candidatesKept, row.siftSkipped),
+          }
+        : null,
     }
   })
 
@@ -133,11 +153,14 @@ function toEvidenceView(e: {
   id: string; kind: string; title: string; body: string; fieldRef: string | null
   sourceType: string | null; citation: string | null; url: string | null
   status: string; note: string | null; runVersion: number
+  siftReason?: string | null; precedentTestPassed?: boolean | null
 }): EvidenceView {
   return {
     id: e.id, kind: e.kind, title: e.title, body: e.body, fieldRef: e.fieldRef,
     sourceType: e.sourceType, citation: e.citation, url: e.url,
     status: e.status, note: e.note, runVersion: e.runVersion,
+    siftReason: e.siftReason ?? null,
+    precedentTestPassed: e.precedentTestPassed ?? null,
   }
 }
 
@@ -278,6 +301,14 @@ export interface RunOutcome {
   knownUnknowns: number
   superseded: number
   failureReason?: string
+  // §19-E Tasks 3/4 — what the run actually did, reported to the caller rather than
+  // left in a log. `siftSkipped` and `adversarialIssues` exist so a degraded run and a
+  // full one are distinguishable from outside (CLAUDE.md §18 corollary).
+  reviewed?: number
+  kept?: number
+  siftSkipped?: boolean
+  adversarialIssues?: boolean
+  precedentsDowngraded?: number
 }
 
 /**
@@ -306,35 +337,68 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     //    "the corpus is silent" are different sentences (§19-C Task 1a).
     const retrieved: SearchResult[] = []
     const failedIntents: string[] = []
+    // §19-E Task 3 — A LARGER CANDIDATE SET, AND THE UNGROUPED ONE.
+    //
+    // Two changes, and the second is the one that actually matters. The limit rises so
+    // the sift has something to sift; and the pass now reads `res.results` rather than
+    // `res.grouped`. `groupForPanel` caps at 3 PER DISPLAY TYPE and ~20 overall — it is
+    // the PANEL's presentation rule, and taking it as the gather's candidate set meant
+    // that however high the limit went, a pass could never see a fourth impact
+    // assessment. That cap is right for a panel a human reads and wrong for a machine
+    // sift, and it silently bounded the old behaviour at ~20 regardless of `limit`.
+    const perIntent = Math.max(1, Math.ceil(SIFT_CANDIDATE_TARGET / Math.max(1, def.intents.length)))
     for (const intent of def.intents) {
       if (Date.now() - startedAt > RUN_BUDGET_MS) { failureReason = 'Ran out of time during retrieval'; break }
       const res = await runSearch({
         keywords: ctx.keywords,
         intent,
         ideaContext: ctx.summary,
-        limit: 14,
+        limit: perIntent,
       })
       if (res.failed) { failedIntents.push(intent); continue }
-      retrieved.push(...res.grouped)
+      retrieved.push(...res.results)
     }
-    const deduped = dedupeById(retrieved)
+    const candidates = dedupeById(retrieved)
+
+    // 1b. SIFT. "Does this actually bear on this proposal's problem, and how?" — a
+    //     different question from "what is most similar", and one the interactive path
+    //     could never afford. A sift that cannot run returns the ranked set MARKED as
+    //     unsifted; it never empties the pass.
+    const sift = candidates.length
+      ? await siftCandidates({
+          passMethod: def.method, mustAnswer: def.mustAnswer, idea: ctx.summary, candidates,
+        })
+      : { kept: [], judgements: new Map<string, SiftKeep>(), reviewed: 0, skipped: false as boolean, skipReason: undefined }
+    const deduped = sift.kept
+    if (sift.skipped) console.warn('[deepening] sift skipped —', sift.skipReason)
+    console.log('[deepening] candidates', {
+      passKey, retrieved: retrieved.length, deduped: candidates.length,
+      kept: deduped.length, skipped: sift.skipped,
+    })
     await writePassReferences(
       ideaId, passKey, def.intents.join('+'),
       failedIntents.length < def.intents.length, ctx.keywords, deduped,
       failedIntents.length ? `intents that failed: ${failedIntents.join(', ')}` : undefined,
     )
 
-    // 2. NOTHING RETRIEVED = NOTHING CLAIMED. No model call, no invented findings; the whole
-    //    pass becomes known unknowns. This is the never-claim invariant at its plainest.
+    // 2. NOTHING TO WORK FROM = NOTHING CLAIMED. No model call, no invented findings; the
+    //    whole pass becomes known unknowns. This is the never-claim invariant at its plainest.
+    //
+    //    ⚠ THREE DIFFERENT SILENCES, AND THEY MUST NOT SHARE A SENTENCE. "The search
+    //    broke", "the corpus holds nothing on this", and "we reviewed 104 sources and
+    //    none of them bore on this proposal" are three different findings about the
+    //    world, and the third is the sift working, not failing. Collapsing them into
+    //    "nothing was found" is the §19-C Task 1a defect wearing a new hat.
     if (deduped.length === 0) {
-      knownUnknowns = def.mustAnswer.map((q) => ({
-        question: q,
-        why: failedIntents.length
-          ? `Retrieval failed for ${failedIntents.join(', ')}, so nothing was searched successfully.`
-          : 'The searches ran and returned no material on this idea.',
-      }))
+      const why = failedIntents.length
+        ? `Retrieval failed for ${failedIntents.join(', ')}, so nothing was searched successfully.`
+        : candidates.length === 0
+          ? 'The searches ran and returned no material on this idea.'
+          : `${candidates.length} sources were retrieved and reviewed, and none of them bore on this proposal's problem.`
+      knownUnknowns = def.mustAnswer.map((q) => ({ question: q, why }))
       await settle(ideaId, passKey, runVersion, failedIntents.length ? 'FAILED' : 'RUN', knownUnknowns,
-        failedIntents.length ? `Retrieval failed: ${failedIntents.join(', ')}` : undefined)
+        failedIntents.length ? `Retrieval failed: ${failedIntents.join(', ')}` : undefined,
+        { reviewed: sift.reviewed, kept: 0, skipped: sift.skipped })
       const issueCount = await raiseTemplateIssues(ideaId, def, runVersion, {
         countsByKind: {}, findingCount: 0, typesReturned: {}, knownUnknownCount: knownUnknowns.length,
         hasCostLines: ctx.hasCostLines, hasChosenApproach: ctx.hasChosenApproach,
@@ -362,22 +426,47 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
         question: q,
         why: 'The analysis step failed after retrieval succeeded — the sources are in the panel, but nothing was concluded from them. Re-run.',
       }))
-      await settle(ideaId, passKey, runVersion, 'FAILED', knownUnknowns, 'The analysis step failed after retrieval succeeded')
+      await settle(ideaId, passKey, runVersion, 'FAILED', knownUnknowns, 'The analysis step failed after retrieval succeeded',
+        { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
       return { runVersion, status: 'FAILED', findings: 0, issues: 0, knownUnknowns: knownUnknowns.length, superseded, failureReason: 'The analysis step failed after retrieval succeeded' }
     }
 
     // 4. PERSIST INCREMENTALLY — one row at a time, so a timeout in the middle loses the
     //    tail and not the run.
     const byId = new Map(deduped.map((r) => [r.id, r]))
+    let precedentsDowngraded = 0
     for (const f of gathered.findings) {
       const src = f.sourceId ? byId.get(f.sourceId) : undefined
       // A finding whose source is not in what we retrieved is not a finding, it is a claim.
       if (!src) continue
+      const judged = sift.judgements.get(src.id)
+
+      // §19-E Task 3 — THE PRECEDENT TEST, ENFORCED RATHER THAN REQUESTED.
+      //
+      // "A candidate kept as a PRECEDENT must satisfy the precedent test: a comparable
+      // measure was tried, and we can say what it was for, what was predicted, or what
+      // happened. A topically-related document is not a precedent."
+      //
+      // The sift makes that judgement about the SOURCE, separately and before the
+      // gather has decided what to say about it — which is why it can overrule the
+      // gather here. A downgrade is not a deletion: the finding survives as a FINDING,
+      // with everything it says intact, and only the word "precedent" is withdrawn.
+      // // A false precedent is worse than a missing one. The user takes it into a
+      // // committee room and is asked what happened, and nothing did.
+      let kind = f.kind
+      if (kind === 'PRECEDENT' && judged && !judged.isPrecedent) {
+        kind = 'FINDING'
+        precedentsDowngraded++
+        console.log('[deepening] precedent downgraded — source fails the precedent test', {
+          passKey, sourceId: src.id, title: f.title.slice(0, 60),
+        })
+      }
+
       await prisma.evidenceItem.create({
         data: {
           ideaId, passKey, runVersion,
           fieldRef: f.fieldRef ?? null,
-          kind: f.kind,
+          kind,
           title: f.title,
           body: f.body,
           sourceType: src.type,
@@ -385,12 +474,43 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
           citation: src.citation,
           url: src.url,
           status: 'PROPOSED',
+          siftReason: judged?.reason ?? null,
+          // Null, not false, when the sift did not run: "not assessed" and "assessed and
+          // failed" are different, and a null renders as neither.
+          precedentTestPassed: judged ? judged.isPrecedent : null,
         },
       })
       findings++
     }
+    if (precedentsDowngraded) {
+      console.warn(`[deepening] ${precedentsDowngraded} finding(s) downgraded from PRECEDENT`, { passKey })
+    }
 
-    for (const text of gathered.issues) {
+    // 4b. THE ISSUES ARE A SEPARATE READING (§19-E Task 4). Not `gathered.issues` — the
+    //     gather critiquing its own output from inside its own frame produced footnotes
+    //     to the findings. This is a hostile committee clerk reading the proposal for
+    //     the first time WITH the findings attached, asked where it is weakest.
+    //
+    //     If the adversarial call fails, we keep the gather's own issues rather than
+    //     losing the list entirely — degraded, and SAID SO in the log, because a
+    //     proposal shown as having survived a hostile reading it never had is exactly
+    //     the kind of quiet false claim this codebase keeps having to remove.
+    const adversarial = await generateAdversarialIssues({
+      idea: ctx.summary,
+      costLines: ctx.costLines,
+      findings: gathered.findings,
+      passMethod: def.method,
+      knownUnknowns: gathered.gaps,
+    })
+    const issueTexts = adversarial ?? gathered.issues
+    if (!adversarial) {
+      console.warn('[deepening] adversarial issues call failed — falling back to the gather\'s own issues', { passKey })
+    }
+    console.log('[deepening] issues', {
+      passKey, adversarial: !!adversarial, raised: issueTexts.length, gatherWouldHaveRaised: gathered.issues.length,
+    })
+
+    for (const text of issueTexts) {
       await prisma.deepeningIssue.create({ data: { ideaId, passKey, runVersion, text, status: 'OPEN' } })
       issues++
     }
@@ -406,7 +526,8 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     }
     for (const gap of gathered.gaps) knownUnknowns.push({ question: gap, why: 'Named by the pass as unfindable in what was retrieved.' })
 
-    await settle(ideaId, passKey, runVersion, 'RUN', knownUnknowns)
+    await settle(ideaId, passKey, runVersion, 'RUN', knownUnknowns, undefined,
+      { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
 
     // 6. TEMPLATE ISSUES — the ones whose absence is itself a defect, raised deterministically
     //    rather than left to the model to remember.
@@ -420,7 +541,11 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       jurisdictionMentioned: ctx.jurisdictionMentioned,
     })
 
-    return { runVersion, status: 'RUN', findings, issues, knownUnknowns: knownUnknowns.length, superseded }
+    return {
+      runVersion, status: 'RUN', findings, issues, knownUnknowns: knownUnknowns.length, superseded,
+      reviewed: sift.reviewed, kept: deduped.length, siftSkipped: sift.skipped,
+      adversarialIssues: !!adversarial, precedentsDowngraded,
+    }
   } catch (err) {
     failureReason = err instanceof Error ? err.message : String(err)
     // Whatever was persisted before the throw STAYS. The status tells the truth about it.
@@ -432,6 +557,10 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
 async function settle(
   ideaId: string, passKey: string, runVersion: number,
   status: 'RUN' | 'FAILED', knownUnknowns: KnownUnknown[], failureReason?: string,
+  // §19-E Task 3 — the sift counts settle WITH the status, in the same guarded write.
+  // Optional because the catch-all failure path may not have got as far as sifting, and
+  // writing zeros there would claim a review that never happened.
+  sift?: { reviewed: number; kept: number; skipped: boolean },
 ): Promise<void> {
   await prisma.deepeningPass.updateMany({
     // Guarded on runVersion: a slow run must never overwrite the status of a NEWER one.
@@ -440,6 +569,7 @@ async function settle(
       status, completedAt: new Date(),
       failureReason: failureReason ?? null,
       knownUnknowns: knownUnknowns as never,
+      ...(sift ? { candidatesReviewed: sift.reviewed, candidatesKept: sift.kept, siftSkipped: sift.skipped } : {}),
     },
   })
 }
