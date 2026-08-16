@@ -7,6 +7,41 @@ ABSENT is 9 → 6 on the acceptance test. Companies Act 2006 returns at RANK 1 t
 £1.07 of the £20 ceiling. The drain/census entry follows, then V37 and V36 §1. The LEX thread's
 17:36 entry is further down and equally current.*
 
+2026-08-16 02:48 UTC — ▼ **SEARCH S3: §7 AND §1 DONE. ⚠ THE `LegislationSection` DROP IS *NOT*
+UNBLOCKED — and the reason has changed.**
+
+❌ **DROP STAYS BLOCKED.** Five measurements, the first two of which were my own errors and are
+kept in the record because the correction sequence is the finding:
+**121,306 covered → alias-resolved to 122,683 covered, 5,106 short, 1 absent.** The shortfall is
+NOT dot leaders (0.0%) and NOT a naming difference. The two sides **model amending instruments
+differently**: legacy `ukpga/2015/21` holds `357TA` (as inserted into CTA 2010); the corpus holds
+`schedule-1-paragraph-N` and puts `357TA` under `ukpga/2010/4`. **9 of 9 spot-checked provisions
+are held under the target.** But a random **n=400 by title: 132 of 350 held elsewhere, 218 not** —
+roughly **23,000 sections of real text held only in the legacy table**, dominated by the amending
+instruments' OWN provisions ("Insertion of article 22A"), whose corpus copies are incomplete.
+**New blocking reason: incomplete corpus copies of amending instruments. A gap class V36 did not
+target and nothing reports.**
+⚠ Two self-corrections worth keeping: my regnal classifier asked whether the *`LegislationItem`* id
+looks regnal — it never does, that IS the V36 §1 finding — and called 1,617 aliased Acts real
+absences; and the orphan matcher could not match legacy `45.42` to corpus `rule-45-42`.
+
+✅ **§7.1** `disabled` is now a distinct `RouteOutcome` with its own counted line; gateway names
+`router DISABLED` apart from `router FAIL-OPEN`; `routerEnabled()` exported for reporters.
+⚠ `check-flags` asserted the weaker "fail-open is console.error", which ONE branch covering both
+states satisfied — strengthened to assert they are told apart. **54/54.**
+✅ **§7.2** `harness-preflight.ts` — `assertRetrievalConfig()` refuses to run degraded,
+`resolvedConfigLine()` prints the config beside the number, wired into `diagnose-recall.ts`.
+**Watched failing first, `check-s3-preflight.ts` 7/7**, each degrader tested individually.
+✅ **§1** ⚠ the brief's premise was partly stale — the surfaces already reach `runSearch`; the real
+gap is that **per-stream fusion lives in `runRoutedSearch`, which the tier-scoped branch never
+called**, so they had no dense retrieval at all. Fixed by letting a tier-scoped call use its
+stream's fused `search()` (only where the tier maps to exactly ONE stream). **Before/after on 8
+questions: ~20 of 48 results change, latency 2,295ms → 3,710ms (+62%).** Shipped behind
+**`LEX_TIER_FUSION`, DEFAULT OFF** per the brief's own hold-behind-a-flag rule — better-looking is
+not measured, and the gold key is still the binding constraint.
+❌ **NOT DONE: §2 (batch per-stream vector calls) and §3 (PRECEDENT / DEVOLUTION_SCOPE intents,
+Public sources block) — not started.** §1's flip is not shipped; the flag is the gate.
+
 2026-08-16 02:13 UTC — ▼ **INGEST: THE V36 CORPUS IS NOW REACHABLE BY A USER, NOT JUST PRESENT.**
 Run overnight under standing pre-authorisation. **No stop condition fired.**
 

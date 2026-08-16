@@ -131,6 +131,116 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH S3 — §7 AND §1 DONE; THE DROP IS **NOT** UNBLOCKED, AND THAT IS THE HEADLINE (2026-08-16 02:48 UTC)
+
+### The question nobody had asked: is the `LegislationSection` DROP unblocked?
+
+**No. It stays blocked, and the reason is different from the one it was blocked for.**
+
+Four measurements, each correcting the one before — the first two were WRONG and are recorded
+as such because the sequence is the point:
+
+| step | result |
+|---|---|
+| 1. per-instrument counts | 121,306 covered · 4,866 short · **1,618 absent** |
+| 2. + alias resolution | 122,683 covered · 5,106 short · **1 absent** |
+| 3. dot-leader triage | the orphans are REAL TEXT, not retracted placeholders |
+| 4. amendment-target check | 9 of 9 sampled "lost" provisions ARE held — under the TARGET act |
+| 5. **randomised n=400** | **37.7% of orphaned provisions found elsewhere; 62.3% not** |
+
+⚠ **Step 1's "1,618 real absences" was my own bug and it would have blocked the drop for the
+wrong reason.** The classifier asked whether the *`LegislationItem`* id looks regnal. It never
+does — `LegislationItem` carries the CALENDAR id **by design**, which is the entire V36 §1
+finding — so it returned 0 aliases and called 1,618 pre-1963 Acts real absences. Resolving
+identity against V37's own alias map (14,083 regnal/calendar pairs) instead of a guess at the
+string's shape moved 1,617 of them out of "absent".
+
+⚠ **Step 3's "100% real text" was also nearly wrong, in the other direction.** The orphan test
+compared `LegislationSection.sectionNumber` against a number scraped off the corpus id tail, and
+legacy `45.42` cannot match `rule-45-42`. Printing the two id vocabularies side by side is what
+showed the real cause, and it is neither a naming difference nor a loss: **the two sides model
+amending instruments differently.** Legacy `ukpga/2015/21` holds `357TA`, `357UH`, `66E` — sections
+as INSERTED into other Acts. The corpus holds that instrument's own `schedule-1-paragraph-N`, and
+holds `357TA` under `ukpga/2010/4`, where TNA's current-state text puts it.
+
+**So the drop is safe for that class and unsafe overall.** A random n=400 across the whole
+shortfall population, matched by TITLE (refs are exactly what differs), finds **132 of 350 usable
+titles held somewhere in the corpus and 218 not** — and the not-found set is dominated by the
+amending instruments' OWN provisions ("Insertion of article 22A", "New Rules after Rule 4.148A"),
+whose corpus copies are incomplete. Extrapolated across ~37,154 short sections that is roughly
+**23,000 sections of real text held only in the legacy table.** 50 of the 400 had titles too short
+to discriminate and are reported, not dropped from the denominator.
+
+**`LegislationSection` DROP: still blocked. New reason: incomplete corpus copies of amending
+instruments — a gap class V36 did not target and nothing currently reports.**
+
+### §7.1 — a disabled router no longer looks like a failed one
+
+`routeQuery` returned bare `null` both when `LEX_QUERY_ROUTER` was off and when the router tried
+and failed, so no caller could tell them apart. `disabled` is now a distinct `RouteOutcome` with
+its own counted log line, `routerEnabled()` is exported for anything that REPORTS a number, and
+the gateway names `router DISABLED` (log) apart from `router FAIL-OPEN` (error).
+
+⚠ **`check-flags` asserted the old, weaker contract** — "the gateway fail-open is console.error" —
+which one branch covering both states satisfied. Loud is necessary and no longer sufficient; the
+check now asserts the two are TOLD APART. **54 passed, 0 failed.**
+
+### §7.2 — harnesses refuse to run degraded
+
+`lib/lex/harness-preflight.ts`: `assertRetrievalConfig()` throws unless `FTS_SEARCH_URL`,
+`VECTOR_SEARCH_URL`, `LEX_VECTOR_STREAMS` and `LEX_QUERY_ROUTER` are all resolved, and
+`resolvedConfigLine()` prints the state beside the number. Wired into `diagnose-recall.ts`, whose
+own preflight had guarded the flags that THROW and not the two that degrade in silence — which is
+why it once reported ROUTING 16/30 against a baseline of 0.
+
+**Watched failing first**, `check-s3-preflight.ts` 7/7, including each degrader individually (a
+guard that only fires when everything is missing would have passed the exact run that misled us)
+and the precise flag state of this machine on 16 Aug.
+
+### §1 — the audit, the change, and the flag it is held behind
+
+⚠ **The brief's premise is partly out of date, and the audit is how that surfaced.** It says the
+three surfaces "call `runFtsSearch` directly". They do not — `gateway-legacy.ts` already calls
+`runSearch` with `tier: 'legislation'`, and the tier-scoped branch already routes for the query
+REWRITE. The real gap is narrower and sharper: **per-stream fusion lives inside `runRoutedSearch`,
+which the tier-scoped branch never calls, so those surfaces got no dense retrieval at all.**
+Scoping and dense were accidentally mutually exclusive.
+
+Consumers, audited: `app/api/ai/[ideaId]/route.ts`, `app/api/ideas/[id]/legislation-search/route.ts`,
+`app/api/search/route.ts` — all via `gateway-legacy.ts`. Three, not more; the brief expected a
+third over-run and this time there wasn't one.
+
+Fixed per requirement 2 — the router runs WITHIN the scope, with no change to `runSearch`'s
+signature: a tier-scoped call uses the matching stream's own fused `search()`. **Only when the tier
+maps to exactly one stream** — `debates` and `committees` share the `parliamentary` tier, and
+picking one would silently narrow a caller's scope.
+
+**Measured before and after on the same 8 questions** (requirement 3):
+
+| | before (BM25) | after (fused) |
+|---|---|---|
+| results/query | 48.0 | 48.0 |
+| overlap | — | 28.3 of 48 |
+| latency/query | 2,295 ms | **3,710 ms (+62%)** |
+
+~20 of 48 results change per query and the swaps read better on inspection — a Consumer Rights
+query drops *Companies Act 2006* and gains *Consumer Rights Act 2015*. **But better-looking is not
+measured**, and +62% lands on the platform's main surface. Per the brief's own instruction it ships
+behind **`LEX_TIER_FUSION`, default OFF**, byte-for-byte the old behaviour until someone decides
+otherwise with the gold set in hand.
+
+✅ Also now true, and it retires the brief's own warning: the corpus path returns **Companies Act
+2006 at rank 1**, so §1 is clean good news rather than a trade-off against the legacy table.
+
+### Not done, and named rather than implied
+
+❌ **§2 (batch the per-stream vector calls) — not started.** Still the right change and still what
+makes the remaining streams affordable.
+❌ **§3 (PRECEDENT and DEVOLUTION_SCOPE intents, the Public sources block) — not started.**
+❌ **§1's flip is not shipped** — the code is in, the flag is off, the gold-set validation is the gate.
+
+---
+
 ## INGEST — V36 IS REACHABLE: EMBEDDED, INDEXED, SERVED, AND ABSENT IS 9 → 6 (2026-08-16 02:13 UTC)
 
 Run overnight under Charlie's standing pre-authorisation (£20 ceiling, five stop conditions).
