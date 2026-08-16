@@ -131,6 +131,101 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST V38 — THE 17.5 GiB WALL DOES NOT EXIST. THE REAL CEILING IS 16 TiB AND WE OCCUPY 0.10% OF IT (2026-08-16 07:45 UTC)
+
+Executes `docs/BRIEF_INGEST_V38_STORAGE.md`. Report of record: **`docs/V38_STORAGE_REPORT.md`**.
+Code `scripts/ingest/v38-*.ts`. `tsc` clean for those files (14 pre-existing errors elsewhere).
+**Nothing was dropped, vacuumed, rewritten or re-labelled** — every script is read-only bar the
+index-usage snapshotter, which creates one small table.
+
+⚠⚠ **§1 SETTLED, FROM THE ENFORCEMENT MECHANISM RATHER THAN A FIGURE ABOUT IT.**
+`neon.max_cluster_size = 16777216 MB = 16 TiB`, read off the running compute — and corroborated
+independently against Neon's published plan docs, which state **"16 TB per branch"** and **no hard
+storage cap** on Launch (storage is usage-billed at $0.35/GB-month; the plan that blocks writes is
+Free, and we are not on it). **We are at 16.58 GiB = 0.10% of the enforced ceiling, costing
+$6.23/month.**
+
+⚠ **WHERE 17.5 CAME FROM: it was an ALERT THRESHOLD, and the label degraded, not the number.**
+`GRAPH_TIER1_REPORT.md` (5 Jul) says "17.5 GB **alert line**" — accurate. Then
+`V26_LEGACY_DROP_RECHECK.md` says "**ceiling**". Then my own 2D-2 schema comment says "**2.4× the
+space that exists**". **And the chain is circular:** `serve-observer.ts` hardcodes 17.5 with the
+comment *"the handoff records the storage line at ~17.5 GB"*, while the handoff's "91% of the 17.5
+GB ceiling" alert **is emitted by that same observer**. Neither end touches Neon. Meanwhile
+`progress-reporter.ts` carries a DIFFERENT unsourced number (`DB_LIMIT_GB = 20`) whose own comment
+already said the truth — *"display only — Neon bills per-GB; any hard limit is console-side"* — and
+`SPRINT_V18_BRIEF.md` had recorded *"if none exists, nothing to do — billing is per-GB
+automatically."* **The answer was in the repository for two months and the number invented
+downstream won, because it was the one that appeared in an alert email.**
+
+⚠ **WHAT IT DID TO 2D-2, WHICH WAS MINE.** 2D-2 declined to materialise 2,528,032 `voted` edges
+because 2.21 GiB "would not fit". Against the real ceiling it would have taken the database to
+**18.79 GiB — 0.11% of 16 TiB** — and cost **$0.83/month**. I read 17.5 out of the handoff and wrote
+"2.4× the space that exists" into a schema comment as a fact about the platform. **I still think the
+view was the better design** (it cannot drift from `division_votes`, and 193 B/row beats 584), but
+that is not the argument I made. *The right answer for the wrong reason is still the wrong reason.*
+
+✅ **§2 MEASURED, AND ALMOST ENTIRELY NOT WORTH DOING — which is only knowable because it was
+measured.** `corpus_sections` is **12.54 GiB = 76%** of the database and **has no body-text column
+at all**: `xmlPreview` 0% populated, `ftsVector` ~0.02%, no `originalText`. **The R2-first design is
+already fully in effect there.** The largest column is `sourceUrl` at 2.50 GiB; columns sum to 6.16
+GiB against 10.41 GiB heap+TOAST, the rest being tuple header and padding — **not reclaimable by
+dropping anything**, so §2's step 3 would rewrite 12.5 GiB to return ~0. Not done.
+⚠ **A number nearly published: the first column projection multiplied a NON-NULL average by ALL
+rows** (AVG ignores nulls), putting `ftsVector` at **42 GiB inside a 16 GiB database**. Obviously
+wrong, which is the only reason it was caught.
+
+⚠⚠ **§2's INDEX DROPS ARE BLOCKED ON EVIDENCE, and that is the finding.** 203 indexes report zero
+scans (0.64 GiB, **$0.24/month**) — but `pg_stat_database.stats_reset` is **NULL**, the compute had
+been up **2 minutes 22 seconds**, and a **positive control** over eight indexes this machine is known
+to have hammered came back **6 of 8**. So the window is unknown and certainly contains this
+session's own probes. **Dropping on that would be this brief's own error repeated inside the sprint
+written to correct it**, and $0.24/month does not buy a guess. Built instead:
+**`v38-index-usage-snapshot.ts`** + `index_usage_snapshots`, recording `idx_scan` WITH the postmaster
+start time so a reset counter can be told from an unused index, and making the **delta over a known
+interval** the measurement. One snapshot taken; the script states plainly that one proves nothing.
+✅ **Ordinary maintenance: nothing to return — no table carries >10,000 dead tuples.** Predicted
+zero, so not run. (And dead tuples are space autovacuum already reuses: a plain VACUUM would not
+have moved the billed figure at all.)
+
+✅ **§3: storage is not a constraint and is not close to one.** $6.23/mo now; $12.46/mo at double the
+corpus; every §2 reclaim combined is under $0.30/mo. At $0.35/GB-month the corpus could grow
+**twenty-fold** for ~$125/month. Scale shows the same storage rate — **there is no storage reason to
+move**; what it adds is support and uptime. ⚠ No `NEON_API_KEY` here, so billing and any console-side
+soft limit are **unreadable and labelled as such**, and Neon limits per PROJECT while
+`pg_database_size` sees one branch.
+
+⚠⚠ **§4.1 — THE CENSUS REPLACES THE EXTRAPOLATION, AND THE BLOCKER IS 67% BIGGER. 38,407 sections
+are held only in the legacy table**, band to 43,252, against S3's extrapolated ~23,000. Of 79,495
+legacy provisions in short instruments: 5,307 dot-leader placeholders (not text we would lose),
+7,825 untitled, 11,593 covered in place, 11,518 found elsewhere (S3's amendment-target case), 4,845
+matched only on an undiscriminating title.
+⚠ **My first run said 47,427 and was wrong for the exact reason S3 had already documented** —
+`LegislationItem` carries the CALENDAR id and the corpus holds pre-1963 Acts under the REGNAL one, so
+the Law of Property Act 1925 read as 218 legacy sections against **0** in the corpus when it is there
+as `ukpga/Geo5/15-16/20`. Applying V36's alias map (14,294 pairs) moved **1,406 instruments** out of
+"short". **I wrote the bug S3 had already fixed, because I did not read their fix first.**
+**The class is now confirmed at population scale**: amending instruments' own provisions —
+`uksi/2010/686` Insolvency (Amendment) Rules (590 legacy / 580 corpus / **523 orphans**),
+`uksi/2019/459` (307), `uksi/2019/775` (269). Work list: `scripts/ingest/v38-orphan-census.json`.
+**DROP still blocked** — though on §1's evidence that drop is now worth **$0.63/month**, which is a
+reason to do it carefully rather than soon.
+
+✅ **§4.2 — the `pdf-only` label is false, confirmed independently. 0 of 60 serve a PDF; 60 of 60
+return 404**, tested with GET (the original used HEAD, which TNA answers 405 on `data.pdf`, so it
+could never have found one). With the prior 0 of 52 that is **0 of 112 on two independent draws**.
+⚠ **NOT re-labelled, deliberately:** the absence of a PDF says what these 117,667 rows are *not*, not
+what they *are*, and choosing a replacement by elimination would put a second unevidenced
+classification where the first one was. The replacement needs its own positive test.
+
+⚠ **§4.3 — the addendum's suspicion is MOSTLY REFUTED. 43 keys are malformed by shape, not ~288.**
+Settled in SQL without touching R2 (an empty trailing component is malformed by construction): 42
+`…/paragraph-/…`, 1 `//`, 0 trailing-dash, across `regional` 23 · `si-2010plus` 7 · `si-pre-2010` 5 ·
+`primary-acts-2000plus` 4 · `primary-acts-pre-2000` 3 · `lda-lordsdivisions` 1. So the ref bug is
+real and explains ~15% — **the other ~245 have a second, still-unidentified cause.**
+
+⚠ **FOR CC-SEARCH: `s3-drop-readiness.ts` throws at its VERDICT block** — it references
+`absentRegnal`, which is never defined (`tsc` reports it twice). Flagged, not fixed; their lane.
+
 ## GRAPH 2D-2 — 2.48M `voted` EDGES THAT COST ZERO BYTES, AND A PERSON SWEEP THAT REPORTS ITS OWN LIMITS (2026-08-16 03:29 UTC)
 
 Executes `docs/BRIEF_GRAPH_2D2.md` in full. Report of record: **`docs/POSITION_GRAPH_2D2_REPORT.md`**.

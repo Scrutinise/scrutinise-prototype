@@ -2,12 +2,78 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-16 03:29 UTC — ▼ **GRAPH 2D-2: the position graph now carries 2,478,613
-`voted` edges and 59,996 `signed-motion` edges — and they cost ZERO bytes, because writing them the
-way the brief describes needed 2.21 GiB and Neon has 0.93 GiB left (94.8% of its line).** ⚠ Two
-things need Charlie: the mySociety `people.json` DATA licence (unstated — it blocks person-resolving
-the older majority of Hansard), and the Neon ceiling itself. SEARCH S3 and INGEST V36 follow, then
-V37 and V36 §1. The LEX thread's 17:36 entry is further down and equally current.*
+*Last updated: 2026-08-16 07:45 UTC — ▼ **INGEST V38: THE 17.5 GiB STORAGE WALL DOES NOT EXIST.
+The enforced ceiling is 16 TiB and we occupy 0.10% of it, at $6.23/month — so 2D-2's edges would
+have fit for $0.83/month, and the number that stopped them was our own alert threshold with its
+label drifted from "alert line" to "wall".** ⚠ And the legacy-table blocker is BIGGER than the
+estimate: the census says 38,407, not ~23,000. GRAPH 2D-2, SEARCH S3 and INGEST V36 follow. The LEX
+thread's 17:36 entry is further down and equally current.*
+
+2026-08-16 07:45 UTC — ▼ **INGEST V38: THE 17.5 GiB WALL DOES NOT EXIST. The enforced ceiling is
+16 TiB and we occupy 0.10% of it, at $6.23/month.** Executes `BRIEF_INGEST_V38_STORAGE.md`.
+Report: **`docs/V38_STORAGE_REPORT.md`**. CHANGE_LOG (2026-08-16 07:45 UTC).
+**Nothing was dropped, vacuumed, rewritten or re-labelled.**
+
+✅ **§1 SETTLED FROM THE ENFORCEMENT MECHANISM, not a figure about it.** `neon.max_cluster_size =
+16777216 MB = 16 TiB`, read off the running compute, corroborated independently against Neon's
+published plan docs ("16 TB per branch", **no hard storage cap** on Launch, $0.35/GB-month).
+**16.58 GiB = 0.10% of the ceiling.**
+
+⚠ **17.5 WAS AN ALERT THRESHOLD AND THE LABEL DEGRADED, NOT THE NUMBER.** `GRAPH_TIER1_REPORT.md`
+correctly said "17.5 GB **alert line**"; it became "**ceiling**" in the V26 recheck and "**2.4× the
+space that exists**" in my own 2D-2 schema comment. **The chain is circular** — `serve-observer.ts`
+takes 17.5 from the handoff, and the handoff's 91% alert is emitted by that observer. Neither end
+touches Neon. `progress-reporter.ts` meanwhile carries a *different* unsourced number (20 GB) whose
+comment already said *"any hard limit is console-side"*, and `SPRINT_V18_BRIEF.md` had already
+recorded *"billing is per-GB automatically"*. **The answer sat in the repo for two months.**
+
+⚠ **THIS CHANGED A DESIGN, AND IT WAS MINE.** 2D-2 built its edges as views because 2.21 GiB "would
+not fit". It would have reached **18.79 GiB = 0.11% of 16 TiB**, for **$0.83/month**. I still think
+the view was the better design — it cannot drift from `division_votes` — but that is not the
+argument I made.
+
+✅ **§2 MEASURED AND ALMOST ENTIRELY NOT WORTH DOING.** `corpus_sections` is **12.54 GiB = 76%** of
+the database and **has no body-text column at all** (`xmlPreview` 0%, `ftsVector` ~0.02%) — the
+R2-first design is already fully in effect. Largest column is `sourceUrl`, 2.50 GiB. Dropping any
+column would rewrite 12.5 GiB to return ~0.
+⚠⚠ **INDEX DROPS BLOCKED ON EVIDENCE:** 203 indexes read zero scans (0.64 GiB / **$0.24 a month**)
+but `stats_reset` is NULL, the compute had been up **2m22s**, and a **positive control over eight
+known-used indexes came back 6/8**. Dropping on that would repeat this brief's own error inside the
+sprint written to correct it. Built **`v38-index-usage-snapshot.ts`** + `index_usage_snapshots`
+instead — deltas over a known interval, with the postmaster start recorded so a reset counter is
+distinguishable from an unused index. **Run it again in a week; wire it into `ops.ts`.**
+✅ **Maintenance: nothing to return** — no table has >10,000 dead tuples. Predicted zero, not run.
+
+✅ **§3: storage is not a constraint and is not close to one.** $6.23/mo now, $12.46/mo at double the
+corpus; the corpus could grow twenty-fold for ~$125/mo. Scale shows the same storage rate — no
+storage reason to move. ⚠ No `NEON_API_KEY` here, so **billing and any console-side soft limit are
+unreadable** and stay labelled so; Neon limits per PROJECT while `pg_database_size` sees one branch.
+
+⚠⚠ **§4.1 — THE BLOCKER IS 67% BIGGER THAN THE ESTIMATE. Census: 38,407 sections held only in the
+legacy table** (band to 43,252) against S3's extrapolated ~23,000, out of 79,495 legacy provisions in
+short instruments.
+⚠ **My first run said 47,427 and was wrong for the exact reason S3 had already documented** — the
+regnal/calendar alias. Law of Property Act 1925 read as 218 legacy vs **0** corpus when it is there
+as `ukpga/Geo5/15-16/20`. V36's alias map (14,294 pairs) moved **1,406 instruments** out of "short".
+**Class confirmed at population scale:** amending instruments' own provisions — `uksi/2010/686`
+(590/580, **523 orphans**), `uksi/2019/459` (307), `uksi/2019/775` (269). Work list:
+`scripts/ingest/v38-orphan-census.json`. **`LegislationSection` DROP still blocked** — and now worth
+only **$0.63/month**, so do it carefully rather than soon.
+
+✅ **§4.2 — the `pdf-only` label is false, independently confirmed: 0 of 60 serve a PDF, 60 of 60 are
+404** (GET, not the HEAD that TNA answers 405). With the prior 0/52 that is **0 of 112**.
+⚠ **NOT re-labelled**: the absence of a PDF says what the 117,667 rows are *not*, not what they
+*are*. The replacement label needs its own positive test — next sprint's first task.
+
+⚠ **§4.3 — suspicion MOSTLY REFUTED: 43 keys malformed by shape, not ~288** (42 `…/paragraph-/…`,
+1 `//`, 0 trailing-dash). The ref bug explains ~15%; **the other ~245 have a second, unidentified
+cause.**
+
+⚠ **FOR CC-SEARCH: `s3-drop-readiness.ts` throws at its VERDICT block** (`absentRegnal` undefined,
+`tsc` flags it twice). Flagged, not fixed.
+
+▶ **CHARLIE:** confirm the plan/billing from the console (unreadable here), and decide whether the
+17.5 alert threshold is retired or re-sourced as a **cost** threshold with an owner.
 
 2026-08-16 03:29 UTC — ▼ **GRAPH 2D-2: 2,478,613 `voted` EDGES AND 59,996 `signed-motion` EDGES
 THAT COST ZERO BYTES — BECAUSE WRITING THEM PROPERLY WOULD HAVE NEEDED 2.21 GiB AND NEON HAS 0.93.**
