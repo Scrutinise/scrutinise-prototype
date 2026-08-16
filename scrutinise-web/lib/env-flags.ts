@@ -58,6 +58,18 @@ export const CAPABILITY_FLAGS = [
   'LEX_SEARCH_GRAPH',
   'LEX_COHERENCE_CORPUS',
   'LEX_SEARCH_STUB',
+  // S3 §1. Tier-scoped callers (the three legacy legislation surfaces) reach the
+  // matching stream's FUSED retrieval instead of bare BM25, so scoping and dense
+  // retrieval stop being mutually exclusive.
+  //
+  // ⚠ DEFAULT OFF ON PURPOSE, per the brief's own rule — "if the routed path is worse
+  // on those questions, say so and hold the flip behind a flag rather than shipping a
+  // regression". Measured 2026-08-16 over 8 legislation questions: ~20 of 48 results
+  // per query change, and the swaps read better on inspection (a Consumer Rights query
+  // drops Companies Act 2006 and gains Consumer Rights Act 2015) — but latency goes
+  // 2,295ms → 3,710ms, +62%, on the platform's main user surface, and the quality half
+  // is NOT gold-validated. Better-looking results are not measured results.
+  'LEX_TIER_FUSION',
 ] as const
 
 export type CapabilityFlagName = (typeof CAPABILITY_FLAGS)[number]
