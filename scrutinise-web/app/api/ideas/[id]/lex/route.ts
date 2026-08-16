@@ -6,11 +6,13 @@ import { authorizeIdea } from '@/lib/lex/authz'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { fieldDef } from '@/lib/lex/page1-config'
 import { buildLexSystemPrompt, runLexTurn } from '@/lib/lex/lex-client'
-import { setProposal, storeExtracted, addCause, listCauses } from '@/lib/lex/field-machine'
+import { setProposal, storeExtracted, addCause, listCauses, setRootCause } from '@/lib/lex/field-machine'
 import { validateProposal } from '@/lib/lex/proposal-schema'
 import { isContinueIntent, performStageAdvance, isResearchRequest, researchQueryFrom } from '@/lib/lex/stage'
 import { countProblemPresses } from '@/lib/lex/orchestrator'
-import { PROBLEM_FIELD_KEY } from '@/lib/lex/method'
+import { acceptedSummary as buildAcceptedSummary, sourceValuesFor } from '@/lib/lex/accepted-context'
+import { matchCause, AMBIGUOUS } from '@/lib/lex/match-cause'
+import { PROBLEM_FIELD_KEY, looksLikeAQuestion } from '@/lib/lex/method'
 import { runLexTools } from '@/lib/lex/tools/tool-runner'
 import { runAdHocResearch, readStageSearches, displayStageFor, type ResearchRecord } from '@/lib/lex/stage-search'
 import { buildFactsBlock } from '@/lib/lex/facts'
@@ -83,10 +85,9 @@ export async function POST(req: Request, { params }: Params) {
   const awaiting = pre.currentField?.status === 'AWAITING_CONFIRMATION'
 
   const allAcceptedFields = pre.pages.flatMap((p) => p.fields)
-  const acceptedSummary = allAcceptedFields
-    .filter((f) => f.status === 'ACCEPTED' && f.value)
-    .map((f) => `${f.label}: ${typeof f.value === 'string' ? f.value.slice(0, 80) : JSON.stringify(f.value).slice(0, 120)}`)
-    .join(' · ')
+  // §19-E Task 1 — ONE copy, shared with the conductor. This was a second `.slice(0, 80)`
+  // living here, and it is the one Charlie's chat turns actually went through.
+  const acceptedSummary = buildAcceptedSummary(pre)
 
   const history = (Array.isArray(idea.aiChatHistory) ? (idea.aiChatHistory as ChatMsg[]) : [])
     .filter((m) => m.role === 'user' || m.role === 'lex')
@@ -106,15 +107,23 @@ export async function POST(req: Request, { params }: Params) {
   const stageStore = readStageSearches(
     (await prisma.idea.findUnique({ where: { id }, select: { stageSearches: true } }))?.stageSearches,
   )
-  const factsBlock = buildFactsBlock({
-    state: pre,
-    search: research ?? stageStore.byStage[displayStageFor(pre.stage)] ?? null,
-  })
+  const stageRecord = research ?? stageStore.byStage[displayStageFor(pre.stage)] ?? null
+  const factsBlock = buildFactsBlock({ state: pre, search: stageRecord })
 
   // §19-D Task 1b — the problem gate. Presses are counted from the transcript (every
   // bubble Lex writes while the problem field is current carries its key), so the gate
   // spends itself after two and the user is never nagged a third time.
   const problemPresses = current?.key === PROBLEM_FIELD_KEY ? countProblemPresses(idea.aiChatHistory) : 0
+
+  // §19-E Task 2 — is this turn a QUESTION, and are there sources in hand to press the
+  // user to read? Both are logged, so "the answer-first block never fired" and "it fired
+  // and Lex still dodged" are distinguishable from outside — the §18 corollary.
+  const questionTurn = looksLikeAQuestion(message)
+  const sourcesInHand = !!stageRecord?.ok && (stageRecord.results?.length ?? 0) > 0
+  console.log('[lex-diag] turn shape', {
+    questionTurn, sourcesInHand, sources: stageRecord?.results?.length ?? 0,
+    currentField: current?.key ?? null, sample: message.slice(0, 60),
+  })
 
   const ideaCount = await prisma.idea.count({ where: { creatorId: idea.creatorId } })
   const systemPrompt = buildLexSystemPrompt({
@@ -131,7 +140,10 @@ export async function POST(req: Request, { params }: Params) {
     statsBlock: tools.block ?? null,
     factsBlock,
     acceptedSummary,
+    sourceValuesBlock: sourceValuesFor(current?.key ?? null, pre),
     problemPresses,
+    questionTurn,
+    sourcesInHand,
   })
 
   let lex
@@ -155,7 +167,44 @@ export async function POST(req: Request, { params }: Params) {
   // lands as source USER because they are the user's own words, tidied — the panel's
   // "from past debates" badge belongs only to corpus-seeded rows. The user still
   // classifies, nests, edits or removes each one; adding it is not accepting it.
-  if (current?.key === 'causes' && lex.proposal?.fieldKey === 'causes' && lex.proposal.valueList?.length) {
+  // §19-E Task 2a — ON A QUESTION TURN, A PROPOSAL IS DISCARDED. The prompt tells Lex
+  // not to emit one; this makes it true regardless, because the platform owns state and
+  // "I've drafted a summary" is not an answer to "is a Charter the right instrument?".
+  // Nothing is lost: the field stays current, unchanged, and the next turn picks it up.
+  if (questionTurn && lex.proposal) {
+    console.log('[lex-diag] proposal discarded — question turn', {
+      currentField: current?.key ?? null, proposedFor: lex.proposal.fieldKey,
+    })
+    lex.proposal = null
+  }
+
+  // §19-E Task 7 — A CHAT ANSWER SELECTS THE ROOT CAUSE.
+  //
+  // Diagnosis was the stage where the interaction silently changed from "answer in chat
+  // OR the panel" to panel-only, and this step is why: the root cause is a SELECTION
+  // from the causes list, so there was nowhere for a chat answer to go and Lex said
+  // "over to you". Lex now proposes the cause TEXT and the platform resolves it to a
+  // row — the same shape as the causes loop, which is the one loop that already took a
+  // chat answer.
+  //
+  // Resolution is deliberately forgiving (exact → prefix → containment → word overlap)
+  // because the user will say "the incentives one", not recite the sentence. It is also
+  // deliberately REFUSED WHEN AMBIGUOUS: two candidates matching equally well means we
+  // do not know which they meant, and picking one would be the platform inventing the
+  // most consequential choice on the page.
+  if (current?.key === 'rootCause' && lex.proposal?.fieldKey === 'rootCause' && lex.proposal.valueText?.trim()) {
+    const causes = await listCauses(id)
+    const match = matchCause(lex.proposal.valueText, causes.map((c) => ({ id: c.id, cause: c.cause })))
+    const resolved = match && match !== AMBIGUOUS ? match : null
+    console.log('[lex-diag] root cause named in chat', {
+      said: lex.proposal.valueText.slice(0, 60), candidates: causes.length,
+      matched: resolved?.id ?? null, ambiguous: match === AMBIGUOUS,
+    })
+    if (resolved) proposalApplied = await setRootCause(id, resolved.id)
+    // No match, or ambiguous: nothing is set, Lex's chatText still shows, and the field
+    // stays current with the panel selector available. Silence here is correct — the
+    // alternative is choosing the root cause on the user's behalf.
+  } else if (current?.key === 'causes' && lex.proposal?.fieldKey === 'causes' && lex.proposal.valueList?.length) {
     const named = lex.proposal.valueList.map((c) => c.trim()).filter((c) => c.length >= 8).slice(0, 5)
     const existing = (await listCauses(id)).map((c) => c.cause.trim().toLowerCase())
     const fresh = named.filter((c) => !existing.includes(c.toLowerCase()))

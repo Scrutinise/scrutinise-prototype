@@ -23,6 +23,60 @@ export const M_GENERAL =
   'with no leverage). Watch for these in the user’s input and in your own drafts; name them kindly ' +
   'and push for the sharper version. Never let a list substitute for a choice.'
 
+// ─── M-ANSWER (all stages) ───────────────────────────────────────────────────
+//
+// §19-E Task 2 — the headline finding of the 13 Aug walk, and the one Charlie called
+// "fundamentally unhelpful".
+//
+// He asked a substantive, well-posed question: does this need a "Charter" — is that
+// the right instrument? How is accountability handled in the Civil Service now? Is
+// anything written down? Is there anything in the Civil Service Code? Lex named three
+// corpus documents, pointed at the panel, and re-issued the guiding-policy summary. It
+// answered no part of the question. The same question put to plain Gemini and to
+// ChatGPT got, in both cases, a direct substantive answer — the statutory basis
+// (Constitutional Reform and Governance Act 2010, Part 1), what the Civil Service Code
+// does and does not cover, the Accounting Officer regime, the Senior Responsible Owner
+// regime as the closest existing analogue, and a reasoned view on whether a Charter is
+// the right instrument at all.
+//
+// // Lex is the same underlying model. The difference is entirely in how we prompt it.
+//
+// In making Lex safe — never claim, only cite what was retrieved, always drive the
+// field forward — we made it unable to THINK ALOUD WITH THE USER. The never-claim rule
+// (§19-C 1b) forbids asserting facts about what the CORPUS CONTAINS without retrieval.
+// It was never meant to stop Lex reasoning from general knowledge, weighing instruments
+// against each other, or saying what it thinks. This block draws that line explicitly,
+// and it is injected at EVERY stage because a question can be asked at any of them.
+export const M_ANSWER =
+  'ANSWERING A QUESTION IS A DIFFERENT JOB FROM FILLING A FIELD, AND IT COMES FIRST.\n' +
+  'When the user asks you something, ANSWER IT. Substantively, in your own reasoning, at the ' +
+  'length the question deserves. Naming documents is not an answer. Pointing at the panel is not ' +
+  'an answer. Re-stating a summary you have already written is not an answer, and it is the ' +
+  'most irritating non-answer of the three because it looks like work.\n' +
+  'THREE KINDS OF STATEMENT, AND YOU MUST KEEP THEM APART IN THE USER’S SIGHT:\n' +
+  '  · CORPUS-GROUNDED AND CITED — what a specific Act, case, debate, committee report or impact ' +
+  'assessment says. Only when it was actually retrieved and shown to you. Cite it.\n' +
+  '  · REASONED OPENLY, AND LABELLED AS REASONING — whether a Charter is the right instrument; ' +
+  'what the trade-offs are; what the closest existing analogue is; what a committee would ask; ' +
+  'how a thing is generally handled. Say it, and say that you are reasoning rather than citing ' +
+  '("I’m reasoning here rather than citing…", "from general knowledge, and worth checking…"). ' +
+  'Withholding this is not caution, it is unhelpfulness, and the user can get it from any chatbot ' +
+  'in thirty seconds.\n' +
+  '  · NEVER — a fabricated citation, statistic, date, case name, or any claim about a document ' +
+  'that was not retrieved. This is the only thing the grounding rule actually forbids.\n' +
+  'If your general knowledge might be out of date on a point that matters, say which point and ' +
+  'what you would check. That is a useful answer; silence is not.'
+
+// §19-E Task 2c — Charlie: "Lex should be fairly firm in the importance of reading the
+// links given and giving an opinion on those." A list of sources is a to-do list handed
+// back to the user; the value we add is saying which of them matters and why.
+export const M_PRESS_TO_READ =
+  'WHEN A SEARCH HAS RETURNED SOURCES, DO NOT LIST THEM. Say which ONE OR TWO matter most and ' +
+  'WHY they matter to this specific proposal, in a sentence each, then ask the user to read those ' +
+  'and tell you what they make of them. Be firm about it: reading the primary material is where ' +
+  'their judgement enters and where yours cannot substitute. A user who has read the two documents ' +
+  'that bear on their idea is in a different position from one handed twenty citations.'
+
 // ─── M-PROBLEM-GATE (Page 2, the `challenge` field) ──────────────────────────
 //
 // §19-D Task 1b — the headline finding of the 10 Aug walk-through. Charlie entered
@@ -106,6 +160,45 @@ export interface MethodContext {
   currentFieldKey?: string | null
   /** How many times Lex has already pressed on this problem statement. */
   problemPresses?: number
+  /** §19-E Task 2a — the user's turn is a QUESTION, not field content. The answer-first
+   *  block is added and the field instruction is subordinated to it. */
+  questionTurn?: boolean
+  /** §19-E Task 2c — a search ran this turn (or this stage) and returned sources, so
+   *  the press-to-read block is worth its space in the prompt. */
+  sourcesInHand?: boolean
+}
+
+/**
+ * Is the user's message a QUESTION rather than field content?
+ *
+ * Deliberately generous where it costs nothing and conservative where it costs
+ * something. A false positive means Lex answers a question that was not quite one —
+ * mildly redundant. A false negative means Lex responds to "is a Charter the right
+ * instrument?" by re-proposing a field, which is the defect. So the asymmetry runs
+ * towards answering.
+ *
+ * It is NOT the whole mechanism: the block only re-orders Lex's priorities for the
+ * turn, and Lex still judges. What this gives us is that the decision is VISIBLE in
+ * `[lex-diag]` and testable in `check:answer-the-question` — the §18 corollary again,
+ * a component that is off and a component that failed must not look alike.
+ */
+const QUESTION_OPENERS =
+  /^\s*(?:do|does|did|is|are|was|were|can|could|should|would|will|shall|has|have|had|must|may|might|am)\b/i
+const WH_WORDS =
+  /\b(?:what|why|how|when|where|which|who|whom|whose)\b/i
+/** Asking for a view, without a question mark: "tell me whether…", "I'd like your view". */
+const ASKS_FOR_A_VIEW =
+  /\b(?:what do you think|your (?:view|opinion|take|read)|do you (?:think|reckon|agree)|tell me (?:whether|if|about|what|how|why)|explain|talk me through|help me understand|is (?:it|this|that) (?:right|the right|worth|sensible|wise)|am i right)\b/i
+
+export function looksLikeAQuestion(raw: string): boolean {
+  const text = (raw ?? '').trim()
+  if (!text) return false
+  if (ASKS_FOR_A_VIEW.test(text)) return true
+  if (!text.includes('?')) return false
+  // A question mark plus either an interrogative opener or a wh-word. "Save this?" is a
+  // question about the mechanics, which the field instruction already handles well; the
+  // block is for questions with substance in them.
+  return QUESTION_OPENERS.test(text) || WH_WORDS.test(text)
 }
 
 /**
@@ -136,13 +229,37 @@ export function looksLikeASolution(text: string): boolean {
 
 /** Short label of the blocks active for a page — for [lex-diag] observability. */
 export function methodBlocksFor(pageKey: string | null | undefined, ctx: MethodContext = {}): string[] {
-  const blocks = ['M-GENERAL']
+  const blocks = ['M-GENERAL', 'M-ANSWER']
   if (pageKey && STAGE_BLOCK[pageKey]) blocks.push('M-' + pageKey.replace('_', '-'))
+  if (ctx.sourcesInHand) blocks.push('M-PRESS-TO-READ')
+  if (ctx.questionTurn) blocks.push('M-ANSWER-FIRST')
   if (ctx.currentFieldKey === PROBLEM_FIELD_KEY) {
     blocks.push((ctx.problemPresses ?? 0) >= MAX_PROBLEM_PRESSES ? 'M-PROBLEM-GATE(spent)' : 'M-PROBLEM-GATE')
   }
   return blocks
 }
+
+/**
+ * §19-E Task 2a — the turn-level instruction, added only when the user actually asked
+ * something. M-ANSWER sets the standing policy; this makes it the FIRST call on the
+ * turn and suspends the field-filling reflex for one exchange.
+ *
+ * The field is not abandoned — it is still current, still shown in the panel, and the
+ * next turn picks it up. What is suspended is proposing INTO it as a substitute for an
+ * answer, which is what produced "I've drafted a summary" in reply to "is a Charter the
+ * right instrument?".
+ */
+const ANSWER_FIRST =
+  'THIS TURN, THE USER HAS ASKED YOU A QUESTION. Answering it is the whole job of this turn.\n' +
+  'Answer every part of what they asked, in order, at the length it deserves — several short ' +
+  'paragraphs is right for a substantive question, and a single sentence is an evasion. Name the ' +
+  'instruments, regimes, statutes and precedents that bear on it from your own knowledge, saying ' +
+  'plainly which parts are you reasoning and which are grounded in what was retrieved. If the ' +
+  'honest answer is that their proposed instrument is the wrong one, or that something close to it ' +
+  'already exists, SAY THAT — it is the single most valuable thing you can tell them.\n' +
+  'DO NOT return a proposal for the current field this turn. DO NOT re-issue a summary you have ' +
+  'already written. You may add ONE closing sentence pointing at the panel or naming the next ' +
+  'step — one, at the end, after the answer.'
 
 /** The instruction that ENDS the press, so two really means two. */
 const GATE_SPENT =
@@ -160,8 +277,12 @@ const GATE_SPENT =
  */
 export function methodForStage(pageKey: string | null | undefined, ctx: MethodContext = {}): string {
   const stage = pageKey ? STAGE_BLOCK[pageKey] : undefined
-  const parts = [M_GENERAL]
+  // M-ANSWER sits with M-GENERAL, at every stage including ORIENTATION: a question can
+  // be asked at any point, and the failure it removes happened on Guiding Policy.
+  const parts = [M_GENERAL, M_ANSWER]
   if (stage) parts.push(stage)
+  if (ctx.sourcesInHand) parts.push(M_PRESS_TO_READ)
+  if (ctx.questionTurn) parts.push(ANSWER_FIRST)
   if (ctx.currentFieldKey === PROBLEM_FIELD_KEY) {
     parts.push((ctx.problemPresses ?? 0) >= MAX_PROBLEM_PRESSES ? GATE_SPENT : M_PROBLEM_GATE)
   }
