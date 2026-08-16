@@ -2914,6 +2914,71 @@ model GraphMergeLog {
   @@map("graph_merge_log")
 }
 
+// ── POSITION GRAPH (Stage 2D sprint 2, BRIEF_GRAPH_2D2) ──────────────────────
+// DDL of record is scripts/ingest/position-graph/schema-2d2.sql, applied by that
+// directory's setup-2d2.ts. Declared here for the same single reason as the five
+// models above: without a model, `prisma migrate diff` proposes DROPPING them.
+// Nothing reads these through the Prisma client.
+//
+// ⚠ The `voted` and `signed-motion` EDGES are not here and are not tables. They are
+// VIEWS (graph_voted_edge, graph_signed_motion_edge, graph_edge_all) over these rows
+// plus division_votes, because materialising 2.53M vote edges would have cost 2.21 GiB
+// against 0.93 GiB of headroom — see schema-2d2.sql's header for the measurement.
+// Prisma does not model views and does not need to: a view is not a table `migrate
+// diff` can propose dropping.
+
+/// The Parliament member register (MNIS), from members-api.parliament.uk, OPL v3.0.
+model GraphMemberRegister {
+  mnisId            Int       @id @map("mnis_id")
+  nameDisplay       String?   @map("name_display")
+  nameList          String?   @map("name_list")
+  nameFullTitle     String?   @map("name_full_title")
+  nameAddress       String?   @map("name_address")
+  gender            String?
+  latestHouse       Int?      @map("latest_house") @db.SmallInt
+  latestParty       String?   @map("latest_party")
+  latestPartyAbbrev String?   @map("latest_party_abbrev")
+  membershipFrom    String?   @map("membership_from")
+  membershipStart   DateTime? @map("membership_start") @db.Date
+  membershipEnd     DateTime? @map("membership_end") @db.Date
+  isCurrent         Boolean?  @map("is_current")
+  fetchedAt         DateTime  @default(now()) @map("fetched_at") @db.Timestamptz()
+
+  @@map("graph_member_register")
+}
+
+/// Every DATED name form a member has carried. This is what decides whether two
+/// entities are one person and whether one entity is two.
+model GraphMemberName {
+  mnisId      Int       @map("mnis_id")
+  surface     String
+  surfaceNorm String    @map("surface_norm")
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  source      String
+
+  @@id([mnisId, surface, source])
+  @@index([surfaceNorm])
+  @@index([mnisId])
+  @@map("graph_member_name")
+}
+
+/// The EDM primary sponsor's member id — on the API's wire, dropped by our ingest.
+model EdmSponsor {
+  motionId      Int       @id @map("motion_id")
+  mnisId        Int?      @map("mnis_id")
+  sponsorName   String    @map("sponsor_name")
+  party         String?
+  constituency  String?
+  dateTabled    DateTime? @map("date_tabled") @db.Date
+  sponsorsCount Int?      @map("sponsors_count")
+  uin           String?
+  fetchedAt     DateTime  @default(now()) @map("fetched_at") @db.Timestamptz()
+
+  @@index([mnisId])
+  @@map("edm_sponsor")
+}
+
 // Central ingest work queue — workers claim rows atomically via FOR UPDATE SKIP LOCKED.
 // Populated by queue-populator.ts before workers start.
 model IngestQueue {
