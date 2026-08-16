@@ -89,6 +89,17 @@ type Ckpt = {
   bodyMisses: number
   doneShards: number[]
   attemptedShards: number[]
+  /**
+   * ⚠ SET WHEN THE SHARD INDICES IN `doneShards` CAME FROM A `--canary` RUN.
+   *
+   * A canary plans over `deltaChunkIds.slice(0, 400)`, so its "shard 0" is 400 chunks.
+   * A full run plans over all of them, so its shard 0 is SHARD_SIZE (40,000) chunks.
+   * Both record the INDEX 0. Without this flag the full run reads `doneShards: [0]`,
+   * skips its own 40,000-chunk shard 0 having embedded 400 of them, and prints
+   * "2/2 shards done" — a partial embed wearing the face of a completed one, and
+   * caused by the safety measure. Measured on the V36 catch-up, 2026-08-15.
+   */
+  canaryShards?: boolean
   vectors: number
   misses: number
   spentUsd: number
@@ -261,6 +272,21 @@ async function main() {
   const planned = CANARY ? deltaChunkIds.slice(0, CANARY_N) : deltaChunkIds
   for (let i = 0, s = 0; i < planned.length; i += SHARD_SIZE, s++) shards.push({ i: s, ids: planned.slice(i, i + SHARD_SIZE) })
   cp.shardSize = SHARD_SIZE
+  // A canary's shard indices do not mean the same thing as a full run's (see Ckpt.canaryShards).
+  // Refuse to inherit them rather than silently skipping a 40,000-chunk shard.
+  if (cp.canaryShards && !CANARY) {
+    console.log(
+      `[vec-catchup] ⚠ the checkpoint's doneShards ${JSON.stringify(cp.doneShards)} came from a --canary run, ` +
+      `whose shard 0 was ${CANARY_N} chunks, not ${n(SHARD_SIZE)}. Discarding them so this run re-plans from scratch.\n` +
+      `[vec-catchup]   ⚠ the canary's ${n(cp.vectors)} vectors are ALREADY in corpus_vec and vecTbl.add() does not ` +
+      `dedupe — delete them before this run, or it will write duplicates.`
+    )
+    cp.doneShards = []
+    cp.attemptedShards = []
+    cp.canaryShards = false
+    await saveCkpt(cp)
+  }
+  if (CANARY) cp.canaryShards = true
   const done = new Set(cp.doneShards)
   const attempted = new Set(cp.attemptedShards)
   const todo = shards.filter((s) => !done.has(s.i))
