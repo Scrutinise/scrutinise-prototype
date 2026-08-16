@@ -131,6 +131,180 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH S4 — THE LEX CHAT ROUTE CANNOT SEE COMMITTEES, DEBATES OR CASE LAW, AND THE ROUTER ALREADY KNEW (2026-08-16 11:49 UTC)
+
+Executes `BRIEF_SEARCH_S4.md` §1 and §2. Report: **`docs/SEARCH_S4_REPORT.md`**. Code:
+`scrutinise-web/scripts/audit-s4-tier-scope.ts`, `scripts/measure-s4-fusion-decision.ts`. `tsc` clean.
+**Nothing was widened, per §1's instruction to report before changing.**
+
+⚠⚠ **§1 — CHARLIE'S REFRAME IS RIGHT AND THE EVIDENCE IS THE SYSTEM'S OWN JUDGEMENT.** For each
+probe the harness also asked `routeQuery` directly. On "what have select committees said about
+water company sewage discharge" the router picks **`committees`**; on "what did MPs argue in the
+debate on assisted dying" it picks **`debates`**; the tier-scoped branch keeps the router's query
+REWRITE, **discards its stream selection**, and retrieves legislation anyway. Measured through the
+running retrieval path: the Lex chat route returns 12 results, `ukpga×7 uksi×4 nisi×1`, while the
+corpus holds *Fourth Report — Water quality in rivers* and *Water Quality in Rivers WQR0085* it
+cannot show. Across seven non-legislation probes, **36–146 non-legislation documents per question
+are unreachable**. Not one committee document, debate or judgment reaches a user on the platform's
+main conversation, on any question, ever.
+
+⚠⚠ **AND THERE ARE TWO GATES IN SERIES, WHICH THE BRIEF DID NOT HAVE.** `tier: 'legislation'` is
+followed by a `LEGISLATION_TYPES` filter applied *after* it — measured at **24 of 36 results dropped
+on every one of the ten probes**. **Widening the tier alone would measure as a no-op**, and anyone
+who widened it, saw no change and concluded the scope was not the problem would be wrong for a
+reason nothing in the logs would show them. A third gate is the response contract: `LegacySearchResult`
+has `actTitle`/`sectionNumber` and the chat route maps them straight into `legislationContext`, so a
+committee transcript admitted through a widened scope **would be handed to Lex as a section of an
+Act**. The fix is a second context channel, not a changed constant.
+✅ **The panel scope is RIGHT, measured not assumed** — asked the sewage committee question,
+`/api/ideas/[id]/legislation-search` returns *Sewerage (Scotland) Act 1968 s.39* and *Water Industry
+Act 1991 s.141A*. Widening it would be a regression dressed as a fix.
+⚠ **`POST /api/search` is a legislation endpoint with a general name and NO first-party caller**
+(grep-verified) — a naming and roadmap decision for Charlie, not a defect.
+
+✅ **§2 — `LEX_TIER_FUSION` MEASURED IN BOTH RUN ORDERS AND RECOMMENDED ON. recall@20 42.4% → 64.1%,
+Δ +21.7pp; no query regressed; 8 of 16 improved, two from zero.** Order reversal changes nothing
+(OFF 43.5/41.3, ON 65.2/63.0). ⚠ **The population had to be established first: the flag governs
+TIER-SCOPED callers only, so running the untiered gold set would have produced two identical numbers
+and a false "no effect".** ⚠⚠ **And the flag is INERT unless `LEX_QUERY_ROUTER` is also on** — the
+branch reading it is guarded by `flags.router`, so turning it on alone would do nothing, silently.
+⚠ **S3's +62% latency does not survive end-to-end measurement: p50 5,307 → 5,666 ms, +7%, which is
+SMALLER than the ON condition's own first-vs-second-position cache swing of 435 ms.** S3 compared
+the two retrieval calls directly and was right about them; through the gateway the router's LLM call
+dominates at ~5s whichever retrieval runs underneath. ⚠ **The preference metric moved its own
+denominator and must not be read as a regression:** 1/1 (100%) OFF against 4/6 (67%) ON is one
+scoreable pair against six — fusion made five more ordering judgements visible. The S2C5 trap again.
+❌ **NOT started: §3 — batching, and the PRECEDENT / DEVOLUTION_SCOPE intents.** §3's batching
+dependency goes live the moment the Lex-chat widening is authorised: five streams against
+`vector-serve`'s cap of 4 means one user saturates it.
+
+▶ **CHARLIE: three decisions** — authorise the Lex chat route's second context channel; flip
+`LEX_TIER_FUSION` after confirming `LEX_QUERY_ROUTER` is on (both unreadable here, §19); decide what
+`POST /api/search` is for.
+
+---
+
+## GRAPH — AMENDMENT 2 BUILT: A MENTION MAY ALWAYS BE SHOWN, AND BEHAVIOUR IS MEASURED TO BE USELESS AS MERGE EVIDENCE (2026-08-16 11:49 UTC)
+
+Executes `POSITION_GRAPH_DESIGN_AMENDMENT_2.md` in full, and **folds Amendments 1 and 2 into
+`POSITION_GRAPH_DESIGN.md`** (both amendment files keep a banner saying so). Report:
+**`docs/POSITION_GRAPH_AMD2_REPORT.md`**. Code in `scripts/ingest/position-graph/`. `tsc` clean for
+that directory. **`verify-amd2.ts`: 16 checks pass, 0 fail, 0 broken negative controls.** Storage
+added: **88 kB**. ⚠ A concurrent CC-GRAPH session is running 2D-3 in the same directory; every file
+here is NEW and no existing graph file was edited.
+
+⚠⚠ **THE HEADLINE IS A CALIBRATION, AND IT SETTLES §2 BY MEASUREMENT.** Random **same-party** pairs
+of members who are certainly different people agree **97.9%** of the time (n=150, ≥20 shared
+divisions); cross-party pairs **10.5%**. Agreement is a party signal, not an identity signal. The
+cleanest case: **two successive Archbishops of Canterbury (MNIS 4252, 4696) — identical register
+display name, 21 shared divisions, 100% agreement.** A name match would merge them; a behavioural
+check would reassure. Both wrong, and the result is a person who does not exist.
+
+✅ **§1 the mention layer.** `graph_mention` over `graph_edge_all`, **no resolution filter**, and the
+absence is asserted rather than trusted: the check proves the view's row count equals
+`graph_edge_all`'s, with **the pre-amendment design as its negative control** — which fires at
+**73,829 mentions lost**. What the old gate cost: **94.6% of people hidden** (2,603 keyed of 48,409)
+while **68.5% of mentions kept**, because the 2.5M vote edges sit on keyed MPs — *a single "coverage"
+number would have said whichever the author preferred.* "Thin record" is now measured: **38,903 of
+45,018 unresolved people hold exactly one mention.**
+⚠ **What §1 asked for and we could not supply, and did not fake:** "name as it appeared" is NOT
+recoverable per appearance — `graph_edge` has no surface column and `corpus_sections.speaker` is
+**NULL on 5,000 of 5,000** sampled committee-evidence sections. `display_name` is the entity's, and
+carries `surface_is_per_entity = TRUE` beside it. The fix belongs in the sweeps.
+
+✅ **§3 the tiers reach the screen.** Three SQL functions define them once so no screen can invent
+its own wording; an unknown `key_source` returns **`unclassified`**, not a safe-looking default.
+⚠ **A negative control REFUSED TO FIRE and the reason is the finding:** all **788** name-matched
+people DO carry `parl_member_id` — 2D-2 put the match in the id column and the uncertainty in
+`key_source`. A tier derived from "does an id column have a value" would promote every one of them
+to "identified".
+
+✅ **§2 the signal, with the rule made mechanical.** 500 name clusters, 99 testable, **187 pairs
+scored**. `graph_identity_signal` has **no column a resolution could be written into** (asserted
+against `information_schema`, control = `graph_merge_log.kept_entity_id`) and **`finding` refuses a
+merging value** — the check attempts `'same-person'` in a rolled-back transaction and passes only
+when the database rejects it. ⚠ **The work list was not what the amendment assumed and it changed
+the design:** 80 of the 500 clusters are **episcopal sees** — an office held in succession — so
+`disjoint-service` is a first-class finding computed from voting ranges and reported apart from
+`divergent`; it is **150 of the 187 pairs**. The pairs the signal exists for: `gerald` Howarth (Con)
+/ Kaufman (Lab) **3.1%** over 32 divisions; `sharma` Virendra (Lab) / Lord Sharma (Con) **5.4%** over
+**868**; `david` Amess / Crausby **6.6%** over 350.
+
+✅ **§6 the halves, never averaged.** organisations **64.4%** identified, people **5.4%** — a factor
+of twelve; the blend, 32.3%, describes neither and is printed once, labelled as the number to stop
+quoting. ⚠ Amendment 2 §6's own "99.6% rest on a name match" is 2D-1's and is now 94.6%.
+
+⚠⚠ **A LIVE DEFECT FOUND ON THE WAY, REPORTED NOT FIXED. MNIS's "address as" is frequently just the
+surname** — `Mr Brown`, `Sir Geoffrey` — and after honorific stripping those become the match
+surfaces `brown`, `geoffrey`, which identify nobody and which `isUselessName()` cannot catch because
+they look like names (**30.6% of `address` surfaces are one word**). **Three of 2D-2's 788 register
+name-matches stand on a surface the register itself says belongs to several members** — `Baroness
+Meacher`, `Mr  George` (Bruce George vs The Lord George) and `Robinson` (Geoffrey vs Iris). The last
+two are coin flips recorded at confidence 0.9. **NOT unmatched — unmatching is a resolution.**
+⚠ **And MNIS 3296**, a Lords Spiritual record covering 1991–2002, casts **zero** `division_votes`
+rows although its service overlaps our window by three years; it is also the one cluster case where
+identity is genuinely open and the behavioural test cannot reach it. Flagged, not chased.
+
+---
+
+## GRAPH 2D-3 §1 — THE POSITION-EXTRACTION PREDICTION, recorded before a penny is spent (2026-08-16 11:47 UTC)
+
+`BRIEF_GRAPH_2D3` §1: *"This is the graph's first real LLM spend. 2D-1 and 2D-2 cost nothing because
+everything was already structured. Predict the cost in CHANGE_LOG before running anything, run a
+bounded pilot first, and score the prediction after."* This entry is that prediction. The score sits
+in the sprint's own entry below it, written after the run.
+
+**THE AREA, CHOSEN BY THE DATA.** 2D-1 §4's ranking recomputed from `graph_edge` rather than quoted
+from the report (`probe-2d3-area.ts`): **Health and Social Care Committee — 794 organisations
+appearing in more than one inquiry**, against the runner-up Environmental Audit Committee's 754
+(−5.0%). 130 inquiries, 3,480 organisations, 2,619 people, 7,560 held submissions, 21,099,728 words,
+2013-10-17 → 2026-06-09. Every one of the 7,560 carries an R2 key, so nothing is unreadable.
+
+**THE BOUND, AND WHY IT IS NOT THE WHOLE AREA.** Charlie's call: **the top 12 inquiries by held
+submissions — 2,982 submissions, 6,303,794 words.** The full area was priced at the same time and is
+$19.38; the 12-inquiry bound is chosen not to save $12 but because a vocabulary derived across all
+130 inquiries at once spans dentistry, assisted dying, Brexit and obesity, and would be either ~250
+propositions (not inspectable, and the brief requires the vocabulary to be inspectable before use)
+or so thin that most submissions are asked about claims they never address.
+
+| bound | submissions | words | input tok | output tok | **predicted** |
+|---|---:|---:|---:|---:|---:|
+| top 4 inquiries | 1,561 | 2,548,222 | 5,730,635 | 624,400 | $3.28 |
+| **top 12 — CHOSEN** | **2,982** | **6,303,794** | **12,857,046** | **1,192,800** | **$6.84** |
+| top 20 | 3,936 | 8,958,328 | 17,818,576 | 1,574,400 | $9.28 |
+| whole area (130) | 7,560 | 21,099,728 | 39,402,638 | 3,024,000 | $19.38 |
+
+Plus proposition derivation and clustering, predicted at **under $0.50** (12 inquiry calls of ~14
+excerpts × 900 words, one clustering call over the candidates), and an Amendment 1 EDM test at
+**under $0.05**. **Total predicted: $7.39.**
+
+**EVERY ASSUMPTION, STATED SO A MISS CAN BE ATTRIBUTED** (`cost-2d3.ts`, imported by both the
+prediction and the meter, so the score compares a forecast against a bill rather than two
+spreadsheets):
+
+- 1 word = **1.33 tokens** — an estimate, labelled as one. The meter reports the API's own
+  `usageMetadata`, never this.
+- **1,500 input tokens** of instruction + proposition list per submission.
+- **400 output tokens** per submission. The dominant half of the bill is output at $2.50/M, so the
+  model emits ONLY the propositions a submission actually addresses; a `no-position` is recorded
+  from the ask rather than generated. ⚠ If that design does not hold — if the model narrates — the
+  output half is where the prediction will miss.
+- `gemini-2.5-flash` list **$0.30/M in, $2.50/M out**, `thinkingBudget: 0`. ⚠ Thought tokens bill at
+  the output rate; the meter counts them separately and includes them, so a silent thinking spend
+  cannot hide inside the total.
+
+**WHAT WOULD MAKE THIS PREDICTION WRONG, named in advance:** long submissions (p99 is 23,393 words,
+111 of the area's submissions exceed 20,000) are capped by the extractor rather than truncated
+silently, and the cap's effect is reported; retries are metered, so a bad hour of 429s shows up as
+spend rather than disappearing; and a submission whose R2 object is missing is counted as skipped,
+not as free.
+
+⚠ **Scope note.** A concurrent session is executing `POSITION_GRAPH_DESIGN_AMENDMENT_2` — the
+mention layer, the identity tiers and the behavioural signal — which is 2D-3's §3 and §4. On
+Charlie's instruction this sprint takes **§1 and §2 only** and leaves those alone.
+
+---
+
 ## 2026-08-16 10:54 UTC — LEX SPRINT 3-E (§19-E): the silent cut, and the safety that became unhelpfulness
 
 Executes `docs/SPRINT_3E_BRIEF.md` §1–§8 in full. `tsc` clean, `next build` passes, all offline

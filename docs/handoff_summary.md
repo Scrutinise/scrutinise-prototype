@@ -2,7 +2,82 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-16 10:54 UTC — ▼ **LEX SPRINT 3-E: THE TRUNCATION'S CAUSE IS `acceptedSummary()`
+*Last updated: 2026-08-16 11:52 UTC — ▼ **SEARCH S4: THE LEX CHAT ROUTE — the platform's main
+conversation — CANNOT RETURN A COMMITTEE DOCUMENT, A DEBATE OR A JUDGMENT, ON ANY QUESTION, EVER;
+and the router already knew, because it picks `committees` and the caller overrules it with a
+constant.** ⚠ TWO gates in series, so widening the tier alone would measure as a no-op. ✅
+`LEX_TIER_FUSION` measured in both run orders: **+21.7pp recall, latency inside the cache noise —
+recommended ON, after confirming `LEX_QUERY_ROUTER` is on.** And ▼ **GRAPH AMENDMENT 2 is BUILT:
+a mention may always be displayed, and behavioural agreement is now MEASURED to be useless as merge
+evidence (97.9% between random same-party pairs of different people).** LEX 3-E, INGEST V38, GRAPH
+2D-2 and SEARCH S3 follow.*
+
+2026-08-16 11:52 UTC — ▼ **SEARCH S4 §1 + §2. Report: `docs/SEARCH_S4_REPORT.md`.** CHANGE_LOG
+(2026-08-16 11:49 UTC). `tsc` clean. **Nothing was widened — §1 says report before changing.**
+
+⚠⚠ **§1 — CHARLIE'S REFRAME IS RIGHT, AND THE EVIDENCE IS THE SYSTEM'S OWN JUDGEMENT.** The harness
+asked `routeQuery` directly per probe: it picks **`committees`** for "what have select committees
+said about sewage discharge" and **`debates`** for "what did MPs argue in the debate on assisted
+dying". The tier-scoped branch keeps the router's query REWRITE and **throws its stream selection
+away**. Measured: the Lex chat route returns `ukpga×7 uksi×4 nisi×1` while the corpus holds *Fourth
+Report — Water quality in rivers* it cannot show. **36–146 non-legislation documents per question
+are unreachable.**
+⚠⚠ **TWO GATES IN SERIES, which the brief did not have:** `tier:'legislation'` then a
+`LEGISLATION_TYPES` filter that drops **24 of 36 on every probe**. **Widening the tier alone
+measures as a no-op.** A third gate is the contract — `LegacySearchResult` has `actTitle`/
+`sectionNumber`, so a committee transcript admitted through a widened scope **would be handed to Lex
+as a section of an Act**. The fix is a second context channel, not a constant.
+✅ **The panel scope is RIGHT, measured** (returns *Sewerage (Scotland) Act 1968 s.39* on the
+committee question). ⚠ **`POST /api/search` is a legislation endpoint with a general name and no
+first-party caller** — Charlie's naming call.
+✅ **§2 — `LEX_TIER_FUSION`: recall@20 42.4% → 64.1%, +21.7pp, both run orders, no query regressed**
+(8 of 16 improved, two from zero). ⚠ The population had to be established first — **the flag governs
+TIER-SCOPED callers only**, so the untiered gold set would have shown "no effect". ⚠⚠ **It is INERT
+unless `LEX_QUERY_ROUTER` is also on** — turning it on alone does nothing, silently. ⚠ **S3's +62%
+latency does not survive end-to-end: +7%, smaller than the ON condition's own 435 ms cache swing**
+(the router's LLM call dominates at ~5s either way). ⚠ The preference metric moved its denominator
+(1 scoreable pair → 6) and must not be read as a regression.
+❌ **NOT started: §3 (batching, PRECEDENT / DEVOLUTION_SCOPE).** Batching becomes a prerequisite the
+moment the Lex-chat widening is authorised — five streams against `vector-serve`'s cap of 4.
+▶ **CHARLIE:** authorise the second context channel · flip `LEX_TIER_FUSION` after checking the
+router · decide what `/api/search` is for.
+
+2026-08-16 11:52 UTC — ▼ **GRAPH AMENDMENT 2 BUILT, and Amendments 1 + 2 FOLDED INTO
+`POSITION_GRAPH_DESIGN.md`.** Report: **`docs/POSITION_GRAPH_AMD2_REPORT.md`**. All code new, in
+`scripts/ingest/position-graph/`. **16/16 checks pass, every negative control fired.** 88 kB added.
+⚠ A concurrent CC-GRAPH session is running 2D-3 in the same directory — **no existing graph file was
+edited.**
+
+⚠⚠ **THE HEADLINE SETTLES §2 BY MEASUREMENT: random SAME-PARTY pairs of members who are certainly
+different people agree 97.9% of the time** (n=150, ≥20 shared divisions); cross-party 10.5%.
+Agreement is a party signal, not an identity signal. **Two successive Archbishops of Canterbury share
+an identical register display name, 21 divisions and 100% agreement** — a merge behaviour would
+endorse and that would fabricate a person.
+✅ **§1** `graph_mention` has no resolution filter and the absence is ASSERTED — the negative control
+is the pre-amendment design, firing at **73,829 mentions lost**. The old gate hid **94.6% of people**
+while keeping 68.5% of mentions, so *a single "coverage" number would have said whichever the author
+preferred*; **38,903 of 45,018 unresolved people hold exactly one mention.**
+⚠ **"Name as it appeared" is NOT recoverable per appearance** — `corpus_sections.speaker` is NULL on
+5,000/5,000 sampled committee sections. Flagged on every row, not faked. **Fix belongs in the sweeps.**
+✅ **§3** three tiers defined once in SQL; unknown `key_source` → `unclassified`, not a safe default.
+⚠ A control refused to fire and taught the lesson: **all 788 name-matches carry `parl_member_id`**,
+so a tier read off the id column would promote every one of them to "identified".
+✅ **§2** 187 pairs scored; the table has **no column a resolution could be written into** and
+`finding` **refuses** a merging value (tested by attempting the write and requiring rejection).
+⚠ 80 of 500 clusters are **episcopal sees** — an office held in succession — so `disjoint-service` is
+its own finding, and it is 150 of the 187 pairs. `sharma`: Virendra (Lab) vs Lord Sharma (Con),
+**868 shared divisions, 5.4% agreement**.
+✅ **§6** organisations **64.4%** identified, people **5.4%** — a factor of 12; the 32.3% blend is
+printed once, labelled as the number to stop quoting.
+⚠⚠ **LIVE DEFECT, reported not fixed: MNIS's "address as" is often just the surname**, so `brown` and
+`geoffrey` are live match surfaces that `isUselessName()` cannot catch. **Three of the 788 stand on a
+surface the register says is shared** — `Mr  George` (Bruce George vs The Lord George) and `Robinson`
+(Geoffrey vs Iris) are coin flips at confidence 0.9. NOT unmatched: that is a resolution.
+▶ **NEXT FOR CC-GRAPH:** record the surface ON the edge · a rule refusing a match on a shared
+surface · Companies House / Charity Commission (columns and tier decisions already in place) ·
+organisation `first_seen` repair.
+
+2026-08-16 10:54 UTC — ▼ **LEX SPRINT 3-E: THE TRUNCATION'S CAUSE IS `acceptedSummary()`
 SLICING EVERY FIELD AT 80 CHARACTERS INTO THE PROMPT — proved to the character on all five clauses,
 including one cut at 106 because `{"avoidance":"` takes 14 of the JSON slice's 120.** ⚠ The brief says
 three clauses end mid-word; only one does, and the other two are undetectable after the fact — which is
