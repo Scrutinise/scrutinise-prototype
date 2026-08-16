@@ -35,6 +35,9 @@ import { runSearch } from './search-gateway'
 import { buildFactsBlock, type TurnFacts } from './facts'
 import { readStageSearches, displayStageFor, type StageSearchRecord } from './stage-search'
 import { PROBLEM_FIELD_KEY, looksLikeASolution } from './method'
+import { acceptedSummary, sourceValuesFor } from './accepted-context'
+
+export { acceptedSummary } from './accepted-context'
 
 // `field` (§19-D Task 1b) tags a Lex bubble with the field it was said ABOUT, so the
 // problem gate can count its own presses without a schema change. Absent on every
@@ -86,12 +89,11 @@ function acceptedValue(state: CanonicalState, key: string): unknown {
   const f = findField(state, key)
   return f && f.status === 'ACCEPTED' ? f.value : null
 }
-function acceptedSummary(state: CanonicalState): string {
-  return allFields(state)
-    .filter((f) => f.status === 'ACCEPTED' && f.value)
-    .map((f) => `${f.label}: ${typeof f.value === 'string' ? f.value.slice(0, 80) : JSON.stringify(f.value).slice(0, 120)}`)
-    .join(' · ')
-}
+// §19-E Task 1 — `acceptedSummary` used to live here as `value.slice(0, 80)`, and that
+// slice is what put three mid-word clauses into Charlie's guiding-policy summary. It
+// now lives in ONE place (accepted-context.ts) alongside the source-values block that
+// gives a composed field the whole of what it is composing from. Re-exported so this
+// module's own callers are unchanged.
 
 /** The facts of this conductor turn (§19-C Task 1b) — including the stage's stored
  *  search, so a conductor message can only describe results that actually exist. */
@@ -124,6 +126,9 @@ async function buildPrompt(
     activePage: state.stage,
     factsBlock: opts.factsBlock ?? (await factsFor(ideaId, state)),
     acceptedSummary: acceptedSummary(state),
+    // §19-E Task 1 — a composed field gets the COMPLETE text of its sources, so it
+    // never has to compose from the abridged ledger.
+    sourceValuesBlock: sourceValuesFor(def.key, state),
   })
 }
 

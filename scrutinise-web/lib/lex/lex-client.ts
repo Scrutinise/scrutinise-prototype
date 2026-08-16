@@ -34,12 +34,25 @@ export interface LexTurnContext {
   /** §19-C Task 1b — the facts of this turn (lib/lex/facts.ts). The only permitted
    *  source for any claim about what exists, was written, or was found. */
   factsBlock?: string | null
-  /** A compact summary of what's already accepted, for grounding. */
+  /** A compact INVENTORY of what's already accepted. Long values are abridged on a
+   *  sentence or word boundary and each abridged entry says so — see text-integrity.ts.
+   *  It orients; it is never the material a field is composed from. */
   acceptedSummary: string
+  /** §19-E Task 1 — for a COMPOSED field (the summaries, the coherence check), the
+   *  COMPLETE text of the fields it is written from. Present only for those fields,
+   *  and never shortened: this is what stops a summary reproducing an 80-character
+   *  stump of `whatItRulesOut` as a finished sentence. */
+  sourceValuesBlock?: string | null
   /** §19-D Task 1b — how many times Lex has already pressed on the problem statement.
    *  At MAX_PROBLEM_PRESSES the gate is replaced by an instruction to accept and move
    *  on: Lex guides, it does not gatekeep. */
   problemPresses?: number
+  /** §19-E Task 2a — the user asked a question rather than supplying field content, so
+   *  answering it is this turn's job and the field instruction is subordinated to it. */
+  questionTurn?: boolean
+  /** §19-E Task 2c — a search has returned sources, so Lex is told to say which ONE OR
+   *  TWO matter and press the user to read them, rather than listing what came back. */
+  sourcesInHand?: boolean
 }
 
 export interface LexRawOutput {
@@ -74,6 +87,10 @@ const RESPONSE_SCHEMA = {
             'whoAffectedImpactCost', 'legalLandscape',
             // §19-D Task 9g — the causes LOOP, proposed as valueList (one per cause).
             'causes',
+            // §19-E Task 7 — the root-cause SELECTION, nameable in chat. It was the one
+            // Diagnosis step with no chat path at all, which is where the stage stopped
+            // saying "answer in chat or the panel" and started saying "over to you".
+            'rootCause',
             // Page 3 (Guiding Policy) — incl. A1 structured anticipatedResponses
             'whatItRulesOut', 'leverage', 'conditionsForSuccess', 'summaryGuidingPolicy',
             'anticipatedResponses',
@@ -165,7 +182,12 @@ function fieldGuidance(field: FieldDef, ctx: LexTurnContext): string {
         : field.key === 'causes'
           ? `They are building the causes of the problem as a TREE — for each, the cause and why it has persisted. Some candidates have been seeded from past debates and committee work; help them weigh those and add their own. Press every cause to a classification: MATERIAL (remove it and the problem largely goes away — decisive) or CONTRIBUTORY (worsens it, not decisive) — ask "is this THE thing, or A thing?" and do not accept vagueness. Where one cause drives another, encourage them to nest it beneath its parent ("X because Y because Z") rather than a flat list. They add, edit, classify, nest and remove causes in the panel; keep it clear, not exhaustive.`
           : field.key === 'rootCause'
-            ? `They are choosing which single cause is the main driver of the problem — the root cause. Help them reason about which is upstream of the others. They select it in the panel.`
+            // §19-E Task 7 — "over to you" was the whole complaint. This step used to
+            // end at "they select it in the panel", which is where Diagnosis stopped
+            // being a conversation. Naming a cause in chat now selects it, exactly as
+            // naming a cause in chat adds it.
+            ? `They are choosing which single cause is the main driver of the problem — the root cause. Help them reason about which is upstream of the others: ask which one, if it went away, would take the problem largely with it.
+They can answer HERE, in chat, or select it in the panel — both work, and saying so is part of your job. When they name one (in their own words, or as "the second one", or by quoting part of it), RETURN A PROPOSAL: proposal.fieldKey "rootCause", proposal.valueText = the cause as it is worded in the list, copied closely enough to be matched. The platform selects it and confirms. If they are still weighing it up, discuss it and emit no proposal — do not push them to choose.`
             : field.key === 'legalLandscape'
               ? `They are setting out what law currently governs this and where it falls short. If a relevant Act or regulator came up in the background briefing, point to it. They write this in the panel.`
               : field.key === 'policyOptions'
@@ -202,21 +224,21 @@ Discuss it conversationally in chatText (1–4 sentences). Quietly capture anyth
     case 'pivotalObstacle':
       return `Propose the PIVOTAL OBSTACLE — the single most important thing blocking a *solution* (why the problem persists). It is DISTINCT from the root cause (which is why the problem happens): the obstacle may be enforcement difficulty, vested interest, cost, or political will. This is the thing the eventual policy must defeat. ALWAYS ask, in chatText, WHO BENEFITS from things staying as they are (cui bono) — it is frequently the route to the obstacle — and record their answer in extracted.beneficiariesOfStatusQuo. proposal.valueText, proposal.fieldKey "pivotalObstacle". In chatText, name the obstacle in a sentence, ask the cui bono question, and invite them to accept or refine.`
     case 'summaryDiagnosis':
-      return `Write the DIAGNOSIS SUMMARY: 2–4 sentences that name BOTH the root cause (why the problem happens) and the pivotal obstacle (why a solution has not stuck), and how they relate. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryDiagnosis". In chatText, invite them to accept it or tell you what to adjust.`
+      return `Write the DIAGNOSIS SUMMARY: 2–4 sentences that name BOTH the root cause (why the problem happens) and the pivotal obstacle (why a solution has not stuck), and how they relate. Compose it from the SOURCE VALUES block above — that is the complete text of what the user accepted; write your own sentences from it and never copy a fragment out of the "already captured" inventory. proposal.valueText, proposal.fieldKey "summaryDiagnosis". In chatText, invite them to accept it or tell you what to adjust.`
     // ── Page 3 (Guiding Policy) ──
     case 'whatItRulesOut':
       return `Compose WHAT THE POLICY RULES OUT from the options the user ruled out and their reasons (the residue of choosing). 2–4 sentences, concrete. proposal.valueText, proposal.fieldKey "whatItRulesOut". In chatText, invite them to accept or edit.`
     case 'conditionsForSuccess':
       return `Propose the CONDITIONS FOR SUCCESS as testable bets — "for this to work, X must be true" — drawn from the chosen approach and its risks. A short list in one text block. proposal.valueText, proposal.fieldKey "conditionsForSuccess". In chatText, invite them to accept or add.`
     case 'summaryGuidingPolicy':
-      return `Write the GUIDING-POLICY SUMMARY: the chosen approach, its leverage on the pivotal obstacle, what it rules out and why, the anticipated responses, and the conditions for success. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryGuidingPolicy". In chatText, invite them to accept or adjust.`
+      return `Write the GUIDING-POLICY SUMMARY: the chosen approach, its leverage on the pivotal obstacle, what it rules out and why, the anticipated responses, and the conditions for success. Compose it from the SOURCE VALUES block above — that is the complete text of what the user accepted. Write it as continuous prose in your own sentences; do NOT paste a clause out of the "already captured" inventory, and every sentence you write must be a whole sentence. proposal.valueText, proposal.fieldKey "summaryGuidingPolicy". In chatText, invite them to accept or adjust.`
     // ── Page 4 (Coherent Actions) ──
     case 'coherenceCheck':
       return `Write the COHERENCE CHECK: a short commentary on whether the actions are mutually consistent, whether effort is CONCENTRATED (not smeared), and the SEQUENCING (what must precede what — chain-link dependencies where one failure breaks the chain). No new user labour — just your read. proposal.valueText, proposal.fieldKey "coherenceCheck". In chatText, invite them to accept or push back.`
     case 'costSummary':
       return `Present the COST SUMMARY: the aggregated plan cost (implementation one-off; enforcement and regulatory-friction ongoing) set against the Page 2 problem cost — the cost-benefit spine. Every figure is a range; never an unexplained point number. proposal.valueText, proposal.fieldKey "costSummary". In chatText, invite them to accept or challenge any figure.`
     case 'summaryCoherentActions':
-      return `Write the COHERENT-ACTIONS SUMMARY: the plan of coordinated actions and its cost-benefit case against the problem. Ground it strictly in what the user accepted. proposal.valueText, proposal.fieldKey "summaryCoherentActions". In chatText, invite them to accept or adjust.`
+      return `Write the COHERENT-ACTIONS SUMMARY: the plan of coordinated actions and its cost-benefit case against the problem. Compose it from the SOURCE VALUES block above — that is the complete text of what the user accepted; write your own whole sentences from it rather than copying a clause out of the "already captured" inventory. proposal.valueText, proposal.fieldKey "summaryCoherentActions". In chatText, invite them to accept or adjust.`
     default:
       return `Propose a value for this field in proposal.valueText with proposal.fieldKey "${field.key}".`
   }
@@ -230,14 +252,28 @@ export function buildLexSystemPrompt(ctx: LexTurnContext): string {
   // §19-D Task 1b — the problem gate arms only while the problem field is current, and
   // spends itself after two presses. Both facts are logged, so "the gate never fired"
   // and "the gate fired and the user held their ground" are distinguishable.
-  const methodCtx = { currentFieldKey: field?.key ?? null, problemPresses: ctx.problemPresses ?? 0 }
+  const methodCtx = {
+    currentFieldKey: field?.key ?? null,
+    problemPresses: ctx.problemPresses ?? 0,
+    questionTurn: !!ctx.questionTurn,
+    sourcesInHand: !!ctx.sourcesInHand,
+  }
   const method = methodForStage(ctx.activePage, methodCtx)
   // [lex-diag] — makes it visible in logs which method blocks are in the prompt (acceptance §19).
   console.log('[lex-diag] method blocks', {
     page: ctx.activePage, blocks: methodBlocksFor(ctx.activePage, methodCtx), presses: methodCtx.problemPresses,
+    questionTurn: methodCtx.questionTurn, sourcesInHand: methodCtx.sourcesInHand,
   })
+  // §19-E Task 2a — on a question turn the field is CONTEXT, not the task. Without this
+  // the field instruction ("RETURN A PROPOSAL…", "your chatText must point them to the
+  // panel") sits directly under the question and wins, which is exactly how "is a
+  // Charter the right instrument?" was answered with a re-issued summary.
+  const fieldPreamble = ctx.questionTurn && field
+    ? `⚠ THE USER HAS ASKED A QUESTION THIS TURN. The field below is CONTEXT ONLY — it tells you what you are both working on. Do NOT act on its instruction this turn, and emit no proposal. Answer the question. The field stays current and you pick it up next turn.\n\n`
+    : ''
+
   const fieldBlock = field
-    ? `CURRENT FIELD (the platform decides this — you never choose the sequence):
+    ? `${fieldPreamble}CURRENT FIELD (the platform decides this — you never choose the sequence):
   key:    ${field.key}
   label:  ${field.label}
   origin: ${field.origin}   ${field.origin === 'box' ? '(a box the user works on in the panel)' : '(you propose a value)'}
@@ -270,18 +306,29 @@ ${ctx.factsBlock ? `${ctx.factsBlock}\n\n` : ''}${ctx.statsBlock ? `${ctx.statsB
   idea title:      ${ctx.ideaTitle ?? '(not set yet)'}
   first idea:      ${ctx.isFirstIdea ? 'yes' : 'no'}
   already captured: ${ctx.acceptedSummary || 'nothing yet'}
+  (that list is an INVENTORY, abridged where a value is long — an entry marked ABRIDGED is
+   not the whole of what the user wrote and must never be quoted or copied as a sentence.)
 
-${fieldBlock}
+${ctx.sourceValuesBlock ? `${ctx.sourceValuesBlock}\n\n` : ''}${fieldBlock}
 
 RULES
 - One thing at a time. Finish the CURRENT field before the next one. Never ask about, hint at, or propose the next field — the platform moves on only when the user Saves or Skips, and it tells you the new current field then.
 - NEVER ask the user to transcribe, copy, re-type, or "pop"/"put" their own words into a box or panel. If they have told you something in chat, YOU tidy it into a proposal (valueText or valueObject) — they only review and Save. Asking them to fill the box themselves is the exact anti-pattern this platform exists to remove.
 - React to what the user just said before anything else.
-- chatText is always 1–4 sentences. Never put JSON or field names in chatText.
+- ${ctx.questionTurn
+    // §19-E Task 2a — the length rule was itself part of the defect. A four-sentence
+    // ceiling makes a real answer to "is a Charter the right instrument, and how is
+    // accountability handled now?" impossible, so the model did the only thing that fits
+    // and pointed at the panel. Brevity is right for conducting a form and wrong for
+    // answering a question, and the two are now different turns.
+    ? 'chatText answers the question, at whatever length the question deserves — for a substantive one that is several short paragraphs, and anything under three sentences is almost certainly an evasion. Structure it: take each part of what they asked in turn.'
+    : 'chatText is always 1–4 sentences.'} Never put JSON or field names in chatText.
 - Only ever propose for the CURRENT field shown above (never another field). If no current field is shown, propose nothing at all.
 - Never say you have written, saved, put or drafted something into a box unless you returned a proposal for the CURRENT field in this same turn. Claiming a write that did not happen is worse than saying nothing.
 - NUMBERS: state a figure only if it appears in a RETRIEVED STATISTICS block above, and give its period, unit and source when you do. With no such block, do not produce figures from memory — say what you'd need to look up. A confident wrong number is the worst thing you can give a user building a case for Parliament.
 - NEVER CLAIM: do not say that something exists, was written, was saved, was found, or is waiting in a panel unless the FACTS OF THIS TURN block says so. No "I've pulled together…", no "you'll find… in the panel", no describing research you have not been shown. If you have not been given it, you have not got it — say that instead. This is the single most damaging thing you can get wrong, because the user cannot tell the difference.
+- WHAT NEVER-CLAIM DOES NOT MEAN. It governs claims about THE PLATFORM AND THE CORPUS — what was retrieved, saved, searched or is sitting in a panel. It does NOT stop you thinking. You may and should reason from general knowledge: weigh one instrument against another, name the regime that already covers something, say what the closest existing analogue is, say what a committee would ask, and say what you think. Label it as reasoning when you do ("I'm reasoning here rather than citing…"). Refusing to answer a question you can answer is not caution — it is the failure this rule gets blamed for. The only hard line is fabrication: never invent a citation, a statistic, a date, a case name, or a claim about a document you were not shown.
+- NEVER END A SENTENCE MID-WORD, and never treat a fragment as a finished clause. If something you have been given stops in the middle of a word or a thought, say so in plain words ("your note on leverage stops mid-sentence — what did you mean to say?") rather than copying the break through into your own writing. A cut-off sentence the user cannot tell is cut off is a claim they cannot check.
 - If you could not do something (a draft failed, a search didn't run), say it plainly in one sentence and offer to try again. An honest failure is always better than a confident substitute.
 - RESEARCH REQUESTS: you cannot search the corpus yourself. If the user asks you to look something up and the FACTS block shows no search ran this turn, say so plainly — "I can't run a corpus search from here yet; the panel search runs at each stage, and I can look again when we move on" — and offer what you can do instead. Never imply you have searched, never describe sources you have not been shown, and never send them to the panel on spec.
 - "extracted" is optional; include only slots you are confident about.`
