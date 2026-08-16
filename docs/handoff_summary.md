@@ -2,10 +2,85 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-16 02:13 UTC — ▼ **INGEST: V36 IS REACHABLE. Embedded, indexed, served, and
-ABSENT is 9 → 6 on the acceptance test. Companies Act 2006 returns at RANK 1 through the product.**
-£1.07 of the £20 ceiling. The drain/census entry follows, then V37 and V36 §1. The LEX thread's
-17:36 entry is further down and equally current.*
+*Last updated: 2026-08-16 03:29 UTC — ▼ **GRAPH 2D-2: the position graph now carries 2,478,613
+`voted` edges and 59,996 `signed-motion` edges — and they cost ZERO bytes, because writing them the
+way the brief describes needed 2.21 GiB and Neon has 0.93 GiB left (94.8% of its line).** ⚠ Two
+things need Charlie: the mySociety `people.json` DATA licence (unstated — it blocks person-resolving
+the older majority of Hansard), and the Neon ceiling itself. SEARCH S3 and INGEST V36 follow, then
+V37 and V36 §1. The LEX thread's 17:36 entry is further down and equally current.*
+
+2026-08-16 03:29 UTC — ▼ **GRAPH 2D-2: 2,478,613 `voted` EDGES AND 59,996 `signed-motion` EDGES
+THAT COST ZERO BYTES — BECAUSE WRITING THEM PROPERLY WOULD HAVE NEEDED 2.21 GiB AND NEON HAS 0.93.**
+Executes `BRIEF_GRAPH_2D2.md` in full. Report: **`docs/POSITION_GRAPH_2D2_REPORT.md`**.
+CHANGE_LOG (2026-08-16 03:29 UTC). All code in `scripts/ingest/position-graph/`. `tsc` clean for that
+directory. **All 16 verification checks pass and every negative control fired.** Nothing user-facing.
+
+✅ **`voted`** — 2,478,613 edges, **2,616 people, all 5,645 divisions, 1999-11-24 → 2026-07-22, 100%
+evidence coverage** (proved: every derived section id resolves, with a control that fires).
+✅ **`signed-motion`** — 59,996 edges, 1,675 sponsors, 1989-11-21 → 2026-06-18, keyed on the member id
+our ingest was dropping.
+
+⚠⚠ **THE STORAGE FINDING IS THE ONE THAT MATTERS BEYOND THIS SPRINT. Neon is at 16.58 GiB of the
+17.5 GiB line — 94.8%.** §1's 2.53M edges were priced from this database's own measured per-row cost
+BEFORE anything was written: `graph_edge` 584.5 B/row + `graph_evidence` 355.8 B/row = **2.21 GiB
+against 0.93 GiB of headroom, 2.4× the space that exists.** `division_votes` already holds the same
+fact at **193.2 B/row**, so `voted` and `signed-motion` are **VIEWS** and every §1 requirement is
+checked rather than dropped. **This sprint's entire storage cost is 14.2 MB.** The rule, in
+`schema-2d2.sql`: *store the fact we do not already have; derive the edge from it.* ▶ **The next
+thing that wants to write millions of rows will not have that option** — flagged for Charlie.
+
+⚠ **CHARLIE'S CALL — mySociety's `parlparse/members/people.json` REFUSED on licence.** It is the only
+crosswalk from the TheyWorkForYou person id to MNIS; its `LICENSE.txt` covers the *software*
+(AGPL-3.0) and GitHub reports the repo `NOASSERTION`, so the DATA licence is unstated — the Public
+Whip ODbL question again. **Consequence, measured: 67.6% of sampled Hansard speeches carry a
+*membership* id and only 16.2% a *person* id, so the older majority of Hansard cannot be
+person-resolved until this is ruled on.** Parliament's own Members API (OPL v3.0) was used instead
+and does not publish the crosswalk.
+
+⚠ **§2's honest result: the graph's people are still mostly name clusters, which is what §2 asked to
+be told.** Stable-key person entities **438 → 2,603 (5.9×)**; **788 more carry a register member id at
+`key_source='name-match'` confidence 0.9 — deliberately NOT `parl-member-id`/1.0**, because a name
+match against a curated register is still a name match; **45,018 unresolved**, correctly (they are
+committee witnesses). **24 splits detected, logged, NONE resolved** — and the inherited peerages
+(`Viscount Camrose`, `Lord Ashton of Hyde`) are the dangerous ones, being the same title held by
+different people in succession. **24 is a floor, not a census.** 54 merges, all read by hand.
+**119 of 2,735 voters unresolved, four of the five largest being split cases — the price of refusing
+to guess.**
+
+⚠ **A DEFECT IN 2D-1's SPINE: `graph_entity.first_seen` equals `last_seen` on 100% of the 46,298
+person entities** — "first" records the LAST sighting. **Repaired on 7,739 people.** ⚠ **The 40,518
+ORGANISATION entities are very likely affected the same way and were NOT touched — CC-GRAPH's next
+job, flagged rather than silently changed.**
+
+⚠ **THE BRIEF'S "98.5% of Hansard speeches carry the person id" IS TRUE OF RECENT FILES ONLY** — the
+attribute is renamed around 2010 and the older half carries a *membership* id instead. The first
+probe searched only for `person_id` and reported whole decades at exactly 0.0%, which is what a
+parser gap looks like; dumping the bytes (§13) found the rename. **Name-matching that population
+would merge 1.6% of names and SPLIT 16.8% of people** — the measured argument for §2's own
+instruction that `spoke-in` stays unbuilt.
+
+✅ **§4 ANSWERED, EDGE NOT BUILT: consultation responders are NOT structured and NOT in the text we
+hold.** 0 of 60 gov.uk API records carry any responder field; at most 2.3% of 300 compiled documents
+carry a named-list signal and **every hit is a POINTER to a linked PDF**. It is a fetch job plus a
+PDF-extraction job — a different sprint, as the brief anticipated.
+
+✅ **§5 — three read by hand, 9 of 9 divisions re-fetched from `votes.parliament.uk` and matched.**
+⚠ **The merge flagged in advance as riskiest is probably wrong** (entity #43723 holds MNIS 565 next
+to the surface "Dr John Morris"; the register records no doctorate). Flagged, not silently kept.
+⚠⚠ **The obvious fix for it was tested and FAILED** — "distrust a match on an out-of-date name" flags
+102 of 788 including hand-verified-correct Theresa May, Kenneth Clarke and Norman Tebbit, because
+`nameHistory` end dates track a change of *style*. **Recorded so nobody builds that screen.**
+
+⚠ **AN API DEFECT WORTH RECORDING: `EarlyDayMotions/list?skip=5200` returns HTTP 200 wrapping
+`{"StatusCode":400,"Success":false}`** — `res.ok` is TRUE so every retry rule waves it through. It
+cost 100 motions. **I first called it deterministic and was wrong; six requests to the identical URL
+gave 400,400,400,400,200,200.** Gap now closed, 60,995 of 60,995. **Rule: on this API check the
+BODY's StatusCode, not the transport's.**
+
+▶ **NEXT FOR CC-GRAPH:** organisation `first_seen` repair · the 119 unresolved members (blocked by
+the ambiguity screen, and resolving them needs evidence the register does not carry) · full EDM
+signatories (**97.1% of the 2,125,547 signatures are still absent**; a scrape with its own licence
+and rate-limit questions, and where withdrawn signatures live) · `spoke-in`, still correctly unbuilt.
 
 2026-08-16 02:48 UTC — ▼ **SEARCH S3: §7 AND §1 DONE. ⚠ THE `LegislationSection` DROP IS *NOT*
 UNBLOCKED — and the reason has changed.**

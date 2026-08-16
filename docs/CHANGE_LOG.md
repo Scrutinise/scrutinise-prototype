@@ -131,6 +131,126 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 2D-2 — 2.48M `voted` EDGES THAT COST ZERO BYTES, AND A PERSON SWEEP THAT REPORTS ITS OWN LIMITS (2026-08-16 03:29 UTC)
+
+Executes `docs/BRIEF_GRAPH_2D2.md` in full. Report of record: **`docs/POSITION_GRAPH_2D2_REPORT.md`**.
+All code in `scripts/ingest/position-graph/`. `tsc --noEmit` clean for that directory (14 pre-existing
+errors elsewhere, in files this sprint did not touch). **Nothing here is user-facing**, per §5.
+
+**`voted`: 2,478,613 edges over 2,616 people and all 5,645 divisions, 1999-11-24 → 2026-07-22, 100%
+evidence coverage.** `signed-motion`: **59,996 edges over 1,675 sponsors**, 1989-11-21 → 2026-06-18.
+**All 16 verification checks pass and every negative control fired.**
+
+⚠⚠ **§1 COULD NOT BE BUILT AS WRITTEN, AND THE REASON WAS PRICED BEFORE ANYTHING WAS WRITTEN.**
+2,528,032 edges into `graph_edge` costs **2.21 GiB** at this database's own measured per-row cost
+(`graph_edge` 584.5 B/row, `graph_evidence` 355.8 B/row — read from `pg_class`, not estimated).
+**Neon had 0.93 GiB of headroom, at 94.7% of the 17.5 GiB line** — already past the 90% the ops
+observer alerts on. The ask was 2.4× the space that exists. Shrinking the work to fit is what root
+`CLAUDE.md` §17 names as the failure mode; a summary is what §1 forbids in terms. **`division_votes`
+is already the edge table** — one row per member per division at **193.2 B/row**, a third the cost,
+with the vote, the teller flag, the date and the party as at that date. So `voted` and
+`signed-motion` are **VIEWS**, and every §1 requirement survives and is checked rather than asserted.
+**The sprint's whole storage cost is 14.2 MB of new tables; the 2.54M edges occupy zero bytes.**
+The rule, written into `schema-2d2.sql`: **store the fact we do not already have; derive the edge
+from it — a graph whose edges are views over their sources cannot drift from those sources.**
+
+✅ **The identity work is validated by something name-matching could not have done: 105 member ids
+vote under two different names** (`Theresa May` / `Baroness May of Maidenhead`, `Eric Pickles` /
+`Lord Pickles`). Keyed, one actor each; name-matched, **210 actors each holding half a career**.
+
+⚠ **§2's honest headline is that the people are still mostly name clusters, which is what §2 asked to
+be told.** Person entities on a **stable key: 438 → 2,603 (5.9×)**; **788** carry a register member
+id at `key_source='name-match'` **confidence 0.9, deliberately NOT `parl-member-id`/1.0** — a name
+match against a curated register is still a name match, and `schema.sql` says that column exists "so
+a name-matched row can never be mistaken for a keyed one". **45,018 remain unresolved**, correctly:
+they are committee witnesses and a register of parliamentarians cannot identify one.
+**Source: Parliament's own `members-api` (OPL v3.0), 5,234 members, 20,997 dated name forms.**
+
+⚠ **CHARLIE'S CALL — mySociety's `parlparse/members/people.json` was REFUSED on licence, not
+overlooked.** One 27.7 MB fetch, 14,796 persons, and a `datadotparl_id` crosswalk on 2,952 of them —
+the only route from the TheyWorkForYou person-id space to MNIS. **Checked rather than assumed:** its
+`LICENSE.txt` covers "the software in this directory" (AGPL-3.0) and says nothing about the data;
+GitHub reports the repo as `NOASSERTION`. Same unresolved-obligation shape as the Public Whip ODbL
+flag in `licence-map.ts`. **Consequence, measured: 67.6% of sampled Hansard speeches carry a
+*membership* id (`speakerid=…/member/N`) and only 16.2% a *person* id** — a membership is a seat-term,
+not a person, so **the older majority of Hansard cannot be person-resolved until this is ruled on.**
+
+⚠ **THE BRIEF'S "98.5% of Hansard speeches carry the person id" IS TRUE OF RECENT FILES ONLY.** By
+decade: 2020s 93.1% person / 2000s 0% person but 92.6% membership / 1980s 0% and 93.3%. ⚠ The first
+probe searched only for `person_id` and reported whole decades at **exactly 0.0%** — which is what a
+parser gap looks like, not a source gap. Dumping the bytes (§13) found the attribute **renamed**
+around 2010. **Measured cost of name-matching that population: merge risk 1.6% of names, SPLIT RISK
+16.8% of people** — the evidence for §2's own instruction not to build `spoke-in` from names.
+
+⚠ **24 SPLITS DETECTED, LOGGED, AND NONE RESOLVED** — one entity matching several real members
+(`Brown` → 4, `Ian Paisley` → 3, `Earl Attlee` → 2). **The inherited peerages are the dangerous
+ones**: `Viscount Camrose`, `Lord Ashton of Hyde`, `Viscount Ridley` — the same title held by
+different people in succession, which no amount of careful normalisation can see. **24 is a FLOOR,
+not a census**: a split is only visible where the entity matched the register at all. **54 merges**
+(51 surviving entities), every one printed and read rather than sampled. **119 of 2,735 voters remain
+unresolved and four of the five largest are split cases — that is the price of refusing to guess.**
+
+⚠ **A DEFECT IN 2D-1's SPINE, found by needing the column: `graph_entity.first_seen` equals
+`last_seen` on 100% of the 46,298 person entities** — the upsert wrote both from whichever row was in
+hand, so "first" records the LAST sighting, while the edges beneath span 2012–2026. **Repaired on
+7,739 person entities.** ⚠ Organisations (40,518) are very likely affected the same way and were NOT
+touched — 2D-1's lane, flagged not silently changed.
+
+⚠⚠ **TWO WRONG VERSIONS OF THE SAME SCREEN, BOTH CAUGHT BY MEASURING RATHER THAN REASONING.** A
+tenure test killed 216 clean matches including `Dame Joan Ruddock` — **a former MP giving evidence
+after leaving Parliament is the normal case**, so the high side of a tenure window carries no
+identity information at all. Its replacement assumed the register's earliest date was a birth date;
+measured, **1,690 of 5,234 precede the seat by 20–81 years (a birth date) and 3,470 equal the seat
+date (not one)**, and taking the second group as birth ruled four 2024-intake MPs "impossible"
+because a witness of that name was active in 2022 — which is what a candidate does before election.
+**What ships fires on 6 candidates, all born 1905–1915 against entities active 2016–2026, and reports
+419 untestable AS untestable rather than as passes.**
+
+✅ **§3: `PrimarySponsor.MnisId` is on the wire and we were dropping it — 60,995 motions swept, 100%
+carrying an id, not one NULL.** The corroboration that makes it worth anything: on the 60,637 motions
+where we hold both, **the recovered id's name agrees with the name our ingest stored on 60,637 and
+disagrees on 0.** ⚠⚠ **97.1% of the signatures are still absent** — 2,125,547 in the record,
+**60,995** nameable (primary sponsors only), **2,064,552 not in this graph**. Every row is stamped
+`role='primary-sponsor'` because a sponsor count printed beside a sponsor edge invites exactly the
+wrong reading.
+
+⚠ **AN API DEFECT WORTH MORE THAN THE 100 ROWS IT COST: `EarlyDayMotions/list?skip=5200` returns
+HTTP 200 wrapping `{"StatusCode":400,"Success":false}`.** `res.ok` is TRUE, so every retry rule in
+our fetch helpers waves it through — the §18 family, a failure that looks like something else.
+**I first called it deterministic by analogy with V36's "a 300 is an answer"; six requests to the
+identical URL settled it instead — 400, 400, 400, 400, 200, 200.** A transient wearing a permanent
+failure's clothes inside a success's. Gap closed (**60,995 of 60,995, zero held motions without a
+sponsor row**). Rule: **on this API check the BODY's StatusCode, not the transport's.** ⚠ And the
+first repair aimed at the wrong offset — a *different* page was also flaky, so "a page failed here"
+is not evidence that "the missing rows are here"; the real window came from binary search.
+
+✅ **§4 ANSWERED, EDGE NOT BUILT, as instructed. The consultation responder is NOT structured and is
+NOT in the text we hold — it is one hop away, inside linked PDFs.** Of 60 consultations through the
+gov.uk content API, **0 carry any field whose name suggests a responder** (`links.organisations` is
+the *publishing department*); attachments on 55/60. Of 300 compiled documents read from R2, **at most
+2.3% carry a named-list signal, and reading the hits shows every one is a POINTER** — *"includes a
+list of respondents in Annex A"* followed by a link to a `[government-response]` PDF. So it is a
+fetch job plus a PDF-extraction job, a different sprint, and the field family literally named for
+responses (`public_feedback_attachments`) is present on only 8/60.
+
+✅ **§5 — THREE READ BY HAND, 9 of 9 divisions re-fetched from `votes.parliament.uk` and matched.**
+MNIS 8 carries 1,786 Commons votes and 120 Lords votes **as one career on one actor**. ⚠ **And the
+merge flagged in advance as riskiest is probably wrong**: entity #43723 holds MNIS 565 alongside the
+surfaces `Dr John Morris` and `Mr John Morris`, and **the register records no doctorate for MNIS 565
+at any point**. Its member id and votes are right; its written-evidence edges are suspect. Flagged,
+not silently kept. ⚠⚠ **The obvious generalisation was tested and FAILED — recorded so nobody builds
+it.** "Distrust a match on a name the member had stopped using" flags **102 of 788 (13%)** and the
+list is full of matches proven correct — `Mrs Theresa May` (12.5-year gap, hand-verified), Kenneth
+Clarke (29.9), Norman Tebbit (28.5). `nameHistory` end dates track a change of *style*, not of
+name-in-use. **The screen is worthless and must not be built.**
+
+⚠ **`verify-2d2.ts` runs every check twice — once for real, once against deliberately corrupted data
+that MUST come back failing — and exits non-zero if a control does not fire even when the data is
+clean.** It earned that three times: it **failed** the `first_seen` repair (bad=1, the repair was
+running before merges moved edges), **failed** signed-motion evidence coverage (bad=258, edges for
+motions we hold no section for), and **reported its own signed-motion control as not firing** while
+`edm_sponsor` was empty — the guard catching itself.
+
 ## SEARCH S3 — §7 AND §1 DONE; THE DROP IS **NOT** UNBLOCKED, AND THAT IS THE HEADLINE (2026-08-16 02:48 UTC)
 
 ### The question nobody had asked: is the `LegislationSection` DROP unblocked?
