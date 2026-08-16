@@ -332,7 +332,26 @@ function capWords(q: string, stream: string): string {
 
 /** How the routing decision was obtained. Logged on every call (§2.3) so the intermittency rate
  *  is readable from production logs rather than inferred from a test script. */
-export type RouteOutcome = 'full' | 'partial' | 'failed'
+/**
+ * `disabled` is NOT a failure and must never be counted as one — but it must not be
+ * INVISIBLE either, which is what it was until 2026-08-16.
+ *
+ * ⚠ S3 §7.1, handed over by CC-Ingest. `routeQuery` returned bare `null` when
+ * LEX_QUERY_ROUTER was off and bare `null` when the router tried and failed, so no
+ * caller could tell the two apart. The V36 acceptance run rendered both as
+ * `[NONE — fail-open]` and reported ROUTING 16/30 against a baseline of 0 — a result
+ * that read as the ingest having broken routing, when the router had simply never run.
+ * That is CLAUDE.md §18's corollary: a component that is OFF and a component that has
+ * FAILED must not look identical from outside.
+ */
+export type RouteOutcome = 'full' | 'partial' | 'failed' | 'disabled'
+
+/** Is routing switched on in this process? Callers that REPORT a retrieval number must
+ *  print this alongside it — a recall figure measured with the router off is not
+ *  comparable with one measured with it on, and nothing else in the output says so. */
+export function routerEnabled(): boolean {
+  return flagEnabled('LEX_QUERY_ROUTER')
+}
 
 /**
  * Recover every stream whose value closed cleanly out of a payload that will not parse.
@@ -396,9 +415,14 @@ function capRoute(route: RouteResult): RouteResult {
  * against, so it degrades the same way.
  */
 export async function routeQuery(keywords: string[], ideaContext: string): Promise<RouteResult | null> {
-  // OFF is not a failure — return quietly. Everything below this line runs only when an operator
-  // has asked for routing, so anything that stops it from happening IS worth shouting about.
-  if (!flagEnabled('LEX_QUERY_ROUTER')) return null
+  // OFF is not a failure — but it is not nothing either, and it used to be silent.
+  // It now emits its OWN counted outcome so a reader of the log, or of
+  // routeOutcomeCounts(), can tell "never asked to route" from "asked and could not".
+  // See RouteOutcome above for the incident this comes from.
+  if (!flagEnabled('LEX_QUERY_ROUTER')) {
+    logRouteOutcome('disabled', [], 'LEX_QUERY_ROUTER is off — routing was never attempted, this is NOT a fail-open')
+    return null
+  }
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return routerFailOpen('missing-key', 'GEMINI_API_KEY is not set in this environment')
@@ -464,7 +488,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
 // so a single log line answers "how often is this failing?" without collecting a sample first.
 // In-process counters reset on redeploy, like every other counter we keep — the per-call line is
 // the record, the totals are the convenience.
-const routeCounts: Record<RouteOutcome, number> = { full: 0, partial: 0, failed: 0 }
+const routeCounts: Record<RouteOutcome, number> = { full: 0, partial: 0, failed: 0, disabled: 0 }
 
 /** Read-only snapshot for tests and any future /stats surface. */
 export function routeOutcomeCounts(): Record<RouteOutcome, number> {
@@ -474,7 +498,8 @@ export function routeOutcomeCounts(): Record<RouteOutcome, number> {
 function logRouteOutcome(outcome: RouteOutcome, streams: string[], note?: string) {
   routeCounts[outcome]++
   const line = `[query-router] route_outcome=${outcome} streams=${streams.length ? streams.join(',') : 'none'} ` +
-    `totals=full:${routeCounts.full}/partial:${routeCounts.partial}/failed:${routeCounts.failed}${note ? ` — ${note}` : ''}`
+    `totals=full:${routeCounts.full}/partial:${routeCounts.partial}/failed:${routeCounts.failed}/disabled:${routeCounts.disabled}` +
+    `${note ? ` — ${note}` : ''}`
   if (outcome === 'failed') console.error(line)
   else console.log(line)
 }

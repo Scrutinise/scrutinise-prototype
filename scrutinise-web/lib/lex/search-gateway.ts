@@ -19,8 +19,8 @@ import { flagEnabled } from '@/lib/env-flags'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
 import { groupForPanel } from './search-stub'
-import { expandQuery, routeQuery } from './query-expansion'
-import { runRoutedSearch, perStreamVectorActive } from './query-router'
+import { expandQuery, routeQuery, routerEnabled } from './query-expansion'
+import { runRoutedSearch, perStreamVectorActive, STREAMS } from './query-router'
 import { fuseWeightedRrf } from './fusion'
 
 // ── Query intent (§14.2) — owned HERE, aligned to the search side's stream taxonomy.
@@ -193,10 +193,54 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       })
     }
     queryKeywords = streamQuery
-    const out = await runFtsSearch(streamQuery, limit, q.tier)
-    ftsResults = out.results
-    failed = !!out.failed
-    failureReason = out.reason
+
+    // S3 §1. A tier-scoped caller used to end up here on `runFtsSearch` — BM25 ONLY.
+    // Per-stream fusion lives inside `fusedStream`, which only `runRoutedSearch`
+    // reached, so the three legacy legislation surfaces got the router's query
+    // REWRITE and no dense retrieval at all. Scoping and dense were accidentally
+    // mutually exclusive.
+    //
+    // The brief's requirement 2 is that the router must be able to run WITHIN a
+    // scope rather than the caller having to choose. `STREAMS` already carries a
+    // per-stream fused retrieval keyed by name, so a tier-scoped call can use the
+    // matching stream's own `search()` and get BM25+dense inside its scope, with no
+    // change to `runSearch`'s signature.
+    //
+    // ⚠ Only when the tier maps to EXACTLY ONE stream. `debates` and `committees`
+    // share the `parliamentary` tier and are separated downstream by display type,
+    // so picking one would silently narrow a caller's scope. Ambiguous tiers keep
+    // the old BM25 path and say so, rather than guessing.
+    const tierStreams = STREAMS.filter((s) => s.tier === q.tier)
+    if (!flagEnabled('LEX_TIER_FUSION')) {
+      // Flag OFF is the shipped default and is byte-for-byte the old behaviour, so
+      // "nothing changed until someone decides it should" is structural rather than
+      // a thing to test. See env-flags.ts for the measured trade-off behind the flag.
+      const out = await runFtsSearch(streamQuery, limit, q.tier)
+      ftsResults = out.results; failed = !!out.failed; failureReason = out.reason
+    } else if (tierStreams.length === 1) {
+      const s = tierStreams[0]
+      const hits = await s.search(streamQuery.join(' '), limit).catch((e) => {
+        console.error(`[search-gateway] tier-scoped fused stream '${s.name}' threw — falling back to BM25`, e)
+        return null
+      })
+      if (hits) {
+        routedStreams = [s.name]
+        ftsResults = hits
+        console.log('[search-gateway] tier-scoped FUSED retrieval', {
+          intent: q.intent, tier: q.tier, stream: s.name, results: hits.length,
+          dense: perStreamVectorActive() ? 'on' : 'off',
+        })
+      } else {
+        const out = await runFtsSearch(streamQuery, limit, q.tier)
+        ftsResults = out.results; failed = !!out.failed; failureReason = out.reason
+      }
+    } else {
+      console.log('[search-gateway] tier maps to !=1 stream — BM25 path retained', {
+        intent: q.intent, tier: q.tier, streams: tierStreams.map((s) => s.name),
+      })
+      const out = await runFtsSearch(streamQuery, limit, q.tier)
+      ftsResults = out.results; failed = !!out.failed; failureReason = out.reason
+    }
   } else if (flags.router) {
     const route = await routeQuery(keywords, q.ideaContext ?? '')
     const streamNames = route ? Object.keys(route) : []
@@ -216,7 +260,16 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
     } else {
       // error, not log: routeQuery has already said WHY on the line above, and this is a real
       // capability loss for the query — no per-stream scoping and no dense fusion.
-      console.error('[search-gateway] router fail-open — searching all streams unfiltered (reason logged by [query-router] above)', { intent: q.intent })
+      // S3 §7.1: OFF and FAILED both land here, and calling both "fail-open" is what made
+      // a disabled router read as a broken one. The retrieval consequence is identical;
+      // the diagnosis is not, so the two are named apart.
+      if (!routerEnabled()) {
+        console.log(
+          '[search-gateway] router DISABLED (LEX_QUERY_ROUTER off) — searching all streams unfiltered. ' +
+          'This is configuration, NOT a failure: routing was never attempted.', { intent: q.intent })
+      } else {
+        console.error('[search-gateway] router FAIL-OPEN — router is ON but produced no decision; searching all streams unfiltered (reason logged by [query-router] above)', { intent: q.intent })
+      }
       const out = await runFtsSearch(keywords, limit, q.tier)
       ftsResults = out.results
       failed = !!out.failed

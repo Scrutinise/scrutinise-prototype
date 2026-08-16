@@ -143,7 +143,16 @@ section('fail-open visibility')
   ok('missing key fails loudly rather than returning null quietly', /routerFailOpen\('missing-key'/.test(src))
   ok('an empty routing decision is treated as a failure', /no-streams-named/.test(src))
   const gw = fs.readFileSync(path.join(__dirname, '../lib/lex/search-gateway.ts'), 'utf8')
-  ok('the gateway fail-open is console.error', /console\.error\('\[search-gateway\] router fail-open/.test(gw))
+  // S3 §7.1 STRENGTHENED THIS. It used to assert only that the gateway's fail-open was
+  // console.error, which a single branch covering BOTH "router is off" and "router
+  // failed" satisfied — and that conflation is exactly what made a disabled router read
+  // as a broken one in the V36 acceptance run (ROUTING 16/30 against a baseline of 0).
+  // Loud is necessary and no longer sufficient: the two states must be TOLD APART.
+  ok('the gateway FAIL-OPEN is console.error', /console\.error\('\[search-gateway\] router FAIL-OPEN/.test(gw))
+  ok('the gateway names DISABLED separately from FAIL-OPEN', /router DISABLED \(LEX_QUERY_ROUTER off\)/.test(gw))
+  ok('a disabled router is NOT logged at error level', /routerEnabled\(\)/.test(gw))
+  ok('routeQuery emits a counted outcome when disabled', /logRouteOutcome\('disabled'/.test(src))
+  ok('`disabled` is a distinct RouteOutcome, not folded into failed', /'full' \| 'partial' \| 'failed' \| 'disabled'/.test(src))
 
   // The 2026-08-08 truncation bug: five tailored per-stream queries did not fit in 512 output
   // tokens, and nothing checked finishReason, so the cut-off arrived disguised as `bad-json`.
