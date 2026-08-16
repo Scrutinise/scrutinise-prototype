@@ -1,0 +1,192 @@
+{
+  "takenAt": "2026-08-16T07:40:17.237Z",
+  "commonThreshold": 50,
+  "aliasPairs": 14294,
+  "aliasRescuedInstruments": 1406,
+  "census": {
+    "provisions": "79495",
+    "placeholders": "5307",
+    "no_title": "7825",
+    "covered_in_place": "11593",
+    "found_elsewhere": "11518",
+    "undiscriminating": "4845",
+    "held_only_in_legacy": "38407"
+  },
+  "worstInstruments": [
+    {
+      "gid": "uksi/2010/686",
+      "title": "The Insolvency (Amendment) Rules 2010",
+      "legacy_n": 590,
+      "corpus_n": 580,
+      "orphans": 523
+    },
+    {
+      "gid": "uksi/2019/459",
+      "title": "The Air Traffic Management (Amendment etc.) (EU Exit) Regulations 2019",
+      "legacy_n": 400,
+      "corpus_n": 397,
+      "orphans": 307
+    },
+    {
+      "gid": "uksi/1993/1956",
+      "title": "Act of Sederunt (Sheriff Court Ordinary Cause Rules) 1993",
+      "legacy_n": 328,
+      "corpus_n": 6,
+      "orphans": 273
+    },
+    {
+      "gid": "uksi/2019/775",
+      "title": "The Human Medicines (Amendment etc.) (EU Exit) Regulations 2019",
+      "legacy_n": 308,
+      "corpus_n": 295,
+      "orphans": 269
+    },
+    {
+      "gid": "uksi/2024/567",
+      "title": "The Veterinary Medicines (Amendment etc.) Regulations 2024",
+      "legacy_n": 229,
+      "corpus_n": 209,
+      "orphans": 214
+    },
+    {
+      "gid": "uksi/2009/1804",
+      "title": "The Limited Liability Partnerships (Application of Companies Act 2006) Regulations 2009",
+      "legacy_n": 272,
+      "corpus_n": 183,
+      "orphans": 190
+    },
+    {
+      "gid": "uksi/2019/632",
+      "title": "The Financial Services and Markets Act 2000 (Amendment) (EU Exit) Regulations 2019",
+      "legacy_n": 210,
+      "corpus_n": 209,
+      "orphans": 172
+    },
+    {
+      "gid": "uksi/2007/3101",
+      "title": "The European Qualifications (Health and Social Care Professions) Regulations 2007",
+      "legacy_n": 289,
+      "corpus_n": 279,
+      "orphans": 159
+    },
+    {
+      "gid": "ukpga/1845/16",
+      "title": "Companies Clauses Consolidation Act 1845",
+      "legacy_n": 175,
+      "corpus_n": 164,
+      "orphans": 156
+    },
+    {
+      "gid": "ssi/2010/22",
+      "title": "The National Health Service (Superannuation Scheme, Pension Scheme, Injury Benefits and Additional Voluntary Contributions) (Scotland) Amendment Regulations 2010",
+      "legacy_n": 151,
+      "corpus_n": 116,
+      "orphans": 147
+    },
+    {
+      "gid": "uksi/2009/2446",
+      "title": "The National Health Service Pension Scheme, Injury Benefits and Additional Voluntary Contributions (Amendment) Regulations 2009",
+      "legacy_n": 151,
+      "corpus_n": 115,
+      "orphans": 144
+    },
+    {
+      "gid": "uksi/2024/832",
+      "title": "The Human Medicines (Amendments relating to the Windsor Framework) Regulations 2024",
+      "legacy_n": 147,
+      "corpus_n": 146,
+      "orphans": 144
+    },
+    {
+      "gid": "uksi/1995/300",
+      "title": "The National Health Service Pension Scheme Regulations 1995",
+      "legacy_n": 202,
+      "corpus_n": 61,
+      "orphans": 141
+    },
+    {
+      "gid": "nisr/2010/22",
+      "title": "The Health and Personal Social Services (Superannuation Scheme, Compensation for Premature Retirement and Additional Voluntary Contributions), and Health and Social Care (Pension Scheme) (Amendment) Regulations (Northern Ireland) 2010",
+      "legacy_n": 151,
+      "corpus_n": 117,
+      "orphans": 140
+    },
+    {
+      "gid": "nisr/2006/47",
+      "title": "The Insolvency (Amendment) Rules (Northern Ireland) 2006",
+      "legacy_n": 282,
+      "corpus_n": 122,
+      "orphans": 140
+    },
+    {
+      "gid": "ukpga/1845/33",
+      "title": "Railways Clauses Consolidation (Scotland) Act 1845",
+      "legacy_n": 161,
+      "corpus_n": 154,
+      "orphans": 128
+    },
+    {
+      "gid": "ukpga/1845/19",
+      "title": "Lands Clauses Consolidation (Scotland) Act 1845",
+      "legacy_n": 141,
+      "corpus_n": 139,
+      "orphans": 123
+    },
+    {
+      "gid": "ukpga/1900/12",
+      "title": "Commonwealth of Australia Constitution Act 1900",
+      "legacy_n": 126,
+      "corpus_n": 9,
+      "orphans": 120
+    },
+    {
+      "gid": "uksi/2019/742",
+      "title": "The Law Enforcement and Security (Amendment) (EU Exit) Regulations 2019",
+      "legacy_n": 146,
+      "corpus_n": 145,
+      "orphans": 109
+    },
+    {
+      "gid": "uksi/2008/1911",
+      "title": "The Limited Liability Partnerships (Accounts and Audit) (Application of Companies Act 2006) Regulations 2008",
+      "legacy_n": 164,
+      "corpus_n": 67,
+      "orphans": 107
+    },
+    {
+      "gid": "uksi/2009/642",
+      "title": "The Insolvency (Amendment) Rules 2009",
+      "legacy_n": 117,
+      "corpus_n": 81,
+      "orphans": 102
+    },
+    {
+      "gid": "uksi/2023/403",
+      "title": "The Judicial Pensions (Fee-Paid Judges) (Amendment) Regulations 2023",
+      "legacy_n": 127,
+      "corpus_n": 75,
+      "orphans": 101
+    },
+    {
+      "gid": "uksi/2003/1730",
+      "title": "The Insolvency (Amendment) Rules 2003",
+      "legacy_n": 240,
+      "corpus_n": 81,
+      "orphans": 100
+    },
+    {
+      "gid": "uksi/2019/418",
+      "title": "The National Health Service Pension Schemes, Additional Voluntary Contributions and Injury Benefits (Amendment) Regulations 2019",
+      "legacy_n": 109,
+      "corpus_n": 108,
+      "orphans": 92
+    },
+    {
+      "gid": "uksi/2013/262",
+      "title": "The Civil Procedure (Amendment) Rules 2013",
+      "legacy_n": 113,
+      "corpus_n": 22,
+      "orphans": 91
+    }
+  ]
+}
