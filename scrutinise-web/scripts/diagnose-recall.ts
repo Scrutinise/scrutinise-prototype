@@ -47,6 +47,10 @@ import { STREAM_SCOPES } from '../lib/lex/stream-scopes'
 import { corpusToType } from '../lib/lex/corpus-type-map'
 import { PREFERENCES, type PrefSide } from './gold-preferences'
 import type { SearchResult } from '../lib/lex/page1-config'
+// S3 §7.2 — this harness produced ABSENT 7 / ROUTING 16 on a machine with three
+// retrieval flags unset, a result that read as V36 having broken routing. It now
+// refuses to run degraded, and prints the configuration beside the number.
+import { assertRetrievalConfig, resolvedConfigLine } from '../lib/lex/harness-preflight'
 
 const L = (() => { const i = process.argv.indexOf('--limit'); return i >= 0 ? parseInt(process.argv[i + 1], 10) : 16 })()
 const K = parseInt(process.env.ORDER_K ?? '20', 10)
@@ -61,9 +65,14 @@ const rankOf = (side: PrefSide, rs: SearchResult[]) => { const i = rs.findIndex(
 type Verdict = 'IN_TOP_K' | 'RANKING' | 'CANDIDATES' | 'ROUTING' | 'TYPING' | 'ABSENT'
 
 async function main() {
-  for (const v of ['FTS_SEARCH_URL', 'GEMINI_API_KEY', 'DATABASE_URL']) {
+  for (const v of ['GEMINI_API_KEY', 'DATABASE_URL']) {
     if (!process.env[v]) { console.error(`${v} is not set — this measures the LIVE path and must not report from no data.`); process.exit(1) }
   }
+  // ⚠ The list above used to include FTS_SEARCH_URL and stop there — it guarded the flags
+  // that THROW and not the two that degrade in silence, which is why this harness once
+  // reported ROUTING 16/30 against a baseline of 0 and looked like an ingest regression.
+  // `assertRetrievalConfig` covers all four and refuses rather than degrades (S3 §7.2).
+  assertRetrievalConfig('diagnose-recall')
   const scoreable = PREFERENCES.filter((p) => p.surface === 'within-stream')
   console.log(`diagnose-recall — L=${L} K=${K} wide=${WIDE}, ${scoreable.length} within-stream pairs\n`)
 
@@ -141,6 +150,8 @@ async function main() {
 
   const total = Object.values(tally).reduce((a, b) => a + b, 0)
   console.log('\n════ WHERE THE MISSING DOCUMENTS ARE LOST ════')
+  // The number and the configuration that produced it travel together, always (S3 §7.2).
+  console.log(`  ${resolvedConfigLine()}`)
   for (const [k, v] of Object.entries(tally)) {
     console.log(`  ${k.padEnd(11)} ${String(v).padStart(3)}/${total}   ${'█'.repeat(Math.round(40 * v / Math.max(total, 1)))}`)
   }
