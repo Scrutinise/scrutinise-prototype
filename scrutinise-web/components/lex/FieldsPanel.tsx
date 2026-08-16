@@ -99,6 +99,91 @@ function hintsFor(key: string): string[] {
   return fieldDef(key)?.hints ?? []
 }
 
+// §19-E Task 7 — the stage-level hint, VERBATIM from the brief for Diagnosis. Keyed by
+// page so a later stage can have its own; a stage with no entry shows nothing rather
+// than a generic line, because a hint that applies everywhere teaches nothing.
+const STAGE_HINT: Record<string, string> = {
+  DIAGNOSIS:
+    'Dictating is a faster way to get your ideas down — Lex will tidy up your thoughts. ' +
+    'You can answer in the chat or write straight into the boxes here; either works.',
+}
+
+// ─── §19-E Task 5 — the editing surface ──────────────────────────────────────
+//
+// Charlie, with screenshots: the field editors show about two and a half lines of what
+// is often a long Lex draft. `whatItRulesOut` on his run was 579 characters and
+// `conditionsForSuccess` 1,282 — read three lines at a time, through a scrollbar, in a
+// box the user could not resize because every textarea carried `resize-none`.
+//
+// // A draft you cannot read is a draft you cannot judge, and judging the draft is the
+// // user's entire job on this panel.
+//
+// GrowTextarea does three things:
+//   1. Sizes itself to its CONTENT on mount and on every change, so a long draft is
+//      simply visible — no scrolling to find out what Lex wrote.
+//   2. Has a floor (so an empty box still looks like somewhere to write) and a ceiling
+//      (so a 3,000-character value does not push the Save button off the screen — past
+//      the ceiling it scrolls, which is the honest behaviour for something genuinely
+//      longer than the panel).
+//   3. Is DRAG-RESIZABLE (`resize-y`), and once the user drags it, auto-sizing stops
+//      for that box. A control that springs back to a computed height the moment you
+//      type in it is worse than one that never moved.
+const GROW_MIN_ROWS = 8
+const GROW_MAX_PX = 520
+
+function GrowTextarea({
+  value, onChange, placeholder, minRows = GROW_MIN_ROWS, className = '',
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  minRows?: number
+  className?: string
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  // Set by the resize observer the moment the user drags the handle. From then on this
+  // box's height is theirs, not ours.
+  const [userSized, setUserSized] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || userSized) return
+    // `auto` first: without it scrollHeight never shrinks, so deleting text leaves the
+    // box at its high-water mark for the rest of the session.
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, GROW_MAX_PX)}px`
+  }, [value, userSized])
+
+  // The drag handle writes an inline height. Watching for a height that differs from
+  // the one we computed is how we know the user moved it — there is no resize event on
+  // a textarea drag, so this is the only honest signal.
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let ours = el.clientHeight
+    const obs = new ResizeObserver(() => {
+      if (!ref.current) return
+      const h = ref.current.clientHeight
+      // A 2px tolerance: sub-pixel layout changes are not a drag.
+      if (Math.abs(h - ours) > 2 && !userSized) setUserSized(true)
+      ours = h
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [userSized])
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={minRows}
+      placeholder={placeholder}
+      className={`w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-y overflow-auto focus:outline-none focus:border-blue-400 ${className}`}
+    />
+  )
+}
+
 // §19-C Task 7 — Save is grey until there is something to save. A pending Lex proposal
 // is different: "Save & accept" genuinely awaits a press, so it stays black from the off.
 function saveClass(enabled: boolean): string {
@@ -170,12 +255,10 @@ function BoxField({
       {hints.length > 0 && !proposed && (
         <p className="text-[11px] text-zinc-400 mb-2 leading-snug">{hints.join(' · ')}</p>
       )}
-      <textarea
+      <GrowTextarea
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        rows={3}
+        onChange={setDraft}
         placeholder="Write as much or as little as you like…"
-        className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400"
       />
       <div className="flex gap-2 mt-1.5">
         <button
@@ -260,12 +343,14 @@ function OutputField({
           ? 'Accept it in the chat, or edit it here and Save.'
           : 'Lex will propose this from what you’ve said — or write it yourself and Save.'}
       </p>
-      <textarea
+      {/* A keyword list is genuinely one line of comma-separated chips and must not be
+          given eight rows; a Lex-drafted summary is 600–1,300 characters and must not be
+          given three. Same control, different floor. */}
+      <GrowTextarea
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        rows={isList ? 2 : 3}
+        onChange={setDraft}
+        minRows={isList ? 2 : GROW_MIN_ROWS}
         placeholder={isList ? 'keyword, keyword, keyword…' : 'Write it here if you’d rather…'}
-        className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400"
       />
       <div className="flex gap-2 mt-1.5">
         <button onClick={submit} disabled={busy || !draft.trim()}
@@ -354,11 +439,14 @@ function StructuredField({
             {slots.map((k) => (
               <div key={k}>
                 <label className="block text-[11px] font-medium text-zinc-500 mb-0.5">{SLOT_LABELS[k] ?? k}</label>
-                <textarea
+                {/* Five slots at eight rows each would be a 40-row wall, so a structured
+                    slot starts at four and grows to what Lex actually drafted — on the
+                    13 Aug run the anticipatedResponses slots were 309–401 characters
+                    apiece, which is six or seven lines, not two. */}
+                <GrowTextarea
                   value={draft[k] ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, [k]: e.target.value }))}
-                  rows={2}
-                  className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400"
+                  onChange={(v) => setDraft((d) => ({ ...d, [k]: v }))}
+                  minRows={4}
                 />
               </div>
             ))}
@@ -455,7 +543,7 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
         <input value={c} onChange={(e) => setC(e.target.value)} placeholder="Cause"
           className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why has it persisted?"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <input value={ev} onChange={(e) => setEv(e.target.value)} placeholder="Evidence (optional)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <div className="flex gap-2">
@@ -573,7 +661,7 @@ function CausesField({ field, causes, busy, api }: { field: CanonicalField; caus
           <input value={c} onChange={(e) => setC(e.target.value)} placeholder="Add a cause…"
             className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
           <textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why has it persisted? (optional)"
-            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
           <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add cause</button>
         </div>
@@ -687,9 +775,9 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
           className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <MechChips selected={mechs} busy={busy} onToggle={(m) => setMechs((s) => s.includes(m) ? s.filter((x) => x !== m) : [...s, m])} />
         <textarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <textarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="flex gap-2">
           <button disabled={busy || !approach.trim()} onClick={() => { api.update(option.id, { approach: approach.trim(), caseFor, caseAgainst, mechanismTypes: mechs }); setEditing(false) }}
             className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
@@ -793,9 +881,9 @@ function PolicyOptionsField({ field, options, busy, api }: { field: CanonicalFie
           <input value={approach} onChange={(e) => setApproach(e.target.value)} placeholder="Add an approach…"
             className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
           <textarea value={caseFor} onChange={(e) => setCaseFor(e.target.value)} rows={2} placeholder="The case for (optional)"
-            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
           <textarea value={caseAgainst} onChange={(e) => setCaseAgainst(e.target.value)} rows={2} placeholder="The case against (optional)"
-            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+            className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
           <button disabled={busy || !approach.trim()} onClick={() => { api.add({ approach: approach.trim(), caseFor: caseFor.trim() || undefined, caseAgainst: caseAgainst.trim() || undefined }); setApproach(''); setCaseFor(''); setCaseAgainst('') }}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">Add approach</button>
         </div>
@@ -1085,7 +1173,7 @@ function ActionCard({ action, benchmarks, costLines, busy, api, costLinesApi }: 
         <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
         <textarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
-          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-none focus:outline-none focus:border-blue-400" />
+          className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <div className="space-y-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Costs (ranges with basis)</p>
           {COST_CATEGORIES.map((cat) => (
@@ -1327,6 +1415,21 @@ export default function FieldsPanel({
               )}
               {collapsible && <span className="text-[11px] text-zinc-400 w-3 text-center">{collapsed ? '+' : '−'}</span>}
             </div>
+
+            {/* §19-E Task 7 — THE DICTATION HINT, at the top of the stage.
+                Diagnosis is where the writing gets long — a problem statement, causes
+                with why each persisted, the legal landscape — and it is the stage where
+                Charlie found the interaction had quietly become panel-only. The hint
+                does two jobs: it tells the user dictation exists (the mic is already
+                built, per docs/CLAUDE.md §6), and it says Lex will tidy up what they
+                say, which is the thing that makes talking rather than typing safe.
+                Shown on the ACTIVE stage only: a hint repeated over four collapsed
+                stages is furniture. */}
+            {isActive && !isLocked && !collapsed && STAGE_HINT[page.key] && (
+              <p className="text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-2 mb-2 leading-snug">
+                {STAGE_HINT[page.key]}
+              </p>
+            )}
 
             {!isLocked && !collapsed && (
               <div className={`space-y-2 ${isActive ? `border-l-2 ${accent.border} pl-3` : ''}`}>

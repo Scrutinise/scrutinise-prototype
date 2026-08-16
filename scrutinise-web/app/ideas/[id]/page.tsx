@@ -19,9 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const idea = await prisma.idea.findUnique({
     where: { id },
-    select: { title: true, summaryDescription: true, stage: true, visibility: true },
+    select: { title: true, summaryDescription: true, stage: true, visibility: true, deletedAt: true },
   })
-  if (!idea) return PRIVATE_METADATA
+  if (!idea || idea.deletedAt) return PRIVATE_METADATA
   const isPublic = ['STAGE_3', 'STAGE_4', 'STAGE_5'].includes(idea.stage) &&
     ['LINK_ONLY', 'PLATFORM_LISTED'].includes(idea.visibility)
   if (!isPublic) return PRIVATE_METADATA
@@ -72,7 +72,10 @@ export default async function IdeaDetailPage({ params }: Props) {
     },
   })
 
-  if (!idea) notFound()
+  // §19-E Task 6 — a deleted idea 404s for everyone, its owner included. notFound()
+  // rather than a "this was deleted" page: the owner deleted it deliberately, and a
+  // tombstone in the place they removed something from is not a kindness.
+  if (!idea || idea.deletedAt) notFound()
 
   // Ideas are publicly accessible only at Stage 3+ with LINK_ONLY or PLATFORM_LISTED visibility.
   // Stage 1 and Stage 2 ideas are always private regardless of the visibility field.

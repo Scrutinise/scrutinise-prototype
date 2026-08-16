@@ -173,3 +173,70 @@ export async function PATCH(req: Request, { params }: Params) {
 
   return NextResponse.json({ ...updated, stage: latest?.stage })
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/ideas/[id] — §19-E Task 6.
+//
+// There was no way to delete an idea at all. Charlie has pre-rebuild ideas that cannot
+// exercise the current flow and are polluting his testing, and the only way to be rid
+// of one was a hand-written SQL statement against production.
+//
+// FOUR DECISIONS, each with a reason:
+//
+//  1. OWNER ONLY. Not owner-or-collaborator. `authorizeIdea` admits collaborators,
+//     which is right for editing and wrong for destruction: a collaborator invited to
+//     help with the wording should not be able to remove the thing they were invited
+//     to. Checked here rather than by reaching for the shared helper, because the
+//     shared helper's answer is the wrong one for this verb.
+//
+//  2. SOFT. `deletedAt` is set; nothing is destroyed. An accidental delete is one
+//     UPDATE away from being undone. A cascade across twenty related tables — votes,
+//     comments, endorsements, evidence, cost lines — is not reversible at all, and the
+//     brief asks for whichever is cheaper to reverse.
+//
+//  3. REFUSED FROM STAGE 4. Once voting has opened and the public can see it, an idea
+//     has other people's contributions attached to it and deleting it takes their work
+//     with it. That is a withdrawal, which already exists as a separate act with its
+//     own semantics. Returning 409 with the reason is more useful than a silent
+//     no-op, and more honest than pretending to delete something that is still listed.
+//
+//  4. IDEMPOTENT. Deleting an already-deleted idea returns 200, not 404. The client
+//     may retry; a second press should not produce an error dialogue about an idea the
+//     user has already successfully removed.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function DELETE(_req: Request, { params }: Params) {
+  const { id } = await params
+  const { error, user } = await getAuthenticatedUser()
+  if (error || !user) return error ?? NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const idea = await prisma.idea.findUnique({
+    where: { id },
+    select: { id: true, creatorId: true, title: true, stage: true, deletedAt: true },
+  })
+  if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  if (idea.creatorId !== user.id) {
+    // 403, not 404: the caller reached an idea they can legitimately see (they may be a
+    // collaborator). Pretending it does not exist would be a lie they can disprove.
+    return NextResponse.json({ error: 'Only the owner can delete an idea' }, { status: 403 })
+  }
+
+  if (idea.deletedAt) {
+    return NextResponse.json({ ok: true, alreadyDeleted: true, id, title: idea.title })
+  }
+
+  const PUBLIC_STAGES = ['STAGE_4', 'STAGE_5']
+  if (PUBLIC_STAGES.includes(idea.stage)) {
+    return NextResponse.json({
+      error:
+        'This idea is public and carries other people’s votes and contributions. ' +
+        'Withdraw it instead — deleting it would take their work with it.',
+      code: 'PUBLIC_IDEA',
+    }, { status: 409 })
+  }
+
+  await prisma.idea.update({ where: { id }, data: { deletedAt: new Date() } })
+  console.log('[idea] deleted', { id, stage: idea.stage, by: user.id })
+
+  return NextResponse.json({ ok: true, id, title: idea.title })
+}

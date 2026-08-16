@@ -32,6 +32,9 @@
     "check:cost-summary": "tsx --env-file=.env scripts/check-cost-summary.ts",
     "check:panel-claims": "tsx scripts/check-panel-claims.ts",
     "check:deepening": "tsx scripts/check-deepening.ts",
+    "check:text-integrity": "tsx scripts/check-text-integrity.ts",
+    "check:answer": "tsx scripts/check-answer-the-question.ts",
+    "check:sprint3e-ui": "tsx scripts/check-sprint3e-ui.ts",
     "whichdb": "tsx --env-file=.env scripts/whichdb.ts"
   },
   "prisma": {

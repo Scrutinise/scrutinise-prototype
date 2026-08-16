@@ -16,6 +16,7 @@ import CampaignTab from './CampaignTab'
 import DocumentExports from '@/components/documents/DocumentExports'
 import WhatNextPanel from '@/components/WhatNextPanel'
 import EvidenceFactsStrip from '@/components/lex/EvidenceFactsStrip'
+import DeleteIdeaDialog from '@/components/lex/DeleteIdeaDialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -2247,6 +2248,7 @@ export default function IdeaDetailClient({
   const [commentCount, setCommentCount] = useState(initialIdea.commentCount)
   const [userIdeaRating, setUserIdeaRating] = useState<number | null>(null)
   const [whatNextOpen, setWhatNextOpen] = useState(searchParams.get('whatnext') === 'true')
+  const [deleteOpen, setDeleteOpen] = useState(false)   // §19-E Task 6
 
   const stageLabel = STAGES.find(s => s.key === idea.stage)?.label ?? idea.stage
   const badgeClass = STAGE_BADGE[idea.stage] ?? 'bg-muted text-muted-foreground'
@@ -2437,7 +2439,35 @@ export default function IdeaDetailClient({
                 Campaign in a Box
               </Button>
             )}
+            {/* §19-E Task 6 — owner-only, and deliberately last in the row and quiet:
+                it is a destructive action sitting next to ordinary ones, so it should
+                be findable rather than prominent. Hidden from Stage 4 onwards, where
+                the idea carries other people's votes and contributions and the right
+                act is a withdrawal — the API refuses it there too, so the absence of
+                the button is a courtesy and not the enforcement. */}
+            {isOwner && !['STAGE_4', 'STAGE_5'].includes(idea.stage) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto text-muted-foreground hover:text-red-600"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete idea
+              </Button>
+            )}
           </div>
+
+          {deleteOpen && (
+            <DeleteIdeaDialog
+              ideaId={idea.id}
+              title={idea.title}
+              onCancel={() => setDeleteOpen(false)}
+              // Straight to the dashboard, and a hard navigation rather than a router
+              // push: the list this idea has just left is server-rendered, and a soft
+              // push would show it still sitting there.
+              onDeleted={() => { window.location.href = '/dashboard' }}
+            />
+          )}
 
           <WhatNextPanel
             idea={{

@@ -59,6 +59,7 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
     where: {
       stage: { in: ['STAGE_3', 'STAGE_4', 'STAGE_5'] },
       status: 'ACTIVE',
+      deletedAt: null,   // §19-E Task 6
     },
     orderBy: { updatedAt: 'desc' },
     take: PAGE_SIZE + 1, // take one extra to detect next page
@@ -90,7 +91,7 @@ export default async function BrowseIdeasPage({ searchParams }: Props) {
     })
     if (dbUser) {
       const raw = await prisma.idea.findMany({
-        where: { creatorId: dbUser.id, status: 'ACTIVE' },
+        where: { creatorId: dbUser.id, status: 'ACTIVE', deletedAt: null },   // §19-E Task 6
         orderBy: { updatedAt: 'desc' },
         take: 3,
         select: {

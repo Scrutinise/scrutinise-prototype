@@ -21,12 +21,17 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SearchResult } from '@/lib/lex/page1-config'
+import { repairRefUrl } from '@/lib/lex/legislation-url'
 
 interface KnownUnknown { question: string; why: string }
 interface EvidenceView {
   id: string; kind: string; title: string; body: string; fieldRef: string | null
   sourceType: string | null; citation: string | null; url: string | null
   status: string; note: string | null; runVersion: number
+  /** §19-E Task 3 — the sift's one-line reason this source bears on the proposal.
+   *  Null on findings written before the sift existed; absence renders as absence. */
+  siftReason: string | null
+  precedentTestPassed: boolean | null
 }
 interface IssueView {
   id: string; text: string; status: string; dismissReason: string | null
@@ -41,6 +46,8 @@ export interface PassState {
   findings: EvidenceView[]
   issues: IssueView[]
   references: SearchResult[]
+  /** §19-E Task 3 — "reviewed 104 sources; 12 bore on this proposal." Null before a run. */
+  sift: { reviewed: number; kept: number; skipped: boolean; line: string } | null
 }
 export interface EvidenceFacts {
   issuesRaised: number; issuesResolved: number; issuesOpen: number
@@ -270,6 +277,18 @@ export default function DeepeningPanel({
                     </p>
                   )}
 
+                  {/* §19-E Task 3 — WHAT THE SIFT DISCARDED, SAID OUT LOUD.
+                      "Reviewed 104 sources; 12 bore on this proposal." A sift whose
+                      discard count is hidden is indistinguishable from no sift at all,
+                      and the honest number is also the quality signal we watch. */}
+                  {p.sift && (
+                    <p className={`text-xs rounded-lg p-2 border ${p.sift.skipped
+                      ? 'text-amber-800 bg-amber-50 border-amber-200'
+                      : 'text-zinc-500 bg-zinc-50 border-zinc-200'}`}>
+                      {p.sift.line}
+                    </p>
+                  )}
+
                   {/* FINDINGS */}
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">
@@ -279,8 +298,12 @@ export default function DeepeningPanel({
                       ? <p className="text-xs text-zinc-400">Not run yet.</p>
                       : live.length === 0
                         ? <p className="text-xs text-zinc-500">
-                            This pass produced no findings. That is a statement about what the corpus holds
-                            on your idea, not about your idea.
+                            {/* Three different silences, and the panel must not blur them:
+                                nothing was retrieved, nothing that was retrieved bore on
+                                the proposal, or the search itself broke. */}
+                            {p.sift && p.sift.reviewed > 0 && p.sift.kept === 0
+                              ? `This pass reviewed ${p.sift.reviewed} sources and none of them bore on your proposal. That is a statement about what the corpus holds, not about your idea — and it is worth reading as a signal that the search terms may need widening.`
+                              : 'This pass produced no findings. That is a statement about what the corpus holds on your idea, not about your idea.'}
                           </p>
                         : <div className="space-y-2">
                             {live.map((f) => (
@@ -294,6 +317,15 @@ export default function DeepeningPanel({
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">
                       Issues to work through {p.issues.length > 0 && <span className="text-zinc-400 font-normal">· {openIssues} open of {p.issues.length}</span>}
                     </div>
+                    {/* §19-E Task 4 — say WHOSE reading this is. The issues used to come
+                        from the same call that wrote the findings, i.e. an author asked
+                        what they had missed. Naming the vantage point is what tells the
+                        user how to read the list. */}
+                    {p.issues.length > 0 && (
+                      <p className="text-[11px] text-zinc-400 mb-1.5">
+                        Read back as a hostile committee clerk would — where this is weakest, and what it cannot answer.
+                      </p>
+                    )}
                     {p.issues.length === 0
                       ? <p className="text-xs text-zinc-400">{p.status === 'NOT_RUN' ? 'Not run yet.' : 'No issues raised.'}</p>
                       : <div className="space-y-2">
@@ -384,10 +416,22 @@ function FindingCard({ f, busy, onJudge }: {
       </div>
       <p className="text-sm font-medium text-zinc-800 mt-1.5">{f.title}</p>
       <p className="text-xs text-zinc-600 leading-relaxed mt-1 whitespace-pre-wrap">{f.body}</p>
+      {/* §19-E Task 3 — WHY THIS SOURCE SURVIVED THE SIFT. A keep with no reason is a
+          rank in disguise, so the reason is shown rather than kept in a log. Absent on
+          findings written before the sift existed, and absence renders as absence. */}
+      {f.siftReason && (
+        <p className="text-[11px] text-zinc-500 mt-1.5 border-l-2 border-zinc-200 pl-2">
+          <span className="text-zinc-400">why this one: </span>{f.siftReason}
+        </p>
+      )}
       {/* Provenance is not optional decoration — a finding without its source is a claim. */}
       <p className="text-[11px] text-zinc-400 mt-1.5">
         {f.citation || 'source not recorded'}
-        {f.url && <> · <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">open</a></>}
+        {/* §19-E Task 8 — repaired on the way out, exactly as BackgroundPanel does it.
+            An EvidenceItem persisted before this sprint carries the bare committee URL
+            that 404s, and a finding whose "open" link is dead is worse than one with no
+            link: the user clicks it precisely to check whether we are telling the truth. */}
+        {f.url && <> · <a href={repairRefUrl(f.sourceType, null, f.url)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">open</a></>}
         {f.fieldRef && <> · bears on <span className="text-zinc-500">{f.fieldRef}</span></>}
       </p>
       {f.status === 'PROPOSED' && (
@@ -434,7 +478,7 @@ function IssueCard({ i, busy, onTriage, onDiscuss }: {
         <div className="mt-2 space-y-1.5">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2}
             placeholder="How did you deal with it?"
-            className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400" />
+            className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-y focus:outline-none focus:border-blue-400" />
           <div className="flex gap-2">
             <button disabled={busy || !text.trim()} onClick={() => { onTriage(i.id, 'address', { note: text.trim() }); setMode(null); setText('') }}
               className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white hover:opacity-90 disabled:opacity-50">Save</button>
@@ -448,7 +492,7 @@ function IssueCard({ i, busy, onTriage, onDiscuss }: {
         <div className="mt-2 space-y-1.5">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2}
             placeholder="Why is this not an issue? (required — it stays on the record)"
-            className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-none focus:outline-none focus:border-blue-400" />
+            className="w-full text-sm p-2 rounded-lg border border-zinc-200 bg-white resize-y focus:outline-none focus:border-blue-400" />
           <div className="flex gap-2">
             {/* Disabled without a reason, AND refused by the API — the form is a courtesy,
                 the API is the rule. */}

@@ -45,12 +45,16 @@ export default function AcceptCard({
       </div>
 
       {editing ? (
+        // §19-E Task 5 — the same complaint applies here: the chat's edit surface showed
+        // three rows of a 1,282-character draft, and it could not be dragged either. The
+        // read-only view below already renders the whole thing, so editing it in a
+        // letterbox was strictly worse than not editing it at all.
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          rows={isKeywords ? 2 : 3}
+          rows={isKeywords ? 2 : Math.min(20, Math.max(6, Math.ceil(draft.length / 60)))}
           autoFocus
-          className="w-full text-sm p-2 rounded-lg border border-blue-200 bg-white resize-none"
+          className="w-full text-sm p-2 rounded-lg border border-blue-200 bg-white resize-y"
         />
       ) : isKeywords ? (
         <div className="flex flex-wrap gap-1.5">

@@ -684,6 +684,13 @@ model Idea {
   updatedAt                 DateTime        @updatedAt
   publishedAt               DateTime?
   withdrawnAt               DateTime?
+  /// §19-E Task 6 — the owner deleted this idea. SOFT, so an accidental delete is one
+  /// UPDATE away from being undone; a cascade across twenty related tables is not
+  /// reversible at all. Deliberately NOT `status = ARCHIVED/WITHDRAWN`: those already
+  /// mean something else (a housekeeping state, and a Stage 4/5 public act), and
+  /// overloading one would make every later query about archived or withdrawn ideas
+  /// silently include deleted ones.
+  deletedAt                 DateTime?
 
   // Relations
   votes                     Vote[]
@@ -3083,6 +3090,15 @@ model DeepeningPass {
   /// Always an array once a run has happened. `[]` renders as "nothing was unfindable",
   /// which is information; a missing block is not.
   knownUnknowns Json                @default("[]")
+  /// §19-E Task 3 — the sift, reported rather than hidden. "Reviewed 104 sources, 12
+  /// bore on this" is honest about how much of a search does not help, and it is a
+  /// quality signal we can watch. A discard count nobody sees is the same as no sift.
+  candidatesReviewed Int            @default(0)
+  candidatesKept     Int            @default(0)
+  /// TRUE when the sift could not run and the pass fell back to the ranked set. Without
+  /// this, "reviewed 104, kept 104" reads as a sift that liked everything rather than a
+  /// sift that never happened (CLAUDE.md §18 corollary).
+  siftSkipped        Boolean        @default(false)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -3112,6 +3128,14 @@ model EvidenceItem {
   status     EvidenceStatus @default(PROPOSED)
   /// Why it was rejected, or why a re-run superseded it.
   note       String?
+  /// §19-E Task 3 — the sift's one-line reason this source bears on the proposal.
+  /// Null on findings written before the sift existed; inventing one would be a claim
+  /// about a judgement nobody made.
+  siftReason String?
+  /// Did the sift judge this source to satisfy the PRECEDENT TEST — a comparable
+  /// measure was tried, and we can say what it was for, what was predicted, or what
+  /// happened? A topically-related document is not a precedent.
+  precedentTestPassed Boolean?
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 

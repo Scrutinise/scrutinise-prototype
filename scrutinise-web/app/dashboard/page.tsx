@@ -28,7 +28,10 @@ export default async function DashboardPage() {
 
   const [ideas, notifications, contributionCount, communityMemberships, groupMemberships] = await Promise.all([
     prisma.idea.findMany({
-      where: { creatorId: user.id },
+      // §19-E Task 6 — a deleted idea leaves the owner's list. This surface had no
+      // status filter at all, which is why the delete had to be a column of its own
+      // rather than an overloaded status value.
+      where: { creatorId: user.id, deletedAt: null },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
