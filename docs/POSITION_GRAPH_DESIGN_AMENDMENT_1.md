@@ -1,5 +1,9 @@
 # AMENDMENT 1 to POSITION_GRAPH_DESIGN.md — §3, the observed edge list
 
+> ✅ **FOLDED INTO `POSITION_GRAPH_DESIGN.md` ON 16 AUGUST 2026** (§3's observed edge list, the
+> petition note, and the standing rule at the end of §3). This file is kept unchanged as the record
+> of what was decided when; **the design document is now the place to read it.**
+
 **Written:** 11 August 2026
 **File with:** `docs/POSITION_GRAPH_DESIGN.md`. Fold into §3 when that document is next edited.
 **Why this exists:** CC-Search deferred `early-day-motions` (60,737 sections) and `petitions`
