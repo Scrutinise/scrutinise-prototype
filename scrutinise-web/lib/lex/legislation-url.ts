@@ -29,6 +29,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SearchResultType } from './page1-config'
+import { committeeUrl } from './committee-url'
 
 /** The three types whose ids carry a legislation.gov.uk gid we can address. */
 const GID_BEARING: SearchResultType[] = ['PRIMARY_LEGISLATION', 'STATUTORY_INSTRUMENT', 'EU_LEGISLATION']
@@ -137,7 +138,13 @@ export function resolveResultUrl(type: SearchResultType, id: string, sourceUrl: 
     const gid = gidFromId(id)
     if (gid) return legislationUrl(gid, refFromId(id))
   }
-  return sourceUrl ?? ''
+  // §19-E Task 8 — committees.parliament.uk stores the bare `/{id}/` form, which 404s
+  // for all three document families. Applied unconditionally rather than gated on
+  // `type === 'COMMITTEE'`: the same host appears under COMMITTEE and GUIDANCE
+  // depending on the corpus a row came from, and a repair that only fires for one of
+  // them leaves the other broken for reasons nobody will remember. `committeeUrl` is
+  // a no-op on any URL that is not the exact bare form.
+  return committeeUrl(sourceUrl ?? '')
 }
 
 /**
@@ -151,8 +158,8 @@ export function repairRefUrl(
   id: string | null | undefined,
   url: string | null | undefined,
 ): string {
-  if (!id || !type) return url ?? ''
-  if (!GID_BEARING.includes(type as SearchResultType)) return url ?? ''
+  if (!id || !type) return committeeUrl(url ?? '')
+  if (!GID_BEARING.includes(type as SearchResultType)) return committeeUrl(url ?? '')
   const gid = gidFromId(id)
-  return gid ? legislationUrl(gid, refFromId(id)) : url ?? ''
+  return gid ? legislationUrl(gid, refFromId(id)) : committeeUrl(url ?? '')
 }
