@@ -131,6 +131,108 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## 2026-08-16 10:54 UTC — LEX SPRINT 3-E (§19-E): the silent cut, and the safety that became unhelpfulness
+
+Executes `docs/SPRINT_3E_BRIEF.md` §1–§8 in full. `tsc` clean, `next build` passes, all offline
+checks green. Full detail: `docs/LEX_PLAYBOOK.md` §17. ⚠ Browser verification of the UI items is
+Charlie's remaining gate — see the note at the end.
+
+**TASK 1 — THE CAUSE, NAMED BEFORE ANY FIX, AND IT IS NEITHER OF THE OBVIOUS TWO.** Not a bounded
+`VarChar`, not `maxOutputTokens`. **`acceptedSummary()` rendered every accepted field as
+`value.slice(0, 80)`** (`JSON.stringify(value).slice(0, 120)` for structured ones) into the prompt's
+`already captured:` line — the *only* place the accepted values appeared — while
+`summaryGuidingPolicy`'s instruction said *"ground it strictly in what the user accepted"*. Lex did
+as it was told and reproduced the stumps, full stop and all. **All five clauses are accounted for to
+the character** against the production row (read from Neon, 2026-08-15): `whatItRulesOut` cut at 80
+of 579 (`…a direct mandate f`), `leverage` at 80 of 200, `conditionsForSuccessLex` at 80 of 1,282,
+`chosenApproach` at 80 of 187 — and **the fifth proves the diagnosis is complete rather than merely
+plausible**: `anticipatedResponses.avoidance` was cut at **106**, which is exactly what
+`JSON.stringify(v).slice(0, 120)` leaves once `{"avoidance":"` has taken its 14 characters. That is
+where `…or break th` stops.
+
+⚠ **THE BRIEF'S DESCRIPTION IS ONE-THIRD RIGHT, AND THE DIFFERENCE DECIDES THE FIX.** It reports
+three clauses ending mid-word; **only one does**. `leverage` and `conditionsForSuccess` were cut at a
+*word boundary* and read as finished sentences — silent, and **undetectable after the fact by any
+regex**. So the fix is not a better detector: `abridge()` never cuts inside a word, prefers a
+sentence boundary and **always marks the cut**; and — the half that actually removes the defect —
+**a composed field is handed the COMPLETE text of the fields it composes from**, in its own block
+marked complete. Raising the cap would only have made it rarer. `acceptedSummary` also existed
+**twice** (conductor and chat route) as two identical slices, and the chat route's was the one
+Charlie's turns went through; it now lives in one file. `npm run check:text-integrity` reproduces the
+old behaviour from the real stored values, so its negative control is permanent.
+
+**TASK 2 — GROUNDING DOES NOT MEAN SILENCE.** Charlie's Charter question got three document names, a
+pointer at the panel, and a re-issued summary; plain Gemini and ChatGPT both answered it properly,
+**on the same underlying model**, so the difference was entirely ours. Three prompt facts were doing
+it, all three fixed: the field instruction sat directly under the question telling Lex to propose (on
+a question turn the field is now marked CONTEXT ONLY and **the route discards any proposal
+regardless**, because the platform owns state); `chatText is always 1–4 sentences` made a real answer
+impossible (lifted on a question turn — "anything under three sentences is almost certainly an
+evasion"); and never-claim was being read as "say nothing you cannot cite" (it now states, in the
+prompt, that reasoning from general knowledge is permitted and expected, must be *labelled* as
+reasoning, and that **fabrication is the only hard line**). Task 2c ships as `M_PRESS_TO_READ`: say
+which one or two sources matter and why, and ask the user to read those.
+
+**TASK 3 — THE SIFT, AND A CAP NOBODY HAD NOTICED.** ~100 candidates, an LLM sift with a one-line
+reason required per keep (a keep with no reason is discarded — it is a rank in disguise), and the
+count reported: *"Reviewed 104 sources; 12 bore on this proposal."* ⚠ **The limit was never the
+binding constraint**: the pass read `res.grouped`, and `groupForPanel` caps at 3 per display type and
+~20 overall, so however high `limit` went a pass could never see a fourth impact assessment — the
+panel's presentation rule taken as a machine's candidate set. **The precedent test is enforced, not
+requested**: the sift judges the source separately and can overrule the gather, downgrading a
+`PRECEDENT` that fails it to `FINDING` (not deleting it — only the word is withdrawn). `siftSkipped`
+is stored because "reviewed 104, kept 104" otherwise reads as a sift that liked everything rather
+than one that never ran, and **three silences are now distinguished**: the search broke, the corpus
+is silent, and 104 were reviewed and none bore on this.
+
+**TASK 4 — THE ISSUES COME FROM A DIFFERENT VANTAGE POINT.** A separate call with a hostile
+committee clerk's brief, given the findings to read critically, at temperature 0.7 (a cold adversary
+raises the same four objections about every proposal). The deterministic templates stay — a model is
+the wrong instrument for "this run produced zero SUPPORTS findings". A failed adversarial call falls
+back to the gather's own issues **and says so**, rather than presenting a proposal as having survived
+a hostile reading it never had.
+
+**TASKS 5/6/7 — the three surfaces.** Editors auto-size to content, are drag-resizable, and stop
+auto-sizing once dragged (a box that springs back as you type is worse than one that never moved);
+`resize-none` is gone from every Lex editing surface. Deletion is soft (`Idea.deletedAt`),
+**owner-only** — deliberately not via `authorizeIdea`, whose answer admits collaborators and is the
+wrong answer for this verb — refused from Stage 4 with a reason, gated at the chokepoints rather than
+in the forty routes that read an idea, with a dialog that **names the idea** twice including on the
+destructive button. ⚠ Deliberately NOT `status = ARCHIVED/WITHDRAWN`: both already mean something,
+and overloading one would make every later query about archived or withdrawn ideas silently include
+deleted ones. On Diagnosis, `rootCause` was the one step with no chat path at all — a *selection*, so
+a chat answer had nowhere to go and Lex said "over to you"; a named cause is now resolved to a row,
+and **the matcher refuses when two fit equally well** rather than picking the first, because the root
+cause is the most consequential single choice on the page. Dictation hint added verbatim.
+
+**TASK 8 — MEASURED, NOT INFERRED, AND TWO TRAPS ON THE WAY.** `committees.parliament.uk/writtenevidence/{id}/`
+404s and `…/{id}/html/` 200s, for all three families, and the corpus stores the bare form on
+**264,773 of 487,088 committee rows (54.4%)**. ⚠ The site answers a bare curl/fetch User-Agent with
+**403 on every path**, which reads exactly like a dead link; and **Node's `fetch` is 403'd regardless
+of headers** (bare HEAD, +UA, GET+UA, +Accept+Accept-Language all 403 while curl with the same UA
+returns 200 in the same second) — a TLS-fingerprint block, so the live probe shells out to curl and
+**skips rather than fails** when curl is absent. ⚠⚠ **And the repair is not the whole story: live,
+stored 0/24 open → repaired 21/24**, the residue being ids **dead at source in both forms** —
+including `/publications/13110/`, the very id this check used to assert. That is corpus freshness for
+the ingest thread, so the check asserts the property the repair OWNS (the bare form never opens; the
+repair never shuts a working link; the repair opens links that were shut) and **reports** the
+dead-at-source rate rather than folding it into a percentage that would go red for reasons its owner
+cannot fix.
+
+**Schema.** Two additive deltas applied to Neon after `npm run whichdb`, each re-run to prove
+idempotence: `prisma/lex_deepening_sift.sql` (`candidatesReviewed`, `candidatesKept`, `siftSkipped`,
+`EvidenceItem.siftReason`, `EvidenceItem.precedentTestPassed`) and `prisma/idea_soft_delete.sql`
+(`Idea.deletedAt` + a partial index over the live rows).
+
+⚠ **NOT DONE, and said plainly:** the acceptance criteria that need a browser and a live model — Lex
+answering the Charter question substantively, a Deepening pass reporting its reviewed/kept counts
+against real retrieval, the editors holding a long draft, an idea actually disappearing from the list
+— are **built and check-guarded but not walked**, because nothing is deployed yet. Per the 12 Aug
+finding, **a push is not a deploy for this project** and the only honest proof is a string read back
+off the running site. ⚠ `check:score-scope` still fails on the Central thread's `lib/question-library.ts`,
+unchanged and not this sprint's code — reported, not edited.
+
+
 ## INGEST V38 — THE 17.5 GiB WALL DOES NOT EXIST. THE REAL CEILING IS 16 TiB AND WE OCCUPY 0.10% OF IT (2026-08-16 07:45 UTC)
 
 Executes `docs/BRIEF_INGEST_V38_STORAGE.md`. Report of record: **`docs/V38_STORAGE_REPORT.md`**.

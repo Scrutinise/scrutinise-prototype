@@ -2,12 +2,77 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-16 07:45 UTC — ▼ **INGEST V38: THE 17.5 GiB STORAGE WALL DOES NOT EXIST.
-The enforced ceiling is 16 TiB and we occupy 0.10% of it, at $6.23/month — so 2D-2's edges would
-have fit for $0.83/month, and the number that stopped them was our own alert threshold with its
-label drifted from "alert line" to "wall".** ⚠ And the legacy-table blocker is BIGGER than the
-estimate: the census says 38,407, not ~23,000. GRAPH 2D-2, SEARCH S3 and INGEST V36 follow. The LEX
-thread's 17:36 entry is further down and equally current.*
+*Last updated: 2026-08-16 10:54 UTC — ▼ **LEX SPRINT 3-E: THE TRUNCATION'S CAUSE IS `acceptedSummary()`
+SLICING EVERY FIELD AT 80 CHARACTERS INTO THE PROMPT — proved to the character on all five clauses,
+including one cut at 106 because `{"avoidance":"` takes 14 of the JSON slice's 120.** ⚠ The brief says
+three clauses end mid-word; only one does, and the other two are undetectable after the fact — which is
+why the fix is the marker plus complete source values, not a better regex. ⚠ And Lex's refusal to answer
+Charlie's question was three lines in its own prompt. INGEST V38, GRAPH 2D-2 and SEARCH S3 follow.*
+
+2026-08-16 10:54 UTC — ▼ **LEX SPRINT 3-E IS BUILT: THE TRUNCATION'S CAUSE IS NAMED AND PROVED TO
+THE CHARACTER, AND LEX'S REFUSAL TO ANSWER TURNS OUT TO BE THREE LINES IN ITS OWN PROMPT.**
+Executes `docs/SPRINT_3E_BRIEF.md` §1–§8 in full. CHANGE_LOG (2026-08-16 10:54 UTC); full detail
+**`docs/LEX_PLAYBOOK.md` §17**. `tsc` clean, `next build` passes, every offline check green.
+
+✅✅ **TASK 1 — IT IS `acceptedSummary()`, AND IT IS NEITHER OF THE TWO OBVIOUS CANDIDATES.** Not a
+bounded `VarChar`, not `maxOutputTokens`. Every accepted field went into the prompt as
+`value.slice(0, 80)`, that line was the ONLY place the accepted values appeared, and the
+guiding-policy instruction said *"ground it strictly in what the user accepted"*. **All five clauses
+reconcile to the character** against the production row: three cut at exactly 80, and the fifth —
+`…or break th` — at **106**, which is precisely what `JSON.stringify(v).slice(0, 120)` leaves once
+`{"avoidance":"` has taken its 14 characters. That fifth number is what makes this a diagnosis
+rather than a plausible story.
+
+⚠ **THE BRIEF SAYS THREE CLAUSES END MID-WORD. ONLY ONE DOES — AND THAT CHANGES THE FIX.** Two were
+cut at a *word boundary* and read as finished sentences: silent, and **undetectable after the fact by
+any regex**. So the answer is not a cleverer detector. `abridge()` never cuts inside a word and
+**always marks the cut**; and the half that actually removes the defect is that a composed field is
+now handed the **COMPLETE** text of the fields it composes from. Raising the cap would only have made
+it rarer. ⚠ `acceptedSummary` existed **twice** — conductor and chat route — as two identical slices,
+and the chat route's was the one Charlie's turns went through. One copy now.
+
+✅ **TASK 2 — THE UNHELPFULNESS IS OURS, NOT THE MODEL'S.** Three prompt facts, all fixed: the field
+instruction sat directly under the question telling Lex to propose (the field is now CONTEXT ONLY on
+a question turn and **the route discards any proposal regardless**); `chatText is always 1–4
+sentences` made a real answer impossible (lifted); and never-claim was being read as "say nothing you
+cannot cite" (it now says, in the prompt, that reasoning from general knowledge is expected, must be
+labelled, and that **fabrication is the only hard line**).
+
+✅ **TASK 3 — AND A CAP NOBODY HAD NOTICED.** The pass read `res.grouped`; `groupForPanel` caps at 3
+per display type and ~20 overall, so **however high `limit` went a pass could never see a fourth
+impact assessment**. The limit was never the binding constraint. Now ~100 candidates through an LLM
+sift, a reason required per keep, the discard count reported to the user, and the **precedent test
+enforced** — a `PRECEDENT` whose source fails it is downgraded to `FINDING`, not deleted.
+
+✅ **TASK 4** — the issues are a separate hostile-clerk call reading the findings critically; the
+deterministic templates stay, and a failed adversarial call falls back **and says so**.
+
+✅ **TASKS 5/6/7/8** — auto-sizing, drag-resizable editors; soft owner-only delete (`Idea.deletedAt`)
+with a dialog that names the idea; the root-cause chat path with a matcher that **refuses when two
+causes fit equally well**; the dictation hint verbatim; and the committee URL repair.
+
+⚠⚠ **TASK 8's NUMBER IS WORSE THAN THE BRIEF ASSUMED AND THE FIX IS NOT COMPLETE.** The bare
+committee URL form 404s for ALL THREE families and the corpus stores it on **264,773 of 487,088
+committee rows (54.4%)** — every one a 404 at rest. `/html/` fixes the form: live, **stored 0/24 open
+→ repaired 21/24**. The residue are ids **dead at source in both forms**, including
+`/publications/13110/` — the very id `check-legislation-urls.ts` used to assert. **That is corpus
+freshness, and it belongs to the ingest thread.**
+
+⚠ **TWO ENVIRONMENT TRAPS THAT WILL RECUR:** committees.parliament.uk answers a bare curl/fetch
+User-Agent with **403 on every path** (reads exactly like a dead link; is not), and **Node's `fetch`
+is 403'd regardless of headers** while curl with the same UA gets 200 in the same second — a
+TLS-fingerprint block. The live probe shells out to curl and **skips rather than fails** without it.
+
+▶ **THE REMAINING GATE IS CHARLIE'S BROWSER, AND NOTHING IS DEPLOYED YET.** Everything is built and
+check-guarded; the acceptance criteria that need a live model and a browser are **not walked**. Per
+the 12 Aug finding, **a push is not a deploy for this project** — prove it by reading a string back
+off the running site. The four to walk: (1) ask the Charter question verbatim and check Lex answers
+it, distinguishes reasoning from citation, and does not re-propose a field; (2) run a Deepening pass
+and read the "reviewed N, kept M" line; (3) open a long Lex draft and check it is readable and
+draggable; (4) delete a pre-rebuild idea and confirm it leaves the dashboard.
+
+⚠ `check:score-scope` still fails on the Central thread's `lib/question-library.ts`, unchanged and
+not this sprint's code — reported, not edited.
 
 2026-08-16 07:45 UTC — ▼ **INGEST V38: THE 17.5 GiB WALL DOES NOT EXIST. The enforced ceiling is
 16 TiB and we occupy 0.10% of it, at $6.23/month.** Executes `BRIEF_INGEST_V38_STORAGE.md`.

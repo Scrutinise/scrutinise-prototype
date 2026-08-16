@@ -782,3 +782,175 @@ panel-authored: each of their rows carries several structured fields being compo
 a temporary idea + action + cost lines and deletes them in a `finally`. `check:feedback` now asserts
 the third-party name unconditionally — it used to be skipped whenever the model didn't run, which is
 precisely when the deterministic pass matters.
+
+---
+
+## 17. Sprint 3-E (§19-E) — the silent cut, and the safety that became unhelpfulness
+
+*2026-08-16 10:54 UTC. Executes `docs/SPRINT_3E_BRIEF.md` in full. The two headline items are
+Task 1 (text truncated mid-sentence) and Task 2 (Lex refusing to answer a direct question), and
+they turn out to be the same failure in two registers: **a degradation that does not announce
+itself**.*
+
+### 17.1 THE TRUNCATION — the cause, named, because the brief asked for it before any fix
+
+Not a `VarChar`. Not `maxOutputTokens`. **`acceptedSummary()` rendered every accepted field as
+`value.slice(0, 80)`** (and `JSON.stringify(value).slice(0, 120)` for structured ones) and joined
+them into the prompt's `already captured:` line. That line was the **only** place the accepted
+values appeared, and `summaryGuidingPolicy`'s instruction said *"ground it strictly in what the
+user accepted"*. Lex did exactly as told and reproduced the stumps, full stop and all.
+
+All five clauses of Charlie's summary are accounted for, to the character, against the production
+row (`d90b880f…`, read from Neon 2026-08-15):
+
+| clause in the summary | source field | cut at | of |
+|---|---|---|---|
+| Chosen Approach | `chosenApproach` | 80 → Lex tidied `responsibiliti` up to `responsibilities` | 187 |
+| Leverage | `leverage` | 80 | 200 |
+| What it Rules Out | `whatItRulesOut` | **80** (`…a direct mandate f`) | 579 |
+| Avoidance | `anticipatedResponses.avoidance` | **106** | 309 |
+| Conditions for Success | `conditionsForSuccessLex` | 80 | 1,282 |
+
+⚠ **The 106 is the proof the diagnosis is complete rather than merely plausible.** It came from the
+*other* slice: `{"avoidance":"` is 14 characters, so `JSON.stringify(v).slice(0, 120)` leaves
+exactly 106 characters of the avoidance slot — which is where `…or break th` stops.
+
+⚠ **AND THE BRIEF'S OWN DESCRIPTION IS ONE-THIRD RIGHT, WHICH MATTERS FOR THE FIX.** It says three
+clauses end mid-word. **Only one does.** `leverage` and `conditionsForSuccess` were cut at a *word
+boundary* and read as finished sentences — silent, and **undetectable after the fact by any
+regex**. That is why the fix is not a cleverer detector:
+
+- `abridge()` (`lib/lex/text-integrity.ts`) never cuts inside a word, prefers a sentence boundary,
+  and **always marks the cut**. A caller can distinguish "short enough to be whole" from "cut".
+- **A composed field gets its sources IN FULL.** `sourceValuesFor()` hands `summaryDiagnosis`,
+  `summaryGuidingPolicy`, `summaryCoherentActions` and `coherenceCheck` the complete text of the
+  fields they are written from, in their own block marked complete. This is the half that actually
+  removes the defect; raising the ledger cap only makes it rarer.
+- `acceptedSummary` now lives in **one** place (`lib/lex/accepted-context.ts`). It existed twice —
+  orchestrator *and* the chat route — as two identical `.slice(0, 80)` expressions, and the chat
+  route's was the one Charlie's turns went through. *A rule that lives in two files is a rule that
+  will hold in one of them.*
+
+`npm run check:text-integrity` guards the compose path. It reproduces the old behaviour from the
+real stored values, so the negative control is permanent rather than a one-off.
+
+**The general rule, for the playbook: never shorten user-facing prose silently.** Cut on a boundary
+and mark it, or refuse and say so. A silently truncated sentence is a claim the user cannot tell is
+incomplete — the never-claim invariant applied to text integrity.
+
+### 17.2 GROUNDING DOES NOT MEAN SILENCE (Task 2)
+
+Charlie asked whether a "Charter" was the right instrument and how Civil Service accountability
+works now. Lex named three documents, pointed at the panel, and re-issued its summary. Plain Gemini
+and ChatGPT both answered it properly — **same underlying model**, so the difference is entirely
+ours.
+
+Three prompt facts were doing the damage, and all three are fixed:
+
+1. **The field instruction sat directly under the question** telling Lex to return a proposal. On a
+   question turn the field block is now prefaced *"CONTEXT ONLY — do not act on its instruction this
+   turn"*, and the route **discards any proposal anyway** (`questionTurn && lex.proposal` → null),
+   because the platform owns state.
+2. **`chatText is always 1–4 sentences`** made a real answer impossible. Lifted on a question turn,
+   replaced by *"at whatever length the question deserves… anything under three sentences is almost
+   certainly an evasion"*.
+3. **Never-claim was being read as "say nothing you cannot cite".** It now states what it does NOT
+   forbid, in the prompt, in words: reasoning from general knowledge is permitted and expected, it
+   must be *labelled* as reasoning, and **fabrication is the only hard line**.
+
+`M_ANSWER` is injected at every stage; `ANSWER_FIRST` only on a question turn; `M_PRESS_TO_READ`
+only when sources are in hand (Task 2c: say which one or two matter and why, and ask them to read
+those — do not list twenty). `looksLikeAQuestion()` is deliberately asymmetric: a false positive
+costs a redundant answer, a false negative costs the defect. Both signals are in `[lex-diag] turn
+shape`, so *"the block never fired"* and *"it fired and Lex still dodged"* are distinguishable.
+`npm run check:answer`.
+
+### 17.3 THE SIFT (Task 3) — and the cap nobody had noticed
+
+Retrieval ranks by similarity; the sift asks *does this bear on this proposal's problem, and how?*
+`lib/lex/deepening-sift.ts`, between retrieval and the gather, ~100 candidates in, a one-line reason
+required for every keep (a keep with no reason is **discarded** — it is a rank in disguise).
+
+⚠ **The limit was never the binding constraint.** The pass read `res.grouped`, and `groupForPanel`
+caps at **3 per display type, ~20 overall**. However high `limit` went, a pass could never see a
+fourth impact assessment. That is the *panel's* presentation rule taken as a machine's candidate
+set. Now reads `res.results`.
+
+**The precedent test is enforced, not requested.** The sift judges the SOURCE separately, before the
+gather has decided what to say about it, so it can overrule: a `PRECEDENT` whose source fails the
+test is **downgraded to `FINDING`** — not deleted, only the word withdrawn. *A false precedent is
+worse than a missing one: the user takes it into a committee room and is asked what happened, and
+nothing did.*
+
+**The discard count is reported** — "Reviewed 104 sources; 12 bore on this proposal" — on the pass
+row (`candidatesReviewed` / `candidatesKept` / `siftSkipped`) and in the panel. `siftSkipped` exists
+because otherwise *"reviewed 104, kept 104"* reads as a sift that liked everything rather than one
+that never ran. And **three silences are now distinguished**: the search broke; the corpus is
+silent; 104 were reviewed and none bore on this.
+
+### 17.4 THE ISSUES COME FROM SOMEWHERE ELSE (Task 4)
+
+The same call produced findings and issues — an author asked what they had missed, which is
+proof-reading, not scrutiny. `lib/lex/deepening-adversarial.ts` is a separate call with a hostile
+committee clerk's brief, given the findings to read critically, at temperature 0.7 (a cold adversary
+raises the same four objections about every proposal). **The deterministic templates stay**: a model
+is the wrong instrument for "this run produced zero SUPPORTS findings", and both fired correctly on
+13 Aug. A failed adversarial call falls back to the gather's issues **and says so**.
+
+### 17.5 THE THREE SURFACES (Tasks 5, 6, 7)
+
+- **Editors.** `GrowTextarea` sizes to content (floor 8 rows, ceiling 520px), is drag-resizable, and
+  **stops auto-sizing once the user drags it** — a box that springs back as you type is worse than
+  one that never moved. `resize-none` is gone from every Lex editing surface.
+- **Delete.** Soft (`Idea.deletedAt`), **owner-only** — deliberately not `authorizeIdea`, whose
+  answer admits collaborators and is the wrong answer for this verb. Refused from Stage 4 with a
+  reason (the idea carries other people's votes; that act is a withdrawal). The gate lives in
+  `authorizeIdea` + the three list queries + the detail page, not in the forty routes that read an
+  idea. The dialog **names the idea**, twice, including on the destructive button.
+  ⚠ Deliberately **not** `status = ARCHIVED/WITHDRAWN`: both already mean something, and overloading
+  one would make every later query about archived or withdrawn ideas silently include deleted ones.
+- **Diagnosis.** `rootCause` was the one step with no chat path at all — a *selection*, so a chat
+  answer had nowhere to go and Lex said "over to you". Lex now proposes the cause text and
+  `matchCause()` resolves it to a row (exact → prefix → containment → content-word overlap), and
+  **refuses when two fit equally well**: the root cause is the most consequential single choice on
+  the page, and guessing it because a regex was close is the platform making a strategic decision.
+  Plus the dictation hint, verbatim, at the top of the active stage.
+
+### 17.6 COMMITTEE LINKS (Task 8) — measured, not inferred
+
+`committees.parliament.uk/writtenevidence/{id}/` **404s**; `…/{id}/html/` **200s**. True for all
+three families, and the corpus stores the bare form on **264,773 of 487,088 committee rows (54.4%)**:
+`writtenevidence` 126,509 · `publications` 122,458 · `oralevidence` 15,806. Repaired on the way out
+in `resolveResultUrl` + `repairRefUrl`, so stored refs written before this sprint become clickable
+without a data migration.
+
+⚠ **TWO TRAPS, both of which produce a confident wrong conclusion:**
+1. **The site answers a bare `curl`/`fetch` User-Agent with 403 on EVERY path.** That reads exactly
+   like a dead link. It is a client block.
+2. **Node's `fetch` is 403'd regardless of headers** — bare HEAD, HEAD+UA, GET+UA and
+   HEAD+UA+Accept+Accept-Language all 403 while `curl` with the same UA returns 200 in the same
+   second. It is a TLS/HTTP-client fingerprint block, so the live probe shells out to `curl`, and
+   **skips rather than fails** when curl is absent.
+
+⚠ **AND THE REPAIR IS NOT THE WHOLE STORY.** Live probe: **stored 0/24 open → repaired 21/24**, with
+the residue being ids **dead at source in BOTH forms** (`/publications/28244/`, `/writtenevidence/112958/`,
+and `/publications/13110/` — the very id `check-legislation-urls.ts` used to assert). That is corpus
+freshness, for the ingest thread. The check therefore asserts the property the repair OWNS — the
+bare form never opens, the repair never shuts a working link, the repair opens links that were shut
+— and **reports** the dead-at-source rate rather than folding it into a percentage that goes red for
+reasons its owner cannot fix.
+
+### 17.7 The checks this sprint adds
+
+| command | what it holds |
+|---|---|
+| `check:text-integrity` | no prose is cut mid-word; abridgements are marked; composed fields get their sources whole; ONE `acceptedSummary` |
+| `check:answer` | the question detector; the answer-first block reaching the prompt only on a question turn; the length ceiling lifting; the platform discarding a proposal |
+| `check:sprint3e-ui` | the editors; the delete path end to end; the cause matcher including its refusal; the dictation hint |
+| `check:deepening` (extended) | the sift, the precedent downgrade, the reported counts, the adversarial call |
+| `check:legislation-urls` | the committee URL forms, and `--live N` probing stored-vs-repaired via curl |
+
+Every new assertion was **watched failing first** against a deliberate break, and the first run of
+`check:text-integrity` failed 12 of its own assertions — two of which were real bugs in `abridge()`
+(a sentence-boundary lookahead read from the window rather than the full text, which cut `e.g.` into
+`e.`) rather than bad assertions.
