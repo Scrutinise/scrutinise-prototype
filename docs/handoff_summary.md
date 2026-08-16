@@ -2,10 +2,50 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-13 09:14 UTC — ▼ **THE V36 RECOVERY DRAINED OVERNIGHT (88% at 09:10, ~1.2 h
-left, 2 failures in 41,913) AND THE REPEAL CENSUS COMPLETED — at 11.44%, not the 17.49% its own
-mid-run reading said.** V36 §2, V37 and V36 §1 follow. The LEX thread's 17:36 entry is further down
-and equally current.*
+*Last updated: 2026-08-16 02:13 UTC — ▼ **INGEST: V36 IS REACHABLE. Embedded, indexed, served, and
+ABSENT is 9 → 6 on the acceptance test. Companies Act 2006 returns at RANK 1 through the product.**
+£1.07 of the £20 ceiling. The drain/census entry follows, then V37 and V36 §1. The LEX thread's
+17:36 entry is further down and equally current.*
+
+2026-08-16 02:13 UTC — ▼ **INGEST: THE V36 CORPUS IS NOW REACHABLE BY A USER, NOT JUST PRESENT.**
+Run overnight under standing pre-authorisation. **No stop condition fired.**
+
+✅ **ACCEPTANCE TEST PASSED — `ABSENT 9 → 6` of 30**, IN_TOP_K 13 → 16, RANKING 5 → 2, ROUTING 0 → 0.
+✅ **RETRIEVED THROUGH THE PRODUCT**, via `runSearch` with routing/tiering/typing/merge all in the
+path — **Companies Act 2006 at RANK 1**, 2/2 targets. That is the instrument the 5-minute
+`ROW_TIMEOUT` threw away on the run's first attempt.
+
+⚠⚠ **THE FIRST ACCEPTANCE RUN WAS NOT COMPARABLE, AND WOULD HAVE READ AS V36 BREAKING ROUTING.**
+It said ABSENT 7 but **ROUTING 16/30** against a baseline of 0, with `routed: [NONE — fail-open]`
+on every query. `LEX_QUERY_ROUTER` is unset locally and `query-expansion.ts:401` returns null for a
+disabled router — **rendered identically to a router that tried and failed. §18's corollary, still
+live in the product.** Three local flags silently degrade the harness and all three make a healthy
+corpus look broken: `FTS_SEARCH_URL` (absent → FTS leg throws), `LEX_VECTOR_STREAMS` (absent →
+dense off), `LEX_QUERY_ROUTER` (absent → fail-open). Only `VECTOR_SEARCH_URL` is in `.env`.
+**Set all three explicitly before quoting any recall number from this machine.**
+
+✅ Embed **75,935 vectors, 0 misses, $1.18** (modelled $1.08–1.10, +9%, inside the CPW band);
+reconciliation declared first and **met exactly**, `corpus_vec == corpus_chunks == 22,689,587`.
+✅ FTS catch-up **73,602 of 73,602, 0 body misses**, 8 corpora reconciled individually.
+✅ `fts-index` **unindexed 105,451 → 0**, query 5,934ms → 1,941ms, peak RSS **20.7 GB** (never
+Railway), €0.069, destroyed. ✅ `vector-reindex` ANN **0.00% unindexed**, €0.096, destroyed.
+✅ **Both serves restarted and PROVEN** by `started_at` moving.
+**SPEND ≈ £1.07** of £20.
+
+⚠⚠ **THE CANARY NEARLY CAUSED THE FAILURE IT EXISTS TO PREVENT.** Its shard 0 is 400 chunks; a full
+run's shard 0 is 40,000, and both record index 0 — so the next run would have skipped 40,000 chunks
+and printed `2/2 shards done`. Clearing `doneShards` alone would have duplicated instead, since
+`vecTbl.add()` has no `mergeInsert`. Both halves undone together; `corpus_vec` returned to
+**22,613,652**, the exact V35 baseline, which is what *proved* the repair. Fixed with a
+`canaryShards` flag, **watched failing first** (1/2 disabled → 2/2 restored, with an
+over-application control).
+
+❌ **FOUND, NOT ACTED ON — ~288 sections point at R2 objects that do not exist.** The 227 "body
+misses" were not the benign no-key kind; **zero** were. Sampling within groups: **V36-written
+0 absent of 400**; **pre-existing 193 absent of 200**. So V36 is clean and this is a separate
+pre-existing defect across `scottish-parliament-or`, `si-pre-2010`, `primary-acts-*`, `regional` —
+unreachable sections that nothing reports. Broken keys ending `schedule-N-paragraph-` suggest a
+section-ref bug; **suspicion, not a finding.** Kept out of this run for attributability.
 
 2026-08-13 09:14 UTC — ▼ **MORNING CHECK ON THE OVERNIGHT RUNS. Both healthy; one number retracted;
 one new defect found and fixed.**

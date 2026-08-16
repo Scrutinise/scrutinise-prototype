@@ -1,0 +1,120 @@
+{
+  "measuredAt": "2026-08-15T07:37:21.438Z",
+  "cpw": 6.164370208974709,
+  "rate": 0.075,
+  "totals": {
+    "compiledSections": 18272362,
+    "unvectored": 73792,
+    "words": 9354658,
+    "chunks": 76136,
+    "embeddedChars": 58675337,
+    "tokens": 14668835,
+    "cost": 1.1001626249999998
+  },
+  "band": [
+    {
+      "cpw": 5.547933188077239,
+      "cost": 0.9901463249999999
+    },
+    {
+      "cpw": 6.164370208974709,
+      "cost": 1.1001626249999998
+    },
+    {
+      "cpw": 6.780807229872181,
+      "cost": 1.21017885
+    }
+  ],
+  "perCorpus": [
+    {
+      "corpus": "fca-handbook",
+      "tier": "guidance",
+      "sections": 3661,
+      "missing": 1,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "tier": "legislation",
+      "sections": 147788,
+      "missing": 2087,
+      "words": 379514,
+      "chunks": 2118,
+      "embChars": 2355787
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "tier": "legislation",
+      "sections": 166290,
+      "missing": 855,
+      "words": 94789,
+      "chunks": 876,
+      "embChars": 595791
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "tier": "parliamentary",
+      "sections": 175576,
+      "missing": 13,
+      "words": 1564,
+      "chunks": 13,
+      "embChars": 9642
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "tier": "parliamentary",
+      "sections": 1232942,
+      "missing": 14,
+      "words": 2043,
+      "chunks": 14,
+      "embChars": 12594
+    },
+    {
+      "corpus": "regional",
+      "tier": "legislation",
+      "sections": 341093,
+      "missing": 9979,
+      "words": 1238655,
+      "chunks": 10264,
+      "embChars": 7772165
+    },
+    {
+      "corpus": "retained-eu",
+      "tier": "legislation",
+      "sections": 199224,
+      "missing": 11669,
+      "words": 768858,
+      "chunks": 11807,
+      "embChars": 4807621
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "tier": "other",
+      "sections": 1043264,
+      "missing": 183,
+      "words": 0,
+      "chunks": 0,
+      "embChars": 0
+    },
+    {
+      "corpus": "si-2010plus",
+      "tier": "legislation",
+      "sections": 275744,
+      "missing": 5431,
+      "words": 820319,
+      "chunks": 5671,
+      "embChars": 5168041
+    },
+    {
+      "corpus": "si-pre-2010",
+      "tier": "legislation",
+      "sections": 462809,
+      "missing": 43560,
+      "words": 6048916,
+      "chunks": 45373,
+      "embChars": 37953696
+    }
+  ]
+}

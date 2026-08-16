@@ -131,6 +131,105 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST — V36 IS REACHABLE: EMBEDDED, INDEXED, SERVED, AND ABSENT IS 9 → 6 (2026-08-16 02:13 UTC)
+
+Run overnight under Charlie's standing pre-authorisation (£20 ceiling, five stop conditions).
+**No stop condition fired.** The 73,467 sections V36 recovered are now retrievable by a user
+rather than merely present in the corpus.
+
+### The acceptance test, like-for-like
+
+`diagnose-recall.ts --limit 16`, against the pre-V36 baseline:
+
+| | baseline | after | |
+|---|---|---|---|
+| IN_TOP_K | 13/30 | **16/30** | ▲ |
+| RANKING | 5 | 2 | ▲ |
+| CANDIDATES | 3 | 6 | |
+| ROUTING | 0 | 0 | = |
+| TYPING | 0 | 0 | = |
+| **ABSENT** | **9** | **6** | **▲ the metric ingest owns** |
+
+⚠ **THE FIRST RUN OF THIS TEST WAS NOT COMPARABLE AND SAID SO ON EVERY LINE — `routed:
+[NONE — fail-open]`.** It reported ABSENT 7 but ROUTING **16/30** against a baseline of 0, and
+IN_TOP_K down 13 → 7. The cause was local configuration, not a regression: `LEX_QUERY_ROUTER`
+is unset on this machine, and `query-expansion.ts:401` returns null for a disabled router, which
+the harness renders identically to a router that tried and failed. **That is §18's corollary
+still live in the product** — OFF and FAILED must not look the same from outside — and it would
+have been read as V36 having broken routing. Re-run with the flag on: zero fail-opens, ROUTING
+back to 0, and the numbers above.
+
+⚠ Two more silent degraders had to be set explicitly, all three of which make a healthy corpus
+look broken: `FTS_SEARCH_URL` (absent → the FTS leg throws), `LEX_VECTOR_STREAMS` (absent →
+dense retrieval simply off), `LEX_QUERY_ROUTER` (absent → fail-open). Only `VECTOR_SEARCH_URL`
+is in the local `.env`.
+
+### Retrieved through the product, not through the index
+
+`scrutinise-web/scripts/v36-verify-recovered.ts` goes through `runSearch` — the gateway, with
+routing, tier scoping, `corpusToType` and the merge all in the path — because an index that holds
+a document and a product that returns it are different claims. **Companies Act 2006 at RANK 1**
+(`primary-acts-2000plus:ukpga/2006/46:section-1`), 2/2 targets, router dispatching
+`route_outcome=full streams=legislation`. That is the instrument the 5-minute `ROW_TIMEOUT` threw
+away on the first attempt of the run.
+
+### What was done, in order
+
+1. **Embed** — 73,792 sections → 75,935 chunks → **75,935 vectors, 0 misses, $1.18**
+   (modelled $1.08–$1.10; +9%, inside the measured CPW band). Reconciliation declared BEFORE the
+   run and **met exactly**: `corpus_vec == corpus_chunks == 22,689,587`.
+2. **FTS catch-up** — **73,602 of 73,602 rows written, 0 body misses**, all 8 corpora reconciled
+   individually (`missing == written` per corpus).
+3. **`fts-index`** — unindexed **105,451 → 0**; 18,272,377 rows; the box's own query timing
+   **5,934ms → 1,941ms**. Peak RSS **20.7 GB**, which is why this can never run on Railway's 8 GB
+   cap. cpx62 × 14.1 min = **€0.069**, server destroyed.
+4. **`vector-reindex`** (not `vector-index`) — ANN **unindexed 0.00%** over all 22,689,587 rows.
+   cpx62 × 19.5 min = **€0.096**, server destroyed.
+5. **Both serves restarted and PROVEN** — `started_at` moved on each; `fts-serve`
+   2026-08-12T22:56 → 2026-08-16T02:02, `vector-serve` 2026-08-12T17:08 → 2026-08-16T02:03.
+
+**SPEND: $1.184 embed + €0.165 boxes ≈ £1.07 of the £20 ceiling.** Fetch £0 (OGL v3.0).
+
+### ⚠ The canary nearly caused the failure it exists to prevent
+
+`--canary` embeds `deltaChunkIds.slice(0, 400)` and records `doneShards: [0]`. A full run plans
+shard 0 as **40,000** chunks and skips any index already in `doneShards` — so the next run would
+have embedded shard 1 only, left ~40,000 chunks with no vector, and printed `2/2 shards done`.
+**A partial embed wearing the face of a complete one, caused by the safety measure.** Caught
+because `1/1 shards done` looked wrong against a 2-shard plan.
+
+Clearing `doneShards` alone was not the fix either: `vecTbl.add()` is a plain add with no
+`mergeInsert`, so shard 0 would have rewritten the canary's 400 as duplicates. Both halves were
+undone together — 400 vectors deleted, shard state reset, dry-run first — and `corpus_vec` returned
+to **22,613,652**, the exact V35 baseline, which is what confirmed the repair rather than merely
+suggesting it. `spentUsd` was deliberately left at $0.00399585: real money, real ledger.
+
+Fixed with a `canaryShards` flag, and **watched failing first** — `v36-check-canary-guard.ts`
+goes 1/2 with the guard disabled (the exact production symptom) and 2/2 with it restored,
+including an over-application control that fails if the fix throws away legitimate resume state.
+
+### ⚠ Found and deliberately NOT acted on: ~288 sections point at R2 objects that do not exist
+
+The catch-up reported **227 body misses**, a counter covering two very different facts: a section
+with no `r2Key` (benign) and a key that resolves to nothing (we recorded text that is not there).
+**Zero were the benign kind.** Sampling WITHIN groups rather than across the list is what
+separated it — a whole-list sample reads ~0.7% and looks like noise, because V36's clean rows are
+99.6% of the list:
+
+| group | population | sampled | absent |
+|---|---|---|---|
+| **V36-written** | 73,494 | 400 | **0 (0.00%)** |
+| pre-existing unvectored | 298 | 200 | **193 (96.5%)** |
+
+So **V36's own output is clean and the scoring below stands**, and there is a separate
+pre-existing defect: ~288 sections across `scottish-parliament-or`, `si-pre-2010`,
+`primary-acts-*` and `regional` are unreachable and nothing reports it. Many of the broken keys
+end `schedule-N-paragraph-` with an empty trailing component, which looks like a section-ref bug
+rather than lost objects — **unconfirmed, and stated as a suspicion rather than a finding.**
+Not folded into this run, per the addendum's own rule about attributability.
+
+---
+
 ## INGEST V36 §2 — THE RECOVERY IS COMPLETE, AND THE PREDICTION IS SCORED (2026-08-14 17:57 UTC)
 
 **41,911 done · 2 failed · of 41,913 seeded — 100% resolved.** Last completion **2026-08-13
