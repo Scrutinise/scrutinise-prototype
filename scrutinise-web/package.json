@@ -39,9 +39,13 @@
     "check:panel-claims": "tsx scripts/check-panel-claims.ts",
     "check:deepening": "tsx scripts/check-deepening.ts",
     "check:text-integrity": "tsx scripts/check-text-integrity.ts",
+    "check:render-decode": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-render-decode.ts",
+    "measure:render-decode": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-render-decode.ts",
     "check:answer": "tsx scripts/check-answer-the-question.ts",
     "check:sprint3e-ui": "tsx scripts/check-sprint3e-ui.ts",
     "check:build-25a": "tsx scripts/check-build-25a.ts",
+    "measure:build-framing": "tsx --env-file=.env scripts/measure-build-framing.ts",
+    "verify:build-25a": "tsx --env-file=.env scripts/verify-build-25a-live.ts",
     "verify:build-25a-ceilings": "tsx --env-file=.env scripts/verify-build-25a-ceilings.ts",
     "cleanup:25a": "tsx --env-file=.env scripts/cleanup-25a-artefacts.ts",
     "whichdb": "tsx --env-file=.env scripts/whichdb.ts"
