@@ -734,6 +734,11 @@ model Idea {
   deepeningPasses           DeepeningPass[]
   evidenceItems             EvidenceItem[]
   deepeningIssues           DeepeningIssue[]
+  // Sprint 25-A (§25 — the user decides, Lex writes). An ADDED path: nothing above
+  // this line changed, so an idea built the current way is unaffected.
+  elicitation               IdeaElicitation?
+  builds                    IdeaBuild[]
+  buildForks                BuildFork[]
 
   @@index([creatorId])
   @@index([stage])
@@ -3200,6 +3205,168 @@ enum DeepeningIssueStatus {
   ADDRESSED
   DEFERRED
   DISMISSED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPRINT 25-A — minimum elicitation and the first build (BRIEF_25A.md).
+// Hand-written additive schema, applied via prisma/lex_build_25a.sql. See that file
+// for the reasoning behind every column; the notes here are the ones a reader of the
+// schema alone would otherwise get wrong.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The four exchanges of §1, one row per idea. Deliberately NOT IdeaFieldState rows:
+/// the field machine's statuses describe a PROPOSAL contract, and these answers are
+/// the user's own words taken before anything has been drafted.
+model IdeaElicitation {
+  id                     String                @id @default(uuid())
+  ideaId                 String                @unique
+  idea                   Idea                  @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  /// Exchange 1 — the problem, in their words. Subject to the §19-D problem gate.
+  problem                String?
+  problemPresses         Int                   @default(0)
+  /// Did the deterministic solution-shape reading fire? Stored so that whether the gate
+  /// armed is observable from outside rather than inferred from Lex's wording.
+  problemGateFired       Boolean               @default(false)
+
+  /// Exchange 2 — what you want to happen, and anything already ruled out.
+  goalKind               String?
+  goalDetail             String?
+  ruledOut               String?
+
+  /// Exchange 3 — what you know that we won't find.
+  /// ⚠ `ownKnowledgeProvenance` is load-bearing: every later citation depends on telling
+  /// the user's own knowledge apart from retrieved material.
+  ownKnowledge           String?
+  ownKnowledgeProvenance ElicitationProvenance @default(USER_TESTIMONY)
+
+  /// Exchange 4 — CAPTURED, NOT READ. Ingestion is 25-D; `readingStatus` stays NOT_READ
+  /// for the whole of this sprint, because saying otherwise breaks never-claim at the
+  /// first exchange.
+  readingUrl             String?
+  readingFileName        String?
+  readingNote            String?
+  readingStatus          String                @default("NOT_READ")
+
+  /// The reusable About-you profile, skipped for a returning user (§1a).
+  profileSkipped         Boolean               @default(false)
+
+  /// §1c — Lex writes back its understanding and waits. A correction re-runs the
+  /// confirmation, not the whole of Page 1, so this counts presses of "Not quite".
+  understanding          String?
+  corrections            Int                   @default(0)
+  status                 ElicitationStatus     @default(IN_PROGRESS)
+  confirmedAt            DateTime?
+
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+}
+
+/// A build is a JOB, not a chat turn (§2). The row IS the status: what is shown is what
+/// is stored, and an abandoned RUNNING row is settled by WRITING it to FAILED.
+///
+/// ⚠ ONE ACTIVE BUILD PER IDEA is enforced by a PARTIAL unique index on (ideaId) WHERE
+/// status IN ('QUEUED','RUNNING'), which Prisma cannot declare. A `prisma migrate diff`
+/// will want to drop it; it must not be dropped — a plain unique on ideaId would make a
+/// second build permanently impossible, and re-running after a correction is normal.
+model IdeaBuild {
+  id              String       @id @default(uuid())
+  ideaId          String
+  idea            Idea         @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  version         Int
+  status          BuildStatus  @default(QUEUED)
+  /// NO DEFAULT — §3a's comparison only survives if every build says which arm it ran.
+  framing         BuildFraming
+
+  passesComplete  Int          @default(0)
+  currentPass     String?
+  /// One entry per named pass, rewritten as each completes. A timeout loses the tail,
+  /// never the run, and a partial build says which passes completed because the answer
+  /// is stored rather than reconstructed.
+  passes          Json         @default("[]")
+  /// §4.2 — what Lex is unsure about, per field, in a sentence. { fieldKey: sentence }.
+  uncertainties   Json         @default("{}")
+  summaryMessage  String?
+  /// The search string pass 1 actually issued — the A/B artefact.
+  queryUsed       String?
+
+  startedAt       DateTime?
+  completedAt     DateTime?
+  /// Set on FAILED and CANCELLED. Hitting a ceiling is a FAILED build with a plain
+  /// reason, never a silently shortened one.
+  failureReason   String?
+  /// Cancel is co-operative: the request is written here and the engine checks it
+  /// between passes. A cancel that only stopped the poller would leave the work running.
+  cancelRequested Boolean      @default(false)
+
+  tokensIn        Int          @default(0)
+  tokensOut       Int          @default(0)
+  /// ⚠ NULL MEANS UNPRICED, NOT FREE. A model we have no rate for must not silently
+  /// cost zero — zero is a claim, and it is the claim most likely to be believed.
+  estCostPence    Decimal?     @db.Decimal(12, 4)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  forks           BuildFork[]
+
+  @@unique([ideaId, version])
+  @@index([ideaId, status])
+}
+
+/// Wherever Lex had to choose, the alternative it set aside with the case for it (§4.1).
+/// TWO ALTERNATIVES PER FORK, which is why `forkKey` and `alternativeIndex` sit beside
+/// the brief's field list: two alternatives are two rows sharing one decision point, and
+/// grouping them by `chosen` string equality would be a join on prose.
+model BuildFork {
+  id                 String    @id @default(uuid())
+  buildId            String
+  build              IdeaBuild @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  ideaId             String
+  idea               Idea      @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  forkKey            String
+  fieldKey           String
+  chosen             String
+  alternativeIndex   Int       @default(0)
+  alternative        String
+  caseForAlternative String
+  /// 25-C turns a fork into a decision. Until then every fork is unresolved, and that is
+  /// the honest value rather than a placeholder.
+  resolved           Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+
+  @@unique([buildId, forkKey, alternativeIndex])
+  @@index([buildId])
+  @@index([ideaId, fieldKey])
+}
+
+enum ElicitationStatus {
+  IN_PROGRESS
+  AWAITING_CONFIRMATION
+  CONFIRMED
+}
+
+/// Both values exist from the start even though 25-A only ever writes the first: an enum
+/// with one member reads as decoration, and the whole reason this column exists is that
+/// the two kinds must be told apart.
+enum ElicitationProvenance {
+  USER_TESTIMONY
+  RETRIEVED
+}
+
+enum BuildStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+enum BuildFraming {
+  /// The user's problem, phrased as they would put it into a chat window.
+  A_NAIVE
+  /// The problem plus goal, ruled-outs, their own knowledge and the profile.
+  B_CONTEXTUALISED
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
