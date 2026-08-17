@@ -322,7 +322,13 @@ offered · stopped, saying "Stopped" not "Done", naming the reason, and marking 
 REACHED).
 
 **That covers shape and copy. It does not cover click handling, polling, or layout, and it is not a
-substitute for the walk.** ▶ **Charlie: `/ideas/build` on production is the thing to open**, once
+substitute for the walk.**
+
+**What WAS confirmed on production, after the push:** `https://www.scrutinise.org/ideas/build`
+returns 200 and its RSC payload carries `redirect_url=/ideas/build;307;` — the server-side redirect
+from `app/ideas/build/page.tsx`, i.e. the deployed route is this sprint's page executing and gating
+on auth. The negative control (`/ideas/definitely-not-a-route`) carries no such marker. So the route
+is live and protected; what is unverified is everything behind the sign-in. ▶ **Charlie: `/ideas/build` on production is the thing to open**, once
 this deploys. If you want me to do it, granting the Chrome extension access to `localhost` is the
 one thing that unblocks it from here.
 

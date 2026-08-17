@@ -127,7 +127,9 @@ beyond Orientation would 409**: a panel of drafts you can look at and cannot kee
 
 ⚠ **NO BROWSER WALK WAS POSSIBLE, AND NONE IS CLAIMED.** The Chrome extension has no host permission
 for `localhost:3000` (the same tools read www.scrutinise.org fine) and the browser has no Clerk
-session on production. `/ideas/build` *did* correctly redirect to `/sign-in?redirect_url=…`.
+session on production. `/ideas/build` *did* correctly redirect to `/sign-in?redirect_url=…`. ✅ **DEPLOYED AND CONFIRMED
+ON PRODUCTION**: `https://www.scrutinise.org/ideas/build` returns 200 carrying the server-side
+redirect from this sprint's `page.tsx`, and a nonexistent-route control carries no such marker.
 `verify:build-25a-ui` renders `BuildProgress` and asserts 31 things a user would see — **shape and
 copy, NOT click handling, polling or layout.**
 
