@@ -2,7 +2,12 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 14:12 UTC — ▼ **SURFACE 1: the platform now says when a law is no
+*Last updated: 2026-08-17 14:26 UTC — ▼ **INGEST RENDER-DECODE: the decode-at-render repair is in.
+38 of 321 served hits carried a literal entity; 38/38 of those documents now come back clean; 0 of
+381 results reach a caller with one. ⚠ And 6,840 contaminated values sit in the LEGACY legislation
+tables the 17 Aug repair never touched — display now repaired, stored values not, and they cost no
+retrieval either (Postgres discards `&amp;` in tsvector — measured, after I got the reason wrong).**
+Earlier: 2026-08-17 14:12 UTC — ▼ **SURFACE 1: the platform now says when a law is no
 longer in force — and a repealed provision turned out to be effectively UNREACHABLE by search, so the
 real exposure was the legislation DETAIL page, which lists 1,335 repealed sections of an Act's 1,650
 with no ranking step. Both now labelled; `/legislation-compare` is not.**
@@ -13,6 +18,46 @@ is NO OpenAI key here; and TWO hardcoded production fallbacks name models the ac
 Earlier: 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4: 54% → 44% on the same fifty, and 189 dated offices.**
 Earlier: INGEST entity-decode (zero recall cost), GRAPH 2D-3, SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E,
 INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 14:26 UTC — ▼ **INGEST RENDER-DECODE IS COMPLETE: the repair Charlie chose is in, proven
+on live data, and it found 6,840 contaminated values nobody had counted.** Executes the open decision
+from `docs/ENTITY_DECODE_REPORT.md` §4. Report: **`docs/RENDER_DECODE_REPORT.md`**. CHANGE_LOG
+(2026-08-17 14:26 UTC). `tsc` clean web-side. **Cost ~$0.00 — no LLM calls.**
+
+✅ **THE MEASUREMENT, TIED BY DOCUMENT ID.** Live FTS, seven corpus-scoped probes: **38 of 321 served
+hits carried a literal entity** (`hmrc-codes-guidance` 23/50, `committees-evidence` 11/50,
+`planning-policy` 4/50). Through `runFtsSearch` after the change: **0 of 381**, and **38/38 of the
+exact documents that were served contaminated come back clean**. ⚠ A clean run over a different
+result set would have proved nothing — the id tie is the evidence.
+
+⚠⚠ **THE 17 AUG REPAIR NEVER TOUCHED THE LEGACY LEGISLATION TABLES: 6,840 rows.**
+`LegislationSection.sectionTitle` 1,838 · `originalText` 4,874 · `corpus_acts.title` 57 ·
+`LegislationItem.title` 57 · `OperationalSection` 14. Read by `lib/search.ts`, the Act browse list
+and the Act detail page. Mostly **`&amp;c.`** — the statutory *"&c."* escaped once too often.
+Displays are repaired; **the stored values are not.** ▶ **Charlie's call: ~6,840 UPDATEs, no R2, no
+Heavy Job Runner, minutes.**
+
+⚠⚠ **AND MY REASON FOR WHY THAT MATTERED WAS WRONG — I CHECKED IT INSTEAD OF ASSERTING IT.**
+`to_tsvector('english','Docks, &amp;c.')` is IDENTICAL to the clean form: Postgres' parser discards
+`&amp;`. So those rows cost **no retrieval** either — the whole defect, in both indexes, is what a
+reader SEES.
+
+✅ **Ten read paths, one decoder, and the forced copy is compared byte-for-byte from BOTH sides**
+(the Next build root cannot import from `scripts/`, so duplication is forced; drift is not).
+⚠⚠ **The drift guard existed on one side only, and watching it proved it**: with the web copy
+diverged, `check:render-decode` failed and `check:entity-decode` reported *all pass*. Fixed in both.
+**All six guards watched failing on their exact broken form**, including inertness — decode-then-
+discard (how the 17 Aug fix first shipped) fires the behavioural check while the textual one passes.
+⚠ **Two of my own checks tested the name rather than the thing** (the raw-HTML grep flagged its own
+documentation; the stub fixture used a tier no `corpusToType` case matches, so it never reached the
+code it tested). Both fixed.
+
+⚠ **`tsc` in `scripts/ingest` is RED and was red before this change** (23 pre-existing errors); this
+adds a 24th of the identical `@/`-alias class. Runtime proven unaffected under `tsx`.
+
+❌ **Not done:** the R2 backfill (~184,000 objects), the 6,840 stored values, the 16 hand-rolled
+ingest decoders. ⚠ **`tna-caselaw` served 0 contaminated snippets in 50** despite 95.3% document
+contamination — a document-level rate is an upper bound on the served rate, never an estimate of it.
 
 2026-08-17 14:12 UTC — ▼ **SURFACE 1 IS COMPLETE: THE PLATFORM NOW SAYS WHEN A LAW IS NO LONGER IN
 FORCE — AND THE SPRINT'S REAL FINDING IS THAT SEARCH WAS NEVER THE EXPOSURE.**
