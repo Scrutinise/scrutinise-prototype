@@ -21,6 +21,7 @@ import {
 import { buildInitialBackground } from './search-stub'
 import { runOrientation } from './orientation'
 import { runSearch } from './search-gateway'
+import { stripNullBytes } from './json-safe'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -345,7 +346,12 @@ export async function fireSearchTrigger(ideaId: string): Promise<{ ok: boolean; 
 
   await prisma.idea.update({
     where: { id: ideaId },
-    data: { legislationRefs: refs as never, orientation: orientation as never },
+    // ⚠ NUL-STRIPPED. A single U+0000 in a retrieved snippet makes PostgreSQL reject the
+    // whole `jsonb` write ("unsupported Unicode escape sequence"), losing the entire
+    // briefing over one bad character in one extract. Found by the 25-A framing harness
+    // on 2026-08-17 — see lib/lex/json-safe.ts. This path has always been exposed; it
+    // stores ~20 grouped results, so the odds had simply not caught up with it.
+    data: { legislationRefs: stripNullBytes(refs) as never, orientation: stripNullBytes(orientation) as never },
   })
   await prisma.document.upsert({
     where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
