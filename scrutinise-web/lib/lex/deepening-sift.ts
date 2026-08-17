@@ -34,6 +34,7 @@
 
 import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
+import { modelFor } from './model-registry'
 
 /** One candidate the sift kept, with the judgement attached. */
 export interface SiftKeep {
@@ -147,7 +148,8 @@ export async function siftCandidates(input: {
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return passthrough('no GEMINI_API_KEY')
-  const model = process.env.LEX_SIFT_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  // S6 §2 — default via lib/lex/model-registry.ts; legacy env vars still take precedence.
+  const model = process.env.LEX_SIFT_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.sift')
 
   // The snippet is SHORTER here than in the gather on purpose: the sift is a relevance
   // judgement over a hundred candidates, not a reading of any one of them, and a

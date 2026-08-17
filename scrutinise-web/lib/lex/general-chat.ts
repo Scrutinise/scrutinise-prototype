@@ -36,6 +36,7 @@
 
 import type { SearchResult } from './page1-config'
 import { runSearch, type CapabilityFlags } from './search-gateway'
+import { modelFor } from './model-registry'
 
 export interface GeneralChatTurn {
   role: 'user' | 'lex'
@@ -177,7 +178,8 @@ async function callGeminiForAnswer(
 ): Promise<AnswerOutput> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set in this environment')
-  const model = process.env.LEX_GENERAL_MODEL ?? 'gemini-2.5-flash'
+  // S6 §2 — default via lib/lex/model-registry.ts; LEX_GENERAL_MODEL still takes precedence.
+  const model = process.env.LEX_GENERAL_MODEL ?? modelFor('lex.general-chat')
   const timeoutMs = parseInt(process.env.LEX_GENERAL_TIMEOUT_MS ?? '30000', 10)
   // 8192, not the 2048 the idea-chat uses, and thinking OFF. The first live run of
   // this file died on `Unterminated string in JSON at position 2488`: an answer over

@@ -33,6 +33,7 @@
 
 import { geminiFinishProblem } from './gemini-finish'
 import type { RawFinding } from './deepening-client'
+import { modelFor } from './model-registry'
 
 const MAX_TOKENS = parseInt(process.env.LEX_ADVERSARIAL_MAX_TOKENS ?? '4000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_ADVERSARIAL_TIMEOUT_MS ?? '45000', 10)
@@ -105,7 +106,10 @@ export async function generateAdversarialIssues(input: {
     console.warn('[deepening:adversarial] no GEMINI_API_KEY — the adversarial reading cannot run')
     return null
   }
-  const model = process.env.LEX_ADVERSARIAL_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  // S6 §2: the default now comes from lib/lex/model-registry.ts — ONE place where a pass's model
+  // is chosen. The legacy env vars still win if set, so this is not a behaviour change; it is a
+  // change to where the DEFAULT lives, which is what made it a dozen defaults before.
+  const model = process.env.LEX_ADVERSARIAL_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.adversarial')
 
   const findings = input.findings.length
     ? input.findings.map((f, i) => `[${i + 1}] (${f.kind}) ${f.title}\n     ${f.body}`).join('\n')

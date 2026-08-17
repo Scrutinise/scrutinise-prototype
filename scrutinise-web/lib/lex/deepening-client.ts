@@ -22,6 +22,7 @@
 
 import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
+import { modelFor } from './model-registry'
 
 const MAX_TOKENS = parseInt(process.env.LEX_DEEPENING_MAX_TOKENS ?? '8000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_DEEPENING_TIMEOUT_MS ?? '60000', 10)
@@ -101,7 +102,8 @@ export async function generateDeepeningFindings(input: {
     console.warn('[deepening] no GEMINI_API_KEY — the gather cannot run')
     return null
   }
-  const model = process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? 'gemini-2.5-flash'
+  // S6 §2 — default via lib/lex/model-registry.ts; legacy env vars still take precedence.
+  const model = process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.gather')
 
   const sources = input.results
     .map((r, i) => `[${i + 1}] id=${r.id}\n    type: ${r.type}\n    title: ${r.title}\n    citation: ${r.citation}\n    date: ${r.date}\n    extract: ${r.snippet}`)
