@@ -8,6 +8,8 @@
     "scheduler": "exec tsx ops.ts",
     "ops": "exec tsx ops.ts",
     "check:report-sections": "tsx v32-check-report-sections.ts",
+    "check:entity-decode": "tsx check-entity-decode.ts",
+    "check:html-entities": "tsx shared/html-entities.ts --self-test",
     "audit:committees": "tsx v32-committees-audit.ts",
     "check:committee-phrases": "tsx v32-committees-phrase-check.ts",
     "rechunk:reports": "tsx v32-rechunk-reports.ts",
