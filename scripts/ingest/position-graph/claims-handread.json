@@ -1,0 +1,33 @@
+{
+ "_why": "BRIEF_GRAPH_2D5 §4, MEASURE 4 — the measure that decides. §4: 'Hand-read a sample of the extracted claims and report how many are real claims worth holding against how many are trivia, restatement, or the submission describing itself.' A large novelty count made of self-description is a WORSE outcome than top-down, not a better one.",
+ "_sample": "40 claims, every Nth by id from graph_claim_bottomup run bu1 — deterministic, so the same sample can be re-drawn and argued with. Reproduce: npx tsx position-graph/claims-bottomup.ts --handsample 40",
+ "_bar": "REAL = a contestable assertion about the world, about cause, or about what should happen, that is worth holding in a queryable corpus. Not 'well written' — worth holding.",
+ "_reviewer": "CC-Graph, 17 Aug 2026. ⚠ The same person who wrote the extraction prompt. An independent reader would be a better test and has not been run.",
+ "_categories": ["real", "self-description", "trivia", "not-a-claim", "restatement"],
+ "verdicts": {
+  "1":    { "v": "real", "n": "The hospice's position on assisted dying. ⚠ The model flagged it isAboutSelf; that flag is WRONG — an organisation stating its policy position is exactly what the corpus is for." },
+  "1009": { "v": "real" }, "1105": { "v": "real" }, "1153": { "v": "real" }, "1201": { "v": "real" },
+  "1249": { "v": "real" },
+  "1297": { "v": "real", "n": "'Continuity is important, but more important for some patients than others' — this is the SCOPING that §2's second pass had to work to find on the same submission. Bottom-up caught it as a claim in its own right." },
+  "1345": { "v": "real" }, "1393": { "v": "real" }, "1441": { "v": "real" }, "145": { "v": "real" },
+  "1489": { "v": "real" }, "1537": { "v": "real" }, "1585": { "v": "real" }, "1633": { "v": "real" },
+  "1681": { "v": "real" }, "1729": { "v": "real" }, "1777": { "v": "real" }, "1873": { "v": "real" },
+  "1921": { "v": "real" },
+  "193":  { "v": "real", "n": "A strong empirical claim about what doctors think — the kind of thing the 83 propositions could never have asked for." },
+  "241": { "v": "real" }, "289": { "v": "real" }, "337": { "v": "real" },
+  "385":  { "v": "real", "n": "'Swimming was the only sporting activity associated with a protective effect against falls' — specific, checkable, and on no proposition's list." },
+  "433":  { "v": "real", "n": "Thin — 'national leadership and funding are essential' — but contestable and policy-bearing. Counted real, marked weak." },
+  "481": { "v": "real" }, "49": { "v": "real" }, "529": { "v": "real" }, "577": { "v": "real" },
+  "625": { "v": "real" }, "817": { "v": "real" }, "913": { "v": "real" },
+  "961":  { "v": "real", "n": "'Having in practice physio and pharmacist is great.' Barely a sentence, but an evaluative claim a reader could disagree with. Counted real, marked weak." },
+
+  "1057": { "v": "self-description", "n": "Describes how this practice allocates patients. Not a claim about policy or the world." },
+  "673":  { "v": "self-description", "n": "⚠ ARGUABLE. About the submitter's own 'Dance On' programme — but the second half ('underutilised due to fragmented commissioning and short-term funding') is a real policy claim. Scored strictly." },
+  "865":  { "v": "self-description", "n": "'We intend to consult on this work in 2021.' Pure organisational housekeeping." },
+
+  "1825": { "v": "trivia", "n": "⚠ ARGUABLE. 'Funding for us to have an Ed Psych full time' is a genuine ask, but a single school's staffing is not a claim worth holding in a national corpus." },
+  "721":  { "v": "trivia", "n": "An example of good practice, offered as an example. Nothing contestable is asserted." },
+
+  "769":  { "v": "not-a-claim", "n": "⚠ THE ONE OUTRIGHT FAILURE. The quote is a bare bullet — 'Workforce development aligned to national standards.' — and the model supplied the verb ('is an enabler for system collaboration') that makes it read as a claim. The assertion is ours, not the submitter's. This is the bibliography failure of POSITION_SAMPLE.md Case 9 in a new costume: document structure invisible to the reader of a flat wall of text." }
+ }
+}

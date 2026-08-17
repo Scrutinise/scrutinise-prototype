@@ -95,7 +95,7 @@ CREATE INDEX IF NOT EXISTS graph_position_trial_idx ON graph_position_trial (tri
  * instruction — so neither was attributable, which is the one thing §1 says not to do. The fields
  * below are now byte-for-byte 2D-3's and the ONLY difference between variants is the preamble.
  */
-const FIELDS = `  · code            the proposition's code exactly as given, e.g. P07
+export const FIELDS = `  · code            the proposition's code exactly as given, e.g. P07
   · textStart       the FIRST EIGHT WORDS of that proposition, copied exactly as given
   · extract         a passage COPIED VERBATIM AND CONTIGUOUSLY from the submission, between 20 and
                     400 characters, that a reader can find in the document and that shows the
@@ -130,7 +130,7 @@ ${COMMON_TAIL}`
  * v2 — THE ONE CHANGE: declining is the expected answer, and the bar to leave it is stated.
  * Nothing else differs from v1. No new field, no new polarity.
  */
-const V2 = `You read one submission to a UK parliamentary select committee inquiry and record which of a
+export const V2 = `You read one submission to a UK parliamentary select committee inquiry and record which of a
 given list of policy PROPOSITIONS it takes a position on.
 
 ⚠ START FROM "NO POSITION" AND REQUIRE EVIDENCE TO LEAVE IT.

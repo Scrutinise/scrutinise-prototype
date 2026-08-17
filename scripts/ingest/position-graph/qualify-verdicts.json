@@ -1,0 +1,22 @@
+{
+ "_why": "BRIEF_GRAPH_2D5 §2. The 23 rows the 2D-3 hand-read marked 'correct' were judged on POLARITY and EXTRACT. They were never judged on whether the position was QUALIFIED. So counting every qualification the second pass found on them as a false positive assumes something the answer key does not say — the same uncontrolled-comparison error this workstream has made before. These are hand verdicts on each one, read against the claim, the position passage and the located condition quote.",
+ "_question": "Does the submission genuinely LIMIT its support for THIS claim, such that recording it plain loses something a reader needs?",
+ "_reviewer": "CC-Graph, 17 Aug 2026",
+ "verdicts": {
+  "16039": { "real": true,  "note": "The ask is a specialised team for HIGH-NEED individuals, not holistic care for everyone. A genuine scoping." },
+  "17591": { "real": true,  "note": "Care England ask for funding in SOCIAL CARE SETTINGS specifically, not for community-led programmes at large. Genuine scoping, and it is who they represent." },
+  "26995": { "real": true,  "note": "The ask is removal of DEFUNCT QOF indicators, not wholesale reduction of bureaucracy. Weak but real — a reader learns what they actually want cut." },
+  "27559": { "real": true,  "note": "'Greater funding to recruit ... would be desirable' — the integration is wanted WITH funding. Conditional in substance." },
+  "28056": { "real": true,  "note": "'benefits for certain groups (multi-morbidity/elderly)' is a real scoping. Note this row is POSITION_SAMPLE.md Case 3, which I published as correctly balanced — it is correctly balanced AND qualified." },
+  "28429": { "real": true,  "note": "'For us LOCALLY the Partnership model IS sustainable - HOWEVER ... financial risk ... overwhelming'. Two limits in one sentence. Clearly reserved." },
+
+  "11610": { "real": false, "note": "'Scrutiny is needed to understand what nationally mandated measures are needed' is a further recommendation, not a limit on supporting a cross-government strategy." },
+  "16032": { "real": false, "note": "'Social work must remain central, supported by adequate resourcing' is a separate demand about the profession, not a condition on supporting continuity of care." },
+  "16034": { "real": false, "note": "⚠ The condition quote is BYTE-IDENTICAL to the position extract. The position was restated as its own condition, which is circular and detectable mechanically." },
+  "16097": { "real": false, "note": "That transformation depends on dedicated staff and funding is an argument FOR sustained investment, not a limit on it." },
+  "18251": { "real": false, "note": "'particularly important in under-served communities' is emphasis, not limitation. They want co-design everywhere and more so there." },
+  "21388": { "real": false, "note": "The inequality warning is an argument FOR wide NHS access, not a condition attached to it. Reads as conditional because it is phrased 'without action to ensure…'." },
+  "33998": { "real": false, "note": "'Not all premises have separate entry/exits' is the REASON for the against position, not a condition on it. Reasons are not qualifications — this is the commonest false shape." },
+  "38684": { "real": false, "note": "The evaluation-still-running reservation is about the submitter's own programme, not about whether PSHE should be strengthened." }
+ }
+}
