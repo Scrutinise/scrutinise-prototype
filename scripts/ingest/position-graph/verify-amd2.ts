@@ -137,9 +137,23 @@ async function main() {
         AND NOT EXISTS (SELECT 1 FROM graph_mention m
                          WHERE m.entity_id = e.id AND m.identity_tier = 'identified')`)
 
+  // ⚠⚠ THIS ASSERTION CHANGED ON 17 AUG 2026, AND THE OLD ONE WAS RIGHT WHEN IT WAS WRITTEN.
+  // It read `surface_is_per_entity IS NOT TRUE` → 0, because at the time we held no per-appearance
+  // surface for ANY mention: the flag was a constant TRUE and the check asserted the constant.
+  // BRIEF_INGEST_CORPUS_FRESHNESS §2 records the surface at write time and plumbs through the two
+  // that were already stored (division_votes.member_name, edm_sponsor.sponsor_name), so the flag is
+  // now COMPUTED and FALSE on most mentions. Left alone, this check failed with bad=2,548,656 —
+  // which is correct behaviour: a check whose premise is deliberately changed must go RED and be
+  // re-decided, never quietly keep passing.
+  //
+  // What it becomes is the invariant that was always meant: never claim a surface we do not hold,
+  // and never hide one we do. verify-surface.ts carries the full four-way version with a negative
+  // control that plants each way of lying about a surface.
   await check('no mention claims a per-appearance surface we do not hold',
-    `SELECT COUNT(*)::text AS bad FROM graph_mention WHERE surface_is_per_entity IS NOT TRUE`, null,
-    'corpus_sections.speaker is NULL on 5,000/5,000 sampled committees-evidence rows, so the display name is the ENTITY\'s, flagged as such')
+    `SELECT COUNT(*)::text AS bad FROM graph_mention
+      WHERE (NOT surface_is_per_entity AND recorded_surface IS NULL)
+         OR (surface_is_per_entity AND recorded_surface IS NOT NULL)`, null,
+    'the flag is computed from whether a surface is actually recorded, in both directions')
 
   // ── §2 the signal ────────────────────────────────────────────────────────────────────────────
   head('§2 behaviour is a signal with evidence, never a resolution')
