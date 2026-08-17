@@ -12,6 +12,10 @@
     "lint": "next lint",
     "db:seed": "tsx prisma/seed.ts",
     "check:sprint2.5-schema": "tsx --env-file=.env scripts/check-sprint2_5-schema.ts",
+    "check:model-registry": "tsx scripts/check-model-registry.ts",
+    "probe:models": "tsx --env-file=.env scripts/probe-model-access.ts",
+    "setup:llm-spend": "tsx --env-file=.env scripts/setup-llm-spend.ts",
+    "reprice:llm-spend": "tsx --env-file=.env scripts/reprice-llm-spend.ts",
     "check:documents": "tsx scripts/check-document-render.ts",
     "check:feedback": "tsx --env-file=.env scripts/check-feedback-capture.ts",
     "check:export": "tsx --env-file=.env scripts/check-export-e2e.ts",
@@ -35,6 +39,7 @@
     "check:text-integrity": "tsx scripts/check-text-integrity.ts",
     "check:answer": "tsx scripts/check-answer-the-question.ts",
     "check:sprint3e-ui": "tsx scripts/check-sprint3e-ui.ts",
+    "check:build-25a": "tsx scripts/check-build-25a.ts",
     "whichdb": "tsx --env-file=.env scripts/whichdb.ts"
   },
   "prisma": {

@@ -3201,3 +3201,47 @@ enum DeepeningIssueStatus {
   DEFERRED
   DISMISSED
 }
+
+/// ─────────────────────────────────────────────────────────────────────────────
+/// LlmSpend — BRIEF_SEARCH_S6 §3. Append-only record of every model call, across
+/// every stream, attributable to a user and to an idea.
+///
+/// ⚠ DDL OF RECORD IS `prisma/llm_spend.sql`, applied by `scripts/setup-llm-spend.ts`.
+/// This model exists for ONE reason: without it `prisma migrate diff` sees a table it
+/// does not know about and proposes DROPPING it. Same pattern as act_metadata.sql and
+/// the position-graph tables. Nothing reads this through the typed Prisma client —
+/// `lib/lex/spend-ledger.ts` uses $queryRaw and the ingest twin uses pg directly,
+/// because it cannot import anything under scrutinise-web/.
+///
+/// ⚠ estCostPence NULL means UNPRICED, NOT FREE. Anthropic and xAI have no rate on
+/// file (docs/MODEL_CONTRACT.md §3), so a pass switched to either records tokens and a
+/// null cost, and any total containing one reports null rather than a partial sum.
+/// ─────────────────────────────────────────────────────────────────────────────
+model LlmSpend {
+  id             BigInt   @id @default(autoincrement())
+  stream         String
+  /// The pass name from lib/lex/model-registry.ts — the join between what was
+  /// configured and what it cost.
+  pass           String
+  model          String
+  tokensIn       Int      @default(0)
+  tokensOut      Int      @default(0)
+  /// Billed at the OUTPUT rate, so kept separate rather than folded into input.
+  tokensThinking Int      @default(0)
+  estCostPence   Decimal? @db.Decimal(12, 4)
+  unpriced       Boolean  @default(false)
+  /// Nullable: ingest spend belongs to no user and no idea, and is still Charlie's.
+  /// ⚠ No relation on purpose — a deleted idea must not delete the record of what it
+  /// cost to produce.
+  userId         String?
+  ideaId         String?
+  ref            String?
+  /// ⚠ A failed call still costs money.
+  failed         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([ideaId])
+  @@index([userId, createdAt])
+  @@index([pass, createdAt])
+  @@index([stream, createdAt])
+}
