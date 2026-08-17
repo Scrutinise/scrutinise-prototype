@@ -25,6 +25,21 @@
  *     space, because a silent substitution is how a decoder invents text
  */
 
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// SHARED CORE — BYTE-IDENTICAL ACROSS scripts/ingest/shared/html-entities.ts
+//                                 AND scrutinise-web/lib/html-entities.ts
+//
+// ⚠ Everything from here to the END SHARED CORE marker is compared byte-for-byte, from BOTH
+// sides (`check:entity-decode` in the ingest, `check:render-decode` in the web app). Edit it in
+// one file and copy it across; never edit one side alone.
+//
+// The reason it is duplicated rather than imported: the Next.js build root is `scrutinise-web/`,
+// so a file above it is not in the deployment. The reason it is CHECKED rather than merely
+// duplicated: the ingest side decides what is STORED and the web side decides what is SHOWN,
+// and two components disagreeing about what a document says is the exact defect class this
+// whole line of work exists to remove.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+
 /** The named entities we decode. Anything not here is left alone, on purpose. */
 const NAMED: Record<string, string> = {
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
@@ -110,6 +125,8 @@ function codePoint(n: number, whole: string): string {
 /** Does this text still contain something that looks like an undecoded entity? */
 export const hasLiteralEntity = (s: string) =>
   /&(#x[0-9a-fA-F]{2,6}|#\d{2,7}|[a-zA-Z][a-zA-Z0-9]{1,9});/.test(s)
+
+// ══════════════════════════════════════════════════════════════════════════════ END SHARED CORE
 
 // ── offline self-test ───────────────────────────────────────────────────────────────────────────
 function selftest() {

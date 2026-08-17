@@ -105,6 +105,45 @@ function main() {
   console.log(`  ${inert.length ? '✗' : '✓'} every decoded value is actually used${inert.length ? `  — DECODED THEN DISCARDED: ${inert.join(', ')}` : ''}`)
   if (inert.length) failures++
 
+  // ⚠ THE TWIN, CHECKED FROM THIS SIDE TOO — AND THIS ASSERTION EXISTS BECAUSE ITS ABSENCE WAS
+  // WATCHED. `scrutinise-web/lib/html-entities.ts` is a forced copy (the Next build root cannot
+  // import from `scripts/`). With the web copy deliberately diverged, the web check failed and
+  // THIS ONE STILL REPORTED "all checks pass" — a drift guard that only fires on one side leaves
+  // whichever side you happened to edit unguarded, which is the half that matters.
+  //
+  // The ingest side decides what is STORED and the web side decides what is SHOWN. Two components
+  // disagreeing about what a document says is the defect class this whole line of work removes.
+  const WEB_TWIN = path.resolve(__dirname, '../../scrutinise-web/lib/html-entities.ts')
+  const CORE_START = '// SHARED CORE — BYTE-IDENTICAL ACROSS'
+  const CORE_END = '═ END SHARED CORE'
+  const core = (file: string): string | null => {
+    if (!fs.existsSync(file)) return null
+    const src = fs.readFileSync(file, 'utf8')
+    const i = src.indexOf(CORE_START)
+    const j = src.indexOf(CORE_END, i + CORE_START.length)
+    if (i < 0 || j < 0) return null
+    return src.slice(i, src.indexOf('\n', j))
+  }
+  const mine = core(path.join(__dirname, 'shared/html-entities.ts'))
+  const theirs = core(WEB_TWIN)
+  if (!mine) {
+    console.log('  ✗ SHARED CORE markers missing in shared/html-entities.ts')
+    failures++
+  } else if (!theirs) {
+    // Not a pass: an unreadable twin is an unchecked twin, and this check exists to notice that.
+    console.log(`  ✗ web twin unreadable or unmarked (${WEB_TWIN}) — the copy cannot be compared`)
+    failures++
+  } else if (mine !== theirs) {
+    let at = 0
+    while (at < mine.length && at < theirs.length && mine[at] === theirs[at]) at++
+    console.log(`  ✗ SHARED CORE DIVERGED from the web twin at byte ${at}:`)
+    console.log(`      ingest ${JSON.stringify(mine.slice(at, at + 50))}`)
+    console.log(`      web    ${JSON.stringify(theirs.slice(at, at + 50))}`)
+    failures++
+  } else {
+    console.log(`  ✓ shared core identical to the web twin (${Buffer.byteLength(mine)} bytes)`)
+  }
+
   console.log(`\n════ ${failures ? `${failures} FAILED` : 'all checks pass'} ════`)
   if (failures) process.exit(1)
 }
