@@ -18,11 +18,21 @@
  * The Publications LIST endpoint carries it — the same lesson sweep-committees.ts learned: the list
  * carries what the detail carries, so this is ~260 calls at Take=200 rather than 45,610 detail calls.
  *
- * ⚠ AND ONE CLASS CANNOT BE FIXED BY ANY URL. ~22% of the publications we hold carry NO document in
- * the API at all — correspondence records with a title, a date and a committee, and nothing to open.
- * `document_id IS NULL` records exactly that, and it is the row a policy decision needs: those must
- * stop being offered as openable citations. This script does NOT mark corpus rows unavailable —
- * that is a mutation of live data and it is Charlie's call (see the report).
+ * ⚠⚠ `document_id IS NULL` MEANS "NO FILE LISTED IN THE API". IT DOES **NOT** MEAN "NOTHING TO OPEN",
+ * AND MY FIRST VERSION OF THIS HEADER SAID IT DID. Measured afterwards on 60 held publications with
+ * no API file: **27 of them (45.0%, 95% CI 33.1–57.5%) still return 200 at `/publications/{id}/html/`.**
+ * An HTML rendition can exist on the website with no corresponding file in the API.
+ *
+ * So the resolver rule is:
+ *   document_id present  → `/publications/{id}/documents/{docId}/default/`  (measured 200 for both
+ *                          the HTML and the PDF-only classes — the durable form)
+ *   document_id NULL     → `/publications/{id}/html/` is the best available guess and opens about
+ *                          45% of the time. It is NOT a link that can be dropped on the strength of
+ *                          this table alone; dropping it would remove working citations.
+ *
+ * The class that genuinely cannot be opened is narrower: `/html/` 404s AND there is no file. That is
+ * what `committees-freshness.ts` calls `no-document` and measures at 21.9% of held publications —
+ * do not read this table's NULL count as that number.
  *
  * Usage (from scripts/ingest):
  *   npx tsx committees-doc-index.ts --predict     # counts + cost, writes nothing
@@ -58,7 +68,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const DDL = `
 CREATE TABLE IF NOT EXISTS committee_publication_document (
   publication_id INTEGER PRIMARY KEY,
-  -- NULL is a FINDING, not a gap: the API holds this publication and it has no file to open.
+  -- NULL = the API lists no file for this publication. ⚠ NOT "nothing to open": 45.0% of these
+  -- still open at /publications/{id}/html/ (n=60, CI 33.1-57.5%). See the header.
   document_id    INTEGER,
   document_count INTEGER NOT NULL DEFAULT 0,
   file_name      TEXT,
@@ -72,12 +83,20 @@ CREATE INDEX IF NOT EXISTS committee_publication_document_has_doc_idx
   ON committee_publication_document ((document_id IS NOT NULL));
 `
 
-/** The URL that opens. Exported so the downstream resolver and the tests share ONE definition. */
-export function publicationUrl(publicationId: number, documentId: number | null): string | null {
-  // ⚠ NULL, NOT A GUESS. A publication with no document has no page; returning the bare
-  // /publications/{id}/ form would hand back a URL measured to 404 for every publication there is.
-  if (documentId == null) return null
-  return `https://committees.parliament.uk/publications/${publicationId}/documents/${documentId}/default/`
+/**
+ * The URL to offer for a publication, and how much it can be trusted. ONE definition, shared by the
+ * downstream resolver and the tests.
+ *
+ * ⚠ THE BARE `/publications/{id}/` FORM IS NEVER RETURNED — it 404s for every publication there is.
+ */
+export function publicationUrl(publicationId: number, documentId: number | null):
+  { url: string; confidence: 'measured' | 'best-guess' } {
+  const base = `https://committees.parliament.uk/publications/${publicationId}`
+  // The document form was probed on both an HTML publication and a PDF-only one: 200 for each.
+  if (documentId != null) return { url: `${base}/documents/${documentId}/default/`, confidence: 'measured' }
+  // No file in the API. `/html/` opens for 45.0% of these (n=60, CI 33.1–57.5%) — worth offering,
+  // NOT worth presenting as certain, and NOT to be dropped, which would remove working citations.
+  return { url: `${base}/html/`, confidence: 'best-guess' }
 }
 
 async function getJson(url: string): Promise<any | null> {
@@ -136,8 +155,11 @@ async function verify(pool: ReturnType<typeof getNeonPool>) {
   console.log('\n════ COVERAGE against the publications we actually hold ════')
   console.log(`  publications held in corpus_sections   ${n(held)}`)
   console.log(`  of those, indexed here                 ${n(indexed)}  (${((100 * indexed) / Math.max(1, held)).toFixed(1)}%)`)
-  console.log(`  ✓ a document to open                   ${n(withDoc)}  (${((100 * withDoc) / Math.max(1, indexed)).toFixed(1)}% of indexed)`)
-  console.log(`  ⚠ NOTHING to open — no document at all  ${n(noDoc)}  (${((100 * noDoc) / Math.max(1, indexed)).toFixed(1)}% of indexed)`)
+  console.log(`  ✓ a file in the API → durable URL      ${n(withDoc)}  (${((100 * withDoc) / Math.max(1, indexed)).toFixed(1)}% of indexed)`)
+  console.log(`  ⚠ NO file in the API                   ${n(noDoc)}  (${((100 * noDoc) / Math.max(1, indexed)).toFixed(1)}% of indexed)`)
+  console.log(`      ⚠ this is NOT "nothing to open": 45.0% of these still open at /html/ (n=60,`)
+  console.log(`        CI 33.1–57.5%). The unopenable class is /html/ 404 AND no file — 21.9% of`)
+  console.log(`        held publications, measured by committees-freshness.ts, not by this table.`)
   console.log(`  ⚠ not indexed                          ${n(held - indexed)} — a publication we hold that the API's list does not return`)
   const { rows: ex } = await pool.query<{ publication_id: number; title: string | null }>(
     `SELECT publication_id, title FROM committee_publication_document WHERE document_id IS NULL LIMIT 3`)

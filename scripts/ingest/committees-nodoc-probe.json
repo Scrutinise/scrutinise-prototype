@@ -1,0 +1,474 @@
+{
+ "measuredAt": "2026-08-17T23:31:40.637Z",
+ "population": 0,
+ "sample": 60,
+ "salt": "a",
+ "tally": {
+  "html-ok": 27,
+  "other-url": 0,
+  "no-document": 33,
+  "gone": 0,
+  "error": 0
+ },
+ "results": [
+  {
+   "id": 12585,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12585/html/"
+  },
+  {
+   "id": 13001,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13001/html/"
+  },
+  {
+   "id": 13255,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13255/html/"
+  },
+  {
+   "id": 13658,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 13836,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13836/html/"
+  },
+  {
+   "id": 14108,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14108/html/"
+  },
+  {
+   "id": 14496,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 14625,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15170,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/15170/html/"
+  },
+  {
+   "id": 16347,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16447,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16536,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16744,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/16744/html/"
+  },
+  {
+   "id": 16875,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16951,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 17245,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 17598,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 17655,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17655/html/"
+  },
+  {
+   "id": 18319,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18319/html/"
+  },
+  {
+   "id": 18337,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 18422,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18422/html/"
+  },
+  {
+   "id": 18514,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18514/html/"
+  },
+  {
+   "id": 18795,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19088,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/19088/html/"
+  },
+  {
+   "id": 19293,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19770,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19978,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20241,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20263,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/20263/html/"
+  },
+  {
+   "id": 20701,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21018,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21022,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21022/html/"
+  },
+  {
+   "id": 21220,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21452,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21452/html/"
+  },
+  {
+   "id": 21537,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21573,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21573/html/"
+  },
+  {
+   "id": 21781,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21781/html/"
+  },
+  {
+   "id": 27303,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27696,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27733,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29356,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29411,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29484,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31221,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31299,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31388,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31390,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32886,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 33024,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35540,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35540/html/"
+  },
+  {
+   "id": 35825,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35825/html/"
+  },
+  {
+   "id": 36076,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36076/html/"
+  },
+  {
+   "id": 36094,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36094/html/"
+  },
+  {
+   "id": 36116,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36116/html/"
+  },
+  {
+   "id": 36175,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36175/html/"
+  },
+  {
+   "id": 37247,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 37829,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/37829/html/"
+  },
+  {
+   "id": 38655,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38655/html/"
+  },
+  {
+   "id": 50844,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50844/html/"
+  },
+  {
+   "id": 51606,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51606/html/"
+  }
+ ]
+}

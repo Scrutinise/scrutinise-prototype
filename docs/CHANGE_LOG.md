@@ -161,6 +161,14 @@ the data it needs now exists.
 and reaches the FTS index, but **no serve path reads it**. Both that and the marking itself are
 Charlie's call.
 
+⚠⚠ **A CORRECTION TO MY OWN RECOMMENDATION, MADE BEFORE IT SHIPPED. I first wrote "no link at all
+where `document_id` is null" — that was wrong and would have removed working citations.** NULL means
+*no file listed in the API*, not *nothing to open*: measured on 60 held publications with no API
+file, **27 (45.0%, CI 33.1–57.5%) still return 200 at `/html/`**. The two counts are different
+classes and must not be quoted as each other — the user-facing 21.9% requires `/html/` to 404 AND no
+file, while the table's NULL count (30.0% of indexed) is the second half alone. `publicationUrl()`
+now returns the URL *and* whether it is `measured` or a `best-guess`.
+
 ⚠⚠ **TWO DEFECTS IN MY OWN MEASUREMENT, BOTH CAUGHT BY THE DATA.** (1) The first run returned **403
 on 300 of 300 probes**: `committees.parliament.uk` refuses Node's `fetch` regardless of User-Agent
 (Cloudflare TLS fingerprinting) — **documented in our own `sources/committees-portal.ts`, which I

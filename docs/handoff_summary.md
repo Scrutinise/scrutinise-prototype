@@ -45,6 +45,10 @@ RUN and PROBED** — `42694` goes 404 → 200. ▶ **The web resolver is NOT cha
 35.7% for a user**: the join belongs to `lib/lex/committee-url.ts`'s thread and its data now exists.
 ⚠ **"Mark them unavailable" would change nothing today** — `availability_status` reaches the FTS
 index but **no serve path reads it**. Charlie's call, both halves.
+⚠⚠ **I corrected my own recommendation before it shipped:** "no link where `document_id` is null"
+was WRONG — **45.0% of no-file publications still open at `/html/`** (n=60, CI 33.1–57.5%), so
+dropping the link would have removed working citations. NULL means *no file in the API*, not
+*nothing to open*; the user-facing 21.9% needs BOTH halves.
 
 ⚠⚠ **TWO DEFECTS IN MY OWN MEASUREMENT.** Node's `fetch` is refused by `committees.parliament.uk`
 regardless of User-Agent (Cloudflare TLS fingerprinting) — **documented in our own

@@ -44,6 +44,12 @@ hold, each probed live and classified against the committees API.
 **Extrapolated over the 45,610 publications we hold — an extrapolation, not a census: ~6,300
 repairable and ~10,000 with nothing behind them.**
 
+⚠ **`no-document` HERE MEANS `/html/` 404s AND the API lists no file — both halves.** It is NOT the
+same as `committee_publication_document.document_id IS NULL`, which counts only the second half and
+is 30.0% of the indexed rows. **45.0% of that wider class still opens at `/html/`** (n=60, CI
+33.1–57.5%), so the two counts must never be quoted as each other. The 21.9% above is the
+user-facing number: nothing opens at all.
+
 ### §1.2 Why — and it is not withdrawal
 
 Three ids the brief names as dead, checked directly:
@@ -86,9 +92,16 @@ reads `OriginalFormat` — so the class cannot be told from metadata. It does no
 is unchanged, so **the 35.7% is still 35.7% for a user today.** The remaining step is a downstream
 one and the brief assigns it there ("fixed at display time in `lib/lex/committee-url.ts`"): join
 `committee_publication_document` in the hydrate that `fts-search.ts` / `vector-search.ts` already
-run, and emit `…/documents/{document_id}/default/` where `document_id` is non-null, no link at all
-where it is null. I have not made that change in another thread's file mid-sprint; the data it
-needs now exists.
+run, and emit `…/documents/{document_id}/default/` where `document_id` is non-null.
+
+⚠⚠ **AND WHERE IT IS NULL, KEEP THE `/html/` LINK — MY FIRST VERSION OF THIS RECOMMENDATION SAID
+"NO LINK AT ALL" AND THAT WAS WRONG.** `document_id IS NULL` means *no file listed in the API*, not
+*nothing to open*: measured on 60 held publications with no API file, **27 (45.0%, 95% CI
+33.1–57.5%) still return 200 at `/publications/{id}/html/`**. Dropping the link would have removed
+working citations from nearly half that class. The corrected rule is in `publicationUrl()`, which
+returns the URL **and** whether it is `measured` or a `best-guess`.
+
+I have not made the web change in another thread's file mid-sprint; the data it needs now exists.
 
 **The join was run and its output probed, rather than being recommended untested:**
 
@@ -255,8 +268,11 @@ sprint's DDL adds three columns and one small table.
 - **`match-registers.ts`'s key_source omission** — 1,785 entities, reported to CC-GRAPH, not fixed.
 - **107 `gave-evidence-to` edges carry no surface** — their source item was absent from the API on
   this pass. Left NULL rather than filled; `verify-surface.ts` reports the live figure.
-- **`committees-doc-index.ts` had not finished its 51,854-publication pass** when this was written,
-  so the table is partial. It is idempotent and refreshes on re-run; a partial index costs nothing
-  but coverage, because a missing row resolves to "no link" rather than to a wrong one.
+- **`committees-doc-index.ts` stopped at 40,800 of 51,854 publications**, covering **37,917 of the
+  45,610 we hold (83.1%)** — 26,547 with a file, 11,370 without. It is idempotent, so finishing it
+  is a re-run; a missing row costs coverage only, because the resolver falls back to `/html/`.
+- **Which of the ~11,000 no-file publications actually open is known only to ±12pp** (45.0% on
+  n=60). A one-off probe of that class would turn a 45% guess into a stored fact per publication —
+  ~11,000 polite requests, a few hours, no LLM.
 - **The 2 unresolved probes** of the 500 — still 403 after a slow re-probe. Excluded from every
   rate rather than assumed to behave like the rest.
