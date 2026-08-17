@@ -2,13 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 12:59 UTC — ▼ **SEARCH S6: `docs/SEARCH_CONTRACT.md` and
+*Last updated: 2026-08-17 14:12 UTC — ▼ **SURFACE 1: the platform now says when a law is no
+longer in force — and a repealed provision turned out to be effectively UNREACHABLE by search, so the
+real exposure was the legislation DETAIL page, which lists 1,335 repealed sections of an Act's 1,650
+with no ranking step. Both now labelled; `/legislation-compare` is not.**
+Earlier: 2026-08-17 12:59 UTC — ▼ **SEARCH S6: `docs/SEARCH_CONTRACT.md` and
 `docs/MODEL_CONTRACT.md` now exist as standing references, model choice per pass is configurable in
 ONE place, and every model call is metered into one ledger. ⚠ Gemini, Claude and Grok all work; there
 is NO OpenAI key here; and TWO hardcoded production fallbacks name models the accounts do not list.**
 Earlier: 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4: 54% → 44% on the same fifty, and 189 dated offices.**
 Earlier: INGEST entity-decode (zero recall cost), GRAPH 2D-3, SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E,
 INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 14:12 UTC — ▼ **SURFACE 1 IS COMPLETE: THE PLATFORM NOW SAYS WHEN A LAW IS NO LONGER IN
+FORCE — AND THE SPRINT'S REAL FINDING IS THAT SEARCH WAS NEVER THE EXPOSURE.**
+Executes `docs/BRIEF_SURFACE_1_REPEAL.md` §1–§5. Report: **`docs/SURFACE_1_REPEAL_REPORT.md`**.
+CHANGE_LOG (2026-08-17 14:12 UTC). `tsc` clean. **Cost under $0.01.**
+⚠ **`docs/PLAN_SURFACING.md`, which the brief says to read first, does not exist** — proceeded from the
+brief's own §0. Write it or drop the reference.
+
+**The defect closed is a correctness defect.** Lex could cite a repealed provision as current law with
+a real citation and a working link. `lib/lex/repeal-status.ts` is the single source for three states —
+`repealed-known` / `repealed-unknown` / `no-record` — and screen and prompt both render from it, so
+they cannot disagree.
+
+⚠⚠ **A REPEALED PROVISION IS EFFECTIVELY UNREACHABLE BY SEARCH. 0 of 96 results across 15 queries
+carried a repeal record; 0 of 7 exact-title searches surfaced their own target.** Not missing — all
+178,826 are `compiled` with an R2 key — **unrankable**: median **33 words against 69**, and that body
+is mostly the dot leaders the source uses to render a repealed provision. ⚠ `uksi/2013/687`, the
+instrument that did the repealing, **ranks first for the title of the section it repealed.**
+
+⚠ **SO THE REAL EXPOSURE IS `/legislation/[itemId]`** — it lists every compiled section in full with no
+ranking step. The **Income and Corporation Taxes Act 1988** page shows **1,335 repealed sections of
+1,650**, all previously unlabelled. **It was not in the brief's list. It is now labelled**, joined on
+`(gid, section_ref)` because that page reads the legacy table, with the rate **measured**:
+**2,731 of 4,061 (67.2%)** across the ten largest affected Acts (`scripts/probe-surface-1-detail-page.ts`).
+⚠ **A MISS STAYS A MISS** — an unplaced section gets NO status, never `no-record`.
+
+✅ **Six surfaces, one seam.** `search-gateway.ts` attaches it, so page-1 briefing, page-2 seeding, the
+Deepening and the build passes inherit it with **no change to the LEX stream's in-flight files**.
+⚠ Both `results` AND `grouped` are annotated — a consumer may read either.
+
+✅ **And in what Lex reads:** a per-result note, a standing instruction (without it a model reads an
+absent marker as confirmation), and ⚠ **a DIFFERENT instruction for the path where nothing could be
+checked** — the chat route's legacy fallback has no key to join on, so it is told not to imply currency
+in either direction. That flag was **inert when first written**; the check now asserts it is used.
+
+⚠⚠ **"No repeal recorded" is NOT "in force"** — `check:repeal-status` greps for the assertion and was
+watched failing on a planted `'In force'`. ⚠ **AND THERE IS NO REPEAL DATE**: the brief asks for date
+and instrument, the census recorded no date, and `detected_at` is when WE detected it. None is shown.
+▶ **Getting the date is an ingest job — the single most valuable follow-up.**
+
+❌ **Named, not fixed** (a partial fix that looks complete is the worst outcome here):
+**`/legislation-compare`** — the one remaining real exposure; **the client-supplied prompt path** (the
+route accepts `repealNote`, the client was not changed to send it); the ~33% of detail-page refs that
+cannot be derived from a bare section number; `/admin`.
+
+❌ **NOT DONE — the browser walk (§3).** Vercel is SAML-blocked here and local Clerk is a dev instance.
+▶ **CHARLIE: open `/legislation/[itemId]` for the Income and Corporation Taxes Act 1988, confirm the red
+REPEALED badge, then ask Lex in chat whether a repealed provision is still current law.**
+
+`verify:surface-1` 15/15 (real gateway, real prompt, real model) · `check:repeal-status` 15/15.
 
 2026-08-17 12:59 UTC — ▼ **SEARCH S6 IS COMPLETE: two standing contracts, a model registry, and a
 spend ledger proven end to end.** Executes `docs/BRIEF_SEARCH_S6_CONTRACTS.md` §1–§4. Report:
