@@ -1,0 +1,354 @@
+{
+ "measuredAt": "2026-08-17T22:26:15.376Z",
+ "population": 0,
+ "sample": 45,
+ "salt": "a",
+ "tally": {
+  "html-ok": 28,
+  "other-url": 7,
+  "no-document": 8,
+  "gone": 0,
+  "error": 2
+ },
+ "results": [
+  {
+   "id": 817,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/817/html/"
+  },
+  {
+   "id": 942,
+   "htmlStatus": 403,
+   "apiStatus": 200,
+   "documentId": 7307,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter to Defra re UK Chemical Strategy and regulatory framework_.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/942/documents/7307/default/",
+   "verdict": "error"
+  },
+  {
+   "id": 1762,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1762/html/"
+  },
+  {
+   "id": 2642,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 26287,
+   "fileFormat": "OriginalFormat",
+   "fileName": "200727 Commission record of discussion PUBLIC.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2642/documents/26287/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 3076,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3076/html/"
+  },
+  {
+   "id": 3833,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3833/html/"
+  },
+  {
+   "id": 4276,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4276/html/"
+  },
+  {
+   "id": 4451,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4451/html/"
+  },
+  {
+   "id": 4713,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4713/html/"
+  },
+  {
+   "id": 5481,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5481/html/"
+  },
+  {
+   "id": 5961,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5961/html/"
+  },
+  {
+   "id": 6589,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6589/html/"
+  },
+  {
+   "id": 7135,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7135/html/"
+  },
+  {
+   "id": 7493,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7493/html/"
+  },
+  {
+   "id": 7593,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 79610,
+   "fileFormat": "OriginalFormat",
+   "fileName": "B9 - 151021 - Letter from the Secretary of State and Annex A to Chair Huw Merriman MP - re Secretary of State session - Follow up .pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/7593/documents/79610/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 9793,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9793/html/"
+  },
+  {
+   "id": 10807,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10807/html/"
+  },
+  {
+   "id": 11216,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/11216/html/"
+  },
+  {
+   "id": 17773,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19951,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20031,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20176,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 22105,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22105/html/"
+  },
+  {
+   "id": 28761,
+   "htmlStatus": 403,
+   "apiStatus": 200,
+   "documentId": 173626,
+   "fileFormat": "OriginalFormat",
+   "fileName": "new ESIC Committee Formal Mins 2021-22 (New Format).pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/28761/documents/173626/default/",
+   "verdict": "error"
+  },
+  {
+   "id": 28781,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 173727,
+   "fileFormat": "OriginalFormat",
+   "fileName": "04a 12.8.22 Letter from Sir Ian Diamond, National Statistician.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/28781/documents/173727/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 29245,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29418,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30314,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 175319,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter from the Secretary of State relating to the Energy Price Guarantee, 30 September 2022.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/30314/documents/175319/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 31601,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 177466,
+   "fileFormat": "OriginalFormat",
+   "fileName": "corresp - 031122 - letter from PAC Chair Dame Meg Hillier to Crawford Falconer re response to Committee's 45th Report of Session 2021-22.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31601/documents/177466/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 32407,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35181,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 39487,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39487/html/"
+  },
+  {
+   "id": 39960,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39960/html/"
+  },
+  {
+   "id": 41161,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41161/html/"
+  },
+  {
+   "id": 41927,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41927/html/"
+  },
+  {
+   "id": 42031,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 209026,
+   "fileFormat": "OriginalFormat",
+   "fileName": "2023-10-30 - Letter from DBT Perm Sec to PAC Chair - BEIS Annual Report and Accounts 2021-22 Update.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/42031/documents/209026/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 42402,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 210736,
+   "fileFormat": "OriginalFormat",
+   "fileName": "List-of-subjects-debated-2022-23.pdf.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/42402/documents/210736/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 42444,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42444/html/"
+  },
+  {
+   "id": 44356,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44356/html/"
+  },
+  {
+   "id": 45274,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45274/html/"
+  },
+  {
+   "id": 47662,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47662/html/"
+  },
+  {
+   "id": 48365,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48365/html/"
+  },
+  {
+   "id": 51372,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51372/html/"
+  },
+  {
+   "id": 51862,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51862/html/"
+  },
+  {
+   "id": 53396,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53396/html/"
+  }
+ ]
+}

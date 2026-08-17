@@ -1,0 +1,3694 @@
+{
+ "measuredAt": "2026-08-17T22:23:55.010Z",
+ "population": 45610,
+ "sample": 500,
+ "note": "merged: the 500-id run plus a slower re-probe of the ids it left throttled",
+ "tally": {
+  "html-ok": 320,
+  "error": 2,
+  "other-url": 69,
+  "no-document": 109
+ },
+ "results": [
+  {
+   "id": 64,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/64/html/"
+  },
+  {
+   "id": 75,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/75/html/"
+  },
+  {
+   "id": 116,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/116/html/"
+  },
+  {
+   "id": 250,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/250/html/"
+  },
+  {
+   "id": 361,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/361/html/"
+  },
+  {
+   "id": 817,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/817/html/"
+  },
+  {
+   "id": 818,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/818/html/"
+  },
+  {
+   "id": 942,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 7307,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter to Defra re UK Chemical Strategy and regulatory framework_.pdf",
+   "docUrlStatus": 403,
+   "verdict": "error"
+  },
+  {
+   "id": 1137,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1137/html/"
+  },
+  {
+   "id": 1229,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 10365,
+   "fileFormat": "OriginalFormat",
+   "fileName": "200521 Prentis.40907.41111.9.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/1229/documents/10365/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 1254,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1254/html/"
+  },
+  {
+   "id": 1535,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1535/html/"
+  },
+  {
+   "id": 1582,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 15054,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter - Rob Behrens to Chair 12.6.20 (impact of the pandemic on PHSO service).pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/1582/documents/15054/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 1684,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1684/html/"
+  },
+  {
+   "id": 1762,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1762/html/"
+  },
+  {
+   "id": 1825,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 17744,
+   "fileFormat": "OriginalFormat",
+   "fileName": "378.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/1825/documents/17744/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 1844,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1844/html/"
+  },
+  {
+   "id": 1855,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1855/html/"
+  },
+  {
+   "id": 1861,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/1861/html/"
+  },
+  {
+   "id": 1873,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 18378,
+   "fileFormat": "OriginalFormat",
+   "fileName": "FBSC Off-payroll working - gov response 01.07.2020.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/1873/documents/18378/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2154,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 20016,
+   "fileFormat": "OriginalFormat",
+   "fileName": "299.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2154/documents/20016/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2163,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2163/html/"
+  },
+  {
+   "id": 2181,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2181/html/"
+  },
+  {
+   "id": 2186,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2186/html/"
+  },
+  {
+   "id": 2208,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 20279,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Lords Grimstone letter to IAC Chair Japan FTA Launch 12.05.2020.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2208/documents/20279/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2470,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 24539,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Corresp - 08092020- Chair PAC to David Williams re NHS Capital Spendin - .docx",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2470/documents/24539/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2484,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2484/html/"
+  },
+  {
+   "id": 2570,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 25861,
+   "fileFormat": "OriginalFormat",
+   "fileName": "P41 William Murray_Promoter.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2570/documents/25861/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2581,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2581/html/"
+  },
+  {
+   "id": 2601,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 26149,
+   "fileFormat": "OriginalFormat",
+   "fileName": "EC4 - 10.09.20 Letter to ESC .pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2601/documents/26149/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2642,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 26287,
+   "fileFormat": "OriginalFormat",
+   "fileName": "200727 Commission record of discussion PUBLIC.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2642/documents/26287/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2692,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/2692/html/"
+  },
+  {
+   "id": 2728,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 27037,
+   "fileFormat": "OriginalFormat",
+   "fileName": "11 200917 BEIS Chair to Minister (ETS Common Framework Scrutiny Timeline).pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2728/documents/27037/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 2904,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 28064,
+   "fileFormat": "OriginalFormat",
+   "fileName": "28072020 JC Letter to Caroline Nokes_.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/2904/documents/28064/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 3076,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3076/html/"
+  },
+  {
+   "id": 3107,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3107/html/"
+  },
+  {
+   "id": 3462,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3462/html/"
+  },
+  {
+   "id": 3688,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 35928,
+   "fileFormat": "OriginalFormat",
+   "fileName": "LK to KK 25.11.20 - COM(2020) 299 \u2013 Energy system integration.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/3688/documents/35928/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 3708,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3708/html/"
+  },
+  {
+   "id": 3750,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3750/html/"
+  },
+  {
+   "id": 3833,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/3833/html/"
+  },
+  {
+   "id": 4073,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4073/html/"
+  },
+  {
+   "id": 4276,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4276/html/"
+  },
+  {
+   "id": 4369,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4369/html/"
+  },
+  {
+   "id": 4451,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4451/html/"
+  },
+  {
+   "id": 4713,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4713/html/"
+  },
+  {
+   "id": 4917,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/4917/html/"
+  },
+  {
+   "id": 5040,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5040/html/"
+  },
+  {
+   "id": 5046,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5046/html/"
+  },
+  {
+   "id": 5149,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5149/html/"
+  },
+  {
+   "id": 5344,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5344/html/"
+  },
+  {
+   "id": 5481,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5481/html/"
+  },
+  {
+   "id": 5506,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 54872,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Natwest letter on SME banking.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/5506/documents/54872/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 5704,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5704/html/"
+  },
+  {
+   "id": 5731,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5731/html/"
+  },
+  {
+   "id": 5825,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5825/html/"
+  },
+  {
+   "id": 5910,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5910/html/"
+  },
+  {
+   "id": 5961,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/5961/html/"
+  },
+  {
+   "id": 6007,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6007/html/"
+  },
+  {
+   "id": 6051,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6051/html/"
+  },
+  {
+   "id": 6130,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6130/html/"
+  },
+  {
+   "id": 6134,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6134/html/"
+  },
+  {
+   "id": 6197,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6197/html/"
+  },
+  {
+   "id": 6217,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6217/html/"
+  },
+  {
+   "id": 6288,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 69333,
+   "fileFormat": "OriginalFormat",
+   "fileName": "200420 Correspondence with mobile providers re covid-19.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6288/documents/69333/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6318,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6318/html/"
+  },
+  {
+   "id": 6330,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6330/html/"
+  },
+  {
+   "id": 6389,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6389/html/"
+  },
+  {
+   "id": 6477,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6477/html/"
+  },
+  {
+   "id": 6581,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 71223,
+   "fileFormat": "OriginalFormat",
+   "fileName": "210630 C Pincher to Chair re appearance at PDR inquiry.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6581/documents/71223/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6589,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6589/html/"
+  },
+  {
+   "id": 6619,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 71411,
+   "fileFormat": "OriginalFormat",
+   "fileName": "SC_response_Building_Safety_Bill_WEB_July_2021.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6619/documents/71411/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6765,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 72028,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter from Rt Hon Michael Gove MP, Chancellor of the Dutchy of Lancaster on Covid status certification review Report, dated 5.7.21.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6765/documents/72028/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6826,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 72300,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Corresp - 080721- letter from Dr Andrea Coscelli CBE to PAC Chair Dame Meg Hillier - re CMA Potential Market Investigation Refen.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6826/documents/72300/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6835,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 72326,
+   "fileFormat": "OriginalFormat",
+   "fileName": "12th mtg Remotely 6 October mins Proc Comm.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/6835/documents/72326/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 6855,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6855/html/"
+  },
+  {
+   "id": 6866,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6866/html/"
+  },
+  {
+   "id": 6979,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/6979/html/"
+  },
+  {
+   "id": 7135,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7135/html/"
+  },
+  {
+   "id": 7429,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 77719,
+   "fileFormat": "OriginalFormat",
+   "fileName": "57-ix.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/7429/documents/77719/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 7493,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7493/html/"
+  },
+  {
+   "id": 7514,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 79273,
+   "fileFormat": "OriginalFormat",
+   "fileName": "EC5 - Letter from CMO to the Education Select Committee 14.10.21.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/7514/documents/79273/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 7593,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 79610,
+   "fileFormat": "OriginalFormat",
+   "fileName": "B9 - 151021 - Letter from the Secretary of State and Annex A to Chair Huw Merriman MP - re Secretary of State session - Follow up .pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/7593/documents/79610/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 7725,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7725/html/"
+  },
+  {
+   "id": 7798,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7798/html/"
+  },
+  {
+   "id": 7817,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/7817/html/"
+  },
+  {
+   "id": 8129,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8129/html/"
+  },
+  {
+   "id": 8281,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8281/html/"
+  },
+  {
+   "id": 8419,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8419/html/"
+  },
+  {
+   "id": 8618,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 87176,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Corresp 18.01.22 PAC Chair to Amanda Pritchard re a Ministerial Direction regarding contracts with Independent Sector Providers.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/8618/documents/87176/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 8723,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8723/html/"
+  },
+  {
+   "id": 8755,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8755/html/"
+  },
+  {
+   "id": 8880,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8880/html/"
+  },
+  {
+   "id": 8890,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/8890/html/"
+  },
+  {
+   "id": 9270,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9270/html/"
+  },
+  {
+   "id": 9418,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9418/html/"
+  },
+  {
+   "id": 9435,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9435/html/"
+  },
+  {
+   "id": 9602,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9602/html/"
+  },
+  {
+   "id": 9793,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/9793/html/"
+  },
+  {
+   "id": 10035,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10035/html/"
+  },
+  {
+   "id": 10103,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 10404,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10404/html/"
+  },
+  {
+   "id": 10408,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10408/html/"
+  },
+  {
+   "id": 10484,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 10579,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 10732,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10732/html/"
+  },
+  {
+   "id": 10807,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10807/html/"
+  },
+  {
+   "id": 10922,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10922/html/"
+  },
+  {
+   "id": 10977,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/10977/html/"
+  },
+  {
+   "id": 11216,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/11216/html/"
+  },
+  {
+   "id": 11857,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/11857/html/"
+  },
+  {
+   "id": 12076,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 12106,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12106/html/"
+  },
+  {
+   "id": 12281,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12281/html/"
+  },
+  {
+   "id": 12554,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12554/html/"
+  },
+  {
+   "id": 12708,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 12738,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12738/html/"
+  },
+  {
+   "id": 12938,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/12938/html/"
+  },
+  {
+   "id": 13011,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13011/html/"
+  },
+  {
+   "id": 13318,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 13429,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13429/html/"
+  },
+  {
+   "id": 13445,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13445/html/"
+  },
+  {
+   "id": 13456,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13456/html/"
+  },
+  {
+   "id": 13538,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13538/html/"
+  },
+  {
+   "id": 13867,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 13870,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 13879,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/13879/html/"
+  },
+  {
+   "id": 14098,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14098/html/"
+  },
+  {
+   "id": 14230,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14230/html/"
+  },
+  {
+   "id": 14241,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 14445,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14445/html/"
+  },
+  {
+   "id": 14467,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14467/html/"
+  },
+  {
+   "id": 14571,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14571/html/"
+  },
+  {
+   "id": 14599,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 14604,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 14660,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14660/html/"
+  },
+  {
+   "id": 14822,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14822/html/"
+  },
+  {
+   "id": 14921,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/14921/html/"
+  },
+  {
+   "id": 14923,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15450,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/15450/html/"
+  },
+  {
+   "id": 15631,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15641,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/15641/html/"
+  },
+  {
+   "id": 15681,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15734,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/15734/html/"
+  },
+  {
+   "id": 15740,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15749,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15832,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15870,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15875,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15967,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 15970,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16010,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16379,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16386,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/16386/html/"
+  },
+  {
+   "id": 16499,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16522,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 16590,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/16590/html/"
+  },
+  {
+   "id": 16631,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/16631/html/"
+  },
+  {
+   "id": 16700,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/16700/html/"
+  },
+  {
+   "id": 17105,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 17335,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17335/html/"
+  },
+  {
+   "id": 17381,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17381/html/"
+  },
+  {
+   "id": 17408,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17408/html/"
+  },
+  {
+   "id": 17614,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 17700,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17700/html/"
+  },
+  {
+   "id": 17766,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/17766/html/"
+  },
+  {
+   "id": 17773,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 18258,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18258/html/"
+  },
+  {
+   "id": 18319,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18319/html/"
+  },
+  {
+   "id": 18588,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18588/html/"
+  },
+  {
+   "id": 18704,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18704/html/"
+  },
+  {
+   "id": 18785,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 18796,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18796/html/"
+  },
+  {
+   "id": 18812,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18812/html/"
+  },
+  {
+   "id": 18845,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18845/html/"
+  },
+  {
+   "id": 18874,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18874/html/"
+  },
+  {
+   "id": 18932,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/18932/html/"
+  },
+  {
+   "id": 19143,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19370,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/19370/html/"
+  },
+  {
+   "id": 19727,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/19727/html/"
+  },
+  {
+   "id": 19728,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19808,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/19808/html/"
+  },
+  {
+   "id": 19810,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 19906,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/19906/html/"
+  },
+  {
+   "id": 19951,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20031,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20176,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20193,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/20193/html/"
+  },
+  {
+   "id": 20229,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20236,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20261,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20268,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20341,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20392,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20596,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 20865,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/20865/html/"
+  },
+  {
+   "id": 21047,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21047/html/"
+  },
+  {
+   "id": 21283,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21444,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21444/html/"
+  },
+  {
+   "id": 21535,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 21547,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21547/html/"
+  },
+  {
+   "id": 21710,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/21710/html/"
+  },
+  {
+   "id": 22026,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22026/html/"
+  },
+  {
+   "id": 22066,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 163775,
+   "fileFormat": "OriginalFormat",
+   "fileName": "220428 Letter from ITC Chair to SoS regarding follow-up letters.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/22066/documents/163775/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 22105,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22105/html/"
+  },
+  {
+   "id": 22116,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 164236,
+   "fileFormat": "OriginalFormat",
+   "fileName": "01b 220425 PS to HASC on SE21 supplementary Estimates.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/22116/documents/164236/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 22203,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22203/html/"
+  },
+  {
+   "id": 22468,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22468/html/"
+  },
+  {
+   "id": 22546,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22546/html/"
+  },
+  {
+   "id": 22553,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22553/html/"
+  },
+  {
+   "id": 22618,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22618/html/"
+  },
+  {
+   "id": 22718,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22718/html/"
+  },
+  {
+   "id": 22752,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22752/html/"
+  },
+  {
+   "id": 22891,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22891/html/"
+  },
+  {
+   "id": 22975,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/22975/html/"
+  },
+  {
+   "id": 23088,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23088/html/"
+  },
+  {
+   "id": 23102,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23102/html/"
+  },
+  {
+   "id": 23108,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23108/html/"
+  },
+  {
+   "id": 23197,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23197/html/"
+  },
+  {
+   "id": 23238,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23238/html/"
+  },
+  {
+   "id": 23294,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/23294/html/"
+  },
+  {
+   "id": 23634,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 24476,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 24923,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 25524,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/25524/html/"
+  },
+  {
+   "id": 25585,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/25585/html/"
+  },
+  {
+   "id": 25643,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/25643/html/"
+  },
+  {
+   "id": 25818,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 25999,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 26036,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/26036/html/"
+  },
+  {
+   "id": 26071,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 26952,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27006,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27153,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27242,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27358,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27378,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27456,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27682,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27694,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 27876,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28026,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28101,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28292,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28352,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28581,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 172358,
+   "fileFormat": "OriginalFormat",
+   "fileName": "2022-08-10 - Letter from SoS to ITC Chair - Fifth Round of UK-India FTA negotiations.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/28581/documents/172358/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 28711,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 173551,
+   "fileFormat": "OriginalFormat",
+   "fileName": "702.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/28711/documents/173551/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 28761,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 173626,
+   "fileFormat": "OriginalFormat",
+   "fileName": "new ESIC Committee Formal Mins 2021-22 (New Format).pdf",
+   "docUrlStatus": 403,
+   "verdict": "error"
+  },
+  {
+   "id": 28781,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 173727,
+   "fileFormat": "OriginalFormat",
+   "fileName": "04a 12.8.22 Letter from Sir Ian Diamond, National Statistician.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/28781/documents/173727/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 28958,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 28980,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29007,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29010,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29064,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29097,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29245,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29418,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29622,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29650,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29692,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29713,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29850,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29864,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 29910,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30097,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30124,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 174271,
+   "fileFormat": "OriginalFormat",
+   "fileName": "643.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/30124/documents/174271/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 30169,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 174855,
+   "fileFormat": "OriginalFormat",
+   "fileName": "D - FCDO Annual Report and Accounts 2021-22 - Reporting Future Programme Allocations.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/30169/documents/174855/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 30281,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 175247,
+   "fileFormat": "OriginalFormat",
+   "fileName": "corresp - 230922 - letter from Jeremy Pocklington CB to PAC Chair Dame Meg Hillier - re I am writing to inform you of the publication of Ending Rough Sleeping.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/30281/documents/175247/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 30314,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 175319,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter from the Secretary of State relating to the Energy Price Guarantee, 30 September 2022.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/30314/documents/175319/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 30643,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30699,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30835,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 30957,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31296,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31360,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 31601,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 177466,
+   "fileFormat": "OriginalFormat",
+   "fileName": "corresp - 031122 - letter from PAC Chair Dame Meg Hillier to Crawford Falconer re response to Committee's 45th Report of Session 2021-22.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31601/documents/177466/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 31761,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 178724,
+   "fileFormat": "OriginalFormat",
+   "fileName": "221124 H Whately to Chair re Adult Social Care response.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31761/documents/178724/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 31773,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 178753,
+   "fileFormat": "OriginalFormat",
+   "fileName": "311022 Chair to Mr Jenrick re Channel crossing session.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31773/documents/178753/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 31897,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 179220,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter to the Secretary of State on the Hewitt review and independent workforce plan 29.11.22.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31897/documents/179220/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 31912,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 179258,
+   "fileFormat": "OriginalFormat",
+   "fileName": "HC 925 - Pre-Appointment - Helen Pitcher-Online.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/31912/documents/179258/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 32051,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32151,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32369,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32407,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32537,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32635,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32714,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32746,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32952,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32963,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 32968,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 33236,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 179896,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Correspondence with The Pensions Regulator (DB pensions with liability driven investments).pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33236/documents/179896/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33283,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 180231,
+   "fileFormat": "OriginalFormat",
+   "fileName": "882.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33283/documents/180231/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33326,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 180383,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter from Sling the Mesh to Chair (IMMDS review) 16.12.22.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33326/documents/180383/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33327,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 180384,
+   "fileFormat": "OriginalFormat",
+   "fileName": "UNISON Head of Health to Chair (Ambulance delays and strikes) 15.12.22 (1).pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33327/documents/180384/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33369,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 182735,
+   "fileFormat": "OriginalFormat",
+   "fileName": "46.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33369/documents/182735/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33420,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 181638,
+   "fileFormat": "OriginalFormat",
+   "fileName": "DRtoBH-Launchof24.7RapeSexualAbuseSupportLine061222.Rev1.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33420/documents/181638/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33427,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 181660,
+   "fileFormat": "OriginalFormat",
+   "fileName": "HoCC-Agenda-16-January-2023.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33427/documents/181660/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33671,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 184009,
+   "fileFormat": "OriginalFormat",
+   "fileName": "HC 926 - Prisons and Probation Ombudsman-Online.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33671/documents/184009/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33853,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 185139,
+   "fileFormat": "OriginalFormat",
+   "fileName": "02 Letter from the Minister of State for Justice on the Section 28 Final Commencement Order.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33853/documents/185139/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 33965,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 186382,
+   "fileFormat": "OriginalFormat",
+   "fileName": "EIP EFRA Committee letter  signed.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/33965/documents/186382/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 34233,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 188423,
+   "fileFormat": "OriginalFormat",
+   "fileName": "03b Letter from OEP on 'Complaints and other public contacts' .pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/34233/documents/188423/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 34518,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 217553,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Formal Minutes 2023.fin.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/34518/documents/217553/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 34576,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 190404,
+   "fileFormat": "OriginalFormat",
+   "fileName": "10th Meeting - Decisions.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/34576/documents/190404/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 34765,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 34787,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 34932,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35181,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35292,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35292/html/"
+  },
+  {
+   "id": 35297,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35480,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35480/html/"
+  },
+  {
+   "id": 35515,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35515/html/"
+  },
+  {
+   "id": 35573,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35573/html/"
+  },
+  {
+   "id": 35618,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35873,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35873/html/"
+  },
+  {
+   "id": 35891,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 35962,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/35962/html/"
+  },
+  {
+   "id": 36078,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36078/html/"
+  },
+  {
+   "id": 36430,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36430/html/"
+  },
+  {
+   "id": 36555,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 36659,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 36674,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36674/html/"
+  },
+  {
+   "id": 36807,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36807/html/"
+  },
+  {
+   "id": 36956,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/36956/html/"
+  },
+  {
+   "id": 37075,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 37163,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/37163/html/"
+  },
+  {
+   "id": 37193,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 37728,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/37728/html/"
+  },
+  {
+   "id": 37837,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/37837/html/"
+  },
+  {
+   "id": 37947,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/37947/html/"
+  },
+  {
+   "id": 38044,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38044/html/"
+  },
+  {
+   "id": 38075,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38075/html/"
+  },
+  {
+   "id": 38092,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": null,
+   "fileFormat": null,
+   "fileName": null,
+   "verdict": "no-document"
+  },
+  {
+   "id": 38097,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38097/html/"
+  },
+  {
+   "id": 38298,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38298/html/"
+  },
+  {
+   "id": 38663,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38663/html/"
+  },
+  {
+   "id": 38876,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/38876/html/"
+  },
+  {
+   "id": 39189,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39189/html/"
+  },
+  {
+   "id": 39365,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39365/html/"
+  },
+  {
+   "id": 39416,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39416/html/"
+  },
+  {
+   "id": 39487,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39487/html/"
+  },
+  {
+   "id": 39494,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39494/html/"
+  },
+  {
+   "id": 39886,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39886/html/"
+  },
+  {
+   "id": 39960,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/39960/html/"
+  },
+  {
+   "id": 40033,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40033/html/"
+  },
+  {
+   "id": 40207,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40207/html/"
+  },
+  {
+   "id": 40255,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40255/html/"
+  },
+  {
+   "id": 40366,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40366/html/"
+  },
+  {
+   "id": 40430,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 197234,
+   "fileFormat": "OriginalFormat",
+   "fileName": "ND09-Note-of-discussion-5-September-2022.docx",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/40430/documents/197234/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 40610,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40610/html/"
+  },
+  {
+   "id": 40623,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40623/html/"
+  },
+  {
+   "id": 40631,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/40631/html/"
+  },
+  {
+   "id": 40745,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 198503,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Bishop_s Stortford Cemetery Bill HL - Third Paper of Amendments for Lords OBC.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/40745/documents/198503/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 41151,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41151/html/"
+  },
+  {
+   "id": 41161,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41161/html/"
+  },
+  {
+   "id": 41163,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41163/html/"
+  },
+  {
+   "id": 41396,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 203510,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter-from-the-Deputy-First-Minister-on-giving-evidence-to-the-Coronavirus-and-Scotland-follow-up-inquiry,-dated-18-July-2023.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/41396/documents/203510/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 41465,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 204113,
+   "fileFormat": "OriginalFormat",
+   "fileName": "140923 Letter Victims and Prisoners Billdocx.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/41465/documents/204113/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 41468,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41468/html/"
+  },
+  {
+   "id": 41482,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41482/html/"
+  },
+  {
+   "id": 41623,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 206171,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter to SIT Committee GF SIGNED .pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/41623/documents/206171/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 41633,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41633/html/"
+  },
+  {
+   "id": 41663,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41663/html/"
+  },
+  {
+   "id": 41762,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41762/html/"
+  },
+  {
+   "id": 41801,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41801/html/"
+  },
+  {
+   "id": 41924,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41924/html/"
+  },
+  {
+   "id": 41927,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41927/html/"
+  },
+  {
+   "id": 41935,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41935/html/"
+  },
+  {
+   "id": 41951,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/41951/html/"
+  },
+  {
+   "id": 42031,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 209026,
+   "fileFormat": "OriginalFormat",
+   "fileName": "2023-10-30 - Letter from DBT Perm Sec to PAC Chair - BEIS Annual Report and Accounts 2021-22 Update.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/42031/documents/209026/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 42056,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42056/html/"
+  },
+  {
+   "id": 42402,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 210736,
+   "fileFormat": "OriginalFormat",
+   "fileName": "List-of-subjects-debated-2022-23.pdf.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/42402/documents/210736/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 42444,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42444/html/"
+  },
+  {
+   "id": 42550,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42550/html/"
+  },
+  {
+   "id": 42817,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42817/html/"
+  },
+  {
+   "id": 42863,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42863/html/"
+  },
+  {
+   "id": 42870,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42870/html/"
+  },
+  {
+   "id": 42946,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42946/html/"
+  },
+  {
+   "id": 42989,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/42989/html/"
+  },
+  {
+   "id": 43045,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43045/html/"
+  },
+  {
+   "id": 43070,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43070/html/"
+  },
+  {
+   "id": 43084,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 214478,
+   "fileFormat": "OriginalFormat",
+   "fileName": "HC 129 - Online.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/43084/documents/214478/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 43090,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43090/html/"
+  },
+  {
+   "id": 43316,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43316/html/"
+  },
+  {
+   "id": 43336,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43336/html/"
+  },
+  {
+   "id": 43346,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43346/html/"
+  },
+  {
+   "id": 43594,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/43594/html/"
+  },
+  {
+   "id": 43834,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 217425,
+   "fileFormat": "OriginalFormat",
+   "fileName": "IDC Chair to to PUS - Supplementary Estimates 2023-24.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/43834/documents/217425/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 43836,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 217432,
+   "fileFormat": "OriginalFormat",
+   "fileName": "PB2324 MIN1 R&R Programme Board minutes - 23 January 2024 - mins for website approved 20240220.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/43836/documents/217432/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44046,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 218298,
+   "fileFormat": "OriginalFormat",
+   "fileName": "11 - Letter from the Minister for Enterprise, Markets and Small Business relating to simpler corporate reporting, 20 March 2024.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44046/documents/218298/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44088,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 218475,
+   "fileFormat": "OriginalFormat",
+   "fileName": "61 - LUHC final -Online.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44088/documents/218475/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44101,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 218591,
+   "fileFormat": "OriginalFormat",
+   "fileName": "9. Embargo - UK-TX SMC.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44101/documents/218591/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44115,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 218683,
+   "fileFormat": "OriginalFormat",
+   "fileName": "7. 20240403 - IAC Written Evidence.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44115/documents/218683/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44230,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 220045,
+   "fileFormat": "OriginalFormat",
+   "fileName": "B1 240319-Letter-from-PUS-to-Chair-re-NNNPS-updated-response.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44230/documents/220045/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44356,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44356/html/"
+  },
+  {
+   "id": 44384,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44384/html/"
+  },
+  {
+   "id": 44435,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44435/html/"
+  },
+  {
+   "id": 44563,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44563/html/"
+  },
+  {
+   "id": 44689,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/44689/html/"
+  },
+  {
+   "id": 44784,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 222417,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Chair and Nicky Park published correspondence.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44784/documents/222417/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 44794,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 222449,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Correspondence from Chair to Secretary of State re Interconnectors dated 18 March 2024.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/44794/documents/222449/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 45098,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45098/html/"
+  },
+  {
+   "id": 45169,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45169/html/"
+  },
+  {
+   "id": 45206,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45206/html/"
+  },
+  {
+   "id": 45207,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45207/html/"
+  },
+  {
+   "id": 45274,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45274/html/"
+  },
+  {
+   "id": 45398,
+   "htmlStatus": 404,
+   "apiStatus": 200,
+   "documentId": 225095,
+   "fileFormat": "OriginalFormat",
+   "fileName": "Letter from L Jay to L Gardiner 230524.pdf",
+   "docUrlStatus": 200,
+   "workingUrl": "https://committees.parliament.uk/publications/45398/documents/225095/default/",
+   "verdict": "other-url"
+  },
+  {
+   "id": 45793,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45793/html/"
+  },
+  {
+   "id": 45846,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45846/html/"
+  },
+  {
+   "id": 45995,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/45995/html/"
+  },
+  {
+   "id": 46071,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46071/html/"
+  },
+  {
+   "id": 46151,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46151/html/"
+  },
+  {
+   "id": 46176,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46176/html/"
+  },
+  {
+   "id": 46675,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46675/html/"
+  },
+  {
+   "id": 46753,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46753/html/"
+  },
+  {
+   "id": 46809,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46809/html/"
+  },
+  {
+   "id": 46902,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46902/html/"
+  },
+  {
+   "id": 46906,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46906/html/"
+  },
+  {
+   "id": 46975,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/46975/html/"
+  },
+  {
+   "id": 47121,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47121/html/"
+  },
+  {
+   "id": 47134,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47134/html/"
+  },
+  {
+   "id": 47273,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47273/html/"
+  },
+  {
+   "id": 47355,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47355/html/"
+  },
+  {
+   "id": 47555,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47555/html/"
+  },
+  {
+   "id": 47662,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47662/html/"
+  },
+  {
+   "id": 47667,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47667/html/"
+  },
+  {
+   "id": 47740,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47740/html/"
+  },
+  {
+   "id": 47918,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47918/html/"
+  },
+  {
+   "id": 47952,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47952/html/"
+  },
+  {
+   "id": 47974,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/47974/html/"
+  },
+  {
+   "id": 48116,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48116/html/"
+  },
+  {
+   "id": 48164,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48164/html/"
+  },
+  {
+   "id": 48216,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48216/html/"
+  },
+  {
+   "id": 48304,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48304/html/"
+  },
+  {
+   "id": 48365,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48365/html/"
+  },
+  {
+   "id": 48723,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48723/html/"
+  },
+  {
+   "id": 48775,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48775/html/"
+  },
+  {
+   "id": 48823,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48823/html/"
+  },
+  {
+   "id": 48907,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/48907/html/"
+  },
+  {
+   "id": 49049,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49049/html/"
+  },
+  {
+   "id": 49055,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49055/html/"
+  },
+  {
+   "id": 49062,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49062/html/"
+  },
+  {
+   "id": 49160,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49160/html/"
+  },
+  {
+   "id": 49272,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49272/html/"
+  },
+  {
+   "id": 49280,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49280/html/"
+  },
+  {
+   "id": 49311,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49311/html/"
+  },
+  {
+   "id": 49317,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49317/html/"
+  },
+  {
+   "id": 49419,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49419/html/"
+  },
+  {
+   "id": 49483,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49483/html/"
+  },
+  {
+   "id": 49598,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49598/html/"
+  },
+  {
+   "id": 49620,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49620/html/"
+  },
+  {
+   "id": 49803,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/49803/html/"
+  },
+  {
+   "id": 50167,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50167/html/"
+  },
+  {
+   "id": 50253,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50253/html/"
+  },
+  {
+   "id": 50279,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50279/html/"
+  },
+  {
+   "id": 50395,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50395/html/"
+  },
+  {
+   "id": 50501,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50501/html/"
+  },
+  {
+   "id": 50561,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50561/html/"
+  },
+  {
+   "id": 50579,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50579/html/"
+  },
+  {
+   "id": 50723,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50723/html/"
+  },
+  {
+   "id": 50862,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50862/html/"
+  },
+  {
+   "id": 50887,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50887/html/"
+  },
+  {
+   "id": 50978,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50978/html/"
+  },
+  {
+   "id": 50979,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50979/html/"
+  },
+  {
+   "id": 50986,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/50986/html/"
+  },
+  {
+   "id": 51078,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51078/html/"
+  },
+  {
+   "id": 51147,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51147/html/"
+  },
+  {
+   "id": 51179,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51179/html/"
+  },
+  {
+   "id": 51280,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51280/html/"
+  },
+  {
+   "id": 51372,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51372/html/"
+  },
+  {
+   "id": 51396,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51396/html/"
+  },
+  {
+   "id": 51450,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51450/html/"
+  },
+  {
+   "id": 51495,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51495/html/"
+  },
+  {
+   "id": 51500,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51500/html/"
+  },
+  {
+   "id": 51513,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51513/html/"
+  },
+  {
+   "id": 51548,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51548/html/"
+  },
+  {
+   "id": 51660,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51660/html/"
+  },
+  {
+   "id": 51714,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51714/html/"
+  },
+  {
+   "id": 51735,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51735/html/"
+  },
+  {
+   "id": 51779,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51779/html/"
+  },
+  {
+   "id": 51783,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51783/html/"
+  },
+  {
+   "id": 51862,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51862/html/"
+  },
+  {
+   "id": 51913,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51913/html/"
+  },
+  {
+   "id": 51921,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/51921/html/"
+  },
+  {
+   "id": 52135,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52135/html/"
+  },
+  {
+   "id": 52362,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52362/html/"
+  },
+  {
+   "id": 52479,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52479/html/"
+  },
+  {
+   "id": 52482,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52482/html/"
+  },
+  {
+   "id": 52491,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52491/html/"
+  },
+  {
+   "id": 52627,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52627/html/"
+  },
+  {
+   "id": 52659,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52659/html/"
+  },
+  {
+   "id": 52672,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52672/html/"
+  },
+  {
+   "id": 52764,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52764/html/"
+  },
+  {
+   "id": 52768,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/52768/html/"
+  },
+  {
+   "id": 53118,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53118/html/"
+  },
+  {
+   "id": 53241,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53241/html/"
+  },
+  {
+   "id": 53293,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53293/html/"
+  },
+  {
+   "id": 53298,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53298/html/"
+  },
+  {
+   "id": 53396,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53396/html/"
+  },
+  {
+   "id": 53555,
+   "htmlStatus": 200,
+   "verdict": "html-ok",
+   "workingUrl": "https://committees.parliament.uk/publications/53555/html/"
+  }
+ ]
+}
