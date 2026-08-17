@@ -46,6 +46,9 @@ import { AREA, areaEdgeCte, areaInquirySql } from './area-2d3'
 import { geminiJson, mapLimit, MODEL } from './llm-2d3'
 import { newMeter, meterLine, meterUsd, FLASH_IN_PER_M, FLASH_OUT_PER_M, wordsToTokens } from './cost-2d3'
 import { getDocText, firstWords, findExtract, normaliseForMatch } from './text-2d3'
+// S6 §3: every stream's spend goes into ONE ledger. Ingest's cost is not a user's, but it is
+// Charlie's, and a single number for what the platform spends is worth more than four.
+import { recordMeter } from '../shared/spend-ledger'
 
 export {}
 
@@ -297,6 +300,7 @@ async function main() {
     console.log(`  extract FOUND in the document ${stats.extractFound}`)
     console.log(`  extract NOT found             ${stats.extractMissing}  (${(100 * stats.extractMissing / Math.max(1, stats.extractFound + stats.extractMissing)).toFixed(1)}% — the fabricated-quotation rate)`)
     console.log(`  ${meterLine(meter)}`)
+    await recordMeter(meter, { stream: 'graph', pass: 'graph.position-extract', model: MODEL, ref: RUN_ID })
     console.log(`  wall clock                    ${Math.round((Date.now() - t0) / 1000)}s`)
   } finally { await endNeonPool() }
 }

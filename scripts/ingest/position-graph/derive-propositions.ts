@@ -25,6 +25,7 @@ import { AREA, areaEdgeCte, areaInquirySql } from './area-2d3'
 import { geminiJson, mapLimit, MODEL } from './llm-2d3'
 import { newMeter, meterLine } from './cost-2d3'
 import { getDocText, firstWords } from './text-2d3'
+import { recordMeter } from '../shared/spend-ledger'  // S6 §3 — one ledger for the platform
 
 export {}
 
@@ -263,6 +264,7 @@ async function derive(pool: ReturnType<typeof getNeonPool>) {
     console.log(`  ✓ ${inq.label.slice(0, 58).padEnd(58)} ${String(props.length).padStart(2)} candidates from ${usable.length} submissions`)
   })
 
+  await recordMeter(meter, { stream: 'graph', pass: 'graph.proposition-derive', model: MODEL, ref: RUN_ID })
   console.log(`\n  ${written} candidates written · ${meterLine(meter)}`)
 }
 
@@ -389,6 +391,7 @@ async function edmTest(pool: ReturnType<typeof getNeonPool>) {
     console.log(`\n  and six motions sample B judged NOT contestable, so the negative is checkable too:`)
     for (const m of b.out.filter((x) => !x.contestable).slice(0, 6)) console.log(`    · ${b.usable[m.index]?.r.t ?? '(?)'} (${b.usable[m.index]?.r.d ?? '?'})`)
   }
+  await recordMeter(meter, { stream: 'graph', pass: 'graph.edm-test', model: MODEL, ref: RUN_ID })
   console.log(`\n  ${meterLine(meter)}`)
 }
 
