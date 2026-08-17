@@ -7,7 +7,10 @@ node_modules/
 # Next.js
 .next/
 out/
-build/
+# ⚠ ANCHORED. An unanchored `build/` matches a directory called `build` AT ANY DEPTH, and on
+# 2026-08-17 it silently excluded `scrutinise-web/app/ideas/build/` — a real route — from the
+# repository. The rule was only ever meant to catch a build output directory at the root.
+/build/
 
 # Environment
 .env
