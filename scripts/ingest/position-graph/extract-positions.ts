@@ -347,4 +347,7 @@ function selftest() {
   if (bad) process.exit(1)
 }
 
-main().catch((e) => { console.error('[extract-positions] FATAL', e instanceof Error ? e.message : e); process.exit(1) })
+// ⚠ GUARDED: this module exports helpers, and an unguarded main() means an IMPORT runs the
+// script. trial-positions.ts imports prefixKey from extract-positions and triggered its $8.51
+// population report mid-trial. A module that does work on import cannot be reused.
+if (require.main === module) main().catch((e) => { console.error('[extract-positions] FATAL', e instanceof Error ? e.message : e); process.exit(1) })
