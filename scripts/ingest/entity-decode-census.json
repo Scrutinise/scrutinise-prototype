@@ -1,0 +1,766 @@
+{
+ "generatedFor": "BRIEF_INGEST_ENTITY_DECODE §1",
+ "sample": 150,
+ "results": [
+  {
+   "corpus": "inquiry-evidence",
+   "rows": 89,
+   "sampled": 89,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lda-commonswrittenquestions",
+   "rows": 8000,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "hmrc-tiins",
+   "rows": 791,
+   "sampled": 150,
+   "docsHit": 22,
+   "hits": 27,
+   "joiners": 0,
+   "kinds": {
+    "&#39;": 9,
+    "&#8212;": 18
+   }
+  },
+  {
+   "corpus": "ni-judgments",
+   "rows": 7772,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "pwdata-lords",
+   "rows": 752805,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "tna-caselaw",
+   "rows": 74896,
+   "sampled": 150,
+   "docsHit": 143,
+   "hits": 23613,
+   "joiners": 1326,
+   "kinds": {
+    "&#8216;": 932,
+    "&#8217;": 7653,
+    "&#8220;": 5145,
+    "&#8221;": 5135,
+    "&#224;": 4,
+    "&#8212;": 78,
+    "&#163;": 1143,
+    "&#8230;": 937,
+    "&#8211;": 870,
+    "&#169;": 5,
+    "&#160;": 1325,
+    "&#167;": 72,
+    "&#8226;": 95,
+    "&#174;": 44,
+    "&#8208;": 1,
+    "&#232;": 20,
+    "&#262;": 2,
+    "&#263;": 6,
+    "&#269;": 1,
+    "&#228;": 7,
+    "&#176;": 11,
+    "&#246;": 6,
+    "&#233;": 15,
+    "&#8250;": 1,
+    "&#8730;": 4,
+    "&#239;": 4,
+    "&#189;": 17,
+    "&#179;": 4,
+    "&#368;": 1,
+    "&#186;": 2,
+    "&#10003;": 16,
+    "&#173;": 1,
+    "&#252;": 2,
+    "&#324;": 1,
+    "&#322;": 1,
+    "&#355;": 2,
+    "&#259;": 2,
+    "&#188;": 3,
+    "&#8232;": 1,
+    "&#8364;": 2,
+    "&#183;": 42
+   }
+  },
+  {
+   "corpus": "consultations",
+   "rows": 7448,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lda-commonsoralquestions",
+   "rows": 69529,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "hmrc-manuals",
+   "rows": 69136,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "independent-reviews",
+   "rows": 657,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "bills-api",
+   "rows": 6535,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "planning-policy",
+   "rows": 64,
+   "sampled": 64,
+   "docsHit": 50,
+   "hits": 94,
+   "joiners": 0,
+   "kinds": {
+    "&#8212;": 84,
+    "&#39;": 10
+   }
+  },
+  {
+   "corpus": "pwdata-debates",
+   "rows": 6387304,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "early-day-motions",
+   "rows": 60737,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lda-commonsdivisions",
+   "rows": 5553,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "oecd",
+   "rows": 505,
+   "sampled": 150,
+   "docsHit": 69,
+   "hits": 156,
+   "joiners": 0,
+   "kinds": {
+    "&#8212;": 46,
+    "&#39;": 110
+   }
+  },
+  {
+   "corpus": "ots-reports",
+   "rows": 497,
+   "sampled": 150,
+   "docsHit": 70,
+   "hits": 211,
+   "joiners": 0,
+   "kinds": {
+    "&#8212;": 50,
+    "&#39;": 161
+   }
+  },
+  {
+   "corpus": "petitions",
+   "rows": 49529,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "hmrc-ancillary",
+   "rows": 472,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "historic-hansard",
+   "rows": 4641085,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "si-pre-2010",
+   "rows": 462809,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "echr-hudoc",
+   "rows": 4410,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "ofcom",
+   "rows": 4169,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lgsco",
+   "rows": 40,
+   "sampled": 40,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "fca-handbook",
+   "rows": 3661,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "scotlawcom",
+   "rows": 350,
+   "sampled": 150,
+   "docsHit": 1,
+   "hits": 1,
+   "joiners": 0,
+   "kinds": {
+    "&ichotom;": 1
+   }
+  },
+  {
+   "corpus": "members-interests",
+   "rows": 3448,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "regional",
+   "rows": 341093,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "college-of-policing",
+   "rows": 332,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lords-divisions-votes",
+   "rows": 3284,
+   "sampled": 150,
+   "docsHit": 9,
+   "hits": 22,
+   "joiners": 0,
+   "kinds": {
+    "&mdash;": 19,
+    "&pound;": 3
+   }
+  },
+  {
+   "corpus": "parliament-treaties",
+   "rows": 328,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "uk-treaties",
+   "rows": 3250,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "tax-treaties-dta",
+   "rows": 324,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "committees-reports",
+   "rows": 323922,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "et-decisions",
+   "rows": 293399,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "si-2010plus",
+   "rows": 275744,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "cps-guidance",
+   "rows": 270,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "ico",
+   "rows": 26562,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lawcom",
+   "rows": 262,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "nao-reports",
+   "rows": 2570,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "sentencing-council",
+   "rows": 253,
+   "sampled": 150,
+   "docsHit": 34,
+   "hits": 57,
+   "joiners": 1,
+   "kinds": {
+    "&#x2013;": 23,
+    "&#x27;": 3,
+    "&#x2019;": 16,
+    "&#xa3;": 13,
+    "&#xa0;": 1,
+    "&#x2010;": 1
+   }
+  },
+  {
+   "corpus": "eur-lex",
+   "rows": 241571,
+   "sampled": 150,
+   "docsHit": 48,
+   "hits": 318,
+   "joiners": 0,
+   "kinds": {
+    "&#39;": 21,
+    "&#039;": 297
+   }
+  },
+  {
+   "corpus": "pwdata-westminster",
+   "rows": 239262,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "pwdata-wms",
+   "rows": 23863,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "commons-divisions-votes",
+   "rows": 2361,
+   "sampled": 150,
+   "docsHit": 1,
+   "hits": 2,
+   "joiners": 0,
+   "kinds": {
+    "&amp;": 2
+   }
+  },
+  {
+   "corpus": "uk-treaties-fcdo",
+   "rows": 23372,
+   "sampled": 150,
+   "docsHit": 1,
+   "hits": 1,
+   "joiners": 0,
+   "kinds": {
+    "&ties;": 1
+   }
+  },
+  {
+   "corpus": "explanatory-memoranda",
+   "rows": 21984,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "cma-cases",
+   "rows": 21525,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "building-regs",
+   "rows": 21,
+   "sampled": 21,
+   "docsHit": 12,
+   "hits": 28,
+   "joiners": 0,
+   "kinds": {
+    "&#8212;": 24,
+    "&#39;": 4
+   }
+  },
+  {
+   "corpus": "pwdata-lordswms",
+   "rows": 20932,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lda-lordsdivisions",
+   "rows": 2089,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "lda-lordswrittenquestions",
+   "rows": 20500,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "retained-eu",
+   "rows": 199224,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "niassembly-hansard",
+   "rows": 196348,
+   "sampled": 150,
+   "docsHit": 4,
+   "hits": 14,
+   "joiners": 0,
+   "kinds": {
+    "&quot;": 14
+   }
+  },
+  {
+   "corpus": "senedd-cofnod",
+   "rows": 191730,
+   "sampled": 150,
+   "docsHit": 4,
+   "hits": 27,
+   "joiners": 0,
+   "kinds": {
+    "&ocirc;": 4,
+    "&acirc;": 9,
+    "&eacute;": 1,
+    "&mdash;": 2,
+    "&iuml;": 2,
+    "&ucirc;": 1,
+    "&lsquo;": 1,
+    "&rsquo;": 6,
+    "&aacute;": 1
+   }
+  },
+  {
+   "corpus": "impact-assessments",
+   "rows": 18756,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "erskine-may",
+   "rows": 1873,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "explanatory-notes",
+   "rows": 18651,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "pwdata-lordswrans",
+   "rows": 175576,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "govuk-core-docs",
+   "rows": 175,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "ofgem",
+   "rows": 17143,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "quangos-govuk",
+   "rows": 171030,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "nilawcom",
+   "rows": 17,
+   "sampled": 17,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "primary-acts-pre-2000",
+   "rows": 166290,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "primary-acts-2000plus",
+   "rows": 147788,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "written-answers",
+   "rows": 143,
+   "sampled": 143,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "hmrc-codes-guidance",
+   "rows": 14067,
+   "sampled": 150,
+   "docsHit": 76,
+   "hits": 354,
+   "joiners": 0,
+   "kinds": {
+    "&#8212;": 62,
+    "&#39;": 292
+   }
+  },
+  {
+   "corpus": "committees-evidence",
+   "rows": 140567,
+   "sampled": 150,
+   "docsHit": 18,
+   "hits": 4045,
+   "joiners": 4045,
+   "kinds": {
+    "&#xa0;": 3939,
+    "&#x2011;": 106
+   }
+  },
+  {
+   "corpus": "inquiry-reports",
+   "rows": 140,
+   "sampled": 140,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "scottish-courts",
+   "rows": 13056,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "written-statements",
+   "rows": 129,
+   "sampled": 129,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "pwdata-wrans",
+   "rows": 1232942,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "tax-tribunals",
+   "rows": 12089,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  },
+  {
+   "corpus": "scottish-parliament-or",
+   "rows": 1043264,
+   "sampled": 150,
+   "docsHit": 0,
+   "hits": 0,
+   "joiners": 0,
+   "kinds": {}
+  }
+ ]
+}
