@@ -22,6 +22,8 @@ const CONTENT_BASE = 'https://publications.parliament.uk'
 // Cloudflare bot detection. No JS rendering needed — just the header.
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
+import { decodeForIndex } from '../shared/html-entities'
+
 export type CommitteePublicationType = 'reports-responses' | 'other-publications'
 
 export interface CommitteePublication {
@@ -86,13 +88,9 @@ export function parsePublicationCards(html: string, type: CommitteePublicationTy
   while ((m = cardRx.exec(html)) !== null) {
     const card = m[1]
 
-    const title = extractText(card, /<div class="primary-info">([^<]+)<\/div>/)
-      ?.replace(/&#x2013;/g, '–')
-      ?.replace(/&#x2014;/g, '—')
-      ?.replace(/&amp;/g, '&')
-      ?.replace(/&lt;/g, '<')
-      ?.replace(/&gt;/g, '>')
-      ?.trim()
+    // Same hand-written list as the body stripper had, and the same omission. One decoder now.
+    const rawTitle = extractText(card, /<div class="primary-info">([^<]+)<\/div>/)
+    const title = rawTitle ? decodeForIndex(rawTitle).trim() : undefined
     if (!title) continue
 
     // PDF URL: /publications/{pubId}/documents/{docId}/default/
@@ -191,16 +189,16 @@ function extractReportText(html: string): string | null {
     .replace(/<header[\s\S]*?<\/header>/gi, '')
     .replace(/<footer[\s\S]*?<\/footer>/gi, '')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#x2013;/g, '–')
-    .replace(/&#x2014;/g, '—')
+  // ⚠ THIS LINE REPLACED A HAND-WRITTEN LIST, AND THE LIST IS WHY 12% OF THIS CORPUS IS DAMAGED.
+  // It decoded `&nbsp;` and not `&#xa0;` — the numeric form of the SAME CHARACTER — so
+  // `Barbara&#xa0;Rayment` was written to R2 verbatim, 5,212 times in a 200-document sample.
+  // `shared/html-entities.ts` is now the only decoder; `npm run check:entity-decode` fails if a
+  // hand-rolled list reappears in any source. See BRIEF_INGEST_ENTITY_DECODE.
+  const decoded = decodeForIndex(stripped)
     .replace(/\s{3,}/g, '\n\n')
     .trim()
 
-  return stripped.length > 100 ? stripped : null
+  return decoded.length > 100 ? decoded : null
 }
 
 function extractText(html: string, rx: RegExp): string | null {
