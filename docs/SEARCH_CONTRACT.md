@@ -151,7 +151,60 @@ by reading a `served` counter off the running service — never by inference.
 | **`/admin/lex-general`** | untiered, fully routed | ✅ yes |
 | **Create-Idea legislation panel** | legislation only | ✅ **right** — measured: it returns *Sewerage (Scotland) Act 1968 s.39* for the sewage question, which is what that panel is for |
 | **`POST /api/search`** | legislation only | ✅ right for its contract |
-| **⚠ The Lex chat route — the platform's main conversation** | **legislation only** | ❌ **NO.** Measured: 12 results, `ukpga×7 uksi×4 nisi×1`, while **36–146 non-legislation documents per question are unreachable**. Not one committee document, debate or judgment reaches a user there, on any question, ever. The router *correctly picks* `committees` and the tier-scoped branch discards its stream selection. **SEARCH S5 fixes it; until then, say so rather than implying the corpus is empty.** |
+| **The Lex chat route — the platform's main conversation** | **two channels, routed** | ✅ **FIXED by SEARCH S5 (17 Aug 2026).** It was legislation only: 36–146 non-legislation documents per question unreachable, not one committee document, debate or judgment reaching a user on any question, ever. It now calls `retrieveForChat()` with no tier, and returns **legislation and evidence separately**. Measured on the same ten questions: **90 documents the conversation could not previously reach**, 7 of 7 non-legislation questions now served (was 0 of 7), and **no legislation lost** on the three legislation-shaped questions. Latency p50 3.3s → 4.6s. |
+
+---
+
+## 6. ⚠⚠ WHEN LEX WANTS SOMETHING SEARCH CANNOT GIVE
+
+**This is the rule that matters most in this document, and it is a never-claim rule.**
+
+> **If Lex wants something and search cannot supply it, Lex says so plainly and specifically.**
+>
+> Not silence. Not a vague deflection. And above all **not an answer composed from general
+> knowledge presented as though it came from the corpus.**
+
+*"I looked for what select committees have said about this and I can't reach committee evidence
+from here yet"* is a **good** answer. It tells the user what exists, what is missing, and that
+somebody knows.
+
+*"I don't have information on that"* is a **bad** answer to the same situation, because it is
+indistinguishable from the corpus being empty.
+
+⚠ **A gap that announces itself is a feature. A gap that looks like an absence of evidence is the
+single most damaging thing this platform can produce**, because the user cannot tell the difference
+and neither can we.
+
+### How this is enforced rather than hoped for
+
+| | |
+|---|---|
+| **The prompt says it** | `GAP_INSTRUCTION` in `lib/lex/chat-retrieval.ts`, injected whenever a gap is detected. It forbids the vague deflection **by name**. |
+| **The gap is detected, not guessed at** | `kindsPlainlyAskedFor()` reads the question for the kind of material it asks about. If the user names committees and no committee material comes back, `gapNote()` tells Lex exactly that. |
+| **A failed search is distinguished from an empty one** | When retrieval fails outright, the note says *the corpus was not consulted at all* — a different sentence, because they are different facts. |
+| **The legacy fallback declares its own limits** | That path reaches legislation only and can never carry a second channel. It says so in the prompt instead of letting silence imply the corpus holds nothing else. |
+| **A worked example** | Asked *"what did MPs argue in the debate on assisted dying"*, the OLD path matched `"assist investi"` inside an investigatory-powers SI and had to admit it found nothing. That is precisely the situation this rule governs. |
+
+### ⚠ And every unmet request is logged
+
+`LexUnmetRequest` records the **kind** that was wanted, the **keywords searched**, **which streams
+the router chose**, and how many results came back. V37's gap-filler expects exactly this signal:
+*what Lex looked for and could not get is the most direct evidence available about what the corpus
+should hold next.* Every other gap signal we have is inferred from sweeps; this one is a real user
+asking a real question and getting nothing.
+
+⚠ **The question text is NOT stored.** A Stage-1 idea is private by design and a gap log is not a
+reason to keep a copy of it.
+
+⚠ **`streams` is the most diagnostic column**, because it separates two failures that look identical
+from outside: *the router never selected committees* (our bug, fixable today) versus *it searched
+committees and found nothing* (a corpus gap, the ingest stream's work). Read
+`LexUnmetDemand`, which splits them.
+
+### What Lex still cannot ask for
+
+See §3. Today that is: cross-domain mechanism analogues, contradiction retrieval, positions, and
+anything on the open web. **When Lex wants one of those, §6 applies — name it, do not improvise it.**
 
 ---
 

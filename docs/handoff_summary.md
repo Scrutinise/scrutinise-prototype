@@ -2,7 +2,11 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 21:52 UTC — ▼ **GRAPH 2D-5: the actual documents are readable at last
+*Last updated: 2026-08-17 22:44 UTC — ▼ **SEARCH S5: Lex can see the whole corpus at last —
+0 → 100 non-legislation results on the same ten questions, 7 of 7 previously-unserved questions now
+served, no legislation lost. The old path was answering an assisted-dying question from "assist
+investi" matched inside an investigatory-powers SI.**
+Earlier: 2026-08-17 21:52 UTC — ▼ **GRAPH 2D-5: the actual documents are readable at last
 in `docs/POSITION_SAMPLE.md`, and Charlie's bottom-up architecture was measured rather than argued —
 it finds 74.4% more than the 83 propositions can reach, 85% of it real, and costs 3.73× more while
 recovering only 57% of the positions we know are right. A supplement, not a switch.**
@@ -13,6 +17,44 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 22:44 UTC — ▼ **SEARCH S5 IS COMPLETE: THE LEX CONVERSATION NOW SEES THE WHOLE CORPUS.**
+Executes `docs/BRIEF_SEARCH_S5_LEX_SCOPE.md` §1–§5. Report: **`docs/SEARCH_S5_REPORT.md`**.
+CHANGE_LOG (2026-08-17 22:44 UTC). `check:lex-scope` **29/29**, `tsc` clean. **Cost ~$0.02.**
+
+**On the same ten questions S4 audited: 0 → 100 non-legislation results; 0 of 7 → 7 of 7
+non-legislation questions served; 3 of 3 legislation questions keep their legislation.**
+Latency p50 3,345 → 5,392 ms, p95 5,280 → 9,034 ms — reported, not buried.
+
+⚠⚠ **THE OLD PATH'S ANSWER IS THE ARGUMENT.** Asked *"what did MPs argue in the debate on assisted
+dying"* it answered from **`"assist investi"`, matched inside The Regulation of Investigatory Powers
+(Communications Data) Order 2010.** The new path returns four dated Hansard citations and then
+declines to overclaim. On sewage it returns the Environmental Audit Committee's "huge chemical
+cocktail" finding, every claim tagged `(Committee evidence)`.
+
+✅ **All three gates moved**, and gate 3 is structural: `EvidenceResult` has **no `actId`, no
+`actTitle`, no `sectionNumber`**, so a committee transcript cannot be rendered as a section of an Act
+— the outcome the brief calls worse than doing nothing. ⚠ A **Bill sits in the evidence channel**: it
+is a proposal, and citing a clause as though in force is the error SURFACE 1 just closed.
+✅ **The legislation panel is NOT widened** — S4 measured its scope as right; asserted by the check.
+✅ **Batching shipped with it** (§2 made it a prerequisite): `Promise.all` over five streams against a
+four-wide service was one user saturating it. Capped at 3, **maxInFlight OBSERVED**, negative control
+run.
+
+✅ **`docs/SEARCH_CONTRACT.md` §6** is the never-claim rule: name the gap specifically, never a vague
+deflection, never general knowledge dressed as corpus. ⚠⚠ The check **found a real bug in it** —
+`committee` does not match "committees", the plural the first probe actually uses, so the gap
+note would have been silent on the exact case §4 exists for.
+✅ **Unmet requests are logged** (`LexUnmetRequest` / `LexUnmetDemand`) for V37's gap-filler — kind,
+keywords, **which streams the router chose**, result count. ⚠ No question text: a Stage-1 idea is
+private.
+
+⚠ **Named, not done:** `SearchResult` has no `attribution`, so **who said it** is unavailable for a
+committee transcript — a gap in the gateway contract. p95 at 9s is acceptable-ish, not good; try
+`LEX_STREAM_CONCURRENCY=4`. The gap note never fired live (all ten questions were served), so its
+production behaviour is asserted by the check rather than observed. 2 of 4 answer pairs completed.
+▶ **CHARLIE: ask Lex on a real idea what select committees have said about something, and confirm the
+answer cites committee evidence AS committee evidence.**
 
 2026-08-17 21:52 UTC — ▼ **GRAPH 2D-5 IS COMPLETE: THE DOCUMENTS ARE SHOWN, AND THE BETTER
 ARCHITECTURE IS BETTER AT DISCOVERY AND WORSE AT EVERYTHING ELSE.**
