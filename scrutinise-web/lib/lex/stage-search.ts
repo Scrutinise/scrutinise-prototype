@@ -19,6 +19,7 @@
 import { prisma } from '@/lib/prisma'
 import type { SearchResult, SearchResultType } from './page1-config'
 import { runSearch, type SearchIntent } from './search-gateway'
+import { stripNullBytes, countNullBytes } from './json-safe'
 
 export interface StageSearchRecord {
   intent: SearchIntent
@@ -62,7 +63,16 @@ async function loadStageSearches(ideaId: string): Promise<StageSearches> {
 }
 
 async function saveStageSearches(ideaId: string, next: StageSearches): Promise<void> {
-  await prisma.idea.update({ where: { id: ideaId }, data: { stageSearches: next as never } })
+  // ⚠ STRIP NUL BYTES BEFORE THE WRITE. A single U+0000 anywhere in a retrieved snippet
+  // makes PostgreSQL reject the whole `jsonb` update with "unsupported Unicode escape
+  // sequence" — so one bad character in one corpus extract loses every stage search for
+  // the idea, and the error names nothing that would lead a reader back to the corpus.
+  // Found by the 25-A framing harness on 2026-08-17; see lib/lex/json-safe.ts.
+  const nulls = countNullBytes(next)
+  if (nulls) {
+    console.warn('[lex-diag] stripped NUL byte(s) from a stage search before storing', { ideaId, nulls })
+  }
+  await prisma.idea.update({ where: { id: ideaId }, data: { stageSearches: stripNullBytes(next) as never } })
 }
 
 // ── which intent belongs to which stage ──────────────────────────────────────
@@ -162,6 +172,25 @@ export async function runStageSearch(ideaId: string, pageKey: string): Promise<S
     pageKey, intent, ok: record.ok, results: record.results.length, reason: record.failureReason ?? null,
   })
   return record
+}
+
+/**
+ * Store a stage record for a search the CALLER already ran (Sprint 25-A §3).
+ *
+ * The build's pass 1 issues its own gateway query — the whole point of §3a is that the
+ * query framing is the variable under test, so it cannot come from `buildStageQuery` —
+ * but its results belong in the same store, or the right-hand panel would show nothing
+ * for an idea whose entire landscape had just been retrieved.
+ *
+ * Additive: no existing caller's behaviour changes, and `runStageSearch` still owns the
+ * ordinary path.
+ */
+export async function storeStageSearch(
+  ideaId: string, pageKey: string, record: StageSearchRecord,
+): Promise<void> {
+  const store = await loadStageSearches(ideaId)
+  store.byStage[pageKey] = record
+  await saveStageSearches(ideaId, store)
 }
 
 /** Task 1c — a corpus search the user asked for in chat. Appended, never replacing. */
