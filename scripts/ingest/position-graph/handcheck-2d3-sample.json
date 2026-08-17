@@ -1,0 +1,352 @@
+[
+ {
+  "position_id": "4612",
+  "proposition": "Improvements in palliative care would negate some of the arguments for assisted dying.",
+  "polarity": "against",
+  "extract": "Far from adversely impact ing the quality of care at the end of life, laws to authorize medical assistance in dying have the opposite effect. These laws raise awareness and improve the quality of medical care for dying patients.",
+  "org": "President Emerita, Compassion &amp; Choices Barbara Coombs Lee"
+ },
+ {
+  "position_id": "21820",
+  "proposition": "Competition law and procurement rules should be removed or significantly reduced in the NHS.",
+  "polarity": "against",
+  "extract": "Even advocates of an effective market economy recognise th a t competition is important and these proposals include no plans to e nsure even that!",
+  "org": "Ms Nicola Snell"
+ },
+ {
+  "position_id": "27414",
+  "proposition": "General Practice funding should be significantly increased as a proportion of the overall NHS budget.",
+  "polarity": "against",
+  "extract": "I am concerned that the publics level of expectation of primary care and health services, will never be met with the current funding model (for example patients who attend with multiple, frequent minor health complaints, when other services and options are available).",
+  "org": "Dr Lucia Magee"
+ },
+ {
+  "position_id": "33998",
+  "proposition": "There should be a system of segregated 'COVID' and 'non-COVID' units within hospitals to ensure patient and staff safety.",
+  "polarity": "against",
+  "extract": "In contrast , attempting to zone within facilities – i.e. separate Covid-19 and non Covid-19 patients – is likely to make minimising cross - contamination more difficult ; the guidance states : “Not all premises are likely to have separate entry/exits point to help maintain this kind of separation”.",
+  "org": "FODO"
+ },
+ {
+  "position_id": "12959",
+  "proposition": "Local authorities should receive adequate funding for children's services, including safeguarding and preventative health care.",
+  "polarity": "against",
+  "extract": "schools and education settings have been identified as having a key role in providing such support, yet they receive few resources to do so.",
+  "org": "Cambridge Acorn Project"
+ },
+ {
+  "position_id": "4713",
+  "proposition": "Assisted dying should be legalised in England and Wales for terminally ill adults.",
+  "polarity": "against",
+  "extract": "as a charity responsible for one of the principal hospices in cent ral London, our position is clear: we put the sanctity of life first and cannot condone o r collaborate with any form of assisted suicide or euthanasia.",
+  "org": "Sir Mark Allen"
+ },
+ {
+  "position_id": "21886",
+  "proposition": "Continuity of care with a named GP should be prioritised over immediate access to any clinician.",
+  "polarity": "against",
+  "extract": "The increasing numbers of large Primary Care Networks ( PCNs ) would destroy continuity of care and make access to care more difficult. General practitioners are already hard pressed; the addition of implementing integrated care would further reduce time for patients.",
+  "org": "Mr Richard Davis"
+ },
+ {
+  "position_id": "26063",
+  "proposition": "Digital-first primary care, including video and online consultations, should be widely adopted and embedded across the NHS.",
+  "polarity": "balanced",
+  "extract": "Online consulting is designed to make it easier to contact a surgery but demand is infinite and ease of access encourages unlocks more unmet needs . All other parts of the NHS have capped capacity.",
+  "org": "Somerset Local Medical Committee"
+ },
+ {
+  "position_id": "28056",
+  "proposition": "Continuity of care with a named GP should be prioritised over immediate access to any clinician.",
+  "polarity": "balanced",
+  "extract": "An interesting question! I am a great believer in continuity of care for a condition / problem more than continuity of care per se. Having a named GP is often a paper exercise more than a practical process. Continuity of care has significant benefits for certain groups (multi-morbidity/ elderly)",
+  "org": "Dr Ben Burville"
+ },
+ {
+  "position_id": "25593",
+  "proposition": "The government and media should cease negative portrayal of General Practice and actively support the profession.",
+  "polarity": "for",
+  "extract": "Work for an NHS that recognises what we do for the NHS as frontline workers.",
+  "org": "NHS"
+ },
+ {
+  "position_id": "35837",
+  "proposition": "The current 10-minute consultation model in General Practice is no longer fit for purpose.",
+  "polarity": "for",
+  "extract": "The move from a reactive crisis based response for frail older people to a proactive case finding and planned approach allows for scheduling of care which reduces press ure on services and provides a t eam of staff who can appropriately provide support.",
+  "org": "British Geriatrics Society (Bgs)"
+ },
+ {
+  "position_id": "11610",
+  "proposition": "A cross-government strategy is needed to tackle health inequalities.",
+  "polarity": "for",
+  "extract": "This postcode lottery has led to entrenched health inequalities. Why osteoporosis requires urgent scrutiny and government-led action: Fracture prevention is hampered by (i) a lack of clinical leadership of osteoporosis within ICBs due to the condi tion not being owned by an y medical specialt y; (ii) under-r epresentation on medical training curricula; (iii) disincentives through QOF, and (iv) failure within the NHS to officially recognise osteoporosis as a long-term condition [xi] . Scrutiny is needed to understand what nationally mandated measures are needed to compel change across ICBs. Otherwise the current postcode lottery will remain entrenched and costs to the NHS, social care system and wider economy will spiral further as t he population ages.",
+  "org": "Royal Osteoporosis Society"
+ },
+ {
+  "position_id": "34761",
+  "proposition": "Mental health awareness training for school staff should be mandatory and integrated into Initial Teacher Training.",
+  "polarity": "for",
+  "extract": "Too often the professionals and peers who engage most regularly with at risk young people do not have the skills to effectively support the young person’s emotional health. One consequence of this is that interventions which are dependent on appropriately trained staff can’t be delivered at scale.",
+  "org": "UCLPartners"
+ },
+ {
+  "position_id": "28423",
+  "proposition": "Allied health professionals (AHPs) and other non-GP clinicians should be more widely integrated into primary care teams to alleviate pressure on GPs.",
+  "polarity": "for",
+  "extract": "An eff ective partnership has been with pharmacists.",
+  "org": "Dr J.Helen Myers"
+ },
+ {
+  "position_id": "4897",
+  "proposition": "Legalising assisted dying would diminish the value of older and disabled people's lives.",
+  "polarity": "for",
+  "extract": "Thus the way a person is treated by society profoundly alters their sense of dignity and worth – it is not an absolute.",
+  "org": "Living and Dying Well"
+ },
+ {
+  "position_id": "17684",
+  "proposition": "Physical activity interventions for older adults should include a social element.",
+  "polarity": "for",
+  "extract": "Social connection: inclusive, age-friendly neighbourhoods that foster meaningful social connection, cohesion, and a sense of belonging.",
+  "org": "NHS Greater Manchester"
+ },
+ {
+  "position_id": "20435",
+  "proposition": "Policies addressing obesity should adopt a whole-system approach rather than focusing primarily on individual responsibility.",
+  "polarity": "for",
+  "extract": "The commercial incentives for the food and drink industry are the primary driver of population-level overweight and obesity, and previous government strategies have largely failed to regulate these industries. The few previous government policy interventions that were actually implemented were almost exclusively focussed on placing the burden on individual people and changing behaviour, whilst largely ignoring structural and commercial factors that limit people’s ability to eat healthily.",
+  "org": "The Royal College of Surgeons of Edinburgh"
+ },
+ {
+  "position_id": "18363",
+  "proposition": "Physical activity interventions for older adults should include a social element.",
+  "polarity": "for",
+  "extract": "Falls not only cause physical injuries but also lead to a loss of confidence, social isolation, and mental health issues like anxiety and depression [2, 3] .",
+  "org": "Univeristy of Hertfordshire"
+ },
+ {
+  "position_id": "17591",
+  "proposition": "The Government should prioritise funding for evidence-based, community-led physical activity programmes.",
+  "polarity": "for",
+  "extract": "The Government should: Fund inclusive, evidence-led physical activity programmes in social care settings; Provide ringfenced grants for ICSs to commission falls prevention and deconditioning initiatives; Embed movement training into the Care Certificate and mandatory CPD; Expand the remit of social prescribing into residential and nursing care; Support data collection on participation, outcomes, and impact.",
+  "org": "Care England"
+ },
+ {
+  "position_id": "17793",
+  "proposition": "The Government should prioritise funding allocations for services which primarily focus on building and/or maintaining muscle as people age.",
+  "polarity": "for",
+  "extract": "Many older people underestimate the importance of strength and conditioning, often associating physical decline with aging until a fall occurs. Public health campaigns showcasing active older adults can motivate and inform this population.",
+  "org": "Norfolk County Council Public Health"
+ },
+ {
+  "position_id": "29945",
+  "proposition": "The NHS should publish a detailed assessment of the backlog in non-COVID-19 care.",
+  "polarity": "for",
+  "extract": "Covid-19 has significantly exacerbated pressures that the breast imaging and diagnostic workforce were already experienced, through increased staff shortages, disruption to services, burnout and creating a concerning backlog in demand. A fully resourced workforce is fundamental to the recovery of breast cancer services.",
+  "org": "Breast Cancer Now"
+ },
+ {
+  "position_id": "33271",
+  "proposition": "Rehabilitation services should be significantly enhanced and expanded across the NHS.",
+  "polarity": "for",
+  "extract": "Rehabilitation services, including those in the community, were already overstretched before the pandemic, and so are not currently equipped to meet the needs of patients - Covid-19 and non-Covid - who are being rapidly discharged from acute hospitals.",
+  "org": "Chartered Society of Physiotherapy"
+ },
+ {
+  "position_id": "26556",
+  "proposition": "The current 10-minute consultation model in General Practice is no longer fit for purpose.",
+  "polarity": "for",
+  "extract": "GPs and other members of primary healthcare teams have faced a massively increased workload over many years , with a growing and aging population, the pandemic, secondary care moving more tasks and patients into the community, and more patients with long term conditions managed at home, but without adequate resources flowing into primary care or social care.",
+  "org": "Hornsey Pensioners Action Group"
+ },
+ {
+  "position_id": "26995",
+  "proposition": "Bureaucracy and administrative burdens in General Practice should be significantly reduced.",
+  "polarity": "for",
+  "extract": "Removal of many indicators of QOF that have become defunct and purely and tick boxing exercise.",
+  "org": "Park Lane"
+ },
+ {
+  "position_id": "16034",
+  "proposition": "Investment in community mental health services should be sustained and sufficient to meet demand and enable transformation.",
+  "polarity": "for",
+  "extract": "Investment in workforce capacity is critical to meeting current and future demand, ensuring people can access services before their needs escalate into crises.",
+  "org": "British Association of Social Workers England"
+ },
+ {
+  "position_id": "28429",
+  "proposition": "The traditional GP partnership model is sustainable and should be supported.",
+  "polarity": "for",
+  "extract": "For us locally the Partnership model IS sustainable - However when we consider the financial risk that we carry as Partners, that can at times be an overwhelming concept. - Unfortunately my understanding is that many organisations staffed by ‘salaried’ clinicians are unhappy places to work, and this has a detrimental impact on patient care. - Our practice currently can only survive due to the level of commitment of its partners, and this wo uld not be the case in a salaried model.",
+  "org": "Dr Debbie Miles"
+ },
+ {
+  "position_id": "14896",
+  "proposition": "Community mental health services should provide holistic care that addresses wider social determinants of mental health, such as housing, employment, and financial stability.",
+  "polarity": "for",
+  "extract": "High quality care should not start with a prescription it should start with a space for high quality compassionate engagement and , bio/psych/social understanding for the individual and their networks of support. It should address the social determinants of mental illness, promote connection and belonging for people to live well in their communities. Patients need to be fully informed, offered choices and involved in their care. The need for flexible support to manage physical health needs is key to address reduced physical morbidity and reduced life expectancy. Housing, employment, finances all are key and so requires a joined up multiagency approach.",
+  "org": "Dr  Anna Cheetham"
+ },
+ {
+  "position_id": "33186",
+  "proposition": "The NHS should publish a detailed assessment of the backlog in non-COVID-19 care.",
+  "polarity": "for",
+  "extract": "RCPCH is currently undertaking a data collection project across local services, in order to track trends and patterns, highlight service pressures, and help identify pinch points.",
+  "org": "Caitlin Plunkett-Reilly"
+ },
+ {
+  "position_id": "17412",
+  "proposition": "The prevention of poor musculoskeletal (MSK) health should be embedded in the Major Conditions Strategy and prevention programmes.",
+  "polarity": "for",
+  "extract": "Swimming supports the management of long-term conditions and reduces the risk of developing multiple health issues. Specifically, swimming has been demonstrated to be an effective musculoskeletal management strategy for those struggling with chronic pain, poor function and low mobility , improving function, pain and quality of life 2 .",
+  "org": "Swim England"
+ },
+ {
+  "position_id": "1994",
+  "proposition": "Bureaucracy and administrative burdens in General Practice should be significantly reduced.",
+  "polarity": "for",
+  "extract": "The recruitment crisis in many healthcare/social care sectors is because the job is too stressful and not well paid for the hours worked. If the job can be more interesting or less stressful I believe it will encourage people to come back.",
+  "org": "GP partner at Cheviot Road surgery Southampton SO16 4AH I am also a clinical director of Southampton West PCN"
+ },
+ {
+  "position_id": "24001",
+  "proposition": "The NHS should publish a detailed assessment of the backlog in non-COVID-19 care.",
+  "polarity": "for",
+  "extract": "The reduction in presentations of people with cancer at the moment means that there may be a surge in new diagnoses in coming weeks or months. Cancer hubs, and diagnostic capacity, must be prepared for this potential increase in demand.",
+  "org": "Less Survivable Cancers Taskforce"
+ },
+ {
+  "position_id": "22227",
+  "proposition": "The White Paper's proposals will deliver effective integration of health and social care services.",
+  "polarity": "for",
+  "extract": "The aim of integrating services is to enable professionals, each with their own distinctive professional expertise and identity, to collaborate effectively in the delivery of person-centred care. In their everyday practice, social workers work in step with a range of professionals and services. We have seen this collaborative nature of social work give rise to a number of developments pertinent to the matter of integration",
+  "org": "Social Work England"
+ },
+ {
+  "position_id": "38243",
+  "proposition": "Community mental health services should be extended to cover the 0-25 age range with comprehensive pathways of support.",
+  "polarity": "for",
+  "extract": "Regular and appropriate referrals to CAMHS Contact with locality worker for this area",
+  "org": "Wales High School"
+ },
+ {
+  "position_id": "18251",
+  "proposition": "Interventions to promote physical activity for older adults should be co-designed with older people, professionals, and healthcare systems.",
+  "polarity": "for",
+  "extract": "The programme was c o-des i gn ed w ith older adults and local community partners (health, cultural) ; t his is particularly important in under-served and deprived communities where traditional exercise offers are less accessible or acceptable , and the ‘lived exper ience ’ of the older person has not been considered .",
+  "org": "Get Doncaster Moving; City of Doncaster Council"
+ },
+ {
+  "position_id": "16039",
+  "proposition": "Community mental health services should provide holistic care that addresses wider social determinants of mental health, such as housing, employment, and financial stability.",
+  "polarity": "for",
+  "extract": "Policy interventions must prioritis e : 1. Integrated Multi-Agency Support: Establishing a specialised team to coordinate care, benefits, and housing for high-need individuals.",
+  "org": "Miss Linda Cairns"
+ },
+ {
+  "position_id": "16097",
+  "proposition": "Investment in community mental health services should be sustained and sufficient to meet demand and enable transformation.",
+  "polarity": "for",
+  "extract": "Investment in transformation on a local level. Most transformation is reliant on visionary dedicated staff that are expected to drive culture change on top of very busy day jobs. Likewise asking members of communities to participate without providing funding.",
+  "org": "Dorset HealthCare (Dr Phil Morgan)"
+ },
+ {
+  "position_id": "27459",
+  "proposition": "The current 10-minute consultation model in General Practice is no longer fit for purpose.",
+  "polarity": "for",
+  "extract": "In fact practices are often willing to do this work which is also often actually important to patients or the system - but the block contract nature of general practice with bu rgeoning demand has meant much of this gets squeezed – or pushed into having to be done beyond core hours – In evenings and weekends.",
+  "org": "Hucknall Road Medical Centre"
+ },
+ {
+  "position_id": "610",
+  "proposition": "Bureaucracy and administrative burdens in General Practice should be significantly reduced.",
+  "polarity": "for",
+  "extract": "Even with general practice in a chronic state of low capacity relative to need, matching the right care to the right patient and retaining core capacity can allow more value to be provided to patients. Policymakers will need to use the levers at their disp osal carefully to help find solutions.",
+  "org": "The Nuffield Trust"
+ },
+ {
+  "position_id": "27559",
+  "proposition": "Allied health professionals (AHPs) and other non-GP clinicians should be more widely integrated into primary care teams to alleviate pressure on GPs.",
+  "polarity": "for",
+  "extract": "Greater funding to recruit a range of co-workers from shared personal assistant roles, to mental health workers and social workers working in an integrated and collaborative way would be desirable.",
+  "org": "Westbourne Medical Centre, Bournemouth"
+ },
+ {
+  "position_id": "14821",
+  "proposition": "Community mental health services should adopt a 'no wrong door' approach to access.",
+  "polarity": "for",
+  "extract": "How could access be improved across the country? Develop VCSE alternatives to police support for 136 Develop crisis alternatives Develop MH first responder programmes",
+  "org": "Cornwall Mind"
+ },
+ {
+  "position_id": "12039",
+  "proposition": "Physical activity should be embedded into routine healthcare, with clinicians equipped to advise on exercise as a core part of treatment.",
+  "polarity": "for",
+  "extract": "The role that sport and physical activity can play in preventative health can be even larger. It is widely recognised that p hysical activity and sport can play a key role in preventing non communicable diseases.",
+  "org": "Sportsgroup"
+ },
+ {
+  "position_id": "38684",
+  "proposition": "PSHE (Personal, Social, Health and Economic) education should be re-thought and strengthened to effectively foster good mental health.",
+  "polarity": "for",
+  "extract": "Independent research is evaluating this work in 6 secondary schools and will be available in the spring but feedback from schools and students as well as the RSPH already suggests that this programme has the potential to play a significant role in supporting schools deliver the kind of PHSE curriculum that students need and deserve and one that will promote emotional wellbeing .",
+  "org": "Youth Connexions Hertfordshire"
+ },
+ {
+  "position_id": "17758",
+  "proposition": "Physical activity interventions for older adults should include a social element.",
+  "polarity": "for",
+  "extract": "Community-based physical and social activity for older adults with mild frailty: a rapid qualitative study of a collaborative intervention pilot.",
+  "org": "RISE (Michael Ali)"
+ },
+ {
+  "position_id": "32746",
+  "proposition": "There should be a system of segregated 'COVID' and 'non-COVID' units within hospitals to ensure patient and staff safety.",
+  "polarity": "for",
+  "extract": "The challenge as they re- start services is both making sure they sufficient clinical capacity and making sure they can effective ly segregat e C OVID and non - C OVID patients.",
+  "org": "Mr Niall Dickson CBE"
+ },
+ {
+  "position_id": "16032",
+  "proposition": "Community mental health services should ensure continuity of care and consistent, long-term relationships between service users and professionals.",
+  "polarity": "for",
+  "extract": "Good mental health care for adults with severe mental illness should be timely, well-coordinated, reliable, and well-funded, built around principles of equity, rights of access co-production, integration, and accountability. It should resemble a properly resourced and universally implemented care programme approach, recognising care coordination as a vital intervention and ensuring long-term 'light touch' monitoring within secondary services to avoid harmful transitions caused by the step-up, step-down model.",
+  "org": "British Association of Social Workers England"
+ },
+ {
+  "position_id": "38192",
+  "proposition": "Mental health awareness training for school staff should be mandatory and integrated into Initial Teacher Training.",
+  "polarity": "for",
+  "extract": "Alongside ensuring there is a counsellor in every school, it is also important that school staff have an understanding of mental health issues and how to identify them . Schools are an excellent place to addre ss mental health concerns , but if the proper support and systems are not in place – for both children and teachers – then cases can be missed or not passed on for referral. It is , therefore , imperative that school staff are provided with adequat e training to help them spot any signs of distress, to feel confident in addressing the issue with the child (and if necessary the parent), and to provide them with the skills to advise families where to go to seek further help. We would recommend that teachers and t eaching assistants are offered courses in basic counselling skills , such as through Counselling MindEd, with regular refresher training, to provide them with these skills.",
+  "org": "British Association for Counselling and Psychotherapy"
+ },
+ {
+  "position_id": "21469",
+  "proposition": "Community-based and peer-led physical activity programmes are effective for older adults.",
+  "polarity": "for",
+  "extract": "Use trusted community anchors (libraries, faith groups, community centres, housing providers) to deliver inclusive and accessible opportunities (Standards 2 & 3).",
+  "org": "National Activity Providers Association"
+ },
+ {
+  "position_id": "21388",
+  "proposition": "Weight loss medications like Wegovy and Mounjaro should be widely accessible through the NHS.",
+  "polarity": "for",
+  "extract": "Without action to ensure that medication is accessible to more people living with obesity and related complications there is a risk that medication will be the treatment choice of those who can afford private prescriptions, further increasing inequalities in the management of obesity.",
+  "org": "Obesity Health Alliance"
+ },
+ {
+  "position_id": "381",
+  "proposition": "Rehabilitation services should be significantly enhanced and expanded across the NHS.",
+  "polarity": "for",
+  "extract": "Our thoughts on this topic are vital as both roles are integral to multidisciplinary teams in clinical and rehabilitation settings, contributing significantly to patient mobility, independence, and quality of life.",
+  "org": "British Association of Prosthetics and Orthotics"
+ },
+ {
+  "position_id": "30935",
+  "proposition": "Bureaucracy and administrative burdens in General Practice should be significantly reduced.",
+  "polarity": "for",
+  "extract": "Work with GPs to find out exactly what are the main causes and then find solutions to stop them. For example, CQC could be more supportive and less punitive, QoF pushes GPs into often little -evidenced large-scale work, a unified patient record would save huge amounts of time currently spent chasing information that is difficult to find. Institute the role of Medical Personal Assistants in general practice to help with administrative duties that are very time consuming and take GPs away from frontline patient care. Devolve responsibility for ‘Fit Notes’ away from GPs to other members of the healthcare team.",
+  "org": "Professor  Kamila Hawthorne"
+ }
+]
