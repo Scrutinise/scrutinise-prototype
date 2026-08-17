@@ -20,6 +20,7 @@ import { isPoliticalCorpus, politicalTitle } from './political-title'
 // §19-D Task 5 — one shared derivation with fts-search.ts. It used to be copied into
 // both files, so the 404 bug was present twice and fixable only twice.
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 
 interface VecHit { id: string; corpus: string; tier: string; score: number; snippet: string }
 
@@ -66,7 +67,11 @@ async function callVector(query: string, limit: number, scope: VectorScope = {})
     if (excludeCorpora?.length && !sameList(json.excludeCorpora, excludeCorpora)) {
       console.warn(`[vector-search] service did not honour excludeCorpora=${JSON.stringify(excludeCorpora)} — dense half is tier-scoped only; redeploy the vector service`)
     }
-    return json.results ?? []
+    // The dense twin of the decode in fts-search.ts, and it is here for the same reason the title
+    // derivation is duplicated: a document found by the ANN half must not READ differently from
+    // the same document found by BM25. One unscoped probe of the live vector service returned 1
+    // contaminated snippet in 50. Only `snippet` is text — `id`/`corpus`/`tier` are keys.
+    return (json.results ?? []).map((h) => ({ ...h, snippet: decodeForDisplay(h.snippet ?? '') }))
   } finally { clearTimeout(t) }
 }
 
@@ -126,8 +131,14 @@ export async function runVectorSearch(
         ? prisma.corpusAct.findMany({ where: { gid: { in: gids }, title: { not: null } }, select: { gid: true, title: true } })
         : Promise.resolve([] as Array<{ gid: string; title: string | null }>),
     ])
-    const hydrate = new Map(hydrateRows.map((r) => [r.id, r]))
-    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, r.title] as const] : [])))
+    // Kept in step with fts-search.ts's hydrate decode, deliberately — see the note there.
+    const hydrate = new Map(hydrateRows.map((r) => [r.id, {
+      ...r,
+      sectionTitle: decodeMaybe(r.sectionTitle),
+      attribution: decodeMaybe(r.attribution),
+      parentTitle: decodeMaybe(r.parentTitle),
+    }]))
+    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, decodeForDisplay(r.title)] as const] : [])))
 
     const results: SearchResult[] = typed.map(({ h, type }) => {
       const meta = hydrate.get(h.id)

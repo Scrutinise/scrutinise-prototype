@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { CompilationStatus } from '@prisma/client'
 import LegislationItemClient from './LegislationItemClient'
 import { repealsForItem } from '@/lib/lex/repeal-status'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 
 interface Props {
   params: Promise<{ itemId: string }>
@@ -16,9 +17,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { title: true, year: true },
   })
   if (!item) return { title: 'Legislation | Scrutinise' }
+  // 57 legacy act titles read `Weights and Measures &amp;c. Act 1976`. A browser TAB and a page
+  // <title> are as user-visible as the heading, and this one also goes out as the meta description.
+  const title = decodeForDisplay(item.title)
   return {
-    title: `${item.title} ${item.year} | Scrutinise`,
-    description: `AI-compiled text of ${item.title} ${item.year}. Not a legal authority — verify on legislation.gov.uk.`,
+    title: `${title} ${item.year} | Scrutinise`,
+    description: `AI-compiled text of ${title} ${item.year}. Not a legal authority — verify on legislation.gov.uk.`,
   }
 }
 
@@ -48,5 +52,19 @@ export default async function LegislationItemPage({ params }: Props) {
   )
   const repealBySection = Object.fromEntries(repeals)
 
-  return <LegislationItemClient item={item as any} repealBySection={repealBySection} />
+  // ⚠ The render-side entity decode, applied HERE because this page has no search step in front
+  // of it: it lists an Act's sections straight out of the legacy table, where 1,838 section titles
+  // and 57 act titles carry a literal entity. Only the display fields are touched; ids, keys,
+  // numbers and the repeal join are left exactly as they came out of the database.
+  const decodedItem = {
+    ...item,
+    title: decodeForDisplay(item.title),
+    sections: item.sections.map((s: { sectionTitle: string | null; originalText: string | null }) => ({
+      ...s,
+      sectionTitle: decodeMaybe(s.sectionTitle),
+      originalText: decodeMaybe(s.originalText),
+    })),
+  }
+
+  return <LegislationItemClient item={decodedItem as any} repealBySection={repealBySection} />
 }

@@ -40,6 +40,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { r2Get } from '@/lib/r2'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 import { runSearch, type SearchIntent } from './search-gateway'
 import { repealPromptNote } from './repeal-status'
 import type { SearchResult } from './page1-config'
@@ -326,14 +327,22 @@ export async function searchPanelViaGateway(query: string, limit: number): Promi
         legacy?.compiledTextKey ? r2Get(legacy.compiledTextKey) : Promise.resolve(null),
         legacy?.lexSummaryKey ? r2Get(legacy.lexSummaryKey) : Promise.resolve(null),
       ])
+      // The R2 half of the render-side decode. `.compiled.txt` and `.summary.txt` are PLAIN TEXT
+      // by construction (never XML — the raw CLML lives under a different key and is not read
+      // here), so decoding cannot damage markup: there is none. `sectionTitle` and the act title
+      // come from the legacy tables, which measure 1,838 and 57 contaminated rows.
+      //
+      // `result.snippet` and `result.citation` arrive already decoded from fts-search.ts, and are
+      // left alone here rather than decoded twice — decoding is idempotent, so this is a
+      // readability choice, not a correctness one.
       return {
         id: result.id,
         sectionNumber,
-        sectionTitle: legacy?.sectionTitle ?? (result.citation || null),
-        compiledText: compiledText ?? plainSnippet(result.snippet),
-        lexSummary,
+        sectionTitle: decodeMaybe(legacy?.sectionTitle ?? (result.citation || null)),
+        compiledText: compiledText ? decodeForDisplay(compiledText) : plainSnippet(result.snippet),
+        lexSummary: decodeMaybe(lexSummary),
         isTnaVerified: legacy?.compiledBy === 'tna-direct',
-        actTitle: legacy?.legislationItem.title ?? displayTitle(result.title, result.citation, result.id, gid),
+        actTitle: decodeForDisplay(legacy?.legislationItem.title ?? displayTitle(result.title, result.citation, result.id, gid)),
         year: legacy?.legislationItem.year ?? yearFromGid(gid, result.date),
         legislationGovUkId: gid ?? '',
         amendmentCount: legacy?.amendmentCount ?? 0,

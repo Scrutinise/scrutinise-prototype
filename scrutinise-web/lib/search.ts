@@ -2,6 +2,7 @@
 // single client serves both legislation and operational FTS (previously split
 // across prismaSearch=Neon / prisma=Railway).
 import { prisma } from '@/lib/prisma'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 
 export type SearchResult = {
   type:          string        // legislationType lowercase or 'operational'
@@ -208,15 +209,23 @@ export async function searchLegislation(opts: {
       await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
       return tx.$queryRawUnsafe<LegRow[]>(sql, ...params)
     })
+    // ⚠ THE LEGACY TABLES WERE NEVER IN THE 17 AUG REPAIR, AND THEY ARE DIRTIER THAN THE CORPUS.
+    // That repair rewrote `corpus_sections`; these two tables were not touched, and measure
+    // (17 Aug): `LegislationSection.sectionTitle` 1,838 rows, `originalText` 4,874,
+    // `LegislationItem.title` 57 — mostly `&amp;c.`, the old statutory "&c." abbreviation, so a
+    // section reads `Docks, &amp;c.` where the Act says `Docks, &c.`. `originalText` reaches a
+    // user only through `ts_headline`, so decoding the SNIPPET covers it without rewriting the
+    // column the FTS vector is derived from. Decoding stored text in place is a separate
+    // decision — see the report.
     for (const r of rows) {
       results.push({
         type:          r.legislationType.toLowerCase(),
         actId:         r.actId,
-        actTitle:      r.actTitle,
+        actTitle:      decodeForDisplay(r.actTitle),
         sectionId:     r.sectionId,
         sectionNumber: r.sectionNumber,
-        title:         r.sectionTitle,
-        snippet:       r.snippet,
+        title:         decodeMaybe(r.sectionTitle),
+        snippet:       decodeForDisplay(r.snippet),
         rank:          Number(r.rank),
       })
     }
@@ -264,15 +273,18 @@ export async function searchLegislation(opts: {
       await tx.$executeRaw`SET LOCAL statement_timeout = '8000ms'`
       return tx.$queryRawUnsafe<OpRow[]>(sql, tsqStr)
     })
+    // Operational is the same shape and much smaller: `pageTitle` 2 rows, `extractedText` 12 —
+    // `&#xA3;5,000` for `£5,000` in a sentencing-guideline page title, which is exactly the kind
+    // of value a user reads as a number.
     for (const r of rows) {
       results.push({
         type:          'operational',
         actId:         r.docSlug,
-        actTitle:      `${r.publisherName} — ${r.docTitle}`,
+        actTitle:      decodeForDisplay(`${r.publisherName} — ${r.docTitle}`),
         sectionId:     r.sectionId,
         sectionNumber: r.pageSlug,
-        title:         r.pageTitle,
-        snippet:       r.snippet,
+        title:         decodeMaybe(r.pageTitle),
+        snippet:       decodeForDisplay(r.snippet),
         rank:          Number(r.rank),
       })
     }

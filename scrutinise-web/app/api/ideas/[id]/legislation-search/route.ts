@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { r2Get } from '@/lib/r2'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { searchPanelViaGateway } from '@/lib/lex/gateway-legacy'
 
@@ -87,14 +88,17 @@ export async function POST(req: Request, { params }: Params) {
       r.compiledTextKey ? r2Get(r.compiledTextKey) : Promise.resolve(null),
       r.lexSummaryKey   ? r2Get(r.lexSummaryKey)   : Promise.resolve(null),
     ])
+    // Render-side entity decode, same repair as lib/lex/gateway-legacy.ts — this route is the
+    // legacy fallback and serves the same legacy tables (1,838 contaminated section titles) and
+    // the same plain-text R2 objects.
     return {
       id: r.id,
       sectionNumber: r.sectionNumber,
-      sectionTitle: r.sectionTitle,
-      compiledText,
-      lexSummary,
+      sectionTitle: decodeMaybe(r.sectionTitle),
+      compiledText: decodeMaybe(compiledText),
+      lexSummary: decodeMaybe(lexSummary),
       isTnaVerified: r.compiledBy === 'tna-direct',
-      actTitle: r.actTitle,
+      actTitle: decodeForDisplay(r.actTitle),
       year: r.year,
       legislationGovUkId: r.legislationGovUkId,
       amendmentCount: r.amendmentCount,

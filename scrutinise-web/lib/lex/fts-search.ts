@@ -26,6 +26,7 @@ import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annot
 import { isPoliticalCorpus, politicalTitle } from './political-title'
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 import { runStubSearch } from './search-stub'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 
 // Native shape returned by fts-query-service.ts (body stripped on the wire).
 interface FtsHit {
@@ -103,7 +104,23 @@ async function callFts(query: string, limit: number, scope: FtsScope = {}): Prom
     if (scope.excludeCorpora?.length && !sameList(json.excludeCorpora, scope.excludeCorpora)) {
       console.warn(`[fts-search] service did not honour excludeCorpora=${JSON.stringify(scope.excludeCorpora)} — falling back to client-side type filtering; REDEPLOY fts-serve`)
     }
-    return json.results ?? []
+    // ⚠ THE RENDER-SIDE DECODE, AND THIS IS THE ONLY PLACE IT HAPPENS FOR THE SPARSE HALF.
+    // The FTS index is built from the R2 text, which still carries literal HTML entities in 16 of
+    // 74 corpora (`docs/ENTITY_DECODE_REPORT.md`), so a snippet arrives reading
+    // `SCS069 &#xa0; Submission by Dr Danielle Beswick`. Measured on the live service, 38 of 321
+    // scoped hits carry one. Decoding here — at the boundary, once — means no downstream consumer
+    // has to remember: the panel, the briefing, the DOCX, the model prompt and the graph all read
+    // the repaired value.
+    //
+    // ⚠ ONLY THE TEXT FIELDS. `id`, `corpus`, `tier` and `parentDocId` are KEYS — they are joined
+    // against Neon and parsed for gids, and putting a decoder anywhere near them would silently
+    // change what a hit points at rather than how it reads.
+    return (json.results ?? []).map((h) => ({
+      ...h,
+      sectionTitle: decodeMaybe(h.sectionTitle),
+      speaker: decodeMaybe(h.speaker),
+      snippet: decodeForDisplay(h.snippet ?? ''),
+    }))
   } finally {
     clearTimeout(t)
   }
@@ -195,8 +212,19 @@ export async function runFtsSearch(
           })
         : Promise.resolve([] as Array<{ gid: string; title: string | null }>),
     ])
-    const hydrate = new Map(hydrateRows.map((r) => [r.id, r]))
-    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, r.title] as const] : [])))
+    // The Neon side of the same repair. `corpus_sections`' user-visible columns were rewritten in
+    // place on 17 Aug and measure 0 today, so this is belt-and-braces for them — but `corpus_acts`
+    // was never in that repair and carries 57 titles reading `Weights and Measures &amp;c. Act
+    // 1976`. That title is what a legislation result is NAMED with, so it is decoded here rather
+    // than left for a caller to notice. Decoding is idempotent, so the already-clean rows are
+    // byte-unchanged.
+    const hydrate = new Map(hydrateRows.map((r) => [r.id, {
+      ...r,
+      sectionTitle: decodeMaybe(r.sectionTitle),
+      attribution: decodeMaybe(r.attribution),
+      parentTitle: decodeMaybe(r.parentTitle),
+    }]))
+    const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, decodeForDisplay(r.title)] as const] : [])))
 
     const results: SearchResult[] = typed.map(({ h, type }) => {
       const meta = hydrate.get(h.id)

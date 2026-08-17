@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { decodeMaybe } from '@/lib/html-entities'
 
 // GET /api/legislation/search?q=...&type=...&year=...&jurisdiction=...&page=1
 // Public — no auth required
@@ -82,5 +83,10 @@ export async function GET(req: Request) {
     ...params,
   )
 
-  return NextResponse.json({ items, page })
+  // The browse list is titles and nothing else, so an undecoded one is the whole of what the user
+  // sees. 57 `corpus_acts` titles carry `&amp;c.` — the statutory "&c." abbreviation, escaped.
+  return NextResponse.json({
+    items: items.map((i) => ({ ...i, title: decodeMaybe(i.title) })),
+    page,
+  })
 }

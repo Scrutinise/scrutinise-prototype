@@ -31,6 +31,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
+import { decodeMaybe } from '@/lib/html-entities'
 
 export type RepealState = 'repealed-known' | 'repealed-unknown' | 'no-record'
 
@@ -151,7 +152,10 @@ export async function lookupRepeals(sectionIds: string[]): Promise<{ statuses: M
       out.set(row.section_id, {
         state: row.repealed_by ? 'repealed-known' : 'repealed-unknown',
         repealedBy: row.repealed_by,
-        repealedByTitle: row.title ?? row.repealed_by,
+        // `title` is a `corpus_acts` title, 57 of which carry a literal entity — and this one is
+        // read out to the user as "repealed by X", so it is decoded. `repealed_by` is the GID and
+        // is NOT decoded: it is a key, and it is also the fallback when there is no title.
+        repealedByTitle: decodeMaybe(row.title) ?? row.repealed_by,
         evidence: row.evidence,
       })
     }
@@ -220,7 +224,7 @@ export async function repealsForItem(
       out.set(bare, {
         state: row.repealed_by ? 'repealed-known' : 'repealed-unknown',
         repealedBy: row.repealed_by,
-        repealedByTitle: row.title ?? row.repealed_by,
+        repealedByTitle: decodeMaybe(row.title) ?? row.repealed_by,
         evidence: row.evidence,
       })
     }

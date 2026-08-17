@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { r2Get } from '@/lib/r2'
+import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 import { CompilationStatus } from '@prisma/client'
 
 // GET /api/legislation/test-sections
@@ -33,15 +34,18 @@ export async function GET() {
       s.lexSummaryKey   ? r2Get(s.lexSummaryKey)   : Promise.resolve(null),
     ])
 
+    // Render-side entity decode. `originalText` is included: this route is a research tool that
+    // shows the stored text next to the compiled text, and a reader comparing the two should not
+    // have to mentally decode one of them.
     return {
       id: s.id,
       sectionNumber: s.sectionNumber,
-      sectionTitle: s.sectionTitle,
-      originalText: s.originalText,
-      compiledText,
-      lexSummary,
+      sectionTitle: decodeMaybe(s.sectionTitle),
+      originalText: decodeMaybe(s.originalText),
+      compiledText: decodeMaybe(compiledText),
+      lexSummary: decodeMaybe(lexSummary),
       isTnaVerified: s.compiledBy === 'tna-direct',
-      actTitle: s.legislationItem.title,
+      actTitle: decodeForDisplay(s.legislationItem.title),
       year: s.legislationItem.year,
       legislationGovUkId: s.legislationItem.legislationGovUkId,
       amendments: s.amendments.map(a => ({
