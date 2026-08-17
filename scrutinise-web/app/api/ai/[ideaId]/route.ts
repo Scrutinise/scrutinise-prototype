@@ -8,6 +8,7 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
 import { searchLegislation, type SearchResult } from '@/lib/search'
 import { searchLegislationViaGateway } from '@/lib/lex/gateway-legacy'
+import { REPEAL_PROMPT_INSTRUCTION, REPEAL_UNAVAILABLE_INSTRUCTION } from '@/lib/lex/repeal-status'
 
 function classifyError(error: unknown): string {
   const msg = String(error).toLowerCase()
@@ -52,6 +53,9 @@ const MessageSchema = z.object({
     sectionTitle: z.string(),
     compiledText: z.string(),
     legislationGovUkId: z.string().optional(),
+    // SURFACE 1: the panel can pass the status straight through. Optional because an older
+    // client will not send it — and when it does not, the server-resolved path below supplies it.
+    repealNote: z.string().nullable().optional(),
   })).optional(),
 })
 
@@ -78,14 +82,23 @@ function buildSystemPrompt(ctx: {
     sectionTitle: string
     compiledText: string
     legislationGovUkId?: string
+    repealNote?: string | null
   }>
+  /** FALSE when the results came from the legacy fallback, which has no key to join the repeal
+   *  table on. The prompt then forbids any statement about currency at all. */
+  repealStatusAvailable?: boolean
 }): string {
   const isStage1 = ctx.currentStage === 'STAGE_1'
 
+  // ── SURFACE 1 — THE REPEAL STATUS GOES INTO WHAT LEX READS, not only into the panel ──
+  // ⚠ If it were in the panel and not here, Lex would describe the provision as current law while
+  // the panel beside it said "REPEALED" — worse than not showing it at all, because the two
+  // disagree on screen. The instruction is appended too: without it a model reads an ABSENT
+  // marker as confirmation, which is the "no repeal recorded is not in force" error one level down.
   const legislationCandidatesStr = ctx.legislationContext && ctx.legislationContext.length > 0
     ? ctx.legislationContext.map(c =>
-        `- ${c.actTitle} (s.${c.sectionNumber}: ${c.sectionTitle})${c.legislationGovUkId ? ` [id: ${c.legislationGovUkId}]` : ''}`
-      ).join('\n')
+        `- ${c.actTitle} (s.${c.sectionNumber}: ${c.sectionTitle})${c.legislationGovUkId ? ` [id: ${c.legislationGovUkId}]` : ''}${c.repealNote ? `  ${c.repealNote}` : ''}`
+      ).join('\n') + `\n\n${ctx.repealStatusAvailable === false ? REPEAL_UNAVAILABLE_INSTRUCTION : REPEAL_PROMPT_INSTRUCTION}`
     : 'none'
 
   // Platform controls which field is active — Lex works on that field only (v6.0 §2.1)
@@ -693,20 +706,28 @@ export async function POST(req: Request, { params }: Params) {
   // Failure stays non-fatal to the Lex turn (it always was): a failed search falls
   // back to the legacy index and says so in the log, rather than silently grounding
   // Lex on nothing.
-  async function runGroundingSearch(): Promise<{ results: SearchResult[]; totalMatches: number }> {
+  // SURFACE 1: the gateway path carries a repeal status per result; the legacy fallback CANNOT.
+  // `lib/search.ts` returns a LegislationSection id, not a `corpus_sections.id`, so there is no
+  // key to join `section_repeals` on — see the report. `repealChecked` carries that distinction
+  // out of this function so the prompt can state it rather than let silence imply currency.
+  type GroundingResult = SearchResult & { repealNote?: string | null }
+  async function runGroundingSearch(): Promise<{ results: GroundingResult[]; totalMatches: number; repealChecked: boolean }> {
     try {
       const gw = await searchLegislationViaGateway({
         q: ftsQuery || message,
         limit: 4,
         intent: 'IDEA_CHAT_GROUNDING',
       })
-      if (!gw.failed) return { results: gw.results as SearchResult[], totalMatches: gw.totalMatches }
+      if (!gw.failed) return { results: gw.results as unknown as GroundingResult[], totalMatches: gw.totalMatches, repealChecked: true }
       console.error('[ai/route] gateway grounding search FAILED — legacy fallback:', gw.failureReason)
     } catch (err) {
       console.error('[ai/route] gateway grounding search threw — legacy fallback:', err)
     }
-    return searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 })
+    // ⚠ REPEAL STATUS IS UNAVAILABLE ON THIS PATH, and the flag says so rather than defaulting
+    // to a comfortable true. The prompt then tells Lex it cannot speak to currency at all.
+    const legacy = await searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 })
       .catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
+    return { ...legacy, repealChecked: false }
   }
 
   // Run lexInsight lookup and the grounding search in parallel — independent reads.
@@ -718,8 +739,13 @@ export async function POST(req: Request, { params }: Params) {
       select: { approvedRule: true },
     }),
     shouldSearch
+      // ⚠ The empty branch is typed from runGroundingSearch's OWN return type, not from
+      // `@/lib/search`'s same-named SearchResult. Two different types called SearchResult are in
+      // scope here, and annotating the empty case with the wrong one made the union lose every
+      // field the gateway adds — which is how the repeal note would have gone missing from the
+      // one place this job most needs it.
       ? runGroundingSearch()
-      : Promise.resolve({ results: [] as SearchResult[], totalMatches: 0 }),
+      : Promise.resolve({ results: [] as Awaited<ReturnType<typeof runGroundingSearch>>['results'], totalMatches: 0, repealChecked: true }),
   ])
 
   // [L6-D Task 1] Temporary FTS diagnostic — remove after Vercel log review
@@ -739,6 +765,7 @@ export async function POST(req: Request, { params }: Params) {
       sectionTitle:        r.title ?? '',
       compiledText:        r.snippet.replace(/<<|>>/g, ''),
       legislationGovUkId:  r.actId,
+      repealNote:          r.repealNote ?? null,
     }))
   }
 
@@ -793,6 +820,7 @@ export async function POST(req: Request, { params }: Params) {
     currentFieldSection: currentFieldSection ?? null,
     currentDateTime,
     legislationContext: resolvedLegislationContext ?? undefined,
+    repealStatusAvailable: autoSearch.repealChecked,
   })
 
   const startTime = Date.now()

@@ -22,6 +22,10 @@ import { groupForPanel } from './search-stub'
 import { expandQuery, routeQuery, routerEnabled } from './query-expansion'
 import { runRoutedSearch, perStreamVectorActive, STREAMS } from './query-router'
 import { fuseWeightedRrf } from './fusion'
+// SURFACE 1: the gateway is 'the SINGLE point of contact with search', so it is where repeal
+// status is attached. Every consumer of a SearchResult then gets it without knowing it exists —
+// the briefing, the Deepening, the build passes, the panels — and no caller can forget.
+import { lookupRepeals, annotate } from './repeal-status'
 
 // ── Query intent (§14.2) — owned HERE, aligned to the search side's stream taxonomy.
 // Add an intent when a new Lex moment needs retrieval; tell the search side so they
@@ -361,8 +365,19 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   //    when the taxonomy lands as a shared corpus-type-map, only the gateway changes.
   const grouped = groupForPanel(results)
 
-  console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null })
-  return { intent: q.intent, results, grouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams, perStream } }
+  // ── SURFACE 1 — repeal status, attached HERE and nowhere else ────────────────────────────
+  // ⚠ Annotated AFTER grouping and applied to BOTH arrays, because `grouped` is a filtered view
+  // over `results` and a consumer may read either. Annotating only one is how a panel comes to
+  // disagree with the answer beside it.
+  // ⚠ ONE query per search, not one per result: twenty round trips inside a request that already
+  // holds a retrieval call is a latency regression nobody would attribute to a label.
+  const { statuses, ok: repealOk } = await lookupRepeals([...results, ...grouped].map((r) => r.id))
+  const annotatedResults = annotate(results, statuses, repealOk)
+  const annotatedGrouped = annotate(grouped, statuses, repealOk)
+  const repealedCount = annotatedResults.filter((r) => r.repeal && r.repeal.state !== 'no-record').length
+
+  console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null, repealed: repealedCount, repealLookup: repealOk ? 'ok' : 'FAILED' })
+  return { intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams, perStream } }
 }
 
 // ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────

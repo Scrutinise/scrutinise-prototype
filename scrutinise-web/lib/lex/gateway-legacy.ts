@@ -41,6 +41,7 @@
 import { prisma } from '@/lib/prisma'
 import { r2Get } from '@/lib/r2'
 import { runSearch, type SearchIntent } from './search-gateway'
+import { repealPromptNote } from './repeal-status'
 import type { SearchResult } from './page1-config'
 
 /** The corpus tier that holds Acts, SIs and retained EU law (scripts/ingest/search/corpus-map.ts). */
@@ -187,6 +188,12 @@ export interface LegacySearchResult {
   title: string | null
   snippet: string
   rank: number
+  /** SURFACE 1 — carried through from the gateway. The three legacy surfaces are the ones the
+   *  S4 audit found showing nothing but legislation, so they are exactly where a repealed
+   *  provision would otherwise be presented as current with a working link. */
+  repeal?: import('./repeal-status').RepealStatus
+  /** The one line that goes into what LEX READS. Null when there is nothing to say. */
+  repealNote?: string | null
 }
 
 /**
@@ -223,6 +230,8 @@ export async function searchLegislationViaGateway(opts: {
     title: result.citation || null,
     snippet: plainSnippet(result.snippet),
     rank: result.score,
+    repeal: result.repeal,
+    repealNote: result.repeal ? repealPromptNote(result.repeal) : null,
   }))
 
   return { results, totalMatches: results.length, failed, failureReason }
@@ -244,6 +253,8 @@ export interface PanelResult {
   amendmentCount: number
   confidence: string | null
   tags: string[]
+  /** SURFACE 1 — see LegacySearchResult above. */
+  repeal?: import('./repeal-status').RepealStatus
 }
 
 /**
@@ -328,6 +339,7 @@ export async function searchPanelViaGateway(query: string, limit: number): Promi
         amendmentCount: legacy?.amendmentCount ?? 0,
         confidence: legacy?.confidence ?? null,
         tags: legacy?.tags ?? [],
+        repeal: result.repeal,
       }
     }),
   )

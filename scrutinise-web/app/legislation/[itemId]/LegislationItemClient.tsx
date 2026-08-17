@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import PublicNav from '@/components/PublicNav'
+import { RepealBadge } from '@/components/RepealBadge'
+import type { RepealStatus } from '@/lib/lex/repeal-status'
 
 interface Amendment {
   id: string
@@ -132,7 +134,12 @@ function ProvenanceBanner({
   )
 }
 
-export default function LegislationItemClient({ item }: { item: LegislationItem }) {
+export default function LegislationItemClient({ item, repealBySection = {} }: {
+  item: LegislationItem
+  /** SURFACE 1 — keyed on the bare section number. A section absent from this map carries NO
+   *  status: the (gid, section_ref) join could not place it, and silence is the honest result. */
+  repealBySection?: Record<string, RepealStatus>
+}) {
   const { isSignedIn } = useUser()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [correctionSectionId, setCorrectionSectionId] = useState<string | null>(null)
@@ -214,6 +221,8 @@ export default function LegislationItemClient({ item }: { item: LegislationItem 
                   <span className="text-sm font-medium text-gray-200">
                     {section.sectionTitle || `Section ${section.sectionNumber}`}
                   </span>
+                  {/* SURFACE 1 — beside the citation, where a reader decides whether to rely on it */}
+                  <RepealBadge repeal={repealBySection[section.sectionNumber]} compact />
                   {section.needsReview && (
                     <span className="rounded bg-amber-900/40 border border-amber-700/40 px-1.5 py-0.5 text-xs text-amber-400">
                       Needs review

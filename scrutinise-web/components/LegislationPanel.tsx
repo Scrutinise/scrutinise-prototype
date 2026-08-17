@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { RepealBadge } from './RepealBadge'
 
 interface LegislationResult {
   id: string
@@ -15,6 +16,9 @@ interface LegislationResult {
   amendmentCount: number
   confidence: string | null
   tags: string[] | null
+  /** SURFACE 1 — attached by the search gateway. Undefined means the lookup failed; the badge
+   *  then renders nothing rather than a reassuring absence. */
+  repeal?: import('@/lib/lex/repeal-status').RepealStatus
 }
 
 interface LegislationPanelProps {
@@ -147,6 +151,9 @@ export default function LegislationPanel({
                       <p className="text-[11px] text-muted-foreground">
                         {result.actTitle} {result.year} — s.{result.sectionNumber}
                       </p>
+                      {/* SURFACE 1 — the repeal state sits in the heading, beside the citation,
+                          because that is where a reader decides whether to rely on it. */}
+                      <RepealBadge repeal={result.repeal} compact />
                       {isTnaVerified && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 border border-teal-200 font-medium shrink-0">
                           TNA verified

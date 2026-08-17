@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { CompilationStatus } from '@prisma/client'
 import LegislationItemClient from './LegislationItemClient'
+import { repealsForItem } from '@/lib/lex/repeal-status'
 
 interface Props {
   params: Promise<{ itemId: string }>
@@ -36,5 +37,16 @@ export default async function LegislationItemPage({ params }: Props) {
 
   if (!item) notFound()
 
-  return <LegislationItemClient item={item as any} />
+  // ── SURFACE 1 — the highest-exposure surface, because there is no search step here ──
+  // This page lists every compiled section of an Act in full. A repealed one would otherwise appear
+  // with its text, its citation and a working legislation.gov.uk link and nothing to say it is dead.
+  // ⚠ Joined on (gid, section_ref) because this page reads the LEGACY table, whose ids are not
+  // corpus_sections ids. An unmatched section carries NO status rather than a reassuring one.
+  const repeals = await repealsForItem(
+    item.legislationGovUkId ?? '',
+    item.sections.map((s: { sectionNumber: string }) => s.sectionNumber),
+  )
+  const repealBySection = Object.fromEntries(repeals)
+
+  return <LegislationItemClient item={item as any} repealBySection={repealBySection} />
 }

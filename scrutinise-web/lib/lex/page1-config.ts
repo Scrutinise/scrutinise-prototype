@@ -462,4 +462,9 @@ export interface SearchResult {
   scorer: ScorerId
   url: string
   date: string
+  /** SURFACE 1 — repeal status, attached by the search gateway so every consumer of a
+   *  SearchResult gets it without knowing it exists. UNDEFINED means the lookup failed and
+   *  nothing may be claimed; `no-record` is an explicit finding and still NOT "in force".
+   *  See lib/lex/repeal-status.ts. */
+  repeal?: import('./repeal-status').RepealStatus
 }
