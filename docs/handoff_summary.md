@@ -2,13 +2,67 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 21:17 UTC — ▼ **LEX 25-A: THE §25 PREMISE IS BUILT AND RUNNABLE AT
+*Last updated: 2026-08-17 21:52 UTC — ▼ **GRAPH 2D-5: the actual documents are readable at last
+in `docs/POSITION_SAMPLE.md`, and Charlie's bottom-up architecture was measured rather than argued —
+it finds 74.4% more than the 83 propositions can reach, 85% of it real, and costs 3.73× more while
+recovering only 57% of the positions we know are right. A supplement, not a switch.**
+Earlier: 2026-08-17 21:17 UTC — ▼ **LEX 25-A: THE §25 PREMISE IS BUILT AND RUNNABLE AT
 `/ideas/build` — four questions, a confirmation the user must give, then a four-pass build that
 drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BRIEF'S SPEC
 (`LEX_DESIGN_ADDENDUM_25.md`) DOES NOT EXIST IN THE REPO, and the brief's 15-minute hard stop CANNOT
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 21:52 UTC — ▼ **GRAPH 2D-5 IS COMPLETE: THE DOCUMENTS ARE SHOWN, AND THE BETTER
+ARCHITECTURE IS BETTER AT DISCOVERY AND WORSE AT EVERYTHING ELSE.**
+Executes `docs/BRIEF_GRAPH_2D5.md` §1–§5. Report: **`docs/POSITION_GRAPH_2D5_REPORT.md`**.
+CHANGE_LOG (2026-08-17 21:52 UTC). `verify-2d5.ts` **26/26** with two negative controls firing.
+**Cost $0.88.** No re-extraction — §0 honoured.
+
+▶ **CHARLIE: `docs/POSITION_SAMPLE.md` IS THE THING YOU ASKED FOR.** Thirteen cases in full prose —
+the claim, the submission, what the extractor recorded, what the hand-read concluded and why. Three
+it got right, one where it correctly stayed silent on four claims its author certainly holds views
+on, two reversed polarities, one where it quoted a **bibliography**, and ⚠ **two where I mark my own
+hand-read as arguable**. All fifty are dumped to JSON so the twelve I did not pick can be read too.
+
+⚠⚠ **THE SPRINT'S BIGGEST FINDING IS ONE MISSING INPUT.** A bibliography entry quoted as a position
+(top-down) and a bare bullet turned into a claim with a verb the model supplied (bottom-up) are the
+same bug: **we strip the document's structure — headings, reference lists, tables — before the model
+sees the text.** Two failure modes, two architectures, one cause. It is the cheapest high-value fix
+available here and it is not a prompt change.
+
+⚠ **§2 — the qualification second pass fixes 3 of 11, and proved the BASELINE was understated.** Its
+schema has no polarity field, so it cannot change a direction (asserted; fires on a planted field).
+⚠⚠ My own first precision figure (18%) was wrong: it counted qualifications found on baseline-CORRECT
+rows as false positives, but those rows were scored on polarity and extract and were **never asked
+about qualification**. Re-read all 14 by hand — **6 genuine, 8 not** (commonest false shape: a REASON
+recorded as a CONDITION). Real precision 53%. **And 6 of the 23 rows we call correct carry an
+unrecorded qualification, so the nuance problem is bigger than 11 in 50.**
+
+⚠⚠ **§3 — YOUR FRAMING POINT IS NOT HYPOTHETICAL. 2 of 12 published inquiry "scopes" are the
+Committee's own report conclusions.** Inquiry 3005 in full: *"Primary care is … under unprecedented
+strain …, **warns the Health Committee in its report**."* Stored beside the position and **never
+applied to it** — the no-adjustment rule is greped and fires on a planted UPDATE. ⚠ The inquiry page
+is Cloudflare-403; the API is open, and the field is `scope`, not `termsOfReference`. ⚠ Inquiry 277's
+whole scope is an administrative status note that replaced the terms of reference — 6,255 position
+rows under it.
+
+⚠ **§4 — measured both ways on the same 49 submissions, same meter, scoring fixed and printed first.**
+· **COST bottom-up 3.73× top-down** ($0.5819 v $0.1560). The brief's "probably not more expensive" is
+  refuted: input IS cheaper (161k v 271k, no vocabulary) but **output is 7× larger** and bills at 8.3×.
+  ⚠ Censored — **35 of 49 hit the 40-claim cap**.
+· **RECALL 13 of 23 = 57%** of the positions we know are right (2 more refused by the verbatim-echo
+  guard rather than snapped to a nearest row).
+· **NOVELTY 1,439 of 1,933 claims (74.4%) covered by none of the 83.** ⚠⚠ Nearly an artefact — the
+  obvious subtraction would have said 1,920, because it only ever tests 23 propositions.
+· **HAND READ 34 of 40 (85%) REAL** — the measure that decides. 3 self-description, 2 trivia, 1 failure.
+· ⚠⚠ **CLUSTERING NOT MEASURED.** The duplicate-string floor came back 0 of 1,933, which is a fact
+  about the model's phrasing, not the corpus. Reported as uninformative, not as reassurance.
+**VERDICT against the rule fixed in advance: 2 of 3 — a SUPPLEMENT, not a switch.**
+
+✅ **§5 — graph of record untouched**: 37,657 rows, 16,196 positions, 5 run ids, no new column, all
+asserted. ⚠ Still nothing user-facing, and §2 says the true error rate is worse than 22 in 50.
 
 2026-08-17 21:17 UTC — ▼ **LEX SPRINT 25-A IS BUILT: the inverted flow — the user decides, Lex
 writes — runs end to end at `/ideas/build`.** Executes `docs/BRIEF_25A.md` §0–§7 plus Charlie's
