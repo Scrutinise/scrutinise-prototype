@@ -2,7 +2,12 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-16 11:52 UTC — ▼ **SEARCH S4: THE LEX CHAT ROUTE — the platform's main
+*Last updated: 2026-08-17 02:49 UTC — ▼ **GRAPH 2D-3 IS COMPLETE: 16,196 positions extracted and
+the hand-read error rate is 54% — the extraction is NOT ready to be shown, and the failure shapes
+say why (4% polarity errors, 46% of failures are positions on claims the submission never
+addressed). §2 landed cleanly: 5,496 organisations now carry a Companies House or Charity
+Commission key.** ⚠ For ingest: 12% of committee documents in R2 carry undecoded HTML entities.
+Earlier: 2026-08-16 11:52 UTC — ▼ **SEARCH S4: THE LEX CHAT ROUTE — the platform's main
 conversation — CANNOT RETURN A COMMITTEE DOCUMENT, A DEBATE OR A JUDGMENT, ON ANY QUESTION, EVER;
 and the router already knew, because it picks `committees` and the caller overrules it with a
 constant.** ⚠ TWO gates in series, so widening the tier alone would measure as a no-op. ✅
@@ -11,6 +16,63 @@ recommended ON, after confirming `LEX_QUERY_ROUTER` is on.** And ▼ **GRAPH AME
 a mention may always be displayed, and behavioural agreement is now MEASURED to be useless as merge
 evidence (97.9% between random same-party pairs of different people).** LEX 3-E, INGEST V38, GRAPH
 2D-2 and SEARCH S3 follow.*
+
+2026-08-17 02:49 UTC — ▼ **GRAPH 2D-3 IS COMPLETE: 16,196 POSITIONS EXTRACTED, AND 54% OF FIFTY
+READ BY HAND AGAINST THEIR SOURCES IS WRONG OR PARTLY WRONG. The error rate is the product; the
+count is not.** Executes `BRIEF_GRAPH_2D3.md` §1–§2 and `BRIEF_GRAPH_2D3_CONTINUED.md` §1–§4.
+Report: **`docs/POSITION_GRAPH_2D3_REPORT.md`**. CHANGE_LOG (2026-08-17 02:49 UTC). All code in
+`scripts/ingest/position-graph/`. `tsc` clean for that directory; **21 verify checks pass, all seven
+negative controls fire**. ⚠ **§3 and §4 are the Amendment 2 session's** on Charlie's instruction —
+`schema-amd2.sql`, `setup-amd2.ts` and `signal-behaviour.ts` were not touched. **Nothing is
+user-facing.** Spend: **$9.20 against $9.06 predicted (+1.5%)**.
+
+⚠⚠ **THE ACCEPTANCE TEST: 46% correct, 26% partly right, 28% wrong.** 16,196 `holds-position` edges
+over 2,979 submissions and 3,405 actors, **100% carrying a passage and 98.4% of those found verbatim
+in their own document** — and the passages being real is not the same as the positions being right.
+
+✅ **THE FAILURE SHAPES SAY IT IS FIXABLE.** `position-invented` 12, `nuance-flattened` 11,
+`proposition-mismatch` 2, **`polarity-flipped` only 2 of 50 (4%)** — the model reads DIRECTION
+correctly and over-attributes. Corroborated independently: **81.7% of all positions are `for`**
+against 13.7% `against`. Three remedies named in the report, **none applied** — replacing a measured
+54% with an unmeasured number is not an improvement. ⚠ Two failures the extract check CANNOT catch:
+one quotation was a line from the document's **bibliography**, another was **the submitter
+introducing itself**.
+
+✅ **AREA CHOSEN BY THE DATA, recomputed from `graph_edge`:** Health and Social Care (794 orgs in >1
+inquiry vs Environmental Audit's 754), bounded to the top 12 inquiries. **Vocabulary reported before
+use: 83 propositions.** ⚠ Only ONE is cross-cutting — these inquiries overlap far less than assumed,
+which is why the priced-in 40 became 83. Contestedness MEASURED rather than asserted: **60 of 83
+(72.3%) carry both sides.**
+
+⚠⚠ **THE PILOT'S 25.9% "FABRICATION RATE" WAS 83.9% OUR OWN MATCHER: `committees-evidence` text in
+R2 CARRIES LITERAL HTML ENTITIES** — 24 of 200 random documents (12.0%), 5,322 occurrences, `&#xa0;`
+(5,212) — plus words broken by stray spaces from PDF extraction. Diagnosed by dumping the bytes
+(§13). Matcher repaired and stored rows re-scored for nothing: **25.9% → 2.9%, 0 rows moved the
+other way**; fresh calls **1.6%**. ▶ **FOR INGEST: the entities are still in R2 and still in whatever
+the search stack indexed.**
+
+⚠ **THE MODEL'S ARRAY INDEXES ARE UNRELIABLE, INTERMITTENTLY** — the EDM test filed one motion's
+proposition under another's index and it did NOT reproduce (0 of 120). Everything now correlates by
+**verbatim echo**; the check fired **255 times** in the full run.
+
+✅ **§2 IS USABLE NOW — 5,496 organisations (13.6%) carry an external stable key.** Companies House
+**4,812**, Charity Commission **2,405**, from open keyless bulk downloads (5.70M and 0.40M register
+rows, OGL v3.0). Exact match on the same `normaliseName()` that built `name_norm`. **389 charity
+splits vs 17 company splits, 0 merges in both — reported separately, and measured.**
+
+⚠⚠ **OFFICE-BY-DATE: THE INSIGHT IS RIGHT, THE DATA WILL NOT CARRY IT.** Of 6,512 register surfaces
+exactly **1** is an office; scored against ground truth it is **63.8% accurate (17 wrong people)**,
+because `graph_member_name`'s windows record when a NAME FORM was carried, not office tenure. The
+Members API publishes only Lords entry dates. **Nothing was resolved and `verify-2d3.ts` asserts
+zero rows.** Needs a real tenure source — Lords Spiritual appointments, the ministerial
+appointments feed, or Companies House officer dates (already downloaded).
+
+▶ **FOR THE AMENDMENT 2 SESSION:** the submitter's own name IS in the document — **64.5% of 600
+random written-evidence files**, 91.7% carrying the internal reference, agreeing with the API
+submitter 96.3% of the time. ⚠ My first claim of this was too strong (three hand-picked files; the
+first parser measured 15.7%). The 3.7% that disagree are the useful ones — *Dame Diana Johnson,
+Minister of State* where the graph says *Home Office*. `parseDocumentHeader` written and self-tested
+(27/27); **handed over, not built into a competing layer.**
 
 2026-08-16 11:52 UTC — ▼ **SEARCH S4 §1 + §2. Report: `docs/SEARCH_S4_REPORT.md`.** CHANGE_LOG
 (2026-08-16 11:49 UTC). `tsc` clean. **Nothing was widened — §1 says report before changing.**

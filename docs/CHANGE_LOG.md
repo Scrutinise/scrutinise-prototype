@@ -247,6 +247,99 @@ identity is genuinely open and the behavioural test cannot reach it. Flagged, no
 
 ---
 
+## GRAPH 2D-3 — 16,196 POSITIONS, AND 54% OF FIFTY READ BY HAND IS WRONG OR PARTLY WRONG (2026-08-17 02:49 UTC)
+
+Executes `docs/BRIEF_GRAPH_2D3.md` §1–§2 and `docs/BRIEF_GRAPH_2D3_CONTINUED.md` §1–§4. Full
+report: **`docs/POSITION_GRAPH_2D3_REPORT.md`**. All code in `scripts/ingest/position-graph/`.
+`tsc` clean for that directory; **21 verification checks pass and all seven negative controls fire**.
+⚠ **§3 and §4 belong to the concurrent Amendment 2 session** on Charlie's instruction — nothing here
+touches `schema-amd2.sql`, `setup-amd2.ts` or `signal-behaviour.ts`. **Nothing is user-facing.**
+
+⚠⚠ **THE HEADLINE IS THE ERROR RATE, NOT THE COUNT, BECAUSE THE BRIEF SAID SO IN ADVANCE.**
+**16,196 `holds-position` edges** over 2,979 submissions and 3,405 actors, 100% carrying a passage,
+98.4% of those passages found verbatim in their own document — and **fifty read by hand against
+their sources score 46% correct, 26% partly right, 28% wrong: a 54% error rate.** Positions do not
+go in front of a user, which is what the brief instructed and what the number now independently
+requires.
+
+✅ **THE FAILURE SHAPES ARE THE USEFUL PART, AND THEY SAY THIS IS FIXABLE.** `position-invented` 12,
+`nuance-flattened` 11, `proposition-mismatch` 2, **`polarity-flipped` only 2 of 50 (4%)**. When the
+model says a submission addresses a claim the DIRECTION is nearly always right; it just says so far
+too often. Corroborated from a different direction: **81.7% of all positions are `for`** against
+13.7% `against`, exactly the skew over-attribution produces. Three remedies are named in the report
+with the evidence for each and **none was applied** — replacing a measured 54% with an unmeasured
+number is not an improvement. Two failures worth naming: one extract was **a line from the
+document's bibliography**, another was **the submitter introducing itself** — ⚠ the verbatim-extract
+check cannot catch either, because the words really are in the document.
+
+✅ **THE AREA WAS CHOSEN BY THE DATA and recomputed from `graph_edge` rather than quoted:**
+Health and Social Care Committee, **794 organisations in more than one inquiry** against
+Environmental Audit's 754 (−5.0%). Bounded to the top 12 inquiries (2,982 submissions, 6.30M words).
+**The vocabulary was reported before it was used — 83 propositions from 91 candidates.**
+⚠ The clustering merged almost nothing and **exactly ONE proposition is cross-cutting**: these
+inquiries overlap far less than the prediction assumed, which is why a priced-in 40-proposition
+vocabulary became 83. ⚠ Weakly-contestable propositions were **deliberately not filtered by hand** —
+contestedness is measurable once positions exist, and it measures **60 of 83 (72.3%) with both sides**.
+
+✅ **THE COST PREDICTION IS SCORED AND IT HELD: $8.63 actual against $8.51 predicted, +1.4%**
+($9.20 against $9.06 for the sprint). It held because the vocabulary was re-priced *after* it
+existed; the original 40-proposition assumption would have missed by 26%. Making the predictor a
+flag on the runner is what made re-pricing free.
+
+⚠⚠ **A 25.9% "FABRICATION RATE" THAT WAS 83.9% OUR OWN MATCHER.** The first pilot could not find a
+quarter of its own quotations. Diagnosed by dumping the bytes rather than hypothesising (§13):
+**`committees-evidence` compiled text in R2 carries LITERAL HTML ENTITIES** — 24 of 200 random
+documents (12.0%), 5,322 occurrences, `&#xa0;` (5,212), `&#x2011;` (107), `&#xad;` (3) — plus words
+broken by stray spaces from PDF extraction (`mental health ser vices`). A model reading
+`Barbara&#xa0;Rayment` quotes "Barbara Rayment", which is the CORRECT reading and looked like an
+invention. Matcher repaired, stored rows re-scored for nothing: **25.9% → 2.9%, with 0 rows moving
+the other way**; on fresh calls **1.6%**. ⚠ **The entities are still in R2 and still in whatever the
+search stack indexed — that is the ingest thread's, and is reported rather than patched over.**
+
+⚠ **THE MODEL'S OWN ARRAY INDEXES ARE UNRELIABLE, INTERMITTENTLY.** The Amendment 1 EDM test filed
+the dietary-salt motion's proposition under a Scottish SI's index. It **did not reproduce** next run
+(0 of 120) — intermittent, and therefore worse than systematic. Every schema now correlates by
+**verbatim echo** (candidate text, or a proposition code plus its first eight words) and counts
+mismatches; the check fired **255 times** in the full run, plus 16 extracts refused as table rows.
+
+✅ **§2 LANDED CLEANLY AND IS USABLE NOW — 5,496 organisations (13.6%) carry an external stable key.**
+Companies House **4,812 promoted (11.9%)** and Charity Commission **2,405 (5.9%)**, from the open
+keyless bulk downloads (5,695,465 and 397,939 register rows, OGL v3.0) — no API key needed, and for
+a 40,518-name hash join the bulk file beats the API. Exact match on the SAME `normaliseName()` that
+built `name_norm`; no fuzzy matching, no suffix stripping. **Merges and splits reported separately
+as the brief requires: 389 charity splits against 17 company splits, and 0 merges in both —
+measured, not assumed.** ⚠ 3,443 keys refused as too generic before matching began; ⚠ 0 matches came
+via an alias, so 2D-1's alias table added nothing here.
+
+⚠⚠ **CHARLIE'S OFFICE-BY-DATE INSIGHT IS RIGHT AND THE DATA WILL NOT CARRY IT — MEASURED BEFORE
+BEING TRUSTED.** Of 6,512 register surfaces, exactly **1** qualifies as an office (non-overlapping
+tenure); 323 are refused because two people held the title at once, 176 because a holder has no
+start date. That one office was then scored against ground truth — `division_votes` already knows
+the true member id — and came back **63.8% accurate (30 of 47), 17 wrong people.** The cause:
+`graph_member_name`'s windows record when the register carried a NAME FORM, not office tenure.
+Parliament's Members API was checked directly and publishes only Lords entry dates. **So nothing was
+resolved: `graph_office_resolution` holds zero rows and `verify-2d3.ts` asserts that it does.** ⚠ The
+brief's counter-example is worse than described — there are **five** MNIS records for
+`archbishop of canterbury`, and MNIS 3296 has no start date at all.
+
+▶ **FOR THE AMENDMENT 2 SESSION — THE SUBMITTER'S NAME IS IN THE DOCUMENT.** `schema-amd2.sql`
+records the per-appearance surface as unavailable because `corpus_sections.speaker` is NULL; that is
+true of the database and false of the document. ⚠ **My own first claim was too strong** — from three
+hand-picked files, and the first parser found only **15.7%** of 600 random documents. Reading the
+failures instead of assuming them (a reference code and title first, "Written Evidence **from** X",
+the name *before* the phrase) lifted it to **64.5%, with 91.7% carrying the internal reference**.
+Where both exist they agree 96.3% of the time, and **the 3.7% that disagree are the useful ones**:
+the document says *Dame Diana Johnson, Minister of State for Crime, Policing and Fire* where the
+graph says *Home Office*. Nothing built — `parseDocumentHeader` is written and self-tested (27/27)
+and handed over rather than turned into a competing layer.
+
+⚠ Two more defects found by running checks that can fail: **a module that did work on import ended
+the shared pool underneath its caller** (guarded in all four scripts with a `main` module test), and
+**streaming the register CSVs out of their zips exited with status 0 part-way through** — an empty
+event loop looks exactly like a clean finish, so both registers are unpacked to disk first.
+
+---
+
 ## GRAPH 2D-3 §1 — THE POSITION-EXTRACTION PREDICTION, recorded before a penny is spent (2026-08-16 11:47 UTC)
 
 `BRIEF_GRAPH_2D3` §1: *"This is the graph's first real LLM spend. 2D-1 and 2D-2 cost nothing because
