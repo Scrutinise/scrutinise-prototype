@@ -247,6 +247,100 @@ identity is genuinely open and the behavioural test cannot reach it. Flagged, no
 
 ---
 
+## GRAPH 2D-4 — 54% → 44% FROM ONE PROMPT CHANGE, AND 189 OFFICES WITH A REAL SUCCESSION (2026-08-17 10:16 UTC)
+
+Executes `docs/BRIEF_GRAPH_2D4.md` §1–§4. Report: **`docs/POSITION_GRAPH_2D4_REPORT.md`**.
+`tsc` clean; **verify-2d4.ts: 22 checks, 22 pass, 7 of them negative controls.** Cost **$0.62** in LLM
+calls plus 5,234 free API requests. **Nothing user-facing** — 44% is better than 54% and still not a
+number to show anyone. ⚠ The graph of record is UNTOUCHED: `graph_position` still holds exactly the
+37,657 rows 2D-3 wrote, and every trial lives in `graph_position_trial`.
+
+✅ **§1 — THE ERROR RATE ON THE SAME FIFTY GOES 54% → 44%, ATTRIBUTABLE TO ONE CHANGE.** v2's single
+difference: start from "no position" and require evidence to leave it, with a stated three-part bar
+and an explicit ban on quoting a bibliography, a self-description or the inquiry's own question.
+**18 HELD · 10 FIXED · 5 regressed — of which 3 were mechanical discards, not declines — so the change
+trades 10 fixed for 2 genuine losses, 5:1.** It removes `position-invented` and
+`proposition-mismatch` rows and leaves `polarity-flipped` untouched, which is what a threshold change
+should do. ⚠ Run-to-run variance is ±1–2 at n=50, so the honest claim is 54% → 42–44%, not a point
+estimate.
+
+⚠⚠ **MY FIRST v2 WAS CONFOUNDED AND THE CONFOUND WAS MINE.** It came back with **118 rows discarded
+on the prefix check against 125 kept**, where 2D-3's full run discarded 155 in 11,700 (1.3%): I had
+compressed the field instructions while changing the threshold, so v2 differed from the baseline in
+TWO ways and neither was attributable. Restoring 2D-3's field wording verbatim took discards to 23.
+**"One change at a time" is the only reason the 10-for-2 number exists.**
+
+⚠⚠ **v3 LOOKS BETTER (60%) AND IS REFUSED — and the test that killed it is the one the brief asked
+for.** v3 = v2 plus a `qualified` polarity with a required condition and direction. It produced 9
+qualified rows and some are genuinely good ("provided it does not widen inequalities in access").
+**But of the 11 `nuance-flattened` failures it was built for, it recorded 6 as plain `for`, discarded
+3 and dropped 2 — ZERO became qualified.** Meanwhile `balanced` went from 6 rows to **0** (qualified
+cannibalised it) and prefix discards went 23 → **62**, because two extra output fields degrade the
+verbatim echo the correlation check depends on. **A feature can work perfectly and still not touch the
+failures that justified it — visible only because the SAME fifty were re-scored.** A conditional field
+is still right; it needs a second pass, not three more fields on the main call.
+
+✅ **§1's OPPOSITE FAILURE, CHECKED: 9 of 9 readable declines are correct.** Ten (submission,
+proposition) pairs v2 declined and the baseline never scored, read by hand — alcohol-treatment funding
+put to a submission about less-survivable cancers, a 0–25 CAMHS pathway put to Cornwall Mind on adult
+severe mental illness. **No evidence of under-attribution.**
+
+✅ **THE SUSPECT-EXTRACT RULE, SCORED BEFORE BEING APPLIED, AND ONE THIRD OF IT REFUSED.** Citation
+shape + self-introduction: **0 false positives on the 23 accepted extracts**, catching 1 of the 2
+known-bad. Adding the positional test: **1/23 = 4.3% false positive** — #16097, a genuine conclusion
+that happens to sit in the last 6% of its document. **The document-tail test is off by default: it
+cannot tell a reference list from a closing argument, and it never could.** ⚠ The bibliography case is
+still MISSED (a paper's title with no author, year or DOI in the quoted line), and the rule stays a
+FLAG, never a delete — a positive class of two cannot justify discarding rows.
+
+✅ **§2 — A TENURE SOURCE THAT ACTUALLY STATES TENURE: 189 OFFICES AGAINST 2D-3's 1.** The Members API
+Biography endpoint carries `governmentPosts`/`oppositionPosts`/`otherPosts` with a start AND an end
+date — VERIFIED LIVE before anything was designed on it, per the brief; there is no bulk endpoint
+(`Reference/Posts` 404s). **5,234 of 5,234 members fetched, status ok on every one, 7,970 dated post
+spells.** Of 1,560 distinct post names: **189 held one at a time (usable), 604 REFUSED as
+simultaneous** ("Minister of State" is not one office), 767 single-holder, **0 undatable.** 2D-3's
+mechanism was always sound; `graph_member_name` was the wrong table.
+
+⚠ **THE VALIDATION IS A DIFFERENT KIND, AND IT SAYS SO.** 2D-3 could score against `division_votes`
+because a vote carries the true member id independently; **there is no equivalent truth for "who held
+post X on date D" — the register IS the assertion.** So: a hand spot-check of eight public-record
+cases, **7 right, 1 wrong.**
+
+⚠⚠ **THE ONE MISS IS THE SPRINT'S REAL LIMIT AND IT IS NOT AN ACCURACY PROBLEM.** Jacob Rees-Mogg was
+Leader of the House on 2019-11-01, filed under "Lord President of the Council and Leader of the House
+of Commons"; the bare "Leader of the House of Commons" post also exists with different holders, as
+does "…and Lord Privy Seal". **One office, several post-name variants, each a correct dated succession,
+none the whole office** — and they must NOT be merged, because folding "Leader of the House and Lord
+Privy Seal" into "Lord Privy Seal" joins two different offices. Matching a MENTION to the right
+variant is a separate problem and is not solved here.
+
+⚠ **A DEFECT verify-2d4 CAUGHT IN MY OWN CLASSIFIER.** The first version merged each person's spells
+into min(start)..max(end) before testing overlap — two bugs in one line: a NULL end means STILL IN
+POST and is therefore maximal, but the merge preferred a concrete date and NARROWED the window; and
+merging spells invents tenure across a gap the register does not assert. **13 posts were classified as
+offices whose stored holders demonstrably overlap.** Replaced by the definition itself (no two
+DIFFERENT people at once; one person's two spells are not a conflict) — overlap count now 0.
+
+✅ **THE BRIEF'S MNIS 3296 CASE, RUN AND REPORTED: episcopal posts in `graph_member_post` = 0.** A see
+is not a government, opposition or party post, so 3296 stays UNRESOLVED — the correct outcome. **944
+Bishops' votes exist in the 1991–2002 window and none can be misattributed, structurally rather than
+luckily: a division vote carries its own member id, so office-by-date is never consulted for one.**
+⚠ **Nothing was stamped onto `graph_entity` — `key_source='office-by-date'` appears on 0 entities and
+the verify asserts it.** The 0.95 confidence sits on the POST, not on a person, because an office
+cluster is several actors and stamping it would build the composite Amendment 2 §1 rules out.
+
+✅ **§3 — ALL THREE REGISTER-AMBIGUOUS NAME MATCHES CLEARED** (Baroness Meacher/MNIS 3810, Mr
+George/317, Robinson/1456). The name stays, the claim about which person it is goes: id cleared,
+confidence back to 0.7, each logged to `graph_merge_log` first, **all 6 edges kept**. 788 → 785.
+⚠⚠ **AND THE MORE INTERESTING FINDING: two of the three ambiguities are CREATED BY US.** *Baroness*
+Meacher and *Mr* Meacher are different people, as are *Mr* George and *The Lord* George — the register
+distinguishes them perfectly and `normalisePersonName`'s honorific-stripping folds them together.
+**Only `Robinson` (Mr/Mrs) is genuinely ambiguous.** A title-preserving normaliser would have resolved
+2 of 3 rather than needing them cleared — reported, not fixed, because it re-keys the whole person
+spine.
+
+---
+
 ## INGEST — THE ENTITIES ARE REAL, WIDER THAN THOUGHT, AND COST ZERO RECALL (2026-08-17 08:35 UTC)
 
 Executes `docs/BRIEF_INGEST_ENTITY_DECODE.md` §1–§4. Report: **`docs/ENTITY_DECODE_REPORT.md`**.

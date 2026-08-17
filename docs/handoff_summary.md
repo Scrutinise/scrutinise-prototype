@@ -2,12 +2,66 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 08:35 UTC — ▼ **INGEST: the undecoded HTML entities are in 16 of 74
-corpora and cost ZERO recall — the brief's mechanism was wrong, and no previously reported search
-number needs a caveat. `tna-caselaw` is the worst at 95.3%, not the corpus that found it. All 16,805
-user-visible values repaired; the R2 backfill priced and deferred.** Earlier: 2026-08-17 02:49 UTC —
-▼ **GRAPH 2D-3 IS COMPLETE: 16,196 positions extracted and the hand-read error rate is 54%.**
-Earlier: SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+*Last updated: 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4: the position error rate on the SAME fifty goes
+54% → 44% from one prompt change (10 fixed for 2 genuine losses), and 189 ministerial offices now
+have a real dated succession against 2D-3's 1. ⚠ v3's `qualified` polarity looked better and is
+REFUSED — it fixed ZERO of the 11 nuance-flattened failures it was built for.** Earlier:
+2026-08-17 08:35 UTC — ▼ **INGEST: the undecoded HTML entities are in 16 of 74 corpora and cost ZERO
+recall; no previously reported search number needs a caveat.** Earlier: GRAPH 2D-3 (54% hand-read
+error rate), SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4 IS COMPLETE. §1: 54% → 44% ON THE SAME FIFTY, ATTRIBUTABLE TO
+ONE CHANGE. §2: 189 OFFICES WITH A DATED SUCCESSION, AGAINST 2D-3's 1. §3: all three
+register-ambiguous name matches cleared — and two of the three ambiguities turn out to be OUR OWN
+normaliser's doing.**
+Executes `docs/BRIEF_GRAPH_2D4.md` §1–§4. Report: **`docs/POSITION_GRAPH_2D4_REPORT.md`**.
+CHANGE_LOG (2026-08-17 10:16 UTC). **verify-2d4.ts: 22 checks, 22 pass, 7 negative controls.** `tsc`
+clean. Cost **$0.62**. ⚠ **Nothing user-facing** — 44% is better than 54% and still not showable.
+⚠ The graph of record is untouched: `graph_position` still holds exactly 2D-3's 37,657 rows; trials
+live in `graph_position_trial`.
+
+✅ **§1 — v2 IS THE WINNER AND IS READY TO BECOME THE EXTRACTOR.** Its one change: start from "no
+position" and require evidence to leave it. **18 HELD · 10 FIXED · 5 regressed, of which 3 were
+mechanical discards rather than declines — so 10 fixed for 2 genuine losses.** ⚠ Variance is ±1–2 at
+n=50, so the claim is 54% → 42–44%. ▶ **The full re-run under v2 is a $8.50 decision, not a
+correctness one.**
+
+⚠⚠ **v3 (a `qualified` polarity) SCORES 60% AND IS REFUSED.** Of the 11 `nuance-flattened` failures
+it was built for it fixed **ZERO** — 6 stayed plain `for`, 3 were discarded, 2 dropped. It also
+wiped `balanced` (6 rows → 0) and tripled prefix discards (23 → 62), because extra output fields
+degrade the verbatim echo the correlation check needs. **A feature can work perfectly and still not
+touch the failures that justified it.** A conditional field needs a SECOND PASS, not more fields.
+
+⚠⚠ **MY FIRST v2 WAS CONFOUNDED BY MY OWN EDIT** — 118 rows discarded on the prefix check against
+125 kept, because I compressed the field instructions while changing the threshold. Two changes, no
+attribution. Restoring 2D-3's wording verbatim took discards to 23.
+
+✅ **9 of 9 readable DECLINES are correct** — §1's opposite-failure check. No under-attribution.
+✅ **The suspect-extract rule scored BEFORE use: citation+self-intro = 0/23 false positives; adding
+the positional test = 1/23 (4.3%), so the tail test is OFF by default.** It cannot tell a reference
+list from a closing argument. Stays a FLAG, never a delete.
+
+✅ **§2 — the Members API Biography endpoint carries dated posts, VERIFIED before designing on it.
+5,234/5,234 members fetched, 0 errors, 7,970 dated post spells. Of 1,560 post names: 189 held one at
+a time, 604 REFUSED as simultaneous, 0 undatable.** Hand spot-check of eight public-record cases:
+**7 right, 1 wrong.** ⚠ **The miss IS the limit: one office is spread over several post-name
+variants** (Rees-Mogg is filed under "Lord President of the Council and Leader of the House of
+Commons"), and they must NOT be merged. Mention → post-variant matching is the next problem.
+⚠ **A defect the verify caught in my own classifier:** collapsing a person's spells treated a NULL
+end (still in post) as narrower than a date, and 13 "offices" had overlapping holders. Now 0.
+✅ **MNIS 3296: episcopal posts = 0, so it stays UNRESOLVED — correct.** 944 Bishops' votes in the
+window and none can be misattributed, structurally: a vote carries its own member id.
+⚠ **Nothing stamped onto `graph_entity`** — `key_source='office-by-date'` on 0 entities, asserted.
+
+✅ **§3 — the three cleared, name kept, edges kept, logged and reversible (788 → 785).**
+⚠⚠ **Two of the three ambiguities are created by `normalisePersonName` stripping honorifics:**
+*Baroness* Meacher vs *Mr* Meacher, *Mr* George vs *The Lord* George are distinct in the register.
+Only `Robinson` (Mr/Mrs) is genuinely ambiguous. **A title-preserving normaliser would resolve 2 of 3
+rather than clear them — reported, not fixed, because it re-keys the whole person spine.**
+
+▶ **NOT DONE:** the full v2 re-extraction; a conditional-position second pass; mention → post-name
+matching; peerages and Companies House officer dates (§2's items 2 and 3); the title-preserving
+normaliser.
 
 2026-08-17 08:35 UTC — ▼ **INGEST: THE UNDECODED ENTITIES ARE REAL, IN 16 OF 74 CORPORA, AND COST
 ZERO RECALL — the brief's own mechanism is wrong. All 16,805 user-visible values are repaired; the
