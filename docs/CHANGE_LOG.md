@@ -317,6 +317,53 @@ identity is genuinely open and the behavioural test cannot reach it. Flagged, no
 
 ---
 
+## SEARCH S6 ADDENDUM — THE SPEND IS VISIBLE, AND THE LEDGER WAS INERT UNTIL NOW (2026-08-17 22:22 UTC)
+
+Charlie's three instructions, added to S6 §3 after the fact. `check:model-registry` **24/24**,
+`tsc` clean both runtimes, write path reconciled attempted-vs-stored against the live database.
+
+⚠⚠ **THE LEDGER WAS RECORDING NOTHING FROM THE PLATFORM.** S6 built `recordSpend()` and wired it
+into **no user-facing path at all** — the table held rows from two ingest scripts and from nothing
+else. An Admin spend page laid on top of that would have shown a platform that costs almost nothing,
+which is the most flattering possible bug and the one least likely to be questioned. **All ten Gemini
+call sites now record**: `lex.chat`, `build.draft`, `deepening.gather/sift/adversarial`,
+`orientation.web`, `lex.general-chat`, `lex.feedback`, the tool runner, and both `search.*` passes.
+⚠ Recorded **before** the truncation guard, deliberately — a call cut off at `maxOutputTokens` was
+billed in full, and those are the calls whose cost most needs to be visible.
+
+✅ **The Admin tab** — `/admin` → **Spend**. Daily tokens and cost with **search and everything else
+in separate columns**; average cost per idea; ideas ranked most to least expensive; period picker of
+7 / 30 / 90 / 365 days. ⚠ The split is by pass-name prefix and there is a **THIRD bucket**: a pass
+matching neither rule shows as `unclassified` rather than being folded into "everything else", so a
+pass somebody adds next month is visible instead of quietly inflating a column. ⚠ Unpriced calls
+render as a dash and a count, never £0.00 — and an idea whose cost cannot be established **sorts
+first, not last**, because an unknown is more worth looking at than a known small number.
+
+✅ **The group column, added before there is history to regret.** `LlmSpend.groupId`, nullable, no FK,
+written by **both** writers (the web ledger and the ingest twin). Charlie's reasoning is exactly
+right and is the reason it went in today rather than with the feature: a column added later leaves
+every earlier row NULL, and NULL is then indistinguishable from "an individual spent this" — the
+group attribution of the platform's first months would be unrecoverable. Nothing reads it yet.
+
+⚠⚠ **NO USER-FACING SPEND CONTROL IS SWITCHED ON**, per Charlie: *"until it's the user's own money,
+the only thing being measured is what this costs him."* `checkUserCeiling()` is called by **nothing**
+— asserted by a check that walks `lib`, `app` and `components`, and the admin page is asserted to
+have no mutating request of any kind. ⚠ The first version of that check fired on `spend-admin.ts`
+because its header *explains* that the ceiling is unwired; comments are now stripped before matching.
+A guard that fires on the sentence describing the rule is a guard somebody switches off — and
+watching it fire was also the proof it is not inert.
+
+⚠ One more check widened after it passed too easily: it first caught only files that **read**
+`usageMetadata`, which missed five files that call Gemini and ignore the usage entirely — the worse
+case, since they spend and report nothing. Widened to "calls `generativelanguage.googleapis.com`",
+which immediately found `deepening-*`, `feedback` and the tool runner. All five are now wired.
+
+⚠ **The average per idea divides by ideas that SPENT SOMETHING**, not by every idea on the platform,
+and says so on the page. It returns null when any idea in the window has an unpriced call, because
+the unpriced models are the expensive ones and dropping them would bias the average low.
+
+---
+
 ## GRAPH 2D-5 — THE DOCUMENTS, AND A BETTER ARCHITECTURE THAT COSTS 3.73× MORE (2026-08-17 21:52 UTC)
 
 Executes `docs/BRIEF_GRAPH_2D5.md` §1–§5. Report: **`docs/POSITION_GRAPH_2D5_REPORT.md`**.
