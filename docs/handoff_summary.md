@@ -2,7 +2,17 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 22:44 UTC — ▼ **SEARCH S5: Lex can see the whole corpus at last —
+*Last updated: 2026-08-17 23:12 UTC — ▼ **SEARCH S7: the carried backlog is cleared. Twice the
+measurement came back "this cannot answer the question", and that is reported as the result. The
+brief's committees-first prediction cannot hold — committees is at a ceiling — while caselaw and
+guidance have a measured +12.5pp and debates is 15pp WORSE.**
+Earlier: 2026-08-17 22:52 UTC — ▼ **INGEST CORPUS FRESHNESS: 35.7% of committee publication
+citations do not open and NONE of them were withdrawn — they are PDF-only publications addressed
+through a documentId we never stored, or records with no file at all. documentId now captured, the
+join proven 404 → 200, and NOT landed downstream. §2: 0% → 99.3% of mentions can show the name as it
+appeared, 93.4% of it from a view change — the names were already in `division_votes.member_name`.**
+⚠⚠ 1,785 organisations display as "mention only" while we hold a Companies House or charity number.
+Earlier: 2026-08-17 22:44 UTC — ▼ **SEARCH S5: Lex can see the whole corpus at last —
 0 → 100 non-legislation results on the same ten questions, 7 of 7 previously-unserved questions now
 served, no legislation lost. The old path was answering an assisted-dying question from "assist
 investi" matched inside an investigatory-powers SI.**
@@ -17,6 +27,90 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 22:52 UTC — ▼ **INGEST CORPUS FRESHNESS IS COMPLETE: nothing was withdrawn, and the
+missing names were already stored.** Executes `docs/BRIEF_INGEST_CORPUS_FRESHNESS.md` §1 and §2.
+Report: **`docs/CORPUS_FRESHNESS_REPORT.md`**. CHANGE_LOG (2026-08-17 22:52 UTC). **Cost ~$0.00 —
+no LLM calls.**
+
+⚠⚠ **§1 — THE RATE IS WORSE THAN THE BRIEF THOUGHT AND ITS DIAGNOSIS IS WRONG. 35.7% of committee
+publication citations do not open (n=498 scored of a deterministic 500), and `gone` is 0 of 498**
+(95% CI 0–0.8%). They are **PDF-only publications addressed through a `documentId` we never stored**
+(13.9%, ~6,300) or **records with no file at all** (21.9%, ~10,000). The brief's own example `22140`
+returns 200 from the API and its document opens. **A publication is addressable three ways and we
+store the one that never works.**
+✅ `committee_publication_document` now captures every `documentId`, and **the downstream join was
+RUN and PROBED** — `42694` goes 404 → 200. ▶ **The web resolver is NOT changed, so 35.7% is still
+35.7% for a user**: the join belongs to `lib/lex/committee-url.ts`'s thread and its data now exists.
+⚠ **"Mark them unavailable" would change nothing today** — `availability_status` reaches the FTS
+index but **no serve path reads it**. Charlie's call, both halves.
+
+⚠⚠ **TWO DEFECTS IN MY OWN MEASUREMENT.** Node's `fetch` is refused by `committees.parliament.uk`
+regardless of User-Agent (Cloudflare TLS fingerprinting) — **documented in our own
+`sources/committees-portal.ts`, which I did not read first**; 300 of 300 probes came back 403 and
+the classifier correctly refused to call them dead. Then the corrected run **manufactured two
+"gone" verdicts out of 403s** on the document URL. Fixed, watched failing first; a live/dead canary
+pair now refuses to let the script run blind.
+
+✅ **§2 — 0% → 99.3% of mentions can show the name as it appeared (2,700,092 of 2,717,900), and
+93.4% of that came from a VIEW CHANGE with no sweep at all.** `division_votes.member_name` and
+`edm_sponsor.sponsor_name` already held it for 2.5M mentions. The stored half took a 36.5-minute
+sweep re-run: **162,626 of 164,238 edges, 1,470 with a surface that VARIES**.
+✅ The grain differs from the brief's "one column on the edge" on purpose: the FACT lives on
+`graph_evidence` (one appearance), the edge carries a first-seen copy plus `subject_surface_varies`.
+✅ **794,019 surfaces differ from our canonical name** (`Zenobe` for `Zenobē`) — our own
+normalisation, until now unrecoverable. ⚠ An INFERRED edge carries NULL on purpose.
+
+⚠⚠ **A RED CHECK THAT IS NOT MINE, WITH A LIVE COST: 1,785 organisations display as "the name as it
+appeared, and nothing more" while we hold a Companies House or charity number for them.**
+`match-registers.ts --promote` writes the key and never updates `key_source`. One line plus one
+UPDATE — **not run, because it changes what 1,785 entities claim about their identity. CC-GRAPH's.**
+
+⚠ **Neon is at 16.63 GiB — 95.0% of the 17.5 GiB ops ALERT line** (the enforced ceiling is 16 TiB
+per V38, so this is a warning, not a wall).
+
+❌ **Not done:** the web resolver join · marking the ~10,000 no-document rows · the
+`match-registers` key_source fix · 2 of 500 probes unresolved and excluded rather than assumed.
+
+2026-08-17 23:12 UTC — ▼ **SEARCH S7 IS COMPLETE: THE BACKLOG CARRIED SINCE S3 IS CLEARED.**
+Executes `docs/BRIEF_SEARCH_S7.md` §1–§4. Report: **`docs/SEARCH_S7_REPORT.md`**.
+CHANGE_LOG (2026-08-17 23:12 UTC). `check:s7-retrieval` **31/31**, `tsc` clean. **Cost $0.**
+
+⚠⚠ **§1 — THE BRIEF'S ORDER IS WRONG, AND THAT IS THE FINDING IT ASKED FOR.** It predicted
+committees would gain most from semantic search and said "if it does not, that is worth knowing
+before spending four sprints". **Committees sits at 100% on the only questions it has — a ceiling,
+not a result.** Meanwhile caselaw and guidance each have a measured **+12.5pp**, and **debates is
+15pp WORSE with vector on**.
+▶ **CHARLIE: `LEX_VECTOR_STREAMS=legislation,caselaw,guidance`** — that env var is yours to set and
+unreadable from here. Latency cost: caselaw +289 ms p50, guidance **+2,528 ms** (watch that one).
+⚠ NOT debates. ⚠ Committees cannot be evaluated until somebody writes committee gold questions.
+
+⚠⚠ **The pre-batching latency scare does NOT reproduce.** Two simultaneous users, against their own
+serial baseline in the same session: **1.37× / 0.95× / 0.75× / 1.19×** of serial p95. No doubling
+anywhere. (n=3 per stream — this kills the 2× catastrophe, it does not price concurrency precisely.)
+
+⚠ **My first live metric was saturated and is reported, not dropped** — on-kind counts came back
+180 of 180 in every arm because every routed stream returns its full window regardless. The useful
+number is the **43–68% top-20 overlap**: the dense half changes a third to a half of the results, so
+it is far from inert.
+
+✅ **§2 — `PRECEDENT` and `DEVOLUTION_SCOPE` built.** PRECEDENT returns intended/predicted/observed
+as a GROUP around one instrument. ⚠ The PIR leg is **1,014 sections inside `impact-assessments`**
+(brief said 1,235), and ⚠⚠ **a missing PIR is never filled from the impact assessment** — that turns
+"nobody checked whether this worked" into "here is what it achieved". DEVOLUTION_SCOPE derives
+jurisdiction from the ID, never the title (**the Scotland Act 1998 is `ukpga`**), covers all three
+nations, and ⚠⚠ **refuses to answer "is it reserved"** — it names the schedules that decide instead.
+Public sources number `[W1]`, provably non-colliding with corpus `[1]`.
+
+⚠⚠ **§3 — the framing experiment is UNDERPOWERED and says so in its own output.** +0.0pp, but **27
+of 31 queries scored zero in both arms** so only 4 could have differed. Cause: the harness runs bare
+BM25 against `corpus_fts` (no scoping, fusion or expansion) versus a platform headline of ~62%.
+▶ Fix is to run it through `runSearch()` from the web side — `scripts/ingest` cannot import it.
+⚠ Which comparison ran is stated: bare vs caller-held context, **NOT** the Lex user-profile contrast.
+⚠⚠ The answer-leak test was excluding **13 of 31** queries whose "leak" was in the ORIGINAL question
+("What laws govern e-scooters?" trips `/e-scooter/i`). Now differential; 0 excluded.
+
+▶ **PRECEDENT and DEVOLUTION_SCOPE are built and tested and NOTHING CALLS THEM YET.**
 
 2026-08-17 22:44 UTC — ▼ **SEARCH S5 IS COMPLETE: THE LEX CONVERSATION NOW SEES THE WHOLE CORPUS.**
 Executes `docs/BRIEF_SEARCH_S5_LEX_SCOPE.md` §1–§5. Report: **`docs/SEARCH_S5_REPORT.md`**.
