@@ -247,6 +247,86 @@ identity is genuinely open and the behavioural test cannot reach it. Flagged, no
 
 ---
 
+## INGEST — THE ENTITIES ARE REAL, WIDER THAN THOUGHT, AND COST ZERO RECALL (2026-08-17 08:35 UTC)
+
+Executes `docs/BRIEF_INGEST_ENTITY_DECODE.md` §1–§4. Report: **`docs/ENTITY_DECODE_REPORT.md`**.
+`tsc` clean; `npm run check:entity-decode` and `npm run check:html-entities` (26/26) added.
+**No LLM tokens spent — every measurement is a query, an R2 read or a local index. Total cost ~$0.005.**
+
+⚠⚠ **§0's MECHANISM IS WRONG, AND THE URGENCY RESTED ON IT.** The brief says `&#xa0;` "usually sits
+BETWEEN TWO WORDS. So the two words are glued into one token." Measured three ways, it does not.
+The FTS `simple` tokeniser splits on EVERY non-alphanumeric character, so `Barbara&#xa0;Rayment`
+indexes as `barbara | xa0 | rayment` and **both real words survive**; `withPosition: false` means
+there are no phrase queries for the junk token to disrupt. **Over the 16 contaminated corpora,
+decoding recovers 0 searchable tokens in 15,659,766.** And the premise's factual base fails too:
+in 300 real `committees-evidence` documents the shape `word&#xa0;word` occurs **0 times** — the
+entity is a paragraph spacer standing alone between spaces, `21 &#xa0; European Affairs Committee`.
+
+✅ **SO §2's QUESTION ABOUT ALREADY-REPORTED NUMBERS HAS A STRONGER ANSWER THAN THE BRIEF EXPECTED:
+the gold-set recall figures, the ABSENT counts and the tier-fusion measurement are NOT floors.**
+They were taken over an index that is not damaged in any way that costs recall. No CHANGE_LOG entry
+needs amending.
+
+⚠⚠ **THE SPREAD IS WIDER THAN THE CORPUS THAT FOUND IT, AND THE WORST CASE WAS NOT BEING WATCHED:
+16 of 74 corpora, and `tna-caselaw` carries an entity in 95.3% of documents** (23,613 occurrences in
+150) against `committees-evidence`'s 12.0%. `planning-policy` 78.1%, `building-regs` 57.1%,
+`hmrc-codes-guidance` 50.7%, `eur-lex` 32.0%. ✅ **The big political corpora are clean** —
+`pwdata-debates`, `historic-hansard`, `pwdata-lords`, `committees-reports` and every legislation
+corpus, 0 in 150. Extrapolated ~184,000 documents (1.01%), labelled as an extrapolation.
+**The volume is typographic** — `&#8217;` 7,653, `&#8220;` 5,145, `&#xa0;` 3,940 — a RENDERING
+defect, provably not a retrieval one.
+
+✅ **§1.3 IS EXHAUSTIVE BECAUSE TITLES LIVE IN NEON, AND ALL 16,805 USER-VISIBLE VALUES ARE NOW
+REPAIRED:** `sectionTitle` 4,532 → 0, `speaker` 10,660 → 0, `attribution` 1,613 → 0, each read back
+after writing and reconciled against the prediction. Concentrated rather than spread — `ofcom`
+21.2%, `ni-judgments` 19.2%, `ofgem` 5.8%.
+
+✅ **THE ROOT CAUSE, NAMED EXACTLY, AND IT IS A CLASS DEFECT.** `sources/committees-portal.ts`
+decoded a hand-written list: `&nbsp;` yes, **`&#xa0;` — the numeric form of the SAME CHARACTER — no**.
+The list was not wrong about anything it named; it was incomplete, and a hand-written list always
+will be. The same file held a second copy for titles with the same omission. **17 source files
+decode entities from hand-written lists and none decodes a numeric form.** Now one decoder
+(`shared/html-entities.ts`) with `check:entity-decode` as a **ratchet** — the 16 remaining are a
+recorded baseline that may fall and must not rise, because failing a build on a pre-existing backlog
+is how a check gets disabled.
+
+⚠ **TWO DECODER BUGS FOUND BY READING THE FIX'S OWN OUTPUT, NOT BY KNOWING THE SPEC.**
+(1) **`&#145;` must map through Windows-1252.** A Hansard title reads `&#145;inadvertent breach&#146;`;
+decoded naively that is U+0091, an INVISIBLE C1 control — the repair would have DELETED the quotation
+marks. 73 titles carry one. (2) **LF/CR/TAB must decode even though other C0 controls must not** — 28
+`pwdata-debates` speaker values read `&#10;   Dr. DRUMMOND&#13;&#10;   SHIELS&#10;`, and refusing all
+C0 controls left them unreadable in exactly the place a user sees them.
+
+⚠ **AND THE FIX ITSELF SHIPPED INERT FIRST** — it decoded into a new variable and returned the old
+one. `check-entity-decode.ts` now asserts every decoded value is read afterwards, **watched failing
+on the exact broken form and passing on the fixed one.**
+
+⚠⚠ **THREE OF MY OWN MEASUREMENTS WERE WRONG BEFORE THEY WERE RIGHT, AND ALL THREE FAILED THE SAME
+WAY — a control that was not matched to its treatment.** (1) "A non-breaking hyphen inside a word
+DESTROYS it" — the CLEAN twin fails too, because the tokeniser splits on an ordinary hyphen; every
+verdict now compares against its own twin. (2) An intra-word/inter-word character classifier that
+cannot tell `Barbara&#xa0;Rayment` (loses nothing) from `preven&#xad;tative` (loses everything),
+replaced by an exact token-set comparison. (3) The live retrieval test reported "62.5% lost" when
+the damaged phrase came from document boilerplate and the control from distinctive mid-document
+prose — with a matched neighbouring-window control the damaged arm retrieves MORE often (7 v 4),
+and with 31 of 40 probes retrieving nothing either way the test is **underpowered and reported as
+such** rather than quoted as a rate.
+
+⚠ **Two adjacent defects, reported not fixed: 73 titles contain `&#65533;`** (U+FFFD — bytes already
+lost, needs a re-fetch not a decoder), and **`scotlawcom` holds 1,337 literal U+00AD characters** in
+200 documents with 0 soft-hyphen entities — which is where the only 98 recoverable tokens in the
+whole census came from, and they are not entities at all.
+
+▶ **§4's PREDICTION, AND THE RUN IS DEFERRED WITH ITS REASON: the R2 backfill is ~184,000 objects,
+$0.90 in R2 operations, ~26 minutes — plus an FTS rebuild through the Heavy Job Runner and
+re-embedding of every changed chunk, which is the real cost.** On zero measured recall damage that
+buys nothing for retrieval. ▶ **CHARLIE'S CALL:** decode-at-render in the search adapters (cheap,
+immediate, all 16 corpora, but every future reader must remember) versus the one-off rewrite
+(permanent, stored text finally matches source, index rebuild included). My recommendation is
+decode-at-render now and fold the rewrite into the next reprocessing pass that is happening anyway.
+
+---
+
 ## GRAPH 2D-3 — 16,196 POSITIONS, AND 54% OF FIFTY READ BY HAND IS WRONG OR PARTLY WRONG (2026-08-17 02:49 UTC)
 
 Executes `docs/BRIEF_GRAPH_2D3.md` §1–§2 and `docs/BRIEF_GRAPH_2D3_CONTINUED.md` §1–§4. Full

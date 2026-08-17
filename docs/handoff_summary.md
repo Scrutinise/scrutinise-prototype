@@ -2,7 +2,70 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 02:49 UTC — ▼ **GRAPH 2D-3 IS COMPLETE: 16,196 positions extracted and
+*Last updated: 2026-08-17 08:35 UTC — ▼ **INGEST: the undecoded HTML entities are in 16 of 74
+corpora and cost ZERO recall — the brief's mechanism was wrong, and no previously reported search
+number needs a caveat. `tna-caselaw` is the worst at 95.3%, not the corpus that found it. All 16,805
+user-visible values repaired; the R2 backfill priced and deferred.** Earlier: 2026-08-17 02:49 UTC —
+▼ **GRAPH 2D-3 IS COMPLETE: 16,196 positions extracted and the hand-read error rate is 54%.**
+Earlier: SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 08:35 UTC — ▼ **INGEST: THE UNDECODED ENTITIES ARE REAL, IN 16 OF 74 CORPORA, AND COST
+ZERO RECALL — the brief's own mechanism is wrong. All 16,805 user-visible values are repaired; the
+R2 backfill is priced at $0.90-plus-an-index-rebuild and DEFERRED with its reason.**
+Executes `docs/BRIEF_INGEST_ENTITY_DECODE.md` §1–§4. Report: **`docs/ENTITY_DECODE_REPORT.md`**.
+CHANGE_LOG (2026-08-17 08:35 UTC). `tsc` clean; `check:entity-decode` + `check:html-entities` (26/26)
+added to `scripts/ingest/package.json`. **No LLM tokens spent — total cost ~$0.005.**
+
+⚠⚠ **§0's PREMISE FAILS THREE WAYS.** It says `&#xa0;` glues two words into one token. The FTS
+`simple` tokeniser splits on EVERY non-alphanumeric character, so `Barbara&#xa0;Rayment` indexes as
+`barbara | xa0 | rayment` and **both real words survive**; `withPosition:false` means no phrase query
+can be disrupted; and in 300 real documents the shape `word&#xa0;word` occurs **0 times** — it is a
+paragraph spacer standing alone between spaces. **Decoding recovers 0 searchable tokens in
+15,659,766.**
+
+✅ **SO THE ANSWER TO §2 IS STRONGER THAN THE BRIEF EXPECTED: the gold-set recall figures, the ABSENT
+counts and the tier-fusion measurement are NOT floors.** No previously reported search number needs
+a caveat and no CHANGE_LOG entry needs amending.
+
+⚠⚠ **THE WORST-AFFECTED CORPUS WAS NOT THE ONE BEING WATCHED: `tna-caselaw` carries an entity in
+95.3% of documents** (74,896 judgments) against `committees-evidence`'s 12.0%. Also `planning-policy`
+78.1%, `building-regs` 57.1%, `hmrc-codes-guidance` 50.7%, `eur-lex` 32.0%. ✅ **The big political
+corpora are clean** (pwdata-debates, historic-hansard, pwdata-lords, committees-reports, all
+legislation — 0 in 150). The volume is typographic (`&#8217;` 7,653, `&#8220;` 5,145), so it is a
+RENDERING defect, provably not a retrieval one.
+
+✅ **REPAIRED: all 16,805 user-visible values in Neon** — `sectionTitle` 4,532 → 0, `speaker`
+10,660 → 0, `attribution` 1,613 → 0, each read back and reconciled against the prediction. Titles
+were exhaustive, not sampled, because they live in Neon.
+
+✅ **ROOT CAUSE NAMED AND IT IS A CLASS DEFECT.** `committees-portal.ts` decoded `&nbsp;` and not
+`&#xa0;` — the numeric form of the same character — from a hand-written list, twice in one file.
+**17 source files decode from hand-written lists; none decodes a numeric form.** Now one decoder,
+`shared/html-entities.ts`, with `check:entity-decode` as a **RATCHET**: the 16 remaining are a
+baseline that may fall and must not rise.
+
+⚠ **THREE OF MY OWN MEASUREMENTS WERE WRONG FIRST, ALL THE SAME WAY — a control not matched to its
+treatment.** A "non-breaking hyphen destroys the word" verdict whose clean twin also failed; a
+character-adjacency classifier that cannot tell `Barbara&#xa0;Rayment` from `preven&#xad;tative`; and
+a live retrieval test that reported "62.5% lost" when the damaged phrase came from boilerplate and
+the control from distinctive prose. With a matched control the damaged arm retrieves MORE often
+(7 v 4) and the test is **reported as underpowered** rather than quoted. ⚠ **And the fix shipped
+INERT first** — decoded into a new variable, returned the old one; the guard for that was watched
+failing on the exact broken form.
+
+⚠ **Two decoder bugs found by reading its own output:** `&#145;` must map through **Windows-1252**
+(naively it is an invisible C1 control, so the repair would have DELETED quotation marks from 73
+titles), and LF/CR/TAB must decode where other C0 controls must not (28 speaker values).
+
+▶ **CHARLIE'S CALL — a real choice, not a rubber stamp:** decode-at-render in the search adapters
+(cheap, immediate, all 16 corpora, but every future reader must remember) versus a one-off R2
+rewrite of ~184,000 objects ($0.90 + an FTS rebuild via the Heavy Job Runner + re-embedding changed
+chunks — the real cost). **My recommendation: decode-at-render now, and fold the rewrite into the
+next reprocessing pass that is happening anyway.** ⚠ Also reported, not fixed: 73 titles hold
+`&#65533;` (bytes already lost — needs a re-fetch), and `scotlawcom` holds 1,337 literal U+00AD
+characters.
+
+2026-08-17 02:49 UTC — ▼ **GRAPH 2D-3 IS COMPLETE: 16,196 positions extracted and
 the hand-read error rate is 54% — the extraction is NOT ready to be shown, and the failure shapes
 say why (4% polarity errors, 46% of failures are positions on claims the submission never
 addressed). §2 landed cleanly: 5,496 organisations now carry a Companies House or Charity
