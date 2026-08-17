@@ -2,13 +2,62 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4: the position error rate on the SAME fifty goes
-54% → 44% from one prompt change (10 fixed for 2 genuine losses), and 189 ministerial offices now
-have a real dated succession against 2D-3's 1. ⚠ v3's `qualified` polarity looked better and is
-REFUSED — it fixed ZERO of the 11 nuance-flattened failures it was built for.** Earlier:
-2026-08-17 08:35 UTC — ▼ **INGEST: the undecoded HTML entities are in 16 of 74 corpora and cost ZERO
-recall; no previously reported search number needs a caveat.** Earlier: GRAPH 2D-3 (54% hand-read
-error rate), SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+*Last updated: 2026-08-17 12:59 UTC — ▼ **SEARCH S6: `docs/SEARCH_CONTRACT.md` and
+`docs/MODEL_CONTRACT.md` now exist as standing references, model choice per pass is configurable in
+ONE place, and every model call is metered into one ledger. ⚠ Gemini, Claude and Grok all work; there
+is NO OpenAI key here; and TWO hardcoded production fallbacks name models the accounts do not list.**
+Earlier: 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4: 54% → 44% on the same fifty, and 189 dated offices.**
+Earlier: INGEST entity-decode (zero recall cost), GRAPH 2D-3, SEARCH S4, GRAPH AMENDMENT 2, LEX 3-E,
+INGEST V38, GRAPH 2D-2.*
+
+2026-08-17 12:59 UTC — ▼ **SEARCH S6 IS COMPLETE: two standing contracts, a model registry, and a
+spend ledger proven end to end.** Executes `docs/BRIEF_SEARCH_S6_CONTRACTS.md` §1–§4. Report:
+**`docs/SEARCH_S6_REPORT.md`**. CHANGE_LOG (2026-08-17 12:59 UTC). `tsc` clean both runtimes;
+`prisma validate` clean, `migrate diff` proposes no DROP. **Cost $0.03.**
+⚠ **Both documents are STANDING REFERENCES — whoever changes what search or the models can do updates
+them in the same commit. A contract that has drifted is worse than none.**
+
+✅ **§1 `docs/SEARCH_CONTRACT.md`** — 18,272,362 documents / 6.37bn words / 74 collections tabulated by
+KIND in plain terms, the 12 intents, how to ask, and what each surface gets. ⚠ **Nine things cannot be
+asked for, each named** — including **phrase search**, because the index is built without token
+positions so a quoted string is a bag of words, which nobody had written down. ⚠ The live S4 defect is
+stated in terms (nothing but legislation reaches the main conversation, ever) with the never-claim rule.
+
+✅ **§2 `docs/MODEL_CONTRACT.md` — every key called ONCE, for real**, with presence, authentication and
+authorisation reported SEPARATELY (conflating them is what cost a session on `VERCEL_TOKEN`).
+**Gemini ✓ · Anthropic ✓ (`claude-opus-5`) · xAI ✓ · OpenAI ✗ NO KEY HERE.**
+⚠⚠ **TWO HARDCODED PRODUCTION FALLBACKS NAME MODELS THAT DO NOT EXIST:**
+`claude-haiku-4-5-20251001` (compile.ts, and what `docs/CLAUDE.md` §6 names) and `grok-3-fast-beta`
+(two Lex routes). **A fallback that does not exist is worse than none — it only fails when the primary
+already has.** Flagged in `KNOWN_STALE`, callers NOT edited (one ingest's, one Lex's).
+⚠ **Anthropic and xAI have NO prices on file and none were invented** — a pass on either records tokens
+and a NULL cost. ▶ **Charlie: two published price pages closes this.**
+✅ **`lib/lex/model-registry.ts` — 15 passes, one place, env-overridable per pass.** Unknown or
+unreachable models refused at RESOLVE time. **Adopted by four passes and the check ASSERTS it**
+(17 checks, 5 negative controls) so it cannot regress to hardcoded defaults.
+
+✅ **§3 THE SPEND LEDGER — one append-only row per call, and NOT a fifth cost mechanism.** 25-A's
+`build-llm.ts`/`build-cost.ts` were **not touched**; this adds what they cannot do — every call, every
+stream, attributable to a user and an idea. `"LlmSpend"` on Neon after a whichdb check.
+⚠ **Two writers, one table, ONE pricer** (ingest cannot import the web lib); **the rate card is
+deliberately NOT duplicated** and the ingest twin's self-test asserts it carries none.
+✅ **Proven end to end: a real graph run wrote a row, the repricer priced it at £0.0199, read-back
+reconciled.** ⚠ **NOT adopted web-side on purpose** — one `recordUsage(...)` line in `build-llm.ts`,
+which is the LEX session's uncommitted file; it belongs to whoever lands 25-A.
+⚠ **The ceiling STOPS, and an unpriced call BLOCKS** — unknown against a hard limit reads as stop.
+⚠ **A total containing an unpriced call is NULL, never a partial sum.**
+✅ **No charging built**, as instructed.
+
+✅ **§3's design question: behind the scenes, and the evidence backs the adversarial step.** 2D-4
+measured our extraction's failure as over-attribution not misreading, so the pass needing a model
+willing to decline is the adversarial read — one override away. **The user control worth keeping is not
+a model picker but *"this one is important — do it properly"***: recommended shape is one boolean per
+build (*thorough*) raising retrieval, adding the adversarial pass and moving it to the strongest model.
+▶ Charlie's call; not built.
+
+⚠ **I destroyed and rebuilt one file** while proving a guard could fire — `cp` made a 0-byte backup and
+the restore truncated an untracked file. Rewritten from context, re-verified, guard then proven with
+in-place edits. **Do not round-trip an untracked file through a shell copy.**
 
 2026-08-17 10:16 UTC — ▼ **GRAPH 2D-4 IS COMPLETE. §1: 54% → 44% ON THE SAME FIFTY, ATTRIBUTABLE TO
 ONE CHANGE. §2: 189 OFFICES WITH A DATED SUCCESSION, AGAINST 2D-3's 1. §3: all three

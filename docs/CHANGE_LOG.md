@@ -247,6 +247,84 @@ identity is genuinely open and the behavioural test cannot reach it. Flagged, no
 
 ---
 
+## SEARCH S6 — TWO CONTRACTS WRITTEN DOWN, AND THE PLATFORM NOW COUNTS WHAT IT SPENDS (2026-08-17 12:59 UTC)
+
+Executes `docs/BRIEF_SEARCH_S6_CONTRACTS.md` §1–§4. Report: **`docs/SEARCH_S6_REPORT.md`**.
+Deliverables: **`docs/SEARCH_CONTRACT.md`** and **`docs/MODEL_CONTRACT.md`** (both STANDING
+REFERENCES — whoever changes what search or the models can do updates them in the same commit).
+`tsc` clean in both runtimes; `prisma validate` clean and `migrate diff` proposes no DROP.
+**Cost $0.03**, one run used to prove the ledger end to end.
+
+✅ **§1 — `SEARCH_CONTRACT.md`, pulled forward because other streams are building against guesses.**
+What the corpus holds in plain terms (**18,272,362 documents, 6.37bn words, 74 collections**, tabulated
+by kind rather than by internal name), the 12 intents and what each returns, how to ask, and what each
+surface actually gets. ⚠ **The honest half is longer than the available half:** nine things cannot be
+asked for today, each named with what it would take — positions, contradiction retrieval, mechanism
+analogues, comparative law, the open web, and **phrase search**, because the keyword index is built
+without token positions so a quoted string is matched as a bag of words. **Nobody had written that
+down.** ⚠ The live S4 defect is stated in terms (not one committee document, debate or judgment reaches
+the main conversation, on any question, ever — three gates in series, S5 not yet landed) and paired
+with the never-claim rule.
+
+✅ **§2 — EVERY KEY CALLED ONCE, FOR REAL, and presence/authentication/authorisation reported
+SEPARATELY** because conflating them is what cost a session on `VERCEL_TOKEN`. **Gemini, Anthropic and
+xAI all complete a real call** (`gemini-2.5-flash`, `claude-opus-5`, `grok-4.20-0309-non-reasoning`).
+⚠ **OpenAI has NO KEY on this machine** although the brief lists it as available.
+
+⚠⚠ **THREE DEFECTS THE PROBE FOUND. (1) TWO HARDCODED PRODUCTION FALLBACKS NAME MODELS THE ACCOUNTS DO
+NOT LIST:** `claude-haiku-4-5-20251001` (compile.ts's Gemini-429 fallback, and the model
+`docs/CLAUDE.md` §6 names) and `grok-3-fast-beta` (two Lex API routes, flagged 6 Aug and still true).
+**A configured fallback that does not exist is worse than none, because it only fails when the primary
+already has.** Both recorded in `KNOWN_STALE`; neither caller edited — one is ingest's, one is Lex's.
+**(2) ANTHROPIC AND xAI HAVE NO PRICES ON FILE AND I DID NOT INVENT ANY** — so a pass switched to
+either records tokens and a NULL cost, carrying through `build-cost.ts`'s rule that a model we cannot
+price costs null, not zero. ▶ **Charlie: two published price pages closes this.** **(3)
+`REACHABLE.openai` is an empty list on purpose**, so pointing a pass at OpenAI fails with "no key on
+this deployment" rather than "unknown model".
+
+✅ **Model choice per pass is configurable — `lib/lex/model-registry.ts`, 15 passes, one place.**
+`LEX_MODEL__DEEPENING__ADVERSARIAL=claude-opus-5` moves that pass. ⚠ **An unknown or unreachable model
+is refused at RESOLVE time, not call time** — a typo otherwise surfaces as a provider 404 inside one
+pass, hours later, in a log nobody reads. ⚠ **Adopted, not inert:** four passes resolve through it,
+legacy env vars still win, and `check:model-registry` (**17 checks, 5 negative controls**) ASSERTS the
+adoption so it cannot regress. That assertion exists because this session already shipped one repair
+that was present and inert.
+
+✅ **§3 — THE SPEND LEDGER: ONE APPEND-ONLY ROW PER CALL, and it is NOT a fifth cost mechanism.**
+25-A's `build-llm.ts` and `build-cost.ts` are correct and **were not touched**; the ledger adds what
+they cannot do — every call, every stream, attributable to a user and an idea. 25-A totals a build;
+this totals a platform. `"LlmSpend"` applied to Neon after a whichdb check, plus `"LlmSpendDaily"`.
+⚠ **Two writers, one table, one pricer** — `scripts/ingest` sets `rootDir: "."` so it cannot import the
+web lib; the ingest side writes rows `unpriced` and the web side is the only pricer. **What is
+deliberately NOT duplicated is the rate card**, and the ingest twin's self-test asserts it carries none
+(watched failing with a planted `inPerM`).
+✅ **Proven end to end, not asserted:** a real graph run wrote a row (25,497 in / 7,032 out), the
+repricer priced it at **£0.0199**, read-back reconciled. Adopted by the graph stream.
+⚠ **NOT adopted web-side, deliberately** — the natural site is `build-llm.ts`, the LEX session's
+uncommitted in-flight file; it is one `recordUsage(...)` line and belongs to whoever lands 25-A.
+⚠ **A ceiling that STOPS, and an unpriced call BLOCKS rather than passes:** if we cannot price what has
+been spent we cannot know whether the ceiling is breached, and the safe reading of unknown against a
+hard limit is stop. ⚠ **A total containing an unpriced call is NULL, not a partial sum** — "£0.31" when
+two of nine calls had no rate reads as complete and nothing says it is short.
+✅ **The charging is absent, as instructed** — no allowance, no 75/25 split, no payment. Counting only.
+
+✅ **§3's DESIGN QUESTION ANSWERED: behind the scenes, and the evidence backs Charlie's instinct about
+the adversarial step.** A user cannot judge which model to use — someone who picks "cheap" gets a worse
+proposal and no way to know why. And GRAPH 2D-4 measured our extraction's failure as **over-attribution
+rather than misreading** (12 invented positions against 2 polarity errors), so **the pass that needs a
+model willing to decline is the adversarial read** — now one override away. **The user control worth
+keeping is not a model picker:** *"this one is important — do it properly"*. Recommended shape is one
+boolean per build (*thorough*) raising the retrieval budget, adding the adversarial pass and moving it
+to the strongest model — one flag, three effects, no vocabulary to learn. ▶ Charlie's call; not built.
+
+⚠ **AND A FILE I DESTROYED AND REBUILT.** Proving the no-rate-card guard could fire, I backed the file
+up with `cp`, planted a constant and restored — the backup was empty, so the restore truncated an
+UNTRACKED file to zero bytes. Rewritten from context and re-verified, then the guard proven to fire
+using in-place edits only. **Do not round-trip an untracked file through a shell copy to test a
+guard.**
+
+---
+
 ## GRAPH 2D-4 — 54% → 44% FROM ONE PROMPT CHANGE, AND 189 OFFICES WITH A REAL SUCCESSION (2026-08-17 10:16 UTC)
 
 Executes `docs/BRIEF_GRAPH_2D4.md` §1–§4. Report: **`docs/POSITION_GRAPH_2D4_REPORT.md`**.
