@@ -10,7 +10,8 @@ Earlier: 2026-08-17 22:52 UTC — ▼ **INGEST CORPUS FRESHNESS: 35.7% of commit
 citations do not open and NONE of them were withdrawn — they are PDF-only publications addressed
 through a documentId we never stored, or records with no file at all. documentId now captured, the
 join proven 404 → 200, and NOT landed downstream. §2: 0% → 99.3% of mentions can show the name as it
-appeared, 93.4% of it from a view change — the names were already in `division_votes.member_name`.**
+appeared (99.93% of stored edges), 93.4% of it from a view change — the names were already in
+`division_votes.member_name`.**
 ⚠⚠ 1,785 organisations display as "mention only" while we hold a Companies House or charity number.
 Earlier: 2026-08-17 22:44 UTC — ▼ **SEARCH S5: Lex can see the whole corpus at last —
 0 → 100 non-legislation results on the same ten questions, 7 of 7 previously-unserved questions now
@@ -52,10 +53,10 @@ the classifier correctly refused to call them dead. Then the corrected run **man
 "gone" verdicts out of 403s** on the document URL. Fixed, watched failing first; a live/dead canary
 pair now refuses to let the script run blind.
 
-✅ **§2 — 0% → 99.3% of mentions can show the name as it appeared (2,700,092 of 2,717,900), and
+✅ **§2 — 0% → 99.4% of mentions can show the name as it appeared (2,701,597 of 2,717,900), and
 93.4% of that came from a VIEW CHANGE with no sweep at all.** `division_votes.member_name` and
 `edm_sponsor.sponsor_name` already held it for 2.5M mentions. The stored half took a 36.5-minute
-sweep re-run: **162,626 of 164,238 edges, 1,470 with a surface that VARIES**.
+two sweep re-runs (36.5 min + 4 min): **164,131 of 164,238 edges — 99.93% — 1,470 VARYING**.
 ✅ The grain differs from the brief's "one column on the edge" on purpose: the FACT lives on
 `graph_evidence` (one appearance), the edge carries a first-seen copy plus `subject_surface_varies`.
 ✅ **794,019 surfaces differ from our canonical name** (`Zenobe` for `Zenobē`) — our own

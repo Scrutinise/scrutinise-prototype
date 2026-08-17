@@ -172,11 +172,13 @@ URL, manufacturing two instances of the exact class the brief hypothesised. Fixe
 watched failing first**. (3) A targeted `--ids` re-probe **overwrote a completed 500-id run**;
 `--out` now exists.
 
-✅ **§2 — 0% → 99.3% OF MENTIONS CAN SHOW THE NAME AS IT APPEARED (2,700,092 of 2,717,900), AND
+✅ **§2 — 0% → 99.4% OF MENTIONS CAN SHOW THE NAME AS IT APPEARED (2,701,597 of 2,717,900), AND
 93.4% OF THAT CAME FROM A VIEW CHANGE WITH NO SWEEP AT ALL.** `division_votes.member_name` and
 `edm_sponsor.sponsor_name` already held the printed name for 2.5M mentions and were simply
-discarded by the views. The stored half took a 36.5-minute sweep re-run: **162,626 of 164,238
-edges, 1,470 with a surface that VARIES across appearances.**
+discarded by the views. The stored half took two sweep re-runs (36.5 min + 4 min, no LLM):
+**164,131 of 164,238 edges — 99.93% — with 1,470 carrying a surface that VARIES across
+appearances.** ⚠ The 107 left NULL had no source item returned by the API this pass; nothing was
+written rather than the canonical name being substituted.
 ✅ **The grain is deliberate and differs from the brief's "one column on the edge"**:
 `graph_evidence.subject_surface` is the FACT (one appearance), `graph_edge.subject_surface` is the
 first-seen copy for display, and `subject_surface_varies` says when it is one of several — because
