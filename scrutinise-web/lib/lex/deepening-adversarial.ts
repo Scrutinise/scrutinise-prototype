@@ -34,6 +34,7 @@
 import { geminiFinishProblem } from './gemini-finish'
 import type { RawFinding } from './deepening-client'
 import { modelFor } from './model-registry'
+import { recordGeminiUsage } from './spend-ledger'
 
 const MAX_TOKENS = parseInt(process.env.LEX_ADVERSARIAL_MAX_TOKENS ?? '4000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_ADVERSARIAL_TIMEOUT_MS ?? '45000', 10)
@@ -157,6 +158,10 @@ export async function generateAdversarialIssues(input: {
     }
     type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
+    // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
+    // never take down the work it is measuring.
+    void recordGeminiUsage(data, { stream: 'deepening', pass: 'deepening.adversarial', model: model })
 
     // BEFORE parsing (CLAUDE.md §18.1).
     const cut = geminiFinishProblem(data?.candidates?.[0], MAX_TOKENS, { label: 'deepening-adversarial' })

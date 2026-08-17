@@ -105,6 +105,86 @@ function main() {
       reachable ? 'it is now reachable — remove it from KNOWN_STALE and fix the caller' : s.where)
   }
 
+  // ── 5. the S6 §3 ADDENDUM — the metering is visible, and it still controls nothing ──────────
+  console.log('\n  the spend addendum (S6 §3 addendum)')
+
+  const sql = fs.readFileSync(path.join(root, 'prisma/llm_spend.sql'), 'utf8')
+  check(/ADD COLUMN IF NOT EXISTS "groupId"/.test(sql),
+    '⚠ the group column exists in the DDL — added before there is history to regret')
+  const webLedger = fs.readFileSync(path.join(root, 'lib/lex/spend-ledger.ts'), 'utf8')
+  const ingestLedger = fs.readFileSync(path.join(root, '../scripts/ingest/shared/spend-ledger.ts'), 'utf8')
+  check(/"groupId"/.test(webLedger) && /"groupId"/.test(ingestLedger),
+    '⚠ BOTH writers record it — a column only one writer fills is worse than none')
+
+  // ⚠⚠ THE INSTRUCTION MOST LIKELY TO BE QUIETLY UNDONE. Charlie: "build the measurement, do not
+  // switch on any user-facing spend control. Until it's the user's own money, the only thing being
+  // measured is what this costs him." A ceiling wired into a route later, by somebody who
+  // reasonably believes the feature is finished, is exactly what this asserts against.
+  const ceilingCallers: string[] = []
+  const walkFor = (dir: string) => {
+    for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue
+      const rel = `${dir}/${e.name}`
+      if (e.isDirectory()) walkFor(rel)
+      else if (/\.(ts|tsx)$/.test(e.name) && !rel.endsWith('lib/lex/spend-ledger.ts')) {
+        // ⚠ COMMENTS ARE STRIPPED FIRST, and the first version did not strip them: it reported
+        // lib/lex/spend-admin.ts as a caller because that file's header EXPLAINS that the ceiling
+        // is deliberately unwired. A guard that fires on the sentence describing the rule is a
+        // guard somebody switches off. (Watching it fire on that comment was also the proof it is
+        // not inert — the check does fire.)
+        const src = fs.readFileSync(path.join(root, rel), 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+        if (/checkUserCeiling\s*\(/.test(src)) ceilingCallers.push(rel)
+      }
+    }
+  }
+  walkFor('lib'); walkFor('app'); walkFor('components')
+  check(ceilingCallers.length === 0,
+    '⚠⚠ NO user-facing spend control is switched on — checkUserCeiling is called by nothing',
+    ceilingCallers.join(', '))
+
+  const section = fs.readFileSync(path.join(root, 'components/admin/SpendSection.tsx'), 'utf8')
+  check(!/method:\s*'(POST|PATCH|DELETE|PUT)'/i.test(section),
+    '   …and the admin spend page has no mutating action of any kind')
+  check(/LlmSpendKind/.test(sql) && /'unclassified'/.test(sql),
+    '⚠ the search / everything-else split has a THIRD bucket, so an unclassified pass stays visible')
+  // A negative control that is RUN rather than asserted: the rule must really route an
+  // unrecognised pass to `unclassified` instead of quietly inflating "everything else".
+  const classify = (p: string) => /^search\./.test(p) ? 'search'
+    : /^(lex|build|deepening|orientation|graph)\./.test(p) ? 'everything-else' : 'unclassified'
+  check(classify('search.query-router') === 'search' && classify('build.draft') === 'everything-else'
+    && classify('rerank.score') === 'unclassified',
+    '   …and an unrecognised pass really does land in it (negative control)')
+
+  // ⚠⚠ THE LEDGER WAS INERT AFTER S6, AND THIS IS THE CHECK THAT WOULD HAVE SAID SO.
+  // S6 built recordSpend() and wired it into nothing on the web side: the table held rows from
+  // two ingest scripts and from no user-facing path at all. An Admin spend page on top of that
+  // would have shown a platform that costs almost nothing — the most flattering possible bug,
+  // and one nobody would think to question. Every file that reads Gemini's own usage numbers
+  // must also record them, or be named here with a reason.
+  const UNMETERED_BY_DESIGN: Record<string, string> = {}
+  const unmetered: string[] = []
+  const walkUsage = (dir: string) => {
+    for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue
+      const rel = `${dir}/${e.name}`
+      if (e.isDirectory()) { walkUsage(rel); continue }
+      if (!/\.ts$/.test(e.name)) continue
+      const src = fs.readFileSync(path.join(root, rel), 'utf8')
+      // ⚠ WIDENED FROM usageMetadata TO 'calls Gemini at all'. The first version only caught files
+      // that READ the usage numbers — a file that calls the API and ignores them entirely was
+      // invisible to it, which is the worse case: it spends and reports nothing.
+      if (!/generativelanguage\.googleapis\.com/.test(src)) continue
+      if (/recordGeminiUsage|recordSpend|recordUsage/.test(src)) continue
+      if (rel in UNMETERED_BY_DESIGN) continue
+      unmetered.push(rel)
+    }
+  }
+  walkUsage('lib')
+  check(unmetered.length === 0,
+    '⚠⚠ every file that CALLS Gemini also records the spend — the ledger is not inert',
+    unmetered.join(', '))
+
   console.log('\n  snapshot')
   for (const s of registrySnapshot()) {
     console.log(`    ${s.pass.padEnd(26)} ${s.model.padEnd(22)} ${s.provider.padEnd(10)}${s.overridden ? ' (overridden)' : ''}`)

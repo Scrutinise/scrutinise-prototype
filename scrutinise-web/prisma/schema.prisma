@@ -3402,6 +3402,10 @@ model LlmSpend {
   /// cost to produce.
   userId         String?
   ideaId         String?
+  /// ⚠ Added before the feature that needs it. Buying tokens for a community group is
+  /// planned; a column added after there is history leaves every earlier row NULL, and
+  /// NULL would then be indistinguishable from "an individual spent this".
+  groupId        String?
   ref            String?
   /// ⚠ A failed call still costs money.
   failed         Boolean  @default(false)

@@ -82,3 +82,59 @@ SELECT date_trunc('day', "createdAt")::date        AS day,
             ELSE SUM("estCostPence") END           AS pence
 FROM "LlmSpend"
 GROUP BY 1, 2, 3, 4;
+
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- ADDENDUM (2026-08-17) — THE GROUP COLUMN, ADDED BEFORE THERE IS HISTORY TO REGRET
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- Charlie: "every metered call must record an optional group as well as a user. Buying tokens for a
+-- community group is a planned feature. Adding the column now costs nothing; adding it after there
+-- is history means the history has no group on it."
+--
+-- That is exactly right and it is the whole reason this is applied today rather than when the
+-- feature is built. A column added later is not the same column: every row written before it
+-- existed carries NULL, and NULL is indistinguishable from "spent by an individual". The group
+-- attribution of the platform's first months would be permanently unrecoverable.
+--
+-- ⚠ NULL MEANS "NOT ON BEHALF OF A GROUP", and that reading is only safe because the column exists
+-- from the first row. Nothing else in this file depends on it yet; no query filters on it; no
+-- allowance is computed from it. It is a column being kept warm.
+ALTER TABLE "LlmSpend" ADD COLUMN IF NOT EXISTS "groupId" TEXT;
+
+-- Deliberately partial, like the user index: most rows will never carry a group.
+CREATE INDEX IF NOT EXISTS "LlmSpend_group_idx" ON "LlmSpend" ("groupId", "createdAt")
+  WHERE "groupId" IS NOT NULL;
+
+-- ⚠ NO FOREIGN KEY, for the same reason as userId and ideaId: a disbanded group must not delete
+-- the record of what it spent.
+
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- THE ADMIN VIEW — what Charlie asked to SEE, not merely to have stored
+-- ════════════════════════════════════════════════════════════════════════════════════════════════
+-- "the metering must surface in the Admin tab, not only in the database."
+--
+-- ⚠ THE SEARCH / EVERYTHING-ELSE SPLIT IS BY PASS PREFIX, AND THE RULE IS HERE SO IT CAN BE
+-- ARGUED WITH. `search.*` passes (query expansion, the router) are the search subsystem's own model
+-- spend. Everything else is the conversation, the build, the deepening, orientation and the graph.
+--
+-- ⚠⚠ AND A PASS THAT MATCHES NEITHER RULE IS 'unclassified', NOT 'other'. When a new pass is added
+-- and nobody updates this view, it must appear as something a reader can see is unaccounted for,
+-- rather than being silently folded into "everything else" and quietly inflating it.
+CREATE OR REPLACE VIEW "LlmSpendKind" AS
+SELECT date_trunc('day', "createdAt")::date AS day,
+       CASE
+         WHEN pass LIKE 'search.%'                                              THEN 'search'
+         WHEN pass LIKE 'lex.%'    OR pass LIKE 'build.%'
+           OR pass LIKE 'deepening.%' OR pass LIKE 'orientation.%'
+           OR pass LIKE 'graph.%'                                               THEN 'everything-else'
+         ELSE 'unclassified'
+       END                                        AS kind,
+       COUNT(*)                                   AS calls,
+       COUNT(*) FILTER (WHERE failed)             AS failed_calls,
+       COUNT(*) FILTER (WHERE unpriced)           AS unpriced_calls,
+       SUM("tokensIn")                            AS tokens_in,
+       SUM("tokensOut" + "tokensThinking")        AS tokens_out,
+       -- A day-kind containing an unpriced call reports NULL, not a partial sum.
+       CASE WHEN COUNT(*) FILTER (WHERE unpriced) > 0 THEN NULL
+            ELSE SUM("estCostPence") END          AS pence
+FROM "LlmSpend"
+GROUP BY 1, 2;

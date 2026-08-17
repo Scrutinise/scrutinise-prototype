@@ -43,6 +43,13 @@ export interface SpendEntry {
   tokensThinking?: number
   userId?: string | null
   ideaId?: string | null
+  /**
+   * ⚠ On behalf of a group. Present before the feature that needs it, because a column added
+   * after there is history leaves every earlier row NULL, and NULL then cannot be told apart
+   * from "an individual spent this". Ingest spend will essentially always be null here; the
+   * twin carries the field so the two writers cannot drift on the table's shape.
+   */
+  groupId?: string | null
   ref?: string | null
   /** ⚠ A failed call still costs money. Recording only successes understates the bill by exactly
    *  the calls you most want to know about. */
@@ -72,10 +79,11 @@ export async function recordSpend(e: SpendEntry): Promise<boolean> {
     const pool = getNeonPool()
     await pool.query(
       `INSERT INTO "LlmSpend" ("stream","pass","model","tokensIn","tokensOut","tokensThinking",
-                               "estCostPence","unpriced","userId","ideaId","ref","failed")
-       VALUES ($1,$2,$3,$4,$5,$6,NULL,TRUE,$7,$8,$9,$10)`,
+                               "estCostPence","unpriced","userId","ideaId","groupId","ref","failed")
+       VALUES ($1,$2,$3,$4,$5,$6,NULL,TRUE,$7,$8,$9,$10,$11)`,
       [e.stream, e.pass, e.model, Math.round(e.tokensIn), Math.round(e.tokensOut),
-        Math.round(e.tokensThinking ?? 0), e.userId ?? null, e.ideaId ?? null, e.ref ?? null, e.failed ?? false])
+        Math.round(e.tokensThinking ?? 0), e.userId ?? null, e.ideaId ?? null, e.groupId ?? null,
+        e.ref ?? null, e.failed ?? false])
     return true
   } catch (err) {
     console.warn('[spend-ledger] could not record spend:', err instanceof Error ? err.message : err)

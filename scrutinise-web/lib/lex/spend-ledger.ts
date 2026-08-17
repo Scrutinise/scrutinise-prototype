@@ -52,6 +52,18 @@ export interface SpendEntry {
   userId?: string | null
   /** Which idea it was spent on. NULL for work that is not about one idea. */
   ideaId?: string | null
+  /**
+   * ⚠ ON BEHALF OF A GROUP, AND IT IS HERE BEFORE THE FEATURE THAT NEEDS IT.
+   *
+   * Buying tokens for a community group is planned and not built. The column exists anyway,
+   * because a column added after there is history is not the same column: every row written
+   * before it existed carries NULL, and NULL is indistinguishable from "an individual spent
+   * this". The group attribution of the platform's first months would be gone for good.
+   *
+   * NULL means "not on behalf of a group" — a reading that is only safe because the column
+   * has been there since the first row. Nothing reads it yet. It is being kept warm.
+   */
+  groupId?: string | null
   /** Free-form: a build id, a run id, a section id — whatever makes the row traceable. */
   ref?: string | null
   /** TRUE when the call failed. ⚠ A failed call still costs money. */
@@ -85,10 +97,10 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
   try {
     await prisma.$executeRaw`
       INSERT INTO "LlmSpend" ("stream", "pass", "model", "tokensIn", "tokensOut", "tokensThinking",
-                              "estCostPence", "unpriced", "userId", "ideaId", "ref", "failed")
+                              "estCostPence", "unpriced", "userId", "ideaId", "groupId", "ref", "failed")
       VALUES (${e.stream}, ${e.pass}, ${e.model}, ${e.tokensIn}, ${e.tokensOut}, ${e.tokensThinking ?? 0},
               ${priced.pence}, ${priced.unpriced}, ${e.userId ?? null}, ${e.ideaId ?? null},
-              ${e.ref ?? null}, ${e.failed ?? false})`
+              ${e.groupId ?? null}, ${e.ref ?? null}, ${e.failed ?? false})`
   } catch (err) {
     console.warn('[spend-ledger] could not record spend', {
       stream: e.stream, pass: e.pass, model: e.model,
@@ -96,6 +108,37 @@ export async function recordSpend(e: SpendEntry): Promise<PricedSpend> {
     })
   }
   return priced
+}
+
+/**
+ * Record straight from a Gemini response body — the one-liner every call site needs.
+ *
+ * ⚠⚠ THIS EXISTS BECAUSE THE LEDGER WAS INERT. S6 built `recordSpend` and wired it into
+ * nothing on the web side: after the sprint the table held rows from two ingest scripts and
+ * from no user-facing path at all. The Admin tab added in the §3 addendum would have shown a
+ * platform that spends almost nothing, which is the most flattering possible bug.
+ *
+ * ⚠ There is no single shared Gemini caller in `lib/lex` — eleven files each run their own
+ * fetch. So the recording cannot be centralised without a refactor those files' owners have
+ * not asked for. This is the next best thing: ONE implementation, called from each site, with
+ * `check-model-registry.ts` asserting that every file which reads `usageMetadata` also records
+ * or is on a named exception list. A per-caller check is what caught the truncation guard
+ * missing in seven callers (docs/CLAUDE.md §18); the same shape of check applies here.
+ *
+ * ⚠ `thoughtsTokenCount` is read and billed as OUTPUT. A model with thinking enabled that
+ * reported only `candidatesTokenCount` would understate its own cost by most of it.
+ */
+export function recordGeminiUsage(
+  body: unknown, ctx: Omit<SpendEntry, 'tokensIn' | 'tokensOut' | 'tokensThinking'>,
+): Promise<PricedSpend> {
+  const u = (body as { usageMetadata?: Record<string, unknown> } | null)?.usageMetadata ?? {}
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  return recordSpend({
+    ...ctx,
+    tokensIn: num(u.promptTokenCount),
+    tokensOut: num(u.candidatesTokenCount),
+    tokensThinking: num(u.thoughtsTokenCount),
+  })
 }
 
 /** Convenience: record straight from 25-A's `LlmUsage`, so a build pass is one line. */

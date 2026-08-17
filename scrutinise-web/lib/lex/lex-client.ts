@@ -9,6 +9,15 @@
 import type { FieldDef } from './page1-config'
 import { methodForStage, methodBlocksFor } from './method'
 import { assertGeminiFinished, geminiFinishProblem } from './gemini-finish'
+import { recordGeminiUsage } from './spend-ledger'
+import { modelFor } from './model-registry'
+
+/**
+ * Who a Lex call is attributable to (BRIEF_SEARCH_S6 §3 addendum). Optional everywhere, so a
+ * caller that has no request context still works and simply records an unattributed row —
+ * which is better than the alternative this replaced, which was recording nothing at all.
+ */
+export interface SpendAttribution { userId?: string | null; ideaId?: string | null; ref?: string | null }
 
 export interface LexTurnContext {
   preferredName: string
@@ -340,7 +349,16 @@ RULES
 // output tokens are billed on what is generated, so a generous ceiling costs nothing.
 const LEX_TURN_MAX_TOKENS = parseInt(process.env.LEX_TURN_MAX_TOKENS ?? '4096', 10)
 
-async function callGemini(systemPrompt: string, userMessage: string, history: { role: string; content: string }[]): Promise<string> {
+/**
+ * ⚠ `spend` IS OPTIONAL AND ADDITIVE (BRIEF_SEARCH_S6 §3 addendum). Without it this call spends
+ * money and records nothing, which is how the ledger came to hold rows from two ingest scripts
+ * and from no user-facing path at all. Attribution is passed in rather than looked up because
+ * this module has no request context.
+ */
+async function callGemini(
+  systemPrompt: string, userMessage: string, history: { role: string; content: string }[],
+  spend?: SpendAttribution,
+): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY not set')
   const model = 'gemini-2.5-flash'
@@ -376,6 +394,15 @@ async function callGemini(systemPrompt: string, userMessage: string, history: { 
     throw e
   }
   const data = await res.json()
+  // ⚠ RECORDED BEFORE THE TRUNCATION GUARD, deliberately. A call that hit MAX_TOKENS was still
+  // billed in full, and the truncated ones are exactly the calls worth knowing the cost of.
+  // Recording after assertGeminiFinished would drop them from the ledger.
+  if (spend) {
+    void recordGeminiUsage(data, {
+      stream: 'lex', pass: 'lex.chat', model: modelFor('lex.chat'),
+      userId: spend.userId ?? null, ideaId: spend.ideaId ?? null, ref: spend.ref ?? null,
+    })
+  }
   // Before parsing: a truncated payload is broken JSON, and without this it arrives as a parse
   // failure rather than as "you ran out of output tokens". See lib/lex/gemini-finish.ts.
   assertGeminiFinished(data?.candidates?.[0], LEX_TURN_MAX_TOKENS, 'lex-turn')
@@ -438,11 +465,12 @@ export async function runLexTurn(
   systemPrompt: string,
   userMessage: string,
   history: { role: string; content: string }[],
+  spend?: SpendAttribution,
 ): Promise<LexRawOutput> {
   let lastErr: LexError | undefined
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const raw = await callGemini(systemPrompt, userMessage, history)
+      const raw = await callGemini(systemPrompt, userMessage, history, spend)
       const parsed = parseLexOutput(raw)
       if (parsed) return parsed
       // Structured output returned but failed our shape/schema check. Log the raw

@@ -19,6 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { geminiFinishProblem } from './gemini-finish'
+import { recordGeminiUsage } from './spend-ledger'
 
 export interface LlmUsage {
   model: string
@@ -66,6 +67,10 @@ const ZERO = (model: string): LlmUsage => ({ model, tokensIn: 0, tokensOut: 0 })
  * a ceiling that does not hold.
  */
 function readUsage(model: string, data: unknown): LlmUsage {
+  // ⚠ BRIEF_SEARCH_S6 §3 addendum. Every build call funnels through here, so this is the one
+  // place a build pass can be recorded without touching each caller. Fire-and-forget by design:
+  // a ledger write must never take down the build it is measuring.
+  void recordGeminiUsage(data, { stream: 'build', pass: 'build.draft', model })
   const u = (data as { usageMetadata?: Record<string, unknown> } | null)?.usageMetadata
   const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   return {

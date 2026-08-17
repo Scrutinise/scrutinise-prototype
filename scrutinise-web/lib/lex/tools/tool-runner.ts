@@ -28,6 +28,7 @@
 import { QUERY_STATS, runQueryStats, formatStatsForPrompt, type QueryStatsArgs, type QueryStatsResult } from './query-stats'
 import { statsConfigured } from '@/lib/stats/stats-db'
 import { geminiFinishProblem } from '../gemini-finish'
+import { recordGeminiUsage } from '../spend-ledger'
 
 const MODEL = process.env.LEX_TOOL_MODEL ?? 'gemini-2.5-flash'
 const TIMEOUT_MS = parseInt(process.env.LEX_TOOL_TIMEOUT_MS ?? '10000', 10)
@@ -105,6 +106,10 @@ async function decideToolCall(
       return null
     }
     const data = await res.json()
+    // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
+    // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
+    // never take down the work it is measuring.
+    void recordGeminiUsage(data, { stream: 'lex', pass: 'lex.chat', model: MODEL })
     // 256 tokens is the tightest budget in the app. A truncated response here does not throw —
     // the functionCall part simply is not there — so the decider silently returns "no tool
     // wanted" and Lex answers without the figures it should have had. That is the same class as

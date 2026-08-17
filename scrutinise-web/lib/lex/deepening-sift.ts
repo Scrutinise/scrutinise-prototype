@@ -35,6 +35,7 @@
 import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
 import { modelFor } from './model-registry'
+import { recordGeminiUsage } from './spend-ledger'
 
 /** One candidate the sift kept, with the judgement attached. */
 export interface SiftKeep {
@@ -197,6 +198,10 @@ export async function siftCandidates(input: {
     }
     type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
+    // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
+    // never take down the work it is measuring.
+    void recordGeminiUsage(data, { stream: 'deepening', pass: 'deepening.sift', model: model })
 
     // BEFORE parsing (CLAUDE.md §18.1). A truncated sift is broken JSON, and a parse
     // error here would send the next reader after a serialiser bug.

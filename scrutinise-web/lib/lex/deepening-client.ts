@@ -23,6 +23,7 @@
 import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
 import { modelFor } from './model-registry'
+import { recordGeminiUsage } from './spend-ledger'
 
 const MAX_TOKENS = parseInt(process.env.LEX_DEEPENING_MAX_TOKENS ?? '8000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_DEEPENING_TIMEOUT_MS ?? '60000', 10)
@@ -148,6 +149,10 @@ export async function generateDeepeningFindings(input: {
     }
     type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
+    // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
+    // never take down the work it is measuring.
+    void recordGeminiUsage(data, { stream: 'deepening', pass: 'deepening.gather', model: model })
 
     // BEFORE parsing (CLAUDE.md §18.1). A truncated gather is broken JSON, and reporting it as
     // a parse error would send the next reader looking for a serialiser bug.

@@ -148,7 +148,9 @@ export async function POST(req: Request, { params }: Params) {
 
   let lex
   try {
-    lex = await runLexTurn(systemPrompt, message, history)
+    // BRIEF_SEARCH_S6 §3 addendum — attribution passed in, so this turn lands in the ledger
+    // against a user and an idea rather than as an unattributed row.
+    lex = await runLexTurn(systemPrompt, message, history, { userId: user.id, ideaId: id })
   } catch (err) {
     // Per-attempt status/body already logged in runLexTurn; this is the summary.
     const e = err as { kind?: string; status?: number; message?: string }

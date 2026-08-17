@@ -33,6 +33,7 @@ import type {
 } from './types'
 import { EMPTY_RECENCY, toStance } from './types'
 import { dedupeRecency, normaliseDate, withinWindow } from './noise-filter'
+import { recordGeminiUsage } from '../spend-ledger'
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
@@ -211,6 +212,9 @@ async function callGemini(opts: {
       .filter((w): w is { uri?: string; title?: string } => !!w)
       .map((w) => ({ label: (w.title ?? '').trim() || 'web source', url: (w.uri ?? '').trim(), date: '', tier: 'B' as const }))
       .filter((s) => s.url.length > 0)
+    // BRIEF_SEARCH_S6 §3 addendum — this call already computes its own cost; the ledger needs
+    // the same numbers so the platform total is not missing a whole stream.
+    void recordGeminiUsage(data, { stream: 'orientation', pass: 'orientation.web', model: opts.model })
     const inTok = data.usageMetadata?.promptTokenCount ?? 0
     const outTok = data.usageMetadata?.candidatesTokenCount ?? 0
     const costUsd = (inTok * FLASH_IN_PER_M + outTok * FLASH_OUT_PER_M) / 1_000_000

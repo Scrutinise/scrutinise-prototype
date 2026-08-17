@@ -17,6 +17,7 @@
 
 import { SURFACE_LABELS, type FeedbackSurfaceKey } from './feedback-types'
 import { geminiFinishProblem } from './gemini-finish'
+import { recordGeminiUsage } from './spend-ledger'
 
 export { FEEDBACK_SURFACES, SURFACE_LABELS } from './feedback-types'
 export type { FeedbackSurfaceKey } from './feedback-types'
@@ -318,6 +319,10 @@ export async function summariseCritique(input: {
     }
     type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = (await res.json()) as Resp
+    // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
+    // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
+    // never take down the work it is measuring.
+    void recordGeminiUsage(data, { stream: 'lex', pass: 'lex.feedback', model: model })
     // 600 tokens is the tightest budget of any JSON call in the app, so this is the one most
     // likely to hit the ceiling. Non-throwing: the fallback() degradation is kept, the guard
     // only stops the truncation arriving as a parse failure. See gemini-finish.ts.

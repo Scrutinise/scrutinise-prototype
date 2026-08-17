@@ -37,6 +37,7 @@
 import type { SearchResult } from './page1-config'
 import { runSearch, type CapabilityFlags } from './search-gateway'
 import { modelFor } from './model-registry'
+import { recordGeminiUsage } from './spend-ledger'
 
 export interface GeneralChatTurn {
   role: 'user' | 'lex'
@@ -236,6 +237,9 @@ async function callGeminiForAnswer(
       usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
     }
     const data = (await res.json()) as Resp
+    // BRIEF_SEARCH_S6 §3 addendum. Corpus chat is admin-only, and it is still spend — leaving it
+    // out would understate the platform total by exactly the calls Charlie makes himself.
+    void recordGeminiUsage(data, { stream: 'admin', pass: 'lex.general-chat', model: modelFor('lex.general-chat') })
     const candidate = data?.candidates?.[0]
     const text = candidate?.content?.parts?.[0]?.text
     if (typeof text !== 'string') {
@@ -260,6 +264,7 @@ async function callGeminiForAnswer(
       // be treated as having cited nothing. Non-numeric entries fall through as NaN and are
       // rejected by the range check at the resolution step, where they are counted.
       citedMarkers: Array.isArray(parsed.citedMarkers) ? parsed.citedMarkers.map(Number) : [],
+      // BRIEF_SEARCH_S6 §3 addendum — corpus chat is admin-only but it is still spend.
       promptTokens: data.usageMetadata?.promptTokenCount,
       outputTokens: data.usageMetadata?.candidatesTokenCount,
     }

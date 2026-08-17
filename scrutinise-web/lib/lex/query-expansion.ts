@@ -15,6 +15,7 @@
 
 import { flagEnabled } from '@/lib/env-flags'
 import { geminiFinishProblem } from './gemini-finish'
+import { recordGeminiUsage } from './spend-ledger'
 
 export interface QueryExpansion {
   anchors: string[]     // candidate Acts / SIs / retained-EU by full statutory name
@@ -103,6 +104,12 @@ async function callGeminiJson(opts: {
   userMessage: string
   schema: object
   logTag: string
+  /**
+   * ⚠ The pass name from model-registry.ts. Required, because the search / everything-else
+   * split on the Admin spend page is BY PASS PREFIX: a search call recorded without one lands
+   * in `unclassified` and the search column stays empty while looking merely quiet.
+   */
+  pass: 'search.query-expansion' | 'search.query-router'
   maxOutputTokens?: number
 }): Promise<GeminiJsonResult> {
   const ctrl = new AbortController()
@@ -137,6 +144,10 @@ async function callGeminiJson(opts: {
     }
     type GeminiResp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
     const data = await res.json() as GeminiResp
+    // ⚠ RECORDED BEFORE THE TRUNCATION CHECK. A call cut off at maxOutputTokens was billed in
+    // full, and those are the calls whose cost most needs to be visible. Fire-and-forget: a
+    // ledger failure must never take down the search it was measuring.
+    void recordGeminiUsage(data, { stream: 'lex', pass: opts.pass, model: opts.model })
     const candidate = data?.candidates?.[0]
     const text = candidate?.content?.parts?.[0]?.text
 
@@ -186,7 +197,7 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
   ].filter(Boolean).join('\n')
 
   const res = await callGeminiJson({
-    model, apiKey, timeoutMs,
+    model, apiKey, timeoutMs, pass: 'search.query-expansion',
     systemPrompt: SYSTEM_PROMPT,
     userMessage,
     schema: EXPANSION_SCHEMA,
@@ -449,7 +460,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
   ].filter(Boolean).join('\n')
 
   const res = await callGeminiJson({
-    model, apiKey, timeoutMs,
+    model, apiKey, timeoutMs, pass: 'search.query-router',
     systemPrompt: routerSystemPrompt(),
     userMessage,
     schema: ROUTER_SCHEMA,

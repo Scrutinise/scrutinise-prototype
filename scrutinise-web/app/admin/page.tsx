@@ -1,5 +1,7 @@
 'use client'
 
+import { SpendSection } from '@/components/admin/SpendSection'
+
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -812,7 +814,7 @@ function LexInsightsSection() {
 // Main admin page
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AdminSection = 'reports' | 'users' | 'insights' | 'config' | 'transfer'
+type AdminSection = 'reports' | 'users' | 'insights' | 'spend' | 'config' | 'transfer'
 
 export default function AdminPage() {
   const [section, setSection] = useState<AdminSection>('reports')
@@ -829,6 +831,8 @@ export default function AdminPage() {
     { key: 'reports', label: 'Content Reports' },
     { key: 'users', label: 'Users' },
     { key: 'insights', label: 'Lex Insights' },
+    // BRIEF_SEARCH_S6 §3 addendum — the metering has to be visible, not only stored.
+    { key: 'spend', label: 'Spend' },
     ...(isSuperAdmin
       ? [
           { key: 'config' as AdminSection, label: 'Platform Config' },
@@ -912,6 +916,17 @@ export default function AdminPage() {
               <LexInsightsSection />
             </CardContent>
           </Card>
+        )}
+
+        {section === 'spend' && (
+          <div>
+            <h2 className="mb-1 text-base font-semibold">Model spend</h2>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Every model call the platform makes, from every stream. Measurement only — nothing here
+              caps, throttles or charges anyone.
+            </p>
+            <SpendSection />
+          </div>
         )}
 
         {section === 'config' && isSuperAdmin && (
