@@ -275,21 +275,41 @@ async function main() {
           const org = await resolveEntity(pool, 'organisation', cp, null, it.date, 'members-interests')
           if (org.created) orgs++
           if (org.matchedByName) orgNameMatches++
+          // FRESHNESS §2 — the surface is `it.memberName`: the name as the REGISTER printed it for
+          // this declaration, which is what a reader is shown beside the interest. It is not the
+          // canonical name and it is not the organisation's: the subject of a `declared-interest`
+          // edge is the member, so the subject surface is the member's.
+          const memberSurface = it.memberName.slice(0, 500)
           const { rows: e } = await pool.query<{ id: string }>(
-            `INSERT INTO graph_edge (subject_id, predicate, object_kind, object_entity_id, object_ref, object_label, first_seen, last_seen)
-             VALUES ($1,'declared-interest','entity',$2,$3,$4,$5,$5)
+            `INSERT INTO graph_edge (subject_id, predicate, object_kind, object_entity_id, object_ref, object_label, first_seen, last_seen, subject_surface)
+             VALUES ($1,'declared-interest','entity',$2,$3,$4,$5,$5,$6)
              ON CONFLICT (subject_id, predicate, object_kind, object_ref) DO UPDATE SET
                first_seen   = LEAST(graph_edge.first_seen, EXCLUDED.first_seen),
                last_seen    = GREATEST(graph_edge.last_seen, EXCLUDED.last_seen),
-               object_label = COALESCE(graph_edge.object_label, EXCLUDED.object_label)
+               object_label = COALESCE(graph_edge.object_label, EXCLUDED.object_label),
+               -- First surface kept, flag sticky — the same rule as sweep-committees.ts, and it
+               -- matters more here: a member's register name changes with an honour or a title, so
+               -- an edge spanning years genuinely does carry several forms.
+               subject_surface = COALESCE(graph_edge.subject_surface, EXCLUDED.subject_surface),
+               subject_surface_varies = graph_edge.subject_surface_varies
+                 OR (graph_edge.subject_surface IS NOT NULL
+                     AND EXCLUDED.subject_surface IS NOT NULL
+                     AND graph_edge.subject_surface <> EXCLUDED.subject_surface)
              RETURNING id`,
-            [person.id, org.id, String(org.id), it.categoryName, it.date])
+            [person.id, org.id, String(org.id), it.categoryName, it.date, memberSurface])
           edges++
-          const { rowCount } = await pool.query(
-            `INSERT INTO graph_evidence (edge_id, section_id, source_url, extract, observed_on)
-             VALUES ($1,$2,$3,$4,$5) ON CONFLICT (edge_id, section_id) DO NOTHING`,
-            [Number(e[0].id), sec.sectionId, sec.url, it.summary?.slice(0, 500) ?? null, it.date])
-          if (rowCount) evidence++
+          // ⚠ `DO NOTHING` BECAME `DO UPDATE`, SO THE COUNTER HAD TO CHANGE WITH IT. Under DO NOTHING
+          // an existing row reported rowCount 0 and `evidence` counted NEW rows; under DO UPDATE
+          // every row reports 1, which would silently turn the same counter into "rows touched" and
+          // overstate the sweep in its own report. `xmax = 0` is true only for a real INSERT.
+          const { rows: evRows } = await pool.query<{ inserted: boolean }>(
+            `INSERT INTO graph_evidence (edge_id, section_id, source_url, extract, observed_on, subject_surface)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             ON CONFLICT (edge_id, section_id) DO UPDATE SET
+               subject_surface = COALESCE(graph_evidence.subject_surface, EXCLUDED.subject_surface)
+             RETURNING (xmax = 0) AS inserted`,
+            [Number(e[0].id), sec.sectionId, sec.url, it.summary?.slice(0, 500) ?? null, it.date, memberSurface])
+          if (evRows[0]?.inserted) evidence++
         }
       }
       if ((skip / TAKE) % 10 === 0) console.log(`  page ${skip / TAKE + 1}/${Math.ceil(total / TAKE)} — ${n(items)} interests`)

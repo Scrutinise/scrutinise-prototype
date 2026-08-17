@@ -272,45 +272,76 @@ async function writePage(pool: ReturnType<typeof getNeonPool>, pending: PendingS
 
   // 6. Edges, then evidence. `n_evidence` is NOT incremented here — it is reconciled from
   //    graph_evidence at the end of the run, so it can never drift from what is actually stored.
-  const edgeKey = new Map<string, { subjectId: number; ref: string; label: string | null; date: string | null }>()
+  // FRESHNESS §2 — the surface travels with the edge, because it cannot be recovered afterwards.
+  // `p.s.name` is the exact string this appearance was matched on, the same string that goes into
+  // graph_alias. `varies` is set here rather than inferred later: within one run we can SEE the
+  // second surface arrive, and across runs the ON CONFLICT below carries the flag forward.
+  const edgeKey = new Map<string, {
+    subjectId: number; ref: string; label: string | null; date: string | null
+    surface: string; varies: boolean
+  }>()
   for (const p of pending) {
     const e = entityFor(p)
     const k = `${e.id}|${p.inquiryId}`
-    if (!edgeKey.has(k)) edgeKey.set(k, { subjectId: e.id, ref: p.inquiryId, label: p.inquiryLabel, date: p.date })
+    const surface = p.s.name.slice(0, 500)
+    const cur = edgeKey.get(k)
+    if (!cur) edgeKey.set(k, { subjectId: e.id, ref: p.inquiryId, label: p.inquiryLabel, date: p.date, surface, varies: false })
+    else if (cur.surface !== surface) cur.varies = true
   }
   const edgeList = [...edgeKey.values()]
   const edgeIds = new Map<string, number>()
   {
     const vals: string[] = []; const params: unknown[] = []
-    edgeList.forEach((x, i) => { const b = i * 4; vals.push(`($${b + 1},'gave-evidence-to','inquiry',NULL,$${b + 2},$${b + 3},$${b + 4},$${b + 4})`); params.push(x.subjectId, x.ref, x.label, x.date) })
+    edgeList.forEach((x, i) => {
+      const b = i * 6
+      vals.push(`($${b + 1},'gave-evidence-to','inquiry',NULL,$${b + 2},$${b + 3},$${b + 4},$${b + 4},$${b + 5},$${b + 6})`)
+      params.push(x.subjectId, x.ref, x.label, x.date, x.surface, x.varies)
+    })
     const { rows: made } = await pool.query<{ id: string; subject_id: string; object_ref: string }>(
-      `INSERT INTO graph_edge (subject_id, predicate, object_kind, object_entity_id, object_ref, object_label, first_seen, last_seen)
+      `INSERT INTO graph_edge (subject_id, predicate, object_kind, object_entity_id, object_ref, object_label, first_seen, last_seen, subject_surface, subject_surface_varies)
        VALUES ${vals.join(',')}
        ON CONFLICT (subject_id, predicate, object_kind, object_ref) DO UPDATE SET
          first_seen   = LEAST(graph_edge.first_seen, EXCLUDED.first_seen),
          last_seen    = GREATEST(graph_edge.last_seen, EXCLUDED.last_seen),
-         object_label = COALESCE(graph_edge.object_label, EXCLUDED.object_label)
+         object_label = COALESCE(graph_edge.object_label, EXCLUDED.object_label),
+         -- ⚠ THE FIRST SURFACE IS KEPT, NEVER OVERWRITTEN, and \`varies\` is STICKY. Overwriting
+         -- would make the displayed name depend on which run happened last; clearing the flag would
+         -- turn "one of several forms" back into "the form used", which is the invented fact this
+         -- whole column exists to avoid.
+         subject_surface = COALESCE(graph_edge.subject_surface, EXCLUDED.subject_surface),
+         subject_surface_varies = graph_edge.subject_surface_varies
+           OR EXCLUDED.subject_surface_varies
+           OR (graph_edge.subject_surface IS NOT NULL
+               AND EXCLUDED.subject_surface IS NOT NULL
+               AND graph_edge.subject_surface <> EXCLUDED.subject_surface)
        RETURNING id, subject_id, object_ref`,
       params)
     for (const m of made) edgeIds.set(`${m.subject_id}|${m.object_ref}`, Number(m.id))
     c.edgeRows += made.length
   }
 
-  const evi = new Map<string, { edgeId: number; sectionId: string; url: string | null; date: string | null }>()
+  // ⚠ THE EVIDENCE ROW IS WHERE THE SURFACE IS A FACT RATHER THAN A DISPLAY CHOICE: one appearance,
+  // one surface, no aggregation. graph_edge.subject_surface is a first-seen copy of this for
+  // reading without a join; this is the row that can be checked against the document.
+  const evi = new Map<string, { edgeId: number; sectionId: string; url: string | null; date: string | null; surface: string }>()
   for (const p of pending) {
     const e = entityFor(p)
     const edgeId = edgeIds.get(`${e.id}|${p.inquiryId}`)
     if (!edgeId) continue
-    evi.set(`${edgeId}|${p.sectionId}`, { edgeId, sectionId: p.sectionId, url: p.url, date: p.date })
+    evi.set(`${edgeId}|${p.sectionId}`, { edgeId, sectionId: p.sectionId, url: p.url, date: p.date, surface: p.s.name.slice(0, 500) })
   }
   {
     const a = [...evi.values()]
     if (a.length) {
       const vals: string[] = []; const params: unknown[] = []
-      a.forEach((x, i) => { const b = i * 4; vals.push(`($${b + 1},$${b + 2},$${b + 3},$${b + 4})`); params.push(x.edgeId, x.sectionId, x.url, x.date) })
+      a.forEach((x, i) => { const b = i * 5; vals.push(`($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5})`); params.push(x.edgeId, x.sectionId, x.url, x.date, x.surface) })
       await pool.query(
-        `INSERT INTO graph_evidence (edge_id, section_id, source_url, observed_on)
-         VALUES ${vals.join(',')} ON CONFLICT (edge_id, section_id) DO NOTHING`, params)
+        `INSERT INTO graph_evidence (edge_id, section_id, source_url, observed_on, subject_surface)
+         VALUES ${vals.join(',')}
+         ON CONFLICT (edge_id, section_id) DO UPDATE SET
+           -- A re-run of an EXISTING evidence row fills the surface where it was missing (the rows
+           -- written before this column existed) and never changes one that is already recorded.
+           subject_surface = COALESCE(graph_evidence.subject_surface, EXCLUDED.subject_surface)`, params)
       c.evidenceRows += a.length
     }
   }
