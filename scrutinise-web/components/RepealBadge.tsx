@@ -2,7 +2,8 @@
 // RepealBadge.tsx — SURFACE 1. ONE component for the three repeal states, so no two
 // surfaces word it differently.
 //
-// ⚠ THE WORDING COMES FROM lib/lex/repeal-status.ts, not from here. That module also writes
+// ⚠ THE WORDING COMES FROM lib/lex/repeal-wording.ts, not from here (repeal-status.ts
+// re-exports it; this file imports the client-safe module because that one pulls prisma). That module also writes
 // the line Lex reads, and a badge that phrased it independently is how the panel comes to
 // say one thing while the answer beside it says another.
 //
@@ -17,7 +18,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 'use client'
 
-import { repealLabel, repealExplanation, type RepealStatus } from '@/lib/lex/repeal-status'
+import { repealLabel, repealExplanation, type RepealStatus } from '@/lib/lex/repeal-wording'
 
 export function RepealBadge({ repeal, compact = false }: { repeal?: RepealStatus; compact?: boolean }) {
   // Lookup failed (or an older caller never attached one) — say nothing rather than something false.

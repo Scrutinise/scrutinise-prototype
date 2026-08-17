@@ -29,7 +29,10 @@ const ROOT = path.join(__dirname, '..')
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8')
 
 /** Files that render or phrase the repeal state for a human or for the model. */
-const WORDING_FILES = ['lib/lex/repeal-status.ts', 'components/RepealBadge.tsx']
+// repeal-wording.ts is the wording's home since 2026-08-17 (repeal-status.ts imports prisma
+// and RepealBadge is a client component — see that file's header). repeal-status.ts stays in the
+// list because it re-exports, so a phrase reintroduced there is still caught.
+const WORDING_FILES = ['lib/lex/repeal-wording.ts', 'lib/lex/repeal-status.ts', 'components/RepealBadge.tsx']
 
 /**
  * "In force" as an ASSERTION. The phrase appears legitimately in prose that FORBIDS the claim
@@ -58,7 +61,7 @@ function main() {
     const bad = assertsInForce(read(f))
     check(bad.length === 0, `${f} never asserts "in force"`, bad.join(' | '))
   }
-  const rs = read('lib/lex/repeal-status.ts')
+  const rs = read('lib/lex/repeal-wording.ts')
   check(/not the same as confirming it is current/.test(rs),
     'the no-record explanation says explicitly that it is not confirmation')
   check(/'no-record'/.test(rs) && /No repeal recorded/.test(rs),
@@ -105,7 +108,7 @@ function main() {
     if (WORDING_FILES.includes(f.replace(/^\.\//, ''))) return false
     const src = read(f)
     // A file that writes the user-facing phrase itself rather than importing it.
-    return /'REPEALED|"REPEALED|No repeal recorded/.test(src) && !/repeal-status/.test(src)
+    return /'REPEALED|"REPEALED|No repeal recorded/.test(src) && !/repeal-status|repeal-wording/.test(src)
   })
   check(rogue.length === 0, 'no file writes the repeal wording without importing it', rogue.join(', '))
 
