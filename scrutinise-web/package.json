@@ -12,6 +12,8 @@
     "lint": "next lint",
     "db:seed": "tsx prisma/seed.ts",
     "check:sprint2.5-schema": "tsx --env-file=.env scripts/check-sprint2_5-schema.ts",
+    "check:s7-retrieval": "tsx scripts/check-s7-retrieval.ts",
+    "measure:s7": "tsx --env-file=.env scripts/measure-s7-streams.ts",
     "check:lex-scope": "tsx scripts/check-lex-scope.ts",
     "measure:s5": "tsx --env-file=.env scripts/measure-s5-lex-scope.ts",
     "check:repeal-status": "tsx scripts/check-repeal-status.ts",
