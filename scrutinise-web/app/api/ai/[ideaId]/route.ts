@@ -8,6 +8,10 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { FIELD_SEQUENCE } from '@/lib/field-labels'
 import { searchLegislation, type SearchResult } from '@/lib/search'
 import { searchLegislationViaGateway } from '@/lib/lex/gateway-legacy'
+// BRIEF_SEARCH_S5 §2 — the second context channel.
+import {
+  retrieveForChat, evidenceBlock, gapNote, logUnmet, GAP_INSTRUCTION, type EvidenceResult,
+} from '@/lib/lex/chat-retrieval'
 import { REPEAL_PROMPT_INSTRUCTION, REPEAL_UNAVAILABLE_INSTRUCTION } from '@/lib/lex/repeal-status'
 
 function classifyError(error: unknown): string {
@@ -76,6 +80,10 @@ function buildSystemPrompt(ctx: {
   currentFieldLabel?: string | null
   currentFieldSection?: string | null
   currentDateTime?: string
+  /** BRIEF_SEARCH_S5 §2 — everything that is NOT legislation, in its own block and its own words. */
+  evidenceContext?: EvidenceResult[]
+  /** The honest line about what was looked for and not found. Null when there is nothing to say. */
+  retrievalGap?: string | null
   legislationContext?: Array<{
     actTitle: string
     sectionNumber: string
@@ -100,6 +108,30 @@ function buildSystemPrompt(ctx: {
         `- ${c.actTitle} (s.${c.sectionNumber}: ${c.sectionTitle})${c.legislationGovUkId ? ` [id: ${c.legislationGovUkId}]` : ''}${c.repealNote ? `  ${c.repealNote}` : ''}`
       ).join('\n') + `\n\n${ctx.repealStatusAvailable === false ? REPEAL_UNAVAILABLE_INSTRUCTION : REPEAL_PROMPT_INSTRUCTION}`
     : 'none'
+
+  // ── BRIEF_SEARCH_S5 §2 — THE SECOND CHANNEL, RENDERED SEPARATELY AND LABELLED SEPARATELY ──
+  // ⚠ Its own block, with each item saying WHAT KIND of document it is. S5 §2: "A user must never
+  // be unable to tell which is which, and neither must Lex." Merging it into the legislation block
+  // would be the failure the brief calls worse than doing nothing — a committee transcript
+  // presented as a section of an Act.
+  const evidenceStr = evidenceBlock(ctx.evidenceContext ?? [])
+  const evidenceSection = evidenceStr
+    ? `
+
+=== OTHER EVIDENCE FROM OUR CORPUS (NOT legislation) ===
+${evidenceStr}
+`
+    : ''
+
+  // ⚠⚠ THE NEVER-CLAIM RULE (§4). A gap that announces itself is a feature; a gap that looks like
+  // an absence of evidence is the single most damaging thing this platform can produce, because
+  // the user cannot tell the difference and neither can we.
+  const gapSection = ctx.retrievalGap ? `
+
+=== WHAT WE LOOKED FOR AND DID NOT FIND ===
+${ctx.retrievalGap}
+${GAP_INSTRUCTION}
+` : ''
 
   // Platform controls which field is active — Lex works on that field only (v6.0 §2.1)
   const fieldInstruction = ctx.currentFieldKey ? `
@@ -299,7 +331,7 @@ CURRENT FIELD:
 
 Legislation candidates (FTS, keyword-matched — verify before use):
 ${legislationCandidatesStr}
-
+${evidenceSection}${gapSection}
 IDENTITY:
 Your name is Lex. Never say you are Claude, the AI, or an AI assistant. Do not reveal the underlying model. Do not claim a knowledge cutoff date.
 
@@ -711,23 +743,47 @@ export async function POST(req: Request, { params }: Params) {
   // key to join `section_repeals` on — see the report. `repealChecked` carries that distinction
   // out of this function so the prompt can state it rather than let silence imply currency.
   type GroundingResult = SearchResult & { repealNote?: string | null }
-  async function runGroundingSearch(): Promise<{ results: GroundingResult[]; totalMatches: number; repealChecked: boolean }> {
+  async function runGroundingSearch(): Promise<{
+    results: GroundingResult[]; totalMatches: number; repealChecked: boolean
+    evidence: EvidenceResult[]; gap: string | null
+  }> {
     try {
-      const gw = await searchLegislationViaGateway({
-        q: ftsQuery || message,
-        limit: 4,
-        intent: 'IDEA_CHAT_GROUNDING',
-      })
-      if (!gw.failed) return { results: gw.results as unknown as GroundingResult[], totalMatches: gw.totalMatches, repealChecked: true }
-      console.error('[ai/route] gateway grounding search FAILED — legacy fallback:', gw.failureReason)
+      // ⚠⚠ BRIEF_SEARCH_S5 §2 — TWO CHANNELS, AND THE CALL IS ROUTED RATHER THAN TIER-SCOPED.
+      // This was `searchLegislationViaGateway`, which passes `tier: 'legislation'` and then drops
+      // every display type that is not an Act, an SI or retained EU law. S4 measured that as 24 of
+      // 36 results discarded on every probe, and between 36 and 146 relevant non-legislation
+      // documents per question unreachable. `retrieveForChat` stops overruling the router and
+      // returns legislation and evidence SEPARATELY — separately because a committee transcript
+      // arriving through a field called `actTitle` would be shown to the user as a section of an
+      // Act, which is worse than not showing it at all.
+      const r = await retrieveForChat({ query: ftsQuery || message, limit: 5 })
+      // §4 — what Lex looked for and could not get. Fire-and-forget; never costs the user a turn.
+      logUnmet(r, (ftsQuery || message).split(/\s+/).filter(Boolean), ideaId)
+      if (!r.failed) {
+        return {
+          results: r.legislation as unknown as GroundingResult[],
+          totalMatches: r.legislation.length,
+          repealChecked: true,
+          evidence: r.evidence,
+          gap: gapNote(r),
+        }
+      }
+      console.error('[ai/route] chat retrieval FAILED — legacy fallback:', r.failureReason)
     } catch (err) {
-      console.error('[ai/route] gateway grounding search threw — legacy fallback:', err)
+      console.error('[ai/route] chat retrieval threw — legacy fallback:', err)
     }
     // ⚠ REPEAL STATUS IS UNAVAILABLE ON THIS PATH, and the flag says so rather than defaulting
     // to a comfortable true. The prompt then tells Lex it cannot speak to currency at all.
     const legacy = await searchLegislation({ q: ftsQuery || message, limit: 4, minRank: 0.25 })
       .catch(() => ({ results: [] as SearchResult[], totalMatches: 0 }))
-    return { ...legacy, repealChecked: false }
+    // ⚠ The legacy fallback reaches legislation ONLY — it has no second channel and never will.
+    // `gap` says so, so silence on this path cannot be read as "the corpus holds nothing else".
+    return {
+      ...legacy, repealChecked: false, evidence: [] as EvidenceResult[],
+      gap: 'The wider corpus (committee evidence, debates, case law, guidance) could NOT be searched '
+        + 'for this turn — only legislation was reachable. If the user asked about any of those, say '
+        + 'plainly that you could not reach them here, and do not answer from general knowledge.',
+    }
   }
 
   // Run lexInsight lookup and the grounding search in parallel — independent reads.
@@ -745,7 +801,10 @@ export async function POST(req: Request, { params }: Params) {
       // field the gateway adds — which is how the repeal note would have gone missing from the
       // one place this job most needs it.
       ? runGroundingSearch()
-      : Promise.resolve({ results: [] as Awaited<ReturnType<typeof runGroundingSearch>>['results'], totalMatches: 0, repealChecked: true }),
+      : Promise.resolve({
+        results: [] as Awaited<ReturnType<typeof runGroundingSearch>>['results'],
+        totalMatches: 0, repealChecked: true, evidence: [] as EvidenceResult[], gap: null,
+      }),
   ])
 
   // [L6-D Task 1] Temporary FTS diagnostic — remove after Vercel log review
@@ -821,6 +880,9 @@ export async function POST(req: Request, { params }: Params) {
     currentDateTime,
     legislationContext: resolvedLegislationContext ?? undefined,
     repealStatusAvailable: autoSearch.repealChecked,
+    // BRIEF_SEARCH_S5 §2 — the second channel, and §4's honest line about what was not found.
+    evidenceContext: autoSearch.evidence,
+    retrievalGap: autoSearch.gap,
   })
 
   const startTime = Date.now()

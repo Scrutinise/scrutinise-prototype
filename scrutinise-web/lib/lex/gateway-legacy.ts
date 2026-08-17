@@ -67,7 +67,7 @@ export function gidFromId(id: string): string | null {
 }
 
 /** `…:section-21` → `section-21`; whole-document rows → ''. */
-function refFromId(id: string): string {
+export function refFromId(id: string): string {
   const parts = id.split(':')
   if (parts.length < 3) return ''
   const ref = parts.slice(2).join(':').trim()
@@ -88,7 +88,7 @@ function refFromId(id: string): string {
  *                                   truncating to `24` would cite the wrong provision)
  *   whole-document rows           → ''
  */
-function sectionNumberFromRef(ref: string): string {
+export function sectionNumberFromRef(ref: string): string {
   if (!ref) return ''
   const simple = /^(section|regulation|article|rule|paragraph)-([0-9]+[A-Za-z]*)$/.exec(ref)
   return simple ? simple[2] : ref
@@ -103,7 +103,7 @@ function yearFromGid(gid: string | null, date: string): number {
 }
 
 /** Strip the FTS snippet's `<<match>>` delimiters — the legacy consumers render plain text. */
-function plainSnippet(s: string): string {
+export function plainSnippet(s: string): string {
   return (s ?? '').replace(/<<|>>/g, '')
 }
 
@@ -121,7 +121,7 @@ function plainSnippet(s: string): string {
  * is used rather than invented prose. Anything else falls back to the citation, then
  * to the id — never to the corpus name.
  */
-function displayTitle(rawTitle: string, citation: string, id: string, gid: string | null): string {
+export function displayTitle(rawTitle: string, citation: string, id: string, gid: string | null): string {
   const corpus = id.split(':')[0]
   const looksLikeCorpusName = !rawTitle || rawTitle === corpus
   if (!looksLikeCorpusName) return rawTitle

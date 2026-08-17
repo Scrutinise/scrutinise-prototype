@@ -24,6 +24,7 @@ import { interleaveStreams } from './interleave'
 import { sortByScore } from './score-scope'
 import { STREAM_SCOPES, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
+import { mapWithLimit, STREAM_CONCURRENCY } from './stream-batch'
 
 /** A stream's SCOPE (which part of the corpus it may reach — see stream-scopes.ts, where the
  *  `types` backstop and the corpus prefilters are documented) plus its retrieval call. */
@@ -219,7 +220,18 @@ export interface RoutedSearchResult {
  */
 export async function runRoutedSearch(route: RouteResult, limit: number): Promise<RoutedSearchResult> {
   const active = STREAMS.filter((s) => route[s.name])
-  const perStream = await Promise.all(active.map((s) => s.search(route[s.name]!, limit)))
+  // ⚠ BRIEF_SEARCH_S5 §2 — BATCHED, and this is a prerequisite rather than an optimisation.
+  // This was `Promise.all(active.map(...))`: five streams fired at once against a search service
+  // that handles four, so ONE USER SATURATED IT. S5 makes five streams the normal case for the
+  // Lex conversation rather than the exception, which is what turns a latent problem into a live
+  // one. `maxInFlight` below is OBSERVED, so a limiter that silently failed open would show.
+  const { results: perStream, stats } = await mapWithLimit(
+    active, STREAM_CONCURRENCY, (s) => s.search(route[s.name]!, limit))
+  if (active.length > stats.limit) {
+    console.log('[query-router] streams batched', {
+      streams: active.length, cap: stats.limit, maxInFlight: stats.maxInFlight, ms: stats.ms,
+    })
+  }
   const total = perStream.reduce((n, s) => n + s.length, 0)
   const results = interleaveStreams(perStream, total, {
     names: active.map((s) => s.name),
