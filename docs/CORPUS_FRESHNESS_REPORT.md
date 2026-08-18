@@ -268,9 +268,13 @@ sprint's DDL adds three columns and one small table.
 - **`match-registers.ts`'s key_source omission** — 1,785 entities, reported to CC-GRAPH, not fixed.
 - **107 `gave-evidence-to` edges carry no surface** — their source item was absent from the API on
   this pass. Left NULL rather than filled; `verify-surface.ts` reports the live figure.
-- **`committees-doc-index.ts` stopped at 40,800 of 51,854 publications**, covering **37,917 of the
-  45,610 we hold (83.1%)** — 26,547 with a file, 11,370 without. It is idempotent, so finishing it
-  is a re-run; a missing row costs coverage only, because the resolver falls back to `/html/`.
+- **`committees-doc-index.ts` reached 45,854 of 51,854 publications**, covering **41,505 of the
+  45,610 we hold (91.0%)** — 26,557 with a file, 14,948 without, 4,105 not yet indexed. It is
+  idempotent, so finishing it is a re-run; a missing row costs coverage only, because the resolver
+  falls back to `/html/`.
+  ⚠ **This figure moved twice while being written down** (83.1% → 91.0%), because a "settled" read
+  of the row count was taken while the sweep was still working through a slow stretch. A row count
+  that has not changed for two minutes is not a finished job — the run's own exit is.
 - **Which of the ~11,000 no-file publications actually open is known only to ±12pp** (45.0% on
   n=60). A one-off probe of that class would turn a 45% guess into a stored fact per publication —
   ~11,000 polite requests, a few hours, no LLM.
