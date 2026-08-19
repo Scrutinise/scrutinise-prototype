@@ -872,6 +872,14 @@ export default function AdminPage() {
           >
             Corpus Chat
           </a>
+          {/* GRAPH 3A §6. A page nothing links to is a page nobody opens — the thing this sprint
+              exists to have eyeballed would have needed the URL typed by hand. */}
+          <a
+            href="/admin/positions"
+            className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Position Graph
+          </a>
           {isSuperAdmin && (
             <a
               href="/admin/invites"
