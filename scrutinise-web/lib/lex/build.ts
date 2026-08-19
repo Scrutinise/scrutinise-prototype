@@ -45,7 +45,8 @@ import { stripNullBytes } from './json-safe'
 import {
   BUILD_PASSES, passDef, frameQuery, effectiveBudgetMs, COST_CEILING_PENCE,
   INSTRUMENT_FORK_KEY, trimForkAlternatives, DOMAIN_TRANSFER_QUESTION,
-  HARD_STOP_MS, PASS_BUDGET_MS, perspectivesFor, modelForPass,
+  HARD_STOP_MS, PASS_BUDGET_MS, perspectivesFor, modelForPass, buildDriver, WORKER_PICKUP_GRACE_MS,
+  type BuildDriver,
   type BuildPassKey, type Framing,
 } from './build-config'
 import {
@@ -58,6 +59,8 @@ import {
   type PassRecord, type PassStatus, type PassCarry,
 } from './build-carry'
 import { runResearch, draftFactsFor } from './build-research'
+import { buildEstimate, formatDuration, type BuildEstimate } from './build-estimate'
+import { sendBuildCompleteEmail } from '@/lib/email'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { readKnownUnknowns } from './deepening'
 import { supersedeOlderProposals } from './evidence-layer'
@@ -101,6 +104,13 @@ export interface BuildView {
   /** TRUE when this build stopped part-way and can be picked up from its last completed
    *  pass rather than restarted from nothing. */
   resumable: boolean
+  /**
+   * AMENDMENT_25B §B — TRUE when the worker was meant to take this build and has not
+   * within the grace period, so the page is driving it instead. Surfaced rather than
+   * hidden: a build running in the browser because the worker is down behaves
+   * differently (it needs the tab open) and the user has to be told.
+   */
+  workerLate: boolean
   forks: Array<{
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
@@ -118,6 +128,25 @@ export interface BuildState {
   history: Array<{ id: string; version: number; status: string; framing: Framing; completedAt: string | null }>
   /** The ceiling actually in force, and which of the two is binding. See build-config. */
   ceiling: { budgetMs: number; binding: string; costPence: number }
+  /**
+   * AMENDMENT_25B §C4 — how long this usually takes, measured rather than guessed.
+   * Carries its own sample size, so the page can say when it does not know yet.
+   */
+  estimate: BuildEstimate
+  /** §C4 — the user's remembered choice, so the checkbox comes up as they left it. */
+  emailDefault: boolean
+  /**
+   * AMENDMENT_25B §B — WHO IS DRIVING THIS BUILD.
+   *
+   * `worker` — Railway runs it end to end; the page may be closed and the build carries
+   * on. `client` — the documented fallback, driven pass-by-pass from this page, which
+   * therefore has to stay open.
+   *
+   * Told to the client rather than inferred by it: the difference decides whether the
+   * page must warn the user not to leave, and a wrong guess either double-runs every pass
+   * or leaves the build stalled for ever.
+   */
+  driver: BuildDriver
 }
 
 function toView(
@@ -127,6 +156,12 @@ function toView(
   const passes = readPassLog(row.passes)
   const started = row.startedAt ? row.startedAt.getTime() : null
   const ended = row.completedAt ? row.completedAt.getTime() : null
+
+  // The worker was supposed to take this and has not. See WORKER_PICKUP_GRACE_MS.
+  const workerLate =
+    buildDriver() === 'worker' &&
+    row.status === 'QUEUED' &&
+    Date.now() - row.createdAt.getTime() > WORKER_PICKUP_GRACE_MS
   // ⚠ PRICED FROM THE PASS LOG WHILE THE BUILD IS STILL RUNNING. 25-A settled the row's
   // token columns only at the end, which was fine when the whole build was one request.
   // With one pass per request (§1) the columns are stale for minutes at a time, and a
@@ -173,7 +208,19 @@ function toView(
         tokensIn: per.tokensIn, tokensOut: per.tokensOut, pence: per.pence,
       }
     }),
-    nextPass: row.status === 'RUNNING' || row.status === 'QUEUED' ? nextPassKey(passes) : null,
+    // ⚠ NULL WHEN THE WORKER IS DRIVING. `nextPass` is an instruction to the client to
+    // POST for the next pass; with the worker running the build, a client that acted on
+    // it would drive the same passes a second time. The server decides who drives, and
+    // it says so here rather than leaving the client to infer it.
+    //
+    // ⚠ …EXCEPT WHEN NO WORKER HAS PICKED IT UP. See WORKER_PICKUP_GRACE_MS: a build left
+    // at QUEUED because there is no worker would otherwise spin for ever, so past the
+    // grace period the client is told to drive it after all. `workerLate` says why, so
+    // "the worker is absent" and "the worker is slow" do not read the same.
+    nextPass: (row.status === 'RUNNING' || row.status === 'QUEUED') && (buildDriver() === 'client' || workerLate)
+      ? nextPassKey(passes)
+      : null,
+    workerLate,
     resumable: isResumable(passes),
     forks,
   }
@@ -183,6 +230,12 @@ export async function buildState(ideaId: string): Promise<BuildState> {
   // Settle on the READ, and by WRITING the status — invariant 2. A build that died
   // without reporting back must not be able to sit at RUNNING for ever.
   await settleAbandonedBuilds(ideaId)
+
+  const estimate = await buildEstimate()
+  const owner = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: { creator: { select: { emailOnBuildComplete: true } } },
+  })
 
   const rows = await prisma.ideaBuild.findMany({ where: { ideaId }, orderBy: { version: 'desc' } })
   const latestRow = rows[0] ?? null
@@ -211,6 +264,9 @@ export async function buildState(ideaId: string): Promise<BuildState> {
       framing: r.framing as Framing, completedAt: r.completedAt?.toISOString() ?? null,
     })),
     ceiling: { budgetMs: ceiling.ms, binding: ceiling.binding, costPence: COST_CEILING_PENCE },
+    estimate,
+    emailDefault: owner?.creator.emailOnBuildComplete ?? false,
+    driver: buildDriver(),
   }
 }
 
@@ -231,7 +287,15 @@ export class ElicitationNotConfirmed extends Error {
  *   · the row is created (the partial unique index is the database's answer to two
  *     concurrent creates) and then CLAIMED in a conditional update whose count is read.
  */
-export async function claimBuild(ideaId: string, framing: Framing): Promise<string> {
+export async function claimBuild(
+  ideaId: string,
+  framing: Framing,
+  /**
+   * AMENDMENT_25B §C4 — "email me when it's done", as chosen for THIS build. Undefined
+   * means the caller expressed no preference and the user's remembered default stands.
+   */
+  notifyEmail?: boolean,
+): Promise<string> {
   if (!(await isConfirmed(ideaId))) throw new ElicitationNotConfirmed()
 
   await settleAbandonedBuilds(ideaId)
@@ -247,10 +311,31 @@ export async function claimBuild(ideaId: string, framing: Framing): Promise<stri
   })
   const version = (highest?.version ?? 0) + 1
 
+  // §C4 — the choice is FROZEN ONTO THE ROW at enqueue, and the user's default is updated
+  // to match. The worker reads the row minutes later on another machine; reading the
+  // preference at send time would make a change in another tab retroactive.
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { creatorId: true } })
+  let wantsEmail = notifyEmail
+  if (wantsEmail === undefined) {
+    const u = idea && await prisma.user.findUnique({
+      where: { id: idea.creatorId }, select: { emailOnBuildComplete: true },
+    })
+    wantsEmail = u?.emailOnBuildComplete ?? false
+  } else if (idea) {
+    await prisma.user.update({
+      where: { id: idea.creatorId },
+      data: { emailOnBuildComplete: wantsEmail },
+    })
+  }
+
   let created
   try {
     created = await prisma.ideaBuild.create({
-      data: { ideaId, version, framing, status: 'QUEUED', passes: freshPassLog() as never },
+      data: {
+        ideaId, version, framing, status: 'QUEUED',
+        notifyEmail: wantsEmail,
+        passes: freshPassLog() as never,
+      },
     })
   } catch (err) {
     // P2002 on either unique index means someone else won the race. That is the guard
@@ -258,6 +343,21 @@ export async function claimBuild(ideaId: string, framing: Framing): Promise<stri
     const code = (err as { code?: string })?.code
     if (code === 'P2002') throw new BuildAlreadyRunning()
     throw err
+  }
+
+  // ⚠ AMENDMENT_25B §B — ON THE WORKER, THE ROW STAYS QUEUED AND THE REQUEST RETURNS.
+  //
+  // "The web app enqueues it and returns immediately." QUEUED is what the worker polls
+  // for, so moving the row to RUNNING here would hide it from the queue and the build
+  // would never start. The worker claims it, in its own conditional write.
+  //
+  // On the client-driven fallback the request DOES claim it, because there is no worker
+  // coming and the very next POST runs pass 1.
+  if (buildDriver() === 'worker') {
+    console.log('[lex-diag] 25b build ENQUEUED for the worker', {
+      ideaId, buildId: created.id, version, framing,
+    })
+    return created.id
   }
 
   // The conditional claim. Guarded on the status we expect to find, and the COUNT is
@@ -268,7 +368,9 @@ export async function claimBuild(ideaId: string, framing: Framing): Promise<stri
   })
   if (claimed.count === 0) throw new BuildAlreadyRunning()
 
-  console.log('[lex-diag] 25a build claimed', { ideaId, buildId: created.id, version, framing })
+  console.log('[lex-diag] 25b build claimed for client-driven run', {
+    ideaId, buildId: created.id, version, framing,
+  })
   return created.id
 }
 
@@ -615,6 +717,121 @@ export async function runNextPass(ideaId: string, userId: string, buildId: strin
   if (!nextPassKey(after)) return finishBuild(ideaId, buildId)
 
   return buildViewOf(buildId)
+}
+
+/**
+ * AMENDMENT_25B §B — RUN A BUILD END TO END. What the Railway worker calls.
+ *
+ * A loop over `runNextPass`, which is deliberately the SAME function the client-driven
+ * fallback calls: the worker is a different DRIVER, not a different engine, so a build
+ * cannot behave one way on the worker and another in the browser.
+ *
+ * ⚠ THE LOOP IS BOUNDED. `nextPassKey` returning the same key forever — a pass that
+ * cannot claim itself, say — would spin against the model API at full speed. The bound is
+ * the pass count plus a small margin, and exhausting it is reported rather than retried.
+ */
+export async function runBuildToCompletion(
+  ideaId: string, userId: string, buildId: string,
+): Promise<BuildView> {
+  /**
+   * ⚠ THE LOOP READS THE STORED LOG, NOT `view.nextPass`. This cost a failed acceptance
+   * test and it is worth the note.
+   *
+   * `BuildView.nextPass` is an INSTRUCTION TO THE CLIENT, and under the worker driver it
+   * is deliberately null so a browser never drives a pass the worker is already running.
+   * The first version of this loop used it as its own condition, so the worker ran
+   * exactly ONE pass and stopped — "RUNNING · 1/7 passes · stopped cleanly", which looks
+   * like a healthy worker with nothing to do.
+   *
+   * The two questions are not the same question: "should the CLIENT ask for another
+   * pass" and "is there another pass" have different answers by design. The engine asks
+   * the second, of the log, which is the only thing that knows.
+   */
+  const remaining = async (): Promise<BuildPassKey | null> => {
+    const row = await prisma.ideaBuild.findUnique({
+      where: { id: buildId }, select: { passes: true, status: true },
+    })
+    if (!row || (row.status !== 'RUNNING' && row.status !== 'QUEUED')) return null
+    return nextPassKey(readPassLog(row.passes))
+  }
+
+  let view = await runNextPass(ideaId, userId, buildId)
+  let guard = 0
+  let next = await remaining()
+  while (next && guard < BUILD_PASSES.length + 3) {
+    guard++
+    view = await runNextPass(ideaId, userId, buildId)
+    next = await remaining()
+  }
+  if (next) {
+    console.error('[lex-diag] 25b build did not converge — the same pass kept coming back', {
+      buildId, stuckOn: next, iterations: guard,
+    })
+    return settleBuild(
+      buildId, 'FAILED',
+      `The build stopped making progress at "${passDef(next)?.label ?? next}". ` +
+      'Nothing it had already drafted was lost; run it again to continue from there.',
+      allUsages(readPassLog((await prisma.ideaBuild.findUnique({
+        where: { id: buildId }, select: { passes: true },
+      }))?.passes)),
+    )
+  }
+  return view
+}
+
+/**
+ * AMENDMENT_25B §B — the worker's queue read.
+ *
+ * Returns the oldest build waiting to be picked up, or null. Two kinds qualify, and they
+ * are the same kind from the worker's point of view:
+ *
+ *   · QUEUED — enqueued by the web app and never started.
+ *   · RUNNING with work left — a build whose worker died mid-pass. `settleAbandonedBuilds`
+ *     has already reset the killed pass to PENDING by the time this runs, so picking it
+ *     up RESUMES it from its last completed pass rather than restarting it.
+ *
+ * ⚠ NOT CLAIMED HERE. Reading and claiming are separate so the claim can be a conditional
+ * write whose count is checked — see `claimQueuedBuild`.
+ */
+export async function nextQueuedBuild(): Promise<{ id: string; ideaId: string; userId: string } | null> {
+  const row = await prisma.ideaBuild.findFirst({
+    where: { status: 'QUEUED' },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, ideaId: true, idea: { select: { creatorId: true } } },
+  })
+  if (!row) return null
+  return { id: row.id, ideaId: row.ideaId, userId: row.idea.creatorId }
+}
+
+/**
+ * Claim a QUEUED build for this worker. Conditional, and the count is read — two workers
+ * polling the same row must not both start it.
+ */
+export async function claimQueuedBuild(buildId: string): Promise<boolean> {
+  const res = await prisma.ideaBuild.updateMany({
+    where: { id: buildId, status: 'QUEUED' },
+    data: { status: 'RUNNING', startedAt: new Date(), currentPass: BUILD_PASSES[0].key },
+  })
+  return res.count > 0
+}
+
+/**
+ * Builds stuck at RUNNING across every idea, settled or resumed.
+ *
+ * `settleAbandonedBuilds` is per-idea because it runs on an idea's own poll. The worker
+ * has no idea in hand, so it needs the same housekeeping across the table — otherwise a
+ * build whose owner never reopens the page would sit at RUNNING for ever and never be
+ * picked up again.
+ */
+export async function sweepStalledBuilds(): Promise<number> {
+  const rows = await prisma.ideaBuild.findMany({
+    where: { status: { in: ['QUEUED', 'RUNNING'] } },
+    select: { ideaId: true },
+    distinct: ['ideaId'],
+  })
+  let swept = 0
+  for (const r of rows) swept += await settleAbandonedBuilds(r.ideaId)
+  return swept
 }
 
 // ── One pass ─────────────────────────────────────────────────────────────────
@@ -1541,5 +1758,53 @@ async function settleBuild(
   console.log('[lex-diag] 25b build settled', {
     buildId, status, passesComplete: row.passesComplete, spend: formatSpend(price), forks: forks.length,
   })
+
+  // AMENDMENT_25B §C4 — the email, on EVERY terminal path, because a build that stopped
+  // early is exactly what someone who walked away needs to be told.
+  await notifyByEmail(row, status)
+
   return toView(row, forks)
+}
+
+/**
+ * Send the "it's done" email, if this build asked for one.
+ *
+ * ⚠ IT MUST NEVER TAKE THE BUILD DOWN. The build is finished and persisted by the time
+ * this runs; a Resend outage is not a reason to report a completed build as failed. So it
+ * is awaited (the worker exits promptly, and a fire-and-forget send would be killed with
+ * the process) but every failure is caught and logged.
+ */
+async function notifyByEmail(
+  row: { id: string; ideaId: string; notifyEmail: boolean; startedAt: Date | null; completedAt: Date | null; failureReason: string | null },
+  status: 'DONE' | 'FAILED' | 'CANCELLED',
+): Promise<void> {
+  if (!row.notifyEmail) return
+  try {
+    const idea = await prisma.idea.findUnique({
+      where: { id: row.ideaId },
+      select: { title: true, creator: { select: { email: true, name: true } } },
+    })
+    if (!idea?.creator?.email) return
+
+    const seconds = row.startedAt && row.completedAt
+      ? (row.completedAt.getTime() - row.startedAt.getTime()) / 1000
+      : null
+
+    await sendBuildCompleteEmail({
+      toEmail: idea.creator.email,
+      toName: idea.creator.name,
+      ideaId: row.ideaId,
+      ideaTitle: idea.title,
+      status,
+      // ⚠ The REAL duration, not the estimate. §C4 wants the estimate to be visibly
+      // honest, and an email quoting the prediction back would be the opposite.
+      durationText: seconds == null ? 'a few minutes' : formatDuration(seconds),
+      failureReason: row.failureReason,
+    })
+    console.log('[lex-diag] 25b build-complete email sent', { buildId: row.id, status })
+  } catch (err) {
+    console.error('[lex-diag] 25b build-complete email FAILED — the build itself is unaffected', {
+      buildId: row.id, error: err instanceof Error ? err.message : err,
+    })
+  }
 }

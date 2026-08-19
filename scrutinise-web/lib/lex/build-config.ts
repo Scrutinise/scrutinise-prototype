@@ -161,6 +161,102 @@ export function effectiveBudgetMs(): { ms: number; binding: 'request' | 'hard-st
 /** Spend ceiling for one build, in pence. Hitting it is a FAILED build with a reason. */
 export const COST_CEILING_PENCE = Number(process.env.LEX_BUILD_COST_PENCE ?? '50')
 
+// ── AMENDMENT_25B §B — WHERE THE BUILD ACTUALLY RUNS ─────────────────────────
+//
+// Charlie's decision, and it supersedes §1 of the brief: **the worker, not the request
+// chain.** "A ten-minute job should not depend on a browser tab staying open. The user
+// starts a build, closes the laptop, and comes back to a finished proposal."
+//
+// That is the whole argument and it is a good one. Pass-per-request removed the 300s
+// ceiling by working around it; the worker removes it by not being subject to it, and it
+// makes the build survive the thing that actually happens — someone closing a tab.
+//
+// ⚠ THE PASS-PER-REQUEST PATH IS KEPT, NOT DELETED, and it is the documented fallback the
+// amendment asks for. It is the same `runNextPass` the worker calls in a loop, so keeping
+// it costs one flag rather than a second engine — and if the worker is unavailable
+// (unprovisioned, crash-looping, paused for a usage limit) a build can still be driven
+// from the browser instead of failing.
+//
+// The CLIENT is told which driver is in force by the state payload, because it cannot
+// read an env var and must not guess: a client that assumed "client" while the worker was
+// also running would drive the same passes twice.
+
+export type BuildDriver = 'worker' | 'client'
+
+/**
+ * ⚠ THE DEFAULT IS `client`, AND THAT IS NOT A VOTE AGAINST THE WORKER. It is the rule
+ * that the default must be the configuration which actually works with what is deployed.
+ *
+ * The worker is built, tested and ready (`scripts/build-worker.ts`, and
+ * `verify:build-worker` passes the closed-tab test end to end). Two things have to be
+ * true before it can be switched on, and NEITHER of them is code:
+ *
+ *   1. A Railway service must exist running `npm run build:worker`.
+ *   2. `LEX_BUILD_DRIVER=worker` must be set in Vercel — which cannot be done from this
+ *      machine, because the Vercel token authenticates and then 403s on every
+ *      project-scoped endpoint with `"saml": true` (docs/CLAUDE.md §19).
+ *
+ * Defaulting to `worker` before both are done would mean every build enqueued and NOTHING
+ * running it: a page that says "Starting" for ever. `WORKER_PICKUP_GRACE_MS` catches that
+ * if it ever happens anyway, but a 90-second dead start on every build is not a default,
+ * it is a bug with a recovery path.
+ *
+ * ▶ FLIPPING IT IS ONE LINE, and the day it is flipped the worker takes over with no
+ * other change — the client is told which driver is in force by the state payload.
+ */
+export function buildDriver(): BuildDriver {
+  return process.env.LEX_BUILD_DRIVER === 'worker' ? 'worker' : 'client'
+}
+
+/**
+ * ⚠ §B's concurrency warning, executed: "A build fires 10–20 searches and the vector
+ * service handles four at once. One build must not saturate the search layer for
+ * everyone."
+ *
+ * Two things hold that line, and only the second is a number:
+ *
+ *  1. A BUILD IS ALREADY SERIAL INSIDE ITSELF. The research pass asks its questions one
+ *     at a time and each question runs its intents one at a time, so a single build has
+ *     at most ONE search in flight. That is a property of the engine, not a setting, and
+ *     `check:build-25b` asserts it rather than trusting it.
+ *  2. THE WORKER RUNS ONE BUILD AT A TIME by default. Two builds in parallel would be two
+ *     concurrent searches, which is still inside the service's four — but three or four
+ *     workers would not be, and the failure would land on every user's search rather than
+ *     on the build that caused it.
+ *
+ * Raise it only with a measurement, and raise `vector-serve`'s cap first.
+ */
+export const WORKER_CONCURRENCY = Math.max(
+  1, parseInt(process.env.LEX_BUILD_WORKER_CONCURRENCY ?? '1', 10),
+)
+
+/** How long the worker waits between polls when it finds nothing to do. */
+export const WORKER_IDLE_MS = parseInt(process.env.LEX_BUILD_WORKER_IDLE_MS ?? '5000', 10)
+
+/**
+ * ⚠ HOW LONG A BUILD MAY SIT QUEUED BEFORE THE BROWSER TAKES IT OVER.
+ *
+ * THE FAILURE THIS PREVENTS IS THE ONE THE ARCHITECTURE CREATES. With the worker driving,
+ * the web app enqueues and returns — so if no worker is running (not yet provisioned,
+ * crash-looping, paused on a usage limit, or mid-redeploy) the row sits at QUEUED and
+ * NOTHING EVER HAPPENS. The user sees "Starting" for ever. That is strictly worse than
+ * the design it replaced, and it is the sort of silence this codebase keeps having to
+ * remove: a worker that is absent and a worker that is merely slow look identical from
+ * the page.
+ *
+ * So after this grace period the CLIENT claims the build and drives it pass-by-pass —
+ * the documented fallback, used automatically rather than by someone noticing. The
+ * handover is safe in one direction by construction: the client's claim moves the row
+ * QUEUED → RUNNING, and `claimQueuedBuild` only ever claims a QUEUED row, so a worker
+ * that wakes up later cannot also take it.
+ *
+ * Generous on purpose. A worker polling every 5s picks a build up almost immediately;
+ * ninety seconds means the fallback only fires when something is genuinely wrong.
+ */
+export const WORKER_PICKUP_GRACE_MS = parseInt(
+  process.env.LEX_BUILD_WORKER_GRACE_MS ?? '90000', 10,
+)
+
 /**
  * §8 — "CEILINGS PER PASS, NOT JUST PER BUILD, so one runaway question cannot consume
  * the budget."
