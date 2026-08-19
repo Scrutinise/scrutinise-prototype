@@ -590,7 +590,57 @@ cost, and it unlocks both §3.3 and the 3B classification that D-2 depends on.
 
 ---
 
-## §H — WHAT IS NOT DONE
+## §H — DELIVERY (docs/CLAUDE.md §20)
+
+Eight scoped commits, `a9413fb`…`1f4e3b6`, pushed to `Main` at 2026-08-19 17:12 UTC. Every `git add`
+named explicit paths: three threads share this tree today, and `scrutinise-web/app/admin/layout.tsx`
+was modified by one of them and is deliberately **not** in any of these commits.
+
+| # | check | result |
+|---|---|---|
+| 1 | every file the sprint created is committed | ✅ **22 of 22** confirmed with `git ls-files` against the file list, not `git status`. Nothing ignored. |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = local HEAD `1f4e3b6`; `git merge-base --is-ancestor` passes. Checked against the **server ref**, not cached status. |
+| 3 | the deployment is green AND is Production | ⛔ **UNREADABLE FROM HERE.** `VERCEL_TOKEN` is SAML-blocked (docs/CLAUDE.md §19): it authenticates and 403s on every project-scoped endpoint. **Charlie's dashboard.** |
+| 4 | the running site serves the change | ⛔ **CANNOT BE RUN FOR THIS SPRINT, and I proved that rather than assuming it.** |
+
+⚠⚠ **Why check 4 is impossible here, with the negative control that killed it.** Every surface 3A
+adds is behind the Clerk middleware, which redirects before Next routes the request:
+
+```
+control  /admin/lex-general              -> 307 -> /sign-in?redirect_url=…lex-general
+new      /admin/positions                -> 307 -> /sign-in?redirect_url=…positions
+CONTROL  /admin/nonexistent-control-xyz  -> 307 -> /sign-in?redirect_url=…nonexistent-control-xyz
+```
+
+**The route that does not exist behaves identically to the one that does.** The same holds for
+`/api/admin/positions` against `/api/admin/nonexistent-control-xyz` — both 307. So a probe of
+`/admin/positions` would have "passed" whether or not the code had deployed, which is the exact
+shape of check this project has been bitten by. It is reported as not-run rather than as passed.
+
+**The honest closing sentence: pushed, and NOT verified live, because every surface this sprint adds
+is authenticated and the control proves the unauthenticated probe cannot tell deployed from absent.**
+What *is* verified is the code and the data: 33/33, 21/21 live against Neon, `tsc` clean, `next build`
+compiled with both routes present, and 2,304,748 estimates read back off the production database.
+
+**One thing that IS observable, and exactly how much it is worth.** The prerendered `/support` page
+changed its ETag and reset its cache age two minutes after the push:
+
+```
+17:13:27 UTC   Etag "8f2a88da46f325c89352cb7c8c4ca580"   Age 7445   X-Vercel-Cache: HIT
+17:14:10 UTC   Etag "7ab07177bad44be89265a6f08151aae8"   Age 0      X-Vercel-Cache: PRERENDER
+```
+
+That is **evidence that a new Production build was served after the push at 17:12**, which is the
+failure mode of 6–9 August (a week of Preview-only deploys) not recurring. It is **not** proof that
+this commit is in it — a prerender ETag says a deploy happened, not which one. Treat it as check 3
+partly answered from the outside, and check 4 still open.
+
+▶ **Charlie closes checks 3 and 4** by confirming a green Production deployment and opening
+`/admin/positions` while signed in.
+
+---
+
+## §I — WHAT IS NOT DONE
 
 - **The deepening wiring.** Deliberate — §0 holds it until SEARCH S8's commit lands. The snippet is
   in §E, ready.
