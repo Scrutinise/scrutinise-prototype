@@ -67,6 +67,29 @@ export async function r2Get(key: string): Promise<string | null> {
   }
 }
 
+/**
+ * INGEST-NAMES §1.2 — read only the first `bytes` of an object.
+ *
+ * The case-name sweep needs the AKN `<meta>` block and nothing else: `FRBRname` sits at byte
+ * 492–600 in every one of 40 sampled judgments. Reading whole judgments to get 60 bytes would
+ * have moved ~7 GB for a 74,896-row backfill. A Range GET moves ~2 GB less than 2% of that and
+ * runs in minutes instead of an hour.
+ *
+ * ⚠ Returns whatever the range contained — the CALLER must handle a value that was cut off, and
+ * re-read in full if its target was not inside the window. A truncated read that silently looks
+ * like an absent field is the §18 failure shape.
+ */
+export async function r2GetRange(key: string, bytes: number): Promise<string | null> {
+  try {
+    const res = await getClient().send(new GetObjectCommand({
+      Bucket: getBucket(), Key: key, Range: `bytes=0-${bytes - 1}`,
+    }))
+    return await res.Body?.transformToString() ?? null
+  } catch {
+    return null
+  }
+}
+
 // V19 — used by cleanup scripts to remove superseded/garbage objects
 // (e.g. the pre-1963 chrome-boilerplate captures). Deletes are free on R2.
 export async function r2Delete(key: string): Promise<void> {

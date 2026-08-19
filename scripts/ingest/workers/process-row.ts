@@ -81,6 +81,8 @@ async function markDone(id: string, formatFound?: string): Promise<void> {
 
 // Source clients
 import { fetchJudgmentXml } from '../sources/tna-caselaw'
+import { nameFromAkn, judgmentDateFromAkn, isCitationShaped } from '../shared/caselaw-name'
+import { attributeWritten, attributeOral, attributePublication } from '../shared/committee-attribution'
 import { enumerateSections, discoverFormats, AVAILABILITY_NOTES } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
 import { fetchReportContent, fetchWrittenStatements, fetchDebateText } from '../sources/parliament-api'
@@ -352,7 +354,21 @@ async function processTnaCaselaw(row: QueueRow): Promise<void> {
       await r2Put(rKey, judgmentXml, 'application/xml')
       const compiled = rawToText(judgmentXml)
       await r2Put(cKey, compiled)
-      await upsertSection({ id: secId, corpus: 'tna-caselaw', sourceUrl: xmlUrl, r2Key: cKey, r2RawKey: rKey, wordCount: countWords(compiled), status: 'compiled' })
+      // INGEST-NAMES §1.2 — THE CASE NAME, which this writer used to throw away.
+      // Every judgment's AKN carries `<FRBRname value="Mensah v Jones"/>` (100 of 100 sampled),
+      // and until now the only stored identifier was the neutral citation, so no user or machine
+      // could tell what a case was about without opening it. The XML is already in hand here —
+      // this costs no extra request. A name that cannot be established leaves the field NULL;
+      // a citation is never dressed up as a name (see shared/caselaw-name.ts).
+      const recovered = nameFromAkn(judgmentXml)
+      const judgmentDate = judgmentDateFromAkn(judgmentXml)
+      await upsertSection({
+        id: secId, corpus: 'tna-caselaw', sourceUrl: xmlUrl, r2Key: cKey, r2RawKey: rKey,
+        wordCount: countWords(compiled), status: 'compiled',
+        sectionTitle: recovered && !isCitationShaped(recovered.title) ? recovered.title : undefined,
+        notes: recovered && !isCitationShaped(recovered.title) ? `title-route:${recovered.route}` : undefined,
+        itemDate: judgmentDate ?? undefined,
+      })
       processed++
     } catch (err: unknown) {
       console.warn(`[pool] caselaw ${docId}: ${err}`)
@@ -1530,6 +1546,18 @@ async function processCommitteesApi(row: QueueRow): Promise<void> {
     : [item.committeeBusiness?.title, item.internalReference].filter(Boolean).join(' — ')
   const itemDate = (item.publicationStartDate ?? item.publicationDate ?? '').slice(0, 10) || undefined
 
+  // INGEST-NAMES §2.2 — WHO SAID IT. `item.witnesses` and `item.committee` were already being
+  // FETCHED here and then dropped on the floor, which is why a user reading select-committee
+  // evidence got a quote and no name at all (S8 §2: 0 of 800 sampled rows). The decision of who
+  // a document is by lives in shared/committee-attribution.ts, one construction site shared with
+  // the backfill sweep — and it refuses to attribute a Government Response to the committee whose
+  // inquiry it answers.
+  const who = kind === 'Publications'
+    ? attributePublication(item.type?.name, item.committee?.name ?? item.committees?.[0]?.name)
+    : kind === 'OralEvidence'
+      ? attributeOral(item)
+      : attributeWritten(item)
+
   const metas: SectionMeta[] = []
   const texts: string[] = []
   for (const doc of docs) {
@@ -1559,6 +1587,8 @@ async function processCommitteesApi(row: QueueRow): Promise<void> {
       sectionTitle: title || undefined,
       itemDate,
       parentDocId: row.docId,
+      speaker: who.speaker ?? undefined,
+      attribution: who.attribution ?? undefined,
     })
     texts.push(text)
   }
