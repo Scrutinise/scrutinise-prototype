@@ -529,6 +529,36 @@ hitting its output ceiling.
 
 ---
 
+## DELIVERY — the four checks of `docs/CLAUDE.md` §20, run after the push
+
+| # | check | result |
+|---|---|---|
+| 1 | **Every file created is committed** — `git ls-files`, not `git status` | ✅ **18 of 18 tracked.** Nothing gitignored; each path checked individually with `git check-ignore -v`, confirming the file rather than the pattern. |
+| 2 | **The remote has the commits** — `git merge-base --is-ancestor` against `git ls-remote`, not local `git status` | ✅ **All 7 commits are ancestors of remote `Main` (`3ee29a0`).** |
+| 3 | **The deployment is green AND is Production** | ❌ **CANNOT BE CHECKED FROM HERE.** `VERCEL_TOKEN` authenticates (`GET /v2/user` → 200) and then 403s with `"saml": true` on every project-scoped endpoint. Charlie must read the dashboard. |
+| 4 | **The running site serves the change** | ❌ **NOT PERFORMABLE, and the reason is structural rather than an omission.** `www.scrutinise.org` returns HTTP 200, but **every string S8 introduces is server-side**: a prompt block, an `EvidenceItem` body, a retrieval label. Four distinctive markers were fetched and none appears on an unauthenticated surface — correctly. The change is only observable inside an authenticated Lex conversation or Deepening panel, and the Chrome extension has no host permission for `localhost:3000` and no Clerk session on production. |
+
+**So the honest closing sentence is: pushed, and NOT verified live — because S8 has no
+unauthenticated user-visible surface to read a marker off.** That is the §20-sanctioned second
+form, not the forbidden "built, tsc clean, checks pass".
+
+⚠ **ONE THING TO WATCH ON THE NEXT DEPLOY, WHICH IS NOT MINE.**
+`scrutinise-web/lib/lex/build.ts` in the working tree uses `BuildDriver` and `buildDriver` without
+importing them (`build-config.ts` exports both). The **committed** version at `HEAD` contains
+neither symbol, so **production is not at risk today** — the breakage exists only in the concurrent
+LEX/25-B session's uncommitted working copy. If that session commits it in this state, the Vercel
+build fails and **S8's changes will not reach the site either**, which is CLAUDE.md §20's third
+incident precisely.
+
+⚠ **And a process note worth carrying forward:** the first `commit-all.sh` written for this sprint
+**disappeared before it could be run**. The concurrent session was committing in the same tree at
+the same time, and §12 step 5 instructs every session to delete `commit-all.sh` after a successful
+push — so one thread's cleanup removed the other's script. This sprint used `commit-all-s8.sh`
+instead. **With concurrent sessions in one working tree, the shared filename in §12 is a race**;
+a per-sprint name costs nothing and removes it.
+
+---
+
 ## ⚠ FOR CHARLIE — what to verify in a browser, and what only you can do
 
 The environment limits are unchanged: **Vercel flags are unreadable and unsettable from this
