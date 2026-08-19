@@ -35,6 +35,7 @@ import { repealPromptNote } from './repeal-status'
 import type { SearchResult, SearchResultType } from './page1-config'
 import type { LegacySearchResult } from './gateway-legacy'
 import { gidFromId, refFromId, sectionNumberFromRef, displayTitle, plainSnippet } from './gateway-legacy'
+import { attributionLine, ATTRIBUTION_ABSENCE_NOTE, type Attribution } from './attribution'
 
 /** The three display types that are operative law and belong in the legislation channel. */
 const LEGISLATION_TYPES: ReadonlySet<string> = new Set([
@@ -82,12 +83,16 @@ export interface EvidenceResult {
   whatItIs: string
   title: string
   /**
-   * ⚠ WHO SAID IT IS NOT AVAILABLE HERE, AND THAT IS A NAMED GAP RATHER THAN AN OVERSIGHT.
-   * `SearchResult` carries no `attribution` field — the adapters hydrate one from
-   * `corpus_sections.attribution` and fold it into the title before it reaches the gateway. For
-   * a committee transcript "who was speaking" is the single most useful fact about it, so this
-   * is worth adding to the gateway contract. Reported rather than faked from the title.
+   * WHO SAID IT — S8 §2 closed the gap S5 named here. Built by `attributionFor()` from the two
+   * structured columns and from nothing else.
+   *
+   * ⚠⚠ NULL IS NOT ANONYMOUS. It means the collection does not hold attribution as a field.
+   * That is the case for committee evidence — the very collection this was wanted for — where
+   * the witness's name lives inside the document body and in no metadata we store. The audit is
+   * in `docs/S8_ATTRIBUTION_AUDIT.txt`; `ATTRIBUTION_ABSENCE_NOTE` is what stops the prompt
+   * reading the absence as anonymity.
    */
+  attribution: Attribution | null
   date: string | null
   url: string | null
   snippet: string
@@ -190,6 +195,9 @@ export async function retrieveForChat(opts: {
       kindLabel: kind.label,
       whatItIs: kind.whatItIs,
       title: String(r.title || r.citation || r.id),
+      // ⚠ Carried straight through from the gateway. This channel does NOT construct it — there
+      // is one construction site (lib/lex/attribution.ts) and this is not it.
+      attribution: r.attribution ?? null,
       date: r.date || null,
       url: r.url || null,
       snippet: plainSnippet(r.snippet),
@@ -296,14 +304,26 @@ export const GAP_INSTRUCTION =
   + 'sources, and never give a vague deflection like "I don\'t have information on that" — that is '
   + 'indistinguishable from the corpus being empty, and the user cannot tell the difference.'
 
-/** Render the evidence block for the prompt. Returns null when there is nothing to render. */
+/**
+ * Render the evidence block for the prompt. Returns null when there is nothing to render.
+ *
+ * ⚠ S8 §2 — the attribution line is emitted only when one exists, and the ABSENCE note is
+ * emitted only when at least one item lacks it. A block where everything is attributed does not
+ * need to explain what a missing attribution would have meant, and a note that appears
+ * unconditionally is the kind of boilerplate a model learns to skip.
+ */
 export function evidenceBlock(items: EvidenceResult[]): string | null {
   if (!items.length) return null
   const lines = items.map((e) => {
     const when = e.date ? ` (${e.date.slice(0, 10)})` : ''
-    return `- [${e.kindLabel}] ${e.title}${when}\n    ${e.whatItIs}\n    "${e.snippet.slice(0, 300)}"`
+    const who = attributionLine(e.attribution)
+    return `- [${e.kindLabel}] ${e.title}${when}\n    ${e.whatItIs}\n`
+      + (who ? `    ${who}\n` : '')
+      + `    "${e.snippet.slice(0, 300)}"`
   })
+  const anyMissing = items.some((e) => !e.attribution)
   return `${lines.join('\n')}\n\n${EVIDENCE_INSTRUCTION}`
+    + (anyMissing ? `\n${ATTRIBUTION_ABSENCE_NOTE}` : '')
 }
 
 /**

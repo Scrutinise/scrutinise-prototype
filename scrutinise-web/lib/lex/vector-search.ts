@@ -21,6 +21,7 @@ import { isPoliticalCorpus, politicalTitle } from './political-title'
 // both files, so the 404 bug was present twice and fixable only twice.
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
+import { attributionFor } from './attribution'
 
 interface VecHit { id: string; corpus: string; tier: string; score: number; snippet: string }
 
@@ -112,9 +113,12 @@ export async function runVectorSearch(
       // The S2C6 §1 columns, identical to fts-search.ts's hydrate — see the note there. Kept in
       // step deliberately: a division found by the ANN half must not be titled differently from
       // the same row found by BM25, which is the whole reason political-title.ts is one file.
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; parentTitle: string | null }>>`
+      // ⚠ `speaker` added for S8 §2, in step with fts-search.ts. The dense half is live on
+      // whichever streams `LEX_VECTOR_STREAMS` names, so a debate found by the ANN half must
+      // not lose the speaker the same row keeps when BM25 finds it.
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null }>>`
         SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
-               s.attribution, a.title AS "parentTitle"
+               s.attribution, s.speaker, a.title AS "parentTitle"
         FROM corpus_sections s
         LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
         WHERE s.id IN (${Prisma.join(ids)})`,
@@ -136,6 +140,7 @@ export async function runVectorSearch(
       ...r,
       sectionTitle: decodeMaybe(r.sectionTitle),
       attribution: decodeMaybe(r.attribution),
+      speaker: decodeMaybe(r.speaker),
       parentTitle: decodeMaybe(r.parentTitle),
     }]))
     const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, decodeForDisplay(r.title)] as const] : [])))
@@ -172,7 +177,9 @@ export async function runVectorSearch(
       const date = meta?.itemDate ?? ''
       // `scorer: 'vector'` — cosine similarity (0..1), not BM25 and not RRF. Distinct from
       // 'bm25' because a 0.83 and a 12.4 are not two views of the same quantity.
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const, url, date }
+      // S8 §2 — same single construction site as the sparse adapter, columns only.
+      const attribution = attributionFor(h.corpus, { speaker: meta?.speaker, attribution: meta?.attribution })
+      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'vector' as const, url, date, attribution }
     })
     return { results: results.slice(0, limit * 3) }
   } catch (err) {

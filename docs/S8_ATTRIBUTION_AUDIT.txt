@@ -1,0 +1,410 @@
+
+
+corpus_sections has a `speaker` column     : true
+corpus_sections has an `attribution` column: true
+
+Every percentage below is OF THE ROWS SAMPLED at that id offset (n≤200), never of the collection.
+
+## COMMITTEE · committees — written and oral evidence  [committees-evidence]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-evidence:oralevidence:10000:161507  →  committees-evidence:oralevidence:10192:165516
+        sectionTitle e.g. null
+   offset "committees-evidence:oralevidence:5"         n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-evidence:oralevidence:5000:154549  →  committees-evidence:oralevidence:5197:154282
+        sectionTitle e.g. null
+   offset "committees-evidence:w"                      n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-evidence:writtenevidence:100000:145457  →  committees-evidence:writtenevidence:100186:146121
+        sectionTitle e.g. "The progress of the UK’s negotiations on EU withdrawal: role of Parliament inquiry — ROP0004"
+   offset "committees-evidence:writtenevidence:9"      n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-evidence:writtenevidence:90000:135415  →  committees-evidence:writtenevidence:90184:135491
+        sectionTitle e.g. "The Internet: to regulate or not to regulate? inquiry — IRN0025"
+
+## COMMITTEE · committees — reports  [committees-reports]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-reports:publication:10000:arc-0001  →  committees-reports:publication:10005:arc-0113
+        sectionTitle e.g. "Report: 4th Report - The Eurojust Regulation: Should the UK Opt-In? — EU Sub Committee E - Justice, Institutions and Consumer Protection — HOUSE OF LORDS"
+   offset "committees-reports:publication:3"           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-reports:publication:3000:28503  →  committees-reports:publication:30146:174873-0011
+        sectionTitle e.g. "Correspondence: Letter to the Secretary of State on the Independent Medicines and Medical Devices Saftey Review"
+   offset "committees-reports:publication:6"           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids committees-reports:publication:6000:67976  →  committees-reports:publication:6085:68272
+        sectionTitle e.g. "Correspondence: Letter from Baroness Andrews to the Northern Ireland Executive, 21 May 2021"
+
+## DEBATE · Commons debates (Hansard)  [pwdata-debates]
+   offset "pwdata-debates:debates19"                   n=200  speaker   8/200 (  4.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-debates:debates1919-02-04a:1  →  pwdata-debates:debates1919-02-05a:254
+        speaker e.g.     "Colonel F. B. MILDMAY (addressing himself to the Clerk, who, standing up, pointed to him, and then sat down)"
+        sectionTitle e.g. "Preamble"
+   offset "pwdata-debates:debates195"                  n=200  speaker   9/200 (  4.5%)  attribution   0/200 (  0.0%)
+        ids pwdata-debates:debates1950-03-01a:1  →  pwdata-debates:debates1950-03-02a:260
+        speaker e.g.     "Mr. Speaker-Elect"
+        sectionTitle e.g. "Preamble"
+   offset "pwdata-debates:debates199"                  n=200  speaker 165/200 ( 82.5%)  attribution   0/200 (  0.0%)
+        ids pwdata-debates:debates1990-01-08a:1  →  pwdata-debates:debates1990-01-08a:279
+        speaker e.g.     "Mr. Scott"
+        sectionTitle e.g. "Preamble"
+   offset "pwdata-debates:debates201"                  n=200  speaker 199/200 ( 99.5%)  attribution   0/200 (  0.0%)
+        ids pwdata-debates:debates2010-01-05b:1  →  pwdata-debates:debates2010-01-05b:279
+        speaker e.g.     "Mr. Speaker"
+        sectionTitle e.g. "BUSINESS BEFORE QUESTIONS — Death of a Member"
+   offset "pwdata-debates:debates2026"                 n=200  speaker 199/200 ( 99.5%)  attribution   0/200 (  0.0%)
+        ids pwdata-debates:debates2026-01-05d:1  →  pwdata-debates:debates2026-01-05d:279
+        speaker e.g.     "Lindsay Hoyle"
+        sectionTitle e.g. "Speaker’s Statement"
+
+## DEBATE · Lords debates  [pwdata-lords]
+   offset ""                                           n=200  speaker 180/200 ( 90.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-lords:daylord1999-11-17a:1  →  pwdata-lords:daylord1999-11-22a:8
+        speaker e.g.     "Baroness Pitkeathley"
+        sectionTitle e.g. "THE QUEEN'S SPEECH"
+   offset "pwdata-lords:lords201" — no compiled rows
+
+## DEBATE · historic Hansard  [historic-hansard]
+   offset ""                                           n=200  speaker 174/200 ( 87.0%)  attribution   0/200 (  0.0%)
+        ids historic-hansard:S1V0001P0:1  →  historic-hansard:S1V0001P0:1178
+        speaker e.g.     "The Earl of Limerick"
+        sectionTitle e.g. "Lords"
+
+## DEBATE · Westminster Hall  [pwdata-westminster]
+   offset ""                                           n=200  speaker 197/200 ( 98.5%)  attribution   0/200 (  0.0%)
+        ids pwdata-westminster:westminster2000-11-29a:1  →  pwdata-westminster:westminster2000-12-14a:18
+        speaker e.g.     "Gareth Thomas"
+        sectionTitle e.g. "Welsh Economy"
+
+## DEBATE · written answers (pwdata)  [pwdata-wrans]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-wrans:answers2001-06-21:1  →  pwdata-wrans:answers2001-06-26:48
+        speaker e.g.     "Ian Stewart"
+        sectionTitle e.g. "PRIME MINISTER — European Council (Gothenburg)"
+
+## DEBATE · written statements (pwdata)  [pwdata-wms]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-wms:ministerial2002-11-14:1  →  pwdata-wms:ministerial2002-12-18:14
+        speaker e.g.     "Brian Wilson"
+        sectionTitle e.g. "TRADE AND INDUSTRY — Gas Prices"
+
+## DEBATE · Lords written answers  [pwdata-lordswrans]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-lordswrans:lordswrans1999-11-18a:1  →  pwdata-lordswrans:lordswrans2000-01-25a:7
+        speaker e.g.     "Lord Davies of Coity"
+        sectionTitle e.g. "Police Training"
+
+## DEBATE · Lords written statements  [pwdata-lordswms]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids pwdata-lordswms:lordswms2004-01-05a:1  →  pwdata-lordswms:lordswms2004-03-26a:2
+        speaker e.g.     "Baroness Amos"
+        sectionTitle e.g. "Iran: Earthquake in Bam"
+
+## DEBATE · written answers (govuk)  [written-answers]
+   offset ""                                           n=143  speaker   0/143 (  0.0%)  attribution   0/143 (  0.0%)
+        ids written-answers:2014-05-31:2014-06-30:1  →  written-answers:2026-05-31:2026-06-05:1
+        sectionTitle e.g. null
+
+## DEBATE · written statements (govuk)  [written-statements]
+   offset ""                                           n=129  speaker   0/129 (  0.0%)  attribution   0/129 (  0.0%)
+        ids written-statements:2014-11-01:2014-12-01:1  →  written-statements:2026-06-01:2026-06-05:1
+        sectionTitle e.g. null
+
+## DEBATE · Scottish Parliament  [scottish-parliament-or]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids scottish-parliament-or:10450:1  →  scottish-parliament-or:10453:77
+        speaker e.g.     "The Presiding Officer (Ken Macintosh)"
+        sectionTitle e.g. "Scottish Parliament: Presiding Officer’s Statement"
+   offset "scottish-parliament-or:2"                   n=200  speaker 185/200 ( 92.5%)  attribution   0/200 (  0.0%)
+        ids scottish-parliament-or:20003:1  →  scottish-parliament-or:20010:89
+        speaker e.g.     "The Convener"
+        sectionTitle e.g. "Scottish Parliament Official Report"
+
+## DEBATE · Senedd  [senedd-cofnod]
+   offset ""                                           n=200  speaker 175/200 ( 87.5%)  attribution   0/200 (  0.0%)
+        ids senedd-cofnod:11041:1  →  senedd-cofnod:11042:118
+        speaker e.g.     "Mark Drakeford"
+        sectionTitle e.g. "Senedd Plenary"
+
+## DEBATE · NI Assembly  [niassembly-hansard]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids niassembly-hansard:142504:1  →  niassembly-hansard:142943:41
+        sectionTitle e.g. "NI Assembly"
+
+## DEBATE · early day motions  [early-day-motions]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids early-day-motions:10000:1  →  early-day-motions:10183:1
+        speaker e.g.     "Andrew Miller"
+        sectionTitle e.g. "ACCESS TO WORK"
+
+## DEBATE · petitions  [petitions]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids petitions:300000:1  →  petitions:300445:1
+        sectionTitle e.g. "Protect the Environment – support carbon neutral energy alternatives"
+
+## DEBATE · Commons oral questions (LDA)  [lda-commonsoralquestions]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids lda-commonsoralquestions:1002311:1  →  lda-commonsoralquestions:1006799:1
+        sectionTitle e.g. null
+
+## DEBATE · Commons written questions (LDA)  [lda-commonswrittenquestions]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids lda-commonswrittenquestions:1847573:1  →  lda-commonswrittenquestions:1847772:1
+        sectionTitle e.g. null
+
+## DEBATE · Commons divisions (LDA)  [lda-commonsdivisions]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids lda-commonsdivisions:1005656:1  →  lda-commonsdivisions:102267:1
+        sectionTitle e.g. null
+
+## CASE_LAW · UK case law (TNA)  [tna-caselaw]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids tna-caselaw:[2001] EWCA Civ 540:1  →  tna-caselaw:[2003] EWCA Civ 14:1
+        sectionTitle e.g. null
+   offset "tna-caselaw:ewca"                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids tna-caselaw:tna.2q4chq43:1  →  tna-caselaw:tna.9nvg5s87:1
+        sectionTitle e.g. null
+   offset "tna-caselaw:uksc" — no compiled rows
+
+## CASE_LAW · Northern Ireland judgments  [ni-judgments]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids ni-judgments:0320:1  →  ni-judgments:2002-nica-7:1
+        sectionTitle e.g. "Trevor McKee v Charity Commission"
+
+## CASE_LAW · Scottish courts  [scottish-courts]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids scottish-courts:media/003n0nss/2010csih44-the-scottish-ministers-vclaire-rennison-or-smith:1  →  scottish-courts:media/0hel4ply/2017csoh151-m-against-s:1
+        sectionTitle e.g. "Court of Session: 2010csih44 the scottish ministers vclaire rennison or smith"
+
+## CASE_LAW · employment tribunals  [et-decisions]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids et-decisions:employment-tribunal-decisions/1-2-p-finch-v-brazil-brothers-ltd-2305076-2019:1  →  et-decisions:employment-tribunal-decisions/a-boas-v-filton-brewery-products-ltd-2305984-slash-2023:2
+        sectionTitle e.g. "1.2 P Finch v Brazil Brothers Ltd: 2305076/2019"
+
+## CASE_LAW · tax tribunals  [tax-tribunals]
+   offset ""                                           n=200  speaker 200/200 (100.0%)  attribution   0/200 (  0.0%)
+        ids tax-tribunals:10000:1  →  tax-tribunals:10182:1
+        speaker e.g.     "Swami RAGHAVAN"
+        sectionTitle e.g. "TC 06031: OCO Limited & Toughglaze (UK) Ltd v The Commissioners For Her Majesty's Revenue & Customs"
+
+## CASE_LAW · Strasbourg (HUDOC)  [echr-hudoc]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids echr-hudoc:001-100362:1  →  echr-hudoc:001-111129:1
+        sectionTitle e.g. "BOYLE v. THE UNITED KINGDOM"
+
+## GUIDANCE · HMRC manuals  [hmrc-manuals]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1  →  hmrc-manuals:hmrc-internal-manuals/air-passenger-duty-risk/apdr4000:1
+        sectionTitle e.g. "ADML1100 — Incorrect Advice to Customers: Introduction"
+
+## GUIDANCE · FCA Handbook  [fca-handbook]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids fca-handbook:aper:aper1s2  →  fca-handbook:cass:cass7s11
+        sectionTitle e.g. null
+
+## GUIDANCE · ICO  [ico]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids ico:action-weve-taken/audits-and-overview-reports/2021/07/police-forces:1  →  ico:action-weve-taken/decision-notices/2006/01/fs50078394:1
+        sectionTitle e.g. "Police forces"
+
+## GUIDANCE · Ofgem  [ofgem]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids ofgem:publications/012009-east-proposal-amend-central-networks-easts-use-system-charging-methodology-system-charges-licensed-embedded-network-operators:1  →  ofgem:publications/23207-enforcement-guidelines:4
+        sectionTitle e.g. "01/2009 East - Proposal to amend Central Networks East's use of system charging methodology - system charges for licensed embedded network operators"
+
+## GUIDANCE · Ofcom  [ofcom]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids ofcom:about-ofcom/accessibility/accessibility-checker:1  →  ofcom:about-ofcom/our-research/stats22:4
+        sectionTitle e.g. "Accessibility of checker.ofcom.org.uk"
+
+## GUIDANCE · CMA cases  [cma-cases]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids cma-cases:-allflex-holding-france-alfred-cox-merger-inquiry:1  →  cma-cases:adaptive-affinity-lack-of-transparency-of-fees-for-services-and-schemes:1
+        sectionTitle e.g. " allflex holding france alfred cox merger inquiry — decision doc 1"
+
+## GUIDANCE · CPS guidance  [cps-guidance]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids cps-guidance:prosecution-guidance/abuse-process:1  →  cps-guidance:prosecution-guidance/public-justice-offences:1
+        sectionTitle e.g. "Abuse of Process"
+
+## GUIDANCE · College of Policing  [college-of-policing]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids college-of-policing:app-content/armed-policing/armed-deployment/discharge-of-firearms:1  →  college-of-policing:app-content/major-investigation-and-public-protection/managing-sexual-offenders-and-violent-offenders/home-visits:1
+        sectionTitle e.g. "Discharge of firearms"
+
+## GUIDANCE · Sentencing Council  [sentencing-council]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids sentencing-council:abstracting-electricity:1  →  sentencing-council:rape:1
+        sectionTitle e.g. null
+
+## GUIDANCE · planning policy  [planning-policy]
+   offset ""                                           n= 64  speaker   0/64 (  0.0%)  attribution   0/64 (  0.0%)
+        ids planning-policy:-government-publications-housing-delivery-test-measurement-rule-book:1  →  planning-policy:guidance-national-planning-policy-framework:1
+        sectionTitle e.g. null
+
+## GUIDANCE · building regulations  [building-regs]
+   offset ""                                           n= 21  speaker   0/21 (  0.0%)  attribution   0/21 (  0.0%)
+        ids building-regs:-government-publications-access-to-and-use-of-buildings-approved-document-m:1  →  building-regs:-guidance-building-regulations-and-approved-documents-index:1
+        sectionTitle e.g. null
+
+## GUIDANCE · NAO reports  [nao-reports]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids nao-reports:16-to-18-year-old-participation-in-education-and-training:1  →  nao-reports:capacity-and-capability-to-regulate-the-quality-and-safety-of-health-and-adult-social-care:2
+        sectionTitle e.g. "16 to 18 year old participation in education and training"
+
+## GUIDANCE · inquiry reports  [inquiry-reports]
+   offset ""                                           n=140  speaker   0/140 (  0.0%)  attribution   0/140 (  0.0%)
+        ids inquiry-reports:al-sweady:1  →  inquiry-reports:zahid-mubarek:3
+        sectionTitle e.g. "al sweady — vol 1"
+
+## GUIDANCE · inquiry evidence  [inquiry-evidence]
+   offset ""                                           n= 89  speaker   0/89 (  0.0%)  attribution   0/89 (  0.0%)
+        ids inquiry-evidence:inq00001208-pol-horizon-it-inquiry-closing-submissions-core-participants-legal:1  →  inquiry-evidence:witn12000100-kevin-rennie-witness-statement:1
+        sectionTitle e.g. "inq00001208 — INQ00001208 - POL Horizon IT Inquiry - Closing Submissions from Core Participants’ legal representatives from Hodge, Jones & Allen, Howe and Co, Hudgell Solicitors, L"
+
+## GUIDANCE · independent reviews  [independent-reviews]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids independent-reviews:a-question-of-trust-report-of-the-investigatory-powers-revie:1  →  independent-reviews:independent-review-into-the-response-to-the-2009-swine-flu-p:15
+        sectionTitle e.g. "a question of trust report of the investigatory powers revie — vol 1"
+
+## GUIDANCE · Law Commission  [lawcom]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids lawcom:14th-programme-of-law-reform:1  →  lawcom:materion-technegol-yn-y-gyfraith-elusennau-ymgynghoriad-atodol-crynodeb:1
+        sectionTitle e.g. "14th programme of law reform"
+
+## GUIDANCE · LGSCO  [lgsco]
+   offset ""                                           n= 40  speaker   0/40 (  0.0%)  attribution   0/40 (  0.0%)
+        ids lgsco:decisions/adult-care-services/charging/25-016-779:1  →  lgsco:decisions/education/special-educational-needs/25-022-164:1
+        sectionTitle e.g. "25 016 779"
+
+## GUIDANCE · OECD  [oecd]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids oecd:-ai-assurance-techniques-fairly-ai-fairly-end-to-end-ai-governance-platform:1  →  oecd:-government-publications-government-commercial-function-annual-report-2022-2023:1
+        sectionTitle e.g. null
+
+## GUIDANCE · Erskine May  [erskine-may]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids erskine-may:10701:1  →  erskine-may:4696:1
+        sectionTitle e.g. "Erskine May: Parliament and international assemblies"
+
+## GUIDANCE · govuk core documents  [govuk-core-docs]
+   offset ""                                           n=175  speaker   0/175 (  0.0%)  attribution   0/175 (  0.0%)
+        ids govuk-core-docs:government/publications/a-new-vision-for-water-white-paper:1  →  govuk-core-docs:government/publications/white-paper-unravelling:1
+        sectionTitle e.g. "A new vision for water: white paper"
+
+## CONSULTATION · consultations  [consultations]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution 200/200 (100.0%)
+        ids consultations:government_consultations_100-business-rates-retention-further-consultation-on-the-design-of-the-reformed-system:1  →  consultations:government_consultations_aligning-the-fees-for-grants-of-probate-to-cost-recovery:1
+        attribution e.g. "ministry-of-housing-communities-and-local-government-2018-2021"
+        sectionTitle e.g. "100% business rates retention: further consultation on the design of the reformed system"
+   offset "consultations:government_consultations_s"   n=200  speaker   0/200 (  0.0%)  attribution 200/200 (100.0%)
+        ids consultations:government_consultations_saf-revenue-certainty-mechanism-approach-to-industry-funding:1  →  consultations:government_consultations_smarter-regulation-employment-law-reform:1
+        attribution e.g. "department-for-transport"
+        sectionTitle e.g. "SAF revenue certainty mechanism: approach to industry funding"
+
+## IMPACT_ASSESSMENT · impact assessments  [impact-assessments]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution 200/200 (100.0%)
+        ids impact-assessments:2006-1:1  →  impact-assessments:2007-16:39
+        attribution e.g. "Department for Environment, Food and Rural Affairs — Consultation"
+        sectionTitle e.g. "Summary"
+   offset "impact-assessments:2020"                    n=200  speaker   0/200 (  0.0%)  attribution 200/200 (100.0%)
+        ids impact-assessments:2020-100:1  →  impact-assessments:2020-112:34
+        attribution e.g. "Department for the Economy — Final"
+        sectionTitle e.g. "Summary"
+
+## EXPLANATORY_NOTE · explanatory notes  [explanatory-notes]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids explanatory-notes:en:ukpga/1999/17:1-0001  →  explanatory-notes:en:ukpga/1999/26:1-0042
+        sectionTitle e.g. "Explanatory Notes: ukpga/1999/17 (1)"
+
+## EXPLANATORY_NOTE · explanatory memoranda  [explanatory-memoranda]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids explanatory-memoranda:em:uksi/2004/1278:1  →  explanatory-memoranda:em:uksi/2004/2365:1-0002
+        sectionTitle e.g. "Explanatory Memorandum: uksi/2004/1278"
+
+## DIVISION · divisions — Commons  [commons-divisions-votes]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids commons-divisions-votes:1000:1  →  commons-divisions-votes:1189:1
+        sectionTitle e.g. "Domestic Abuse Bill: Motion to disagree with Lords Amendment 41"
+
+## DIVISION · divisions — Lords  [lords-divisions-votes]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids lords-divisions-votes:1000:1  →  lords-divisions-votes:1180:1
+        sectionTitle e.g. "Childcare Bill"
+
+## BILL · bills  [bills-api]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids bills-api:2518:1  →  bills-api:2792:6
+        sectionTitle e.g. "Highgate Cemetery Act — Bill papers, became an Act"
+
+## TREATY · treaties  [uk-treaties]
+   offset ""                                           n=200  speaker   0/200 (  0.0%)  attribution   0/200 (  0.0%)
+        ids uk-treaties:government/publications/1999-amendments-to-the-international-code-for-the-construction-and-equipment-of-ships-carrying-dangerous-chemicals-in-bulk:1  →  uk-treaties:government/publications/agreement-between-the-uk-and-saint-kitts-and-nevis-concerning-air-services:2
+        sectionTitle e.g. "1999 amendments to the International Code for the Construction and Equipment of Ships carrying Dangerous Chemicals in Bulk"
+
+
+════ THE TABLE §2 ASKS FOR — collection → where attribution lives → sampled coverage ════
+(ranges span the id offsets sampled; a range is a real spread, not an error bar)
+
+  COMMITTEE         committees-evidence           speaker          0.0%   attribution          0.0%
+  COMMITTEE         committees-reports            speaker          0.0%   attribution          0.0%
+  DEBATE            pwdata-debates                speaker     4.0–99.5%   attribution          0.0%
+  DEBATE            pwdata-lords                  speaker         90.0%   attribution          0.0%
+  DEBATE            historic-hansard              speaker         87.0%   attribution          0.0%
+  DEBATE            pwdata-westminster            speaker         98.5%   attribution          0.0%
+  DEBATE            pwdata-wrans                  speaker        100.0%   attribution          0.0%
+  DEBATE            pwdata-wms                    speaker        100.0%   attribution          0.0%
+  DEBATE            pwdata-lordswrans             speaker        100.0%   attribution          0.0%
+  DEBATE            pwdata-lordswms               speaker        100.0%   attribution          0.0%
+  DEBATE            written-answers               speaker          0.0%   attribution          0.0%
+  DEBATE            written-statements            speaker          0.0%   attribution          0.0%
+  DEBATE            scottish-parliament-or        speaker   92.5–100.0%   attribution          0.0%
+  DEBATE            senedd-cofnod                 speaker         87.5%   attribution          0.0%
+  DEBATE            niassembly-hansard            speaker          0.0%   attribution          0.0%
+  DEBATE            early-day-motions             speaker        100.0%   attribution          0.0%
+  DEBATE            petitions                     speaker          0.0%   attribution          0.0%
+  DEBATE            lda-commonsoralquestions      speaker          0.0%   attribution          0.0%
+  DEBATE            lda-commonswrittenquestions   speaker          0.0%   attribution          0.0%
+  DEBATE            lda-commonsdivisions          speaker          0.0%   attribution          0.0%
+  CASE_LAW          tna-caselaw                   speaker          0.0%   attribution          0.0%
+  CASE_LAW          ni-judgments                  speaker          0.0%   attribution          0.0%
+  CASE_LAW          scottish-courts               speaker          0.0%   attribution          0.0%
+  CASE_LAW          et-decisions                  speaker          0.0%   attribution          0.0%
+  CASE_LAW          tax-tribunals                 speaker        100.0%   attribution          0.0%
+  CASE_LAW          echr-hudoc                    speaker          0.0%   attribution          0.0%
+  GUIDANCE          hmrc-manuals                  speaker          0.0%   attribution          0.0%
+  GUIDANCE          fca-handbook                  speaker          0.0%   attribution          0.0%
+  GUIDANCE          ico                           speaker          0.0%   attribution          0.0%
+  GUIDANCE          ofgem                         speaker          0.0%   attribution          0.0%
+  GUIDANCE          ofcom                         speaker          0.0%   attribution          0.0%
+  GUIDANCE          cma-cases                     speaker          0.0%   attribution          0.0%
+  GUIDANCE          cps-guidance                  speaker          0.0%   attribution          0.0%
+  GUIDANCE          college-of-policing           speaker          0.0%   attribution          0.0%
+  GUIDANCE          sentencing-council            speaker          0.0%   attribution          0.0%
+  GUIDANCE          planning-policy               speaker          0.0%   attribution          0.0%
+  GUIDANCE          building-regs                 speaker          0.0%   attribution          0.0%
+  GUIDANCE          nao-reports                   speaker          0.0%   attribution          0.0%
+  GUIDANCE          inquiry-reports               speaker          0.0%   attribution          0.0%
+  GUIDANCE          inquiry-evidence              speaker          0.0%   attribution          0.0%
+  GUIDANCE          independent-reviews           speaker          0.0%   attribution          0.0%
+  GUIDANCE          lawcom                        speaker          0.0%   attribution          0.0%
+  GUIDANCE          lgsco                         speaker          0.0%   attribution          0.0%
+  GUIDANCE          oecd                          speaker          0.0%   attribution          0.0%
+  GUIDANCE          erskine-may                   speaker          0.0%   attribution          0.0%
+  GUIDANCE          govuk-core-docs               speaker          0.0%   attribution          0.0%
+  CONSULTATION      consultations                 speaker          0.0%   attribution        100.0%
+  IMPACT_ASSESSMENT impact-assessments            speaker          0.0%   attribution        100.0%
+  EXPLANATORY_NOTE  explanatory-notes             speaker          0.0%   attribution          0.0%
+  EXPLANATORY_NOTE  explanatory-memoranda         speaker          0.0%   attribution          0.0%
+  DIVISION          commons-divisions-votes       speaker          0.0%   attribution          0.0%
+  DIVISION          lords-divisions-votes         speaker          0.0%   attribution          0.0%
+  BILL              bills-api                     speaker          0.0%   attribution          0.0%
+  TREATY            uk-treaties                   speaker          0.0%   attribution          0.0%
+=== other tables that could hold who-said-it ===
+  CommunityMember
+  Evidence
+  EvidenceItem
+  GroupMember
+  PartyMembership
+  committee_publication_document
+  graph_evidence
+  graph_identity_signal_evidence
+  graph_member_name
+  graph_member_post
+  graph_member_post_fetch
+  graph_member_register

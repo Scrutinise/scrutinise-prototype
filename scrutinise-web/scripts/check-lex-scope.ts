@@ -132,6 +132,10 @@ async function main() {
     id: 'x', kind: 'COMMITTEE', kindLabel: EVIDENCE_KINDS.COMMITTEE.label,
     whatItIs: EVIDENCE_KINDS.COMMITTEE.whatItIs, title: 'Water quality in rivers',
     date: '2022-01-13', url: null, snippet: 'a huge chemical cocktail', score: 1,
+    // S8 §2 — committee evidence holds no structured attribution (0 of 800 rows sampled), so
+    // null here is the REAL value for this collection, not a placeholder. See
+    // scripts/check-s8-attribution.ts for the assertions that keep it honest.
+    attribution: null,
   }])
   check(!!block && /\[Committee evidence\]/.test(block),
     'a rendered evidence item is labelled with what kind of document it is')

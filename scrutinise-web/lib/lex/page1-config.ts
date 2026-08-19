@@ -467,4 +467,9 @@ export interface SearchResult {
    *  nothing may be claimed; `no-record` is an explicit finding and still NOT "in force".
    *  See lib/lex/repeal-status.ts. */
   repeal?: import('./repeal-status').RepealStatus
+  /** S8 §2 — WHO SAID IT. Built by `attributionFor()` from the two structured columns
+   *  (`corpus_sections.speaker` / `.attribution`) and from NOTHING ELSE — never parsed back
+   *  out of `title`. NULL means the collection does not hold it structurally; it does NOT
+   *  mean the source is anonymous. See lib/lex/attribution.ts. */
+  attribution?: import('./attribution').Attribution | null
 }

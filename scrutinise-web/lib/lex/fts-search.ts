@@ -26,6 +26,7 @@ import { annotatedGidFromId, annotationTitle, isAnnotationCorpus } from './annot
 import { isPoliticalCorpus, politicalTitle } from './political-title'
 import { gidFromId, refFromId, refToCitation, resolveResultUrl } from './legislation-url'
 import { runStubSearch } from './search-stub'
+import { attributionFor } from './attribution'
 import { decodeForDisplay, decodeMaybe } from '@/lib/html-entities'
 
 // Native shape returned by fts-query-service.ts (body stripped on the wire).
@@ -194,9 +195,13 @@ export async function runFtsSearch(
       // `corpus_acts.gid`, which is indexed. It is a JOIN rather than a second lookup because
       // an impact assessment's instrument gid lives in `parentDocId` — it is not derivable from
       // the id the way an annotation's is, so it cannot be known before this query returns.
-      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; parentTitle: string | null }>>`
+      // ⚠ `speaker` joins the same SELECT for S8 §2. It is already in the FTS index, but the
+      // index's copy is baked in at build time and Neon's is current — the same staleness axis
+      // `dbTitleSupersedesIndex` exists for. Neon wins; the index value is the fallback for a
+      // row the hydrate misses. One more column, no extra round-trip.
+      prisma.$queryRaw<Array<{ id: string; sourceUrl: string | null; itemDate: string | null; sectionTitle: string | null; attribution: string | null; speaker: string | null; parentTitle: string | null }>>`
         SELECT s.id, s."sourceUrl", s."itemDate"::text AS "itemDate", s."sectionTitle",
-               s.attribution, a.title AS "parentTitle"
+               s.attribution, s.speaker, a.title AS "parentTitle"
         FROM corpus_sections s
         LEFT JOIN corpus_acts a ON a.gid = s."parentDocId" AND a.title IS NOT NULL
         WHERE s.id IN (${Prisma.join(ids)})`,
@@ -222,6 +227,7 @@ export async function runFtsSearch(
       ...r,
       sectionTitle: decodeMaybe(r.sectionTitle),
       attribution: decodeMaybe(r.attribution),
+      speaker: decodeMaybe(r.speaker),
       parentTitle: decodeMaybe(r.parentTitle),
     }]))
     const actTitle = new Map(actRows.flatMap((r) => (r.title ? [[r.gid, decodeForDisplay(r.title)] as const] : [])))
@@ -279,7 +285,14 @@ export async function runFtsSearch(
       // `scorer: 'bm25'` — raw BM25 from the FTS service, comparable only with other BM25
       // scores from the same index. score-scope.ts is what stops it being compared with an
       // RRF score three orders of magnitude smaller.
-      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'bm25' as const, url, date }
+      //
+      // S8 §2 — attribution is built from the COLUMNS ONLY. `title` is in scope on this line
+      // and is deliberately not passed: `attributionFor` has no parameter that could take it.
+      const attribution = attributionFor(h.corpus, {
+        speaker: meta?.speaker ?? h.speaker,
+        attribution: meta?.attribution,
+      })
+      return { id: h.id, type, title, citation, snippet: h.snippet, score: h.score, scorer: 'bm25' as const, url, date, attribution }
     })
 
     return { results: results.slice(0, limit * 3) } // groupForPanel caps downstream

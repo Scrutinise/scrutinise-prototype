@@ -1,0 +1,460 @@
+[measure-s8-attribution] retrieval configuration OK — [config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured
+[config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured
+[readback:before] fts OK served=51 width=16 since=2026-08-17T23:14:12.680Z
+[readback:before] vector OK served=847 width=4 since=2026-08-16T02:03:34.580Z
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:1/partial:0/failed:0/disabled:0
+(node:49860) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 10727 }
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 60,
+    debates: 60,
+    committees: 60,
+    caselaw: 60,
+    guidance: 60
+  }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 300,
+  failed: false,
+  reason: null,
+  repealed: 2,
+  repealLookup: 'ok'
+}
+
+Q: companies act 2006 directors duties
+   legislation 10 · evidence 10 · attributed 3/10 (30%)
+     [Parliamentary debate] BUSINESS, ENTERPRISE AND REGULATORY REFORM — Financial Institutions: Public Ap
+        — Jonathan Djanogly, the minister or body that answered this written question
+     [Parliamentary debate] BUSINESS, ENTERPRISE AND REGULATORY REFORM — Excel Airways
+        — Austin Mitchell, the minister or body that answered this written question
+     [Committee evidence] Corporate Governance inquiry — CGV0104
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:2/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 7044 }
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 60,
+    debates: 60,
+    committees: 60,
+    caselaw: 60,
+    guidance: 60
+  }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 300,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: data protection lawful basis for processing personal data
+   legislation 10 · evidence 10 · attributed 2/10 (20%)
+     [Parliamentary debate] Data Protection Bill [HL] - Report (1st Day)
+        (no attribution held for this collection)
+     [Parliamentary debate] Department for Science, Innovation and Technology — Genetics: Databases
+        — Sir Julian Lewis, the minister or body that answered this written question
+     [Committee evidence] Correspondence: Letter from Information Commissioner's Office to the Chair dat
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:3/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 6504 }
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 60,
+    debates: 60,
+    committees: 60,
+    caselaw: 60,
+    guidance: 60
+  }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 300,
+  failed: false,
+  reason: null,
+  repealed: 1,
+  repealLookup: 'ok'
+}
+
+Q: equality act public sector equality duty
+   legislation 10 · evidence 10 · attributed 3/10 (30%)
+     [Parliamentary debate] Scottish Parliament: Race Equality
+        — Christina McKelvie, speaking in the Scottish Parliament, on the record
+     [Parliamentary debate] HOME DEPARTMENT — Equality Act 2010
+        — Lynne Featherstone, the minister who made this written statement
+     [Committee evidence] Government Response: Government Response to the Skills for every young person 
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=committees totals=full:4/partial:0/failed:0/disabled:0
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'committees' ],
+  perStream: { committees: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 60,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: what have select committees said about water company sewage discharge
+   legislation 0 · evidence 10 · attributed 0/10 (0%)
+     [Committee evidence] Correspondence: Correspondence from the Chair to the Minister for Climate Chan
+        (no attribution held for this collection)
+     [Committee evidence] Report: 11th Report - UK Progress on Reducing Nitrate Pollution — Environmenta
+        (no attribution held for this collection)
+     [Committee evidence] Report: Fourth Report - Water quality in rivers — Environmental Audit Committe
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=debates totals=full:5/partial:0/failed:0/disabled:0
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'debates' ],
+  perStream: { debates: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 60,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: what did MPs argue in the debate on assisted dying
+   legislation 0 · evidence 10 · attributed 10/10 (100%)
+     [Parliamentary debate] Assisted Dying Law — [Sir Graham Brady in the Chair]
+        — Daisy Cooper, speaking in Westminster Hall, on the record
+     [Parliamentary debate] Assisted Dying — [Sir Robert Syms in the Chair]
+        — Fiona Bruce, speaking in Westminster Hall, on the record
+     [Parliamentary debate] Terminally Ill Adults (End of Life) Bill — Schedule 2 - Assisted Dying Review 
+        — Sarah Olney, speaking in the House of Commons, on the record
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:6/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 6391 }
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 60,
+    debates: 60,
+    committees: 60,
+    caselaw: 60,
+    guidance: 60
+  }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 300,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: how have the courts interpreted the duty to make reasonable adjustments
+   legislation 10 · evidence 10 · attributed 4/10 (40%)
+     [Parliamentary debate] Cabinet Office — Employment: Disability
+        — James Naish, the minister or body that answered this written question
+     [Parliamentary debate] WORK AND PENSIONS — Disability Discrimination Act 1995
+        — Jim Cunningham, the minister or body that answered this written question
+     [Committee evidence] Equality Act 2010 and Disability Committee - publications — EQD0175
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=legislation,debates,committees,guidance totals=full:7/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 4, cap: 3, maxInFlight: 3, ms: 6950 }
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'legislation', 'debates', 'committees', 'guidance' ],
+  perStream: { legislation: 60, debates: 60, committees: 60, guidance: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 240,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: government guidance on procurement social value
+   legislation 10 · evidence 10 · attributed 3/10 (30%)
+     [Explanatory note] Explanatory Notes — Small Business, Enterprise and Employment Act 2015
+        (no attribution held for this collection)
+     [Bill (not yet law)] Procurement Act 2023 — Bill papers, became an Act
+        (no attribution held for this collection)
+     [Parliamentary debate] Cabinet Office — Government Departments: Procurement
+        — John Glen, the minister or body that answered this written question
+[query-router] route_outcome=full streams=committees totals=full:8/partial:0/failed:0/disabled:0
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'committees' ],
+  perStream: { committees: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 60,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: what evidence did witnesses give on leasehold reform
+   legislation 0 · evidence 10 · attributed 0/10 (0%)
+     [Committee evidence] Report: 4th Report - The effectiveness and influence of the select committee s
+        (no attribution held for this collection)
+     [Committee evidence] Report: 12th Report - Leasehold Reform — Housing, Communities and Local Govern
+        (no attribution held for this collection)
+     [Committee evidence] Leasehold reform inquiry — LHR0054
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=debates,committees,guidance totals=full:9/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 60,
+  vector: 60,
+  fused: 60,
+  weight: 0.5
+}
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'debates', 'committees', 'guidance' ],
+  perStream: { debates: 60, committees: 60, guidance: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 180,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: has parliament scrutinised the rollout of universal credit
+   legislation 0 · evidence 10 · attributed 4/10 (40%)
+     [Parliamentary debate] Universal Credit — Statement
+        — Lord Freud, speaking in the House of Lords, on the record
+     [Parliamentary debate] Department for Work and Pensions — Universal Credit
+        — Kerry McCarthy, the minister or body that answered this written question
+     [Committee evidence] Welfare policy in Scotland inquiry — WIS0021
+        (no attribution held for this collection)
+[query-router] route_outcome=full streams=debates,committees totals=full:10/partial:0/failed:0/disabled:0
+[search-gateway] router dispatched {
+  intent: 'IDEA_CHAT_GROUNDING',
+  streams: [ 'debates', 'committees' ],
+  perStream: { debates: 60, committees: 60 }
+}
+[search-gateway] result {
+  intent: 'IDEA_CHAT_GROUNDING',
+  results: 120,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+
+Q: what was said about buy now pay later regulation in parliament
+   legislation 0 · evidence 10 · attributed 5/10 (50%)
+     [Parliamentary debate] Buy Now, Pay Later: Regulation - Question
+        — Baroness Kramer, speaking in the House of Lords, on the record
+     [Parliamentary debate] Treasury — Credit: Regulation
+        — Pat McFadden, the minister or body that answered this written question
+     [Committee evidence] Report: 10th Report - Tackling Financial Exclusion: A country that works for e
+        (no attribution held for this collection)
+[readback:after ] fts OK served=102 width=16 since=2026-08-17T23:14:12.680Z
+[readback:after ] vector OK served=873 width=4 since=2026-08-16T02:03:34.580Z
+[engagement] fts+51  vector+26
+
+════ ATTRIBUTION RATE, RETRIEVED vs AUDITED ════
+overall evidence-channel results: 34/100 attributed (34%)
+
+  display type        retrieved   attributed   rate     the audit said
+  COMMITTEE               41            0       0%     0% — no structured attribution on either column (0 of 800 rows, 4 id offsets)
+  DEBATE                  34           33      97%     4.0–99.5% — pwdata-debates `speaker`, rising with date; scottish-parliament-or 100%
+                      e.g. Jonathan Djanogly — the minister or body that answered this written question
+  GUIDANCE                13            0       0%     0% across all seven regulator collections sampled
+  CASE_LAW                 8            0       0%     0% — court named only in a title prefix on scottish-courts; nothing structural
+  EXPLANATORY_NOTE         2            0       0%     0%
+  IMPACT_ASSESSMENT        1            1     100%     100% — `attribution` = "{department} — {stage}"
+                      e.g. Department for Education — the department that published this assessment (Final stage)
+  BILL                     1            0       0%     not sampled
+
+════ ONE RENDERED EVIDENCE BLOCK, AS LEX RECEIVES IT ════
+- [Parliamentary debate] BUSINESS, ENTERPRISE AND REGULATORY REFORM — Financial Institutions: Public Appointments (2008-11-05)
+    what was said in the Commons or the Lords, on the record
+    — Jonathan Djanogly, the minister or body that answered this written question
+    "Q (Jonathan Djanogly): To ask the Minister of State, Department for Business, Enterprise and Regulatory Reform whether the directors appointed by the Government to the boards of (a) Northern Rock and (b) Bradford and Bingley are subject to the duties on directors set out in sections 170 to 177 of th"
+- [Parliamentary debate] BUSINESS, ENTERPRISE AND REGULATORY REFORM — Excel Airways (2008-10-09)
+    what was said in the Commons or the Lords, on the record
+    — Austin Mitchell, the minister or body that answered this written question
+    "Q (Austin Mitchell): To ask the Minister of State, Department for Business, Enterprise and Regulatory Reform when he was informed that KPMG had resigned as auditors to Excel Airways Group PLC in October 2006; what steps he and the regulator took to investigate the reasons for this resignation; and i"
+- [Committee evidence] Corporate Governance inquiry — CGV0104 (2016-11-09)
+    what a witness told a select committee, or what that committee reported
+    "CGV0104 - Evidence on Corporate Governance Written evidence from ClientEarth (CGV0104) 1 Introduction In September 2016, the Business, Innovation and Skills ( BIS ) Committee launched an inquiry on corporate governance, focussing on directors' duties, executive pay and the composition of board s (th"
+- [Committee evidence] Corporate Governance inquiry — CGV0057 (2016-11-04)
+    what a witness told a select committee, or what that committee reported
+    "CGV0057 - Evidence on Corporate Governance Written evidence from David Offenbach (CGV0057) I write from my experience as a Solicitor acting for public , private and not for profit companies and as a former non-executive Director of a Stock Exchange quoted company for 15 years which has led me to con"
+- [Case law] tna-caselaw (2017-01-01)
+    what a court decided
+    "EWHC-Chancery 2017 2059 [2017] EWHC 2059 (Ch) 0.26.9 654647e4ca2a32c6cab23aef6fbe876320956c67d
+
+[config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured
