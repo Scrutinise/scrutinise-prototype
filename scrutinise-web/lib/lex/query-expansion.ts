@@ -234,10 +234,18 @@ const ROUTER_STREAMS_BASE: RouterStreamName[] = ['legislation', 'debates', 'comm
  *  input, never text-searched (SEARCH_STRATEGY §3.3). */
 const ROUTER_STREAMS_V2_EXTRA: RouterStreamName[] = ['impact-assessments', 'consultations', 'explanatory']
 
+/** S9 §4 — the statistics catalogue, live only behind `LEX_STATS_STREAM`. Independent of
+ *  `LEX_ROUTER_STREAMS_V2`: the two answer different questions and either can be on alone. */
+const ROUTER_STREAMS_STATS: RouterStreamName[] = ['statistics']
+
 /** ⚠ Read at call time so a harness can flip the flag between arms in one process — which is
- *  exactly what `measure-s8-router-v2.ts` does to compare selection with and without. */
-const routerStreams = (): RouterStreamName[] =>
-  flagEnabled('LEX_ROUTER_STREAMS_V2') ? [...ROUTER_STREAMS_BASE, ...ROUTER_STREAMS_V2_EXTRA] : ROUTER_STREAMS_BASE
+ *  exactly what `measure-s8-router-v2.ts` does to compare selection with and without, and what
+ *  `measure-s9-router.ts` does for the statistics stream. */
+const routerStreams = (): RouterStreamName[] => [
+  ...ROUTER_STREAMS_BASE,
+  ...(flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_STREAMS_V2_EXTRA : []),
+  ...(flagEnabled('LEX_STATS_STREAM') ? ROUTER_STREAMS_STATS : []),
+]
 
 /** One tailored query string per stream the LLM judged relevant. A stream absent
  *  from the object was judged NOT relevant — the caller skips it entirely. */
@@ -294,7 +302,34 @@ const ROUTER_SCHEMA_V2 = {
   propertyOrdering: [...ROUTER_SCHEMA_BASE.propertyOrdering, 'impact-assessments', 'consultations', 'explanatory'],
 }
 
-const routerSchema = () => (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_SCHEMA_V2 : ROUTER_SCHEMA_BASE)
+/**
+ * S9 §4 — `statistics` appended to whichever schema is otherwise in force.
+ *
+ * ⚠ LAST IN `propertyOrdering`, for the measured reason above: Gemini emits ALPHABETICALLY in
+ * practice, and `statistics` sorts after everything except nothing — it is the alphabetically
+ * LAST of all nine names. So it is the stream a truncation destroys first whether the hint is
+ * honoured or not, which is the correct place for it: losing the statistics query costs a
+ * side-rail, while losing `legislation` costs the query its dense retrieval.
+ */
+function withStats(schema: { type: string; properties: Record<string, unknown>; propertyOrdering: string[] }) {
+  return {
+    ...schema,
+    properties: { ...schema.properties, statistics: { type: 'string' } },
+    propertyOrdering: [...schema.propertyOrdering, 'statistics'],
+  }
+}
+
+const ROUTER_SCHEMA_STATS = withStats(ROUTER_SCHEMA_BASE)
+const ROUTER_SCHEMA_V2_STATS = withStats(ROUTER_SCHEMA_V2)
+
+const routerSchema = () => {
+  const v2 = flagEnabled('LEX_ROUTER_STREAMS_V2')
+  const stats = flagEnabled('LEX_STATS_STREAM')
+  if (v2 && stats) return ROUTER_SCHEMA_V2_STATS
+  if (v2) return ROUTER_SCHEMA_V2
+  if (stats) return ROUTER_SCHEMA_STATS
+  return ROUTER_SCHEMA_BASE
+}
 
 // ── measurement switches ─────────────────────────────────────────────────────
 //
@@ -371,8 +406,44 @@ specifically about what they contain, and never as a substitute for legislation:
 - consultations: what the government ASKED the public, and what respondents said. Route here for questions about what was consulted on or how respondents replied. Tailor with the policy name plus consultation vocabulary (e.g. "leasehold reform consultation response respondents").
 - explanatory: explanatory notes and memoranda — the department's own statement of what a provision was FOR. Route here when the question is about PURPOSE or intent rather than the operative text. Tailor with the Act or SI name plus purpose vocabulary (e.g. "Data Protection Act 2018 explanatory notes purpose").`
 
+/**
+ * S9 §4 — the statistics catalogue, APPENDED for the same reason the S8 §4 block is appended:
+ * `ROUTER_PROMPT_BASE` reaches the model byte-identical, so any change in how the five existing
+ * streams are selected is attributable to a ninth option existing rather than to the prompt
+ * having been rewritten around it.
+ *
+ * ⚠⚠ THE NEGATIVE HALF IS THE LOAD-BEARING HALF, and it is stated first and at length on
+ * purpose. S9 §5: "does it NOT select it when the question is legal or evidential? A stream that
+ * fires on everything is worse than one that fires on nothing." The failure mode this guards
+ * against is specific and easy to imagine: almost every policy question can be made to sound
+ * quantitative ("how bad is the sewage problem"), and a router that reads "numbers might help
+ * here" as "route to statistics" would fire on the entire gold set.
+ *
+ * ⚠ It also states what the stream RETURNS, because the model's own idea of what a statistics
+ * search does is the thing most likely to be wrong: it finds out WHETHER A SERIES EXISTS. It
+ * never returns a figure. A tailored query that reads like a request for a number
+ * ("total NHS spending 2024") is still fine as a search string — but the prompt says what comes
+ * back, so the model does not route here expecting an answer it will not get.
+ */
+const ROUTER_PROMPT_STATS_STREAM = `
+
+One further source is available, and it is NOT a corpus of documents:
+- statistics: a CATALOGUE of official numeric data series — ONS, OBR, HMRC, HM Treasury PESA, World Bank, IMF. It tells you WHETHER A PUBLISHED SERIES EXISTS for a quantity (its title, publisher, units, geography and time span). It NEVER returns the values themselves; those are fetched separately once a series is identified.
+
+ROUTE TO statistics ONLY when the user is asking whether a QUANTITY IS MEASURED — how much is spent, how many there are, what the rate or trend is, how the UK compares numerically. Tailor with the quantity in the words the series itself would use, plus the GEOGRAPHY when the question is about one country (e.g. "UK public expenditure health function", "UK alcohol duty receipts", "UK unemployment rate"). ⚠ Name the geography or the search will match another country's series just as well — the catalogue holds 22 countries. Do NOT pad the query with publisher acronyms the source may not use.
+
+⚠ DO NOT route to statistics for:
+- legal questions — what the law says, what a court decided, what a duty requires;
+- evidential questions — what a committee concluded, what a witness said, what was consulted on;
+- questions that merely CONCERN a measurable subject. "Should sewage discharges be banned" is a policy question, not a request for a series. "How much sewage is discharged" is a request for a series.
+If in doubt, omit statistics. A question that would be no worse answered without a number does not need this source.
+
+⚠⚠ THE statistics QUERY IS SHORTER THAN THE OTHERS — THREE TO SIX WORDS, not six to twelve. It is matched against series TITLES of about five words, not against document text, so every extra word is a chance to match the wrong series on an accident. Measured examples of exactly that: "Office Budget Responsibility" matched *Home Office*; "each year" matched *Life expectancy at birth (years)*; "international comparison" matched *GDP per capita, PPP (current international $)*. Write the geography and the quantity and STOP: "UK alcohol duty receipts", "UK unemployment rate", "UK tax gap", "UK public sector net borrowing". No publisher names, no words like series, data, figures, statistics, official, annual, comparison, or trend.`
+
 function routerSystemPrompt(): string {
-  const base = ROUTER_PROMPT_BASE + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
+  const base = ROUTER_PROMPT_BASE
+    + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
+    + (flagEnabled('LEX_STATS_STREAM') ? ROUTER_PROMPT_STATS_STREAM : '')
   return base + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
 }
 

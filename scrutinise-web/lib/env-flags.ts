@@ -90,6 +90,24 @@ export const CAPABILITY_FLAGS = [
   // instrument problem that makes committees unevaluable), which is what §5's question set exists
   // to fix. Flipping it is Charlie's call once there is something to score it with.
   'LEX_ROUTER_STREAMS_V2',
+  // S9 §4. The statistics catalogue as a routed stream. The router selects it exactly as it
+  // selects legislation or caselaw; what differs is the PAYLOAD, which travels on its own
+  // channel (`GatewayResult.statistics`) as a series DESCRIPTOR rather than a document —
+  // because a catalogue hit that renders like a corpus document invites Lex to quote it as
+  // evidence of a fact, when it is only evidence that a MEASUREMENT EXISTS.
+  //
+  // ⚠ DEFAULT OFF, and here the reason is that it is UNVALIDATED rather than expensive. There
+  // is no gold set for statistics and one cannot be borrowed (S9 §5); the ten candidate
+  // questions Q51–Q60 in GOLD_CANDIDATES_S8.md are marked UNVALIDATED and await Charlie. What
+  // IS measured is behavioural — whether the router selects this stream when a numeric series
+  // is plainly wanted and, more importantly, leaves it alone when the question is legal or
+  // evidential. A stream that fires on everything is worse than one that fires on nothing.
+  //
+  // ⚠ It also costs a sixth router stream (an eighth with V2 on) against `vector-serve`'s
+  // concurrency cap of 4 — but NOT a vector call: this stream has no dense leg and does not
+  // touch the corpus index at all, so the cost is one Postgres read against a cached
+  // in-process index, measured at SEARCH_S9_REPORT.md §B3.
+  'LEX_STATS_STREAM',
 ] as const
 
 export type CapabilityFlagName = (typeof CAPABILITY_FLAGS)[number]

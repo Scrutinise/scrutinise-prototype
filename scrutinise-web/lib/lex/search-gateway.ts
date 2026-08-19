@@ -26,6 +26,8 @@ import { fuseWeightedRrf } from './fusion'
 // status is attached. Every consumer of a SearchResult then gets it without knowing it exists —
 // the briefing, the Deepening, the build passes, the panels — and no caller can forget.
 import { lookupRepeals, annotate } from './repeal-status'
+// S9 §4 — the statistics catalogue. Values never enter this file; only descriptors.
+import { searchCatalogue, statsUseContext, type CatalogueSearchOutcome } from './stats-catalogue'
 
 // ── Query intent (§14.2) — owned HERE, aligned to the search side's stream taxonomy.
 // Add an intent when a new Lex moment needs retrieval; tell the search side so they
@@ -86,6 +88,44 @@ export function capabilityFlags(): CapabilityFlags {
   }
 }
 
+/**
+ * S9 §4 — retrieve the statistics catalogue for a routed query, or nothing.
+ *
+ * Returns `undefined` in the two cases that mean "not consulted" — the flag is off, or the
+ * router did not select the stream — and an outcome object in every case where it WAS
+ * consulted, including when it found nothing. Those are different statements and
+ * `SEARCH_CONTRACT.md` §6 requires Lex to be able to tell them apart.
+ *
+ * ⚠ NEVER THROWS. A statistics store that is unconfigured, unreachable or slow must not break
+ * a Lex turn; `searchCatalogue` already degrades to `unavailable: true`, and this catches
+ * anything left so that a stats fault can never take out a legislation answer.
+ */
+async function retrieveStatistics(
+  streamQuery: string | undefined,
+  intent: SearchIntent,
+): Promise<CatalogueSearchOutcome | undefined> {
+  if (!flagEnabled('LEX_STATS_STREAM')) return undefined
+  if (!streamQuery || !streamQuery.trim()) return undefined
+  const t0 = Date.now()
+  try {
+    const useContext = statsUseContext()
+    const out = await searchCatalogue(streamQuery, { limit: 8, useContext })
+    console.log('[search-gateway] statistics catalogue', {
+      intent, query: streamQuery, useContext,
+      series: out.results.length, searchedOver: out.searchedOver,
+      // ⚠ ALWAYS LOGGED, even at zero. A licence gate whose effect is invisible is a licence
+      // gate nobody can tell is running — §3.3's own failure class.
+      licenceWithheld: out.licenceWithheld,
+      unavailable: out.unavailable, ms: Date.now() - t0,
+    })
+    return out
+  } catch (err) {
+    console.error('[search-gateway] statistics catalogue threw — reporting UNAVAILABLE rather than empty, ' +
+      'so Lex cannot say "no such series exists" when it did not look:', err)
+    return { results: [], unavailable: true, licenceWithheld: 0, searchedOver: 0 }
+  }
+}
+
 export interface GatewayQuery {
   /** Accepted context terms that build the query. */
   keywords: string[]
@@ -123,6 +163,25 @@ export interface GatewayResult {
    *  the two in what they store and in what Lex is allowed to say. */
   failed: boolean
   failureReason?: string
+  /**
+   * ⚠⚠ S9 §4 — THE STATISTICS CATALOGUE, ON ITS OWN CHANNEL AND NOT IN `results`.
+   *
+   * Present only when `LEX_STATS_STREAM` is on AND the router selected `statistics`.
+   * `undefined` means the stream was not consulted; `results: []` inside it means it WAS
+   * consulted and no series matched — the failed-vs-empty distinction, one level down.
+   *
+   * THE SEPARATION IS STRUCTURAL, NOT COSMETIC. A `SearchResult` is a document: something
+   * Lex may quote as evidence of a fact. A `SeriesDescriptor` is evidence that a
+   * MEASUREMENT EXISTS, and carries no value at all. Interleaving the two into one list is
+   * exactly how a catalogue heading would end up cited as though it were a finding — the
+   * same reasoning that keeps `LegacySearchResult` and `EvidenceResult` apart
+   * (SEARCH_STRATEGY §10), applied one collection further out.
+   *
+   * ⚠ A caller that wants the NUMBER must take `seriesKey` and make the exact call
+   * (`lib/stats/stats-query.ts::getSeriesByKey` → `getSeriesObservations`). Search
+   * establishes that a series exists; it does not and must not tell you what it says.
+   */
+  statistics?: import('./stats-catalogue').CatalogueSearchOutcome
   /** Observability: which flags fired + terms the expansion added (query-only). */
   meta: {
     flags: CapabilityFlags
@@ -169,6 +228,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   let expansionAdded: string[] = []
   let routedStreams: string[] | undefined
   let perStream: Array<{ stream: string; ids: string[] }> | undefined
+  let statistics: CatalogueSearchOutcome | undefined
   // Used only by the vector-fusion step below (4b), which routing doesn't touch
   // (out of this brief's scope) — defaults to the bare keywords when routed.
   let queryKeywords = keywords
@@ -253,13 +313,27 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
       // `results` arrives INTERLEAVED, not concatenated — see query-router.ts::runRoutedSearch.
       // Every downstream prefix (general-chat's answer context, the orchestrator's snippets,
       // score-ordering's top-K) is therefore stream-balanced without each caller re-deciding it.
-      const routed = await runRoutedSearch(route, limit)
+      // S9 §4 — the statistics catalogue runs CONCURRENTLY with corpus retrieval, not after
+      // it. It touches a different database and shares none of the corpus services, so it
+      // adds no queueing against `vector-serve`'s width and its cost is hidden inside the
+      // slowest corpus stream rather than added to it (measured: SEARCH_S9_REPORT.md §B3).
+      //
+      // ⚠ `runRoutedSearch` simply does not match `statistics` — there is no `StreamScope`
+      // of that name — so the route object needs no filtering before it is passed on.
+      const [routed, stats] = await Promise.all([
+        runRoutedSearch(route, limit),
+        retrieveStatistics(route.statistics, q.intent),
+      ])
       ftsResults = routed.results
       perStream = routed.perStream
+      statistics = stats
       console.log('[search-gateway] router dispatched', {
         intent: q.intent,
         streams: streamNames,
         perStream: Object.fromEntries(routed.perStream.map((s) => [s.stream, s.ids.length])),
+        statistics: stats
+          ? { series: stats.results.length, withheld: stats.licenceWithheld, unavailable: stats.unavailable }
+          : 'not selected',
       })
     } else {
       // error, not log: routeQuery has already said WHY on the line above, and this is a real
@@ -377,7 +451,7 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const repealedCount = annotatedResults.filter((r) => r.repeal && r.repeal.state !== 'no-record').length
 
   console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null, repealed: repealedCount, repealLookup: repealOk ? 'ok' : 'FAILED' })
-  return { intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, meta: { flags, expansionAdded, routedStreams, perStream } }
+  return { intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics, meta: { flags, expansionAdded, routedStreams, perStream } }
 }
 
 // ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────

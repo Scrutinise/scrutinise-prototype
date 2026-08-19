@@ -18,10 +18,26 @@ import type { SearchResultType } from './page1-config'
  *  re-exported by query-expansion.ts (which owns the LLM decision that produces them). It used
  *  to live there, which meant anything wanting the name list imported a Gemini client.
  *
- *  The last three are the S8 §4 candidates, live only behind `LEX_ROUTER_STREAMS_V2`. */
+ *  The three after the base five are the S8 §4 candidates, live only behind
+ *  `LEX_ROUTER_STREAMS_V2`.
+ *
+ *  ⚠ `statistics` (S9 §4, behind `LEX_STATS_STREAM`) IS DELIBERATELY NOT IN `STREAM_SCOPES`
+ *  BELOW, and that is not an oversight. A `StreamScope` describes a slice of the CORPUS index
+ *  — a tier, a corpus prefilter, a display type — and the statistics catalogue is none of
+ *  those: it lives in a separate database, carries no corpus rows, and is retrieved by
+ *  `lib/lex/stats-catalogue.ts` rather than by the FTS/vector services.
+ *
+ *  Two consequences worth stating, because both would otherwise read as bugs:
+ *    · `runRoutedSearch` iterates `streams()`, which is built from `STREAM_SCOPES`, so a route
+ *      naming `statistics` is simply not matched there and no corpus retrieval happens for it.
+ *      The gateway picks it up separately and puts it on its own channel.
+ *    · `corpus-reachability.ts` computes which COLLECTIONS a stream can select. Statistics has
+ *      no collection, so its absence from the scope table keeps that matrix honest rather than
+ *      adding a row that can never be satisfied. */
 export type RouterStreamName =
   | 'legislation' | 'debates' | 'committees' | 'caselaw' | 'guidance'
   | 'impact-assessments' | 'consultations' | 'explanatory'
+  | 'statistics'
 
 /**
  * COMMITTEE / DEBATE corpora, kept next to each other because they are complements and must

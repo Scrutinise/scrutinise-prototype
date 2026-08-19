@@ -73,6 +73,49 @@ flag adds is a SLOT of their own in the round-robin interleave, so an impact ass
 competing for legislation's positions against 1.6M sections of statute. Cost: five streams become
 eight, and a stream is one retrieval call per query. Measured in `docs/SEARCH_S8_ROUTER_V2.md`.
 
+### ⚠⚠ A NINTH STREAM THAT IS NOT A CORPUS — `statistics` (S9 §4, `LEX_STATS_STREAM`, default OFF)
+
+**What it answers: DOES A RELEVANT NUMERIC SERIES EXIST. It never answers what the number is.**
+
+The statistics catalogue is 5,733 official series from ONS, OBR, HMRC, HM Treasury PESA, the World
+Bank and the IMF, in a separate database from the corpus. What is indexed is the **catalogue** —
+the headings that describe what a series *is*: title, measure, unit, geography, time span,
+publisher, COFOG function. **The observations are not indexed and are never searched.**
+
+Why the line is drawn there: a plausible-looking approximate match over a numeric series is
+worthless and dangerous. "Roughly" is a legitimate output for a debate transcript and never a
+legitimate output for a statistic.
+
+**How a caller uses it, in two steps that must stay two steps:**
+
+1. `runSearch()` → `result.statistics.results` → a `SeriesDescriptor[]`, each carrying
+   `seriesKey`, what the series is, its span, its publisher and its licence.
+2. If a VALUE is needed, the caller takes `seriesKey` and makes the exact call —
+   `lib/stats/stats-query.ts::getSeriesByKey` then `getSeriesObservations`. **Search does not do
+   this and must not be made to.**
+
+⚠ **The payload travels on its own channel, `GatewayResult.statistics`, and NOT in `results`.**
+A `SearchResult` is a document Lex may quote as evidence of a fact. A `SeriesDescriptor` is
+evidence that a *measurement exists*, and carries no value at all. Interleaving them is how a
+catalogue heading would end up cited as a finding — the same reasoning that keeps
+`LegacySearchResult` and `EvidenceResult` structurally apart.
+
+⚠ **Licence terms are ENFORCED, not recorded.** 2,329 of 5,733 series (40.6%, all IMF) are
+`commercialUseExcluded`. The filter runs on the row set **before scoring**, so a restricted series
+is never a candidate rather than being removed from a ranked list afterwards; the caller must
+declare `STATS_USE_CONTEXT` (`non-commercial` | `commercial`), an unrecognised value fails to the
+restrictive branch, and the number withheld is logged on every call. Every descriptor carries its
+licence, licence URL and the attribution the source requires.
+
+⚠ **`unavailable` is not `results: []`.** The first means the catalogue could not be consulted (no
+`STATS_DATABASE_URL`, store unreachable); the second means it was consulted and nothing matched.
+Lex must not say "there is no such series" for the first. See §6.
+
+⚠ **`statistics` selects no corpus stream and issues no corpus retrieval** — proved
+deterministically, not measured: `runRoutedSearch` matches route keys against `STREAM_SCOPES`, and
+there is no scope of that name (`check:s9-catalogue`, "adding `statistics` to a route selects no
+extra CORPUS stream", 36 results identical both ways).
+
 ⚠ **`PRECEDENT`, `CAUSAL_EVIDENCE`, `DEVOLUTION_SCOPE` and `GENERAL_CORPUS_CHAT` are DESCRIPTIVE.**
 They are logged and callers key off them, but they select no streams — **adding one changes no
 retrieval for anyone.** If you need retrieval to actually change, that is a conversation with
@@ -120,6 +163,9 @@ Named individually, with what each would take. **This list is the honest half of
 | **Comparative law from other jurisdictions** | Reserved as `COMPARATIVE_LAW`. Nothing ingested for it. |
 | **Amendable-section lookup** — "which section would this change amend" | Reserved as `AMENDABLE_SECTION`. |
 | **Who gave a piece of committee evidence** | ⚠⚠ **PARTIALLY CLOSED, AND THE HARD HALF IS STILL OPEN.** `attribution` now reaches every caller (§4 above) and covers 14 of 54 non-legislation collections — but **committee evidence and committee reports carry nothing**, on either column, in 1,400 sampled rows. The witness's name is in the R2 body and in no metadata we hold. Ingest work, not search work. |
+| **The VALUE of a statistic, from search** | ⚠⚠ **NOT A GAP — A RULE.** Search returns a series *descriptor* and never an observation; the value comes from a separate exact call keyed on `seriesKey` (§2). Enforced at the boundary on every call (`assertNoObservationValues`), watched failing in `check:s9-catalogue`. Do not "add values to the descriptor". |
+| **A statistics series for anything outside the fiscal/macro spine** | The store is ONS, OBR, HMRC, PESA (UK fiscal and macroeconomic) plus World Bank and IMF comparatives. Measured: **zero** series match `nhs`, `waiting` or `hospital` anywhere in label or measure. There is health *spending*; there is no health *activity*, no crime, no housing, no education outcomes. Ingest work on the statistics side, not search work. |
+| **Reliable discovery of a series whose label is a source column code** | ⚠ 2,807 of 5,733 series (49%) are labelled with the publisher's own codes — `PSNB (April 1978)`, `NICS (October 2018)`, `PCDebtint (March 2022)`. Thirteen of these are glossed from long names the store itself carries elsewhere; the rest are not, and **a gloss will not be invented** — that is the same failure class as an invented figure. Closing it needs either a curated gloss table validated against the publishers' documentation, or dense retrieval over the headings. |
 | **Phrase / exact-quotation search** | The keyword index is built **without token positions** (`withPosition: false`), so there are no phrase queries. A quoted string is matched as a bag of words. |
 | **Anything in the 55.9% of source material not ingested** | Ingest work, collection by collection. |
 
