@@ -54,6 +54,20 @@ function Dot({ status }: { status: string }) {
   return <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${cls}`} aria-hidden />
 }
 
+/**
+ * 25-B §8 — the per-pass spend line, or null when a pass has not spent anything.
+ *
+ * ⚠ An UNPRICED pass says so rather than showing nothing: a pass that ran on a model with
+ * no rate on file has a real cost we cannot state, and a blank line reads as free.
+ */
+function spendFor(build: BuildView, key: string): string | null {
+  const row = build.spendByPass?.find((s) => s.key === key)
+  if (!row || (!row.tokensIn && !row.tokensOut)) return null
+  const tokens = `${row.tokensIn.toLocaleString()} in / ${row.tokensOut.toLocaleString()} out`
+  if (row.pence == null) return `${tokens} — cost not estimated`
+  return `${tokens} — ${row.pence < 1 ? 'under 1p' : `${row.pence.toFixed(1)}p`}`
+}
+
 function elapsed(seconds: number | null): string {
   if (seconds == null) return ''
   const m = Math.floor(seconds / 60)
@@ -116,8 +130,20 @@ export default function BuildProgress({
                 {p.status === 'NOT_REACHED' && <span className="ml-2 text-xs font-normal text-zinc-400">— not reached</span>}
               </p>
               <p className="text-xs text-zinc-500 mt-0.5">{p.detail}</p>
+              {/* 25-B §8 — "Progress must show what is happening, not a spinner: the
+                  current pass, THE QUESTION BEING ASKED, and findings appearing as they
+                  land." The research pass writes this line before each library question,
+                  so a five-minute pass is legible while it runs rather than after it. */}
+              {p.status === 'RUNNING' && p.activity && (
+                <p className="text-xs text-blue-700 mt-1">{p.activity}…</p>
+              )}
               {p.output && <p className="text-xs text-emerald-700 mt-1">{p.output}</p>}
               {p.failureReason && <p className="text-xs text-amber-700 mt-1">{p.failureReason}</p>}
+              {/* §8 — the spend for THIS pass. A build total cannot answer "which pass
+                  cost that", which is the question the numbers exist to answer. */}
+              {spendFor(build, p.key) && (
+                <p className="text-[11px] text-zinc-400 mt-1">{spendFor(build, p.key)}</p>
+              )}
             </div>
           </li>
         ))}

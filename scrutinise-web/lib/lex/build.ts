@@ -45,52 +45,25 @@ import { stripNullBytes } from './json-safe'
 import {
   BUILD_PASSES, passDef, frameQuery, effectiveBudgetMs, COST_CEILING_PENCE,
   INSTRUMENT_FORK_KEY, trimForkAlternatives, DOMAIN_TRANSFER_QUESTION,
+  HARD_STOP_MS, PASS_BUDGET_MS, perspectivesFor, modelForPass,
   type BuildPassKey, type Framing,
 } from './build-config'
 import {
   runOrientPass, runDiagnosisPass, runApproachPass, runActionsPass, writeBuildSummary,
-  type RawFork, type RawUncertainty,
+  runRevisePass,
+  type RawFork, type RawUncertainty, type OrientOutput, type InstrumentAssessment,
 } from './build-client'
+import {
+  freshPassLog, readPassLog, carryInto, allUsages, nextPassKey, isResumable, passesComplete,
+  type PassRecord, type PassStatus, type PassCarry,
+} from './build-carry'
+import { runResearch, draftFactsFor } from './build-research'
+import { generateAdversarialIssues } from './deepening-adversarial'
+import { readKnownUnknowns } from './deepening'
+import { supersedeOlderProposals } from './evidence-layer'
 
 export const BUILD_STAGE = 'BUILD'
-
-// ── The pass log ─────────────────────────────────────────────────────────────
-
-export type PassStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'NOT_REACHED'
-
-export interface PassRecord {
-  key: BuildPassKey
-  label: string
-  detail: string
-  status: PassStatus
-  startedAt: string | null
-  completedAt: string | null
-  /** A one-line account of what this pass produced, for the progress display. */
-  output: string | null
-  failureReason: string | null
-}
-
-function freshPassLog(): PassRecord[] {
-  return BUILD_PASSES.map((p) => ({
-    key: p.key, label: p.label, detail: p.detail,
-    status: 'PENDING' as PassStatus,
-    startedAt: null, completedAt: null, output: null, failureReason: null,
-  }))
-}
-
-function readPassLog(raw: unknown): PassRecord[] {
-  if (!Array.isArray(raw) || !raw.length) return freshPassLog()
-  // Reconcile against the configured passes, so adding a pass in a later sprint does
-  // not make an old row unreadable — and so a pass that is configured but missing from
-  // a stored log shows as PENDING rather than vanishing.
-  const stored = raw as PassRecord[]
-  return BUILD_PASSES.map((p) => {
-    const found = stored.find((s) => s?.key === p.key)
-    return found
-      ? { ...found, label: p.label, detail: p.detail }
-      : { key: p.key, label: p.label, detail: p.detail, status: 'PENDING' as PassStatus, startedAt: null, completedAt: null, output: null, failureReason: null }
-  })
-}
+export type { PassRecord, PassStatus }
 
 // ── State (the polling surface) ──────────────────────────────────────────────
 
@@ -113,6 +86,21 @@ export interface BuildView {
   uncertainties: Array<{ fieldKey: string; sentence: string }>
   queryUsed: string | null
   spend: { tokensIn: number; tokensOut: number; pence: number | null; line: string }
+  /**
+   * 25-B §8 — "Report the spend per build, broken down by pass." Derived from the same
+   * usages the build total is derived from, so the two cannot disagree.
+   */
+  spendByPass: Array<{ key: string; label: string; tokensIn: number; tokensOut: number; pence: number | null }>
+  /**
+   * 25-B §1 — THE POLLING SURFACE'S INSTRUCTION TO THE CLIENT. Which pass the server
+   * wants run next, or null when there is nothing left to run. The client triggers it;
+   * the server decides it. A client that guessed the next pass could ask for one that
+   * has already run.
+   */
+  nextPass: BuildPassKey | null
+  /** TRUE when this build stopped part-way and can be picked up from its last completed
+   *  pass rather than restarted from nothing. */
+  resumable: boolean
   forks: Array<{
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
@@ -139,14 +127,24 @@ function toView(
   const passes = readPassLog(row.passes)
   const started = row.startedAt ? row.startedAt.getTime() : null
   const ended = row.completedAt ? row.completedAt.getTime() : null
-  const price: BuildPrice = {
-    tokensIn: row.tokensIn,
-    tokensOut: row.tokensOut,
-    pence: row.estCostPence == null ? null : Number(row.estCostPence),
-    // The row records the outcome, not the models; when the price is null the reason is
-    // that something in the run was unpriced, and the line says so without naming it.
-    unpriced: row.estCostPence == null && (row.tokensIn || row.tokensOut) ? ['a model with no rate on file'] : [],
-  }
+  // ⚠ PRICED FROM THE PASS LOG WHILE THE BUILD IS STILL RUNNING. 25-A settled the row's
+  // token columns only at the end, which was fine when the whole build was one request.
+  // With one pass per request (§1) the columns are stale for minutes at a time, and a
+  // spend line reading 0 while four passes have run would be the "zero is a claim"
+  // failure build-cost.ts exists to prevent. The log is the live source; the columns are
+  // the settled record, and `settleBuild` writes them from the same numbers.
+  const live = priceBuild(allUsages(passes))
+  const settled = row.status === 'QUEUED' || row.status === 'RUNNING'
+  const price: BuildPrice = settled
+    ? live
+    : {
+        tokensIn: row.tokensIn,
+        tokensOut: row.tokensOut,
+        pence: row.estCostPence == null ? null : Number(row.estCostPence),
+        // The row records the outcome, not the models; when the price is null the reason is
+        // that something in the run was unpriced, and the line says so without naming it.
+        unpriced: row.estCostPence == null && (row.tokensIn || row.tokensOut) ? ['a model with no rate on file'] : [],
+      }
   const unc = (row.uncertainties && typeof row.uncertainties === 'object' && !Array.isArray(row.uncertainties)
     ? (row.uncertainties as Record<string, string>)
     : {})
@@ -168,6 +166,15 @@ function toView(
     uncertainties: Object.entries(unc).map(([fieldKey, sentence]) => ({ fieldKey, sentence: String(sentence) })),
     queryUsed: row.queryUsed,
     spend: { tokensIn: price.tokensIn, tokensOut: price.tokensOut, pence: price.pence, line: formatSpend(price) },
+    spendByPass: passes.map((p) => {
+      const per = priceBuild(p.usages ?? [])
+      return {
+        key: p.key, label: p.label,
+        tokensIn: per.tokensIn, tokensOut: per.tokensOut, pence: per.pence,
+      }
+    }),
+    nextPass: row.status === 'RUNNING' || row.status === 'QUEUED' ? nextPassKey(passes) : null,
+    resumable: isResumable(passes),
     forks,
   }
 }
@@ -277,17 +284,30 @@ export async function requestCancel(ideaId: string, buildId: string): Promise<bo
 
 // ── Running ──────────────────────────────────────────────────────────────────
 
-interface RunAccumulator {
+/**
+ * Everything ONE pass needs. 25-A passed a mutable `RunAccumulator` down a loop inside a
+ * single function; §1 splits the passes across requests, so what a pass receives is
+ * assembled fresh from the STORED carry and the database each time.
+ *
+ * `usages` is the exception and is genuinely per-pass: the pass owns what it spent, and
+ * the build total is the sum over the log (build-carry.ts).
+ */
+interface PassContext {
+  ideaId: string
+  userId: string
+  buildId: string
+  buildVersion: number
+  ctx: ElicitationContext
+  framed: ReturnType<typeof frameQuery>
+  carry: PassCarry
   usages: LlmUsage[]
-  uncertainties: Record<string, string>
-  forkCount: number
-  results: SearchResult[]
-  searchFailed: boolean
-  orientation: string
-  diagnosis: string
-  approach: string
-  instrument: string
+  /** §8 — say what is happening while it happens, not after. */
+  activity: (line: string) => Promise<void>
 }
+
+interface PassOk { ok: true; output: string; carry?: PassCarry }
+interface PassFail { ok: false; reason: string }
+type PassOutcome = PassOk | PassFail
 
 /** A reason a build stopped early. Naming them apart is the §18 rule. */
 type StopReason =
@@ -295,26 +315,35 @@ type StopReason =
   | { kind: 'cost'; price: BuildPrice }
   | { kind: 'cancel' }
 
-async function checkStop(
-  buildId: string, startedAt: number, acc: RunAccumulator,
-): Promise<StopReason | null> {
-  const budget = effectiveBudgetMs()
-  const elapsed = Date.now() - startedAt
-  if (elapsed > budget.ms) return { kind: 'time', elapsedMs: elapsed }
+/**
+ * ⚠ THE HARD STOP IS MEASURED FROM THE ROW, NOT FROM THIS FUNCTION.
+ *
+ * This is the change that makes 25-A's 15-minute ceiling real (see build-config.ts). The
+ * build now spans many requests, so "how long has this build been running" is a question
+ * about `startedAt` on the stored row. Measuring from the current function's start would
+ * reset the clock on every pass and produce a ceiling that can never fire — which is
+ * exactly the guard-that-cannot-fail 25-A refused to ship.
+ */
+async function checkStop(buildId: string, usages: LlmUsage[]): Promise<StopReason | null> {
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId },
+    select: { cancelRequested: true, startedAt: true },
+  })
+  if (row?.cancelRequested) return { kind: 'cancel' }
 
-  const price = priceBuild(acc.usages)
+  const elapsed = row?.startedAt ? Date.now() - row.startedAt.getTime() : 0
+  if (elapsed > HARD_STOP_MS) return { kind: 'time', elapsedMs: elapsed }
+
+  const price = priceBuild(usages)
   // ⚠ An UNPRICED run cannot be stopped on cost, and pretending otherwise (by treating
   // null as 0) would mean the ceiling silently stopped existing. It is logged loudly
   // instead, so the gap is visible rather than assumed away.
   if (price.pence != null && price.pence > COST_CEILING_PENCE) return { kind: 'cost', price }
   if (price.pence == null && (price.tokensIn || price.tokensOut)) {
-    console.warn('[lex-diag] 25a cost ceiling NOT ENFORCEABLE this run — unpriced model(s)', {
+    console.warn('[lex-diag] 25b cost ceiling NOT ENFORCEABLE this run — unpriced model(s)', {
       buildId, unpriced: price.unpriced,
     })
   }
-
-  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { cancelRequested: true } })
-  if (row?.cancelRequested) return { kind: 'cancel' }
   return null
 }
 
@@ -332,6 +361,20 @@ function stopMessage(stop: StopReason): string {
   }
 }
 
+/**
+ * The corpus results pass 1 retrieved, re-read for a later pass.
+ *
+ * §1's cost: passes 2a–2c used to hold `acc.results` in memory. They now run in their own
+ * requests, so they read back what pass 1 STORED. This is the same list the panel shows,
+ * which is a small improvement on its own — what the later passes reason over and what
+ * the user can see are now provably the same set.
+ */
+async function storedResults(ideaId: string): Promise<SearchResult[]> {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { legislationRefs: true } })
+  const raw = idea?.legislationRefs
+  return Array.isArray(raw) ? (raw as unknown as SearchResult[]) : []
+}
+
 /** Update the pass log and the row's derived counters in one write. */
 async function writePass(
   buildId: string, key: BuildPassKey, patch: Partial<PassRecord>, extra: Record<string, unknown> = {},
@@ -342,10 +385,53 @@ async function writePass(
     where: { id: buildId },
     data: {
       passes: stripNullBytes(log) as never,
-      passesComplete: log.filter((p) => p.status === 'DONE').length,
+      passesComplete: passesComplete(log),
       ...extra,
     },
   })
+}
+
+/**
+ * §1 — CLAIM ONE PASS, IN A CONDITIONAL WRITE WHOSE RESULT IS READ.
+ *
+ * The build's own single-active-build guard is not enough any more. With the client
+ * triggering each pass, two polls landing together can both decide the same pass is
+ * next, and both would run it — double-charging the user and writing two sets of
+ * proposals. So a pass is claimed the same way a build is: read the stored log, verify
+ * the pass is still PENDING, and write RUNNING guarded on the status we read.
+ *
+ * Returns false when someone else got there first, which is not an error.
+ */
+async function claimPass(buildId: string, key: BuildPassKey): Promise<boolean> {
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { passes: true, status: true },
+  })
+  if (!row || (row.status !== 'RUNNING' && row.status !== 'QUEUED')) return false
+
+  const log = readPassLog(row.passes)
+  const target = log.find((p) => p.key === key)
+  if (!target || (target.status !== 'PENDING' && target.status !== 'RUNNING')) return false
+  // A pass already marked RUNNING is either a concurrent claim or a request the platform
+  // killed. `settleAbandonedBuilds` is what tells those apart, by age; here we simply
+  // decline, because re-entering a pass that may still be live is how work gets doubled.
+  if (target.status === 'RUNNING') return false
+
+  const next = log.map((p) =>
+    p.key === key
+      ? { ...p, status: 'RUNNING' as PassStatus, startedAt: new Date().toISOString(), activity: 'Starting' }
+      : p)
+
+  const claimed = await prisma.ideaBuild.updateMany({
+    // Guarded on the build status, and the count is read. A claim whose result is not
+    // checked is not a claim.
+    where: { id: buildId, status: { in: ['QUEUED', 'RUNNING'] } },
+    data: {
+      passes: stripNullBytes(next) as never,
+      status: 'RUNNING',
+      currentPass: key,
+    },
+  })
+  return claimed.count > 0
 }
 
 /** Persist a pass's forks. Two alternatives per fork; extras are dropped and counted. */
@@ -408,117 +494,151 @@ async function persistForks(
   return { written, trimmed }
 }
 
-function mergeUncertainties(acc: RunAccumulator, list: RawUncertainty[]): void {
-  for (const u of list ?? []) {
-    if (!u?.fieldKey?.trim() || !u?.sentence?.trim()) continue
-    acc.uncertainties[u.fieldKey.trim()] = u.sentence.trim()
-  }
+/** Merge this pass's uncertainties into the ones already on the row. Cross-request, so
+ *  the accumulation is a read-modify-write rather than an in-memory object. */
+async function mergeUncertainties(buildId: string, list: RawUncertainty[]): Promise<void> {
+  const clean = (list ?? []).filter((u) => u?.fieldKey?.trim() && u?.sentence?.trim())
+  if (!clean.length) return
+  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { uncertainties: true } })
+  const existing = (row?.uncertainties && typeof row.uncertainties === 'object' && !Array.isArray(row.uncertainties)
+    ? (row.uncertainties as Record<string, string>)
+    : {})
+  for (const u of clean) existing[u.fieldKey.trim()] = u.sentence.trim()
+  await prisma.ideaBuild.update({
+    where: { id: buildId },
+    data: { uncertainties: stripNullBytes(existing) as never },
+  })
 }
 
 /**
- * Run the build. Awaited by its route ON PURPOSE — returning early and letting the
- * promise run on is how work gets silently killed when the response ends, and a build
- * that dies unrecorded is exactly the failure this feature exists to make impossible.
+ * §1 — RUN THE NEXT PASS, AND ONE PASS ONLY.
+ *
+ * ⚠ THIS IS THE ARCHITECTURAL CHANGE THE SPRINT TURNS ON, so the reasoning is here
+ * rather than in a brief nobody reads next to the code.
+ *
+ * 25-A ran all four passes inside one request in 45–53 seconds. 25-B's seven passes
+ * include ten-odd library questions, each retrieving ~100 candidates and sifting them,
+ * plus a revision and an adversarial read — minutes of model time. Vercel's `maxDuration`
+ * ceiling is 300 seconds and there is no configuration that raises it. A ceiling that
+ * cannot be raised is an architecture constraint, not a configuration problem.
+ *
+ * So: the client already polls this build's row every three seconds. The poll response
+ * now carries `nextPass`, and the client POSTs it back. Each pass therefore gets its own
+ * 300-second budget, incremental persistence already existed, and a pass the platform
+ * kills mid-flight is picked up by the settle and RESUMED rather than failed.
+ *
+ * Awaited by its route ON PURPOSE — returning early and letting the promise run on is
+ * how work gets silently killed when the response ends.
  */
-export async function runBuild(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
-  const startedAt = Date.now()
-  const budget = effectiveBudgetMs()
-  console.log('[lex-diag] 25a build starting', {
-    ideaId, buildId, budgetMs: budget.ms, binding: budget.binding, costCeilingPence: COST_CEILING_PENCE,
-  })
-
+export async function runNextPass(ideaId: string, userId: string, buildId: string): Promise<BuildView> {
   const row = await prisma.ideaBuild.findUnique({ where: { id: buildId } })
   if (!row) throw new Error('Build row missing')
-  const framing = row.framing as Framing
+  if (row.status !== 'RUNNING' && row.status !== 'QUEUED') return buildViewOf(buildId)
+
+  const log = readPassLog(row.passes)
+  const key = nextPassKey(log)
+
+  // Nothing left to run. Finish the build — and note that this is reached by a POLL, so
+  // a build whose last pass completed in a request that then died still finishes.
+  if (!key) return finishBuild(ideaId, buildId)
+
+  const usagesSoFar = allUsages(log)
+  const stop = await checkStop(buildId, usagesSoFar)
+  if (stop) return stopBuild(buildId, stop)
+
+  if (!(await claimPass(buildId, key))) {
+    console.log('[lex-diag] 25b pass already claimed by another request', { buildId, key })
+    return buildViewOf(buildId)
+  }
 
   const ctx = await elicitationContext(ideaId, userId)
   if (!ctx) return settleBuild(buildId, 'FAILED', 'There is no elicitation to build from.', [])
 
-  const framed = frameQuery(framing, ctx)
-  await prisma.ideaBuild.update({ where: { id: buildId }, data: { queryUsed: framed.queryUsed } })
-
-  const acc: RunAccumulator = {
-    usages: [], uncertainties: {}, forkCount: 0,
-    results: [], searchFailed: false,
-    orientation: '', diagnosis: '', approach: '', instrument: '',
+  const framed = frameQuery(row.framing as Framing, ctx)
+  if (!row.queryUsed) {
+    await prisma.ideaBuild.update({ where: { id: buildId }, data: { queryUsed: framed.queryUsed } })
   }
 
+  const passUsages: LlmUsage[] = []
+  const pctx: PassContext = {
+    ideaId, userId, buildId,
+    buildVersion: row.version,
+    ctx,
+    framed,
+    carry: carryInto(log, key),
+    usages: passUsages,
+    activity: (line: string) => writePass(buildId, key, { activity: line }),
+  }
+
+  console.log('[lex-diag] 25b pass starting', {
+    ideaId, buildId, key, passBudgetMs: PASS_BUDGET_MS, hardStopMs: HARD_STOP_MS,
+    perspectives: perspectivesFor(key).length, model: modelForPass(key),
+  })
+
+  let outcome: PassOutcome
   try {
-    for (const pass of BUILD_PASSES) {
-      const stop = await checkStop(buildId, startedAt, acc)
-      if (stop) return await stopBuild(buildId, stop, acc)
-
-      await writePass(buildId, pass.key, { status: 'RUNNING', startedAt: new Date().toISOString() }, {
-        currentPass: pass.key,
-      })
-
-      const outcome = await runOnePass(pass.key, ideaId, userId, buildId, ctx, framed, acc)
-
-      if (passFailed(outcome)) {
-        await writePass(buildId, pass.key, {
-          status: 'FAILED', completedAt: new Date().toISOString(), failureReason: outcome.reason,
-        })
-        // Mark the passes after this one as NOT_REACHED rather than leaving them PENDING:
-        // "pending" on a finished build reads as "still to come".
-        for (const later of BUILD_PASSES.slice(BUILD_PASSES.indexOf(pass) + 1)) {
-          await writePass(buildId, later.key, { status: 'NOT_REACHED' })
-        }
-        return await settleBuild(
-          buildId, 'FAILED',
-          `${passDef(pass.key)?.label ?? pass.key} failed: ${outcome.reason}`,
-          acc.usages, acc.uncertainties,
-        )
-      }
-
-      await writePass(buildId, pass.key, {
-        status: 'DONE', completedAt: new Date().toISOString(), output: outcome.output,
-      })
-    }
-
-    // Everything drafted. Write the "what I did and what I'm unsure about" message and
-    // open every page so the user can edit any of it (§5).
-    await openAllPages(ideaId)
-    const summary = await composeSummary(ideaId, buildId, acc)
-    return await settleBuild(buildId, 'DONE', null, acc.usages, acc.uncertainties, summary)
+    outcome = await runOnePass(key, pctx)
   } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err)
-    console.error('[lex-diag] 25a build threw', { ideaId, buildId, reason })
-    // Whatever was persisted before the throw STAYS. The status tells the truth about it.
-    return settleBuild(buildId, 'FAILED', reason, acc.usages, acc.uncertainties)
+    outcome = { ok: false, reason: err instanceof Error ? err.message : String(err) }
+    console.error('[lex-diag] 25b pass threw', { ideaId, buildId, key, reason: outcome.reason })
   }
+
+  if (passFailed(outcome)) {
+    // ⚠ THE SPEND IS RECORDED ON THE FAILURE PATH TOO. A pass that burned tokens and then
+    // failed still cost money.
+    await writePass(buildId, key, {
+      status: 'FAILED', completedAt: new Date().toISOString(),
+      failureReason: outcome.reason, activity: null, usages: passUsages,
+    })
+    for (const later of BUILD_PASSES.slice(BUILD_PASSES.findIndex((p) => p.key === key) + 1)) {
+      // "PENDING" on a finished build reads as "still to come".
+      await writePass(buildId, later.key, { status: 'NOT_REACHED' })
+    }
+    const all = allUsages(readPassLog((await prisma.ideaBuild.findUnique({
+      where: { id: buildId }, select: { passes: true },
+    }))?.passes))
+    return settleBuild(buildId, 'FAILED', `${passDef(key)?.label ?? key} failed: ${outcome.reason}`, all)
+  }
+
+  await writePass(buildId, key, {
+    status: 'DONE', completedAt: new Date().toISOString(),
+    output: outcome.output, activity: null,
+    carry: outcome.carry ?? {}, usages: passUsages,
+  })
+
+  // Is that the last one? Finishing HERE as well as on the next poll means a build does
+  // not need one extra round trip to reach DONE — and the poll path stays as the
+  // belt-and-braces route for a request that dies after the last pass.
+  const after = readPassLog((await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { passes: true },
+  }))?.passes)
+  if (!nextPassKey(after)) return finishBuild(ideaId, buildId)
+
+  return buildViewOf(buildId)
 }
 
 // ── One pass ─────────────────────────────────────────────────────────────────
-
-interface PassOk { ok: true; output: string }
-interface PassFail { ok: false; reason: string }
-type PassOutcome = PassOk | PassFail
 
 /** Same reason as `llmFailed` in build-llm.ts: `strict: false` means the truthiness of a
  *  literal discriminant does not narrow, so the predicate is the supported form. */
 function passFailed(o: PassOutcome): o is PassFail { return o.ok === false }
 
-async function runOnePass(
-  key: BuildPassKey,
-  ideaId: string,
-  userId: string,
-  buildId: string,
-  ctx: ElicitationContext,
-  framed: ReturnType<typeof frameQuery>,
-  acc: RunAccumulator,
-): Promise<PassOutcome> {
+async function runOnePass(key: BuildPassKey, c: PassContext): Promise<PassOutcome> {
   switch (key) {
-    case 'ORIENT': return orientPass(ideaId, buildId, framed, acc)
-    case 'DIAGNOSIS': return diagnosisPass(ideaId, userId, buildId, framed, acc)
-    case 'APPROACH': return approachPass(ideaId, userId, buildId, ctx, framed, acc)
-    case 'ACTIONS': return actionsPass(ideaId, userId, buildId, framed, acc)
+    case 'ORIENT': return orientPass(c)
+    case 'DIAGNOSIS': return diagnosisPass(c)
+    case 'APPROACH': return approachPass(c)
+    case 'ACTIONS': return actionsPass(c)
+    case 'RESEARCH': return researchPass(c)
+    case 'REVISE': return revisePass(c)
+    case 'ADVERSARIAL': return adversarialPass(c)
   }
 }
 
 // §3 — one corpus search through the gateway, plus one domain-transfer question.
-async function orientPass(
-  ideaId: string, buildId: string, framed: ReturnType<typeof frameQuery>, acc: RunAccumulator,
-): Promise<PassOutcome> {
+async function orientPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId, framed } = c
+  await c.activity('Searching the corpus')
   // ⚠ TWO INTENTS, ONE SEARCH EACH, exactly as §3 asks: BACKGROUND_BRIEFING and
   // LEGAL_LANDSCAPE. They are separate gateway calls because the intents route
   // differently, and merging them into one query would make the routed streams the
@@ -549,18 +669,17 @@ async function orientPass(
     }
   }
 
-  acc.results = merged
   // ⚠ "the search failed" and "the corpus is silent" are different sentences to a user
   // building a case for Parliament (§19-C Task 1a). The flag records which.
-  acc.searchFailed = anyFailed || !anyRan
+  const searchFailed = anyFailed || !anyRan
 
   // Store the retrieval where the existing panel already looks for it, so §5's "present
   // it in the panel as it stands today" needs no new surface.
   const record: StageSearchRecord = {
     intent: 'BACKGROUND_BRIEFING',
     ranAt: new Date().toISOString(),
-    ok: !acc.searchFailed,
-    failureReason: acc.searchFailed ? 'one or more corpus searches did not complete' : undefined,
+    ok: !searchFailed,
+    failureReason: searchFailed ? 'one or more corpus searches did not complete' : undefined,
     query: framed.keywords,
     results: merged.slice(0, 20),
   }
@@ -574,22 +693,55 @@ async function orientPass(
     data: { legislationRefs: stripNullBytes(merged.slice(0, 20)) as never },
   })
 
-  const result = await runOrientPass({ promptBlock: framed.promptBlock, results: merged })
-  acc.usages.push(result.usage)
-  if (llmFailed(result)) {
-    console.error('[lex-diag] 25a orient pass failed', { reason: result.reason, detail: result.detail })
-    return { ok: false, reason: plainFailure(result.reason) }
+  // ── §7 — ONE READING PER PERSPECTIVE, AND THEY ARE NOT BLENDED. ────────────
+  //
+  // ⚠ THE MERGE RULE IS DIFFERENT HERE FROM PASS 3, AND DELIBERATELY SO. Pass 3 produces
+  // FINDINGS, which are discrete and can be deduplicated with the divergence preserved.
+  // Pass 1 produces PROSE, and averaging four terrain paragraphs into one is precisely
+  // "the mush we are trying to avoid" — the thing §7 forbids for drafting passes. So the
+  // readings are kept SEPARATE AND LABELLED in the briefing, the cited ids are unioned,
+  // and the one structured field this pass proposes comes from a single voice.
+  const perspectives = perspectivesFor('ORIENT')
+  const readings: Array<{ label: string; value: OrientOutput }> = []
+  let result: Awaited<ReturnType<typeof runOrientPass>> | null = null
+
+  for (const p of perspectives) {
+    if (perspectives.length > 1) await c.activity(`Reading the terrain — ${p.label}`)
+    const r = await runOrientPass({
+      promptBlock: framed.promptBlock,
+      results: merged,
+      lens: p.lens || undefined,
+      model: p.model ?? modelForPass('ORIENT'),
+    })
+    c.usages.push(r.usage)
+    if (llmFailed(r)) {
+      console.error('[lex-diag] 25b orient perspective failed', {
+        perspective: p.id, reason: r.reason, detail: r.detail,
+      })
+      continue
+    }
+    // The FIRST successful reading is the house one and owns the structured field.
+    if (!result) result = r
+    readings.push({ label: p.label, value: r.value })
+  }
+
+  if (!result || llmFailed(result)) {
+    const reason = result && llmFailed(result) ? plainFailure(result.reason) : 'every reading of the terrain failed'
+    console.error('[lex-diag] 25b orient pass failed', { reason })
+    return { ok: false, reason }
   }
 
   const o = result.value
   // Drop any cited id that is not in the set we handed over. A fabricated citation
   // cannot be persisted even if the model produces one.
-  const cited = (o.citedSourceIds ?? []).filter((id) => seen.has(id))
-  const dropped = (o.citedSourceIds ?? []).length - cited.length
-  if (dropped) console.warn('[lex-diag] 25a orient dropped unknown source ids', { dropped })
+  const citedAll = new Set<string>()
+  for (const r of readings) for (const id of r.value.citedSourceIds ?? []) if (seen.has(id)) citedAll.add(id)
+  const droppedIds = readings.reduce((n, r) => n + (r.value.citedSourceIds ?? []).length, 0) - citedAll.size
+  if (droppedIds > 0) console.warn('[lex-diag] 25b orient dropped unknown source ids', { dropped: droppedIds })
 
-  acc.orientation = [
-    o.terrain,
+  const orientation = [
+    ...readings.map((r) =>
+      readings.length > 1 ? `[${r.label}]\n${r.value.terrain}` : r.value.terrain),
     '',
     `On "${DOMAIN_TRANSFER_QUESTION}" — ${o.domainTransfer}`,
   ].join('\n')
@@ -604,39 +756,45 @@ async function orientPass(
 
   // The briefing document, on the surface the panel already renders. The
   // domain-transfer half is LABELLED as reasoning in the body, because it is.
+  const terrainForBriefing = readings.length > 1
+    ? readings.map((r) => `**${r.label}**\n\n${r.value.terrain}`).join('\n\n')
+    : o.terrain
   await prisma.document.upsert({
     where: { ideaId_kind: { ideaId, kind: 'INITIAL_BACKGROUND' } },
     create: {
       ideaId, kind: 'INITIAL_BACKGROUND', status: 'ready',
       summary: o.terrain.slice(0, 400),
-      body: briefingBody(o.terrain, o.domainTransfer, merged, acc.searchFailed),
+      body: briefingBody(terrainForBriefing, o.domainTransfer, merged, searchFailed),
     },
     update: {
       status: 'ready',
       summary: o.terrain.slice(0, 400),
-      body: briefingBody(o.terrain, o.domainTransfer, merged, acc.searchFailed),
+      body: briefingBody(terrainForBriefing, o.domainTransfer, merged, searchFailed),
     },
   })
 
-  console.log('[lex-diag] 25a orient done', {
-    buildId, results: merged.length, searchFailed: acc.searchFailed, cited: cited.length,
+  console.log('[lex-diag] 25b orient done', {
+    buildId, results: merged.length, searchFailed, cited: citedAll.size, readings: readings.length,
   })
   return {
     ok: true,
-    output: acc.searchFailed
+    output: searchFailed
       ? `${merged.length} sources — ⚠ at least one corpus search did not complete`
-      : `${merged.length} sources read; ${cited.length} cited`,
+      : `${merged.length} sources read; ${citedAll.size} cited` +
+        (readings.length > 1 ? ` across ${readings.length} readings` : ''),
+    carry: { orientation, searchFailed },
   }
 }
 
-async function diagnosisPass(
-  ideaId: string, userId: string, buildId: string,
-  framed: ReturnType<typeof frameQuery>, acc: RunAccumulator,
-): Promise<PassOutcome> {
+async function diagnosisPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId, framed } = c
+  await c.activity('Drafting the diagnosis')
   const result = await runDiagnosisPass({
-    promptBlock: framed.promptBlock, orientation: acc.orientation, results: acc.results,
+    promptBlock: framed.promptBlock,
+    orientation: c.carry.orientation ?? '',
+    results: await storedResults(ideaId),
   })
-  acc.usages.push(result.usage)
+  c.usages.push(result.usage)
   if (llmFailed(result)) {
     console.error('[lex-diag] 25a diagnosis pass failed', { reason: result.reason, detail: result.detail })
     return { ok: false, reason: plainFailure(result.reason) }
@@ -683,30 +841,32 @@ async function diagnosisPass(
   if (d.summaryDiagnosis?.trim()) await setProposal(ideaId, 'summaryDiagnosis', { value: d.summaryDiagnosis.trim() })
 
   const { written, trimmed } = await persistForks(buildId, ideaId, d.forks ?? [])
-  acc.forkCount += written
-  mergeUncertainties(acc, d.uncertainties ?? [])
-  acc.diagnosis = [
+  await mergeUncertainties(buildId, d.uncertainties ?? [])
+  const diagnosis = [
     d.challenge, d.summaryDiagnosis,
     d.rootCause ? `Root cause: ${d.rootCause}` : '',
     d.pivotalObstacle ? `Pivotal obstacle: ${d.pivotalObstacle}` : '',
   ].filter(Boolean).join('\n')
 
-  console.log('[lex-diag] 25a diagnosis done', { buildId, causes: causes.length, forks: written, trimmed })
-  return { ok: true, output: `${causes.length} causes, ${written} recorded alternatives` }
+  console.log('[lex-diag] 25b diagnosis done', { buildId, causes: causes.length, forks: written, trimmed })
+  return {
+    ok: true,
+    output: `${causes.length} causes, ${written} recorded alternatives`,
+    carry: { diagnosis },
+  }
 }
 
-async function approachPass(
-  ideaId: string, userId: string, buildId: string, ctx: ElicitationContext,
-  framed: ReturnType<typeof frameQuery>, acc: RunAccumulator,
-): Promise<PassOutcome> {
+async function approachPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId, framed, ctx } = c
+  await c.activity('Drafting the approach, and naming the instrument')
   const result = await runApproachPass({
     promptBlock: framed.promptBlock,
-    orientation: acc.orientation,
-    diagnosis: acc.diagnosis,
+    orientation: c.carry.orientation ?? '',
+    diagnosis: c.carry.diagnosis ?? '',
     ruledOut: ctx.ruledOut,
-    results: acc.results,
+    results: await storedResults(ideaId),
   })
-  acc.usages.push(result.usage)
+  c.usages.push(result.usage)
   if (llmFailed(result)) {
     console.error('[lex-diag] 25a approach pass failed', { reason: result.reason, detail: result.detail })
     return { ok: false, reason: plainFailure(result.reason) }
@@ -732,14 +892,14 @@ async function approachPass(
   // §4 — THE INSTRUMENT QUESTION. Named, recorded as a fork of its own, and folded into
   // the guiding-policy summary so it is visible without opening the fork list.
   const inst = a.instrument
-  acc.instrument = inst?.chosen?.trim()
+  const instrument = inst?.chosen?.trim()
     ? `${inst.chosen.trim()} · ${inst.scope ?? 'scope not stated'} · ${inst.devolution ?? 'devolution not stated'}`
     : 'not named'
   const instrumentForks: RawFork[] = inst?.chosen?.trim()
     ? [{
         forkKey: INSTRUMENT_FORK_KEY,
         fieldKey: 'summaryGuidingPolicy',
-        chosen: acc.instrument,
+        chosen: instrument,
         alternatives: (inst.alternatives ?? []).map((x) => ({
           alternative: x.alternative, caseForAlternative: x.caseForAlternative,
         })),
@@ -749,37 +909,42 @@ async function approachPass(
     // ⚠ Reported, not papered over. The instrument question is the one §4 adds, so a
     // build that skipped it must be visible rather than looking like a build that
     // answered it. It is not a pass failure — the rest of the approach is still useful.
-    console.warn('[lex-diag] 25a APPROACH named no instrument', { buildId })
-    acc.uncertainties['summaryGuidingPolicy'] =
-      'I did not manage to name what KIND of instrument this would be (a Bill, a regulation, a ' +
-      'regulator rule, funding, an organisational change) — that question is still open and it matters.'
+    console.warn('[lex-diag] 25b APPROACH named no instrument', { buildId })
+    await mergeUncertainties(buildId, [{
+      fieldKey: 'summaryGuidingPolicy',
+      sentence:
+        'I did not manage to name what KIND of instrument this would be (a Bill, a regulation, a ' +
+        'regulator rule, funding, an organisational change) — that question is still open and it matters.',
+    }])
   }
 
   // Duplicate instrument forks are dropped inside persistForks — see the note there.
   const { written, trimmed } = await persistForks(buildId, ideaId, [...instrumentForks, ...(a.forks ?? [])])
-  acc.forkCount += written
-  mergeUncertainties(acc, a.uncertainties ?? [])
-  acc.approach = [a.chosenApproach, a.leverage, a.whatItRulesOut].filter(Boolean).join('\n')
+  await mergeUncertainties(buildId, a.uncertainties ?? [])
+  const approach = [a.chosenApproach, a.leverage, a.whatItRulesOut].filter(Boolean).join('\n')
 
-  console.log('[lex-diag] 25a approach done', {
-    buildId, options: options.length, instrument: acc.instrument, forks: written, trimmed,
+  console.log('[lex-diag] 25b approach done', {
+    buildId, options: options.length, instrument, forks: written, trimmed,
   })
-  return { ok: true, output: `${options.length} approaches; instrument: ${acc.instrument}` }
+  return {
+    ok: true,
+    output: `${options.length} approaches; instrument: ${instrument}`,
+    carry: { approach, instrument },
+  }
 }
 
-async function actionsPass(
-  ideaId: string, userId: string, buildId: string,
-  framed: ReturnType<typeof frameQuery>, acc: RunAccumulator,
-): Promise<PassOutcome> {
+async function actionsPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId, framed } = c
+  await c.activity('Drafting the coordinated actions')
   const result = await runActionsPass({
     promptBlock: framed.promptBlock,
-    diagnosis: acc.diagnosis,
-    approach: acc.approach,
-    instrument: acc.instrument,
+    diagnosis: c.carry.diagnosis ?? '',
+    approach: c.carry.approach ?? '',
+    instrument: c.carry.instrument ?? '',
   })
-  acc.usages.push(result.usage)
+  c.usages.push(result.usage)
   if (llmFailed(result)) {
-    console.error('[lex-diag] 25a actions pass failed', { reason: result.reason, detail: result.detail })
+    console.error('[lex-diag] 25b actions pass failed', { reason: result.reason, detail: result.detail })
     return { ok: false, reason: plainFailure(result.reason) }
   }
   const v = result.value
@@ -801,11 +966,408 @@ async function actionsPass(
   }
 
   const { written, trimmed } = await persistForks(buildId, ideaId, v.forks ?? [])
-  acc.forkCount += written
-  mergeUncertainties(acc, v.uncertainties ?? [])
+  await mergeUncertainties(buildId, v.uncertainties ?? [])
 
-  console.log('[lex-diag] 25a actions done', { buildId, actions: actions.length, forks: written, trimmed })
+  console.log('[lex-diag] 25b actions done', { buildId, actions: actions.length, forks: written, trimmed })
   return { ok: true, output: `${actions.length} actions drafted` }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SPRINT 25-B — PASSES 3, 4 AND 5
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * §4 — PASS 3. Run the interrogation library against the pass-2 draft.
+ *
+ * The work is in build-research.ts; what lives here is the pass's contract with the
+ * engine: what it carries forward, what its one-line output says, and the fact that a
+ * research pass which found nothing is a COMPLETED pass with stated gaps, not a failure.
+ */
+async function researchPass(c: PassContext): Promise<PassOutcome> {
+  await c.activity('Working out which questions this draft raises')
+
+  const facts = await draftFactsFor(c.ideaId, c.carry)
+  const costLines = await costLinesFor(c.ideaId)
+
+  const outcome = await runResearch({
+    ideaId: c.ideaId,
+    buildId: c.buildId,
+    buildVersion: c.buildVersion,
+    facts,
+    costLines,
+    onActivity: c.activity,
+  })
+  c.usages.push(...outcome.usages)
+
+  // ⚠ A RESEARCH PASS THAT FOUND NOTHING HAS NOT FAILED. Every question that fired and
+  // came back empty has written a stated gap under its own panel heading, which is a
+  // result. The pass only fails if it could not ask anything at all — and even then the
+  // gaps are already stored, so the revision reads "we looked and could not reach it"
+  // rather than proceeding as though no question had been asked.
+  const asked = outcome.outcomes.length
+  if (!asked) {
+    return { ok: false, reason: 'no library question fired on this draft, so there was nothing to research' }
+  }
+
+  const findings = outcome.outcomes.reduce((n, o) => n + o.findings, 0)
+  const reviewed = outcome.outcomes.reduce((n, o) => n + o.reviewed, 0)
+  const gaps = outcome.outcomes.reduce((n, o) => n + o.gaps.length, 0)
+  const contradictions = outcome.outcomes.reduce((n, o) => n + o.contradictions, 0)
+
+  // §4 — a live power leads everything, and the fork is UPDATED so the change is visible
+  // where the user makes the decision rather than only in a paragraph.
+  if (outcome.instrument?.powerFound) {
+    await recordInstrumentRetirement(c, outcome.instrument)
+  }
+
+  const summary = [
+    outcome.summary,
+    outcome.stoppedReason ? `\n⚠ ${outcome.stoppedReason}` : '',
+  ].filter(Boolean).join('\n')
+
+  console.log('[lex-diag] 25b research done', {
+    buildId: c.buildId, asked, reviewed, findings, gaps, contradictions,
+    powerFound: outcome.instrument?.powerFound ?? null, stoppedEarly: outcome.stoppedEarly,
+  })
+
+  return {
+    ok: true,
+    output:
+      `${asked} question${asked === 1 ? '' : 's'} asked; reviewed ${reviewed} sources; ` +
+      `${findings} finding${findings === 1 ? '' : 's'}` +
+      `${contradictions ? `, ${contradictions} contradicting the draft` : ''}; ` +
+      `${gaps} stated gap${gaps === 1 ? '' : 's'}` +
+      `${outcome.instrument?.powerFound ? ' — ⚠ an existing power may remove the need for a Bill' : ''}` +
+      `${outcome.stoppedEarly ? ' (stopped at its own spend ceiling)' : ''}`,
+    carry: { research: summary },
+  }
+}
+
+/**
+ * §4/§9 — "a positive finding visibly changes the instrument fork."
+ *
+ * Two writes, and both are needed for that sentence to be true. The FORK is where the
+ * user makes the decision, so a finding that changes the answer has to land there; and
+ * an UNCERTAINTY is what they read first, so it has to say the route may have changed.
+ * A paragraph in a summary is not "visibly".
+ */
+async function recordInstrumentRetirement(c: PassContext, assessment: InstrumentAssessment): Promise<void> {
+  const reachWord =
+    assessment.reach === 'covers' ? 'appears to cover this outright'
+      : assessment.reach === 'partial' ? 'reaches part of this and not the rest'
+        : assessment.reach === 'unclear' ? 'exists, and what was retrieved does not settle whether it reaches this'
+          : 'exists in this area but does not appear usable for this'
+
+  await prisma.buildFork.updateMany({
+    where: { buildId: c.buildId, forkKey: INSTRUMENT_FORK_KEY },
+    data: {
+      // ⚠ NOT `resolved: true`. The evidence has REOPENED this decision, not settled it —
+      // marking it resolved would hide the very fork the finding makes urgent. 25-C turns
+      // a fork into a decision, and this is the decision it most needs to offer.
+      caseForAlternative:
+        `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. ` +
+        `${assessment.reachNote}`,
+      alternative: `Use the existing power: ${assessment.provision}`,
+    },
+  })
+
+  await mergeUncertainties(c.buildId, [{
+    fieldKey: 'summaryGuidingPolicy',
+    sentence:
+      `I drafted this as ${c.carry.instrument || 'primary legislation'}, and then the research found ` +
+      `${assessment.provision}, which ${reachWord}. Before anything else, decide whether you need a new Act at all.`,
+  }])
+
+  console.warn('[lex-diag] 25b instrument fork changed by research', {
+    buildId: c.buildId, provision: assessment.provision, reach: assessment.reach,
+  })
+}
+
+/**
+ * §5 — PASS 4. Revise in the light of the research, and KEEP THE CONTRADICTIONS.
+ *
+ * ⚠ The contradictions are persisted as EvidenceItem rows of kind CONTRADICTS, in the
+ * same evidence layer as everything else (§2 — no second layer). A revision record IS a
+ * finding about the idea: "I first concluded X; the evidence says Y; here is why I
+ * changed my mind" is exactly the shape of a finding, it attaches to a field by
+ * `fieldRef` like every other finding, and the user accepts or rejects it the same way.
+ * Its `sourceId` is null because its source is the research pass rather than a document,
+ * and `citation` is therefore null rather than invented.
+ */
+async function revisePass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId } = c
+  await c.activity('Re-reading the draft against what the research found')
+
+  if (!c.carry.research) {
+    // Nothing to revise against. Not a failure of this pass — a consequence of the one
+    // before it, and said in those words rather than as a generic error.
+    return { ok: false, reason: 'the research pass produced nothing to revise against' }
+  }
+
+  const forkRows = await prisma.buildFork.findMany({
+    where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }],
+  })
+  const forksByKey = new Map<string, { forkKey: string; chosen: string; alternatives: string[] }>()
+  for (const f of forkRows) {
+    const existing = forksByKey.get(f.forkKey)
+    if (existing) existing.alternatives.push(f.alternative)
+    else forksByKey.set(f.forkKey, { forkKey: f.forkKey, chosen: f.chosen, alternatives: [f.alternative] })
+  }
+
+  const actions = await prisma.lexCoherentAction.findMany({
+    where: { ideaId }, select: { practicalStep: true, whoImplements: true },
+  })
+
+  const result = await runRevisePass({
+    promptBlock: c.framed.promptBlock,
+    diagnosis: c.carry.diagnosis ?? '',
+    approach: c.carry.approach ?? '',
+    actions: actions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` (${a.whoImplements})` : ''}`).join('\n'),
+    instrument: c.carry.instrument ?? '',
+    research: c.carry.research,
+    forks: [...forksByKey.values()],
+  })
+  c.usages.push(result.usage)
+  if (llmFailed(result)) {
+    console.error('[lex-diag] 25b revise pass failed', { reason: result.reason, detail: result.detail })
+    return { ok: false, reason: plainFailure(result.reason) }
+  }
+  const r = result.value
+
+  await c.activity('Writing the revision, and recording where it changed my mind')
+
+  // ── The rewritten causes. §5: rewrite these first and hardest. ─────────────
+  const causes = (r.causes ?? []).filter((x) => x?.cause?.trim())
+  if (causes.length) {
+    // ⚠ REPLACES the pass-2 causes rather than appending. Two sets of causes on one idea
+    // is not a revision, it is a duplicate — and the contradiction records below are what
+    // preserve what the first set said, which is the honest way to keep it.
+    await prisma.diagnosisCause.deleteMany({ where: { ideaId, source: 'LEX_CORPUS' } })
+    await createCauses(ideaId, causes.map((x) => ({
+      cause: x.cause.trim(),
+      whyPersisted: x.whyPersisted?.trim() || null,
+      classification: x.classification === 'MATERIAL' ? 'MATERIAL' : 'CONTRIBUTORY',
+    })), 'LEX_CORPUS')
+    await setProposal(ideaId, 'causes', { value: '' })
+  }
+
+  if (r.rootCause?.trim()) await setProposal(ideaId, 'rootCause', { value: r.rootCause.trim() })
+  if (r.pivotalObstacle?.trim()) await setProposal(ideaId, 'pivotalObstacle', { value: r.pivotalObstacle.trim() })
+  if (r.summaryDiagnosis?.trim()) await setProposal(ideaId, 'summaryDiagnosis', { value: r.summaryDiagnosis.trim() })
+  if (r.chosenApproach?.trim()) await setProposal(ideaId, 'chosenApproach', { value: r.chosenApproach.trim() })
+  if (r.summaryGuidingPolicy?.trim()) await setProposal(ideaId, 'summaryGuidingPolicy', { value: r.summaryGuidingPolicy.trim() })
+  if (r.summaryCoherentActions?.trim()) await setProposal(ideaId, 'summaryCoherentActions', { value: r.summaryCoherentActions.trim() })
+
+  // ── THE CONTRADICTIONS. The output that justifies the iteration. ───────────
+  await supersedeOlderProposals(ideaId, 'REVISE', c.buildVersion)
+  const contradictions = (r.contradictions ?? []).filter(
+    (x) => x?.firstConcluded?.trim() && x?.evidenceSays?.trim(),
+  )
+  for (const x of contradictions) {
+    await prisma.evidenceItem.create({
+      data: {
+        ideaId,
+        passKey: 'REVISE',
+        runVersion: c.buildVersion,
+        fieldRef: x.fieldKey?.trim() || null,
+        kind: 'CONTRADICTS',
+        title: `The research changed my mind about ${x.fieldKey?.trim() || 'this'}`,
+        body: [
+          `I first concluded: ${x.firstConcluded.trim()}`,
+          `The evidence says: ${x.evidenceSays.trim()}`,
+          `Why I changed my mind: ${x.whyChanged?.trim() || '(not stated)'}`,
+        ].join('\n\n'),
+        // ⚠ NULL, not a fabricated citation. This finding's source is the research pass,
+        // which is named in the body; attaching a document citation to a reasoning step
+        // would be exactly the never-claim breach the rest of the build refuses.
+        sourceType: null, sourceId: null, citation: null, url: null,
+        status: 'PROPOSED',
+      },
+    })
+  }
+
+  // The chain and coherence checks land as issues, on the existing issues list, because
+  // that is what the user works through. A chain that holds raises nothing.
+  const checks: string[] = []
+  if (!r.chainHolds && r.chainNote?.trim()) {
+    checks.push(`The chain from causes to actions does not hold as drafted: ${r.chainNote.trim()}`)
+  }
+  if (r.coherenceNote?.trim() && r.coherenceNote.trim().length >= 40) {
+    checks.push(`On the coherence of the actions: ${r.coherenceNote.trim()}`)
+  }
+  for (const text of checks) {
+    await prisma.deepeningIssue.create({
+      data: { ideaId, passKey: 'REVISE', runVersion: c.buildVersion, text, status: 'OPEN' },
+    })
+  }
+
+  // Forks the evidence has SETTLED are marked resolved WITH THE REASON; forks it has
+  // OPENED are added. Both are §5's requirement and both are writes, not prose.
+  let resolved = 0
+  for (const f of r.forksResolved ?? []) {
+    if (!f?.forkKey?.trim() || !f?.reason?.trim()) continue
+    const res = await prisma.buildFork.updateMany({
+      where: { buildId, forkKey: f.forkKey.trim(), resolved: false },
+      data: { resolved: true, caseForAlternative: `SETTLED BY THE RESEARCH: ${f.reason.trim()}` },
+    })
+    resolved += res.count
+  }
+  const { written } = await persistForks(buildId, ideaId, r.forks ?? [])
+  await mergeUncertainties(buildId, r.uncertainties ?? [])
+
+  const revision = [
+    r.summaryDiagnosis,
+    r.summaryGuidingPolicy,
+    r.summaryCoherentActions,
+    contradictions.length
+      ? `\nWHERE THE RESEARCH CHANGED THE DRAFT:\n${contradictions
+          .map((x) => `- ${x.fieldKey}: first "${x.firstConcluded}" → now "${x.evidenceSays}" (${x.whyChanged})`)
+          .join('\n')}`
+      : '\nThe research did not contradict the first draft anywhere, which is itself worth a sceptical look.',
+    r.chainHolds ? '' : `\n⚠ THE CHAIN DOES NOT HOLD: ${r.chainNote}`,
+  ].filter(Boolean).join('\n')
+
+  console.log('[lex-diag] 25b revise done', {
+    buildId, causes: causes.length, contradictions: contradictions.length,
+    chainHolds: r.chainHolds, forksResolved: resolved, forksOpened: written,
+  })
+
+  return {
+    ok: true,
+    output:
+      `${causes.length} causes rewritten; ` +
+      `${contradictions.length} place${contradictions.length === 1 ? '' : 's'} the evidence changed the draft; ` +
+      `${resolved} fork${resolved === 1 ? '' : 's'} settled, ${written} opened` +
+      `${r.chainHolds ? '' : ' — ⚠ the chain from causes to actions does not hold'}`,
+    carry: { revision, diagnosis: revision },
+  }
+}
+
+/**
+ * §6 — PASS 5. The adversarial read, against the WHOLE revised kernel.
+ *
+ * ⚠ This is `deepening-adversarial.ts`, unchanged apart from the two parameters §6 asked
+ * for (§2 — reuse, do not rebuild). What differs from a Deepening pass is the VANTAGE:
+ * the clerk is given the entire revised proposal and every finding the research produced,
+ * not one pass's slice, and asked where the whole thing is weakest.
+ */
+async function adversarialPass(c: PassContext): Promise<PassOutcome> {
+  const { ideaId, buildId } = c
+  const model = modelForPass('ADVERSARIAL')
+  await c.activity('Reading the whole proposal back as a hostile committee clerk')
+
+  const kernel = await kernelText(ideaId)
+  const costLines = await costLinesFor(ideaId)
+
+  // Every finding the build produced, as the clerk's reading material. Rejected ones are
+  // excluded: a finding the user has thrown out should not be pressed on them again.
+  const evidence = await prisma.evidenceItem.findMany({
+    where: { ideaId, runVersion: c.buildVersion, status: { not: 'REJECTED' } },
+    orderBy: { createdAt: 'asc' },
+    select: { kind: true, title: true, body: true },
+  })
+
+  const gapRows = await prisma.deepeningPass.findMany({
+    where: { ideaId, runVersion: c.buildVersion },
+    select: { knownUnknowns: true },
+  })
+  const knownUnknowns = gapRows
+    .flatMap((g) => readKnownUnknowns(g.knownUnknowns))
+    .map((g) => g.question)
+    .slice(0, 40)
+
+  const issues = await generateAdversarialIssues(
+    {
+      idea: kernel,
+      costLines,
+      findings: evidence.map((e) => ({
+        kind: e.kind as 'FINDING', title: e.title, body: e.body, sourceId: '',
+      })),
+      // ⚠ THE WHOLE KERNEL, NOT ONE PASS'S ANGLE. The clerk is told it is reading the
+      // finished thing, so "look for what that reading was NOT covering" points at the
+      // proposal's blind spots rather than at a neighbouring pass.
+      passMethod:
+        'This is the COMPLETE proposal after research and revision — the diagnosis, the approach, ' +
+        'the instrument and the actions, with every finding attached. You are not covering one angle ' +
+        'of it; you are reading all of it, cold, for the first time.',
+      knownUnknowns,
+    },
+    {
+      model,
+      label: 'build-adversarial',
+      stream: 'build',
+      onUsage: (u) => c.usages.push(u),
+    },
+  )
+
+  if (!issues) {
+    // ⚠ NOT AN EMPTY ISSUES LIST. "This proposal survived a hostile reading" is a strong
+    // claim and we must not make it by accident, so a failed clerk is a failed pass with
+    // everything else the build produced intact.
+    console.error('[lex-diag] 25b adversarial pass failed', { buildId, model })
+    return { ok: false, reason: 'the adversarial reading did not complete, so the proposal has not been read back hostilely' }
+  }
+
+  await supersedeOlderProposals(ideaId, 'ADVERSARIAL', c.buildVersion)
+  for (const text of issues) {
+    await prisma.deepeningIssue.create({
+      data: { ideaId, passKey: 'ADVERSARIAL', runVersion: c.buildVersion, text, status: 'OPEN' },
+    })
+  }
+
+  console.log('[lex-diag] 25b adversarial done', { buildId, issues: issues.length, model })
+  return {
+    ok: true,
+    // §6 — the MODEL is named in the output, because "report the difference in the
+    // findings" only means something if the reader knows which model produced them.
+    output: `${issues.length} issue${issues.length === 1 ? '' : 's'} raised against the whole proposal, read by ${model}`,
+  }
+}
+
+/** The revised kernel as prose — what the clerk reads, and what a report quotes. */
+async function kernelText(ideaId: string): Promise<string> {
+  const idea = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: {
+      title: true, challenge: true, summaryDiagnosis: true, rootCause: true, pivotalObstacle: true,
+      chosenApproach: true, summaryGuidingPolicy: true, summaryCoherentActions: true,
+      legalLandscape: true, whoAffectedImpactCost: true,
+      diagnosisCauses: { select: { cause: true, classification: true } },
+      lexActions: { select: { practicalStep: true, whoImplements: true } },
+    },
+  })
+  if (!idea) return ''
+  const asText = (v: unknown): string => {
+    if (typeof v === 'string') return v
+    if (v && typeof v === 'object') {
+      return Object.values(v as Record<string, unknown>).filter((x) => typeof x === 'string').join(' · ')
+    }
+    return ''
+  }
+  return [
+    idea.title && `TITLE: ${idea.title}`,
+    idea.challenge && `THE PROBLEM: ${idea.challenge}`,
+    asText(idea.whoAffectedImpactCost) && `WHO IS AFFECTED: ${asText(idea.whoAffectedImpactCost)}`,
+    idea.diagnosisCauses.length && `CAUSES:\n${idea.diagnosisCauses.map((x) => `- (${x.classification}) ${x.cause}`).join('\n')}`,
+    idea.rootCause && `ROOT CAUSE: ${idea.rootCause}`,
+    idea.pivotalObstacle && `PIVOTAL OBSTACLE: ${idea.pivotalObstacle}`,
+    idea.summaryDiagnosis && `THE DIAGNOSIS: ${idea.summaryDiagnosis}`,
+    asText(idea.legalLandscape) && `THE LEGAL LANDSCAPE AS STATED: ${asText(idea.legalLandscape)}`,
+    idea.chosenApproach && `THE APPROACH: ${idea.chosenApproach}`,
+    idea.summaryGuidingPolicy && `THE GUIDING POLICY: ${idea.summaryGuidingPolicy}`,
+    idea.lexActions.length && `ACTIONS:\n${idea.lexActions.map((a) => `- ${a.practicalStep}${a.whoImplements ? ` — ${a.whoImplements}` : ''}`).join('\n')}`,
+    idea.summaryCoherentActions && `THE PLAN: ${idea.summaryCoherentActions}`,
+  ].filter(Boolean).join('\n\n')
+}
+
+/** Cost lines as entered, for the passes that scrutinise them. Never invented. */
+async function costLinesFor(ideaId: string): Promise<string[]> {
+  const actions = await prisma.lexCoherentAction.findMany({
+    where: { ideaId },
+    select: { costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } },
+  })
+  return actions.flatMap((a) =>
+    a.costLines.map((cl) => `${cl.label}: ${cl.low ?? '?'}–${cl.high ?? '?'} ${cl.unit ?? ''} (basis: ${cl.basis ?? 'NOT STATED'})`))
 }
 
 // ── Finishing ────────────────────────────────────────────────────────────────
@@ -824,19 +1386,73 @@ async function openAllPages(ideaId: string): Promise<void> {
   await prisma.idea.update({ where: { id: ideaId }, data: { lexPage: 'COHERENT_ACTIONS' } })
 }
 
-async function composeSummary(ideaId: string, buildId: string, acc: RunAccumulator): Promise<string> {
-  const passes = readPassLog((await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { passes: true } }))?.passes)
-  const done = passes.filter((p) => p.status === 'DONE').map((p) => p.label)
-  const uncertainties: RawUncertainty[] = Object.entries(acc.uncertainties).map(([fieldKey, sentence]) => ({ fieldKey, sentence }))
+/**
+ * §1 — FINISH THE BUILD. Reached from the last pass's own request, and ALSO from a poll,
+ * so a build whose final pass completed in a request the platform then killed still
+ * reaches DONE instead of waiting for a settle to call it abandoned.
+ */
+async function finishBuild(ideaId: string, buildId: string): Promise<BuildView> {
+  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId } })
+  if (!row) throw new Error('Build row missing')
+  if (row.status !== 'RUNNING' && row.status !== 'QUEUED') return buildViewOf(buildId)
+
+  const log = readPassLog(row.passes)
+  await openAllPages(ideaId)
+  const { message, usage } = await composeSummary(ideaId, buildId, log)
+
+  // ⚠ THE SUMMARY CALL IS ATTRIBUTED TO A PASS, AND THIS IS A FIX FROM THE FIRST LIVE RUN.
+  //
+  // It happens after the last pass, so it belonged to no pass — and the §8 breakdown came
+  // out 737 tokens short of the build total (11,750 vs 12,487 on 2026-08-19). A breakdown
+  // that does not sum to the total it sits beside is worse than no breakdown: it invites
+  // the reader to trust two numbers that disagree, and neither is flagged.
+  //
+  // It is booked to the LAST COMPLETED PASS rather than to an invented "summary" row,
+  // because inventing a pass in the log would put a pass in the progress display that
+  // nobody configured.
+  const lastDone = [...log].reverse().find((p) => p.status === 'DONE')
+  if (lastDone) {
+    await writePass(buildId, lastDone.key, { usages: [...(lastDone.usages ?? []), usage] })
+  }
+
+  const settledLog = readPassLog((await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { passes: true },
+  }))?.passes)
+  return settleBuild(buildId, 'DONE', null, allUsages(settledLog), message)
+}
+
+/** Read the current row and render it, without changing anything. */
+async function buildViewOf(buildId: string): Promise<BuildView> {
+  const row = await prisma.ideaBuild.findUnique({ where: { id: buildId } })
+  if (!row) throw new Error('Build row missing')
+  const forks = await prisma.buildFork.findMany({
+    where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }],
+  })
+  return toView(row, forks)
+}
+
+async function composeSummary(
+  ideaId: string, buildId: string, log: PassRecord[],
+): Promise<{ message: string; usage: LlmUsage }> {
+  const done = log.filter((p) => p.status === 'DONE').map((p) => p.label)
+  const row = await prisma.ideaBuild.findUnique({
+    where: { id: buildId }, select: { uncertainties: true },
+  })
+  const unc = (row?.uncertainties && typeof row.uncertainties === 'object' && !Array.isArray(row.uncertainties)
+    ? (row.uncertainties as Record<string, string>)
+    : {})
+  const uncertainties: RawUncertainty[] = Object.entries(unc).map(([fieldKey, sentence]) => ({ fieldKey, sentence: String(sentence) }))
+  const forkCount = await prisma.buildFork.count({ where: { buildId } })
+  const results = await storedResults(ideaId)
+  const searchFailed = !!carryInto(log, 'DIAGNOSIS').searchFailed
 
   const result = await writeBuildSummary({
     passesCompleted: done,
     uncertainties,
-    forkCount: acc.forkCount,
-    sourcesUsed: acc.results.length,
-    searchFailed: acc.searchFailed,
+    forkCount,
+    sourcesUsed: results.length,
+    searchFailed,
   })
-  acc.usages.push(result.usage)
 
   // A failed summary is not a failed build — the draft is real either way. But it must
   // not be replaced with prose that implies Lex reviewed its own work when it did not,
@@ -844,10 +1460,10 @@ async function composeSummary(ideaId: string, buildId: string, acc: RunAccumulat
   const message = llmOk(result)
     ? result.value.message.trim()
     : [
-        `I’ve drafted a first version from your four answers: ${done.join(', ')}.`,
-        acc.searchFailed
+        `I’ve drafted, researched and revised a version from your four answers: ${done.join(', ')}.`,
+        searchFailed
           ? 'At least one corpus search did not complete, so the background is partial — that is a gap in what I looked at, not a finding that there is nothing there.'
-          : `I read ${acc.results.length} sources from the corpus.`,
+          : `I read ${results.length} sources from the corpus.`,
         uncertainties.length
           ? `There are ${uncertainties.length} things I said I was unsure about; they are listed against the fields they belong to.`
           : 'I did not record anything I was unsure about, which is itself worth a sceptical look.',
@@ -855,7 +1471,7 @@ async function composeSummary(ideaId: string, buildId: string, acc: RunAccumulat
       ].join(' ')
 
   if (llmFailed(result)) {
-    console.warn('[lex-diag] 25a build summary fell back to the deterministic form', {
+    console.warn('[lex-diag] 25b build summary fell back to the deterministic form', {
       reason: result.reason, detail: result.detail,
     })
   }
@@ -867,20 +1483,20 @@ async function composeSummary(ideaId: string, buildId: string, acc: RunAccumulat
     lexBubble(CREDIBILITY_NOTE, BUILD_STAGE, 'build:credibility'),
     lexBubble(DIRECT_EDITING_NOTE, BUILD_STAGE, 'build:editing'),
   ])
-  return message
+  return { message, usage: result.usage }
 }
 
-async function stopBuild(buildId: string, stop: StopReason, acc: RunAccumulator): Promise<BuildView> {
+async function stopBuild(buildId: string, stop: StopReason): Promise<BuildView> {
   const status = stop.kind === 'cancel' ? 'CANCELLED' : 'FAILED'
-  // Passes that never ran are NOT_REACHED, not PENDING — see the note in runBuild.
+  // Passes that never ran are NOT_REACHED, not PENDING — see the note in runNextPass.
   const row = await prisma.ideaBuild.findUnique({ where: { id: buildId }, select: { passes: true } })
   const log = readPassLog(row?.passes).map((p) =>
     p.status === 'PENDING' || p.status === 'RUNNING'
       ? { ...p, status: 'NOT_REACHED' as PassStatus, completedAt: new Date().toISOString() }
       : p)
   await prisma.ideaBuild.update({ where: { id: buildId }, data: { passes: stripNullBytes(log) as never } })
-  console.warn('[lex-diag] 25a build stopped early', { buildId, kind: stop.kind })
-  return settleBuild(buildId, status, stopMessage(stop), acc.usages, acc.uncertainties)
+  console.warn('[lex-diag] 25b build stopped early', { buildId, kind: stop.kind })
+  return settleBuild(buildId, status, stopMessage(stop), allUsages(log))
 }
 
 /**
@@ -895,7 +1511,6 @@ async function settleBuild(
   status: 'DONE' | 'FAILED' | 'CANCELLED',
   failureReason: string | null,
   usages: LlmUsage[],
-  uncertainties: Record<string, string> = {},
   summaryMessage?: string,
 ): Promise<BuildView> {
   const price = priceBuild(usages)
@@ -912,7 +1527,9 @@ async function settleBuild(
       tokensOut: price.tokensOut,
       // null when unpriced — never 0 as a stand-in. See build-cost.ts.
       estCostPence: price.pence,
-      uncertainties: stripNullBytes(uncertainties) as never,
+      // ⚠ 25-B does NOT write `uncertainties` here. They accumulate across requests now
+      // (mergeUncertainties), so settling them from a parameter would overwrite four
+      // passes' worth with whatever the last one happened to hold.
       ...(summaryMessage ? { summaryMessage } : {}),
     },
   })
@@ -921,7 +1538,7 @@ async function settleBuild(
   const forks = await prisma.buildFork.findMany({
     where: { buildId }, orderBy: [{ forkKey: 'asc' }, { alternativeIndex: 'asc' }],
   })
-  console.log('[lex-diag] 25a build settled', {
+  console.log('[lex-diag] 25b build settled', {
     buildId, status, passesComplete: row.passesComplete, spend: formatSpend(price), forks: forks.length,
   })
   return toView(row, forks)

@@ -70,6 +70,26 @@ export const CAPABILITY_FLAGS = [
   // 2,295ms → 3,710ms, +62%, on the platform's main user surface, and the quality half
   // is NOT gold-validated. Better-looking results are not measured results.
   'LEX_TIER_FUSION',
+  // 25-B §7. Multi-model perspectives on the build's COVERAGE passes (1 and 3), never on
+  // the drafting passes. N calls with different framings, merged with the divergence
+  // preserved rather than averaged away — see lib/lex/build-perspectives.ts.
+  //
+  // ⚠ DEFAULT OFF, and that is the brief's own instruction rather than caution: it
+  // multiplies the cost of the two most expensive passes, and §7 exists so that Charlie
+  // can judge whether the extra coverage is worth the money. He cannot judge that if it
+  // is already on.
+  'LEX_BUILD_PERSPECTIVES',
+  // S8 §4. Three candidate router streams — impact assessments, consultations, explanatory
+  // material. All three are already typed, indexed and RETRIEVABLE today; what they lack is a
+  // slot of their own in the round-robin interleave, so they compete for a neighbouring stream's
+  // positions and lose on BM25 to collections hundreds of times their size.
+  //
+  // ⚠ DEFAULT OFF, and the reason is cost rather than caution: five streams become eight, and a
+  // stream is a retrieval call per query against a `vector-serve` concurrency cap of 4. The gain
+  // is also UNMEASURABLE today — the gold set has no archetype for any of these three (the same
+  // instrument problem that makes committees unevaluable), which is what §5's question set exists
+  // to fix. Flipping it is Charlie's call once there is something to score it with.
+  'LEX_ROUTER_STREAMS_V2',
 ] as const
 
 export type CapabilityFlagName = (typeof CAPABILITY_FLAGS)[number]

@@ -44,9 +44,11 @@ export interface ElicitationState {
 }
 export interface PassRecord {
   key: string; label: string; detail: string
-  status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'NOT_REACHED'
+  status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'NOT_REACHED' | 'SKIPPED'
   startedAt: string | null; completedAt: string | null
   output: string | null; failureReason: string | null
+  /** 25-B §8 — what this pass is doing RIGHT NOW, written while it runs. */
+  activity?: string | null
 }
 export interface BuildView {
   id: string; version: number
@@ -60,6 +62,11 @@ export interface BuildView {
   uncertainties: Array<{ fieldKey: string; sentence: string }>
   queryUsed: string | null
   spend: { tokensIn: number; tokensOut: number; pence: number | null; line: string }
+  /** 25-B §8 — the same spend, broken down by pass. */
+  spendByPass: Array<{ key: string; label: string; tokensIn: number; tokensOut: number; pence: number | null }>
+  /** 25-B §1 — the pass the SERVER wants run next, or null when there is none. */
+  nextPass: string | null
+  resumable: boolean
   forks: Array<{
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
@@ -70,6 +77,48 @@ export interface BuildState {
   latest: BuildView | null
   history: Array<{ id: string; version: number; status: string; framing: string; completedAt: string | null }>
   ceiling: { budgetMs: number; binding: string; costPence: number }
+}
+
+/**
+ * AMENDMENT_25B §A.3 — fetch JSON, and FAIL WITH THE ACTUAL REASON.
+ *
+ * ⚠ THE `.json()` CALL IS WHERE THE REAL CAUSE USED TO DISAPPEAR. A route that is not
+ * deployed returns Next's HTML 404 page; calling `.json()` on it throws
+ * "Unexpected token '<'", which is a JSON parse error standing where "that endpoint does
+ * not exist" should be. That is precisely what happened to `/api/ideas/[id]/build` — the
+ * file had never been committed — and the parse error was swallowed into a generic
+ * message for two days.
+ *
+ * So the STATUS is checked before the body is parsed, and a non-JSON body is reported as
+ * a missing or broken endpoint rather than as bad JSON.
+ */
+async function getJson(url: string, cid: string, init?: RequestInit): Promise<Record<string, unknown>> {
+  let res: Response
+  try {
+    res = await fetch(url, init)
+  } catch (err) {
+    throw new Error(`the network request to ${url} failed`)
+  }
+
+  if (!res.ok) {
+    // 404 is the one worth naming exactly: it means the endpoint is not there at all,
+    // which is a deployment fact, not a user problem.
+    if (res.status === 404) throw new Error(`${url} is not available on this deployment (404)`)
+    if (res.status === 401 || res.status === 403) throw new Error(`you are not signed in for ${url} (${res.status})`)
+    throw new Error(`${url} returned ${res.status}`)
+  }
+
+  const type = res.headers.get('content-type') ?? ''
+  if (!type.includes('application/json')) {
+    console.error(`[build-boot ${cid}] ${url} returned ${type || 'no content-type'}, not JSON`)
+    throw new Error(`${url} did not return JSON (got ${type || 'no content-type'})`)
+  }
+
+  try {
+    return (await res.json()) as Record<string, unknown>
+  } catch {
+    throw new Error(`${url} returned a body I could not read as JSON`)
+  }
 }
 
 function Spinner({ className = 'w-4 h-4' }: { className?: string }) {
@@ -90,6 +139,8 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   const [error, setError] = useState<string | null>(null)
   const bootedRef = useRef(false)
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** 25-B §1 — the pass this client currently has in flight, so polls do not stack POSTs. */
+  const drivingRef = useRef<string | null>(null)
 
   // Local form state for the current step.
   const [text, setText] = useState('')
@@ -104,26 +155,39 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
     if (bootedRef.current) return
     bootedRef.current = true
     ;(async () => {
+      // AMENDMENT_25B §A.3 — a correlation id, so a user's screenshot and the server log
+      // can be joined. Generated per boot attempt, printed in the message, and attached
+      // to every console line below.
+      const cid = Math.random().toString(36).slice(2, 8).toUpperCase()
       try {
         let id = ideaId
         if (!id) {
-          const res = await fetch('/api/ideas', {
+          const created = await getJson('/api/ideas', cid, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: 'Untitled idea' }),
           })
-          if (!res.ok) throw new Error('create idea failed')
-          id = (await res.json()).id as string
+          id = created.id as string
           setIdeaId(id)
         }
         const [e, b] = await Promise.all([
-          fetch(`/api/ideas/${id}/elicitation`).then((r) => r.json()),
-          fetch(`/api/ideas/${id}/build`).then((r) => r.json()),
+          getJson(`/api/ideas/${id}/elicitation`, cid),
+          getJson(`/api/ideas/${id}/build`, cid),
         ])
-        setElicit(e)
-        setBuild(b)
-      } catch {
-        setError('Could not start a session. Please refresh.')
+        setElicit(e as unknown as ElicitationState)
+        setBuild(b as unknown as BuildState)
+      } catch (err) {
+        // ⚠ AMENDMENT_25B §A.3 — THE MESSAGE CARRIES A REASON.
+        //
+        // "Could not start a session. Please refresh." is what this said for two days
+        // while `/api/ideas/[id]/build` was missing from production entirely, and it told
+        // the user nothing and us less: a 404 on a route that was never deployed, a 500
+        // from a missing table and a dropped connection all produced the same eleven
+        // words. The reason now travels with it, and the underlying error is logged
+        // against the same id.
+        const reason = err instanceof Error ? err.message : String(err)
+        console.error(`[build-boot ${cid}] session could not be started:`, err)
+        setError(`Could not start a session — ${reason} (ref ${cid}). Please refresh; if it keeps happening, send us that reference.`)
       } finally {
         setBooting(false)
       }
@@ -149,6 +213,47 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
     pollRef.current = setTimeout(() => { void refresh() }, 3000)
     return () => { if (pollRef.current) clearTimeout(pollRef.current) }
   }, [build, refresh])
+
+  /**
+   * 25-B §1 — DRIVE THE BUILD, ONE PASS PER REQUEST.
+   *
+   * The build no longer fits in a single request (seven passes, minutes of model time,
+   * a 300-second platform ceiling that cannot be raised). So the poll response carries
+   * `nextPass` and this triggers it — no new infrastructure, and each pass gets its own
+   * full budget.
+   *
+   * ⚠ `drivingRef` IS THE WHOLE CORRECTNESS ARGUMENT ON THIS SIDE. Polls arrive every
+   * three seconds and a pass takes far longer than that, so without it every poll during
+   * a running pass would fire another POST. The server refuses a second claim on the same
+   * pass, so nothing would be double-run — but the requests would pile up against the
+   * platform's concurrency limit for no purpose. The server-side claim is the guard; this
+   * is the good manners.
+   */
+  useEffect(() => {
+    const latest = build?.latest
+    if (!latest) return
+    if (latest.status !== 'RUNNING' && latest.status !== 'QUEUED') return
+    if (!latest.nextPass || latest.cancelRequested) return
+    if (drivingRef.current) return
+
+    drivingRef.current = latest.nextPass
+    void fetch(`/api/ideas/${ideaId}/build`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // The pass is echoed back as a CHECK, not an instruction — the server runs its own
+      // answer if this one is stale. See the route.
+      body: JSON.stringify({ pass: latest.nextPass }),
+    })
+      .catch(() => {
+        // A pass request that never lands is not an error the user can act on: the row is
+        // unchanged, the next poll sees the same `nextPass`, and it is tried again. A
+        // banner here would cry wolf on an ordinary retry.
+      })
+      .finally(() => {
+        drivingRef.current = null
+        void refresh()
+      })
+  }, [build, ideaId, refresh])
 
   // ── Actions ────────────────────────────────────────────────────────────────
   const post = useCallback(async (path: string, body: unknown): Promise<Record<string, unknown> | null> => {
