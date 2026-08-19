@@ -468,7 +468,7 @@ const CHECKS: Check[] = [
     name: '§3 a failed search and a silent corpus are told apart',
     run: (s) => {
       const src = s['lib/lex/build.ts']
-      if (!/acc\.searchFailed = anyFailed \|\| !anyRan/.test(src)) {
+      if (!/searchFailed = anyFailed \|\| !anyRan/.test(src)) {
         return 'the build no longer records that a corpus search failed — a broken search would read as a silent corpus'
       }
       const failed = briefingBody('t', 'd', [], true)
@@ -476,17 +476,17 @@ const CHECKS: Check[] = [
       if (!/did not complete/.test(failed)) return 'a failed search is not reported in the briefing'
       return /did not complete/.test(clean) ? 'a successful search is being reported as failed' : null
     },
-    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace('acc.searchFailed = anyFailed || !anyRan', 'acc.searchFailed = false') }),
+    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace('searchFailed = anyFailed || !anyRan', 'searchFailed = false') }),
   },
   {
     name: '§3 a citation the corpus did not return cannot be persisted',
     run: (s) => {
       const src = s['lib/lex/build.ts']
-      return /const cited = \(o\.citedSourceIds \?\? \[\]\)\.filter\(\(id\) => seen\.has\(id\)\)/.test(src)
+      return /citedSourceIds[\s\S]{0,90}seen\.has\(id\)/.test(src)
         ? null
         : 'the orient pass no longer drops source ids that were never handed to the model'
     },
-    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace('const cited = (o.citedSourceIds ?? []).filter((id) => seen.has(id))', 'const cited = o.citedSourceIds ?? []') }),
+    break: (s) => ({ ...s, 'lib/lex/build.ts': s['lib/lex/build.ts'].replace(/citedSourceIds[\s\S]{0,90}seen\.has\(id\)/g, 'citedSourceIds') }),
   },
 
   // ── §4 — forks and the instrument ──────────────────────────────────────────

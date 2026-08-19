@@ -43,12 +43,20 @@ function view(over: Partial<BuildView> = {}): BuildView {
       completedAt: i === 0 ? '2026-08-17T14:00:12.000Z' : null,
       output: i === 0 ? '38 sources read; 6 cited' : null,
       failureReason: null,
+      activity: i === 1 ? 'Asking: What law governs this today?' : null,
     })),
-    passesComplete: 1, passesTotal: 4, currentPass: 'DIAGNOSIS',
+    passesComplete: 1, passesTotal: BUILD_PASSES.length, currentPass: 'DIAGNOSIS',
     startedAt: '2026-08-17T14:00:00.000Z', completedAt: null, elapsedSeconds: 95,
     failureReason: null, cancelRequested: false, summaryMessage: null,
     uncertainties: [], queryUsed: 'B_CONTEXTUALISED :: bins council :: context(412 chars)',
     spend: { tokensIn: 120000, tokensOut: 5000, pence: 4.2, line: '120,000 in / 5,000 out — estimated cost 4.2p' },
+    // 25-B §8 — the per-pass breakdown the panel now renders.
+    spendByPass: BUILD_PASSES.map((p, i) => ({
+      key: p.key, label: p.label,
+      tokensIn: i === 0 ? 120000 : 0, tokensOut: i === 0 ? 5000 : 0,
+      pence: i === 0 ? 4.2 : null,
+    })),
+    nextPass: 'DIAGNOSIS', resumable: true,
     forks: [],
     ...over,
   }
@@ -69,7 +77,7 @@ function main() {
     assert(running.includes(p.label), `§2 the progress display names the pass "${p.label}"`)
     assert(running.includes(p.detail.slice(0, 40)), `   …and says what it is doing`)
   }
-  assert(running.includes('1 of 4 passes'), '§2 it says how many passes are done')
+  assert(running.includes(`1 of ${BUILD_PASSES.length} passes`), '§2 it says how many passes are done')
   assert(running.includes('1m 35s'), '§2 elapsed time is visible', running.slice(0, 200))
   assert(running.includes('38 sources read; 6 cited'), '§2 a finished pass shows what it produced')
   assert(running.includes('Stop'), '§2 Cancel is offered WHILE RUNNING')
@@ -116,7 +124,7 @@ function main() {
   assert(stopped.includes('Stopped'), '§2 a build that hit a ceiling says Stopped, not Done')
   assert(stopped.includes('ran out of time'), '   …and gives the plain reason')
   assert(stopped.includes('not reached'), '   …and marks the passes it never got to as NOT REACHED')
-  assert(stopped.includes('2 of 4 passes'), '   …and reports which passes DID complete')
+  assert(stopped.includes(`2 of ${BUILD_PASSES.length} passes`), '   …and reports which passes DID complete')
 
   // ── unpriced spend must not read as free ─────────────────────────────────
   const unpriced = render(view({

@@ -6,7 +6,7 @@
 // runtime. This script therefore does ONE build with whatever ceilings the environment
 // gives it, and asserts that the outcome is the one the configuration implies:
 //
-//   LEX_BUILD_BUDGET_MS=1        → the time ceiling must fire before any pass runs
+//   LEX_BUILD_HARD_STOP_MS=1     → the time ceiling must fire before any pass runs
 //   LEX_BUILD_COST_PENCE=0.0001  → the cost ceiling must fire after the first pass
 //   (neither set)                → the build must finish DONE
 //
@@ -16,16 +16,38 @@
 // It also asserts the thing the brief actually cares about: whatever the build managed
 // to draft BEFORE stopping is still there. A ceiling must truncate the RUN, never the
 // draft, and it must never be reported as a completed build.
-//
-// Usage (run all three, in order):
-//   LEX_BUILD_BUDGET_MS=1       npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
-//   LEX_BUILD_COST_PENCE=0.0001 npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
-//                               npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ⚠ 25-B UPDATE — THE TIME CEILING UNDER TEST HAS CHANGED, AND SO HAS HOW A BUILD RUNS.
+//
+// 25-A ran every pass in one call to `runBuild`, and the ceiling that could fire was the
+// in-request budget. 25-B runs ONE PASS PER REQUEST (§1), so this harness now drives the
+// same loop the client drives — `runNextPass` until there is no next pass — and the time
+// ceiling under test is the WHOLE-BUILD hard stop, which is measured from the stored
+// `startedAt` and is therefore reachable for the first time.
+//
+// Usage (run all three, in order):
+//   LEX_BUILD_HARD_STOP_MS=1    npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
+//   LEX_BUILD_COST_PENCE=0.0001 npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
+//                               npx tsx --env-file=.env scripts/verify-build-25a-ceilings.ts
+
 import { prisma } from '../lib/prisma'
-import { claimBuild, runBuild } from '../lib/lex/build'
-import { effectiveBudgetMs, COST_CEILING_PENCE } from '../lib/lex/build-config'
+import { claimBuild, runNextPass } from '../lib/lex/build'
+import { effectiveBudgetMs, COST_CEILING_PENCE, HARD_STOP_MS, BUILD_PASSES } from '../lib/lex/build-config'
+
+/**
+ * Drive the build the way the client does: run a pass, read the state, run the next.
+ * The loop is bounded by the pass count plus a small margin — an unbounded "until DONE"
+ * loop against a build that refuses to advance is an infinite loop in a verifier, which
+ * is a worse failure than the one being tested.
+ */
+async function driveBuild(ideaId: string, userId: string, buildId: string) {
+  let view = await runNextPass(ideaId, userId, buildId)
+  for (let i = 0; i < BUILD_PASSES.length + 2 && view.nextPass; i++) {
+    view = await runNextPass(ideaId, userId, buildId)
+  }
+  return view
+}
 
 let pass = 0
 let fail = 0
@@ -41,12 +63,13 @@ const PROBLEM =
 
 async function main() {
   const budget = effectiveBudgetMs()
-  const tinyTime = budget.ms < 5_000
+  const tinyTime = HARD_STOP_MS < 5_000
   const tinyCost = COST_CEILING_PENCE < 0.01
   const expect = tinyTime ? 'time' : tinyCost ? 'cost' : 'complete'
 
   console.log('── verify:build-25a-ceilings ──')
-  console.log(`budget ${budget.ms}ms (${budget.binding}) · cost ceiling ${COST_CEILING_PENCE}p · expecting: ${expect}`)
+  console.log(`pass budget ${budget.ms}ms (${budget.binding}) · hard stop ${HARD_STOP_MS}ms · ` +
+    `cost ceiling ${COST_CEILING_PENCE}p · ${BUILD_PASSES.length} passes · expecting: ${expect}`)
 
   const user = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true } })
   if (!user) { console.error('no user to own the throwaway idea'); process.exit(1) }
@@ -77,13 +100,13 @@ async function main() {
 
   try {
     const buildId = await claimBuild(idea.id, 'B_CONTEXTUALISED')
-    const view = await runBuild(idea.id, user.id, buildId)
+    const view = await driveBuild(idea.id, user.id, buildId)
     console.log(`\nresult: ${view.status} · ${view.passesComplete}/${view.passesTotal} passes · ${view.elapsedSeconds}s · ${view.spend.line}`)
     console.log(`reason: ${view.failureReason ?? '(none)'}\n`)
 
     if (expect === 'complete') {
       assert(view.status === 'DONE', 'with ordinary ceilings the build COMPLETES', `status ${view.status}`)
-      assert(view.passesComplete === view.passesTotal, '   …all four passes', `${view.passesComplete}/${view.passesTotal}`)
+      assert(view.passesComplete === view.passesTotal, '   …every configured pass', `${view.passesComplete}/${view.passesTotal}`)
       assert(!view.failureReason, '   …with no failure reason', view.failureReason ?? '')
 
       // ── §4, and this is a guard against a real thing that happened ────────
@@ -116,7 +139,7 @@ async function main() {
       assert(words.test(view.failureReason ?? ''), `   …naming the ${expect} ceiling specifically`, view.failureReason ?? '')
       assert(
         view.passesComplete < view.passesTotal,
-        '   …and reporting fewer than all four passes',
+        '   …and reporting fewer than every pass',
         `${view.passesComplete}/${view.passesTotal}`,
       )
       assert(

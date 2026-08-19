@@ -48,11 +48,22 @@
     "check:answer": "tsx scripts/check-answer-the-question.ts",
     "check:sprint3e-ui": "tsx scripts/check-sprint3e-ui.ts",
     "check:build-25a": "tsx scripts/check-build-25a.ts",
+    "check:build-25b": "tsx scripts/check-build-25b.ts",
+    "check:committed": "tsx scripts/check-committed.ts",
     "verify:build-25a": "tsx --env-file=.env scripts/verify-build-25a-live.ts",
     "verify:build-25a-ceilings": "tsx --env-file=.env scripts/verify-build-25a-ceilings.ts",
     "verify:build-25a-ui": "tsx scripts/verify-build-25a-ui.tsx",
     "cleanup:25a": "tsx --env-file=.env scripts/cleanup-25a-artefacts.ts",
-    "whichdb": "tsx --env-file=.env scripts/whichdb.ts"
+    "whichdb": "tsx --env-file=.env scripts/whichdb.ts",
+    "check:s8-attribution": "tsx scripts/check-s8-attribution.ts",
+    "measure:s8-attribution": "tsx --env-file=.env scripts/measure-s8-attribution.ts",
+    "audit:s8-attribution": "tsx --env-file=.env scripts/audit-s8-attribution.ts",
+    "verify:s8-deepening": "tsx --env-file=.env scripts/verify-s8-deepening.ts",
+    "check:s8-config": "tsx --env-file=.env scripts/check-s8-config-hygiene.ts",
+    "measure:s8-framing": "tsx --env-file=.env scripts/measure-s8-framing.ts",
+    "measure:s8-router-v2": "tsx --env-file=.env scripts/measure-s8-router-v2.ts",
+    "measure:s8-concurrency": "tsx --env-file=.env scripts/measure-s8-concurrency.ts",
+    "explore:s8-gold": "tsx --env-file=.env scripts/explore-s8-gold.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
