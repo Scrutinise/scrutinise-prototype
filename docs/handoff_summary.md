@@ -2,7 +2,8 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-19 09:35 UTC — ▼ **SEARCH S8: the first-pass search infrastructure is finished. FOUR of eight sections reversed a premise — the two "non-existent" fallback models both return HTTP 200 (one is silently substituted), attribution exists everywhere EXCEPT the committees collection it was built for, and raising stream concurrency to 4 makes five-stream questions WORSE because 4 is exactly vector-serve's width.**
+*Last updated: 2026-08-19 17:09 UTC — ▼ **GRAPH 3A: the position graph has a factual layer — 2.32M signals, 2.30M estimates, no model anywhere in it, and the ten highest-confidence records it produces are the Labour left, found from nothing but who voted against their own party. ⚠⚠ The free-vote heuristic finds every assisted dying and hunting division and NONE of the abortion ones — because the abortion divisions we hold are whipped NI Regulations, not conscience votes. ⚠⚠ Amendment sponsorship and committee membership have NO SOURCE DATA at all.**
+Earlier: 2026-08-19 09:35 UTC — ▼ **SEARCH S8: the first-pass search infrastructure is finished. FOUR of eight sections reversed a premise — the two "non-existent" fallback models both return HTTP 200 (one is silently substituted), attribution exists everywhere EXCEPT the committees collection it was built for, and raising stream concurrency to 4 makes five-stream questions WORSE because 4 is exactly vector-serve's width.**
 Earlier: 2026-08-17 23:12 UTC — ▼ **SEARCH S7: the carried backlog is cleared. Twice the
 measurement came back "this cannot answer the question", and that is reported as the result. The
 brief's committees-first prediction cannot hold — committees is at a ceiling — while caselaw and
@@ -29,6 +30,63 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-19 17:09 UTC — ▼ **GRAPH 3A IS COMPLETE: THE POSITION GRAPH HAS A FACTUAL LAYER — 2,317,523
+signals and 2,304,748 estimates, built from votes, EDM signatures, witness appearances and declared
+interests, with no model anywhere in it.** Executes `docs/BRIEF_GRAPH_3A.md` §1–§7 against
+`docs/POSITION_GRAPH_DESIGN.md`. Report: **`docs/GRAPH_3A_REPORT.md`**.
+CHANGE_LOG (2026-08-19 17:09 UTC). `check-3a.ts` **33/33** with **all 15 self-test breaks firing**,
+`verify:positions` **21/21 live against Neon**, `tsc` clean in both trees, `next build` compiled.
+**Cost $0 — no LLM call anywhere.**
+
+✅ **THE SANITY CHECK NOBODY DESIGNED: the ten highest-confidence records in the whole graph are
+Richard Burgon, Bell Ribeiro-Addy, Nadia Whittome, Grahame Morris, Ian Byrne, Imran Hussain, Apsana
+Begum and Rachael Maskell.** The arithmetic found the Labour left from nothing but who voted against
+their own party's majority. Nobody told it who they were.
+
+⚠⚠ **THE FREE-VOTE HEURISTIC WORKS AND THE BRIEF'S EXPECTATION OF IT IS HALF WRONG.** The ten
+most-split divisions it flags are all the assisted dying Bill; the 2006 and 2015 Assisted Dying
+Bills, the 2003 Hunting Bill, House of Lords Reform and the Coroners and Justice Bill are all in the
+list. But **abortion is 0 of 11 — because the abortion divisions we hold are not free votes.** They
+are Northern Ireland abortion *Regulations*, which the Government whipped (Labour cohesion 0.92–0.99);
+the classic conscience votes predate our Commons coverage, which starts 2016-03-09. ⚠ And the
+hunting misses generalise: Lords Conservative cohesion on hunting was 0.97–0.99 *by conviction*, so
+**a free vote a party happens to agree on is indistinguishable from a whipped one, and always will
+be.** My own prediction of 565 free-vote-like divisions measured **34** — I predicted conscience
+votes; the heuristic detects visible party splits, and those are not the same thing.
+
+⚠⚠ **THE BRIEF EXPECTED PARTY-AT-TIME-OF-VOTE TO NEED INFERRING. WE ALREADY STORE IT** on 2,527,966
+of 2,528,032 vote rows — verified, not assumed, from dated transitions (Corbyn Labour→Independent→Your
+Party; Rosindell Con→Reform UK). So rebellion is a plain fact with no inference caveat. It works end
+to end: **Imran Hussain's two assisted-dying votes classify differently** — unwhipped-group in Nov
+2024 (he had lost the whip), free-vote-heuristic in Jun 2025 (readmitted). Nothing was told that.
+
+⚠⚠ **TWO OF THE FIVE P0 SIGNAL TYPES HAVE NO SOURCE DATA.** Amendment sponsorship: `bills-api` holds
+6,574 publication PDFs and **no sponsor or amendment rows anywhere in the database**. Committee
+membership: `graph_member_post` is 7,970 *government/opposition* posts; searching it for committees
+returns 165 rows, all Lords "Deputy Chairman of Committees" or party NEC seats. Both reported by name
+in the script's own output every run, never silently skipped.
+
+⚠⚠ **DO NOT ROLL SEVERAL DIVISIONS ON ONE BILL INTO ONE NUMBER YET.** 448 of 453 members with 3+
+votes on the assisted dying Bill read as a "divided record", because voting *for* the Bill and
+*against* an amendment to it are opposite directions once summed. Structural, not a bug — it is what
+3B's amendment classification exists to fix.
+
+⚠ **`position_estimate` cost 596 MB and the database is now at 99.2% of the 17.5 GiB ops ALERT line**
+(the enforced ceiling is 16 TiB, and the observer has been red since 95.3% before this sprint). 90%
+of those rows summarise exactly one vote. **The vote SIGNALS were deliberately NOT stored** — derived
+as a view over `division_votes`, saving 0.48 GiB, on 2D-2's rule: store the fact you do not already
+have. Decision D-1 in the report.
+
+▶ **CHARLIE: click `/admin` → "Position Graph"**, search "Terminally Ill Adults", tick the two
+readings, and open the evidence on anyone you have a view about. ⚠ No browser walk was possible from
+here (no localhost host permission, no Clerk session on production) and none is claimed.
+
+❌ **Not done:** the deepening wiring (§0 held it for S8, which has since landed — snippet ready in
+the report) · §3.3 and §3.4 for want of data · 3B's amendment classification · the §8 validation set,
+which is the gate on any of this reaching a user · 97.1% of EDM signatures, still primary-sponsor
+only · **120 members excluded although we know exactly who they are** (name collisions; 50,491 votes,
+including every vote by Lord Patel, Lord Jopling and Lord Moynihan).
 
 2026-08-19 09:35 UTC — ▼ **SEARCH S8 IS COMPLETE: THE FIRST-PASS SEARCH INFRASTRUCTURE IS
 FINISHED, AND FOUR OF THE EIGHT SECTIONS REVERSED A PREMISE THE BRIEF OR THE CODEBASE HELD.**
