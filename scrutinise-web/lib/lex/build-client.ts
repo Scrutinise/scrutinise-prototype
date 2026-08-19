@@ -160,9 +160,13 @@ const ORIENT_SCHEMA = {
 export async function runOrientPass(input: {
   promptBlock: string
   results: SearchResult[]
+  /** §7 — a perspective's framing, appended. Biases what is noticed; relaxes no rule. */
+  lens?: string
+  model?: string
 }): Promise<LlmResult<OrientOutput>> {
   const system = [
     M_GENERAL, '', M_ANSWER, '', GROUNDING, '', ROUGHNESS,
+    input.lens ? `\n${input.lens}` : '',
     '',
     'YOU ARE ORIENTING. Four outputs:',
     '  `terrain`        — what the record actually holds that bears on this, in 3–6 sentences. Name the',
@@ -181,7 +185,7 @@ export async function runOrientPass(input: {
   ].join('\n')
 
   return callJson<OrientOutput>({
-    model: modelForPass('ORIENT'),
+    model: input.model ?? modelForPass('ORIENT'),
     system,
     user: `${input.promptBlock}\n\nSOURCES — the only material you may cite:\n${sourcesBlock(input.results)}`,
     schema: ORIENT_SCHEMA,
@@ -472,6 +476,257 @@ export async function runActionsPass(input: {
     timeoutMs: TIMEOUT_MS,
     temperature: 0.5,
     label: 'build-actions',
+  })
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SPRINT 25-B
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── §4 — DOES AN EXISTING POWER RETIRE THE BILL? ─────────────────────────────
+//
+// The research pass's leading question can short-circuit everything after it, and §9
+// requires that "a positive finding visibly changes the instrument fork". That demands a
+// DEFINITE answer, and the alternative — pattern-matching the gather's prose for a
+// section number — is precisely the guard-that-silently-misfires this codebase keeps
+// removing. So the verdict is a small structured call over the findings that were
+// already retrieved.
+//
+// ⚠ IT MAY NOT INTRODUCE A PROVISION. It is given the findings and nothing else, and a
+// power it cannot attribute to one of them is not a power — a fabricated enabling
+// provision would send a user to a committee claiming a Minister can already act.
+
+export interface InstrumentAssessment {
+  /** TRUE only when a specific provision in the findings confers the power. */
+  powerFound: boolean
+  /** The enabling provision, named exactly, or '' when none was found. */
+  provision: string
+  /** Does it reach what this proposal wants to do? */
+  reach: 'covers' | 'partial' | 'no' | 'unclear'
+  /** One sentence the user reads. "Nearly" must be stated as nearly. */
+  reachNote: string
+}
+
+const INSTRUMENT_ASSESSMENT_SCHEMA = {
+  type: 'object',
+  properties: {
+    powerFound: { type: 'boolean' },
+    provision: { type: 'string' },
+    reach: { type: 'string', enum: ['covers', 'partial', 'no', 'unclear'] },
+    reachNote: { type: 'string' },
+  },
+  required: ['powerFound', 'provision', 'reach', 'reachNote'],
+}
+
+export async function assessInstrumentRetirement(input: {
+  question: string
+  findings: Array<{ kind: string; title: string; body: string }>
+  instrument: string
+}): Promise<LlmResult<InstrumentAssessment>> {
+  const system = [
+    M_GENERAL,
+    '',
+    'You are answering ONE question from findings that have already been retrieved and checked:',
+    'DOES AN EXISTING DELEGATED POWER REMOVE THE NEED FOR PRIMARY LEGISLATION HERE?',
+    '',
+    'This matters more than anything else in the draft. A proposal that needs no new Act is a proposal',
+    'that can actually happen, and one that assumes it needs a Bill when a Minister can already act',
+    'wastes years.',
+    '',
+    'RULES:',
+    '1. `powerFound` is TRUE only if one of the FINDINGS BELOW names a specific enabling provision —',
+    '   an Act, a section, and words conferring power to make regulations, an order, a scheme or a',
+    '   direction. If no finding names one, it is FALSE. You may not supply a provision from your own',
+    '   knowledge: a fabricated enabling provision sends someone into a committee room claiming a',
+    '   Minister can already act.',
+    '2. `provision` is copied from the finding, exactly. Empty string when `powerFound` is false.',
+    '3. `reach` is the honest verdict on whether the power stretches to what this proposal wants:',
+    '     covers   — it plainly does',
+    '     partial  — it reaches some of it and not the rest. SAY WHICH PART in `reachNote`.',
+    '     no       — a power exists in the area but cannot be used for this',
+    '     unclear  — a power exists and the findings do not settle whether it reaches',
+    '   ⚠ "partial" and "unclear" are the useful answers and the ones most likely to be rounded to',
+    '   "covers". Do not round them.',
+    '4. `reachNote` is ONE sentence, addressed to the proposer, saying what follows for their route.',
+  ].join('\n')
+
+  return callJson<InstrumentAssessment>({
+    model: modelForPass('RESEARCH'),
+    system,
+    user: [
+      `THE QUESTION: ${input.question}`,
+      `\nTHE INSTRUMENT THE DRAFT ASSUMED: ${input.instrument || '(none was named)'}`,
+      '\nTHE FINDINGS — the only material you may draw a provision from:',
+      ...(input.findings.length
+        ? input.findings.map((f, i) => `[${i + 1}] (${f.kind}) ${f.title}\n     ${f.body}`)
+        : ['(none)']),
+    ].join('\n'),
+    schema: INSTRUMENT_ASSESSMENT_SCHEMA,
+    maxOutputTokens: 1200,
+    timeoutMs: TIMEOUT_MS,
+    temperature: 0.2,
+    label: 'build-instrument-assessment',
+  })
+}
+
+// ── §5 — PASS 4: REVISE, AND KEEP THE CONTRADICTIONS ─────────────────────────
+//
+// "The pass that justifies the whole iterative design."
+//
+// ⚠ THE CONTRADICTIONS ARE THE OUTPUT, NOT A SIDE EFFECT. A revision that silently
+// overwrites pass 2 destroys the only visible evidence that the research changed
+// anything — and "I first concluded X; the evidence says Y; here is why I changed my
+// mind" is a finding about the idea in its own right. So `contradictions` is a required
+// field of the schema rather than an optional extra, and the prompt is told that an
+// empty list is a claim about the research, not a tidy result.
+
+export interface RevisionOutput {
+  /** The rewritten causes. §5: "particularly the causes, which were written before
+   *  anyone knew what the actions would imply." */
+  causes: Array<{ cause: string; whyPersisted: string; classification: 'MATERIAL' | 'CONTRIBUTORY' }>
+  rootCause: string
+  pivotalObstacle: string
+  summaryDiagnosis: string
+  chosenApproach: string
+  summaryGuidingPolicy: string
+  summaryCoherentActions: string
+  /** ⚠ The point of the pass. Each is a place the evidence moved the draft. */
+  contradictions: Array<{
+    fieldKey: string
+    firstConcluded: string
+    evidenceSays: string
+    whyChanged: string
+  }>
+  /** The chain check: do these actions defeat this obstacle, which follows from these causes? */
+  chainHolds: boolean
+  chainNote: string
+  /** The coherence check: concentration, sequencing, missing implementers. */
+  coherenceNote: string
+  /** Forks the evidence has SETTLED — resolved, with the reason. */
+  forksResolved: Array<{ forkKey: string; reason: string }>
+  forks: RawFork[]
+  uncertainties: RawUncertainty[]
+}
+
+const REVISION_SCHEMA = {
+  type: 'object',
+  properties: {
+    causes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          cause: { type: 'string' }, whyPersisted: { type: 'string' },
+          classification: { type: 'string', enum: ['MATERIAL', 'CONTRIBUTORY'] },
+        },
+        required: ['cause', 'whyPersisted', 'classification'],
+      },
+    },
+    rootCause: { type: 'string' },
+    pivotalObstacle: { type: 'string' },
+    summaryDiagnosis: { type: 'string' },
+    chosenApproach: { type: 'string' },
+    summaryGuidingPolicy: { type: 'string' },
+    summaryCoherentActions: { type: 'string' },
+    contradictions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          fieldKey: { type: 'string' },
+          firstConcluded: { type: 'string' },
+          evidenceSays: { type: 'string' },
+          whyChanged: { type: 'string' },
+        },
+        required: ['fieldKey', 'firstConcluded', 'evidenceSays', 'whyChanged'],
+      },
+    },
+    chainHolds: { type: 'boolean' },
+    chainNote: { type: 'string' },
+    coherenceNote: { type: 'string' },
+    forksResolved: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { forkKey: { type: 'string' }, reason: { type: 'string' } },
+        required: ['forkKey', 'reason'],
+      },
+    },
+    forks: FORK_SCHEMA,
+    uncertainties: UNCERTAINTY_SCHEMA,
+  },
+  required: ['causes', 'rootCause', 'pivotalObstacle', 'summaryDiagnosis', 'chosenApproach',
+    'summaryGuidingPolicy', 'summaryCoherentActions', 'contradictions', 'chainHolds', 'chainNote',
+    'coherenceNote', 'forksResolved', 'forks', 'uncertainties'],
+}
+
+export async function runRevisePass(input: {
+  promptBlock: string
+  diagnosis: string
+  approach: string
+  actions: string
+  instrument: string
+  /** What pass 3 found, including the instrument verdict where there is one. */
+  research: string
+  /** The forks pass 2 recorded, so this pass can resolve or open them. */
+  forks: Array<{ forkKey: string; chosen: string; alternatives: string[] }>
+}): Promise<LlmResult<RevisionOutput>> {
+  const system = [
+    M_GENERAL, '', M_DIAGNOSIS, '', M_GUIDING_POLICY, '', GROUNDING, '',
+    FORK_INSTRUCTION, '', UNCERTAINTY_INSTRUCTION,
+    '',
+    'YOU ARE REVISING A DRAFT YOU WROTE BEFORE YOU HAD DONE ANY RESEARCH. The research is below.',
+    'This is not a polish pass. It is the pass where the evidence is allowed to change the answer.',
+    '',
+    '⚠ REWRITE THE CAUSES FIRST AND HARDEST. They were written before anyone knew what the actions',
+    'would imply, and they are the part of the draft most likely to be wrong. A cause that survives',
+    'the research unchanged should survive because you checked it, not because you did not look.',
+    '',
+    '⚠ WHERE THE REVISION CONTRADICTS THE FIRST DRAFT, KEEP THE CONTRADICTION AND SAY SO.',
+    '`contradictions` is the most valuable thing this pass produces. Each entry:',
+    '  `fieldKey`       — which field changed (challenge · causes · rootCause · pivotalObstacle ·',
+    '                     chosenApproach · summaryGuidingPolicy · summaryCoherentActions).',
+    '  `firstConcluded` — what the first draft said. Quote its substance, not a paraphrase of it.',
+    '  `evidenceSays`   — what the research actually showed. Name the finding.',
+    '  `whyChanged`     — why that moved you. This is the sentence the user learns most from.',
+    'An EMPTY contradictions list is a strong claim: it says the research changed nothing. Sometimes',
+    'that is true. It is more often a sign of not having read the findings against the draft, so if',
+    'you are about to return an empty list, go back through the findings once more first.',
+    '',
+    'THE CHAIN CHECK. `chainHolds` and `chainNote`: do these ACTIONS defeat this OBSTACLE, which',
+    'follows from these CAUSES? Trace it link by link and say where it is weakest. A chain that does',
+    'not hold is a finding, not a failure of the pass — set `chainHolds` false and say where it breaks.',
+    '',
+    'THE COHERENCE CHECK. `coherenceNote`: CONCENTRATION (do the actions pull in one direction, or',
+    'are they a list?), SEQUENCING (does anything depend on something that comes after it?), and',
+    'MISSING IMPLEMENTERS (is there a step with nobody named to do it?).',
+    '',
+    'FORKS. `forksResolved` lists forks below that the evidence has now SETTLED, with the reason.',
+    '`forks` is for decision points the evidence has OPENED — a choice that did not exist before the',
+    'research did.',
+  ].join('\n')
+
+  return callJson<RevisionOutput>({
+    model: modelForPass('REVISE'),
+    system,
+    user: [
+      input.promptBlock,
+      `\nYOUR FIRST DIAGNOSIS (written with no research behind it):\n${input.diagnosis}`,
+      `\nYOUR FIRST APPROACH:\n${input.approach}`,
+      `\nYOUR FIRST ACTIONS:\n${input.actions}`,
+      `\nTHE INSTRUMENT YOU ASSUMED: ${input.instrument || '(none was named)'}`,
+      `\n═══ WHAT THE RESEARCH FOUND ═══\n${input.research}`,
+      input.forks.length
+        ? `\nTHE DECISIONS YOU RECORDED AN ALTERNATIVE FOR:\n${input.forks
+            .map((f) => `- ${f.forkKey}: chose "${f.chosen}"; set aside ${f.alternatives.join(' / ')}`)
+            .join('\n')}`
+        : '',
+    ].filter(Boolean).join('\n'),
+    schema: REVISION_SCHEMA,
+    maxOutputTokens: MAX_TOKENS('REVISE'),
+    timeoutMs: TIMEOUT_MS,
+    temperature: 0.4,
+    label: 'build-revise',
   })
 }
 

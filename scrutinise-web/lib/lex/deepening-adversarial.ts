@@ -34,7 +34,8 @@
 import { geminiFinishProblem } from './gemini-finish'
 import type { RawFinding } from './deepening-client'
 import { modelFor } from './model-registry'
-import { recordGeminiUsage } from './spend-ledger'
+import { thinkingConfigFor, requiresThinking, THINKING_HEADROOM } from './model-thinking'
+import { recordGeminiUsage, type SpendStream } from './spend-ledger'
 
 const MAX_TOKENS = parseInt(process.env.LEX_ADVERSARIAL_MAX_TOKENS ?? '4000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_ADVERSARIAL_TIMEOUT_MS ?? '45000', 10)
@@ -93,6 +94,27 @@ const SYSTEM = [
  * says the adversarial reading did not run, rather than presenting a proposal as having
  * survived a hostile reading it never had.
  */
+/**
+ * ⚠ 25-B §6 — THE BUILD'S PASS 5 IS THIS CALL, NOT A COPY OF IT.
+ *
+ * The only differences are the vantage point it is given (the WHOLE revised kernel with
+ * all the findings, rather than one pass's) and the model it runs on — "adversarial
+ * reasoning is where model strength shows and Flash is the cheapest thing we run", so
+ * §6 asks for a stronger model to be tried here and the difference reported.
+ *
+ * Both are parameters. A second adversarial function would have made the §6 comparison a
+ * comparison between two prompts as well as two models, which measures nothing.
+ */
+export interface AdversarialOptions {
+  /** §6 — override the model. Defaults to the registry's, as before. */
+  model?: string
+  /** Diagnostic label and ledger `pass` name. */
+  label?: string
+  stream?: SpendStream
+  /** Usage out-channel — see the note on GatherOptions in deepening-client.ts. */
+  onUsage?: (usage: { model: string; tokensIn: number; tokensOut: number }) => void
+}
+
 export async function generateAdversarialIssues(input: {
   idea: string
   costLines: string[]
@@ -101,16 +123,17 @@ export async function generateAdversarialIssues(input: {
   passMethod: string
   /** What the run looked for and could not find — a gap is a question waiting to be asked. */
   knownUnknowns: string[]
-}): Promise<string[] | null> {
+}, opts: AdversarialOptions = {}): Promise<string[] | null> {
+  const label = opts.label ?? 'deepening:adversarial'
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    console.warn('[deepening:adversarial] no GEMINI_API_KEY — the adversarial reading cannot run')
+    console.warn(`[${label}] no GEMINI_API_KEY — the adversarial reading cannot run`)
     return null
   }
   // S6 §2: the default now comes from lib/lex/model-registry.ts — ONE place where a pass's model
   // is chosen. The legacy env vars still win if set, so this is not a behaviour change; it is a
   // change to where the DEFAULT lives, which is what made it a dozen defaults before.
-  const model = process.env.LEX_ADVERSARIAL_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.adversarial')
+  const model = opts.model ?? process.env.LEX_ADVERSARIAL_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.adversarial')
 
   const findings = input.findings.length
     ? input.findings.map((f, i) => `[${i + 1}] (${f.kind}) ${f.title}\n     ${f.body}`).join('\n')
@@ -143,30 +166,52 @@ export async function generateAdversarialIssues(input: {
             // must not embellish; this is looking for the angle nobody thought of, and a
             // cold adversary produces the same four objections about every proposal.
             temperature: 0.7,
-            maxOutputTokens: MAX_TOKENS,
+            // ⚠ The budget is raised for a model that must think, because thinking tokens
+            // count against this ceiling — see thinkingConfigFor in model-registry.ts.
+            maxOutputTokens: requiresThinking(model) ? MAX_TOKENS + THINKING_HEADROOM : MAX_TOKENS,
             responseMimeType: 'application/json',
             responseSchema: SCHEMA,
-            thinkingConfig: { thinkingBudget: 0 },
+            // OFF for every model that will accept it (§19-D Task 2b). `gemini-2.5-pro`
+            // refuses a zero budget outright — 400 "This model only works in thinking
+            // mode" — so the ONE place that decides is the registry, not this line.
+            thinkingConfig: thinkingConfigFor(model),
           },
         }),
         signal: ctrl.signal,
       },
     )
     if (!res.ok) {
-      console.error('[deepening:adversarial] HTTP', res.status, await res.text().catch(() => ''))
+      console.error(`[${label}] HTTP`, res.status, await res.text().catch(() => ''))
       return null
     }
-    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = {
+      usageMetadata?: Record<string, unknown>
+      candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
+    }
     const data = (await res.json()) as Resp
     // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
     // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
     // never take down the work it is measuring.
-    void recordGeminiUsage(data, { stream: 'deepening', pass: 'deepening.adversarial', model: model })
+    void recordGeminiUsage(data, {
+      stream: opts.stream ?? 'deepening',
+      pass: opts.label ? `${opts.label}.adversarial` : 'deepening.adversarial',
+      model: model,
+    })
+    // Before the truncation check, for the same reason — a cut-off call was billed in full.
+    if (opts.onUsage) {
+      const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+      const u = data?.usageMetadata
+      opts.onUsage({
+        model,
+        tokensIn: n(u?.promptTokenCount),
+        tokensOut: n(u?.candidatesTokenCount) + n(u?.thoughtsTokenCount),
+      })
+    }
 
     // BEFORE parsing (CLAUDE.md §18.1).
-    const cut = geminiFinishProblem(data?.candidates?.[0], MAX_TOKENS, { label: 'deepening-adversarial' })
+    const cut = geminiFinishProblem(data?.candidates?.[0], MAX_TOKENS, { label: `${label}-cut` })
     if (cut) {
-      console.error(`[deepening:adversarial] ${cut.reason} — ${cut.detail}`)
+      console.error(`[${label}] ${cut.reason} — ${cut.detail}`)
       return null
     }
 
@@ -178,10 +223,10 @@ export async function generateAdversarialIssues(input: {
       // Rule 1 enforced rather than requested: a one-clause "issue" is a label.
       .filter((s) => s.length >= 40)
       .filter((s) => !/^consider\b/i.test(s))
-    console.log('[deepening:adversarial]', { raised: issues.length, findingsRead: input.findings.length })
+    console.log(`[${label}]`, { raised: issues.length, findingsRead: input.findings.length, model })
     return issues
   } catch (err) {
-    console.error('[deepening:adversarial] failed:', err instanceof Error ? err.message : err)
+    console.error(`[${label}] failed:`, err instanceof Error ? err.message : err)
     return null
   } finally {
     clearTimeout(t)

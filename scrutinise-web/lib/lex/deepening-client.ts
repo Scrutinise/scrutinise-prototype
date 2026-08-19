@@ -23,7 +23,7 @@
 import type { SearchResult } from './page1-config'
 import { geminiFinishProblem } from './gemini-finish'
 import { modelFor } from './model-registry'
-import { recordGeminiUsage } from './spend-ledger'
+import { recordGeminiUsage, type SpendStream } from './spend-ledger'
 
 const MAX_TOKENS = parseInt(process.env.LEX_DEEPENING_MAX_TOKENS ?? '8000', 10)
 const TIMEOUT_MS = parseInt(process.env.LEX_DEEPENING_TIMEOUT_MS ?? '60000', 10)
@@ -91,20 +91,52 @@ const SYSTEM = [
   '   an issue. Do not raise an issue that merely restates a finding.',
 ].join('\n')
 
+/**
+ * ⚠ 25-B §2 — THIS IS THE ONE GATHER, AND THE BUILD USES IT TOO.
+ *
+ * Sprint 25-B's research pass asks the same question of the same corpus in the same
+ * shape; the only differences are that it runs per LIBRARY QUESTION rather than per
+ * Deepening pass, that it may carry a §7 perspective lens, and that its spend has to
+ * come back to the caller for the build's per-pass cost ceiling.
+ *
+ * All three are optional parameters rather than a second copy of this function. "Two
+ * systems doing the same job is how the drift we have twice fixed begins" — and a
+ * duplicate gather would have been the third.
+ */
+export interface GatherOptions {
+  /** §6/§7 — override the model for this call. Defaults to the registry's. */
+  model?: string
+  /**
+   * §7 — a perspective's framing, appended to the system prompt. It biases WHAT IS
+   * NOTICED; it never relaxes a rule, and the never-claim contract above still binds.
+   */
+  lens?: string
+  /** Diagnostic label and ledger `pass` name, so build spend is attributable per pass. */
+  label?: string
+  stream?: SpendStream
+  /**
+   * Usage out-channel. A callback rather than a changed return type: the Deepening's own
+   * caller reads `GatherResult | null` and must keep doing so, and a build cost ceiling
+   * that silently missed this call's tokens would be a ceiling that does not hold.
+   */
+  onUsage?: (usage: { model: string; tokensIn: number; tokensOut: number }) => void
+}
+
 export async function generateDeepeningFindings(input: {
   method: string
   mustAnswer: string[]
   idea: string
   costLines: string[]
   results: SearchResult[]
-}): Promise<GatherResult | null> {
+}, opts: GatherOptions = {}): Promise<GatherResult | null> {
+  const label = opts.label ?? 'deepening'
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    console.warn('[deepening] no GEMINI_API_KEY — the gather cannot run')
+    console.warn(`[${label}] no GEMINI_API_KEY — the gather cannot run`)
     return null
   }
   // S6 §2 — default via lib/lex/model-registry.ts; legacy env vars still take precedence.
-  const model = process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.gather')
+  const model = opts.model ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.gather')
 
   const sources = input.results
     .map((r, i) => `[${i + 1}] id=${r.id}\n    type: ${r.type}\n    title: ${r.title}\n    citation: ${r.citation}\n    date: ${r.date}\n    extract: ${r.snippet}`)
@@ -130,7 +162,9 @@ export async function generateDeepeningFindings(input: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM }] },
+          // §7 — the lens is APPENDED, never substituted. Every perspective is bound by
+          // the same never-claim rules above; what differs is what it looks hardest for.
+          system_instruction: { parts: [{ text: opts.lens ? `${SYSTEM}\n\n${opts.lens}` : SYSTEM }] },
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
             temperature: 0.3,
@@ -144,21 +178,40 @@ export async function generateDeepeningFindings(input: {
       },
     )
     if (!res.ok) {
-      console.error('[deepening] gather HTTP', res.status, await res.text().catch(() => ''))
+      console.error(`[${label}] gather HTTP`, res.status, await res.text().catch(() => ''))
       return null
     }
-    type Resp = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
+    type Resp = {
+      usageMetadata?: Record<string, unknown>
+      candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
+    }
     const data = (await res.json()) as Resp
     // BRIEF_SEARCH_S6 §3 addendum — recorded before any truncation check, because a call
     // cut off at maxOutputTokens was billed in full. Fire-and-forget: a ledger write must
     // never take down the work it is measuring.
-    void recordGeminiUsage(data, { stream: 'deepening', pass: 'deepening.gather', model: model })
+    void recordGeminiUsage(data, {
+      stream: opts.stream ?? 'deepening',
+      pass: opts.label ? `${opts.label}.gather` : 'deepening.gather',
+      model: model,
+    })
+    // ⚠ REPORTED BEFORE THE TRUNCATION CHECK, for the same reason the ledger write is: a
+    // call cut off at maxOutputTokens was billed in full, and a cost ceiling that only
+    // counts successful calls is a ceiling a failing loop walks straight through.
+    if (opts.onUsage) {
+      const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+      const u = data?.usageMetadata
+      opts.onUsage({
+        model,
+        tokensIn: n(u?.promptTokenCount),
+        tokensOut: n(u?.candidatesTokenCount) + n(u?.thoughtsTokenCount),
+      })
+    }
 
     // BEFORE parsing (CLAUDE.md §18.1). A truncated gather is broken JSON, and reporting it as
     // a parse error would send the next reader looking for a serialiser bug.
-    const cut = geminiFinishProblem(data?.candidates?.[0], MAX_TOKENS, { label: 'deepening-gather' })
+    const cut = geminiFinishProblem(data?.candidates?.[0], MAX_TOKENS, { label: `${label}-gather` })
     if (cut) {
-      console.error(`[deepening] gather ${cut.reason} — ${cut.detail}`)
+      console.error(`[${label}] gather ${cut.reason} — ${cut.detail}`)
       // Truncation is a FAILED run, not a partial one: half a findings array parsed out of a
       // cut-off payload would silently drop the tail and look complete.
       return null
@@ -189,7 +242,7 @@ export async function generateDeepeningFindings(input: {
       gaps: (Array.isArray(obj.gaps) ? obj.gaps : []).map(String).map((s) => s.trim()).filter(Boolean),
     }
   } catch (err) {
-    console.error('[deepening] gather failed:', err instanceof Error ? err.message : err)
+    console.error(`[${label}] gather failed:`, err instanceof Error ? err.message : err)
     return null
   } finally {
     clearTimeout(t)
