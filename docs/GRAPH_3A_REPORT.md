@@ -622,18 +622,29 @@ is authenticated and the control proves the unauthenticated probe cannot tell de
 What *is* verified is the code and the data: 33/33, 21/21 live against Neon, `tsc` clean, `next build`
 compiled with both routes present, and 2,304,748 estimates read back off the production database.
 
-**One thing that IS observable, and exactly how much it is worth.** The prerendered `/support` page
-changed its ETag and reset its cache age two minutes after the push:
+⚠⚠ **A "deploy happened" signal I claimed and then withdrew, because a later reading killed it.**
+The prerendered `/support` page changed its ETag and reset its cache age two minutes after the push,
+and this report initially recorded that as *evidence a new Production build was served*:
 
 ```
 17:13:27 UTC   Etag "8f2a88da46f325c89352cb7c8c4ca580"   Age 7445   X-Vercel-Cache: HIT
 17:14:10 UTC   Etag "7ab07177bad44be89265a6f08151aae8"   Age 0      X-Vercel-Cache: PRERENDER
+17:17:43 UTC                                             Age 0      X-Vercel-Cache: PRERENDER   ← a
+17:18:03 UTC                                             Age 20     X-Vercel-Cache: HIT            second
+                                                                                                   reset
 ```
 
-That is **evidence that a new Production build was served after the push at 17:12**, which is the
-failure mode of 6–9 August (a week of Preview-only deploys) not recurring. It is **not** proof that
-this commit is in it — a prerender ETag says a deploy happened, not which one. Treat it as check 3
-partly answered from the outside, and check 4 still open.
+**A second `Age: 0` three and a half minutes later, with no push between them, and the page carries
+`X-Nextjs-Stale-Time: 300`.** An Age reset on this page is *routine five-minute revalidation*, not a
+deploy. The ETag change is the only remaining half of the signal, and a page that regenerates on
+revalidation can change it without any new build. **So: no external evidence either way about
+whether this commit is deployed.** Checks 3 and 4 are both open, and the 6–9 August failure mode
+(a week of green Preview deploys and nothing in Production) is neither confirmed nor excluded from
+here.
+
+⚠ The general lesson, since this is the second time in one sprint: *the first reading looked
+decisive because there was nothing to compare it with.* One sample of a cache header is not a
+measurement.
 
 ▶ **Charlie closes checks 3 and 4** by confirming a green Production deployment and opening
 `/admin/positions` while signed in.
