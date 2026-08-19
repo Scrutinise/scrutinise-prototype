@@ -603,7 +603,10 @@ async function callGrok(systemPrompt: string, userMessage: string, history: Arra
       'Authorization': `Bearer ${grokKey}`,
     },
     body: JSON.stringify({
-      model: 'grok-3-fast-beta',
+      // S8 §7.2 — was 'grok-3-fast-beta'. That id still returns HTTP 200, but xAI SILENTLY
+      // SERVES grok-4.3 for it: the response body echoes "model":"grok-4.3". So the call never
+      // failed and the configured name was never the model anyone got. Named honestly now.
+      model: 'grok-4.3',
       messages: [
         { role: 'system', content: systemPrompt },
         ...history.map(m => ({

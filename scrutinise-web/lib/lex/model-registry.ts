@@ -27,16 +27,21 @@
 export type Provider = 'google' | 'anthropic' | 'xai' | 'openai'
 
 /**
- * Models each account could actually reach on 17 Aug 2026, read off `/v1/models`.
+ * Models each account could actually reach, read off `/v1/models` on 17 Aug 2026 and corrected
+ * by live 1-token calls on 19 Aug 2026 (S8 §7.2).
  *
- * ⚠ THIS IS AN ALLOW-LIST, AND ITS JOB IS TO SAY NO. Two production fallbacks currently
- * name ids that are NOT here — `claude-haiku-4-5-20251001` (compile.ts) and
- * `grok-3-fast-beta` (two Lex routes). They are listed in KNOWN_STALE below rather than
- * quietly added, because a configured fallback that does not exist is worse than none.
+ * ⚠ THIS IS AN ALLOW-LIST, AND ITS JOB IS TO SAY NO — but it must say no for a reason that is
+ * true. `claude-haiku-4-5-20251001` was excluded because the list endpoint did not return it,
+ * and a live call proved it answers perfectly well. **Absence from a model list is evidence
+ * about the list, not about the model.** Anything added here on the strength of a list read
+ * alone should be probed before it is trusted to reject a caller.
  */
 export const REACHABLE: Record<Provider, string[]> = {
   google: ['gemini-2.5-flash', 'gemini-2.5-pro'],
-  anthropic: ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7'],
+  // `claude-haiku-4-5-20251001` is the dated form compile.ts names as its Gemini-429 fallback;
+  // verified LIVE on 19 Aug 2026 (HTTP 200, echoing its own id).
+  anthropic: ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7',
+    'claude-haiku-4-5', 'claude-haiku-4-5-20251001'],
   xai: ['grok-4.6', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning',
     'grok-4.20-0309-non-reasoning', 'grok-4.20-multi-agent-0309', 'grok-build-0.1'],
   // ⚠ No key on this machine (probe-model-access.ts, 17 Aug 2026). Listed so that pointing
@@ -46,15 +51,29 @@ export const REACHABLE: Record<Provider, string[]> = {
 
 /**
  * Model ids that are hardcoded in production today and are NOT in the account's list.
- * Kept here so `check:model-registry` can keep failing until they are fixed, and so the
- * next reader does not have to rediscover it.
+ *
+ * ⚠⚠ BOTH ORIGINAL ENTRIES WERE WRONG, AND THE ERROR WAS THE SAME ONE TWICE: A MODEL-LIST READ
+ * IS NOT A CALLABILITY TEST. S8 §7.2 made a live 1-token call against each on 19 Aug 2026 and
+ * both returned **HTTP 200**. The two failed in opposite directions:
+ *
+ *   `claude-haiku-4-5-20251001`  200, and the body echoes back `"model":"claude-haiku-4-5-20251001"`.
+ *                                It is simply CALLABLE and was never stale — absent from the list
+ *                                endpoint, present at the inference endpoint. Now in REACHABLE.
+ *
+ *   `grok-3-fast-beta`           200 — and the body echoes `"model":"grok-4.3"`. ⚠⚠ xAI SILENTLY
+ *                                SUBSTITUTES. The call never failed, no error was ever logged, and
+ *                                the model our config named was not the model any user got, on
+ *                                every Lex turn that path served since the id was retired. The two
+ *                                routes now name `grok-4.3` explicitly.
+ *
+ * The lesson generalises past these two: **a 200 is not proof you got the model you asked for.**
+ * The only reliable check is comparing the request's model to the one the response echoes, which
+ * is what `check:s8-config --probe` now asserts.
+ *
+ * Empty is the correct state. Adding an entry means: hardcoded somewhere, and PROVEN uncallable
+ * or silently substituted by a live call — not merely missing from a `/v1/models` response.
  */
-export const KNOWN_STALE: Array<{ model: string; where: string; note: string }> = [
-  { model: 'claude-haiku-4-5-20251001', where: 'scripts/legislation/compile.ts (Gemini 429 fallback)',
-    note: 'not in the Anthropic account list on 17 Aug 2026' },
-  { model: 'grok-3-fast-beta', where: 'app/api/ai/[ideaId]/route.ts and app/api/ai/public/route.ts',
-    note: 'not in the xAI model list; flagged 6 Aug 2026 and still true' },
-]
+export const KNOWN_STALE: Array<{ model: string; where: string; note: string }> = []
 
 /** Every pass that calls a model, with the model it uses today. */
 export const PASS_DEFAULTS = {

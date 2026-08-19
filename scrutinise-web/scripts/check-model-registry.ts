@@ -69,7 +69,15 @@ function main() {
     check(threw, why, threw ? 'refused' : `ACCEPTED "${value}" — the guard is not working`)
   }
   refuses('gemini-9.9-imaginary', 'an unknown Google model is refused')
-  refuses('claude-haiku-4-5-20251001', 'a KNOWN STALE id is refused')
+  // ⚠⚠ THIS ASSERTION USED TO NAME `claude-haiku-4-5-20251001` AND IT WAS WRONG. It was written on
+  // the strength of a `/v1/models` read that did not list the id; S8 §7.2 made a live 1-token call
+  // and got **HTTP 200, echoing that exact id back**. The model was always callable — absent from
+  // the list endpoint, present at the inference endpoint — so the registry was refusing a working
+  // fallback, and this check was asserting that it should.
+  //
+  // **A model-list read is not a callability test.** The id is now in REACHABLE, so a still-unknown
+  // Anthropic id stands in here to keep the guard exercised.
+  refuses('claude-opus-9-imaginary', 'an unknown Anthropic id is refused')
   refuses('not-a-model-at-all', 'a string with no known provider is refused')
   refuses('gpt-5', 'an OpenAI model is refused — no key on this deployment')
   // And the positive control: a real, reachable model is ACCEPTED.
@@ -97,12 +105,30 @@ function main() {
   check(hardcoded.length === 0, 'no adopted file still falls back to a hardcoded model string',
     hardcoded.map((h) => h.file).join(', '))
 
-  // ── 4. the stale ids stay flagged ───────────────────────────────────────────────────────────
-  console.log('\n  the two known-stale production fallbacks')
+  // ── 4. the stale ids ────────────────────────────────────────────────────────────────────────
+  //
+  // ⚠⚠ BOTH ORIGINAL ENTRIES WERE RETIRED BY S8 §7.2, FOR OPPOSITE REASONS, AND NEITHER WAS THE
+  // "does not exist" the list read implied:
+  //   claude-haiku-4-5-20251001 → 200, echoing its own id. Callable. Now in REACHABLE.
+  //   grok-3-fast-beta          → 200, echoing "grok-4.3". xAI SILENTLY SUBSTITUTES, so the model
+  //                               our config named was never the model any user got. Both Lex
+  //                               routes now name `grok-4.3`.
+  // The live probe lives in `scripts/check-s8-config-hygiene.ts --probe`, which asserts the thing
+  // that actually matters: the model the RESPONSE echoes matches the one requested.
+  console.log('\n  known-stale production fallbacks')
+  check(KNOWN_STALE.length === 0,
+    'KNOWN_STALE is empty — no configured id is known-uncallable',
+    KNOWN_STALE.map((s) => s.model).join(', ') || 'both original entries retired on live evidence')
   for (const s of KNOWN_STALE) {
     const reachable = (Object.values(REACHABLE) as string[][]).some((l) => l.includes(s.model))
     check(!reachable, `${s.model} is still absent from the reachable list`,
       reachable ? 'it is now reachable — remove it from KNOWN_STALE and fix the caller' : s.where)
+  }
+  // The retired id must not creep back into the two Lex routes.
+  for (const rel of ['app/api/ai/[ideaId]/route.ts', 'app/api/ai/public/route.ts']) {
+    const src = fs.readFileSync(path.join(root, rel), 'utf8').replace(/\/\/.*$/gm, '')
+    check(!/'grok-3-fast-beta'/.test(src),
+      `${rel} does not name the silently-substituted xAI id`)
   }
 
   // ── 5. the S6 §3 ADDENDUM — the metering is visible, and it still controls nothing ──────────

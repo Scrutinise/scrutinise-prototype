@@ -145,7 +145,9 @@ export async function POST(req: Request) {
           'Authorization': `Bearer ${grokKey}`,
         },
         body: JSON.stringify({
-          model: 'grok-3-fast-beta',
+          // S8 §7.2 — see the note in app/api/ai/[ideaId]/route.ts: 'grok-3-fast-beta' returns 200
+          // and is silently served by grok-4.3. The config now names the model actually served.
+          model: 'grok-4.3',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...history.map(m => ({

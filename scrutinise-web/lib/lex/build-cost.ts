@@ -28,13 +28,57 @@ export interface ModelRate {
 }
 
 /**
- * List prices as published by Google for the paid tier, recorded 2026-08-17.
- * NOT verified against an invoice in this sprint — see the header.
+ * List prices, per 1,000,000 tokens, USD.
+ *
+ * ⚠ A PRICE IS A FACT ABOUT A DAY, so every figure carries its source and the date it was
+ * checked (S8 §7). A rate table with no provenance cannot be audited or refreshed — the next
+ * reader has no way to tell a current price from one that was right eighteen months ago.
+ *
+ * ⚠ NOT verified against an invoice — these are published list prices. See the header.
  */
 const DEFAULT_RATES: Record<string, ModelRate> = {
+  // ── Google ─────────────────────────────────────────────────────────────────────────────────
+  // Source: Google's published Gemini API pricing. Checked 2026-08-17.
   'gemini-2.5-flash': { inPerM: 0.30, outPerM: 2.50 },
   'gemini-2.5-flash-lite': { inPerM: 0.10, outPerM: 0.40 },
   'gemini-2.5-pro': { inPerM: 1.25, outPerM: 10.00 },
+
+  // ── Anthropic ──────────────────────────────────────────────────────────────────────────────
+  // S8 §7 item 1. Source: https://platform.claude.com/docs/en/about-claude/models/overview
+  // Checked 2026-08-19.
+  // ⚠ Every model named in `model-registry.ts`'s REACHABLE.anthropic is priced here, so a pass
+  // pointed at any of them reports a cost rather than "unpriced" — which is what made the cost
+  // CEILING unenforceable, since `priceBuild` returns `pence: null` the moment one model in a
+  // run has no rate.
+  'claude-opus-5': { inPerM: 5.00, outPerM: 25.00 },
+  'claude-opus-4-8': { inPerM: 5.00, outPerM: 25.00 },
+  'claude-opus-4-7': { inPerM: 5.00, outPerM: 25.00 },
+  // ⚠ Sonnet 5 carries an introductory rate of $2.00/$10.00 through 2026-08-31. The LIST price is
+  // recorded rather than the promotion: an estimate that silently assumes a discount overstates
+  // the ceiling's headroom the day the promotion ends, and this table has no expiry mechanism.
+  'claude-sonnet-5': { inPerM: 3.00, outPerM: 15.00 },
+  'claude-fable-5': { inPerM: 10.00, outPerM: 50.00 },
+  'claude-haiku-4-5': { inPerM: 1.00, outPerM: 5.00 },
+  // The dated form of the Haiku id, which `scripts/legislation/compile.ts` names as its Gemini-429
+  // fallback. Same model, same price — priced under both spellings so the fallback path cannot
+  // report "unpriced" on the one run where it actually fires.
+  'claude-haiku-4-5-20251001': { inPerM: 1.00, outPerM: 5.00 },
+
+  // ── xAI ────────────────────────────────────────────────────────────────────────────────────
+  // S8 §7 item 1. Source: https://docs.x.ai/docs/models. Checked 2026-08-19.
+  // ⚠⚠ xAI PRICES ARE TIERED BY PROMPT LENGTH — each model has a low and a high band (grok-4.6 is
+  // $2.00/$6.00 below the threshold and $4.00/$12.00 above it). This table has one rate per model
+  // and no length input, so it records the LOW band and will UNDERSTATE a long-prompt call by up
+  // to 2×. That is stated here rather than hidden because an estimate whose error direction is
+  // known is usable and one whose isn't is not. Making it exact means threading prompt length
+  // into `priceBuild`, which is a change to the meter, not to this table.
+  'grok-4.6': { inPerM: 2.00, outPerM: 6.00 },
+  'grok-4.5': { inPerM: 2.00, outPerM: 6.00 },
+  'grok-4.3': { inPerM: 1.25, outPerM: 2.50 },
+  'grok-4.20-0309-reasoning': { inPerM: 1.25, outPerM: 2.50 },
+  'grok-4.20-0309-non-reasoning': { inPerM: 1.25, outPerM: 2.50 },
+  'grok-4.20-multi-agent-0309': { inPerM: 1.25, outPerM: 2.50 },
+  'grok-build-0.1': { inPerM: 1.00, outPerM: 2.00 },
 }
 
 /** USD → GBP. Overridable; a rate that moves is not worth a deploy. */
