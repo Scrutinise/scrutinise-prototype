@@ -641,3 +641,58 @@ one index build serves both this and the title reindex D-1 mentions. `stripAknPr
 `verify:names-e2e` run live · `tsc` clean in `scrutinise-web`; in `scripts/` the only 6 errors are
 **pre-existing and in other threads' files** (`graph/check-3a.ts`, `ingest/graph/download-graph-sources.ts`,
 `ingest/s3-drop-readiness.ts`, `lib/lex/repeal-status.ts`) and none is touched by this sprint.
+
+---
+
+## DELIVERY — CLAUDE.md §20's FOUR CHECKS
+
+⚠ **This sprint's value is a DATABASE change, not a code change.** No file under
+`scrutinise-web/app`, `/lib` or `/components` was modified — the four commits touch ingest scripts,
+one verification script, two `package.json` script entries and docs. So there is no new behaviour
+waiting on a Vercel deploy: production reads the recovered names straight out of Neon. That makes
+checks 3 and 4 mean something different here from the three incidents §20 was written about, and
+the difference is stated rather than used to wave them away.
+
+**1. Every file this sprint created is committed** — checked with `git ls-files --error-unmatch`
+per path, not `git status`, and `git check-ignore -v` run over all 21 new paths returned nothing.
+13 of 13 named files COMMITTED.
+
+**2. The remote has the commits** — `git merge-base --is-ancestor HEAD origin/Main` after a real
+fetch, and `git ls-remote` returns `a5334675…` for `refs/heads/Main`, matching local HEAD.
+
+**3. The deployment.** ⚠ **NOT CHECKED, AND IT IS NOT READABLE FROM HERE** — `VERCEL_TOKEN`
+authenticates and then 403s on every project-scoped endpoint with `"saml": true`
+(`docs/CLAUDE.md` §19). ⚠ **No app code changed, so there is nothing in this sprint for a
+deployment to carry.** Both halves of that sentence are true and neither is offered as a
+substitute for the other.
+
+**4. The running site serves the change** — answered as far as it can be, and the limit is stated:
+
+- **The write landed in production's database, verified by endpoint identity.**
+  `NEON_DATABASE_URL` (where the sweeps wrote) is `ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech`;
+  `DATABASE_URL` (what the app reads) is that same endpoint's pooler alias. This matches the
+  record in `docs/CLAUDE.md` §16.
+  ⚠ **I ran this check AFTER the sweeps, not before.** §16 requires it first. The sweeps were
+  `UPDATE`s that only fill NULL columns — not schema-altering, not destructive, and idempotent —
+  so the risk was low, but the rule says first and I did it last. Recorded rather than tidied away.
+- **The serving path was exercised live and returned the recovered names.** `verify:names-e2e`
+  calls the platform's own gateway against production Neon, production `fts-serve` and production
+  `vector-serve`, and both services' `served` counters moved (`fts+29 vector+15`) — so retrieval
+  happened rather than being assumed. It returned
+  `Water Quality in Rivers — WQR0085 — Salmon and Trout Conservation` and
+  `Griffiths v The Secretary of State for Work And Pensions`, and the second was checked back to
+  `tna-caselaw:[2015] EWCA Civ 1265:1`, route `source`.
+- ⚠ **What was NOT exercised is production's own Next.js process.** Every search surface requires
+  a Clerk session, `/api/search` calls `getAuthenticatedUser()` before anything else, and no
+  browser walk is possible from this session (no localhost host permission, no production Clerk
+  session). The harness runs the same library code against the same three backends, which is
+  strong — but it is not the production web process, and it is not claimed to be.
+
+**The honest closing sentence:** *pushed, and verified live by reading the recovered names back out
+of the platform's own retrieval against production Neon, production `fts-serve` and production
+`vector-serve`, with both services' counters confirming engagement; production's own web process
+was NOT exercised, because its search surfaces need a Clerk session this environment cannot hold.*
+
+▶ **CHARLIE, the one-minute confirmation this cannot do:** ask Lex about committee evidence on
+sewage — expect a **named** submitter now, where S8 told you to expect none — and ask it about a
+Supreme Court judgment, expecting a case name rather than a bare citation.
