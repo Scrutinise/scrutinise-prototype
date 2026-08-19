@@ -41,7 +41,7 @@ differently:
    direction of an amendment vote is meaningless until 3B classifies amendments. Decision **D-2**.
 
 **Checks:** `check-3a.ts` **33/33**, with all **15** self-test breaks firing (`--self-test`).
-`verify-positions-api.ts` **21/21** against the live graph. `tsc` clean in both trees;
+`verify-positions-api.ts` **23/23** against the live graph. `tsc` clean in both trees;
 `next build` compiled successfully with `/admin/positions` and `/api/admin/positions` present.
 
 ▶ **CHARLIE: the thing to click is `/admin` → "Position Graph"** (`/admin/positions`). Search
@@ -475,7 +475,7 @@ human can read.
 "divided record", never "neutral". There is no band for "no signals", because that case must never
 reach the function: an actor with no signals is absent, and absence is the caller's to render.
 
-**21/21 against the live graph** (`npm run verify:positions`), asserting content rather than shape.
+**23/23 against the live graph** (`npm run verify:positions`), asserting content rather than shape.
 Two findings came out of running it:
 
 ⚠⚠ **1. Do not roll several divisions on one Bill into one number.** Of 453 members with three or
@@ -542,7 +542,7 @@ validation set.
 `localhost:3000` and the browser holds no Clerk session on production, so no authenticated walk was
 possible from here. What *is* verified: `next build` compiled successfully with `/admin/positions`
 and `/api/admin/positions` both present, `tsc` is clean, and every number the page renders comes from
-`positionsFor()`, which is exercised 21/21 against the live database. **The click is Charlie's.**
+`positionsFor()`, which is exercised 23/23 against the live database. **The click is Charlie's.**
 
 ---
 
@@ -619,7 +619,7 @@ shape of check this project has been bitten by. It is reported as not-run rather
 
 **The honest closing sentence: pushed, and NOT verified live, because every surface this sprint adds
 is authenticated and the control proves the unauthenticated probe cannot tell deployed from absent.**
-What *is* verified is the code and the data: 33/33, 21/21 live against Neon, `tsc` clean, `next build`
+What *is* verified is the code and the data: 33/33, 23/23 live against Neon, `tsc` clean, `next build`
 compiled with both routes present, and 2,304,748 estimates read back off the production database.
 
 ⚠⚠ **A "deploy happened" signal I claimed and then withdrew, because a later reading killed it.**

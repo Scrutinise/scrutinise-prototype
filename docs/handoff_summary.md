@@ -36,7 +36,7 @@ signals and 2,304,748 estimates, built from votes, EDM signatures, witness appea
 interests, with no model anywhere in it.** Executes `docs/BRIEF_GRAPH_3A.md` §1–§7 against
 `docs/POSITION_GRAPH_DESIGN.md`. Report: **`docs/GRAPH_3A_REPORT.md`**.
 CHANGE_LOG (2026-08-19 17:09 UTC). `check-3a.ts` **33/33** with **all 15 self-test breaks firing**,
-`verify:positions` **21/21 live against Neon**, `tsc` clean in both trees, `next build` compiled.
+`verify:positions` **23/23 live against Neon**, `tsc` clean in both trees, `next build` compiled.
 **Cost $0 — no LLM call anywhere.**
 
 ✅ **THE SANITY CHECK NOBODY DESIGNED: the ten highest-confidence records in the whole graph are
