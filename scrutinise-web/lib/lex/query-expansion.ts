@@ -229,7 +229,15 @@ export async function expandQuery(keywords: string[], ideaContext: string): Prom
 export type { RouterStreamName } from './stream-scopes'
 import type { RouterStreamName } from './stream-scopes'
 
-const ROUTER_STREAMS: RouterStreamName[] = ['legislation', 'debates', 'committees', 'caselaw', 'guidance']
+const ROUTER_STREAMS_BASE: RouterStreamName[] = ['legislation', 'debates', 'committees', 'caselaw', 'guidance']
+/** S8 §4 — candidates, live only behind `LEX_ROUTER_STREAMS_V2`. Divisions stay out: a graph
+ *  input, never text-searched (SEARCH_STRATEGY §3.3). */
+const ROUTER_STREAMS_V2_EXTRA: RouterStreamName[] = ['impact-assessments', 'consultations', 'explanatory']
+
+/** ⚠ Read at call time so a harness can flip the flag between arms in one process — which is
+ *  exactly what `measure-s8-router-v2.ts` does to compare selection with and without. */
+const routerStreams = (): RouterStreamName[] =>
+  flagEnabled('LEX_ROUTER_STREAMS_V2') ? [...ROUTER_STREAMS_BASE, ...ROUTER_STREAMS_V2_EXTRA] : ROUTER_STREAMS_BASE
 
 /** One tailored query string per stream the LLM judged relevant. A stream absent
  *  from the object was judged NOT relevant — the caller skips it entirely. */
@@ -252,7 +260,7 @@ export type RouteResult = Partial<Record<RouterStreamName, string>>
 // the one the ordering regression was observed on. Exactly the wrong one to lose.
 // `propertyOrdering` is an ordering HINT, not a constraint on the content, which is why it does
 // not carry `maxLength`'s failure mode; it was measured on its own pass regardless.
-const ROUTER_SCHEMA = {
+const ROUTER_SCHEMA_BASE = {
   type: 'object',
   properties: {
     legislation: { type: 'string' },
@@ -263,6 +271,30 @@ const ROUTER_SCHEMA = {
   },
   propertyOrdering: ['legislation', 'debates', 'committees', 'caselaw', 'guidance'],
 }
+
+/**
+ * S8 §4 — the same schema with the three candidate streams appended.
+ *
+ * ⚠ THE ORDERING HINT PUTS THE NEW STREAMS LAST, and that is the point rather than tidiness.
+ * Gemini emits ALPHABETICALLY in practice (measured 2026-08-09 by forcing truncation), so a
+ * truncated payload loses whatever sorts late — which is why `propertyOrdering` exists at all.
+ * `consultations` and `explanatory` sort before `legislation` alphabetically, so if the model
+ * ignores the hint the way it did before, the streams a truncation destroys are still the ones
+ * this list ends with. Putting the three candidates last is the most a hint can do to keep the
+ * five load-bearing streams ahead of them.
+ */
+const ROUTER_SCHEMA_V2 = {
+  type: 'object',
+  properties: {
+    ...ROUTER_SCHEMA_BASE.properties,
+    'impact-assessments': { type: 'string' },
+    consultations: { type: 'string' },
+    explanatory: { type: 'string' },
+  },
+  propertyOrdering: [...ROUTER_SCHEMA_BASE.propertyOrdering, 'impact-assessments', 'consultations', 'explanatory'],
+}
+
+const routerSchema = () => (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_SCHEMA_V2 : ROUTER_SCHEMA_BASE)
 
 // ── measurement switches ─────────────────────────────────────────────────────
 //
@@ -316,8 +348,32 @@ Keywords: buy now pay later credit checks
 Keywords: sewage discharge by water companies
 {"legislation":"Water Industry Act 1991 Environmental Permitting Regulations discharge","debates":"storm overflows sewage discharge water companies","guidance":"Ofwat Environment Agency storm overflow enforcement guidance","caselaw":"water company nuisance discharge judicial review"}`
 
+/**
+ * S8 §4 — the three candidate corpora, APPENDED rather than woven into the base prompt.
+ *
+ * ⚠⚠ THE BRIEF'S CONSTRAINT IS "do not retune the five existing streams' selection behaviour",
+ * and the shape of this string is how that is honoured. `ROUTER_PROMPT_BASE` is byte-identical
+ * with the flag off and byte-identical up to its last character with the flag on; nothing is
+ * reworded, reordered, or re-exampled. The five existing descriptions, the exact-citation special
+ * case, and the three worked examples all reach the model unchanged.
+ *
+ * ⚠ It still cannot be claimed that selection of the five is UNAFFECTED — adding options to a
+ * choice can change the choice even when the options' descriptions do not. That is precisely what
+ * §4 asks to be measured ("does its choice displace a stream that was serving the answer"), and
+ * it is measured rather than asserted. What this arrangement buys is that any displacement is
+ * attributable to the new streams existing, not to the prompt having been rewritten around them.
+ */
+const ROUTER_PROMPT_V2_STREAMS = `
+
+Three further corpora are available. They are NARROW — route to them only when the question is
+specifically about what they contain, and never as a substitute for legislation:
+- impact-assessments: what the government PREDICTED an instrument would cost and achieve, before it did. Route here for questions about predicted costs, benefits, options appraised, or the RPC opinion. Tailor with the instrument name plus the appraisal vocabulary (e.g. "Environmental Permitting Regulations impact assessment costs benefits").
+- consultations: what the government ASKED the public, and what respondents said. Route here for questions about what was consulted on or how respondents replied. Tailor with the policy name plus consultation vocabulary (e.g. "leasehold reform consultation response respondents").
+- explanatory: explanatory notes and memoranda — the department's own statement of what a provision was FOR. Route here when the question is about PURPOSE or intent rather than the operative text. Tailor with the Act or SI name plus purpose vocabulary (e.g. "Data Protection Act 2018 explanatory notes purpose").`
+
 function routerSystemPrompt(): string {
-  return ROUTER_PROMPT_BASE + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
+  const base = ROUTER_PROMPT_BASE + (flagEnabled('LEX_ROUTER_STREAMS_V2') ? ROUTER_PROMPT_V2_STREAMS : '')
+  return base + (fewShotEnabled() ? ROUTER_LENGTH_FEWSHOT : ROUTER_LENGTH_LEGACY)
 }
 
 /**
@@ -397,7 +453,7 @@ function parseRoute(raw: string): { route: RouteResult; mode: 'full' | 'partial'
   if (!obj || typeof obj !== 'object') return null
   const o = obj as Record<string, unknown>
   const out: RouteResult = {}
-  for (const stream of ROUTER_STREAMS) {
+  for (const stream of routerStreams()) {
     const v = o[stream]
     if (typeof v === 'string' && v.trim().length > 0) out[stream] = v.trim()
   }
@@ -463,7 +519,7 @@ export async function routeQuery(keywords: string[], ideaContext: string): Promi
     model, apiKey, timeoutMs, pass: 'search.query-router',
     systemPrompt: routerSystemPrompt(),
     userMessage,
-    schema: ROUTER_SCHEMA,
+    schema: routerSchema(),
     logTag: 'query-router',
     maxOutputTokens,
   })

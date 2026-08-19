@@ -22,9 +22,10 @@ import { runVectorSearch } from './vector-search'
 import { fuseWeightedRrf, VECTOR_WEIGHT } from './fusion'
 import { interleaveStreams } from './interleave'
 import { sortByScore } from './score-scope'
-import { STREAM_SCOPES, type StreamScope } from './stream-scopes'
+import { activeStreamScopes, type StreamScope } from './stream-scopes'
 import type { RouteResult, RouterStreamName } from './query-expansion'
-import { mapWithLimit, STREAM_CONCURRENCY } from './stream-batch'
+import { mapWithLimit, streamConcurrency } from './stream-batch'
+import { flagEnabled } from '@/lib/env-flags'
 
 /** A stream's SCOPE (which part of the corpus it may reach — see stream-scopes.ts, where the
  *  `types` backstop and the corpus prefilters are documented) plus its retrieval call. */
@@ -189,10 +190,44 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
 // The list is BUILT from STREAM_SCOPES rather than restating it: the scope (tier / corpora /
 // excludeCorpora / types) is data, shared with the reachability matrix; the retrieval function
 // is code and stays here.
-export const STREAMS: StreamConfig[] = STREAM_SCOPES.map((s) => ({
-  ...s,
-  search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora, s.extraCorpora),
-}))
+//
+// S8 §4 — the three candidate streams join ONLY when `LEX_ROUTER_STREAMS_V2` is on. The flag is
+// read here, on the runtime side, so `stream-scopes.ts` keeps its no-runtime-imports property.
+//
+// ⚠ READ PER CALL, MEMOISED PER FLAG VALUE — not frozen at module load. Module-load was the first
+// design and it made the §4 measurement impossible to run fairly: comparing the two arms would
+// have meant two processes, and therefore two different cache states, two different service warm-
+// ups, and no way to alternate. A per-call read lets one process alternate arms against the same
+// warm services, which is the only way the latency delta means anything.
+//
+// The consistency the module-load version was protecting is preserved by scope rather than by
+// timing: a router DECISION and its DISPATCH both happen inside one `runSearch`, and the flag does
+// not change inside a request in production. Memoising per value keeps the `fusedStream` closures
+// stable, so an arm's second query reuses the first's stream objects rather than rebuilding them.
+const STREAM_CACHE = new Map<boolean, StreamConfig[]>()
+export function routerStreamsV2(): boolean { return flagEnabled('LEX_ROUTER_STREAMS_V2') }
+export function streams(): StreamConfig[] {
+  const v2 = routerStreamsV2()
+  const hit = STREAM_CACHE.get(v2)
+  if (hit) return hit
+  const built = activeStreamScopes(v2).map((s) => ({
+    ...s,
+    search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora, s.extraCorpora),
+  }))
+  STREAM_CACHE.set(v2, built)
+  console.log(`[query-router] streams in force: ${built.map((s) => s.name).join(', ')} (LEX_ROUTER_STREAMS_V2=${v2 ? 'ON' : 'off'})`)
+  return built
+}
+
+/** ⚠ Back-compat for the existing readers (`search-gateway.ts`'s tier-scoped branch and
+ *  `scripts/verify-stream-scoping.ts`). A getter, so it reflects the flag rather than freezing
+ *  whatever it was when this module first loaded. */
+export const STREAMS: StreamConfig[] = new Proxy([] as StreamConfig[], {
+  get(_t, prop, recv) { return Reflect.get(streams(), prop, recv) },
+  has(_t, prop) { return Reflect.has(streams(), prop) },
+  ownKeys() { return Reflect.ownKeys(streams()) },
+  getOwnPropertyDescriptor(_t, prop) { return Reflect.getOwnPropertyDescriptor(streams(), prop) },
+})
 
 /** What a routed search produced, per stream, before and after interleaving. The gateway
  *  puts this on `meta` so a caller — and scripts/check-stream-coverage.ts — can state which
@@ -219,14 +254,14 @@ export interface RoutedSearchResult {
  * now safe, because any prefix of an interleaved list is stream-balanced.
  */
 export async function runRoutedSearch(route: RouteResult, limit: number): Promise<RoutedSearchResult> {
-  const active = STREAMS.filter((s) => route[s.name])
+  const active = streams().filter((s) => route[s.name])
   // ⚠ BRIEF_SEARCH_S5 §2 — BATCHED, and this is a prerequisite rather than an optimisation.
   // This was `Promise.all(active.map(...))`: five streams fired at once against a search service
   // that handles four, so ONE USER SATURATED IT. S5 makes five streams the normal case for the
   // Lex conversation rather than the exception, which is what turns a latent problem into a live
   // one. `maxInFlight` below is OBSERVED, so a limiter that silently failed open would show.
   const { results: perStream, stats } = await mapWithLimit(
-    active, STREAM_CONCURRENCY, (s) => s.search(route[s.name]!, limit))
+    active, streamConcurrency(), (s) => s.search(route[s.name]!, limit))
   if (active.length > stats.limit) {
     console.log('[query-router] streams batched', {
       streams: active.length, cap: stats.limit, maxInFlight: stats.maxInFlight, ms: stats.ms,

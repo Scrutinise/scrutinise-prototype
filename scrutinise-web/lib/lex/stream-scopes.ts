@@ -16,8 +16,12 @@ import type { SearchResultType } from './page1-config'
 
 /** The stream names the router can address today. Declared HERE, next to the scopes, and
  *  re-exported by query-expansion.ts (which owns the LLM decision that produces them). It used
- *  to live there, which meant anything wanting the name list imported a Gemini client. */
-export type RouterStreamName = 'legislation' | 'debates' | 'committees' | 'caselaw' | 'guidance'
+ *  to live there, which meant anything wanting the name list imported a Gemini client.
+ *
+ *  The last three are the S8 §4 candidates, live only behind `LEX_ROUTER_STREAMS_V2`. */
+export type RouterStreamName =
+  | 'legislation' | 'debates' | 'committees' | 'caselaw' | 'guidance'
+  | 'impact-assessments' | 'consultations' | 'explanatory'
 
 /**
  * COMMITTEE / DEBATE corpora, kept next to each other because they are complements and must
@@ -149,6 +153,58 @@ export const STREAM_SCOPES: StreamScope[] = [
   // measurement and a decision, not a line in a list. S2C reports it; Charlie decides it.
   { name: 'guidance', tier: 'guidance', extraCorpora: ['erskine-may'] },
 ]
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * S8 §4 — THE THREE CANDIDATE STREAMS. Flag-gated (`LEX_ROUTER_STREAMS_V2`), default OFF.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * "Impact assessments, consultations and explanatory material are typed, indexed and retrievable,
+ * but the router's stream-selection prompt predates them — they surface only through neighbouring
+ * streams. A user asking 'what did the government predict this policy would cost' has a stream
+ * that answers exactly that, which the router cannot deliberately choose."
+ *
+ * ⚠⚠ THIS ADDS NO REACHABILITY, AND SAYING OTHERWISE WOULD OVERSELL IT. All three collections sit
+ * inside tiers an existing stream already selects with no corpus filter:
+ *
+ *   impact-assessments   tier `legislation`  → already returned by the `legislation` stream
+ *   explanatory-notes    tier `legislation`  → already returned by the `legislation` stream
+ *   explanatory-memoranda tier `legislation` → already returned by the `legislation` stream
+ *   consultations        tier `guidance`     → already returned by the `guidance` stream
+ *
+ * What V2 changes is SLOTS, not access. `runRoutedSearch` interleaves round-robin, so each stream
+ * gets its own share of the final list; today an impact assessment competes for legislation's
+ * slots against 1.6M sections of statute and loses on BM25 for the same reason the division
+ * roll-calls lose to 12M Hansard sections (see the `debates` note above — this is that problem
+ * again, and the interleave is the mechanism that was identified as the fix).
+ *
+ * ⚠ THE COST IS A RETRIEVAL CALL PER STREAM PER QUERY. Five streams become eight against a
+ * `vector-serve` concurrency cap of 4 (S2C6 §4) and `LEX_STREAM_CONCURRENCY` of 3. That is why
+ * the flag is OFF and why §4 asks for a latency delta rather than a recall number alone.
+ *
+ * ⚠ DIVISIONS STAY OUT — a graph input, never text-searched (SEARCH_STRATEGY §3.3).
+ */
+export const STREAM_SCOPES_V2: StreamScope[] = [
+  // What the government PREDICTED an instrument would do. Corpus-scoped inside the legislation
+  // tier, with the display type as the backstop — the same belt-and-braces the committees stream
+  // uses, and for the same reason: a service that ignored `corpora` would otherwise return the
+  // whole tier as though it were impact assessments.
+  { name: 'impact-assessments', tier: 'legislation', types: ['IMPACT_ASSESSMENT'], corpora: ['impact-assessments'] },
+  // What the government ASKED, and what respondents said.
+  { name: 'consultations', tier: 'guidance', types: ['CONSULTATION'], corpora: ['consultations'] },
+  // What a provision was FOR — the department's own statement of purpose. Both collections, one
+  // stream: a user does not distinguish an explanatory note from an explanatory memorandum, and
+  // splitting them would spend two of the eight slots on one question.
+  { name: 'explanatory', tier: 'legislation', types: ['EXPLANATORY_NOTE'], corpora: ['explanatory-notes', 'explanatory-memoranda'] },
+]
+
+/**
+ * The scopes in force. Pure — the caller reads the flag, so this module keeps its
+ * runtime-dependency-free property and `corpus-reachability.ts` can still import it from outside
+ * the Next.js path alias.
+ */
+export function activeStreamScopes(v2: boolean): StreamScope[] {
+  return v2 ? [...STREAM_SCOPES, ...STREAM_SCOPES_V2] : STREAM_SCOPES
+}
 
 /**
  * Could `stream` return a row of this corpus, sitting under this INDEXED tier, displayed as this
