@@ -132,6 +132,145 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-B — THE DRAFT IS NOW RESEARCHED, REVISED AND READ BACK HOSTILELY, AND THE BUILD CAME OFF THE REQUEST PATH TO DO IT (2026-08-19 09:15 UTC)
+
+Executes `docs/BRIEF_25B.md` §0–§9. Report: **`docs/BUILD_25B_REPORT.md`**.
+`tsc` clean · **check:build-25b 42/42 with all 19 source-level negative controls firing** ·
+check:build-25a 40/40 (40 controls fired) · verify:build-25a-ui 37/37 · check:deepening,
+check:llm-guards, check:never-claim, check:flags, check:panel-claims all pass.
+**Live: four full seven-pass builds against the production FTS index. Cost ~28p total; a build is 5.6p.**
+
+⚠⚠ **THE DELIVERY CHECK FOUND THAT `/api/ideas/[id]/build` HAS NEVER BEEN COMMITTED — 25-A's BUILD
+ENDPOINT IS NOT IN THE REPOSITORY AND THEREFORE CANNOT BE ON PRODUCTION.** `git ls-files` returns
+nothing for it and `git log --all` shows it in no commit ever; it is not ignored, and `git add`
+accepts it. This is CLAUDE.md §20's incident-2/3 class **repeating on the same feature**: the
+`build/`-shaped ignore rule was anchored on 17 Aug and `app/ideas/build/` (the page) was added, and
+its sibling `app/api/ideas/[id]/build/` **was missed** — "confirm the file, not the pattern" is
+exactly the check that catches this, and it had not been run. 25-A's own deploy note verified the
+PAGE's redirect marker, which is a real check that could not possibly have caught a missing sibling
+endpoint behind the sign-in. **The route ships in this commit**; until now `/ideas/build` rendered,
+gated correctly, and every call it made to start a build would have 404ed.
+
+**§1 — one pass per request.** 25-A ran four passes in one 45–53s request; 25-B's research pass alone
+takes **153s** (198s with perspectives) and the whole build 214–275s against a Vercel `maxDuration`
+ceiling of 300 that no configuration raises. The poll response now carries `nextPass`, the client
+POSTs it back to the same endpoint, and **the server decides which pass runs from the stored log** —
+a client that could name the pass could re-run a completed one and double-charge. Cross-pass state
+moved from an in-memory accumulator to the pass log (`build-carry.ts`), because an accumulator does
+not survive a request boundary. ✅ **A 25-A four-pass row upgrades to seven with the completed passes
+intact and RESUMES**, rather than being stranded by the upgrade.
+⚠ **A limitation 25-A documented is now reversed:** it declared the brief's 15-minute hard stop
+unreachable, because a 900,000ms budget checked inside a function the platform kills at 300s is a
+guard that cannot fire. Elapsed is now measured from the row's stored `startedAt` **across** requests,
+so **`HARD_STOP_MS` is a real wall clock for the first time.**
+⚠ **The settle now RESUMES as well as fails**, and the two stalls are told apart by time: a PASS stuck
+longer than a pass can take was killed → reset to PENDING; a BUILD nothing has touched for far longer
+→ FAILED. ⚠ It also had to stop ageing builds off `startedAt` — right when a build was one request,
+and it **would have declared a healthy seven-pass build abandoned while it was still working.**
+
+⚠⚠ **§3's PREMISE ABOUT INTENTS IS WRONG, AND WORSE THAN THE BRIEF THOUGHT.** The brief says four
+intents "may not be routed yet". **`intent` never selects streams — for any caller.** There is not one
+`intent ===` branch anywhere in `lib/lex`, and `query-router.ts` is never handed it. SEARCH_CONTRACT
+§2 calls three intents "descriptive"; measured against the code, **every intent is.** So an `intents[]`
+field would have been decoration. **What changes retrieval is the query text**, so every library
+question owns a `terms()` builder and the guard fails any question that ships with bare draft terms.
+`retrievalStanding` has **no `routed` state at all**, because no caller would justify one.
+⚠ `EXISTING_POWER`, `CASE_INTERPRETATION` and `LINEAGE` are not in the intent union at all; they
+declare `wantedIntent`, run on `LEGAL_LANDSCAPE`, and **say the shortfall is a limit in our search
+rather than an absence of evidence.** No new intent strings were invented — SEARCH_CONTRACT §2 says
+that is a conversation with CC-Search.
+
+**§4/§5 — and the sentence the sprint exists for.** Live, on a private-rented-damp idea: 7 questions
+asked, **600 sources reviewed, 193 kept, 68 findings**, and pass 4 preserved the place the evidence
+moved it: *"I first concluded: primary legislation… The evidence says: regulations under an existing
+power may already reach this… This changes the instrument from primary to secondary legislation."*
+Contradictions are stored in the SAME evidence layer as `CONTRADICTS` rows with `sourceType`,
+`sourceId` and `citation` explicitly **null** — a revision's source is the research pass, and attaching
+a document citation to a reasoning step would be the never-claim breach the rest of the build refuses.
+⚠ **"A positive `EXISTING_POWER` finding visibly changes the instrument fork" is UNDEMONSTRATED and is
+reported as such, not passed** — the structured check returned `powerFound: false` on all runs, and it
+was right to (the powers found were narrow). The revision pass caught the point in prose each time, so
+the user saw it; the fork did not move.
+
+⚠⚠ **§6's STRONGER MODEL COULD NOT RUN AT ALL, AND NOBODY KNEW.** `gemini-2.5-pro` answers
+**400 — "Budget 0 is invalid. This model only works in thinking mode."** This codebase sets
+`thinkingBudget: 0` on every Gemini call (rightly — §19-D, where thinking ate three generators' output
+budgets), which **made `gemini-2.5-pro` unreachable through every one of our clients** while
+`model-registry.ts` listed it REACHABLE and MODEL_CONTRACT §5 recommended it for exactly this pass. **A
+capability we believed we had and did not.** Fixed in `lib/lex/model-thinking.ts`, with the output
+ceiling raised alongside — thinking tokens count against `maxOutputTokens`, so a thinking model on the
+flat budget truncates before it answers, which is §19-D arriving by the other door. ⚠ **Applied only to
+the adversarial caller**; the other five Gemini callers still cannot use pro, and that is recorded
+rather than half-fixed. **The comparison then ran on the SAME kernel** (two builds would compare drafts
+as well as models): both raised 7 issues — **a count would have shown no difference** — but pro cites
+the proposal's own findings by number against it, turns the user's own testimony into the mechanism's
+central weakness, and raises duplication against two named Acts. Default stays Flash.
+
+⚠⚠ **§7's CASE IS NOT SUPPORTED BY THE MEASUREMENT.** Same idea, same corpus, same day:
+**5.6p → 11.4p (2.04×) for 68 → 73 findings (+7%)**, 214s → 275s. The run reported *64 of 73 findings
+unique to one perspective* — 88% divergence — but **that figure is inflated by our own dedup key**,
+which includes the finding's wording, so two perspectives making the same point in different words
+count as two. **It should not be quoted.** A wording-proof denominator (`sourcesShared`/`sourcesTotal`)
+was added so the next run measures it properly. Flag-gated, OFF by default; the merge keeps and MARKS
+singletons, sorts them first, lets a CONTRADICTS reading survive a merge with a neutral one, and NAMES
+a perspective that failed rather than absorbing it.
+
+**§8 — and a real bug the first live run found.** The per-pass spend breakdown came out **737 tokens
+short of the build total** (11,750 vs 12,487): the closing summary call happens after the last pass and
+belonged to no pass. **A breakdown that does not sum to the total beside it is worse than none** — it
+invites trust in two numbers that disagree. Fixed and guarded. Research is **57% of the build's cost**
+(3.21p of 5.6p). ⚠ `REQUEST_BUDGET_MS` was very nearly shipped as a value that is reported and never
+read; the per-pass time and spend ceilings are now CHECKED on the research loop, which is the only one
+that can exceed a request, and hitting one **stops the pass, not the build.**
+✅ **The honesty paths were exercised hard by accident:** the first live run had no `FTS_SEARCH_URL`, so
+retrieval failed on every call and all eight questions produced **`search-broke` stated gaps** — "a
+failure in our search, not a finding about the corpus" — rather than reporting an empty corpus.
+
+**§2 — reuse.** One sift, one adversarial call, one gather, one evidence layer, one issues list, all
+the Deepening's; the guards assert each negative directly with a control that injects a duplicate.
+⚠ Two small modules (`evidence-layer.ts`, `model-thinking.ts`) hold rules that belong in `deepening.ts`
+and `model-registry.ts` — **both were mid-flight in the concurrent S8 sprint and import files not yet
+in the repository**, so folding into them would have put a file on `Main` whose import does not
+resolve: the §20 `build-cost.ts` incident exactly. The follow-up is named in each file's header.
+⚠ `check:model-registry` fails on `Main` for a reason that is **not this sprint's** — S8 emptied
+`KNOWN_STALE` after verifying `claude-haiku-4-5-20251001` live and its own control has not caught up.
+
+**Not done, and named:** no authed browser walk (the extension has no host permission for
+`localhost:3000` and this session has no Clerk session on production; the local Clerk is a DEV
+instance) — the new client-driven pass loop is therefore **not** covered by a browser test; the resume
+path was not exercised by an actual kill; and the runs were BM25-only, since this machine has no
+`LEX_VECTOR_STREAMS`.
+
+---
+
+## SEARCH S8 — PREDICTIONS, RECORDED BEFORE THE RUNS (2026-08-19 09:01 UTC)
+
+⚠ Written into the change log **before** either measurement was taken, per BRIEF_SEARCH_S8 §8
+("predict-measure-compare: §3 and §6 predictions written into the change log before the runs").
+Whatever the numbers turn out to be, these are the sentences they are scored against.
+
+**§3 — the framing harness, re-homed through `runSearch()`.** GOLD TEST 11 measured bare BM25
+against `corpus_fts` and got a floor of 8.1% recall, so **27 of 31 queries scored zero in both
+arms** and only 4 could have shown a difference in either direction. The brief's prediction, which
+I adopt: *with routing and fusion live, headroom should rise well above 4 of 31.* If it does not,
+the gold queries themselves are the next suspect, and that feeds §5.
+
+I add a second, sharper prediction of my own so the run can falsify something specific: **headroom
+reaches at least 20 of 31**, on the reasoning that the platform BM25 gold headline is ~62% against
+this harness's 8.1%, and a 7.6× recall difference should convert nearly all of the 27 zero-zero
+queries into scoreable ones. On the framing effect itself I predict **no significant difference**
+— caller-held context (the archetype's stream and kind) is thin next to what routing already does,
+and the router rewrites the query per stream anyway, which is the same intervention applied better.
+
+**§6 — concurrency 3 → 4.** Raising `LEX_STREAM_CONCURRENCY` to 4 should cut p50/p95 on
+five-stream questions by roughly the cost of one serialised batch wave, without pushing the
+vector/FTS services into the saturation the batching was built to prevent. Five streams at a cap
+of 3 takes two waves; at a cap of 4 it takes two waves as well (4 + 1), so **the saving should be
+smaller than a naive reading of "one wave" suggests** — I predict a real but modest p95 improvement
+rather than a step change, and I expect `maxInFlight` to reach 4 in the second arm (if it does not,
+the cap is not the binding constraint and the measurement is about something else).
+
+
 ## INGEST — NOTHING WAS WITHDRAWN, AND THE MISSING NAMES WERE ALREADY STORED (2026-08-17 22:52 UTC)
 
 Executes `docs/BRIEF_INGEST_CORPUS_FRESHNESS.md` §1 and §2. Report:
