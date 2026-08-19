@@ -132,6 +132,202 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## SEARCH S9 — THE STATISTICS CATALOGUE IS BUILT, AND TWO OF THE BRIEF'S THREE RESIDUALS WERE WRONG (2026-08-19 22:25 UTC)
+
+Executes `docs/BRIEF_SEARCH_S9.md` §1–§6 against `SEARCH_STRATEGY_v5.md` §6d.
+Report: **`docs/SEARCH_S9_REPORT.md`**. `check:s9-catalogue` **30/30 assertions with all 9
+self-test breaks firing**, `tsc` clean. **Cost ~£0.02** — 60 router calls across three
+measurement runs; no embedding, no index build, no heavy job.
+
+**What shipped.** The last unbuilt stream in the first-pass architecture. 5,733 official series
+from ONS, OBR, HMRC, HM Treasury PESA, the World Bank and the IMF are now discoverable through the
+router exactly as legislation or caselaw are (`LEX_STATS_STREAM`, **default OFF**, read through
+`flagEnabled`) — but **only the catalogue headings are indexed and the layer never returns a
+value.** `SeriesDescriptor` has no field an observation could travel in;
+`assertNoObservationValues()` re-checks that at the boundary on every call rather than trusting the
+type; and `stat_observation.value` appears nowhere in the catalogue SQL, which is the never-claim
+rule expressed as a query. The payload travels on `GatewayResult.statistics`, **not** in `results`,
+because a catalogue hit that renders like a corpus document invites Lex to quote it as evidence of
+a fact when it is only evidence that a *measurement exists* — the same structural separation that
+keeps `LegacySearchResult` and `EvidenceResult` apart. `SEARCH_CONTRACT.md` §2 and §3 updated in
+the same commit.
+
+⚠⚠ **THE BRIEF'S §3.2 RESIDUAL IS REFUTED: `sourceSeriesId` IS NULL ON ZERO ROWS**, not "a large
+minority" — 5,733 of 5,733 populated, backfilled on the ingest side since the 4 Aug snapshot that
+`series-key.ts`'s doc comment still quotes ("null for 2,925 of 3,404"). **But the conclusion drawn
+from it survives on different evidence, so nobody should now "simplify" the key:** the natural key
+without `seriesLabel` still collapses 5,733 series onto 4,427 tuples (**1,306 collide, 22.8%**),
+and `(datasetId, sourceSeriesId)` collides on 113 — because the distinguishing detail is *which
+department* and *which wellbeing band*, and that lives only in the label. `seriesKey` remains the
+only unique stable handle. ⚠ And **79% of `sourceSeriesId` is our own synthesised slug**
+(`derived:£PSCR (2)|March 2015`), so the field is no longer null and is still not provenance.
+
+⚠⚠ **THE BRIEF'S SECOND RESIDUAL IS ALSO WRONG, IN OUR FAVOUR.** §3.2 says licence terms "cannot
+express a per-vintage restriction". `StatSeries.commercialUseExcluded` — a nullable per-series
+override — has existed since 4 Aug for exactly the OECD 1-July-2024 terms change, and is **in use**:
+2,329 explicit `true`, 3,404 inheriting. Because `forecastVintage` is a series-level dimension, a
+per-vintage restriction on OBR forecast rounds is expressible too. What remains genuinely
+inexpressible is much narrower and is now stated precisely: a restriction that changes **part-way
+through one series' own time range**, for want of a per-observation licence column.
+
+✅ **THE LICENCE REGISTER NOW GATES RETRIEVAL RATHER THAN SITTING BESIDE IT.** 2,329 of 5,733
+series (**40.6%**, all IMF) are `commercialUseExcluded`, covering **40,351 of 80,443 observations —
+50.2%, half the store.** The filter runs on the row set **before scoring**, so a restricted series
+is never a candidate rather than being stripped from a ranked list; `searchCatalogue` **requires**
+an explicit `useContext` with no default parameter, so a caller that forgets does not compile; an
+unrecognised `STATS_USE_CONTEXT` falls to the *restrictive* branch; and the withheld count is
+logged on every call including zero. Measured: a query aimed at the restricted collection returns
+**10 restricted series when permitted and 0 when not**, over 5,733 vs 3,404 scored. ⚠ The break
+that matters asserts the permissive arm *does* reach them — "none in the commercial arm" would
+otherwise pass just as well if the query had never matched IMF at all, which is the vacuous-check
+failure class §3.3 itself names.
+
+✅ **§3.4 ANSWERED YES, AND THE CATALOGUE IS BARELY USABLE WITHOUT DERIVED HEADINGS.** COFOG
+function *name*, geography *name* and time *span* are all headings the source rows do not carry;
+all three are derived into the index. The forcing evidence: **2,807 of 5,733 series (49%) are
+labelled with the publisher's own column codes** — `PTT (November 2022)`, `NICS (October 2018)`,
+`PCDebtint (March 2022)`, `sa_nic2_4` — and PESA's 103 departmental series identify their function
+by a **bare number** (`Local Government — 03`), so the COFOG join is the only thing that makes them
+findable by subject. ⚠ Thirteen measure codes are glossed and **every gloss is corroborated from
+the store's own data** (`obr-psf-databank` carries the same quantities under long snake_case names,
+so the databank glosses the historical-forecast short codes); **codes with no corroborating long
+name are deliberately left unglossed rather than guessed** — an invented expansion puts words in a
+result the source never used, which is the same failure class as an invented figure.
+
+⚠⚠ **BOTH OF MY OWN PREDICTIONS WERE REFUTED, ONE IN EACH DIRECTION.** Recorded in
+`measure-s9-stats-stream.ts` before the first run. **(A)** I predicted the router would select
+`statistics` on 9 of 10 quantitative questions and named Q55 ("has anyone measured whether people
+are actually happier") as the miss; it selected **10/10**, including Q55, for which it wrote
+`UK happiness life satisfaction`. I was modelling the model as vaguer than it is. **(B)** I
+predicted **2 of 10** false positives on the S5 ten and named them in advance (sewage discharge;
+universal credit rollout); there were **0/10**. That is the number §5 says matters most — "a stream
+that fires on everything is worse than one that fires on nothing" — and the negative half of the
+prompt, stated first and at length with an explicit contrast, appears to be doing real work. ⚠ At
+n=1 per question, 0/10 is consistent with a true rate up to ~25% and is not proof of zero.
+
+⚠⚠ **TWO DEFECTS FOUND BY RUNNING IT, AND THE SECOND WAS CAUSED BY MY OWN FIX FOR THE FIRST.**
+(1) Unweighted, `datasetTitle` and `source` are identical on every row of a dataset — they move all
+those rows together while telling them apart not at all — so "income inequality Gini coefficient
+ONS time series" returned **Unemployment rate**: `ons` matched the dataset title *and* the source
+on all 44 ONS rows against one hit of `gini`. Fixed with field weights (`label` 3.0, `measure` 2.5,
+derived `gloss`/`cofog` 2.0, `dataset`/`source` damped to **0.4**). (2) Improving the router prompt
+to name the geography then **broke the negative control**: `UK NHS waiting list size number
+patients` returned **five plausible UK series** for a question the store cannot answer at all,
+because World Bank and IMF labels *begin with the country name* so `uk` matches the LABEL of
+thousands of rows at full weight. **One meaningless token manufactured five plausible hits.** That
+is the worst failure this stream can have — a statistics feature that answers "no" badly is worse
+than one that answers nothing, because the user cannot tell. Fixed with two structural floors: a
+hit must match an **identity** heading (matching only the container is not a hit) and must match at
+least one **discriminating** token (≤10% of the searched population). Q60 returns 0 again.
+
+⚠⚠ **THE A/B REGRESSION ARM COULD NOT ANSWER ITS QUESTION, AND AN EARLIER VERSION OF IT WAS
+SATURATED.** With the flag off vs on the corpus results were identical on only 1 of 10 and the
+flag-ON arm measured **931 ms faster** — both noise, because the router rewrites every stream's
+query with a fresh LLM call in each arm, so the arms differ before the flag does. ⚠ And the first
+run was worse: **`FTS_SEARCH_URL` is unset in the local `.env`**, so every corpus search returned
+**0 results in both arms** and the harness printed *"identical on 10/10"* — a saturated metric, not
+a null result, exactly the trap SEARCH_STRATEGY v5 §1 names. The rerun used the live service
+(`fts-serve-production.up.railway.app`, `/stats` → 200). **The question was then answered
+deterministically instead, and the answer is stronger than the A/B could have been:** holding the
+route fixed and adding only the `statistics` key gives `["guidance","legislation"]` both ways and
+**36 results with byte-identical `perStream`** — no LLM, no network variance, no arm, because
+`runRoutedSearch` matches route keys against `STREAM_SCOPES` and there is no scope of that name.
+
+⚠ **Retrieval quality: 8 of 10 plausible top hits, AND THAT IS NOT A RECALL FIGURE** — the
+questions are mine and are marked UNVALIDATED. It is reported because the two failures name a real
+mechanism: **a catalogue heading is ~5 words, so one incidental match dominates.** `international`
+is a literal token in the WDI label (`GDP per capita, PPP (current international $)`), and `income`
+is rarer in this store (df 12) than `gini` (df 21), so *income_tax* outranks the Gini index for a
+query about income inequality — the concept "income inequality" appearing nowhere in the World
+Bank's own label, which is just "Gini index". Three more of the same shape were fixed by cutting
+the statistics query instruction to three-to-six words: `Office Budget Responsibility` had matched
+*Home Office*, and `each year` had matched *Life expectancy at birth (years)*. **BM25 over
+five-word titles is a different retrieval problem from BM25 over documents.**
+
+⚠ **Latency:** catalogue retrieval **p50 3 ms, p95 7 ms** warm; the cold index build is
+**1.36–1.71 s** and lands on one request per process per 15-minute TTL. Added wall-clock on a
+routed query is ≈0 — it runs concurrently with corpus retrieval against a different database.
+
+**§1 — the gold candidates document is reviewable in one pass, and the order is on the record.**
+CC-Ingest wrote its ten case-law extracts **first** (22:54 UTC, file stable and verified over 12
+seconds); CC-Search restructured on top, mechanically, with assertions that refuse to write on any
+unexpected count, and **CC-Ingest's ten blockquotes are byte-for-byte identical afterwards**
+(verified by diff). Delivered: a single running number **Q1–Q60**, the archetype spelled out at
+every question, a one-line VERDICT slot, a progress index, and Q51–Q60 for statistics, every key
+read back from the live store. **No question, key or rationale was reworded.**
+
+⚠⚠ **AND THE RESTRUCTURE SURFACED THE SPRINT'S SHARPEST FINDING: FOUR OF THE TEN CASE-LAW KEYS ARE
+WRONG.** Reading CC-Ingest's extracts against the questions they sit under — **Q11** (public sector
+equality duty) and **Q17** (benefit caps) both point at `[2015] UKSC 21`, which is **R (Evans) v
+Attorney General**, the "black spider memos" FOI case; **Q18** (public authority duty of care)
+points at `[2018] UKSC 22`, **Newcastle upon Tyne Hospitals NHS FT v Haywood**, an employment
+notice case; **Q19** (climate targets) points at `[2020] UKSC 12`, **WM Morrison Supermarkets v
+Various Claimants**, vicarious liability for a data breach. Six are right (Miller, Uber, Cheshire
+West, UNISON, McCaughey, and the Phillips exact-pin control). **A 40% error rate on keys asserted
+from outside knowledge is the strongest evidence this file has produced**, and it is precisely the
+"implementer writing its own exam" failure SEARCH_STRATEGY v5 §5.2 names as the binding constraint
+on everything downstream. The four are **left in place and marked rather than deleted — deleting
+them would delete the finding** — and cannot be re-keyed from here, because nothing makes case law
+subject-searchable. ⚠ Every quality number this project has reported against case-law questions
+should be treated as provisional until Charlie's pass.
+
+❌ **Not done, named:** nothing here is validated, and no recall figure for statistics exists or is
+claimed · most of the 49% code-labelled series are still unglossed (13 of ~40) · two of ten probe
+top hits are wrong (Q53, Q59), mechanism named, unfixed · the A/B arm is unreadable at n=1 and is
+replaced by a narrower deterministic proof · `salvageRoute` does not recover `statistics` from a
+truncated payload (deliberate — a truncation should cost the side-rail before it costs
+`legislation`) · no `department` column, no per-observation licence, and `oecd-cofog-expenditure`
+is **registered with 0 series and 0 observations** and would appear silently the moment anyone
+ingests it (both raised to the stats thread, neither edited — §6) · the values path is unscored ·
+`FTS_SEARCH_URL` is still unset in the local `.env`, so every future local recall harness will
+silently measure zero unless it is passed explicitly.
+
+---
+
+## INGEST NAMES — PREDICTIONS, RECORDED BEFORE THE SWEEPS RAN (2026-08-19 22:04 UTC)
+
+Executes `docs/BRIEF_INGEST_NAMES.md`. Written from the §1.1 and §2.1 audits and BEFORE any
+backfill statement was issued, so the numbers below can be scored rather than rationalised
+(standing rule: predict-measure-compare).
+
+**§1 — case-law titles (`tna-caselaw`, 74,896 rows, 0 titled today).**
+`FRBRname` was present in 100 of 100 deterministically sampled judgments' stored AKN XML, so:
+
+1. **≥ 99.5% of the 74,896 rows get a title**, i.e. at most ~375 misses.
+2. **≥ 99.9% of recovered titles come by route `source`**; `parsed:v1` fires on **fewer than 50**
+   rows. If the parsed route fires on more than a few hundred, my read of the source is wrong.
+3. **0 citation-shaped rejects** — the source never publishes a bare citation as `FRBRname`.
+4. Hand-reading 30 recovered titles against their judgment text: **≥ 29 of 30 correct.**
+
+**§1.1 coverage prediction, now measured rather than predicted:** the brief's §0 says "every court
+judgment we hold has a blank title". That is TRUE OF `tna-caselaw` AND OF NOTHING ELSE —
+`et-decisions` 100.0%, `scottish-courts` 99.9%, `echr-hudoc` 100%, `cma-cases` 94.0%,
+`ni-judgments` 98.0%, `tax-tribunals` 92.3% already carry one. The premise is corrected in the
+report rather than carried.
+
+**§2 — committee attribution.**
+
+5. **`committees-reports`: 303,354 of 344,773 rows (88.0%) can be attributed with NO fetch at all**
+   — `notes` already holds a JSON blob carrying `committeeName`, written by the V32 API ingest.
+   I predict **~87% of rows attributed**, the shortfall being the 8,302 `Government Response`
+   rows, which are the GOVERNMENT'S text and must NOT be attributed to the committee.
+6. **`committees-evidence` written (126,509 rows): ≥ 90% attributed** from the committees API's
+   `witnesses[]`, split roughly **60/40 organisation/individual**.
+7. **`committees-evidence` oral (15,806 rows): ≥ 85% carry a session witness list**, and **0%
+   carry per-speech attribution** — we store one row per whole transcript, so who said a given
+   sentence is not recoverable without a granularity change. Scoped OUT, and named.
+8. **End-to-end (§2.3): three committee questions through the platform's own search will return
+   results carrying a name on ≥ 50% of committee hits** — lower than the store rate because the
+   role phrasing lives in a search-owned file this sprint does not edit.
+
+⚠ Cost of the chosen §2 route, measured before committing to it: the committees API's unwindowed
+`WrittenEvidence` listing **HTTP 500s** (33.6 s, twice), the month-windowed listing serves 100
+items in ~4.7 s, and per-item detail averages 157 ms at concurrency 4. So the sweep is metadata
+only — ~1.7 h of listing pages, versus re-fetching 508 million words of document text, which is
+the route NOT taken.
+
+---
+
 ## LEX AMENDMENT_25B — THE BUILD ENDPOINT WAS NEVER IN THE REPOSITORY, AND THAT IS WHY NOBODY COULD START A BUILD (2026-08-19 21:45 UTC)
 
 Executes `docs/AMENDMENT_25B.md` §A–§D and §C4, which supersede `BRIEF_25B.md` where they differ.

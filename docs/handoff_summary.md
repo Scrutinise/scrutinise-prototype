@@ -2,7 +2,8 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-19 21:45 UTC — ▼ **LEX 25-B + AMENDMENT: `/ideas/build` WAS DOWN BECAUSE ITS API ROUTE HAD NEVER BEEN COMMITTED — `app/api/ideas/[id]/build/route.ts` appears in no commit on any branch, ever. Third file-not-in-the-repository outage in a week, second on this feature. Fixed, verified live, and `check:committed` now makes the class impossible. The build itself now researches the draft against a 9-question interrogation library, revises it, and keeps the contradictions — "I first concluded primary legislation; the evidence says an existing power may already reach this" — then reads the whole thing back as a hostile clerk. 7 passes, 214s, 5.6p. ⚠ §3's premise is wrong: `intent` never selects streams for ANY caller. ⚠ §7 multi-perspective DOUBLED the cost for 7% more findings. ⚠ `gemini-2.5-pro` was unreachable through every Gemini client we have. ▶ CHARLIE: the worker is built and proven (closed-tab test 9/9) but needs a Railway service + `LEX_BUILD_DRIVER=worker` in Vercel — see `docs/BUILD_WORKER_DEPLOY.md`.**
+*Last updated: 2026-08-19 22:25 UTC — ▼ **SEARCH S9: THE STATISTICS CATALOGUE IS BUILT — 5,733 official series discoverable through the router, and the layer STRUCTURALLY CANNOT RETURN A NUMBER. Two of the brief's three residuals were refuted (`sourceSeriesId` is null on ZERO rows, not a large minority; the per-vintage licence restriction it says is inexpressible already has a column and is in use). The licence register now GATES retrieval — 40.6% of series, half the observations, filtered before scoring. ⚠⚠ Both my predictions were refuted, one each way: 10/10 selection where I predicted 9, and 0/10 false positives where I predicted 2. ⚠⚠ MY OWN FIX BROKE THE NEGATIVE CONTROL MID-SPRINT — "UK NHS waiting list" returned five plausible UK series for a question the store cannot answer, because World Bank labels BEGIN with the country name. Fixed with two relevance floors. ⚠⚠ AND FOUR OF THE TEN CASE-LAW GOLD KEYS ARE WRONG, exposed by CC-Ingest's extracts. ▶ CHARLIE: `docs/GOLD_CANDIDATES_S8.md` is now one-pass reviewable, Q1–Q60.**
+Earlier: 2026-08-19 21:45 UTC — ▼ **LEX 25-B + AMENDMENT: `/ideas/build` WAS DOWN BECAUSE ITS API ROUTE HAD NEVER BEEN COMMITTED — `app/api/ideas/[id]/build/route.ts` appears in no commit on any branch, ever. Third file-not-in-the-repository outage in a week, second on this feature. Fixed, verified live, and `check:committed` now makes the class impossible. The build itself now researches the draft against a 9-question interrogation library, revises it, and keeps the contradictions — "I first concluded primary legislation; the evidence says an existing power may already reach this" — then reads the whole thing back as a hostile clerk. 7 passes, 214s, 5.6p. ⚠ §3's premise is wrong: `intent` never selects streams for ANY caller. ⚠ §7 multi-perspective DOUBLED the cost for 7% more findings. ⚠ `gemini-2.5-pro` was unreachable through every Gemini client we have. ▶ CHARLIE: the worker is built and proven (closed-tab test 9/9) but needs a Railway service + `LEX_BUILD_DRIVER=worker` in Vercel — see `docs/BUILD_WORKER_DEPLOY.md`.**
 Earlier: 2026-08-19 17:09 UTC — ▼ **GRAPH 3A: the position graph has a factual layer — 2.32M signals, 2.30M estimates, no model anywhere in it, and the ten highest-confidence records it produces are the Labour left, found from nothing but who voted against their own party. ⚠⚠ The free-vote heuristic finds every assisted dying and hunting division and NONE of the abortion ones — because the abortion divisions we hold are whipped NI Regulations, not conscience votes. ⚠⚠ Amendment sponsorship and committee membership have NO SOURCE DATA at all.**
 Earlier: 2026-08-19 09:35 UTC — ▼ **SEARCH S8: the first-pass search infrastructure is finished. FOUR of eight sections reversed a premise — the two "non-existent" fallback models both return HTTP 200 (one is silently substituted), attribution exists everywhere EXCEPT the committees collection it was built for, and raising stream concurrency to 4 makes five-stream questions WORSE because 4 is exactly vector-serve's width.**
 Earlier: 2026-08-17 23:12 UTC — ▼ **SEARCH S7: the carried backlog is cleared. Twice the
@@ -31,6 +32,77 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-19 22:25 UTC — ▼ **SEARCH S9 IS COMPLETE: THE STATISTICS CATALOGUE IS BUILT, ROUTED AND
+FLAG-GATED — THE LAST UNBUILT STREAM IN THE FIRST-PASS ARCHITECTURE.** Executes
+`docs/BRIEF_SEARCH_S9.md` §1–§6. Report: **`docs/SEARCH_S9_REPORT.md`**.
+CHANGE_LOG (2026-08-19 22:25 UTC). `check:s9-catalogue` **30/30 with all 9 self-test breaks
+firing**, `tsc` clean. **Cost ~£0.02** (60 router calls; no embedding, no index build, no heavy job).
+
+✅ **5,733 official series — ONS, OBR, HMRC, PESA, World Bank, IMF — are discoverable through the
+router exactly as legislation is (`LEX_STATS_STREAM`, default OFF), and the layer STRUCTURALLY
+CANNOT RETURN A NUMBER.** Only catalogue headings are indexed; `stat_observation.value` appears
+nowhere in the SQL; `SeriesDescriptor` has no field a value could travel in, and
+`assertNoObservationValues()` re-checks that at the boundary on every call. The payload travels on
+`GatewayResult.statistics`, **not** in `results`, so a catalogue heading can never be quoted as
+evidence of a fact — it is evidence a *measurement exists*. `SEARCH_CONTRACT.md` §2/§3 updated in
+the same commit.
+
+⚠⚠ **TWO OF THE BRIEF'S THREE RESIDUALS WERE WRONG.** `sourceSeriesId` is null on **zero** rows,
+not "a large minority" (the ingest side backfilled it since the 4 Aug snapshot the code comment
+still quotes) — **but do not simplify the key**: the natural key without `seriesLabel` still
+collides on 1,306 series (22.8%), so `seriesKey` remains the only unique stable handle, and 79% of
+`sourceSeriesId` is our own synthesised slug rather than provenance. And the per-vintage licence
+restriction the brief says cannot be expressed **already has a column and is in use** (2,329
+explicit overrides); what is genuinely inexpressible is only a restriction changing part-way
+through one series' own time range.
+
+✅ **THE LICENCE REGISTER GATES RETRIEVAL RATHER THAN SITTING BESIDE IT.** 2,329 of 5,733 series
+(40.6%, all IMF) are restricted — **50.2% of all observations, half the store.** Filtered on the
+row set *before* scoring, so a restricted series is never a candidate; `useContext` is required
+with no default, so a caller that forgets does not compile; an unrecognised value fails to the
+restrictive branch; the withheld count is logged every call. ⚠ The load-bearing break asserts the
+permissive arm *does* reach 10 of them — otherwise "none in the commercial arm" would pass just as
+well if the query had never matched IMF.
+
+⚠⚠ **BOTH PREDICTIONS REFUTED, ONE IN EACH DIRECTION.** Recorded before the run. The router
+selected statistics on **10/10** quantitative questions where I predicted 9 (and named the wrong
+miss). It selected it on **0/10** legal/evidential questions where I predicted 2 and named them —
+that is the number §5 says matters most.
+
+⚠⚠ **MY OWN FIX BROKE THE NEGATIVE CONTROL MID-SPRINT.** Telling the router to name the geography
+made "UK NHS waiting list" return **five plausible UK series** for a question the store cannot
+answer at all — because World Bank and IMF labels *begin with the country name*, so `uk` matches
+the LABEL of thousands of rows. **One meaningless token manufactured five plausible hits.** Fixed
+with two structural floors (an identity-heading match, and a discriminating term ≤10% of the
+population). Also fixed: dataset title and publisher, identical on every row of a dataset, were
+outranking each row's own identity — "Gini coefficient" returned *Unemployment rate*.
+
+⚠ **THE A/B REGRESSION ARM IS UNREADABLE and an earlier version of it was SATURATED** — the router
+re-rolls every query per arm, and `FTS_SEARCH_URL` is unset locally so the first run compared 0
+results against 0 and printed "identical on 10/10". Replaced by a deterministic proof that is
+stronger than the A/B could be: adding `statistics` to a fixed route gives byte-identical
+`perStream` over 36 results.
+
+⚠ **Retrieval quality 8/10 plausible top hits — NOT a recall figure** (the questions are mine and
+UNVALIDATED). The two failures name a real mechanism: a heading is ~5 words, so one incidental
+token dominates (`international` matched *GDP per capita, PPP (current international $)*).
+
+▶ **CHARLIE: `docs/GOLD_CANDIDATES_S8.md` is now one-pass reviewable — Q1–Q60, one VERDICT line
+each.** ⚠⚠ **Four of the ten case-law keys are WRONG** (Q11, Q17, Q18, Q19), exposed by
+CC-Ingest's extracts: `[2015] UKSC 21` is *R (Evans) v Attorney General*, not an equality-duty or
+benefit-cap case. Left in place and marked — **deleting them would delete the finding**, which is a
+40% error rate on keys asserted from outside knowledge and the sharpest evidence yet for
+SEARCH_STRATEGY §5.2.
+▶ **CHARLIE (Vercel, unreadable from here):** `LEX_STATS_STREAM` stays OFF until Q51–Q60 are
+validated; set `STATS_USE_CONTEXT=non-commercial` explicitly.
+⚠ No browser walk was possible from here (no localhost host permission, no Clerk session on
+production) and none is claimed — what to click is named in the report.
+
+❌ **Not done:** nothing validated, no recall figure claimed · 27 of ~40 code-labelled measure
+families still unglossed (and **a gloss will not be invented** — same failure class as an invented
+figure) · Q53 and Q59 top hits wrong · no `department` column and `oecd-cofog-expenditure` holds
+**0 series** (both raised to the stats thread, neither edited) · the values path is unscored.
 
 2026-08-19 17:09 UTC — ▼ **GRAPH 3A IS COMPLETE: THE POSITION GRAPH HAS A FACTUAL LAYER — 2,317,523
 signals and 2,304,748 estimates, built from votes, EDM signatures, witness appearances and declared
