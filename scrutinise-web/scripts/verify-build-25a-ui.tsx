@@ -56,7 +56,7 @@ function view(over: Partial<BuildView> = {}): BuildView {
       tokensIn: i === 0 ? 120000 : 0, tokensOut: i === 0 ? 5000 : 0,
       pence: i === 0 ? 4.2 : null,
     })),
-    nextPass: 'DIAGNOSIS', resumable: true,
+    nextPass: 'DIAGNOSIS', resumable: true, workerLate: false,
     forks: [],
     ...over,
   }

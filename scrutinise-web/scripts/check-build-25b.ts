@@ -34,6 +34,7 @@ import {
 } from '../lib/lex/build-carry'
 import { mergePerspectives, divergenceLine, type PerspectiveRun } from '../lib/lex/build-perspectives'
 import { priceBuild } from '../lib/lex/build-cost'
+import { humaniseSeconds, MIN_SAMPLE, EMAIL_OFFER_SECONDS } from '../lib/lex/build-estimate'
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8')
 
@@ -56,6 +57,8 @@ const FILES = [
   'lib/lex/build-carry.ts',
   'lib/lex/build-research.ts',
   'lib/lex/build-perspectives.ts',
+  'lib/lex/build-estimate.ts',
+  'scripts/build-worker.ts',
   'lib/lex/build-client.ts',
   'lib/lex/build-settle.ts',
   'lib/lex/build-cost.ts',
@@ -672,6 +675,208 @@ const CHECKS: Check[] = [
       ...src,
       'lib/lex/build.ts': src['lib/lex/build.ts'].replace(/adversarial reading did not complete/g, 'ok'),
     }),
+  },
+
+  // ═══ AMENDMENT_25B §B — THE WORKER ═══════════════════════════════════════
+  {
+    name: '§B the web request ENQUEUES and runs nothing under the worker driver',
+    run: (src) => {
+      const route = src['app/api/ideas/[id]/build/route.ts']
+      if (!/buildDriver\(\) === 'client'/.test(route)) {
+        return 'the route runs a pass unconditionally, so the request still does the work'
+      }
+      const build = src['lib/lex/build.ts']
+      return /if \(buildDriver\(\) === 'worker'\)[\s\S]{0,400}return created\.id/.test(build)
+        ? null
+        : 'claimBuild still claims the row to RUNNING, so the worker will never see it queued'
+    },
+    break: (src) => ({
+      ...src,
+      'app/api/ideas/[id]/build/route.ts': src['app/api/ideas/[id]/build/route.ts']
+        .replace(/buildDriver\(\) === 'client'/g, 'true'),
+    }),
+  },
+  {
+    name: '§B the worker loop reads the STORED LOG, not the client-facing nextPass',
+    run: (src) => {
+      const build = src['lib/lex/build.ts']
+      // ⚠ THIS GUARD ENCODES A BUG THE CLOSED-TAB TEST CAUGHT ON 19 AUG. The first
+      // version of runBuildToCompletion looped on `view.nextPass`, which is deliberately
+      // NULL under the worker driver so a browser never drives a pass the worker owns —
+      // so the worker ran exactly ONE pass and reported "stopped cleanly". The two
+      // questions ("should the client ask for another" and "is there another") are not
+      // the same question, and the engine must ask the second.
+      const fn = build.slice(build.indexOf('export async function runBuildToCompletion'))
+      const body = fn.slice(0, fn.indexOf('\n}\n') + 3)
+      if (/while\s*\(\s*view\.nextPass/.test(body)) {
+        return 'the worker loop conditions on view.nextPass, which is null under the worker driver — it will run one pass and stop'
+      }
+      return /nextPassKey\(readPassLog/.test(body)
+        ? null
+        : 'the loop does not read the stored pass log, so it cannot know whether work remains'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/build.ts': src['lib/lex/build.ts'].replace(
+        /const remaining = async[\s\S]*?\n  \}\n/,
+        'const remaining = async () => null\n',
+      ).replace(/while \(next && guard/, 'while (view.nextPass && guard'),
+    }),
+  },
+  {
+    name: '§B a build cannot sit QUEUED for ever when no worker exists',
+    run: (src) => {
+      const build = src['lib/lex/build.ts']
+      // ⚠ THE FAILURE THE ARCHITECTURE CREATES. Enqueue-and-return means that with no
+      // worker running — unprovisioned, crash-looping, paused on a usage limit — the row
+      // sits at QUEUED and nothing ever happens, which is strictly worse than the design
+      // it replaced. The page must take it over, and must SAY it has.
+      if (!/workerLate/.test(build)) return 'nothing detects a build the worker never picked up'
+      if (!/WORKER_PICKUP_GRACE_MS/.test(build)) return 'there is no grace period, so the fallback would race a healthy worker'
+      const route = src['app/api/ideas/[id]/build/route.ts']
+      // And the handover must be one-way: claim it off the queue before driving it, or a
+      // worker starting up later takes the same build.
+      return /claimQueuedBuild\(latest\.id\)/.test(route)
+        ? null
+        : 'the page drives a QUEUED build without claiming it, so a worker could take it too'
+    },
+    break: (src) => ({
+      ...src,
+      'app/api/ideas/[id]/build/route.ts': src['app/api/ideas/[id]/build/route.ts']
+        .replace(/claimQueuedBuild\(latest\.id\)/g, 'true'),
+    }),
+  },
+  {
+    name: '§B a build is SERIAL inside itself, so one build is one search in flight',
+    run: (src) => {
+      const research = src['lib/lex/build-research.ts']
+      // §B's concurrency warning: the vector service handles four at once. A build that
+      // fanned its questions out in parallel would be 9 searches from one user.
+      if (/Promise\.all\([\s\S]{0,200}questions/.test(research)) {
+        return 'the research pass fans its questions out in parallel'
+      }
+      return /for \(const q of questions\)/.test(research)
+        ? null
+        : 'the research pass no longer walks its questions one at a time'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/build-research.ts': src['lib/lex/build-research.ts']
+        .replace('for (const q of questions) {', 'await Promise.all(questions.map(async (q) => {'),
+    }),
+  },
+
+  // ═══ AMENDMENT_25B §C/§C4 — TELLING THE USER, AND THE ESTIMATE ═══════════
+  {
+    name: '§C4 the estimate EXCLUDES builds that did not finish',
+    run: (src) => {
+      const est = src['lib/lex/build-estimate.ts']
+      return /status: 'DONE'/.test(est)
+        ? null
+        : 'the estimate is taken over builds that failed, so a run of early failures would report "about a minute"'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/build-estimate.ts': src['lib/lex/build-estimate.ts'].replace(/status: 'DONE',/g, ''),
+    }),
+  },
+  {
+    name: '§C4 below the floor it says it does not know, rather than quoting a mean',
+    run: () => {
+      if (MIN_SAMPLE < 2) return `MIN_SAMPLE is ${MIN_SAMPLE} — one build would set the estimate`
+      return MIN_SAMPLE >= 5 ? null : `MIN_SAMPLE is ${MIN_SAMPLE}, below the five the brief asks for`
+    },
+  },
+  {
+    name: '§C4 the figure is rounded to something a human says',
+    run: () => {
+      // "About 7 minutes", not "6.8 minutes".
+      const cases: Array<[number, string]> = [
+        [45, 'about a minute'],
+        [408, 'about 7 minutes'],      // 6.8 minutes
+        [409, 'about 7 minutes'],
+        [1020, 'about 15 minutes'],    // 17 → nearest 5
+      ]
+      for (const [secs, want] of cases) {
+        const got = humaniseSeconds(secs)
+        if (got !== want) return `${secs}s rendered as "${got}", expected "${want}"`
+      }
+      // And no decimal ever reaches the user.
+      for (const s of [61, 100, 250, 500, 1000, 2000]) {
+        if (/\d+\.\d/.test(humaniseSeconds(s))) return `${s}s produced false precision: ${humaniseSeconds(s)}`
+      }
+      return null
+    },
+  },
+  {
+    name: '§C4 the email is offered on length, and not for a short build',
+    run: () => {
+      if (EMAIL_OFFER_SECONDS < 60) return `the offer threshold is ${EMAIL_OFFER_SECONDS}s — it would offer for everything`
+      return EMAIL_OFFER_SECONDS <= 300 ? null : `the threshold is ${EMAIL_OFFER_SECONDS}s, so a long build would never offer`
+    },
+  },
+  {
+    name: '§C4 the choice is frozen on the build row, not read from the user at send time',
+    run: (src) => {
+      const build = src['lib/lex/build.ts']
+      if (!/notifyEmail: wantsEmail/.test(build)) return 'the choice is not stored on the build row'
+      // The send path must read the ROW's flag. Reading the user's preference there would
+      // make a change in another tab retroactive to a build already running.
+      return /if \(!row\.notifyEmail\) return/.test(build)
+        ? null
+        : 'the send path does not gate on the row, so the preference would be retroactive'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/build.ts': src['lib/lex/build.ts'].replace(/if \(!row\.notifyEmail\) return/g, 'if (false) return'),
+    }),
+  },
+  {
+    name: '§C4 a build that stopped early emails too',
+    run: (src) => {
+      const build = src['lib/lex/build.ts']
+      // notifyByEmail is called from settleBuild, which is every terminal path — DONE,
+      // FAILED and CANCELLED alike. Only telling people about success is how someone
+      // waits ten minutes for something that stopped after two.
+      return /await notifyByEmail\(row, status\)/.test(build)
+        ? null
+        : 'the email is not sent from the one place every terminal path goes through'
+    },
+    break: (src) => ({
+      ...src,
+      'lib/lex/build.ts': src['lib/lex/build.ts']
+        .replace('await notifyByEmail(row, status)', "if (status === 'DONE') await notifyByEmail(row, status)")
+        .replace(/await notifyByEmail\(row, status\)/, 'noop()'),
+    }),
+  },
+  {
+    name: '§C the notification fires on an observed TRANSITION, never on what was found',
+    run: (src) => {
+      const client = src['app/ideas/build/BuildIdeaClient.tsx']
+      if (!/lastStatusRef/.test(client)) return 'nothing tracks the previous status, so opening a finished build would notify'
+      return /const wasRunning =/.test(client) && /if \(!wasRunning \|\| !hasFinished\) return/.test(client)
+        ? null
+        : 'the notification does not require a running-to-finished transition'
+    },
+    break: (src) => ({
+      ...src,
+      'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
+        .replace('if (!wasRunning || !hasFinished) return', 'if (!hasFinished) return'),
+    }),
+  },
+  {
+    name: '§C the permission is NOT requested on page load',
+    run: (src) => {
+      const client = src['app/ideas/build/BuildIdeaClient.tsx']
+      // A prompt before the user has asked for anything gets dismissed, and a dismissal is
+      // permanent — `Notification.permission` becomes "denied" and cannot be asked again.
+      const start = client.indexOf('const startBuild = useCallback')
+      const idx = client.indexOf('Notification.requestPermission')
+      if (idx < 0) return 'the permission is never requested at all'
+      return idx > start
+        ? null
+        : 'requestPermission is called outside startBuild — a prompt on load is dismissed and cannot be re-asked'
+    },
   },
 
   // ═══ Passes as configuration ═════════════════════════════════════════════
