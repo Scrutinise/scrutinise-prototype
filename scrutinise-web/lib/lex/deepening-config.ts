@@ -15,6 +15,7 @@
 
 import type { SearchIntent } from './search-gateway'
 import type { SearchResultType } from './page1-config'
+import type { JobKey } from './deepening-jobs'
 
 export type PassKey = 'EVIDENCE_PRECEDENT' | 'LEGAL' | 'FINANCIAL' | 'POLITICAL_RISK'
 
@@ -33,6 +34,26 @@ export interface PassDef {
   training: string
   /** The gather's retrieval intents, in the order they run. */
   intents: SearchIntent[]
+  /**
+   * S8 §1 — STRUCTURED RETRIEVAL JOBS this pass runs, beside the intents.
+   *
+   * ⚠ A SECOND AXIS, NOT A LONGER `intents` LIST, and the difference is what S8's audit found.
+   * An INTENT takes keywords, goes through `runSearch()`, and produces candidates for the sift.
+   * A JOB takes an instrument or a query and produces a RENDERED BLOCK — a group, an ordering, a
+   * refusal — that a flat candidate list would destroy. `retrievePrecedent()` does not touch the
+   * gateway at all; it is a keyed `$queryRaw` over three collections. Expressing it as an intent
+   * would run a general search and call it a precedent.
+   *
+   * ⚠ AND `PRECEDENT` / `DEVOLUTION_SCOPE` APPEAR IN BOTH LISTS ON PURPOSE. The intent makes the
+   * pass's general retrieval legible in the logs and in what it records it searched (they are
+   * DESCRIPTIVE at the gateway and select no streams); the job is what actually assembles the
+   * artefact. Removing the intent would change no retrieval; removing the job would silently
+   * restore the built-but-unwired state S8 §1 exists to end.
+   *
+   * Jobs are configuration in the same sense passes are: `deepening.ts` iterates this array and
+   * knows no job key, exactly as it iterates `PASSES` and knows no pass key.
+   */
+  jobs?: JobKey[]
   /**
    * The method block handed to the model for this pass — what to look for, what counts
    * as a finding, and what counts as an issue. The engine adds the never-claim rules and
@@ -94,6 +115,12 @@ export const PASSES: PassDef[] = [
       'what the measure was for, what it was predicted to cost and achieve, and what actually ' +
       'happened. Expect it to find gaps — a gap named is a strength, not a failure.',
     intents: ['CAUSAL_EVIDENCE', 'PRECEDENT', 'LEGAL_LANDSCAPE'],
+    // S8 §1. This pass's own method already asks for the triangulation — "what the measure was
+    // FOR / what it was PREDICTED to do / what actually HAPPENED" — and until now it asked the
+    // MODEL to assemble it out of a flat candidate list. The job assembles it deterministically
+    // from the collections that hold each leg, which is the difference between a comparison and
+    // three documents that happen to be adjacent.
+    jobs: ['PRECEDENT'],
     method: [
       'You are assembling EVIDENCE and PRECEDENTS for a UK policy proposal.',
       '',
@@ -152,6 +179,13 @@ export const PASSES: PassDef[] = [
       'legislation or could be done by regulation. The last question matters most — if a Minister can ' +
       'already act, your proposal may not need a new law at all.',
     intents: ['LEGAL_LANDSCAPE', 'DEVOLUTION_SCOPE'],
+    // S8 §1. `mustAnswer` already carries "Is the subject reserved or devolved, and to which
+    // legislature?", and the honest answer to it is not one this retrieval can give — so the job
+    // shows WHO HAS LEGISLATED, jurisdiction-labelled from each document's own identifier, and
+    // names the three schedules that actually decide the question. Extending this pass rather
+    // than adding a fifth: splitting "what law does this touch" from "which parliament can make
+    // it" would give the user two cards for one question they experience as one.
+    jobs: ['DEVOLUTION_SCOPE'],
     method: [
       'You are mapping the LEGAL LANDSCAPE of a UK policy proposal.',
       '',

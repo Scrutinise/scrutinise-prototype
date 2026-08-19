@@ -1,0 +1,803 @@
+[verify-s8-deepening] retrieval configuration OK — [config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured
+[config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured
+MAX_INSTRUMENTS = 3
+
+(node:21604) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+anchor instrument: ukpga/1999/17 — Disability Rights Commission Act 1999(repealed)
+
+── seeding two harness ideas ──
+   seeded f4a2d7a3-7b37-408a-8e0d-988f17e6fb47 WITH a real IdeaLegislation link → ukpga/1999/17
+   seeded 126342ca-6ffc-40b2-aeda-afa32ea12c2b with NO instrument link
+
+════ EVIDENCE_PRECEDENT on the idea WITH an instrument ════
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:1/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 7787 }
+[search-gateway] router dispatched {
+  intent: 'CAUSAL_EVIDENCE',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 100,
+    debates: 100,
+    committees: 100,
+    caselaw: 100,
+    guidance: 100
+  }
+}
+[search-gateway] result {
+  intent: 'CAUSAL_EVIDENCE',
+  results: 500,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:2/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 5831 }
+[search-gateway] router dispatched {
+  intent: 'PRECEDENT',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 100,
+    debates: 100,
+    committees: 100,
+    caselaw: 100,
+    guidance: 100
+  }
+}
+[search-gateway] result {
+  intent: 'PRECEDENT',
+  results: 500,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:3/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 7519 }
+[search-gateway] router dispatched {
+  intent: 'LEGAL_LANDSCAPE',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 100,
+    debates: 100,
+    committees: 100,
+    caselaw: 100,
+    guidance: 100
+  }
+}
+[search-gateway] result {
+  intent: 'LEGAL_LANDSCAPE',
+  results: 500,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening:sift] truncated — [deepening-sift] cut off at maxOutputTokens=8000 — raise the budget or shorten the input …ends: " 2001, indicating implementation challenges.\",\n      \"isPrecedent\": false\n    },"
+[deepening] sift skipped — sift truncated
+[deepening] candidates {
+  passKey: 'EVIDENCE_PRECEDENT',
+  retrieved: 1500,
+  deduped: 562,
+  kept: 562,
+  skipped: true
+}
+[deepening-jobs] PRECEDENT instruments {
+  passKey: 'EVIDENCE_PRECEDENT',
+  instruments: [
+    'ukpga/1999/17 (linked-to-this-idea)',
+    'uksi/2006/3189 (retrieved-and-kept-by-the-sift)',
+    'uksi/1999/2210 (retrieved-and-kept-by-the-sift)'
+  ]
+}
+[deepening] job {
+  passKey: 'EVIDENCE_PRECEDENT',
+  job: 'PRECEDENT',
+  written: 1,
+  detail: '1 group(s) from 3 instrument(s); 2 held no explanatory note, impact assessment or review (uksi/2006/3189, uksi/1999/2210)',
+  skipped: null
+}
+[deepening:adversarial] { raised: 6, findingsRead: 24, model: 'gemini-2.5-flash' }
+[deepening] issues {
+  passKey: 'EVIDENCE_PRECEDENT',
+  adversarial: true,
+  raised: 6,
+  gatherWouldHaveRaised: 2
+}
+   outcome: status=RUN findings=25 issues=8 knownUnknowns=4
+   job PRECEDENT: written=1 detail=1 group(s) from 3 instrument(s); 2 held no explanatory note, impact assessment or review (uksi/2006/3189, uksi/1999/2210)
+   read back from Neon: 25 evidence row(s), 1 of them from a job
+
+   ── stored row [PRECEDENT_GROUP] status=PROPOSED kind=PRECEDENT
+      title: Intended, predicted, observed — Disability Rights Commission Act 1999(repealed)
+      body:
+        PRECEDENT FOR Disability Rights Commission Act 1999(repealed) — intended, predicted, observed:
+        - [INTENDED] Explanatory Notes: ukpga/1999/17 (1)
+            what the provision was FOR — the department's own statement of purpose, laid alongside it
+        
+        ⚠ no impact assessment is held for this instrument; NO POST-IMPLEMENTATION REVIEW EXISTS for this instrument — nobody has published an assessment of whether it worked. Say so plainly. Do NOT substitute what was PREDICTED for what was OBSERVED — a prediction is not an outcome.
+        
+        (this instrument is linked to your idea)
+  PASS  ⚠ the linked instrument produced a stored PRECEDENT group  — 1 group(s)
+  PASS     …whose body is the intended/predicted/observed GROUP, not a ranked list
+  PASS     …and carries no rank numbering
+  PASS     …stored PROPOSED, so the user judges it
+  PASS     …and states HOW the instrument was identified
+  PASS  ⚠⚠ the LINKED-instrument path produced a group — the strongest source works end to end
+  PASS  ⚠⚠ the "nobody has checked whether this worked" sentence IS in real stored output
+  PASS     …with the instruction never to substitute the prediction for the outcome
+  PASS  every stored row is PROPOSED or REJECTED — nothing auto-ACCEPTED  — PROPOSED
+
+════ LEGAL on the idea WITH an instrument ════
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:4/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 6564 }
+[search-gateway] router dispatched {
+  intent: 'LEGAL_LANDSCAPE',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 100,
+    debates: 100,
+    committees: 100,
+    caselaw: 100,
+    guidance: 100
+  }
+}
+[search-gateway] result {
+  intent: 'LEGAL_LANDSCAPE',
+  results: 500,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:5/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 7897 }
+[search-gateway] router dispatched {
+  intent: 'DEVOLUTION_SCOPE',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 100,
+    debates: 100,
+    committees: 100,
+    caselaw: 100,
+    guidance: 100
+  }
+}
+[search-gateway] result {
+  intent: 'DEVOLUTION_SCOPE',
+  results: 500,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening:sift] { reviewed: 646, kept: 76, discarded: 570, precedents: 6 }
+[deepening] candidates {
+  passKey: 'LEGAL',
+  retrieved: 1000,
+  deduped: 646,
+  kept: 76,
+  skipped: false
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,caselaw,guidance totals=full:6/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 72,
+  vector: 72,
+  fused: 72,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'caselaw',
+  tier: 'caselaw',
+  corpora: null,
+  extraCorpora: null,
+  bm25: 72,
+  vector: 72,
+  fused: 72,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 72,
+  vector: 72,
+  fused: 72,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 5, cap: 3, maxInFlight: 3, ms: 7726 }
+[search-gateway] router dispatched {
+  intent: 'DEVOLUTION_SCOPE',
+  streams: [ 'legislation', 'debates', 'committees', 'caselaw', 'guidance' ],
+  perStream: {
+    legislation: 72,
+    debates: 72,
+    committees: 72,
+    caselaw: 72,
+    guidance: 72
+  }
+}
+[search-gateway] result {
+  intent: 'DEVOLUTION_SCOPE',
+  results: 360,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening] job {
+  passKey: 'LEGAL',
+  job: 'DEVOLUTION_SCOPE',
+  written: 1,
+  detail: '24 results across 3 jurisdiction(s): unknown 17 · UK-wide 4 · Northern Ireland 3',
+  skipped: null
+}
+[deepening] precedent downgraded — source fails the precedent test {
+  passKey: 'LEGAL',
+  sourceId: 'pwdata-wrans:answers2005-01-24a:147',
+  title: "DRC's role in supporting legal action"
+}
+[deepening] 1 finding(s) downgraded from PRECEDENT { passKey: 'LEGAL' }
+[deepening:adversarial] { raised: 6, findingsRead: 8, model: 'gemini-2.5-flash' }
+[deepening] issues {
+  passKey: 'LEGAL',
+  adversarial: true,
+  raised: 6,
+  gatherWouldHaveRaised: 2
+}
+   outcome: status=RUN findings=9 issues=8 knownUnknowns=6
+   job DEVOLUTION_SCOPE: written=1 detail=24 results across 3 jurisdiction(s): unknown 17 · UK-wide 4 · Northern Ireland 3
+   read back from Neon: 9 evidence row(s), 1 of them from a job
+
+   ── stored row [DEVOLUTION_SCOPE] status=PROPOSED kind=FINDING
+      title: Who has legislated on this — unknown 17 · UK-wide 4 · Northern Ireland 3
+      body:
+        WHO HAS LEGISLATED: unknown 17 · UK-wide 4 · Northern Ireland 3
+        
+        - [unknown] Explanatory Notes — Disability Rights Commission Act 1999(repealed)
+            "2. The notes need to be read in conjunction with the Act. They are not, and are not meant to be, a comprehensive description of the Act. So where a section or part of a section does not seem to requir"
+        - [UK-wide] The Disability Rights Commission Act 1999 (Commencement No.3) Order 2006
+            "The Disability Rights Commission Act 1999 (Commencement No.3) Order 2006 article 2 Commencement of whole Act 2 The day appointed for the commencement of the Disability Rights Commission Act 1999, so f"
+        - [unknown] Equality Act 2010 (Amendment) (Disabled Access) Bill [HL] - Second Reading
+            "My Lords, it is an honour to follow the noble Baroness, Lady Deech. I commend her and her committee for their excellent report on the Equality Act 2010 and disability. I declare an interest as a membe"
+        - [unknown] Women and Equalities — Equality and Human Rights Commission
+            "Q (Mr Charles Walker): To ask the Minister for Women and Equalities, what information she holds on (a) the position of Disability Commissioner, (b) the appointment of a Disability Commissioner and (c)"
+        - [unknown] Report: Mental Capacity Act 2005: post-legislative scrutiny - Report — Mental Capacity Act 2005 Committee — MENTAL CAPACITY ACT 2005: POST-LEGISLATIVE SCRUTINY 31
+            "53 Select Committee on Public Service and Demographic Change, Ready for Ageing? (1st Report, Session 2012-13, HL Paper 140): http://www.parliament.uk/business/committees/committees-a-z/lordsselect/pub"
+        - [unknown] Report: 2nd Report - Review of select committee activity and proposals for new committee activity — Liaison Committee (Lords) — SECOND REPORT FROM THE LIAISON COMMITTEE 3 — ¶4
+            "4. There are currently five House of Lords investigative sessional committees: • The European Union Committee 1 Leader’s Group on Working Practices, Report of the Leader’s Group on Working Practices ("
+        - [Northern Ireland] In the matter of an application by Peter Neill for Judicial Review
+            "1 Neutral Citation No. [2006] NICA 5 Ref: KERF5507 Judgment: approved by the Court for handing down Delivered: 08/03/2006 (subject to editorial corrections) IN HER MAJESTY’S COURT OF APPEAL IN NORTHER"
+        - [Northern Ireland] In the matter of an application by the Northern Ireland Human Rights Commission for judicial review
+            "1 Neutral Citation no. (2000) 2159 Ref: CARC3301 Judgment: approved by the Court for handing down Delivered: 08/12/00 (subject to editorial corrections) IN THE HIGH COURT OF JUSTICE IN NORTHERN IRELAN"
+        - [unknown] Equality Act 2010: code of practice on employment - Draft
+            "DRAFT Code of Practice – Employment Code ________________________________________________________ 1 DRAFT EQUALITY ACT 2010 CODE OF PRACTICE ON EMPLOYMENT DRAFT Code of Practice – Employment Code ____"
+        - [unknown] Draft code of practice for employers: avoiding unlawful discrimination while preventing illegal working
+            "Draft V2.0 Code of practice for employers Avoiding unlawful discrimination while preventing illegal working [xx] April 2014 Presented to Parliament pursuant to section 23(1) of the Immigration, Asylum"
+        - [UK-wide] The Disability Rights Commission Act 1999 (Commencement No. 1 and Transitional Provision) Order 1999
+            "The Disability Rights Commission Act 1999 (Commencement No. 1 and Transitional Provision) Order 1999 article 2 Commencement of provisions concerning the Disability Rights Commission 2 The following pr"
+        - [unknown] Queen’s Speech - Debate (6th Day) (Continued)
+            "My Lords, I intend to focus my remarks on an important subject that transcends the policy areas covered by today’s debate: disability equality. Some noble Lords may have heard that I have a new status"
+        - [unknown] Report: 1st Report - Sessional report 2014-15 — Constitution Committee — 8 SESSIONAL REPORT 2014–15
+            "• Similarly, the Serious Crimes Bill included measures recommended in pre-legislative scrutiny. In this case, provisions relating to restraint orders and sanctions for non-payment of confiscation orde"
+        - [unknown] tna-caselaw
+            ""
+        - [unknown] Equality Act 2010: code of practice on services, public functions associations - Draft
+            "DRAFT Code of Practice – Services, Public Functions and Associations Code ________________________________________________________ 1 DRAFT EQUALITY ACT 2010 CODE OF PRACTICE ON SERVICES, PUBLIC FUNCTI"
+        - [UK-wide] Equality Act 2006
+            "Equality Act 2006 schedule 3 paragraph 59 59 The Disability Rights Commission Act 1999 shall cease to have effect."
+        - [unknown] Women and Equalities — Equality and Human Rights Commission
+            "Q (Heidi Allen): To ask the Minister for Women and Equalities, whether the Equality and Human Rights Commission's Disability Advisory Committee was (a) consulted and (b) informed in advance of the abo"
+        - [unknown] Report: 16th Report - Legislative Scrutiny: Terrorism Prevention and Investigation Measures Bill (Drawing special attention to: Terrorism Prevention and Investigation Measures Bill) — Human Rights (Joint Committee) — 60 Legislative Scrutiny: Terrorism Prevention and Investigation Measures Bill
+            "60 Legislative Scrutiny: Terrorism Prevention and Investigation Measures Bill Third Report Legislative Scrutiny: Financial Services Bill and the Pre-Budget Report HL Paper 184/HC 184 Fourth Report Leg"
+        - [unknown] tna-caselaw
+            "EWCA-Civil 2010 875 [2010] EWCA Civ 875 0.26.10 82066c63d8ceaac4b682acdebe573f2af0e32ea09c834ad51806196ac55968fe 6.0.2 #judgment { font-family: 'Times New Roman'; font-size: 12pt; } #judgment .Normal "
+        - [unknown] Prevention of illegal working: guidance for employers on the avoidance of unlawful discrimination
+            "PREVENTION OF ILLEGAL WORKING IMMIGRATION, ASYLUM AND NATIONALITY ACT 2006 GUIDANCE FOR EMPLOYERS ON THE AVOIDANCE OF UNLAWFUL DISCRIMINATION IN EMPLOYMENT PRACTICE WHILE SEEKING TO PREVENT ILLEGAL WO"
+        - [UK-wide] Equality Act 2006
+            "Equality Act 2006 section 8 Equality and diversity 8 1 The Commission shall, by exercising the powers conferred by this Part— a promote understanding of the importance of equality and diversity, b enc"
+        - [unknown] Race, Sex and Disability Commissions
+            "My Lords, I have been involved with the subject for 40 years, I am afraid. I strongly welcome the commitment to the Government's proposal. In addition to considering the case for a single Equality Com"
+        - [unknown] Report: 1st report - Work of the Committee in 2008-09 (Government Response to the Committee's Second Report of 2009-10; Legislative Scrutiny (Finance Bills and Academies Bill)) — Human Rights (Joint Committee) — Other retrospective measures
+            "Work of the Committee in 2008–09: Government Response to the Committee’s Second Report of Session 2009–10; Legislative Scrutiny (Finance Bills and Academies Bills) 25 List of Reports from the Committe"
+        - [Northern Ireland] Tweed and Others Application for Judicial Review
+            "1 Neutral Citation No. [2005] NICA 42 Ref: MORF5333 Judgment: approved by the Court for handing down Delivered: 07/09/2005 (subject to editorial corrections) IN HER MAJESTY’S COURT OF APPEAL IN NORTHE"
+        
+        ⚠ Each item below is labelled with the parliament or assembly that made it. This shows WHO HAS LEGISLATED on the subject, which is evidence — it is NOT a ruling on whether the subject is reserved or devolved. That question is settled by Schedule 5 to the Scotland Act 1998, Schedule 7A to the Government of Wales Act 2006 and Schedules 2 and 3 to the Northern Ireland Act 1998. Never tell a user a matter is devolved or reserved on the strength of what this search returned; say what the pattern shows and name the schedule that decides it.
+  PASS  the devolution row leads with WHO HAS LEGISLATED
+  PASS     …and every item is jurisdiction-labelled
+  PASS  ⚠⚠ …and the stored body REFUSES the reservation question
+  PASS     …naming all three schedules that actually decide it
+  PASS     …and carries precedentTestPassed NULL, not false ("not assessed" ≠ "assessed and failed")
+  PASS  ⚠⚠ …and the block honours its limit — the 577-line body defect stays fixed  — 24 rendered items (cap 24)
+  PASS  every stored row is PROPOSED or REJECTED — nothing auto-ACCEPTED  — PROPOSED
+
+════ EVIDENCE_PRECEDENT on the idea WITHOUT an instrument ════
+[query-router] route_outcome=full streams=legislation,debates,committees,guidance totals=full:7/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 4, cap: 3, maxInFlight: 3, ms: 9070 }
+[search-gateway] router dispatched {
+  intent: 'CAUSAL_EVIDENCE',
+  streams: [ 'legislation', 'debates', 'committees', 'guidance' ],
+  perStream: { legislation: 100, debates: 100, committees: 100, guidance: 100 }
+}
+[search-gateway] result {
+  intent: 'CAUSAL_EVIDENCE',
+  results: 400,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,guidance totals=full:8/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 4, cap: 3, maxInFlight: 3, ms: 8298 }
+[search-gateway] router dispatched {
+  intent: 'PRECEDENT',
+  streams: [ 'legislation', 'debates', 'committees', 'guidance' ],
+  perStream: { legislation: 100, debates: 100, committees: 100, guidance: 100 }
+}
+[search-gateway] result {
+  intent: 'PRECEDENT',
+  results: 400,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,guidance totals=full:9/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 4, cap: 3, maxInFlight: 3, ms: 8103 }
+[search-gateway] router dispatched {
+  intent: 'LEGAL_LANDSCAPE',
+  streams: [ 'legislation', 'debates', 'committees', 'guidance' ],
+  perStream: { legislation: 100, debates: 100, committees: 100, guidance: 100 }
+}
+[search-gateway] result {
+  intent: 'LEGAL_LANDSCAPE',
+  results: 400,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening:sift] truncated — [deepening-sift] cut off at maxOutputTokens=8000 — raise the budget or shorten the input …ends: "edent\": false\n    },\n    {\n      \"id\": \"pwdata-lordswrans:lordswrans2021-12-09:1"
+[deepening] sift skipped — sift truncated
+[deepening] candidates {
+  passKey: 'EVIDENCE_PRECEDENT',
+  retrieved: 1200,
+  deduped: 564,
+  kept: 564,
+  skipped: true
+}
+[deepening-jobs] PRECEDENT instruments {
+  passKey: 'EVIDENCE_PRECEDENT',
+  instruments: [
+    'ukpga/2012/23 (retrieved-and-kept-by-the-sift)',
+    'ukpga/2017/1 (retrieved-and-kept-by-the-sift)',
+    'ukpga/1969/38 (retrieved-and-kept-by-the-sift)'
+  ]
+}
+[deepening] job {
+  passKey: 'EVIDENCE_PRECEDENT',
+  job: 'PRECEDENT',
+  written: 1,
+  detail: '1 group(s) from 3 instrument(s); 2 held no explanatory note, impact assessment or review (ukpga/2017/1, ukpga/1969/38)',
+  skipped: null
+}
+[deepening:adversarial] { raised: 7, findingsRead: 24, model: 'gemini-2.5-flash' }
+[deepening] issues {
+  passKey: 'EVIDENCE_PRECEDENT',
+  adversarial: true,
+  raised: 7,
+  gatherWouldHaveRaised: 3
+}
+   outcome: status=RUN findings=25 issues=9 knownUnknowns=4
+   job PRECEDENT: written=1 detail=1 group(s) from 3 instrument(s); 2 held no explanatory note, impact assessment or review (ukpga/2017/1, ukpga/1969/38)
+   read back from Neon: 25 evidence row(s), 1 of them from a job
+
+   ── stored row [PRECEDENT_GROUP] status=PROPOSED kind=PRECEDENT
+      title: Intended, predicted, observed — Small Charitable Donations Act 2012
+      body:
+        PRECEDENT FOR Small Charitable Donations Act 2012 — intended, predicted, observed:
+        - [INTENDED] Explanatory Notes: ukpga/2012/23 (1)
+            what the provision was FOR — the department's own statement of purpose, laid alongside it
+        
+        ⚠ no impact assessment is held for this instrument; NO POST-IMPLEMENTATION REVIEW EXISTS for this instrument — nobody has published an assessment of whether it worked. Say so plainly. Do NOT substitute what was PREDICTED for what was OBSERVED — a prediction is not an outcome.
+        
+        (this instrument was found by the search for your idea and kept as relevant — it is not something you have told us your proposal amends)
+  PASS  an idea with no linked instrument writes a group only if retrieval identified one
+  PASS  every stored row is PROPOSED or REJECTED — nothing auto-ACCEPTED  — PROPOSED
+
+════ LEGAL on the idea WITHOUT an instrument ════
+[query-router] route_outcome=full streams=debates,committees,guidance totals=full:10/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[search-gateway] router dispatched {
+  intent: 'LEGAL_LANDSCAPE',
+  streams: [ 'debates', 'committees', 'guidance' ],
+  perStream: { debates: 100, committees: 100, guidance: 100 }
+}
+[search-gateway] result {
+  intent: 'LEGAL_LANDSCAPE',
+  results: 300,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[query-router] route_outcome=full streams=legislation,debates,committees,guidance totals=full:11/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'legislation',
+  tier: 'legislation',
+  corpora: null,
+  extraCorpora: [ 'bills-api' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 100,
+  vector: 100,
+  fused: 100,
+  weight: 0.5
+}
+[query-router] streams batched { streams: 4, cap: 3, maxInFlight: 3, ms: 7705 }
+[search-gateway] router dispatched {
+  intent: 'DEVOLUTION_SCOPE',
+  streams: [ 'legislation', 'debates', 'committees', 'guidance' ],
+  perStream: { legislation: 100, debates: 100, committees: 100, guidance: 100 }
+}
+[search-gateway] result {
+  intent: 'DEVOLUTION_SCOPE',
+  results: 400,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening:sift] truncated — [deepening-sift] cut off at maxOutputTokens=8000 — raise the budget or shorten the input …ends: "arch-into-public-trust-in-charities-and-trustees-experience-of-their-role-2022:3"
+[deepening] sift skipped — sift truncated
+[deepening] candidates {
+  passKey: 'LEGAL',
+  retrieved: 700,
+  deduped: 544,
+  kept: 544,
+  skipped: true
+}
+[query-router] route_outcome=full streams=debates,committees,guidance totals=full:12/partial:0/failed:0/disabled:0
+[query-router] per-stream fusion {
+  stream: 'guidance',
+  tier: 'guidance',
+  corpora: null,
+  extraCorpora: [ 'erskine-may' ],
+  bm25: 72,
+  vector: 72,
+  fused: 72,
+  weight: 0.5
+}
+[search-gateway] router dispatched {
+  intent: 'DEVOLUTION_SCOPE',
+  streams: [ 'debates', 'committees', 'guidance' ],
+  perStream: { debates: 72, committees: 72, guidance: 72 }
+}
+[search-gateway] result {
+  intent: 'DEVOLUTION_SCOPE',
+  results: 216,
+  failed: false,
+  reason: null,
+  repealed: 0,
+  repealLookup: 'ok'
+}
+[deepening] job {
+  passKey: 'LEGAL',
+  job: 'DEVOLUTION_SCOPE',
+  written: 1,
+  detail: '24 results across 1 jurisdiction(s): unknown 24',
+  skipped: null
+}
+[deepening] gather truncated — [deepening-gather] cut off at maxOutputTokens=8000 — raise the budget or shorten the input …ends: "  \"kind\": \"FINDING\",\n      \"title\": \"The Further and Higher Education (Scotland)"
+   outcome: status=FAILED findings=1 issues=0 knownUnknowns=4 failureReason=The analysis step failed after retrieval succeeded
+   job DEVOLUTION_SCOPE: written=1 detail=24 results across 1 jurisdiction(s): unknown 24
+   read back from Neon: 1 evidence row(s), 1 of them from a job
+
+   ── stored row [DEVOLUTION_SCOPE] status=PROPOSED kind=FINDING
+      title: Who has legislated on this — unknown 24
+      body:
+        WHO HAS LEGISLATED: unknown 24
+        
+        - [unknown] Village Halls
+            "I thank the Minister for that. Another problem with the Countryside Agency is its rather rigid definition of services—it will fund only services, and that does not include the basic structure of the h"
+        - [unknown] CULTURE MEDIA AND SPORT — National Lottery
+            "Q (Mark Prisk): To ask the Secretary of State for Culture, Media and Sport which village halls and community centres have benefited from Lottery funding in the Hertford and Stortford constituency sinc"
+        - [unknown] Report: 6th Report - Rural Communities - Volume II (Volume II - additional written evidence) — Environment, Food and Rural Affairs Committee
+            "2. CCN's 36 member councils, with over 2500 councillors, serve 46% of the population across 85% of England. This includes the overwhelming majority of rural England. CCN therefore welcomes the inquiry"
+        - [unknown] Report: 6th Report - Rural Communities - Volume II (Volume II - additional written evidence) — Environment, Food and Rural Affairs Committee
+            "cobber Pack: U PL: COE1 [E]Processed: [23-07-2013 16:04] Job: 028246 Unit: PG01 Source: /MILES/PKU/INPUT/028246/028246_w026_Steve RC 038 - Pitchup.com.xml Ev w42 Environment, Food and Rural Affairs Co"
+        - [unknown] Village halls: answers to some common questions
+            "Guidance Village halls: answers to some common questions December 2010 (new format February 2017) 1 of 4 Village halls: answers to some common questions Contents Why is a village hall charitable? 1 Wh"
+        - [unknown] Village halls and community centres (RS9)
+            "Village Halls and Community Centres• The Charity Commission is the independent regulator for charitable activity. This is one of a series of reports that draws upon independent research that we have c"
+        - [unknown] CULTURE MEDIA AND SPORT — Lottery Funds (Village Halls)
+            "Q (David Cameron): To ask the Secretary of State for Culture, Media and Sport how many representations she has received about the case for village halls to win an appropriate share of Lottery funds; a"
+        - [unknown] Report: 6th Report - Rural Communities - Volume II (Volume II - additional written evidence) — Environment, Food and Rural Affairs Committee
+            "cobber Pack: U PL: COE1 [O]Processed: [23-07-2013 16:04] Job: 028246 Unit: PG01 Source: /MILES/PKU/INPUT/028246/028246_w026_Steve RC 038 - Pitchup.com.xml Environment, Food and Rural Affairs Committee"
+        - [unknown] Village halls: answers to some common questions
+            "This guidance covers aspects of running a charity that are specific to village halls. Why is a village hall charitable? A village hall is a charitable community facility that is available to the publi"
+        - [unknown] CULTURE MEDIA AND SPORT — Community Fund
+            "Q (Andrew Rosindell): To ask the Secretary of State for Culture, Media and Sport what recent discussions she has had with the Community Fund on funding for village halls. A (Estelle Morris): My right "
+        - [unknown] Report: 6th Report - Rural Communities - Volume II (Volume II - additional written evidence) — Environment, Food and Rural Affairs Committee — ¶16
+            "16. It is evident from the discussions at the Exchange Group forum how difficult the challenge will be for rural businesses and communities to benefit from the next round of structural funds and EAFRD"
+        - [unknown] Villages halls and community centres: summary
+            "RS 9a-Village Halls and Community Centres Summary IIn nt tr ro od du uc ct ti io on n The Government recognises that villagehalls, community centres and othercharities that provide space and facilitie"
+        - [unknown] CULTURE MEDIA AND SPORT — Lottery Funding
+            "Q (Peter Ainsworth): To ask the Secretary of State for Culture, Media and Sport what plans she has to improve access to Lottery funds for village hall projects. A (Richard Caborn): We have asked Lotte"
+        - [unknown] Report: Report of Session 2017-19 - Time for a strategy for the rural economy — Rural Economy Committee — 9. How can deprivation and inequality in rural areas be tackled?
+            "230TIME FOR A STRATEgY FOR THE RURAL ECOnOMY OrganisationPriorities Skills Advisory Panels Address careers guidance, provide guidance on pathways, identify ways to connect rural businesses and educati"
+        - [unknown] Village halls and community centres (RS9)
+            "Commission research shows how village hall and community centre charities are changing. The research also highlights the issues they face to try and meet the ever changing community. Successful halls "
+        - [unknown] Department for Culture, Media and Sport — Loneliness: Rural Areas
+            "Q (Simon Hoare): To ask the Secretary of State for Culture, Media and Sport, what steps she is taking to help tackle loneliness in rural areas. A (Stephanie Peacock): This Government is committed to i"
+        - [unknown] Report: 8th Report - The National Planning Policy Framework - Volume II (Volume II: Additional written evidence) — Housing, Communities and Local Government Committee
+            "cobber Pack: U PL: CWE1 [E]Processed: [19-12-2011 15:46] Job: 016786 Unit: PG01 Ev w94Communities and Local Government Committee: Evidence 5.5 The relationship between the NPPF and local plans is far "
+        - [unknown] Village halls: answers to some common questions
+            "A village hall is a charitable community facility that is available to the public in a particular area for community-related recreational activities. This guidance covers aspects of running a charity "
+        - [unknown] Department for Digital, Culture, Media and Sport — Music: Licensed Premises
+            "Q (Alex Sobel): To ask the Secretary of State for Digital, Culture, Media and Sport, what funding his Department has allocated to support the sustainability of independent music venues in rural commun"
+        - [unknown] Report: Report of Session 2017-19 - Time for a strategy for the rural economy — Rural Economy Committee
+            "141TIME FOR A STRATEgY FOR THE RURAL ECOnOMY Box 23: Rural arts: The Rural Diversity Network Arts Council England cited The Rural Diversity network (RDn) as an example of good practice in rural arts. "
+        - [unknown] Use of church halls for village hall and other charitable purposes (CC18)
+            "What is this guidance about? This guidance explains what to do when a church hall is no longer needed, or only needed occasionally for church purposes. It covers situations including when: there is no"
+        - [unknown] CULTURE, MEDIA AND SPORT — Live Theatre
+            "Does my hon. Friend share my concern that the organisations that take theatre to village halls in rural communities are disproportionately hit in the Arts Council review? Many are losing 100% of their"
+        - [unknown] Report: 6th Report - Rural Communities - Volume II (Volume II - additional written evidence) — Environment, Food and Rural Affairs Committee
+            "6. “Evidence of an Overwhelming Urban Bias in Arts and Cultural Funding” 6.1 To try and overcome some of these problems the RCF decided to commission an Independent Study Report (ISR) from John Holden"
+        - [unknown] Charity Commission guidance
+            "Search all guidance Search all of the Charity Commission’s guidance ‘5-minute guides’ for charity trustees Short guidance on the basics all trustees need to know: Charity purposes and rules Making dec"
+        
+        ⚠ Each item below is labelled with the parliament or assembly that made it. This shows WHO HAS LEGISLATED on the subject, which is evidence — it is NOT a ruling on whether the subject is reserved or devolved. That question is settled by Schedule 5 to the Scotland Act 1998, Schedule 7A to the Government of Wales Act 2006 and Schedules 2 and 3 to the Northern Ireland Act 1998. Never tell a user a matter is devolved or reserved on the strength of what this search returned; say what the pattern shows and name the schedule that decides it.
+  PASS  the devolution row leads with WHO HAS LEGISLATED
+  PASS     …and every item is jurisdiction-labelled
+  PASS  ⚠⚠ …and the stored body REFUSES the reservation question
+  PASS     …naming all three schedules that actually decide it
+  PASS     …and carries precedentTestPassed NULL, not false ("not assessed" ≠ "assessed and failed")
+  PASS  ⚠⚠ …and the block honours its limit — the 577-line body defect stays fixed  — 24 rendered items (cap 24)
+  PASS  every stored row is PROPOSED or REJECTED — nothing auto-ACCEPTED  — PROPOSED
+
+harness ideas hard-deleted: f4a2d7a3-7b37-408a-8e0d-988f17e6fb47, 126342ca-6ffc-40b2-aeda-afa32ea12c2b
+
+════ all 25 checks pass ════
+[config] fts=fts-serve-production.up.railway.app vector=vector-serve-production.up.railway.app streams=legislation,caselaw,guidance router=ON fully-configured

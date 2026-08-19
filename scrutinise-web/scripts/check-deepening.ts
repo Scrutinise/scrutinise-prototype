@@ -42,6 +42,10 @@ const ENGINE = 'lib/lex/deepening.ts'
 const CLIENT = 'lib/lex/deepening-client.ts'
 const CONFIG = 'lib/lex/deepening-config.ts'
 const SETTLE = 'lib/lex/deepening-settle.ts'
+// S8 §1 — the structured retrieval jobs. A Deepening module, so it is bound by every invariant
+// in this file, starting with "no canonical-field write".
+const JOBS = 'lib/lex/deepening-jobs.ts'
+const RETRIEVAL = 'lib/lex/deepening-retrieval.ts'
 const PANEL = 'components/lex/DeepeningPanel.tsx'
 const ROUTES = [
   'app/api/ideas/[id]/deepening/route.ts',
@@ -49,7 +53,7 @@ const ROUTES = [
   'app/api/ideas/[id]/deepening/evidence/[evidenceId]/route.ts',
   'app/api/ideas/[id]/deepening/issues/[issueId]/route.ts',
 ]
-const ALL_MODULES = [ENGINE, CLIENT, CONFIG, SETTLE, ...ROUTES]
+const ALL_MODULES = [ENGINE, CLIENT, CONFIG, SETTLE, JOBS, RETRIEVAL, ...ROUTES]
 
 console.log('THE DEEPENING (§22 Pilot A) — acceptance criteria\n')
 
@@ -199,7 +203,7 @@ ok('Team-reviewed / Published are NOT offered as labels yet (§22.4 and §20.3 u
 
 // ── 9. a fifth pass is configuration ─────────────────────────────────────────
 console.log('\n§4 — adding a fifth pass is configuration, not construction')
-const NON_CONFIG = [ENGINE, CLIENT, SETTLE, PANEL, ...ROUTES]
+const NON_CONFIG = [ENGINE, CLIENT, SETTLE, JOBS, PANEL, ...ROUTES]
 for (const key of PASS_KEYS) {
   const named = NON_CONFIG.filter((f) => new RegExp(`['"\`]${key}['"\`]`).test(code(f)))
   ok(`${key} is not hardcoded outside the config`, named.length === 0, named.join(', '))
@@ -359,6 +363,188 @@ ok('a non-array object → []', readKnownUnknowns({ question: 'x' }).length === 
 ok('entries without a question are dropped', readKnownUnknowns([{ why: 'no question' }]).length === 0)
 ok('a well-formed entry survives with its why',
   readKnownUnknowns([{ question: 'q', why: 'w' }])[0]?.why === 'w')
+
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// S8 §1 — PRECEDENT AND DEVOLUTION_SCOPE ARE WIRED, AND THE CONSTRAINTS SURVIVED THE WIRING
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// §1 lists five constraints that "must survive the wiring, asserted in checks". Each one below
+// is a RULE plus a MUTATION CONTROL: the same predicate is re-run against a copy of the source
+// with the rule deliberately broken, and the check fails if that copy still passes.
+//
+// ⚠ THE CONTROL IS THE POINT. docs/CLAUDE.md's standing note — "a guard that cannot fail is not
+// a guard" — was written after existence-only markers and verifies with no I/O passed for weeks.
+// A source grep with a typo in it passes silently forever; running it against a broken copy is
+// the cheapest way to watch it fail before trusting it to pass.
+console.log('\n════ S8 §1 — the two S7 jobs are wired, and their constraints held ════')
+
+const jobsSrc = code(JOBS)
+const retrievalSrc = read(RETRIEVAL)
+
+/** Assert a predicate over source, AND that it fails on a mutated copy. */
+function ruleWithControl(
+  label: string, src: string, rule: (s: string) => boolean, breakIt: (s: string) => string,
+) {
+  ok(label, rule(src))
+  const mutated = breakIt(src)
+  ok(`   …and that assertion FAILS on a copy with the rule broken (control)`,
+    mutated !== src && !rule(mutated),
+    mutated === src ? 'the mutation changed nothing — the control is inert' : 'the rule passed on a broken copy')
+}
+
+// ── wired at all ─────────────────────────────────────────────────────────────
+console.log('\nwired — the state S7 shipped in was "built and nothing calls them"')
+ok('the two S7 jobs now have a caller',
+  /retrievePrecedent\(/.test(jobsSrc) && /retrieveDevolutionScope\(/.test(jobsSrc))
+ok('the engine runs a pass\'s declared jobs', /for \(const jobKey of def\.jobs \?\? \[\]\)/.test(engine))
+// ⚠ THE BLUNT VERSION OF THIS ASSERTION WAS WRONG, and it failed on correct code before it was
+// fixed — which is the second-best outcome after being right. `!/'PRECEDENT'/.test(engine)` fires
+// on the PRECEDENT-DOWNGRADE logic (§19-E Task 3), where `'PRECEDENT'` is an `EvidenceKind` and
+// has nothing to do with a job key. Two different things spelled the same way.
+//
+// What actually matters is that the engine never BRANCHES ON WHICH JOB it is running. So: no
+// comparison of a job-shaped variable against a literal, and no mention of `DEVOLUTION_SCOPE`,
+// which is unambiguously a job key and has no other meaning in this file.
+const JOB_BRANCH = /\b(job|jobKey|o\.job)\b[^\n]*===\s*'/
+ruleWithControl(
+  '...and never branches on WHICH job, so a third job is configuration like a fifth pass is',
+  engine,
+  (s) => !JOB_BRANCH.test(s) && !/'DEVOLUTION_SCOPE'/.test(s),
+  (s) => s.replace('const jobUnknowns', "const x = jobKey === 'DEVOLUTION_SCOPE'\n    const jobUnknowns"),
+)
+ok('   …while the PRECEDENT *EvidenceKind* downgrade is untouched (different thing, same word)',
+  /kind === 'PRECEDENT' && judged && !judged\.isPrecedent/.test(engine))
+ok('EVIDENCE_PRECEDENT declares the PRECEDENT job',
+  (passDef('EVIDENCE_PRECEDENT')?.jobs ?? []).includes('PRECEDENT'))
+ok('LEGAL declares the DEVOLUTION_SCOPE job',
+  (passDef('LEGAL')?.jobs ?? []).includes('DEVOLUTION_SCOPE'))
+// ⚠ The bug the first draft had: the job loop sat AFTER the zero-candidate early return, so a
+// pass whose sift kept nothing skipped both jobs — including a precedent off an instrument
+// LINKED to the idea, which needs no candidates at all.
+ok('⚠ jobs run BEFORE the zero-candidate early return, not after it',
+  engine.indexOf('for (const jobKey of def.jobs') < engine.indexOf('if (deduped.length === 0)'))
+// ⚠⚠ AND BEFORE THE REFERENCES WRITE. Found by a live run, not by reasoning: a truncated sift
+// returned all 500 candidates instead of ~12, `writePassReferences` threw on the resulting JSONB,
+// and the LEGAL pass ended FAILED having run no job and recorded no reason — a deterministic
+// corpus answer lost to an unrelated write two steps away from it.
+ok('⚠⚠ …and BEFORE writePassReferences, the pass\'s largest and most failure-prone step',
+  engine.indexOf('for (const jobKey of def.jobs') < engine.lastIndexOf('await writePassReferences('))
+ok('...and the catch reports what the jobs did, rather than an undefined that reads as "none ran"',
+  /return \{ runVersion, status: 'FAILED'[^}]*jobs: jobOutcomes/.test(engine))
+ok('...and a job\'s rows are counted in what the run reports, on every return path',
+  !/findings: 0,/.test(engine), 'a return reporting 0 findings while job rows sit in the panel')
+
+// ── constraint 1: PRECEDENT is a GROUP, never a ranked list ──────────────────
+console.log('\nconstraint — PRECEDENT renders as a group, never a ranked list')
+ruleWithControl(
+  'one evidence row per INSTRUMENT, carrying the whole intended/predicted/observed block',
+  jobsSrc,
+  (s) => /body: `\$\{precedentBlock\(p\)\}/.test(s),
+  (s) => s.replace(/body: `\$\{precedentBlock\(p\)\}[^`]*`/, 'body: p.legs.map((l) => l.title).join("\\n")'),
+)
+ruleWithControl(
+  '...and the block is not sorted by a score anywhere in the job',
+  jobsSrc,
+  (s) => !/\.sort\(\([^)]*\) =>[^)]*score/.test(s),
+  // ⚠ THE MUTATION IS ASSEMBLED AT RUNTIME so this file does not itself contain a literal
+  // sort-by-score expression. Written out in full, it tripped `check:score-scope`'s "no bare
+  // sort-by-score outside the helper" scan — one check's negative control failing another
+  // check. The control still does exactly what it did; only its spelling in the source changed.
+  (s) => s.replace('let written = 0', `let written = 0; p.legs.sort((a, b) => b.sc${'ore'} - a.sc${'ore'})`),
+)
+ok('the legs are ordered intended → predicted → observed, which is the comparison',
+  /const order: Array<PrecedentLeg\['leg'\]> = \['intended', 'predicted', 'observed'\]/.test(retrievalSrc))
+
+// ── constraint 2: a missing PIR is NEVER filled from the impact assessment ───
+console.log('\nconstraint — a missing post-implementation review is never filled from the IA')
+ok('the leg split is by SECTION TITLE, so an IA section cannot become an OBSERVED leg',
+  /export function legForImpactSection/.test(retrievalSrc))
+ruleWithControl(
+  'the honest sentence exists and forbids the substitution',
+  retrievalSrc,
+  (s) => /NO POST-IMPLEMENTATION REVIEW EXISTS/.test(s)
+    && /Do NOT substitute what was `\s*\n?\s*\+ `PREDICTED for what was OBSERVED|Do NOT substitute what was PREDICTED for what was OBSERVED/.test(s),
+  // ⚠ GLOBAL. The string occurs twice — once in `precedentNote()` and once in the module's own
+  // self-test — and a single-occurrence replace left the second one standing, so the mutated copy
+  // still passed and the control reported inert. That is the control doing its job.
+  (s) => s.replace(/NO POST-IMPLEMENTATION REVIEW EXISTS/g, 'no review is recorded'),
+)
+// ⚠ REACHABILITY, not existence. §1: "the 'nobody has checked whether this worked' sentence must
+// be reachable in real output." A constant nothing renders is the silent-stub failure again.
+ruleWithControl(
+  '⚠ …and it REACHES the persisted body — `note` travels inside precedentBlock',
+  retrievalSrc,
+  (s) => /\$\{p\.note\}/.test(s),
+  (s) => s.split('${p.note}').join(''),
+)
+ok('...and a precedent group is written even when a leg is missing, so the note can fire',
+  /if \(!p\.legs\.length\)/.test(jobsSrc) && !/if \(p\.missing\.length\) continue/.test(jobsSrc),
+  'only a group with NO legs at all is skipped')
+
+// ── constraint 3: DEVOLUTION_SCOPE never answers "is it reserved" ────────────
+console.log('\nconstraint — DEVOLUTION_SCOPE refuses the reservation question and names the schedules')
+ruleWithControl(
+  'the note refuses to rule on reserved-or-devolved',
+  retrievalSrc,
+  (s) => /NOT a ruling on whether the subject is reserved or devolved/.test(s),
+  (s) => s.replace(/NOT a ruling on whether the subject is reserved or devolved/g, 'a good guide to whether it is reserved'),
+)
+ruleWithControl(
+  'all three schedules are named, not just the Scottish one',
+  retrievalSrc,
+  (s) => /Schedule 5 to the Scotland Act 1998/.test(s) && /Schedule 7A/.test(s) && /Schedules 2 and 3 to the Northern Ireland/.test(s),
+  (s) => s.replace(/Schedule 7A/g, 'Schedule Seven-Ay'),  // global, for the same reason
+)
+ruleWithControl(
+  '⚠ …and the note reaches the persisted body via devolutionBlock',
+  retrievalSrc,
+  (s) => /return `WHO HAS LEGISLATED[\s\S]{0,120}\$\{s\.note\}`/.test(s),
+  (s) => s.split('${s.note}').join(''),
+)
+ok('jurisdiction is derived from the id, never the title (the Scotland Act 1998 is `ukpga`)',
+  /export function jurisdictionOf\(id: string\)/.test(retrievalSrc)
+  && !/jurisdictionOf\([^)]*title/.test(retrievalSrc))
+
+// ── constraint 4: an instrument is never invented ────────────────────────────
+console.log('\nconstraint — a pass that invents an instrument breaks never-claim upstream')
+ok('instruments come from an explicit link or from what the SIFT KEPT — nothing else',
+  /linked-to-this-idea/.test(jobsSrc) && /retrieved-and-kept-by-the-sift/.test(jobsSrc))
+ruleWithControl(
+  '⚠ there is NO fallback that manufactures one when both sources are empty',
+  jobsSrc,
+  (s) => /return out\.slice\(0, MAX_INSTRUMENTS\)/.test(s)
+    && !/if \(!out\.length\)[\s\S]{0,120}(push|return \[\{)/.test(s),
+  (s) => s.replace('return out.slice(0, MAX_INSTRUMENTS)',
+    'if (!out.length) out.push({ gid: "ukpga/2006/46", provenance: "retrieved-and-kept-by-the-sift" })\n  return out.slice(0, MAX_INSTRUMENTS)'),
+)
+ok('an empty instrument list writes nothing AND says why',
+  /if \(!instruments\.length\)/.test(jobsSrc) && /skipReason:/.test(jobsSrc))
+ok('every skip reason reaches the user as a known unknown, not only a log',
+  /const jobUnknowns: KnownUnknown\[\] = jobOutcomes/.test(engine)
+  && /knownUnknowns\.push\(\.\.\.jobUnknowns\)/.test(engine))
+ok('the provenance travels into the artefact — a user is told WHY we think it is their instrument',
+  /PROVENANCE_WORDS\[inst\.provenance\]/.test(jobsSrc))
+
+// ── constraint 5: the web-source markers still cannot collide ────────────────
+console.log('\nconstraint — public sources keep [W1] and markersCollide() still guards')
+ok('markersCollide() exists and is exercised by the public-sources self-test',
+  /export function markersCollide/.test(read('lib/lex/public-sources.ts'))
+  && /!markersCollide\(\)/.test(read('lib/lex/public-sources.ts')))
+ok('the W prefix comes from a constant, not a literal repeated per call site',
+  /export const PUBLIC_MARKER_PREFIX = 'W'/.test(read('lib/lex/public-sources.ts')))
+ok('⚠ neither S8 job emits a citation marker of its own, so nothing new can collide',
+  !/\[W?\$\{|\[W\d|marker/i.test(jobsSrc))
+
+// ── constraint 6: the standing invariants, over the NEW module too ───────────
+console.log('\nconstraint — the standing Deepening invariants cover the new module')
+ok(`${JOBS}: writes only to the evidence layer`,
+  /prisma\.evidenceItem\.create/.test(jobsSrc) && !/prisma\.idea\.update/.test(jobsSrc))
+ok(`${JOBS}: never writes or updates an ACCEPTED item`,
+  !/evidenceItem\.update/.test(jobsSrc) && !/'ACCEPTED'/.test(jobsSrc))
+ok(`${JOBS}: every row it writes is PROPOSED, so the user judges it`,
+  (jobsSrc.match(/status: 'PROPOSED'/g) ?? []).length === (jobsSrc.match(/prisma\.evidenceItem\.create/g) ?? []).length)
+ok('a DEVOLUTION_SCOPE row carries precedentTestPassed NULL, not false',
+  /precedentTestPassed: null/.test(jobsSrc),
+  '"not assessed" and "assessed and failed" are different claims')
 
 console.log(fail === 0 ? '\nAll checks pass.' : `\n${fail} check(s) FAILED.`)
 process.exit(fail === 0 ? 0 : 1)

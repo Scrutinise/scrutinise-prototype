@@ -215,7 +215,18 @@ export async function retrieveDevolutionScope(query: string, limit = 24): Promis
     intent: 'DEVOLUTION_SCOPE',
     limit,
   })
-  const results: DevolutionResult[] = out.results.map((r: SearchResult) => ({
+  // ⚠⚠ `.slice(limit)` IS LOad-BEARING, AND ITS ABSENCE WAS A REAL DEFECT (found S8 §1, by
+  // reading a persisted artefact rather than a counter). `limit` is passed to `runSearch` as the
+  // per-call cap, but the ROUTED path returns the union of every stream it dispatched — five
+  // streams at ~60 hits each. A `limit = 24` call came back with 360 results, and
+  // `devolutionBlock` renders one two-line entry per result, so the block written into an
+  // EvidenceItem body was **577 lines long** across two runs. Nothing errored: the caller asked
+  // for 24, got 360, and stored all of them.
+  //
+  // The cap belongs here rather than in the caller because the block is this module's artefact.
+  // `byJurisdiction` is counted AFTER the slice, so the shape line describes the items actually
+  // shown — a count over 360 above a list of 24 would be a caption that disagrees with its table.
+  const results: DevolutionResult[] = out.results.slice(0, limit).map((r: SearchResult) => ({
     id: r.id,
     jurisdiction: jurisdictionOf(r.id),
     title: r.title || r.citation || r.id,

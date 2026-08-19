@@ -33,6 +33,7 @@ import { PASSES, passDef, type IssueContext, type PassDef } from './deepening-co
 import { generateDeepeningFindings, type RawFinding } from './deepening-client'
 import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep } from './deepening-sift'
 import { generateAdversarialIssues } from './deepening-adversarial'
+import { runJob, jobQuestion, type JobOutcome } from './deepening-jobs'
 
 /** A declared gap. Always carries WHAT was looked for, not just that something is missing. */
 export interface KnownUnknown {
@@ -309,6 +310,10 @@ export interface RunOutcome {
   siftSkipped?: boolean
   adversarialIssues?: boolean
   precedentsDowngraded?: number
+  /** S8 §1 — what each declared structured job did, INCLUDING the ones that wrote nothing and
+   *  why. Reported to the caller rather than left in a log, for the same reason `siftSkipped`
+   *  is: a degraded run and a full one must be distinguishable from outside. */
+  jobs?: JobOutcome[]
 }
 
 /**
@@ -328,6 +333,10 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
   let issues = 0
   let knownUnknowns: KnownUnknown[] = []
   let failureReason: string | undefined
+  // ⚠ HOISTED OUT OF THE TRY so the catch can report what the jobs did. A pass that throws after
+  // a job has written its rows must not return `jobs: undefined` — that reads as "no job ran"
+  // and is the status-shown-is-not-status-stored defect invariant 3 exists to prevent.
+  const jobOutcomes: JobOutcome[] = []
 
   try {
     const ctx = await loadIdeaContext(ideaId)
@@ -375,13 +384,73 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       passKey, retrieved: retrieved.length, deduped: candidates.length,
       kept: deduped.length, skipped: sift.skipped,
     })
+    // 2b. STRUCTURED RETRIEVAL JOBS (S8 §1). Run BEFORE the references write, before the gather,
+    //     and before the zero-candidate early return below. All three orderings are deliberate and
+    //     all three were arrived at by watching a real run fail.
+    //
+    //     ⚠⚠ BEFORE `writePassReferences`, because that write is the largest and most failure-prone
+    //     step in the pass and the jobs do not depend on it. Observed on the 19 Aug verification
+    //     run: the sift TRUNCATED, returned its passthrough of all 500 candidates instead of the
+    //     usual ~12, and the references write of 500 full results into `Idea.stageSearches` threw.
+    //     With the loop below the write, the LEGAL pass ended FAILED having run no job and recorded
+    //     no reason — the devolution answer was lost to an unrelated failure two steps away from it.
+    //     Ordering is the whole fix: a deterministic corpus fact should not be hostage to a JSONB
+    //     write about something else.
+    //
+    //     ⚠ BEFORE THE GATHER, because a job's output is a fact about the corpus rather than a
+    //     reading of it: an instrument either has a post-implementation review or it does not,
+    //     and that answer must not depend on whether a model call succeeded afterwards.
+    //
+    //     ⚠ INDEPENDENTLY OF IT, because these rows are assembled deterministically and must not
+    //     pass through the gather's `byId` source check or the precedent downgrade below. Those
+    //     exist to stop a MODEL claiming a source it was not given; a job that read the row out
+    //     of `corpus_sections` itself is not what they guard against.
+    //
+    //     ⚠⚠ AND BEFORE THE ZERO-CANDIDATE RETURN, which the first draft got wrong. A job does
+    //     not depend on the sift's output — `DEVOLUTION_SCOPE` issues its own search, and
+    //     `PRECEDENT` will use an instrument LINKED to the idea whether or not this pass's
+    //     retrieval kept anything. Putting the loop after the early return meant that a pass
+    //     whose sift kept nothing silently skipped both jobs: built, wired, and unreachable on
+    //     exactly the runs that most needed a deterministic answer.
+    //
+    //     A job that throws costs its own rows and nothing else, so a failing DEVOLUTION_SCOPE
+    //     cannot take a working gather down.
+    for (const jobKey of def.jobs ?? []) {
+      try {
+        const outcome = await runJob(jobKey, {
+          ideaId, passKey, runVersion, keywords: ctx.keywords, kept: deduped,
+        })
+        jobOutcomes.push(outcome)
+        findings += outcome.written
+        console.log('[deepening] job', { passKey, job: jobKey, written: outcome.written, detail: outcome.detail, skipped: outcome.skipReason })
+      } catch (err) {
+        const why = err instanceof Error ? err.message : String(err)
+        jobOutcomes.push({ job: jobKey, written: 0, unmetQuestion: jobQuestion(jobKey), skipReason: `This lookup failed to run: ${why}`, detail: 'threw' })
+        console.error('[deepening] job THREW', { passKey, job: jobKey, error: why })
+      }
+    }
+
+    // The references write moved BELOW the job loop — see the note above. It stays inside the
+    // same try, so a failure here still settles the pass FAILED; what changed is that the job
+    // rows are already committed by the time it runs.
     await writePassReferences(
       ideaId, passKey, def.intents.join('+'),
       failedIntents.length < def.intents.length, ctx.keywords, deduped,
       failedIntents.length ? `intents that failed: ${failedIntents.join(', ')}` : undefined,
     )
+    // ⚠ A SKIPPED JOB BECOMES A KNOWN UNKNOWN WITH ITS REASON ATTACHED. §1: "the pass writes
+    // nothing and logs why". A log is for us; a known unknown is for the user, and the user is
+    // the one who can act on "no instrument is identified for this idea".
+    //
+    // ⚠ THE QUESTION TEXT COMES FROM THE JOB, not from a branch here. The first draft wrote
+    // `o.job === 'PRECEDENT' ? … : …` on this line and `check:deepening` failed it on the first
+    // run: that is a job key hardcoded in the engine, which is the same defect as a pass key
+    // hardcoded in the engine. A third job must be configuration.
+    const jobUnknowns: KnownUnknown[] = jobOutcomes
+      .filter((o) => o.skipReason)
+      .map((o) => ({ question: o.unmetQuestion, why: o.skipReason as string }))
 
-    // 2. NOTHING TO WORK FROM = NOTHING CLAIMED. No model call, no invented findings; the
+    // 2c. NOTHING TO WORK FROM = NOTHING CLAIMED. No model call, no invented findings; the
     //    whole pass becomes known unknowns. This is the never-claim invariant at its plainest.
     //
     //    ⚠ THREE DIFFERENT SILENCES, AND THEY MUST NOT SHARE A SENTENCE. "The search
@@ -395,18 +464,21 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
         : candidates.length === 0
           ? 'The searches ran and returned no material on this idea.'
           : `${candidates.length} sources were retrieved and reviewed, and none of them bore on this proposal's problem.`
-      knownUnknowns = def.mustAnswer.map((q) => ({ question: q, why }))
+      knownUnknowns = [...def.mustAnswer.map((q) => ({ question: q, why })), ...jobUnknowns]
       await settle(ideaId, passKey, runVersion, failedIntents.length ? 'FAILED' : 'RUN', knownUnknowns,
         failedIntents.length ? `Retrieval failed: ${failedIntents.join(', ')}` : undefined,
         { reviewed: sift.reviewed, kept: 0, skipped: sift.skipped })
       const issueCount = await raiseTemplateIssues(ideaId, def, runVersion, {
-        countsByKind: {}, findingCount: 0, typesReturned: {}, knownUnknownCount: knownUnknowns.length,
+        countsByKind: {}, findingCount: findings, typesReturned: {}, knownUnknownCount: knownUnknowns.length,
         hasCostLines: ctx.hasCostLines, hasChosenApproach: ctx.hasChosenApproach,
         jurisdictionMentioned: ctx.jurisdictionMentioned,
       })
       return {
-        runVersion, status: failedIntents.length ? 'FAILED' : 'RUN', findings: 0, issues: issueCount,
-        knownUnknowns: knownUnknowns.length, superseded,
+        // ⚠ `findings`, NOT 0. A job can have written a precedent group off a LINKED instrument
+        // on a run whose sift kept nothing, and reporting zero here would tell the user the pass
+        // produced nothing while its rows sat in the panel.
+        runVersion, status: failedIntents.length ? 'FAILED' : 'RUN', findings, issues: issueCount,
+        knownUnknowns: knownUnknowns.length, superseded, jobs: jobOutcomes,
         failureReason: failedIntents.length ? `Retrieval failed: ${failedIntents.join(', ')}` : undefined,
       }
     }
@@ -422,13 +494,16 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
 
     if (!gathered) {
       // The model call failed. That is a FAILED run with its retrieval kept, not an empty one.
-      knownUnknowns = def.mustAnswer.map((q) => ({
+      knownUnknowns = [...def.mustAnswer.map((q) => ({
         question: q,
         why: 'The analysis step failed after retrieval succeeded — the sources are in the panel, but nothing was concluded from them. Re-run.',
-      }))
+      })), ...jobUnknowns]
       await settle(ideaId, passKey, runVersion, 'FAILED', knownUnknowns, 'The analysis step failed after retrieval succeeded',
         { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
-      return { runVersion, status: 'FAILED', findings: 0, issues: 0, knownUnknowns: knownUnknowns.length, superseded, failureReason: 'The analysis step failed after retrieval succeeded' }
+      // ⚠ `findings`, not 0 — see the note on the zero-candidate return. The job rows are real,
+      // persisted, and visible in the panel; a run that reports 0 while they sit there is the
+      // "status shown is not the status stored" defect invariant 3 exists to prevent.
+      return { runVersion, status: 'FAILED', findings, issues: 0, knownUnknowns: knownUnknowns.length, superseded, jobs: jobOutcomes, failureReason: 'The analysis step failed after retrieval succeeded' }
     }
 
     // 4. PERSIST INCREMENTALLY — one row at a time, so a timeout in the middle loses the
@@ -525,6 +600,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       knownUnknowns.push({ question: `Everything the ${intent} search would have covered`, why: 'That search failed to run.' })
     }
     for (const gap of gathered.gaps) knownUnknowns.push({ question: gap, why: 'Named by the pass as unfindable in what was retrieved.' })
+    knownUnknowns.push(...jobUnknowns)
 
     await settle(ideaId, passKey, runVersion, 'RUN', knownUnknowns, undefined,
       { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
@@ -544,13 +620,18 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     return {
       runVersion, status: 'RUN', findings, issues, knownUnknowns: knownUnknowns.length, superseded,
       reviewed: sift.reviewed, kept: deduped.length, siftSkipped: sift.skipped,
-      adversarialIssues: !!adversarial, precedentsDowngraded,
+      adversarialIssues: !!adversarial, precedentsDowngraded, jobs: jobOutcomes,
     }
   } catch (err) {
     failureReason = err instanceof Error ? err.message : String(err)
-    // Whatever was persisted before the throw STAYS. The status tells the truth about it.
-    await settle(ideaId, passKey, runVersion, 'FAILED', knownUnknowns, failureReason)
-    return { runVersion, status: 'FAILED', findings, issues, knownUnknowns: knownUnknowns.length, superseded, failureReason }
+    // Whatever was persisted before the throw STAYS. The status tells the truth about it —
+    // including the job rows, which are now committed before the most failure-prone step runs.
+    const jobUnknownsOnFailure: KnownUnknown[] = jobOutcomes
+      .filter((o) => o.skipReason)
+      .map((o) => ({ question: o.unmetQuestion, why: o.skipReason as string }))
+    const all = [...knownUnknowns, ...jobUnknownsOnFailure]
+    await settle(ideaId, passKey, runVersion, 'FAILED', all, failureReason)
+    return { runVersion, status: 'FAILED', findings, issues, knownUnknowns: all.length, superseded, jobs: jobOutcomes, failureReason }
   }
 }
 
