@@ -63,7 +63,8 @@
     "measure:s8-framing": "tsx --env-file=.env scripts/measure-s8-framing.ts",
     "measure:s8-router-v2": "tsx --env-file=.env scripts/measure-s8-router-v2.ts",
     "measure:s8-concurrency": "tsx --env-file=.env scripts/measure-s8-concurrency.ts",
-    "explore:s8-gold": "tsx --env-file=.env scripts/explore-s8-gold.ts"
+    "explore:s8-gold": "tsx --env-file=.env scripts/explore-s8-gold.ts",
+    "verify:positions": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-positions-api.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
