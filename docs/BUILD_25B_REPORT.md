@@ -1,10 +1,15 @@
 # SPRINT 25-B — research, revision, and the adversarial read
 
-**Executes:** `docs/BRIEF_25B.md` §0–§9. **Thread:** Lex/UX. **Written:** 2026-08-19 08:59 UTC.
-**Guards:** `check:build-25b` 42/42, all 19 source-level negative controls fire · `check:build-25a`
-40/40 · `verify:build-25a-ui` 37/37 · `tsc` clean.
-**Live:** two full seven-pass builds against the production FTS index. **Cost: 5.6p single-perspective,
-11.4p with three.**
+**Executes:** `docs/BRIEF_25B.md` §0–§9 **and `docs/AMENDMENT_25B.md` §A–§D + §C4**, which wins where
+they differ. **Thread:** Lex/UX. **Written:** 2026-08-19, amended 21:45 UTC.
+**Guards:** `check:build-25b` **54/54**, all 27 source-level negative controls fire · `check:build-25a`
+40/40 · `check:committed` (new) · `verify:build-25a-ui` 37/37 · `tsc` clean.
+**Live:** four full seven-pass builds against the production FTS index, plus the worker's closed-tab
+test (9/9). **Cost: 5.6p single-perspective, 11.4p with three.**
+
+▶ **The headline is not the passes. `/api/ideas/[id]/build` had never been committed**, so 25-A's build
+endpoint was not on production at all — which is why nobody could start a build. Found by the delivery
+check CLAUDE.md §20 asks for, fixed, and verified live. **§A below.**
 
 ---
 
@@ -75,8 +80,12 @@ fires between passes like any other stop reason.
 seven-pass build abandoned while it was still working.** It now ages off `updatedAt`, which every pass
 write moves — silence there is the real signal that nothing is driving it.
 
-**Not taken:** the Railway-worker alternative. The first approach worked, so §1's "take it only if the
-first approach fails" was not reached.
+⚠ **SUPERSEDED MID-SPRINT BY `AMENDMENT_25B` §B, AND THIS SECTION IS KEPT RATHER THAN REWRITTEN.**
+Charlie's decision is the worker, not the request chain, and the reasoning is better than the brief's:
+"a ten-minute job should not depend on a browser tab staying open." Everything above still stands and
+still runs — `runNextPass` is the engine the worker calls in a loop, so pass-per-request survives as
+the **documented fallback** the amendment asks for rather than as dead code, and it is what runs today
+while the worker awaits provisioning. See the §B section below.
 
 ---
 
@@ -382,6 +391,148 @@ under the exact conditions that would hide it.
 
 Per CLAUDE.md §20, the four delivery checks were run and are recorded in the CHANGE_LOG entry for this
 sprint. **A sprint closes on a string read back off the running site, not on a green local build.**
+
+---
+
+---
+
+# AMENDMENT_25B — §A to §D, and §C4
+
+*Read alongside the brief; where they differ, the amendment wins. Added 2026-08-19.*
+
+## §A — `/ideas/build` was down, and the cause was the repository again
+
+**Charlie's report: *"Could not start a session. Please refresh."*, unchanged for two days.
+The cause was found by §20's first delivery check and it is the same class as the outage two
+days earlier.**
+
+> `app/api/ideas/[id]/build/route.ts` and its `cancel/` sibling appear in **no commit, on any
+> branch, ever.** They are not ignored. `git add` accepts them. They had simply never been
+> added.
+
+The chain is exact: `/ideas/build` deployed and gated correctly, because `page.tsx` **was**
+committed. Its client boots by fetching `/api/ideas/{id}/elicitation` and
+`/api/ideas/{id}/build` together. The second 404ed on production, the client called `.json()`
+on Next's HTML 404 page, that threw a parse error, and the catch reported eleven words that
+named nothing.
+
+⚠ **Every check anyone ran passed.** `tsc` and `next build` were clean because the files exist
+on the machine. `git status` never showed them. 25-A's deploy note verified the *page's*
+redirect marker — a real check that could not possibly have caught a missing sibling endpoint
+behind the sign-in. **This is CLAUDE.md §20's "confirm the file, not the pattern", and the
+reason the pattern was already fixed: the `build/`-shaped ignore was anchored on 17 Aug and
+`app/ideas/build/` was added — its API sibling was missed.**
+
+**Fixed three ways:**
+
+1. **The files are committed** (`854303c`), which is the whole bug.
+2. **`check:committed`** — the check §20 asked for. It compares the working tree against the
+   repository and fails when a shipped source file is not in the commit. On its first run it
+   found both. ⚠ Its own first version reported `prisma/schema.prisma` as uncommitted, because
+   `git ls-files` returns paths relative to the *current directory* and it runs from
+   `scrutinise-web/` — a false positive large enough to teach the next reader to ignore it.
+   Watched failing, fixed, then watched failing again on a planted path.
+3. **The message carries a reason and a correlation id.** The boot now checks the status
+   before parsing, so a 404 on an undeployed route can never again present as bad JSON:
+   *"Could not start a session — /api/ideas/…/build is not available on this deployment (404)
+   (ref A3F9K2)."*
+
+**Verified live**, per §20 check 4 — the deployed bundle carries both new markers, the **old**
+message is gone, and a never-written control string is absent. That is the sprint's own string
+read back off the running site with a working control.
+
+⚠ **Not done: the signed-in browser walk.** The extension has no host permission for
+`localhost:3000` and this session has no Clerk session on production. **Charlie's re-test is
+the remaining gate on §A** — but unlike the last three sprints that said this, the failing
+component and its fix are both now identified and verified deployed.
+
+## §B — builds on the worker: built, tested, NOT yet switched on
+
+**The worker is finished and proven.** `npm run verify:build-worker` enqueues a build through
+the same path the web request uses, spawns the worker as a **separate OS process**, does
+nothing while it runs, and finds it DONE at 7/7 passes for 3.7p — **9 assertions, 0
+failures.** That is "close the tab and come back", tested across a real process boundary
+rather than asserted.
+
+⚠ **And the test earned its keep immediately: it caught a bug that made the worker useless.**
+The first run reported *"RUNNING · 1/7 passes · stopped cleanly"* — a healthy-looking worker
+with nothing to do. `runBuildToCompletion` was looping on `view.nextPass`, which is
+**deliberately null under the worker driver** so a browser never drives a pass the worker
+owns. I had overloaded one field with two questions — *"should the CLIENT ask for another
+pass"* and *"is there another pass"* — which have different answers by design. The engine now
+asks the second, of the stored log. **A guard encodes it**, because this is a bug that
+reappears the moment someone tidies the loop.
+
+**Two steps remain and neither is code** — the recipe is `docs/BUILD_WORKER_DEPLOY.md`:
+
+1. Create the Railway service (root directory **`scrutinise-web`**, not `scripts/` — the
+   engine is `lib/lex/*` and `scripts/ingest` cannot import it, which is the wall SEARCH S7
+   §3 hit).
+2. Set `LEX_BUILD_DRIVER=worker` in Vercel. **I cannot do this**: the Vercel token
+   authenticates and then 403s on every project-scoped endpoint with `"saml": true`.
+
+⚠ **`buildDriver()` therefore defaults to `client`, and that is not a vote against the
+worker.** Defaulting to `worker` before the service exists would enqueue every build with
+nothing to run it — a page saying "Starting" for ever, which is strictly worse than the
+design it replaces. **The default must be the configuration that works with what is
+deployed.**
+
+▶ **And the failure the architecture creates is handled rather than hoped away.** If no worker
+claims a build within 90 seconds, the page claims it off the queue and drives it — the
+documented fallback, used automatically — and **says so**: *"Our build server hasn't picked
+this up, so it's running from this page instead."* The handover is one-way by construction:
+the client's claim moves the row QUEUED → RUNNING, and `claimQueuedBuild` only ever claims a
+QUEUED row, so a worker waking later cannot also take it.
+
+## §C / §C4 — telling the user, and an estimate that admits what it doesn't know
+
+**In-page (free)** — the row is the source of truth and the page already polls it. ⚠ It is
+only *true* because the worker runs the build: under the old design the page had to stay open
+to make progress, so "it updates itself" would have been a promise about a page doing the work.
+
+**Browser notification** — fires on a **transition this session watched**, never on what it
+found: opening the page on a build that finished yesterday must not announce it. Permission is
+requested when the user **starts a build**, not on load — a prompt before anyone has asked for
+anything gets dismissed, and a dismissal is permanent. **A failed build notifies too**, since
+the whole point is that they are not watching.
+
+**The estimate is a query, not instrumentation** — the mean of the last 20 **DONE** builds
+from `startedAt`/`completedAt`, which 25-A already recorded:
+
+| rule | how it is executed |
+|---|---|
+| failed builds excluded | `status: 'DONE'` in the query, guarded — a run of early failures would otherwise report "about a minute" |
+| fewer than five → no figure | *"Usually a few minutes — we don't have enough builds yet to be precise"* |
+| round to something human | `about a minute` · `about 7 minutes` (from 6.8) · nearest 5 above ten minutes; a guard asserts no decimal ever reaches the user |
+| show it before, and as time elapses | on the Build button, and *"3 of 7 passes · 2m 10s of about 7 minutes"* |
+| overrun | past 1.5× the mean: *"Taking longer than usual — still running."* Never said without a measured mean |
+| show the actual at the end | *"Took 8m 12s — usually about 7 minutes."* Including when the estimate missed |
+
+**The email is offered on the same number** — nothing below three minutes, a checkbox above
+it. ⚠ **The choice is frozen onto the build row at enqueue**, not read from the user at send
+time: the worker sends minutes later on another machine, and reading the preference then would
+make a change in another tab retroactive to a build already running. `EmailSuppression` remains
+the authority on whether we may write to the address at all.
+
+**Schema:** two additive columns and an index, applied to Neon after `whichdb` confirmed the
+host (§16), verified present afterwards, and mirrored into `schema.prisma` so
+`prisma migrate diff` cannot propose dropping them.
+
+## §D — /admin has a way back
+
+Fixed in `app/admin/layout.tsx`, **not** in `page.tsx`: there are three admin routes and all
+three were equally trapped. Putting the bar on the page that happened to be complained about
+would have left `/admin/invites` and `/admin/lex-general` exactly as they were.
+
+## Amendment acceptance criteria
+
+| §E criterion | verdict |
+|---|---|
+| `/ideas/build` loads and completes a build on production, signed in, walked in a browser | ⚠ **cause fixed and verified deployed; the signed-in walk is Charlie's** — no Clerk session here |
+| the cause of the session failure is named in the CHANGE_LOG | ✅ |
+| a build runs on the worker, survives the tab closing, is found finished | ✅ **proven across a process boundary**, 9/9 — but not yet switched on in production |
+| the page updates itself on completion; a notification fires when permitted | ✅ |
+| `/admin` has a way back | ✅ |
 
 ---
 
