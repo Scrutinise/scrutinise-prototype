@@ -2,7 +2,14 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-19 22:25 UTC — ▼ **SEARCH S9: THE STATISTICS CATALOGUE IS BUILT — 5,733 official series discoverable through the router, and the layer STRUCTURALLY CANNOT RETURN A NUMBER. Two of the brief's three residuals were refuted (`sourceSeriesId` is null on ZERO rows, not a large minority; the per-vintage licence restriction it says is inexpressible already has a column and is in use). The licence register now GATES retrieval — 40.6% of series, half the observations, filtered before scoring. ⚠⚠ Both my predictions were refuted, one each way: 10/10 selection where I predicted 9, and 0/10 false positives where I predicted 2. ⚠⚠ MY OWN FIX BROKE THE NEGATIVE CONTROL MID-SPRINT — "UK NHS waiting list" returned five plausible UK series for a question the store cannot answer, because World Bank labels BEGIN with the country name. Fixed with two relevance floors. ⚠⚠ AND FOUR OF THE TEN CASE-LAW GOLD KEYS ARE WRONG, exposed by CC-Ingest's extracts. ▶ CHARLIE: `docs/GOLD_CANDIDATES_S8.md` is now one-pass reviewable, Q1–Q60.**
+*Last updated: 2026-08-19 22:57 UTC — ▼ **INGEST NAMES: the case name and the witness were
+inside requests we were already paying for. Case law 0% → 99.98% titled, committee evidence
+0% → 96.87%, committee reports 0% → 85.58% with no fetch at all — and 21 of 23 committee
+search results now carry a name, up from zero. ⚠⚠ My prediction that the citation-shaped guard
+would never fire was REFUTED: the source publishes a bare citation as a case name twice, and
+those two rows are blank only because the guard exists. ⚠⚠ The snippet a user and Lex see for
+a judgment is a STYLESHEET — 200 of 200 documents.**
+Earlier: 2026-08-19 22:25 UTC — ▼ **SEARCH S9: THE STATISTICS CATALOGUE IS BUILT — 5,733 official series discoverable through the router, and the layer STRUCTURALLY CANNOT RETURN A NUMBER. Two of the brief's three residuals were refuted (`sourceSeriesId` is null on ZERO rows, not a large minority; the per-vintage licence restriction it says is inexpressible already has a column and is in use). The licence register now GATES retrieval — 40.6% of series, half the observations, filtered before scoring. ⚠⚠ Both my predictions were refuted, one each way: 10/10 selection where I predicted 9, and 0/10 false positives where I predicted 2. ⚠⚠ MY OWN FIX BROKE THE NEGATIVE CONTROL MID-SPRINT — "UK NHS waiting list" returned five plausible UK series for a question the store cannot answer, because World Bank labels BEGIN with the country name. Fixed with two relevance floors. ⚠⚠ AND FOUR OF THE TEN CASE-LAW GOLD KEYS ARE WRONG, exposed by CC-Ingest's extracts. ▶ CHARLIE: `docs/GOLD_CANDIDATES_S8.md` is now one-pass reviewable, Q1–Q60.**
 Earlier: 2026-08-19 21:45 UTC — ▼ **LEX 25-B + AMENDMENT: `/ideas/build` WAS DOWN BECAUSE ITS API ROUTE HAD NEVER BEEN COMMITTED — `app/api/ideas/[id]/build/route.ts` appears in no commit on any branch, ever. Third file-not-in-the-repository outage in a week, second on this feature. Fixed, verified live, and `check:committed` now makes the class impossible. The build itself now researches the draft against a 9-question interrogation library, revises it, and keeps the contradictions — "I first concluded primary legislation; the evidence says an existing power may already reach this" — then reads the whole thing back as a hostile clerk. 7 passes, 214s, 5.6p. ⚠ §3's premise is wrong: `intent` never selects streams for ANY caller. ⚠ §7 multi-perspective DOUBLED the cost for 7% more findings. ⚠ `gemini-2.5-pro` was unreachable through every Gemini client we have. ▶ CHARLIE: the worker is built and proven (closed-tab test 9/9) but needs a Railway service + `LEX_BUILD_DRIVER=worker` in Vercel — see `docs/BUILD_WORKER_DEPLOY.md`.**
 Earlier: 2026-08-19 17:09 UTC — ▼ **GRAPH 3A: the position graph has a factual layer — 2.32M signals, 2.30M estimates, no model anywhere in it, and the ten highest-confidence records it produces are the Labour left, found from nothing but who voted against their own party. ⚠⚠ The free-vote heuristic finds every assisted dying and hunting division and NONE of the abortion ones — because the abortion divisions we hold are whipped NI Regulations, not conscience votes. ⚠⚠ Amendment sponsorship and committee membership have NO SOURCE DATA at all.**
 Earlier: 2026-08-19 09:35 UTC — ▼ **SEARCH S8: the first-pass search infrastructure is finished. FOUR of eight sections reversed a premise — the two "non-existent" fallback models both return HTTP 200 (one is silently substituted), attribution exists everywhere EXCEPT the committees collection it was built for, and raising stream concurrency to 4 makes five-stream questions WORSE because 4 is exactly vector-serve's width.**
@@ -103,6 +110,70 @@ production) and none is claimed — what to click is named in the report.
 families still unglossed (and **a gloss will not be invented** — same failure class as an invented
 figure) · Q53 and Q59 top hits wrong · no `department` column and `oecd-cofog-expenditure` holds
 **0 series** (both raised to the stats thread, neither edited) · the values path is unscored.
+
+2026-08-19 22:57 UTC — ▼ **INGEST NAMES IS COMPLETE: THE CASE NAME AND THE WITNESS WERE INSIDE
+REQUESTS WE WERE ALREADY PAYING FOR.** Executes `docs/BRIEF_INGEST_NAMES.md` §0–§3. Report:
+**`docs/INGEST_NAMES_REPORT.md`**. CHANGE_LOG (2026-08-19 22:57 UTC). `check:names` **33/33**,
+`check:names-negative` **5/5 fired with the rollback demonstrated**, `verify:names-e2e` run live,
+`tsc` clean in `scrutinise-web`. **Cost $0 — no LLM call anywhere.**
+
+✅ **CASE LAW 0% → 99.98%** (74,883 of 74,896; 74,877 route `source`, 6 `parsed:v1`, route stored
+per row). **COMMITTEE EVIDENCE 0% → 96.87%** (written 97.72%, oral 90.11%; 1,603 API pages, 0 failed,
+0 incomplete windows, ~1.9 h, metadata only). **COMMITTEE REPORTS 0% → 85.58%** with **no fetch at
+all** — the committee's name was already in our own `notes` blob.
+
+✅ **AND IT REACHES A USER: 21 of 23 committee results now carry a name (91%)**, measured through
+the platform's own search with both services' counters read either side, against S8's 0. Verbatim:
+`Water Quality in Rivers — WQR0085 — Salmon and Trout Conservation` — §0's own example. ⚠ n is
+small and the router is non-deterministic; an intermediate run measured 57%.
+
+⚠⚠ **MY PREDICTION WAS REFUTED BY THE GUARD I DOUBTED.** I predicted zero citation-shaped rejects
+because "the source never publishes a bare citation as a case name". It does, twice
+(`FRBRname="[2015] EWHC 1842 (Fam)"`). Those rows are blank instead of titled with their own
+citation **only because the guard exists**. ⚠ A third is my guard's own false negative:
+`FRBRname="M"` is the real name of an anonymised family case and my rule strips it to nothing.
+
+⚠⚠ **THE BRIEF'S PREMISE THAT EVERY JUDGMENT IS UNTITLED IS WRONG** — `tna-caselaw` was the only
+blank collection; `et-decisions` 100%, `scottish-courts` 99.9%, `echr-hudoc` 100%, `ni-judgments`
+98.0%, `cma-cases` 94.0%, `tax-tribunals` 92.3%. ⚠ Titled is not well titled and those were not
+improved.
+
+⚠⚠ **THE SNIPPET A USER AND LEX SEE FOR A JUDGMENT IS A STYLESHEET** — 200 of 200 sampled
+`tna-caselaw` documents open with the AKN generator's CSS (p50 5.3%, p90 23.5%, max 67.9%), and the
+snippet is cut from the head. Lex's evidence for *R (Miller) v The Prime Minister* literally begins
+`#judgment { font-family: 'Times New Roman'; … }`. NOT fixed — needs a re-compile of 74,896
+documents plus an index rebuild (D-4).
+
+⚠⚠ **8,302 GOVERNMENT RESPONSES ARE DELIBERATELY UNATTRIBUTED.** They are the Government's text
+under a committee's inquiry, carrying that committee's name on the row — the obvious sweep would
+have labelled them as the committee's findings. A live negative control corrupts one and watches
+the guard turn red.
+
+⚠ **PER-SPEECH ORAL ATTRIBUTION IS SCOPED OUT AND SAYS SO.** One row per whole transcript, so we
+store **who appeared**, never a speaker: **0 of 15,806 oral rows carry `speaker`**, asserted live.
+
+▶ **CHARLIE — four decisions, all in the report:** D-1 the committee ROLE phrase (a search-owned
+one-liner; and `lib/lex/attribution.ts` now documents the OPPOSITE of the data — its
+`ATTRIBUTION_ABSENCE_NOTE` goes into the prompt saying we hold no committee names) · D-2 provenance
+in `notes` vs its own column (recommend: leave) · **D-3 `itemDate` on 74,896 case-law rows is the
+citation year, not the judgment date** — `[2019] UKSC 41` reads 2019-01-01, handed down 2019-09-24;
+the live writer now stores the true date, so old and new rows are on two bases until a 13-minute
+rerun you authorise · D-4 the CSS re-compile.
+
+▶ **CC-SEARCH — one line, reported not made:** `lib/lex/corpus-type-map.ts:226`,
+`TITLE_FROM_DB = new Set(['bills-api'])` → add `'tna-caselaw'`. Without it the dense half shows the
+recovered case name and the BM25 half shows the literal slug `tna-caselaw` (the FTS index still
+holds `sectionTitle: null`, confirmed by querying `fts-serve`). ⚠ It does not fix
+`titleBoosted: false` — **searching for a case BY NAME still cannot match the name** until reindex.
+
+✅ **§1.3's extracts found four bad gold keys** — K1/K7 are both *R (Evans) v Attorney General*, K8
+is a notice-of-termination case, K9 is a data-breach vicarious-liability case. Already committed by
+the search thread (975ecc4), which records a 40% key error rate off the back of them.
+
+❌ **Not done:** per-speech oral attribution · the BM25 title line and the name-match reindex · the
+CSS re-compile · 41,419 `committees-reports` rows (12.0%) with no metadata blob and so no author ·
+1,401 oral sessions with no witness record at source · the 13 untitled case-law rows · the other
+case-law collections' poor titles · **no browser walk was possible from here and none is claimed.**
 
 2026-08-19 17:09 UTC — ▼ **GRAPH 3A IS COMPLETE: THE POSITION GRAPH HAS A FACTUAL LAYER — 2,317,523
 signals and 2,304,748 estimates, built from votes, EDM signatures, witness appearances and declared

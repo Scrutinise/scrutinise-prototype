@@ -284,6 +284,124 @@ silently measure zero unless it is passed explicitly.
 
 ---
 
+## INGEST NAMES — THE CASE NAME AND THE WITNESS WERE IN THE RESPONSE ALL ALONG (2026-08-19 22:57 UTC)
+
+Executes `docs/BRIEF_INGEST_NAMES.md` §0–§3. Report: **`docs/INGEST_NAMES_REPORT.md`**.
+`check:names` **33/33** · `check:names-negative` **5/5 fired, with the rollback demonstrated** ·
+`verify:names-e2e` run live against Neon + `fts-serve` + `vector-serve` · `tsc` clean in
+`scrutinise-web`. **Cost $0 — no LLM call anywhere in this sprint.**
+
+✅ **BOTH HALVES OF §0 WERE THE SAME FAILURE: THE WRITER HAD THE NAME IN ITS HAND AND DROPPED IT.**
+`processTnaCaselaw` already held each judgment's Akoma Ntoso XML — which carries
+`<FRBRname value="Mensah v Jones"/>` on **100 of 100** sampled judgments — in a local variable at
+the moment it wrote a row with no title. `processCommitteesApi` already fetched `item.witnesses`
+and `item.committee` and stored neither. **Nothing new had to be discovered; the facts were inside
+requests we were already paying for.** ⚠ `sources/tna-caselaw.ts` even parses the name into
+`CaseLawJudgment.name` — and nothing anywhere consumes that interface.
+
+✅ **CASE LAW: 0% → 99.98%** — 74,883 of 74,896, **74,877 by route `source` and 6 by `parsed:v1`**,
+with the route stored per row and counted back off the database. **Hand-read 30 of 30 correct, and
+the negative control (each title paired with the WRONG judgment) scores 0 of 30** — without that
+control the 30/30 could have been matching "Royal Courts of Justice".
+
+✅ **COMMITTEE EVIDENCE: 0% → 96.87%** (137,854 of 142,315) from a metadata-only API sweep —
+1,603 pages, **0 failed pages, 0 incomplete windows**, ~1.9 h. Written evidence **97.72%**
+(85,345 organisations → `attribution`, 38,267 individuals → `speaker`); oral **90.11%** panel lists.
+✅ **COMMITTEE REPORTS: 0% → 85.58%** (295,052 of 344,773) **with no fetch at all** — the
+committee's name was already sitting in our own `notes` blob, one column from the one search reads.
+
+✅ **AND IT REACHES A USER, MEASURED THROUGH THE PLATFORM'S OWN SEARCH, NOT A DATABASE QUERY.**
+**21 of 23 committee results now carry a name (91%)**, against S8's 0. Verbatim from the run:
+`Water Quality in Rivers — WQR0085 — Salmon and Trout Conservation` — which is §0's own example:
+a user reading sewage evidence can now tell the quote is a campaign group and not the committee.
+⚠ n is small (3 questions, 23–30 results) and the router is non-deterministic run to run; an
+intermediate run measured 57%. The direction is not in doubt, the decimal place is.
+
+⚠⚠ **MY OWN PREDICTION WAS REFUTED BY THE GUARD I DOUBTED.** I predicted **"0 citation-shaped
+rejects — the source never publishes a bare citation as `FRBRname`"**. It does:
+`FRBRname="[2015] EWHC 1842 (Fam)"` and `FRBRname="[2020] EWHC 3396 (Fam)"`. Without §1.2's
+"a placeholder that looks like data is worse than a blank" rule, those two rows would now be in the
+search index titled with their own citation, **looking exactly like recovered names**. ⚠ A third
+row is my guard's own false negative: `[2013] EWHC 1901 (Fam)` publishes `FRBRname="M"`, which is
+the real name of an anonymised family case, and my rule strips it to nothing. Reported, not
+special-cased.
+
+⚠⚠ **THE BRIEF'S §0 PREMISE IS WRONG: `tna-caselaw` WAS THE ONLY BLANK COLLECTION.** `et-decisions`
+100.0%, `scottish-courts` 99.9%, `echr-hudoc` 100%, `ni-judgments` 98.0%, `cma-cases` 94.0%,
+`tax-tribunals` 92.3% all already carried a title. ⚠ Titled is not well titled — `scottish-courts`
+stores a truncated slug rendered as prose and `cma-cases` "apples mobile platform — decision doc 11";
+both are display strings a rule composed, and neither was improved here.
+
+⚠⚠ **THE MOST DAMAGING ERROR AVAILABLE HERE WAS ONE SQL STATEMENT AWAY, AND IT IS NOT THE ONE 2D-5
+FOUND.** 8,302 `committees-reports` rows are **Government Responses** — the Government's text,
+published under a committee's inquiry, carrying that committee's id and name on the row. The
+obvious sweep would have labelled 8,302 rows of government text as the committee's finding. They
+are excluded by publication type, left NULL, and a live negative control corrupts one and watches
+the guard turn red. The API's `respondingDepartment` — which would give them a correct author — was
+populated on **1 of 100** sampled publications.
+
+⚠⚠ **THE ORAL-EVIDENCE HALF IS SCOPED DOWN AND SAYS SO.** We hold **one row per whole transcript**
+(mean 14,190 words), so "who said this sentence" is not a question our data can answer. What is
+stored is **who appeared**, in the body column — **0 of 15,806 rows carry a `speaker`**, asserted by
+a live check, because a four-person panel in a person field reads as one human being with
+semicolons in their name. Per-speech attribution needs the granularity change V18 made for
+`pwdata`, not a field.
+
+⚠⚠ **A FINDING THIS SPRINT TRIPPED OVER: THE SNIPPET A USER AND LEX SEE FOR A JUDGMENT IS A
+STYLESHEET.** `rawToText` emits the AKN `<meta>` block, so **200 of 200** sampled `tna-caselaw`
+documents open with the generator's embedded CSS (p50 5.3% of the document, p90 23.5%, max 67.9%) —
+and the snippet is cut from the head. Live from `fts-serve`, this is the evidence Lex is handed for
+*R (Miller) v The Prime Minister*: `"#judgment { font-family: 'Times New Roman'; font-size: 12pt; }
+…"`. NOT fixed — it needs a re-compile of 74,896 documents and an index rebuild. Decision D-4.
+
+⚠ **THE TWO RETRIEVERS NOW TITLE THE SAME JUDGMENT DIFFERENTLY, AND THE FIX IS ONE LINE IN A
+SEARCH-OWNED FILE — REPORTED, NOT MADE.** The dense half reads Neon and shows the recovered case
+name; the BM25 half reads the FTS index, whose copy is still `sectionTitle: null` (confirmed by
+querying `fts-serve` directly), and falls back to the literal corpus slug **`tna-caselaw`**.
+`corpus-type-map.ts:226`: `TITLE_FROM_DB = new Set(['bills-api'])` → add `'tna-caselaw'`. The
+`bills-api` entry is there for exactly the same reason. ⚠ It does NOT fix `titleBoosted: false` —
+**searching for a case by name still cannot match the name** until a reindex.
+
+⚠ **`lib/lex/attribution.ts` NOW DOCUMENTS THE OPPOSITE OF THE DATA.** Its header says
+`committees-evidence` is "0 of 800 rows", and `ATTRIBUTION_ABSENCE_NOTE` — carried **into the
+prompt** — tells the model "we simply do not store that name as a field yet". Both were true on
+19 August and are not now. Exact replacement text in the report, D-1.
+
+✅ **§1.3 DELIVERED FIRST, AND IT FOUND FOUR BAD KEYS.** The ten case-law gold questions now carry
+the case name and the judgment's first ~200 words beneath them in `GOLD_CANDIDATES_S8.md`.
+**Four of the nine substantive keys point at the wrong case:** K1 and K7 (equality duty; benefit
+cap) are both *R (Evans) v Attorney General* — the Prince of Wales letters; K8 (public-authority
+duty of care) is *Newcastle upon Tyne Hospitals NHS FT v Haywood*, a notice-of-termination case;
+K9 (climate targets) is *WM Morrison Supermarkets v Various Claimants*, vicarious liability for a
+data breach. ⚠ The verdicts are in the report, not in the gold document — the extracts there are
+factual only, because accepting a question is Charlie's call. The search thread has since acted on
+them and records a 40% key error rate.
+
+⚠ **THE VERIFICATION FOUND A DEFECT IN MY OWN CODE ON ITS FIRST RUN.** Eight of thirty §1.4 samples
+came back showing CSS instead of a party line: `stripAknPreamble` required every CSS rule to
+contain a `prop: value` pair, and the generator emits empty rules (`#judgment .PageNumber { }`), so
+the walk stopped at the first one. Fixed, regression check added, and the seven affected §1.3 gold
+extracts rewritten (CSS occurrences in that document 7 → 0). Nothing stored was affected — the
+title path never reads compiled text.
+
+⚠ **THE GOLD DOCUMENT'S FORMAT CHANGED UNDER THE SPRINT** (`### K1 —` → `### Q11 · K1 —`,
+`Accept / Reject / Amend` → `VERDICT →`) while the search thread restructured it. The extract
+writer's strict regex matched nothing and **refused to run rather than silently writing zero
+blocks**; both shapes are accepted now, and the refusal on zero matches stays. That file is
+committed by the search thread (975ecc4) with all ten extracts and no CSS, so
+`commit-ingest-names.sh` deliberately does not touch it.
+
+❌ **Not done, named:** per-speech oral attribution (needs a granularity change) · the BM25 title
+line and the name-match reindex · the CSS re-compile · **41,419 `committees-reports` rows (12.0%)
+with no metadata blob and so no author** · 8,302 Government Responses with no author at source ·
+1,401 oral sessions with no witness record at source · **`itemDate` on 74,896 case-law rows is
+still the citation year, not the judgment date** (D-3: `[2019] UKSC 41` reads 2019-01-01, handed
+down 2019-09-24; the live writer now stores the true date, so old and new rows are on two different
+bases until the rerun) · the 13 untitled case-law rows · the other case-law collections' poor
+titles · **no browser walk, and none claimed.**
+
+---
+
 ## INGEST NAMES — PREDICTIONS, RECORDED BEFORE THE SWEEPS RAN (2026-08-19 22:04 UTC)
 
 Executes `docs/BRIEF_INGEST_NAMES.md`. Written from the §1.1 and §2.1 audits and BEFORE any
