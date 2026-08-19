@@ -67,6 +67,8 @@ export interface BuildView {
   /** 25-B §1 — the pass the SERVER wants run next, or null when there is none. */
   nextPass: string | null
   resumable: boolean
+  /** AMENDMENT_25B §B — no worker picked this up, so the page is driving it instead. */
+  workerLate: boolean
   forks: Array<{
     id: string; forkKey: string; fieldKey: string; chosen: string
     alternative: string; caseForAlternative: string; alternativeIndex: number; resolved: boolean
@@ -77,6 +79,20 @@ export interface BuildState {
   latest: BuildView | null
   history: Array<{ id: string; version: number; status: string; framing: string; completedAt: string | null }>
   ceiling: { budgetMs: number; binding: string; costPence: number }
+  /** AMENDMENT_25B §B — 'worker' (the build survives this page closing) or 'client'
+   *  (the fallback, which needs the page to stay open). The server decides and says. */
+  driver: 'worker' | 'client'
+  /** AMENDMENT_25B §C4 — measured from the last 20 successful builds, or an admission
+   *  that there are not yet enough to have a figure. */
+  estimate: {
+    meanSeconds: number | null
+    sampleSize: number
+    minutes: number | null
+    line: string
+    offerEmail: boolean
+  }
+  /** §C4 — the user's remembered "email me when it's done" choice. */
+  emailDefault: boolean
 }
 
 /**
@@ -141,6 +157,14 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** 25-B §1 — the pass this client currently has in flight, so polls do not stack POSTs. */
   const drivingRef = useRef<string | null>(null)
+  /**
+   * AMENDMENT_25B §C — the last build status this SESSION actually observed.
+   *
+   * ⚠ IT STARTS NULL ON PURPOSE. The notification must fire on a TRANSITION we watched,
+   * never on what we found. Opening the page on a build that finished yesterday would
+   * otherwise raise "your build is ready" for something the user read last night.
+   */
+  const lastStatusRef = useRef<string | null>(null)
 
   // Local form state for the current step.
   const [text, setText] = useState('')
@@ -149,6 +173,9 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   const [readingUrl, setReadingUrl] = useState('')
   const [correction, setCorrection] = useState('')
   const [correcting, setCorrecting] = useState(false)
+  /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
+  const [emailWhenDone, setEmailWhenDone] = useState(false)
+  const emailSeededRef = useRef(false)
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -213,6 +240,76 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
     pollRef.current = setTimeout(() => { void refresh() }, 3000)
     return () => { if (pollRef.current) clearTimeout(pollRef.current) }
   }, [build, refresh])
+
+  /**
+   * §C4 — seed the checkbox from the remembered default, ONCE.
+   *
+   * ⚠ Only once: re-seeding on every poll would fight the user, snapping the box back to
+   * their old default the moment they unticked it.
+   */
+  useEffect(() => {
+    if (emailSeededRef.current || !build) return
+    emailSeededRef.current = true
+    setEmailWhenDone(build.emailDefault)
+  }, [build])
+
+  /**
+   * AMENDMENT_25B §C — TELL THE USER WHEN IT IS DONE.
+   *
+   * Two of the three the amendment asks for:
+   *
+   *  1. IN-PAGE, and it is free: the row is the source of truth and the page already
+   *     polls it, so a build that finishes while the user is looking elsewhere on the
+   *     page updates itself. Nothing to build — but it is only true because the WORKER
+   *     runs the build (§B). Under the old design the page had to stay open to make
+   *     progress at all, so "it updates itself" would have been a promise about a page
+   *     that was doing the work.
+   *
+   *  2. BROWSER NOTIFICATION, on a permission granted once, so a ten-minute job can be
+   *     left in a background tab.
+   *
+   * ⚠ THE PERMISSION IS NOT REQUESTED ON PAGE LOAD. A prompt that appears before the user
+   * has asked for anything is the pattern everyone has learned to dismiss, and a
+   * dismissal is permanent — `Notification.permission` becomes "denied" and cannot be
+   * asked again. It is requested when they START a build, which is the first moment the
+   * offer means anything.
+   *
+   * ⚠ AND A FAILED BUILD NOTIFIES TOO. Only telling people about success is how someone
+   * waits ten minutes for something that stopped after two.
+   */
+  useEffect(() => {
+    const status = build?.latest?.status
+    if (!status) return
+
+    const previous = lastStatusRef.current
+    lastStatusRef.current = status
+
+    // Only a transition we watched, from running to finished.
+    const wasRunning = previous === 'RUNNING' || previous === 'QUEUED'
+    const hasFinished = status === 'DONE' || status === 'FAILED' || status === 'CANCELLED'
+    if (!wasRunning || !hasFinished) return
+
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission !== 'granted') return
+
+    const body =
+      status === 'DONE'
+        ? 'Your idea has been drafted, researched and revised. Open the tab to read it.'
+        : status === 'CANCELLED'
+          ? 'You stopped the build. Everything it drafted before that has been kept.'
+          : build?.latest?.failureReason?.slice(0, 160) ?? 'The build stopped early. What it drafted has been kept.'
+
+    try {
+      const n = new Notification(
+        status === 'DONE' ? 'Your Scrutinise build is ready' : 'Your Scrutinise build stopped',
+        { body, tag: `build-${build?.latest?.id ?? 'x'}`, icon: '/favicon.ico' },
+      )
+      n.onclick = () => { window.focus(); n.close() }
+    } catch {
+      // Notification construction can throw on some mobile browsers even with permission
+      // granted. The in-page update has already happened, so there is nothing to recover.
+    }
+  }, [build])
 
   /**
    * 25-B §1 — DRIVE THE BUILD, ONE PASS PER REQUEST.
@@ -312,11 +409,25 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   const startBuild = useCallback(() => {
     if (!ideaId) return
     setError(null)
+
+    // AMENDMENT_25B §C — ask now, because now is when it means something. Only when the
+    // browser has not already decided: re-requesting a denied permission does nothing,
+    // and re-requesting a granted one is a prompt for no reason.
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      void Notification.requestPermission().catch(() => {
+        // Safari on older versions rejects rather than resolving 'denied'. Nothing to do:
+        // the build runs either way and the page still updates itself.
+      })
+    }
     // Optimistic RUNNING so the panel does not sit inert. The authoritative status still
     // comes from the server on the next poll.
     setBuild((b) => b && ({ ...b, canStart: false }))
     void fetch(`/api/ideas/${ideaId}/build`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // §C4 — sent only when the offer was actually shown. Posting `false` on a build too
+      // short to have offered would silently clear a preference the user set elsewhere.
+      body: JSON.stringify(build?.estimate?.offerEmail ? { notifyEmail: emailWhenDone } : {}),
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -328,7 +439,7 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
       .finally(() => { void refresh() })
     // Begin polling immediately rather than waiting for the POST to answer.
     setTimeout(() => { void refresh() }, 1200)
-  }, [ideaId, refresh])
+  }, [ideaId, refresh, build?.estimate?.offerEmail, emailWhenDone])
 
   const cancelBuild = useCallback(async () => {
     await post('/build/cancel', {})
@@ -551,6 +662,35 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
                 >
                   Build it
                 </button>
+
+                {/* AMENDMENT_25B §C4 — the estimate, BEFORE they commit to waiting.
+                    It is a measurement or it is an admission; `estimate.line` is
+                    already whichever of those is true, so there is no branch here
+                    that could accidentally quote a figure we do not have. */}
+                {build?.estimate && (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    {build.estimate.line}
+                    {build.estimate.meanSeconds != null && (
+                      <span className="text-zinc-400"> (from the last {build.estimate.sampleSize} builds)</span>
+                    )}
+                  </p>
+                )}
+
+                {/* §C4 — the email offer, driven by the same number. Below about three
+                    minutes there is no offer at all: they will just wait, and an
+                    unrequested email for a two-minute job is a nuisance. */}
+                {build?.estimate?.offerEmail && build.canStart && (
+                  <label className="mt-2 flex items-center gap-2 text-xs text-zinc-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={emailWhenDone}
+                      onChange={(e) => setEmailWhenDone(e.target.checked)}
+                      className="rounded border-zinc-300"
+                    />
+                    Email me when it’s done
+                  </label>
+                )}
+
                 {build?.blockedReason && !build.canStart && (
                   <p className="mt-2 text-xs text-amber-700">{build.blockedReason}</p>
                 )}
@@ -561,9 +701,27 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
               <BuildProgress
                 build={latest}
                 ceiling={build!.ceiling}
+                estimate={build!.estimate}
                 onCancel={running ? cancelBuild : undefined}
                 busy={busy}
               />
+            )}
+
+            {/* AMENDMENT_25B §B/§C — say whether they can walk away, because the two
+                drivers give opposite answers and the user cannot tell by looking.
+                Under the worker this is the whole point of the change; under the
+                fallback, leaving would stall the build, and saying nothing would be
+                the more expensive silence. */}
+            {running && build && (
+              <p className="mt-3 text-xs text-zinc-500">
+                {latest?.workerLate
+                  ? '⚠ Our build server hasn’t picked this up, so it’s running from this page instead — please keep the tab open. It will still finish.'
+                  : build.driver === 'worker'
+                  ? typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted'
+                    ? 'This runs on our servers — you can close this tab and we’ll notify you when it’s done.'
+                    : 'This runs on our servers, so you can close this tab and come back to it. Allow notifications and we’ll tell you when it’s finished.'
+                  : '⚠ Keep this tab open — this build is being run from this page, so closing it will stop it between passes.'}
+              </p>
             )}
 
             {(finished || stopped) && ideaId && (

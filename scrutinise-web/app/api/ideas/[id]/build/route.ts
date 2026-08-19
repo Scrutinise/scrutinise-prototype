@@ -22,8 +22,8 @@ export const maxDuration = 300
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
-import { buildState, claimBuild, runNextPass, BuildAlreadyRunning, ElicitationNotConfirmed } from '@/lib/lex/build'
-import { DEFAULT_FRAMING, isFraming, isBuildPassKey } from '@/lib/lex/build-config'
+import { buildState, claimBuild, claimQueuedBuild, runNextPass, BuildAlreadyRunning, ElicitationNotConfirmed } from '@/lib/lex/build'
+import { DEFAULT_FRAMING, isFraming, isBuildPassKey, buildDriver } from '@/lib/lex/build-config'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -40,6 +40,13 @@ const BodySchema = z.object({
    * completed, which would double-charge and overwrite proposals.
    */
   pass: z.string().optional(),
+  /**
+   * AMENDMENT_25B §C4 — "email me when it's done", as ticked on the build screen.
+   * Absent means the user expressed no preference on this build and their remembered
+   * default stands; present also UPDATES that default, which is what "remember the choice
+   * per user as a default they can change" means.
+   */
+  notifyEmail: z.boolean().optional(),
 })
 
 export async function GET(_req: Request, { params }: Params) {
@@ -62,7 +69,13 @@ export async function POST(req: Request, { params }: Params) {
   const framing = isFraming(parsed.data.framing) ? parsed.data.framing : DEFAULT_FRAMING
   const continuing = !!parsed.data.pass
 
-  // ── CONTINUE an existing build (25-B §1) ─────────────────────────────────
+  // ── CONTINUE an existing build — THE FALLBACK PATH ONLY ──────────────────
+  //
+  // ⚠ AMENDMENT_25B §B: with the worker driving, a continue request is a client acting on
+  // a stale belief and must be refused rather than obeyed. Running the pass anyway would
+  // race the worker through the same pass — two claims, and whichever lost would waste a
+  // model call. `buildState.nextPass` is already null under the worker, so a current
+  // client never sends this; refusing it is what protects against an old tab.
   if (continuing) {
     if (!isBuildPassKey(parsed.data.pass!)) {
       return NextResponse.json({ error: `Unknown pass "${parsed.data.pass}"` }, { status: 422 })
@@ -71,9 +84,23 @@ export async function POST(req: Request, { params }: Params) {
     const latest = state.latest
     // Nothing to continue. NOT an error — a poll racing the last pass's own completion
     // is the ordinary case, and 409ing it would put a red banner on a finished build.
+    //
+    // ⚠ Under the worker driver `nextPass` is null, so a current client never gets here;
+    // an OLD tab that does is refused by this same line rather than racing the worker.
+    // The exception is `workerLate` — no worker took the build, so the page drives it.
     if (!latest || (latest.status !== 'RUNNING' && latest.status !== 'QUEUED') || !latest.nextPass) {
       return NextResponse.json(state)
     }
+
+    // ⚠ CLAIM IT OFF THE QUEUE FIRST. Driving a build that is still QUEUED would leave it
+    // visible to `claimQueuedBuild`, so a worker starting up mid-build would take it too
+    // and both would run the same passes. Moving it to RUNNING is what makes the handover
+    // one-way — and the claim is conditional, so if a worker got there first this fails
+    // and the page simply goes back to polling.
+    if (latest.status === 'QUEUED' && !(await claimQueuedBuild(latest.id))) {
+      return NextResponse.json(await buildState(id))
+    }
+
     await runNextPass(id, authz.idea.creatorId, latest.id)
     return NextResponse.json(await buildState(id))
   }
@@ -81,7 +108,7 @@ export async function POST(req: Request, { params }: Params) {
   // ── START a build ────────────────────────────────────────────────────────
   let buildId: string
   try {
-    buildId = await claimBuild(id, framing)
+    buildId = await claimBuild(id, framing, parsed.data.notifyEmail)
   } catch (err) {
     if (err instanceof BuildAlreadyRunning) {
       return NextResponse.json({ error: err.message, state: await buildState(id) }, { status: 409 })
@@ -92,14 +119,21 @@ export async function POST(req: Request, { params }: Params) {
     throw err
   }
 
-  // Awaited on purpose. Returning early and letting the promise run on is how work gets
-  // silently killed when the response ends — and a build that dies unrecorded is exactly
-  // the failure this feature exists to make impossible. The client polls GET regardless,
-  // so a platform timeout on this request costs the response, not the record.
+  // ⚠ AMENDMENT_25B §B — ENQUEUE AND RETURN. THE REQUEST RUNS NOTHING.
   //
-  // 25-B: this runs the FIRST pass only. The client's next poll carries `nextPass` and it
-  // POSTs back to continue — see the header.
-  await runNextPass(id, authz.idea.creatorId, buildId)
+  // "The web app enqueues it and returns immediately." The row is left at QUEUED, the
+  // Railway worker claims it, and this response comes back in milliseconds. That is the
+  // whole point of the change: the build no longer depends on this request, this
+  // function's time limit, or the browser tab that made it.
+  //
+  // The client polls the row exactly as before — it does not need to know where the work
+  // happens, which is why the progress display needed no change for this.
+  if (buildDriver() === 'client') {
+    // The fallback: no worker is coming, so this request runs the first pass and the
+    // client's poll drives the rest. Awaited on purpose — returning early and letting the
+    // promise run on is how work gets silently killed when the response ends.
+    await runNextPass(id, authz.idea.creatorId, buildId)
+  }
 
   return NextResponse.json(await buildState(id))
 }
