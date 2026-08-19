@@ -2,7 +2,8 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-17 23:12 UTC — ▼ **SEARCH S7: the carried backlog is cleared. Twice the
+*Last updated: 2026-08-19 09:35 UTC — ▼ **SEARCH S8: the first-pass search infrastructure is finished. FOUR of eight sections reversed a premise — the two "non-existent" fallback models both return HTTP 200 (one is silently substituted), attribution exists everywhere EXCEPT the committees collection it was built for, and raising stream concurrency to 4 makes five-stream questions WORSE because 4 is exactly vector-serve's width.**
+Earlier: 2026-08-17 23:12 UTC — ▼ **SEARCH S7: the carried backlog is cleared. Twice the
 measurement came back "this cannot answer the question", and that is reported as the result. The
 brief's committees-first prediction cannot hold — committees is at a ceiling — while caselaw and
 guidance have a measured +12.5pp and debates is 15pp WORSE.**
@@ -28,6 +29,92 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-19 09:35 UTC — ▼ **SEARCH S8 IS COMPLETE: THE FIRST-PASS SEARCH INFRASTRUCTURE IS
+FINISHED, AND FOUR OF THE EIGHT SECTIONS REVERSED A PREMISE THE BRIEF OR THE CODEBASE HELD.**
+Executes `docs/BRIEF_SEARCH_S8.md` §1–§8. Report: **`docs/SEARCH_S8_REPORT.md`**.
+CHANGE_LOG (2026-08-19 09:35 UTC). `verify:s8-deepening` **25/25 live against Neon**,
+`check:s8-attribution` **33/33**, `check:s8-config` **18/18 with --probe**,
+`check:model-registry` **25/25**, `check:deepening` all pass. ⚠ `tsc` clean on every file S8 touched but **NOT on the tree** — `lib/lex/build.ts` uses `BuildDriver`/`buildDriver` with no import (concurrent LEX/25-B session, mid-edit). Not in any S8 commit; ⚠⚠ **if that lands, production fails to build.**
+**Cost £1.01, measured from the `LlmSpend` ledger, not estimated** — `deepening.sift` 64.5p (the sift dominates, and it is the same component whose truncation caused §1's fourth defect), `deepening.gather` 28.9p, `search.query-router` 6.8p across 242 calls, `deepening.adversarial` 0.9p. ⚠ My own pre-run estimate was ~£0.40; the ledger says 2.5x that.
+
+✅ **§1 — PRECEDENT AND DEVOLUTION_SCOPE ARE WIRED, AND THE ARTEFACTS WERE READ BACK FROM NEON.**
+The "nobody has checked whether this worked" sentence is **reachable in real stored output**, not
+just present as a constant. ⚠⚠ **FOUR DEFECTS FOUND BY RUNNING IT.** The linked-instrument path
+**could never return anything** — `IdeaLegislation.legislationItemId` is a UUID, not a gid, so the
+strongest of the two sources was silently dead on every idea. `retrieveDevolutionScope` **ignored
+its own limit** and wrote a **577-line** body into `EvidenceItem` (asked for 24, stored 360).
+And the job loop sat after both the zero-candidate return AND `writePassReferences` — a truncated
+sift returned 500 candidates, the JSONB write threw, and the LEGAL pass ended FAILED having run no
+job and recorded no reason. ⚠ The sift-passthrough root cause is NOT fixed.
+
+⚠⚠ **§2 — ATTRIBUTION IS BUILT, AND THE COLLECTION IT WAS BUILT FOR HAS NOTHING.** Of **54**
+non-legislation collections, **14 carry attribution and 40 carry none**. `committees-evidence` is
+**0 of 800 rows** across four id offsets, on both columns; `committees-reports` 0 of 600. The
+witness's name is in the R2 body and in no metadata we hold — **an ingest job, not a search one**.
+✅ What IS carried: the whole pwdata family, Holyrood, the Senedd, `early-day-motions` (⚠ the
+SPONSOR), `tax-tribunals` (⚠ the JUDGE), `pwdata-wrans` (⚠ the minister ANSWERING) — three roles
+that any plausible default would have described wrongly, all read off the ingest writer.
+✅ On the S5 ten questions: **34 of 100** results attributed; **DEBATE 97%** against a store rate
+of 4.0–99.5% — retrieval favours modern Hansard, so the user sees far better than the average.
+⚠ **Two of my own measurement bugs, both caught by running it:** the first audit probed corpus
+names I had GUESSED (`caselaw`, `guidance`, `hansard` — none exist) and never sampled
+`tna-caselaw`; and `LIMIT 200` with no `ORDER BY` read **0/200** on a collection that is 99.5%
+populated from 2010.
+
+✅ **§3 — THE FRAMING EXPERIMENT CAN ANSWER ITS QUESTION AT LAST, AND THE ANSWER IS NO.** Re-homed
+through `runSearch()`: **headroom 4/31 → 22/31**, recall 8.1% → **42.2%**. Framing effect
+**−1.1pp**, better on 3 and worse on 3 — a **real null result** rather than S7's floor effect.
+Both predictions, recorded in the change log before the run, held. ⚠ Which comparison ran is
+stated: bare vs **caller-enriched**, NOT the Lex user-profile contrast.
+
+⚠⚠ **§6 — THE PREDICTION IS REFUTED AND THE MECHANISM IS IN THE SERVICE'S OWN COUNTERS. DO NOT
+RAISE `LEX_STREAM_CONCURRENCY`.** On five-stream questions cap 4 is **worse on every statistic**:
+p50 7,205 → 11,136 ms, p95 13,071 → **19,885 ms**. **4 is exactly `vector-serve`'s width** — its
+`/stats` shows `max: 4` and `queueHighWaterMark: 4` during the run. Per-stream fusion means each
+stream issues a vector call, so a cap of 4 fills the service exactly and the fifth stream queues.
+**Raising the cap buys saturation, not a wave** — which is the reasoning S5 §2 used to pick 3,
+holding up under test. ⚠ n=5 per arm on the binding subset; direction consistent, price imprecise.
+
+⚠⚠ **§7 — THE BRIEF'S PREMISE IS FALSE, TWICE.** Both "non-existent" fallback models return
+**HTTP 200**. `claude-haiku-4-5-20251001` echoes its own id — **callable, never stale**; the
+registry had excluded it on a `/v1/models` read, and **a model-list read is not a callability
+test**. `grok-3-fast-beta` returns 200 and echoes **`grok-4.3`** — xAI **silently substitutes**, so
+the model our config named was never the model any user got, on every Lex turn that path served.
+Both routes now name `grok-4.3`; `KNOWN_STALE` is empty. ✅ Anthropic and xAI prices added with
+source URL and date-checked; no configured model resolves to "unpriced". ⚠ Declared inaccuracies:
+xAI is prompt-length tiered and this table records the LOW band (understates by up to 2×), and
+Sonnet 5's LIST price is recorded rather than its expiring promotion. ✅ **Nothing live wants an
+OpenAI key** — the only server-side read sits behind two entry points that throw.
+
+⚠ **§4 — `LEX_ROUTER_STREAMS_V2` BUILT, FLAG OFF, GATE NOT CLEANLY ADJUDICABLE.** Recall flat
+(41.1% → 41.1%), latency near-free (p50 −232 ms, p95 +810 ms). ⚠ It adds **no reachability** — the
+three collections are already inside tiers an existing stream selects; it adds a SLOT in the
+interleave. ⚠⚠ Three regressions, **only one of them the change**: F2 lost `legislation` and
+`guidance` to `consultations` (100% → 50%), while C2 and B6 **selected identical streams in both
+arms** and still moved — that is the router's per-stream query rewrite, a fresh LLM call per arm.
+**Displacement and router non-determinism are confounded at n=1 per arm.** ⚠ `impact-assessments`
+— the stream §4 quotes verbatim — was chosen on **1 of 44** and its own probe did not select it.
+**Leave it OFF** until §5 is validated and `explanatory` has questions.
+
+📋 **§5 — 50 DRAFT GOLD QUESTIONS in `docs/GOLD_CANDIDATES_S8.md`, NOTHING SCORED.** 21 outside-in
+/ 29 document-outward, six new question shapes. ⚠⚠ **CASE LAW CANNOT BE KEYED FROM THE DATABASE AT
+ALL** — every `tna-caselaw` row has `sectionTitle = NULL`, the id IS the neutral citation, and the
+subject lives only in R2. All ten case-law questions are marked `PRESENT / SUBJECT UNVERIFIED`.
+⚠ Only **52%** of impact assessments resolve to a named instrument; four guidance collections
+(`ico`, `fca-handbook`, `sentencing-council`, `planning-policy`) are unaskable by title.
+
+▶ **CHARLIE: `docs/GOLD_CANDIDATES_S8.md` needs your validation pass — the case-law section most.**
+▶ **CHARLIE (browser):** run the Deepening on a real idea and confirm the two new cards; then ask
+Lex about a debate (expect a named speaker) AND about committee evidence (expect NO name — that
+absence is correct and is the §2 finding).
+▶ **CHARLIE (Vercel, unreadable from here):** `LEX_ROUTER_STREAMS_V2` OFF unless §4's numbers
+persuade; `LEX_STREAM_CONCURRENCY` stays 3; S7's `LEX_VECTOR_STREAMS` recommendation stands.
+
+❌ **Not done, named:** committee attribution (ingest) · the sift passthrough that caused §1's
+fourth defect · `explanatory` has no gold questions, so §4 is only two-thirds scoreable · every
+case-law subject unverified · `check:score-scope` still fails on the Central thread's
+`lib/question-library.ts` (reported, not edited).
 
 2026-08-17 22:52 UTC — ▼ **INGEST CORPUS FRESHNESS IS COMPLETE: nothing was withdrawn, and the
 missing names were already stored.** Executes `docs/BRIEF_INGEST_CORPUS_FRESHNESS.md` §1 and §2.

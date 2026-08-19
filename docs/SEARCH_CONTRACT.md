@@ -2,7 +2,7 @@
 
 **Status:** STANDING REFERENCE. ⚠ **A contract that has drifted is worse than none, because the next
 reader trusts it.** Whoever changes what search can do updates this file **in the same commit**.
-**Last verified:** 17 August 2026, against the running system and the code, not from memory.
+**Last verified:** 19 August 2026, against the running system and the code, not from memory.
 **Owner:** CC-Search. **Audience:** every other stream — Lex, Graph, Central, Ingest.
 
 This document exists because other streams have been building against guesses. It is written in
@@ -65,10 +65,44 @@ streams.**
 **The five streams the router picks between:** the law · what Parliament said · what committees were
 told · what courts decided · what regulators advise.
 
+⚠ **Three more exist behind `LEX_ROUTER_STREAMS_V2`, default OFF (S8 §4):** what the government
+PREDICTED (impact assessments) · what the government ASKED (consultations) · what a provision was
+FOR (explanatory notes and memoranda). **They add no reachability** — all three collections already
+sit inside tiers the `legislation` and `guidance` streams select with no corpus filter. What the
+flag adds is a SLOT of their own in the round-robin interleave, so an impact assessment stops
+competing for legislation's positions against 1.6M sections of statute. Cost: five streams become
+eight, and a stream is one retrieval call per query. Measured in `docs/SEARCH_S8_ROUTER_V2.md`.
+
 ⚠ **`PRECEDENT`, `CAUSAL_EVIDENCE`, `DEVOLUTION_SCOPE` and `GENERAL_CORPUS_CHAT` are DESCRIPTIVE.**
 They are logged and callers key off them, but they select no streams — **adding one changes no
 retrieval for anyone.** If you need retrieval to actually change, that is a conversation with
 CC-Search, not a new string.
+
+### ⚠ TWO STRUCTURED RETRIEVAL JOBS, WHICH ARE NOT INTENTS (S8 §1)
+
+An **intent** takes keywords, goes through `runSearch()` and returns a ranked candidate list. A
+**job** takes an instrument or a query and returns a RENDERED BLOCK that a flat ranking would
+destroy. They are a different axis, and S8 §1's audit is what separated them:
+
+| job | what it does | does it use the gateway? |
+|---|---|---|
+| `retrievePrecedent(gid)` | intended / predicted / observed for **one instrument**, as a GROUP | ❌ **No.** A keyed `$queryRaw` over `explanatory-notes`, `explanatory-memoranda`, `impact-assessments`. Declaring `PRECEDENT` in a pass's `intents` runs a general search that has nothing to do with this. |
+| `retrieveDevolutionScope(q)` | who has legislated, jurisdiction-labelled from the **id**, never the title | ✅ Yes — an ordinary routed search; the job's contribution is the labelling and the refusal below |
+
+⚠⚠ **`DEVOLUTION_SCOPE` DOES NOT ANSWER "IS IT RESERVED", and its output says so.** It shows who
+has legislated, which is evidence and not a conclusion. The reservation question is settled by
+Schedule 5 to the Scotland Act 1998, Schedule 7A to the Government of Wales Act 2006 and Schedules
+2 and 3 to the Northern Ireland Act 1998, and the block names them. Answering a constitutional
+question with a frequency count is exactly the confident wrong claim this platform exists not to
+make.
+
+⚠ **A missing post-implementation review is NEVER filled from the impact assessment.** Most
+instruments have never had one, and the honest output says *"NO POST-IMPLEMENTATION REVIEW EXISTS
+for this instrument — nobody has published an assessment of whether it worked"*. Verified reachable
+in real persisted output, not just present as a constant (`docs/S8_DEEPENING_VERIFY.txt`).
+
+Both are wired into the Deepening (`EVIDENCE_PRECEDENT` and `LEGAL` respectively) as of S8; before
+that they were built, tested and called by nothing.
 
 ---
 
@@ -85,6 +119,7 @@ Named individually, with what each would take. **This list is the honest half of
 | **Anything on the open web** | A Gemini-grounded orientation pass exists behind `LEX_WEB_ORIENTATION` (measured: 10/12 signals against a corpus-only control of 1/12, ~30.8s and $0.076 per briefing). It is **not general web search** and it is flag-gated. |
 | **Comparative law from other jurisdictions** | Reserved as `COMPARATIVE_LAW`. Nothing ingested for it. |
 | **Amendable-section lookup** — "which section would this change amend" | Reserved as `AMENDABLE_SECTION`. |
+| **Who gave a piece of committee evidence** | ⚠⚠ **PARTIALLY CLOSED, AND THE HARD HALF IS STILL OPEN.** `attribution` now reaches every caller (§4 above) and covers 14 of 54 non-legislation collections — but **committee evidence and committee reports carry nothing**, on either column, in 1,400 sampled rows. The witness's name is in the R2 body and in no metadata we hold. Ingest work, not search work. |
 | **Phrase / exact-quotation search** | The keyword index is built **without token positions** (`withPosition: false`), so there are no phrase queries. A quoted string is matched as a bag of words. |
 | **Anything in the 55.9% of source material not ingested** | Ingest work, collection by collection. |
 
@@ -103,6 +138,57 @@ search could not be completed, which is a different state from a completed searc
 ---
 
 ## 4. How to ask
+
+### ⚠ WHO SAID IT — `attribution` (added S8 §2)
+
+Every `SearchResult` and every `EvidenceResult` now carries an optional
+`attribution: { name, role, source } | null`.
+
+```ts
+res.results[0].attribution
+// { name: 'Lindsay Hoyle', role: 'speaking in the House of Commons, on the record', source: 'speaker' }
+```
+
+⚠⚠ **`null` MEANS "NOT HELD STRUCTURALLY". IT DOES NOT MEAN "ANONYMOUS".** The distinction is the
+whole point: a committee submission has a named author, we simply do not store that name as a
+field. `ATTRIBUTION_ABSENCE_NOTE` travels into the prompt whenever any item in a block lacks one,
+so a model cannot read the gap as anonymity.
+
+⚠ **It is built from two structured columns and from nothing else** — `corpus_sections.speaker`
+and `corpus_sections.attribution`. It is **never** parsed out of a title. Several collections put
+who-said-it in their title and nowhere else (`committees-reports` ends "— HOUSE OF LORDS";
+`scottish-courts` begins "Court of Session:"), and a regex over display text is an inference
+travelling as a fact. `scripts/check-s8-attribution.ts` enforces this with a scanner that is
+watched firing on a planted violation.
+
+**Which collections carry it** (measured 19 Aug 2026, ≥200 rows per id offset — full table in
+`docs/S8_ATTRIBUTION_AUDIT.txt`). Of the **54** non-legislation collections, **14** carry
+something and **40** carry nothing:
+
+| carried by | collections | what the value is |
+|---|---|---|
+| `speaker` | the whole `pwdata` family (90–100%), `historic-hansard` (87%), `scottish-parliament-or` (92.5–100%), `senedd-cofnod` (87.5%) | the member speaking |
+| `speaker` | `pwdata-wrans`, `pwdata-wms`, `pwdata-lordswrans`, `pwdata-lordswms` (100%) | ⚠ the minister **ANSWERING**, not the member asking |
+| `speaker` | `early-day-motions` (100%) | ⚠ the **SPONSOR** — nobody spoke; an EDM is a signature sheet |
+| `speaker` | `tax-tribunals` (100%) | ⚠ the **JUDGE** who decided the case |
+| `attribution` | `consultations`, `impact-assessments` (100%) | the publishing organisation, sometimes with a stage |
+
+⚠⚠ **AND THE COLLECTION THIS WAS WANTED FOR HAS NOTHING.** `committees-evidence` is 0 of 800 rows
+across four id offsets, on both columns; `committees-reports` is 0 of 600. Oral evidence carries
+no `sectionTitle` either. The witness's name is inside the R2 document body and in no metadata we
+hold. **Closing that is an ingest job, not a search one.** Also zero: all case law except
+`tax-tribunals`, all seventeen guidance collections, `niassembly-hansard`, the govuk
+`written-answers`/`written-statements` pair (the pwdata equivalents ARE populated), the three
+`lda-*` collections, and `petitions`.
+
+⚠ **`pwdata-debates` has an ERA GRADIENT, not a flat rate:** 4.0% in 1919, 4.5% in 1950, 82.5% in
+1990, 99.5% from 2010. Retrieval favours modern Hansard, so what a user actually sees is far
+better than the collection average — measured at **97% of retrieved DEBATE results** on the S5 ten
+questions (`docs/S8_ATTRIBUTION_MEASURE.txt`).
+
+`LegacySearchResult` is untouched — the three legacy legislation surfaces carry no attribution.
+
+---
 
 ```ts
 import { runSearch } from '@/lib/lex/search-gateway'
@@ -147,7 +233,7 @@ by reading a `served` counter off the running service — never by inference.
 | **Page 1 background briefing** | all five streams, expansion on | ✅ yes |
 | **Page 2 cause seeding** | all five streams | ✅ yes |
 | **Build passes (25-A)** | two intents, `BACKGROUND_BRIEFING` + `LEGAL_LANDSCAPE`, one search each | ✅ yes |
-| **The Deepening passes** | all five streams | ✅ yes |
+| **The Deepening passes** | all five streams, **plus two structured jobs** (§2 above) — `EVIDENCE_PRECEDENT` runs `PRECEDENT`, `LEGAL` runs `DEVOLUTION_SCOPE` | ✅ yes |
 | **`/admin/lex-general`** | untiered, fully routed | ✅ yes |
 | **Create-Idea legislation panel** | legislation only | ✅ **right** — measured: it returns *Sewerage (Scotland) Act 1968 s.39* for the sewage question, which is what that panel is for |
 | **`POST /api/search`** | legislation only | ✅ right for its contract |
@@ -217,3 +303,12 @@ anything on the open web. **When Lex wants one of those, §6 applies — name it
 - streams and their scopes — `scrutinise-web/lib/lex/stream-scopes.ts`
 - index configuration — `scripts/ingest/search/build-fts-index.ts`
 - positions — `docs/POSITION_GRAPH_2D3_REPORT.md`, `docs/POSITION_GRAPH_2D4_REPORT.md`
+- attribution coverage — `docs/S8_ATTRIBUTION_AUDIT.txt` (the store, ≥200 rows per id offset,
+  19 Aug 2026) and `docs/S8_ATTRIBUTION_MEASURE.txt` (what retrieval actually returns, same day).
+  ⚠ The two have **different denominators on purpose**: the audit is *of the collection*, the
+  measurement is *of what ten real questions surface*, and they diverge sharply where retrieval
+  is not a uniform sample of a collection — DEBATE is 4.0–99.5% in the store and 97% in the hand.
+- the two structured jobs — `docs/S8_DEEPENING_VERIFY.txt`, 25/25 assertions against artefacts
+  read back from Neon, not against counters
+- router streams V2 — `docs/SEARCH_S8_ROUTER_V2.md`
+- stream concurrency — `docs/SEARCH_S8_CONCURRENCY.md`
