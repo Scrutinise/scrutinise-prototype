@@ -92,3 +92,72 @@ export function assertRetrievalConfig(harnessName: string, opts: { allowDegraded
   }
   throw new Error(message)
 }
+
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// S8 §3 — READ THE CONFIGURATION POSITIVELY, OFF THE RUNNING SERVICES
+// ════════════════════════════════════════════════════════════════════════════════════════════
+/**
+ * ⚠ EVERYTHING ABOVE READS `process.env`, WHICH IS A STATEMENT ABOUT THIS SHELL AND NOT ABOUT
+ * WHAT RAN. §3 asks for the flag state "read positively — a `served`/config readback, not the
+ * env", and docs/CLAUDE.md §19 says the same thing one level up: a behavioural measurement taken
+ * from a reachable surface beats an unreachable config file every time.
+ *
+ * `served` is the counter that settles it. Read it before the run and after: if it did not move,
+ * the retrieval this harness thinks it measured did not touch that service — whatever the env
+ * said. That distinguishes "configured and working" from "configured and silently unreachable",
+ * which is the pair CLAUDE.md §18's corollary exists for.
+ *
+ * ⚠ Never throws. A stats endpoint being down must not stop a measurement; it must be REPORTED
+ * next to it.
+ */
+export interface ServiceReadback {
+  name: 'fts' | 'vector'
+  url: string | null
+  reachable: boolean
+  served: number | null
+  startedAt: string | null
+  detail: string
+}
+
+async function readStats(name: ServiceReadback['name'], url: string | null): Promise<ServiceReadback> {
+  if (!url) return { name, url, reachable: false, served: null, startedAt: null, detail: 'URL unset' }
+  try {
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 15000)
+    const res = await fetch(`${url.replace(/\/$/, '')}/stats`, { signal: ctrl.signal })
+    clearTimeout(t)
+    if (!res.ok) return { name, url, reachable: false, served: null, startedAt: null, detail: `HTTP ${res.status}` }
+    const j = (await res.json()) as { served?: number; started_at?: string; concurrency?: { max?: number } }
+    return {
+      name, url, reachable: true,
+      served: typeof j.served === 'number' ? j.served : null,
+      startedAt: j.started_at ?? null,
+      detail: `served=${j.served ?? '?'} width=${j.concurrency?.max ?? '?'} since=${j.started_at ?? '?'}`,
+    }
+  } catch (err) {
+    return { name, url, reachable: false, served: null, startedAt: null, detail: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+export async function readServiceConfig(): Promise<ServiceReadback[]> {
+  const s = retrievalFlagState()
+  return Promise.all([readStats('fts', s.ftsUrl), readStats('vector', s.vectorUrl)])
+}
+
+/**
+ * The engagement check: did the run actually reach the services?
+ *
+ * ⚠ A ZERO DELTA IS A FINDING, NOT A ROUNDING ERROR. `served` not moving while a harness
+ * reports results means the results came from somewhere else — the stub, a cache, or an arm
+ * that silently failed open. Report the delta beside every number that claims to have used them.
+ */
+export function servedDelta(before: ServiceReadback[], after: ServiceReadback[]): string {
+  return before.map((b) => {
+    const a = after.find((x) => x.name === b.name)
+    if (b.served == null || a?.served == null) return `${b.name}=UNREADABLE(${b.detail})`
+    const d = a.served - b.served
+    // A restart resets the counter, so a negative delta is a redeploy, not a negative use.
+    if (a.startedAt !== b.startedAt) return `${b.name}=RESTARTED mid-run (counter reset; delta unusable)`
+    return `${b.name}+${d}${d === 0 ? ' ⚠ NOT ENGAGED' : ''}`
+  }).join('  ')
+}
