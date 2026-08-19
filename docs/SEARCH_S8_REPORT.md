@@ -542,13 +542,16 @@ hitting its output ceiling.
 unauthenticated user-visible surface to read a marker off.** That is the §20-sanctioned second
 form, not the forbidden "built, tsc clean, checks pass".
 
-⚠ **ONE THING TO WATCH ON THE NEXT DEPLOY, WHICH IS NOT MINE.**
-`scrutinise-web/lib/lex/build.ts` in the working tree uses `BuildDriver` and `buildDriver` without
-importing them (`build-config.ts` exports both). The **committed** version at `HEAD` contains
-neither symbol, so **production is not at risk today** — the breakage exists only in the concurrent
-LEX/25-B session's uncommitted working copy. If that session commits it in this state, the Vercel
-build fails and **S8's changes will not reach the site either**, which is CLAUDE.md §20's third
-incident precisely.
+✅ **A `build.ts` WARNING RAISED DURING THIS SPRINT HAS SINCE RESOLVED — recorded because the
+sequence is the useful part.** For part of the session `scrutinise-web/lib/lex/build.ts` used
+`BuildDriver` and `buildDriver` without importing them, so `tsc` on the shared tree failed on three
+lines. It was the concurrent session's **uncommitted working copy**; the committed version at
+`HEAD` never contained either symbol, so production was never at risk. Re-checked after that
+session pushed: **the tree is fully `tsc`-clean and `build.ts` at `HEAD` is unaffected.**
+
+⚠ The transferable point stands even though the instance closed: in a shared working tree, a
+`tsc` failure is not necessarily yours, and the question to ask before acting on one is *"is this
+in `HEAD`, or only in someone's working copy?"* — `git show HEAD:<path>` answers it in a second.
 
 ⚠ **And a process note worth carrying forward:** the first `commit-all.sh` written for this sprint
 **disappeared before it could be run**. The concurrent session was committing in the same tree at

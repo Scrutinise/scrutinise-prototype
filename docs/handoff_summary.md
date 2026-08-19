@@ -93,7 +93,7 @@ FINISHED, AND FOUR OF THE EIGHT SECTIONS REVERSED A PREMISE THE BRIEF OR THE COD
 Executes `docs/BRIEF_SEARCH_S8.md` §1–§8. Report: **`docs/SEARCH_S8_REPORT.md`**.
 CHANGE_LOG (2026-08-19 09:35 UTC). `verify:s8-deepening` **25/25 live against Neon**,
 `check:s8-attribution` **33/33**, `check:s8-config` **18/18 with --probe**,
-`check:model-registry` **25/25**, `check:deepening` all pass. ⚠ `tsc` clean on every file S8 touched but **NOT on the tree** — `lib/lex/build.ts` uses `BuildDriver`/`buildDriver` with no import (concurrent LEX/25-B session, mid-edit). Not in any S8 commit; ⚠⚠ **if that lands, production fails to build.**
+`check:model-registry` **25/25**, `check:deepening` all pass. `tsc` clean (a mid-session failure in `lib/lex/build.ts` was another session's working copy, never `HEAD`, and has resolved).
 **Cost £1.01, measured from the `LlmSpend` ledger, not estimated** — `deepening.sift` 64.5p (the sift dominates, and it is the same component whose truncation caused §1's fourth defect), `deepening.gather` 28.9p, `search.query-router` 6.8p across 242 calls, `deepening.adversarial` 0.9p. ⚠ My own pre-run estimate was ~£0.40; the ledger says 2.5x that.
 
 ✅ **§1 — PRECEDENT AND DEVOLUTION_SCOPE ARE WIRED, AND THE ARTEFACTS WERE READ BACK FROM NEON.**

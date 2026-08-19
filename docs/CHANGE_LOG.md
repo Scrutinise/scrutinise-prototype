@@ -252,7 +252,7 @@ New: `lib/lex/attribution.ts`, `lib/lex/deepening-jobs.ts`, `scripts/check-s8-at
 `scripts/verify-s8-deepening.ts`, `scripts/explore-s8-gold.ts`,
 `docs/GOLD_CANDIDATES_S8.md`. Deleted: `scripts/ingest/search/measure-s7-framing.ts` (re-homed).
 `verify:s8-deepening` **25/25 live**, `check:s8-attribution` **33/33**, `check:s8-config`
-**18/18 --probe**, `check:model-registry` **25/25**, `check:deepening` all pass. ⚠ `tsc` is clean across every file this sprint touched but **NOT on the tree** — `lib/lex/build.ts` uses `BuildDriver`/`buildDriver` without importing them, a mid-edit from the concurrent LEX/25-B session. Not in any S8 commit; ⚠ if committed in that state production fails to build.
+**18/18 --probe**, `check:model-registry` **25/25**, `check:deepening` all pass. `tsc` clean. ⚠ It was NOT clean for part of the session — `lib/lex/build.ts` used `BuildDriver`/`buildDriver` with no import — but that was a concurrent session's uncommitted working copy, never `HEAD`, and it has since resolved.
 **£1.01, measured from the `LlmSpend` ledger rather than estimated** — `deepening.sift` 64.5p, `deepening.gather` 28.9p, `search.query-router` 6.8p over 242 calls, `deepening.adversarial` 0.9p. ⚠ The sift is two-thirds of the sprint's spend, and it is the same component whose truncation caused §1's fourth defect. ⚠ My own estimate before reading the ledger was ~£0.40 — 2.5x low.
 
 ⚠⚠ **THE SPRINT'S SHAPE: four of the eight sections found their own premise false, and every one
