@@ -684,3 +684,77 @@ If you don't want to receive these emails, unsubscribe here: ${unsubscribeUrl}
     return { sent: false, reason: err instanceof Error ? err.message : 'send failed' }
   }
 }
+
+/**
+ * AMENDMENT_25B §C4 — "email me when it's done".
+ *
+ * ⚠ SENT ONLY WHEN THE USER ASKED FOR IT ON THIS BUILD. The flag lives on the IdeaBuild
+ * row, frozen at enqueue, so a preference changed in another tab afterwards cannot make
+ * this send retroactive — and `sendEmail` still checks EmailSuppression, which remains
+ * the authority on whether we may write to the address at all (docs/CLAUDE.md §7 item 8).
+ *
+ * ⚠ A FAILED BUILD EMAILS TOO. Only telling people about success is how someone waits ten
+ * minutes for something that stopped after two — the whole point of the notification is
+ * that they are not watching.
+ */
+export async function sendBuildCompleteEmail({
+  toEmail,
+  toName,
+  ideaId,
+  ideaTitle,
+  status,
+  durationText,
+  failureReason,
+}: {
+  toEmail: string
+  toName: string | null
+  ideaId: string
+  ideaTitle: string
+  status: 'DONE' | 'FAILED' | 'CANCELLED'
+  durationText: string
+  failureReason?: string | null
+}): Promise<void> {
+  const unsubscribeUrl = `${APP_URL}/unsubscribe/${Buffer.from(toEmail).toString('base64')}`
+  const url = `${APP_URL}/ideas/create?ideaId=${ideaId}`
+  const name = toName?.trim() || 'there'
+  const title = ideaTitle?.trim() || 'your idea'
+
+  const done = status === 'DONE'
+  const subject = done
+    ? `Your draft of “${title}” is ready`
+    : `Your build of “${title}” stopped early`
+
+  const opening = done
+    ? `I've drafted, researched and revised ${title}. It took ${durationText}.`
+    : status === 'CANCELLED'
+      ? `You stopped the build of ${title} after ${durationText}. Everything it had drafted before that has been kept.`
+      : `The build of ${title} stopped after ${durationText}. ${failureReason ?? ''} Whatever it drafted before stopping has been kept.`
+
+  const text = [
+    `Hello ${name},`,
+    '',
+    opening,
+    '',
+    `Read it here: ${url}`,
+    '',
+    'Nothing has been accepted on your behalf — everything is a proposal for you to keep, change or throw out.',
+    '',
+    `You asked to be emailed when this finished. To stop these, unsubscribe here: ${unsubscribeUrl}`,
+  ].join('\n')
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #18181b;">
+      <p>Hello ${name},</p>
+      <p>${opening}</p>
+      <p><a href="${url}" style="display:inline-block; background:#18181b; color:#fff; padding:10px 18px; border-radius:9999px; text-decoration:none;">Read it</a></p>
+      <p style="color:#52525b; font-size: 14px;">Nothing has been accepted on your behalf — everything is a proposal for you to keep, change or throw out.</p>
+      <hr style="border:none; border-top:1px solid #e4e4e7; margin: 24px 0;" />
+      <p style="color:#71717a; font-size:12px;">
+        You asked to be emailed when this finished.
+        <a href="${unsubscribeUrl}" style="color: #71717a;">Unsubscribe</a>
+      </p>
+    </div>
+  `
+
+  await sendEmail({ to: toEmail, subject, html, text })
+}

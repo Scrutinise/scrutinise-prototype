@@ -439,6 +439,10 @@ model User {
   username                  String              @unique
   email                     String              @unique
   emailVerified             Boolean             @default(false)
+  /// AMENDMENT_25B §C4 — the user's remembered default for "email me when the build is
+  /// done". A PREFERENCE, not a consent record: `EmailSuppression` remains the authority
+  /// on whether we may email the address at all, and the send path checks it.
+  emailOnBuildComplete      Boolean             @default(false)
   bio                       String?
   // Role
   role                      UserRole            @default(CITIZEN)
@@ -3298,6 +3302,12 @@ model IdeaBuild {
   /// Cancel is co-operative: the request is written here and the engine checks it
   /// between passes. A cancel that only stopped the poller would leave the work running.
   cancelRequested Boolean      @default(false)
+  /// AMENDMENT_25B §C4 — what the user asked for WHEN THEY STARTED THIS BUILD.
+  /// ⚠ Deliberately not read from `User` at send time: the worker sends minutes later, on
+  /// another machine, and must honour the choice made at enqueue rather than a preference
+  /// changed in another tab since. Storing it here is what stops the setting being
+  /// retroactive.
+  notifyEmail     Boolean      @default(false)
 
   tokensIn        Int          @default(0)
   tokensOut       Int          @default(0)
@@ -3312,6 +3322,9 @@ model IdeaBuild {
 
   @@unique([ideaId, version])
   @@index([ideaId, status])
+  /// AMENDMENT_25B §C4 — the estimate reads the last 20 DONE builds by `completedAt`, on
+  /// every load of /ideas/build. Without this it is a sort over every build ever run.
+  @@index([status, completedAt(sort: Desc)], name: "IdeaBuild_status_completedAt_idx")
 }
 
 /// Wherever Lex had to choose, the alternative it set aside with the case for it (§4.1).

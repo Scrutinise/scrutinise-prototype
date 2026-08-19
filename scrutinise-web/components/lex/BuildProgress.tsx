@@ -68,6 +68,14 @@ function spendFor(build: BuildView, key: string): string | null {
   return `${tokens} — ${row.pence < 1 ? 'under 1p' : `${row.pence.toFixed(1)}p`}`
 }
 
+/** Mirrors humaniseSeconds in lib/lex/build-estimate.ts — "about 7 minutes", never 6.8. */
+function humanise(seconds: number): string {
+  if (seconds < 90) return 'about a minute'
+  const mins = seconds / 60
+  if (mins < 10) return `about ${Math.round(mins)} minutes`
+  return `about ${Math.round(mins / 5) * 5} minutes`
+}
+
 function elapsed(seconds: number | null): string {
   if (seconds == null) return ''
   const m = Math.floor(seconds / 60)
@@ -78,16 +86,36 @@ function elapsed(seconds: number | null): string {
 export default function BuildProgress({
   build,
   ceiling,
+  estimate,
   onCancel,
   busy,
 }: {
   build: BuildView
   ceiling: { budgetMs: number; binding: string; costPence: number }
+  /** AMENDMENT_25B §C4 — the measured mean, or an admission that there isn't one yet. */
+  estimate?: { meanSeconds: number | null; sampleSize: number; line: string }
   /** Present only while the build is actually running (§2 — "Cancel is available"). */
   onCancel?: () => void | Promise<void>
   busy: boolean
 }) {
   const running = build.status === 'RUNNING' || build.status === 'QUEUED'
+
+  // §C4 — "If a build overruns the estimate materially, say so rather than letting the
+  // progress bar sit there." Only ever said when there IS a measured mean: "taking longer
+  // than usual" is a claim about a usual we would not have.
+  const overrun =
+    running && estimate?.meanSeconds != null && build.elapsedSeconds != null &&
+    build.elapsedSeconds >= estimate.meanSeconds * 1.5
+
+  // §C4 — the actual duration beside the estimate once it is over, INCLUDING when the
+  // estimate was wrong. A figure only ever shown before the event cannot be calibrated by
+  // the person reading it, and one that disappears when it misses is worse than none.
+  const finishedLine =
+    !running && build.elapsedSeconds != null
+      ? estimate?.meanSeconds != null
+        ? `Took ${elapsed(build.elapsedSeconds)} — usually ${humanise(estimate.meanSeconds)}.`
+        : `Took ${elapsed(build.elapsedSeconds)}.`
+      : null
 
   return (
     <div className="border border-zinc-200 rounded-2xl overflow-hidden">
@@ -99,7 +127,16 @@ export default function BuildProgress({
           <span className="text-xs text-zinc-500">
             {build.passesComplete} of {build.passesTotal} passes
             {build.elapsedSeconds != null && ` · ${elapsed(build.elapsedSeconds)}`}
+            {/* §C4 — the estimate again as time elapses, so the number the user was
+                given before they committed is still on screen while they wait. */}
+            {running && estimate?.meanSeconds != null && !overrun &&
+              ` of ${humanise(estimate.meanSeconds)}`}
           </span>
+          {overrun && (
+            <span className="text-xs font-medium text-amber-700">
+              Taking longer than usual — still running.
+            </span>
+          )}
         </div>
         {running && onCancel && (
           <button
@@ -204,6 +241,8 @@ export default function BuildProgress({
       )}
 
       <div className="px-4 py-2 border-t border-zinc-100 text-[11px] text-zinc-400 space-y-0.5">
+        {/* §C4 — the estimate, checked against what it actually took. */}
+        {finishedLine && <p className="text-zinc-500">{finishedLine}</p>}
         <p>{build.spend.line}</p>
         <p>
           Framing {build.framing === 'A_NAIVE' ? 'A (naive)' : 'B (contextualised)'}
