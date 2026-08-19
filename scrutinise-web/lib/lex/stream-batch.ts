@@ -18,12 +18,27 @@
 // fails open looks exactly like a limiter that is working.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Default 3, under the service's 4, so one query never fills the pool on its own. */
-export const STREAM_CONCURRENCY = (() => {
+/**
+ * Default 3, under the service's 4, so one query never fills the pool on its own.
+ *
+ * ⚠ READ PER CALL (S8 §6). It used to be a module-load constant, which made the 3-vs-4 experiment
+ * impossible to run fairly: comparing the two caps would have needed two processes, so the two
+ * arms would have had different cache states and different service warm-ups, and the p95 delta —
+ * the whole point of the measurement — would have been measuring the restart rather than the cap.
+ * Reading per call lets one process ALTERNATE the arms against the same warm services.
+ *
+ * Nothing else changes: a deployed process's environment does not move underneath it, so in
+ * production this returns the same number it always did, on every call.
+ */
+export function streamConcurrency(): number {
   const raw = process.env.LEX_STREAM_CONCURRENCY
   const n = raw ? parseInt(raw, 10) : NaN
   return Number.isFinite(n) && n >= 1 && n <= 16 ? n : 3
-})()
+}
+
+/** Back-compat for readers that want the value rather than the function. Resolved at import
+ *  time, so a harness that flips the env mid-process must call `streamConcurrency()`. */
+export const STREAM_CONCURRENCY = streamConcurrency()
 
 export interface BatchStats {
   /** How many tasks were run. */
