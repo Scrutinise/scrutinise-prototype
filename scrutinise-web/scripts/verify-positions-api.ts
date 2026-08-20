@@ -79,12 +79,45 @@ async function main() {
   const twoSignals = both.actors.filter((a) => a.grounds.length === 2)
   check(twoSignals.length > 100, 'hundreds of members voted in BOTH divisions',
     `${twoSignals.length} of ${both.actorsMatched}`)
-  check(twoSignals.every((a) => Math.abs(a.stanceScore) === 1),
-    'across the two readings, every member who voted twice voted the same way twice',
-    `${twoSignals.length} members, none divided — a settled conscience position, not a bug`)
+
+  // ⚠⚠ CORRECTED BY GRAPH 3B. This assertion used to read *"across the two readings, every member
+  // who voted twice voted the same way twice"*, and it passed — 23/23 — and it was WRONG. The raw
+  // rows say 587 members voted in both readings and **16 of them changed side**.
+  //
+  // It passed because of the SORT KEY, not because of the data. 3A ranked by |stance| × confidence;
+  // a member who changed their mind has stance ≈ 0, so the product is ≈ 0 and they sort last. All
+  // 16 landed at ranks 612–627 of 627, and this harness passes `limit: 400` — so every single
+  // counter-example was below the cut-off and the assertion could not have failed. Measured by
+  // `scripts/graph/probe-3b-rank.ts`.
+  //
+  // 3A's report repeated it as a fact about the world: *"All 400 who voted in both voted the same
+  // way both times — a settled conscience position, not a bug."* That sentence is false, and it is
+  // exactly the shape this project keeps getting caught by: **a check that could only pass, whose
+  // passing was then written down as a finding.**
+  //
+  // Rewritten to assert the mechanism — that both shapes exist and the rollup tells them apart —
+  // and to REQUIRE the counter-examples to be visible, so a future ranking change that buries them
+  // again fails here instead of producing another confident sentence.
+  const changedSide = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.stanceScore) < 1)
+  const heldFirm = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.stanceScore) === 1)
+  check(heldFirm.length > 100 && changedSide.length > 0,
+    'across the two readings, most members held firm and SOME changed side — both are present',
+    `${heldFirm.length} the same way twice, ${changedSide.length} changed side` +
+    (changedSide.length ? ` (e.g. ${changedSide.slice(0, 3).map((a) => a.name).join(', ')})` : ''))
+  check(changedSide.every((a) => a.divided && a.stanceWording === 'divided record'),
+    'a member who changed side is flagged divided and worded "divided record", never averaged away')
+  check(changedSide.every((a) => a.byTarget.length === 2 && a.byTarget[0].stanceWording !== a.byTarget[1].stanceWording),
+    'and their two readings are shown SEPARATELY, with opposite sides — §4.2, never summed')
 
   // The divided record, on the full set where a member can back the Bill and resist an amendment.
-  const full = await positionsFor(ASSISTED_DYING_FULL.map((t) => parseTarget(t)!), { asOf: AS_OF, limit: 500, maxGroundsPerActor: 9 })
+  // ⚠ `limit` raised from 500 to 700 by GRAPH 3B, and the reason is the same lesson as above.
+  // Under 3B's sort key (confidence first) a MIXED record outranks a consistent one — signals that
+  // disagree land in different harmonic-discount groups, so each counts in full and the mass is
+  // larger. On this Bill only ONE of 426 members with 9+ votes is entirely consistent, and at
+  // limit 500 of ~630 matched they fell off the bottom, making `consistent.length > 0` fail.
+  // Raising the limit is the honest fix: the assertion is about the data containing both shapes,
+  // and it must not depend on where a ranking happens to put them.
+  const full = await positionsFor(ASSISTED_DYING_FULL.map((t) => parseTarget(t)!), { asOf: AS_OF, limit: 700, maxGroundsPerActor: 9 })
   const many = full.actors.filter((a) => a.grounds.length >= 3)
   const consistent = many.filter((a) => Math.abs(a.stanceScore) === 1)
   const divided = many.filter((a) => Math.abs(a.stanceScore) < 1)
@@ -137,14 +170,47 @@ async function main() {
   check(both.configVersion !== null, 'the result names the config version that produced the estimates',
     both.configVersion ?? '(none)')
 
-  // ── 7. ranking puts the strongest record first ─────────────────────────────────────────────
-  const scores = both.actors.map((a) => Math.abs(a.stanceScore) * a.confidence)
-  check(scores.every((s, i) => i === 0 || scores[i - 1] >= s - 1e-9),
-    'actors are ranked by how strong and how well-evidenced the record is')
+  // ── 7. the order is the order it says it is, and it says when it has run out ───────────────
+  // GRAPH 3B §1. 3A asserted `|stance| × confidence` DESC. That key is replaced (brief §1) and,
+  // more to the point, an assertion that the rows come back in the order the code sorted them in
+  // is a check that cannot fail. What can fail — and is what actually broke on the live page — is
+  // the page claiming a ranking when every row shown carries the same key.
+  const conf = both.actors.map((a) => a.confidence)
+  check(conf.every((c, i) => i === 0 || conf[i - 1] >= c - 1e-9),
+    'actors come back in descending confidence, the key the page prints')
+  check(both.ranking.key.startsWith('confidence'), 'the result names its own sort key', both.ranking.key)
+  check(both.ranking.ofMatched === both.actorsMatched, 'the tie count is over the actors MATCHED, not the ones shown')
+
+  // The case Charlie hit: two divisions where the top of the list is a large tied block.
+  const tied = await positionsFor(
+    [{ type: 'division', id: 'commons:2051' }, { type: 'division', id: 'commons:2068' }],
+    { asOf: AS_OF, limit: 40, actorKind: 'person' })
+  check(tied.ranking.tiedAtTop > 40,
+    'Charlie\'s case really is a tied block bigger than the page',
+    `${tied.ranking.tiedAtTop} tied of ${tied.ranking.ofMatched} matched`)
+  check(tied.ranking.shownOrderIsNameOrderOnly === true,
+    'and the page is told the visible order is name order, not a ranking')
+  check(tied.ranking.note !== null && /not a ranking/i.test(tied.ranking.note!),
+    'and given the sentence to print', tied.ranking.note ?? '(none)')
+
+  // ── 8. GRAPH 3B §1 — the stance word never travels without its target ──────────────────────
+  check(one.actors.every((a) => a.claim.includes('Terminally Ill Adults')),
+    'every claim names the division it is a claim about',
+    one.actors[0]?.claim?.slice(0, 96))
+  check(one.actors.every((a) => a.claimCaveat === null),
+    'a single-target claim carries no multi-target caveat')
+  check(both.actors.every((a) => a.claimCaveat !== null),
+    'a multi-target claim always carries the do-not-read-this-as-the-subject caveat')
+  check(both.actors.every((a) => a.byTarget.length === a.grounds.length),
+    'every requested target the actor has a signal for appears separately in byTarget')
+  check(both.actors.every((a) => a.byTarget.every((t) => t.targetLabel && t.targetLabel.length > 3)),
+    'and each one is labelled with something a human can read',
+    both.actors[0]?.byTarget?.[0]?.targetLabel ?? '(none)')
 
   console.log(`\n──── a real answer, printed so it can be argued with ────`)
   for (const a of both.actors.slice(0, 6)) {
-    console.log(`  ${a.name.padEnd(28)} ${a.stanceWording.padEnd(15)} ${a.stanceScore.toFixed(2).padStart(5)}  ${a.confidenceWording.padEnd(22)} ${a.confidence.toFixed(3)}`)
+    console.log(`  ${a.name.padEnd(28)} ${a.confidenceWording.padEnd(22)} ${a.confidence.toFixed(3)}  ${a.divided ? '[divided]' : ''}`)
+    console.log(`      ${a.claim}`)
     for (const g of a.grounds) {
       console.log(`      ${g.date}  ${g.direction > 0 ? 'for    ' : 'against'}  ${g.derivation}  ${(g.targetLabel ?? '').slice(0, 58)}`)
     }
