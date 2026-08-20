@@ -1,0 +1,612 @@
+[
+  {
+    "n": 1,
+    "code": "C1",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees"
+    ]
+  },
+  {
+    "n": 2,
+    "code": "C2",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 3,
+    "code": "C3",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 4,
+    "code": "C4",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 5,
+    "code": "C5",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees"
+    ]
+  },
+  {
+    "n": 6,
+    "code": "C6",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 7,
+    "code": "C7",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 8,
+    "code": "C8",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 9,
+    "code": "C9",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 10,
+    "code": "C10",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees"
+    ]
+  },
+  {
+    "n": 11,
+    "code": "K1",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 12,
+    "code": "K2",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 13,
+    "code": "K3",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 14,
+    "code": "K4",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 15,
+    "code": "K5",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 16,
+    "code": "K6",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 17,
+    "code": "K7",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 18,
+    "code": "K8",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 19,
+    "code": "K9",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 20,
+    "code": "K10",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "caselaw"
+    ]
+  },
+  {
+    "n": 21,
+    "code": "G1",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "guidance"
+    ]
+  },
+  {
+    "n": 22,
+    "code": "G2",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "guidance"
+    ]
+  },
+  {
+    "n": 23,
+    "code": "G3",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 24,
+    "code": "G4",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 25,
+    "code": "G5",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "guidance"
+    ]
+  },
+  {
+    "n": 26,
+    "code": "G6",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 27,
+    "code": "G7",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 28,
+    "code": "G8",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "guidance"
+    ]
+  },
+  {
+    "n": 29,
+    "code": "G9",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 30,
+    "code": "G10",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "caselaw",
+      "guidance"
+    ]
+  },
+  {
+    "n": 31,
+    "code": "I1",
+    "picked": true,
+    "query": "UK plastic straw ban cost estimate",
+    "streams": [
+      "debates",
+      "committees",
+      "guidance",
+      "statistics"
+    ]
+  },
+  {
+    "n": 32,
+    "code": "I2",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 33,
+    "code": "I3",
+    "picked": true,
+    "query": "UK residual waste reduction cost",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 34,
+    "code": "I4",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 35,
+    "code": "I5",
+    "picked": true,
+    "query": "UK tobacco duty receipts",
+    "streams": [
+      "debates",
+      "guidance",
+      "statistics"
+    ]
+  },
+  {
+    "n": 36,
+    "code": "I6",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 37,
+    "code": "I7",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 38,
+    "code": "I8",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 39,
+    "code": "I9",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 40,
+    "code": "I10",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 41,
+    "code": "N1",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 42,
+    "code": "N2",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 43,
+    "code": "N3",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "legislation",
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 44,
+    "code": "N4",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 45,
+    "code": "N5",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 46,
+    "code": "N6",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 47,
+    "code": "N7",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "guidance"
+    ]
+  },
+  {
+    "n": 48,
+    "code": "N8",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "debates",
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 49,
+    "code": "N9",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees",
+      "guidance"
+    ]
+  },
+  {
+    "n": 50,
+    "code": "N10",
+    "picked": false,
+    "query": null,
+    "streams": [
+      "committees"
+    ]
+  },
+  {
+    "n": 51,
+    "code": "S1",
+    "picked": true,
+    "query": "UK public expenditure health function",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 52,
+    "code": "S2",
+    "picked": true,
+    "query": "UK tax gap",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 53,
+    "code": "S3",
+    "picked": true,
+    "query": "UK health spending international comparison",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 54,
+    "code": "S4",
+    "picked": true,
+    "query": "UK unemployment rate",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 55,
+    "code": "S5",
+    "picked": true,
+    "query": "UK national well-being happiness",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 56,
+    "code": "S6",
+    "picked": true,
+    "query": "UK government borrowing forecast",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 57,
+    "code": "S7",
+    "picked": true,
+    "query": "UK government departmental expenditure",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 58,
+    "code": "S8",
+    "picked": true,
+    "query": "UK alcohol duty receipts",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 59,
+    "code": "S9",
+    "picked": true,
+    "query": "UK income inequality",
+    "streams": [
+      "statistics"
+    ]
+  },
+  {
+    "n": 60,
+    "code": "S10",
+    "picked": true,
+    "query": "UK NHS waiting list numbers",
+    "streams": [
+      "statistics"
+    ]
+  }
+]

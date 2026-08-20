@@ -1,0 +1,243 @@
+{
+  "1": {
+    "debates": "House of Lords debate water sewage regulation failure",
+    "committees": "Lords Committee inquiry water sewage regulation failing",
+    "guidance": "Ofwat Environment Agency water sewage regulation reports"
+  },
+  "2": {
+    "committees": "Post Office Horizon compensation scheme inquiry evidence"
+  },
+  "3": {
+    "debates": "Grenfell Inquiry government response parliamentary statements questions",
+    "committees": "Housing Communities Local Government Committee Grenfell Inquiry"
+  },
+  "4": {
+    "committees": "committee report evidence Universal Credit migration managed migration"
+  },
+  "5": {
+    "debates": "leasehold reform parliamentary questions ministers statements",
+    "committees": "leasehold reform select committee inquiry evidence"
+  },
+  "6": {
+    "committees": "AI governance evidence submissions select committee report",
+    "guidance": "Law Commission AI regulation call for evidence"
+  },
+  "7": {
+    "committees": "net zero trade policy committee evidence inquiry"
+  },
+  "8": {
+    "committees": "special educational needs committee evidence witnesses"
+  },
+  "9": {
+    "committees": "committee evidence serious violence youth crime causes"
+  },
+  "10": {
+    "debates": "NHS waiting times planned operations parliamentary debate",
+    "committees": "Health and Social Care Committee NHS waiting times inquiry",
+    "guidance": "NHS England waiting times operational standards guidance"
+  },
+  "11": {
+    "legislation": "Equality Act 2010 public sector equality duty",
+    "debates": "public sector equality duty cuts impact assessment",
+    "committees": "public sector equality duty inquiry committee evidence",
+    "caselaw": "judicial review public sector equality duty failure",
+    "guidance": "Equality and Human Rights Commission PSED guidance"
+  },
+  "12": {
+    "debates": "prorogation of Parliament Supreme Court judgment debate",
+    "committees": "prorogation of Parliament select committee evidence",
+    "caselaw": "R (Miller) v The Prime Minister prorogation"
+  },
+  "13": {
+    "caselaw": "Supreme Court judgment gig economy worker employment status"
+  },
+  "14": {
+    "legislation": "Mental Capacity Act 2005 deprivation of liberty safeguards",
+    "debates": "deprivation of liberty care settings human rights",
+    "committees": "Joint Committee Human Rights deprivation liberty safeguards inquiry",
+    "caselaw": "Supreme Court deprivation of liberty care settings judgment",
+    "guidance": "CQC deprivation of liberty safeguards guidance care"
+  },
+  "15": {
+    "caselaw": "R (UNISON) v Lord Chancellor employment tribunal fees"
+  },
+  "16": {
+    "caselaw": "duty to investigate deaths in custody court decision"
+  },
+  "17": {
+    "caselaw": "Supreme Court benefit cap discrimination human rights challenge"
+  },
+  "18": {
+    "caselaw": "public authority duty of care leading case"
+  },
+  "19": {
+    "caselaw": "Supreme Court judicial review government climate policy legality"
+  },
+  "20": {
+    "caselaw": "[2003] EWCA Civ 1769 Court of Appeal judgment"
+  },
+  "21": {
+    "legislation": "Money Laundering Regulations 2017 company formation agents",
+    "guidance": "HMRC guidance anti-money laundering supervision company formation"
+  },
+  "22": {
+    "legislation": "Domestic Abuse Act 2021 charging standards prosecution",
+    "debates": "domestic abuse prosecution charging decisions debate",
+    "committees": "Home Affairs Committee domestic abuse charging evidence",
+    "caselaw": "domestic abuse charging decision judicial review",
+    "guidance": "CPS guidance domestic abuse charging decisions code"
+  },
+  "23": {
+    "legislation": "perverting the course of justice false accusation",
+    "debates": "false rape allegations criminal justice system",
+    "committees": "Home Affairs Committee false allegations evidence",
+    "caselaw": "false allegation perverting course of justice",
+    "guidance": "CPS guidance false allegations prosecution"
+  },
+  "24": {
+    "legislation": "Police and Criminal Evidence Act 1984 stop search powers",
+    "debates": "police stop and search powers accountability",
+    "committees": "Home Affairs Committee stop and search scrutiny",
+    "caselaw": "stop and search legality human rights",
+    "guidance": "PACE Code A stop and search guidance"
+  },
+  "25": {
+    "guidance": "CPS guidance abuse of process criminal proceedings"
+  },
+  "26": {
+    "legislation": "Magistrates' Courts Act 1980 committal Crown Court procedure",
+    "debates": "magistrates' court Crown Court transfer committal proceedings",
+    "committees": "justice committee magistrates' Crown Court transfer evidence",
+    "caselaw": "committal for trial Crown Court jurisdiction procedure",
+    "guidance": "CPS guidance magistrates' court Crown Court committal"
+  },
+  "27": {
+    "legislation": "Senior Courts Act 1981 judicial review procedure",
+    "caselaw": "Administrative Court judicial review appeal procedure",
+    "guidance": "Administrative Court judicial review procedural guide"
+  },
+  "28": {
+    "guidance": "HMRC staff guidance anti-money laundering compliance checks"
+  },
+  "29": {
+    "legislation": "HMRC Commissioners for Revenue and Customs Act discretion",
+    "debates": "HMRC powers discretion taxpayer treatment debate",
+    "committees": "Treasury Committee HMRC discretion taxpayer charter inquiry",
+    "caselaw": "HMRC legitimate expectation judicial review ultra vires",
+    "guidance": "HMRC guidance extra-statutory concessions taxpayer charter"
+  },
+  "30": {
+    "legislation": "HMRC error official error concession taxpayer rights",
+    "debates": "HMRC wrong advice taxpayer compensation redress scheme",
+    "committees": "Treasury Committee HMRC taxpayer service errors complaints",
+    "caselaw": "HMRC legitimate expectation judicial review official error",
+    "guidance": "HMRC complaints process official error guidance manual"
+  },
+  "31": {
+    "legislation": "Environmental Protection Act 1990 plastic straw ban",
+    "debates": "plastic straw ban impact assessment cost government",
+    "committees": "Environmental Audit Committee plastic waste inquiry evidence",
+    "guidance": "Defra guidance single-use plastics ban impact assessment"
+  },
+  "32": {
+    "legislation": "Building Safety Act 2022 levy scheme regulations",
+    "debates": "building safety levy scheme government predictions impact",
+    "committees": "levy scheme building safety inquiry evidence",
+    "guidance": "HMRC building safety levy scheme guidance"
+  },
+  "33": {
+    "debates": "residual waste reduction target predicted cost",
+    "committees": "waste reduction target cost inquiry evidence",
+    "guidance": "Defra residual waste reduction target impact assessment"
+  },
+  "34": {
+    "debates": "Regulatory Policy Committee tobacco products fees regulations approval",
+    "committees": "Regulatory Policy Committee tobacco product fees scrutiny",
+    "guidance": "Regulatory Policy Committee impact assessment tobacco fees"
+  },
+  "35": {
+    "debates": "tobacco fee changes business cost government statement",
+    "committees": "tobacco control inquiry business impact assessment evidence",
+    "guidance": "DHSC tobacco fees consultation impact assessment"
+  },
+  "36": {
+    "legislation": "Environmental Permitting Regulations impact assessment changes",
+    "debates": "environmental permitting changes impact assessment debate",
+    "committees": "environmental permitting changes impact assessment committee evidence",
+    "guidance": "Environment Agency environmental permitting changes impact assessment"
+  },
+  "37": {
+    "legislation": "Data Protection Act 2018 adequacy regulations South Korea",
+    "debates": "data adequacy decision South Korea government expectations",
+    "committees": "DCMS Committee evidence data adequacy South Korea",
+    "guidance": "ICO international data transfers adequacy assessment"
+  },
+  "38": {
+    "legislation": "Public Guardian fees statutory instrument justification",
+    "debates": "Public Guardian fees increase debate written question",
+    "committees": "Justice Committee Public Guardian fees evidence inquiry",
+    "guidance": "Office of Public Guardian fee increase consultation"
+  },
+  "39": {
+    "debates": "Public Guardian fee government options consideration debate",
+    "committees": "Public Guardian fee setting inquiry evidence",
+    "guidance": "Office of Public Guardian fee review consultation"
+  },
+  "40": {
+    "debates": "plastic straw ban effectiveness environmental impact assessment",
+    "committees": "environmental audit committee plastic straw ban inquiry",
+    "guidance": "DEFRA single-use plastics ban impact assessment review"
+  },
+  "41": {
+    "debates": "government consultation reducing sewage discharges water quality",
+    "committees": "environmental audit committee sewage discharge inquiry evidence",
+    "guidance": "Defra consultation storm overflows sewage discharge reduction"
+  },
+  "42": {
+    "debates": "smoking age ban consultation parliamentary debate",
+    "committees": "Health Committee inquiry smoking age consultation evidence",
+    "guidance": "Department Health Social Care smoking age consultation"
+  },
+  "43": {
+    "legislation": "Building Safety Act 2022 higher-risk buildings regulations",
+    "debates": "building safety bill government proposals changes",
+    "committees": "Housing Committee building safety inquiry evidence",
+    "guidance": "HSE building safety regulator guidance"
+  },
+  "44": {
+    "debates": "gambling sponsorship consultation government policy",
+    "committees": "gambling regulation inquiry evidence sponsorship",
+    "guidance": "Gambling Commission consultation remote customer interaction"
+  },
+  "45": {
+    "debates": "AI copyright intellectual property government policy questions",
+    "committees": "AI intellectual property select committee inquiry evidence",
+    "guidance": "Intellectual Property Office AI copyright guidance"
+  },
+  "46": {
+    "debates": "leasehold reform consultation government response commonhold",
+    "committees": "Levelling Up Committee leasehold reform inquiry evidence",
+    "guidance": "Law Commission leasehold reform consultation papers"
+  },
+  "47": {
+    "debates": "storm overflows consultation water companies government policy",
+    "committees": "Environmental Audit Committee storm overflows inquiry evidence",
+    "guidance": "Environment Agency Ofwat storm overflows consultation guidance"
+  },
+  "48": {
+    "debates": "net zero aviation government consultation strategy",
+    "committees": "Transport Committee net zero aviation inquiry evidence",
+    "guidance": "Department for Transport net zero aviation consultation response"
+  },
+  "49": {
+    "legislation": "Building Regulations electrical safety consultation",
+    "debates": "electrical safety building regulations consultation",
+    "committees": "electrical safety building regulations inquiry evidence",
+    "guidance": "HSE electrical safety building regulations guidance"
+  },
+  "50": {
+    "debates": "renters reform bill proposals tenant landlord debate",
+    "committees": "levelling up committee renters reform bill evidence",
+    "guidance": "department levelling up housing communities renters reform"
+  }
+}
