@@ -467,7 +467,12 @@ export async function runGeneralCorpusChat(input: {
     // mistyped id, so the message says so plainly and reports the range it had to work with.
     console.error('[lex-general] answer cited source numbers it was never shown', {
       dropped: diagnostics.droppedCitations,
-      shown: `[1..${context.length}]`,
+      // 25-C — `String()` because `restrict-template-expressions` reports `context.length` as
+      // `any` here. The value is a number at runtime; what the rule is telling us is that the
+      // compiler cannot VOUCH for it on this path, and a diagnostic that silently prints
+      // "[object Object]" would be worst exactly when someone is reading it to debug a grounding
+      // failure. The underlying `any` on `search.results` is worth its own look.
+      shown: `[1..${String(context.length)}]`,
       question: question.slice(0, 120),
     })
   }

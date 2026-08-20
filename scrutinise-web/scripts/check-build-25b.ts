@@ -36,7 +36,20 @@ import { mergePerspectives, divergenceLine, type PerspectiveRun } from '../lib/l
 import { priceBuild } from '../lib/lex/build-cost'
 import { humaniseSeconds, MIN_SAMPLE, EMAIL_OFFER_SECONDS } from '../lib/lex/build-estimate'
 
-const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8')
+/**
+ * ⚠ LINE ENDINGS ARE NORMALISED ON READ, AND THIS IS NOT A NICETY.
+ *
+ * This repo checks out CRLF on Windows. An assertion that slices a function body on a bare
+ * newline-brace-newline matches NOTHING there: `indexOf` returns -1, the slice collapses to two
+ * characters, and the check reports a failure that has nothing to do with the code it guards.
+ *
+ * 25-B's worker-loop guard did exactly that the moment an edit rewrote `build.ts` with CRLF — it
+ * reported the loop had stopped reading the stored pass log while the loop was perfectly correct.
+ * The same class already bit `check:build-25a` once, with a control that matched a literal
+ * newline and therefore tested an unmodified file. Normalise once, here, and the class is gone.
+ */
+const read = (p: string) =>
+  readFileSync(join(process.cwd(), p), 'utf8').split('\r\n').join('\n')
 
 type Sources = Record<string, string>
 

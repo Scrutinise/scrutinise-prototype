@@ -29,6 +29,7 @@ import { ELICITATION_STEPS, CREDIBILITY_NOTE, OPENING_ASK } from '../lib/lex/eli
 import { looksLikeASolution, MAX_PROBLEM_PRESSES } from '../lib/lex/method'
 import { llmFailed, llmOk, type LlmResult } from '../lib/lex/build-llm'
 import { stripNullBytes, countNullBytes } from '../lib/lex/json-safe'
+import { thinkingConfigFor } from '../lib/lex/model-thinking'
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8')
 
@@ -632,7 +633,16 @@ const CHECKS: Check[] = [
       }
       return /elapsed\(build\.elapsedSeconds\)/.test(ui) ? null : 'elapsed time is no longer shown'
     },
-    break: (s) => ({ ...s, 'components/lex/BuildProgress.tsx': s['components/lex/BuildProgress.tsx'].replace('elapsed(build.elapsedSeconds)', "''") }),
+    // ⚠ `split/join`, NOT `.replace` — which substitutes only the FIRST occurrence. 25-C added a
+    // second `elapsed(build.elapsedSeconds)` (the actual-vs-estimate line), so the single-shot
+    // mutation left the other one standing, the assertion still matched, and the harness correctly
+    // reported the control as inert: "this assertion cannot fail, so it is asserting nothing".
+    // A control that stops mutating everything it names decays into a guard that always passes.
+    break: (s) => ({
+      ...s,
+      'components/lex/BuildProgress.tsx':
+        s['components/lex/BuildProgress.tsx'].split('elapsed(build.elapsedSeconds)').join("''"),
+    }),
   },
   {
     name: '§5 the draft is presented in the EXISTING panel, not a second viewer',
@@ -701,11 +711,21 @@ const CHECKS: Check[] = [
     name: '§18 thinking is OFF on every build call (it ate three generators’ budgets in §19-D)',
     run: (s) => {
       const src = s['lib/lex/build-llm.ts']
-      return /thinkingConfig: \{ thinkingBudget: 0 \}/.test(src)
+      // ⚠ 25-C §4c — THE RULE IS UNCHANGED; THE LITERAL MOVED. Thinking must still be OFF for
+      // every model that accepts a zero budget. It is now decided per model, because
+      // `gemini-2.5-pro` REJECTS a zero budget outright and this very line is what made it
+      // unreachable through all seven build passes while the registry listed it as available.
+      // So the assertion is the property — the config comes from the one helper that decides it —
+      // rather than a string that pins one model's answer for all of them.
+      if (!/thinkingConfig: thinkingConfigFor\(opts\.model\)/.test(src)) {
+        return 'the build no longer routes its thinking budget through model-thinking.ts'
+      }
+      // …and that helper must still answer ZERO for an ordinary model.
+      return thinkingConfigFor('gemini-2.5-flash').thinkingBudget === 0
         ? null
-        : 'thinking is no longer disabled — §19-D Task 2b: three generators returned nothing because thinking ate the whole output budget'
+        : 'thinking is no longer disabled for models that accept it — §19-D Task 2b: three generators returned nothing because thinking ate the whole output budget'
     },
-    break: (s) => ({ ...s, 'lib/lex/build-llm.ts': s['lib/lex/build-llm.ts'].replace('thinkingConfig: { thinkingBudget: 0 }', 'thinkingConfig: { thinkingBudget: 4096 }') }),
+    break: (s) => ({ ...s, 'lib/lex/build-llm.ts': s['lib/lex/build-llm.ts'].replace('thinkingConfig: thinkingConfigFor(opts.model)', 'thinkingConfig: { thinkingBudget: 4096 }') }),
   },
   {
     name: '§18 failure reasons are named apart, not collapsed into one',
