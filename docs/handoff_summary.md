@@ -2,7 +2,32 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-20 07:44 UTC — ▼ **INGEST CASELAW TEXT: the judgment was under the stylesheet all along. 74,896 of 74,896 case-law bodies re-compiled from AKN we already held — 0 re-fetches, £0 — hand-read 30 of 30 correct against judgments re-fetched live from the National Archives, with the same three checks scoring 0 of 30 on the old writer. 74,896 of 74,896 dates moved to the handed-down date, residual ZERO. ⚠⚠ THE FINDING NOBODY WAS LOOKING FOR: the keyword index carried 0 of 74,896 case-law titles and 74,066 wrong dates — last night's title recovery reached the database and stopped there, so NO USER HAD EVER SEEN A RECOVERED CASE NAME. Now 99.98% titled in the index. ⚠⚠ The brief's premise is half wrong: the judgments were never lost, the stylesheet was a median 5.7% of the characters at the HEAD — which is exactly what is served as a snippet. ⚠⚠ The guard caught three shapes my 300-document census missed and TWO WERE MY OWN BUGS: 20 judgments the source publishes as the single word `withdrawn`, 4 anonymised family judgments my CSS detector called a stylesheet because anonymisation writes `{ }`, and 2 the National Archives publishes with NO TEXT AT ALL (uk:hash = SHA-256 of the empty string) where refusing to write left a PURE STYLESHEET. ⚠ THE MEANING-BASED HALF IS STILL SERVING CSS — 12.7% of everything ever embedded for case law is stylesheet, chunk 0 is >50% stylesheet in 77% of documents, ~$31 to re-embed. ⚠ et-decisions: 131,654 of 293,403 rows (44.9%) are a LANDING PAGE, not a decision. ▶ CHARLIE: NOTHING REACHES A USER UNTIL `fts-serve` IS REDEPLOYED — Railway service c268ec09-e489-4cfa-837a-7740d95c24c7 → Deployments → Redeploy.**
+*Last updated: 2026-08-20 23:24 UTC — ▼ **LEX 25-C: THE INSTRUMENT FORK MOVED — a build drafted
+"Primary legislation (Act of Parliament)", the research found the Renters' Rights Act 2025, and the
+fork visibly changed to offer it. That acceptance criterion had carried "undemonstrated" for two
+sprints and took THREE stacked defects to reach. ⚠⚠ The gate was never shut: probed in isolation it
+recognised 3 of 3 real powers — the assessment simply ran inside the question loop, on the leading
+question's own findings, while the powers were surfaced by the OTHER questions. The one question
+named after the power was the one place the power was not. ⚠⚠ `recordInstrumentRetirement` logged
+"instrument fork changed by research" without reading its `updateMany` count — it reported this
+sprint's headline criterion as MET while the database showed no such fork. ⚠⚠ And pass 4 was ERASING
+pass 3: resolving a fork overwrote `caseForAlternative`, destroying the research's own
+"THE RESEARCH FOUND AN EXISTING POWER" text. ⚠⚠⚠ THE SIFT'S FAILURE IS NOT A DEEPENING BUG — it is a
+platform-wide retrieval fan-out: `GatewayQuery.limit` goes to EVERY routed stream, each over-fetches
+×3, and the sum returns. `limit:10` → 150 results; `limit:34` → 500. 15× at small limits, and
+`grouped` is 20 either way, which is why nobody has seen it — seven callers take the flood. Reported
+to CC-Search as `docs/FINDING_FOR_SEARCH_gateway-limit-fanout.md`; THE GATEWAY IS UNTOUCHED. ⚠ The
+brief's 6/6/6/6 "cap before the sift" is REFUTED — it is round-robin interleave; the sift sees all
+630. ⚠ The attribution note had INVERTED the rule it exists to enforce, disclaiming witness names on
+rows that now carry them 96.87% of the time, in three places. ⚠⚠ `claude-sonnet-5` REJECTS
+`temperature` with a hard 400 — reachability said OK, every structured call would have failed; only
+a real call found it, and it is an allow-list, not a version rule. `gemini-2.5-pro` is reachable for
+the first time (thinkingBudget is now per-model). The review agenda is built and mounted,
+contradictions first, and it assembles rather than generates. ▶ CHARLIE: THE AGENDA HAS NEVER BEEN
+SEEN IN A BROWSER — no host permission for localhost, no Clerk session on production from here. And
+`grok-4.20-multi-agent-0309` needs your call: drop it from REACHABLE or route it to the endpoint
+that accepts it. `docs/LEX_25C_REPORT.md`.**
+Earlier: 2026-08-20 07:44 UTC — ▼ **INGEST CASELAW TEXT: the judgment was under the stylesheet all along. 74,896 of 74,896 case-law bodies re-compiled from AKN we already held — 0 re-fetches, £0 — hand-read 30 of 30 correct against judgments re-fetched live from the National Archives, with the same three checks scoring 0 of 30 on the old writer. 74,896 of 74,896 dates moved to the handed-down date, residual ZERO. ⚠⚠ THE FINDING NOBODY WAS LOOKING FOR: the keyword index carried 0 of 74,896 case-law titles and 74,066 wrong dates — last night's title recovery reached the database and stopped there, so NO USER HAD EVER SEEN A RECOVERED CASE NAME. Now 99.98% titled in the index. ⚠⚠ The brief's premise is half wrong: the judgments were never lost, the stylesheet was a median 5.7% of the characters at the HEAD — which is exactly what is served as a snippet. ⚠⚠ The guard caught three shapes my 300-document census missed and TWO WERE MY OWN BUGS: 20 judgments the source publishes as the single word `withdrawn`, 4 anonymised family judgments my CSS detector called a stylesheet because anonymisation writes `{ }`, and 2 the National Archives publishes with NO TEXT AT ALL (uk:hash = SHA-256 of the empty string) where refusing to write left a PURE STYLESHEET. ⚠ THE MEANING-BASED HALF IS STILL SERVING CSS — 12.7% of everything ever embedded for case law is stylesheet, chunk 0 is >50% stylesheet in 77% of documents, ~$31 to re-embed. ⚠ et-decisions: 131,654 of 293,403 rows (44.9%) are a LANDING PAGE, not a decision. ▶ CHARLIE: NOTHING REACHES A USER UNTIL `fts-serve` IS REDEPLOYED — Railway service c268ec09-e489-4cfa-837a-7740d95c24c7 → Deployments → Redeploy.**
 Earlier: 2026-08-20 06:50 UTC — ▼ **SEARCH S10: THE BINDING CONSTRAINT IS LIFTED — these are
 the first retrieval numbers this project has taken on questions it did not write. Overall recall@20
 is 34% (15/44); consultations 78%, committees 30%, guidance 10%. ⚠⚠⚠ AND `cps-guidance` IS

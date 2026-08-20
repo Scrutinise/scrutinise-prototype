@@ -132,6 +132,114 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-C — THE REVIEW AGENDA, AND THE INSTRUMENT FORK FINALLY MOVED (2026-08-20 23:24 UTC)
+
+Executes `docs/BRIEF_25C.md` §1–§5, Charlie's five-point addendum, and the §4c model-reachability
+note. Report: **`docs/LEX_25C_REPORT.md`**. `check:lex-25c` **32/32 with every control firing**;
+`check:build-25a` 40/40 (**40 controls, 0 inert** — two of its own guards had gone dead and are
+repaired); `check:build-25b` 54/54; `check:deepening`, `check:never-claim`, `check:panel-claims`,
+`check:flags`, `check:model-registry` all pass; `tsc` clean. Four live seven-pass builds, one
+16-model reachability sweep, one real structured call per vendor. ~26p.
+
+**The headline: the acceptance criterion that carried "undemonstrated" for two sprints is
+demonstrated.** A build drafted "Primary legislation (Act of Parliament)", the research found the
+Renters' Rights Act 2025, and **the instrument fork visibly moved to offer it** — on a deliberately
+chosen idea, not a hopeful one. Getting there took **three defects stacked on top of each other**,
+and none was the one everybody assumed.
+
+⚠⚠ **The gate was never shut.** Before running anything I isolated `assessInstrumentRetirement` and
+fed it powers the 25-B runs had already surfaced: it recognised **3 of 3**, with a control naming no
+power correctly returning false. This **reverses the standing assumption** that the corpus does not
+surface enabling provisions. The fault was SCOPE — the assessment ran *inside* the question loop on
+the leading question's own findings, while the powers were surfaced by the *other* questions (the
+Renters' Rights Act by the revision pass, s.123 of the Housing and Planning Act 2016 by the
+adversarial reader). **The one question named after the power was the one place the power was not.**
+The verdict is now taken once, at the end, over all findings.
+
+⚠⚠ **A claim whose result was not checked.** `recordInstrumentRetirement` logged *"instrument fork
+changed by research"* unconditionally after its `updateMany`. On run 2 the assessment correctly
+returned `powerFound: true`, the line duly announced the fork had changed, and the database showed no
+such fork — **it was reporting the sprint's headline acceptance criterion as met while it was not.**
+It now reads the count, and *creates* the fork when the approach pass named no instrument.
+
+⚠⚠ **Pass 4 was erasing pass 3.** Resolving a fork overwrote `caseForAlternative` with its own
+settlement note, destroying the "⚠ THE RESEARCH FOUND AN EXISTING POWER" text the research pass had
+just written — two passes both behaving reasonably, and the more valuable write lost. Settlement now
+goes to `recommendationReason`; the case for the road not taken is never erased.
+
+⚠⚠⚠ **The sift's failure is NOT a Deepening bug — it is a platform-wide retrieval fan-out.**
+`GatewayQuery.limit` is documented as "max canonical results before grouping". It is not: it goes to
+*every routed stream*, each over-fetches ×3 for fusion, and the interleaved **sum** returns. Measured
+live: `limit:10` → **150 results**; `limit:34` → **500**. `min(3 × limit, 100) × streams` — **15× at
+small limits.** `grouped` is 20 either way, which is exactly why nobody has seen it. Seven callers
+read `results` unfiltered and take the flood (`chat-retrieval`, `gateway-legacy`, `deepening`,
+`build-research`, `build` orient, `deepening-retrieval`, `orchestrator`); the Deepening was merely
+the only one loud enough to notice, being unusual in paying a per-candidate model cost on top.
+**Written up for CC-Search as `docs/FINDING_FOR_SEARCH_gateway-limit-fanout.md`; the gateway, router
+and interleave are UNTOUCHED** — the contract is theirs. Capped on our side in the two Lex callers.
+⚠ §18's truncation guard worked exactly as designed: 3 of 4 passes said *"the sift did not run —
+truncated at maxOutputTokens=8000"* instead of silently falling back to ranked order.
+
+⚠ **The brief's design question is REFUTED.** The even 6/6/6/6 type split is not a cap applied before
+the sift — it is `interleaveStreams` round-robining. `groupForPanel`'s cap is 3, not 6, and the
+Deepening reads `results`, not `grouped`. **The sift receives the whole union and can choose the best
+28 of 630.** There is no design question here.
+
+⚠ **The attribution note had inverted the rule it exists to enforce.** It asserted as standing fact
+that committee witness names are not stored — while CC-Ingest's 19 Aug recovery put attribution on
+**96.87%** of committee evidence rows. Lex was disclaiming names it was being handed. The claim was
+in **three** places. Fixed not by editing the sentence but by making it count the rows in front of it
+(`attributionAbsenceNote(held, total)`), because a coverage figure written into code decays silently
+the moment another thread does its job.
+
+**§2.2–§2.4:** two model-only instructions were rendering on the user's screen inside
+`EvidenceItem.body` — split at construction into `{forUser, forModel}`, never by stripping afterwards,
+and the *substance* of each caveat stays with the user; a deterministically assembled precedent record
+and a model's one-document summary no longer wear the same "Precedent" badge; known-unknowns collapse
+on (type, question) with subjects unioned, never on string similarity, with losslessness asserted.
+⚠ **The check caught a bug `tsc` structurally cannot:** after the split, one call site still read
+`${precedentBlock(p)}`, which compiles cleanly and writes **`[object Object]`** into every precedent
+body. Class-fixed per Charlie's point 2 with `@typescript-eslint/restrict-template-expressions` —
+which reports **124 repo-wide** (86 of them `catch (e) { ${e} }`, 80 in `scripts/`), so `lint:templates`
+gates `lib/` only and `lint:templates:all` runs the sweep. Gating on 124 would have trained everyone
+to bypass it.
+
+**§3 — the review agenda** is built and mounted above the Deepening: contradictions **first**
+(ordering is a data constant a check asserts, because "I first concluded X; the evidence says Y" was
+buried mid-list), decisions with their reasoning, challenges, 2–3 sources, gaps classified by kind,
+your contribution, framing last. **It assembles; it does not generate** — no model call, asserted by a
+guard. Resolving a decision keeps both sides: `resolvedChoice` is a string, not a boolean, because a
+boolean records *that* a decision happened and loses *what* was decided. ▶ Charlie was right that §3
+had no dependency on §4c and I could not name one; it went first.
+
+**§4c:** `thinkingBudget` is now per-model — a single global zero made **`gemini-2.5-pro` unreachable
+through all seven passes** while the registry listed it as available; it is reachable for the first
+time. Anthropic and OpenAI are callable behind one interface (`model-call.ts`), each held to §18's
+three rules, with `closeSchema` adapting our Gemini-shaped schemas for OpenAI strict mode. The
+reachability sweep covers 16 models with echoed-model comparison: 15 OK, **1 REJECTED**
+(`grok-4.20-multi-agent-0309` — "Multi Agent requests are not allowed on chat completions"), 0
+substituted. ⚠ **`REACHABLE.openai` is empty, so NOTHING was probed for OpenAI, and the check says so
+out loud** — a green run is not a statement about a provider with no models in config.
+⚠⚠ **And only a real call could find this:** `claude-sonnet-5` rejects `temperature` with a hard 400.
+Reachability said OK; every structured call would have failed. Probed across all seven Claude ids —
+only `claude-haiku-4-5` and its dated twin accept it, so it is an **allow-list, not a version rule**
+(`claude-opus-4-8` and `4-7` reject it too). §4b honoured: **the multi-perspective comparison was NOT
+re-run.**
+
+⚠ **Two guards had gone inert and their own harnesses caught them.** 25-A's thinking guard pinned a
+literal that had moved into a helper; its progress control used `.replace`, which substitutes only the
+FIRST occurrence — and 25-C added a second, so the mutation left one standing and the assertion could
+no longer fail. And one of mine did it in reverse: a Python edit helper wrote CRLF, a guard sliced on
+`'\n}\n'`, and it **reported a failure about perfectly correct code**. Both harnesses now normalise
+line endings on read.
+
+**NOT verified:** no signed-in browser walk — the extension has no host permission for `localhost` and
+this session has no Clerk session on production, so **the agenda has never been seen in a browser**;
+OpenAI is unproven end to end (no key on this machine); `grok-4.20-multi-agent-0309` needs Charlie's
+decision (drop it or route it elsewhere); the `limit` fan-out is capped in two callers, not fixed.
+
+---
+
 ## SEARCH S10 — THE FIRST TRUSTWORTHY RETRIEVAL NUMBERS, AND A COLLECTION NO QUERY COULD EVER RETURN (2026-08-20 06:50 UTC)
 
 Executes `docs/BRIEF_SEARCH_S10.md` §0–§7 against Charlie's completed validation pass
