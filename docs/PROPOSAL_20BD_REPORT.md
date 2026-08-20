@@ -292,6 +292,50 @@ Wherever curation lands, that column lands with it.
 
 ---
 
+## Delivery — the four §20 checks, each reported
+
+**1. Every file this sprint created is in the repository.** `check:committed` scans 455 shipped
+source files; all 19 of this sprint's files are tracked, and `git check-ignore -v` was run on each
+before committing (confirming the *file*, not the pattern). ⚠ **It reports three files that are NOT
+mine and must not be committed by me** — `lib/lex/known-unknowns.ts`, `lib/lex/evidence-labels.ts`
+(both 25-C's) and `lib/lex/stats-licence-register.ts` (the stats thread's). **No committed file
+imports any of them**, checked per-file against `HEAD` rather than the working tree: the one apparent
+hit — `proposal-snapshot.ts` — is a *comment* explaining why it deliberately does not import
+`known-unknowns.ts`, and its committed import list is five lines long and contains none of the three.
+
+**2. The remote has the commits.** Verified against the **server ref** via `git ls-remote`, not
+`git status` (which compares a cached ref): `merge-base --is-ancestor` confirms all six commits are
+ancestors of `c479197`, the server's tip.
+
+⚠ **`git pull --rebase` REFUSED, and stashing would have been the wrong fix.** *"cannot pull with
+rebase: You have unstaged changes"* — three threads share this tree and the other two have in-flight
+work in it. `git stash` would have taken another session's uncommitted edits out from under them
+mid-sprint. The right move was to ask whether a rebase was needed at all: the server's tip was
+**already an ancestor of HEAD**, so this was a fast-forward and there was nothing to rebase onto.
+`commit-lex-doc.sh` was corrected to check ancestry first and to **refuse rather than stash** if the
+remote has genuinely diverged.
+
+**3. The deployment is green AND Production — NOT VERIFIED, and the reason is known.** `VERCEL_TOKEN`
+authenticates and then 403s on every project-scoped endpoint with `"saml": true` (CLAUDE.md §19).
+The deployment list is unreadable from this machine. **This is stated rather than inferred** — and
+check 4 below is the one that proves the thing check 3 is a proxy for.
+
+**4. The running site serves this sprint's change — YES, read back with a control.**
+
+| Request | Result |
+|---|---|
+| `GET /proposals/not-a-real-token-20bd` | **200**, body contains *"That link does not point at a proposal."* and *"This proposal isn't available"* — both strings introduced by this sprint |
+| `GET /terms` (control) | 200, **0** occurrences of that string |
+| `GET /proposalsXX/not-a-real-token` (control) | **404** — so the 200 above is the new route, not a catch-all |
+| `GET /api/proposals/not-a-real-token-20bd` | **404 with this sprint's own JSON**: `{"error":"not_found","message":"That link does not point at a proposal."}` |
+
+⚠ **One thing I checked and will not claim.** `GET /api/ideas/{id}/document` returns **307** — and so
+does `/api/ideas/{id}/nosuchroute20bd`. Clerk's middleware redirects any unmatched API path, so **307
+does not prove that route exists.** The API routes' presence is proved by the fourth row instead,
+where the response body is a string only this sprint's code can produce.
+
+---
+
 ## ▶ CHARLIE — the browser walk
 
 1. Open any idea with a kernel → **Documents/Exports** tab → **"Open publishing"**.
