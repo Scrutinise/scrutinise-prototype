@@ -168,6 +168,17 @@ read it) · Q2 add `committees` to it · Q3 `LEX_GUIDANCE_CPS` on as a bridge, r
 Q4 flip `LEX_STATS_STREAM` · Q5 **the next validated set should be debates and legislation and
 nothing else.**
 
+⚠ **CROSS-THREAD, RAISED NOT FIXED — `check:committed` fires on `lib/lex/known-unknowns.ts` and
+`lib/lex/evidence-labels.ts`, on this machine and in no commit.** It is **LATENT, not a live break**,
+and I first read it as live: checking the importing *paths* said "five committed files import two
+missing ones", but checking the committed *content* says nothing in the repository imports either
+(the one HEAD hit is a comment). Production is fine — HTTP 200 during this check. **The break fires
+the moment the Lex thread commits its modified `deepening.ts` / `DeepeningPanel.tsx` /
+`deepening-jobs.ts` without the two new files** — the `build-cost.ts` incident of 17–18 Aug exactly.
+⚠ `next build` passed locally and proves nothing, because the files exist here. ▶ **Whoever owns
+Deepening: `git add` both in the same commit as their importers.** Not committed by search — a
+half-written file from a live session is worse than an absent one.
+
 ❌ **Not done:** `debates`/`legislation` unevaluated · no weight adopted · case law pre-fix only and
 **searching a case BY NAME still cannot match the name** until reindex · the four rejects preserved
 but not re-keyed · `vector-serve` not widened, no stress test run against the serving host ·

@@ -675,6 +675,44 @@ legislation, and nothing else.
 
 ---
 
+## ⚠ ONE CROSS-THREAD ITEM, RAISED NOT FIXED — AND STATED MORE PRECISELY THAN I FIRST HAD IT
+
+`npm run check:committed` fires on two files that are on this machine and in no commit:
+
+```
+scrutinise-web/lib/lex/known-unknowns.ts
+scrutinise-web/lib/lex/evidence-labels.ts
+```
+
+**It is a LATENT risk, not a live break, and the distinction is the whole point.** My first reading
+of this was wrong and would have been alarming for no reason: I checked that the *importing files*
+were tracked (`git ls-files`) and concluded five committed files import two missing ones. Checking
+the committed *content* rather than the path says otherwise:
+
+| importer | imports it in HEAD | imports it in the working copy |
+|---|---:|---:|
+| `lib/lex/deepening.ts` | 0 | 3 |
+| `components/lex/DeepeningPanel.tsx` | 0 | 2 |
+| `lib/lex/deepening-jobs.ts` | 0 | 1 |
+| `lib/lex/deepening-sift.ts` | 0 *(the one hit is a comment)* | 1 |
+| `lib/documents/proposal-snapshot.ts` | 0 | 0 |
+
+**Nothing in the repository imports either file, so production is not broken and www.scrutinise.org
+returned HTTP 200 during this check.** The break happens the moment the Lex thread commits its
+modified `deepening.ts` / `DeepeningPanel.tsx` / `deepening-jobs.ts` **without** also committing the
+two new files — which is precisely the `build-cost.ts` incident of 17–18 Aug (`docs/CLAUDE.md` §20),
+and precisely what `check:committed` was built to catch one sprint earlier.
+
+⚠ **`next build` passed locally on this tree, and that proves nothing about it** — the files exist
+here. A green local build says the files on this machine are consistent with each other, not that a
+clean checkout would compile. That is §20's third incident restated.
+
+▶ **Whoever owns the Deepening work: `git add` both files in the same commit as their importers.**
+Not committed here — a half-written file from a live session is worse than an absent one, and these
+are not search's to commit.
+
+---
+
 ## ARTEFACTS
 
 | file | what it is |
