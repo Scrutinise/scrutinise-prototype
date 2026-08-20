@@ -71,8 +71,18 @@
     "measure:s8-concurrency": "tsx --env-file=.env scripts/measure-s8-concurrency.ts",
     "explore:s8-gold": "tsx --env-file=.env scripts/explore-s8-gold.ts",
     "verify:positions": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-positions-api.ts",
+    "check:20bd": "tsx scripts/check-20bd.ts",
+    "verify:20bd": "tsx --env-file=.env scripts/verify-20bd-live.ts",
     "check:s9-catalogue": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s9-catalogue.ts",
-    "measure:s9-stats": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s9-stats-stream.ts"
+    "measure:s9-stats": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s9-stats-stream.ts",
+    "check:s10-fusion": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s10-fusion.ts",
+    "check:s10-stats-licence": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s10-stats-licence.ts",
+    "verify:s10-keys": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-s10-keys.ts",
+    "verify:s10-dense-query": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-s10-dense-query.ts",
+    "measure:s10-recall": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s10-recall.ts",
+    "measure:s10-stats": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s10-stats.ts",
+    "diagnose:s10-misses": "tsx --env-file=.env --tsconfig tsconfig.json scripts/diagnose-s10-misses.ts",
+    "measure:s10-guidance-fix": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s10-guidance-fix.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"
