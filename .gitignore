@@ -144,3 +144,8 @@ scripts/ingest/v36/enumerate.log
 # V37 repeal census — live run state, rewritten every page, resumable by design.
 scripts/ingest/v36/repeal-census-checkpoint.json
 scripts/ingest/v36/repeal-census.log
+
+# GRAPH 3B — the Electoral Commission bulk CSV cache (21.5 MB of public data, refetchable).
+# Anchored to the exact file, not a `*.csv` pattern: docs/CLAUDE.md §20 check 1 exists because a
+# broad ignore rule silently excluded a real route directory from the repository once already.
+/scripts/graph/.ec-donations.csv

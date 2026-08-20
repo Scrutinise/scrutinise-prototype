@@ -31,6 +31,8 @@ export type SignalType =
   | 'committee_membership'
   | 'declared_interest'
   | 'witness_appearance'
+  // P1, added by GRAPH 3B §2.2. Direction 0 always — see the weight comment below.
+  | 'political_donation'
 
 /**
  * The weight class a vote falls into. This is the *derivation* — the classification — and it is
@@ -56,6 +58,7 @@ export interface PositionConfig {
     witness_appearance: number
     committee_membership: number
     declared_interest: number
+    political_donation: number
   }
   /** Half-life in YEARS per signal type. `null` = does not decay. Design §5. */
   halfLifeYears: Record<SignalType, number | null>
@@ -116,6 +119,17 @@ export const POSITION_CONFIG: PositionConfig = {
     committee_membership: 0.1,
     // [design §5] "alignment prior, not stance".
     declared_interest: 0.1,
+    // [NOT IN DESIGN, added by GRAPH 3B §2.2] A donation recorded in the Electoral Commission's
+    // register. Design §4 places it at P1 as "fact of the path" — the signal is the PATH
+    // (member ← donor → sector), not a stance. Brief §2: *"Direction 0 means direction 0. A
+    // donation is not a position. If the aggregation is tempted to convert a funding path into a
+    // stance, that temptation is the thing this whole design exists to resist."*
+    //
+    // Same number as a declared interest because it is the same KIND of fact — an alignment prior
+    // with a date and a counterparty — and giving it more would be asserting that money buys a
+    // position, which is a claim about the world this graph is in no position to make. Charlie's
+    // to settle; report §2.2, decision D-9.
+    political_donation: 0.1,
   },
   halfLifeYears: {
     // [design §5] "votes 8 years".
@@ -132,6 +146,11 @@ export const POSITION_CONFIG: PositionConfig = {
     committee_membership: 8,
     // [NOT IN DESIGN] as above; inert in 3A because there are no rows.
     amendment_sponsorship: 8,
+    // [NOT IN DESIGN, GRAPH 3B §2.2] A donation IS a dated event, unlike a declared interest, which
+    // we hold as a standing relationship. So it decays, and it borrows the vote half-life for the
+    // same reason D-4 gives: 3B must not invent a why, so it uses the one it can defend. A 2010
+    // donation is a much weaker prior about a 2026 position than last year's.
+    political_donation: 8,
   },
   // Sized off the data: 17,240 of 46,702 party×division groups have 20+ voters, and 5,634 of the
   // 5,645 divisions have at least one major party at that size — so 20 keeps essentially every
