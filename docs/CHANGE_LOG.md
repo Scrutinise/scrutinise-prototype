@@ -132,6 +132,182 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 3B — THE STANCE SCORE HAS THREE VALUES, AND CONFIDENCE REWARDS AN INCONSISTENT RECORD (2026-08-20 06:20 UTC)
+
+Executes `docs/BRIEF_GRAPH_3B.md` §1–§5. Report: **`docs/GRAPH_3B_REPORT.md`**. Validation draft:
+**`docs/POSITION_VALIDATION_CANDIDATES.md`**. `check-3b.ts` **50/50** with all **7** self-test
+breaks firing and **6 negative controls**; `verify:positions` **35/35** live against Neon; `tsc` clean in `scrutinise-web`. ⚠ `tsc` on the
+scripts tree reports 2 errors, **both pre-existing and neither in a file this sprint touched**
+(`check-3a.ts:405`, a deliberately-broken literal inside 3A's own self-test; and ingest-owned
+`download-graph-sources.ts:55`). **Cost $0 — no LLM call anywhere.**
+
+⚠⚠ **THE PAGE COULD NOT RANK BECAUSE THE STANCE SCORE IS NOT A SPECTRUM.** Over all 2,304,748
+estimates there are exactly **three distinct stance values** — `+1`, `0`, `−1` — and **zero rows in
+between**. 92.87% sit at exactly ±1.00 (2,140,510 of 2,304,748), 7.13% at exactly 0.00. It is a
+three-valued flag displayed to two decimal places. The cause is arithmetic, not tuning:
+`stanceScore = signed / mass` is a *normalised* mean, and a per-target estimate aggregates exactly
+one signal — so **one consistent vote and fifty consistent votes give the identical stance of 1.00**.
+Three of four predictions hit exactly (3 distinct values, 92.87%, 7.13%; distinct confidence
+predicted 10,000, measured 18,647).
+
+⚠⚠ **CONFIDENCE CURRENTLY REWARDS AN INCONSISTENT RECORD, AND THAT IS THE SHARPEST FINDING.** The
+harmonic discount is grouped by `(type, class, DIRECTION)`, so signals that *disagree* land in
+different groups and each counts in full. Nine votes the same way → **0.7481**. Five one way and
+four the other → **0.8810**. On the real Bill: of 426 members with 9+ votes on assisted dying, the
+**one** entirely consistent member averages 0.8957 and the **425** mixed ones average **0.9188**.
+Confidence is measuring turnout, not how well we know a position — which means the brief's
+confidence-first sort key (implemented exactly as specified) **puts the least decided members at the
+top**, where 3A's `|stance| × confidence` buried them. Both keys are biased, in opposite directions.
+Decision D-7.
+
+⚠⚠ **3A'S "A MISSED FREE VOTE UNDERSTATES RATHER THAN OVERSTATES" IS REFUTED.** The heuristic misses
+2 of the 11 assisted-dying divisions, and on those two it emits **328 `rebellion:v1` signals at
+weight 0.9** — the highest weight in the config — for members who rebelled against nothing, because
+there was no whip. A missed free vote does not produce one class, it produces the whole whipped
+ladder including the rebellion branch. **That is the mechanism that put 108 people at the top of
+Charlie's page**, and why the tied block reads 0.671 rather than 0.555.
+
+⚠⚠ **A 3A FINDING PUBLISHED AS FACT IS FALSE, AND THE CHECK THAT "PROVED" IT COULD NOT HAVE FAILED.**
+3A: *"All 400 who voted in both voted the same way both times."* The raw rows say **16 of 587 changed
+side** (Emma Hardy, Lee Anderson, Amanda Hack, Yuan Yang, Chris Hinchliff and 11 others). All 16
+ranked **612th–627th of 627** under 3A's sort key; the harness passed `limit: 400`, so every
+counter-example was below the cut-off. Rewritten to test the mechanism and to **require the
+counter-examples to be visible**, so a future ranking change fails here instead of producing another
+confident sentence.
+
+✅ **THE 9,048 ms IS 91 ms, AND IT WAS NEVER A MISSING INDEX.** `position_signal`'s vote arm derives
+`target_id` as `house || ':' || division_id`, a computed column, so the target filter arrived as a
+hash join against a two-row function scan and the plan materialised **all 2,317,523 signals to
+return 981**. `idx_dv_div` already existed and finishes the scan in 1.95 ms — it was unreachable
+because **a view cannot take a parameter**. Added `position_signal_for(types[], ids[])`, a
+set-returning function (view 1,710–4,397 ms → function 57 ms; end-to-end 91 ms). No new storage.
+
+✅ **THE RANKING NOW PRINTS ITS OWN KEY AND SAYS WHEN IT HAS RUN OUT.** On Charlie's exact pair —
+identified by scoring all 55 pairs against the brief's two numbers, because **my first guess was
+wrong** (Amendment 12 + Third Reading gives 607 actors and 0.6227, not 555 and 0.671) — the page now
+says *"40 of 555 actors, tied at this confidence (0.671, 2 signals) — ordered by name. This is not a
+ranking."* **135 of the 555 are tied.**
+
+✅ **THE NEVER-CLAIM RULE AT THE DISPLAY LAYER.** `composeClaim()` is now the only way to render a
+stance word and its signature will not let you call it without the targets, so "supported 1.00" can
+no longer be read as "supports assisted dying" when it means "voted for Amendment 12". Per-division
+results are separately labelled, dated and **never summed** (§4.2, Charlie's D-2 decision).
+
+✅ **§2.2 ELECTORAL COMMISSION DONATIONS INGESTED — 89,861 records, 244 direction-0 signals over 122
+members and 80 donor organisations.** Neither end is ever resolved on similarity: donors on
+Companies House number only (the donor's name is never consulted), donees only where the normalised
+name matches **exactly one** MNIS-identified person — a collision leaves the row unresolved by
+construction. **2,056 rows excluded on donee type alone** (Mayor, Councillor, MSP, Candidate,
+Members Association) because a councillor sharing a name with an MP is the wrongly-merged identity
+the rule exists to prevent. 84.6% of eligible individual rows resolve; the 15.4% miss is mostly
+first-name variants ("Edward Davey" ≠ "Ed Davey") and pre-2016 members, listed by name in the
+report. Two predictions were beaten (resolution 84.6% vs 35% predicted; CH match 9.1% vs 4%).
+⚠ **244 is thin because of our entity layer, not the register: 14,879 records carry a Companies
+House number we do not hold** — decision D-10 hands them to the entity sweep for a ~11× widening.
+
+⛔ **§2.1 APPG NOT BUILT — it is behind a Cloudflare bot challenge and I did not build a way around
+one.** `publications.parliament.uk` 403s every programmatic request including its own homepage,
+while members-api/bills-api/committees-api/interests-api all return 200 from the same process;
+headless Chromium gets **"Just a moment…"**; the real Chrome renders it fine. Not an IP block, not a
+bad path. Three legitimate routes in D-8 — and `interests-api.parliament.uk` **is** open and carries
+member ids, which is a strictly better identity story for a later sprint.
+
+✅ **§3 VALIDATION DRAFT — non-circular BY CONSTRUCTION, and the proof is a number.** Every citation
+is a bill or amendment sponsorship fetched live from `bills-api.parliament.uk`, and
+`position_signal` holds **zero** `amendment_sponsorship` rows (3A found no source data;
+`check-3b.ts` prints that zero every run). **The graph cannot be scored against a signal it does not
+hold.** ⚠ Two of the ten matters first resolved to the **wrong Bill** — "Environment Bill" matched
+*Anxiety (Environmental Concerns) Bill* — because the API's search is not relevance-ranked. Bill ids
+are now pinned with a `titleMustMatch` guard so a drifted pin fails loudly instead of writing
+plausible citations from the wrong Bill.
+
+⚠⚠ **§4.1 THE 17.5 GB LINE IS OURS, ITS PROVENANCE IS CIRCULAR, AND THE DATABASE HAS NOW PASSED IT.**
+`scripts/ingest/search/serve-observer.ts:50` — `NEON_CEILING_GB ?? '17.5'`, commented "Neon plan
+ceiling. The handoff records the storage line at ~17.5 GB". The handoff's percentage is emitted *by
+that observer*; neither end of the citation is a source, and the enforced ceiling read from this
+compute is **16 TiB**. Neon is now **17.68 GiB — 101.1% of the line**, so the observer is alerting
+CRITICAL against a number nobody can source. Reported, not edited (ingest-owned). Decision D-11.
+
+⚠⚠ **TWO THINGS I BROKE MID-SPRINT, BOTH RECORDED BECAUSE THE FAILURE MODE GENERALISES.** (1) I
+redefined `position_signal_vote` over the new set-returning function so the classification ladder
+would have one home — correct, byte-identical rows, and **measured on the wrong access pattern**.
+The estimate build filters `WHERE actor_id BETWEEN`, and against a function `actor_id` is an *output
+column*, so every batch hash-joined the whole vote arm. **It truncated `position_estimate` and left
+it half-rebuilt (1,357,000 of 2.3M) after a read timeout.** Fixed by keeping the view's own FROM
+clause and replacing only the CASE with `position_vote_class()`; rebuild completed 2,304,858
+estimates in 248.1s (3A: 225s — the ~9% is the scalar call, named rather than absorbed). *One
+object, two readers, one benchmark.* (2) `weightFunctionSql()` hard-coded its signal-type list, so
+adding `political_donation` to the config did **not** add a case to the generated SQL —
+`position_raw_weight('political_donation', NULL)` returned NULL while TypeScript returned 0.1. Two
+sources of truth wearing one name, in the function that exists to prevent exactly that. Now derived
+from the config's own keys. Both new checks were **watched failing against the real broken state**
+before the fix.
+
+▶ **CHARLIE:** `/admin` → **Position Graph** → search `Terminally Ill Adults` → tick **Amendment (b)
+to New Clause 14** and **Amendment 12** → *Show positions*. The amber tie sentence is the string
+that proves this sprint deployed. Then `docs/POSITION_VALIDATION_CANDIDATES.md`, one VERDICT line
+per row — that document is the gate on any of this reaching a user.
+
+❌ **Not done:** APPG (D-8) · Companies House joins, no API key (D-12) · nothing scored, no accuracy
+figure claimed · no weight retuned (§1.5 is a proposal with evidence) · the free-vote heuristic's
+misses diagnosed not fixed (D-13) · amendment sponsorship measured and specified (§4.3) not ingested
+· the deepening wiring still unapplied · 97.1% of EDM signatures still missing · no browser walk
+(authenticated surface, and 3A proved the unauthenticated probe cannot tell deployed from absent).
+
+---
+
+## INGEST CASELAW TEXT — PREDICTIONS, RECORDED BEFORE THE RE-COMPILE RAN (2026-08-20 05:12 UTC)
+
+Executes `docs/BRIEF_INGEST_CASELAW_TEXT.md`. Written from the §1 scoping audit, after the pilot
+measurements and BEFORE any body was overwritten, so the numbers can be scored rather than
+rationalised (standing rule: predict-measure-compare).
+
+**The brief's §0 premise is half right, and the half that is wrong matters.** "The text beneath the
+title is CSS" is not what is stored. What is stored is the WHOLE Akoma Ntoso document with its tags
+removed, so each body opens with the identifiers, the SHA-256 build hash and 2.0k-3.4k characters of
+`#judgment { font-family: 'Times New Roman' … }` — and then the judgment, in full, follows. Measured
+over 60 documents: the preamble is a **median 5.7% and mean 4.9% of the characters**, not all of
+them. It is still the failure the brief describes, because the head of the body is what is served as
+a snippet and what fills chunk 0 of the embedding — but any claim that the judgments themselves were
+lost is wrong, and the report says so.
+
+1. **The re-compile is a RE-COMPILE, not a re-fetch.** All 74,896 rows carry an `r2RawKey`; 60 of 60
+   sampled objects are present, are Akoma Ntoso, and carry a `<judgmentBody>`. **0 fetches to the
+   National Archives.** The §1 decision gate does not need Charlie.
+2. **74,896 of 74,896 bodies re-compile and pass the §2.2 guard; fewer than 20 are refused.** On 200
+   documents the new extractor scored 200/200 against 0/200 for what is stored today.
+3. **The stored text shrinks by 9-10%**, and every character removed is `<meta>`: identifiers, the
+   build hash and the stylesheet. Pilot over 1,000 documents: 9.41%.
+4. **`wordCount` on this collection falls by roughly 8%** — 680.7 M stored words today, of which
+   several hundred `font-family` "words" per document were never words.
+5. **The FTS half: `font-family` currently returns case-law hits and after the refresh returns
+   none**, while a phrase from a real judgment returns the same judgment with a readable snippet.
+6. **The meaning-based half is NOT fixed by this sprint and I predict it stays broken** until a
+   re-embed is authorised. 12.7% of everything ever embedded for case law is stylesheet, chunk 0 is
+   more than half stylesheet in **77% of documents**, and the 8-chunk cap means ~2,085 characters
+   (~417 words) of real judgment per capped document never reached the embedder at all. Re-embedding
+   the collection costs **~$31** at the Batch-API rate the corpus embed was costed at. That is
+   Decision 1 for Charlie.
+7. **§4 dates: ~74,800 of 74,896 rows move, mean move around 180 days**, and the residual — rows
+   whose AKN states no date — is **under 1% of the collection**. R (Miller) v The Prime Minister is
+   stored as 2019-01-01 today and was handed down 2019-09-24: **wrong by 266 days**, measured, not
+   assumed.
+8. **Sequencing: dates first, then the text, then ONE index refresh carrying both.** They write
+   different columns (`itemDate` versus `wordCount`/`notes`) so neither can lose the other's write,
+   and the date sweep reads a 32 KB range where the text re-compile reads whole objects — so if the
+   text run has to be repeated, the date work is not repeated with it.
+9. **Nothing goes dark.** The index refresh deletes and re-adds `tna-caselaw` rows in batches of
+   500, so at most 500 of 18 M rows are absent from keyword search at any instant, and no other
+   tier is touched.
+
+⚠ **The earlier recommendation for this fix was `stripAknPreamble()` (INGEST_NAMES D-4) and it is
+NOT what was built.** §2.1 forbids solving this with a pattern match, and it is right to: stripping
+the CSS run would have left the identifiers and the build hash stored as if they were the judgment.
+The writer now selects the `<judgment>` element without its `<meta>` child, which is why the measured
+cut is 9.41% and not the 8.20% `stripAknPreamble` was measuring.
+
+---
+
 ## SEARCH S9 — THE STATISTICS CATALOGUE IS BUILT, AND TWO OF THE BRIEF'S THREE RESIDUALS WERE WRONG (2026-08-19 22:25 UTC)
 
 Executes `docs/BRIEF_SEARCH_S9.md` §1–§6 against `SEARCH_STRATEGY_v5.md` §6d.

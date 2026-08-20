@@ -2,7 +2,18 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-19 22:57 UTC — ▼ **INGEST NAMES: the case name and the witness were
+*Last updated: 2026-08-20 06:20 UTC — ▼ **GRAPH 3B: the position graph's stance score has
+exactly THREE values — +1, 0, −1, with zero rows in between and 92.87% at exactly ±1.00 — so the
+"top 40" had nothing to sort on. ⚠⚠ CONFIDENCE CURRENTLY REWARDS AN INCONSISTENT RECORD: nine
+votes the same way scores 0.748, five-one-way-and-four-the-other scores 0.881, and on the real
+Bill the 425 mixed records average HIGHER than the 1 consistent one. ⚠⚠ 3A's "a missed free vote
+understates rather than overstates" is REFUTED — it emits 328 rebellion signals at weight 0.9 for
+members who rebelled against nothing. ⚠⚠ And 3A's "all 400 voted the same way both times" is
+FALSE (16 of 587 changed side); all 16 ranked 612th–627th of 627, below the harness's limit of
+400, so the check could not have failed. 9,048 ms → 91 ms, and it was never a missing index.
+Electoral Commission register ingested (89,861 rows, 244 direction-0 signals); APPG is behind a
+Cloudflare bot challenge and was NOT worked around.**
+Earlier: 2026-08-19 22:57 UTC — ▼ **INGEST NAMES: the case name and the witness were
 inside requests we were already paying for. Case law 0% → 99.98% titled, committee evidence
 0% → 96.87%, committee reports 0% → 85.58% with no fetch at all — and 21 of 23 committee
 search results now carry a name, up from zero. ⚠⚠ My prediction that the citation-shaped guard
@@ -39,6 +50,89 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-20 06:20 UTC — ▼ **GRAPH 3B IS COMPLETE: THE GRAPH NOW SAYS WHAT ITS ORDER MEANS, WHAT ITS
+STANCE IS A STANCE TOWARD, AND WHEN IT CANNOT RANK AT ALL.** Executes `docs/BRIEF_GRAPH_3B.md`
+§1–§5. Report: **`docs/GRAPH_3B_REPORT.md`**. Validation draft:
+**`docs/POSITION_VALIDATION_CANDIDATES.md`**. CHANGE_LOG (2026-08-20 06:20 UTC).
+`check-3b.ts` **50/50** with all **7** self-test breaks firing and **6 negative controls**;
+`verify:positions` **35/35** live against Neon; `tsc` clean in `scrutinise-web`. ⚠ The scripts
+tree has 2 **pre-existing** `tsc` errors, neither in a file 3B touched (`check-3a.ts:405`, a
+deliberately-broken literal in 3A's own self-test; `download-graph-sources.ts:55`, ingest-owned).
+**Cost £0 — no LLM call.**
+
+⚠⚠ **THE SCORE DOES NOT DISCRIMINATE BECAUSE IT IS NOT A SPECTRUM.** Over all 2,304,748 estimates
+there are exactly **three distinct stance values** (+1, 0, −1) and **zero rows in between**; 92.87%
+sit at exactly ±1.00. `stanceScore = signed / mass` is a normalised mean and a per-target estimate
+aggregates one signal, so **one consistent vote and fifty give the identical 1.00**. Three of four
+predictions hit exactly.
+
+⚠⚠ **CONFIDENCE REWARDS AN INCONSISTENT RECORD — the sharpest finding of the sprint.** The harmonic
+discount groups by `(type, class, DIRECTION)`, so disagreeing signals dodge it and each counts in
+full. 9 votes one way → **0.7481**; 5 one way + 4 the other → **0.8810**. On the assisted dying
+Bill, of 426 members with 9+ votes, the **one** consistent member averages 0.8957 and the **425**
+mixed ones average **0.9188**. So the brief's confidence-first sort key (implemented as specified)
+puts the *least decided* members at the top, where 3A's key buried them. **Both keys are biased, in
+opposite directions** — decision D-7, and nothing was retuned (§1.5 is a proposal with evidence).
+
+⚠⚠ **TWO 3A STATEMENTS ARE REFUTED.** (1) *"A missed free vote is scored at the whipped weight,
+which understates rather than overstates"* — it does not: on the 2 of 11 assisted-dying divisions
+the heuristic misses, it emits **328 `rebellion:v1` signals at weight 0.9**, the highest in the
+config, for members who rebelled against nothing. That is the mechanism that put 108 people at the
+top of Charlie's page. (2) *"All 400 who voted in both voted the same way both times"* — **16 of 587
+changed side**; all 16 ranked **612th–627th of 627** under 3A's sort key and the harness passed
+`limit: 400`, so **the check could not have failed**, and its passing was written up as a finding.
+
+✅ **9,048 ms → 91 ms, AND IT WAS NEVER A MISSING INDEX.** `idx_dv_div` already existed and does the
+scan in 1.95 ms; it was unreachable because **a view cannot take a parameter**, so the target filter
+became a hash join and the plan materialised all 2,317,523 signals to return 981. Fixed with
+`position_signal_for(types[], ids[])`, a set-returning function — no new storage.
+
+✅ **THE PAGE NOW PRINTS ITS SORT KEY AND ITS TIES**, and renders the target inside every claim:
+*"40 of 555 actors, tied at this confidence (0.671, 2 signals) — ordered by name. This is not a
+ranking."* Per-division results are separately labelled and **never summed** (Charlie's D-2).
+
+✅ **§2.2 ELECTORAL COMMISSION REGISTER INGESTED** — 89,861 records, **244 direction-0 signals** over
+122 members and 80 donor organisations. Neither end resolved on similarity: donors on Companies
+House number only, donees only on a normalised name that is **unique** among MNIS-identified people;
+2,056 rows excluded on donee type alone (Mayor, Councillor, MSP, Candidate, Members Association).
+84.6% of eligible individual rows resolve. ⚠ **244 is thin because of our entity layer, not the
+register — 14,879 records carry a CH number we do not hold** (D-10, ~11× widening available).
+
+⛔ **§2.1 APPG NOT BUILT: it is behind a Cloudflare bot challenge and I did not build a way around
+one.** `publications.parliament.uk` 403s every programmatic request including its homepage while
+every other parliament.uk API returns 200; headless Chromium gets "Just a moment…"; real Chrome
+renders it. Three legitimate routes in D-8, and **`interests-api.parliament.uk` is open and carries
+member ids** — a better identity story for a later sprint.
+
+⚠⚠ **NEON HAS PASSED THE 17.5 GiB LINE (17.68 GiB, 101.1%) AND THE LINE CANNOT BE SOURCED.** It
+lives at `scripts/ingest/search/serve-observer.ts:50`, comments itself as the "Neon plan ceiling"
+(it is not — the enforced ceiling read from this compute is 16 TiB), and cites "the handoff", whose
+percentage is emitted by that observer. **Circular.** Reported not edited (ingest-owned) — D-11.
+
+⚠⚠ **I BROKE `position_estimate` MID-SPRINT AND IT IS WORTH THE PARAGRAPH.** Redefining
+`position_signal_vote` over the new function was correct, byte-identical, and **measured on the
+wrong access pattern**: the estimate build filters `WHERE actor_id BETWEEN`, and against a function
+`actor_id` is an output column, so every batch hash-joined the whole vote arm. **The table was
+truncated and left half-rebuilt (1,357,000 of 2.3M) after a read timeout.** Fixed by keeping the
+view's own FROM clause and replacing only the CASE with `position_vote_class()`; rebuilt 2,304,858
+estimates in 248.1s (3A: 225s; the ~9% is the scalar call, named not absorbed). *One object, two
+readers, one benchmark.* Separately: `weightFunctionSql()` hard-coded its signal-type list, so a new
+config weight produced **NULL** in SQL while TypeScript returned 0.1 — now derived from the config's
+own keys, with a check that was watched failing first.
+
+▶ **CHARLIE:** `/admin` → **Position Graph** → search `Terminally Ill Adults` → tick **Amendment (b)
+to New Clause 14** and **Amendment 12** → *Show positions*. The amber tie sentence is the string
+that proves this deployed. Then **`docs/POSITION_VALIDATION_CANDIDATES.md`** — one VERDICT line per
+row; it is the gate on any of this reaching a user, and its citations are **non-circular by
+construction** (bill/amendment sponsorship, of which the graph holds provably zero signals).
+⚠ No browser walk was possible from here and none is claimed — every surface is behind Clerk and 3A
+proved an unauthenticated probe cannot tell a deployed route from an absent one.
+
+❌ **Not done:** APPG (D-8) · Companies House joins, no API key (D-12) · **nothing scored, no
+accuracy figure claimed anywhere** · no weight retuned · the free-vote heuristic's misses diagnosed
+not fixed (D-13) · amendment sponsorship measured and specified (§4.3) not ingested · the deepening
+wiring still unapplied · 97.1% of EDM signatures still missing.
 
 2026-08-19 22:25 UTC — ▼ **SEARCH S9 IS COMPLETE: THE STATISTICS CATALOGUE IS BUILT, ROUTED AND
 FLAG-GATED — THE LAST UNBUILT STREAM IN THE FIRST-PASS ARCHITECTURE.** Executes
