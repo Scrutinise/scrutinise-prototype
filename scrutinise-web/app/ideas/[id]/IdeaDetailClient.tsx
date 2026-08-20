@@ -2635,6 +2635,22 @@ export default function IdeaDetailClient({
                 </p>
               </div>
               <DocumentExports ideaId={idea.id} variant="page" />
+              {/* Sprint 20-B/D — the proposal itself, and who can read it. Owner
+                  only, because publishing is the owner's act (§20.3). */}
+              {isOwner && (
+                <div className="border-t border-zinc-200 pt-4">
+                  <h3 className="text-sm font-semibold text-zinc-900">The proposal document</h3>
+                  <p className="text-sm text-zinc-600 mt-1">
+                    The Proposal and the Summary, and the version a recipient’s link is pinned to.
+                  </p>
+                  <a
+                    href={`/ideas/${idea.id}/publish`}
+                    className="inline-block mt-2 text-xs px-3 py-1.5 rounded border border-zinc-300 hover:bg-zinc-50"
+                  >
+                    Open publishing
+                  </a>
+                </div>
+              )}
             </div>
           )}
           {activeTab === 'team' && <TeamTab idea={idea} isOwner={isOwner} ownerReferralCode={currentUserReferralCode} />}
