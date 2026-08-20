@@ -19,7 +19,7 @@
 import type { SearchResult, SearchResultType } from './page1-config'
 import { runFtsSearch } from './fts-search'
 import { runVectorSearch } from './vector-search'
-import { fuseWeightedRrf, VECTOR_WEIGHT } from './fusion'
+import { fuseWeightedRrf, streamVectorWeight } from './fusion'
 import { interleaveStreams } from './interleave'
 import { sortByScore } from './score-scope'
 import { activeStreamScopes, type StreamScope } from './stream-scopes'
@@ -176,10 +176,67 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
 
     const bm25 = mergeLegs(mainB, extraB, `${name} bm25 legs`, limit)
     const vec = mergeLegs(denseScoped, extraV, `${name} vector legs`, limit)
+    // S10 §3 — the weight is now resolved PER STREAM. With `LEX_FUSION_WEIGHTS` off this returns
+    // the same 0.5 constant this line always used, so the shipped default is byte-identical.
+    const weight = streamVectorWeight(name)
+    // ⚠ CAPTURED BEFORE THE EARLY RETURN, so a stream whose dense half came back empty is recorded
+    // as `vector: []` rather than not recorded at all. "No dense leg" and "not measured" are
+    // different statements and a sweep that could not tell them apart would average over both.
+    emitLegs({ stream: name, query, bm25, vector: vec, weight })
     if (!vec.length) return bm25
-    const fused = fuseWeightedRrf(vec, bm25).slice(0, Math.max(limit, bm25.length))
-    console.log('[query-router] per-stream fusion', { stream: name, tier, corpora: corpora ?? null, extraCorpora: extraCorpora ?? null, bm25: bm25.length, vector: vec.length, fused: fused.length, weight: VECTOR_WEIGHT })
+    const fused = fuseWeightedRrf(vec, bm25, weight).slice(0, Math.max(limit, bm25.length))
+    // The resolved weight is logged next to the stream name on EVERY fused call. A stream that is
+    // absent from `LEX_VECTOR_STREAMS` never reaches this line at all, so "dial set but dense off"
+    // — which does nothing, silently — is told apart from "dial set and working" by reading the
+    // log rather than by inferring from a config value nobody on this machine can read.
+    console.log('[query-router] per-stream fusion', { stream: name, tier, corpora: corpora ?? null, extraCorpora: extraCorpora ?? null, bm25: bm25.length, vector: vec.length, fused: fused.length, weight })
     return fused
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// S10 §3 — THE LEG CAPTURE SEAM, so a weight sweep measures THIS code and not a copy of it.
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// WHY IT EXISTS. Sweeping six fusion weights over five streams and fifty questions the obvious way
+// means 1,500 retrieval passes against a service four requests wide — hours of wall-clock for a
+// measurement whose inputs never change. The two INPUT rankings (BM25 and dense) do not depend on
+// the weight at all; only the fusion of them does. So the legs are retrieved once and every weight
+// is computed from them.
+//
+// ⚠ THE SEAM IS HERE, IN THE PRODUCTION PATH, AND NOT IN THE HARNESS — deliberately. A harness
+// that rebuilt the scopes, the two legs and `mergeLegs` for itself would be measuring a COPY of
+// the ranking pipeline, and stream-scopes.ts already records what a copy costs: "a copy is how the
+// matrix would keep saying reachable for a month after someone narrowed a filter". What is
+// captured here is exactly what `fuseWeightedRrf` was about to be handed.
+//
+// ⚠ INERT UNLESS A SINK IS INSTALLED. No sink is installed anywhere in the app; only a script
+// calls `captureLegs`. The cost when nothing is listening is one null check per fused stream call.
+export interface CapturedLegs {
+  stream: string
+  query: string
+  /** The merged BM25 ranking, in rank order — what fusion receives as its sparse input. */
+  bm25: SearchResult[]
+  /** The merged dense ranking, in rank order. EMPTY is a real, recordable state (see above). */
+  vector: SearchResult[]
+  /** The weight this call actually resolved, so a recomputation can be checked against the real one. */
+  weight: number
+}
+
+let legSink: ((legs: CapturedLegs) => void) | null = null
+
+/** Install a sink to observe every fused stream's two input rankings. Returns the uninstall
+ *  function. Measurement only — nothing in the app installs one. */
+export function captureLegs(sink: (legs: CapturedLegs) => void): () => void {
+  legSink = sink
+  return () => { legSink = null }
+}
+
+function emitLegs(legs: CapturedLegs): void {
+  if (!legSink) return
+  try { legSink(legs) } catch (e) {
+    // A measurement sink must never be able to break retrieval for a user.
+    console.error('[query-router] leg capture sink threw — retrieval is unaffected', e)
   }
 }
 
@@ -204,18 +261,27 @@ function fusedStream(name: string, tier: string, types?: SearchResultType[], cor
 // timing: a router DECISION and its DISPATCH both happen inside one `runSearch`, and the flag does
 // not change inside a request in production. Memoising per value keeps the `fusedStream` closures
 // stable, so an arm's second query reuses the first's stream objects rather than rebuilding them.
-const STREAM_CACHE = new Map<boolean, StreamConfig[]>()
+// ⚠ KEYED ON EVERY FLAG THAT SHAPES THE SCOPES, not just V2. `LEX_GUIDANCE_CPS` (S10 §1) changes
+// the guidance stream's `extraCorpora`, so a cache keyed on V2 alone would hand back a stream built
+// under the other arm — and the arms would look identical in a measurement that alternates them,
+// which is precisely what this cache exists to make possible.
+const STREAM_CACHE = new Map<string, StreamConfig[]>()
 export function routerStreamsV2(): boolean { return flagEnabled('LEX_ROUTER_STREAMS_V2') }
+/** S10 §1 — admit `cps-guidance` to the guidance stream. Default OFF; the measurement and the
+ *  reason the default stayed off are in stream-scopes.ts above `activeStreamScopes`. */
+export function guidanceCpsEnabled(): boolean { return flagEnabled('LEX_GUIDANCE_CPS') }
 export function streams(): StreamConfig[] {
   const v2 = routerStreamsV2()
-  const hit = STREAM_CACHE.get(v2)
+  const cps = guidanceCpsEnabled()
+  const key = `${v2}|${cps}`
+  const hit = STREAM_CACHE.get(key)
   if (hit) return hit
-  const built = activeStreamScopes(v2).map((s) => ({
+  const built = activeStreamScopes(v2, cps).map((s) => ({
     ...s,
     search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora, s.extraCorpora),
   }))
-  STREAM_CACHE.set(v2, built)
-  console.log(`[query-router] streams in force: ${built.map((s) => s.name).join(', ')} (LEX_ROUTER_STREAMS_V2=${v2 ? 'ON' : 'off'})`)
+  STREAM_CACHE.set(key, built)
+  console.log(`[query-router] streams in force: ${built.map((s) => s.name).join(', ')} (LEX_ROUTER_STREAMS_V2=${v2 ? 'ON' : 'off'} LEX_GUIDANCE_CPS=${cps ? 'ON' : 'off'})`)
   return built
 }
 

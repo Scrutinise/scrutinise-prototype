@@ -108,6 +108,33 @@ export const CAPABILITY_FLAGS = [
   // touch the corpus index at all, so the cost is one Postgres read against a cached
   // in-process index, measured at SEARCH_S9_REPORT.md §B3.
   'LEX_STATS_STREAM',
+  // S10 §3. THE DIAL — a per-stream fusion weight instead of one 0.5 for every collection. The
+  // values live in `LEX_FUSION_STREAM_WEIGHTS` (`debates:0.2,caselaw:0.65`); this boolean gates
+  // the mechanism, exactly as `LEX_SEARCH_VECTOR` gates and `LEX_VECTOR_STREAMS` configures.
+  //
+  // ⚠ DEFAULT OFF, and with it off `streamVectorWeight()` returns the same 0.5 constant every
+  // caller already used — so the change is a no-op until a weight is deliberately set. That is
+  // the brief's own requirement ("nothing widened before it is measured") and it is asserted by
+  // comparing rankings in `scripts/check-s10-fusion.ts`, not by reading the code.
+  //
+  // ⚠ ONE BOOLEAN IS WHAT A ROLLBACK WANTS. Flipping this off restores 0.5 everywhere without
+  // anyone having to remember what the weights string used to say.
+  'LEX_FUSION_WEIGHTS',
+  // S10 §1. Admit `cps-guidance` (270 sections) to the guidance stream's extra leg. The collection
+  // is display-typed GUIDANCE but indexed under tier `other`, so NO router stream can select it
+  // and no query can return a CPS guidance document — measured on Charlie's validated set, where
+  // it costs five of the ten guidance questions.
+  //
+  // ⚠ DEFAULT OFF BECAUSE THE FIX IS ZERO-SUM, not because it is unmeasured. `mergeLegs` sorts the
+  // two legs together on one BM25 scale and slices to a fixed budget, so a strong extra leg takes
+  // the main leg's room rather than getting its own: guidance 2/10 → 8/10 and consultations
+  // 6/9 → 4/9, in-stream recall@20. Net +4 of 19 with a real loss inside it — a product judgement,
+  // which is Charlie's, and the same reasoning that holds `LEX_TIER_FUSION` off.
+  //
+  // ⚠ THE DURABLE FIX IS NEITHER ARM: `tierFor()` plus a full index rebuild moves the collection
+  // into the `guidance` tier, where it competes in the main leg and needs no extra call. Delete
+  // this flag then.
+  'LEX_GUIDANCE_CPS',
 ] as const
 
 export type CapabilityFlagName = (typeof CAPABILITY_FLAGS)[number]
