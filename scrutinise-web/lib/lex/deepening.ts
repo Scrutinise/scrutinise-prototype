@@ -34,13 +34,11 @@ import { generateDeepeningFindings, type RawFinding } from './deepening-client'
 import { siftCandidates, siftSummaryLine, SIFT_CANDIDATE_TARGET, type SiftKeep } from './deepening-sift'
 import { generateAdversarialIssues } from './deepening-adversarial'
 import { runJob, jobQuestion, type JobOutcome } from './deepening-jobs'
+import { collapseKnownUnknowns, type KnownUnknown } from './known-unknowns'
 
-/** A declared gap. Always carries WHAT was looked for, not just that something is missing. */
-export interface KnownUnknown {
-  question: string
-  /** Why it could not be answered — always specific enough to act on. */
-  why: string
-}
+// 25-C §2.4 — the shape and the collapse live in known-unknowns.ts so the panel, the build's
+// agenda and this engine cannot disagree about what a gap is. Re-exported for existing importers.
+export type { KnownUnknown } from './known-unknowns'
 
 export interface PassState {
   passKey: string
@@ -355,6 +353,29 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     // that however high the limit went, a pass could never see a fourth impact
     // assessment. That cap is right for a panel a human reads and wrong for a machine
     // sift, and it silently bounded the old behaviour at ~20 regardless of `limit`.
+    // ⚠⚠ 25-C §2.1 — `limit` IS PER STREAM, NOT PER CALL, AND THAT IS WHY THE SIFT STOPPED
+    // RUNNING.
+    //
+    // The arithmetic below intends `SIFT_CANDIDATE_TARGET` (100) candidates in total. It does not
+    // get them. `runSearch` hands `limit` to `runRoutedSearch`, which passes it to EVERY stream
+    // (`s.search(query, limit)`) and then returns the interleaved SUM — so a 3-intent pass asking
+    // for 34 each against 5 routed streams receives 34 × 5 × 3 ≈ 510 rows, and 646 was measured on
+    // 19 Aug (docs/S8_DEEPENING_VERIFY.txt).
+    //
+    // At that size the sift's output could not fit its ceiling: **3 of 4 passes hit
+    // `[deepening:sift] truncated — cut off at maxOutputTokens=8000`** and honestly reported
+    // "Reviewed 630 sources. The sift did not run…". ⚠ THE HONESTY MACHINERY WORKED — §18's
+    // truncation guard turned what would have been a silent fallback to ranked order into a
+    // sentence the user could read. The defect was upstream of it.
+    //
+    // Two knock-on effects, and the second is easy to miss:
+    //   1. the sift's OUTPUT scales with the candidate count, so the ceiling fires;
+    //   2. its prompt anchors the keep ratio to a hundred ("keeping 8 of 100 is a good outcome"),
+    //      so at 646 the model keeps proportionally more — which is what pushed it over.
+    //
+    // Fixed by honouring the configured target here (see the cap below) rather than by raising the
+    // ceiling: 100 IS the "much larger candidate set" the sift was designed around, and 646 was
+    // never a decision anyone took.
     const perIntent = Math.max(1, Math.ceil(SIFT_CANDIDATE_TARGET / Math.max(1, def.intents.length)))
     for (const intent of def.intents) {
       if (Date.now() - startedAt > RUN_BUDGET_MS) { failureReason = 'Ran out of time during retrieval'; break }
@@ -367,7 +388,26 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       if (res.failed) { failedIntents.push(intent); continue }
       retrieved.push(...res.results)
     }
-    const candidates = dedupeById(retrieved)
+    const deduped = dedupeById(retrieved)
+
+    // 25-C §2.1 — HONOUR THE CONFIGURED TARGET. See the note on `perIntent`.
+    //
+    // ⚠ TAKING THE FIRST N IS FAIR HERE, and only because of what produced the order.
+    // `interleaveStreams` round-robins across the routed streams, so a prefix of this list is
+    // STREAM-BALANCED rather than dominated by whichever stream scored highest — the same property
+    // that makes the even N/N/N/N split in the logs look like a per-type quota when it is nothing
+    // of the kind. A prefix of a score-ordered list would have been a silent bias towards
+    // legislation; a prefix of this one is not.
+    //
+    // ⚠ THE DISCARD IS LOGGED LOUDLY, because it is retrieval we paid for and did not judge. If
+    // this number stays large, the fix is to lower `limit` — not to raise the sift's ceiling.
+    const candidates = deduped.slice(0, SIFT_CANDIDATE_TARGET)
+    if (deduped.length > candidates.length) {
+      console.warn('[deepening] retrieved far more than the sift target — `limit` is per-stream', {
+        passKey, retrieved: retrieved.length, deduped: deduped.length,
+        sifting: candidates.length, discardedUnjudged: deduped.length - candidates.length,
+      })
+    }
 
     // 1b. SIFT. "Does this actually bear on this proposal's problem, and how?" — a
     //     different question from "what is most similar", and one the interactive path
@@ -378,11 +418,11 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
           passMethod: def.method, mustAnswer: def.mustAnswer, idea: ctx.summary, candidates,
         })
       : { kept: [], judgements: new Map<string, SiftKeep>(), reviewed: 0, skipped: false as boolean, skipReason: undefined }
-    const deduped = sift.kept
+    const keptBySift = sift.kept
     if (sift.skipped) console.warn('[deepening] sift skipped —', sift.skipReason)
     console.log('[deepening] candidates', {
-      passKey, retrieved: retrieved.length, deduped: candidates.length,
-      kept: deduped.length, skipped: sift.skipped,
+      passKey, retrieved: retrieved.length, deduped: keptBySift.length,
+      sifted: candidates.length, kept: keptBySift.length, skipped: sift.skipped,
     })
     // 2b. STRUCTURED RETRIEVAL JOBS (S8 §1). Run BEFORE the references write, before the gather,
     //     and before the zero-candidate early return below. All three orderings are deliberate and
@@ -435,7 +475,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     // rows are already committed by the time it runs.
     await writePassReferences(
       ideaId, passKey, def.intents.join('+'),
-      failedIntents.length < def.intents.length, ctx.keywords, deduped,
+      failedIntents.length < def.intents.length, ctx.keywords, keptBySift,
       failedIntents.length ? `intents that failed: ${failedIntents.join(', ')}` : undefined,
     )
     // ⚠ A SKIPPED JOB BECOMES A KNOWN UNKNOWN WITH ITS REASON ATTACHED. §1: "the pass writes
@@ -448,7 +488,10 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     // hardcoded in the engine. A third job must be configuration.
     const jobUnknowns: KnownUnknown[] = jobOutcomes
       .filter((o) => o.skipReason)
-      .map((o) => ({ question: o.unmetQuestion, why: o.skipReason as string }))
+      .map((o) => ({
+        question: o.unmetQuestion, why: o.skipReason as string,
+        kind: 'job-unmet' as const, subjects: o.subjects ?? [],
+      }))
 
     // 2c. NOTHING TO WORK FROM = NOTHING CLAIMED. No model call, no invented findings; the
     //    whole pass becomes known unknowns. This is the never-claim invariant at its plainest.
@@ -458,7 +501,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     //    none of them bore on this proposal" are three different findings about the
     //    world, and the third is the sift working, not failing. Collapsing them into
     //    "nothing was found" is the §19-C Task 1a defect wearing a new hat.
-    if (deduped.length === 0) {
+    if (keptBySift.length === 0) {
       const why = failedIntents.length
         ? `Retrieval failed for ${failedIntents.join(', ')}, so nothing was searched successfully.`
         : candidates.length === 0
@@ -489,7 +532,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       mustAnswer: def.mustAnswer,
       idea: ctx.summary,
       costLines: ctx.costLines,
-      results: deduped,
+      results: keptBySift,
     })
 
     if (!gathered) {
@@ -499,7 +542,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
         why: 'The analysis step failed after retrieval succeeded — the sources are in the panel, but nothing was concluded from them. Re-run.',
       })), ...jobUnknowns]
       await settle(ideaId, passKey, runVersion, 'FAILED', knownUnknowns, 'The analysis step failed after retrieval succeeded',
-        { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
+        { reviewed: sift.reviewed, kept: keptBySift.length, skipped: sift.skipped })
       // ⚠ `findings`, not 0 — see the note on the zero-candidate return. The job rows are real,
       // persisted, and visible in the panel; a run that reports 0 while they sit there is the
       // "status shown is not the status stored" defect invariant 3 exists to prevent.
@@ -508,7 +551,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
 
     // 4. PERSIST INCREMENTALLY — one row at a time, so a timeout in the middle loses the
     //    tail and not the run.
-    const byId = new Map(deduped.map((r) => [r.id, r]))
+    const byId = new Map(keptBySift.map((r) => [r.id, r]))
     let precedentsDowngraded = 0
     for (const f of gathered.findings) {
       const src = f.sourceId ? byId.get(f.sourceId) : undefined
@@ -595,20 +638,28 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     const answered = new Set(gathered.answered)
     knownUnknowns = def.mustAnswer
       .filter((q) => !answered.has(q))
-      .map((q) => ({ question: q, why: 'Nothing retrieved answered this.' }))
+      .map((q) => ({ question: q, why: 'Nothing retrieved answered this.', kind: 'unanswered' as const }))
     for (const intent of failedIntents) {
-      knownUnknowns.push({ question: `Everything the ${intent} search would have covered`, why: 'That search failed to run.' })
+      knownUnknowns.push({
+        question: `Everything the ${intent} search would have covered`,
+        why: 'That search failed to run.',
+        kind: 'search-failed', subjects: [intent],
+      })
     }
-    for (const gap of gathered.gaps) knownUnknowns.push({ question: gap, why: 'Named by the pass as unfindable in what was retrieved.' })
+    for (const gap of gathered.gaps) {
+      knownUnknowns.push({ question: gap, why: 'Named by the pass as unfindable in what was retrieved.', kind: 'named-gap' })
+    }
     knownUnknowns.push(...jobUnknowns)
+    // 25-C §2.4 — collapsed on (type, question), subjects unioned, nothing dropped.
+    knownUnknowns = collapseKnownUnknowns(knownUnknowns)
 
     await settle(ideaId, passKey, runVersion, 'RUN', knownUnknowns, undefined,
-      { reviewed: sift.reviewed, kept: deduped.length, skipped: sift.skipped })
+      { reviewed: sift.reviewed, kept: keptBySift.length, skipped: sift.skipped })
 
     // 6. TEMPLATE ISSUES — the ones whose absence is itself a defect, raised deterministically
     //    rather than left to the model to remember.
     const typesReturned: Record<string, number> = {}
-    for (const r of deduped) typesReturned[r.type] = (typesReturned[r.type] ?? 0) + 1
+    for (const r of keptBySift) typesReturned[r.type] = (typesReturned[r.type] ?? 0) + 1
     const countsByKind: Record<string, number> = {}
     for (const f of gathered.findings) countsByKind[f.kind] = (countsByKind[f.kind] ?? 0) + 1
     issues += await raiseTemplateIssues(ideaId, def, runVersion, {
@@ -619,7 +670,7 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
 
     return {
       runVersion, status: 'RUN', findings, issues, knownUnknowns: knownUnknowns.length, superseded,
-      reviewed: sift.reviewed, kept: deduped.length, siftSkipped: sift.skipped,
+      reviewed: sift.reviewed, kept: keptBySift.length, siftSkipped: sift.skipped,
       adversarialIssues: !!adversarial, precedentsDowngraded, jobs: jobOutcomes,
     }
   } catch (err) {
@@ -628,7 +679,10 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
     // including the job rows, which are now committed before the most failure-prone step runs.
     const jobUnknownsOnFailure: KnownUnknown[] = jobOutcomes
       .filter((o) => o.skipReason)
-      .map((o) => ({ question: o.unmetQuestion, why: o.skipReason as string }))
+      .map((o) => ({
+        question: o.unmetQuestion, why: o.skipReason as string,
+        kind: 'job-unmet' as const, subjects: o.subjects ?? [],
+      }))
     const all = [...knownUnknowns, ...jobUnknownsOnFailure]
     await settle(ideaId, passKey, runVersion, 'FAILED', all, failureReason)
     return { runVersion, status: 'FAILED', findings, issues, knownUnknowns: all.length, superseded, jobs: jobOutcomes, failureReason }

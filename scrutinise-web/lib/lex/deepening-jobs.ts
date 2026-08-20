@@ -138,6 +138,15 @@ export interface JobOutcome {
   unmetQuestion: string
   /** For the report and the run log. */
   detail: string
+  /**
+   * 25-C §2.4 — WHAT THIS OUTCOME IS ABOUT, as identifiers rather than prose.
+   *
+   * The known-unknowns collapse groups on (statement type, question) and unions these. They are
+   * carried structurally BECAUSE the alternative is parsing gids back out of `skipReason`, and a
+   * regex over a sentence is exactly the "string similarity" the brief forbids — it would drop an
+   * instrument the day someone rewords the reason, and drop it invisibly.
+   */
+  subjects?: string[]
 }
 
 /** The user-facing question each job answers. Declared beside the job, never in the engine. */
@@ -184,6 +193,7 @@ async function runPrecedent(
   if (!instruments.length) {
     return {
       job: 'PRECEDENT', written: 0, detail: 'no instruments', unmetQuestion: PRECEDENT_QUESTION,
+      subjects: [],
       skipReason:
         'No instrument is identified for this idea, so there is nothing to look up the intended, '
         + 'predicted and observed record OF. Link an Act or an SI to the idea, or run this pass '
@@ -207,7 +217,10 @@ async function runPrecedent(
         fieldRef: null,
         kind: 'PRECEDENT',
         title: `Intended, predicted, observed — ${p.instrumentTitle ?? inst.gid}`,
-        body: `${precedentBlock(p)}\n\n(${PROVENANCE_WORDS[inst.provenance]})`,
+        // ⚠ `.forUser` is load-bearing and `tsc` CANNOT catch its absence: a RenderedBlock
+        // interpolated into a template literal is a legal string — "[object Object]" — so the
+        // compiler was happy to write that into every precedent body. check:lex-25c caught it.
+        body: `${precedentBlock(p).forUser}\n\n(${PROVENANCE_WORDS[inst.provenance]})`,
         sourceType: 'PRECEDENT_GROUP',
         sourceId: p.legs[0].id,
         citation: p.instrumentTitle ?? inst.gid,
@@ -230,6 +243,8 @@ async function runPrecedent(
     + (emptyGids.length ? `; ${emptyGids.length} held no explanatory note, impact assessment or review (${emptyGids.join(', ')})` : '')
   return {
     job: 'PRECEDENT', written, detail, unmetQuestion: PRECEDENT_QUESTION,
+    // The instruments this outcome is ABOUT — the ones that held no note, assessment or review.
+    subjects: emptyGids,
     skipReason: written === 0
       ? `The ${instruments.length} instrument(s) identified for this idea have no explanatory note, `
         + `impact assessment or post-implementation review in the corpus, so there is no `
@@ -254,6 +269,7 @@ async function runDevolutionScope(
   if (!query) {
     return {
       job: 'DEVOLUTION_SCOPE', written: 0, detail: 'no keywords', unmetQuestion: DEVOLUTION_QUESTION,
+      subjects: [],
       skipReason: 'The idea has no keywords yet, so there was nothing to search across jurisdictions.',
     }
   }
@@ -276,7 +292,7 @@ async function runDevolutionScope(
       fieldRef: null,
       kind: 'FINDING',
       title: `Who has legislated on this — ${shape}`,
-      body: devolutionBlock(scope),
+      body: devolutionBlock(scope).forUser,
       sourceType: 'DEVOLUTION_SCOPE',
       sourceId: scope.results[0].id,
       citation: null,

@@ -421,7 +421,7 @@ ok('LEGAL declares the DEVOLUTION_SCOPE job',
 // pass whose sift kept nothing skipped both jobs — including a precedent off an instrument
 // LINKED to the idea, which needs no candidates at all.
 ok('⚠ jobs run BEFORE the zero-candidate early return, not after it',
-  engine.indexOf('for (const jobKey of def.jobs') < engine.indexOf('if (deduped.length === 0)'))
+  engine.indexOf('for (const jobKey of def.jobs') < engine.indexOf('if (keptBySift.length === 0)'))
 // ⚠⚠ AND BEFORE THE REFERENCES WRITE. Found by a live run, not by reasoning: a truncated sift
 // returned all 500 candidates instead of ~12, `writePassReferences` threw on the resulting JSONB,
 // and the LEGAL pass ended FAILED having run no job and recorded no reason — a deterministic
@@ -438,8 +438,8 @@ console.log('\nconstraint — PRECEDENT renders as a group, never a ranked list'
 ruleWithControl(
   'one evidence row per INSTRUMENT, carrying the whole intended/predicted/observed block',
   jobsSrc,
-  (s) => /body: `\$\{precedentBlock\(p\)\}/.test(s),
-  (s) => s.replace(/body: `\$\{precedentBlock\(p\)\}[^`]*`/, 'body: p.legs.map((l) => l.title).join("\\n")'),
+  (s) => /body: `\$\{precedentBlock\(p\)\.forUser\}/.test(s),
+  (s) => s.replace(/body: `\$\{precedentBlock\(p\)\.forUser\}[^`]*`/, 'body: p.legs.map((l) => l.title).join("\\n")'),
 )
 ruleWithControl(
   '...and the block is not sorted by a score anywhere in the job',
@@ -473,8 +473,8 @@ ruleWithControl(
 ruleWithControl(
   '⚠ …and it REACHES the persisted body — `note` travels inside precedentBlock',
   retrievalSrc,
-  (s) => /\$\{p\.note\}/.test(s),
-  (s) => s.split('${p.note}').join(''),
+  (s) => /\$\{p\.note\.forUser\}/.test(s),
+  (s) => s.split('${p.note.forUser}').join(''),
 )
 ok('...and a precedent group is written even when a leg is missing, so the note can fire',
   /if \(!p\.legs\.length\)/.test(jobsSrc) && !/if \(p\.missing\.length\) continue/.test(jobsSrc),
@@ -497,8 +497,9 @@ ruleWithControl(
 ruleWithControl(
   '⚠ …and the note reaches the persisted body via devolutionBlock',
   retrievalSrc,
-  (s) => /return `WHO HAS LEGISLATED[\s\S]{0,120}\$\{s\.note\}`/.test(s),
-  (s) => s.split('${s.note}').join(''),
+  // 25-C §2.2 — the block now returns { forUser, forModel } and the body takes the user half.
+  (s) => /forUser: `WHO HAS LEGISLATED[\s\S]{0,140}\$\{s\.note\.forUser\}`/.test(s),
+  (s) => s.split('${s.note.forUser}').join(''),
 )
 ok('jurisdiction is derived from the id, never the title (the Scotland Act 1998 is `ukpga`)',
   /export function jurisdictionOf\(id: string\)/.test(retrievalSrc)

@@ -50,8 +50,8 @@ export interface Precedent {
   legs: PrecedentLeg[]
   /** ⚠ Which legs are MISSING. Stated, because two of three is a different finding from three. */
   missing: Array<'intended' | 'predicted' | 'observed'>
-  /** The honest line for the prompt when a leg is absent. Null when all three are present. */
-  note: string | null
+  /** The honest line when a leg is absent, split by audience (§2.2). Null when all three are present. */
+  note: RenderedBlock | null
 }
 
 const LEG_MEANING: Record<PrecedentLeg['leg'], string> = {
@@ -129,16 +129,43 @@ export async function retrievePrecedent(gid: string): Promise<Precedent> {
   }
 }
 
+/**
+ * ⚠⚠ 25-C §2.2 — TWO AUDIENCES, SPLIT AT CONSTRUCTION.
+ *
+ * These blocks are stored on `EvidenceItem.body`, which is BOTH rendered in the Deepening panel
+ * AND fed to the adversarial reader in the build's pass 5. Until now they carried one string
+ * containing sentences addressed to the model — "Say so plainly", "Do NOT substitute…", "Never
+ * tell a user…" — and the user read those on screen, as instructions to nobody.
+ *
+ * The brief is explicit that the fix is at CONSTRUCTION, never by stripping text afterwards, and
+ * that is the right call: a stripper is a regex over prose that silently stops matching the day
+ * someone rewords the sentence, and the failure mode is the leak coming back unnoticed.
+ *
+ * So every block returns both halves and the caller chooses. `forUser` states the FACT and the
+ * caveat as something a reader can act on; `forModel` carries the imperative. The substance is
+ * never model-only — a caveat the user cannot see is a caveat that cannot protect them.
+ */
+export interface RenderedBlock {
+  /** Shown on screen. Facts and caveats addressed to the reader. */
+  forUser: string
+  /** Added to a prompt, never rendered. Imperatives addressed to the model. */
+  forModel: string
+}
+
 /** ⚠ Exported and tested: the sentence that stops an absence being read as a finding. */
-export function precedentNote(missing: Array<'intended' | 'predicted' | 'observed'>): string {
+export function precedentNote(missing: Array<'intended' | 'predicted' | 'observed'>): RenderedBlock {
   const words: Record<string, string> = {
     intended: 'no explanatory note is held for this instrument',
     predicted: 'no impact assessment is held for this instrument',
     observed: 'NO POST-IMPLEMENTATION REVIEW EXISTS for this instrument — nobody has published an '
       + 'assessment of whether it worked',
   }
-  return `⚠ ${missing.map((m) => words[m]).join('; ')}. Say so plainly. Do NOT substitute what was `
-    + `PREDICTED for what was OBSERVED — a prediction is not an outcome.`
+  return {
+    // The absence itself is a finding the user needs, and the reason it matters is a fact about
+    // evidence rather than an instruction — so it stays on screen.
+    forUser: `⚠ ${missing.map((m) => words[m]).join('; ')}. A prediction is not an outcome.`,
+    forModel: 'Say so plainly. Do NOT substitute what was PREDICTED for what was OBSERVED.',
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════════════
@@ -195,8 +222,8 @@ export interface DevolutionScope {
   results: DevolutionResult[]
   /** Counts per jurisdiction — the shape of the answer before anyone reads a single document. */
   byJurisdiction: Record<string, number>
-  /** ⚠ The line the prompt needs so a pattern is not read as a legal conclusion. */
-  note: string
+  /** ⚠ The line needed so a pattern is not read as a legal conclusion, split by audience (§2.2). */
+  note: RenderedBlock
 }
 
 /**
@@ -239,26 +266,40 @@ export async function retrieveDevolutionScope(query: string, limit = 24): Promis
   return { query, results, byJurisdiction, note: DEVOLUTION_NOTE }
 }
 
-export const DEVOLUTION_NOTE =
-  '⚠ Each item below is labelled with the parliament or assembly that made it. This shows WHO HAS '
-  + 'LEGISLATED on the subject, which is evidence — it is NOT a ruling on whether the subject is '
-  + 'reserved or devolved. That question is settled by Schedule 5 to the Scotland Act 1998, '
-  + 'Schedule 7A to the Government of Wales Act 2006 and Schedules 2 and 3 to the Northern Ireland '
-  + 'Act 1998. Never tell a user a matter is devolved or reserved on the strength of what this '
-  + 'search returned; say what the pattern shows and name the schedule that decides it.'
+/**
+ * 25-C §2.2 — split at construction. The SUBSTANCE is the user's (they are the one who must not
+ * walk into a committee saying "this is devolved"); only the imperative is the model's.
+ */
+export const DEVOLUTION_NOTE: RenderedBlock = {
+  forUser:
+    '⚠ Each item below is labelled with the parliament or assembly that made it. This shows WHO HAS '
+    + 'LEGISLATED on the subject, which is evidence — it is NOT a ruling on whether the subject is '
+    + 'reserved or devolved. That question is settled by Schedule 5 to the Scotland Act 1998, '
+    + 'Schedule 7A to the Government of Wales Act 2006 and Schedules 2 and 3 to the Northern Ireland '
+    + 'Act 1998.',
+  forModel:
+    'Never tell a user a matter is devolved or reserved on the strength of what this search '
+    + 'returned; say what the pattern shows and name the schedule that decides it.',
+}
 
 /** Render the group for the prompt, jurisdiction first so it cannot be missed. */
-export function devolutionBlock(s: DevolutionScope): string {
+export function devolutionBlock(s: DevolutionScope): RenderedBlock {
   const lines = s.results.map((r) => `- [${r.jurisdiction}] ${r.title}\n    "${r.snippet.slice(0, 200)}"`)
   const shape = Object.entries(s.byJurisdiction)
     .sort((a, b) => b[1] - a[1]).map(([j, n]) => `${j} ${n}`).join(' · ')
-  return `WHO HAS LEGISLATED: ${shape}\n\n${lines.join('\n')}\n\n${s.note}`
+  return {
+    forUser: `WHO HAS LEGISLATED: ${shape}\n\n${lines.join('\n')}\n\n${s.note.forUser}`,
+    forModel: s.note.forModel,
+  }
 }
 
-export function precedentBlock(p: Precedent): string {
+export function precedentBlock(p: Precedent): RenderedBlock {
   const lines = p.legs.map((l) => `- [${l.leg.toUpperCase()}] ${l.title}\n    ${l.whatItIs}`)
-  return `PRECEDENT FOR ${p.instrumentTitle ?? p.gid} — intended, predicted, observed:\n`
-    + `${lines.join('\n') || '(nothing held)'}${p.note ? `\n\n${p.note}` : ''}`
+  return {
+    forUser: `PRECEDENT FOR ${p.instrumentTitle ?? p.gid} — intended, predicted, observed:\n`
+    + `${lines.join('\n') || '(nothing held)'}${p.note ? `\n\n${p.note.forUser}` : ''}`,
+    forModel: p.note ? p.note.forModel : '',
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════════════════════
@@ -301,13 +342,13 @@ function selftest() {
 
     // the notes never let an absence read as a finding
     ['⚠ a missing PIR says nobody has assessed whether it worked',
-      /NO POST-IMPLEMENTATION REVIEW EXISTS/.test(precedentNote(['observed']))],
+      /NO POST-IMPLEMENTATION REVIEW EXISTS/.test(precedentNote(['observed']).forUser)],
     ['⚠ and forbids substituting the prediction for the outcome',
-      /Do NOT substitute what was PREDICTED for what was OBSERVED/.test(precedentNote(['observed']))],
+      /Do NOT substitute what was PREDICTED for what was OBSERVED/.test(precedentNote(['observed']).forModel)],
     ['⚠⚠ the devolution note refuses to call the reservation question',
-      /NOT a ruling on whether the subject is reserved or devolved/.test(DEVOLUTION_NOTE)],
+      /NOT a ruling on whether the subject is reserved or devolved/.test(DEVOLUTION_NOTE.forUser)],
     ['   …and names the schedules that actually decide it',
-      /Schedule 5 to the Scotland Act 1998/.test(DEVOLUTION_NOTE) && /Schedule 7A/.test(DEVOLUTION_NOTE)],
+      /Schedule 5 to the Scotland Act 1998/.test(DEVOLUTION_NOTE.forUser) && /Schedule 7A/.test(DEVOLUTION_NOTE.forUser)],
     ['the two unbuilt intents carry reasons, not just names',
       NOT_BUILT.MECHANISM_ANALOGUE.length > 100 && NOT_BUILT.CONTRADICTION.length > 100],
   ]

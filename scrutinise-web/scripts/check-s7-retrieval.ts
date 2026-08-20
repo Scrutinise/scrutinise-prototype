@@ -40,9 +40,9 @@ function main() {
     'an impact-assessment section is the PREDICTED leg')
   check(legForImpactSection(null) === 'predicted',
     '⚠ an untitled section defaults to PREDICTED — the safer error, since calling a prediction an outcome is the damaging one')
-  check(/Do NOT substitute what was PREDICTED for what was OBSERVED/.test(precedentNote(['observed'])),
+  check(/Do NOT substitute what was PREDICTED for what was OBSERVED/.test(precedentNote(['observed']).forModel),
     '⚠⚠ a missing PIR forbids substituting the prediction for the outcome')
-  check(/NO POST-IMPLEMENTATION REVIEW EXISTS/.test(precedentNote(['observed'])),
+  check(/NO POST-IMPLEMENTATION REVIEW EXISTS/.test(precedentNote(['observed']).forUser),
     '   …and says plainly that nobody has assessed whether it worked')
 
   // ── §2 DEVOLUTION — jurisdiction from the identifier, never the title ───────────────────────
@@ -60,17 +60,17 @@ function main() {
   check(jurisdictionOf('primary-acts-pre-2000:ukpga/1998/46:section-28') === 'UK-wide',
     '⚠⚠ the SCOTLAND ACT 1998 is UK-wide — derived from the id, never from a title containing "Scotland"')
   check(jurisdictionOf('unknown:zz/1/1:x') === 'unknown', 'an unrecognised id is unknown, never guessed')
-  check(/NOT a ruling on whether the subject is reserved or devolved/.test(DEVOLUTION_NOTE),
+  check(/NOT a ruling on whether the subject is reserved or devolved/.test(DEVOLUTION_NOTE.forUser),
     '⚠⚠ the note refuses to answer the reservation question from a frequency count')
-  check(/Schedule 5 to the Scotland Act 1998/.test(DEVOLUTION_NOTE) && /Schedule 7A/.test(DEVOLUTION_NOTE)
-    && /Northern Ireland\s*\n?Act 1998|Northern Ireland Act 1998/.test(DEVOLUTION_NOTE),
+  check(/Schedule 5 to the Scotland Act 1998/.test(DEVOLUTION_NOTE.forUser) && /Schedule 7A/.test(DEVOLUTION_NOTE.forUser)
+    && /Northern Ireland\s*\n?Act 1998|Northern Ireland Act 1998/.test(DEVOLUTION_NOTE.forUser),
   '   …and names all three schedules that actually decide it')
   const block = devolutionBlock({
     query: 'x',
     results: [{ id: 'secondary:ssi/2019/1:regulation-3', jurisdiction: 'Scotland', title: 'T', snippet: 's', url: null, type: 'STATUTORY_INSTRUMENT' }],
     byJurisdiction: { Scotland: 1 },
     note: DEVOLUTION_NOTE,
-  })
+  }).forUser
   check(/^\[Scotland\]/m.test(block.split('\n').find((l) => l.startsWith('- '))?.slice(2) ?? ''),
     '⚠ jurisdiction is the FIRST thing on each rendered line, so it cannot be skimmed past')
 

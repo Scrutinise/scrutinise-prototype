@@ -22,6 +22,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SearchResult } from '@/lib/lex/page1-config'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
+// 25-C §2.3 — the label and the provenance note are derived in ONE place, shared with any
+// other renderer, so two surfaces cannot disagree about what a row is.
+import { evidenceLabel, provenanceNote, isAssembled } from '@/lib/lex/evidence-labels'
 
 interface KnownUnknown { question: string; why: string }
 interface EvidenceView {
@@ -54,6 +57,9 @@ export interface EvidenceFacts {
   knownUnknownsDeclared: number; sourcesByType: Record<string, number>
   lastDeepeningRun: string | null; passesRun: number; passesTotal: number
 }
+
+/** An assembled record is styled apart from a model's reading — different kind, different weight. */
+const ASSEMBLED_CLASS = 'bg-indigo-50 text-indigo-700 border-indigo-200'
 
 const KIND_LABEL: Record<string, string> = {
   FINDING: 'Finding',
@@ -411,11 +417,20 @@ function FindingCard({ f, busy, onJudge }: {
   return (
     <div className={`rounded-lg border p-2.5 ${accepted ? 'border-emerald-200 bg-emerald-50/40' : 'border-zinc-200'}`}>
       <div className="flex items-start gap-2">
-        <Chip className={KIND_CLASS[f.kind] ?? KIND_CLASS.FINDING}>{KIND_LABEL[f.kind] ?? f.kind}</Chip>
+        {/* 25-C §2.3 — the badge is DERIVED FROM PROVENANCE, not from the kind alone. An
+            assembled precedent record and a model's reading of one document are different
+            things and no longer share a word. See lib/lex/evidence-labels.ts. */}
+        <Chip className={isAssembled(f.sourceType) ? ASSEMBLED_CLASS : (KIND_CLASS[f.kind] ?? KIND_CLASS.FINDING)}>
+          {evidenceLabel(f.kind, f.sourceType)}
+        </Chip>
         {accepted && <Chip className="bg-emerald-50 text-emerald-700 border-emerald-200">Accepted</Chip>}
       </div>
       <p className="text-sm font-medium text-zinc-800 mt-1.5">{f.title}</p>
       <p className="text-xs text-zinc-600 leading-relaxed mt-1 whitespace-pre-wrap">{f.body}</p>
+      {/* How it was produced, where that is worth saying. */}
+      {provenanceNote(f.kind, f.sourceType) && (
+        <p className="text-[11px] text-zinc-500 italic mt-1">{provenanceNote(f.kind, f.sourceType)}</p>
+      )}
       {/* §19-E Task 3 — WHY THIS SOURCE SURVIVED THE SIFT. A keep with no reason is a
           rank in disguise, so the reason is shown rather than kept in a log. Absent on
           findings written before the sift existed, and absence renders as absence. */}
