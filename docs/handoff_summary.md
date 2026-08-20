@@ -2,7 +2,15 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-20 06:20 UTC — ▼ **GRAPH 3B: the position graph's stance score has
+*Last updated: 2026-08-20 06:44 UTC — ▼ **LEX 20-B/D: the proposal document EXISTS — a completed
+proposal renders to a readable Proposal and a one-page Summary in docx and PDF, and a shared link is
+PINNED to the version that was shared (publish v1, edit, mint v2, and the recipient still gets v1,
+content and all). ⚠⚠ The fixture check passed 46/46 and the FIRST LIVE RUN found a defect it could
+not see: Postgres `jsonb` sorts object keys by length then bytewise, so the change note said "2 fields
+edited" when one had been. ⚠⚠ The headline cost REFUSES to sum a partial set. ▶ CHARLIE: §4's
+recommendation is MERGE — §25.3 item 9 already absorbs §20.2's claims check and I do not think it was
+noticed.**
+Earlier: 2026-08-20 06:20 UTC — ▼ **GRAPH 3B: the position graph's stance score has
 exactly THREE values — +1, 0, −1, with zero rows in between and 92.87% at exactly ±1.00 — so the
 "top 40" had nothing to sort on. ⚠⚠ CONFIDENCE CURRENTLY REWARDS AN INCONSISTENT RECORD: nine
 votes the same way scores 0.748, five-one-way-and-four-the-other scores 0.881, and on the real
@@ -133,6 +141,75 @@ proved an unauthenticated probe cannot tell a deployed route from an absent one.
 accuracy figure claimed anywhere** · no weight retuned · the free-vote heuristic's misses diagnosed
 not fixed (D-13) · amendment sponsorship measured and specified (§4.3) not ingested · the deepening
 wiring still unapplied · 97.1% of EDM signatures still missing.
+
+2026-08-20 06:44 UTC — ▼ **LEX 20-B/D IS COMPLETE: THE PROPOSAL DOCUMENT EXISTS, AND A SHARED LINK
+CANNOT SHIFT UNDER ITS RECIPIENT.** Executes `docs/BRIEF_20BD.md` §0–§5. Report:
+**`docs/PROPOSAL_20BD_REPORT.md`**. CHANGE_LOG (2026-08-20 06:44 UTC). `check:20bd` **47/47 with all
+13 self-test breaks firing**, `verify:20bd` **45/45 live against Neon and R2**, `tsc` clean,
+`next build` compiled with all nine new routes, Sprint 2.5's `check:documents` still passes.
+**Cost $0 — no model call anywhere in this sprint, by design.**
+
+✅ **EVERYTHING BUILT SO FAR WAS AN INPUT TO A DOCUMENT THAT DID NOT EXIST. IT EXISTS.** A completed
+proposal renders to a readable Proposal and a one-page Summary in docx and PDF from one snapshot,
+through Sprint 2.5's block model — two renderers over one block model, as `model.ts`'s own header
+said §20-B was meant to use it. Owner page `/ideas/[id]/publish`; recipient link `/proposals/[token]`.
+
+⚠⚠ **THE FIXTURE CHECK PASSED 46/46 AND THE FIRST LIVE RUN FOUND A DEFECT IT COULD NOT SEE.** The
+change note said *"2 fields edited"* when **one** had been. **Postgres `jsonb` does not preserve key
+order — it sorts keys by length then bytewise** (verified against Neon: `{affectedGroups, impact,
+cost}` returns as `{cost, impact, affectedGroups}`), so comparing a stored snapshot against a fresh
+one with `JSON.stringify` marked every structured field permanently edited. **The content hash was
+never affected because both its sides are freshly built objects — one comparison had the guard and
+its neighbour did not.** §24 computes "12 of 14 findings resolved since" off exactly this field.
+⚠ My original assertion (`changeNote.includes('Chosen approach')`) was true in both the broken and
+the fixed output and would have shipped it; it now asserts the COUNT and the ABSENCE.
+⚠ **A second error was mine, in my own test** — `JSON.stringify(a, Object.keys(a).sort())` reported a
+hash defect that does not exist: the replacer-ARRAY form does not reorder keys, it FILTERS them at
+every level.
+
+✅ **THE SEAM HELD AND WAS WATCHED FAILING AGAINST REAL CODE.** `buildProposalSnapshot` is the only
+thing in the document stack that reads idea state; the import ban and the no-Prisma-in-a-renderer
+rule are asserted over the whole directory, and both were proved by adding the banned import to
+`build-proposal.ts` for real, watching the assertion go red, and restoring byte-identical.
+⚠ **`lib/lex/known-unknowns.ts` is deliberately NOT imported — it is 25-C's and it is UNCOMMITTED in
+this shared tree**, so importing it would put a file on Main whose import does not resolve (the
+`build-cost.ts` incident). The assembler reads the JSON column instead.
+
+✅ **ALL FOUR VERSIONING PROPERTIES PROVED AGAINST THE LIVE DATABASE, NOT ASSERTED.** Append-only by
+**watching Postgres refuse a second write of version 1** (`P2002`). Unchanged mints nothing. **Publish
+v1 → edit → mint v2 → the resolver still returns v1 and the recipient's CONTENT is still the old
+content.** COMMUNITY reads the published version only; non-member `not_in_community`, signed-out
+`sign_in_required`. ⚠ **The version number is in the R2 object key** — without it a v3 re-render
+overwrites the object a v1 link points at and the recipient's document changes with no URL change.
+⚠ **The share token is minted once and kept**, so a link already in an MP's inbox survives a
+re-publish.
+
+⚠ **THE HEADLINE COST REFUSES TO SUM A PARTIAL SET** — one uncosted action and the Summary says "not
+costed in the record", because a total silently omitting three of five actions is the most dangerous
+number the document could carry. ⚠ **The unsupported marker is deliberately not on every field and
+both halves are asserted** — a guiding-policy field is a decision, not a claim, and a fully sourced
+proposal must carry NO marker or the marker is decoration. ⚠ **The gaps section is never empty**, and
+⚠ **only ACCEPTED evidence enters the snapshot** (a PROPOSED finding is a judgement nobody made).
+
+▶ **CHARLIE — §4 RECOMMENDATION: MERGE 20-C's claims check and source curation INTO 25.3's agenda**,
+and give publishing a thin confirmation rather than a second gate. Decisive reason:
+**`LEX_REBUILD_DESIGN.md` §25.3 item 9 already says so** — *"(Absorbs §20.2's claims check; it belongs
+here.)"* — in the spec 25-C is building from right now, and I do not think it was noticed. The one
+thing genuinely not in the agenda: the agenda is per-idea and continuous, curation is per-artefact
+and frozen, so publishing should pin the agenda's outstanding items **into the version** — which is
+what makes §24.4's sentence computable, and `describeChange` computes it today. Full reasoning in the
+report.
+▶ **CHARLIE (browser, 6 steps in the report):** Documents/Exports tab → "Open publishing" → generate
+both, publish to a link, edit a field, and confirm the link **still** shows the old version.
+▶ **REPORTED NOT MADE, nobody owns it:** §20.2.1 needs an `excluded` state on a source ("excluded, not
+deleted") and **no such state exists anywhere in the schema** — the Evidence Pack is blocked on it.
+▶ **25-C:** when the known-unknowns collapse is committed, the assembler should call it.
+
+❌ **Not done:** the Evidence Pack, the Online View and the standalone Legislative Annex — scaffolded
+in the snapshot with their inputs defined, deliberately unbuilt (`/proposals/[token]` is the link
+resolver made visible and says so) · 20-C itself · the `excluded` source state · **per-claim
+attribution at the sentence level** (support is per field/cause/action, the honest limit of a
+structural check) · **no browser walk was possible from here and none is claimed.**
 
 2026-08-19 22:25 UTC — ▼ **SEARCH S9 IS COMPLETE: THE STATISTICS CATALOGUE IS BUILT, ROUTED AND
 FLAG-GATED — THE LAST UNBUILT STREAM IN THE FIRST-PASS ARCHITECTURE.** Executes
