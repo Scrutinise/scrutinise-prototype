@@ -489,6 +489,90 @@ misses diagnosed not fixed (D-13) · amendment sponsorship measured and specifie
 
 ---
 
+## INGEST CASELAW TEXT — THE JUDGMENT WAS UNDER THE STYLESHEET, AND THE TITLES HAD NEVER LEFT THE DATABASE (2026-08-20 07:44 UTC)
+
+Executes `docs/BRIEF_INGEST_CASELAW_TEXT.md`. Report: `docs/INGEST_CASELAW_TEXT_REPORT.md`.
+**Cost $0 — no LLM call anywhere in this sprint.**
+
+**The bug.** `processTnaCaselaw` stored `rawToText(judgmentXml)` — the whole Akoma Ntoso document
+with its tags removed. `rawToText` deletes tags and keeps text nodes, and the National Archives puts
+its rendering stylesheet in a text node inside `<meta><presentation><html:style>`. Every stored
+judgment opened with the court code, the citation, a SHA-256 build hash and 2.0k–3.4k characters of
+`#judgment { font-family: 'Times New Roman' … }`.
+
+⚠ **The brief's premise is half wrong and the half that is wrong matters: the judgments were never
+lost.** They sat underneath; the stylesheet was a median 5.7% of the characters. Still the failure
+described, because the head of a body is what is served as a snippet and what fills chunk 0 of the
+embedding — but nothing had to be re-fetched, and no judgment text had been destroyed.
+
+**Fixed at the writer, not with a stripper.** `shared/akn-text.ts` selects the `<judgment>` element
+without its `<meta>` child — a deny-list of exactly `<meta>`, so whatever TNA adds next is kept.
+Stripping the CSS run instead would have left the identifiers and the build hash stored as the
+judgment. 300 documents were shape-counted first: style outside `<meta>` in 0 of them.
+
+**Result. 74,896 of 74,896 bodies re-compiled**, 74,894 by the normal route and 2 as
+`empty-at-source`; **0 rows now carry a stylesheet**. Hand-read **30 of 30 correct against judgments
+re-fetched live from the National Archives**, with the same three checks scoring **0 of 30** on the
+old writer's output. Stored words 680,711,377 → 656,751,154. Re-compile ~55 min, index refresh
+29.2 min, dates 7.2 min, **£0, no re-fetch, nothing went dark** (74,896 rows in `corpus_fts` before
+and after every chunk).
+
+⚠⚠ **THE FINDING NOBODY WAS LOOKING FOR: the keyword index carried 0 of 74,896 case-law titles and
+74,066 wrong dates.** Last night's title recovery reached the database and stopped there, because
+`fts-catchup` appends ids the index lacks and has no concept of a row whose CONTENT changed. **No
+user had ever seen a recovered case name.** Now 74,883 (99.98%) titled in the index, 0 dated
+1 January. Found by accident, in a "before" measurement taken for another purpose.
+
+⚠⚠ **THE GUARD CAUGHT THREE SHAPES THE 300-DOCUMENT CENSUS DID NOT CONTAIN, AND TWO WERE MY OWN
+BUGS.** 26 documents refused on the first full pass: **20** the source publishes as the single word
+`withdrawn` (the word floor read faithful as failed — fixed by giving the guard the source's own
+body word count, asserted in both directions); **4** anonymised family judgments my CSS detector
+called a stylesheet, because anonymisation replaces every name with `{ }` and I counted empty braces
+as rules — *"1. This case is about { } ( "W" ), who was born on { } 2025"*, `[2025] EWFC 266 (B)`;
+and **2** that the National Archives publishes with no text at all, `uk:hash` equal to the SHA-256
+of the empty string, where refusing to write LEFT A PURE STYLESHEET in place. All three fixed, all
+26 re-run.
+
+⚠ **THE MEANING-BASED HALF IS NOT FIXED AND STILL SERVES THE STYLESHEET** — the vector layer has its
+own copy of the text in `corpus_chunks`. Measured: **12.7% of everything ever embedded for case law
+is stylesheet**, chunk 0 is more than half stylesheet in **77% of documents**, and the 8-chunk cap
+means **~417 words per capped document never reached the embedder at all**. Re-embedding costs
+**~$31**. Decision 1 for Charlie.
+
+**§4 dates (authorised): 74,896 of 74,896 moved, residual ZERO**, mean move 176 days, largest 6,236.
+*R (Miller) v The Prime Minister* was stored as 2019-01-01 and handed down 2019-09-24 — wrong by 266
+days, measured before and asserted after. 830 rows that had no date at all now have one.
+
+**Predictions: two of nine right as stated, four refuted, one half-wrong through my own instrument.**
+The refutations found the defects. ⚠ **My `font-family Times New Roman` probe still returned ten
+case-law hits after a clean refresh** — BM25 split it into four terms and matched *Roman* in "Roman
+Abramovich", "Westminster Roman Catholic Diocese", "Court of Alesd, Romania". A probe a clean index
+still answers is not a probe; it is now the single token `font-family`, measured as **0 of 10
+returned bodies containing the string**. ⚠ `wordCount` fell **3.52%**, not the ~8% predicted.
+
+⚠ **`et-decisions`: 131,654 of 293,403 rows (44.9%) are a LANDING PAGE, not a decision** — median 18
+words, 36 of 40 sampled beginning *"Read the full decision in …"*, the link text on gov.uk stored as
+the document. Same failure class as this sprint's, in a collection 1.76× larger than `tna-caselaw`.
+Found by the audit, out of scope, Decision 4. ⚠ And the opposite, so nobody over-corrects: the short
+bodies among the 161,749 PDF-sourced rows are mostly genuine — a withdrawal judgment really is 41
+words. Length does not identify the bug; `sourceUrl` does.
+
+⚠ **`scottish-courts` is NOT the same bug** — 0 CSS characters in 60 of 60. Its failure is in the
+title. The brief asked; the answer is no.
+
+▶ **CHARLIE: nothing above reaches a user until `fts-serve` is redeployed** (Railway service
+`c268ec09-e489-4cfa-837a-7740d95c24c7` → Deployments → Redeploy). It calls `openTable()` once at
+boot. Then Decision 2 (`fts-index` heavy job, €0.05, absorbs 74,896 un-indexed rows) and Decision 1
+(the ~$31 re-embed).
+
+**Three things that cost time, recorded so they do not again:** a quadratic `/([^{}]*)\{([^{}]*)\}/g`
+hung the audit for 12 minutes at 100% CPU on brace-free text; `WHERE corpus=… AND id > ''` made
+Postgres walk 6,139,777 rows of the primary key before the first judgment (6 rows/s → 158/s once the
+id range was bounded, and the bound was verified before use); and `parseInt(String(Infinity))` is
+`NaN`, which reached Postgres as the string `'NaN'` and killed the first full run instantly.
+
+---
+
 ## INGEST CASELAW TEXT — PREDICTIONS, RECORDED BEFORE THE RE-COMPILE RAN (2026-08-20 05:12 UTC)
 
 Executes `docs/BRIEF_INGEST_CASELAW_TEXT.md`. Written from the §1 scoping audit, after the pilot
