@@ -40,8 +40,24 @@ interface ActorPosition {
   confidenceWording: string
   stanceWording: string
   signalCounts: Record<string, { n: number; weight: number }>
-  byTarget: Array<{ targetType: string; targetId: string; stanceScore: number; confidence: number }>
+  claim: string
+  claimCaveat: string | null
+  byTarget: Array<{
+    targetType: string; targetId: string; targetLabel: string | null; date: string
+    stanceScore: number; confidence: number; stanceWording: string; claim: string
+  }>
+  divided: boolean
+  signalCount: number
   grounds: Ground[]
+}
+
+interface Ranking {
+  key: string
+  tiedAtTop: number
+  ofMatched: number
+  shown: number
+  shownOrderIsNameOrderOnly: boolean
+  note: string | null
 }
 
 interface Candidate { type: string; id: string; label: string; date: string | null }
@@ -49,6 +65,7 @@ interface Candidate { type: string; id: string; label: string; date: string | nu
 interface PositionsResponse {
   mode: string
   actors: ActorPosition[]
+  ranking: Ranking
   targetsWithNoSignals: Array<{ type: string; id: string }>
   actorsMatched: number
   asOf: string
@@ -176,9 +193,30 @@ export default function PositionGraphExplorer() {
         <section className="space-y-3">
           <div className={`${box} px-4 py-3 text-xs text-zinc-600`}>
             <strong>{result.actorsMatched.toLocaleString()}</strong> actors have at least one
-            recorded signal on these targets{result.actorsMatched > result.actors.length && <> — showing the top {result.actors.length}</>}.
+            recorded signal on these targets
+            {result.actorsMatched > result.actors.length && <> — showing {result.actors.length}</>}.
             {' '}Decayed to <span className="font-mono">{result.asOf}</span>, config{' '}
             <span className="font-mono">{result.config.version}</span>, {result.elapsedMs} ms.
+
+            {/* GRAPH 3B §1 — the order, and whether it is an order at all.
+                The page previously said "showing the top 40" over a list that was in alphabetical
+                order, because 135 of 555 actors carried an identical score and the sort had
+                nothing left to separate them. Saying "top 40" of a tied set is the same failure
+                class as a metric that cannot fail: it looks like a result and is not one. So the
+                key is printed verbatim, and when it has run out the page says so. */}
+            <div className="mt-2 border-t border-zinc-100 pt-2">
+              <span className="text-zinc-400">Ordered by </span>
+              <span className="font-mono text-zinc-700">{result.ranking.key}</span>
+            </div>
+            {result.ranking.note && (
+              <div className={`mt-1 rounded px-2 py-1 ${
+                result.ranking.shownOrderIsNameOrderOnly
+                  ? 'bg-amber-50 text-amber-900' : 'text-zinc-500'}`}>
+                {result.ranking.shownOrderIsNameOrderOnly && <strong>⚠ </strong>}
+                {result.ranking.note}
+              </div>
+            )}
+
             {result.targetsWithNoSignals.length > 0 && (
               <div className="mt-1 text-amber-700">
                 ⚠ No signal at all for: {result.targetsWithNoSignals.map((t) => `${t.type}:${t.id}`).join(', ')}
@@ -219,12 +257,49 @@ export default function PositionGraphExplorer() {
                 </div>
               </div>
 
+              {/* GRAPH 3B §1 — the never-claim rule at the display layer.
+                  "supported 1.00" beside a name, on a page about assisted dying, is read as
+                  "supports assisted dying". What the graph knows is "voted aye on Amendment 12 on
+                  20 June 2025", which is a different and narrower statement. The stance word never
+                  appears here without the thing it is a stance toward. */}
+              <p className="mt-1.5 text-xs text-zinc-800">{a.claim}</p>
+              {a.claimCaveat && (
+                <p className="mt-1 text-[11px] italic text-amber-800">{a.claimCaveat}</p>
+              )}
+
               <div className="mt-1 text-[11px] text-zinc-500">
                 {Object.entries(a.signalCounts)
                   .map(([t, c]) => `${c.n} × ${t.replace(/_/g, ' ')} (weight ${c.weight.toFixed(2)})`)
                   .join(' · ')}
                 {a.parlMemberId != null && <> · MNIS {a.parlMemberId}</>}
+                {a.divided && (
+                  <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-900">
+                    signals point both ways across these targets
+                  </span>
+                )}
               </div>
+
+              {/* GRAPH 3B §4.2 — Charlie's decision: do not combine divisions on one Bill.
+                  Voting for a Bill and against an amendment to it cancel out once summed, and 448
+                  of 453 members read as "divided" on the assisted dying Bill for that purely
+                  structural reason. The breakdown is therefore always shown, separately labelled,
+                  and never added up. */}
+              {a.byTarget.length > 1 && (
+                <ul className="mt-2 space-y-0.5 border-l-2 border-zinc-100 pl-3 text-[11px] text-zinc-600">
+                  {a.byTarget.map((t) => (
+                    <li key={`${t.targetType}:${t.targetId}`}>
+                      <span className="tabular-nums text-zinc-400">{t.date}</span>{' '}
+                      <span className={t.stanceScore > 0 ? 'text-emerald-700' : t.stanceScore < 0 ? 'text-red-700' : 'text-zinc-500'}>
+                        {t.stanceWording}
+                      </span>{' '}
+                      {t.targetLabel ?? `${t.targetType}:${t.targetId}`}
+                      <span className="ml-1 tabular-nums text-zinc-400">
+                        ({t.stanceScore.toFixed(2)}, conf {t.confidence.toFixed(3)})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               <button
                 onClick={() => setOpen(open === a.actorId ? null : a.actorId)}
