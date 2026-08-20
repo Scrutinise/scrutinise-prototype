@@ -29,9 +29,11 @@
  */
 import { getNeonPool } from '@/lib/pg-pool'
 import { POSITION_CONFIG } from './position-config'
-import { aggregate, describeConfidence, describeStance, SignalForMath } from './position-math'
+import {
+  aggregate, composeClaim, describeConfidence, describeStance, SignalForMath,
+} from './position-math'
 
-export { describeConfidence, describeStance }
+export { describeConfidence, describeStance, composeClaim }
 
 /** The concrete things an actor can have taken a position on. */
 export type TargetType = 'division' | 'edm' | 'inquiry' | 'organisation' | 'bill' | 'instrument'
@@ -81,10 +83,75 @@ export interface ActorPosition {
   stanceWording: string
   /** Per signal type: how many, and what they were worth after decay and discount. */
   signalCounts: Record<string, { n: number; weight: number }>
-  /** The precomputed per-target estimates, where `position_estimate` holds one. */
-  byTarget: Array<{ targetType: string; targetId: string; stanceScore: number; confidence: number }>
+  /**
+   * GRAPH 3B §1 — the stance word WITH the thing it is a stance toward, in one string. Never
+   * render `stanceWording` on its own; see `composeClaim()` for why that is a false statement
+   * rather than a terse one.
+   */
+  claim: string
+  /** Non-null whenever more than one target contributed. Must be shown with the claim. */
+  claimCaveat: string | null
+  /**
+   * GRAPH 3B §4.2 — per target, SEPARATELY LABELLED AND NEVER SUMMED. Charlie's decision on
+   * Bill-level aggregation: voting for a Bill and against an amendment to it cancel out, so the
+   * breakdown is the honest object and the rollup is the convenience.
+   *
+   * ⚠ Computed from the SIGNALS with the same `aggregate()`, not read out of `position_estimate`.
+   * Two reasons: an estimate row goes slightly stale every day because decay is baked into it,
+   * and a target with no precomputed estimate would silently drop out of the breakdown.
+   */
+  byTarget: Array<{
+    targetType: string
+    targetId: string
+    /** The division's title / the motion's subject line. Null only when we hold no label at all. */
+    targetLabel: string | null
+    date: string
+    stanceScore: number
+    confidence: number
+    stanceWording: string
+    /** The one-line claim for this target alone. */
+    claim: string
+  }>
+  /**
+   * TRUE when this actor's signals do not all point the same way across the requested targets.
+   * The rolled-up `stanceScore` is near zero in that case and means "divided record", NOT
+   * "neutral" — and on a Bill it usually means the targets are a mixture of the Bill and
+   * amendments to it, which is a fact about the question asked, not about the member.
+   */
+  divided: boolean
+  /** How many signals contributed. The second sort key, and printed beside the ranking. */
+  signalCount: number
   /** Every signal, as a citation. Most recent first. */
   grounds: Ground[]
+}
+
+/**
+ * GRAPH 3B §1 — WHAT THE ORDER MEANS, SHIPPED WITH THE ORDER.
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * A RANKING THAT CANNOT RANK IS THE SAME FAILURE CLASS AS A METRIC THAT CANNOT FAIL
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * `/admin/positions` said *"showing the top 40"* over a list in alphabetical order, because 135 of
+ * the 555 actors carried an identical score and the sort had nothing left to separate them. It
+ * looked like a result and was not one.
+ *
+ * The fix is NOT a livelier tie-break — that would hide the finding. It is to say what the sort key
+ * is, and to say so out loud when the key has run out. `tiedAtTop` is computed over the actors
+ * MATCHED, not the ones shown, so the sentence stays true when `limit` is raised or lowered.
+ */
+export interface Ranking {
+  /** The sort key in words, for printing verbatim on the page. */
+  key: string
+  /** How many of the matched actors share the top actor's key exactly. */
+  tiedAtTop: number
+  /** How many actors matched in total (before `limit`). */
+  ofMatched: number
+  /** How many are being shown. */
+  shown: number
+  /** True when every actor SHOWN is tied — i.e. the visible order is the name order and nothing else. */
+  shownOrderIsNameOrderOnly: boolean
+  /** The sentence the page must print. Null when the ranking genuinely ranks the visible rows. */
+  note: string | null
 }
 
 export interface PositionsOptions {
@@ -101,8 +168,10 @@ export interface PositionsOptions {
 }
 
 export interface PositionsResult {
-  /** Ranked: the strongest, best-evidenced records first. */
+  /** Ordered by `ranking.key`. Read `ranking` before believing the order means anything. */
   actors: ActorPosition[]
+  /** What the order is, and whether it separates the rows it is shown over. */
+  ranking: Ranking
   /** Targets that resolved to no signal at all. Naming them is the never-claim rule (design §6). */
   targetsWithNoSignals: PositionTarget[]
   /** How many actors matched before `limit` and `minConfidence` were applied. */
@@ -111,6 +180,14 @@ export interface PositionsResult {
   configVersion: string | null
   elapsedMs: number
 }
+
+/**
+ * The sort key, in the words the page prints. Defined once, here, so the page cannot describe an
+ * order the code does not implement — which is how "showing the top 40" came to sit over a list
+ * that was in alphabetical order.
+ */
+export const RANK_KEY_WORDING =
+  'confidence (descending), then number of contributing signals (descending), then name (A–Z)'
 
 /** `division:commons:2071` → `{ type: 'division', id: 'commons:2071' }`. */
 export function parseTarget(s: string): PositionTarget | null {
@@ -154,6 +231,21 @@ interface SignalRow {
 // (type, id) pairs. Postgres refuses the obvious `= ANY($1::record[])` form outright — "input of
 // anonymous composite types is not implemented" — and it fails at execution, not at parse, so it
 // looks like a data problem rather than a syntax one. Found by running it.
+//
+// ⚠⚠ GRAPH 3B §1 — THE SOURCE IS `position_signal_for(...)`, A FUNCTION, NOT THE `position_signal`
+// VIEW. This is the 9,048 ms Charlie saw, and it was neither a missing index nor an inherently
+// heavy query. The view derives `target_id` as `house || ':' || division_id`, a COMPUTED column,
+// so the target filter arrived as a hash join against a two-row function scan and Postgres could
+// not push it down: the plan materialised all 2,317,523 signals and threw away 2,316,542 of them.
+// A view cannot take a parameter; a set-returning function can, and inside it the predicate
+// decomposes to (house, division_id) and reaches the `idx_dv_div` index that already existed.
+//
+//     view      4,397 ms          function      57 ms          77×
+//
+// The function shares `position_vote_class()` with the view, so the classification ladder still
+// has one home, and `check-3b.ts` asserts the two return identical rows target-type by
+// target-type — because "one definition" is a claim, and a claim about two code paths agreeing
+// needs something that would notice if they stopped.
 const SIGNAL_SQL = `
   SELECT s.actor_id::text,
          i.canonical_name       AS name,
@@ -165,10 +257,8 @@ const SIGNAL_SQL = `
          s.target_type, s.target_id, s.signal_ref, s.signal_type,
          s.direction, s.derivation, s.raw_weight, s.observed_at::text, s.evidence_ids,
          COALESCE(d.title, cs."sectionTitle", ge.object_label, org.canonical_name) AS target_label,
-         COALESCE(d.source_url, cs."sourceUrl")                                    AS source_url
-    FROM unnest($1::text[], $2::text[]) AS want(target_type, target_id)
-    JOIN position_signal s
-      ON s.target_type = want.target_type AND s.target_id = want.target_id
+         COALESCE(d.source_url, cs."sourceUrl", don.source_url)                    AS source_url
+    FROM position_signal_for($1::text[], $2::text[]) s
     JOIN graph_entity_identity i ON i.entity_id = s.actor_id
     -- ⚠ Every numeric cast below is wrapped in a CASE that tests the string first. A plain
     -- \`AND s.target_type='division' AND ...::int\` reads as safe and is not: the planner is free to
@@ -191,6 +281,14 @@ const SIGNAL_SQL = `
     LEFT JOIN graph_entity org
       ON org.id = (CASE WHEN s.target_type = 'organisation' AND s.target_id ~ '^[0-9]+$'
                         THEN s.target_id::bigint END)
+    -- GRAPH 3B §2.2. A donation signal's evidence is an Electoral Commission reference, and a
+    -- citation the reader cannot open is a citation that will eventually be shown without one.
+    LEFT JOIN LATERAL (
+      SELECT dn.source_url FROM position_donation dn
+       WHERE s.signal_type = 'political_donation'
+         AND ('ec-donation:' || dn.ec_ref) = s.evidence_ids[1]
+       LIMIT 1
+    ) don ON TRUE
    WHERE ($3::text IS NULL OR i.kind = $3)`
 
 /**
@@ -210,8 +308,12 @@ export async function positionsFor(
   const minConfidence = opts.minConfidence ?? 0
   const maxGrounds = opts.maxGroundsPerActor ?? 12
 
+  const emptyRanking: Ranking = {
+    key: RANK_KEY_WORDING, tiedAtTop: 0, ofMatched: 0, shown: 0,
+    shownOrderIsNameOrderOnly: false, note: null,
+  }
   const empty: PositionsResult = {
-    actors: [], targetsWithNoSignals: targets, actorsMatched: 0, asOf,
+    actors: [], ranking: emptyRanking, targetsWithNoSignals: targets, actorsMatched: 0, asOf,
     configVersion: null, elapsedMs: Date.now() - t0,
   }
   if (!targets.length) return { ...empty, targetsWithNoSignals: [] }
@@ -233,36 +335,70 @@ export async function positionsFor(
     else byActor.set(r.actor_id, [r])
   }
 
-  // The per-target precomputed estimates, for the same actors and targets.
-  const { rows: estRows } = await pool.query<{
-    actor_id: string; target_type: string; target_id: string
-    stance_score: number; confidence: number; config_version: string
-  }>(`SELECT e.actor_id::text, e.target_type, e.target_id, e.stance_score, e.confidence, e.config_version
-        FROM unnest($1::text[], $2::text[]) AS want(target_type, target_id)
-        JOIN position_estimate e
-          ON e.target_type = want.target_type AND e.target_id = want.target_id
-       WHERE e.actor_id = ANY($3::bigint[])`,
-    [types, ids, [...byActor.keys()]])
-  const estByActor = new Map<string, PositionsResult['actors'][number]['byTarget']>()
-  for (const e of estRows) {
-    const list = estByActor.get(e.actor_id) ?? []
-    list.push({ targetType: e.target_type, targetId: e.target_id, stanceScore: e.stance_score, confidence: e.confidence })
-    estByActor.set(e.actor_id, list)
-  }
+  // `config_version` is read for display only. It is the version that built the STORED estimates;
+  // every number returned here is computed live from signals with the CURRENT config, so if the
+  // two ever disagree the page is showing a stale label. One row is enough to name it.
+  const { rows: cfgRows } = await pool.query<{ config_version: string }>(
+    `SELECT config_version FROM position_estimate_meta ORDER BY id DESC LIMIT 1`)
+
+  const toMath = (s: SignalRow): SignalForMath => ({
+    id: s.signal_ref,
+    signalType: s.signal_type as SignalForMath['signalType'],
+    derivation: s.derivation,
+    direction: s.direction,
+    rawWeight: s.raw_weight,
+    observedAt: s.observed_at,
+  })
 
   const actors: ActorPosition[] = []
   for (const [actorId, sigs] of byActor) {
-    const forMath: SignalForMath[] = sigs.map((s) => ({
-      id: s.signal_ref,
-      signalType: s.signal_type as SignalForMath['signalType'],
-      derivation: s.derivation,
-      direction: s.direction,
-      rawWeight: s.raw_weight,
-      observedAt: s.observed_at,
-    }))
-    const agg = aggregate(forMath, asOf, POSITION_CONFIG)
+    const agg = aggregate(sigs.map(toMath), asOf, POSITION_CONFIG)
     if (agg.confidence < minConfidence) continue
     const head = sigs[0]
+
+    // ── §4.2: per target, separately labelled, never summed ────────────────────────────────────
+    const perTarget = new Map<string, SignalRow[]>()
+    for (const s of sigs) {
+      const k = `${s.target_type}:${s.target_id}`
+      const l = perTarget.get(k); if (l) l.push(s); else perTarget.set(k, [s])
+    }
+    const byTarget = [...perTarget.values()]
+      .map((rows) => {
+        const a = aggregate(rows.map(toMath), asOf, POSITION_CONFIG)
+        const label = rows[0].target_label
+        const date = rows.map((r) => r.observed_at).sort().at(-1)!
+        const wording = describeStance(a.stanceScore)
+        return {
+          targetType: rows[0].target_type,
+          targetId: rows[0].target_id,
+          targetLabel: label,
+          date,
+          stanceScore: a.stanceScore,
+          confidence: a.confidence,
+          stanceWording: wording,
+          claim: composeClaim(wording, [{
+            label: label ?? `${rows[0].target_type}:${rows[0].target_id}`,
+            date,
+            direction: rows[0].direction,
+          }]).claim,
+        }
+      })
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+
+    // "Divided" is a fact about the requested SET, not about the person — which is exactly why it
+    // is reported as its own flag rather than left to be inferred from a score near zero.
+    const directions = new Set(sigs.filter((s) => s.direction !== 0).map((s) => s.direction))
+    const divided = directions.size > 1
+
+    const { claim, caveat } = composeClaim(
+      describeStance(agg.stanceScore),
+      byTarget.map((t) => ({
+        label: t.targetLabel ?? `${t.targetType}:${t.targetId}`,
+        date: t.date,
+        direction: t.stanceScore > 0 ? 1 : t.stanceScore < 0 ? -1 : 0,
+      })),
+    )
+
     const grounds: Ground[] = sigs
       .slice()
       .sort((a, b) => (a.observed_at < b.observed_at ? 1 : a.observed_at > b.observed_at ? -1 : 0))
@@ -279,6 +415,7 @@ export async function positionsFor(
         sourceUrl: s.source_url,
         evidenceIds: s.evidence_ids,
       }))
+
     actors.push({
       actorId,
       name: head.name,
@@ -292,25 +429,58 @@ export async function positionsFor(
       confidenceWording: describeConfidence(agg.confidence),
       stanceWording: describeStance(agg.stanceScore),
       signalCounts: agg.signalCounts,
-      byTarget: estByActor.get(actorId) ?? [],
+      claim,
+      claimCaveat: caveat,
+      byTarget,
+      divided,
+      signalCount: sigs.length,
       grounds,
     })
   }
 
-  // Rank by how much there is to say and how firmly: |stance| × confidence. An actor with a strong
-  // record either way outranks one with a thin one, and a divided record does not float to the top
-  // just because it has many signals.
+  // ── THE ORDER, AND WHAT IT MEANS ───────────────────────────────────────────────────────────
+  //
+  // ⚠ 3A ranked by |stance| × confidence. That key is WORSE than it looks on a small target set:
+  // stance is `signed / mass`, a ratio, so it is exactly ±1 for anyone who voted consistently
+  // however many times they did it — which makes the product collapse to `confidence` for almost
+  // everybody, and makes a genuinely divided record sort to the bottom on a key of exactly 0.
+  // Brief §1: order by confidence, then by the number of contributing signals, then by name — and
+  // PRINT THE KEY, so a reader can see what the order is claiming and what it is not.
   actors.sort((a, b) =>
-    Math.abs(b.stanceScore) * b.confidence - Math.abs(a.stanceScore) * a.confidence ||
     b.confidence - a.confidence ||
-    (a.name < b.name ? -1 : 1))
+    b.signalCount - a.signalCount ||
+    (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+
+  const shown = actors.slice(0, limit)
+  const tieKey = (a: ActorPosition) => `${a.confidence.toFixed(6)}|${a.signalCount}`
+  const tiedAtTop = actors.length ? actors.filter((a) => tieKey(a) === tieKey(actors[0])).length : 0
+  const shownAllTied = shown.length > 1 && shown.every((a) => tieKey(a) === tieKey(shown[0]))
+
+  const ranking: Ranking = {
+    key: RANK_KEY_WORDING,
+    tiedAtTop,
+    ofMatched: actors.length,
+    shown: shown.length,
+    shownOrderIsNameOrderOnly: shownAllTied,
+    note: shownAllTied
+      // The sentence the brief asks for, verbatim in shape: say that there is no ranking here.
+      ? `${shown.length} of ${actors.length.toLocaleString()} actors, tied at this confidence ` +
+        `(${shown[0].confidence.toFixed(3)}, ${shown[0].signalCount} signal${shown[0].signalCount === 1 ? '' : 's'}) ` +
+        `— ordered by name. This is not a ranking.`
+      : tiedAtTop > 1
+        ? `${tiedAtTop} actors are tied at the top of this order (confidence ` +
+          `${actors[0].confidence.toFixed(3)}, ${actors[0].signalCount} signal${actors[0].signalCount === 1 ? '' : 's'}); ` +
+          `among those the order is by name.`
+        : null,
+  }
 
   return {
-    actors: actors.slice(0, limit),
+    actors: shown,
+    ranking,
     targetsWithNoSignals,
     actorsMatched: actors.length,
     asOf,
-    configVersion: estRows[0]?.config_version ?? null,
+    configVersion: cfgRows[0]?.config_version ?? null,
     elapsedMs: Date.now() - t0,
   }
 }

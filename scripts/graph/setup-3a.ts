@@ -124,9 +124,18 @@ export function weightFunctionSql(): string {
     'whipped-with:v1', 'small-party-unclassified:v1'] as const)
     .map((k) => `      WHEN p_signal_type = 'vote' AND p_derivation = '${k}' THEN ${w[k]}::real`)
     .join('\n')
-  const typeCases = (['edm_signature', 'amendment_sponsorship', 'witness_appearance',
-    'committee_membership', 'declared_interest'] as const)
-    .map((k) => `      WHEN p_signal_type = '${k}' THEN ${w[k]}::real`)
+  // ⚠⚠ DERIVED FROM THE CONFIG, NOT LISTED HERE. This was a hard-coded array of five names, and
+  // GRAPH 3B found the failure it produces: adding `political_donation` to position-config.ts did
+  // NOT add a case to the SQL, so `position_raw_weight('political_donation', NULL)` returned NULL
+  // while the TypeScript config happily returned 0.1. Two sources of truth wearing one name — and
+  // the whole point of generating this function was to avoid exactly that.
+  //
+  // A weight key containing ':' is a vote CLASS (handled above); everything else is a signal type.
+  // check-3b.ts asserts the SQL knows every signal type the config knows, so a future addition
+  // fails a check rather than silently losing its weight.
+  const typeCases = Object.keys(w)
+    .filter((k) => !k.includes(':'))
+    .map((k) => `      WHEN p_signal_type = '${k}' THEN ${w[k as keyof typeof w]}::real`)
     .join('\n')
   return `
 CREATE OR REPLACE FUNCTION position_raw_weight(p_signal_type text, p_derivation text)

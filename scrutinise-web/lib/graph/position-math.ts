@@ -190,3 +190,61 @@ export function describeStance(stanceScore: number): 'supported' | 'opposed' | '
   if (stanceScore <= -0.2) return 'opposed'
   return 'divided record'
 }
+
+/** One thing an actor's stance is a stance TOWARD. Enough to name it and date it, nothing more. */
+export interface ClaimTarget {
+  label: string
+  date: string
+  /** +1 / -1 / 0 as recorded on that specific target. */
+  direction: number
+}
+
+/**
+ * GRAPH 3B §1 — the never-claim rule at the display layer.
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * WHY A BARE STANCE WORD IS A FALSE STATEMENT AND NOT MERELY A TERSE ONE
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * `describeStance()` returns "supported". Rendered beside a name on a page headed *assisted dying*,
+ * a reader completes the sentence themselves: **"supports assisted dying"**. What the graph knows
+ * is narrower and different — *"voted aye on Amendment 12 to the Terminally Ill Adults (End of
+ * Life) Bill on 20 June 2025"*. Amendment 12 was an amendment; voting for it is not the same act as
+ * voting for the Bill, and on this Bill some members did one and not the other.
+ *
+ * So the stance word never travels alone. This function is the only way to render it, and it cannot
+ * be called without the targets, because the type will not let you.
+ *
+ * ⚠ It deliberately does NOT summarise several targets into one phrase. Design §6 and 3A's D-2: a
+ * vote for a Bill and a vote against an amendment to it are opposite directions once summed, and
+ * 448 of 453 members read as "divided" on this Bill for that purely structural reason. The targets
+ * are LISTED, each with its own side.
+ */
+export function composeClaim(
+  stanceWording: string,
+  targets: ClaimTarget[],
+  maxNamed = 3,
+): { claim: string; caveat: string | null } {
+  if (!targets.length) {
+    // Design §6: absence is the caller's to render, and it must never arrive here as a score.
+    return { claim: 'no recorded signal', caveat: null }
+  }
+
+  const side = (d: number) => (d > 0 ? 'for' : d < 0 ? 'against' : 'engaged with, no side recorded')
+  const named = targets.slice(0, maxNamed)
+    .map((t) => `${side(t.direction)} “${t.label}” (${t.date})`)
+    .join('; ')
+  const rest = targets.length - named.length > 0 ? '' : ''
+  const more = targets.length > maxNamed ? `; and ${targets.length - maxNamed} more` : rest
+
+  if (targets.length === 1) {
+    return { claim: `${stanceWording} — ${named}`, caveat: null }
+  }
+  return {
+    claim: `${stanceWording}, across ${targets.length} things asked about — ${named}${more}`,
+    // The caveat is not decoration. It is the difference between what was measured and what a
+    // reader will otherwise infer, said in the same breath as the number.
+    caveat:
+      'A stance toward these specific divisions, not toward the Bill or the subject. ' +
+      'Voting for a Bill and against an amendment to it are opposite directions once combined.',
+  }
+}
