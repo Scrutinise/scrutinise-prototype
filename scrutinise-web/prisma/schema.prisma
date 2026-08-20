@@ -548,6 +548,7 @@ model User {
   legislationCorrections    LegislationCorrection[]
   feedbacks                 Feedback[]
   lexFeedbackItems          FeedbackItem[]
+  proposalVersions          ProposalVersion[]   @relation("ProposalVersionCreator")
 
   @@index([clerkId])
   @@index([email])
@@ -683,6 +684,22 @@ model Idea {
   // Decision 22 Jul 2026.
   communityId               String?
   community                 Community?      @relation(fields: [communityId], references: [id])
+  // Sprint 20-D (§20.3) — PROPOSAL publication. Deliberately NOT the `visibility`
+  // column above: that one is the five-stage lifecycle's visibility, read by the
+  // stage gates and every listing query, and an idea can be STAGE_3 link-only
+  // while its proposal is unpublished. See prisma/lex_proposal_20bd.sql.
+  proposalVisibility         ProposalVisibility @default(PRIVATE)
+  /// ⚠ THE PIN. Every share resolver reads this and never "the latest version" —
+  /// that is the whole of "a recipient's link does not shift under them while the
+  /// owner keeps editing" (§20.3).
+  publishedProposalVersionId String?
+  publishedProposalVersion   ProposalVersion?   @relation("IdeaPublishedVersion", fields: [publishedProposalVersionId], references: [id], onDelete: SetNull)
+  proposalPublishedAt        DateTime?
+  /// Minted once and KEPT across re-publishes, so a link already in an MP's inbox
+  /// keeps working when the owner publishes a revision. Revoking is
+  /// `proposalVisibility = PRIVATE`, which the resolver refuses on.
+  proposalShareToken         String?            @unique
+  proposalVersions           ProposalVersion[]  @relation("IdeaProposalVersions")
   // Timestamps
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt
@@ -749,6 +766,7 @@ model Idea {
   @@index([visibility])
   @@index([status])
   @@index([communityId])
+  @@index([proposalVisibility])
 }
 
 model WordingHistory {
@@ -2003,11 +2021,69 @@ model Document {
   sourceFingerprint String?
   sourceLabel       String?   // human "generated from …", shown next to the download
   exportError       String?   // last render/upload failure, surfaced honestly
+  /// Sprint 20-B (§20.6) — which STORED VERSION this file was rendered from, null
+  /// when it was rendered from the live working state. A file made from the draft
+  /// and a file made from published v3 look identical on disk, and telling them
+  /// apart is the difference between "your draft" and "what the recipient holds".
+  proposalVersionId String?
+  proposalVersion   ProposalVersion? @relation(fields: [proposalVersionId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([ideaId, kind])
   @@index([ideaId])
+}
+
+/// ─────────────────────────────────────────────────────────────────────────────
+/// Sprint 20-D (§2) — an append-only published version of a proposal.
+///
+/// ⚠ `snapshot` is the WHOLE §1 assembler output, serialised. A version is NOT a
+/// pointer at live state: state moves, and a recipient's link must not move with
+/// it. Storing the snapshot is what makes "the version that was shared" a fact
+/// rather than a reconstruction from rows that have since changed.
+///
+/// ⚠ APPEND-ONLY. There is no update path in the application; a change makes the
+/// next version. The unique (ideaId, versionNumber) below means a second write of
+/// the same number FAILS rather than overwriting, and `check:20bd` asserts the
+/// invariant against the live database rather than trusting the intention.
+///
+/// DDL of record is `prisma/lex_proposal_20bd.sql`. This model exists so that
+/// `prisma migrate diff` does not see a table it doesn't know about and propose
+/// dropping it — the same pattern as LlmSpend and the position-graph tables.
+/// ─────────────────────────────────────────────────────────────────────────────
+model ProposalVersion {
+  id            String   @id @default(uuid())
+  ideaId        String
+  idea          Idea     @relation("IdeaProposalVersions", fields: [ideaId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  /// sha-256 over the snapshot with its volatile fields removed, so an unchanged
+  /// proposal does not mint a new version. ⚠ Compared against the LATEST version
+  /// only — reverting an edit legitimately reproduces an older hash, and that
+  /// must still be recordable.
+  contentHash   String
+  snapshot      Json
+  createdAt     DateTime @default(now())
+  createdBy     String
+  creator       User     @relation("ProposalVersionCreator", fields: [createdBy], references: [id])
+  /// What changed since the previous version, so §24's "12 of 14 findings resolved
+  /// since" can be COMPUTED rather than asserted.
+  changeNote    String?
+
+  publishedOn   Idea[]     @relation("IdeaPublishedVersion")
+  documents     Document[]
+
+  @@unique([ideaId, versionNumber])
+  @@index([ideaId, createdAt(sort: Desc)])
+  @@index([contentHash])
+}
+
+/// §20.3 — the four publication states of a PROPOSAL. See the SQL file for why
+/// this is not an extension of `IdeaVisibility`.
+enum ProposalVisibility {
+  PRIVATE
+  LINK
+  COMMUNITY
+  PUBLIC
 }
 
 // Page 2 (Diagnosis) causes loop (design §7.2). Mirrors the CoherentActions
