@@ -20,10 +20,13 @@ chunk 0 of the embedding.
 **Everything needed was already on disk** — all 74,896 rows carry their raw AKN — so this was a
 **re-compile, not a re-fetch: 0 requests to the National Archives.**
 
-**74,896 of 74,896 case-law bodies now carry the judgment and no stylesheet**, hand-read **30 of 30
-correct against judgments re-fetched live from the National Archives**, with the same three checks
-scoring **0 of 30** against the old writer's output. **74,896 of 74,896 dates moved** from the
-citation year to the day the judgment was handed down, residual **zero**.
+**74,896 of 74,896 case-law bodies were rewritten by the new extractor** — that is a count over the
+whole collection, from the provenance stored on every row, not a sum of the runs' own tallies. What
+those bodies *contain* is a sample claim and is stated as one: **400 of 400 read back out of R2
+pass the guard**, and **30 of 30 hand-read correct against judgments re-fetched live from the
+National Archives**, with the same three checks scoring **0 of 30** against the old writer's output.
+**74,896 of 74,896 dates moved** from the citation year to the day the judgment was handed down,
+residual **zero**.
 
 ⚠⚠ **And the sprint found something nobody was looking for: the keyword index carried 0 of 74,896
 case-law titles.** Last night's title recovery reached the database and stopped there, because
@@ -472,6 +475,12 @@ belongs to whoever owns search.
    are also not marked `unavailable` in the way `tna-legislation` marks a provision it cannot
    fetch. Using that mechanism would be right and touches a column three threads share, so it is
    reported rather than done.
+9. ⚠ **The LIVE writer path was not exercised end to end.** `processTnaCaselaw` is fixed and
+   typechecks, and every line of judgment it now depends on (`aknJudgmentText`, `aknBodyWordCount`,
+   `checkJudgmentBody`) is the same code the 74,896-document backfill ran and the checks cover. But
+   the writer itself only runs when a queue row yields a judgment we do not already hold, and TNA
+   case law is complete — so no new row passed through it during this sprint. The first genuinely
+   new judgment is the first live test.
 
 ---
 
