@@ -1,0 +1,688 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 20-B §3a/§3b — THE PROPOSAL and THE SUMMARY, built from the snapshot.
+//
+// TWO RENDERERS OVER ONE BLOCK MODEL. Sprint 2.5's `model.ts` says in its own
+// header that the Initial Background is the first thing built through it and the
+// full proposal document is meant to be the second. So this is a new BUILDER —
+// snapshot in, `DocumentModel` out — and not a second export path. `renderDocx`
+// and `renderPdf` learn nothing about proposals.
+//
+// ⚠ THE SEAM. Nothing in this file touches Prisma or `lib/lex/deepening*`. It
+// reads `ProposalSnapshot` and nothing else, which is what lets 25-C keep
+// changing the underlying shapes while this file stays still.
+//
+// FOUR CONTENT RULES, ALL OF WHICH ALREADY EXIST ELSEWHERE AND HOLD HERE:
+//
+//   1. RENDERING OF STORED STATE ONLY. No model call, no computed prose. If the
+//      snapshot does not hold it, it does not appear.
+//   2. EVERY CLAIM CARRIES ITS SOURCE, and a claim with nothing behind it is
+//      VISIBLY MARKED rather than quietly presented — the never-claim rule, in
+//      the artefact that leaves the building.
+//   3. A GAP IS STATED, NOT OMITTED. "What this proposal does not establish" is
+//      a section of the document, not an omission from it.
+//   4. THE USER'S OWN KNOWLEDGE IS ATTRIBUTED TO THEM, never blended into Lex's
+//      prose.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { Block, DocumentModel, Run, SourceRef } from './model'
+import { markdownToBlocks } from './markdown'
+import {
+  assertRenderableSnapshot,
+  snapshotHash,
+  type ProposalSnapshot,
+  type SnapshotAction,
+  type SnapshotCostFigure,
+  type SnapshotField,
+} from './proposal-snapshot'
+
+export interface ProposalBuildResult {
+  model: DocumentModel
+  /** sha-256 over exactly the snapshot that was rendered. */
+  fingerprint: string
+  sourceLabel: string
+}
+
+/**
+ * ⚠ WHICH FIELDS GET THE UNSUPPORTED MARKER, AND WHY IT IS NOT ALL OF THEM.
+ *
+ * Rule 2 is about CLAIMS — assertions about the world that a reader could check
+ * and that could be wrong. These are those fields.
+ *
+ * A guiding-policy field is a DECISION, not a claim: "we rule out a licensing
+ * regime" is the user's judgement, and stamping it "unsupported" would be a
+ * category error that trains the reader to ignore the marker on the fields where
+ * it means something. Those are attributed instead (§ "The user's own knowledge").
+ *
+ * ⚠ Getting this wrong in either direction is a real failure. Marking everything
+ * makes the marker noise; marking nothing is the quiet presentation the rule
+ * exists to stop. `check:20bd` asserts both halves.
+ */
+const CLAIM_FIELDS = new Set([
+  'challenge',
+  'whoAffectedImpactCost',
+  'rootCause',
+  'legalLandscape',
+  'pivotalObstacle',
+])
+
+const UNSUPPORTED_NOTE =
+  'Not evidenced — no source in the record backs this. It is the proposer’s statement, offered as such.'
+
+function text(s: string): Run[] {
+  return [{ text: s }]
+}
+
+function fieldByKey(snapshot: ProposalSnapshot, key: string): SnapshotField | undefined {
+  return snapshot.fields.find((f) => f.key === key)
+}
+
+/** The stored value as prose, or null when there is nothing to render. */
+function fieldText(field: SnapshotField | undefined): string | null {
+  if (!field) return null
+  if (field.status !== 'ACCEPTED' && field.status !== 'SKIPPED') return null
+  if (typeof field.value === 'string' && field.value.trim()) return field.value.trim()
+  return null
+}
+
+function money(f: SnapshotCostFigure | null): string | null {
+  if (!f) return null
+  const unit = f.unit ?? 'GBP'
+  const sym = unit === 'GBP' ? '£' : `${unit} `
+  const fmt = (n: number) => `${sym}${n.toLocaleString('en-GB')}`
+  if (f.low != null && f.high != null) {
+    return f.low === f.high ? fmt(f.low) : `${fmt(f.low)}–${fmt(f.high)}`
+  }
+  if (f.low != null) return `${fmt(f.low)} (low end only)`
+  if (f.high != null) return `${fmt(f.high)} (high end only)`
+  return null
+}
+
+/**
+ * A costed figure and its basis, together, always.
+ *
+ * ⚠ A figure with no basis is rendered as "no basis stated", NEVER dropped and
+ * never shown bare. A bare number in a document sent to a committee clerk reads
+ * as a costing; an uncosted number with its silence named reads as what it is.
+ */
+function figureRuns(label: string, f: SnapshotCostFigure | null): Run[] | null {
+  const amount = money(f)
+  if (!amount) return null
+  const runs: Run[] = [{ text: `${label}: `, bold: true }, { text: amount }]
+  if (f?.basis) runs.push({ text: ` — ${f.basis}`, italic: true })
+  else runs.push({ text: ' — no basis stated', italic: true })
+  if (f?.userOverride) runs.push({ text: ' (proposer’s figure, overriding the benchmark)', italic: true })
+  if (f?.priceYear) runs.push({ text: ` [${f.priceYear} prices]` })
+  return runs
+}
+
+/** Push a claim block plus its source line, or its visible absence. */
+function pushClaim(
+  blocks: Block[],
+  snapshot: ProposalSnapshot,
+  opts: { body: string; evidenceIds: string[]; supported: boolean; markUnsupported: boolean },
+) {
+  blocks.push(...markdownToBlocks(opts.body))
+  if (opts.evidenceIds.length) {
+    const refs = opts.evidenceIds
+      .map((id) => snapshot.evidence.find((e) => e.id === id))
+      .filter((e): e is NonNullable<typeof e> => Boolean(e))
+    if (refs.length) {
+      blocks.push({
+        kind: 'bullets',
+        items: refs.map((e): Run[] => {
+          const runs: Run[] = [{ text: e.title, bold: true }]
+          if (e.citation) runs.push({ text: ` — ${e.citation}` })
+          if (e.url) runs.push({ text: ` ${e.url}`, href: e.url })
+          return runs
+        }),
+      })
+    }
+  } else if (opts.markUnsupported && !opts.supported) {
+    blocks.push({ kind: 'note', text: UNSUPPORTED_NOTE })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §3a — THE PROPOSAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuildResult {
+  assertRenderableSnapshot(snapshot)
+  const blocks: Block[] = []
+
+  // ── The ask, first ─────────────────────────────────────────────────────────
+  if (snapshot.summaryDescription?.trim()) {
+    blocks.push({ kind: 'note', text: snapshot.summaryDescription.trim() })
+  }
+
+  // ── Diagnosis ──────────────────────────────────────────────────────────────
+  blocks.push({ kind: 'heading', level: 1, runs: text('The problem') })
+
+  const challenge = fieldByKey(snapshot, 'challenge')
+  const challengeText = fieldText(challenge)
+  if (challengeText) {
+    pushClaim(blocks, snapshot, {
+      body: challengeText,
+      evidenceIds: challenge?.evidenceIds ?? [],
+      supported: challenge?.supported ?? false,
+      markUnsupported: CLAIM_FIELDS.has('challenge'),
+    })
+  } else {
+    // A gap is stated, not omitted — including the biggest one.
+    blocks.push({ kind: 'note', text: 'The problem statement has not been settled on this proposal.' })
+  }
+
+  const whoAffected = fieldByKey(snapshot, 'whoAffectedImpactCost')
+  if (whoAffected?.slots.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text(whoAffected.label) })
+    for (const slot of whoAffected.slots) {
+      blocks.push({ kind: 'paragraph', runs: [{ text: `${slot.label}: `, bold: true }, { text: slot.value }] })
+    }
+    if (!whoAffected.supported) blocks.push({ kind: 'note', text: UNSUPPORTED_NOTE })
+  }
+
+  if (snapshot.causes.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('Why it happens') })
+    // Root-level causes first, each with its sub-causes, so the causal tree is
+    // readable rather than a flat list that has lost its shape.
+    const roots = snapshot.causes.filter((c) => !c.parentCauseId)
+    const renderCause = (c: (typeof snapshot.causes)[number], depth: number) => {
+      const head: Run[] = [{ text: c.cause, bold: true }]
+      if (c.isRootCause) head.push({ text: '  [root cause]', italic: true })
+      if (c.classification && c.classification !== 'UNASSESSED') {
+        head.push({ text: `  [${c.classification.toLowerCase()}]`, italic: true })
+      }
+      // The user's own causes are attributed as theirs; Lex's corpus-seeded ones say so.
+      head.push({
+        text: c.source === 'USER' ? `  — ${snapshot.owner.name}’s account` : '  — identified from the corpus',
+        italic: true,
+      })
+      blocks.push({ kind: 'heading', level: depth === 0 ? 3 : 3, runs: head })
+      if (c.whyPersisted) {
+        blocks.push({ kind: 'paragraph', runs: [{ text: 'Why it has persisted: ', bold: true }, { text: c.whyPersisted }] })
+      }
+      if (c.evidenceLine) {
+        blocks.push({ kind: 'paragraph', runs: [{ text: 'Evidence: ', bold: true }, { text: c.evidenceLine }] })
+      }
+      pushClaim(blocks, snapshot, {
+        body: '',
+        evidenceIds: c.evidenceIds,
+        supported: c.supported,
+        markUnsupported: true,
+      })
+      for (const child of snapshot.causes.filter((x) => x.parentCauseId === c.id)) renderCause(child, depth + 1)
+    }
+    for (const c of roots) renderCause(c, 0)
+  }
+
+  const legal = fieldByKey(snapshot, 'legalLandscape')
+  if (legal?.slots.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text(legal.label) })
+    for (const slot of legal.slots) {
+      blocks.push({ kind: 'paragraph', runs: [{ text: `${slot.label}: `, bold: true }, { text: slot.value }] })
+    }
+    if (!legal.supported) blocks.push({ kind: 'note', text: UNSUPPORTED_NOTE })
+  }
+
+  const pivotal = fieldText(fieldByKey(snapshot, 'pivotalObstacle'))
+  if (pivotal) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('The pivotal obstacle') })
+    pushClaim(blocks, snapshot, {
+      body: pivotal,
+      evidenceIds: fieldByKey(snapshot, 'pivotalObstacle')?.evidenceIds ?? [],
+      supported: fieldByKey(snapshot, 'pivotalObstacle')?.supported ?? false,
+      markUnsupported: true,
+    })
+  }
+
+  // ── Guiding policy ─────────────────────────────────────────────────────────
+  blocks.push({ kind: 'rule' })
+  blocks.push({ kind: 'heading', level: 1, runs: text('The approach') })
+
+  const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
+  if (approach) blocks.push(...markdownToBlocks(approach))
+  else blocks.push({ kind: 'note', text: 'No approach has been committed to on this proposal yet.' })
+
+  const leverage = fieldText(fieldByKey(snapshot, 'leverage'))
+  if (leverage) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('Why this hits the obstacle') })
+    blocks.push(...markdownToBlocks(leverage))
+  }
+
+  const rulesOut = fieldText(fieldByKey(snapshot, 'whatItRulesOut'))
+  const ruledOutOptions = snapshot.options.filter((o) => o.status === 'RULED_OUT')
+  if (rulesOut || ruledOutOptions.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('What it rules out') })
+    if (rulesOut) blocks.push(...markdownToBlocks(rulesOut))
+    if (ruledOutOptions.length) {
+      blocks.push({
+        kind: 'bullets',
+        items: ruledOutOptions.map((o): Run[] => {
+          const runs: Run[] = [{ text: o.approach, bold: true }]
+          // ⚠ A ruled-out option without its reason is a decision with the
+          // reasoning stripped off. Say that it is missing rather than listing
+          // the option as though it were self-explanatory.
+          runs.push({ text: o.ruleOutReason ? ` — ${o.ruleOutReason}` : ' — no reason recorded', italic: !o.ruleOutReason })
+          return runs
+        }),
+      })
+    }
+  }
+
+  const responses = fieldByKey(snapshot, 'anticipatedResponses')
+  if (responses?.slots.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('Anticipated responses') })
+    for (const slot of responses.slots) {
+      blocks.push({ kind: 'paragraph', runs: [{ text: `${slot.label}: `, bold: true }, { text: slot.value }] })
+    }
+  }
+
+  const conditions = fieldText(fieldByKey(snapshot, 'conditionsForSuccess'))
+  if (conditions) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('Conditions for success') })
+    blocks.push(...markdownToBlocks(conditions))
+  }
+
+  // ── Coherent actions ───────────────────────────────────────────────────────
+  blocks.push({ kind: 'rule' })
+  blocks.push({ kind: 'heading', level: 1, runs: text('What would be done') })
+
+  if (!snapshot.actions.length) {
+    blocks.push({ kind: 'note', text: 'No costed actions have been recorded on this proposal yet.' })
+  }
+  for (const a of snapshot.actions) {
+    blocks.push({ kind: 'heading', level: 2, runs: text(a.practicalStep) })
+    const meta: Run[] = []
+    if (a.whoImplements) meta.push({ text: `Implemented by ${a.whoImplements}. ` })
+    if (a.mechanismType) meta.push({ text: `Mechanism: ${a.mechanismType}. ` })
+    meta.push({
+      text: a.source === 'USER' ? `Proposed by ${snapshot.owner.name}.` : 'Drafted by Lex from the toolkit.',
+      italic: true,
+    })
+    blocks.push({ kind: 'paragraph', runs: meta })
+
+    for (const [label, f] of [
+      ['Implementation (one-off)', a.implementationCost],
+      ['Enforcement (ongoing)', a.enforcementCost],
+      ['Regulatory friction (ongoing)', a.regulatoryFriction],
+    ] as const) {
+      const runs = figureRuns(label, f)
+      if (runs) blocks.push({ kind: 'paragraph', runs })
+    }
+
+    if (a.costLines.length) {
+      blocks.push({
+        kind: 'bullets',
+        items: a.costLines.map((l): Run[] => {
+          const runs: Run[] = [{ text: l.label, bold: true }]
+          const amount = money({
+            low: l.low, high: l.high, unit: l.unit, basis: l.basis,
+            benchmarkId: l.benchmarkId, userOverride: false, priceYear: l.priceYear,
+          })
+          if (amount) runs.push({ text: ` — ${amount}` })
+          runs.push({ text: l.basis ? ` (${l.basis})` : ' (no basis stated)', italic: !l.basis })
+          return runs
+        }),
+      })
+    }
+
+    if (!a.supported) blocks.push({ kind: 'note', text: UNSUPPORTED_NOTE })
+
+    // §20.4 — the legislative annex renders WHERE THE INSTRUMENT IS LEGISLATIVE,
+    // inline under its action. Standalone is §20-E and is scaffolded, not built.
+    if (a.legislative) {
+      blocks.push({ kind: 'heading', level: 3, runs: text('Legislative annex') })
+      if (a.targetOrganisation) {
+        blocks.push({ kind: 'paragraph', runs: [{ text: 'Target: ', bold: true }, { text: a.targetOrganisation }] })
+      }
+      if (a.wording) {
+        blocks.push({ kind: 'paragraph', runs: [{ text: 'Drafting intent: ', bold: true }, { text: a.wording }] })
+      }
+      blocks.push({
+        kind: 'note',
+        text: 'Drafting intent only. The provisions to amend, the operation and the linked case law are §20-E and are not established here.',
+      })
+    }
+  }
+
+  // ── Costs against the problem ──────────────────────────────────────────────
+  const costSummaryText = typeof snapshot.costs.summary?.summary === 'string'
+    ? String(snapshot.costs.summary.summary).trim()
+    : null
+  if (costSummaryText || snapshot.costs.problemCost) {
+    blocks.push({ kind: 'rule' })
+    blocks.push({ kind: 'heading', level: 1, runs: text('Cost against the cost of the problem') })
+    if (snapshot.costs.problemCost) {
+      blocks.push({ kind: 'paragraph', runs: [{ text: 'Cost of the problem: ', bold: true }, { text: snapshot.costs.problemCost }] })
+    }
+    if (costSummaryText) blocks.push(...markdownToBlocks(costSummaryText))
+  }
+
+  // ── The user's own knowledge, attributed ───────────────────────────────────
+  if (snapshot.userKnowledge) {
+    blocks.push({ kind: 'rule' })
+    blocks.push({ kind: 'heading', level: 1, runs: text(`In ${snapshot.owner.name}’s own words`) })
+    // ⚠ NOT blended into the prose above. `ownKnowledgeProvenance` exists exactly
+    // so the user's testimony can be told apart from retrieved material, and this
+    // is the section where that distinction is honoured rather than lost.
+    blocks.push({
+      kind: 'note',
+      text: snapshot.userKnowledge.provenance === 'USER_TESTIMONY'
+        ? 'The proposer’s own account, recorded as testimony. It has not been checked against the corpus.'
+        : 'Recorded as retrieved material rather than the proposer’s testimony.',
+    })
+    blocks.push(...markdownToBlocks(snapshot.userKnowledge.text))
+  }
+
+  // ── A gap is stated, not omitted ───────────────────────────────────────────
+  blocks.push({ kind: 'rule' })
+  blocks.push({ kind: 'heading', level: 1, runs: text('What this proposal does not establish') })
+  blocks.push(...gapBlocks(snapshot))
+
+  // ── Sources ────────────────────────────────────────────────────────────────
+  if (snapshot.sources.length || snapshot.evidence.length) {
+    blocks.push({ kind: 'rule' })
+    blocks.push({ kind: 'heading', level: 1, runs: text('Sources') })
+    for (const group of snapshot.sources) {
+      const refs: SourceRef[] = group.refs.map((r) => ({
+        title: r.title, citation: r.citation, url: r.url, snippet: r.snippet, date: r.date,
+      }))
+      blocks.push({ kind: 'sources', label: group.label, refs })
+    }
+    const findings = snapshot.evidence.filter((e) => e.url || e.citation)
+    if (findings.length) {
+      blocks.push({
+        kind: 'sources',
+        label: 'Accepted findings',
+        refs: findings.map((e): SourceRef => ({
+          title: e.title,
+          citation: e.citation ?? '',
+          url: e.url ?? '',
+          snippet: e.siftReason ?? undefined,
+        })),
+      })
+    }
+  }
+
+  const sourceLabel = describeSource(snapshot)
+  return {
+    model: {
+      title: snapshot.title || 'Policy proposal',
+      subtitle: 'Policy proposal',
+      sourceLabel,
+      generatedAt: new Date(),
+      blocks,
+    },
+    fingerprint: snapshotHash(snapshot),
+    sourceLabel,
+  }
+}
+
+/**
+ * ⚠ THE HONEST LIMITATIONS SECTION, AND IT IS NEVER EMPTY.
+ *
+ * §20.2.4: "a proposal that names its own gaps is stronger in committee than one
+ * that pretends to have none". A proposal with nothing to declare gets a sentence
+ * saying so, because a MISSING section reads as an omission while an explicit
+ * "nothing was recorded" reads as a fact — and only one of those is true.
+ */
+function gapBlocks(snapshot: ProposalSnapshot): Block[] {
+  const out: Block[] = []
+  let anything = false
+
+  const unevidenced = snapshot.coverage.fieldsTotal - snapshot.coverage.fieldsSupported
+  const unevidencedActions = snapshot.coverage.actionsTotal - snapshot.coverage.actionsSupported
+  if (unevidenced > 0 || unevidencedActions > 0) {
+    anything = true
+    out.push({
+      kind: 'paragraph',
+      runs: [{
+        text: `${unevidenced} of ${snapshot.coverage.fieldsTotal} settled kernel fields and ${unevidencedActions} of ${snapshot.coverage.actionsTotal} actions carry no source in the record. Each is marked where it appears above.`,
+      }],
+    })
+  }
+
+  if (snapshot.knownUnknowns.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Questions the research could not answer') })
+    out.push({
+      kind: 'bullets',
+      items: snapshot.knownUnknowns.map((u): Run[] => [
+        { text: u.question, bold: true },
+        { text: u.why ? ` — ${u.why}` : '' },
+      ]),
+    })
+  }
+
+  const openIssues = snapshot.issues.filter((i) => i.status === 'OPEN' || i.status === 'DEFERRED')
+  if (openIssues.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Open issues') })
+    out.push({
+      kind: 'bullets',
+      items: openIssues.map((i): Run[] => [
+        { text: i.text },
+        { text: i.status === 'DEFERRED' ? ' [deferred]' : '', italic: true },
+      ]),
+    })
+  }
+
+  // A dismissed issue stays visible WITH ITS REASON. What was considered and set
+  // aside is a strength; hiding it is what makes a reader distrust the rest.
+  const dismissed = snapshot.issues.filter((i) => i.status === 'DISMISSED')
+  if (dismissed.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Considered and set aside') })
+    out.push({
+      kind: 'bullets',
+      items: dismissed.map((i): Run[] => [
+        { text: i.text },
+        { text: i.dismissReason ? ` — ${i.dismissReason}` : ' — no reason recorded', italic: true },
+      ]),
+    })
+  }
+
+  if (snapshot.forks.open.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Decisions still open') })
+    out.push({
+      kind: 'bullets',
+      items: snapshot.forks.open.map((f): Run[] => [
+        { text: f.chosen, bold: true },
+        { text: ` — the alternative not taken: ${f.alternative}. ${f.caseForAlternative}` },
+      ]),
+    })
+  }
+
+  const failedPasses = snapshot.passes.filter((p) => p.status === 'FAILED')
+  if (failedPasses.length) {
+    anything = true
+    out.push({ kind: 'heading', level: 2, runs: text('Research that did not complete') })
+    out.push({
+      kind: 'bullets',
+      items: failedPasses.map((p): Run[] => [
+        { text: p.passKey, bold: true },
+        { text: p.failureReason ? ` — ${p.failureReason}` : ' — no reason recorded' },
+      ]),
+    })
+  }
+
+  if (!anything) {
+    out.push({
+      kind: 'paragraph',
+      runs: text('Nothing was recorded as unestablished on this proposal. That is the state of the record, not a claim that no gaps exist.'),
+    })
+  }
+  return out
+}
+
+function describeSource(snapshot: ProposalSnapshot): string {
+  const sourceCount = snapshot.sources.reduce((n, g) => n + g.refs.length, 0)
+  return [
+    'the stored proposal state',
+    `${snapshot.coverage.fieldsTotal} settled kernel field${snapshot.coverage.fieldsTotal === 1 ? '' : 's'}`,
+    `${snapshot.actions.length} action${snapshot.actions.length === 1 ? '' : 's'}`,
+    `${snapshot.evidence.length} accepted finding${snapshot.evidence.length === 1 ? '' : 's'}`,
+    `${sourceCount} corpus source${sourceCount === 1 ? '' : 's'}`,
+  ].join(', ')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §3b — THE SUMMARY (1–2 pages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ⚠ DELIBERATELY SHORT, AND IT POINTS AT THE ONLINE VIEW FOR DEPTH.
+ *
+ * §20.1: "a committee clerk reads two pages and follows a link; they do not read
+ * forty." So this is not an abridged Proposal — it is a different document with
+ * six things in it: the problem, the pivotal obstacle, the approach, what it
+ * rules out, headline cost against problem cost, and THE ASK.
+ *
+ * Everything long is TRUNCATED WITH ITS TRUNCATION VISIBLE (`…`), never silently
+ * cut, and the honest-limitations line survives at one sentence — a summary that
+ * drops the gaps is the one document where the never-claim rule would matter most
+ * and be easiest to lose.
+ */
+export function buildSummaryDocument(
+  snapshot: ProposalSnapshot,
+  opts: { onlineViewUrl?: string | null } = {},
+): ProposalBuildResult {
+  assertRenderableSnapshot(snapshot)
+  const blocks: Block[] = []
+
+  const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
+
+  const challenge = fieldText(fieldByKey(snapshot, 'challenge'))
+  blocks.push({ kind: 'heading', level: 2, runs: text('The problem') })
+  blocks.push({
+    kind: 'paragraph',
+    runs: text(challenge ? clip(challenge, 700) : 'Not yet settled on this proposal.'),
+  })
+
+  const pivotal = fieldText(fieldByKey(snapshot, 'pivotalObstacle'))
+  blocks.push({ kind: 'heading', level: 2, runs: text('The pivotal obstacle') })
+  blocks.push({
+    kind: 'paragraph',
+    runs: text(pivotal ? clip(pivotal, 500) : 'Not yet named on this proposal.'),
+  })
+
+  const approach = fieldText(fieldByKey(snapshot, 'chosenApproach'))
+  blocks.push({ kind: 'heading', level: 2, runs: text('The approach') })
+  blocks.push({
+    kind: 'paragraph',
+    runs: text(approach ? clip(approach, 700) : 'No approach has been committed to.'),
+  })
+
+  const rulesOut = fieldText(fieldByKey(snapshot, 'whatItRulesOut'))
+  const ruledOut = snapshot.options.filter((o) => o.status === 'RULED_OUT')
+  if (rulesOut || ruledOut.length) {
+    blocks.push({ kind: 'heading', level: 2, runs: text('What it rules out') })
+    if (rulesOut) blocks.push({ kind: 'paragraph', runs: text(clip(rulesOut, 500)) })
+    if (ruledOut.length) {
+      blocks.push({
+        kind: 'bullets',
+        items: ruledOut.slice(0, 4).map((o): Run[] => [
+          { text: o.approach, bold: true },
+          { text: o.ruleOutReason ? ` — ${clip(o.ruleOutReason, 160)}` : ' — no reason recorded' },
+        ]),
+      })
+      if (ruledOut.length > 4) {
+        blocks.push({ kind: 'note', text: `${ruledOut.length - 4} further alternatives are listed in the full proposal.` })
+      }
+    }
+  }
+
+  // Headline cost against problem cost — the comparison, in one place.
+  blocks.push({ kind: 'heading', level: 2, runs: text('Cost') })
+  const headline = headlineCost(snapshot.actions)
+  blocks.push({
+    kind: 'paragraph',
+    runs: [
+      { text: 'Cost of the proposal: ', bold: true },
+      { text: headline ?? 'not costed in the record' },
+    ],
+  })
+  blocks.push({
+    kind: 'paragraph',
+    runs: [
+      { text: 'Cost of the problem: ', bold: true },
+      { text: snapshot.costs.problemCost ?? 'not established in the record' },
+    ],
+  })
+
+  // The ask.
+  blocks.push({ kind: 'heading', level: 2, runs: text('The ask') })
+  const legislativeActions = snapshot.actions.filter((a) => a.legislative)
+  if (legislativeActions.length) {
+    blocks.push({
+      kind: 'bullets',
+      items: legislativeActions.slice(0, 5).map((a): Run[] => [
+        { text: a.practicalStep, bold: true },
+        { text: a.targetOrganisation ? ` — ${a.targetOrganisation}` : '' },
+      ]),
+    })
+  } else if (snapshot.actions.length) {
+    blocks.push({
+      kind: 'bullets',
+      items: snapshot.actions.slice(0, 5).map((a): Run[] => [{ text: a.practicalStep }]),
+    })
+  } else {
+    blocks.push({ kind: 'paragraph', runs: text('No actions have been recorded, so there is no ask to state.') })
+  }
+
+  // ⚠ The gaps line survives into the summary. One sentence, and it is the one a
+  // clerk will hold the rest of the document against.
+  blocks.push({ kind: 'rule' })
+  const unevidenced = snapshot.coverage.fieldsTotal - snapshot.coverage.fieldsSupported
+  const gapCount = snapshot.knownUnknowns.length + snapshot.issues.filter((i) => i.status === 'OPEN').length
+  blocks.push({
+    kind: 'note',
+    text: `What this does not establish: ${unevidenced} of ${snapshot.coverage.fieldsTotal} settled kernel fields carry no source, and ${gapCount} question${gapCount === 1 ? '' : 's'} or issue${gapCount === 1 ? '' : 's'} remain open. All are listed in the full proposal.`,
+  })
+
+  if (opts.onlineViewUrl) {
+    blocks.push({
+      kind: 'paragraph',
+      runs: [
+        { text: 'The full proposal, its sources and its evidence: ' },
+        { text: opts.onlineViewUrl, href: opts.onlineViewUrl },
+      ],
+    })
+  }
+
+  const sourceLabel = describeSource(snapshot)
+  return {
+    model: {
+      title: snapshot.title || 'Policy proposal',
+      subtitle: 'Summary — the proposal in two pages',
+      sourceLabel,
+      generatedAt: new Date(),
+      blocks,
+    },
+    fingerprint: snapshotHash(snapshot),
+    sourceLabel,
+  }
+}
+
+/**
+ * The headline cost: the summed one-off implementation range across actions.
+ *
+ * ⚠ IT REFUSES TO SUM A PARTIAL SET. If any action carries no implementation
+ * figure, the total is returned as null rather than as the sum of the ones that
+ * happen to have numbers — a total that silently omits three of five actions is
+ * the single most dangerous number this document could carry.
+ */
+export function headlineCost(actions: SnapshotAction[]): string | null {
+  if (!actions.length) return null
+  let low = 0
+  let high = 0
+  for (const a of actions) {
+    const f = a.implementationCost
+    if (!f || (f.low == null && f.high == null)) return null
+    low += f.low ?? f.high ?? 0
+    high += f.high ?? f.low ?? 0
+  }
+  const fmt = (n: number) => `£${n.toLocaleString('en-GB')}`
+  return low === high ? fmt(low) : `${fmt(low)}–${fmt(high)}`
+}
