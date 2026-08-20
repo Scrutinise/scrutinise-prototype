@@ -855,10 +855,10 @@ config.
 
 | # | check | result |
 |---|---|---|
-| 1 | every file the sprint created is committed | see `commit-graph-3b.sh` output — confirmed with `git ls-files` against the file list, not `git status` |
-| 2 | the remote has the commits | `git ls-remote origin Main` compared against local HEAD |
-| 3 | the deployment is green AND is Production | ⛔ **UNREADABLE FROM HERE.** `VERCEL_TOKEN` is SAML-blocked (docs/CLAUDE.md §19): it authenticates and 403s on every project-scoped endpoint. **Charlie's dashboard.** |
-| 4 | the running site serves the change | ⛔ **CANNOT BE RUN, and 3A proved that rather than assumed it.** Every surface is behind the Clerk middleware, and a route that does not exist 307s to sign-in identically to one that does — so an unauthenticated probe would "pass" whether or not the code deployed. |
+| 1 | every file the sprint created is committed | ✅ **28 of 28** confirmed with `git ls-files --error-unmatch` against the file list, **not** `git status` — an ignored file never appears in it. The one file deliberately excluded is the 21.5 MB EC bulk CSV cache, and the ignore rule is **anchored to that exact path** (`/scripts/graph/.ec-donations.csv`), not a `*.csv` pattern: §20's own second incident was an unanchored rule swallowing a real directory. |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = local HEAD `8a6ee81`, byte-identical; `git merge-base --is-ancestor` passes. Checked against the **server ref**, not cached status. Seven scoped commits, `5c8ae1f`…`8a6ee81`. |
+| 3 | the deployment is green AND is Production | ⛔ **UNREADABLE FROM HERE — and measured just now rather than recalled.** `GET /v2/user` → **200**; `GET /v6/deployments` → **403** with `"saml":true,"scope":"charlie-leachs-projects"` in the body. Exactly the signature docs/CLAUDE.md §19 describes, and exactly the one that reads like an expired token and is not. **Charlie's dashboard.** |
+| 4 | the running site serves the change | ⛔ **CANNOT BE RUN, and the negative control that kills it was re-run today rather than quoted from 3A:** `/admin/positions` → 307, `/admin/lex-general` → 307, **`/admin/nonexistent-control-xyz` → 307**, and the same for the two API paths. The route that does not exist behaves identically to the one that does, so a probe would "pass" whether or not this sprint deployed. Reported as **not run**, never as passed. |
 
 **The honest closing sentence: pushed, and NOT verified live, because every surface this sprint
 touches is authenticated and the negative control shows an unauthenticated probe cannot tell
