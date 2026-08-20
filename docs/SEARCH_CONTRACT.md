@@ -65,6 +65,47 @@ streams.**
 **The five streams the router picks between:** the law · what Parliament said · what committees were
 told · what courts decided · what regulators advise.
 
+### ⚠⚠ WHAT RETRIEVAL ACTUALLY ACHIEVES, ON QUESTIONS SEARCH DID NOT WRITE (S10 §1)
+
+**Charlie's validation pass is complete (`docs/GOLD_CANDIDATES_S8.md`), and these are the first
+retrieval figures in this project not taken on questions the implementer set itself.** Every number
+reads: *of the N questions where a known-correct document exists, X% returned it in the top 20.*
+Scored through `runSearch()`, dense on all five streams at the shipped 0.5 weight; all 68 answer-key
+rows proved present in `corpus_sections` first, so a zero is a retrieval result and not a missing row.
+
+| collection | n | recall@20 | recall@5 | in-stream recall@20 |
+|---|---:|---|---|---|
+| committees | 10 | 30% | 10% | 30% |
+| caselaw ⚠ *pre-fix baseline* | 6 | 50% | 33% | 67% |
+| guidance ⚠ *see below* | 10 | 10% | 0% | 30% |
+| impact-assessments | 9 | 11% | 0% | 33% |
+| consultations | 9 | 78% | 44% | 89% |
+| **ALL** | **44** | **34%** | **16%** | **48%** |
+
+⚠ **A caller must not read these as one number.** Three things are being measured at once and they
+have different fixes:
+
+1. **The round-robin interleave costs six questions of 44** — 34% merged against 48% in-stream. With
+   four streams routed the merged top 20 holds about five results per stream, so a key at rank 8 of
+   its own stream cannot reach it. That is an *allocation* property of `runRoutedSearch`, not a
+   search-quality one, and a caller taking a longer prefix gets more of them.
+2. **`cps-guidance` is unreachable by any query.** It is display-typed GUIDANCE but indexed under
+   tier `other`, so the guidance stream's prefilter excludes it — five of the ten guidance questions
+   cannot be answered at any setting. `LEX_GUIDANCE_CPS` (default OFF) admits it via the extra leg
+   and takes guidance to 8/10 in-stream, at the cost of consultations 6/9 → 4/9, because `mergeLegs`
+   divides a fixed budget. The durable fix is a reindex with the collection in the `guidance` tier.
+3. **Case law is a PRE-FIX BASELINE and carries no recommendation.** CC-Ingest is re-compiling the
+   stored text. Separately, the FTS index still holds `sectionTitle: null` for `tna-caselaw`, so
+   **searching for a case by name still cannot match the name** until the next full rebuild — the
+   dense half shows the recovered name because `corpus-type-map.ts::TITLE_FROM_DB` prefers Neon.
+
+⚠ **`debates` and `legislation` have NO validated questions**, so nothing in this table describes
+them and their per-stream vector settings are held on absence of evidence rather than on a result.
+
+⚠ **Four impact-assessment questions were NOT ROUTED to `legislation` at all** — the only stream that
+can reach an impact assessment with `LEX_ROUTER_STREAMS_V2` off. That is the sharpest evidence yet
+for the V2 flag below.
+
 ⚠ **Three more exist behind `LEX_ROUTER_STREAMS_V2`, default OFF (S8 §4):** what the government
 PREDICTED (impact assessments) · what the government ASKED (consultations) · what a provision was
 FOR (explanatory notes and memoranda). **They add no reachability** — all three collections already
@@ -106,6 +147,25 @@ is never a candidate rather than being removed from a ranked list afterwards; th
 declare `STATS_USE_CONTEXT` (`non-commercial` | `commercial`), an unrecognised value fails to the
 restrictive branch, and the number withheld is logged on every call. Every descriptor carries its
 licence, licence URL and the attribution the source requires.
+
+⚠⚠ **THE RESTRICTIVE CONTEXT IS `commercial`, AND THAT READS BACKWARDS AT A GLANCE (S10 §4.1).**
+`commercialUseExcluded` means a series is WITHHELD under `commercial` and **PERMITTED** under
+`non-commercial`. So S9's headline — "40.6% of series, 50.2% of observations, filtered before
+scoring" — describes the **commercial** arm. Measured both ways on the same probe:
+
+| `STATS_USE_CONTEXT` | withheld | searched over |
+|---|---:|---:|
+| `non-commercial` ← **set in Vercel** | **0** | 5,733 |
+| `commercial` | 2,329 | 3,404 |
+
+**Under the value production runs, nothing is withheld and the whole store is searchable.** Both
+figures are correct; only one describes the deployment, and S9 did not say which.
+
+The setting is no longer a bare string in a dashboard: `lib/lex/stats-licence-register.ts` records
+the declared context with its **date, its owner, its basis and what would make it need re-taking**,
+and `npm run check:s10-stats-licence` fails if the register and the running configuration disagree —
+and, separately, if the gate ever stops being more restrictive under `commercial`. ⚠ That check reads
+the environment it runs in, so green locally says nothing about Vercel.
 
 ⚠ **`unavailable` is not `results: []`.** The first means the catalogue could not be consulted (no
 `STATS_DATABASE_URL`, store unreachable); the second means it was consulted and nothing matched.
@@ -358,3 +418,12 @@ anything on the open web. **When Lex wants one of those, §6 applies — name it
   read back from Neon, not against counters
 - router streams V2 — `docs/SEARCH_S8_ROUTER_V2.md`
 - stream concurrency — `docs/SEARCH_S8_CONCURRENCY.md`
+- ⚠⚠ **recall, the vector decisions, the fusion curves and the statistics scores —
+  `docs/SEARCH_S10_REPORT.md`, 20 Aug 2026.** The first figures taken on questions the search thread
+  did NOT write (`docs/GOLD_CANDIDATES_S8.md`, Charlie's validation pass). They supersede S7's
+  "committees at a 100% ceiling", S7's "+12.5pp" on caselaw and guidance, and S9's "0 of 10 false
+  positives" — each of which was measured against a set its own author wrote. Every arm in that
+  report is computed from ONE live retrieval pass whose recomputation is proven id-for-id against
+  the gateway's own output, with `served` counters read either side (`fts+231 vector+231`).
+- the fusion dial — `scrutinise-web/lib/lex/fusion.ts` (`LEX_FUSION_WEIGHTS`, default OFF, a no-op
+  until a weight is set; **no weight has been adopted for any stream**)

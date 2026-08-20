@@ -2,7 +2,21 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-20 06:44 UTC — ▼ **LEX 20-B/D: the proposal document EXISTS — a completed
+*Last updated: 2026-08-20 06:50 UTC — ▼ **SEARCH S10: THE BINDING CONSTRAINT IS LIFTED — these are
+the first retrieval numbers this project has taken on questions it did not write. Overall recall@20
+is 34% (15/44); consultations 78%, committees 30%, guidance 10%. ⚠⚠⚠ AND `cps-guidance` IS
+UNREACHABLE BY ANY QUERY AND HAS BEEN ALL ALONG — display-typed GUIDANCE, indexed under tier
+`other`, so the guidance stream's prefilter excludes it; all five CPS keys return at rank 0–2 scoped
+to their own corpus and `streamCanSelect` is false for every one. Found because guidance scored 1/10
+while consultations scored 8/9 FROM THE SAME STREAM. ⚠⚠ The one-line fix is zero-sum (guidance 2/10
+→ 8/10, consultations 6/9 → 4/9) so it shipped behind `LEX_GUIDANCE_CPS`, default OFF. ⚠⚠ A single
+recall number hides three different failures: 15 hit · 11 DILUTED · 14 NOT-RETRIEVED · 4 NOT-ROUTED,
+and the round-robin interleave alone costs six questions. ⚠⚠ `debates` and `legislation` have ZERO
+validated questions, so their vector settings are held on absence of evidence and §3's central
+hypothesis CANNOT BE TESTED. ⚠⚠ S9's licence headline describes the arm production does not run —
+non-commercial withholds 0, not 40.6%. ▶ CHARLIE: five decisions in the report, and the first is
+just "what is `LEX_VECTOR_STREAMS` actually set to?" — the arms differ by 9 questions of 44.**
+Earlier: 2026-08-20 06:44 UTC — ▼ **LEX 20-B/D: the proposal document EXISTS — a completed
 proposal renders to a readable Proposal and a one-page Summary in docx and PDF, and a shared link is
 PINNED to the version that was shared (publish v1, edit, mint v2, and the recipient still gets v1,
 content and all). ⚠⚠ The fixture check passed 46/46 and the FIRST LIVE RUN found a defect it could
@@ -58,6 +72,108 @@ drafts the whole kernel as proposals in 44–53 seconds for about 4p. ⚠ THE BR
 FIRE on Vercel — both ceilings are declared and the code names which one binds.** Earlier:
 2026-08-17 08:35 UTC — INGEST entity decode; 2026-08-17 02:49 UTC — GRAPH 2D-3; SEARCH S4, GRAPH
 AMENDMENT 2, LEX 3-E, INGEST V38, GRAPH 2D-2.*
+
+2026-08-20 06:50 UTC — ▼ **SEARCH S10 IS COMPLETE: THE BINDING CONSTRAINT ON EVERY RETRIEVAL CLAIM
+THIS PROJECT HAS MADE SINCE S7 IS LIFTED.** Executes `docs/BRIEF_SEARCH_S10.md` §0–§7 against
+Charlie's completed validation pass. Report: **`docs/SEARCH_S10_REPORT.md`**.
+CHANGE_LOG (2026-08-20 06:50 UTC). `check:s10-fusion` **19/19 with all 5 breaks firing**,
+`check:s10-stats-licence` **9/9 with all 4 breaks firing**, `verify:s10-keys` **68/68**, `tsc` clean
+in `scrutinise-web`. **Cost ~£0.03.**
+
+✅ **THE HEADLINE, WITH n BESIDE IT EVERY TIME.** Scored through `runSearch()` — the real gateway —
+after proving all 68 answer-key rows present in `corpus_sections`, so every zero is a retrieval
+result and not a missing row. **Overall recall@20 15/44 (34%), recall@5 16%.** Consultations
+**7/9 (78%)** · caselaw **3/6 (50%, PRE-FIX BASELINE ONLY)** · committees **3/10 (30%)** · impact
+assessments **1/9 (11%)** · guidance **1/10 (10%)**. These supersede S7's "committees at a 100%
+ceiling" (a ceiling, not a result), S7's "+12.5pp" on caselaw and guidance, and S9's "0 of 10 false
+positives" — each measured on a set its own author wrote.
+
+⚠⚠⚠ **`cps-guidance` IS UNREACHABLE BY ANY QUERY AND HAS BEEN ALL ALONG.** Guidance scored 1/10
+while consultations scored 8/9 **from the same stream** — both sit in the `guidance` tier. Not a
+search-quality story, so the index was asked rather than reasoned about: all five CPS keys return at
+**rank 0–2** scoped to their own corpus and `streamCanSelect` is **false** for every one. The
+collection is display-typed GUIDANCE and **indexed under tier `other`**, which the guidance stream's
+prefilter excludes. ⚠ Already recorded in `CORPUS_REACHABILITY.md` (10 Aug) as `keyword-only`,
+deferred "pending the reranker decision" — and `keyword-only` means *reachable only when routing is
+OFF*, which in production means unreachable. **The deferral was reasonable when nothing could price
+it. Charlie's set prices it: five of ten guidance questions.** ⚠⚠ The one-line fix is **zero-sum** —
+guidance 2/10 → 8/10 in-stream, consultations **6/9 → 4/9** — because `mergeLegs` sorts both legs on
+one BM25 scale and slices to a fixed budget, so a strong extra leg takes the main leg's room. Shipped
+as `LEX_GUIDANCE_CPS`, **default OFF**; the durable fix is a reindex with the collection in the
+`guidance` tier, which trades nothing. ⚠ Eight more collections (~48,600 sections) are in the same
+state and were not touched.
+
+⚠⚠ **ONE RECALL NUMBER HIDES THREE DIFFERENT FAILURES WITH THREE DIFFERENT FIXES: 15 hit · 11
+DILUTED · 14 NOT-RETRIEVED · 4 NOT-ROUTED.** In-stream recall@20 is **21/44 (48%)** against 34%
+merged, so **the round-robin interleave alone costs six questions** — with four streams routed the
+merged top 20 holds ~5 per stream, and Q4 missed by a single position. Not a defect (concatenation
+was worse, S5) but now a measured allocation decision rather than an invisible one. And **4
+impact-assessment questions were NOT ROUTED to `legislation`**, the only stream that can reach one
+with `LEX_ROUTER_STREAMS_V2` off — the sharpest evidence yet for that flag.
+
+⚠⚠ **FOUR OF FIVE PREDICTIONS REFUTED, AND THE WORST ONE IS WHY THE BUG WAS FOUND.** guidance
+predicted **80%**, measured **10%**; committees 60% → 30%; consultations 55% → 78%; impact
+assessments 25% → 11%; caselaw 50% held exactly. **An 80%-predicted collection landing at 10% forced
+the question "why is its neighbour at 78%?"** ⚠ Also scored: the exact-citation control Q20 came
+back at rank 2 as predicted; "the committee misses will concentrate in written evidence" was WRONG —
+five of seven misses are reports.
+
+✅ **§2 — THE ONE VECTOR DECISION WITH EVIDENCE UNDER IT REVERSES TODAY'S SETTING:** committees
+**0/10 → 3/10, +30.0pp**, and vector is OFF there today. caselaw +50.0pp but over text being
+replaced, **so no recommendation**. guidance **+0.0pp is a FLOOR EFFECT, not a null result**. ⚠⚠
+**`debates` and `legislation` cannot be re-taken at all — the validated set has ZERO questions
+either stream owns**, so S7's "debates is 15pp worse" is neither confirmed nor refuted and both
+settings are now held on absence of evidence and labelled so. Latency: p50 flat, **p95 4,495 →
+9,249 ms** — the dense leg costs the tail.
+▶ **`LEX_VECTOR_STREAMS=legislation,caselaw,guidance,committees`.**
+
+✅ **§3 — THE DIAL IS BUILT AND ADOPTED NOWHERE, AND SAYS SO.** `LEX_FUSION_WEIGHTS` (default OFF),
+**a no-op proven by comparing rankings, not by reading the constant**. committees plateaus at 65/35
+so today's 0.5 is already on it; caselaw is a step function at 0.5 on n=6 over void text; guidance is
+a floor. ⚠⚠ **§3's hypothesis is about DEBATES and could not be tested.** ✅ The dial costs **no**
+latency, structurally — a weight only changes how two already-retrieved rankings merge. ⚠ Every arm
+comes from ONE retrieval pass captured in the PRODUCTION path, with a fidelity control that
+re-derives the live call's own per-stream id order: **50 of 50 id-for-id**, without which the sweep
+would have measured a copy of the pipeline.
+
+⚠⚠ **§4.1 — S9's LICENCE HEADLINE DESCRIBES THE ARM PRODUCTION DOES NOT RUN.** The gate withholds
+under `commercial`, so `commercialUseExcluded` **permits** non-commercial use. Measured:
+**non-commercial withheld=0 over all 5,733 series; commercial withheld=2,329.** With
+`STATS_USE_CONTEXT=non-commercial` set in Vercel, **nothing is withheld.** The setting now carries a
+date, an owner, a basis and a re-take trigger, with a check that fails on divergence.
+
+✅ **§4 — STATISTICS: 9/9 selection · 3/50 false positives · 6/9 retrieval · negative control
+PASSES.** False positives measured on **Charlie's fifty** legal/evidential questions, not S9's ten
+probes; **my prediction of "3–6, naming Q10/Q31/Q33/Q35/Q38" measured 3, three of them named, none
+unnamed.** All three are impact-assessment questions with quantitative surface. ⚠⚠ **Q57 returned
+NOTHING because `departmental` matches nothing while `department` matches the right dataset** — a
+tokenisation failure, not a floor failure — and **the floors that make the NHS control pass are the
+same floors that killed it.** ▶ Recommend flipping `LEX_STATS_STREAM` on, with Q53/Q57/Q59 named as
+the cost.
+
+⚠ **§6.1 REFUTED — the dense leg ALREADY embeds the rewritten, stream-specific query.** Five streams,
+five different strings, none the raw question. So that improvement is banked and **cannot be part of
+the debates explanation.** ⚠ My first version of this verification was itself wrong and reported a
+false defect by comparing against a separately-rolled route.
+✅ **§6.2 — widening `vector-serve` is ONE env var (`VECTOR_MAX_CONCURRENT`, default 4)** and our own
+2 Aug measurement already shows the cap is a **throughput choice, not a safety floor** (64 concurrent
+did not crash; a handle pool measured **0.82×** once run-order was controlled). Cost is memory: live
+**rss 3,737 MB / peak 4,821 / cap 7,629**. That document's own "re-measure on Railway once deployed"
+has never been done. ▶ Probe on Railway → `VECTOR_MAX_CONCURRENT=8` → `LEX_STREAM_CONCURRENCY` 3→7,
+**never the last without the first.**
+
+▶ **CHARLIE — five decisions, all in the report, and the first is free:** Q1 **what is
+`LEX_VECTOR_STREAMS` actually set to?** (the arms differ by 9 questions of 44 and nobody here can
+read it) · Q2 add `committees` to it · Q3 `LEX_GUIDANCE_CPS` on as a bridge, reindex as the fix ·
+Q4 flip `LEX_STATS_STREAM` · Q5 **the next validated set should be debates and legislation and
+nothing else.**
+
+❌ **Not done:** `debates`/`legislation` unevaluated · no weight adopted · case law pre-fix only and
+**searching a case BY NAME still cannot match the name** until reindex · the four rejects preserved
+but not re-keyed · `vector-serve` not widened, no stress test run against the serving host ·
+Q53/Q57/Q59 stats top hits wrong, causes named not fixed · interleave dilution measured not changed ·
+`LEX_ROUTER_STREAMS_V2` still unscored · **no browser walk was possible and none is claimed** ·
+every "production" configuration named is an INFERENCE about Vercel, labelled in the same sentence.
 
 2026-08-20 06:20 UTC — ▼ **GRAPH 3B IS COMPLETE: THE GRAPH NOW SAYS WHAT ITS ORDER MEANS, WHAT ITS
 STANCE IS A STANCE TOWARD, AND WHEN IT CANNOT RANK AT ALL.** Executes `docs/BRIEF_GRAPH_3B.md`
