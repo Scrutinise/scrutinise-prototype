@@ -61,7 +61,31 @@ export interface SiftResult {
   skipReason?: string
 }
 
-const MAX_TOKENS = parseInt(process.env.LEX_SIFT_MAX_TOKENS ?? '8000', 10)
+/**
+ * ⚠ 25-C §2.1 — SIZED FROM THE INPUT, NOT A FLAT NUMBER.
+ *
+ * A flat 8,000 was the ceiling that fired: on 19 Aug **3 of 4 Deepening passes truncated here**
+ * and reported "the sift did not run". The candidate set had grown to ~646 (because `limit` is
+ * per-stream — see deepening.ts) and the output scales with it, roughly one `{id, reason,
+ * isPrecedent}` object per keep.
+ *
+ * The upstream cause is fixed by capping the candidate set at the configured target. This is the
+ * belt to that braces: a ceiling derived from the number of candidates cannot fire for an
+ * arithmetic reason again, whatever a future caller hands in.
+ *
+ * ⚠ A generous ceiling is nearly free. Output tokens bill on what is GENERATED, so a large budget
+ * on a call that emits a short list costs nothing, while a tight one buys nothing and eventually
+ * fires (CLAUDE.md §18 rule 5). The env var still wins if set.
+ */
+const BASE_MAX_TOKENS = parseInt(process.env.LEX_SIFT_MAX_TOKENS ?? '8000', 10)
+const TOKENS_PER_CANDIDATE = parseInt(process.env.LEX_SIFT_TOKENS_PER_CANDIDATE ?? '60', 10)
+
+function maxTokensFor(candidates: number): number {
+  if (process.env.LEX_SIFT_MAX_TOKENS) return BASE_MAX_TOKENS
+  // Room for every candidate to be kept, which never happens but is the only bound that
+  // cannot be exceeded by a sift doing its job badly.
+  return Math.max(BASE_MAX_TOKENS, candidates * TOKENS_PER_CANDIDATE)
+}
 const TIMEOUT_MS = parseInt(process.env.LEX_SIFT_TIMEOUT_MS ?? '60000', 10)
 
 /**
@@ -149,6 +173,8 @@ export async function siftCandidates(input: {
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return passthrough('no GEMINI_API_KEY')
+  // Sized from the candidate count — see maxTokensFor.
+  const MAX_TOKENS = maxTokensFor(reviewed)
   // S6 §2 — default via lib/lex/model-registry.ts; legacy env vars still take precedence.
   const model = process.env.LEX_SIFT_MODEL ?? process.env.LEX_DEEPENING_MODEL ?? process.env.QUERY_EXPANSION_MODEL ?? modelFor('deepening.sift')
 
