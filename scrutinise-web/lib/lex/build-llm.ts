@@ -20,18 +20,23 @@
 
 import { geminiFinishProblem } from './gemini-finish'
 import { recordGeminiUsage } from './spend-ledger'
+import { providerFor } from './model-registry'
+import { callModelJson } from './model-call'
+import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
 
-export interface LlmUsage {
-  model: string
-  tokensIn: number
-  tokensOut: number
-}
-
-export type LlmFailureReason = 'no-key' | 'http' | 'timeout' | 'truncated' | 'blocked' | 'bad-json' | 'empty'
-
-export interface LlmOk<T> { ok: true; value: T; usage: LlmUsage }
-export interface LlmFail { ok: false; reason: LlmFailureReason; detail: string; usage: LlmUsage }
-export type LlmResult<T> = LlmOk<T> | LlmFail
+/**
+ * ⚠ 25-C §4c — THE RESULT TYPES LIVE IN `model-call.ts` AND ARE RE-EXPORTED HERE.
+ *
+ * They were declared in both files for about ten minutes and `tsc` immediately caught what that
+ * costs: two structurally-identical unions that are not assignable to each other the moment one
+ * grows a member the other lacks (`unroutable`). Every existing importer keeps importing from
+ * here, so nothing downstream changes — but there is now one definition, which is the same rule
+ * this sprint applied to the sift, the adversarial call and the evidence label.
+ */
+export type {
+  LlmUsage, LlmFailureReason, LlmOk, LlmFail, LlmResult,
+} from './model-call'
+import type { LlmUsage, LlmResult, LlmOk, LlmFail, LlmFailureReason } from './model-call'
 
 /**
  * ⚠ USE THESE, NOT `if (!result.ok)`.
@@ -80,7 +85,36 @@ function readUsage(model: string, data: unknown): LlmUsage {
   }
 }
 
+/**
+ * ⚠⚠ 25-C §4c — THIS NOW DISPATCHES BY PROVIDER, AND THAT IS THE WHOLE OF "A PASS MAY NAME ANY
+ * MODEL IN CONFIG".
+ *
+ * Every build pass already routes through this one function, so making it provider-aware gives
+ * all seven of them Anthropic and OpenAI at a single change point — rather than seven call sites
+ * each growing their own vendor branch, which is precisely how the truncation guard came to be
+ * missing from seven callers (CLAUDE.md §18).
+ *
+ * The Gemini path below is unchanged and is still the default for every pass; nothing about the
+ * existing behaviour moves. What changes is that `LEX_BUILD_MODEL_ADVERSARIAL=claude-opus-5` now
+ * works instead of sending a Claude id to Google's endpoint.
+ */
 export async function callJson<T>(opts: LlmCallOptions): Promise<LlmResult<T>> {
+  const provider = providerFor(opts.model)
+  if (provider && provider !== 'google') {
+    return callModelJson<T>({
+      model: opts.model,
+      system: opts.system,
+      user: opts.user,
+      schema: opts.schema,
+      maxOutputTokens: opts.maxOutputTokens,
+      timeoutMs: opts.timeoutMs,
+      temperature: opts.temperature,
+      label: opts.label,
+      stream: 'build',
+      pass: 'build.draft',
+    })
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return { ok: false, reason: 'no-key', detail: `[${opts.label}] GEMINI_API_KEY not set`, usage: ZERO(opts.model) }
@@ -99,12 +133,15 @@ export async function callJson<T>(opts: LlmCallOptions): Promise<LlmResult<T>> {
           contents: [{ role: 'user', parts: [{ text: opts.user }] }],
           generationConfig: {
             temperature: opts.temperature ?? 0.4,
-            maxOutputTokens: opts.maxOutputTokens,
+            // 25-C §4c — per-model, and the ceiling rises for a model that must think.
+            maxOutputTokens: outputBudgetFor(opts.model, opts.maxOutputTokens),
             responseMimeType: 'application/json',
             responseSchema: opts.schema,
-            // OFF, and this is not a preference. §19-D Task 2b: three generators were
-            // silently returning nothing because thinking ate the whole output budget.
-            thinkingConfig: { thinkingBudget: 0 },
+            // OFF for every model that accepts it — §19-D Task 2b: three generators were
+            // silently returning nothing because thinking ate the whole output budget. But it is
+            // now decided PER MODEL: `gemini-2.5-pro` rejects a zero budget outright and was
+            // unreachable through every one of our clients because of this line (25-C §4c).
+            thinkingConfig: thinkingConfigFor(opts.model),
           },
         }),
         signal: ctrl.signal,
