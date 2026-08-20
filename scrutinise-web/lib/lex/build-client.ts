@@ -46,6 +46,14 @@ export interface RawFork {
   forkKey: string
   fieldKey: string
   chosen: string
+  /**
+   * 25-C §3a — the case FOR the road taken.
+   *
+   * ⚠ Without it the panel could argue the alternative and merely assert the recommendation, and
+   * a user can only defer to a recommendation whose reasoning is absent. That is the opposite of
+   * what the agenda exists for.
+   */
+  whyChosen?: string
   alternatives: Array<{ alternative: string; caseForAlternative: string }>
 }
 
@@ -63,6 +71,7 @@ const FORK_SCHEMA = {
       forkKey: { type: 'string' },
       fieldKey: { type: 'string' },
       chosen: { type: 'string' },
+      whyChosen: { type: 'string' },
       alternatives: {
         type: 'array',
         items: {
@@ -75,7 +84,7 @@ const FORK_SCHEMA = {
         },
       },
     },
-    required: ['forkKey', 'fieldKey', 'chosen', 'alternatives'],
+    required: ['forkKey', 'fieldKey', 'chosen', 'whyChosen', 'alternatives'],
   },
 }
 
@@ -97,6 +106,10 @@ const FORK_INSTRUCTION = [
   'alternative you have already argued against is not a decision you have offered them.',
   '`forkKey` is a stable slug for the decision point (e.g. "diagnosis:rootCause"). `fieldKey` is the',
   'field it bears on.',
+  '⚠ `whyChosen` IS THE CASE FOR WHAT YOU PICKED, and it is not optional. You are already writing',
+  'the genuine case for each road NOT taken; a recommendation with the reasoning missing on one',
+  'side only can be deferred to but not weighed, and the user is the one who has to defend it.',
+  'One or two sentences, specific to this proposal — not "it is the most appropriate option".',
 ].join('\n')
 
 const UNCERTAINTY_INSTRUCTION = [

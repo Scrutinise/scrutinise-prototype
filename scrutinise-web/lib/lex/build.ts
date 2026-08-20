@@ -575,6 +575,9 @@ async function persistForks(
             forkKey: f.forkKey.trim(),
             fieldKey: (f.fieldKey ?? '').trim() || 'unassigned',
             chosen: f.chosen.trim(),
+            // 25-C §3a — the case FOR the road taken, so the agenda can show a
+            // recommendation the user can weigh rather than one they can only defer to.
+            recommendationReason: f.whyChosen?.trim() || null,
             alternativeIndex: i,
             alternative: a.alternative.trim(),
             caseForAlternative: a.caseForAlternative.trim(),
@@ -1117,6 +1120,10 @@ async function approachPass(c: PassContext): Promise<PassOutcome> {
         forkKey: INSTRUMENT_FORK_KEY,
         fieldKey: 'summaryGuidingPolicy',
         chosen: instrument,
+        // The approach pass argues the instrument inside `summaryGuidingPolicy`; that
+        // paragraph IS the case for it, so the fork carries it rather than leaving the
+        // platform's own fork the only one with no reasoning shown (25-C §3a).
+        whyChosen: a.summaryGuidingPolicy?.trim() || a.leverage?.trim() || undefined,
         alternatives: (inst.alternatives ?? []).map((x) => ({
           alternative: x.alternative, caseForAlternative: x.caseForAlternative,
         })),
@@ -1275,7 +1282,7 @@ async function recordInstrumentRetirement(c: PassContext, assessment: Instrument
         : assessment.reach === 'unclear' ? 'exists, and what was retrieved does not settle whether it reaches this'
           : 'exists in this area but does not appear usable for this'
 
-  await prisma.buildFork.updateMany({
+  const moved = await prisma.buildFork.updateMany({
     where: { buildId: c.buildId, forkKey: INSTRUMENT_FORK_KEY },
     data: {
       // ⚠ NOT `resolved: true`. The evidence has REOPENED this decision, not settled it —
@@ -1295,8 +1302,52 @@ async function recordInstrumentRetirement(c: PassContext, assessment: Instrument
       `${assessment.provision}, which ${reachWord}. Before anything else, decide whether you need a new Act at all.`,
   }])
 
-  console.warn('[lex-diag] 25b instrument fork changed by research', {
-    buildId: c.buildId, provision: assessment.provision, reach: assessment.reach,
+  // ⚠⚠ 25-C §3a — THE COUNT IS READ, BECAUSE THIS LINE USED TO LIE.
+  //
+  // It logged "instrument fork changed by research" unconditionally after the `updateMany`,
+  // without looking at how many rows it had touched. On the 20 Aug run the assessment correctly
+  // returned `powerFound: true`, this line duly announced the fork had changed, and the
+  // verification found no such fork in the database — because there was no instrument fork to
+  // update. **A claim whose result is not checked is not a claim**, and this one was reporting
+  // the sprint's headline acceptance criterion as met while it was not.
+  if (moved.count > 0) {
+    console.warn('[lex-diag] 25b instrument fork MOVED by the research', {
+      buildId: c.buildId, rows: moved.count,
+      provision: assessment.provision, reach: assessment.reach,
+    })
+    return
+  }
+
+  // ⚠ THE POWER IS REAL AND THERE IS NO FORK TO PUT IT ON. That happens when the approach pass
+  // named no instrument, so no `guidingPolicy:instrument` fork was ever written. Losing the
+  // finding here would be the worst outcome available: the research established that a Minister
+  // may already be able to act, and the user would never be told.
+  //
+  // So the fork is CREATED. The build had an implicit instrument — an unnamed one is treated as
+  // primary legislation everywhere else in this engine — and the research has just produced the
+  // alternative to it, with the case for that alternative.
+  console.warn('[lex-diag] 25b instrument fork ABSENT — creating one to carry the finding', {
+    buildId: c.buildId, provision: assessment.provision,
+  })
+  await prisma.buildFork.create({
+    data: {
+      buildId: c.buildId,
+      ideaId: c.ideaId,
+      forkKey: INSTRUMENT_FORK_KEY,
+      fieldKey: 'summaryGuidingPolicy',
+      chosen: c.carry.instrument || 'primary legislation (assumed — the draft never named one)',
+      recommendationReason:
+        'The draft assumed a new Act. It did not say why, which is itself worth questioning.',
+      alternativeIndex: 0,
+      alternative: `Use the existing power: ${assessment.provision}`,
+      caseForAlternative:
+        `⚠ THE RESEARCH FOUND AN EXISTING POWER. ${assessment.provision} — it ${reachWord}. `
+        + `${assessment.reachNote}`,
+    },
+  }).catch((err) => {
+    // A duplicate means a fork appeared between the update and the create; the finding is already
+    // recorded, so this is not an error to fail a pass over.
+    if ((err as { code?: string })?.code !== 'P2002') throw err
   })
 }
 
@@ -1423,9 +1474,36 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
   let resolved = 0
   for (const f of r.forksResolved ?? []) {
     if (!f?.forkKey?.trim() || !f?.reason?.trim()) continue
+    // ⚠⚠ 25-C §3a — THIS USED TO OVERWRITE `caseForAlternative`, AND IT DESTROYED THE SPRINT'S
+    // HEADLINE FINDING.
+    //
+    // The research pass writes "⚠ THE RESEARCH FOUND AN EXISTING POWER…" onto the instrument
+    // fork. Pass 4 then resolved the same fork and replaced that text with its own settlement
+    // note — so on the 20 Aug run the fork provably MOVED in pass 3 and the verification, reading
+    // the database afterwards, correctly found no trace of it. Two passes, both behaving
+    // reasonably, and the more valuable of the two writes lost.
+    //
+    // It is also the exact thing §3a forbids: "the record keeps both, because a proposal that
+    // shows what it considered and set aside is stronger than one that looks inevitable." A
+    // resolution is not licence to erase what was resolved.
+    //
+    // So the settlement is recorded on `recommendationReason` — where reasoning about the choice
+    // belongs — and the case for the road not taken is left exactly as it was.
+    const existing = await prisma.buildFork.findFirst({
+      where: { buildId, forkKey: f.forkKey.trim(), resolved: false },
+      select: { recommendationReason: true },
+    })
+    const settled = `The research settled this: ${f.reason.trim()}`
     const res = await prisma.buildFork.updateMany({
       where: { buildId, forkKey: f.forkKey.trim(), resolved: false },
-      data: { resolved: true, caseForAlternative: `SETTLED BY THE RESEARCH: ${f.reason.trim()}` },
+      data: {
+        resolved: true,
+        resolvedChoice: 'chosen',
+        resolvedAt: new Date(),
+        recommendationReason: existing?.recommendationReason
+          ? `${existing.recommendationReason}\n\n${settled}`
+          : settled,
+      },
     })
     resolved += res.count
   }

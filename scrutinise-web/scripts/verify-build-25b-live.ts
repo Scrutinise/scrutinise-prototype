@@ -67,6 +67,19 @@ function note(line: string) { notes.push(line); console.log(`  ·  ${line}`) }
  *   · a delegated power very plausibly already exists, so a positive finding is possible;
  *   · it has a measurable claim in it, so the research can contradict the draft.
  */
+/**
+ * ⚠ 25-C §3a — THIS IDEA IS CHOSEN, NOT HOPEFUL.
+ *
+ * `EXISTING_POWER` returned false on four consecutive runs and "undemonstrated" carried for two
+ * sprints. A fifth build on a topic picked for other reasons would have produced a fifth
+ * non-result. This problem is chosen because the corpus DEMONSTRABLY holds delegated powers over
+ * it: the 25-B runs themselves surfaced the Renters' Rights Act 2025 and s.123 of the Housing and
+ * Planning Act 2016 while researching exactly this, and `scripts/probe-existing-power.ts` confirms
+ * the assessment recognises both when it is shown them.
+ *
+ * So a false verdict here cannot be blamed on the corpus. That is what makes it a test rather
+ * than another attempt.
+ */
 const PROBLEM =
   'Private landlords in my town are letting flats with damp and mould that make children ill, and the ' +
   'council says it has no power to force repairs quickly enough. I want a new law requiring landlords ' +

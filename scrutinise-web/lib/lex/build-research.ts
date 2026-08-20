@@ -188,7 +188,26 @@ async function retrieveFor(
       })
     }
   }
-  return { candidates, searchBroke: broke || !ran, ran }
+  // ⚠ 25-C §2.1 — THE SAME CAP AS THE DEEPENING, FOR THE SAME REASON.
+  //
+  // `limit` is per-stream at the gateway and each stream over-fetches ×3 for fusion, so a request
+  // for 34 returns ~500 (measured: `limit: 10` → 150 rows across five streams). Pass 3 pays a
+  // sift AND a gather per question, so the flood arrives as truncation and spend rather than as
+  // a slow page. Reported to CC-Search in docs/FINDING_FOR_SEARCH_gateway-limit-fanout.md; the
+  // gateway is theirs and is deliberately untouched.
+  //
+  // A prefix is fair ONLY because `interleaveStreams` round-robins — it is stream-balanced, not
+  // legislation-heavy. A prefix of a score-ordered list would have been a silent bias.
+  const target = PER_QUESTION_LIMIT()
+  const capped = candidates.slice(0, target)
+  if (candidates.length > capped.length) {
+    console.warn('[25b:research] gateway returned far more than asked — capping to the target', {
+      question: q.id, asked: keywords.length ? perIntent : 0,
+      returned: candidates.length, sifting: capped.length,
+      discardedUnjudged: candidates.length - capped.length,
+    })
+  }
+  return { candidates: capped, searchBroke: broke || !ran, ran }
 }
 
 /**
@@ -372,6 +391,8 @@ export async function runResearch(input: {
   const outcomes: QuestionOutcome[] = []
   const allFindings: RawFinding[] = []
   let instrument: InstrumentAssessment | null = null
+  // 25-C §3a — remembered so the verdict can be taken after every question has run.
+  let instrumentQuestion: InterrogationQuestion | null = null
   let stoppedEarly = false
   let stoppedReason: string | null = null
 
@@ -513,28 +534,52 @@ export async function runResearch(input: {
 
     outcomes.push({ ...outcome, findings: findingCount, contradictions })
 
-    // ── §4 — the leading question can short-circuit the instrument. ────────
-    //
-    // Keyed off the CONFIG FLAG, never off the question's id, so the engine does not
-    // have to know which question this is. See interrogation-library.ts.
-    if (q.retiresTheInstrument && merged && findingCount) {
-      await input.onActivity('Checking whether an existing power removes the need for a Bill')
-      const assessed = await assessInstrumentRetirement({
-        question: q.question,
-        findings: merged.findings,
-        instrument: input.facts.instrument,
+    // 25-C §3a — the leading question's own findings are NO LONGER assessed here. See the
+    // assessment block after the loop, and the note on why it moved.
+    if (q.retiresTheInstrument) instrumentQuestion = q
+  }
+
+  // ══ 25-C §3a — DOES AN EXISTING POWER RETIRE THE BILL? ════════════════════
+  //
+  // ⚠⚠ THIS MOVED OUT OF THE LOOP, AND THAT IS THE FIX FOR FOUR CONSECUTIVE FALSE NEGATIVES.
+  //
+  // `EXISTING_POWER` returned `powerFound: false` on every 25-B run, and the standing assumption
+  // was that the corpus does not surface enabling provisions. It was wrong. Isolating the
+  // assessment (`scripts/probe-existing-power.ts`) fed it the powers those very runs had found —
+  // the Renters' Rights Act 2025, s.123 of the Housing and Planning Act 2016, the electrical
+  // safety regulations — and it recognised **3 of 3**, with a control that names no power
+  // correctly returning false. The gate was never shut.
+  //
+  // What was wrong was the SCOPE. The assessment ran INSIDE the question loop, on
+  // `merged.findings` — the leading question's own six-or-fewer findings. But the powers were
+  // found by the OTHER questions: the Renters' Rights Act surfaced in the revision pass reading
+  // all of the research, and s.123 in the adversarial pass reading all of the evidence. The one
+  // question named after the power was the one place the power was not.
+  //
+  // So the question still LEADS — its terms shape retrieval and its findings come first, which is
+  // what §4's ordering is for — but the VERDICT is taken once, at the end, over everything the
+  // pass found. Asking first and deciding last are not in conflict.
+  if (instrumentQuestion && allFindings.length) {
+    await input.onActivity('Checking whether an existing power removes the need for a Bill')
+    const assessed = await assessInstrumentRetirement({
+      question: instrumentQuestion.question,
+      // ⚠ EVERY finding the pass produced, not one question's.
+      findings: allFindings,
+      instrument: input.facts.instrument,
+    })
+    onUsage(assessed.usage)
+    if (llmOk(assessed)) {
+      instrument = assessed.value
+      console.log('[25b:research] instrument assessment', {
+        buildId: input.buildId, powerFound: instrument.powerFound, reach: instrument.reach,
+        findingsRead: allFindings.length,
       })
-      onUsage(assessed.usage)
-      if (llmOk(assessed)) {
-        instrument = assessed.value
-        console.log('[25b:research] instrument assessment', {
-          buildId: input.buildId, powerFound: instrument.powerFound, reach: instrument.reach,
-        })
-      } else {
-        // ⚠ REPORTED, NOT ASSUMED NEGATIVE. "We could not tell whether a power exists" is
-        // not "no power exists", and defaulting to the second would quietly restore the
-        // Bill as the assumed route — the exact error this question exists to catch.
-        console.warn('[25b:research] instrument assessment failed', { reason: assessed.reason })
+    } else {
+      // ⚠ REPORTED, NOT ASSUMED NEGATIVE. "We could not tell whether a power exists" is
+      // not "no power exists", and defaulting to the second would quietly restore the
+      // Bill as the assumed route — the exact error this question exists to catch.
+      console.warn('[25b:research] instrument assessment failed', { reason: assessed.reason })
+      if (outcomes.length) {
         outcomes[outcomes.length - 1].gaps.push({
           question: 'Does an existing power remove the need for primary legislation?',
           why: 'The check ran after the research and did not complete, so this is unresolved rather than answered no.',
