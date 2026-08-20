@@ -167,6 +167,10 @@ export const STREAM_SCOPES: StreamScope[] = [
   // whole reachability gap) and is NOT listed: it is display-typed DEBATE, so it would join the
   // debates stream, and changing what a million sections do to that stream's results is a
   // measurement and a decision, not a line in a list. S2C reports it; Charlie decides it.
+  //
+  // ⚠⚠ `cps-guidance` IS **NOT** IN THIS LIST AND THAT IS A DECISION WITH NUMBERS UNDER IT.
+  // It joins only behind `LEX_GUIDANCE_CPS` — see `GUIDANCE_CPS_EXTRA` and `activeStreamScopes`
+  // below for the measurement and why the default stayed off.
   { name: 'guidance', tier: 'guidance', extraCorpora: ['erskine-may'] },
 ]
 
@@ -214,12 +218,71 @@ export const STREAM_SCOPES_V2: StreamScope[] = [
 ]
 
 /**
- * The scopes in force. Pure — the caller reads the flag, so this module keeps its
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * S10 §1 — `cps-guidance`: STRUCTURALLY UNREACHABLE, FIXABLE IN ONE LINE, AND THE FIX IS A TRADE.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * WHAT WAS FOUND. Charlie's validated set scored guidance at 1/10 while consultations scored 8/9 —
+ * from the SAME stream, since both collections sit in the `guidance` tier. That is not a
+ * search-quality story, so the index was asked directly (`scripts/diagnose-s10-misses.ts`) instead
+ * of reasoned about. All five CPS keys came back at rank 0–2 when scoped to their own corpus, and
+ * `streamCanSelect` returned FALSE for every one of them: `cps-guidance` is display-typed GUIDANCE
+ * by `corpusToType` but indexed under tier `other`, so **no router stream can select it and no
+ * query could ever return a CPS guidance document.** Perfectly retrievable, structurally
+ * unreachable — the erskine-may shape exactly.
+ *
+ * ⚠ IT WAS ALREADY KNOWN, AND DEFERRED WITHOUT A PRICE ON IT. `docs/CORPUS_REACHABILITY.md`
+ * (2026-08-10) lists it verdict `keyword-only`, among nine collections "deferred pending the
+ * reranker decision". `keyword-only` means reachable only when routing is OFF or has failed open —
+ * and routing is ON in production, so in the product it means unreachable. The deferral was
+ * reasonable when nothing could price it. The validated set prices it.
+ *
+ * ⚠⚠ AND THE FIX IS ZERO-SUM, WHICH IS WHY IT IS A FLAG AND NOT A LIST ENTRY. Measured
+ * before-and-after with dense off, so the extra BM25 leg was the only difference
+ * (`scripts/measure-s10-guidance-fix.ts`), in-stream recall@20:
+ *
+ *     guidance        2/10  →  8/10     (Q22, Q23, Q25, Q26, Q27 recovered; ranks 4, 0, 12, 2, 0)
+ *     consultations   6/9   →  4/9      (⚠ Q44 rank 0 → 21, Q49 rank 4 → 33)
+ *     total           8/19  →  12/19
+ *
+ * The loss is not a surprise once looked at: `mergeLegs` sorts the two legs together by BM25 score
+ * and slices to a fixed budget, so an extra leg that scores well does not get extra room — it takes
+ * the main leg's. This is the divisions finding from the `debates` note above, inverted: there the
+ * extra leg lost the merge and bought nothing; here it wins the merge and displaces the collection
+ * that was already working.
+ *
+ * ▶ SO THE DEFAULT STAYS OFF AND THE FLIP IS CHARLIE'S, with both numbers visible. Net +4 of 19 is
+ * a real gain and −2 on a collection that was working is a real loss, and which matters more is a
+ * product judgement rather than an arithmetic one. The precedent is `LEX_TIER_FUSION`, held behind
+ * a flag for exactly this reason: better-looking results are not a mandate to ship a regression
+ * somewhere else.
+ *
+ * ▶ THE DURABLE FIX IS NEITHER ARM: `tierFor()` plus a full index rebuild puts `cps-guidance` in
+ * the `guidance` tier, where it competes in the MAIN leg on equal terms and needs no extra call at
+ * all. This flag is a bridge to that, as `extraCorpora`'s own contract requires.
+ *
+ * ⚠ ONLY THIS COLLECTION. The other eight deferred collections total ~48,600 sections (`cma-cases`
+ * 22,898, `ofgem` 17,161, `ofcom` 4,169 …), each costing another retrieval call per routed query.
+ * cps-guidance is 270 sections and is the only one the validated set demonstrates a cost for. The
+ * rest stay deferred, now with the mechanism demonstrated and a way to price them.
+ */
+export const GUIDANCE_CPS_EXTRA = 'cps-guidance'
+
+/**
+ * The scopes in force. Pure — the CALLER reads the flags, so this module keeps its
  * runtime-dependency-free property and `corpus-reachability.ts` can still import it from outside
  * the Next.js path alias.
+ *
+ * `cpsGuidance` defaults to false so every existing caller — including the reachability matrix —
+ * keeps describing the shipped default unless it deliberately asks for the other arm.
  */
-export function activeStreamScopes(v2: boolean): StreamScope[] {
-  return v2 ? [...STREAM_SCOPES, ...STREAM_SCOPES_V2] : STREAM_SCOPES
+export function activeStreamScopes(v2: boolean, cpsGuidance = false): StreamScope[] {
+  const base = cpsGuidance
+    ? STREAM_SCOPES.map((s) => (s.name === 'guidance'
+      ? { ...s, extraCorpora: [...(s.extraCorpora ?? []), GUIDANCE_CPS_EXTRA] }
+      : s))
+    : STREAM_SCOPES
+  return v2 ? [...base, ...STREAM_SCOPES_V2] : base
 }
 
 /**
