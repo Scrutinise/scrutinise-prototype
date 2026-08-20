@@ -82,6 +82,7 @@ async function markDone(id: string, formatFound?: string): Promise<void> {
 // Source clients
 import { fetchJudgmentXml } from '../sources/tna-caselaw'
 import { nameFromAkn, judgmentDateFromAkn, isCitationShaped } from '../shared/caselaw-name'
+import { aknJudgmentText, aknBodyWordCount, checkJudgmentBody } from '../shared/akn-text'
 import { attributeWritten, attributeOral, attributePublication } from '../shared/committee-attribution'
 import { enumerateSections, discoverFormats, AVAILABILITY_NOTES } from '../sources/tna-legislation'
 import { fetchCaseHtml, extractCaseText } from '../sources/bailii-scraper'
@@ -352,7 +353,40 @@ async function processTnaCaselaw(row: QueueRow): Promise<void> {
 
       const rKey = caselawRawKey(docId)
       await r2Put(rKey, judgmentXml, 'application/xml')
-      const compiled = rawToText(judgmentXml)
+
+      // INGEST-CASELAW-TEXT §2.1 — THE JUDGMENT, which this writer used to store as a stylesheet.
+      // It was `rawToText(judgmentXml)`: tags removed, every text node kept — including the one
+      // inside `<meta><presentation><html:style>`, where the National Archives puts the CSS it
+      // renders the judgment with. Every stored document opened with the identifiers, the build
+      // hash and 2.0k–3.4k characters of `#judgment { font-family: 'Times New Roman' … }`, which
+      // is what was indexed, what was served as the snippet, and what Lex was handed as evidence.
+      // `aknJudgmentText` selects the document instead — the `<judgment>` element without its
+      // `<meta>` child — and returns null for a shape it does not recognise.
+      const extracted = aknJudgmentText(judgmentXml)
+      if (!extracted) {
+        console.warn(`[pool] caselaw ${docId}: no <judgmentBody>/<mainBody> — NOT stored (raw kept at ${rKey})`)
+        continue
+      }
+      // §2.2 — and the writer refuses to store a body that fails it. A row that is not written
+      // is a miss we can count and re-run; a row written with a stylesheet in it is a miss that
+      // looks like a success, which is the whole reason this sprint exists.
+      //
+      // ⚠ The guard is given the SOURCE's own body word count, because "one word" and "one word
+      // out of nine thousand" are opposite problems that look identical from the output. Twenty
+      // judgments in this collection are the single word `withdrawn`; two are empty at source, with
+      // `uk:hash` equal to the SHA-256 of the empty string. For those two an EMPTY body is stored
+      // deliberately — leaving the row alone would leave a stylesheet and nothing else.
+      const verdict = checkJudgmentBody(extracted.text, { sourceBodyWords: aknBodyWordCount(judgmentXml) })
+      if (!verdict.ok && !verdict.emptyAtSource) {
+        console.warn(`[pool] caselaw ${docId}: body guard REFUSED — ${verdict.reason} — NOT stored (raw kept at ${rKey})`)
+        continue
+      }
+      if (verdict.emptyAtSource) {
+        console.warn(`[pool] caselaw ${docId}: ${verdict.reason} — storing an empty body`)
+        extracted.text = ''
+        extracted.route = 'akn:empty-at-source'
+      }
+      const compiled = extracted.text
       await r2Put(cKey, compiled)
       // INGEST-NAMES §1.2 — THE CASE NAME, which this writer used to throw away.
       // Every judgment's AKN carries `<FRBRname value="Mensah v Jones"/>` (100 of 100 sampled),
@@ -366,7 +400,13 @@ async function processTnaCaselaw(row: QueueRow): Promise<void> {
         id: secId, corpus: 'tna-caselaw', sourceUrl: xmlUrl, r2Key: cKey, r2RawKey: rKey,
         wordCount: countWords(compiled), status: 'compiled',
         sectionTitle: recovered && !isCitationShaped(recovered.title) ? recovered.title : undefined,
-        notes: recovered && !isCitationShaped(recovered.title) ? `title-route:${recovered.route}` : undefined,
+        // `title-route:` stays FIRST — check-names.ts and check-names-negative.ts both test
+        // `notes LIKE 'title-route:%'`, and the text route is appended rather than substituted so
+        // those keep working while the body's provenance is readable off the database too.
+        notes: [
+          recovered && !isCitationShaped(recovered.title) ? `title-route:${recovered.route}` : null,
+          `text-route:${extracted.route}`,
+        ].filter(Boolean).join(' '),
         itemDate: judgmentDate ?? undefined,
       })
       processed++
