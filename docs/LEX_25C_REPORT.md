@@ -302,6 +302,29 @@ about perfectly correct code. Both harnesses now normalise line endings on read.
 
 ---
 
+## Delivery (CLAUDE.md §20)
+
+Eight scoped commits pushed as `199c30a`, via `commit-lex-25c.sh` — **named per stream, not
+`commit-all.sh`**, since two sessions raced on a shared one on 19 August. Deleted after the push.
+
+| # | check | result |
+|---|---|---|
+| 1 | every file created is committed | ✅ `check:committed` 460 files clean, **plus `git ls-files --error-unmatch` on all 14 named files** — the file, not the pattern |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = `199c30a`; `merge-base --is-ancestor` confirms |
+| 3 | the deployment is green **and Production** | ⚠ **not read directly** — `VERCEL_TOKEN` is SAML-blocked (§19), so this is inferred from check 4 rather than measured |
+| 4 | the running site serves the change | ✅ **`https://www.scrutinise.org/ideas/create` — 17 client chunks, 1,053,790 bytes — returns "Where the research changed my mind" and "More of it would help most here"** |
+
+⚠ **The probe was watched failing first.** Run against production *before* the deploy landed it
+reported both markers ABSENT over 1,044,702 bytes of the same chunks — so its later PRESENT is a
+measurement, not a grep that matches anything. A control string of the same shape that 25-C never
+introduced is absent in both runs.
+
+Check 4 is on the production hostname and is the stronger of the two, which is why check 3's gap is
+recorded rather than worked around: it says the deployment is Production more directly than a
+dashboard column would.
+
+---
+
 ## What is NOT verified
 
 1. **No signed-in browser walk.** The extension has no host permission for `localhost:3000` and this
