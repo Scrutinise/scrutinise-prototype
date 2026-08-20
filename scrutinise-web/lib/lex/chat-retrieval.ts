@@ -35,7 +35,7 @@ import { repealPromptNote } from './repeal-status'
 import type { SearchResult, SearchResultType } from './page1-config'
 import type { LegacySearchResult } from './gateway-legacy'
 import { gidFromId, refFromId, sectionNumberFromRef, displayTitle, plainSnippet } from './gateway-legacy'
-import { attributionLine, ATTRIBUTION_ABSENCE_NOTE, type Attribution } from './attribution'
+import { attributionLine, attributionAbsenceNote, type Attribution } from './attribution'
 
 /** The three display types that are operative law and belong in the legislation channel. */
 const LEGISLATION_TYPES: ReadonlySet<string> = new Set([
@@ -86,11 +86,14 @@ export interface EvidenceResult {
    * WHO SAID IT — S8 §2 closed the gap S5 named here. Built by `attributionFor()` from the two
    * structured columns and from nothing else.
    *
-   * ⚠⚠ NULL IS NOT ANONYMOUS. It means the collection does not hold attribution as a field.
-   * That is the case for committee evidence — the very collection this was wanted for — where
-   * the witness's name lives inside the document body and in no metadata we store. The audit is
-   * in `docs/S8_ATTRIBUTION_AUDIT.txt`; `ATTRIBUTION_ABSENCE_NOTE` is what stops the prompt
-   * reading the absence as anonymity.
+   * ⚠⚠ NULL IS NOT ANONYMOUS. It means we do not hold attribution FOR THAT ROW.
+   *
+   * ⚠ 25-C §1a — THIS COMMENT USED TO SAY COMMITTEE EVIDENCE HOLDS NO WITNESS NAMES AT ALL, and
+   * that stopped being true on 19 Aug 2026 when CC-Ingest recovered them: **96.87% of committee
+   * evidence rows now carry attribution.** The claim survived in three places at once — here, in
+   * the absence note, and in the note's own header — which is what a hardcoded fact about coverage
+   * does. `attributionAbsenceNote(held, total)` now COUNTS the rows it is describing, so the
+   * statement is recomputed per call and cannot decay. The audit is in `docs/S8_ATTRIBUTION_AUDIT.txt`.
    */
   attribution: Attribution | null
   date: string | null
@@ -321,9 +324,12 @@ export function evidenceBlock(items: EvidenceResult[]): string | null {
       + (who ? `    ${who}\n` : '')
       + `    "${e.snippet.slice(0, 300)}"`
   })
-  const anyMissing = items.some((e) => !e.attribution)
+  // 25-C §1a — COUNTED, not asserted. The note states what is true of THESE rows, so it cannot
+  // go on describing a coverage gap that the ingest thread has since closed.
+  const held = items.filter((e) => !!e.attribution).length
+  const anyMissing = held < items.length
   return `${lines.join('\n')}\n\n${EVIDENCE_INSTRUCTION}`
-    + (anyMissing ? `\n${ATTRIBUTION_ABSENCE_NOTE}` : '')
+    + (anyMissing ? `\n${attributionAbsenceNote(held, items.length)}` : '')
 }
 
 /**

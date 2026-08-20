@@ -34,11 +34,23 @@
 //   attribution   2 collections — consultations and impact-assessments, both 100%, both packing
 //                "{organisation} — {stage}" into one column.
 //
-// ⚠⚠ AND THE COLLECTION §2 EXISTS FOR IS THE ONE THAT HAS NOTHING. `committees-evidence` is
-// 0 of 800 rows across four id offsets, on both columns; `committees-reports` is 0 of 600. Oral
-// evidence carries no `sectionTitle` either. The witness's name is inside the R2 document body
-// and in no metadata we hold, so the honest output for a committee transcript today is null —
-// a finding for the ingest thread, not something this module can paper over.
+// ⚠⚠ AND THE COLLECTION §2 EXISTS FOR WAS THE ONE THAT HAD NOTHING — UNTIL IT DIDN'T.
+//
+// The audit found `committees-evidence` at 0 of 800 rows across four id offsets, on both columns,
+// and `committees-reports` at 0 of 600: the witness's name was inside the R2 document body and in
+// no metadata we held. That was recorded here as a finding for the ingest thread.
+//
+// ⚠⚠ CC-INGEST CLOSED IT THE SAME NIGHT. As of 19 Aug 2026 committee evidence is **96.87%**
+// attributed and committee reports **85.58%**, from data already inside requests we were paying
+// for. **This paragraph was false for a day**, and so was the absence note built on it, which had
+// begun telling the model to disclaim names it was being shown — the never-claim rule running
+// backwards.
+//
+// ⚠ THE LESSON IS NOT "KEEP THE PERCENTAGES UP TO DATE." It is that a coverage figure written into
+// code is a claim that decays the moment another thread does its job, and decays SILENTLY because
+// nothing re-reads it. `attributionAbsenceNote(held, total)` counts the rows in front of it
+// instead. The numbers above are kept because they are dated and describe a measurement that was
+// taken; they are history, not the basis of any live behaviour.
 //
 // ⚠ ALSO ZERO, AND WORTH NAMING BECAUSE THEY LOOK LIKE THEY SHOULD NOT BE: all six case-law
 // collections except tax-tribunals, all seventeen guidance collections, niassembly-hansard, the
@@ -205,9 +217,26 @@ export function attributionLine(a: Attribution | null | undefined): string | nul
  * ⚠ The sentence that stops a null being read as anonymity, carried into the prompt beside the
  * evidence block. Without it a model looking at ten committee transcripts with no attribution
  * has every reason to describe them as anonymous submissions, which they are not.
+ *
+ * ⚠⚠ 25-C §1a — IT IS NOW MEASURED, BECAUSE THE ASSERTED VERSION WENT STALE AND INVERTED THE RULE
+ * IT EXISTS TO ENFORCE.
+ *
+ * The old constant closed by asserting, as a standing fact, that committee witness names were not
+ * stored as a field. CC-Ingest recovered them overnight on 19 Aug 2026 and **96.87% of committee
+ * evidence rows now carry attribution** — so the sentence was telling the model to disclaim names
+ * it was being handed. A never-claim rule running backwards is still a false statement, and a worse
+ * one than the gap it replaced, because it makes Lex sound careful while being wrong.
+ *
+ * The lesson is not "update the sentence". A hardcoded fact about coverage is a claim that decays
+ * silently the moment the ingest thread does its job — it nearly did this to the Deepening's known
+ * unknowns too (see deepening.ts invariant 2). So the note now COUNTS THE ROWS IN FRONT OF IT and
+ * says what is true of those, which cannot go stale because it is recomputed per call.
  */
-export const ATTRIBUTION_ABSENCE_NOTE =
-  'Where an item carries no "—" attribution line, WHO SAID IT IS NOT HELD IN OUR METADATA for '
-  + 'that collection. That is not the same as the source being anonymous, and you must never say '
-  + 'or imply that it is. Committee evidence in particular names its witnesses inside the '
-  + 'document; we simply do not store that name as a field yet.'
+export function attributionAbsenceNote(held: number, total: number): string {
+  const missing = Math.max(0, total - held)
+  return `${held} of the ${total} item${total === 1 ? '' : 's'} below carry a "—" line naming who `
+    + `said it; ${missing} do not. Where a line is MISSING, who said it is not held in our metadata `
+    + 'FOR THAT ROW. That is not the same as the source being anonymous, and you must never say or '
+    + 'imply that it is — a committee transcript names its witness inside the document even where '
+    + 'our index has not captured it.'
+}

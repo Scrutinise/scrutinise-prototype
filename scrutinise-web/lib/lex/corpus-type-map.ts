@@ -222,8 +222,15 @@ export function corpusDisplayName(corpus: string): string {
  * had been `Bill 2518 — publication 17` (an internal numeric id and an ordinal) and are now
  * `Abortion Bill — 2nd reading (last updated 2019)`. Remove this entry after the next full FTS
  * rebuild, at which point the index carries the corrected titles itself.
+ *
+ * ⚠ `tna-caselaw` is here for the SAME REASON AND THE SAME DAY (25-C §1a/§1b). CC-Ingest recovered
+ * case names on 19 Aug 2026 — **case law went 0% → 99.98% titled** — and the FTS index has not been
+ * rebuilt since. Without this entry the dense half of a hybrid search shows *Miller v Secretary of
+ * State* and the keyword half shows the literal string `tna-caselaw`: **the same document under two
+ * titles in one result set**, which reads to a user as two documents. Remove after the next full
+ * FTS rebuild, exactly as for `bills-api`.
  */
-const TITLE_FROM_DB = new Set(['bills-api'])
+const TITLE_FROM_DB = new Set(['bills-api', 'tna-caselaw'])
 
 export function dbTitleSupersedesIndex(corpus: string): boolean {
   return TITLE_FROM_DB.has(corpus)

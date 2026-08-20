@@ -16,7 +16,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs'
 import { join } from 'path'
 import {
-  attributionFor, attributionLine, deslug, ATTRIBUTION_ABSENCE_NOTE, type Attribution,
+  attributionFor, attributionLine, deslug, attributionAbsenceNote, type Attribution,
 } from '../lib/lex/attribution'
 import { evidenceBlock, EVIDENCE_KINDS, type EvidenceResult } from '../lib/lex/chat-retrieval'
 
@@ -238,13 +238,13 @@ function main() {
   const bothBlock = evidenceBlock([withAttr, withoutAttr])
   check(!!bothBlock && bothBlock.includes('— Lindsay Hoyle,'),
     'an attributed item renders its "who said it" line')
-  check(!!bothBlock && bothBlock.includes(ATTRIBUTION_ABSENCE_NOTE),
+  check(!!bothBlock && /not the same as the source being anonymous/i.test(bothBlock),
     '⚠ and a block containing an UNattributed item carries the note that null ≠ anonymous')
 
   const allAttr = evidenceBlock([withAttr])
-  check(!!allAttr && !allAttr.includes(ATTRIBUTION_ABSENCE_NOTE),
+  check(!!allAttr && !/not the same as the source being anonymous/i.test(allAttr),
     '   …while a fully-attributed block does NOT carry it (no unconditional boilerplate)')
-  check(/not the same as the source being anonymous/i.test(ATTRIBUTION_ABSENCE_NOTE),
+  check(/not the same as the source being anonymous/i.test(attributionAbsenceNote(1, 2)),
     '⚠⚠ the note says in terms that a missing attribution is not anonymity')
 
   check(attributionLine(null) === null, 'a null attribution renders nothing, never an empty dash')
