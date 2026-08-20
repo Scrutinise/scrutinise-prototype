@@ -17,6 +17,7 @@ import BackgroundPanel from '@/components/lex/BackgroundPanel'
 import HowItWorksModal from '@/components/lex/HowItWorksModal'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
+import AgendaPanel from '@/components/lex/AgendaPanel'
 import type { FeedbackSurfaceKey } from '@/lib/lex/feedback-types'
 import type { CausesApi, PolicyApi, ActionsApi, CostLinesApi } from '@/components/lex/FieldsPanel'
 import { accentFor } from '@/lib/lex/stage-accents'
@@ -528,12 +529,20 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 actionsApi={actionsApi}
                 costLinesApi={costLinesApi}
                 deepening={
-                  <DeepeningPanel
-                    ideaId={state.ideaId}
-                    unlocked={kernelComplete}
-                    onOpenPass={setOpenDeepeningPass}
-                    onDiscussIssue={discussIssue}
-                  />
+                  <>
+                    {/* 25-C §3 — THE AGENDA COMES FIRST, above the Deepening's own cards.
+                        The whole point is that the user is handed what to DO rather than a
+                        library to search; putting it under the four pass cards would make it
+                        the sixth thing on the page and undo the ordering §3 exists for.
+                        It renders nothing until a build has completed. */}
+                    <AgendaPanel ideaId={state.ideaId} />
+                    <DeepeningPanel
+                      ideaId={state.ideaId}
+                      unlocked={kernelComplete}
+                      onOpenPass={setOpenDeepeningPass}
+                      onDiscussIssue={discussIssue}
+                    />
+                  </>
                 }
               />
             </div>

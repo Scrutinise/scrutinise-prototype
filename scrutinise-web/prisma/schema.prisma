@@ -3419,14 +3419,26 @@ model BuildFork {
   alternativeIndex   Int       @default(0)
   alternative        String
   caseForAlternative String
+  /// 25-C §3a — WHY Lex chose what it chose. `caseForAlternative` is the case for the road NOT
+  /// taken; without this the panel shows the alternative argued for and the recommendation merely
+  /// asserted, and a user can only defer to it rather than weigh it.
+  /// ⚠ NULL on every build made before 25-C. The agenda renders that absence rather than faking it.
+  recommendationReason String?
   /// 25-C turns a fork into a decision. Until then every fork is unresolved, and that is
   /// the honest value rather than a placeholder.
   resolved           Boolean   @default(false)
+  /// 25-C §3a — WHICH WAY the user went: `'chosen'` or `'alternative:<n>'`.
+  /// ⚠ A string, not a boolean or an index. `resolved` alone records THAT a decision happened and
+  /// loses WHAT was decided; a bare index would point at the wrong row if alternatives reorder.
+  resolvedChoice     String?
+  resolvedAt         DateTime?
   createdAt          DateTime  @default(now())
 
   @@unique([buildId, forkKey, alternativeIndex])
   @@index([buildId])
   @@index([ideaId, fieldKey])
+  /// 25-C §3a — the agenda reads a build's decisions, outstanding ones first.
+  @@index([ideaId, resolved], name: "BuildFork_ideaId_resolved_idx")
 }
 
 enum ElicitationStatus {
