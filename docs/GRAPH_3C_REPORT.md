@@ -792,10 +792,10 @@ and the previous three all reached production.
 
 | # | check | result |
 |---|---|---|
-| 1 | every file the sprint created is committed | *(filled in after `commit-graph-3c.sh` — with `git ls-files --error-unmatch` against the file list, and `git check-ignore -v` on anything missing, confirming the FILE and not the pattern)* |
-| 2 | the remote has the commits | *(after push: `git ls-remote origin Main` against local HEAD, and `git merge-base --is-ancestor` — the server ref, never cached status)* |
-| 3 | the deployment is green AND is Production | ⛔ **UNREADABLE FROM HERE.** The Vercel token authenticates and 403s on every project scope with `"saml": true` (docs/CLAUDE.md §19). **Charlie's dashboard.** |
-| 4 | the running site serves the change | ⛔ **CANNOT BE RUN, and the negative control is the reason.** `/admin/positions` 307s to sign-in, and so does a route that does not exist — an unauthenticated probe cannot tell deployed from absent. Reported as **not run**, never as passed. |
+| 1 | every file the sprint created is committed | ✅ **28 of 28**, with `git ls-files --error-unmatch` against the file list — **not** `git status`, which never lists an ignored file. Nothing needed `git check-ignore`. ⚠ Every `git add` named **explicit paths**: the tree holds uncommitted work from at least three other streams, and one of those files does not parse. |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = local HEAD `efbc756ca3f8…`, **byte-identical**, and `git merge-base --is-ancestor` passes. Checked against the **server ref**, not cached status. Seven scoped commits, `742d171`…`efbc756`, each carrying its own real UTC `Date:` trailer taken from the system clock at commit time. |
+| 3 | the deployment is green AND is Production | ⛔ **UNREADABLE FROM HERE.** The Vercel token authenticates and 403s on every project scope with `"saml": true` (docs/CLAUDE.md §19) — a signature that reads exactly like an expired credential and is not. **Charlie's dashboard.** |
+| 4 | the running site serves the change | ⛔ **CANNOT BE RUN, and the control that kills it was re-run just now rather than quoted from 3B:** `/admin/positions` → **307**, `/api/admin/positions` → **307**, and `/admin/nonexistent-control-xyz-3c` → **307**. A route that does not exist behaves identically to one that does, so a probe would "pass" whether or not this sprint deployed. Reported as **not run**, never as passed. |
 
 **What IS verified**, and it is the code and the data rather than the delivery: `check-3c` 41/41
 with every break watched firing, `check-3b` 51/51, `check-3a` 33/33, `verify:positions` **37/37
