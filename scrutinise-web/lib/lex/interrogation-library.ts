@@ -36,6 +36,7 @@
 
 import type { SearchIntent } from './search-gateway'
 import { termsFrom } from './build-config'
+import type { HeadingKey } from './question-headings'
 
 export type QuestionKind = 'CORPUS' | 'DOMAIN_TRANSFER'
 
@@ -84,7 +85,22 @@ export interface InterrogationQuestion {
   firesWhen: (d: DraftFacts) => boolean
   /** Questions this must answer or declare unanswerable. Drives the known unknowns. */
   mustAnswer: string[]
-  /** The heading its findings — or its stated gap — appear under. */
+  /**
+   * 25-D §3 — WHICH §25.5 PANEL HEADING THIS QUESTION ANSWERS.
+   *
+   * ⚠ THE QUESTION DECLARES THE HEADING; THE PANEL NEVER GUESSES THE QUESTION. That direction
+   * is forced and is the right way round anyway: `check:build-25b` forbids a question id from
+   * appearing outside this file, so a panel that mapped ids to headings would have to name
+   * them. More importantly it is the 25-C known-unknowns lesson — the producer that writes a
+   * row knows what it answers, and anything downstream that works it out from the wording is
+   * guessing on a proposal a Bill may rest on.
+   *
+   * Several questions may share a heading. That is intended: "what the law says now" is
+   * answered both by the standing legal map AND by whether a power already exists, and the
+   * user wants those together. `panelHeading` below keeps them apart WITHIN the heading.
+   */
+  heading: HeadingKey
+  /** The question's own sub-heading — the finer label, shown inside `heading`. */
   panelHeading: string
   /** The method block handed to the sift and the gather. What counts as a finding here. */
   method: string
@@ -128,6 +144,10 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     // It ALSO fires when no instrument was named, because an unnamed instrument is the
     // case where the user is most likely to end up drafting a Bill by default.
     firesWhen: (d) => d.instrumentIsPrimary,
+    // An existing delegated power IS part of what the law says now — and it is the half a
+    // user is least likely to look for, which is why it shares the heading rather than
+    // getting a quieter one of its own.
+    heading: 'LAW_NOW',
     panelHeading: 'Whether a power to do this already exists',
     mustAnswer: [
       'Which enactment, if any, already confers power to make this change?',
@@ -162,6 +182,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     kind: 'CORPUS',
     intents: ['LEGAL_LANDSCAPE'],
     firesWhen: () => true,
+    heading: 'LAW_NOW',
     panelHeading: 'The law as it stands',
     mustAnswer: [
       'Which Act or instrument governs this today?',
@@ -191,6 +212,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     // names no law, this question retrieves case law about the general subject, which
     // reads as authority and is not.
     firesWhen: (d) => d.namesExistingLaw,
+    heading: 'COURTS',
     panelHeading: 'How the courts have read it',
     mustAnswer: [
       'Has a court construed the provision this proposal would change?',
@@ -216,6 +238,11 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     intents: ['LEGAL_LANDSCAPE', 'CAUSE_SEEDING'],
     wantedIntent: 'LINEAGE',
     firesWhen: (d) => d.namesExistingLaw,
+    // ⚠ LINEAGE FILES UNDER "what was tried before", and the mapping is worth defending:
+    // THE CURRENT PROVISION IS ITSELF A PREVIOUS ATTEMPT. What it was enacted to fix, and
+    // whether the complained-of feature was a deliberate compromise, is exactly "what was
+    // tried and what happened" — it just happens to be the attempt that is still in force.
+    heading: 'TRIED_BEFORE',
     panelHeading: 'Why the rule reads the way it does',
     mustAnswer: [
       'What was the current provision enacted to fix?',
@@ -241,6 +268,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     kind: 'CORPUS',
     intents: ['PRECEDENT'],
     firesWhen: (d) => d.hasChosenApproach,
+    heading: 'TRIED_BEFORE',
     panelHeading: 'Whether this has been tried before',
     mustAnswer: [
       'Has a comparable measure been tried in the UK, and what was it for?',
@@ -270,6 +298,9 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     kind: 'CORPUS',
     intents: ['CAUSAL_EVIDENCE'],
     firesWhen: (d) => d.hasCauses,
+    // "The numbers" is where a user looks to find out whether the problem is real at the
+    // scale claimed, and that is what this question tests.
+    heading: 'NUMBERS',
     panelHeading: 'Whether the diagnosis holds up',
     mustAnswer: [
       'Is the scale of the problem measured anywhere, and by whom?',
@@ -296,6 +327,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     kind: 'CORPUS',
     intents: ['CAUSE_SEEDING'],
     firesWhen: () => true,
+    heading: 'ARGUED',
     panelHeading: 'Where this has been examined before',
     mustAnswer: [
       'Has a committee or a debate examined this problem?',
@@ -325,6 +357,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     // asking again produces a paragraph confirming what the draft said, which reads as
     // corroboration and is not.
     firesWhen: (d) => d.devolution !== 'reserved',
+    heading: 'DEVOLVED',
     panelHeading: 'Whether this is Westminster’s to change',
     mustAnswer: [
       'Is the subject reserved or devolved, and to which legislature?',
@@ -351,6 +384,7 @@ export const INTERROGATION_LIBRARY: InterrogationQuestion[] = [
     // the follow-up corpus question it generates is asked through LEGAL_LANDSCAPE.
     intents: [],
     firesWhen: () => true,
+    heading: 'ELSEWHERE',
     panelHeading: 'What other sectors built for the same problem',
     mustAnswer: [
       'Who outside this sector has a problem of the same shape?',

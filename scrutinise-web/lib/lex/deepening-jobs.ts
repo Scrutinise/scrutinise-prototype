@@ -47,6 +47,7 @@ import {
   type Precedent,
 } from './deepening-retrieval'
 import { gidFromId } from './legislation-url'
+import type { HeadingKey } from './question-headings'
 
 /** The structured retrieval jobs a pass can declare. Adding one is an entry here plus a case in
  *  `runJob` — never a branch in the engine, which must not know a pass key or a job key. */
@@ -214,6 +215,11 @@ async function runPrecedent(
     await prisma.evidenceItem.create({
       data: {
         ideaId, passKey, runVersion,
+        // 25-D §3 — THE JOB'S OWN HEADING, not its pass's. A job is a separate producer and
+        // is the one that knows what it assembled; deriving from the pass would be right by
+        // accident here and wrong for `runDevolutionScope`, which runs inside LEGAL and
+        // answers "what's devolved".
+        headingKey: 'TRIED_BEFORE' satisfies HeadingKey,
         fieldRef: null,
         kind: 'PRECEDENT',
         title: `Intended, predicted, observed — ${p.instrumentTitle ?? inst.gid}`,
@@ -289,6 +295,9 @@ async function runDevolutionScope(
   await prisma.evidenceItem.create({
     data: {
       ideaId, passKey, runVersion,
+      // See runPrecedent above: the job's heading, not the pass's. This one runs inside the
+      // LEGAL pass and answers a different question.
+      headingKey: 'DEVOLVED' satisfies HeadingKey,
       fieldRef: null,
       kind: 'FINDING',
       title: `Who has legislated on this — ${shape}`,

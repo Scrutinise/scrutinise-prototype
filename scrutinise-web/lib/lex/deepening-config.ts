@@ -16,6 +16,7 @@
 import type { SearchIntent } from './search-gateway'
 import type { SearchResultType } from './page1-config'
 import type { JobKey } from './deepening-jobs'
+import type { HeadingKey } from './question-headings'
 
 export type PassKey = 'EVIDENCE_PRECEDENT' | 'LEGAL' | 'FINANCIAL' | 'POLITICAL_RISK'
 
@@ -23,6 +24,17 @@ export interface PassDef {
   key: PassKey
   /** Card heading. */
   label: string
+  /**
+   * 25-D §3 — WHICH §25.5 PANEL HEADING THIS PASS'S FINDINGS APPEAR UNDER.
+   *
+   * ⚠ DECLARED BY THE PASS, exactly as a question declares its own. The panel groups by
+   * heading and knows no pass key, which is the same contract `deepening.ts` already keeps
+   * with `jobs` and `intents`: the engine iterates configuration and names nothing in it.
+   *
+   * A pass and a build question may share a heading — LEGAL and the standing legal map both
+   * answer "what the law says now", and a user reading that heading wants both.
+   */
+  heading: HeadingKey
   /** One line under the heading — what this pass is for, before it is opened. */
   strapline: string
   /**
@@ -107,6 +119,8 @@ export interface IssueContext {
 export const PASSES: PassDef[] = [
   {
     key: 'EVIDENCE_PRECEDENT',
+    // Its own strapline is the heading, near enough: "has anything like this been tried?"
+    heading: 'TRIED_BEFORE',
     label: 'Evidence & precedents',
     strapline: 'Is the problem real and measured — and has anything like this been tried?',
     training:
@@ -171,6 +185,7 @@ export const PASSES: PassDef[] = [
   },
   {
     key: 'LEGAL',
+    heading: 'LAW_NOW',
     label: 'Legal',
     strapline: 'What law this touches, how it interlocks, and whether you need an Act at all.',
     training:
@@ -234,6 +249,7 @@ export const PASSES: PassDef[] = [
   },
   {
     key: 'FINANCIAL',
+    heading: 'NUMBERS',
     label: 'Financial',
     strapline: 'Stress-test the costing the way the Treasury would.',
     training:
@@ -282,6 +298,11 @@ export const PASSES: PassDef[] = [
   },
   {
     key: 'POLITICAL_RISK',
+    // ⚠ NOT "who has taken a position". This pass produces the ATTACK LINES in their
+    // strongest form and what killed a comparable measure — an argument, not a register of
+    // who voted which way. Filing it under POSITIONS would let an empty positions heading
+    // look answered while the thing it is actually for (the voting record) stays unread.
+    heading: 'AGAINST',
     label: 'Political risk',
     strapline: 'Who resists, on what grounds, and what killed the last attempt.',
     training:

@@ -583,6 +583,8 @@ export async function runPass(ideaId: string, passKey: string, runVersion: numbe
       await prisma.evidenceItem.create({
         data: {
           ideaId, passKey, runVersion,
+          // 25-D §3 — the pass declares its own §25.5 heading in `deepening-config.ts`.
+          headingKey: def.heading,
           fieldRef: f.fieldRef ?? null,
           kind,
           title: f.title,

@@ -475,6 +475,10 @@ export async function runResearch(input: {
           data: {
             ideaId: input.ideaId,
             passKey: q.id,
+            // 25-D §3 — TAGGED BY THE PRODUCER THAT KNOWS THE ANSWER. The question declares
+            // which §25.5 heading it answers; nothing downstream has to work it out from the
+            // finding's wording, which is where a wrong guess would come from.
+            headingKey: q.heading,
             runVersion: input.buildVersion,
             fieldRef: f.fieldRef ?? null,
             kind,

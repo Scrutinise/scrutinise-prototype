@@ -1437,6 +1437,12 @@ async function revisePass(c: PassContext): Promise<PassOutcome> {
         ideaId,
         passKey: 'REVISE',
         runVersion: c.buildVersion,
+        // ⚠ 25-D §3 — NULL, AND ON PURPOSE. A contradiction is not a source card; it is the
+        // sentence that leads the review agenda (25-C §3b), and giving it a panel heading
+        // would file the build's headline output back among the references, which is exactly
+        // where §3b found it buried. Left explicit so the next reader knows it was decided
+        // rather than forgotten; `heading-map.ts` records the same reasoning.
+        headingKey: null,
         fieldRef: x.fieldKey?.trim() || null,
         kind: 'CONTRADICTS',
         title: `The research changed my mind about ${x.fieldKey?.trim() || 'this'}`,
