@@ -1469,3 +1469,49 @@ is void**. Re-baseline after index hygiene, never across it.
 "delete all but one" predicate: `fts-hygiene` deletes every copy of a duplicated id and re-adds
 one, taken from the rows it just read out, so the survivor is a copy that genuinely existed
 rather than something re-derived from R2 and possibly differing.
+
+---
+
+**§20 addendum (21 Aug 2026, SEARCH S11 §4) — THE THIRD CASE: A ROW WHOSE *CONTENT* CHANGED.
+This is the one nothing covered, and it is the most common of the three.**
+
+Appends are covered (`fts-catchup`). Deletions are covered (`fts-hygiene`). **A row that is
+already in the index and whose body, title or date has been rewritten in `corpus_sections` was
+covered by nothing at all** — and that is what an ordinary backfill produces.
+
+⚠ `fts-catchup` reports SUCCESS on exactly this case. It reconciles by finding ids the index
+lacks; the id is already there, so there is nothing to append, so it appends nothing and exits
+clean. **A green catch-up is not evidence the index matches the database.**
+
+What that cost, once, measurably: case-law titles were recovered into `corpus_sections` on
+19 August 2026 and the index carried **0 of 74,896** of them, with 74,066 wrong dates beside
+them. **No user ever saw a recovered case name.** It was found the following day in a "before"
+measurement taken for an unrelated purpose (`INGEST_CASELAW_TEXT_REPORT.md` Decision 5).
+
+**THE CHECKLIST ITEM — add to any sprint that writes to `corpus_sections`:**
+
+> ☐ Did this sprint rewrite a field the FTS index carries (`sectionTitle`, `itemDate`, `speaker`,
+>   `parentDocId`, `availability_status`, `wordCount`, or the R2 body)? If yes:
+>   1. `npx tsx search/fts-refresh.ts --corpus=<name> --from=db` (or `--ids-file=` for a subset)
+>   2. `tsx ../ops/heavy-job/run.ts run fts-index` on the rented box — never the serving host
+>   3. **Redeploy `fts-serve`** — it holds its table from boot and serves nothing new until it does
+>   4. Say in the report which of the three ran. "Backfilled 74,896 rows" is not a delivery claim.
+
+`scripts/ingest/search/fts-refresh.ts` is the general tool (S11 §4); `refresh-fts-caselaw.ts` was
+the one-collection original it generalises. It has two modes and the distinction matters:
+`--from=db` rebuilds the record from `corpus_sections` + R2 (a CONTENT change), `--from=index`
+carries the body through untouched and recomputes only the derived `tier`/`jurisdiction` (a
+RE-TIER), so a tier move cannot silently ship an unrelated body change inside it.
+
+**⚠⚠ AND THE df CONSEQUENCE ABOVE APPLIES HERE TOO, WHICH IS EASY TO MISS BECAUSE NOTHING WAS
+DELETED ON PURPOSE.** A content refresh is a delete-and-re-add, so it moves BM25 **document
+frequencies** exactly as index hygiene does — *"any gold-set or answer-key baseline measured
+before the cleanup is void"* applies word for word.
+
+This is not theoretical and it has already happened: the 20 August case-law re-compile rewrote
+74,896 bodies, and **S10's per-collection recall numbers, taken hours earlier, no longer
+reproduce.** Re-measured on 21 August through a method proven exact against a tier leg (5/5
+id-for-id), the guidance-tier rankings had moved on **5 of 5** questions sampled, top-10 overlap
+3–8 of 10, with consultations documents displaced by `quangos-govuk` ones — in a tier the
+case-law fix never touched. **A collection's content fix re-ranks its neighbours.** Re-baseline
+after any content refresh, and treat a recall number taken across one as void rather than stale.

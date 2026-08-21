@@ -72,6 +72,16 @@ export const JOBS: Record<string, HeavyJob> = {
     // rows — the largest table yet — in 552s for €0.053, query 5,573ms → 1,508ms, unindexed 0.
     // Still not lowered: four runs now sit in 18.0-19.8 GB and the trend against row count is
     // flat, which is the case for keeping the record rather than the mean.
+    // FIFTH measurement, 21 Aug 2026 (SEARCH S11 re-tier + case-law tail): 546s on 18,272,377 rows
+    // — larger again — 118,789 unindexed → 0, €0.056, query 44,274ms → 1,639ms. Peak **16.0 GB**,
+    // BELOW the whole four-run band. ⚠ DELIBERATELY NOT LOWERED, and the runner's own "record this
+    // in jobs.ts" line is being declined on the rule two comments up: one run below the record on
+    // MORE data is noise, not headroom, and sizing down on it would be reading noise as a trend.
+    // Five runs now sit in 16.0-19.8 GB and 32 GB stays the right size.
+    // ⚠ The 44s "before" is worth keeping: 118,789 unindexed rows — a TENTH of the 1,191,345 that
+    // caused the August latency incident — produced a WORSE query time than that incident did.
+    // The penalty is not linear in un-indexed row count, so "only a few thousand appended" is not
+    // a reason to defer this job.
     expectedPeakGb: 19.8,
     peakSource:
       '4 Aug 2026, cpx62 (32 GB), 17,700,396 rows, 499s → 19.8 GB peak. ' +
