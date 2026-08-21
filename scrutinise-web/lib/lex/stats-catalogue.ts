@@ -378,6 +378,17 @@ function buildRow(r: Record<string, unknown>): CatalogueRow {
   const gloss = measureGlossFor(measure)
   const geoLabel = geographyLabelFor(geography)
   const cofogName = (r.cofogFunctionName as string | null) ?? null
+  // ⚠ NARROWED HERE RATHER THAN AT THE INTERPOLATION, and the reason is worth the line. S11 §5.2
+  // inherited a report of an `unknown` reaching a template literal at line 392 — described as a
+  // user-facing GEOGRAPHY label. Running `lint:templates` rather than trusting the description
+  // showed the geography line was already `String()`-wrapped and the actual `unknown` on that line
+  // is `r.cofogFunctionCode`, one field along. Same line, different bug, and a different severity:
+  // `fields.cofog` is TOKENISED, never displayed, so an object here would not print
+  // "[object Object]" to a user — it would put the tokens `object` and `Object` into the search
+  // index for every series with a COFOG code, which is a quieter fault than the reported one and
+  // a worse one to find later. Both are the same class as `RenderedBlock` (25-C): a value whose
+  // type nothing guarantees, silently stringified.
+  const cofogCode = r.cofogFunctionCode == null ? '' : String(r.cofogFunctionCode)
   const firstPeriod = (r.firstPeriod as string | null) ?? null
   const lastPeriod = (r.lastPeriod as string | null) ?? null
 
@@ -389,7 +400,7 @@ function buildRow(r: Record<string, unknown>): CatalogueRow {
     measure,
     gloss: gloss ?? '',
     geography: `${geography} ${geoLabel}`,
-    cofog: cofogName ? `${cofogName} ${r.cofogFunctionCode}` : '',
+    cofog: cofogName ? `${cofogName} ${cofogCode}` : '',
     dataset: String(r.datasetTitle),
     source: String(r.source).replace(/_/g, ' '),
     unit: String(r.unit).replace(/_/g, ' '),
