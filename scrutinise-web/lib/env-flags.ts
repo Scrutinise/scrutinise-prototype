@@ -120,21 +120,21 @@ export const CAPABILITY_FLAGS = [
   // ⚠ ONE BOOLEAN IS WHAT A ROLLBACK WANTS. Flipping this off restores 0.5 everywhere without
   // anyone having to remember what the weights string used to say.
   'LEX_FUSION_WEIGHTS',
-  // S10 §1. Admit `cps-guidance` (270 sections) to the guidance stream's extra leg. The collection
-  // is display-typed GUIDANCE but indexed under tier `other`, so NO router stream can select it
-  // and no query can return a CPS guidance document — measured on Charlie's validated set, where
-  // it costs five of the ten guidance questions.
+  // ⚠⚠ `LEX_GUIDANCE_CPS` WAS HERE AND WAS RETIRED ON 2026-08-21 (S11 §2.4). It admitted
+  // `cps-guidance` to the guidance stream's EXTRA LEG as a bridge, because the collection was
+  // display-typed GUIDANCE and indexed under tier `other`, so no router stream could select it.
   //
-  // ⚠ DEFAULT OFF BECAUSE THE FIX IS ZERO-SUM, not because it is unmeasured. `mergeLegs` sorts the
-  // two legs together on one BM25 scale and slices to a fixed budget, so a strong extra leg takes
-  // the main leg's room rather than getting its own: guidance 2/10 → 8/10 and consultations
-  // 6/9 → 4/9, in-stream recall@20. Net +4 of 19 with a real loss inside it — a product judgement,
-  // which is Charlie's, and the same reasoning that holds `LEX_TIER_FUSION` off.
+  // The bridge is gone because the thing it bridged to has been built: `cps-guidance` is now in
+  // the `guidance` tier in `corpus-map.ts` and the rows carry that tier in the index. It competes
+  // in the MAIN leg, needs no extra retrieval call, and — measured, not assumed — costs the
+  // consultations that shared the stream nothing (4/9 → 4/9, where the extra-leg arm had cost
+  // them 6/9 → 4/9). The flag is deleted rather than defaulted off: a redundant flag that still
+  // gates a live code path is a trap for the next reader, and this one would have quietly
+  // double-retrieved a collection already in the tier.
   //
-  // ⚠ THE DURABLE FIX IS NEITHER ARM: `tierFor()` plus a full index rebuild moves the collection
-  // into the `guidance` tier, where it competes in the main leg and needs no extra call. Delete
-  // this flag then.
-  'LEX_GUIDANCE_CPS',
+  // ⚠ SIX MORE COLLECTIONS MOVED WITH IT and never had a flag: `cma-cases`, `ofgem`, `ofcom`,
+  // `independent-reviews`, `inquiry-evidence`, `lgsco`. See `corpus-map.ts` and
+  // `docs/SEARCH_S11_REPORT.md`.
 ] as const
 
 export type CapabilityFlagName = (typeof CAPABILITY_FLAGS)[number]

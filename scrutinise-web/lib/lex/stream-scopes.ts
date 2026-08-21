@@ -168,9 +168,17 @@ export const STREAM_SCOPES: StreamScope[] = [
   // debates stream, and changing what a million sections do to that stream's results is a
   // measurement and a decision, not a line in a list. S2C reports it; Charlie decides it.
   //
-  // ⚠⚠ `cps-guidance` IS **NOT** IN THIS LIST AND THAT IS A DECISION WITH NUMBERS UNDER IT.
-  // It joins only behind `LEX_GUIDANCE_CPS` — see `GUIDANCE_CPS_EXTRA` and `activeStreamScopes`
-  // below for the measurement and why the default stayed off.
+  // ⚠⚠ `cps-guidance` IS NOT IN THIS LIST AND NO LONGER NEEDS TO BE. It was here behind
+  // `LEX_GUIDANCE_CPS` until S11 moved it into the `guidance` TIER, where it competes in the main
+  // leg with no extra call — the outcome `extraCorpora`'s own contract asks for ("a bridge to the
+  // next reindex … after which the entry is deleted"). Six further collections moved with it:
+  // `cma-cases`, `ofgem`, `ofcom`, `independent-reviews`, `inquiry-evidence`, `lgsco`. See the
+  // block below and `corpus-map.ts`.
+  //
+  // ⚠ `erskine-may` STAYS an extra leg, deliberately. It is parliamentary PROCEDURE, not regulator
+  // guidance; moving it into the `guidance` tier would file the rules of the House under the same
+  // heading as an Ofgem licence condition. The extra leg is the right shape for the one collection
+  // whose retrieval home and whose subject genuinely disagree.
   { name: 'guidance', tier: 'guidance', extraCorpora: ['erskine-may'] },
 ]
 
@@ -219,70 +227,59 @@ export const STREAM_SCOPES_V2: StreamScope[] = [
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * S10 §1 — `cps-guidance`: STRUCTURALLY UNREACHABLE, FIXABLE IN ONE LINE, AND THE FIX IS A TRADE.
+ * S10 §1 / S11 §1 — `cps-guidance`: FOUND UNREACHABLE, BRIDGED BY A FLAG, THEN FIXED PROPERLY.
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
- * WHAT WAS FOUND. Charlie's validated set scored guidance at 1/10 while consultations scored 8/9 —
- * from the SAME stream, since both collections sit in the `guidance` tier. That is not a
- * search-quality story, so the index was asked directly (`scripts/diagnose-s10-misses.ts`) instead
- * of reasoned about. All five CPS keys came back at rank 0–2 when scoped to their own corpus, and
- * `streamCanSelect` returned FALSE for every one of them: `cps-guidance` is display-typed GUIDANCE
- * by `corpusToType` but indexed under tier `other`, so **no router stream can select it and no
- * query could ever return a CPS guidance document.** Perfectly retrievable, structurally
- * unreachable — the erskine-may shape exactly.
+ * WHAT WAS FOUND (S10, 20 Aug 2026). Charlie's validated set scored guidance at 1/10 while
+ * consultations scored 8/9 — from the SAME stream, both collections sitting in the `guidance`
+ * tier. That is not a search-quality story, so the index was asked directly rather than reasoned
+ * about: all five CPS keys came back at rank 0–2 scoped to their own corpus, and `streamCanSelect`
+ * returned FALSE for every one. `cps-guidance` was display-typed GUIDANCE by `corpusToType` and
+ * indexed under tier `other`, so **no router stream could select it and no query could ever return
+ * a CPS guidance document.** Perfectly retrievable, structurally unreachable.
  *
- * ⚠ IT WAS ALREADY KNOWN, AND DEFERRED WITHOUT A PRICE ON IT. `docs/CORPUS_REACHABILITY.md`
- * (2026-08-10) lists it verdict `keyword-only`, among nine collections "deferred pending the
- * reranker decision". `keyword-only` means reachable only when routing is OFF or has failed open —
- * and routing is ON in production, so in the product it means unreachable. The deferral was
- * reasonable when nothing could price it. The validated set prices it.
+ * WHAT WAS DONE ABOUT IT, IN TWO STEPS, AND WHY THE FIRST ONE IS GONE.
  *
- * ⚠⚠ AND THE FIX IS ZERO-SUM, WHICH IS WHY IT IS A FLAG AND NOT A LIST ENTRY. Measured
- * before-and-after with dense off, so the extra BM25 leg was the only difference
- * (`scripts/measure-s10-guidance-fix.ts`), in-stream recall@20:
+ * S10 shipped a bridge: an `extraCorpora` entry behind `LEX_GUIDANCE_CPS`, default OFF, because
+ * that arm was **zero-sum** — `mergeLegs` sorts both legs on one BM25 scale and slices to a fixed
+ * budget, so a strong extra leg takes the main leg's room rather than getting its own. Measured:
+ * guidance 2/10 → 8/10, consultations **6/9 → 4/9**.
  *
- *     guidance        2/10  →  8/10     (Q22, Q23, Q25, Q26, Q27 recovered; ranks 4, 0, 12, 2, 0)
- *     consultations   6/9   →  4/9      (⚠ Q44 rank 0 → 21, Q49 rank 4 → 33)
- *     total           8/19  →  12/19
+ * ⚠⚠ S11 DID THE DURABLE FIX, AND THE TRADE TURNED OUT TO BELONG TO THE MECHANISM, NOT TO THE
+ * COLLECTION. `tierFor()` now returns `guidance` for it and the rows were rewritten to carry that
+ * tier (`scripts/ingest/search/fts-refresh.ts --retier-all`), so it competes in the MAIN leg with
+ * no extra retrieval call. Re-measured on the same validated set, arms differing only in which
+ * rows are eligible (`scrutinise-web/scripts/measure-s11-tier.ts`):
  *
- * The loss is not a surprise once looked at: `mergeLegs` sorts the two legs together by BM25 score
- * and slices to a fixed budget, so an extra leg that scores well does not get extra room — it takes
- * the main leg's. This is the divisions finding from the `debates` note above, inverted: there the
- * extra leg lost the merge and bought nothing; here it wins the merge and displaces the collection
- * that was already working.
+ *     guidance        3/10  →  8/10     (+5)
+ *     consultations   4/9   →  4/9      (⚠ NOT ONE QUESTION LOST, AND NOT ONE RANK MOVED)
  *
- * ▶ SO THE DEFAULT STAYS OFF AND THE FLIP IS CHARLIE'S, with both numbers visible. Net +4 of 19 is
- * a real gain and −2 on a collection that was working is a real loss, and which matters more is a
- * product judgement rather than an arithmetic one. The precedent is `LEX_TIER_FUSION`, held behind
- * a flag for exactly this reason: better-looking results are not a mandate to ship a regression
- * somewhere else.
+ * The extra leg cost consultations two answers; the tier move costs them nothing. A quota has to
+ * take a gain from somewhere; a shared ranking makes it earn its place. **That is the difference,
+ * and it is why "widening a stream is zero-sum" is true of one mechanism and not of the other.**
  *
- * ▶ THE DURABLE FIX IS NEITHER ARM: `tierFor()` plus a full index rebuild puts `cps-guidance` in
- * the `guidance` tier, where it competes in the MAIN leg on equal terms and needs no extra call at
- * all. This flag is a bridge to that, as `extraCorpora`'s own contract requires.
+ * ⚠ `LEX_GUIDANCE_CPS` AND `GUIDANCE_CPS_EXTRA` ARE THEREFORE DELETED, not defaulted off. Left in
+ * place they would double-retrieve a collection that is already in the tier, and a redundant flag
+ * that still gates a live code path is a trap for the next reader.
  *
- * ⚠ ONLY THIS COLLECTION. The other eight deferred collections total ~48,600 sections (`cma-cases`
- * 22,898, `ofgem` 17,161, `ofcom` 4,169 …), each costing another retrieval call per routed query.
- * cps-guidance is 270 sections and is the only one the validated set demonstrates a cost for. The
- * rest stay deferred, now with the mechanism demonstrated and a way to price them.
+ * ⚠⚠ SEQUENCING, BECAUSE THIS CODE AND THE INDEX SHIP SEPARATELY. The flag was Charlie's stopgap
+ * and was ON. Removing it is safe only once the re-tiered rows are BEING SERVED — the index has
+ * them, but `fts-serve` holds its table from boot. Until it is redeployed, this code path is gone
+ * and the served index still has the collection under `other`, i.e. `cps-guidance` is briefly back
+ * to unreachable. Named as an expected observable in `docs/SEARCH_S11_REPORT.md` rather than left
+ * to be discovered.
  */
-export const GUIDANCE_CPS_EXTRA = 'cps-guidance'
 
 /**
  * The scopes in force. Pure — the CALLER reads the flags, so this module keeps its
  * runtime-dependency-free property and `corpus-reachability.ts` can still import it from outside
  * the Next.js path alias.
  *
- * `cpsGuidance` defaults to false so every existing caller — including the reachability matrix —
- * keeps describing the shipped default unless it deliberately asks for the other arm.
+ * ⚠ The `cpsGuidance` parameter was removed in S11: the collection is in the `guidance` tier now,
+ * so there is no arm to select between. See the block above.
  */
-export function activeStreamScopes(v2: boolean, cpsGuidance = false): StreamScope[] {
-  const base = cpsGuidance
-    ? STREAM_SCOPES.map((s) => (s.name === 'guidance'
-      ? { ...s, extraCorpora: [...(s.extraCorpora ?? []), GUIDANCE_CPS_EXTRA] }
-      : s))
-    : STREAM_SCOPES
-  return v2 ? [...base, ...STREAM_SCOPES_V2] : base
+export function activeStreamScopes(v2: boolean): StreamScope[] {
+  return v2 ? [...STREAM_SCOPES, ...STREAM_SCOPES_V2] : STREAM_SCOPES
 }
 
 /**

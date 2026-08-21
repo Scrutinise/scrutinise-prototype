@@ -261,27 +261,28 @@ function emitLegs(legs: CapturedLegs): void {
 // timing: a router DECISION and its DISPATCH both happen inside one `runSearch`, and the flag does
 // not change inside a request in production. Memoising per value keeps the `fusedStream` closures
 // stable, so an arm's second query reuses the first's stream objects rather than rebuilding them.
-// ⚠ KEYED ON EVERY FLAG THAT SHAPES THE SCOPES, not just V2. `LEX_GUIDANCE_CPS` (S10 §1) changes
-// the guidance stream's `extraCorpora`, so a cache keyed on V2 alone would hand back a stream built
-// under the other arm — and the arms would look identical in a measurement that alternates them,
-// which is precisely what this cache exists to make possible.
+// ⚠ KEYED ON EVERY FLAG THAT SHAPES THE SCOPES. Today that is `LEX_ROUTER_STREAMS_V2` alone;
+// until S11 it was also `LEX_GUIDANCE_CPS`, which changed the guidance stream's `extraCorpora`. A
+// cache keyed on a subset of the flags hands back a stream built under the other arm, and the two
+// arms then look identical in a measurement that alternates them — precisely what this cache
+// exists to make possible. ⚠ ADD THE KEY WHENEVER A FLAG IS ADDED THAT SHAPES A SCOPE.
 const STREAM_CACHE = new Map<string, StreamConfig[]>()
 export function routerStreamsV2(): boolean { return flagEnabled('LEX_ROUTER_STREAMS_V2') }
-/** S10 §1 — admit `cps-guidance` to the guidance stream. Default OFF; the measurement and the
- *  reason the default stayed off are in stream-scopes.ts above `activeStreamScopes`. */
-export function guidanceCpsEnabled(): boolean { return flagEnabled('LEX_GUIDANCE_CPS') }
 export function streams(): StreamConfig[] {
   const v2 = routerStreamsV2()
-  const cps = guidanceCpsEnabled()
-  const key = `${v2}|${cps}`
+  // `String()` rather than a lint suppression. Booleans stringify deterministically so there is no
+  // bug here, and `allowBoolean: false` is deliberate: the rule cannot tell a cache key from a
+  // sentence, and a boolean reaching a user-facing string almost always is one. Stating the intent
+  // is cheaper than an exception that would also cover the next, real, case (S11 §5.2).
+  const key = String(v2)
   const hit = STREAM_CACHE.get(key)
   if (hit) return hit
-  const built = activeStreamScopes(v2, cps).map((s) => ({
+  const built = activeStreamScopes(v2).map((s) => ({
     ...s,
     search: fusedStream(s.name, s.tier, s.types, s.corpora, s.excludeCorpora, s.extraCorpora),
   }))
   STREAM_CACHE.set(key, built)
-  console.log(`[query-router] streams in force: ${built.map((s) => s.name).join(', ')} (LEX_ROUTER_STREAMS_V2=${v2 ? 'ON' : 'off'} LEX_GUIDANCE_CPS=${cps ? 'ON' : 'off'})`)
+  console.log(`[query-router] streams in force: ${built.map((s) => s.name).join(', ')} (LEX_ROUTER_STREAMS_V2=${v2 ? 'ON' : 'off'})`)
   return built
 }
 
