@@ -34,13 +34,26 @@
 
 import { providerFor, type Provider } from './model-registry'
 import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
+import { samplingFor, samplingOmissions } from './model-sampling'
 import { geminiFinishProblem } from './gemini-finish'
 import { recordGeminiUsage, type SpendStream } from './spend-ledger'
 
 export interface LlmUsage {
+  /** What we ASKED for. */
   model: string
   tokensIn: number
   tokensOut: number
+  /**
+   * 25-D §1c — WHAT ANSWERED, as the response itself reported it. Null where the vendor did not
+   * say, or where the call never reached one.
+   *
+   * ⚠ A 200 IS NOT PROOF YOU GOT THE MODEL YOU ASKED FOR. `grok-3-fast-beta` returned HTTP 200
+   * for months while the body echoed `grok-4.3`, on every Lex turn that path served, with
+   * nothing logged. `check:model-reachability` compares these two — but it runs on demand, and
+   * a substitution that begins between runs is invisible until someone thinks to look. Carrying
+   * the echoed id back on every call is what lets a caller notice at the moment it happens.
+   */
+  echoedModel?: string | null
 }
 
 export type LlmFailureReason =
@@ -113,28 +126,31 @@ export function hasKeyFor(provider: Provider): boolean {
 }
 
 /**
- * ⚠⚠ ANTHROPIC MODELS THAT STILL ACCEPT `temperature`, MEASURED RATHER THAN INFERRED.
+ * 25-D §1b — THE SAMPLING DECISION IS TAKEN ONCE, FOR EVERY VENDOR, IN ONE PLACE.
  *
- * `claude-sonnet-5` answers a plain reachability ping perfectly and then rejects a real call with
- * **HTTP 400 — "`temperature` is deprecated for this model."** So a reachability check alone would
- * have declared the whole Anthropic path green while every structured call through it failed, which
- * is precisely why `verify:model-vendors` makes a real schema call per vendor and does not stop at
- * a ping.
+ * 25-C fixed `claude-sonnet-5`'s hard 400 on `temperature` with an Anthropic-local allow-list
+ * inside `callAnthropic`. That was correct and too narrow in two ways, both of which are the
+ * shape this codebase has already been bitten by:
  *
- * Probed live on 2026-08-20 against every id in `REACHABLE.anthropic`:
+ *   · IT LIVED IN ONE VENDOR BRANCH. The next model to deprecate a knob will not be Anthropic's,
+ *     and the fix would have had to be written a third time — which is exactly how the truncation
+ *     guard came to be missing from seven callers (CLAUDE.md §18).
+ *   · IT WAS AN ALLOW-LIST OF MODELS THAT ACCEPT, so an Anthropic id nobody had probed silently
+ *     lost a parameter it supports. `REJECTS_TEMPERATURE` states the measured fact instead: these
+ *     five refuse it, everything else gets it.
  *
- *   ACCEPTS   claude-haiku-4-5 · claude-haiku-4-5-20251001
- *   REJECTS   claude-opus-5 · claude-sonnet-5 · claude-fable-5 · claude-opus-4-8 · claude-opus-4-7
- *
- * ⚠ AN ALLOW-LIST, NOT A VERSION RULE. "Anything below 5 accepts it" would have been a tidy guess
- * and wrong — `claude-opus-4-8` and `claude-opus-4-7` reject it while `claude-haiku-4-5` does not.
- * A model not on this list simply does not get the parameter, which costs a little determinism and
- * never costs a failed call.
+ * `samplingFor()` returns the parameters this model may actually carry; the omission is logged
+ * rather than silent, because a parameter that quietly stops being sent is a behaviour change
+ * nobody can see. See `model-sampling.ts` for the probe evidence.
  */
-const ANTHROPIC_ACCEPTS_TEMPERATURE: ReadonlySet<string> = new Set([
-  'claude-haiku-4-5',
-  'claude-haiku-4-5-20251001',
-])
+function sampling(o: ModelCallOptions, fallback?: number): Record<string, number> {
+  const want = { temperature: o.temperature ?? fallback }
+  const dropped = samplingOmissions(o.model, want)
+  if (dropped.length) {
+    console.log('[model-call] sampling parameter omitted', { label: o.label, model: o.model, dropped })
+  }
+  return samplingFor(o.model, want) as Record<string, number>
+}
 
 // ── Google ───────────────────────────────────────────────────────────────────
 
@@ -160,7 +176,7 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
           system_instruction: { parts: [{ text: o.system }] },
           contents: [{ role: 'user', parts: [{ text: o.user }] }],
           generationConfig: {
-            temperature: o.temperature ?? 0.4,
+            ...sampling(o, 0.4),
             maxOutputTokens,
             responseMimeType: 'application/json',
             responseSchema: o.schema,
@@ -176,6 +192,7 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
     }
     const data = await res.json() as {
       usageMetadata?: Record<string, unknown>
+      modelVersion?: string
       candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
     }
     void recordGeminiUsage(data, { stream: o.stream ?? 'lex', pass: o.pass ?? o.label, model: o.model })
@@ -183,6 +200,7 @@ async function callGoogle<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       model: o.model,
       tokensIn: n(data?.usageMetadata?.promptTokenCount),
       tokensOut: n(data?.usageMetadata?.candidatesTokenCount) + n(data?.usageMetadata?.thoughtsTokenCount),
+      echoedModel: data?.modelVersion ?? null,
     }
 
     // Rule 1 — before parsing.
@@ -223,11 +241,11 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       body: JSON.stringify({
         model: o.model,
         max_tokens: o.maxOutputTokens,
-        // ⚠ OMITTED unless this model still accepts it — see ANTHROPIC_ACCEPTS_TEMPERATURE.
-        // Sending it to a model that has deprecated it is a hard 400, not a warning.
-        ...(ANTHROPIC_ACCEPTS_TEMPERATURE.has(o.model) && o.temperature != null
-          ? { temperature: o.temperature }
-          : {}),
+        // ⚠ OMITTED where this model refuses it — see `model-sampling.ts`. Sending
+        // `temperature` to a model that has deprecated it is a hard 400, not a warning.
+        // No fallback here on purpose: Anthropic's own default is a deliberate choice and
+        // substituting 0.4 for every caller that never asked would change behaviour silently.
+        ...sampling(o),
         system: o.system,
         messages: [{ role: 'user', content: o.user }],
         tools: [{ name: 'emit', description: 'Return the result.', input_schema: o.schema }],
@@ -241,6 +259,7 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
     }
     const data = await res.json() as {
       stop_reason?: string
+      model?: string
       usage?: { input_tokens?: number; output_tokens?: number }
       content?: Array<{ type?: string; text?: string; input?: unknown }>
     }
@@ -248,6 +267,7 @@ async function callAnthropic<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       model: o.model,
       tokensIn: n(data?.usage?.input_tokens),
       tokensOut: n(data?.usage?.output_tokens),
+      echoedModel: data?.model ?? null,
     }
 
     // Rule 1 — before reading the body. `max_tokens` is Anthropic's `MAX_TOKENS`.
@@ -293,7 +313,11 @@ async function callOpenAI<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       body: JSON.stringify({
         model: o.model,
         max_completion_tokens: o.maxOutputTokens,
-        temperature: o.temperature ?? 0.4,
+        // ⚠ Through the same per-model gate as the other two vendors. Several OpenAI reasoning
+        // models reject `temperature` outright as well; this path has never been exercised
+        // end to end (no key on this machine), and hardcoding the parameter is precisely how
+        // it would 400 on its first live call.
+        ...sampling(o, 0.4),
         messages: [
           { role: 'system', content: o.system },
           { role: 'user', content: o.user },
@@ -310,6 +334,7 @@ async function callOpenAI<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       return { ok: false, reason: 'http', detail: `[${o.label}] HTTP ${res.status} ${body.slice(0, 300)}`, usage: ZERO(o.model) }
     }
     const data = await res.json() as {
+      model?: string
       usage?: { prompt_tokens?: number; completion_tokens?: number }
       choices?: Array<{ finish_reason?: string; message?: { content?: string; refusal?: string } }>
     }
@@ -317,6 +342,7 @@ async function callOpenAI<T>(o: ModelCallOptions): Promise<LlmResult<T>> {
       model: o.model,
       tokensIn: n(data?.usage?.prompt_tokens),
       tokensOut: n(data?.usage?.completion_tokens),
+      echoedModel: data?.model ?? null,
     }
 
     const choice = data.choices?.[0]

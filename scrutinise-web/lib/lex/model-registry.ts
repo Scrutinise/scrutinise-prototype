@@ -42,8 +42,18 @@ export const REACHABLE: Record<Provider, string[]> = {
   // verified LIVE on 19 Aug 2026 (HTTP 200, echoing its own id).
   anthropic: ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7',
     'claude-haiku-4-5', 'claude-haiku-4-5-20251001'],
+  // ⚠ 25-D §1a — `grok-4.20-multi-agent-0309` WAS REMOVED, and it is worth saying why rather
+  // than leaving a silent absence for someone to "fix" by adding it back.
+  //
+  // The 25-C sweep found it REJECTED on the chat-completions endpoint every other xAI model
+  // answers on — *"Multi Agent requests are not allowed on chat completions"*. Charlie's
+  // decision was to drop it, not to route it: multi-vendor multi-agent is not authorised, no
+  // pass depends on it, and a specialised endpoint whose contract differs from the one we call
+  // is exactly the shape that produced this vendor's worst failure — `grok-3-fast-beta`
+  // returning HTTP 200 for months while a different model answered. xAI stays a vendor here
+  // because its standard models are reachable; the endpoint we do not call is not listed.
   xai: ['grok-4.6', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning',
-    'grok-4.20-0309-non-reasoning', 'grok-4.20-multi-agent-0309', 'grok-build-0.1'],
+    'grok-4.20-0309-non-reasoning', 'grok-build-0.1'],
   // ⚠ No key on this machine (probe-model-access.ts, 17 Aug 2026). Listed so that pointing
   // a pass at OpenAI fails with "no key" rather than "unknown model".
   openai: [],
@@ -88,6 +98,10 @@ export const PASS_DEFAULTS = {
   // ── the build (25-A) ──
   'build.draft': 'gemini-2.5-flash',
   'build.settle': 'gemini-2.5-flash',
+  // ── the user's own documents and links (25-D §4 / §25.6) ──
+  // ⚠ ONE CALL PER DOCUMENT, EVER — at ingest. The document is read once into findings and
+  // is never sent again, which is what makes a fifty-page report cost nothing per turn.
+  'lex.material': 'gemini-2.5-flash',
   // ── the Deepening (§22) ──
   'deepening.gather': 'gemini-2.5-flash',
   'deepening.sift': 'gemini-2.5-flash',

@@ -23,6 +23,7 @@ import { recordGeminiUsage } from './spend-ledger'
 import { providerFor } from './model-registry'
 import { callModelJson } from './model-call'
 import { thinkingConfigFor, outputBudgetFor } from './model-thinking'
+import { samplingFor, samplingOmissions } from './model-sampling'
 
 /**
  * ⚠ 25-C §4c — THE RESULT TYPES LIVE IN `model-call.ts` AND ARE RE-EXPORTED HERE.
@@ -132,7 +133,12 @@ export async function callJson<T>(opts: LlmCallOptions): Promise<LlmResult<T>> {
           system_instruction: { parts: [{ text: opts.system }] },
           contents: [{ role: 'user', parts: [{ text: opts.user }] }],
           generationConfig: {
-            temperature: opts.temperature ?? 0.4,
+            // 25-D §1b — PER MODEL, exactly like `thinkingConfig` two lines below. Every Gemini
+            // model in config accepts `temperature` today, so this line changes no behaviour —
+            // and that is the reason to route it through the gate now rather than after a
+            // deprecation. The thinking budget was a constant here too, right up until
+            // `gemini-2.5-pro` refused it and took every one of the seven build passes with it.
+            ...samplingFor(opts.model, { temperature: opts.temperature ?? 0.4 }),
             // 25-C §4c — per-model, and the ceiling rises for a model that must think.
             maxOutputTokens: outputBudgetFor(opts.model, opts.maxOutputTokens),
             responseMimeType: 'application/json',
@@ -158,8 +164,21 @@ export async function callJson<T>(opts: LlmCallOptions): Promise<LlmResult<T>> {
       }
     }
 
-    const data = (await res.json()) as { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> }
+    const data = (await res.json()) as {
+      modelVersion?: string
+      candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }>
+    }
     const usage = readUsage(opts.model, data)
+    // 25-D §1c — what actually answered, carried back. See `LlmUsage.echoedModel`.
+    usage.echoedModel = data?.modelVersion ?? null
+    if (usage.echoedModel && usage.echoedModel !== opts.model && !usage.echoedModel.startsWith(opts.model)) {
+      // ⚠ NOT a failure — a substitution may be a dated alias of the same model. It is LOGGED,
+      // loudly, because the alternative is what happened with `grok-3-fast-beta`: months of
+      // results attributed to a model that never ran, with nothing anywhere to notice it by.
+      console.warn('[build-llm] A DIFFERENT MODEL ANSWERED', {
+        label: opts.label, asked: opts.model, answered: usage.echoedModel,
+      })
+    }
 
     // BEFORE parsing. A truncated payload is broken JSON, and parsing first turns a
     // length limit into a parse error and sends the reader after a serialiser bug.
