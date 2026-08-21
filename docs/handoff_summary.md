@@ -25,9 +25,14 @@ stale-index defect — and generalising the case-law refresh found a latent bug 
 citation rewrite, which would have stripped the title from every legislation row it touched.
 ❌ THE $31 CASE-LAW RE-EMBED WAS NOT STARTED AND IS UNSPENT — `build-vector-index` shards a
 `corpus_chunks` it requires to be immutable, so a REPLACE path must be written and staged first.
-▶ CHARLIE: **REDEPLOY `fts-serve`** — proven necessary with a two-sided test, `{"tier":"guidance",
-"corpora":["cps-guidance"]}` returns 0 rows today and `{"tier":"other"}` returns 5; after the
-redeploy they must SWAP. `docs/SEARCH_S11_REPORT.md`.**
+✅ DELIVERED AND VERIFIED LIVE, and the check changed the answer: this was drafted saying "nothing
+has reached a user", then `fts-serve` turned out to have restarted itself at 01:28 UTC. Two-sided
+control either side of it: `{"tier":"other","corpora":["cps-guidance"]}` 5 rows → 0,
+`{"tier":"guidance"}` 0 rows → 3 — SWAPPED. On the guidance stream's own scope `cps-guidance` is
+now **13 of the top 20, at ranks 0, 1 and 2**. Warm p50 **44,274ms → 318ms (139×)**, zero-match
+probe 44,815ms → 3ms. ▶ CHARLIE: one action left — delete `LEX_GUIDANCE_CPS` from Vercel (inert
+now); plus one DECISION, the two treaty collections, unmeasurable until a debates validated set
+exists. `docs/SEARCH_S11_REPORT.md`.**
 Earlier: 2026-08-21 01:23 UTC — ▼ **GRAPH 3C: THE SCORE IS A SPECTRUM AND THE RANKING POINTS
 THE RIGHT WAY — 3 distinct stance values across 2,304,858 estimates → 13,448, and 92.87% at exactly
 ±1.00 → 0%. The evidence is a rank, not an adjective: on the assisted dying Bill the ONE entirely

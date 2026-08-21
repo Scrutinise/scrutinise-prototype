@@ -364,14 +364,23 @@ malformed escape at 219:34. It is in **no commit on any branch**. The `build-cos
 it breaks the production build the moment anything importing it is committed. Not edited — a
 half-written file from another session is worse than an absent one.
 
-▶ **CHARLIE — TWO THINGS, AND THE FIRST IS THE GATE ON EVERYTHING ABOVE.** (1) **Redeploy
-`fts-serve`** (`c268ec09-e489-4cfa-837a-7740d95c24c7`). Proven necessary rather than assumed, with a
-two-sided test: today `{"tier":"guidance","corpora":["cps-guidance"]}` returns **0** rows and
-`{"tier":"other",…}` returns **5**; after the redeploy those must **swap**. ⚠ The latency gain
-reached the service WITHOUT a redeploy (44 s → 2.8–4.2 s) while the tier did not — measured, mechanism
-not asserted. (2) `LEX_GUIDANCE_CPS` can be deleted from Vercel; the code no longer reads it.
-⚠ **Order matters** — between this deploying and the redeploy, `cps-guidance` is briefly unreachable
-again.
+✅ **DELIVERED AND VERIFIED ON THE RUNNING SERVICE, WHICH IS THE ONLY CHECK THAT PROVES ANYTHING
+(§20) — AND IT CHANGED THE ANSWER.** This entry was drafted saying "the redeploy is required and
+nothing has reached a user". Running the check found `fts-serve` had restarted of its own accord
+(`started_at` 2026-08-21T01:28:36Z), so the re-tier is LIVE. Two-sided control, either side of the
+restart: `{"tier":"other","corpora":["cps-guidance"]}` **5 rows → 0**, `{"tier":"guidance",…}`
+**0 rows → 3** — they swapped. **Acceptance test on the guidance stream's own scope, no corpus
+filter:** `cps-guidance` returns **13 of the top 20, at ranks 0, 1 and 2**. A collection no query
+could return at any setting is now the top three results for the question it exists to answer.
+✅ **Latency closed the loop too: warm p50 44,274 ms → 318 ms (139×), p95 410 ms, and the zero-match
+`quokka` probe 44,815 ms → 3 ms** — the diagnostic `fts-optimize`'s own header names, confirming
+those 44 seconds WERE the scan of the un-indexed rows.
+
+▶ **CHARLIE — ONE ACTION, DOWN FROM TWO.** Delete `LEX_GUIDANCE_CPS` from Vercel; the code no longer
+reads it. Observable signal: `[query-router] streams in force: …` stops printing `LEX_GUIDANCE_CPS=`
+at all. ⚠ The §2.4 sequencing hazard has PASSED — it applied only until the index was being served,
+and it is. Plus one decision, not an action: the two treaty collections (admit TREATY to `debates`,
+or a sixth stream), unmeasurable until a debates validated set exists.
 
 ## LEX 25-D / 20-E — THE PANEL ANSWERS QUESTIONS, AND AN EMPTY HEADING SAYS WHY IT IS EMPTY (2026-08-21 01:20 UTC)
 

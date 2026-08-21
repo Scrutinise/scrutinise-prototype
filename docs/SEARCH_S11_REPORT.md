@@ -485,8 +485,9 @@ is exactly the quantity the interleave sprint would measure.
    could be built for it.
 4. ⚠ **No browser walk, and none is claimed.** The extension has no host permission for localhost
    and no Clerk session on production from here.
-5. ⚠ **The re-tier is verified by direct read of the index, NOT through `fts-serve`**, which holds
-   its table from boot. Nothing in §1/§2 reaches a user until it is redeployed.
+5. ✅ ~~The re-tier is verified by direct read of the index only.~~ **Superseded — it is verified on
+   the RUNNING SERVICE**, which restarted at 01:28 UTC; the guidance stream's own scope returns 13
+   `cps-guidance` documents in the top 20, at ranks 0–2. See the delivery section.
 6. ⚠ **The interleave dilution is measured and unchanged** (§5.3).
 7. ⚠ **`cps-guidance` HTML entities and the `lgsco` title defect** are reported, not fixed —
    ingest questions.
@@ -507,54 +508,81 @@ Every other file in the tree typechecks clean.
 
 ---
 
-## ▶ THE TWO THINGS ONLY CHARLIE CAN DO
+## ▶ WHAT IS LEFT FOR CHARLIE — ONE ITEM, DOWN FROM TWO
 
-**1. Redeploy `fts-serve`.** Railway → service `fts-serve`
-(`c268ec09-e489-4cfa-837a-7740d95c24c7`, `https://fts-serve-production-4cea.up.railway.app`) →
-Deployments → ⋮ on the latest SUCCESS → Redeploy.
+**~~1. Redeploy `fts-serve`.~~ ALREADY DONE — it restarted itself at `2026-08-21T01:28:36Z` and the
+acceptance test above passes against the running service.** No action needed. ⚠ If it is ever
+restarted from an older deployment, the two-sided test above is how to tell in one request; the
+`started_at` field in `/stats` is how to tell whether a restart actually happened, whatever the
+dashboard says.
 
-*Why:* it calls `openTable()` once at boot with no `readConsistencyInterval`, so it is still
-serving the pre-re-tier snapshot. **Nothing in this sprint reaches a user until it restarts.**
+**1. Delete `LEX_GUIDANCE_CPS` from Vercel.** The code no longer reads it, so it is inert either
+way — but a retired flag left set is how the next reader comes to believe it does something.
 
-*Expected observable signal — a counter and a result, never an absence of errors:*
-- `GET /stats` → `started_at` moves and `served` resets to 0. If `started_at` is unchanged, the
-  redeploy did not happen, whatever the dashboard says.
-- `POST /fts-search {"query":"domestic abuse prosecution charging","tier":"guidance","limit":20}`
-  → **returns `cps-guidance` rows.** Today, against the old snapshot, it returns none. This is the
-  one-line proof that the whole sprint landed.
-- Warm p50 should return to low single-digit seconds from the 30–45 s of §2.2.
+*Expected observable signal — a line that changes, never an absence of errors:*
+`[query-router] streams in force: …` no longer prints `LEX_GUIDANCE_CPS=…` at all. If it still
+does, the deploy carrying this sprint has not reached production.
 
-**2. The `LEX_GUIDANCE_CPS` environment variable can be deleted from Vercel** once the redeploy
-above is done. The code no longer reads it, so it is inert either way — but leaving a retired flag
-set is how the next reader comes to believe it does something.
+⚠ **The §2.4 sequencing hazard has passed.** It applied only between this code deploying and the
+index being served; the index is being served now, so the flag's removal cannot leave
+`cps-guidance` unreachable.
 
-*Expected observable signal:* `[query-router] streams in force: …` no longer prints
-`LEX_GUIDANCE_CPS=…`. ⚠ **Order matters:** see §2.4 — until the redeploy, `cps-guidance` is briefly
-unreachable again.
+**2. A decision, not an action: the two treaty collections** (§1.2). `uk-treaties` (3,264) and
+`tax-treaties-dta` (324) stay unreachable, and the choice is between admitting the TREATY display
+type to the debates stream and building a sixth stream (one more retrieval call per query against
+a service four requests wide). ⚠ Neither can be scored until a debates validated set exists —
+which is also S10's Q5.
 
 ---
 
-## ⚠⚠ THE REDEPLOY REQUIREMENT IS PROVEN, NOT ASSUMED — AND SO IS THE TEST FOR IT
+## ✅ DELIVERED — VERIFIED ON THE RUNNING SERVICE, NOT ON LOCAL EVIDENCE (§20)
 
-"`fts-serve` holds its table from boot" is repeated in several files. It was tested rather than
-repeated, from the pre-redeploy side, with a control that fires:
+**This section was originally written as "the redeploy is required and nothing has reached a user".
+The delivery check changed the answer, which is the entire reason §20 requires it to be run.**
+
+"`fts-serve` holds its table from boot" is repeated in several files, so it was tested rather than
+repeated — twice, either side of a service restart, with a two-sided control so that a service
+which had simply stopped returning anything could not pass:
+
+| `POST /fts-search {"query":"domestic abuse","corpora":["cps-guidance"], …}` | 01:05 UTC | 01:31 UTC |
+|---|---:|---:|
+| `"tier":"other"` (the OLD tier) | **5 rows** | **0 rows** |
+| `"tier":"guidance"` (the NEW tier) | **0 rows** | **3 rows** |
+
+**They swapped.** `/stats` shows `started_at` moved to `2026-08-21T01:28:36Z` — the service
+restarted of its own accord between the two readings — so the re-tier is live.
+
+### The acceptance test: the guidance stream's own scope, no corpus filter
+
+This is the retrieval the router actually issues, and the string this sprint introduced read back
+off the running service:
 
 ```
-POST /fts-search {"query":"domestic abuse","tier":"guidance","corpora":["cps-guidance"]}  → 0 rows
-POST /fts-search {"query":"domestic abuse","tier":"other",   "corpora":["cps-guidance"]}  → 5 rows
+POST /fts-search {"query":"CPS prosecution guidance domestic abuse charging decision",
+                  "tier":"guidance","limit":20}                       → 20 rows in 1,889 ms
+
+  by corpus: cps-guidance 13 · ico 5 · college-of-policing 1 · quangos-govuk 1
+
+  rank 0  tier=guidance  Violence against Women and Girls Guidance
+  rank 1  tier=guidance  Reconsidering a Prosecution Decision
+  rank 2  tier=guidance  Perverting the Course of Justice and Wasting Police Time in Cases
+                         involving Allegedly False Allegations of Rape and / or Domestic Abuse
 ```
 
-**The served index still has the collection under `other`.** After the redeploy those two results
-must **swap** — that is the acceptance test, and it is two-sided, so a service that had simply
-stopped returning anything could not pass it.
+**A collection that could not be returned by any query at any setting is now the top three results
+for the question it exists to answer**, and 13 of the top 20.
 
-⚠ **One thing did reach the running service without a redeploy, and it is worth recording because
-it complicates the rule:** the latency gain did. The same service went from **44 s** to **2.8–4.2 s**
-on ordinary queries after the rebuild, while still serving the old tier for the rows above. So the
-rebuilt index files are visible to it and the re-tiered row *content* is not. **Stated as measured;
-the mechanism is not asserted.** The practical consequence is unchanged and now has evidence
-under it: **the redeploy is required for the tier change, and nothing in §1 reaches a user without
-it.**
+### Latency, closing the loop on §2.2
+
+| | before the rebuild | after |
+|---|---:|---:|
+| warm p50 | **44,274 ms** *(the job's own before-measurement, from inside the datacentre)* | **318 ms** |
+| warm p95 | ~49,000 ms | **410 ms** |
+| zero-match probe (`quokka`) | 44,815 ms | **3–4 ms** |
+
+The zero-match probe is the diagnostic `fts-optimize`'s header names: an indexed lookup for a term
+that is not there returns in milliseconds, so those 44 seconds *were* the scan of the un-indexed
+rows. **139× on warm p50.**
 
 ---
 
