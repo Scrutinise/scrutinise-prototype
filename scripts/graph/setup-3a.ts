@@ -120,19 +120,29 @@ async function whichDb(pool: ReturnType<typeof getNeonPool>) {
  */
 export function weightFunctionSql(): string {
   const w = POSITION_CONFIG.weights
-  const voteCases = (['rebellion:v1', 'free-vote-heuristic:v1', 'unwhipped-group:v1',
-    'whipped-with:v1', 'small-party-unclassified:v1'] as const)
-    .map((k) => `      WHEN p_signal_type = 'vote' AND p_derivation = '${k}' THEN ${w[k]}::real`)
-    .join('\n')
-  // ⚠⚠ DERIVED FROM THE CONFIG, NOT LISTED HERE. This was a hard-coded array of five names, and
-  // GRAPH 3B found the failure it produces: adding `political_donation` to position-config.ts did
-  // NOT add a case to the SQL, so `position_raw_weight('political_donation', NULL)` returned NULL
-  // while the TypeScript config happily returned 0.1. Two sources of truth wearing one name — and
-  // the whole point of generating this function was to avoid exactly that.
+  // ⚠⚠ GRAPH 3C — THIS LIST WAS STILL HARD-CODED, AND 3B'S FIX HAD ONLY REACHED THE OTHER HALF.
+  // 3B found `political_donation` silently missing from the generated SQL and derived the
+  // SIGNAL-TYPE cases from the config to prevent it recurring — but left the five VOTE CLASSES
+  // written out as a literal array here. Adding `party-split:v1` to the config in 3C therefore
+  // produced a class the SQL did not know, `position_raw_weight('vote','party-split:v1')` → NULL,
+  // and 37,187 votes with no weight. Loud rather than silent, because of the deliberate absence of
+  // a fallback below — but it is the SAME defect, half-fixed, and this is the other half.
   //
-  // A weight key containing ':' is a vote CLASS (handled above); everything else is a signal type.
-  // check-3b.ts asserts the SQL knows every signal type the config knows, so a future addition
-  // fails a check rather than silently losing its weight.
+  // A weight key containing ':' is a vote CLASS; everything else is a signal type. One rule, both
+  // halves, derived from the config's own keys.
+  const voteCases = Object.keys(w)
+    .filter((k) => k.includes(':'))
+    .map((k) => `      WHEN p_signal_type = 'vote' AND p_derivation = '${k}' THEN ${w[k as keyof typeof w]}::real`)
+    .join('\n')
+  // ⚠⚠ DERIVED FROM THE CONFIG, NOT LISTED HERE. GRAPH 3B found the failure the literal produces:
+  // adding `political_donation` to position-config.ts did NOT add a case to the SQL, so
+  // `position_raw_weight('political_donation', NULL)` returned NULL while the TypeScript config
+  // happily returned 0.1. Two sources of truth wearing one name — and the whole point of
+  // generating this function was to avoid exactly that.
+  //
+  // check-3b.ts asserts the SQL knows every signal type the config knows; check-3c.ts asserts the
+  // same for every vote class, so a future addition of either kind fails a check rather than
+  // silently losing its weight.
   const typeCases = Object.keys(w)
     .filter((k) => !k.includes(':'))
     .map((k) => `      WHEN p_signal_type = '${k}' THEN ${w[k as keyof typeof w]}::real`)
