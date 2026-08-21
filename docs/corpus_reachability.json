@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-10 20:40 UTC",
+  "generatedAt": "2026-08-20 23:59 UTC",
   "totals": {
-    "collections": 70,
-    "sections": 18383172,
-    "fts_rows": 18166926,
-    "vec_rows": 22607985
+    "collections": 74,
+    "sections": 18521164,
+    "fts_rows": 18272377,
+    "vec_rows": 22689587
   },
   "streams": [
     "legislation",
@@ -129,22 +129,8 @@
       "type_null": false,
       "router_stream": "committees",
       "tier_scoped_callers": [],
-      "gold_questions": 13,
-      "gold_ids": [
-        "B2",
-        "C2",
-        "C4",
-        "D4",
-        "E4",
-        "F2",
-        "F3",
-        "CM2",
-        "CM3",
-        "GD1",
-        "GD2",
-        "GD3",
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -155,7 +141,7 @@
       "sections": 344773,
       "compiled": 323922,
       "fts_rows": 323922,
-      "vec_rows": 464790,
+      "vec_rows": 437701,
       "index_tiers": {
         "parliamentary": 323922
       },
@@ -167,25 +153,56 @@
       "type_null": false,
       "router_stream": "committees",
       "tier_scoped_callers": [],
-      "gold_questions": 16,
-      "gold_ids": [
-        "B3",
-        "B4",
-        "C4",
-        "C5",
-        "E1",
-        "E2",
-        "E3",
-        "CM1",
-        "CM2",
-        "CM3",
-        "CM4",
-        "GD1",
-        "GD2",
-        "GD3",
-        "GD4",
-        "EN1"
+      "gold_questions": 0,
+      "gold_ids": [],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "collection": "commons-divisions-votes",
+      "label": "Commons division votes (per-member)",
+      "retired": false,
+      "sections": 2361,
+      "compiled": 2361,
+      "fts_rows": 2361,
+      "vec_rows": 18888,
+      "index_tiers": {
+        "parliamentary": 2361
+      },
+      "tier": "parliamentary",
+      "tier_split": false,
+      "types": [
+        "DIVISION"
       ],
+      "type_null": false,
+      "router_stream": "debates",
+      "tier_scoped_callers": [],
+      "gold_questions": 0,
+      "gold_ids": [],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "collection": "consultations",
+      "label": "Consultations (GOV.UK)",
+      "retired": false,
+      "sections": 7448,
+      "compiled": 7448,
+      "fts_rows": 7448,
+      "vec_rows": 8652,
+      "index_tiers": {
+        "guidance": 7448
+      },
+      "tier": "guidance",
+      "tier_split": false,
+      "types": [
+        "CONSULTATION"
+      ],
+      "type_null": false,
+      "router_stream": "guidance",
+      "tier_scoped_callers": [],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -232,10 +249,8 @@
       "type_null": false,
       "router_stream": "NONE",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "F4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "deferred-to-graph",
       "note": "DESTINED FOR THE POSITION GRAPH, not a retrieval stream: a named list of members endorsing a proposition on a date — a high-confidence position-graph edge, not a document to retrieve and read. Retrieval status unchanged — still returned by the unrouted/fail-open path, as keyword-only."
     },
@@ -258,10 +273,8 @@
       "type_null": false,
       "router_stream": "caselaw",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -308,10 +321,8 @@
       "type_null": false,
       "router_stream": "caselaw",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "D5"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -322,7 +333,7 @@
       "sections": 241571,
       "compiled": 241571,
       "fts_rows": 241571,
-      "vec_rows": 492152,
+      "vec_rows": 439112,
       "index_tiers": {
         "legislation": 241571
       },
@@ -350,7 +361,7 @@
       "sections": 27428,
       "compiled": 21984,
       "fts_rows": 21984,
-      "vec_rows": 39855,
+      "vec_rows": 32991,
       "index_tiers": {
         "legislation": 21984
       },
@@ -378,7 +389,7 @@
       "sections": 18801,
       "compiled": 18651,
       "fts_rows": 18651,
-      "vec_rows": 22517,
+      "vec_rows": 20133,
       "index_tiers": {
         "legislation": 18651
       },
@@ -394,14 +405,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 5,
-      "gold_ids": [
-        "D2",
-        "D3",
-        "E3",
-        "F3",
-        "EN1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -472,15 +477,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 6,
-      "gold_ids": [
-        "B5",
-        "D4",
-        "E2",
-        "E4",
-        "F4",
-        "EN2"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -551,11 +549,8 @@
       "type_null": false,
       "router_stream": "guidance",
       "tier_scoped_callers": [],
-      "gold_questions": 2,
-      "gold_ids": [
-        "GD1",
-        "GD3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -602,10 +597,36 @@
       "type_null": false,
       "router_stream": "guidance",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "GD3"
+      "gold_questions": 0,
+      "gold_ids": [],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
+      "collection": "impact-assessments",
+      "label": "Impact assessments (legislation.gov.uk)",
+      "retired": false,
+      "sections": 18759,
+      "compiled": 18756,
+      "fts_rows": 18756,
+      "vec_rows": 49248,
+      "index_tiers": {
+        "legislation": 18756
+      },
+      "tier": "legislation",
+      "tier_split": false,
+      "types": [
+        "IMPACT_ASSESSMENT"
       ],
+      "type_null": false,
+      "router_stream": "legislation",
+      "tier_scoped_callers": [
+        "app/api/ai/[ideaId] (Lex chat grounding)",
+        "/api/ideas/[id]/legislation-search (CreateIdea panel)",
+        "POST /api/search"
+      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -850,6 +871,30 @@
       "note": "indexed under tier \"other\", which no stream selects — surfaces only on the unrouted/fail-open path"
     },
     {
+      "collection": "lords-divisions-votes",
+      "label": "Lords division votes (per-member)",
+      "retired": false,
+      "sections": 3284,
+      "compiled": 3284,
+      "fts_rows": 3284,
+      "vec_rows": 18219,
+      "index_tiers": {
+        "parliamentary": 3284
+      },
+      "tier": "parliamentary",
+      "tier_split": false,
+      "types": [
+        "DIVISION"
+      ],
+      "type_null": false,
+      "router_stream": "debates",
+      "tier_scoped_callers": [],
+      "gold_questions": 0,
+      "gold_ids": [],
+      "verdict": "reachable",
+      "note": null
+    },
+    {
       "collection": "members-interests",
       "label": "Register of Members' Financial Interests",
       "retired": false,
@@ -890,10 +935,8 @@
       "type_null": false,
       "router_stream": "guidance",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "CM1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -940,11 +983,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 2,
-      "gold_ids": [
-        "B4",
-        "CM3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1015,10 +1055,8 @@
       "type_null": false,
       "router_stream": "NONE",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "keyword-only",
       "note": "indexed under tier \"other\", which no stream selects — surfaces only on the unrouted/fail-open path"
     },
@@ -1113,18 +1151,8 @@
       "type_null": false,
       "router_stream": "NONE",
       "tier_scoped_callers": [],
-      "gold_questions": 9,
-      "gold_ids": [
-        "C2",
-        "C4",
-        "C5",
-        "E2",
-        "E4",
-        "F1",
-        "F2",
-        "F4",
-        "F5"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "deferred-to-graph",
       "note": "DESTINED FOR THE POSITION GRAPH, not a retrieval stream: the same shape as an EDM but for public salience rather than parliamentary position. Retrieval status unchanged — still returned by the unrouted/fail-open path, as keyword-only."
     },
@@ -1156,12 +1184,12 @@
       "collection": "primary-acts-2000plus",
       "label": "UK Primary Acts (2000+)",
       "retired": false,
-      "sections": 145767,
-      "compiled": 145704,
-      "fts_rows": 145704,
-      "vec_rows": 148935,
+      "sections": 147975,
+      "compiled": 147788,
+      "fts_rows": 147788,
+      "vec_rows": 151045,
       "index_tiers": {
-        "legislation": 145704
+        "legislation": 147788
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1175,15 +1203,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 6,
-      "gold_ids": [
-        "A1",
-        "A4",
-        "D2",
-        "E1",
-        "E3",
-        "GD3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1191,12 +1212,12 @@
       "collection": "primary-acts-pre-2000",
       "label": "UK Primary Acts (pre-2000)",
       "retired": false,
-      "sections": 172995,
-      "compiled": 165438,
-      "fts_rows": 165438,
-      "vec_rows": 171637,
+      "sections": 179435,
+      "compiled": 166290,
+      "fts_rows": 166290,
+      "vec_rows": 172508,
       "index_tiers": {
-        "legislation": 165438
+        "legislation": 166290
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1210,12 +1231,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 3,
-      "gold_ids": [
-        "A1",
-        "A2",
-        "D2"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1238,26 +1255,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 17,
-      "gold_ids": [
-        "B5",
-        "C4",
-        "C5",
-        "E1",
-        "E2",
-        "E4",
-        "E5",
-        "F1",
-        "F2",
-        "F4",
-        "F5",
-        "CM1",
-        "CM2",
-        "CM3",
-        "CL3",
-        "GD3",
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1280,20 +1279,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 11,
-      "gold_ids": [
-        "B4",
-        "C4",
-        "E2",
-        "E4",
-        "E5",
-        "F1",
-        "F2",
-        "CM2",
-        "CM3",
-        "GD2",
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1316,10 +1303,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "E1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1327,12 +1312,12 @@
       "collection": "pwdata-lordswrans",
       "label": "Lords Written Answers (per-Q&A)",
       "retired": false,
-      "sections": 176099,
-      "compiled": 175560,
-      "fts_rows": 175560,
-      "vec_rows": 177208,
+      "sections": 176119,
+      "compiled": 175580,
+      "fts_rows": 175576,
+      "vec_rows": 177224,
       "index_tiers": {
-        "parliamentary": 175560
+        "parliamentary": 175576
       },
       "tier": "parliamentary",
       "tier_split": false,
@@ -1342,20 +1327,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 11,
-      "gold_ids": [
-        "C1",
-        "C2",
-        "C4",
-        "E1",
-        "E2",
-        "F1",
-        "F3",
-        "F4",
-        "CM1",
-        "GD1",
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1378,20 +1351,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 11,
-      "gold_ids": [
-        "B4",
-        "C4",
-        "C5",
-        "D4",
-        "E5",
-        "F2",
-        "F4",
-        "CM1",
-        "CM3",
-        "GD1",
-        "GD4"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1414,11 +1375,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 2,
-      "gold_ids": [
-        "E1",
-        "CM2"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1426,12 +1384,12 @@
       "collection": "pwdata-wrans",
       "label": "Commons Written Answers (per-Q&A)",
       "retired": false,
-      "sections": 1235159,
-      "compiled": 1232894,
-      "fts_rows": 1232894,
-      "vec_rows": 1247557,
+      "sections": 1235263,
+      "compiled": 1232998,
+      "fts_rows": 1232942,
+      "vec_rows": 1247605,
       "index_tiers": {
-        "parliamentary": 1232894
+        "parliamentary": 1232942
       },
       "tier": "parliamentary",
       "tier_split": false,
@@ -1441,27 +1399,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 18,
-      "gold_ids": [
-        "B4",
-        "C2",
-        "C4",
-        "D4",
-        "E1",
-        "E2",
-        "E4",
-        "E5",
-        "F1",
-        "F2",
-        "F3",
-        "F5",
-        "CM1",
-        "CM2",
-        "GD1",
-        "GD2",
-        "GD4",
-        "EN1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1484,11 +1423,8 @@
       "type_null": false,
       "router_stream": "guidance",
       "tier_scoped_callers": [],
-      "gold_questions": 2,
-      "gold_ids": [
-        "D5",
-        "GD1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1496,12 +1432,12 @@
       "collection": "regional",
       "label": "Devolved Legislation (Scot/Wal/NI)",
       "retired": false,
-      "sections": 346274,
-      "compiled": 331124,
-      "fts_rows": 331124,
-      "vec_rows": 348558,
+      "sections": 357161,
+      "compiled": 341093,
+      "fts_rows": 341093,
+      "vec_rows": 358804,
       "index_tiers": {
-        "legislation": 331124
+        "legislation": 341093
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1515,11 +1451,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 2,
-      "gold_ids": [
-        "E1",
-        "F3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1527,12 +1460,12 @@
       "collection": "retained-eu",
       "label": "Retained EU Law",
       "retired": false,
-      "sections": 308513,
-      "compiled": 187555,
-      "fts_rows": 187555,
-      "vec_rows": 197161,
+      "sections": 319346,
+      "compiled": 199224,
+      "fts_rows": 199224,
+      "vec_rows": 208987,
       "index_tiers": {
-        "legislation": 187555
+        "legislation": 199224
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1546,10 +1479,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 1,
-      "gold_ids": [
-        "GD3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1596,10 +1527,8 @@
       "type_null": false,
       "router_stream": "caselaw",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "CL1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1622,14 +1551,8 @@
       "type_null": false,
       "router_stream": "debates",
       "tier_scoped_callers": [],
-      "gold_questions": 5,
-      "gold_ids": [
-        "E4",
-        "F2",
-        "CM2",
-        "CM3",
-        "EN1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1685,12 +1608,12 @@
       "collection": "si-2010plus",
       "label": "Statutory Instruments (2010+)",
       "retired": false,
-      "sections": 281244,
-      "compiled": 270339,
-      "fts_rows": 270339,
-      "vec_rows": 286946,
+      "sections": 287078,
+      "compiled": 275744,
+      "fts_rows": 275744,
+      "vec_rows": 292604,
       "index_tiers": {
-        "legislation": 270339
+        "legislation": 275744
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1704,12 +1627,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 3,
-      "gold_ids": [
-        "C5",
-        "E1",
-        "E3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1717,12 +1636,12 @@
       "collection": "si-pre-2010",
       "label": "Statutory Instruments (pre-2010)",
       "retired": false,
-      "sections": 419636,
-      "compiled": 419250,
-      "fts_rows": 419250,
-      "vec_rows": 461752,
+      "sections": 489450,
+      "compiled": 462809,
+      "fts_rows": 462809,
+      "vec_rows": 506949,
       "index_tiers": {
-        "legislation": 419250
+        "legislation": 462809
       },
       "tier": "legislation",
       "tier_split": false,
@@ -1736,10 +1655,8 @@
         "/api/ideas/[id]/legislation-search (CreateIdea panel)",
         "POST /api/search"
       ],
-      "gold_questions": 1,
-      "gold_ids": [
-        "A3"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1786,10 +1703,8 @@
       "type_null": false,
       "router_stream": "caselaw",
       "tier_scoped_callers": [],
-      "gold_questions": 1,
-      "gold_ids": [
-        "GD1"
-      ],
+      "gold_questions": 0,
+      "gold_ids": [],
       "verdict": "reachable",
       "note": null
     },
@@ -1914,1280 +1829,5 @@
       "note": null
     }
   ],
-  "gold": [
-    {
-      "id": "A1",
-      "query": "Section 21 Housing Act 1988",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "primary-acts-pre-2000": 1,
-        "primary-acts-2000plus": 1
-      },
-      "topCorpora": {
-        "primary-acts-pre-2000": 1,
-        "primary-acts-2000plus": 4,
-        "si-pre-2010": 2,
-        "pwdata-wrans": 7,
-        "pwdata-debates": 1,
-        "historic-hansard": 4,
-        "senedd-cofnod": 1
-      },
-      "inStreamKeyHits": 2,
-      "inStreamTop": 7,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "A2",
-      "query": "What does section 1 of the Theft Act 1968 actually say?",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "primary-acts-pre-2000": 1
-      },
-      "topCorpora": {
-        "primary-acts-pre-2000": 5,
-        "si-pre-2010": 4,
-        "si-2010plus": 1,
-        "primary-acts-2000plus": 1,
-        "pwdata-debates": 3,
-        "historic-hansard": 2,
-        "pwdata-wrans": 1,
-        "pwdata-lordswrans": 1,
-        "cps-guidance": 1,
-        "committees-reports": 1
-      },
-      "inStreamKeyHits": 1,
-      "inStreamTop": 11,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "A3",
-      "query": "Working Time Regulations 1998",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "si-pre-2010": 14
-      },
-      "topCorpora": {
-        "si-pre-2010": 12,
-        "primary-acts-pre-2000": 1,
-        "pwdata-wrans": 6,
-        "niassembly-hansard": 1
-      },
-      "inStreamKeyHits": 14,
-      "inStreamTop": 13,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "A4",
-      "query": "Equality Act 2010 section 149",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "primary-acts-2000plus": 1
-      },
-      "topCorpora": {
-        "primary-acts-2000plus": 1,
-        "pwdata-lordswrans": 6,
-        "committees-reports": 3,
-        "quangos-govuk": 4,
-        "pwdata-wrans": 4,
-        "pwdata-debates": 2
-      },
-      "inStreamKeyHits": 1,
-      "inStreamTop": 1,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "A5",
-      "query": "Find me the law that says you have to wear a seatbelt",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "petitions": 2,
-        "pwdata-wrans": 7,
-        "historic-hansard": 3,
-        "pwdata-debates": 4,
-        "committees-reports": 1,
-        "pwdata-westminster": 2,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "B1",
-      "query": "Can my landlord kick me out without giving a reason?",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 4,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "petitions": 1,
-        "pwdata-debates": 6,
-        "historic-hansard": 7,
-        "pwdata-lords": 4,
-        "explanatory-notes": 1,
-        "scottish-parliament-or": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 1,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "B2",
-      "query": "I want to stop people renting out whole houses as Airbnbs all year round",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "committees-evidence": 1
-      },
-      "topCorpora": {
-        "pwdata-westminster": 8,
-        "pwdata-debates": 4,
-        "senedd-cofnod": 1,
-        "committees-evidence": 3,
-        "pwdata-lords": 3,
-        "scottish-parliament-or": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "B3",
-      "query": "Is it illegal to take a photo of someone in public without their permission?",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "committees-reports": 1
-      },
-      "topCorpora": {
-        "petitions": 16,
-        "quangos-govuk": 2,
-        "committees-reports": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "B4",
-      "query": "Statutory duty of candour — who does it bind and where is it heading?",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-lords": 8,
-        "committees-reports": 9,
-        "niassembly-hansard": 2,
-        "pwdata-westminster": 3,
-        "pwdata-wrans": 1
-      },
-      "topCorpora": {
-        "pwdata-lords": 8,
-        "committees-reports": 7,
-        "niassembly-hansard": 2,
-        "pwdata-westminster": 2,
-        "pwdata-wrans": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "B5",
-      "query": "What are the rules about how much noise my neighbours can make at night?",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-debates": 7,
-        "historic-hansard": 1
-      },
-      "topCorpora": {
-        "pwdata-debates": 19,
-        "historic-hansard": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "C1",
-      "query": "Everything currently regulating short-term holiday lets in England",
-      "intendedStream": "legislation + guidance",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "pwdata-lordswrans": 2
-      },
-      "topCorpora": {
-        "pwdata-wrans": 15,
-        "pwdata-lordswrans": 3,
-        "pwdata-debates": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "C2",
-      "query": "What laws govern e-scooters?",
-      "intendedStream": "legislation + guidance",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-wrans": 7,
-        "pwdata-lordswrans": 13,
-        "petitions": 2,
-        "committees-evidence": 1
-      },
-      "topCorpora": {
-        "pwdata-lordswrans": 12,
-        "pwdata-wrans": 6,
-        "committees-evidence": 1,
-        "petitions": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "C3",
-      "query": "The statutory framework for adult social care funding in England",
-      "intendedStream": "legislation + guidance",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "pwdata-wrans": 15,
-        "committees-reports": 4,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "C4",
-      "query": "What duties do water companies have about sewage discharges, and where do they come from?",
-      "intendedStream": "legislation + guidance",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-evidence": 2,
-        "committees-reports": 2,
-        "pwdata-wrans": 4,
-        "pwdata-debates": 6,
-        "petitions": 1,
-        "pwdata-westminster": 2,
-        "pwdata-lords": 3,
-        "pwdata-lordswrans": 2
-      },
-      "topCorpora": {
-        "pwdata-debates": 6,
-        "petitions": 1,
-        "pwdata-westminster": 2,
-        "pwdata-wrans": 4,
-        "pwdata-lords": 3,
-        "committees-evidence": 1,
-        "committees-reports": 1,
-        "pwdata-lordswrans": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "C5",
-      "query": "What protections do people who live in park homes / mobile homes have?",
-      "intendedStream": "legislation + guidance",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 3,
-      "satisfyingCorpora": {
-        "si-2010plus": 1,
-        "committees-reports": 1,
-        "pwdata-debates": 3,
-        "pwdata-westminster": 3,
-        "petitions": 1
-      },
-      "topCorpora": {
-        "si-2010plus": 1,
-        "pwdata-westminster": 5,
-        "committees-reports": 4,
-        "pwdata-debates": 7,
-        "petitions": 1,
-        "pwdata-lords": 2
-      },
-      "inStreamKeyHits": 1,
-      "inStreamTop": 1,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "D1",
-      "query": "What has amended section 21 of the Housing Act 1988 since 2015?",
-      "intendedStream": "citation graph",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "primary-acts-pre-2000": 1,
-        "explanatory-notes": 11,
-        "primary-acts-2000plus": 2,
-        "committees-reports": 1,
-        "pwdata-wrans": 5
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "D2",
-      "query": "List the statutory instruments made under the Building Safety Act 2022",
-      "intendedStream": "citation graph",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "explanatory-notes": 11,
-        "primary-acts-pre-2000": 3,
-        "primary-acts-2000plus": 1
-      },
-      "topCorpora": {
-        "explanatory-notes": 11,
-        "primary-acts-pre-2000": 2,
-        "explanatory-memoranda": 5,
-        "primary-acts-2000plus": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-router-stream"
-    },
-    {
-      "id": "D3",
-      "query": "Which provisions of the Environment Act 2021 are not yet in force?",
-      "intendedStream": "citation graph",
-      "draft": false,
-      "keysTotal": 1,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "explanatory-notes": 12
-      },
-      "topCorpora": {
-        "explanatory-notes": 15,
-        "regional": 2,
-        "explanatory-memoranda": 1,
-        "si-2010plus": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-router-stream"
-    },
-    {
-      "id": "D4",
-      "query": "Has the Dangerous Dogs Act 1991 been changed since it was passed — what changed and why?",
-      "intendedStream": "citation graph",
-      "draft": false,
-      "keysTotal": 3,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "historic-hansard": 2,
-        "pwdata-westminster": 2,
-        "pwdata-wrans": 12,
-        "committees-evidence": 2
-      },
-      "topCorpora": {
-        "historic-hansard": 2,
-        "pwdata-westminster": 2,
-        "pwdata-wrans": 13,
-        "petitions": 1,
-        "committees-evidence": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-router-stream"
-    },
-    {
-      "id": "D5",
-      "query": "What case law has considered 'philosophical belief' under section 10 of the Equality Act 2010?",
-      "intendedStream": "citation graph",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "et-decisions": 12,
-        "quangos-govuk": 2
-      },
-      "topCorpora": {
-        "primary-acts-2000plus": 1,
-        "explanatory-memoranda": 1,
-        "et-decisions": 12,
-        "pwdata-lords": 3,
-        "quangos-govuk": 2,
-        "pwdata-debates": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-router-stream"
-    },
-    {
-      "id": "E1",
-      "query": "What did ministers say the under-occupancy provisions of the Welfare Reform Act 2012 were intended to achieve?",
-      "intendedStream": "debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "primary-acts-2000plus": 1,
-        "regional": 1,
-        "si-2010plus": 1,
-        "pwdata-wrans": 2,
-        "committees-reports": 5,
-        "pwdata-debates": 1,
-        "pwdata-lordswrans": 1,
-        "pwdata-wms": 1,
-        "pwdata-lordswms": 1
-      },
-      "topCorpora": {
-        "explanatory-memoranda": 2,
-        "primary-acts-2000plus": 1,
-        "regional": 1,
-        "si-2010plus": 1,
-        "pwdata-wrans": 2,
-        "committees-reports": 5,
-        "pwdata-debates": 3,
-        "pwdata-lordswrans": 1,
-        "hmrc-manuals": 1,
-        "niassembly-hansard": 1,
-        "pwdata-wms": 1,
-        "pwdata-lordswms": 1
-      },
-      "inStreamKeyHits": 6,
-      "inStreamTop": 9,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "E2",
-      "query": "Why was the sugar tax designed as a levy on manufacturers instead of a tax at the till?",
-      "intendedStream": "debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-wrans": 5,
-        "committees-reports": 2,
-        "pwdata-lords": 2,
-        "historic-hansard": 9,
-        "pwdata-debates": 3,
-        "petitions": 2,
-        "pwdata-lordswrans": 1
-      },
-      "topCorpora": {
-        "historic-hansard": 9,
-        "pwdata-wrans": 3,
-        "pwdata-debates": 3,
-        "petitions": 2,
-        "committees-reports": 1,
-        "pwdata-lordswrans": 1,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 20,
-      "inStreamTop": 17,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "E3",
-      "query": "What assurances were given during the passage of the Investigatory Powers Act 2016 about safeguards on bulk powers?",
-      "intendedStream": "debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "explanatory-notes": 13,
-        "primary-acts-2000plus": 4,
-        "si-2010plus": 2,
-        "committees-reports": 12
-      },
-      "topCorpora": {
-        "explanatory-notes": 7,
-        "primary-acts-2000plus": 2,
-        "si-2010plus": 1,
-        "committees-reports": 9,
-        "echr-hudoc": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "E4",
-      "query": "Why does the indoor smoking ban not apply to private homes? What was said when it was passed?",
-      "intendedStream": "debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "petitions": 1,
-        "pwdata-debates": 6,
-        "pwdata-lords": 2,
-        "committees-evidence": 1,
-        "historic-hansard": 1,
-        "pwdata-wrans": 2,
-        "scottish-parliament-or": 1
-      },
-      "topCorpora": {
-        "pwdata-lords": 3,
-        "petitions": 2,
-        "pwdata-debates": 8,
-        "committees-evidence": 1,
-        "historic-hansard": 2,
-        "pwdata-wrans": 2,
-        "pwdata-lordswrans": 1,
-        "scottish-parliament-or": 1
-      },
-      "inStreamKeyHits": 12,
-      "inStreamTop": 17,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "E5",
-      "query": "When the Hunting Act 2004 was passed, what did ministers say about how it would be enforced?",
-      "intendedStream": "debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-wrans": 3,
-        "pwdata-debates": 3,
-        "pwdata-westminster": 3,
-        "pwdata-lords": 1
-      },
-      "topCorpora": {
-        "pwdata-wrans": 2,
-        "pwdata-debates": 7,
-        "pwdata-westminster": 2,
-        "pwdata-lords": 5,
-        "historic-hansard": 3,
-        "scottish-parliament-or": 1
-      },
-      "inStreamKeyHits": 10,
-      "inStreamTop": 20,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "F1",
-      "query": "Has anyone tried to ban single-use plastics completely? What happened?",
-      "intendedStream": "bills + debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-lords": 2,
-        "petitions": 8,
-        "pwdata-wrans": 20,
-        "pwdata-lordswrans": 8,
-        "pwdata-debates": 2
-      },
-      "topCorpora": {
-        "pwdata-lords": 1,
-        "petitions": 4,
-        "pwdata-wrans": 10,
-        "pwdata-lordswrans": 4,
-        "pwdata-debates": 1
-      },
-      "inStreamKeyHits": 32,
-      "inStreamTop": 16,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "F2",
-      "query": "Previous Private Members’ Bills attempting to restrict fireworks sales, and why they failed",
-      "intendedStream": "bills + debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-evidence": 5,
-        "pwdata-westminster": 5,
-        "petitions": 1,
-        "pwdata-debates": 5,
-        "pwdata-wrans": 2,
-        "scottish-parliament-or": 2,
-        "pwdata-lords": 1
-      },
-      "topCorpora": {
-        "committees-evidence": 5,
-        "pwdata-westminster": 5,
-        "petitions": 1,
-        "pwdata-debates": 5,
-        "pwdata-wrans": 1,
-        "scottish-parliament-or": 2,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 15,
-      "inStreamTop": 14,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "F3",
-      "query": "I want a law making landlords accept tenants with pets. Has this been tried?",
-      "intendedStream": "bills + debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-wrans": 2,
-        "pwdata-lordswrans": 2,
-        "regional": 1,
-        "committees-evidence": 1,
-        "explanatory-notes": 1
-      },
-      "topCorpora": {
-        "pwdata-wrans": 8,
-        "pwdata-lordswrans": 2,
-        "petitions": 4,
-        "pwdata-lords": 2,
-        "explanatory-notes": 1,
-        "regional": 1,
-        "pwdata-debates": 1,
-        "committees-evidence": 1
-      },
-      "inStreamKeyHits": 4,
-      "inStreamTop": 13,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "F4",
-      "query": "Attempts since 2010 to introduce proportional representation for Westminster elections",
-      "intendedStream": "bills + debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "pwdata-debates": 10,
-        "pwdata-westminster": 1,
-        "early-day-motions": 1,
-        "historic-hansard": 4,
-        "pwdata-lordswrans": 1,
-        "petitions": 1
-      },
-      "topCorpora": {
-        "pwdata-debates": 10,
-        "pwdata-westminster": 1,
-        "pwdata-lords": 1,
-        "early-day-motions": 1,
-        "pwdata-lordswms": 1,
-        "historic-hansard": 4,
-        "pwdata-lordswrans": 1,
-        "petitions": 1
-      },
-      "inStreamKeyHits": 16,
-      "inStreamTop": 18,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "F5",
-      "query": "Has Parliament ever tried to make first aid training compulsory in schools?",
-      "intendedStream": "bills + debates",
-      "draft": false,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-debates": 6,
-        "petitions": 3,
-        "pwdata-wrans": 3
-      },
-      "topCorpora": {
-        "petitions": 8,
-        "pwdata-debates": 6,
-        "pwdata-wrans": 5,
-        "pwdata-westminster": 1
-      },
-      "inStreamKeyHits": 9,
-      "inStreamTop": 12,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "B6",
-      "query": "I want to revoke MiFID II",
-      "intendedStream": "legislation",
-      "draft": false,
-      "keysTotal": 6,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "hmrc-manuals": 2,
-        "quangos-govuk": 4,
-        "explanatory-memoranda": 8,
-        "si-2010plus": 6
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 14,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "CM1",
-      "query": "What did MPs conclude were the causes of the collapse of Carillion?",
-      "intendedStream": "committees",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-debates": 6,
-        "committees-reports": 17,
-        "pwdata-lordswrans": 1,
-        "nao-reports": 1,
-        "pwdata-westminster": 1,
-        "pwdata-wrans": 1
-      },
-      "topCorpora": {
-        "pwdata-debates": 5,
-        "committees-reports": 11,
-        "pwdata-lordswrans": 1,
-        "nao-reports": 1,
-        "pwdata-westminster": 1,
-        "pwdata-wrans": 1
-      },
-      "inStreamKeyHits": 17,
-      "inStreamTop": 11,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "CM2",
-      "query": "Why were failures in the Post Office Horizon IT system not addressed for so long?",
-      "intendedStream": "committees",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "scottish-parliament-or": 6,
-        "pwdata-wrans": 5,
-        "committees-reports": 10,
-        "pwdata-debates": 4,
-        "committees-evidence": 5,
-        "pwdata-lords": 4,
-        "pwdata-wms": 2
-      },
-      "topCorpora": {
-        "scottish-parliament-or": 4,
-        "pwdata-wrans": 3,
-        "committees-reports": 5,
-        "pwdata-debates": 2,
-        "committees-evidence": 3,
-        "pwdata-lords": 2,
-        "pwdata-wms": 1
-      },
-      "inStreamKeyHits": 15,
-      "inStreamTop": 8,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "CM3",
-      "query": "What evidence was given about the effects of the two-child limit on child poverty?",
-      "intendedStream": "committees",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "pwdata-lords": 8,
-        "pwdata-debates": 9,
-        "committees-evidence": 6,
-        "scottish-parliament-or": 8,
-        "committees-reports": 1,
-        "pwdata-westminster": 2,
-        "niassembly-hansard": 2
-      },
-      "topCorpora": {
-        "pwdata-lords": 5,
-        "pwdata-debates": 5,
-        "committees-evidence": 3,
-        "scottish-parliament-or": 4,
-        "committees-reports": 1,
-        "pwdata-westminster": 1,
-        "niassembly-hansard": 1
-      },
-      "inStreamKeyHits": 7,
-      "inStreamTop": 4,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "CM4",
-      "query": "What did committees find caused the failures in the UK response to the coronavirus pandemic?",
-      "intendedStream": "committees",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-reports": 26
-      },
-      "topCorpora": {
-        "committees-reports": 20
-      },
-      "inStreamKeyHits": 26,
-      "inStreamTop": 20,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "CL1",
-      "query": "What is the test for whether a public body’s decision is so unreasonable that a court will overturn it?",
-      "intendedStream": "caselaw",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "scottish-courts": 1
-      },
-      "topCorpora": {
-        "pwdata-debates": 6,
-        "committees-reports": 4,
-        "pwdata-lordswrans": 1,
-        "scottish-courts": 1,
-        "hmrc-manuals": 4,
-        "et-decisions": 1,
-        "pwdata-lords": 1,
-        "pwdata-westminster": 2
-      },
-      "inStreamKeyHits": 1,
-      "inStreamTop": 2,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "CL2",
-      "query": "When is a consultation by a public authority unlawful because it was inadequate?",
-      "intendedStream": "caselaw",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "quangos-govuk": 3,
-        "committees-reports": 4,
-        "pwdata-debates": 6,
-        "historic-hansard": 1,
-        "early-day-motions": 1,
-        "explanatory-notes": 3,
-        "explanatory-memoranda": 1,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "CL3",
-      "query": "Can the government suspend Parliament to avoid scrutiny?",
-      "intendedStream": "caselaw",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "pwdata-debates": 2
-      },
-      "topCorpora": {
-        "pwdata-debates": 4,
-        "scottish-parliament-or": 10,
-        "committees-reports": 3,
-        "committees-evidence": 1,
-        "pwdata-lordswrans": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "CL4",
-      "query": "How do courts decide if someone driving for an app is an employee or self-employed?",
-      "intendedStream": "caselaw",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 0,
-      "satisfyingCorpora": {},
-      "topCorpora": {
-        "hmrc-manuals": 5,
-        "quangos-govuk": 2,
-        "committees-reports": 3,
-        "committees-evidence": 2,
-        "pwdata-wrans": 6,
-        "petitions": 1,
-        "pwdata-debates": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "no-key-hit"
-    },
-    {
-      "id": "GD1",
-      "query": "How does HMRC decide whether a contractor counts as employed or self-employed for tax?",
-      "intendedStream": "guidance",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-reports": 4,
-        "hmrc-manuals": 2,
-        "pwdata-lordswrans": 1,
-        "pwdata-wrans": 7,
-        "quangos-govuk": 2,
-        "tax-tribunals": 1,
-        "pwdata-westminster": 1,
-        "committees-evidence": 1
-      },
-      "topCorpora": {
-        "committees-reports": 3,
-        "hmrc-manuals": 5,
-        "pwdata-lordswrans": 1,
-        "pwdata-wrans": 4,
-        "quangos-govuk": 2,
-        "tax-tribunals": 2,
-        "committees-evidence": 2,
-        "pwdata-westminster": 1
-      },
-      "inStreamKeyHits": 4,
-      "inStreamTop": 7,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "GD2",
-      "query": "What must a financial firm do when a customer complains?",
-      "intendedStream": "guidance",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-reports": 5,
-        "pwdata-lords": 1,
-        "pwdata-wrans": 3,
-        "committees-evidence": 2
-      },
-      "topCorpora": {
-        "committees-reports": 13,
-        "pwdata-lords": 2,
-        "pwdata-wrans": 3,
-        "committees-evidence": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "GD3",
-      "query": "When do I have to tell the regulator about a personal data breach?",
-      "intendedStream": "guidance",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "primary-acts-2000plus": 4,
-        "retained-eu": 3,
-        "hmrc-manuals": 1,
-        "committees-reports": 2,
-        "committees-evidence": 1,
-        "ico": 2,
-        "pwdata-debates": 2
-      },
-      "topCorpora": {
-        "primary-acts-2000plus": 3,
-        "retained-eu": 2,
-        "hmrc-manuals": 2,
-        "pwdata-lords": 2,
-        "pwdata-debates": 4,
-        "committees-reports": 5,
-        "committees-evidence": 1,
-        "ico": 1
-      },
-      "inStreamKeyHits": 3,
-      "inStreamTop": 3,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "GD4",
-      "query": "What are the rules about political advertising on television?",
-      "intendedStream": "guidance",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "committees-evidence": 2,
-        "committees-reports": 1,
-        "ofcom": 4,
-        "pwdata-westminster": 2,
-        "pwdata-wrans": 3,
-        "pwdata-lordswrans": 1,
-        "echr-hudoc": 2,
-        "pwdata-lords": 1,
-        "pwdata-debates": 1
-      },
-      "topCorpora": {
-        "committees-evidence": 1,
-        "committees-reports": 1,
-        "ofcom": 4,
-        "pwdata-westminster": 1,
-        "pwdata-debates": 7,
-        "pwdata-wrans": 3,
-        "pwdata-lordswrans": 1,
-        "echr-hudoc": 1,
-        "pwdata-lords": 1
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 0,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 4,
-      "undeliverableFrom": [],
-      "unroutableFrom": [
-        "ofcom"
-      ],
-      "outcome": "off-stream"
-    },
-    {
-      "id": "EN1",
-      "query": "Why was the Building Safety Act 2022 introduced and what problem was it meant to solve?",
-      "intendedStream": "legislation",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 2,
-      "satisfyingCorpora": {
-        "explanatory-notes": 30,
-        "scottish-parliament-or": 1,
-        "pwdata-wrans": 1,
-        "committees-reports": 1
-      },
-      "topCorpora": {
-        "explanatory-notes": 15,
-        "scottish-parliament-or": 1,
-        "pwdata-wrans": 1,
-        "committees-reports": 2,
-        "pwdata-debates": 1
-      },
-      "inStreamKeyHits": 30,
-      "inStreamTop": 15,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "ok"
-    },
-    {
-      "id": "EN2",
-      "query": "What is the speed limit for heavy goods vehicles on a dual carriageway?",
-      "intendedStream": "legislation",
-      "draft": true,
-      "keysTotal": 2,
-      "keysHit": 1,
-      "satisfyingCorpora": {
-        "historic-hansard": 5
-      },
-      "topCorpora": {
-        "si-2010plus": 1,
-        "pwdata-lordswrans": 2,
-        "pwdata-wrans": 4,
-        "historic-hansard": 5,
-        "pwdata-lordswms": 1,
-        "pwdata-wms": 1,
-        "pwdata-debates": 4,
-        "petitions": 2
-      },
-      "inStreamKeyHits": 0,
-      "inStreamTop": 1,
-      "undeliverableKeyHits": 0,
-      "unroutableKeyHits": 0,
-      "undeliverableFrom": [],
-      "unroutableFrom": [],
-      "outcome": "off-stream"
-    }
-  ]
+  "gold": []
 }
