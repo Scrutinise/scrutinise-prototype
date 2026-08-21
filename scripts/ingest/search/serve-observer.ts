@@ -12,11 +12,12 @@
  *   concurrency inFlight, queued, queueHighWaterMark, rejections
  *   throughput  served count, p50, p95 — both uncached and all-requests where available
  *   errors      5xx count, and crashes/restarts since the last report
- *   Neon        database size vs the plan ceiling, and connection count
+ *   Neon        database size PRICED against a storage budget, and connection count
+ *               (GRAPH 3C §5 — there is no plan ceiling; see the constants below)
  *   cost        Railway service-hours, and Gemini embed calls/day (vector's per-query cost)
  *
- * IMMEDIATE email on: memory >70% of cap, warm p95 >5s, any crash/restart, Neon >80%,
- * rejections >0. Otherwise a daily digest.
+ * IMMEDIATE email on: memory >70% of cap, warm p95 >5s, any crash/restart, Neon storage past
+ * its COST budget, rejections >0. Otherwise a daily digest.
  *
  * ── THREE THINGS THAT ARE DELIBERATE ─────────────────────────────────────────
  *
@@ -44,10 +45,46 @@ const STATE_KEY = '_search/serve-observer-state.json'
 
 const MEM_ALERT_PCT = parseFloat(process.env.SERVE_MEM_ALERT_PCT ?? '70')
 const P95_ALERT_MS = parseInt(process.env.SERVE_P95_ALERT_MS ?? '5000', 10)
-const NEON_ALERT_PCT = parseFloat(process.env.SERVE_NEON_ALERT_PCT ?? '80')
-// Neon plan ceiling. The handoff records the storage line at ~17.5 GB; override rather
-// than edit if the plan changes.
-const NEON_CEILING_GB = parseFloat(process.env.NEON_CEILING_GB ?? '17.5')
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// NEON STORAGE — A COST LINE, NOT A CEILING.        Replaced by GRAPH 3C §5, 21 Aug 2026.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// What was here:
+//     const NEON_CEILING_GB = parseFloat(process.env.NEON_CEILING_GB ?? '17.5')
+//     // Neon plan ceiling. The handoff records the storage line at ~17.5 GB …
+//
+// ⚠⚠ It was not a plan ceiling and never had been, and its provenance was a closed loop: the
+// comment cited "the handoff", and the handoff's percentage was emitted by THIS OBSERVER. Neither
+// end of the citation was a source. GRAPH 3B located it and reported it; INGEST V38 (16 Aug) had
+// already established that the wall does not exist. The enforced limit, read from the production
+// compute, is `neon.max_cluster_size` = **16 TiB** — 0.1% of which is where the database actually
+// sits. During 3B the database passed 17.5 GiB, so this line has been emitting a CRITICAL storage
+// alert against a fiction ever since.
+//
+// What replaces it: **Neon's Launch plan has no fixed storage allowance.** Storage is usage-priced,
+// so the only honest threshold is a cost one, tied to the $50 spending notification already set in
+// the Neon console.
+//
+//   source        Neon console, Launch plan, read by Charlie; recorded in docs/BRIEF_GRAPH_3C.md §5
+//   date checked  2026-08-21          ← a plan price is a fact about a day. Re-check it, do not
+//                                       inherit it, and move this date when you do.
+//   unit price    $0.35 per GB-month
+//   budget        $15/month of storage — under a third of the $50 notification, because storage is
+//                 the SMALL line: the same reading put compute at $33.01 against storage's $3.96.
+//                 At $0.35/GB-month, $15 is ~43 GB, which is real headroom rather than a red light.
+//
+// ⚠ TWO THINGS THIS ALERT CANNOT SEE, SAID HERE RATHER THAN IMPLIED BY ITS SILENCE:
+//   1. **Compute is eight times storage and is not observable from this process.** A storage alert
+//      that never fires does not mean the bill is fine. The $50 notification in the console is the
+//      thing that watches total spend; this only watches the line it can measure.
+//   2. **The unit price and the reported bill do not reconcile, and that is not resolved here.**
+//      19.09 GB × $0.35 = $6.68/month, against the $3.96 recorded in the brief — a factor of 1.7.
+//      Most likely Neon bills average storage over the period and the figure was mid-month, but
+//      nobody on this machine can read the console to find out. The alert is computed from the
+//      UNIT PRICE, because that is the number that can be recomputed and checked; if the console
+//      says otherwise, the console wins and this comment is the record of the discrepancy.
+const NEON_STORAGE_USD_PER_GB_MONTH = parseFloat(process.env.NEON_STORAGE_USD_PER_GB_MONTH ?? '0.35')
+const NEON_STORAGE_ALERT_USD = parseFloat(process.env.NEON_STORAGE_ALERT_USD ?? '15')
 const DIGEST_HOUR = parseInt(process.env.SERVE_DIGEST_HOUR ?? '8', 10)
 // Re-alert window: a breach that persists should not email every hour forever.
 const REALERT_HOURS = parseInt(process.env.SERVE_REALERT_HOURS ?? '12', 10)
@@ -82,7 +119,16 @@ export interface ServeStats {
 }
 
 export interface Observation { name: string; url: string; ok: boolean; error?: string; stats?: ServeStats }
-export interface NeonObservation { ok: boolean; error?: string; sizeGb?: number; ceilingGb?: number; pctOfCeiling?: number; connections?: number; maxConnections?: number }
+export interface NeonObservation {
+  ok: boolean; error?: string; sizeGb?: number
+  /** Projected monthly storage cost at the recorded unit price. GRAPH 3C §5. */
+  storageUsdPerMonth?: number
+  /** The storage budget this is measured against — a cost, not a capacity. */
+  budgetUsd?: number
+  /** storageUsdPerMonth as a % of budgetUsd. */
+  pctOfBudget?: number
+  connections?: number; maxConnections?: number
+}
 export interface ServeState {
   startedAt: Record<string, string>          // service → last seen boot time
   lastAlertAt: Record<string, string>        // alert key → ISO time last emailed
@@ -200,11 +246,18 @@ export function evaluateServe(
   // ── Neon ──
   if (!neon.ok) {
     raise('warning', 'neon:down', '🟠 Neon check failed', `Could not read Neon size/connections.\n\nError: ${neon.error ?? 'unknown'}`)
-  } else if (neon.pctOfCeiling != null && neon.pctOfCeiling > NEON_ALERT_PCT) {
-    raise('critical', 'neon:storage', `🔴 Neon storage at ${neon.pctOfCeiling}% of plan`,
-      `Neon is ${neon.sizeGb?.toFixed(2)} GB of a ${neon.ceilingGb} GB ceiling (${neon.pctOfCeiling}%).\n` +
+  } else if (neon.pctOfBudget != null && neon.pctOfBudget > 100) {
+    // ⚠ A COST alert, not a capacity one — there is no capacity wall to hit (see the constants).
+    // `warning`, not `critical`: overspending a storage budget is a decision to take, not an
+    // outage. The old line raised CRITICAL against a number that could not be sourced, which is
+    // how a page of red became something to scroll past.
+    raise('warning', 'neon:storage', `🟠 Neon storage costing $${neon.storageUsdPerMonth?.toFixed(2)}/month`,
+      `Neon holds ${neon.sizeGb?.toFixed(2)} GB, which at $${NEON_STORAGE_USD_PER_GB_MONTH}/GB-month is ` +
+      `$${neon.storageUsdPerMonth?.toFixed(2)} a month — past the $${neon.budgetUsd} storage budget (${neon.pctOfBudget}%).\n` +
       `Connections: ${neon.connections}/${neon.maxConnections ?? '?'}.\n\n` +
-      `Storage growth has already forced one emergency resize in this project (Railway, 4 Jun). Plan the headroom, do not discover it.`)
+      `⚠ There is NO storage ceiling to hit: neon.max_cluster_size is 16 TiB. This is a bill, not a wall.\n` +
+      `⚠ COMPUTE is the larger line (~8× storage at the last reading) and is NOT visible to this check. ` +
+      `The $50 spending notification in the Neon console is what watches total spend.`)
   }
 
   // ── daily digest ──
@@ -264,7 +317,8 @@ export function renderDigest(obs: Observation[], neon: NeonObservation, nowMs: n
   L.push('── Neon ' + '─'.repeat(56))
   if (!neon.ok) L.push(`   🔴 check failed — ${neon.error}`)
   else {
-    L.push(`   storage     ${neon.sizeGb?.toFixed(2)} GB of ${neon.ceilingGb} GB ceiling (${neon.pctOfCeiling}%)`)
+    L.push(`   storage     ${neon.sizeGb?.toFixed(2)} GB = $${neon.storageUsdPerMonth?.toFixed(2)}/month at $${NEON_STORAGE_USD_PER_GB_MONTH}/GB-month ` +
+      `(${neon.pctOfBudget}% of the $${neon.budgetUsd} storage budget; no capacity ceiling exists — compute is the bigger line and is not measured here)`)
     L.push(`   connections ${neon.connections}${neon.maxConnections ? ` of ${neon.maxConnections}` : ''}`)
   }
   L.push('')
@@ -300,8 +354,10 @@ async function checkNeon(): Promise<NeonObservation> {
     const maxc = await pool.query<{ setting: string }>(`SELECT current_setting('max_connections') AS setting`)
     const sizeGb = parseFloat(size.rows[0].gb)
     return {
-      ok: true, sizeGb, ceilingGb: NEON_CEILING_GB,
-      pctOfCeiling: Math.round((sizeGb / NEON_CEILING_GB) * 1000) / 10,
+      ok: true, sizeGb,
+      storageUsdPerMonth: Math.round(sizeGb * NEON_STORAGE_USD_PER_GB_MONTH * 100) / 100,
+      budgetUsd: NEON_STORAGE_ALERT_USD,
+      pctOfBudget: Math.round((sizeGb * NEON_STORAGE_USD_PER_GB_MONTH / NEON_STORAGE_ALERT_USD) * 1000) / 10,
       connections: parseInt(conns.rows[0].n, 10),
       maxConnections: parseInt(maxc.rows[0].setting, 10),
     }

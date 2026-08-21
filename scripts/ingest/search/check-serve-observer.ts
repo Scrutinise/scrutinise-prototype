@@ -18,7 +18,9 @@ function check(name: string, cond: boolean, detail = '') {
 }
 
 const FRESH: ServeState = { startedAt: {}, lastAlertAt: {}, lastDigestDay: '', embedCallsBaseline: {} }
-const OK_NEON: NeonObservation = { ok: true, sizeGb: 8, ceilingGb: 17.5, pctOfCeiling: 45.7, connections: 12, maxConnections: 100 }
+// GRAPH 3C §5 — a COST observation now, not a capacity one. 8 GB × $0.35 = $2.80/month against a
+// $15 budget = 18.7%, comfortably quiet.
+const OK_NEON: NeonObservation = { ok: true, sizeGb: 8, storageUsdPerMonth: 2.80, budgetUsd: 15, pctOfBudget: 18.7, connections: 12, maxConnections: 100 }
 // 2026-08-07 09:00 UTC — past the 08:00 digest hour, so digest tests are deterministic.
 const NOW = Date.parse('2026-08-07T09:00:00Z')
 
@@ -93,9 +95,17 @@ function main() {
     check('a SECOND restart still fires (crash loops must not be deduped away)', again.events.some((e) => e.key === 'vector-serve:restart'))
   }
 
-  console.log('\nNeon storage > 80%')
+  console.log('\nNeon storage past its COST budget')
   {
-    const full: NeonObservation = { ok: true, sizeGb: 15, ceilingGb: 17.5, pctOfCeiling: 85.7, connections: 20, maxConnections: 100 }
+    // ⚠ 15 GB is NOT a breach any more, and that is the point of the change: 15 × $0.35 = $5.25,
+    // 35% of the $15 budget. The old fixture breached at 15 GB because it was measured against a
+    // 17.5 GB "ceiling" that did not exist — and the live database has been past that line since
+    // GRAPH 3B, emitting a CRITICAL alert against a fiction. The breach fixture is now a database
+    // that genuinely costs more than the budget: 50 GB = $17.50/month, 116.7%.
+    const full: NeonObservation = { ok: true, sizeGb: 50, storageUsdPerMonth: 17.50, budgetUsd: 15, pctOfBudget: 116.7, connections: 20, maxConnections: 100 }
+    const under: NeonObservation = { ok: true, sizeGb: 19.01, storageUsdPerMonth: 6.65, budgetUsd: 15, pctOfBudget: 44.3, connections: 20, maxConnections: 100 }
+    check('the ACTUAL 19.01 GB does NOT fire — the alert it replaced had been firing for days',
+      !evaluateServe([healthy()], under, { ...FRESH, lastDigestDay: '2026-08-07' }, NOW).events.some((e) => e.key === 'neon:storage'))
     check('fires', evaluateServe([healthy()], full, { ...FRESH, lastDigestDay: '2026-08-07' }, NOW).events.some((e) => e.key === 'neon:storage'))
     check('a failed Neon check is itself reported', evaluateServe([healthy()], { ok: false, error: 'timeout' }, { ...FRESH, lastDigestDay: '2026-08-07' }, NOW).events.some((e) => e.key === 'neon:down'))
   }
