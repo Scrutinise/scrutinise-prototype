@@ -300,8 +300,38 @@ The Evidence Pack is offered from the shared link.
 
 ## Delivery (CLAUDE.md §20)
 
-Recorded in the change log entry. Any check that could not be measured from this machine is
-labelled as an inference rather than a measurement.
+Nine scoped commits pushed as `d69c0ab`, via **`commit-lex-25d.sh`** — named per stream, not
+`commit-all.sh`, since two sessions raced on a shared one on 19 August. Every `git add` names
+explicit paths; three threads are working in this tree and none of their files appear in any
+commit. Deleted after the push.
+
+| # | check | result |
+|---|---|---|
+| 1 | every file created is committed | ✅ `check:committed` **473 files clean**, plus `git ls-files --error-unmatch` on all 16 named files, and `git check-ignore -v` on each before committing — the file, not the pattern |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = `d69c0ab`; `merge-base --is-ancestor` confirms |
+| 3 | the deployment is green **and Production** | ⚠ **not read directly** — `VERCEL_TOKEN` is SAML-blocked (§19), so this is *inferred* from check 4 rather than measured |
+| 4 | the running site serves the change | ✅ **`https://www.scrutinise.org/ideas/create` — 17 client chunks, 1,066,301 bytes** — returns "What we found, by question", "Everything we retrieved, by document type" and the material control's copy |
+
+⚠ **The probe was watched failing first.** Run against production *before* the deploy landed,
+it reported all four markers **ABSENT** over 1,053,791 bytes of the same 17 chunks — so the
+later PRESENT is a measurement rather than a grep that matches anything. A control string of
+the same shape 25-D never introduced ("What we found, by parish council") is absent in both
+runs. The bundle grew by 12,510 bytes between them.
+
+⚠ **One marker is ABSENT and it is not a miss.** "Who has taken a position" — a §25.5 heading
+— does not appear in the client bundle because `QUESTION_HEADINGS` is **server-side only**:
+the panel component receives heading text from the API at runtime rather than importing the
+table. Absence is what that design predicts, and saying so is not the same as explaining it
+away — the three markers that *do* travel to the client are the ones the check rests on.
+
+### ⚠ And a probe I wrote, ran, and threw away
+
+I probed the three new API routes expecting `401` (route exists, needs a session) against
+`404` (never deployed). **Every route answered `307`, including a control path that has never
+existed** — Clerk's middleware redirects unauthenticated requests before routing, so the probe
+cannot distinguish a deployed route from a fictional one. It is recorded here rather than
+quietly dropped, because a check whose control passes is a check asserting nothing, and it
+would have read as corroboration if I had reported the three 307s without the fourth.
 
 ---
 
