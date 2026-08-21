@@ -177,7 +177,14 @@ async function mapPool<A, R>(items: A[], c: number, fn: (a: A) => Promise<R>): P
   async function writeBatch(records: FtsRecord[]) {
     if (DRY || !records.length) return
     await tbl.delete(`id IN (${inList(records.map((r) => r.id))})`)
-    await tbl.add(records)
+    // ⚠ `as unknown as Data` — LanceDB's `add()` takes its own `Data` union (Arrow table or
+    // `Record<string, unknown>[]`). `FtsRecord` is structurally compatible but nominally distinct,
+    // so TS refuses it. The cast is at the two call sites rather than by loosening `FtsRecord`,
+    // because the declared shape is the thing that keeps the three writers from drifting
+    // (fts-record.ts) and weakening it to satisfy a library signature would give that up.
+    // ⚠ Found by S12 running `tsc -p scripts/ingest`; S11's "tsc clean" was the WEB tsconfig only,
+    // which does not cover this directory. The code was correct and ran — 43,893 rows re-tiered.
+    await tbl.add(records as unknown as import('@lancedb/lancedb').Data)
   }
 
   // ── MODE: index → index (re-tier) ───────────────────────────────────────────────────────────
@@ -229,7 +236,7 @@ async function mapPool<A, R>(items: A[], c: number, fn: (a: A) => Promise<R>): P
         // Added in chunks: one `add` of 21,525 rows with full bodies is a single very large
         // Arrow buffer, and the delete has already happened, so failing here is the expensive
         // case. Smaller adds fail smaller.
-        for (let i = 0; i < records.length; i += BATCH) await tbl.add(records.slice(i, i + BATCH))
+        for (let i = 0; i < records.length; i += BATCH) await tbl.add(records.slice(i, i + BATCH) as unknown as import('@lancedb/lancedb').Data)
         console.log(`[fts-refresh] ${corpus}: rewrote ${records.length.toLocaleString()} rows (${changed.toLocaleString()} changed) in ${((Date.now() - t1) / 1000).toFixed(0)}s`)
       }
       read += rows.length; refreshed += records.length
