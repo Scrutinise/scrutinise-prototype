@@ -115,22 +115,39 @@ function checkPerTargetNeverSummed() {
   const perB = aggregate([againstAmendment], AS_OF, POSITION_CONFIG)
   ok('for-the-Bill and against-an-amendment cancel when summed', Math.abs(rolled.stanceScore) < 0.01,
     `rolled ${rolled.stanceScore.toFixed(3)}`)
+  // ⚠ GRAPH 3C — `consistency`, not `stanceScore`. A single vote's DIRECTION is still exactly ±1;
+  // its stance score is now ±0.41, because the score carries the strength of the evidence and one
+  // vote is not much evidence. The property this line is about — "each target on its own is
+  // unambiguous" — is a statement about direction, so it reads the direction number.
   ok('and each target on its own is unambiguous',
-    perA.stanceScore === 1 && perB.stanceScore === -1,
-    `${perA.stanceScore} / ${perB.stanceScore}`)
+    perA.consistency === 1 && perB.consistency === -1,
+    `${perA.consistency} / ${perB.consistency}`)
   ok('the cancelled rollup is worded "divided record", never "neutral"',
-    describeStance(rolled.stanceScore) === 'divided record')
+    describeStance(rolled) === 'divided record')
 }
 
-/** §1's diagnosis, held as an assertion so a future change cannot quietly un-fix it. */
+/**
+ * ⚠⚠ GRAPH 3C INVERTED THIS CHECK, AND THAT IS THE POINT OF IT.
+ *
+ * 3B wrote it to hold its own diagnosis in place — *"stance is scale-free: 1 consistent vote and
+ * 50 give the SAME stance … this is WHY the page could not rank"* — so that a later change could
+ * not quietly un-fix the defect. 3C's §1 is that fix, so the assertion had to fail, and it did.
+ *
+ * It is inverted rather than deleted, with 3B's numbers kept in the failure message: the check now
+ * asserts the property the fix was FOR, and if a future change reintroduces a scale-free stance
+ * this line fails with the history attached instead of silently agreeing.
+ */
 function checkStanceIsScaleFree() {
   const one = aggregate([sig({ id: '1' })], AS_OF, POSITION_CONFIG)
   const fifty = aggregate(
     Array.from({ length: 50 }, (_, i) => sig({ id: `s${i}` })), AS_OF, POSITION_CONFIG)
-  ok('stance is scale-free: 1 consistent vote and 50 give the SAME stance',
-    one.stanceScore === fifty.stanceScore && one.stanceScore === 1,
-    `${one.stanceScore} vs ${fifty.stanceScore} — this is WHY the page could not rank`)
-  ok('…and confidence is therefore the only axis that separates them',
+  ok('stance is NO LONGER scale-free: 50 consistent votes outrank 1 (3B: both were exactly 1.00)',
+    fifty.stanceScore > one.stanceScore && Math.abs(one.stanceScore) < 1,
+    `${one.stanceScore.toFixed(3)} → ${fifty.stanceScore.toFixed(3)}`)
+  ok('…while CONSISTENCY stays scale-free, which is what every form of words reads',
+    one.consistency === fifty.consistency && one.consistency === 1,
+    `${one.consistency} vs ${fifty.consistency} — the old stance column, under the name it deserved`)
+  ok('…and confidence separates them too',
     fifty.confidence > one.confidence,
     `${one.confidence.toFixed(4)} → ${fifty.confidence.toFixed(4)}`)
 }
@@ -162,7 +179,29 @@ function rankRows(rows: RankRow[], limit = 40): RankResult {
 async function dbChecks(pool: ReturnType<typeof getNeonPool>) {
   console.log('\n──── the database, after 3B\'s DDL')
 
-  // The redefinition must not have changed a single classification.
+  // ⚠⚠ GRAPH 3C CHANGED THIS CHECK, AND DELIBERATELY BROKE FOUR OF ITS FIVE ASSERTIONS.
+  //
+  // 3B's version asserted that its view redefinition changed NOT ONE classification — correct for
+  // 3B, whose DDL was a refactor. 3C §2 is not a refactor: it adds `is_cohesive_party` to the
+  // ladder, so `rebellion:v1` only fires against a party that actually held together. Four counts
+  // therefore had to move, and did:
+  //
+  //     whipped-with:v1              1,865,002 → 1,844,806    −20,196
+  //     rebellion:v1                    18,493 →     10,050    −8,443   (45.7% of them)
+  //     small-party-unclassified:v1     61,919 →     61,519      −400
+  //     free-vote-heuristic:v1           8,132 →      9,070      +938
+  //     party-split:v1                       0 →     28,101   +28,101   (the new rung)
+  //     unwhipped-group:v1             127,039 →    127,039         0   (untouched, as it must be)
+  //
+  // ⚠ 3A's five numbers are kept, because they turned out to be worth something beyond history:
+  // `audit-3c-distribution.ts` reconstructs the pre-3C classification by running the surviving
+  // 5-argument `position_vote_class()` over today's rows, and it reproduces all five EXACTLY. Two
+  // independent routes to the same baseline is what makes the before/after column trustworthy
+  // rather than merely printed.
+  //
+  // The invariant that survives — and it is the one that matters — is that the rows were
+  // RECLASSIFIED, not created or destroyed: the total is unchanged, and `unwhipped-group:v1`, the
+  // one class the 3C rung cannot reach, has not moved by a single row.
   const { rows: cls } = await pool.query<{ derivation: string; n: string }>(
     `SELECT derivation, COUNT(*)::text AS n FROM position_signal_vote GROUP BY 1`)
   const got = Object.fromEntries(cls.map((r) => [r.derivation, Number(r.n)]))
@@ -170,9 +209,23 @@ async function dbChecks(pool: ReturnType<typeof getNeonPool>) {
     'whipped-with:v1': 1865002, 'unwhipped-group:v1': 127039,
     'small-party-unclassified:v1': 61919, 'rebellion:v1': 18493, 'free-vote-heuristic:v1': 8132,
   }
-  for (const [k, v] of Object.entries(want3A)) {
-    ok(`redefined view: ${k} unchanged`, got[k] === v, `${got[k]?.toLocaleString()} (3A: ${v.toLocaleString()})`)
-  }
+  const total3A = Object.values(want3A).reduce((a, b) => a + b, 0)
+  const totalNow = Object.values(got).reduce((a, b) => a + b, 0)
+  ok('the ladder reclassified rows and created none: the vote-signal total is unchanged',
+    totalNow === total3A, `${totalNow.toLocaleString()} vs 3A's ${total3A.toLocaleString()}`)
+  ok('unwhipped-group:v1 is untouched — 3C\'s rung cannot reach a group that carries no whip',
+    got['unwhipped-group:v1'] === want3A['unwhipped-group:v1'],
+    `${got['unwhipped-group:v1']?.toLocaleString()}`)
+  ok('rebellion:v1 SHRANK — a rebellion now requires a party that held together',
+    got['rebellion:v1'] < want3A['rebellion:v1'],
+    `${want3A['rebellion:v1'].toLocaleString()} → ${got['rebellion:v1']?.toLocaleString()} ` +
+    `(−${(want3A['rebellion:v1'] - got['rebellion:v1']).toLocaleString()}, ` +
+    `${(100 * (want3A['rebellion:v1'] - got['rebellion:v1']) / want3A['rebellion:v1']).toFixed(1)}%)`)
+  ok('party-split:v1 exists and carries the votes that left the other classes',
+    got['party-split:v1'] > 0, `${got['party-split:v1']?.toLocaleString()} signals`)
+  ok('no vote signal is unclassified — every row still has a derivation the config knows',
+    cls.every((r) => r.derivation !== null && r.derivation in POSITION_CONFIG.weights),
+    cls.map((r) => r.derivation).join(', '))
   // ⚠ Stated as an equation, not as a constant. 3A's total was 2,317,523; 3B adds P1 donation
   // signals. Hard-coding the new total would make this check pass for the wrong reason the moment
   // the register grows — the invariant that matters is that NOTHING ELSE changed.

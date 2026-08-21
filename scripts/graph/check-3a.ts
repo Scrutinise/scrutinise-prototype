@@ -141,8 +141,14 @@ function constructedCases(cfg: PositionConfig, broken: boolean) {
     assert('the strong band starts exactly at the configured threshold',
       describeConfidence(cfg.confidenceBands.strong, cfg) === 'strong recorded record' &&
       describeConfidence(cfg.confidenceBands.strong - 0.001, cfg) !== 'strong recorded record')
+    // ⚠ GRAPH 3C — the argument is now `{ consistency }`, not a bare number, and the change was
+    // made specifically so this call site had to be looked at. `describeStance` reads CONSISTENCY
+    // (which way the record points), which is what 3A/3B stored in `stanceScore`; 3C gave
+    // `stanceScore` a new meaning and a bare-number signature would have let every caller keep
+    // compiling while silently changing what it said.
     assert('a stance near zero is a divided record, never neutral or absent',
-      describeStance(0) === 'divided record' && describeStance(0.19) === 'divided record')
+      describeStance({ consistency: 0 }) === 'divided record' &&
+      describeStance({ consistency: 0.19 }) === 'divided record')
   }
 
   // 8. A single whipped vote is weak evidence and says so.
@@ -254,14 +260,31 @@ async function dbChecks(pool: ReturnType<typeof getNeonPool>) {
     reconciled,
     `${Number(rec.edges).toLocaleString()} edges − ${Number(rec.absent).toLocaleString()} absent = ${(Number(rec.edges) - Number(rec.absent)).toLocaleString()} vs ${Number(rec.signals).toLocaleString()} signals`)
 
-  // The additive promise: 3A created nothing outside its own relations.
-  const own = ['position_signal_stored', 'position_division_party', 'position_division_class',
-    'position_estimate', 'position_estimate_meta', 'position_signal_vote', 'position_signal']
+  // The additive promise: the graph stream created nothing outside its own relations.
+  //
+  // ⚠ GRAPH 3C — THIS CHECK HAS BEEN FAILING SINCE 3B AND NOBODY LOOKED. 3B added
+  // `position_donation` (§2.2, the Electoral Commission register) and did not add it here, so
+  // `check-3a.ts` has reported 32/33 ever since — a real, harmless failure sitting in a harness
+  // whose whole purpose is that a failure means something. 3B's report quotes check-3b 50/50 and
+  // verify:positions 35/35 and does not mention this one at all.
+  //
+  // Extended rather than loosened: the list is still exhaustive and still fails on anything not on
+  // it. What it asserts is now what it always meant — that every `position_*` relation in the
+  // database was created deliberately by a graph sprint and is named in one place.
+  const own = [
+    // 3A
+    'position_signal_stored', 'position_division_party', 'position_division_class',
+    'position_estimate', 'position_estimate_meta', 'position_signal_vote', 'position_signal',
+    // 3B §2.2
+    'position_donation',
+    // 3C adds COLUMNS and FUNCTIONS only — no new relation. If this list grows without a sprint
+    // section to point at, something created a table nobody decided on.
+  ]
   const { rows: created } = await pool.query<{ relname: string }>(
     `SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
       WHERE n.nspname='public' AND c.relname LIKE 'position\\_%' AND c.relkind IN ('r','v')`)
   const unexpected = created.map((r) => r.relname).filter((r) => !own.includes(r))
-  check('3A created no relation outside its own seven', unexpected.length === 0,
+  check(`the graph stream created no relation outside its own ${own.length}`, unexpected.length === 0,
     unexpected.length ? unexpected.join(', ') : `${created.length} relations, all expected`)
 }
 
