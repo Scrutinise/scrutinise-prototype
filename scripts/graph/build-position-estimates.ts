@@ -17,6 +17,31 @@
  * rebuild tomorrow with identical config legitimately produces different estimates, and without
  * that row nothing would say so.
  *
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * WHO READS `position_estimate`, ESTABLISHED BEFORE THE 3C REBUILD RATHER THAN AFTER IT
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * Brief §1: *"3B truncated `position_estimate` and left it half-rebuilt by optimising one access
+ * pattern without asking who else read the same object. Before any rebuild: establish who reads
+ * the table, write it down, and make the rebuild atomic from a reader's point of view or
+ * explicitly offline."*
+ *
+ * Grepped, not recalled — `position_estimate` (the TABLE, not `_meta`) appears in exactly five
+ * files, and every one of them is CC-Graph-owned tooling:
+ *
+ *   · this file                                    WRITER (truncate-and-rebuild)
+ *   · scripts/graph/check-3a.ts, check-3b.ts,
+ *     check-3c.ts                                  assertions, run by hand
+ *   · scripts/graph/report-3a.ts                   reporting, run by hand
+ *   · scripts/graph/audit-3b/3c-distribution.ts    reporting, run by hand
+ *
+ * ⚠⚠ **NO PRODUCTION READ PATH TOUCHES IT AT ALL.** `positions.ts` — the read API, and the only
+ * thing `/admin/positions` calls — computes every number live from the signal layer and reads
+ * `position_estimate_meta` for one string: the `config_version` label shown at the foot of the
+ * page. So the rebuild is EXPLICITLY OFFLINE, and the window in which the table is empty is not
+ * user-visible in any surface that exists today. That is the honest reason it is safe, and it is
+ * a fact about today which the next sprint must re-establish rather than inherit: the moment
+ * anything serves from this table, this rebuild needs to become atomic.
+ *
  * Usage (from scripts/graph):
  *   npx tsx build-position-estimates.ts
  *   npx tsx build-position-estimates.ts --as-of 2026-08-19   # fixed date, for a reproducible run
@@ -29,6 +54,7 @@ try { require('dotenv').config({ path: path.join(__dirname, '../../scrutinise-we
 import { getNeonPool, endNeonPool } from '../ingest/shared/neon-pool'
 import { POSITION_CONFIG, configVersion } from '../../scrutinise-web/lib/graph/position-config'
 import { aggregate, SignalForMath } from '../../scrutinise-web/lib/graph/position-math'
+import { NEON_STORAGE_USD_PER_GB_MONTH, NEON_STORAGE_PRICE_CHECKED } from './setup-3c'
 
 export {}
 
@@ -134,6 +160,7 @@ async function main() {
         pending.push([
           head.actor_id, head.target_type, head.target_id,
           agg.stanceScore, agg.confidence, JSON.stringify(agg.signalCounts), cv,
+          agg.consistency,
         ])
         estimatesWritten++
         if (pending.length >= INSERT_BATCH) { if (!DRY) await flush(pool, pending); pending = [] }
@@ -182,34 +209,58 @@ async function main() {
     console.log(`  attention-only estimates: ${Number(ceil.n).toLocaleString()}; of those, ${ceil.over} exceed the ${POSITION_CONFIG.attentionConfidenceCeiling} ceiling` +
       (Number(ceil.over) === 0 ? '  ✓' : '  ❌'))
 
+    // ── §1's own success criterion, asked of the table rather than of the arithmetic ────────────
+    //
+    // Brief §1: *"if there are still fewer than, say, twenty distinct stance values across 2.3M
+    // rows, the fix has not worked, whatever the arithmetic says."* So it is asked here, on every
+    // build, and printed with a verdict rather than left for a report to interpret.
+    const { rows: [dist] } = await pool.query<{ ds: string; dcn: string; at1: string; n: string }>(`
+      SELECT COUNT(DISTINCT stance_score)::text AS ds,
+             COUNT(DISTINCT consistency)::text  AS dcn,
+             COUNT(*) FILTER (WHERE ABS(stance_score) >= 0.999999)::text AS at1,
+             COUNT(*)::text AS n
+        FROM position_estimate`)
+    console.log(`\n════ IS IT A DISTRIBUTION? ════`)
+    console.log(`  distinct stance_score values   ${Number(dist.ds).toLocaleString().padStart(9)}   ${Number(dist.ds) >= 20 ? '✓ (§1 wants ≥ 20)' : '❌ FEWER THAN 20 — §1 says the fix has not worked'}`)
+    console.log(`  distinct consistency values    ${Number(dist.dcn).toLocaleString().padStart(9)}   (the OLD stance_score; 3 before this sprint)`)
+    console.log(`  rows at |stance| = 1.00        ${Number(dist.at1).toLocaleString().padStart(9)}   ${((100 * Number(dist.at1)) / Number(dist.n)).toFixed(4)}% of all estimates (was 92.87%)`)
+
     const { rows: [sz1] } = await pool.query<{ b: string }>(`SELECT pg_database_size(current_database())::text AS b`)
     const { rows: [tsz] } = await pool.query<{ s: string; bytes: string }>(
       `SELECT pg_size_pretty(pg_total_relation_size('position_estimate')) AS s,
               pg_total_relation_size('position_estimate')::text AS bytes`)
     console.log(`\n════ WHAT IT COST ════`)
     console.log(`  position_estimate   ${tsz.s}  (${(Number(tsz.bytes) / estimatesWritten).toFixed(1)} bytes/row)`)
+    console.log(`                      = $${((Number(tsz.bytes) / 1e9) * NEON_STORAGE_USD_PER_GB_MONTH).toFixed(2)} / month at $${NEON_STORAGE_USD_PER_GB_MONTH}/GB-month`)
     console.log(`  database            ${(Number(sz0.b) / 1024 ** 3).toFixed(2)} → ${(Number(sz1.b) / 1024 ** 3).toFixed(2)} GiB`)
-    console.log(`  ops ALERT line      17.5 GiB — now ${((100 * Number(sz1.b)) / (17.5 * 1024 ** 3)).toFixed(1)}% of it`)
+    // ⚠ GRAPH 3C §5 — THE "17.5 GiB ops ALERT line" THAT USED TO PRINT HERE IS GONE. It was never a
+    // plan limit (the enforced ceiling is 16 TiB), its only citation was itself, and the database
+    // passed it during 3B — so the line it produced was a CRITICAL alert against a fiction. Neon's
+    // Launch plan has no fixed storage allowance; storage is usage-priced, so the honest number is
+    // a cost. Price and the date it was checked: see setup-3c.ts.
+    console.log(`  storage cost        $${((Number(sz1.b) / 1e9) * NEON_STORAGE_USD_PER_GB_MONTH).toFixed(2)} / month   (checked ${NEON_STORAGE_PRICE_CHECKED})`)
   } finally {
     await endNeonPool()
   }
 }
 
 async function flush(pool: ReturnType<typeof getNeonPool>, rows: unknown[][]) {
-  const cols = 7
+  const cols = 8
   const values: unknown[] = []
   const tuples: string[] = []
   rows.forEach((r, i) => {
-    tuples.push(`($${i * cols + 1},$${i * cols + 2},$${i * cols + 3},$${i * cols + 4},$${i * cols + 5},$${i * cols + 6}::jsonb,$${i * cols + 7})`)
+    tuples.push(`($${i * cols + 1},$${i * cols + 2},$${i * cols + 3},$${i * cols + 4},$${i * cols + 5},$${i * cols + 6}::jsonb,$${i * cols + 7},$${i * cols + 8})`)
     values.push(...r)
   })
   await pool.query(
     `INSERT INTO position_estimate
-       (actor_id, target_type, target_id, stance_score, confidence, signal_counts, config_version)
+       (actor_id, target_type, target_id, stance_score, confidence, signal_counts, config_version,
+        consistency)
      VALUES ${tuples.join(',')}
      ON CONFLICT (actor_id, target_type, target_id) DO UPDATE
        SET stance_score = EXCLUDED.stance_score, confidence = EXCLUDED.confidence,
            signal_counts = EXCLUDED.signal_counts, config_version = EXCLUDED.config_version,
+           consistency = EXCLUDED.consistency,
            computed_at = now()`, values)
 }
 

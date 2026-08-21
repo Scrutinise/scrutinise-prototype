@@ -44,6 +44,9 @@ export type VoteClass =
   | 'unwhipped-group:v1'
   | 'whipped-with:v1'
   | 'small-party-unclassified:v1'
+  // GRAPH 3C §2. The member's own party did not hold together in this division, so there was no
+  // whip for them to be with or against — whichever side they took.
+  | 'party-split:v1'
 
 export interface PositionConfig {
   /** `raw_weight` per weight class and signal type. Design §5's table. */
@@ -53,6 +56,7 @@ export interface PositionConfig {
     'unwhipped-group:v1': number
     'whipped-with:v1': number
     'small-party-unclassified:v1': number
+    'party-split:v1': number
     edm_signature: number
     amendment_sponsorship: number
     witness_appearance: number
@@ -74,12 +78,48 @@ export interface PositionConfig {
    */
   cohesionThreshold: number
   /**
+   * GRAPH 3C §2 — bill-level propagation. A division whose most-cohesive party sits BELOW this is
+   * a near miss on `cohesionThreshold`, and may inherit the free-vote classification of the bill
+   * it belongs to when a strict majority of that bill's divisions are already tagged.
+   *
+   * ⚠ It is a CEILING ON THE RESCUE, not a second threshold: it decides which divisions
+   * propagation may reach, never which are tagged in the first place. Without it, propagation
+   * across a generic `bill_title` (the corpus has one literally called "Ten Minute Rule Bill")
+   * would carry a free-vote reading to a division whose parties were 99% cohesive. Measured: it is
+   * exactly the guard that keeps commons:1079 (best cohesion 0.9899) out while letting
+   * commons:2051, commons:2053 and lords:1886 in.
+   */
+  billPropagationCohesionCeiling: number
+  /**
    * Groups that carry no whip, so "rebellion" is undefined for their members and "whipped-with" is
    * a false description. Matched against `division_votes.party` exactly.
    */
   unwhippedParties: string[]
-  /** Saturation constant for confidence: summed effective weight of this size gives confidence 0.5. */
+  /**
+   * GRAPH 3C §2. A party is treated as having applied a whip in a division only when its cohesion
+   * reaches `cohesionThreshold`. Below that, its members' votes are classified `party-split:v1` —
+   * neither `rebellion:v1` nor `whipped-with:v1`, because there was no whip to be on either side
+   * of. ONE number, deliberately: `cohesionThreshold` is the definition of "whipped", and both the
+   * division-level heuristic and the per-vote ladder now read it from the same place.
+   */
+  /** Saturation constant for confidence: NET directional evidence of this size gives confidence 0.5. */
   confidenceSaturation: number
+  /**
+   * GRAPH 3C §1. The prior mass the stance score is shrunk toward zero by:
+   * `stance = signed / (mass + stanceShrinkage)`.
+   *
+   * ⚠ THIS IS THE WHOLE FIX TO "THE SCORE IS NOT A SPECTRUM". 3A/3B computed `signed / mass`, a
+   * NORMALISED mean direction, which divides out both volume and consistency: one consistent vote
+   * and fifty consistent votes both came out at exactly 1.00, and across 2,304,858 estimates there
+   * were exactly three distinct values. Dividing by `mass + k` instead keeps the sign and the
+   * consistency but lets the magnitude grow with the evidence, so the score is a spectrum again.
+   *
+   * Set equal to `confidenceSaturation` on purpose, so the sprint adds a SHAPE and no new number:
+   * both say "this much summed evidence is worth half of what there is to know", and a single
+   * undecayed rebellion therefore reads stance 0.5 and confidence 0.5 — one sentence to explain.
+   * Provisional until §8 scores it, like every other number in this file.
+   */
+  stanceShrinkage: number
   /** The most confidence direction-0 (attention) signals may ever contribute on their own. */
   attentionConfidenceCeiling: number
   /** Confidence → fixed wording. Three bands, so callers cannot invent adjectives. */
@@ -108,6 +148,18 @@ export const POSITION_CONFIG: PositionConfig = {
     // It carries the whipped weight (it can only ever understate) under its own name, so the
     // count is visible in the report rather than hidden inside the whipped total.
     'small-party-unclassified:v1': 0.2,
+    // [NOT IN DESIGN, added by GRAPH 3C §2] The member's own party voted BOTH ways in this
+    // division, below `cohesionThreshold`. Measured on the case that prompted the sprint: on
+    // commons:2051 Labour split 126 aye / 181 no — cohesion 0.5896 — and every one of those 126
+    // was recorded as `rebellion:v1` at 0.9, the highest weight in the config, for defying a whip
+    // that plainly was not there. Across the whole graph, 8,773 of 18,999 minority-side votes
+    // (46.2%) currently classed `rebellion:v1` come from a party below 0.85 cohesion.
+    //
+    // It carries the FREE VOTE weight because it is the same fact arrived at one level down: a
+    // member voting where no whip held. Both sides of the split get it — the majority side of a
+    // party that split 54/46 is not "voting with the whip" either, and 3A's 0.2 understated them
+    // exactly as much as the 0.9 overstated the others.
+    'party-split:v1': 0.7,
     // [design §5] "voluntary, costless but deliberate". Design §3 also calls an EDM signature the
     // highest-confidence position signal anywhere; 0.6 is the design's own number and stands.
     edm_signature: 0.6,
@@ -161,6 +213,10 @@ export const POSITION_CONFIG: PositionConfig = {
   // LD 84.7% — free-vote-like, correct) and Universal Credit and PIP Bill 2R (Lab 87.2% — whipped,
   // correct, with its 49 rebels landing as rebels).
   cohesionThreshold: 0.85,
+  // GRAPH 3C §2 — see the interface comment. The band immediately above `cohesionThreshold`;
+  // propagation rescues near misses only. Chosen so the rescue set is small enough to print in
+  // full in the report, which it is: three divisions.
+  billPropagationCohesionCeiling: 0.90,
   unwhippedParties: [
     'Crossbench',
     'Bishops',
@@ -184,6 +240,8 @@ export const POSITION_CONFIG: PositionConfig = {
   // costly — is a coin-flip's worth of evidence about someone's stance; it takes a pattern to get
   // past 0.7. Chosen for that property, not fitted to anything, and provisional per §8.
   confidenceSaturation: 0.9,
+  // GRAPH 3C §1 — see the interface comment. Deliberately the same number as the line above.
+  stanceShrinkage: 0.9,
   // Design §5: "many weak signals never manufacture certainty — cap the contribution of any
   // 0-direction signal type to confidence at a low ceiling."
   attentionConfidenceCeiling: 0.15,
@@ -201,5 +259,9 @@ export const POSITION_CONFIG: PositionConfig = {
  */
 export function configVersion(cfg: PositionConfig = POSITION_CONFIG): string {
   const h = createHash('sha256').update(JSON.stringify(cfg)).digest('hex').slice(0, 12)
-  return `3a.${h}`
+  // The prefix names the last sprint to change the SHAPE of this object (3C added
+  // `stanceShrinkage` and `party-split:v1`); the hash is the identity. It moved 3a → 3c so that
+  // "which build is production serving" is answerable at a glance on the admin page, which is the
+  // only deployment marker available while every surface here is authenticated.
+  return `3c.${h}`
 }

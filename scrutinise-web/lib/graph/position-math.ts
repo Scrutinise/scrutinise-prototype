@@ -28,6 +28,39 @@
  *
  * ⚠ The discount is applied WITHIN a class, never across classes: a rebellion and a free vote are
  * different observations and both count in full.
+ *
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * GRAPH 3C — WHAT CHANGED, AND THE THREE MEASUREMENTS THAT FORCED EACH CHANGE
+ * ════════════════════════════════════════════════════════════════════════════════════════════════
+ * 3B audited this function against all 2,304,858 estimates and found three defects. They are
+ * recorded here rather than in a report alone, because the next person to touch this file needs to
+ * know which properties are load-bearing.
+ *
+ * 1 · **The discount was grouped BY DIRECTION, which rewarded an inconsistent record.**
+ *     `(signalType, derivation, direction)` put agreeing and disagreeing signals in different
+ *     groups, so neither discounted the other and both counted in full. Nine votes the same way
+ *     scored confidence 0.748; five one way and four the other scored **0.881**. On the Terminally
+ *     Ill Adults Bill the 425 members with a mixed record averaged 0.919 against the one entirely
+ *     consistent member's 0.896. *Confidence was measuring turnout.*
+ *     → The group key is now `(signalType, derivation, isAttention)`. Direction NETS inside the
+ *       group instead of escaping it.
+ *
+ * 2 · **The stance score was not a spectrum.** `signed / mass` is a NORMALISED mean direction, so
+ *     it divides out both volume and consistency: across the whole table there were exactly
+ *     **three** distinct values (+1, 0, −1) and 92.87% sat at exactly ±1.00. One consistent vote
+ *     and fifty consistent votes were identical.
+ *     → `stanceScore` is now `signed / (mass + stanceShrinkage)` — sign and consistency preserved,
+ *       magnitude grows with the evidence. The old ratio is kept, under the name it always
+ *       deserved: `consistency`. Every wording function reads THAT, so no form of words changes.
+ *
+ * 3 · **Confidence saturated on GROSS evidence.** Two members with identical turnout and opposite
+ *     records were equally well "known".
+ *     → Confidence now saturates on `|signed|`, the NET directional evidence. A perfectly split
+ *       record is, correctly, a record we cannot draw a position from — and it still says so out
+ *       loud, because `consistency` and the `divided` flag both survive to the display layer.
+ *
+ * ⚠ THE ONE PROPERTY THAT DID NOT CHANGE, AND MUST NOT: attention (direction 0) signals never
+ * acquire a side and never exceed `attentionConfidenceCeiling` on their own.
  */
 import { POSITION_CONFIG, PositionConfig, SignalType } from './position-config'
 
@@ -45,12 +78,29 @@ export interface SignalForMath {
 }
 
 export interface Aggregate {
-  /** [-1, +1]. 0 with `mass` 0 means NO SIGNALS, which callers must render as absence, not neutrality. */
+  /**
+   * (-1, +1), open at both ends. Direction × evidence strength: `signed / (mass + shrinkage)`.
+   *
+   * ⚠ THIS IS THE RANKING NUMBER, NOT THE WORDING NUMBER. It is deliberately NOT a normalised mean
+   * — a single whipped vote reads 0.17 and fifty consistent free votes read 0.76, and that gap is
+   * the point. Never pass it to `describeStance()`; the type will not let you.
+   *
+   * 0 with `mass` 0 means NO SIGNALS, which callers must render as absence, not neutrality.
+   */
   stanceScore: number
-  /** [0, 1]. */
+  /**
+   * [-1, +1]. How consistently the directional signals point one way, independent of how many
+   * there are: `signed / mass`. THIS IS WHAT 3A AND 3B CALLED `stanceScore`, and it is what every
+   * form of words is derived from — so the wording is unchanged by 3C while the ranking is fixed.
+   * 1.00 = every signal the same way, whether that is one signal or fifty. 0 = perfectly split.
+   */
+  consistency: number
+  /** [0, 1]. Saturates on |signed| — the NET directional evidence, not the turnout. */
   confidence: number
-  /** Summed effective weight of the DIRECTIONAL signals — the thing confidence saturates on. */
+  /** Summed effective weight of the DIRECTIONAL signals, gross, after decay and discount. */
   mass: number
+  /** Net signed weight: `Σ direction × effective weight`. `|signed| ≤ mass`, equal when consistent. */
+  signed: number
   /** Summed effective weight of the direction-0 signals, before the ceiling is applied. */
   attentionMass: number
   /** Per signal type: how many signals and what they were worth after decay and discount. */
@@ -103,11 +153,13 @@ export function aggregate(
     w: s.rawWeight * decay(s.signalType, s.observedAt, asOf, cfg),
   }))
 
-  // Group for the harmonic discount: same weight class AND same direction. Attention signals
-  // (direction 0) are grouped by class too, so a hundred witness appearances cannot add up either.
+  // ⚠⚠ GRAPH 3C — THE GROUP KEY NO LONGER CARRIES `direction`. That single token was defect 1 in
+  // the header: signals that DISAGREED landed in different groups, dodged each other's discount,
+  // and accumulated more mass than signals that agreed. `isAttention` stays in the key because a
+  // direction-0 signal is a different KIND of observation, not a different side of one.
   const groups = new Map<string, { s: SignalForMath; w: number }[]>()
   for (const d of decayed) {
-    const key = `${d.s.signalType}|${d.s.derivation ?? ''}|${d.s.direction}`
+    const key = `${d.s.signalType}|${d.s.derivation ?? ''}|${d.s.direction === 0 ? 'attention' : 'directional'}`
     const list = groups.get(key)
     if (list) list.push(d)
     else groups.set(key, [d])
@@ -122,18 +174,32 @@ export function aggregate(
   for (const key of [...groups.keys()].sort()) {
     const list = groups.get(key)!
     list.sort((a, b) => (b.w - a.w) || (a.s.id < b.s.id ? -1 : a.s.id > b.s.id ? 1 : 0))
+
+    let groupMass = 0
+    let gross = 0
+    let signedGross = 0
     list.forEach((d, i) => {
       const contribution = d.w / (i + 1)
-      if (d.s.direction === 0) {
-        attentionMass += contribution
-      } else {
-        mass += contribution
-        signed += d.s.direction * contribution
-      }
+      groupMass += contribution
+      gross += d.w
+      signedGross += d.s.direction * d.w
       const c = (signalCounts[d.s.signalType] ??= { n: 0, weight: 0 })
       c.n += 1
       c.weight += contribution
     })
+
+    if (list[0].s.direction === 0) {
+      attentionMass += groupMass
+      continue
+    }
+    mass += groupMass
+    // ⚠ The net direction is taken over the group's GROSS weights and then applied to its
+    // DISCOUNTED mass. Doing it the other way — discounting each signal and then summing signed
+    // contributions — would make the answer depend on which side happened to hold rank 1, since
+    // the i-th signal is worth w/i. With equal weights that rank is decided by an id tie-break,
+    // so a 5-4 split would score anywhere between +0.62 and −0.62 of its own mass depending on an
+    // accident of ordering. This form is stable: five for and four against always nets 1/9.
+    signed += groupMass * (gross > 0 ? signedGross / gross : 0)
   }
 
   // Round the reported weights so a jsonb blob does not carry seventeen digits of noise.
@@ -141,10 +207,17 @@ export function aggregate(
     signalCounts[k].weight = round6(signalCounts[k].weight)
   }
 
-  const stanceScore = mass > 0 ? signed / mass : 0
-  // Saturating in the summed evidence, never reaching 1: confidence is bounded by how much was
-  // observed, so it can be high and still be wrong, which is what the §8 validation set measures.
-  const cDirectional = mass > 0 ? 1 - Math.pow(2, -mass / cfg.confidenceSaturation) : 0
+  // How consistently the record points one way, scale-free. 3A/3B's `stanceScore`, renamed to what
+  // it measures. Every form of words is derived from this, so 3C changes no wording.
+  const consistency = mass > 0 ? signed / mass : 0
+  // Direction × strength of evidence. `mass + shrinkage` instead of `mass`: see the config comment
+  // on `stanceShrinkage`. Sign is identical to `consistency`; magnitude now grows with the record.
+  const stanceScore = mass > 0 ? signed / (mass + cfg.stanceShrinkage) : 0
+  // Saturating in the NET evidence, never reaching 1: confidence is bounded by how much was
+  // observed AND by how well it agrees, so it can be high and still be wrong, which is what the
+  // §8 validation set measures. Using |signed| rather than `mass` is defect 3 in the header —
+  // turnout is not conviction.
+  const cDirectional = mass > 0 ? 1 - Math.pow(2, -Math.abs(signed) / cfg.confidenceSaturation) : 0
   const cAttentionRaw = attentionMass > 0 ? 1 - Math.pow(2, -attentionMass / cfg.confidenceSaturation) : 0
   const cAttention = Math.min(cfg.attentionConfidenceCeiling, cAttentionRaw)
   // Probabilistic OR: two independent-ish sources of confidence combine without ever exceeding 1,
@@ -153,8 +226,10 @@ export function aggregate(
 
   return {
     stanceScore: round6(stanceScore),
+    consistency: round6(consistency),
     confidence: round6(confidence),
     mass: round6(mass),
+    signed: round6(signed),
     attentionMass: round6(attentionMass),
     signalCounts,
   }
@@ -179,15 +254,23 @@ export function describeConfidence(confidence: number, cfg: PositionConfig = POS
 }
 
 /**
- * Stance score → wording. Deliberately refuses the middle: a score near zero is CONTESTED or
+ * CONSISTENCY → wording. Deliberately refuses the middle: a record near zero is CONTESTED or
  * BALANCED, never "neutral", and never nothing.
  *
  * ⚠ There is no band here for "no signals". That case must not reach this function at all — design
  * §6: an actor with no signals is *absent*, and absence is the caller's to render.
+ *
+ * ⚠⚠ GRAPH 3C — IT TAKES AN OBJECT, NOT A NUMBER, AND THAT IS THE WHOLE POINT OF THE SIGNATURE.
+ * The number this reads is `consistency`, which is what 3A and 3B called `stanceScore`. 3C gave
+ * `stanceScore` a different meaning (direction × evidence strength, shrunk toward zero), and under
+ * the old signature every existing call site would have kept compiling while silently changing
+ * what it said: a single whipped vote would read 0.167 and be described as a "divided record".
+ * Taking `{ consistency }` makes every one of those call sites a compile error instead, which is
+ * how they came to be reviewed. Do not relax it back to a number.
  */
-export function describeStance(stanceScore: number): 'supported' | 'opposed' | 'divided record' {
-  if (stanceScore >= 0.2) return 'supported'
-  if (stanceScore <= -0.2) return 'opposed'
+export function describeStance(a: { consistency: number }): 'supported' | 'opposed' | 'divided record' {
+  if (a.consistency >= 0.2) return 'supported'
+  if (a.consistency <= -0.2) return 'opposed'
   return 'divided record'
 }
 

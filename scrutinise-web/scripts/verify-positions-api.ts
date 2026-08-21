@@ -75,7 +75,25 @@ async function main() {
     'Third Reading of the assisted dying Bill classifies as free-vote-like throughout')
 
   // ── 2. the rollup across targets does what one target cannot ──────────────────────────────
-  const both = await positionsFor(ASSISTED_DYING.map((t) => parseTarget(t)!), { asOf: AS_OF, limit: 400 })
+  // ⚠⚠⚠ `limit` WAS 400, AND GRAPH 3C WATCHED IT HIDE THE COUNTER-EXAMPLES A SECOND TIME.
+  //
+  // 3B rewrote the assertion below to require the 16 members who changed side to be VISIBLE — and
+  // left the limit at 400, because under 3B's ranking key those 16 sorted to ranks 1–23 and were
+  // comfortably inside it. 3C's whole §1 is that the key was pointing the wrong way: a
+  // contradictory record is now correctly a LOW-confidence one, so the same 16 sorted to the
+  // bottom, fell below 400 again, and the check reported **"400 the same way twice, 0 changed
+  // side"** — the identical false sentence 3A published, arrived at from the opposite direction.
+  //
+  // It FAILED rather than passing, which is the whole value of 3B's rewrite and is why this is a
+  // paragraph rather than an incident. But the lesson is narrower than "assert the mechanism":
+  // **3B fixed the assertion and not the harness limit that had defeated it**, so the fix survived
+  // exactly as long as the ranking key it was written against. The limit is now larger than the
+  // matched set, and the harness ASSERTS it is not truncating — a bound that cannot bite cannot
+  // hide anything, whatever the next key turns out to be.
+  const both = await positionsFor(ASSISTED_DYING.map((t) => parseTarget(t)!), { asOf: AS_OF, limit: 5000 })
+  check(both.actors.length === both.actorsMatched,
+    'the harness sees EVERY matched actor — no ranking key can hide a counter-example below the limit',
+    `${both.actors.length} shown of ${both.actorsMatched} matched`)
   const twoSignals = both.actors.filter((a) => a.grounds.length === 2)
   check(twoSignals.length > 100, 'hundreds of members voted in BOTH divisions',
     `${twoSignals.length} of ${both.actorsMatched}`)
@@ -98,8 +116,8 @@ async function main() {
   // Rewritten to assert the mechanism — that both shapes exist and the rollup tells them apart —
   // and to REQUIRE the counter-examples to be visible, so a future ranking change that buries them
   // again fails here instead of producing another confident sentence.
-  const changedSide = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.stanceScore) < 1)
-  const heldFirm = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.stanceScore) === 1)
+  const changedSide = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.consistency) < 1)
+  const heldFirm = both.actors.filter((a) => a.grounds.length === 2 && Math.abs(a.consistency) === 1)
   check(heldFirm.length > 100 && changedSide.length > 0,
     'across the two readings, most members held firm and SOME changed side — both are present',
     `${heldFirm.length} the same way twice, ${changedSide.length} changed side` +
@@ -110,21 +128,27 @@ async function main() {
     'and their two readings are shown SEPARATELY, with opposite sides — §4.2, never summed')
 
   // The divided record, on the full set where a member can back the Bill and resist an amendment.
+  //
   // ⚠ `limit` raised from 500 to 700 by GRAPH 3B, and the reason is the same lesson as above.
-  // Under 3B's sort key (confidence first) a MIXED record outranks a consistent one — signals that
-  // disagree land in different harmonic-discount groups, so each counts in full and the mass is
-  // larger. On this Bill only ONE of 426 members with 9+ votes is entirely consistent, and at
-  // limit 500 of ~630 matched they fell off the bottom, making `consistent.length > 0` fail.
-  // Raising the limit is the honest fix: the assertion is about the data containing both shapes,
-  // and it must not depend on where a ranking happens to put them.
+  // Under 3B's sort key a MIXED record outranked a consistent one — signals that disagreed landed
+  // in different harmonic-discount groups, so each counted in full and the mass was larger. On
+  // this Bill only ONE of 426 members with 9+ votes is entirely consistent, and at limit 500 of
+  // ~630 matched they fell off the bottom, making `consistent.length > 0` fail.
+  //
+  // ⚠⚠ GRAPH 3C FIXED THE CAUSE, AND THE LIMIT STAYS AT 700 ANYWAY. That member now ranks **1 of
+  // 426** rather than 426 of 426 (`audit-3c-scoring.ts`), so 500 would pass again — which is
+  // exactly why the limit is not being lowered back. The assertion is about the DATA containing
+  // both shapes; making it depend on where today's ranking puts them is how 3A came to publish a
+  // finding that could not fail. A limit generous enough to hold every matched actor keeps the
+  // check honest under whatever the next ranking key turns out to be.
   const full = await positionsFor(ASSISTED_DYING_FULL.map((t) => parseTarget(t)!), { asOf: AS_OF, limit: 700, maxGroundsPerActor: 9 })
   const many = full.actors.filter((a) => a.grounds.length >= 3)
-  const consistent = many.filter((a) => Math.abs(a.stanceScore) === 1)
-  const divided = many.filter((a) => Math.abs(a.stanceScore) < 1)
+  const consistent = many.filter((a) => Math.abs(a.consistency) === 1)
+  const divided = many.filter((a) => Math.abs(a.consistency) < 1)
   check(consistent.length > 0 && divided.length > 0,
     'the rollup separates a consistent record from a divided one, rather than averaging both away',
     `of ${many.length} members with 3+ votes on the Bill: ${consistent.length} entirely consistent, ${divided.length} divided`)
-  check(divided.every((a) => a.stanceWording === 'divided record' || Math.abs(a.stanceScore) >= 0.2),
+  check(divided.every((a) => a.stanceWording === 'divided record' || Math.abs(a.consistency) >= 0.2),
     'a divided record is described as divided, never as neutral and never as absent')
   const bestOne = Math.max(...one.actors.map((a) => a.confidence))
   const bestTwo = Math.max(...both.actors.map((a) => a.confidence))
@@ -150,7 +174,7 @@ async function main() {
   const inquiryTargets = await positionsFor([{ type: 'inquiry', id: '6260' }], { asOf: AS_OF, limit: 20 })
   check(inquiryTargets.actorsMatched > 0, 'an inquiry returns its witnesses',
     `${inquiryTargets.actorsMatched} actors`)
-  check(inquiryTargets.actors.every((a) => a.stanceScore === 0),
+  check(inquiryTargets.actors.every((a) => a.stanceScore === 0 && a.consistency === 0),
     'a witness appearance records attention, never a side')
   check(inquiryTargets.actors.every((a) => a.confidence <= 0.15 + 1e-9),
     'and never exceeds the attention confidence ceiling',
@@ -199,8 +223,21 @@ async function main() {
     one.actors[0]?.claim?.slice(0, 96))
   check(one.actors.every((a) => a.claimCaveat === null),
     'a single-target claim carries no multi-target caveat')
-  check(both.actors.every((a) => a.claimCaveat !== null),
-    'a multi-target claim always carries the do-not-read-this-as-the-subject caveat')
+  // ⚠ GRAPH 3C — THIS IS THE THIRD ASSERTION IN THIS FILE THAT `limit: 400` WAS PROPPING UP.
+  // It read `both.actors.every(a => a.claimCaveat !== null)` and passed, because the top 400 under
+  // the old key happened to be all two-division voters. Raising the limit to show every matched
+  // actor brought in the 40 members who voted in only ONE of the two divisions — whose caveat is
+  // correctly null, since there is nothing to warn about combining. The assertion was measuring
+  // "the sample contains no single-target actors", not the property it names. Now it says which
+  // actors it is about, and the complementary case is asserted rather than assumed.
+  const multi = both.actors.filter((a) => a.byTarget.length > 1)
+  const single = both.actors.filter((a) => a.byTarget.length === 1)
+  check(multi.length > 100 && multi.every((a) => a.claimCaveat !== null),
+    'a multi-target claim always carries the do-not-read-this-as-the-subject caveat',
+    `${multi.length} multi-target actors, all caveated`)
+  check(single.length > 0 && single.every((a) => a.claimCaveat === null),
+    'and a single-target claim never carries it — there is nothing to warn about combining',
+    `${single.length} single-target actors, none caveated`)
   check(both.actors.every((a) => a.byTarget.length === a.grounds.length),
     'every requested target the actor has a signal for appears separately in byTarget')
   check(both.actors.every((a) => a.byTarget.every((t) => t.targetLabel && t.targetLabel.length > 3)),

@@ -36,6 +36,7 @@ interface ActorPosition {
   identityCaveat: string | null
   parlMemberId: number | null
   stanceScore: number
+  consistency: number
   confidence: number
   confidenceWording: string
   stanceWording: string
@@ -44,7 +45,7 @@ interface ActorPosition {
   claimCaveat: string | null
   byTarget: Array<{
     targetType: string; targetId: string; targetLabel: string | null; date: string
-    stanceScore: number; confidence: number; stanceWording: string; claim: string
+    stanceScore: number; consistency: number; confidence: number; stanceWording: string; claim: string
   }>
   divided: boolean
   signalCount: number
@@ -208,6 +209,15 @@ export default function PositionGraphExplorer() {
               <span className="text-zinc-400">Ordered by </span>
               <span className="font-mono text-zinc-700">{result.ranking.key}</span>
             </div>
+            {/* GRAPH 3C §1 — the two numbers on every row, named once. */}
+            <div className="mt-1 text-[11px] text-zinc-500">
+              Each row shows <strong>consistency</strong> (which way the record points, −1 to +1,
+              regardless of its size) and <strong>×strength</strong> (that direction weighted by how
+              much evidence there is). Fifty consistent votes and one consistent vote share a
+              consistency of 1.00 and differ on strength — before GRAPH 3C they shared both, which
+              is why this page could not rank. Confidence saturates on the <em>net</em> evidence, so
+              a record that points both ways is a low-confidence one.
+            </div>
             {result.ranking.note && (
               <div className={`mt-1 rounded px-2 py-1 ${
                 result.ranking.shownOrderIsNameOrderOnly
@@ -247,11 +257,23 @@ export default function PositionGraphExplorer() {
                     {a.identityStatement}
                   </span>
                 </div>
+                {/* GRAPH 3C §1 — TWO NUMBERS, BECAUSE THEY ANSWER TWO QUESTIONS.
+                    `consistency` is which way the record points and how consistently (what 3A and
+                    3B printed as "stance"); `stanceScore` is that direction weighted by how much
+                    evidence there is for it, and is what the list is ordered on. Printing only the
+                    first is how one consistent vote and fifty consistent votes came to read
+                    identically; printing only the second would make a single whipped vote at 0.17
+                    look like a divided record. */}
                 <div className="text-right text-sm">
-                  <span className={a.stanceScore > 0 ? 'text-emerald-700' : a.stanceScore < 0 ? 'text-red-700' : 'text-zinc-500'}>
+                  <span className={a.consistency > 0 ? 'text-emerald-700' : a.consistency < 0 ? 'text-red-700' : 'text-zinc-500'}>
                     {a.stanceWording}
                   </span>
-                  <span className="ml-2 tabular-nums text-zinc-500">{a.stanceScore.toFixed(2)}</span>
+                  <span className="ml-2 tabular-nums text-zinc-500" title="consistency: which way the record points, regardless of how big it is">
+                    {a.consistency.toFixed(2)}
+                  </span>
+                  <span className="ml-2 tabular-nums text-zinc-400" title="stance: direction × strength of evidence — the number this list is ordered by">
+                    ×{Math.abs(a.stanceScore).toFixed(2)}
+                  </span>
                   <span className="ml-3 text-zinc-500">{a.confidenceWording}</span>
                   <span className="ml-2 tabular-nums text-zinc-400">{a.confidence.toFixed(3)}</span>
                 </div>
@@ -289,12 +311,12 @@ export default function PositionGraphExplorer() {
                   {a.byTarget.map((t) => (
                     <li key={`${t.targetType}:${t.targetId}`}>
                       <span className="tabular-nums text-zinc-400">{t.date}</span>{' '}
-                      <span className={t.stanceScore > 0 ? 'text-emerald-700' : t.stanceScore < 0 ? 'text-red-700' : 'text-zinc-500'}>
+                      <span className={t.consistency > 0 ? 'text-emerald-700' : t.consistency < 0 ? 'text-red-700' : 'text-zinc-500'}>
                         {t.stanceWording}
                       </span>{' '}
                       {t.targetLabel ?? `${t.targetType}:${t.targetId}`}
                       <span className="ml-1 tabular-nums text-zinc-400">
-                        ({t.stanceScore.toFixed(2)}, conf {t.confidence.toFixed(3)})
+                        ({t.consistency.toFixed(2)} ×{Math.abs(t.stanceScore).toFixed(2)}, conf {t.confidence.toFixed(3)})
                       </span>
                     </li>
                   ))}

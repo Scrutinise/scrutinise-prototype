@@ -73,9 +73,18 @@ export interface ActorPosition {
   /** Parliament's member id where we hold one — the drill-down key for a member. */
   parlMemberId: number | null
 
-  /** Rolled up across every requested target this actor has a signal for. [-1, +1]. */
+  /**
+   * Rolled up across every requested target this actor has a signal for. (-1, +1).
+   * GRAPH 3C: direction × strength of evidence — the RANKING number. Fifty consistent votes score
+   * higher than one; they used to score identically. Never render this as a verdict on its own.
+   */
   stanceScore: number
-  /** [0, 1]. */
+  /**
+   * [-1, +1]. How consistently the record points one way, independent of its size. This is the
+   * number every form of words is derived from, and it is what 3A/3B called `stanceScore`.
+   */
+  consistency: number
+  /** [0, 1]. Saturates on the NET evidence, so a contradictory record is not a confident one. */
   confidence: number
   /** The only permitted wording for that number. */
   confidenceWording: string
@@ -107,6 +116,7 @@ export interface ActorPosition {
     targetLabel: string | null
     date: string
     stanceScore: number
+    consistency: number
     confidence: number
     stanceWording: string
     /** The one-line claim for this target alone. */
@@ -367,13 +377,14 @@ export async function positionsFor(
         const a = aggregate(rows.map(toMath), asOf, POSITION_CONFIG)
         const label = rows[0].target_label
         const date = rows.map((r) => r.observed_at).sort().at(-1)!
-        const wording = describeStance(a.stanceScore)
+        const wording = describeStance(a)
         return {
           targetType: rows[0].target_type,
           targetId: rows[0].target_id,
           targetLabel: label,
           date,
           stanceScore: a.stanceScore,
+          consistency: a.consistency,
           confidence: a.confidence,
           stanceWording: wording,
           claim: composeClaim(wording, [{
@@ -391,11 +402,14 @@ export async function positionsFor(
     const divided = directions.size > 1
 
     const { claim, caveat } = composeClaim(
-      describeStance(agg.stanceScore),
+      describeStance(agg),
       byTarget.map((t) => ({
         label: t.targetLabel ?? `${t.targetType}:${t.targetId}`,
         date: t.date,
-        direction: t.stanceScore > 0 ? 1 : t.stanceScore < 0 ? -1 : 0,
+        // ⚠ `consistency`, not `stanceScore` — the side this target came out on, independent of
+        // how strong the evidence for it was. `for`/`against` is a fact about direction; the
+        // strength is carried elsewhere and must not leak into the word.
+        direction: t.consistency > 0 ? 1 : t.consistency < 0 ? -1 : 0,
       })),
     )
 
@@ -425,9 +439,10 @@ export async function positionsFor(
       identityCaveat: head.identity_caveat,
       parlMemberId: head.parl_member_id,
       stanceScore: agg.stanceScore,
+      consistency: agg.consistency,
       confidence: agg.confidence,
       confidenceWording: describeConfidence(agg.confidence),
-      stanceWording: describeStance(agg.stanceScore),
+      stanceWording: describeStance(agg),
       signalCounts: agg.signalCounts,
       claim,
       claimCaveat: caveat,
@@ -446,6 +461,14 @@ export async function positionsFor(
   // everybody, and makes a genuinely divided record sort to the bottom on a key of exactly 0.
   // Brief §1: order by confidence, then by the number of contributing signals, then by name — and
   // PRINT THE KEY, so a reader can see what the order is claiming and what it is not.
+  //
+  // ⚠⚠ GRAPH 3C CLOSES D-7 BY CHANGING THE NUMBER, NOT THE KEY. 3B flagged that both available
+  // keys were biased in opposite directions: confidence-first put the LEAST decided members at the
+  // top, because contradictory signals escaped the harmonic discount and accumulated more mass
+  // than agreeing ones. That is fixed in `aggregate()` — confidence now saturates on the NET
+  // evidence — so confidence-first no longer promotes the ambivalent; it demotes them, which is
+  // what a reader who knows the subject expects. The key is unchanged and so is this wording;
+  // what changed is that the number under it now means conviction rather than turnout.
   actors.sort((a, b) =>
     b.confidence - a.confidence ||
     b.signalCount - a.signalCount ||
