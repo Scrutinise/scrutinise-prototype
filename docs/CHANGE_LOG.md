@@ -251,6 +251,130 @@ Then `docs/POSITION_VALIDATION_CANDIDATES.md`, 50 PRIORITY rows.
 
 ---
 
+## SEARCH S12 — A SAFE WAY TO REPLACE EMBEDDINGS, AND THE PREMISE THAT WAS WRONG (2026-08-21 22:17 UTC)
+
+Executes `docs/BRIEF_SEARCH_S12.md` §0–§7. Report: **`docs/SEARCH_S12_REPORT.md`**.
+`tsc` clean in `scrutinise-web`; `tsc -p scripts/ingest` has **30 pre-existing errors across 11
+files and none from S12's** — two that `fts-refresh.ts` contributed in S11 are fixed here. Pilot
+guards watched failing first. **Spend: $0.038 pilot + the case-law run (below).**
+
+⚠⚠ **THE BRIEF'S DIAGNOSIS DOES NOT MATCH THE CODE, AND CORRECTING IT IS THE SPRINT'S DURABLE
+ARTEFACT.** §1 states that *"chunks are numbered in one continuous sequence across the whole corpus"*
+so a re-cut makes *"vectors describe different text than the one they are attached to"*.
+**`vector-common.ts:53` is `chunkId = `${sectionId}#${k}`** — content-addressed, per section, and
+every fetch and delete in the pipeline keys off it by RANGE. Re-cutting collection A cannot attach
+collection B's vectors to other text. What IS global is the SHARD PLAN: `build-vector-index.ts:140`
+slices the sorted id list by ORDINAL position and the checkpoint stores only the shard INDEX, so a
+**resume against a stale checkpoint** skips ranges and repeats others — a coverage fault, confined
+to resumes.
+
+⚠ **And the blast radius is 0.31%, measured.** `tna-caselaw` sorts **69th of 74**; the chunks whose
+ordinal position moves at all are `uk-treaties` 12,543 + `uk-treaties-fcdo` 56,215 +
+`written-answers` 1,138 + `written-statements` 994 = **70,890 of 22,689,587 — two shards of 568.**
+
+✅ **THE REAL RISKS ARE A DIFFERENT LIST, AND EACH HAS A GUARD.** **R1 orphan vectors** — a re-cut
+of a shortened document leaves `…#6`/`…#7` with no chunk behind them; `vector-query-service.ts:229`
+returns hits keyed by **sectionId** and hydrates the snippet from the section's FIRST chunk, so an
+orphan does not display someone else's text — it makes a section **retrievable because of a passage
+it no longer contains**, which no row count reveals. **R3 re-chunk without re-embed** is the one
+that really does attach a vector to text it does not describe.
+
+✅ **DESIGN CHOSEN: a collection-scoped replace that never consults the global plan**
+(`scripts/ingest/search/vec-replace.ts`). The alternatives and why they lost are in the report:
+**(A) stable per-collection chunk ids — ALREADY TRUE, £0, nothing to build**; **(B) recompute shard
+boundaries from the table — correct and cheap, but it edits the full-rebuild path (the script
+holding a $430–520 button) to fix a resume hazard the chosen design does not create; recommended as
+a standalone follow-up.**
+
+✅ **PROVEN ON A SMALL COLLECTION BEFORE ANYTHING WAS SPENT, AND THE GUARD WAS WATCHED FAILING ON
+THE REAL BROKEN STATE (§6).** `inquiry-evidence`, forced to a genuinely different cut because a
+plain re-cut of an untouched collection reproduces its chunks exactly and would have proved nothing:
+`--chunk` alone took 446 chunks to 225 and the guards went **RED — G1 221 orphan vectors, G3
+225 vs 446** — then `--embed` turned them green, then the collection was restored to 446 = 446.
+⚠⚠ **The isolation assertion is the one that matters** (*"a boundary shift is invisible in the
+collection you touched and visible only in the ones you did not"*): **74 of 74 collections, every
+row of both tables, no sampling — 0 unexpectedly changed**, with the collections sorting after the
+pilot named and checked individually.
+
+⚠ **A design fault found DURING the run and deliberately not patched mid-flight:** phase 1 deletes
+the collection's chunks in one statement, so for ~25 minutes `corpus_chunks` holds no case-law rows
+and snippet hydration for that collection would return empty. Phase 2 does not have this problem
+(per-shard delete). Shipping an unexercised edit in the same commit as a proven one is how a fix
+becomes an incident, so it is named as a follow-up. ⚠ The mitigation is NOT "the serving process
+holds its tables from boot" — S11 made that argument about `fts-serve` and then watched `fts-serve`
+restart itself.
+
+⚠⚠ **THE CHUNK-COUNT PREDICTION WAS REFUTED AND THE REASON IS THE USEFUL PART.** Predicted
+480,000–520,000 chunks (−7% to −14%); measured **539,454 (−18,779, −3.4%)**. I had reasoned that
+removing 12.7% of embedded text removes a comparable share of chunks. It does not, because those
+documents were **hitting the 8-chunk cap** (242 of 300 sampled). A capped document still caps. **The
+gain is not fewer chunks — it is more judgment text fitting underneath the cap**: the ~417 words per
+capped document that never reached the embedder now do. The count barely moves; what is *in* the
+chunks changes completely. ⚠ **2 body misses of 74,896**, matching exactly the two documents the
+ingest sprint found the National Archives publishes with no text at all.
+
+✅ **§4 — THE DISPLAY-TYPE SWEEP, WHOLE POPULATION, AND THE ANSWER IS NO.** 74 of 74 collections
+classified and the section counts reconcile to 18,521,164 of 18,521,164. **69 reachable · 0
+TYPE-BLOCKED · 0 TIER-BLOCKED · 2 NO-STREAM-PASSES-BOTH · 3 by-design.** The accident does not reach
+beyond the two treaty collections, and after S11 there is no tier-blocked collection left either.
+⚠ **My own first label was wrong and was corrected before it reached the report:** I classified the
+treaties `BOTH` (both axes blocked). Their tier IS owned by a stream (`debates` owns
+`parliamentary`) and their type IS admitted by a stream (`caselaw` applies no type filter) — **each
+axis passes, just never in the same stream.** That widens the fix materially. ▶ Recommend admitting
+`TREATY` to `debates` ONCE GOLD V2 is validated and debates questions exist; separating rendering
+from routing properly is the durable fix and §4 is right that it must not ride behind an embedding
+change.
+
+✅ **§5 — DRIFT DETECTION CLOSED ON BOTH SIDES.** S11 built the keyword side (`fts-drift.ts`). S12
+found the gap: **`corpus_chunks` and `corpus_vec` are written by different phases and nothing
+asserted they agree** — the meaning side had no detector at all. Closed as
+`check-s12-isolation.ts --drift`, per collection, never totalled (a total nets a shortfall in one
+collection against a surplus in another and reports zero).
+
+✅ **§3's index stamp built, and it costs one metadata read.** Every Lance table carries a monotonic
+`version()`; `index-state.ts` records it beside every measurement. ⚠ **Row counts are not a
+substitute**: a delete-and-re-add of the same number of rows leaves the count identical and the
+ranking completely different, which is exactly what voided S10's numbers. At the time of writing:
+`corpus_fts` v7308 · `corpus_vec` v3981 · `corpus_chunks` v18389.
+
+⚠ **§0 — GOLD V2 IS NOT VALIDATED** (all 24 VERDICT lines blank at `680926e`), so §3's baseline runs
+on the existing **44-question** set and this is named wherever a number is quoted. `debates` and
+`legislation` still have zero questions.
+
+⚠⚠ **A LIVE SERVING DEFECT, DIAGNOSED WHILE PROBING SOMETHING ELSE, AND NEARLY MISATTRIBUTED TO
+MY OWN CHANGE.** `tna-caselaw` results were returning EMPTY snippets while `ni-judgments` returned
+text — which looked exactly like the re-cut having lost the chunks. `corpus_chunks` held all
+**539,454** with chunk 0 reading *"Neutral Citation Number: [2025] EWHC 2205 (Admin)…"*, i.e.
+judgment text, exactly as intended. The real cause is a **pre-existing** bug in the serving path:
+`snippets()` limited its lookup to `sectionIds.length * 4` rows, but a section contributes as many
+rows as it has CHUNKS — up to 8 — so a few long documents consume the whole shared allowance and
+every section after them gets **no row at all**, rendered as an empty string that reads like a
+document with no text. Reproduces exactly as the arithmetic predicts: **limit=1 → 0 of 1 empty,
+limit=3 → 1 of 3, limit=10 → 5 of 10**, and the SAME document has a snippet at 3 and none at 10 —
+which is word for word what `INGEST_CASELAW_TEXT_REPORT` called "inconsistent snippet hydration"
+and flagged for this thread. **It is not inconsistency, it is a budget.** Fixed (per section, wired
+to the chunker's own `MAX_CHUNKS`), and a section that still gets no row is now WARNED rather than
+returned blank. Takes effect on the `vector-serve` redeploy §2 already requires.
+
+❌ **§2 DID NOT FINISH AND §3 THEREFORE DID NOT RUN.** Phase 1 (re-cut) is **complete and landed on
+the plan to the row — 539,454 chunks, 2 body misses**. Phase 2 is in flight, checkpointed per shard
+under a $40 ceiling: 14 shards split into ~98 sequential Batch sub-jobs, and the API is pacing job
+creation (`create 429 (quota bucket) — waiting 90s`), so it is an overnight run. §3's baseline is
+deliberately NOT taken — the brief says after §2 lands, and taking it mid-replace would produce
+exactly the kind of number this sprint exists to stop circulating. ⚠ `tna-caselaw` is in the R3
+state (new chunks, partly-old vectors) until it completes; `--verify` reports it red rather than
+silently. ⚠ Resume with `--embed`, **never `--reset`** — and the tool now REFUSES `--chunk` against
+a checkpoint with completed shards, watched firing (exit 3) and watched staying silent on the safe
+path.
+
+▶ **CHARLIE — four steps, in order, each with a signal that moves:** (1) let the embed finish
+(resume command in the report); (2) `vector-index` heavy job on the rented box — verify
+`unindexed=0`; (3) **redeploy `vector-serve`** — today `limit=10` on a caselaw query returns **5 of
+10 empty snippets**, after it **0 of 10**; (4) take the baseline, stating the configuration and the
+index version beside it, and **not** as "improved from 34%" — S10's figure is void, not a
+comparison point. Plus: **GOLD V2 still needs your validation pass**, which gates the
+debates/legislation evaluation, the treaty decision and the `limit` semantics decision.
+
 ## SEARCH GOLD v2 — TEST QUESTIONS FOR DEBATES AND LEGISLATION, AND THE WRONG KEY THE CHECK CAUGHT (2026-08-21 02:58 UTC)
 
 Executes `docs/BRIEF_GOLD_V2.md` §0–§5. Deliverable: **`docs/GOLD_CANDIDATES_V2.md`** — 21 questions

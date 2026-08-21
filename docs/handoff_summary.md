@@ -2,7 +2,28 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-21 02:58 UTC — ▼ **SEARCH GOLD v2: THE TEST QUESTIONS FOR DEBATES AND
+*Last updated: 2026-08-21 22:17 UTC — ▼ **SEARCH S12: THE REPLACE PATH EXISTS AND THE BRIEF'S
+PREMISE WAS WRONG.** There is no global chunk numbering — `chunkId` is `${sectionId}#${k}`,
+content-addressed, and every fetch and delete keys off it by RANGE, so re-cutting one collection
+cannot attach another's vectors to different text. What IS global is the shard plan, so the real
+hazard is a stale-checkpoint RESUME. Measured blast radius of a naive re-cut: **70,890 of
+22,689,587 chunks, 0.31%, two shards of 568.** ✅ `vec-replace.ts` built, scoped to one collection,
+priced before it spends; the pilot watched its guard fail on the REAL broken state (446 chunks →
+225, **221 orphan vectors**, red before green) and isolation compared **74 of 74 collections, every
+row, no sampling — 0 unexpectedly changed**. ⚠⚠ **A LIVE SERVING DEFECT FOUND AND NEARLY
+MISATTRIBUTED TO MY OWN CHANGE**: caselaw snippets were coming back EMPTY, which looked like the
+re-cut losing chunks — the table held all 539,454 with judgment text in chunk 0, and the real cause
+is a PRE-EXISTING shared row budget (`sectionIds.length * 4`) that starves sections with many
+chunks: **limit=10 → 5 of 10 results have no snippet**, the same document has one at limit=3 and
+none at limit=10. That is the 'inconsistent hydration' ingest flagged; it is a budget, and it is
+fixed. ⚠ My chunk-count prediction was REFUTED — 539,454 not 480–520k — because capped documents
+still cap: the gain is more judgment text UNDER the cap, not fewer chunks. ✅ §4 sweep: 74 of 74
+classified, **0 type-blocked, 0 tier-blocked**, only the 2 treaty collections affected. ❌ §2's
+embed is an OVERNIGHT run (Batch API pacing at 90s per 429) and §3's baseline is therefore NOT
+taken. ▶ CHARLIE: let it finish → `vector-index` job → **redeploy `vector-serve`** (5-of-10 empty
+snippets → 0 of 10) → then the baseline. **GOLD V2 still needs your validation pass.**
+`docs/SEARCH_S12_REPORT.md`.**
+Earlier: 2026-08-21 02:58 UTC — ▼ **SEARCH GOLD v2: THE TEST QUESTIONS FOR DEBATES AND
 LEGISLATION EXIST — 21 questions plus 3 negative controls, nothing scored, awaiting Charlie's pass
 (`docs/GOLD_CANDIDATES_V2.md`).** 27 of 27 keys verified by reading the document body out of R2
 against a claim written down BEFORE the read; `runSearch()` never called, because keying a question
