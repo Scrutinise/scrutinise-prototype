@@ -303,13 +303,45 @@ const res = await runSearch({
   keywords: ['sewage', 'discharge', 'water company'],
   intent: 'CAUSE_SEEDING',
   ideaContext: 'optional — steers query expansion ONLY, never enters cited text',
-  limit: 40,          // canonical results before grouping; grouping caps ~20
+  limit: 40,          // ⚠⚠ PER STREAM, NOT A TOTAL — see below. 40 → up to 500 results.
   // tier: 'legislation'  ⚠ see below — almost certainly not what you want
 })
-// res.results  — ranked, canonical
-// res.grouped  — ≤3 per display type, ~20 total, panel-ready
-// res.failed   — TRUE = the search could not run. NOT the same as "found nothing".
+// res.results         — ranked, canonical, INTERLEAVED across streams (any prefix is balanced)
+// res.grouped         — ≤3 per display type, ~20 total, panel-ready
+// res.failed          — TRUE = the search could not run. NOT the same as "found nothing".
+// res.meta.requested  — {limit, returned, streams, fanout} — what you asked for vs what arrived
 ```
+
+### ⚠⚠ `limit` IS A PER-STREAM BUDGET AND THIS DOCUMENT USED TO SAY OTHERWISE (S11 §5.1)
+
+Until 21 August 2026 the line above read *"canonical results before grouping; grouping caps ~20"*.
+**That was wrong, and every caller was written against it.** `limit` is passed to EVERY routed
+stream; each stream over-fetches ×3 for fusion; `results` is the interleaved sum. The shape is
+`min(3 × limit, 100) × streams`. Measured on the live stack, five streams routed
+(`docs/FINDING_FOR_SEARCH_gateway-limit-fanout.md`):
+
+| asked | `results` | per stream | `grouped` |
+|---|---:|---|---:|
+| `limit: 10` | **150** | 30 × 5 | 20 |
+| `limit: 34` | **500** | 100 × 5 | 20 |
+
+⚠ **`grouped` is 20 either way, which is why nobody saw it for six weeks.** Every caller reading
+`grouped` is capped downstream and looks correct; the cost appeared only as latency and as tokens
+nobody attributed to it. It surfaced when the Deepening's sift — the one caller that reads
+`results` unfiltered *and* pays a per-candidate model cost — hit its output ceiling and said so.
+
+**What S11 changed: the reporting, not the behaviour.** `meta.requested` now carries
+`{limit, returned, streams, fanout}` on every non-empty search, and the gateway logs
+`asked N → got M across K stream(s)`. A behaviour change here would move recall on every surface
+on the platform, and the validated set still has **no debates and no legislation questions** to
+measure that with (S10 §7 Q5) — so it is deliberately deferred rather than guessed at.
+
+▶ **PENDING DECISION, owner Charlie, blocked on a debates/legislation validated set:** should
+`limit` become a total (divided across streams) or stay a per-stream budget and be renamed? Either
+is defensible. The documentation and the code now agree on which one is true today.
+
+**If you need a bounded set:** take a PREFIX of `results` — it is round-robin interleaved, so any
+prefix is stream-balanced — or read `grouped`. Do not assume `results.length <= limit`.
 
 **`runSearch()` is the single point of contact.** It owns query building, expansion, routing,
 retrieval, fusion and grouping. When search grows, this file changes and callers do not.

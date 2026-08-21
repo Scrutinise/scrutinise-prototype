@@ -134,7 +134,34 @@ export interface GatewayQuery {
   /** Extra idea context for query expansion ONLY. Never enters briefing/cited text
    *  (grounding guardrail §3): web/expansion steer retrieval; the corpus is cited. */
   ideaContext?: string
-  /** Max canonical results before grouping. Grouping caps ~20 downstream. */
+  /**
+   * ⚠⚠ A PER-STREAM BUDGET, NOT A TOTAL — and this comment used to say the opposite.
+   *
+   * It read *"Max canonical results before grouping"*. It is not, and has never been: `limit` is
+   * handed to EVERY routed stream, each stream over-fetches ×3 for fusion, and `results` is the
+   * interleaved sum. Measured on the live stack with five streams routed
+   * (`docs/FINDING_FOR_SEARCH_gateway-limit-fanout.md`, CC-Lex, 2026-08-20):
+   *
+   *     limit: 10  →  results 150   (30 per stream × 5)
+   *     limit: 34  →  results 500   (100 per stream × 5, the ×3 over-fetch capped at 100)
+   *
+   * i.e. `min(3 × limit, 100) × streams`. A caller asking for ten receives a hundred and fifty.
+   *
+   * ⚠ `grouped` is 20 in both cases, which is why this stayed invisible for six weeks: every
+   * caller that reads `grouped` is capped downstream and looks correct, so the cost showed up only
+   * as latency and tokens nobody attributed to it. It surfaced when the Deepening's sift — which
+   * reads `results` unfiltered AND pays a per-candidate model cost — hit its output ceiling.
+   *
+   * ▶ THE BEHAVIOUR IS DELIBERATELY UNCHANGED IN S11. Making `limit` a total would move recall on
+   * every surface on the platform, and the validated set still has no debates or legislation
+   * questions to measure that with (S10 §7 Q5). What S11 does instead is make it VISIBLE:
+   * `meta.requested` now reports the asked-for limit beside `results.length` and the per-stream
+   * fan-out, so no caller has to discover this the way the last one did. The decision is recorded
+   * as pending in `docs/SEARCH_CONTRACT.md` §2.
+   *
+   * Callers that need a bounded set should take a PREFIX of `results` — it is interleaved
+   * round-robin (interleave.ts), so any prefix is stream-balanced — or read `grouped`.
+   */
   limit?: number
   /** Restrict retrieval to ONE corpus tier (`fts-query-service.ts`'s existing filter).
    *
@@ -193,6 +220,28 @@ export interface GatewayResult {
      *  lex-general debugging view reports. Without it, stream membership has to be re-derived
      *  from corpus names, i.e. guessed. */
     perStream?: Array<{ stream: string; ids: string[] }>
+    /**
+     * S11 §5.1 — WHAT WAS ASKED FOR, BESIDE WHAT ARRIVED. Present on every non-empty search.
+     *
+     * `limit` is a per-stream budget and `results` is the interleaved sum across streams, each
+     * over-fetched ×3 for fusion (see `GatewayQuery.limit`). Nothing in the result set said so, so
+     * a caller comparing "I asked for 10" with `results.length === 150` had no way to tell an
+     * intended fan-out from a bug — and for six weeks nobody did. `perStream` already carried the
+     * ids; this carries the ONE NUMBER that makes them interpretable.
+     *
+     * ⚠ REPORTING ONLY. It changes no retrieval and no ranking, deliberately (§5.1). The point is
+     * that the next person meets this in a result object rather than in a truncated model call.
+     */
+    requested?: {
+      /** The `limit` the caller passed, after the gateway's default is applied. */
+      limit: number
+      /** `results.length` — the interleaved sum actually returned. */
+      returned: number
+      /** How many streams were dispatched. 1 on the tier-scoped and unrouted paths. */
+      streams: number
+      /** `returned / limit`, rounded to one decimal — the fan-out, stated rather than derivable. */
+      fanout: number
+    }
   }
 }
 
@@ -450,8 +499,27 @@ export async function runSearch(q: GatewayQuery): Promise<GatewayResult> {
   const annotatedGrouped = annotate(grouped, statuses, repealOk)
   const repealedCount = annotatedResults.filter((r) => r.repeal && r.repeal.state !== 'no-record').length
 
-  console.log('[search-gateway] result', { intent: q.intent, results: results.length, failed, reason: failureReason ?? null, repealed: repealedCount, repealLookup: repealOk ? 'ok' : 'FAILED' })
-  return { intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics, meta: { flags, expansionAdded, routedStreams, perStream } }
+  // S11 §5.1 — the fan-out, stated. Derived from what actually happened rather than recomputed
+  // from the scope table: `perStream` is present only on the routed path, and the tier-scoped and
+  // unrouted paths really do dispatch one stream, so `?? 1` is the fact and not a fallback.
+  const requested = {
+    limit,
+    returned: annotatedResults.length,
+    streams: perStream?.length ?? 1,
+    fanout: limit > 0 ? Math.round((annotatedResults.length / limit) * 10) / 10 : 0,
+  }
+
+  console.log('[search-gateway] result', {
+    intent: q.intent, results: results.length, failed, reason: failureReason ?? null,
+    repealed: repealedCount, repealLookup: repealOk ? 'ok' : 'FAILED',
+    // ⚠ Logged as `asked → got` rather than as a bare count, because a bare count is what every
+    // log line already had while the fan-out went unnoticed for six weeks (§5.1).
+    limit: `asked ${requested.limit} → got ${requested.returned} across ${requested.streams} stream(s) (${requested.fanout}×)`,
+  })
+  return {
+    intent: q.intent, results: annotatedResults, grouped: annotatedGrouped, failed, failureReason, statistics,
+    meta: { flags, expansionAdded, routedStreams, perStream, requested },
+  }
 }
 
 // ── fusion moved to ./fusion.ts (2026-08-06) ──────────────────────────────────
