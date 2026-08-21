@@ -53,6 +53,8 @@
     "check:build-25b": "tsx scripts/check-build-25b.ts",
     "check:committed": "tsx scripts/check-committed.ts",
     "check:lex-25c": "tsx scripts/check-lex-25c.ts",
+    "check:lex-25d": "tsx scripts/check-lex-25d.ts",
+    "verify:lex-25d": "tsx --env-file=.env scripts/verify-lex-25d-live.ts",
     "check:model-reachability": "tsx --env-file=.env scripts/check-model-reachability.ts",
     "build:worker": "tsx scripts/build-worker.ts",
     "verify:build-worker": "tsx --env-file=.env scripts/verify-build-worker.ts",
