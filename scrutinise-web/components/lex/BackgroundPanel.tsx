@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import DocumentExports from '@/components/documents/DocumentExports'
+import QuestionPanel from './QuestionPanel'
 import { repairRefUrl } from '@/lib/lex/legislation-url'
 import type { CanonicalState, SearchResult, SearchResultType } from '@/lib/lex/page1-config'
 
@@ -125,6 +126,7 @@ export default function BackgroundPanel({
   onRetrySearch,
   onGiveFeedback,
   deepeningPass,
+  focusFieldRef,
 }: {
   ideaId: string
   initialBackground: CanonicalState['initialBackground']
@@ -150,8 +152,14 @@ export default function BackgroundPanel({
   /** §22 — while a Deepening pass is open, ITS retrieval leads this panel, through the
    *  same grouped renderer as everything else. Null when no pass is open. */
   deepeningPass?: { label: string; results: SearchResult[] } | null
+  /** 25-D §3 rule 3 — the field the user is currently reading. Orders and marks the
+   *  by-question panel; it never filters it. */
+  focusFieldRef?: string | null
 }) {
   const [open, setOpen] = useState(true)
+  // 25-D §3 rule 4 — the type-grouped list is still here, and it FOLDS. The headings name
+  // what matters; they do not hide the rest.
+  const [showFullList, setShowFullList] = useState(false)
 
   const grouped = TYPE_ORDER.map((t) => ({
     type: t,
@@ -180,6 +188,15 @@ export default function BackgroundPanel({
           Each new section then runs its own focused search.
         </p>
       )}
+
+      {/* ══ 25-D §3 / §25.5 — THE PANEL, BY QUESTION, AND IT LEADS. ══════════════
+          "Primary legislation / debates / committee reports" is our filing system; the
+          user came with a question. This renders the SAME material against the ten
+          interrogation headings, with an empty heading stated as a gap rather than left
+          out — and the type-grouped list is still below, folded (rule 4). It fetches its
+          own data and renders nothing from canonical state, so nothing above this line
+          changed. */}
+      <QuestionPanel ideaId={ideaId} focusFieldRef={focusFieldRef ?? null} />
 
       {/* §22 — the open Deepening pass's own retrieval, leading the panel. Same RefCard,
           same type grouping and same ordering as every other block here, so a source found
@@ -267,6 +284,22 @@ export default function BackgroundPanel({
           </button>
         </div>
       )}
+
+      {/* ══ 25-D §3 rule 4 — THE FULL SOURCE LIST STAYS, COLLAPSED, UNDERNEATH. ══
+          Everything below this line is unchanged: the stage searches, the user's own
+          research, the Initial Background and the type-grouped Page-1 cards. The
+          question headings above name what matters; they do NOT hide the rest, and a
+          user who wants to browse the corpus the way it is shelved still can. */}
+      <div className="rounded-xl border border-zinc-200 overflow-hidden">
+        <button onClick={() => setShowFullList((v) => !v)}
+          className="w-full flex items-center gap-2 px-3 py-2 bg-zinc-50 hover:bg-zinc-100 text-left">
+          <span className="text-xs font-semibold uppercase tracking-wide flex-1 text-zinc-700">
+            Everything we retrieved, by document type
+          </span>
+          <span className="text-[11px] text-zinc-400 w-3 text-center">{showFullList ? '−' : '+'}</span>
+        </button>
+        {showFullList && (
+          <div className="px-3 py-3 border-t border-zinc-100 space-y-4">
 
       {/* §19-C Task 2 — the ACTIVE stage's landscape, in its five sections. */}
       {stageSearch && stageSearch.ok && (
@@ -369,6 +402,10 @@ export default function BackgroundPanel({
           <div className="space-y-1.5">{g.items.map((r) => <RefCard key={r.id} r={r} />)}</div>
         </div>
       ))}
+
+          </div>
+        )}
+      </div>
     </div>
   )
 }

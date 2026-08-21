@@ -565,6 +565,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 onRetrySearch={retrySearch}
                 onGiveFeedback={() => openFeedback('BRIEFING')}
                 deepeningPass={openDeepeningPass}
+                // 25-D §3 rule 3 — "the panel follows what the user is reviewing". The field
+                // the machine currently has open is what the by-question panel marks and sorts
+                // on; it never filters, so a contradiction found against the diagnosis stays
+                // visible once the user moves on.
+                focusFieldRef={state.currentField?.key ?? null}
               />
             </div>
           </div>
