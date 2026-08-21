@@ -2,7 +2,24 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-21 01:44 UTC — ▼ **SEARCH S11: NINE COLLECTIONS — 48,883 SECTIONS —
+*Last updated: 2026-08-21 02:58 UTC — ▼ **SEARCH GOLD v2: THE TEST QUESTIONS FOR DEBATES AND
+LEGISLATION EXIST — 21 questions plus 3 negative controls, nothing scored, awaiting Charlie's pass
+(`docs/GOLD_CANDIDATES_V2.md`).** 27 of 27 keys verified by reading the document body out of R2
+against a claim written down BEFORE the read; `runSearch()` never called, because keying a question
+on what retrieval returns makes recall 100% by construction. ⚠⚠ THE CHECK CAUGHT A WRONG KEY ON ITS
+FIRST RUN: two rows titled `Senedd Plenary: The 20 mph Speed Limit` are, in the body, a debate about
+oesophageal and stomach cancers — and the mechanism is collection-wide: **61.1% of all 191,730
+`senedd-cofnod` speeches sit in their session's single biggest heading block** (14.6 headings per 279
+speeches), so the tail inherits whatever heading came last. ⚠⚠ Compounding it, **95% of a 40-row
+sample has WELSH bodies**, so an English query can only match the English heading — the one that is
+wrong for most rows. A Welsh devolved question is not askable in English today; Q3 moved to Northern
+Ireland. ⚠⚠ LEGISLATION TITLES ARE UNRELIABLE TOO: Online Safety Act `section-12` is titled
+"Serious Crime Act 2007" while its body is the children's safety duties (2 wrong of 3 read) — not
+measured, and it degrades retrieval as well as keying. ⚠ Vagrancy Act 1824, National Minimum Wage Act
+1998 and Housing Act 1996 are ABSENT (pre-2000 coverage is 21.4%), so "is it illegal to sleep rough?"
+cannot be answered at all. ⚠ The sourcing split is 16 outside-in to 5 document-outward against §2's
+"about half each" — stated as a shortfall, needing ~5 more. ▶ CHARLIE: one VERDICT line each.**
+Earlier: 2026-08-21 01:44 UTC — ▼ **SEARCH S11: NINE COLLECTIONS — 48,883 SECTIONS —
 COULD NOT BE RETURNED BY ANY QUERY AT ANY SETTING, AND SEVEN OF THEM NOW CAN.** Confirmed one at a
 time against the live index rather than inferred from `cps-guidance`'s pattern: 8 of 8 probed come
 back at rank 0–4 scoped to their own corpus and are returned by NO router stream with its real

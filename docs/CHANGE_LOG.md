@@ -251,6 +251,83 @@ Then `docs/POSITION_VALIDATION_CANDIDATES.md`, 50 PRIORITY rows.
 
 ---
 
+## SEARCH GOLD v2 — TEST QUESTIONS FOR DEBATES AND LEGISLATION, AND THE WRONG KEY THE CHECK CAUGHT (2026-08-21 02:58 UTC)
+
+Executes `docs/BRIEF_GOLD_V2.md` §0–§5. Deliverable: **`docs/GOLD_CANDIDATES_V2.md`** — 21 questions
+plus 3 negative controls, numbered, one VERDICT line each, **nothing scored**, awaiting Charlie's
+pass. Verifier: `scrutinise-web/scripts/verify-goldv2-keys.ts`; lookup helper:
+`scrutinise-web/scripts/gold-lookup.ts`. **Spend £0.**
+
+✅ **THE DELIVERABLE.** 11 debates questions and 10 legislation questions, covering every archetype
+§3 asks for except two that could not be found (below), plus **3 negative controls where a 0%
+retrieval score is a PASS** — labelled so a future scoring session cannot fold them into an average.
+**27 of 27 keys were verified by reading the document body out of R2** and comparing it against a
+claim written down BEFORE the read. Every block carries the confirming extract, so Charlie reads the
+document rather than my word for it. **Keys were built from `corpus_sections` and R2 only —
+`runSearch()` is never called**, because keying a question on whatever retrieval returns makes
+recall 100% by construction (§1 trap 4).
+
+⚠⚠ **THE VERIFICATION CAUGHT A WRONG KEY ON ITS FIRST RUN, WHICH IS THE WHOLE REASON §1 TRAP 2
+EXISTS.** Two rows titled `Senedd Plenary: The 20 mph Speed Limit` — the biggest Welsh controversy
+of the decade — are, on reading their bodies, **a short debate about oesophageal and stomach
+cancers**. Withdrawn, and deliberately KEPT in the verifier as `WITHDRAWN` so the defect stays
+reproducible rather than disappearing with the question.
+
+⚠⚠ **AND THE MECHANISM IS COLLECTION-WIDE, MEASURED NOT GUESSED: 61.1% OF ALL 191,730
+`senedd-cofnod` SPEECHES SIT IN THEIR SESSION'S SINGLE BIGGEST HEADING BLOCK** (117,205 of 191,730;
+687 sessions averaging **14.6 headings for 279 speeches**). Session 13683 holds 333 speeches under 21
+headings and the last heading starts at speech 151 — so **183 speeches inherit it whatever they are
+about.** ⚠ Compounding it: **38 of a 40-row random sample (95%) have WELSH-language bodies**, so an
+English query can only match the English heading — the one that is wrong for most rows. **A question
+about Welsh devolved politics, asked in English, is currently unanswerable for reasons that have
+nothing to do with retrieval quality.** Q3 was re-keyed from Wales to Northern Ireland (the RHI
+"cash for ash" ministerial statement, verified) and Wales is recorded as a gap instead.
+
+⚠⚠ **LEGISLATION SECTION TITLES DO NOT RELIABLY DESCRIBE THEIR SECTIONS EITHER.**
+`ukpga/2023/50:section-12` (Online Safety Act) is titled **"Serious Crime Act 2007"** while its body
+is the children's online-safety duties; `section-1` is titled "Joint provisional notices of
+contravention" while its body is the Act's overview; `section-100` is correct. **2 wrong of 3 read.**
+Every legislation key here was chosen or confirmed on its BODY. ⚠ How widespread this is has NOT been
+measured and should be — the title is indexed, so it degrades retrieval as well as keying.
+
+⚠ **A CORPUS GAP I FIRST REPORTED TO MYSELF AS A GAP AND WAS WRONG ABOUT.** A search for the Commons
+assisted-dying second reading returned nothing and briefly looked like missing coverage. It is
+there: **29 Nov 2024 holds 200 speeches and 41,951 words.** My query had required a single speech
+over 1,200 words (none is) and expected "Second Reading" in the title (Commons headings omit it;
+Lords headings include it). **"I searched and found nothing" is not a corpus finding until the query
+has been checked** — recorded because both assumptions would mislead the next person.
+
+✅ **REAL GAPS, WHICH §5 SAYS ARE WORTH MORE THAN THE QUESTIONS WOULD HAVE BEEN.** The `Vagrancy Act
+1824` (rough sleeping), `National Minimum Wage Act 1998` and `Housing Act 1996` (homelessness duty)
+are **all absent from the corpus** — consistent with the measured 21.4% coverage of pre-2000 primary
+Acts. *"Is it illegal to sleep rough?"* cannot be answered at all. Also unrepresented and named:
+`pwdata-wrans`/`pwdata-lordswrans` (1.4M sections of written answers), `eur-lex`/`retained-eu`
+(550k), and `bills-api`.
+
+⚠ **THE SOURCING SPLIT MISSES WHAT §2 ASKED FOR AND SAYS SO RATHER THAN ROUNDING IT.** §2 wants about
+half from each direction so the difference can be seen; the set is **16 outside-in to 5
+document-outward**, and at n=5 the document-outward half is too small to compare against. The cause
+is process — I started from publicly contested subjects and browsed the corpus for its own notable
+documents too late. ▶ It needs roughly five more document-outward questions to make the comparison
+measurable, and they are cheap to add.
+
+✅ **9 of 21 questions deliberately avoid the document's own vocabulary** (§3 requires at least
+three) — "hanging" not "capital punishment", "subpostmasters" not "Post Office (Horizon System)
+Offences Bill", "make me leave without giving a reason" not "section 21". ⚠ **Q11 is the control
+against them:** it uses the document's own words on purpose, so that if it fails too, the problem is
+not vocabulary. ⚠ **N2 and N3 are deliberately adjacent to Q12 and Q11**, so a system that
+pattern-matches "landlord evict" to s.21, or offers a past statement as a forthcoming one, is caught
+doing it.
+
+❌ **Not done, named:** nothing is scored and nothing should be until the VERDICT lines are filled ·
+no Welsh question · the document-outward half is short · written answers, retained EU law and
+`bills-api` have no questions · the legislation-title defect is reported, not measured.
+
+▶ **CHARLIE:** `docs/GOLD_CANDIDATES_V2.md` is one-pass reviewable, Q1–Q21 plus N1–N3, one VERDICT
+line each. The three things most worth your eye are the negative controls (behaviour, not recall),
+Q13 (the hardest — it needs two Acts connected), and whether the `vocabulary: avoided` phrasings are
+really how someone would type them.
+
 ## SEARCH S11 — SEVEN COLLECTIONS NO QUERY COULD RETURN, AND THE TRADE THAT WAS NOT ONE (2026-08-21 01:44 UTC)
 
 Executes `docs/BRIEF_SEARCH_S11.md` §0–§6 except §3. Report: **`docs/SEARCH_S11_REPORT.md`**.
