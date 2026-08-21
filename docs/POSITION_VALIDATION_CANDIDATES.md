@@ -61,13 +61,58 @@ Add one line per row: `ACCEPT` · `REJECT` · `AMEND: <the correct position>` ·
 
 ---
 
+---
 
-## M1 — Assisted dying
+# ▶ PRIORITY — REVIEW THESE 50 FIRST (GRAPH 3C §3)
 
+157 rows is too many for one sitting, so this is the subset chosen for the widest
+coverage: **5 rows from each of the 10 matters**, spread across parties, and
+deliberately including the members whose record the graph finds *divided* as well as the
+ones it finds settled. Everything else is **DEFERRED** below — deferred, not deleted, and
+still worth scoring later.
+
+**Nothing here has been scored. Add one line per row: `ACCEPT` · `REJECT` ·**
+**`AMEND: <the correct position>` · `UNSURE`.**
+
+## ⚠ Two things about how these were chosen
+
+**1 · The selection used the graph. The verdict must not.** "Settled" and "divided" are
+facts about what the graph currently holds, so the graph chose which rows you see first.
+Its *answer* is nowhere on this page: no stance, no score, no confidence appears beside
+any VERDICT line, because a reviewer who has been told what the machine thinks is a
+reviewer who has been anchored. The only thing shown is a **Coverage** line saying how
+many votes exist and whether they agree with each other — never which way they point.
+
+**2 · ⚠ An accuracy figure from this subset is not an accuracy figure for the graph.**
+It is over-weighted toward hard cases on purpose — divided records are where GRAPH 3C's
+scoring change shows, because under the old arithmetic they scored *higher* than settled
+ones. Whoever scores this must report it as a **stratified** accuracy with the strata
+printed. A headline number for the whole graph needs the deferred rows scored too.
+
+| stratum | meaning | in this subset |
+| --- | --- | ---: |
+| A | 3+ votes on the matter, all the same way | 16 |
+| B | 3+ votes, **not** all the same way | 28 |
+| C | fewer than 3 votes, or none — the graph should be quiet here | 6 |
+
+| # | matter | rows | parties |
+| --- | --- | ---: | --- |
+| M1 | Assisted dying | 5 | Labour, Liberal Democrat, Conservative |
+| M2 | Removals to Rwanda | 5 | Conservative, Liberal Democrat, Scottish National Party, Labour |
+| M3 | Illegal migration and small boats | 5 | Conservative, Plaid Cymru, Labour, Bishops |
+| M4 | Asylum and the Nationality and Borders Act | 5 | Conservative, Liberal Democrat, Crossbench, Bishops |
+| M5 | Leaving the European Union | 5 | Conservative, Plaid Cymru, Labour, Crossbench |
+| M6 | The generational smoking ban | 5 | Labour, Conservative, Liberal Democrat, Traditional Unionist Voice |
+| M7 | Protest and public order | 5 | Conservative, Labour, Scottish National Party, Liberal Democrat, Plaid Cymru |
+| M8 | Employment rights and industrial action | 5 | Conservative, Labour, Liberal Democrat, Crossbench |
+| M9 | Sewage, water quality and the Environment Act | 5 | Conservative, Liberal Democrat, Crossbench, Green Party |
+| M10 | Retained EU law and the "sunset" clause | 5 | Conservative, Scottish National Party, Labour |
+
+## M1 — Assisted dying · PRIORITY
 A free vote throughout, and the clearest conscience matter in the corpus. 11 divisions, Nov 2024 – Jun 2025.
 
 **What the graph holds:** 11 divisions
-(2024-11-29 → 2025-06-20), 9 classified free-vote-like.
+(2024-11-29 → 2025-06-20), 11 classified free-vote-like.
 **Bill:** `Terminally Ill Adults (End of Life) Bill` — <https://bills.parliament.uk/bills/3774>
 
 ### M1.001 — Kim Leadbeater (MNIS 4923), Labour
@@ -77,6 +122,7 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **Citation:** Named sponsor of "Terminally Ill Adults (End of Life) Bill" (bills-api billId 3774)
 - **Source:** <https://bills.parliament.uk/bills/3774>
 - **In its own words:** “A Bill to allow adults who are terminally ill, subject to safeguards and protections, to request and be provided with assistance to end their own life; and for connected purposes.”
+- **Coverage (why this row was chosen — says nothing about which way):** 11 votes recorded, NOT all the same way
 - **VERDICT:** _______
 
 ### M1.002 — Lord Falconer of Thoroton (MNIS 2758), Labour
@@ -86,15 +132,7 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **Citation:** Named sponsor of "Terminally Ill Adults (End of Life) Bill" (bills-api billId 3774)
 - **Source:** <https://bills.parliament.uk/bills/3774>
 - **In its own words:** “A Bill to allow adults who are terminally ill, subject to safeguards and protections, to request and be provided with assistance to end their own life; and for connected purposes.”
-- **VERDICT:** _______
-
-### M1.003 — Dame Meg Hillier (MNIS 1524), Labour
-
-- **Proposed position on Assisted dying:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC1 at Report stage, with 36 co-sponsors (Naz Shah, Antonia Bance, Jess Asato, Kirsteen Sullivan, …)
-- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
-- **In its own words:** “To move the following Clause— “No health professional shall raise assisted dying first”
+- **Coverage (why this row was chosen — says nothing about which way):** no votes recorded on this matter
 - **VERDICT:** _______
 
 ### M1.004 — Tom Gordon (MNIS 5032), Liberal Democrat
@@ -104,6 +142,7 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **Citation:** Lead sponsor of 1 at Report stage
 - **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
 - **In its own words:** “Clause 2, page 2, line 2, leave out “within 6 months” and insert— “(i) in the case of a neurodegenerative illness, disease, or medical condition, within 12 months; or”
+- **Coverage (why this row was chosen — says nothing about which way):** 11 votes recorded, NOT all the same way
 - **VERDICT:** _______
 
 ### M1.005 — Sir Edward Leigh (MNIS 345), Conservative
@@ -113,6 +152,549 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **Citation:** Lead sponsor of NC3 at Report stage
 - **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
 - **In its own words:** “To move the following Clause— “Guidance: administration of pain relief to people who are terminally ill”
+- **Coverage (why this row was chosen — says nothing about which way):** 11 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M1.008 — Saqib Bhatti (MNIS 4818), Conservative
+
+- **Proposed position on Assisted dying:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC7 at Report stage
+- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
+- **In its own words:** “To move the following Clause— “Doctor independence”
+- **Coverage (why this row was chosen — says nothing about which way):** 11 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+## M2 — Removals to Rwanda · PRIORITY
+Whipped. 54 divisions, Dec 2023 – Apr 2024, plus 63 mentioning Rwanda across other bills.
+
+**What the graph holds:** 57 divisions
+(2023-12-12 → 2024-04-22), 0 classified free-vote-like.
+**Bill:** `Safety of Rwanda (Asylum and Immigration) Act 2024` — <https://bills.parliament.uk/bills/3540>
+
+### M2.017 — James Cleverly (MNIS 4366), Conservative
+
+- **Proposed position on Removals to Rwanda:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Safety of Rwanda (Asylum and Immigration) Act 2024" (bills-api billId 3540)
+- **Source:** <https://bills.parliament.uk/bills/3540>
+- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”
+- **Coverage (why this row was chosen — says nothing about which way):** 32 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M2.018 — Lord Sharpe of Epsom (MNIS 4888), Conservative
+
+- **Proposed position on Removals to Rwanda:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Safety of Rwanda (Asylum and Immigration) Act 2024" (bills-api billId 3540)
+- **Source:** <https://bills.parliament.uk/bills/3540>
+- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”
+- **Coverage (why this row was chosen — says nothing about which way):** 25 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M2.020 — Mr Alistair Carmichael (MNIS 1442), Liberal Democrat
+
+- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 6 at Committee of the whole House, with 1 co-sponsor (Sir Robert Buckland) — decision: NotSelected
+- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
+- **In its own words:** “Page 3, line 21, leave out Clause 3”
+- **Coverage (why this row was chosen — says nothing about which way):** 31 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M2.021 — Alison Thewliss (MNIS 4430), Scottish National Party
+
+- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 51 at Committee of the whole House, with 3 co-sponsors (Chris Stephens, Stephen Flynn, Owen Thompson) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
+- **In its own words:** “Clause 5, page 5, line 15, leave out “not””
+- **Coverage (why this row was chosen — says nothing about which way):** 32 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M2.022 — Yvette Cooper (MNIS 420), Labour
+
+- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 38 at Committee of the whole House, with 1 co-sponsor (Stephen Kinnock) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
+- **In its own words:** “Clause 5, page 5, line 23, after “person” insert “in consultation with the Attorney General.””
+- **Coverage (why this row was chosen — says nothing about which way):** 29 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+## M3 — Illegal migration and small boats · PRIORITY
+Whipped. 80 divisions, Mar – Jul 2023.
+
+**What the graph holds:** 81 divisions
+(2023-03-13 → 2023-07-17), 0 classified free-vote-like.
+**Bill:** `Illegal Migration Act 2023` — <https://bills.parliament.uk/bills/3429>
+
+### M3.033 — Suella Braverman (MNIS 4475), Conservative
+
+- **Proposed position on Illegal migration and small boats:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Illegal Migration Act 2023" (bills-api billId 3429)
+- **Source:** <https://bills.parliament.uk/bills/3429>
+- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”
+- **Coverage (why this row was chosen — says nothing about which way):** 46 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M3.034 — Lord Murray of Blidworth (MNIS 4950), Conservative
+
+- **Proposed position on Illegal migration and small boats:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Illegal Migration Act 2023" (bills-api billId 3429)
+- **Source:** <https://bills.parliament.uk/bills/3429>
+- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”
+- **Coverage (why this row was chosen — says nothing about which way):** 35 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M3.035 — Liz Saville Roberts (MNIS 4521), Plaid Cymru
+
+- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC1 at Report stage, with 6 co-sponsors (Hywel Williams, Ben Lake, Apsana Begum, Nadia Whittome, …) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>
+- **In its own words:** “To move the following Clause— “Detainees: permission to work after six months”
+- **Coverage (why this row was chosen — says nothing about which way):** 36 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M3.036 — Apsana Begum (MNIS 4790), Labour
+
+- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC2 at Report stage, with 21 co-sponsors (Bell Ribeiro-Addy, Richard Burgon, Rebecca Long Bailey, Ms Diane Abbott, …) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>
+- **In its own words:** “To move the following Clause— “Arrangements for removal: pregnancy”
+- **Coverage (why this row was chosen — says nothing about which way):** 45 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M3.044 — The Lord Bishop of Durham (MNIS 4312), Bishops
+
+- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 128B at Committee stage, with 3 co-sponsors (Baroness Stroud, Lord Purvis of Tweed, Baroness Lister of Burtersett) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>
+- **In its own words:** “Clause 58, page 61, line 3, at end insert— “(6A) The Secretary of State may not make regulations under subsection (1) specifying any limit on the number of persons who arrive under the following schemes—”
+- **Coverage (why this row was chosen — says nothing about which way):** no votes recorded on this matter
+- **VERDICT:** _______
+
+## M4 — Asylum and the Nationality and Borders Act · PRIORITY
+Whipped, and the largest single block of divisions in the corpus (84).
+
+**What the graph holds:** 84 divisions
+(2021-07-20 → 2022-04-27), 0 classified free-vote-like.
+**Bill:** `Nationality and Borders Act 2022` — <https://bills.parliament.uk/bills/3023>
+
+### M4.049 — Priti Patel (MNIS 4066), Conservative
+
+- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Nationality and Borders Act 2022" (bills-api billId 3023)
+- **Source:** <https://bills.parliament.uk/bills/3023>
+- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”
+- **Coverage (why this row was chosen — says nothing about which way):** 40 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M4.050 — Baroness Williams of Trafford (MNIS 4311), Conservative
+
+- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Nationality and Borders Act 2022" (bills-api billId 3023)
+- **Source:** <https://bills.parliament.uk/bills/3023>
+- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”
+- **Coverage (why this row was chosen — says nothing about which way):** 42 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M4.051 — Baroness Hamwee (MNIS 2652), Liberal Democrat
+
+- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 1 at Committee stage — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>
+- **In its own words:** “leave out “equally” and insert “in the same terms””
+- **Coverage (why this row was chosen — says nothing about which way):** 44 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M4.056 — Lord Anderson of Ipswich (MNIS 4705), Crossbench
+
+- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of Unnumbered at Committee stage, with 3 co-sponsors (Lord Rosser, Lord Paddick, Baroness Warsi) — decision: Disagreed
+- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>
+- **In its own words:** “The above-named Lords give notice of their intention to oppose the Question that Clause 9 stand part of the Bill.”
+- **Coverage (why this row was chosen — says nothing about which way):** 7 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M4.063 — The Lord Bishop of Durham (MNIS 4312), Bishops
+
+- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 29 at Report stage, with 1 co-sponsor (Baroness Lister of Burtersett) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>
+- **In its own words:** “at end insert— In section 16 of the Nationality, Immigration and Asylum Act 2002 (establishment of centres), at end insert—”
+- **Coverage (why this row was chosen — says nothing about which way):** no votes recorded on this matter
+- **VERDICT:** _______
+
+## M5 — Leaving the European Union · PRIORITY
+Whipped on paper and split in practice; 78 divisions, Nov 2017 – Jun 2018.
+
+**What the graph holds:** 78 divisions
+(2017-11-15 → 2018-06-20), 0 classified free-vote-like.
+**Bill:** `European Union (Withdrawal) Act 2018` — <https://bills.parliament.uk/bills/2045>
+
+### M5.065 — Mr David Davis (MNIS 373), Conservative
+
+- **Proposed position on Leaving the European Union:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "European Union (Withdrawal) Act 2018" (bills-api billId 2045)
+- **Source:** <https://bills.parliament.uk/bills/2045>
+- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”
+- **Coverage (why this row was chosen — says nothing about which way):** 56 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M5.066 — Baroness Evans of Bowes Park (MNIS 4329), Conservative
+
+- **Proposed position on Leaving the European Union:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "European Union (Withdrawal) Act 2018" (bills-api billId 2045)
+- **Source:** <https://bills.parliament.uk/bills/2045>
+- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”
+- **Coverage (why this row was chosen — says nothing about which way):** 18 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M5.068 — Lord Wigley (MNIS 547), Plaid Cymru
+
+- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 1 at Committee stage, with 1 co-sponsor (Lord Dykes) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
+- **In its own words:** “at beginning insert “Subject to subsections (2) and (3),””
+- **Coverage (why this row was chosen — says nothing about which way):** 17 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M5.069 — Lord Adonis (MNIS 3743), Labour
+
+- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Lord Hain, Lord Triesman, Baroness Meacher) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
+- **In its own words:** “leave out “on exit day” and insert “on a date to be determined by a further Act of Parliament””
+- **Coverage (why this row was chosen — says nothing about which way):** 18 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M5.077 — Lord Pannick (MNIS 3870), Crossbench
+
+- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 15 at Committee stage, with 3 co-sponsors (Baroness Taylor of Bolton, Lord Norton of Louth, Lord Beith) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
+- **In its own words:** “leave out paragraphs (b) to (d)”
+- **Coverage (why this row was chosen — says nothing about which way):** 14 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+## M6 — The generational smoking ban · PRIORITY
+A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus holds 8 divisions.
+
+**What the graph holds:** 8 divisions
+(2024-04-16 → 2026-02-24), 0 classified free-vote-like.
+**Bill:** `Tobacco and Vapes Act 2026` — <https://bills.parliament.uk/bills/3879>
+
+### M6.081 — Wes Streeting (MNIS 4504), Labour
+
+- **Proposed position on The generational smoking ban:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Tobacco and Vapes Act 2026" (bills-api billId 3879)
+- **Source:** <https://bills.parliament.uk/bills/3879>
+- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”
+- **Coverage (why this row was chosen — says nothing about which way):** 7 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M6.082 — Baroness Merron (MNIS 347), Labour
+
+- **Proposed position on The generational smoking ban:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Tobacco and Vapes Act 2026" (bills-api billId 3879)
+- **Source:** <https://bills.parliament.uk/bills/3879>
+- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”
+- **Coverage (why this row was chosen — says nothing about which way):** 1 vote recorded — a thin record
+- **VERDICT:** _______
+
+### M6.086 — Dr Caroline Johnson (MNIS 4592), Conservative
+
+- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC6 at Committee stage — decision: NegativedOnDivision
+- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>
+- **In its own words:** “To move the following Clause— “Consultation on licensing regulations”
+- **Coverage (why this row was chosen — says nothing about which way):** 6 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M6.088 — Helen Maguire (MNIS 5336), Liberal Democrat
+
+- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 49 at Committee stage — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>
+- **In its own words:** “Title, line 2, leave out “born on or after 1 January 2009” and insert “under the age of 25””
+- **Coverage (why this row was chosen — says nothing about which way):** 4 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M6.093 — Jim Allister (MNIS 5356), Traditional Unionist Voice
+
+- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC3 at Report stage, with 7 co-sponsors (Gavin Robinson, Sammy Wilson, Jim Shannon, Alex Easton, …) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>
+- **In its own words:** “To move the following Clause— “Amendment of the European Union (Withdrawal) Act 2018”
+- **Coverage (why this row was chosen — says nothing about which way):** 6 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+## M7 — Protest and public order · PRIORITY
+Whipped. 25 divisions, May 2022 – Jun 2023.
+
+**What the graph holds:** 31 divisions
+(2022-05-23 → 2026-02-04), 0 classified free-vote-like.
+**Bill:** `Public Order Act 2023` — <https://bills.parliament.uk/bills/3153>
+
+### M7.097 — Priti Patel (MNIS 4066), Conservative
+
+- **Proposed position on Protest and public order:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Public Order Act 2023" (bills-api billId 3153)
+- **Source:** <https://bills.parliament.uk/bills/3153>
+- **In its own words:** “A Bill to make provision for new offences relating to public order; to make provision about stop and search powers; to make provision about the exercise of police functions relating to public order; to make provision abo…”
+- **Coverage (why this row was chosen — says nothing about which way):** 3 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M7.099 — Dr Rupa Huq (MNIS 4511), Labour
+
+- **Proposed position on Protest and public order:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC1 at Committee stage, with 38 co-sponsors (Sir Bernard Jenkin, Dame Diana Johnson, Wera Hobhouse, Simon Fell, …) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
+- **In its own words:** “To move the following Clause— “Offence of interference with access to or provision of abortion services”
+- **Coverage (why this row was chosen — says nothing about which way):** 14 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M7.105 — Anne McLaughlin (MNIS 4437), Scottish National Party
+
+- **Proposed position on Protest and public order:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 1 at Committee stage
+- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
+- **In its own words:** “Page 1, line 4, leave out Clause 1”
+- **Coverage (why this row was chosen — says nothing about which way):** 10 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M7.106 — Wendy Chamberlain (MNIS 4765), Liberal Democrat
+
+- **Proposed position on Protest and public order:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 29 at Committee stage — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
+- **In its own words:** “Clause 1, page 1, line 10, leave out “or is capable of causing””
+- **Coverage (why this row was chosen — says nothing about which way):** 16 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M7.108 — Liz Saville Roberts (MNIS 4521), Plaid Cymru
+
+- **Proposed position on Protest and public order:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC12 at Report stage, with 2 co-sponsors (Hywel Williams, Ben Lake) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>
+- **In its own words:** “To move the following Clause— “Justice impact assessments for Wales”
+- **Coverage (why this row was chosen — says nothing about which way):** 12 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+## M8 — Employment rights and industrial action · PRIORITY
+Whipped. 24 divisions, Jan – Jul 2023.
+
+**What the graph holds:** 24 divisions
+(2023-01-16 → 2023-07-17), 0 classified free-vote-like.
+**Bill:** `Strikes (Minimum Service Levels) Act 2023` — <https://bills.parliament.uk/bills/3396>
+
+### M8.113 — Grant Shapps (MNIS 1582), Conservative
+
+- **Proposed position on Employment rights and industrial action:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Strikes (Minimum Service Levels) Act 2023" (bills-api billId 3396)
+- **Source:** <https://bills.parliament.uk/bills/3396>
+- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”
+- **Coverage (why this row was chosen — says nothing about which way):** 9 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M8.114 — Lord Callanan (MNIS 4336), Conservative
+
+- **Proposed position on Employment rights and industrial action:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Strikes (Minimum Service Levels) Act 2023" (bills-api billId 3396)
+- **Source:** <https://bills.parliament.uk/bills/3396>
+- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”
+- **Coverage (why this row was chosen — says nothing about which way):** 8 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M8.115 — Lord Collins of Highbury (MNIS 4222), Labour
+
+- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 42 at Committee stage, with 2 co-sponsors (Baroness O'Grady of Upper Holloway, Lord Hendy) — decision: NotMoved
+- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
+- **In its own words:** “leave out subsections (2) and (3)”
+- **Coverage (why this row was chosen — says nothing about which way):** 8 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M8.116 — Lord Fox (MNIS 4322), Liberal Democrat
+
+- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 43 at Committee stage — decision: NotMoved
+- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
+- **In its own words:** “leave out subsections (2) to (5) and insert— A statutory instrument containing regulations under this section may not be made unless a draft of the instrument has been laid before, and approved by a resolution of, each House of Parliament.”…”
+- **Coverage (why this row was chosen — says nothing about which way):** 8 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M8.122 — Lord Patel (MNIS 2443), Crossbench
+
+- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 18 at Committee stage, with 1 co-sponsor (Lord Kakkar) — decision: NotMoved
+- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
+- **In its own words:** “at end insert— Regulations made under subsection (4)(a) specifying minimum service levels for health services may not be made unless the Government has first established, via primary legislation, appropriate and legally enforceable staffing levels across healt…”
+- **Coverage (why this row was chosen — says nothing about which way):** no votes recorded on this matter
+- **VERDICT:** _______
+
+## M9 — Sewage, water quality and the Environment Act · PRIORITY
+39 divisions, Jan – Nov 2021. The sewage amendments are the well-reported part.
+
+**What the graph holds:** 39 divisions
+(2021-01-26 → 2021-11-08), 0 classified free-vote-like.
+**Bill:** `Environment Act 2021` — <https://bills.parliament.uk/bills/2593>
+
+### M9.126 — George Eustice (MNIS 3934), Conservative
+
+- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Environment Act 2021" (bills-api billId 2593)
+- **Source:** <https://bills.parliament.uk/bills/2593>
+- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”
+- **Coverage (why this row was chosen — says nothing about which way):** 19 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M9.127 — Lord Goldsmith of Richmond Park (MNIS 4062), Conservative
+
+- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Environment Act 2021" (bills-api billId 2593)
+- **Source:** <https://bills.parliament.uk/bills/2593>
+- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”
+- **Coverage (why this row was chosen — says nothing about which way):** 19 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M9.129 — Lord Teverson (MNIS 3789), Liberal Democrat
+
+- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Baroness Jones of Whitchurch, Baroness Jones of Moulsecoomb, Baroness Bennett of Manor Castle) — decision: NotMoved
+- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
+- **In its own words:** “Insert the following new Clause— “Purpose and declaration of biodiversity and climate emergency”
+- **Coverage (why this row was chosen — says nothing about which way):** 19 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M9.130 — The Duke of Wellington (MNIS 4541), Crossbench
+
+- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 4 at Committee stage, with 1 co-sponsor (Baroness Altmann) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
+- **In its own words:** “at end insert “, in particular water quality;””
+- **Coverage (why this row was chosen — says nothing about which way):** 13 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M9.132 — Baroness Bennett of Manor Castle (MNIS 4719), Green Party
+
+- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 7 at Committee stage — decision: NotMoved
+- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
+- **In its own words:** “leave out “resource efficiency” and insert “reduction in resource use””
+- **Coverage (why this row was chosen — says nothing about which way):** 20 votes recorded, all the same way
+- **VERDICT:** _______
+
+## M10 — Retained EU law and the "sunset" clause · PRIORITY
+Whipped. 25 divisions, Oct 2022 – Jun 2023.
+
+**What the graph holds:** 25 divisions
+(2022-10-25 → 2023-06-21), 0 classified free-vote-like.
+**Bill:** `Retained EU Law (Revocation and Reform) Act 2023` — <https://bills.parliament.uk/bills/3340>
+
+### M10.142 — Mr Jacob Rees-Mogg (MNIS 4099), Conservative
+
+- **Proposed position on Retained EU law and the "sunset" clause:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Retained EU Law (Revocation and Reform) Act 2023" (bills-api billId 3340)
+- **Source:** <https://bills.parliament.uk/bills/3340>
+- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”
+- **Coverage (why this row was chosen — says nothing about which way):** 16 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M10.143 — Lord Callanan (MNIS 4336), Conservative
+
+- **Proposed position on Retained EU law and the "sunset" clause:** SUPPORTS
+- **Basis:** `bill-sponsor`
+- **Citation:** Named sponsor of "Retained EU Law (Revocation and Reform) Act 2023" (bills-api billId 3340)
+- **Source:** <https://bills.parliament.uk/bills/3340>
+- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”
+- **Coverage (why this row was chosen — says nothing about which way):** 9 votes recorded, all the same way
+- **VERDICT:** _______
+
+### M10.144 — Brendan O'Hara (MNIS 4371), Scottish National Party
+
+- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 70 at Committee stage, with 1 co-sponsor (Peter Grant) — decision: Withdrawn
+- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>
+- **In its own words:** “Clause 16, page 18, line 25, at end insert— “(1A) Before the power in subsection (1) may be exercised, the relevant national authority must publish a written statement on any societal and economic changes relevant to the intended modifications.”…”
+- **Coverage (why this row was chosen — says nothing about which way):** 14 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M10.145 — Justin Madders (MNIS 4418), Labour
+
+- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 87 at Committee stage, with 4 co-sponsors (Alex Sobel, Stella Creasy, Paul Blomfield, Mary Glindon) — decision: NotCalled
+- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>
+- **In its own words:** “Clause 16, page 18, line 27, at end insert— “(3) No regulations may be made under this section unless the conditions set out in section [Conditions on the exercise of powers under section 15 and 16] have been complied with.”…”
+- **Coverage (why this row was chosen — says nothing about which way):** 13 votes recorded, NOT all the same way
+- **VERDICT:** _______
+
+### M10.155 — Baroness Lawlor (MNIS 4965), Conservative
+
+- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of 122A at Committee stage — decision: WithdrawnBeforeDebate
+- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>
+- **In its own words:** “[Withdrawn] Clause 15, page 19, line 27, leave out “23 June 2026” and insert “the end of 2024””
+- **Coverage (why this row was chosen — says nothing about which way):** no votes recorded on this matter
+- **VERDICT:** _______
+
+---
+
+# DEFERRED — 107 rows, kept for a later pass
+
+Not rejected and not deleted: these are the remaining rows of the same 157-row draft.
+Score them when the priority set is done and a population-level accuracy figure is
+wanted. Their VERDICT lines are left blank exactly as they were.
+
+## M1 — Assisted dying · DEFERRED
+
+### M1.003 — Dame Meg Hillier (MNIS 1524), Labour
+
+- **Proposed position on Assisted dying:** PROPOSED — read the quote
+- **Basis:** `amendment-sponsor`
+- **Citation:** Lead sponsor of NC1 at Report stage, with 36 co-sponsors (Naz Shah, Antonia Bance, Jess Asato, Kirsteen Sullivan, …)
+- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
+- **In its own words:** “To move the following Clause— “No health professional shall raise assisted dying first”
 - **VERDICT:** _______
 
 ### M1.006 — Andrew Pakes (MNIS 5243), Labour
@@ -131,15 +713,6 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **Citation:** Lead sponsor of NC5 at Report stage, with 1 co-sponsor (Rachael Maskell)
 - **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
 - **In its own words:** “To move the following Clause— “Implications for civil procedure rules and probate proceedings”
-- **VERDICT:** _______
-
-### M1.008 — Saqib Bhatti (MNIS 4818), Conservative
-
-- **Proposed position on Assisted dying:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC7 at Report stage
-- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>
-- **In its own words:** “To move the following Clause— “Doctor independence”
 - **VERDICT:** _______
 
 ### M1.009 — Gregory Stafford (MNIS 5351), Conservative
@@ -214,33 +787,7 @@ A free vote throughout, and the clearest conscience matter in the corpus. 11 div
 - **In its own words:** “Clause 4, page 2, line 22, at end insert— “(2A) A person may not be appointed under subsection (2) unless the appointment has the consent of the Health and Social Care Select Committee of the House of Commons.”
 - **VERDICT:** _______
 
----
-
-## M2 — Removals to Rwanda
-
-Whipped. 54 divisions, Dec 2023 – Apr 2024, plus 63 mentioning Rwanda across other bills.
-
-**What the graph holds:** 57 divisions
-(2023-12-12 → 2024-04-22), 0 classified free-vote-like.
-**Bill:** `Safety of Rwanda (Asylum and Immigration) Act 2024` — <https://bills.parliament.uk/bills/3540>
-
-### M2.017 — James Cleverly (MNIS 4366), Conservative
-
-- **Proposed position on Removals to Rwanda:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Safety of Rwanda (Asylum and Immigration) Act 2024" (bills-api billId 3540)
-- **Source:** <https://bills.parliament.uk/bills/3540>
-- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”
-- **VERDICT:** _______
-
-### M2.018 — Lord Sharpe of Epsom (MNIS 4888), Conservative
-
-- **Proposed position on Removals to Rwanda:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Safety of Rwanda (Asylum and Immigration) Act 2024" (bills-api billId 3540)
-- **Source:** <https://bills.parliament.uk/bills/3540>
-- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”
-- **VERDICT:** _______
+## M2 — Removals to Rwanda · DEFERRED
 
 ### M2.019 — Robert Jenrick (MNIS 4320), Conservative
 
@@ -249,33 +796,6 @@ Whipped. 54 divisions, Dec 2023 – Apr 2024, plus 63 mentioning Rwanda across o
 - **Citation:** Lead sponsor of 11 at Committee of the whole House, with 60 co-sponsors (Suella Braverman, Sir John Hayes, Sir Iain Duncan Smith, Mr David Jones, …) — decision: Withdrawn
 - **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
 - **In its own words:** “Clause 3, page 3, line 21, after “Act” insert “, and of the Illegal Migration Act 2023 insofar as they relate to the removal of persons to Rwanda””
-- **VERDICT:** _______
-
-### M2.020 — Mr Alistair Carmichael (MNIS 1442), Liberal Democrat
-
-- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 6 at Committee of the whole House, with 1 co-sponsor (Sir Robert Buckland) — decision: NotSelected
-- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
-- **In its own words:** “Page 3, line 21, leave out Clause 3”
-- **VERDICT:** _______
-
-### M2.021 — Alison Thewliss (MNIS 4430), Scottish National Party
-
-- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 51 at Committee of the whole House, with 3 co-sponsors (Chris Stephens, Stephen Flynn, Owen Thompson) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
-- **In its own words:** “Clause 5, page 5, line 15, leave out “not””
-- **VERDICT:** _______
-
-### M2.022 — Yvette Cooper (MNIS 420), Labour
-
-- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 38 at Committee of the whole House, with 1 co-sponsor (Stephen Kinnock) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>
-- **In its own words:** “Clause 5, page 5, line 23, after “person” insert “in consultation with the Attorney General.””
 - **VERDICT:** _______
 
 ### M2.023 — Stella Creasy (MNIS 4088), Labour
@@ -368,51 +888,7 @@ Whipped. 54 divisions, Dec 2023 – Apr 2024, plus 63 mentioning Rwanda across o
 - **In its own words:** “Clause 4, page 4, line 23, leave out subsection (2)”
 - **VERDICT:** _______
 
----
-
-## M3 — Illegal migration and small boats
-
-Whipped. 80 divisions, Mar – Jul 2023.
-
-**What the graph holds:** 81 divisions
-(2023-03-13 → 2023-07-17), 0 classified free-vote-like.
-**Bill:** `Illegal Migration Act 2023` — <https://bills.parliament.uk/bills/3429>
-
-### M3.033 — Suella Braverman (MNIS 4475), Conservative
-
-- **Proposed position on Illegal migration and small boats:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Illegal Migration Act 2023" (bills-api billId 3429)
-- **Source:** <https://bills.parliament.uk/bills/3429>
-- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”
-- **VERDICT:** _______
-
-### M3.034 — Lord Murray of Blidworth (MNIS 4950), Conservative
-
-- **Proposed position on Illegal migration and small boats:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Illegal Migration Act 2023" (bills-api billId 3429)
-- **Source:** <https://bills.parliament.uk/bills/3429>
-- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”
-- **VERDICT:** _______
-
-### M3.035 — Liz Saville Roberts (MNIS 4521), Plaid Cymru
-
-- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC1 at Report stage, with 6 co-sponsors (Hywel Williams, Ben Lake, Apsana Begum, Nadia Whittome, …) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>
-- **In its own words:** “To move the following Clause— “Detainees: permission to work after six months”
-- **VERDICT:** _______
-
-### M3.036 — Apsana Begum (MNIS 4790), Labour
-
-- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC2 at Report stage, with 21 co-sponsors (Bell Ribeiro-Addy, Richard Burgon, Rebecca Long Bailey, Ms Diane Abbott, …) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>
-- **In its own words:** “To move the following Clause— “Arrangements for removal: pregnancy”
-- **VERDICT:** _______
+## M3 — Illegal migration and small boats · DEFERRED
 
 ### M3.037 — Dame Diana Johnson (MNIS 1533), Labour
 
@@ -477,15 +953,6 @@ Whipped. 80 divisions, Mar – Jul 2023.
 - **In its own words:** “Clause 3, page 4, line 9, leave out subsections (2) to (4)”
 - **VERDICT:** _______
 
-### M3.044 — The Lord Bishop of Durham (MNIS 4312), Bishops
-
-- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 128B at Committee stage, with 3 co-sponsors (Baroness Stroud, Lord Purvis of Tweed, Baroness Lister of Burtersett) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>
-- **In its own words:** “Clause 58, page 61, line 3, at end insert— “(6A) The Secretary of State may not make regulations under subsection (1) specifying any limit on the number of persons who arrive under the following schemes—”
-- **VERDICT:** _______
-
 ### M3.045 — Lord Purvis of Tweed (MNIS 4293), Liberal Democrat
 
 - **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote
@@ -522,42 +989,7 @@ Whipped. 80 divisions, Mar – Jul 2023.
 - **In its own words:** “After Clause 59, insert the following new Clause— “Safe passage visa scheme”
 - **VERDICT:** _______
 
----
-
-## M4 — Asylum and the Nationality and Borders Act
-
-Whipped, and the largest single block of divisions in the corpus (84).
-
-**What the graph holds:** 84 divisions
-(2021-07-20 → 2022-04-27), 0 classified free-vote-like.
-**Bill:** `Nationality and Borders Act 2022` — <https://bills.parliament.uk/bills/3023>
-
-### M4.049 — Priti Patel (MNIS 4066), Conservative
-
-- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Nationality and Borders Act 2022" (bills-api billId 3023)
-- **Source:** <https://bills.parliament.uk/bills/3023>
-- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”
-- **VERDICT:** _______
-
-### M4.050 — Baroness Williams of Trafford (MNIS 4311), Conservative
-
-- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Nationality and Borders Act 2022" (bills-api billId 3023)
-- **Source:** <https://bills.parliament.uk/bills/3023>
-- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”
-- **VERDICT:** _______
-
-### M4.051 — Baroness Hamwee (MNIS 2652), Liberal Democrat
-
-- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 1 at Committee stage — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>
-- **In its own words:** “leave out “equally” and insert “in the same terms””
-- **VERDICT:** _______
+## M4 — Asylum and the Nationality and Borders Act · DEFERRED
 
 ### M4.052 — Baroness McIntosh of Pickering (MNIS 384), Conservative
 
@@ -593,15 +1025,6 @@ Whipped, and the largest single block of divisions in the corpus (84).
 - **Citation:** Lead sponsor of 27 at Committee stage, with 3 co-sponsors (Baroness Fox of Buckley, Baroness Mobarik, Baroness Warsi) — decision: NotMoved
 - **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>
 - **In its own words:** “Leave out Clause 9 and insert the following new Clause— “Deprivation of citizenship”
-- **VERDICT:** _______
-
-### M4.056 — Lord Anderson of Ipswich (MNIS 4705), Crossbench
-
-- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of Unnumbered at Committee stage, with 3 co-sponsors (Lord Rosser, Lord Paddick, Baroness Warsi) — decision: Disagreed
-- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>
-- **In its own words:** “The above-named Lords give notice of their intention to oppose the Question that Clause 9 stand part of the Bill.”
 - **VERDICT:** _______
 
 ### M4.057 — Lord Paddick (MNIS 4288), Liberal Democrat
@@ -658,15 +1081,6 @@ Whipped, and the largest single block of divisions in the corpus (84).
 - **In its own words:** “Insert the following new Clause— “Compliance with the Refugee Convention”
 - **VERDICT:** _______
 
-### M4.063 — The Lord Bishop of Durham (MNIS 4312), Bishops
-
-- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 29 at Report stage, with 1 co-sponsor (Baroness Lister of Burtersett) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>
-- **In its own words:** “at end insert— In section 16 of the Nationality, Immigration and Asylum Act 2002 (establishment of centres), at end insert—”
-- **VERDICT:** _______
-
 ### M4.064 — Baroness Stroud (MNIS 4546), Conservative
 
 - **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote
@@ -676,33 +1090,7 @@ Whipped, and the largest single block of divisions in the corpus (84).
 - **In its own words:** “Insert the following new Clause— “Changes to the Immigration Act 1971”
 - **VERDICT:** _______
 
----
-
-## M5 — Leaving the European Union
-
-Whipped on paper and split in practice; 78 divisions, Nov 2017 – Jun 2018.
-
-**What the graph holds:** 78 divisions
-(2017-11-15 → 2018-06-20), 0 classified free-vote-like.
-**Bill:** `European Union (Withdrawal) Act 2018` — <https://bills.parliament.uk/bills/2045>
-
-### M5.065 — Mr David Davis (MNIS 373), Conservative
-
-- **Proposed position on Leaving the European Union:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "European Union (Withdrawal) Act 2018" (bills-api billId 2045)
-- **Source:** <https://bills.parliament.uk/bills/2045>
-- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”
-- **VERDICT:** _______
-
-### M5.066 — Baroness Evans of Bowes Park (MNIS 4329), Conservative
-
-- **Proposed position on Leaving the European Union:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "European Union (Withdrawal) Act 2018" (bills-api billId 2045)
-- **Source:** <https://bills.parliament.uk/bills/2045>
-- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”
-- **VERDICT:** _______
+## M5 — Leaving the European Union · DEFERRED
 
 ### M5.067 — Lord Callanan (MNIS 4336), Conservative
 
@@ -711,24 +1099,6 @@ Whipped on paper and split in practice; 78 divisions, Nov 2017 – Jun 2018.
 - **Citation:** Named sponsor of "European Union (Withdrawal) Act 2018" (bills-api billId 2045)
 - **Source:** <https://bills.parliament.uk/bills/2045>
 - **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”
-- **VERDICT:** _______
-
-### M5.068 — Lord Wigley (MNIS 547), Plaid Cymru
-
-- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 1 at Committee stage, with 1 co-sponsor (Lord Dykes) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
-- **In its own words:** “at beginning insert “Subject to subsections (2) and (3),””
-- **VERDICT:** _______
-
-### M5.069 — Lord Adonis (MNIS 3743), Labour
-
-- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Lord Hain, Lord Triesman, Baroness Meacher) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
-- **In its own words:** “leave out “on exit day” and insert “on a date to be determined by a further Act of Parliament””
 - **VERDICT:** _______
 
 ### M5.070 — Lord Foulkes of Cumnock (MNIS 579), Labour
@@ -794,15 +1164,6 @@ Whipped on paper and split in practice; 78 divisions, Nov 2017 – Jun 2018.
 - **In its own words:** “At end insert “and forms part of domestic primary legislation””
 - **VERDICT:** _______
 
-### M5.077 — Lord Pannick (MNIS 3870), Crossbench
-
-- **Proposed position on Leaving the European Union:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 15 at Committee stage, with 3 co-sponsors (Baroness Taylor of Bolton, Lord Norton of Louth, Lord Beith) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>
-- **In its own words:** “leave out paragraphs (b) to (d)”
-- **VERDICT:** _______
-
 ### M5.078 — Baroness McIntosh of Pickering (MNIS 384), Conservative
 
 - **Proposed position on Leaving the European Union:** PROPOSED — read the quote
@@ -830,33 +1191,7 @@ Whipped on paper and split in practice; 78 divisions, Nov 2017 – Jun 2018.
 - **In its own words:** “At end insert— human rights protection.””
 - **VERDICT:** _______
 
----
-
-## M6 — The generational smoking ban
-
-A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus holds 8 divisions.
-
-**What the graph holds:** 8 divisions
-(2024-04-16 → 2026-02-24), 0 classified free-vote-like.
-**Bill:** `Tobacco and Vapes Act 2026` — <https://bills.parliament.uk/bills/3879>
-
-### M6.081 — Wes Streeting (MNIS 4504), Labour
-
-- **Proposed position on The generational smoking ban:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Tobacco and Vapes Act 2026" (bills-api billId 3879)
-- **Source:** <https://bills.parliament.uk/bills/3879>
-- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”
-- **VERDICT:** _______
-
-### M6.082 — Baroness Merron (MNIS 347), Labour
-
-- **Proposed position on The generational smoking ban:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Tobacco and Vapes Act 2026" (bills-api billId 3879)
-- **Source:** <https://bills.parliament.uk/bills/3879>
-- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”
-- **VERDICT:** _______
+## M6 — The generational smoking ban · DEFERRED
 
 ### M6.083 — Mary Kelly Foy (MNIS 4753), Labour
 
@@ -885,15 +1220,6 @@ A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus 
 - **In its own words:** “To move the following Clause— “Ban on manufacture and sales of high-strength nicotine pouches”
 - **VERDICT:** _______
 
-### M6.086 — Dr Caroline Johnson (MNIS 4592), Conservative
-
-- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC6 at Committee stage — decision: NegativedOnDivision
-- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>
-- **In its own words:** “To move the following Clause— “Consultation on licensing regulations”
-- **VERDICT:** _______
-
 ### M6.087 — Andrew Gwynne (MNIS 1506), Labour
 
 - **Proposed position on The generational smoking ban:** PROPOSED — read the quote
@@ -901,15 +1227,6 @@ A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus 
 - **Citation:** Lead sponsor of 15 at Committee stage — decision: Agreed
 - **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>
 - **In its own words:** “Clause 168, page 121, line 1, after “force” insert “(so far as not in force by virtue of subsection (2))””
-- **VERDICT:** _______
-
-### M6.088 — Helen Maguire (MNIS 5336), Liberal Democrat
-
-- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 49 at Committee stage — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>
-- **In its own words:** “Title, line 2, leave out “born on or after 1 January 2009” and insert “under the age of 25””
 - **VERDICT:** _______
 
 ### M6.089 — Sarah Bool (MNIS 5355), Conservative
@@ -948,15 +1265,6 @@ A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus 
 - **In its own words:** “To move the following Clause— “Ban on the supply of plastic cigarette filters”
 - **VERDICT:** _______
 
-### M6.093 — Jim Allister (MNIS 5356), Traditional Unionist Voice
-
-- **Proposed position on The generational smoking ban:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC3 at Report stage, with 7 co-sponsors (Gavin Robinson, Sammy Wilson, Jim Shannon, Alex Easton, …) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>
-- **In its own words:** “To move the following Clause— “Amendment of the European Union (Withdrawal) Act 2018”
-- **VERDICT:** _______
-
 ### M6.094 — Catherine Atkinson (MNIS 5143), Labour
 
 - **Proposed position on The generational smoking ban:** PROPOSED — read the quote
@@ -984,24 +1292,7 @@ A free vote on the Conservative side at Second Reading, Apr 2024 — the corpus 
 - **In its own words:** “To move the following Clause— “Review of provisions”
 - **VERDICT:** _______
 
----
-
-## M7 — Protest and public order
-
-Whipped. 25 divisions, May 2022 – Jun 2023.
-
-**What the graph holds:** 31 divisions
-(2022-05-23 → 2026-02-04), 0 classified free-vote-like.
-**Bill:** `Public Order Act 2023` — <https://bills.parliament.uk/bills/3153>
-
-### M7.097 — Priti Patel (MNIS 4066), Conservative
-
-- **Proposed position on Protest and public order:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Public Order Act 2023" (bills-api billId 3153)
-- **Source:** <https://bills.parliament.uk/bills/3153>
-- **In its own words:** “A Bill to make provision for new offences relating to public order; to make provision about stop and search powers; to make provision about the exercise of police functions relating to public order; to make provision abo…”
-- **VERDICT:** _______
+## M7 — Protest and public order · DEFERRED
 
 ### M7.098 — Lord Sharpe of Epsom (MNIS 4888), Conservative
 
@@ -1010,15 +1301,6 @@ Whipped. 25 divisions, May 2022 – Jun 2023.
 - **Citation:** Named sponsor of "Public Order Act 2023" (bills-api billId 3153)
 - **Source:** <https://bills.parliament.uk/bills/3153>
 - **In its own words:** “A Bill to make provision for new offences relating to public order; to make provision about stop and search powers; to make provision about the exercise of police functions relating to public order; to make provision abo…”
-- **VERDICT:** _______
-
-### M7.099 — Dr Rupa Huq (MNIS 4511), Labour
-
-- **Proposed position on Protest and public order:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC1 at Committee stage, with 38 co-sponsors (Sir Bernard Jenkin, Dame Diana Johnson, Wera Hobhouse, Simon Fell, …) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
-- **In its own words:** “To move the following Clause— “Offence of interference with access to or provision of abortion services”
 - **VERDICT:** _______
 
 ### M7.100 — Stella Creasy (MNIS 4088), Labour
@@ -1066,24 +1348,6 @@ Whipped. 25 divisions, May 2022 – Jun 2023.
 - **In its own words:** “Title, line 2, leave out “delegation” and insert “exercise””
 - **VERDICT:** _______
 
-### M7.105 — Anne McLaughlin (MNIS 4437), Scottish National Party
-
-- **Proposed position on Protest and public order:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 1 at Committee stage
-- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
-- **In its own words:** “Page 1, line 4, leave out Clause 1”
-- **VERDICT:** _______
-
-### M7.106 — Wendy Chamberlain (MNIS 4765), Liberal Democrat
-
-- **Proposed position on Protest and public order:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 29 at Committee stage — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>
-- **In its own words:** “Clause 1, page 1, line 10, leave out “or is capable of causing””
-- **VERDICT:** _______
-
 ### M7.107 — Suella Braverman (MNIS 4475), Conservative
 
 - **Proposed position on Protest and public order:** PROPOSED — read the quote
@@ -1091,15 +1355,6 @@ Whipped. 25 divisions, May 2022 – Jun 2023.
 - **Citation:** Lead sponsor of NC7 at Report stage — decision: Agreed
 - **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>
 - **In its own words:** “To move the following Clause— “Power of Secretary of State to bring proceedings”
-- **VERDICT:** _______
-
-### M7.108 — Liz Saville Roberts (MNIS 4521), Plaid Cymru
-
-- **Proposed position on Protest and public order:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of NC12 at Report stage, with 2 co-sponsors (Hywel Williams, Ben Lake) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>
-- **In its own words:** “To move the following Clause— “Justice impact assessments for Wales”
 - **VERDICT:** _______
 
 ### M7.109 — Bell Ribeiro-Addy (MNIS 4764), Labour
@@ -1138,51 +1393,7 @@ Whipped. 25 divisions, May 2022 – Jun 2023.
 - **In its own words:** “After Clause 18, insert the following new Clause— “Protection for journalists and others monitoring protests”
 - **VERDICT:** _______
 
----
-
-## M8 — Employment rights and industrial action
-
-Whipped. 24 divisions, Jan – Jul 2023.
-
-**What the graph holds:** 24 divisions
-(2023-01-16 → 2023-07-17), 0 classified free-vote-like.
-**Bill:** `Strikes (Minimum Service Levels) Act 2023` — <https://bills.parliament.uk/bills/3396>
-
-### M8.113 — Grant Shapps (MNIS 1582), Conservative
-
-- **Proposed position on Employment rights and industrial action:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Strikes (Minimum Service Levels) Act 2023" (bills-api billId 3396)
-- **Source:** <https://bills.parliament.uk/bills/3396>
-- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”
-- **VERDICT:** _______
-
-### M8.114 — Lord Callanan (MNIS 4336), Conservative
-
-- **Proposed position on Employment rights and industrial action:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Strikes (Minimum Service Levels) Act 2023" (bills-api billId 3396)
-- **Source:** <https://bills.parliament.uk/bills/3396>
-- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”
-- **VERDICT:** _______
-
-### M8.115 — Lord Collins of Highbury (MNIS 4222), Labour
-
-- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 42 at Committee stage, with 2 co-sponsors (Baroness O'Grady of Upper Holloway, Lord Hendy) — decision: NotMoved
-- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
-- **In its own words:** “leave out subsections (2) and (3)”
-- **VERDICT:** _______
-
-### M8.116 — Lord Fox (MNIS 4322), Liberal Democrat
-
-- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 43 at Committee stage — decision: NotMoved
-- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
-- **In its own words:** “leave out subsections (2) to (5) and insert— A statutory instrument containing regulations under this section may not be made unless a draft of the instrument has been laid before, and approved by a resolution of, each House of Parliament.”…”
-- **VERDICT:** _______
+## M8 — Employment rights and industrial action · DEFERRED
 
 ### M8.117 — Baroness Randerson (MNIS 4230), Liberal Democrat
 
@@ -1229,15 +1440,6 @@ Whipped. 24 divisions, Jan – Jul 2023.
 - **In its own words:** “After paragraph (b) insert— users of the services or others who are affected by the availability of the services,””
 - **VERDICT:** _______
 
-### M8.122 — Lord Patel (MNIS 2443), Crossbench
-
-- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 18 at Committee stage, with 1 co-sponsor (Lord Kakkar) — decision: NotMoved
-- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>
-- **In its own words:** “at end insert— Regulations made under subsection (4)(a) specifying minimum service levels for health services may not be made unless the Government has first established, via primary legislation, appropriate and legally enforceable staffing levels across healt…”
-- **VERDICT:** _______
-
 ### M8.123 — Lord Hendy (MNIS 4723), Labour
 
 - **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote
@@ -1265,33 +1467,7 @@ Whipped. 24 divisions, Jan – Jul 2023.
 - **In its own words:** “at end insert— “234CA Protection of employees”
 - **VERDICT:** _______
 
----
-
-## M9 — Sewage, water quality and the Environment Act
-
-39 divisions, Jan – Nov 2021. The sewage amendments are the well-reported part.
-
-**What the graph holds:** 39 divisions
-(2021-01-26 → 2021-11-08), 0 classified free-vote-like.
-**Bill:** `Environment Act 2021` — <https://bills.parliament.uk/bills/2593>
-
-### M9.126 — George Eustice (MNIS 3934), Conservative
-
-- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Environment Act 2021" (bills-api billId 2593)
-- **Source:** <https://bills.parliament.uk/bills/2593>
-- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”
-- **VERDICT:** _______
-
-### M9.127 — Lord Goldsmith of Richmond Park (MNIS 4062), Conservative
-
-- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Environment Act 2021" (bills-api billId 2593)
-- **Source:** <https://bills.parliament.uk/bills/2593>
-- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”
-- **VERDICT:** _______
+## M9 — Sewage, water quality and the Environment Act · DEFERRED
 
 ### M9.128 — The Earl of Lindsay (MNIS 2059), Conservative
 
@@ -1302,24 +1478,6 @@ Whipped. 24 divisions, Jan – Jul 2023.
 - **In its own words:** “Insert the following new Clause— “Environmental objectives”
 - **VERDICT:** _______
 
-### M9.129 — Lord Teverson (MNIS 3789), Liberal Democrat
-
-- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Baroness Jones of Whitchurch, Baroness Jones of Moulsecoomb, Baroness Bennett of Manor Castle) — decision: NotMoved
-- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
-- **In its own words:** “Insert the following new Clause— “Purpose and declaration of biodiversity and climate emergency”
-- **VERDICT:** _______
-
-### M9.130 — The Duke of Wellington (MNIS 4541), Crossbench
-
-- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 4 at Committee stage, with 1 co-sponsor (Baroness Altmann) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
-- **In its own words:** “at end insert “, in particular water quality;””
-- **VERDICT:** _______
-
 ### M9.131 — Lord Blencathra (MNIS 497), Conservative
 
 - **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
@@ -1327,15 +1485,6 @@ Whipped. 24 divisions, Jan – Jul 2023.
 - **Citation:** Lead sponsor of 5 at Committee stage, with 1 co-sponsor (Lord Randall of Uxbridge) — decision: Withdrawn
 - **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
 - **In its own words:** “leave out paragraph (c) and insert— nature;””
-- **VERDICT:** _______
-
-### M9.132 — Baroness Bennett of Manor Castle (MNIS 4719), Green Party
-
-- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 7 at Committee stage — decision: NotMoved
-- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>
-- **In its own words:** “leave out “resource efficiency” and insert “reduction in resource use””
 - **VERDICT:** _______
 
 ### M9.133 — Baroness Scott of Needham Market (MNIS 2542), Liberal Democrat
@@ -1419,51 +1568,7 @@ Whipped. 24 divisions, Jan – Jul 2023.
 - **In its own words:** “After subsection (1) insert— In the range of species which contribute to the target, at least one must be a species that is significant to chalk streams and its abundance an indicator of the health of its ecosystem.””
 - **VERDICT:** _______
 
----
-
-## M10 — Retained EU law and the "sunset" clause
-
-Whipped. 25 divisions, Oct 2022 – Jun 2023.
-
-**What the graph holds:** 25 divisions
-(2022-10-25 → 2023-06-21), 0 classified free-vote-like.
-**Bill:** `Retained EU Law (Revocation and Reform) Act 2023` — <https://bills.parliament.uk/bills/3340>
-
-### M10.142 — Mr Jacob Rees-Mogg (MNIS 4099), Conservative
-
-- **Proposed position on Retained EU law and the "sunset" clause:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Retained EU Law (Revocation and Reform) Act 2023" (bills-api billId 3340)
-- **Source:** <https://bills.parliament.uk/bills/3340>
-- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”
-- **VERDICT:** _______
-
-### M10.143 — Lord Callanan (MNIS 4336), Conservative
-
-- **Proposed position on Retained EU law and the "sunset" clause:** SUPPORTS
-- **Basis:** `bill-sponsor`
-- **Citation:** Named sponsor of "Retained EU Law (Revocation and Reform) Act 2023" (bills-api billId 3340)
-- **Source:** <https://bills.parliament.uk/bills/3340>
-- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”
-- **VERDICT:** _______
-
-### M10.144 — Brendan O'Hara (MNIS 4371), Scottish National Party
-
-- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 70 at Committee stage, with 1 co-sponsor (Peter Grant) — decision: Withdrawn
-- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>
-- **In its own words:** “Clause 16, page 18, line 25, at end insert— “(1A) Before the power in subsection (1) may be exercised, the relevant national authority must publish a written statement on any societal and economic changes relevant to the intended modifications.”…”
-- **VERDICT:** _______
-
-### M10.145 — Justin Madders (MNIS 4418), Labour
-
-- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 87 at Committee stage, with 4 co-sponsors (Alex Sobel, Stella Creasy, Paul Blomfield, Mary Glindon) — decision: NotCalled
-- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>
-- **In its own words:** “Clause 16, page 18, line 27, at end insert— “(3) No regulations may be made under this section unless the conditions set out in section [Conditions on the exercise of powers under section 15 and 16] have been complied with.”…”
-- **VERDICT:** _______
+## M10 — Retained EU law and the "sunset" clause · DEFERRED
 
 ### M10.146 — Ms Nusrat Ghani (MNIS 4460), Conservative
 
@@ -1546,15 +1651,6 @@ Whipped. 25 divisions, Oct 2022 – Jun 2023.
 - **In its own words:** “Clause 15, page 19, line 27, leave out “23 June 2026” and insert “11:59 pm on 31 December 2028””
 - **VERDICT:** _______
 
-### M10.155 — Baroness Lawlor (MNIS 4965), Conservative
-
-- **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
-- **Basis:** `amendment-sponsor`
-- **Citation:** Lead sponsor of 122A at Committee stage — decision: WithdrawnBeforeDebate
-- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>
-- **In its own words:** “[Withdrawn] Clause 15, page 19, line 27, leave out “23 June 2026” and insert “the end of 2024””
-- **VERDICT:** _______
-
 ### M10.156 — Baroness Parminter (MNIS 4178), Liberal Democrat
 
 - **Proposed position on Retained EU law and the "sunset" clause:** PROPOSED — read the quote
@@ -1573,4 +1669,3 @@ Whipped. 25 divisions, Oct 2022 – Jun 2023.
 - **In its own words:** “After Clause 16, insert the following new Clause— “Conditions on the exercise of powers under sections 15 and 16”
 - **VERDICT:** _______
 
----
