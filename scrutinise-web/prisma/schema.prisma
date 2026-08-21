@@ -760,6 +760,10 @@ model Idea {
   elicitation               IdeaElicitation?
   builds                    IdeaBuild[]
   buildForks                BuildFork[]
+  // Sprint 25-D. Two more per-idea records, both additive: what the user decided about
+  // each corpus source (§2a), and the user's own documents and links (§25.6).
+  sourceDecisions           IdeaSourceDecision[]
+  userMaterial              IdeaUserMaterial[]
 
   @@index([creatorId])
   @@index([stage])
@@ -3221,6 +3225,12 @@ model EvidenceItem {
   /// measure was tried, and we can say what it was for, what was predicted, or what
   /// happened? A topically-related document is not a precedent.
   precedentTestPassed Boolean?
+  /// Sprint 25-D §3 — WHICH §25.5 QUESTION THIS ANSWERS, tagged by the producer that
+  /// wrote the row. Never derived downstream: a panel that classified findings by
+  /// reading them would guess, and a wrong guess files a finding under a question it
+  /// does not answer. Null on rows written before 25-D, and rendered as unclassified
+  /// rather than filed under a heading nobody chose.
+  headingKey String?
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
@@ -3229,6 +3239,7 @@ model EvidenceItem {
   @@index([ideaId, passKey])
   @@index([ideaId, fieldRef])
   @@index([ideaId, status])
+  @@index([ideaId, headingKey])
 }
 
 /// A specific, addressable gap. The user works through these: address, defer, or
@@ -3516,4 +3527,103 @@ model LlmSpend {
   @@index([userId, createdAt])
   @@index([pass, createdAt])
   @@index([stream, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPRINT 25-D / 20-E — source exclusion (§2a) and the user's own material (§25.6).
+// Hand-written additive schema, applied via prisma/lex_25d.sql. That file carries the
+// full reasoning; the notes here are the ones a reader of the schema alone would
+// otherwise get wrong.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// §20.2.1 — what the user decided about ONE corpus source. Include, exclude with a
+/// reason, or annotate.
+///
+/// ⚠ A ROW, NOT A FLAG ON THE SOURCE. Corpus sources live in JSON columns written by
+/// retrieval, and a decision written there is destroyed the next time the search runs.
+/// "Excluded, never deleted" cannot be built on a column a re-run overwrites.
+///
+/// ⚠⚠ AND THE ROW IS SELF-SUFFICIENT — it carries the source's own title, citation and
+/// url. A source excluded today can drop out of retrieval tomorrow; without these the
+/// Evidence Pack's "what was considered and set aside" degrades into orphan ids, and
+/// the strongest thing this feature does is the first thing to break.
+model IdeaSourceDecision {
+  id         String               @id @default(uuid())
+  ideaId     String
+  idea       Idea                 @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// The corpus ref id — the same `SearchResult.id` every surface already keys a source by.
+  sourceKey  String
+  status     SourceDecisionStatus @default(EXCLUDED)
+  /// ⚠ Required by the application when status = EXCLUDED. An exclusion with no stated
+  /// reason is an unaccountable veto — the rule `DeepeningIssue.dismissReason` is held to.
+  reason     String?
+  annotation String?
+  title      String?
+  citation   String?
+  url        String?
+  sourceType String?
+  decidedBy  String
+  decidedAt  DateTime             @default(now())
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@unique([ideaId, sourceKey])
+  @@index([ideaId, status])
+}
+
+enum SourceDecisionStatus {
+  INCLUDED
+  EXCLUDED
+}
+
+/// §25.6 — a document or a link the user brought, held as EXTRACTED TEXT and nothing else.
+///
+/// ⚠ NO BINARY IS STORED. ~30KB a document means storage is free at any plausible scale;
+/// a stored PDF is a liability to hold, serve and erase, and it invites someone to hand
+/// the whole thing to a model later. Which is the second rule: the text is NEVER injected
+/// wholesale into a prompt — it is read once into findings with provenance, and those
+/// findings are what retrieval surfaces.
+///
+/// Deleted with the idea (GDPR erasure): cascade, never a soft delete.
+model IdeaUserMaterial {
+  id            String             @id @default(uuid())
+  ideaId        String
+  idea          Idea               @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  kind          UserMaterialKind
+  status        UserMaterialStatus @default(PENDING)
+  label         String
+  filename      String?
+  mimeType      String?
+  /// ⚠ RETAINED FOR A LINK, ALWAYS. A quotation whose source cannot be reopened is not
+  /// evidence.
+  url           String?
+  /// The extracted text — THE ONLY COPY OF THE CONTENT WE HOLD.
+  text          String?
+  charCount     Int                @default(0)
+  sourceBytes   Int                @default(0)
+  /// Set on FAILED. An empty entry and a failed extraction must not look the same.
+  failureReason String?
+  /// When the findings pass last read it. NULL means the text is stored and has never
+  /// been read — a state the UI states rather than hides.
+  findingsAt    DateTime?
+  findingCount  Int                @default(0)
+  /// The user's assertion that they may share it (§25.6 liability).
+  rightsConfirmed Boolean          @default(false)
+  addedBy       String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([ideaId])
+  @@index([ideaId, status])
+}
+
+enum UserMaterialKind {
+  FILE
+  LINK
+}
+
+enum UserMaterialStatus {
+  PENDING
+  READY
+  FAILED
 }
