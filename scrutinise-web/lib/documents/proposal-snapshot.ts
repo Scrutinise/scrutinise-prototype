@@ -45,7 +45,12 @@ import { repairRefUrl } from '@/lib/lex/legislation-url'
  * on. A renderer that meets a shape it does not know says so rather than rendering
  * a partial document — see `assertRenderableSnapshot`.
  */
-export const SNAPSHOT_VERSION = 1
+export const SNAPSHOT_VERSION = 2
+//
+// ⚠ 2 (25-D/20-E): `evidence[].headingKey`, `sources[].decision`, `excludedSources` and
+// `outstanding` were added. A stored v1 snapshot STILL RENDERS — `assertRenderableSnapshot`
+// refuses only a FUTURE shape — so every renderer below treats the new members as optional
+// on anything it did not write itself. A v1 version published last week must still open.
 
 // ── the object ───────────────────────────────────────────────────────────────
 
@@ -148,6 +153,12 @@ export interface SnapshotEvidence {
   sourceType: string | null
   /** The sift's one-line reason this source bears on the proposal. Null pre-sift. */
   siftReason: string | null
+  /**
+   * 25-D §3 — which §25.5 question this answers, as the PRODUCER tagged it. Null on rows
+   * written before 25-D, and rendered as "not filed under a question" rather than swept
+   * into whichever heading happens to be first.
+   */
+  headingKey: string | null
 }
 
 export interface SnapshotIssue {
@@ -176,11 +187,77 @@ export interface SnapshotFork {
   resolved: boolean
 }
 
+export interface SnapshotSourceRef {
+  id: string
+  title: string
+  citation: string
+  url: string
+  snippet?: string
+  date?: string
+  /**
+   * 25-D §2a — what the user decided about this source. `null` means they have not looked
+   * at it, which is DIFFERENT from having included it: §20.2.2 makes the same distinction
+   * for a cost figure nobody has reviewed, and for the same reason. An un-reviewed source
+   * silently blessed is a claim the user never made.
+   */
+  decision?: 'INCLUDED' | 'EXCLUDED' | null
+  exclusionReason?: string | null
+  annotation?: string | null
+}
+
 export interface SnapshotSource {
   /** Grouped by corpus type; the label is the group's heading. */
   group: string
   label: string
-  refs: { id: string; title: string; citation: string; url: string; snippet?: string; date?: string }[]
+  refs: SnapshotSourceRef[]
+}
+
+/**
+ * 25-D §2a — a source the user CONSIDERED AND SET ASIDE, with the reason.
+ *
+ * ⚠ SEPARATE FROM `sources`, and self-sufficient. A source can be excluded and then drop
+ * out of retrieval — rankings move, collections are reindexed, a search re-runs with
+ * different terms — so this list is built from the DECISION ROWS, which carry their own
+ * title and citation, not by filtering the retrieved set. Built the other way, the Evidence
+ * Pack would lose exactly the exclusions nobody can find any more, which are the ones a
+ * reader is most likely to ask about.
+ */
+export interface SnapshotExcludedSource {
+  sourceKey: string
+  title: string | null
+  citation: string | null
+  url: string | null
+  reason: string | null
+  annotation: string | null
+  decidedAt: string
+}
+
+/**
+ * §2b — WHAT WAS STILL OPEN WHEN THIS VERSION WAS PUBLISHED.
+ *
+ * ⚠⚠ THE DISTINCTION THIS EXISTS FOR, AND 20-B/D FOUND IT: **the review agenda is per-idea
+ * and continuous; a published version is per-artefact and frozen.** The agenda keeps moving
+ * as the user works. A recipient holding version 3 needs to know what its author knew was
+ * unfinished AT VERSION 3 — not what is unfinished now, which they cannot see and which
+ * will have changed by the time they ask.
+ *
+ * Pinning it is also what makes §24's *"12 of 14 findings resolved since"* COMPUTABLE rather
+ * than asserted: both ends of that sentence are stored numbers about stored versions.
+ *
+ * ⚠ AND IT IS ASSEMBLED FROM ROWS, NOT WRITTEN. Every field is a count or a copy of state
+ * that already exists — there is no model call anywhere in this file and there must not be.
+ */
+export interface SnapshotOutstanding {
+  /** Issues the user has not addressed, deferred or dismissed. */
+  openIssues: { id: string; passKey: string; text: string }[]
+  /** Decisions Lex offered that the user has not settled either way. */
+  unresolvedForks: { forkKey: string; fieldKey: string; chosen: string; alternative: string }[]
+  /** Gaps the build declared it could not close. */
+  declaredGaps: { question: string; why: string; passKey: string }[]
+  /** Kernel fields settled with nothing in the record behind them. */
+  unsupportedFields: string[]
+  /** Totals, so a later version can compute movement without re-deriving the lists. */
+  counts: { openIssues: number; totalIssues: number; unresolvedForks: number; declaredGaps: number }
 }
 
 /** §3c — defined in the snapshot, deliberately NOT built. */
@@ -220,6 +297,10 @@ export interface ProposalSnapshot {
   knownUnknowns: SnapshotUnknown[]
   forks: { open: SnapshotFork[]; resolved: SnapshotFork[] }
   sources: SnapshotSource[]
+  /** §2a — considered and set aside, with reasons. Never filtered out of the record. */
+  excludedSources: SnapshotExcludedSource[]
+  /** §2b — what was still open at the moment this version was made. */
+  outstanding: SnapshotOutstanding
   /** Which deepening passes have run, so "no findings" and "never searched" differ. */
   passes: { passKey: string; status: string; completedAt: string | null; failureReason: string | null }[]
   scaffolded: SnapshotScaffold[]
@@ -358,7 +439,7 @@ export async function buildProposalSnapshot(
   }
 
   const [fieldRows, causeRows, optionRows, actionRows, costLineRows,
-    evidenceRows, issueRows, passRows, forkRows] = await Promise.all([
+    evidenceRows, issueRows, passRows, forkRows, decisionRows] = await Promise.all([
     prisma.ideaFieldState.findMany({
       where: { ideaId },
       select: { fieldKey: true, status: true, value: true },
@@ -392,6 +473,10 @@ export async function buildProposalSnapshot(
     }),
     prisma.deepeningPass.findMany({ where: { ideaId }, orderBy: { passKey: 'asc' } }),
     prisma.buildFork.findMany({ where: { ideaId }, orderBy: { createdAt: 'asc' } }),
+    // 25-D §2a — the user's own decisions about sources. Read here, in the seam, as TABLE
+    // rows: the same reasoning as everything else in this file, so the document stack does
+    // not couple itself to `lib/lex/sources.ts` while that thread is still moving.
+    prisma.ideaSourceDecision.findMany({ where: { ideaId }, orderBy: { decidedAt: 'asc' } }),
   ])
 
   const statusByKey = new Map(fieldRows.map((r) => [r.fieldKey, r]))
@@ -511,6 +596,7 @@ export async function buildProposalSnapshot(
     url: e.url,
     sourceType: e.sourceType,
     siftReason: e.siftReason,
+    headingKey: e.headingKey ?? null,
   }))
 
   const issues: SnapshotIssue[] = issueRows.map((i) => ({
@@ -554,24 +640,49 @@ export async function buildProposalSnapshot(
   const refs: StoredRef[] = Array.isArray(idea.legislationRefs)
     ? (idea.legislationRefs as unknown as StoredRef[])
     : []
+  const decisionByKey = new Map(decisionRows.map((d) => [d.sourceKey, d]))
   const sources: SnapshotSource[] = TYPE_ORDER
     .map((t) => ({
       group: t,
       label: TYPE_LABELS[t] ?? t,
       refs: refs
         .filter((r) => r.type === t)
-        .map((r) => ({
-          id: r.id ?? '',
-          title: r.title?.trim() || 'Untitled source',
-          citation: r.citation?.trim() || '',
-          // Repaired on the way out, exactly as the briefing export does — a
-          // source whose link does not open is not a source.
-          url: repairRefUrl(r.type, r.id, r.url)?.trim() || '',
-          snippet: r.snippet?.trim() || undefined,
-          date: r.date?.trim() || undefined,
-        })),
+        .map((r) => {
+          const d = r.id ? decisionByKey.get(r.id) : undefined
+          return {
+            id: r.id ?? '',
+            title: r.title?.trim() || 'Untitled source',
+            citation: r.citation?.trim() || '',
+            // Repaired on the way out, exactly as the briefing export does — a
+            // source whose link does not open is not a source.
+            url: repairRefUrl(r.type, r.id, r.url)?.trim() || '',
+            snippet: r.snippet?.trim() || undefined,
+            date: r.date?.trim() || undefined,
+            // ⚠ NULL WHERE THE USER HAS NOT LOOKED. Defaulting to INCLUDED would put every
+            // source Lex retrieved into the document as though the user had endorsed it,
+            // which is the opposite of §20.2's "Lex proposed them; the user owns them".
+            decision: (d?.status as 'INCLUDED' | 'EXCLUDED' | undefined) ?? null,
+            exclusionReason: d?.status === 'EXCLUDED' ? d.reason : null,
+            annotation: d?.annotation ?? null,
+          }
+        }),
     }))
     .filter((g) => g.refs.length > 0)
+
+  // ⚠ BUILT FROM THE DECISION ROWS, NOT BY FILTERING `refs`. See `SnapshotExcludedSource`:
+  // the exclusions that matter most to a reader are the ones whose source is no longer in
+  // the retrieved set, and those are invisible to a filter over what retrieval returned.
+  const excludedSources: SnapshotExcludedSource[] = decisionRows
+    .filter((d) => d.status === 'EXCLUDED')
+    .map((d) => ({
+      sourceKey: d.sourceKey,
+      title: d.title,
+      citation: d.citation,
+      url: d.url,
+      reason: d.reason,
+      annotation: d.annotation,
+      decidedAt: d.decidedAt.toISOString(),
+    }))
 
   const whoAffected = idea.whoAffectedImpactCost as Record<string, unknown> | null
   const problemCost = typeof whoAffected?.cost === 'string' && whoAffected.cost.trim()
@@ -581,6 +692,36 @@ export async function buildProposalSnapshot(
   // Only kernel fields the user has actually settled count toward coverage; an
   // EMPTY field is not an unsupported claim, it is an absent one.
   const settled = fields.filter((f) => f.status === 'ACCEPTED' && f.value !== null)
+
+  // ── §2b — WHAT WAS STILL OPEN, PINNED ────────────────────────────────────────
+  //
+  // ⚠ COMPUTED HERE AND THEN FROZEN BY BEING STORED. `mintVersion` writes this whole object
+  // into `ProposalVersion.snapshot`; from that moment it is a fact about that version and a
+  // later edit cannot reach it. That is the acceptance criterion — "a later change does not
+  // alter what was pinned" — and it holds STRUCTURALLY rather than by a rule someone has to
+  // remember, because nothing in the application updates a stored snapshot.
+  const openIssues = issues.filter((i) => i.status === 'OPEN')
+  const unresolvedForks = forksAll.filter((f) => !f.resolved)
+  const outstanding: SnapshotOutstanding = {
+    openIssues: openIssues.map((i) => ({ id: i.id, passKey: i.passKey, text: i.text })),
+    // ⚠ ONE ENTRY PER DECISION POINT, not per alternative. A three-way fork is stored as
+    // three rows sharing a `forkKey`, and counting rows would report one open decision as
+    // three — which is the number §24 would then compare against.
+    unresolvedForks: [...new Map(unresolvedForks.map((f) => [f.forkKey, {
+      forkKey: f.forkKey, fieldKey: f.fieldKey, chosen: f.chosen, alternative: f.alternative,
+    }])).values()],
+    declaredGaps: knownUnknowns,
+    // ⚠ A SETTLED FIELD WITH NOTHING BEHIND IT. §20.2.4's "what this proposal does not yet
+    // establish", taken from the structural fact rather than from a judgement: the field is
+    // accepted and no accepted evidence in the record bears on it.
+    unsupportedFields: settled.filter((f) => !f.supported).map((f) => f.label),
+    counts: {
+      openIssues: openIssues.length,
+      totalIssues: issues.length,
+      unresolvedForks: new Set(unresolvedForks.map((f) => f.forkKey)).size,
+      declaredGaps: knownUnknowns.length,
+    },
+  }
 
   return {
     snapshotVersion: SNAPSHOT_VERSION,
@@ -615,6 +756,8 @@ export async function buildProposalSnapshot(
       resolved: forksAll.filter((f) => f.resolved),
     },
     sources,
+    excludedSources,
+    outstanding,
     passes: passRows.map((p) => ({
       passKey: p.passKey,
       status: p.status,

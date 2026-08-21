@@ -19,6 +19,7 @@ import {
   ensureVersionExport,
   proposalFilename,
   isProposalKind,
+  PROPOSAL_KINDS,
   type ExportFormat,
 } from '@/lib/documents/proposal-export'
 import { r2SignedUrl } from '@/lib/r2'
@@ -45,7 +46,10 @@ export async function GET(req: Request, { params }: Params) {
   const format = url.searchParams.get('format') ?? 'pdf'
 
   if (!isProposalKind(kind)) {
-    return NextResponse.json({ error: 'kind must be PROPOSAL or PROPOSAL_SUMMARY' }, { status: 422 })
+    // ⚠ Derived from `PROPOSAL_KINDS`, not typed out. 20-E added EVIDENCE_PACK and this
+    // message named two kinds — a hardcoded list in an error is a list that goes stale
+    // silently, and tells the caller their valid request was invalid.
+    return NextResponse.json({ error: `kind must be one of ${PROPOSAL_KINDS.join(', ')}` }, { status: 422 })
   }
   if (format !== 'docx' && format !== 'pdf') {
     return NextResponse.json({ error: 'format must be docx or pdf' }, { status: 422 })

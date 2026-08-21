@@ -32,6 +32,7 @@ import { r2Put, r2SignedUrl, r2Exists } from '@/lib/r2'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
 import { buildProposalDocument, buildSummaryDocument, type ProposalBuildResult } from './build-proposal'
+import { buildEvidencePackDocument } from './build-evidence-pack'
 import {
   buildProposalSnapshot,
   snapshotHash,
@@ -44,18 +45,24 @@ export const PDF_MIME = 'application/pdf'
 
 export type ExportFormat = 'docx' | 'pdf'
 
-/** The two kinds built this sprint. The other three are scaffolded in the snapshot. */
-export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY'] as const
+/**
+ * The kinds that render. `EVIDENCE_PACK` joined them in 20-E; the Online View is a PAGE
+ * rather than a file and so is not a kind here, and the standalone Legislative Annex stays
+ * scaffolded because its substance waits on the AMENDABLE_SECTION search intent.
+ */
+export const PROPOSAL_KINDS = ['PROPOSAL', 'PROPOSAL_SUMMARY', 'EVIDENCE_PACK'] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
 const KIND_LABEL: Record<ProposalKind, string> = {
   PROPOSAL: 'The Proposal',
   PROPOSAL_SUMMARY: 'The Summary',
+  EVIDENCE_PACK: 'The Evidence Pack',
 }
 
 const KIND_SLUG: Record<ProposalKind, string> = {
   PROPOSAL: 'proposal',
   PROPOSAL_SUMMARY: 'summary',
+  EVIDENCE_PACK: 'evidence-pack',
 }
 
 export function isProposalKind(v: string): v is ProposalKind {
@@ -111,9 +118,11 @@ export function proposalFilename(
  * which builder a kind maps to.
  */
 export function buildFor(kind: ProposalKind, snapshot: ProposalSnapshot, onlineViewUrl?: string | null): ProposalBuildResult {
-  return kind === 'PROPOSAL'
-    ? buildProposalDocument(snapshot)
-    : buildSummaryDocument(snapshot, { onlineViewUrl })
+  switch (kind) {
+    case 'PROPOSAL': return buildProposalDocument(snapshot)
+    case 'EVIDENCE_PACK': return buildEvidencePackDocument(snapshot)
+    case 'PROPOSAL_SUMMARY': return buildSummaryDocument(snapshot, { onlineViewUrl })
+  }
 }
 
 async function renderPair(result: ProposalBuildResult): Promise<{ docx: Buffer; pdf: Buffer }> {

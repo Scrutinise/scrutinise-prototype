@@ -163,6 +163,8 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
         citation: 'Road Traffic Offenders Act 1988, s.53',
         url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53',
         sourceType: 'PRIMARY_LEGISLATION', siftReason: 'States the uprating power and its last exercise.',
+        // 25-D §3 — the §25.5 question this answers, as its producer tagged it.
+        headingKey: 'LAW_NOW',
       },
     ],
     issues: [
@@ -181,7 +183,7 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
     sources: [
       {
         group: 'PRIMARY_LEGISLATION', label: 'Primary legislation',
-        refs: [{ id: 'ukpga/1988/53', title: 'Road Traffic Offenders Act 1988', citation: 'Road Traffic Offenders Act 1988, s.53', url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53', snippet: 'Fixed penalty levels…', date: '1988-05-15' }],
+        refs: [{ id: 'ukpga/1988/53', title: 'Road Traffic Offenders Act 1988', citation: 'Road Traffic Offenders Act 1988, s.53', url: 'https://www.legislation.gov.uk/ukpga/1988/53/section/53', snippet: 'Fixed penalty levels…', date: '1988-05-15', decision: 'INCLUDED', exclusionReason: null, annotation: null }],
       },
     ],
     passes: [
@@ -194,6 +196,31 @@ function fixture(overrides: Partial<ProposalSnapshot> = {}): ProposalSnapshot {
       { key: 'LEGISLATIVE_ANNEX', label: 'The Legislative Annex (standalone)', readsFrom: ['actions'], status: 'scaffolded', why: 'x' },
     ],
     coverage: { fieldsTotal: 5, fieldsSupported: 1, actionsTotal: 2, actionsSupported: 1 },
+    // ── 25-D §2a — considered and set aside, with a reason. ───────────────────
+    //
+    // ⚠ THE FIXTURE'S EXCLUDED SOURCE IS DELIBERATELY ONE THAT IS NOT IN `sources`. That is
+    // the case the Evidence Pack has to get right: a source excluded and then dropped from
+    // retrieval is invisible to anything that filters the retrieved set, and it is the one a
+    // reader is most likely to ask about.
+    excludedSources: [
+      {
+        sourceKey: 'ukia/2013/0142',
+        title: 'Impact Assessment — Fixed Penalty Uprating 2013',
+        citation: 'IA No. MoJ/2013/0142',
+        url: 'https://www.legislation.gov.uk/ukia/2013/142',
+        reason: 'It prices a different offence class, so its per-case figure is not comparable.',
+        annotation: null,
+        decidedAt: '2026-08-21T09:00:00.000Z',
+      },
+    ],
+    // ── 25-D §2b — what was still open when this version was made. ────────────
+    outstanding: {
+      openIssues: [{ id: 'i1', passKey: 'LEGAL', text: 'No post-implementation review of the 2013 order exists' }],
+      unresolvedForks: [{ forkKey: 'instrument', fieldKey: 'chosenApproach', chosen: 'Primary legislation', alternative: 'An existing order-making power' }],
+      declaredGaps: [{ question: 'What did the 2013 uprating actually achieve?', why: 'No post-implementation review was published', passKey: 'EVIDENCE' }],
+      unsupportedFields: ['The problem'],
+      counts: { openIssues: 1, totalIssues: 3, unresolvedForks: 1, declaredGaps: 1 },
+    },
   }
   return { ...base, ...overrides }
 }
