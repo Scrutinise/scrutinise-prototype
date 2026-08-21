@@ -2,7 +2,33 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-21 01:23 UTC — ▼ **GRAPH 3C: THE SCORE IS A SPECTRUM AND THE RANKING POINTS
+*Last updated: 2026-08-21 01:44 UTC — ▼ **SEARCH S11: NINE COLLECTIONS — 48,883 SECTIONS —
+COULD NOT BE RETURNED BY ANY QUERY AT ANY SETTING, AND SEVEN OF THEM NOW CAN.** Confirmed one at a
+time against the live index rather than inferred from `cps-guidance`'s pattern: 8 of 8 probed come
+back at rank 0–4 scoped to their own corpus and are returned by NO router stream with its real
+scope. ⚠⚠ THE BRIEF'S CENTRAL WARNING IS REFUTED AS APPLIED HERE, and the refutation is the useful
+part: "widening a stream is zero-sum" belongs to the EXTRA-LEG mechanism, where `mergeLegs` divides
+a fixed budget — a tier move puts the rows in the MAIN leg where they earn their place. Measured
+BEFORE building: guidance 3/10 → 8/10, consultations 4/9 → 4/9, **not one question lost and not one
+rank moved**, where S10's flag arm had cost them 6/9 → 4/9. ⚠⚠ THE FINDING NOBODY ASKED FOR: S10's
+recall numbers, taken twenty hours earlier, NO LONGER REPRODUCE — 0 of 5 sampled rankings survive,
+because the 20 Aug case-law re-compile rewrote 74,896 bodies and a delete-and-re-add moves BM25
+document frequencies for the whole table. **Our own playbook already said a baseline measured across
+that is void; nobody had applied it to a content repair.** S10's absolute per-collection numbers are
+VOID, not stale. ✅ Reindex: 118,789 un-indexed → 0 (predicted exactly), 546s, €0.056, query
+44,274ms → 1,639ms (27×), box destroyed; case-law titles verified IN THE BUILT INDEX at 99.98%.
+⚠⚠ 118,789 un-indexed rows — a TENTH of the 1.19M behind the August incident — produced a WORSE
+query time than that incident did; the penalty is not linear. ⚠ The re-tier's first run would have
+taken three hours (`corpus_fts` has NO scalar index on `id`, so every batched delete was a full
+18.2M-row scan); the second took 5.3 minutes. ✅ `fts-refresh.ts` + `fts-drift.ts` close the
+stale-index defect — and generalising the case-law refresh found a latent bug first: it omits the
+citation rewrite, which would have stripped the title from every legislation row it touched.
+❌ THE $31 CASE-LAW RE-EMBED WAS NOT STARTED AND IS UNSPENT — `build-vector-index` shards a
+`corpus_chunks` it requires to be immutable, so a REPLACE path must be written and staged first.
+▶ CHARLIE: **REDEPLOY `fts-serve`** — proven necessary with a two-sided test, `{"tier":"guidance",
+"corpora":["cps-guidance"]}` returns 0 rows today and `{"tier":"other"}` returns 5; after the
+redeploy they must SWAP. `docs/SEARCH_S11_REPORT.md`.**
+Earlier: 2026-08-21 01:23 UTC — ▼ **GRAPH 3C: THE SCORE IS A SPECTRUM AND THE RANKING POINTS
 THE RIGHT WAY — 3 distinct stance values across 2,304,858 estimates → 13,448, and 92.87% at exactly
 ±1.00 → 0%. The evidence is a rank, not an adjective: on the assisted dying Bill the ONE entirely
 consistent member of 426 ranked 426th of 426 under the arithmetic 3B inherited, and ranks 1st under
