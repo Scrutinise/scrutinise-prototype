@@ -2,7 +2,66 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-20 23:24 UTC — ▼ **LEX 25-C: THE INSTRUMENT FORK MOVED — a build drafted
+*Last updated: 2026-08-21 01:23 UTC — ▼ **GRAPH 3C: THE SCORE IS A SPECTRUM AND THE RANKING POINTS
+THE RIGHT WAY — 3 distinct stance values across 2,304,858 estimates → 13,448, and 92.87% at exactly
+±1.00 → 0%. The evidence is a rank, not an adjective: on the assisted dying Bill the ONE entirely
+consistent member of 426 ranked 426th of 426 under the arithmetic 3B inherited, and ranks 1st under
+3C's. The sort key is the same line of code; confidence now saturates on the NET evidence rather
+than on turnout, so the mixed records went from averaging 0.8947 to 0.3066. ⚠⚠ THE FALSE
+REBELLIONS WERE NEVER A FREE-VOTE-HEURISTIC PROBLEM: `is_whipped_party` never meant the whip HELD,
+and the ladder used it as though it did — on commons:2051 Labour split 126/181 (cohesion 0.5896)
+and one Conservative party of 83 holding at 0.8554 made the division "whipped" for everyone, so 126
+Labour members were recorded as rebels at the highest weight in the config. Cohesion was already
+stored on every row and nothing read it. rebellion:v1 18,493 → 10,050 (−45.7%); 328 → 0 on 3B's two
+named divisions; total unchanged — reclassified, none created or lost. ⚠⚠ THE OBVIOUS DETECTION FIX
+IS REFUTED BY THE BRIEF'S OWN CONTROL — "use the largest whipped party" tags 7 of the 9 whipped
+Northern Ireland abortion Regulations as free votes. ⚠⚠⚠ A CHECK THAT COULD NOT FAIL, THIRD SPRINT
+RUNNING, THIRD DIRECTION: 3B rewrote 3A's false assertion and left the `limit: 400` that had
+defeated it, so 3C's ranking change buried the same 16 counter-examples from the other end and the
+harness reported 3A's exact false sentence. It failed rather than passed — but the fix survived
+only as long as the key it was written against. ⚠ check-3a has been 32/33 since 3B and nobody
+looked. ⚠⚠ THE 17.5 GB "CEILING" IS RETIRED for a cost line ($0.35/GB-month, $15 budget, source and
+date recorded in the file); today 19.01 GB = $6.65 = 44.3%, quiet, where the old constant read
+108.6% and had been raising a CRITICAL alert against a fiction since 3B. 3A's D-1 closed: the whole
+estimate table costs $0.22 a month. ⚠⚠ APPG: REPORT AND STOP, and two of 3B's three route
+descriptions are WRONG — interests-api has zero categories mentioning a group, and 3B's register URL
+renders as "as at 30 July 2015". The live edition is 29 June 2026, 571 pages or one 6.5 MB PDF, and
+its officers carry a NAME AND PARTY WITH NO MNIS ID. ⚠ D-10's "11×" is a ratio of rows: the signal
+ceiling is 7.7×, and 84.3% of the 4,458 companies unlock nothing. ▶ CHARLIE: the config version at
+the foot of /admin/positions should read `3c.7bac2c10d652`; and
+`docs/POSITION_VALIDATION_CANDIDATES.md` now has 50 PRIORITY rows, nothing scored. ⚠
+`app/ideas/create/CreateIdeaClient.tsx` HAS AN UNCOMMITTED SYNTAX ERROR — LEX-owned, not touched,
+production unaffected because it is uncommitted, but `next build` cannot run in this tree.
+`docs/GRAPH_3C_REPORT.md`.**
+Earlier: 2026-08-21 01:20 UTC — ▼ **LEX 25-D / 20-E: THE PANEL ANSWERS QUESTIONS NOW,
+AND AN EMPTY HEADING SAYS WHY IT IS EMPTY. All six sections shipped — §5 was reachable, so
+nothing was stopped short. The ten §25.5 headings replace the filing system, with the
+type-grouped list kept and folded underneath. ⚠⚠ The hard part was the EMPTY headings, and
+there are FOUR reasons a heading can be empty which must never share a sentence: the question
+ran and found nothing · it did not fire on this draft · NOTHING WE HAVE CAN ANSWER IT · the
+user has added nothing. The third is the one that would otherwise be a false statement about
+the world — "Who has taken a position" has no producer at all, because the position graph
+holds 2.3M signals and nothing in Lex reads it, and rendering that as "we looked and found
+nothing" blames the record for a gap of ours. ⚠⚠ THE REACHABILITY CHECK CERTIFIED A MODEL ON
+WHICH EVERY REAL CALL WOULD HAVE FAILED, and it was WATCHED FAILING before it was fixed: with
+the sampling gate emptied it reports 5 REJECTED on `temperature`, with it restored 15 usable
+/ 0 rejected. UNUSABLE is the verdict 25-C did not have and is exactly where `claude-sonnet-5`
+lived. The echoed model now comes back on EVERY call, not only in the check. ⚠⚠ A DEFECT THIS
+SPRINT INTRODUCED AND CAUGHT BY READING REAL OUTPUT: a control-character class that also
+matched the LETTER `u` silently deleted every `u` from every uploaded document ("Treasury" →
+"Treasry"), with no error and nothing in a log; and a raw NUL byte in the source made the
+whole module read as BINARY to grep. ⚠ Sources can be excluded with a reason and STAY —
+a row, not a flag, because a decision written into the retrieval JSON is destroyed the next
+time the search runs, and the row carries the source's own title so an exclusion survives the
+source dropping out of retrieval. ⚠ Publishing PINS the outstanding items: live 0/0/3, pinned
+version 1/1/2. ⚠ Documents and links are read ONCE into findings, never enter a prompt again,
+and every quote is verified against the stored text — 3 of 3 verbatim on the live run.
+▶ CHARLIE: STILL NO SIGNED-IN BROWSER WALK — the by-question panel and the "Your material"
+control have never been seen in a browser, no real multipart upload has gone through the route
+(the PDF and Word extractors have not run on a real file), and the Evidence Pack has never
+been rendered through R2, so the first download will be the first render.
+`docs/LEX_25D_REPORT.md`.**
+Earlier: 2026-08-20 23:24 UTC — ▼ **LEX 25-C: THE INSTRUMENT FORK MOVED — a build drafted
 "Primary legislation (Act of Parliament)", the research found the Renters' Rights Act 2025, and the
 fork visibly changed to offer it. That acceptance criterion had carried "undemonstrated" for two
 sprints and took THREE stacked defects to reach. ⚠⚠ The gate was never shut: probed in isolation it

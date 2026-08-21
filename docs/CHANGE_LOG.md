@@ -132,6 +132,361 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 3C — THE SCORE IS A SPECTRUM, AND THE ONE CONSISTENT MEMBER WENT FROM LAST TO FIRST (2026-08-21 01:23 UTC)
+
+Executes `docs/BRIEF_GRAPH_3C.md` §0–§6. Report: **`docs/GRAPH_3C_REPORT.md`**. **Cost $0** — no
+LLM call anywhere. `check-3c` **41/41** with every constructed break watched firing and 8 negative
+controls; `check-3b` **51/51**; `check-3a` **33/33**; `verify:positions` **37/37 live against
+Neon**; `check:serve-observer` **29/29**; `audit-3c-scoring` every property holds. `tsc` clean in
+`scrutinise-web`.
+
+✅ **THE SCORE MEANS SOMETHING NOW, AND THE EVIDENCE IS A RANK RATHER THAN AN ADJECTIVE.** Across
+all 2,304,858 estimates: **3 distinct stance values → 13,448**, and **92.87% at exactly ±1.00 → 0%**.
+On the Terminally Ill Adults Bill, rolled up over every member's whole record: the **one** entirely
+consistent member of 426 scored mean confidence 0.7595 while the **425** mixed-record members
+averaged **0.8947** — so the consistent member ranked **426th of 426** on the key the page prints.
+Under 3C the mixed records average **0.3066** and that member ranks **1st**. The sort key is the
+same line of code; what changed is that confidence saturates on the **net** evidence rather than on
+turnout. ⚠ **87.6% of the table still sits below \|stance\| 0.20 and that is correct, not
+disappointing** — 90% of these rows summarise exactly one vote, and one vote is not much evidence;
+the point is that they no longer all read ±1.00.
+
+⚠⚠ **THE FALSE REBELLIONS WERE NOT A FREE-VOTE-HEURISTIC PROBLEM — `is_whipped_party` NEVER MEANT
+THE WHIP HELD, AND THE LADDER USED IT AS THOUGH IT DID.** On `commons:2051` Labour split **126 aye /
+181 no, cohesion 0.5896**, and one Conservative party of 83 holding at 0.8554 was enough to make the
+division "whipped" for everyone — so 126 Labour members were recorded as `rebellion:v1` at **0.9,
+the highest weight in the config**, and the 181 on the other side as `whipped-with:v1` at 0.2. Two
+errors in opposite directions on one division. **Cohesion was already stored on every row and
+nothing read it.** New rung `party-split:v1` @ 0.7: **`rebellion:v1` 18,493 → 10,050, −8,443
+(−45.7%)**, 28,101 signals into the new class, **total unchanged at 2,080,585 — reclassified, none
+created or lost**, and `unwhipped-group:v1` moved by exactly **0** rows. On 3B's two named
+divisions: **328 rebellion signals at 0.9 → 0.**
+
+⚠ **R1, the obvious detection fix, is REFUTED by the brief's own negative control.** Four candidate
+rules were scored against six cases decided from the public record first: "use the largest whipped
+party" tags **7 of the 9 Northern Ireland abortion Regulations** as free votes. What shipped is 3A's
+rule **+ bill-level propagation** (strict majority of the bill's divisions, AND this division's own
+best party a near miss below 0.90) — **5 of 6 cases correct**, 34 → 36 divisions tagged, and **both**
+propagated divisions printed by name. ⚠ Predicted 37, measured 36: the probe used `>= 0.5`, the
+implementation a strict majority, and the difference is exactly `lords:1886`. **Left as a residual
+rather than relaxed, because loosening a rule after seeing which row it picks up is tuning past the
+requirement** (D-3). ⚠⚠ `abortion` moved from the positive list to the NEGATIVE one — a correction
+to the TEST, not the world: those divisions are whipped NI *Regulations*, and 3A's ⚠ against them
+was the wrong way round.
+
+⚠⚠⚠ **A CHECK THAT COULD NOT FAIL, FOR THE THIRD TIME IN THREE SPRINTS, FROM THE THIRD DIRECTION.**
+3A published "every member who voted in both readings voted the same way twice" — false, and it
+passed only because all 16 counter-examples ranked below `limit: 400`. **3B rewrote the assertion
+and left the limit**, which was safe only because 3B's key put those 16 at ranks 1–23. 3C correctly
+demotes contradictory records, they fell below 400 again, and `verify:positions` reported **"400 the
+same way twice, 0 changed side"** — 3A's exact false sentence, reached from the opposite end. It
+FAILED rather than passed, which is 3B's rewrite earning its keep; but **3B fixed the assertion and
+not the harness limit that had defeated it.** Limit now exceeds the matched set and the harness
+asserts it is not truncating (627 of 627); `check-3c.ts` contains no `limit` at all. ⚠ Raising it
+exposed a SECOND assertion the limit had been propping up — "a multi-target claim always carries the
+caveat" was measuring "the sample contains no single-target actors".
+
+⚠ **`check-3a.ts` has been failing 32/33 since 3B and nobody looked** — 3B added `position_donation`
+and not the allow-list entry. Now 33/33. ⚠ **`weightFunctionSql()` was still half-hardcoded**: 3B
+derived the SIGNAL-TYPE cases from the config and left the five VOTE CLASSES as a literal, so adding
+`party-split:v1` produced `position_raw_weight('vote','party-split:v1') → NULL`. Same defect, other
+half, now fixed and asserted. ⚠ **Two `--self-test` breaks did not break anything**: one was handed
+a broken *weight* against a property about *grouping* (the break is now 3B's own frozen
+`aggregate()` — the real broken state), and one **read its own bound out of the config under test**,
+passing at confidence 0.2575 "under" a ceiling of 1.
+
+✅ **§5 — THE 17.5 GB "CEILING" IS RETIRED AND REPLACED BY A BILL.** It was never a plan limit, its
+only citation was itself, and the database passed it during 3B — so it had been raising a CRITICAL
+alert against a fiction. Now a cost line: **$0.35/GB-month, $15/month storage budget, source and
+date-checked recorded in the file**; today's 19.01 GB = **$6.65 = 44.3%, quiet**. Dropped from
+`critical` to `warning`. ⚠ Two things it cannot see are stated IN the file: compute is ~8× storage
+and invisible from here, and **the brief's own $3.96 does not reconcile with its own $0.35 × 19.09 =
+$6.68** (D-7). **3A's D-1 is closed**: `position_estimate` is 616 MB = **$0.22 a month**.
+
+✅ **§3 — 50 of 157 validation rows chosen, 107 DEFERRED, nothing scored**, idempotent (two runs
+byte-identical), all 157 VERDICT lines still blank. Stratified A 16 / B 28 / C 6. ⚠ **Stratum C was
+0 of 50 in the first selection** — no case where the graph holds almost nothing, which is exactly
+what a key needs to catch a graph that answers when it should abstain. ⚠ **The selection used the
+graph; the verdict must not** — no stance, score or confidence appears near a VERDICT line, only a
+neutral coverage count, and the document says an accuracy figure from a stratified subset is not an
+accuracy figure for the graph.
+
+⚠⚠ **§4.1 APPG — REPORT AND STOP, and TWO of 3B's three route descriptions are wrong.** The 403 +
+Cloudflare challenge is re-measured and stands (its own homepage 403s; three parliament APIs return
+200 from the same process). But **3B's D-8 recommendation (c) is REFUTED**: `interests-api` is the
+register of FINANCIAL INTERESTS and **zero of its ten categories mention a group** — read, not
+assumed. And **3B's register URL is an eleven-year-old snapshot** — `/register/contents.htm` renders
+as *"as at 30 July 2015"*. The live edition is **29 June 2026, 571 group pages or one 6.5 MB PDF,
+published every ~6 weeks**, listed on `www.parliament.uk`, which is not blocked. ⚠⚠ **APPG officers
+carry a NAME and a PARTY and no MNIS id**, so an APPG ingest is a worse identity problem than the
+donations register. **No crawler was built over the browser's challenge clearance** — 571
+same-origin fetches from a cleared page is a bot in a browser's clothes.
+
+⚠ **§4.2 — D-10's "11×" is a ratio of ROWS, and rows are not signals: the measured ceiling is 7.7×**
+(251 → 1,933), because a donation is only a signal when BOTH ends resolve and the donee resolves on
+8.6% of the register. ⚠⚠ **84.3% of the work is not worth doing: 3,756 of 4,458 companies unlock
+NOTHING**, and 702 carry the whole widening. Work-list emitted as
+`scripts/graph/ec-companies-to-acquire.csv`, sorted so those 702 come first. ⚠⚠ **And a latent
+defect found in the work-list itself**: the Commission publishes CH numbers with and without the
+leading zero (`9630980` AND `09630980`) — 8,252 rows, 1,833 companies. It resolves **zero** rows
+today, **which is the dangerous answer**: the moment the entity sweep lands, a padded store meeting
+an unpadded register silently misses 8,252 rows and looks like an absence in the register. Fix
+before the acquisition, not after (D-6).
+
+❌ **Not done, named:** nothing scored (design §8's gate still shut) · APPG (all three routes need
+Charlie, per brief §4.1) · the Companies House acquisition (not the graph's to build) · the CH
+padding normalisation (D-6) · `lords:1886` (D-3) · hunting 3 of 27 (structural, 3A's finding) ·
+`amendment_sponsorship` and `committee_membership` still 0 signals · 97.1% of EDM signatures ·
+the deepening wiring · the browser walk. ⚠⚠ **`next build` was NOT run and that is a gap, not an
+omission: the working tree contains an uncommitted syntax error in a LEX-owned file**
+(`app/ideas/create/CreateIdeaClient.tsx`, a `//` comment inside a JSX opening tag). Production is
+unaffected because it is uncommitted, but a sweep-style commit would break the Vercel build — the
+fourth file-level build break in three weeks (D-8).
+
+▶ **CHARLIE:** `/admin` → Position Graph, and **the config version at the foot should read
+`3c.7bac2c10d652`** (3B left `3a.d28ce0b05297`). Tick several of the eleven assisted-dying divisions
+— the top of the list should now be the members who voted the same way throughout, with the
+both-ways voters near the bottom flagged *divided record*. Under 3B it was the other way round.
+Then `docs/POSITION_VALIDATION_CANDIDATES.md`, 50 PRIORITY rows.
+
+---
+
+## SEARCH S11 — SEVEN COLLECTIONS NO QUERY COULD RETURN, AND THE TRADE THAT WAS NOT ONE (2026-08-21 01:44 UTC)
+
+Executes `docs/BRIEF_SEARCH_S11.md` §0–§6 except §3. Report: **`docs/SEARCH_S11_REPORT.md`**.
+`tsc` clean except one pre-existing error in an UNTRACKED Lex file; `lint:templates` **clean across
+`lib/`**; `fts-drift --self-test` **planted drift FIRED**; probe controls **3/3**; tier-leg
+fidelity control **5/5 id-for-id**; heavy-job verify **unindexed=0**. **Spend €0.056.**
+
+✅ **THE HEADLINE. 48,883 sections across nine collections could not be returned by any query at any
+setting; seven of them now can.** Confirmed ONE AT A TIME against the live index rather than
+inferred from `cps-guidance`'s pattern: 8 of 8 probed come back at **rank 0–4 scoped to their own
+corpus** and are returned by **NO** router stream when the same query is issued with that stream's
+real scope. `cma-cases` 22,898 · `ofgem` 17,161 · `ofcom` 4,169 · `independent-reviews` 667 ·
+`cps-guidance` 270 · `inquiry-evidence` 90 · `lgsco` 40 → tier `guidance`.
+
+⚠⚠ **THE BRIEF'S CENTRAL WARNING IS REFUTED AS APPLIED TO THIS CHANGE, AND THE REFUTATION IS THE
+USEFUL PART.** "Widening a stream is zero-sum" is a property of the **extra-leg** mechanism, where
+`mergeLegs` slices two rankings into one fixed budget — a quota, so a gain must be taken from
+something. A tier move puts the rows in the MAIN leg, where they have to earn their place on score.
+Measured **before building**, in-stream recall@20 on Charlie's validated set, dense off, arms
+differing only in which rows are eligible: **guidance 3/10 → 8/10 (+5); consultations 4/9 → 4/9 —
+not one question lost and not one rank moved**, where S10's extra-leg arm had cost them 6/9 → 4/9.
+Re-measured after the rebuild: identical.
+
+⚠ **The measurement did not need the rebuild and that is not an approximation** — a corpus prefilter
+selects rows without rescoring them, so a `corpora` list IS a tier leg. Controlled rather than
+asserted: `corpora=[…]` and `tier:'guidance'` returned **identical lists, id for id, on 5 of 5**.
+
+⚠⚠ **THE FINDING NOBODY ASKED FOR: S10's RECALL NUMBERS, TAKEN TWENTY HOURS EARLIER, NO LONGER
+REPRODUCE — 0 of 5 sampled rankings survive**, top-10 overlap 3–8 of 10, with `consultations`
+documents displaced by `quangos-govuk` ones in a tier the case-law work never touched. Two causes
+were separated rather than argued: the method was ruled out by the 5/5 fidelity control, so **the
+index moved.** ⚠ **The mechanism was already written down in our own playbook** (§20, 5 Aug): a
+delete-and-re-add changes BM25 **document frequencies**, so *"any gold-set or answer-key baseline
+measured before the cleanup is void"* — and the 20 Aug case-law re-compile rewrote **74,896
+bodies**. Nobody joined the rule to the case because the rule was written about deliberate deletion
+and this was a repair. **S10's absolute per-collection numbers — the ones Q2/Q3/Q4 were priced on
+— are void, not stale.** Its internal comparisons stand.
+
+✅ **§2 THE REINDEX, PREDICTED THEN MEASURED.** 43,893 rows moved `other → guidance`; un-indexed
+**118,789 → 0** (predicted 118,789 **exactly**); build **546 s** against ~570 s predicted; **€0.056**;
+sample query **44,274 ms → 1,639 ms (27×)**; box destroyed. ⚠ **Peak RSS 16.0 GB REFUTED my ~19.5 GB
+prediction on the safe side, and `jobs.ts` was deliberately NOT lowered** — its own rule says one run
+below the record on more data is noise, so the runner's "record this" line was declined with the
+reason. ⚠⚠ **118,789 un-indexed rows — a TENTH of the 1,191,345 behind the August latency incident —
+produced a WORSE query time (44.3 s) than that incident did (25–32 s). The penalty is not linear.**
+
+⚠⚠ **THE RE-TIER'S FIRST LIVE RUN WOULD HAVE TAKEN THREE HOURS; THE SECOND TOOK 5.3 MINUTES.** It
+reused `refresh-fts-caselaw`'s shape — `delete WHERE id IN (…500 ids…)` — and managed **3,697 rows in
+15 minutes**, because **`corpus_fts` has no scalar index on `id`**, so each of 88 delete predicates was
+a full scan of 18.2 M rows. Batching made the scans more numerous, not cheaper. One `corpus =`
+predicate per collection is 7 scans instead of 88.
+
+✅ **§2.3 THE CASE-LAW TITLES ARE IN THE BUILT INDEX, verified THERE and not in the database** —
+74,883 of 74,896 (**99.98%**) titled, **74,896 dated**, range 1965-08-09..2026-06-11, real case names.
+
+✅ **§4 THE STALE-INDEX DEFECT CLOSED, AND THE GENERALISATION FOUND A LATENT BUG FIRST.** The three
+writers had already drifted: `build-fts-index` and `fts-catchup` run legislation rows through
+`buildCitation`; `refresh-fts-caselaw` does not, while its header claims it "uses exactly the record
+shape `fts-catchup` writes so the two cannot drift". True of the fields, false of the derivation —
+harmless on `tna-caselaw`, and **generalised naively it would have stripped the citation title from
+every legislation row it touched.** Now `fts-record.ts` is the one definition (and THROWS rather than
+degrading if handed a legislation row with no act index); `fts-refresh.ts` is the general tool with
+`--from=db` (content) and `--from=index` (re-tier, which cannot ship an unrelated body change inside
+a tier move); `fts-drift.ts` is the detector, **because a refresh script nobody runs is not a fix.**
+
+⚠ **The drift detector found three real defects on its first run, and one false positive that had to
+be fixed before it was usable:** it reported `si-pre-2010` and `retained-eu` as drifted because the
+index holds MORE titles than the database — the citation rewrite working. **Comparing a derived
+field against its source and calling the difference drift is how a detector trains its reader to
+ignore it.** Now skipped for that tier, with the skip PRINTED, and a shortfall still reported.
+Genuine finds: **`bills-api` has NO `itemDate` in the index at all** (null..null vs
+2021-03-16..2026-08-04), and `pwdata-wrans`/`pwdata-lordswrans` are **5 days behind**.
+
+✅ **§5.1 THE `limit` FAN-OUT IS SELF-DESCRIBING, BEHAVIOUR DELIBERATELY UNCHANGED.** `meta.requested`
+= `{limit, returned, streams, fanout}`; the gateway logs `asked N → got M across K stream(s)`.
+`SEARCH_CONTRACT.md` §2 rewritten — it said "max canonical results before grouping" and **every
+caller was written against the documentation**, while the code hands `limit` to every stream
+(`min(3 × limit, 100) × streams`; `limit:10` → 150). Not changed here because it moves recall on
+every surface and there are still no debates/legislation questions; recorded as a pending decision.
+
+⚠ **§5.2 ONE OF THE TWO TEMPLATE-LITERAL FINDINGS WAS NOT WHAT IT WAS REPORTED TO BE.** Reported as an
+`unknown` reaching a user-facing GEOGRAPHY label at `stats-catalogue.ts:392`. Running
+`lint:templates` rather than trusting the description: the geography line is already `String()`-
+wrapped; the actual `unknown` is **`r.cofogFunctionCode`**, one field along — and `fields.cofog` is
+**tokenised, never displayed**, so an object there would not print "[object Object]" to a user, it
+would put the tokens `object` and `Object` into the search index for every series with a COFOG code.
+Quieter than reported and worse to find later.
+
+❌ **§3 THE CASE-LAW RE-EMBED WAS NOT STARTED AND THE $31 IS UNSPENT.** The brief requires both
+halves or neither, so a half-run is the failure mode. ⚠ **`build-vector-index.ts` shards
+`corpus_chunks` sorted by `chunkId` and records DONE shard INDICES**, relying on that table being
+immutable; replacing one collection's chunks renumbers every boundary and a resumed run re-embeds
+the whole 21.8 M-chunk corpus — **"a four-figure mistake, not a slow one"**, in that file's own
+words. A REPLACE path does not exist and the safe shape is a staging table
+(`VECTOR_CHUNKS_TABLE`/`VECTOR_VEC_TABLE` are already env-overridable) so old vectors keep serving
+until both swap. Recommended as the next sprint's §1. **The meaning-based half of case-law retrieval
+still computes over, and displays, a stylesheet.**
+
+❌ **Also not done, named:** `uk-treaties` + `tax-treaties-dta` (3,588 sections) stay unreachable —
+a **different mechanism** (typed TREATY inside `parliamentary`, so a tier entry would not fix them)
+and **unmeasurable**, because the validated set has zero debates questions; ⚠ the sharp version is
+that `uk-treaties-fcdo` (23,372, **7× larger**) IS reachable purely because it happens to be typed
+DEBATE · `lgsco` mapped on tier evidence only — **all 40 of its titles are bare ten-character case
+numbers**, so no probe could be built · `cps-guidance` titles carry raw HTML entities (`&#039;`) ·
+the interleave dilution (six questions of 44) measured and untouched, per §5.3 · **no browser walk
+and none claimed.**
+
+⚠ **CROSS-THREAD, RAISED NOT FIXED: `scrutinise-web/lib/lex/user-material.ts` is UNTRACKED and DOES
+NOT COMPILE** — `tsc` returns exactly one error across the whole web app and it is this file's
+malformed escape at 219:34. It is in **no commit on any branch**. The `build-cost.ts` shape exactly:
+it breaks the production build the moment anything importing it is committed. Not edited — a
+half-written file from another session is worse than an absent one.
+
+▶ **CHARLIE — TWO THINGS, AND THE FIRST IS THE GATE ON EVERYTHING ABOVE.** (1) **Redeploy
+`fts-serve`** (`c268ec09-e489-4cfa-837a-7740d95c24c7`). Proven necessary rather than assumed, with a
+two-sided test: today `{"tier":"guidance","corpora":["cps-guidance"]}` returns **0** rows and
+`{"tier":"other",…}` returns **5**; after the redeploy those must **swap**. ⚠ The latency gain
+reached the service WITHOUT a redeploy (44 s → 2.8–4.2 s) while the tier did not — measured, mechanism
+not asserted. (2) `LEX_GUIDANCE_CPS` can be deleted from Vercel; the code no longer reads it.
+⚠ **Order matters** — between this deploying and the redeploy, `cps-guidance` is briefly unreachable
+again.
+
+## LEX 25-D / 20-E — THE PANEL ANSWERS QUESTIONS, AND AN EMPTY HEADING SAYS WHY IT IS EMPTY (2026-08-21 01:20 UTC)
+
+Executes `docs/BRIEF_25D_20E.md` §1–§6 **in full — §5 was reachable, so nothing was stopped
+short**. Report: **`docs/LEX_25D_REPORT.md`**. `check:lex-25d` **77/77, 26 controls, all fired**;
+`verify:lex-25d` **32/32** live against Neon; `verify:lex-25d --with-model` **37/37**;
+`check:20bd` 47/47; `check:build-25a` 40/40; `check:build-25b` 54/54; `check:lex-25c` 32/32;
+`check:model-reachability --controls` **15 usable / 0 rejected / 0 unusable, 5 controls fired**;
+`check:deepening`, `check:never-claim`, `check:panel-claims`, `check:flags`,
+`check:model-registry`, `check:corpus-types`, `check:llm-guards` all pass; `tsc` clean.
+Schema applied to Neon via `prisma/lex_25d.sql` after `whichdb` (CLAUDE.md §16). **Cost ~3p.**
+
+✅ **THE PANEL IS ORGANISED BY QUESTION, AND THE EMPTY HEADINGS ARE THE PART THAT MATTERED.**
+The ten §25.5 headings replace "primary legislation / debates / committee reports" as the
+organising idea, with the type-grouped list kept and folded underneath. A heading with nothing
+under it renders a **stated gap with one of four typed reasons**, and they must not share a
+sentence: `asked-found-nothing` (the question ran) · `not-asked` (it did not fire on this
+draft) · `no-producer` (**nothing we have can answer it**) · `nothing-added` (the user's own
+material, which is an invitation and not a gap).
+
+⚠⚠ **`no-producer` IS THE ONE THAT WOULD OTHERWISE HAVE BEEN A FALSE STATEMENT ABOUT THE
+WORLD.** *"Who has taken a position"* has no producer — the position graph holds 2.3M signals
+and **nothing in Lex reads it** (§25.8 item 6). Rendering that as "we looked and found nothing"
+blames the record for a gap of ours. The check asserts both directions: no heading may be
+silently unanswerable, **and** a heading declared unanswerable may not also carry findings —
+that combination tells the user their evidence does not exist while showing it to them.
+
+⚠ **Two mappings are judgement calls, both defended in code.** LINEAGE files under "what was
+tried before" because **the current provision is itself a previous attempt**. POLITICAL_RISK
+files under "the strongest case against", NOT "who has taken a position" — it produces attack
+lines, not a register of who voted which way, and filing it there would have let that heading
+look answered while the voting record stayed unread. ⚠ `REVISE` (the build's contradictions) is
+**deliberately unfiled** and says so: it leads the review agenda, and a panel heading would bury
+the build's best output among the source cards again. `check:lex-25d --map` prints the whole
+mapping from the code rather than from a report that goes stale.
+
+⚠⚠ **THE REACHABILITY CHECK CERTIFIED A MODEL ON WHICH EVERY REAL CALL WOULD HAVE FAILED, AND
+IT WAS WATCHED FAILING BEFORE IT WAS FIXED.** With the per-model sampling gate temporarily
+emptied — the pre-fix state — the rewritten check reports **5 REJECTED** with
+*"`temperature` is deprecated for this model"* on `claude-sonnet-5` and four others; with the
+gate restored, **15 usable · 0 rejected**. The probe is now `callModelJson` — production entry
+point, production parameters, production structured-output mode, and a schema that **nests an
+array of objects** because every real schema does. **`UNUSABLE` is the verdict 25-C did not
+have** and is exactly where `claude-sonnet-5` lived: reachable and usable are different claims.
+xAI is an honest exception marked `[ping only]` per model. And **the echoed model now comes back
+on every call**, not only inside the check — a substitution that begins between runs was
+invisible, which is how `grok-3-fast-beta` served a different model for months.
+
+⚠ **Sampling parameters are now per-model across all three vendors plus the build's own Gemini
+client.** 25-C's fix lived inside one vendor branch and listed models that *accept*;
+`REJECTS_TEMPERATURE` states the measured fact instead — five ids, probed live, **an allow-list
+and not a version rule** (`claude-opus-4-8` rejects, `claude-haiku-4-5` accepts).
+`grok-4.20-multi-agent-0309` dropped from `REACHABLE` per Charlie, with the reason recorded
+beside the absence.
+
+✅ **A SOURCE CAN BE SET ASIDE AND STAYS.** `IdeaSourceDecision`, one row per (idea, source) —
+**a row and not a flag, because corpus sources live in JSON columns that RETRIEVAL writes, and
+a decision recorded there is destroyed the next time the search runs.** ⚠⚠ And the row carries
+the source's own title, citation and url: a source excluded today can be gone from retrieval
+tomorrow, and without its own copy "what was considered and set aside" degrades into orphan ids
+— **failing precisely in the case it exists for**. An exclusion with no reason is refused by the
+write path (watched refusing, nothing written); re-including keeps the reason; the route has no
+DELETE.
+
+✅ **PUBLISHING PINS WHAT WAS OPEN.** 20-B/D's distinction is real: the agenda is per-idea and
+continuous, a version is per-artefact and frozen. Proved by moving the state afterwards — live
+snapshot 0 open issues / 0 unresolved decisions / 3 excluded sources; **pinned version 1 / 1 /
+2**. ⚠ One entry per decision point, not per alternative: a three-way fork is three rows sharing
+a `forkKey`, and counting rows would report one open decision as three — which is the number
+§24's *"12 of 14 findings resolved since"* then compares against.
+
+✅ **DOCUMENTS AND LINKS ARE READ ONCE INTO FINDINGS AND NEVER ENTER A PROMPT AGAIN.** No binary
+is stored anywhere. ⚠⚠ **Every quote is verified against the stored text rather than trusted** —
+a reconstructed quote attributed to the user's OWN document is the most damaging thing this
+feature could produce; comparison is on normalised whitespace and quote marks, and a finding
+whose quote is not found is dropped, counted and logged. Live: **3 of 3 findings quoted
+verbatim**, filed under the questions they answer, marked as the user's own. Deleting the idea
+deletes the text and every finding from it — **watched firing**, not inferred from a cascade
+nobody has seen fire.
+
+⚠⚠ **A DEFECT THIS SPRINT INTRODUCED, CAUGHT BY LOOKING AT REAL OUTPUT.** A careless edit to
+the control-character class made it match **the letter `u`**: every uploaded document silently
+lost every `u` (*"Treasury"* → *"Treasry"*), no error, nothing in a log, and no way to notice
+short of reading the stored text. Found by reading the output of a live fetch, which is not a
+method that scales — so `normalise` is exported and the check now asserts **letters survive**,
+with a control that plants a class matching a letter. The same run showed the whitespace
+collapse could not touch what it was for (gov.uk extractions began with hundreds of characters
+of newline-space pairs; those are not consecutive newlines). ⚠ And a **raw NUL byte in the
+source made the module read as BINARY to `grep`** — a guard that grepped it would have matched
+nothing and reported a clean pass.
+
+✅ **THE EVIDENCE PACK AND THE ONLINE VIEW ARE BUILT**, both over the existing snapshot, neither
+reading idea state. The pack groups sources by the question they answer, marks any figure with
+**`NO BASIS STATED`**, lists the ruled-out alternatives and the excluded sources with reasons,
+and states what was outstanding at that version. ⚠ *"Nothing was set aside"* is **stated, not
+omitted** — an absent section reads as "we did not do this part". ⚠ A shape-1 snapshot still
+renders, with the newer sections named as never recorded rather than shown empty. The Online
+View is now the thing rather than a cover sheet: the kernel, causes, actions, rule-outs, the
+evidence by question **with corpus links live**, the set-aside sources, and the pinned
+outstanding block — all from the published version, **no read of live idea state on the page**.
+
+⚠ **The first run of the live harness failed two assertions for a reason that had nothing to do
+with the code**: a `.catch(() => null)` on a setup insert swallowed an invalid enum value, so no
+forks existed and two pinning assertions went red. The catch is gone and the comment says why —
+a setup step that can fail silently turns every assertion downstream of it into noise.
+
+▶ **CHARLIE: STILL NO SIGNED-IN BROWSER WALK.** The extension has no host permission for
+`localhost:3000` and this session has no Clerk session on production, so **the by-question panel
+and the "Your material" control have never been seen in a browser**. Nor has a real
+`multipart/form-data` upload gone through the route — the PDF and Word extractors have not run
+on a real file this sprint, only the text and HTML paths. And the Evidence Pack has not been
+rendered to PDF/docx through R2, so the first download will be the first render.
+
+---
+
 ## LEX 25-C — THE REVIEW AGENDA, AND THE INSTRUMENT FORK FINALLY MOVED (2026-08-20 23:24 UTC)
 
 Executes `docs/BRIEF_25C.md` §1–§5, Charlie's five-point addendum, and the §4c model-reachability
