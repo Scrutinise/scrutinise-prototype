@@ -39,8 +39,13 @@
 import http from 'http'
 import { connectLance, lancedb } from './lance'
 import { CHUNKS_TABLE, VEC_TABLE } from './vector-common'
+import { MAX_CHUNKS } from './chunk'
 import { embedQuery, vectorSearchSections, retrievalConfig } from './vector-core'
 import { QueryCache } from './query-cache'
+
+/** Rows the snippet lookup may read per requested section. Taken from the chunker's own cap so the
+ *  two cannot drift: if MAX_CHUNKS rises, the snippet budget rises with it. See `snippets()`. */
+const SNIPPET_ROWS_PER_SECTION = MAX_CHUNKS
 
 const PORT = parseInt(process.env.VECTOR_PORT ?? '8081', 10)
 // Boot time, so a monitor can tell a restart from a quiet service: /stats counters are
@@ -153,14 +158,47 @@ function send(res: http.ServerResponse, code: number, obj: unknown, headers: Rec
   res.end(JSON.stringify(obj))
 }
 
-/** one snippet per section (its first chunk body) for the top hits */
+/**
+ * one snippet per section (its first chunk body) for the top hits
+ *
+ * ⚠⚠ THE `limit` HERE WAS `sectionIds.length * 4` AND IT SILENTLY STARVED HALF THE RESULTS.
+ *
+ * The row budget is shared across ALL the requested sections, but a section contributes as many
+ * rows as it has chunks — up to `MAX_CHUNKS` (8). So a handful of long documents consume the whole
+ * allowance and every section after them gets no row at all, and therefore no snippet. It is not a
+ * truncation of one snippet; it is the complete absence of some.
+ *
+ * Diagnosed 2026-08-21 (S12) from a reproduction that scales exactly as the arithmetic predicts,
+ * on `tier: caselaw` where documents run to 8 chunks each:
+ *
+ *     limit=1  → 0 of 1  empty
+ *     limit=3  → 1 of 3  empty
+ *     limit=10 → 5 of 10 empty
+ *
+ * ⚠ And the SAME document has a snippet at `limit=3` and none at `limit=10` — which is precisely
+ * what `INGEST_CASELAW_TEXT_REPORT.md` recorded as "its snippet hydration is inconsistent" and
+ * flagged for the search thread. It is not inconsistency; it is a budget, and this is the mechanism.
+ *
+ * ⚠ It was nearly misattributed. The empty snippets appeared during S12's case-law re-cut and
+ * looked exactly like the re-cut having lost the chunks. Reading `corpus_chunks` directly showed
+ * 539,454 chunks present with correct bodies, and the `limit` sweep above showed the rate scaling
+ * with the request rather than with the collection — so it is pre-existing and the re-cut is
+ * exonerated. **Bytes before hypotheses**, in both directions.
+ *
+ * The budget is now per section rather than shared, so no section can be crowded out by another.
+ */
 async function snippets(sectionIds: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>()
   if (!sectionIds.length) return out
   const inList = sectionIds.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')
-  const rows = await chunksTbl.query().where(`sectionId IN (${inList})`).select(['sectionId', 'chunkId', 'body', 'sectionTitle']).limit(sectionIds.length * 4).toArray() as any[]
+  // MAX_CHUNKS (8) is the cap `chunk.ts` enforces, so this is the true worst case, not a guess.
+  const rows = await chunksTbl.query().where(`sectionId IN (${inList})`).select(['sectionId', 'chunkId', 'body', 'sectionTitle']).limit(sectionIds.length * SNIPPET_ROWS_PER_SECTION).toArray() as any[]
   rows.sort((a, b) => (a.chunkId < b.chunkId ? -1 : 1))
   for (const r of rows) if (!out.has(r.sectionId)) out.set(r.sectionId, (r.body ?? '').slice(0, 300))
+  // A section that still got no row is a fault, not an empty document — say so rather than
+  // returning a blank snippet that reads like "this document has no text".
+  const missing = sectionIds.filter((s) => !out.has(s))
+  if (missing.length) console.warn(`[vector-query] ${missing.length}/${sectionIds.length} sections got NO snippet row (budget ${sectionIds.length * SNIPPET_ROWS_PER_SECTION}) — e.g. ${missing.slice(0, 2).join(', ')}`)
   return out
 }
 
