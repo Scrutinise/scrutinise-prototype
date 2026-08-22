@@ -5,17 +5,50 @@
 
 ---
 
-## §0 — THE CONFIRMATION THE BRIEF ASKED FOR, FIRST
+## §0 — THE CONFIRMATION THE BRIEF ASKED FOR, AND IT CHANGED MID-SPRINT
 
-**GOLD V2 has NOT been validated.** `docs/GOLD_CANDIDATES_V2.md` is committed at `680926e` and
-every one of its 24 VERDICT lines is still blank. So, per §0, **§3's baseline runs on the existing
-validated set and this report names it every time it quotes a number**: `SCOREABLE` in
-`scrutinise-web/scripts/gold/s10-gold-set.ts` — **44 questions**, all `scoring: 'recall'`,
-distributed committees 10 · guidance 10 · impact-assessments 9 · consultations 9 · caselaw 6.
+⚠ **This section originally read "GOLD V2 has NOT been validated." Charlie validated it on
+22 August, so the answer — and the question set §3 must use — changed while the sprint was running.
+Both states are recorded rather than the earlier one being overwritten.**
 
-⚠ **`debates` and `legislation` still have zero questions**, which is the gap GOLD V2 exists to
-close and the reason S10's §2 decisions for those two streams remain held on absence of evidence.
-Nothing in this sprint changes that.
+**GOLD V2 is validated: 24 of 24 reviewed — 22 ACCEPT, 2 AMEND, 0 REJECT.**
+
+⚠ **The two AMENDs are applied, not counted as accepts.** A set that recorded an amendment as an
+acceptance would be scoring questions nobody approved in that wording:
+
+| | as drafted | as validated |
+|---|---|---|
+| **Q6** | "…bringing back **hanging**?" | "…bringing back **the death penalty**?" |
+| **Q12** | "Can my landlord **make me leave**…?" | "Can my landlord **evict me**…?" |
+
+⚠⚠ **Q6's amendment also reclassifies it, and the count moves with it.** It was one of the nine
+questions deliberately phrased in words the document does not use — but "the death penalty" **is**
+the document's own wording (`DEATH PENALTY (ABOLITION) BILL`). So it is no longer a
+vocabulary-avoided question and that count drops **9 → 8** (§3 of the gold brief requires ≥3).
+Charlie's wording is plainly the better question; the reclassification is recorded so the ≥3
+requirement is not quietly made to look larger than it is.
+
+### So §3's baseline uses the ENLARGED set, and this report names it wherever a number is quoted
+
+| set | questions | streams covered |
+|---|---:|---|
+| `SCOREABLE` (`gold/s10-gold-set.ts`) | 44 | committees 10 · guidance 10 · impact-assessments 9 · consultations 9 · caselaw 6 |
+| `SCOREABLE_V2` (`gold/gold-v2-set.ts`) — **new** | **21** | **debates 11 · legislation 10** |
+| **combined, recall-scoreable** | **65** | |
+| negative controls (behaviour-scored; **a 0% is a PASS**) | 3 | excluded from `SCOREABLE_V2` by construction |
+
+✅ **`debates` and `legislation` have questions for the first time.** That closes the gap that has
+held S10's §2 decisions for those two streams on absence of evidence since the set existed.
+
+**Transcribed** to `scrutinise-web/scripts/gold/gold-v2-set.ts`, with **`npm run check:goldv2`**
+asserting the transcription against the document Charlie signed off — same ids both ways, every
+question text character-for-character, every verdict, every key, and the negative controls carrying
+none. **24 questions · 27 keys · both directions · no sampling · ALL CHECKS PASS.**
+
+⚠ **The keys are taken from `verify-goldv2-keys.ts`, not from the prose.** The markdown abbreviates
+shared prefixes with an ellipsis (`…:78`), so a regex over the document silently drops keys — it
+found 24 of 27 when tried. The verified list, every entry of which was read back out of R2, is the
+authority and the check asserts both directions against it.
 
 ---
 
@@ -352,8 +385,9 @@ never passed is a check that cannot fail**, which is the section this sits under
    under a $40 ceiling, and every completed shard is recorded.**
 2. ❌ **§3's baseline is untaken.** The brief is explicit that it runs *after* §2 lands, and taking
    it now would produce exactly the kind of number this sprint exists to stop circulating: measured
-   against an index in the middle of being replaced. **The harness, the question set and the index
-   stamp are all ready** — see below.
+   against an index in the middle of being replaced. **The question set (now 65), the index stamp
+   and the harness are ready**; the one remaining step is pointing `measure-s10-recall.ts` at
+   `SCOREABLE_V2` as well as `SCOREABLE`, deliberately left to the session that runs it.
 3. ⚠ **`tna-caselaw` is in the R3 state until phase 2 completes** — new chunks, partly-old vectors.
    Visible, not silent: `--verify` reports G1/G2 red.
 4. ⚠ **The phase-1 whole-collection chunk delete** (§1) is a real design fault, named and not
@@ -394,8 +428,11 @@ POST /vector-search {"query":"judicial review of a planning decision","limit":10
 case-law snippet is judgment text rather than CSS. `GET /stats` → `started_at` moves.
 
 **Q4 — Then take the baseline (§3), and it is the first one that can be compared to anything
-later.** Everything it needs is in place: the 44-question set, the harness, and `index-state.ts` to
-stamp which index produced the number.
+later.** Everything it needs is in place: the **65-question** set (44 + GOLD V2's 21, now
+validated), the harness, and `index-state.ts` to stamp which index produced the number.
+⚠ **The harness reads `SCOREABLE` only** — wiring `SCOREABLE_V2` into `measure-s10-recall.ts` is a
+small change and is NOT done, because it should be made and exercised in the same session as the
+run it feeds, not shipped blind ahead of it.
 ```
 cd scrutinise-web
 FTS_SEARCH_URL=https://fts-serve-production-4cea.up.railway.app \
@@ -406,8 +443,13 @@ LEX_QUERY_ROUTER=true LEX_VECTOR_STREAMS=legislation,caselaw,guidance,committees
 ⚠ **State the configuration and the index version beside the number**, and **do not present it as
 "recall improved from 34%"** — S10's figure is void, not a comparison point. This is a new baseline.
 
-**Q5 — GOLD V2 still needs your validation pass.** It gates the debates/legislation evaluation, the
-treaty decision in §4, and the `limit` semantics decision carried over from S11.
+**Q5 — ~~GOLD V2 still needs your validation pass.~~ ✅ DONE, 22 August.** 22 ACCEPT, 2 AMEND
+(applied), 0 REJECT. What it unblocks, now actionable:
+- **the debates/legislation evaluation** — §3's baseline can report those two streams for the first
+  time;
+- **§4's treaty decision** — admitting `TREATY` to the `debates` stream can now ship with a
+  before/after, which is what made it undecidable yesterday;
+- **the `limit` semantics decision** carried over from S11 §5.1.
 
 ---
 

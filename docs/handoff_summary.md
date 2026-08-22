@@ -2,7 +2,22 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-21 22:17 UTC — ▼ **SEARCH S12: THE REPLACE PATH EXISTS AND THE BRIEF'S
+*Last updated: 2026-08-22 01:32 UTC — ▼ **SEARCH GOLD v2 IS VALIDATED — 24 of 24: 22 ACCEPT,
+2 AMEND, 0 REJECT — and `debates` and `legislation` have test questions for the first time.** The
+baseline set goes **44 → 65 recall-scoreable** (+3 negative controls, where a 0% is a PASS).
+⚠ **The two AMENDs are APPLIED, not logged as accepts** (Q6 "hanging" → "the death penalty"; Q12
+"make me leave" → "evict me"), and ⚠⚠ **Q6's amendment reclassifies it** — "the death penalty" IS
+the document's own wording, so it stops being a vocabulary-avoided question and that count drops
+**9 → 8**. Transcribed to `gold/gold-v2-set.ts`; `npm run check:goldv2` asserts it against the
+signed-off document in both directions, 24 questions · 27 keys · no sampling. ⚠ Keys come from the
+R2-verified list, NOT the prose — the markdown's ellipsis shorthand makes a regex drop 3 of 27.
+✅ This unblocks S12 §4's treaty decision (it can now ship with a before/after) and S10's held
+debates/legislation vector settings. ❌ **S12 §2's case-law embed is still running** — 4 of 14
+shards, 160,000 vectors, **$9.44 of ~$33**, paced by Batch-API 429s at 90s a time; §3's baseline is
+gated on it and is NOT taken. ▶ CHARLIE: let it finish → `vector-index` job → **redeploy
+`vector-serve`** (today a caselaw `limit=10` returns 5 of 10 EMPTY snippets, after it 0 of 10) →
+then the 65-question baseline. `docs/SEARCH_S12_REPORT.md`.**
+Earlier: 2026-08-21 22:17 UTC — ▼ **SEARCH S12: THE REPLACE PATH EXISTS AND THE BRIEF'S
 PREMISE WAS WRONG.** There is no global chunk numbering — `chunkId` is `${sectionId}#${k}`,
 content-addressed, and every fetch and delete keys off it by RANGE, so re-cutting one collection
 cannot attach another's vectors to different text. What IS global is the shard plan, so the real

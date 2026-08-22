@@ -251,6 +251,39 @@ Then `docs/POSITION_VALIDATION_CANDIDATES.md`, 50 PRIORITY rows.
 
 ---
 
+## SEARCH GOLD v2 — VALIDATED, TRANSCRIBED, AND THE TWO AMENDMENTS APPLIED (2026-08-22 01:32 UTC)
+
+Charlie completed the validation pass: **24 of 24 reviewed — 22 ACCEPT, 2 AMEND, 0 REJECT.**
+`npm run check:goldv2` **passes: 24 questions · 27 keys · both directions · no sampling.**
+
+⚠ **THE TWO AMENDS ARE APPLIED, NOT RECORDED AS ACCEPTS** — a set that logged an amendment as an
+acceptance would be scoring questions nobody approved in that wording. **Q6** "bringing back
+hanging" → "bringing back **the death penalty**"; **Q12** "make me leave" → "**evict me**".
+
+⚠⚠ **AND Q6's AMENDMENT RECLASSIFIES IT, SO THE COUNT MOVED.** It was one of the nine questions
+deliberately phrased in words the document does NOT use — but "the death penalty" **is** the
+document's own wording (`DEATH PENALTY (ABOLITION) BILL`). It is no longer vocabulary-avoided and
+that count drops **9 → 8** (§3 requires ≥3). Charlie's wording is the better question; the
+reclassification is recorded so the requirement is not quietly made to look larger than it is.
+
+✅ **TRANSCRIBED to `scrutinise-web/scripts/gold/gold-v2-set.ts`** in the shape the harness reads,
+with `check-goldv2.ts` asserting it against the document Charlie signed off: same ids both ways,
+every question text character-for-character, every verdict, every key, and the negative controls
+carrying none and excluded from `SCOREABLE_V2`. ⚠ **The keys come from `verify-goldv2-keys.ts`, not
+from the prose** — the markdown abbreviates shared prefixes with an ellipsis (`…:78`), so a regex
+over the document silently drops keys (it found **24 of 27** when tried). The verified list, every
+entry read back out of R2, is the authority.
+
+✅ **`debates` and `legislation` HAVE QUESTIONS FOR THE FIRST TIME**, so the baseline set goes
+**44 → 65 recall-scoreable** (+ 3 behaviour-scored negative controls, where a 0% is a PASS). That
+closes the gap holding S10's §2 decisions for those two streams on absence of evidence, and it makes
+S12 §4's treaty decision measurable — admitting `TREATY` to `debates` can now ship with a
+before/after, which is exactly what made it undecidable a day ago.
+
+▶ Still gated on S12 §2's embed: the baseline itself. The one remaining wiring step is pointing
+`measure-s10-recall.ts` at `SCOREABLE_V2` as well as `SCOREABLE`, deliberately left to the session
+that runs it rather than shipped blind ahead of it.
+
 ## SEARCH S12 — A SAFE WAY TO REPLACE EMBEDDINGS, AND THE PREMISE THAT WAS WRONG (2026-08-21 22:17 UTC)
 
 Executes `docs/BRIEF_SEARCH_S12.md` §0–§7. Report: **`docs/SEARCH_S12_REPORT.md`**.
