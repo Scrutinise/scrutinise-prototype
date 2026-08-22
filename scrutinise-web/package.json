@@ -83,6 +83,7 @@
     "verify:20bd": "tsx --env-file=.env scripts/verify-20bd-live.ts",
     "check:s9-catalogue": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s9-catalogue.ts",
     "measure:s9-stats": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-s9-stats-stream.ts",
+    "check:goldv2": "tsx --tsconfig tsconfig.json scripts/check-goldv2.ts",
     "check:s10-fusion": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s10-fusion.ts",
     "check:s10-stats-licence": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-s10-stats-licence.ts",
     "verify:s10-keys": "tsx --env-file=.env --tsconfig tsconfig.json scripts/verify-s10-keys.ts",
