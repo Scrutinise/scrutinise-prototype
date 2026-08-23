@@ -19,19 +19,19 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import PublicNav from '@/components/PublicNav'
 import BuildProgress from '@/components/lex/BuildProgress'
 import {
-  CONFIRM_YES_LABEL, CONFIRM_NO_LABEL, CORRECTION_PROMPT,
-} from '@/lib/lex/elicitation-config'
+  QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
+  Spinner, type StepView,
+} from '@/components/lex/ElicitationCards'
 
 // The server's shapes, restated for the client. Kept structural rather than imported
 // wholesale so this file cannot accidentally pull server-only code into the bundle.
-interface StepView {
-  key: string; label: string; question: string; hints: string[]
-  optional: boolean; done: boolean; answer: string | null
-}
 interface Msg { role: string; content: string; stage?: string; field?: string }
+export type ElicitationPhase = 'QUESTION' | 'UNDERSTANDING_FAILED' | 'AWAITING_CONFIRMATION' | 'CONFIRMED'
 export interface ElicitationState {
   ideaId: string
   status: 'IN_PROGRESS' | 'AWAITING_CONFIRMATION' | 'CONFIRMED'
+  /** 25-E §1 — the ONE value this component switches on. The server decides it. */
+  phase: ElicitationPhase
   steps: StepView[]
   currentStep: string | null
   understanding: string | null
@@ -137,22 +137,18 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
   }
 }
 
-function Spinner({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-    </svg>
-  )
-}
 
-export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: string }) {
+export default function BuildIdeaClient(
+  { initialIdeaId, resumed = false }: { initialIdeaId?: string; resumed?: boolean },
+) {
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
   const [elicit, setElicit] = useState<ElicitationState | null>(null)
   const [build, setBuild] = useState<BuildState | null>(null)
   const [booting, setBooting] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** TRUE when the elicitation moved and the build half could not be re-read with it. */
+  const [buildStale, setBuildStale] = useState(false)
   const bootedRef = useRef(false)
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** 25-B §1 — the pass this client currently has in flight, so polls do not stack POSTs. */
@@ -172,7 +168,6 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   const [ruledOut, setRuledOut] = useState('')
   const [readingUrl, setReadingUrl] = useState('')
   const [correction, setCorrection] = useState('')
-  const [correcting, setCorrecting] = useState(false)
   /** AMENDMENT_25B §C4 — the checkbox, seeded from the user's remembered default. */
   const [emailWhenDone, setEmailWhenDone] = useState(false)
   const emailSeededRef = useRef(false)
@@ -196,6 +191,23 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
           })
           id = created.id as string
           setIdeaId(id)
+        }
+        // ⚠⚠ 25-E §2 — PUT THE ID IN THE URL. THE SINGLE MOST IMPORTANT LINE IN THIS FILE.
+        //
+        // Without it, this page minted a new idea on EVERY visit and kept the id in React
+        // state only — so a refresh started a blank elicitation on a fresh idea and orphaned
+        // everything the user had written. They had not lost their answers (those were in the
+        // database all along); they had lost the way back to them, which to the person sitting
+        // there is the same thing and is why Charlie stopped.
+        //
+        // `replaceState`, not `pushState`: the id is not a navigation the user made, and it
+        // must not put a step in their Back history.
+        if (typeof window !== 'undefined' && id) {
+          const url = new URL(window.location.href)
+          if (url.searchParams.get('ideaId') !== id) {
+            url.searchParams.set('ideaId', id)
+            window.history.replaceState(null, '', url.toString())
+          }
         }
         const [e, b] = await Promise.all([
           getJson(`/api/ideas/${id}/elicitation`, cid),
@@ -230,6 +242,31 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
     if (e) setElicit(e)
     if (b) setBuild(b)
   }, [ideaId])
+
+  /**
+   * 25-E §1 — APPLY BOTH HALVES OF A MUTATION'S ANSWER.
+   *
+   * ⚠⚠ THE DEFECT THIS REPLACES STOPPED THE ENTIRE PRODUCT. `confirm()` used to write
+   * `setElicit(...)` and nothing else, leaving `build` as the object fetched at boot — the
+   * one that said `canStart: false` and *"Confirm what I've understood first"*. So confirming
+   * removed the confirmation buttons and revealed a permanently greyed-out "Build it" beside
+   * a note demanding the user confirm. There was no way forward and no way back.
+   *
+   * ⚠ AND THE PROOF IS IN THE DATABASE: eleven elicitation rows, one CONFIRMED — and
+   * `IdeaBuild` is EMPTY. Not one build has ever been started, by anyone, on this platform.
+   * A user reached the end of the flow, agreed to the reading, and could not get past it.
+   *
+   * The route now returns both halves from the one request that changed either. `build` is
+   * only overwritten when the server actually sent it: a null means "unreadable", and keeping
+   * a stale object is better than blanking a panel — but it must never be treated as fresh,
+   * so `buildStale` below says so on screen.
+   */
+  const applyMutation = useCallback((data: Record<string, unknown> | null) => {
+    if (!data) return
+    if (data.state) setElicit(data.state as ElicitationState)
+    if (data.build) { setBuild(data.build as BuildState); setBuildStale(false) }
+    else if (data.state) setBuildStale(true)
+  }, [])
 
   // Poll ONLY while a build is actually running. The status shown is the status the
   // server stored — nothing here infers "probably finished by now".
@@ -384,20 +421,24 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
       ruledOut: ruledOut || undefined, readingUrl: readingUrl || undefined, ...extra,
     })
     if (data?.state) {
-      setElicit(data.state as ElicitationState)
+      applyMutation(data)
       setText(''); setGoalKind(''); setRuledOut(''); setReadingUrl('')
     }
-  }, [elicit?.currentStep, post, text, goalKind, ruledOut, readingUrl])
+  }, [elicit?.currentStep, post, text, goalKind, ruledOut, readingUrl, applyMutation])
 
   const confirm = useCallback(async () => {
-    const data = await post('/elicitation', { action: 'confirm' })
-    if (data?.state) setElicit(data.state as ElicitationState)
-  }, [post])
+    applyMutation(await post('/elicitation', { action: 'confirm' }))
+  }, [post, applyMutation])
 
   const sendCorrection = useCallback(async () => {
     const data = await post('/elicitation', { action: 'correct', text: correction })
-    if (data?.state) { setElicit(data.state as ElicitationState); setCorrecting(false); setCorrection('') }
-  }, [post, correction])
+    if (data?.state) { applyMutation(data); setCorrection('') }
+  }, [post, correction, applyMutation])
+
+  /** 25-E §1 — the paragraph failed to write. Try again. Not a correction. */
+  const retryUnderstanding = useCallback(async () => {
+    applyMutation(await post('/elicitation', { action: 'retry' }))
+  }, [post, applyMutation])
 
   /**
    * Start the build. The POST is deliberately NOT awaited for the UI: it runs the whole
@@ -447,7 +488,48 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
   }, [post, refresh])
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  //
+  // 25-E §1 — ONE SWITCH ON ONE SERVER-DECIDED VALUE. The previous version chose between
+  // three blocks with three independent conditions, and there is a reachable state in which
+  // all three are false — which is a page with no controls on it. `phase` is a closed union
+  // and the render below covers every member, so that state cannot be reached again.
+  //
+  // ⚠ `?? 'QUESTION'` IS FOR ONE CASE ONLY: a client that has been served before the server
+  // that sends `phase`. It is not a fallback for an unexpected value — an unknown phase falls
+  // to the explicit default at the bottom, which SAYS it does not know rather than showing
+  // nothing.
   const step = elicit?.steps.find((s) => s.key === elicit.currentStep) ?? null
+
+  /**
+   * 25-E §4b — WHY SEND IS DISABLED, IN WORDS, BESIDE THE BUTTON.
+   *
+   * ⚠ A disabled control that does not say what would enable it is the same defect as §1a in
+   * miniature, and it cost Charlie the same kind of time: he could not press Send on question
+   * two and nothing on the page told him a category had to be chosen first. Returning the
+   * REASON rather than a boolean means the button and the explanation cannot disagree —
+   * there is one expression, and the sentence is derived from it.
+   */
+  const blockedSend: string | null = !step ? null
+    : step.key === 'problem' && !text.trim() ? 'Write something first — anything at all.'
+      : step.key === 'goal' && !goalKind ? 'Pick one of the four above to carry on.'
+        : null
+
+  /**
+   * ⚠⚠ 25-E §1 — THE BACKSTOP, AND IT IS THE POINT OF THE WHOLE SECTION.
+   *
+   * `phase` is a closed union and every member has a block below, so this should always be
+   * true. It is computed anyway, because the defect that stopped this product for eight
+   * sprints was precisely a combination of conditions nobody had checked was exhaustive —
+   * and the symptom was a page with nothing on it, which is indistinguishable from a crash.
+   *
+   * If this is ever false the user gets a sentence and a way out instead of a blank panel,
+   * and `check:lex-25e` asserts it holds for every reachable state.
+   */
+  const rendersAControl =
+    (elicit?.phase === 'QUESTION' && !!step)
+    || elicit?.phase === 'UNDERSTANDING_FAILED'
+    || elicit?.phase === 'AWAITING_CONFIRMATION'
+    || elicit?.phase === 'CONFIRMED'
   const latest = build?.latest ?? null
   const running = latest?.status === 'RUNNING' || latest?.status === 'QUEUED'
   const finished = latest?.status === 'DONE'
@@ -468,6 +550,22 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
         ) : (
           <>
+            {/* ⚠ 25-E §2 — THE RESUMPTION IS ANNOUNCED. "Never silently discard" cuts both
+                ways: silently RESTORING is nearly as disorienting, because the user cannot
+                tell whether what they are looking at is theirs or a fresh start. Charlie's
+                refresh gave him a blank form and he concluded — correctly, from what he could
+                see — that four questions of writing were gone. */}
+            {resumed && (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+                <p className="text-sm text-emerald-900">
+                  Picking up where you left off — everything you told me is still here.
+                </p>
+                <a href="/ideas/build?fresh=1" className="text-xs text-emerald-800 underline">
+                  Start a different idea instead
+                </a>
+              </div>
+            )}
+
             {/* The step rail — four questions, then a confirmation. Shows how short this is. */}
             <ol className="flex flex-wrap gap-2 mb-6 text-[11px] font-medium">
               {elicit.steps.map((s) => (
@@ -505,197 +603,60 @@ export default function BuildIdeaClient({ initialIdeaId }: { initialIdeaId?: str
                 ))}
             </div>
 
-            {/* ── The current question ──────────────────────────────────────── */}
-            {elicit.status !== 'CONFIRMED' && elicit.currentStep !== 'confirm' && step && (
-              <div className="border border-zinc-200 rounded-2xl p-4">
-                <p className="text-sm font-semibold text-zinc-900">{step.label}</p>
-                <p className="text-sm text-zinc-600 mt-1">{step.question}</p>
-                {step.hints.length > 0 && (
-                  <ul className="mt-2 text-xs text-zinc-400 list-disc list-inside space-y-0.5">
-                    {step.hints.map((h) => <li key={h}>{h}</li>)}
-                  </ul>
-                )}
-
-                {step.key === 'goal' && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {elicit.goalKinds.map((g) => (
-                      <button
-                        key={g.key}
-                        onClick={() => setGoalKind(g.key)}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-full border ${
-                          goalKind === g.key
-                            ? 'bg-zinc-900 text-white border-zinc-900'
-                            : 'bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50'
-                        }`}
-                      >
-                        {g.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {step.key === 'reading' && (
-                  <input
-                    value={readingUrl}
-                    onChange={(e) => setReadingUrl(e.target.value)}
-                    placeholder="https://…"
-                    className="mt-3 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2"
-                  />
-                )}
-
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  rows={step.key === 'problem' ? 8 : 4}
-                  placeholder={
-                    step.key === 'goal' ? 'Anything more about what you want? (optional)'
-                      : step.key === 'reading' ? 'Or tell me what it is (optional)'
-                        : 'In your own words…'
-                  }
-                  className="mt-3 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 leading-relaxed"
-                />
-
-                {step.key === 'goal' && (
-                  <textarea
-                    value={ruledOut}
-                    onChange={(e) => setRuledOut(e.target.value)}
-                    rows={2}
-                    placeholder="Anything you’ve already ruled out, and why (optional)"
-                    className="mt-2 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2"
-                  />
-                )}
-
-                {/* Exchange 4 says plainly that Lex cannot read it yet. Never-claim, at the
-                    point of asking rather than in a footnote afterwards. */}
-                {step.key === 'reading' && (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    I’ll keep it with the idea, but I can’t read documents yet — nothing I draft will
-                    come from it. That’s a later sprint, and I’d rather say so than pretend.
-                  </p>
-                )}
-
-                <div className="flex items-center gap-2 mt-3">
-                  <button
-                    onClick={() => void answer()}
-                    disabled={busy || (step.key === 'problem' && !text.trim()) || (step.key === 'goal' && !goalKind)}
-                    className="text-sm font-semibold px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 inline-flex items-center gap-2"
-                  >
-                    {busy && <Spinner className="w-3.5 h-3.5" />}
-                    Send
-                  </button>
-                  {step.optional && (
-                    <button
-                      onClick={() => void answer({ skip: true })}
-                      disabled={busy}
-                      className="text-sm font-medium px-3 py-2 rounded-full border border-zinc-300 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40"
-                    >
-                      Nothing to add
-                    </button>
-                  )}
-                </div>
-              </div>
+            {/* ══ THE PHASE SWITCH ══════════════════════════════════════════════
+                One value, from a closed union, every member handled — and each card is a
+                pure component so `verify:lex-25e-ui` can RENDER it and assert a usable
+                control comes out. That is the only kind of check that could have caught the
+                defect this sprint fixed. */}
+            {elicit.phase === 'QUESTION' && step && (
+              <QuestionCard
+                step={step}
+                goalKinds={elicit.goalKinds}
+                text={text} onText={setText}
+                goalKind={goalKind} onGoalKind={setGoalKind}
+                ruledOut={ruledOut} onRuledOut={setRuledOut}
+                readingUrl={readingUrl} onReadingUrl={setReadingUrl}
+                blockedSend={blockedSend}
+                busy={busy}
+                onSend={() => void answer()}
+                onSkip={() => void answer({ skip: true })}
+              />
             )}
 
-            {/* ── §1c The confirmation ──────────────────────────────────────── */}
-            {elicit.status === 'AWAITING_CONFIRMATION' && !correcting && (
-              <div className="border-2 border-blue-200 bg-blue-50/40 rounded-2xl p-4">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => void confirm()}
-                    disabled={busy}
-                    className="text-sm font-semibold px-4 py-2 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40 inline-flex items-center gap-2"
-                  >
-                    {busy && <Spinner className="w-3.5 h-3.5" />}
-                    {CONFIRM_YES_LABEL}
-                  </button>
-                  <button
-                    onClick={() => setCorrecting(true)}
-                    disabled={busy}
-                    className="text-sm font-medium px-4 py-2 rounded-full border border-zinc-300 text-zinc-700 hover:bg-white disabled:opacity-40"
-                  >
-                    {CONFIRM_NO_LABEL}
-                  </button>
-                </div>
-              </div>
+            {elicit.phase === 'UNDERSTANDING_FAILED' && (
+              <UnderstandingFailedCard busy={busy} onRetry={() => void retryUnderstanding()} />
             )}
 
-            {correcting && (
-              <div className="border border-zinc-200 rounded-2xl p-4">
-                <p className="text-sm text-zinc-600">{CORRECTION_PROMPT}</p>
-                <textarea
-                  value={correction}
-                  onChange={(e) => setCorrection(e.target.value)}
-                  rows={4}
-                  className="mt-2 w-full text-sm border border-zinc-300 rounded-lg px-3 py-2"
-                />
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => void sendCorrection()}
-                    disabled={busy || !correction.trim()}
-                    className="text-sm font-semibold px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 inline-flex items-center gap-2"
-                  >
-                    {busy && <Spinner className="w-3.5 h-3.5" />}
-                    Say it back to me
-                  </button>
-                  <button
-                    onClick={() => setCorrecting(false)}
-                    className="text-sm font-medium px-3 py-2 rounded-full text-zinc-500 hover:bg-zinc-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+            {elicit.phase === 'AWAITING_CONFIRMATION' && (
+              <ConfirmationCard
+                correction={correction}
+                onCorrection={setCorrection}
+                busy={busy}
+                onConfirm={() => void confirm()}
+                onCorrect={() => void sendCorrection()}
+              />
             )}
 
-            {/* ── §2 The build ─────────────────────────────────────────────── */}
-            {elicit.status === 'CONFIRMED' && !latest && (
-              <div className="border border-zinc-200 rounded-2xl p-4">
-                <p className="text-sm text-zinc-700">
-                  That’s everything I need. I’ll go and draft the whole thing — the diagnosis, the
-                  approach and the actions — and show you what I’ve got. It usually takes a few
-                  minutes, and you can stop it at any point.
-                </p>
-                <button
-                  onClick={startBuild}
-                  disabled={busy || !build?.canStart}
-                  className="mt-3 text-sm font-semibold px-5 py-2.5 rounded-full bg-zinc-900 text-white hover:opacity-90 disabled:opacity-40"
-                >
-                  Build it
-                </button>
-
-                {/* AMENDMENT_25B §C4 — the estimate, BEFORE they commit to waiting.
-                    It is a measurement or it is an admission; `estimate.line` is
-                    already whichever of those is true, so there is no branch here
-                    that could accidentally quote a figure we do not have. */}
-                {build?.estimate && (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {build.estimate.line}
-                    {build.estimate.meanSeconds != null && (
-                      <span className="text-zinc-400"> (from the last {build.estimate.sampleSize} builds)</span>
-                    )}
-                  </p>
-                )}
-
-                {/* §C4 — the email offer, driven by the same number. Below about three
-                    minutes there is no offer at all: they will just wait, and an
-                    unrequested email for a two-minute job is a nuisance. */}
-                {build?.estimate?.offerEmail && build.canStart && (
-                  <label className="mt-2 flex items-center gap-2 text-xs text-zinc-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={emailWhenDone}
-                      onChange={(e) => setEmailWhenDone(e.target.checked)}
-                      className="rounded border-zinc-300"
-                    />
-                    Email me when it’s done
-                  </label>
-                )}
-
-                {build?.blockedReason && !build.canStart && (
-                  <p className="mt-2 text-xs text-amber-700">{build.blockedReason}</p>
-                )}
-              </div>
+            {elicit.phase === 'CONFIRMED' && !latest && (
+              <StartBuildCard
+                canStart={!!build?.canStart}
+                blockedReason={build?.blockedReason ?? null}
+                buildStale={buildStale}
+                estimateLine={build?.estimate?.line ?? null}
+                sampleSize={build?.estimate?.sampleSize ?? 0}
+                hasMean={build?.estimate?.meanSeconds != null}
+                offerEmail={!!build?.estimate?.offerEmail}
+                emailWhenDone={emailWhenDone}
+                onEmailWhenDone={setEmailWhenDone}
+                busy={busy}
+                onStart={startBuild}
+                onRetryState={() => void refresh()}
+              />
             )}
+
+            {/* ⚠ THE DEAD-END BACKSTOP. See `rendersAControl`. A user must never be looking
+                at a page with no way forward — that is what "it crashed" looked like. */}
+            {!rendersAControl && <NothingToShowCard busy={busy} onReload={() => void refresh()} />}
 
             {latest && (
               <BuildProgress
