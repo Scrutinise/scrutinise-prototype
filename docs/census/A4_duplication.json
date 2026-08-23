@@ -1,0 +1,67 @@
+{
+ "generated": "2026-08-23T01:40:35.307Z",
+ "results": [
+  {
+   "pair": "Hansard Commons",
+   "a": "historic-hansard",
+   "b": "pwdata-debates",
+   "query": "the Prime Minister was asked about the situation in Northern Ireland internment",
+   "fromA": 2,
+   "fromB": 28,
+   "proved": true
+  },
+  {
+   "pair": "Hansard Lords",
+   "a": "historic-hansard",
+   "b": "pwdata-lords",
+   "query": "My Lords, I beg to move that this Bill be now read a second time",
+   "fromA": 20,
+   "fromB": 10,
+   "proved": true
+  },
+  {
+   "pair": "Commons divisions",
+   "a": "lda-commonsdivisions",
+   "b": "commons-divisions-votes",
+   "query": "division ayes noes European Union Withdrawal Agreement",
+   "fromA": 15,
+   "fromB": 15,
+   "proved": true
+  },
+  {
+   "pair": "Lords divisions",
+   "a": "lda-lordsdivisions",
+   "b": "lords-divisions-votes",
+   "query": "contents not contents division on the amendment",
+   "fromA": 0,
+   "fromB": 30,
+   "proved": false
+  },
+  {
+   "pair": "Treaties",
+   "a": "uk-treaties",
+   "b": "uk-treaties-fcdo",
+   "query": "agreement between the government of the United Kingdom and the government concerning air services",
+   "fromA": 26,
+   "fromB": 4,
+   "proved": true
+  },
+  {
+   "pair": "Written answers (retired)",
+   "a": "lda-lordswrittenquestions",
+   "b": "pwdata-lordswrans",
+   "query": "to ask Her Majesty's Government what representations they have made to the government of China",
+   "fromA": 0,
+   "fromB": 30,
+   "proved": false
+  },
+  {
+   "pair": "CONTROL — a subject in only one collection",
+   "a": "et-decisions",
+   "b": "pwdata-debates",
+   "fromA": 30,
+   "fromB": 0,
+   "controlOk": true
+  }
+ ]
+}

@@ -1,0 +1,705 @@
+{
+ "generated": "2026-08-23T01:50:31.729Z",
+ "probed": 87,
+ "withText": 11,
+ "totalSections": 182,
+ "totalWords": 39190,
+ "results": [
+  {
+   "docId": "ukpga/Vict/63-64/52",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/51",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/50",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/49",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/48",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/47",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/46",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/45",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/44",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/43",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/42",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/41",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/40",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/39",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/38",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/37",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/36",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/35",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/5",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/63-64/4",
+   "year": 1900,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/51",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/49",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/48",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 2,
+   "words": 302,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/47",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/46",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/45",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/44",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/43",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/41",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/40",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/39",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/38",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/37",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/36",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/35",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 52,
+   "words": 13436,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/34",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/33",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/32",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/5",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/9-10/4",
+   "year": 1919,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/60",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/59",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/58",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/57",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/56",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/55",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 11,
+   "words": 2665,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/9",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/8",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/7",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/12-13/6",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5Sess2/13/4",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "error: ukpga/Geo5Sess2/13/4: no CLML/HTML/PDF, and at least one for"
+  },
+  {
+   "docId": "ukpga/Geo5Sess2/13/3",
+   "year": 1922,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "error: ukpga/Geo5Sess2/13/3: no CLML/HTML/PDF, and at least one for"
+  },
+  {
+   "docId": "ukpga/Geo5/13-14/10",
+   "year": 1923,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/13-14/1",
+   "year": 1923,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/2",
+   "year": 1932,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/29",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/28",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/27",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/26",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/25",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/24",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/23",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/22",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/21",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/20",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 9,
+   "words": 265,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/19",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 25,
+   "words": 302,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/18",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/16",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo5/23-24/15",
+   "year": 1933,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/5",
+   "year": 1936,
+   "reason": "classb",
+   "sections": 32,
+   "words": 9275,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/56",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/55",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/54",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 15,
+   "words": 405,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/53",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/52",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/51",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Edw8and1Geo6/1/50",
+   "year": 1937,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6/2-3/111",
+   "year": 1939,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6/2-3/110",
+   "year": 1939,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/9",
+   "year": 1951,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/8",
+   "year": 1951,
+   "reason": "classb",
+   "sections": 4,
+   "words": 833,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/7",
+   "year": 1951,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/68",
+   "year": 1952,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/67",
+   "year": 1952,
+   "reason": "classb",
+   "sections": 24,
+   "words": 9534,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Geo6and1Eliz2/15-16/65",
+   "year": 1952,
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/1968/2",
+   "year": 1968,
+   "reason": "classb",
+   "sections": 6,
+   "words": 2107,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/1996/59",
+   "year": 1996,
+   "reason": "classb",
+   "sections": 2,
+   "words": 66,
+   "outcome": "ok"
+  }
+ ]
+}

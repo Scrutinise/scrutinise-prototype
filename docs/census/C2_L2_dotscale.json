@@ -1,0 +1,88 @@
+{
+  "instrument": "20+ period run",
+  "samples": [
+    {
+      "population": 319319,
+      "label": "retained-eu unflagged",
+      "sampled": 600,
+      "r2_missing": 0,
+      "read": 600,
+      "dot_leaders": 222,
+      "pct": 37,
+      "ci95": "±3.86",
+      "wordCounts_of_dot_leaders": [
+        [
+          "34",
+          209
+        ],
+        [
+          "33",
+          3
+        ],
+        [
+          "58",
+          1
+        ],
+        [
+          "65",
+          1
+        ],
+        [
+          "79",
+          1
+        ],
+        [
+          "208",
+          1
+        ]
+      ]
+    },
+    {
+      "population": 1601619,
+      "label": "ALL legislation unflagged",
+      "sampled": 800,
+      "r2_missing": 0,
+      "read": 800,
+      "dot_leaders": 54,
+      "pct": 6.75,
+      "ci95": "±1.74",
+      "wordCounts_of_dot_leaders": [
+        [
+          "34",
+          34
+        ],
+        [
+          "33",
+          1
+        ],
+        [
+          "64",
+          1
+        ],
+        [
+          "78",
+          1
+        ],
+        [
+          "146",
+          1
+        ],
+        [
+          "148",
+          1
+        ]
+      ]
+    },
+    {
+      "population": 0,
+      "label": "never-scanned tail (id > cursor)",
+      "sampled": 0,
+      "r2_missing": 0,
+      "read": 0,
+      "dot_leaders": 0,
+      "pct": 0,
+      "ci95": "±0.00",
+      "wordCounts_of_dot_leaders": []
+    }
+  ]
+}

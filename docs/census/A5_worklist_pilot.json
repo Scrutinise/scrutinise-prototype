@@ -1,0 +1,4578 @@
+{
+ "generated": "2026-08-23T02:24:29.541Z",
+ "sampled": 501,
+ "elapsed_min": 61.2,
+ "instruments_per_min": 8.2,
+ "byOutcome": {
+  "no-provisions-at-source": 394,
+  "ok": 105,
+  "RETRYABLE": 2
+ },
+ "byCorpusStats": {
+  "primary-acts-pre-2000": {
+   "n": 69,
+   "ok": 2,
+   "sections": 154,
+   "words": 5006
+  },
+  "primary-acts-2000plus": {
+   "n": 1,
+   "ok": 1,
+   "sections": 2093,
+   "words": 361186
+  },
+  "si-pre-2010": {
+   "n": 319,
+   "ok": 52,
+   "sections": 505,
+   "words": 93499
+  },
+  "si-2010plus": {
+   "n": 9,
+   "ok": 7,
+   "sections": 52,
+   "words": 4589
+  },
+  "regional": {
+   "n": 19,
+   "ok": 13,
+   "sections": 116,
+   "words": 9177
+  },
+  "retained-eu": {
+   "n": 84,
+   "ok": 30,
+   "sections": 77,
+   "words": 3584
+  }
+ },
+ "classb": {
+  "n": 96,
+  "recovered": 36,
+  "rate": 0.375
+ },
+ "unseen": {
+  "n": 405,
+  "recovered": 69,
+  "rate": 0.17
+ },
+ "mean_sections_per_instrument": 28.5,
+ "mean_words_per_instrument": 4543,
+ "projection_full_worklist": {
+  "instruments": 41913,
+  "hours": 85.3,
+  "sections": 250725,
+  "words": 39908622
+ },
+ "results": [
+  {
+   "docId": "ukpga/Geo3/41/109",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 687,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/41/21",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 608,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/42/73",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 677,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/43/153",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 582,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/43/65",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 605,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/44/90",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 633,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/45/117",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 580,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/45/33",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 601,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/46/106",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 623,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/46/22",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 594,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3Sess1/47/37",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 577,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/48/140",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 616,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/48/52",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 575,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/49/97",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 625,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/49/12",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 611,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/50/47",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 643,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/51/91",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 613,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/51/8",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 604,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/52/89",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 623,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/53/11",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 577,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/53/101",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 565,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/53/31",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 624,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/54/152",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 580,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/54/67",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 668,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/55/150",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 709,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/55/67",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 585,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/56/110",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 615,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/56/23",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 591,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/57/70",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 599,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/58/84",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 611,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/59/137",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 647,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3/59/50",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 640,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/1/92",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 591,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo3and1Geo4/60/12",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 615,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/1-2/53",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 635,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/3/95",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 704,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/3/10",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 585,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/4/24",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 579,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/5/49",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 695,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/6/99",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 595,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/6/12",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 629,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/7/5",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 614,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/9/91",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 599,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4/9/1",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 610,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Geo4and1Will4/11/49",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 610,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/1-2/27",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 601,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/2-3/88",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 604,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/3-4/104",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 605,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/3-4/10",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 590,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/4-5/22",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 617,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/5-6/18",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 584,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4/6-7/48",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 608,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Will4and1Vict/7/49",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 619,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/1-2/90",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 629,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/2-3/95",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 598,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/2-3/6",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 654,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/3-4/27",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 588,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/5/4",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 592,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/6-7/71",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 603,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/7-8/94",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 600,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/7-8/2",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 922,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/8-9/43",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 595,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/9-10/62",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 587,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/10-11/85",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 704,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/11-12/129",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 709,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/11-12/40",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 643,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/12-13/59",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 594,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ukpga/Vict/23-24/124",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "classb",
+   "sections": 11,
+   "words": 178,
+   "ms": 237,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/Vict/38-39/55",
+   "corpus": "primary-acts-pre-2000",
+   "reason": "classb",
+   "sections": 143,
+   "words": 4828,
+   "ms": 248,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ukpga/2006/46",
+   "corpus": "primary-acts-2000plus",
+   "reason": "classb",
+   "sections": 2093,
+   "words": 361186,
+   "ms": 599,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1948/96",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/423",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/808",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 264,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/1220",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/1431",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/1745",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/2102",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/2531",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 355,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1948/2819",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 261,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/568",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 301,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/809",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 399,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/1218",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/1512",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/1966",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 261,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/2124",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 259,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1949/2308",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/329",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 267,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/609",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/908",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/1236",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/1621",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1950/1904",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1951/538",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1951/949",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1951/1217",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 259,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1951/1742",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 262,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1951/2241",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1952/812",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 434,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1952/1331",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1952/1836",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1952/2127",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1953/566",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1953/1011",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1953/1451",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 365,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1953/1708",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1954/439",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1954/940",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1954/1429",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1955/15",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 250,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1955/400",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1955/1826",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1956/831",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1956/1434",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1956/2033",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1957/823",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 259,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1957/1405",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1958/537",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1958/1518",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 245,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1959/313",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1959/1241",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1959/2010",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1960/922",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 272,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1960/1505",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 268,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1961/20",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 264,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1961/947",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1961/1510",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1962/112",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 276,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1962/1502",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1962/2611",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1963/750",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 246,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1963/1258",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1963/1624",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1963/2038",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1964/321",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 266,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1964/831",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1964/1142",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 326,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1964/1402",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1964/2002",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 280,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1965/513",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1965/1101",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 268,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1965/1525",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 254,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1965/1943",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 262,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/56",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/338",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/601",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/908",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/1223",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1966/1519",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/354",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/515",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/949",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/1132",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/1515",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1967/1825",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/238",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 271,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/525",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 361,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/1048",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/1366",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 254,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/1602",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1968/2001",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 254,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1969/425",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1969/716",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1969/1042",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 268,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1969/1349",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1969/1500",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 250,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/49",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/348",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/515",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 259,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/825",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/1142",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/1439",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1970/1848",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 308,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/131",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/449",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 266,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/739",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/1058",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 345,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/1219",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 344,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/1649",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1971/1956",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/57",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/211",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 244,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/519",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 261,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/805",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/1135",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/1301",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 261,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/1612",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1972/1955",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/9",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/241",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/453",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 254,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/513",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/745",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/1049",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/1271",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/1305",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/1528",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 271,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/1725",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/2073",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1973/2118",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 266,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/145",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 250,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/332",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/548",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 262,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/605",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 250,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/961",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/1164",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 257,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/1203",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/1559",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 264,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/1750",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 266,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/1962",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1974/2018",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/54",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/109",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/352",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/571",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/628",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/848",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 243,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/902",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/1135",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 31,
+   "words": 3785,
+   "ms": 239,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1975/1202",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 268,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/1424",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 273,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/1643",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 258,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/1862",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/1924",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1975/2000",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 338,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/56",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 259,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/114",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 243,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/349",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 266,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/400",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 254,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/769",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/809",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/1004",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/1203",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 245,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/1776",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/1800",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/2023",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1976/2201",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 269,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/132",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/350",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 260,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/555",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 265,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/866",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/909",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/1265",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/1319",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 262,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/1515",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 331,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/1734",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 255,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/1920",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1977/2103",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/140",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 307,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/207",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/436",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/764",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 263,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/951",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 275,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/1000",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/1234",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 253,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/1434",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/1652",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 248,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1978/1868",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 264,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/70",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/114",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 247,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/353",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 267,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/407",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 252,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/768",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 245,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/817",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 256,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/1024",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 262,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/1207",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 267,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/1427",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 249,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1979/1654",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 251,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/55",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 566,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/110",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 909,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/334",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 591,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/558",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 597,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/746",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 623,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/964",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 656,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/1023",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 569,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/1252",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 693,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/1459",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 577,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/1656",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 546,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1980/1723",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 5270,
+   "outcome": "RETRYABLE"
+  },
+  {
+   "docId": "uksi/1980/1960",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 62397,
+   "outcome": "RETRYABLE"
+  },
+  {
+   "docId": "uksi/1981/37",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60420,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/250",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60379,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/322",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60334,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/518",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60361,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/852",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60445,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/1065",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60380,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/1130",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60300,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/1313",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60322,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/1664",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60335,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1981/1718",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60541,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/39",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60319,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/277",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60395,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/341",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 66,
+   "ms": 30111,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1982/548",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60340,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/711",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60327,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/917",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60323,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/1130",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60386,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/1344",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60333,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/1505",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60404,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1982/1734",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60350,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/40",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60379,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/222",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60465,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/551",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60340,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/872",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60530,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/1160",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60396,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/1441",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60344,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/1600",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60375,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1983/1937",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60363,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/137",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60726,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/209",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60422,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/418",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60408,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/605",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60911,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/954",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60395,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/1133",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60373,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/1428",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60400,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/1604",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60740,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1984/1972",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60405,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/56",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60377,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/114",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60449,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/333",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60329,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/528",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60399,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/759",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60430,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/953",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60423,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/1167",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60336,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/1333",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60337,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/1666",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60351,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/1875",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60335,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1985/1939",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60334,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/32",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 60382,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/253",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 57298,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/318",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 51701,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/546",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 46526,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/723",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 41857,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/1057",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 37728,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/1105",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 34065,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/1303",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 30673,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/1663",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 27577,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/1807",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 24887,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/2001",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 23050,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1986/2235",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 20353,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/1987/116",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 9,
+   "words": 1496,
+   "ms": 11245,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1987/315",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 7,
+   "words": 557,
+   "ms": 8736,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1988/35",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 4,
+   "words": 678,
+   "ms": 7776,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1988/359",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 14,
+   "words": 2727,
+   "ms": 7139,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1989/30",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 437,
+   "ms": 6606,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1989/373",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 139,
+   "ms": 5826,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1989/428",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 11,
+   "words": 548,
+   "ms": 5652,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1990/255",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 87,
+   "ms": 4756,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1990/447",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 4,
+   "words": 330,
+   "ms": 4313,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1991/132",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 47,
+   "ms": 3871,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1991/475",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 265,
+   "ms": 3492,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1991/1324",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 3,
+   "words": 316,
+   "ms": 3153,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1992/224",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 42,
+   "words": 9158,
+   "ms": 2899,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1992/557",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 5,
+   "words": 689,
+   "ms": 2638,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1993/9",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 6,
+   "words": 1106,
+   "ms": 2379,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1993/320",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 116,
+   "ms": 2167,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1994/37",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 129,
+   "ms": 1955,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1994/323",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 10,
+   "words": 1944,
+   "ms": 1929,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1995/14",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 205,
+   "ms": 1661,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1995/346",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 2,
+   "words": 124,
+   "ms": 1509,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1996/32",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 57,
+   "words": 8890,
+   "ms": 1369,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1996/360",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 29,
+   "words": 4198,
+   "ms": 1281,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1996/572",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 86,
+   "ms": 1128,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1996/3051",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 10,
+   "words": 1055,
+   "ms": 1056,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1997/261",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 7,
+   "words": 1066,
+   "ms": 991,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1997/458",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 437,
+   "ms": 912,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1998/163",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 40,
+   "ms": 822,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1998/1332",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 43,
+   "words": 5667,
+   "ms": 795,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/1999/218",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 136,
+   "ms": 701,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2000/243",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 17,
+   "words": 1756,
+   "ms": 638,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2001/45",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 531,
+   "ms": 648,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2001/241",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 163,
+   "ms": 603,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2001/463",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 8,
+   "words": 802,
+   "ms": 569,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2002/128",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 35,
+   "ms": 488,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2002/454",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 90,
+   "ms": 692,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2003/53",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 4,
+   "words": 311,
+   "ms": 526,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2003/336",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 134,
+   "ms": 442,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2003/504",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 66,
+   "ms": 328,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2004/226",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 388,
+   "ms": 711,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2004/536",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 186,
+   "ms": 594,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2005/233",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 20,
+   "words": 2259,
+   "ms": 663,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2005/441",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 78,
+   "words": 36489,
+   "ms": 412,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2005/658",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 326,
+   "ms": 427,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2006/218",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 49,
+   "ms": 421,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2006/558",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 12,
+   "words": 1677,
+   "ms": 356,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2007/140",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 10,
+   "words": 743,
+   "ms": 428,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2007/461",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 176,
+   "ms": 331,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2008/117",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 219,
+   "ms": 451,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2008/3234",
+   "corpus": "si-pre-2010",
+   "reason": "classb",
+   "sections": 3,
+   "words": 373,
+   "ms": 428,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2009/358",
+   "corpus": "si-pre-2010",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 202,
+   "ms": 408,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2010/40",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 16,
+   "words": 725,
+   "ms": 313,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2011/977",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 3,
+   "words": 376,
+   "ms": 487,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2012/750",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 16,
+   "words": 1600,
+   "ms": 437,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2013/1423",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 819,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "uksi/2014/1865",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 2,
+   "words": 92,
+   "ms": 447,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2022/830",
+   "corpus": "si-2010plus",
+   "reason": "classb",
+   "sections": 10,
+   "words": 1359,
+   "ms": 410,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2026/654",
+   "corpus": "si-2010plus",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 293,
+   "ms": 469,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2026/745",
+   "corpus": "si-2010plus",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 144,
+   "ms": 424,
+   "outcome": "ok"
+  },
+  {
+   "docId": "uksi/2026/866",
+   "corpus": "si-2010plus",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 836,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ssi/1999/60",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 17,
+   "words": 3347,
+   "ms": 406,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2006/38",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 2,
+   "words": 54,
+   "ms": 409,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2006/516",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 3,
+   "words": 143,
+   "ms": 405,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2007/163",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 2,
+   "words": 81,
+   "ms": 461,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2007/254",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 29,
+   "words": 2511,
+   "ms": 448,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2007/333",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 4,
+   "words": 169,
+   "ms": 567,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2007/410",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 5,
+   "words": 165,
+   "ms": 337,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2008/168",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 28,
+   "words": 376,
+   "ms": 434,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2011/88",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 12,
+   "words": 1080,
+   "ms": 395,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2016/182",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 842,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "ssi/2024/81",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 3,
+   "words": 179,
+   "ms": 460,
+   "outcome": "ok"
+  },
+  {
+   "docId": "ssi/2026/225",
+   "corpus": "regional",
+   "reason": "unseen",
+   "sections": 0,
+   "words": 0,
+   "ms": 748,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "wsi/2020/1655",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 743,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "nisr/1976/113",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 442,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "nisr/1985/229",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 781,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "nisr/1995/74",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 736,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "nisr/2018/2",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 2,
+   "words": 462,
+   "ms": 421,
+   "outcome": "ok"
+  },
+  {
+   "docId": "nisr/2020/228",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 3,
+   "words": 99,
+   "ms": 302,
+   "outcome": "ok"
+  },
+  {
+   "docId": "nisr/2022/174",
+   "corpus": "regional",
+   "reason": "classb",
+   "sections": 6,
+   "words": 511,
+   "ms": 402,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/1969/2311",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 467,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1973/2221",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 684,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1974/3112",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 417,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1974/1008",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 590,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1975/2734",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 394,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1975/222",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 426,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1976/1198",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 468,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1977/1990",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 486,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1977/35",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 441,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1978/705",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 437,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1979/1794",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 428,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1980/2458",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 881,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1981/2034",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 850,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1982/3110",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 795,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1982/910",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 764,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1983/2465",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 769,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1984/3549",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 752,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1984/1374",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 741,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1985/2338",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 731,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1986/3669",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 773,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1986/979",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 746,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1987/2577",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 773,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1988/3825",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 726,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1988/1675",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 766,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1989/3882",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1049,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1989/3223",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 745,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1989/1054",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 783,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1990/2912",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 802,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1990/494",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1073,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1991/2090",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 822,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1991/157",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 823,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1992/2300",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 746,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1993/3673",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 725,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1993/1450",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 833,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1994/2037",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 760,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1995/2813",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 768,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1995/282",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 796,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1996/568",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 878,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1997/926",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 809,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1998/1448",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 789,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/1999/2146",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 795,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2000/2493",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 11,
+   "words": 374,
+   "ms": 289,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2000/437",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 749,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2001/276",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 843,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2002/340",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 778,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2003/337",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 758,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2004/66",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 747,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eur/2006/1274",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 2,
+   "words": 70,
+   "ms": 327,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/1263",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 2,
+   "words": 52,
+   "ms": 666,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/790",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 203,
+   "ms": 794,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/699",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 125,
+   "ms": 553,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/583",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 65,
+   "ms": 318,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/489",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 71,
+   "ms": 534,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/400",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 68,
+   "ms": 522,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/307",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 55,
+   "ms": 307,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/196",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 34,
+   "ms": 305,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/104",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 52,
+   "ms": 346,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2009/20",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 68,
+   "ms": 295,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/1123",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 34,
+   "ms": 338,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/987",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 43,
+   "ms": 352,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/843",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 67,
+   "ms": 348,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/745",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 365,
+   "ms": 347,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/659",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 68,
+   "ms": 296,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/566",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 68,
+   "ms": 345,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/453",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 667,
+   "ms": 520,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/365",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 252,
+   "ms": 347,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/272",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 3,
+   "words": 163,
+   "ms": 358,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/184",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 58,
+   "ms": 318,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/93",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 34,
+   "ms": 291,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2010/9",
+   "corpus": "retained-eu",
+   "reason": "unseen",
+   "sections": 2,
+   "words": 68,
+   "ms": 307,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2014/1107",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 3,
+   "words": 131,
+   "ms": 481,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eur/2016/69",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 2,
+   "words": 48,
+   "ms": 352,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eudn/1974/356",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 415,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1978/641",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 417,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1982/411",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 782,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1987/332",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1059,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1991/11",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1088,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1994/84",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 769,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/1998/389",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1232,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/2001/144",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 0,
+   "words": 0,
+   "ms": 1115,
+   "outcome": "no-provisions-at-source"
+  },
+  {
+   "docId": "eudn/2005/123",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 2,
+   "words": 68,
+   "ms": 321,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eudn/2009/886",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 4,
+   "words": 94,
+   "ms": 340,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eudn/2015/681",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 2,
+   "words": 68,
+   "ms": 2333,
+   "outcome": "ok"
+  },
+  {
+   "docId": "eudn/2019/417",
+   "corpus": "retained-eu",
+   "reason": "classb",
+   "sections": 3,
+   "words": 51,
+   "ms": 300,
+   "outcome": "ok"
+  }
+ ]
+}
