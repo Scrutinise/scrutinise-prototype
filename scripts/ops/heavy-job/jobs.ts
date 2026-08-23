@@ -188,6 +188,12 @@ export const JOBS: Record<string, HeavyJob> = {
       // SECOND RUN AGREES, which is the condition the note below set for revisiting the size.
       '12 Aug 2026 (V35), cpx62, 22,613,652 rows (+95,044 from the V35 catch-up), ANN build 1,130s, ' +
       '20.5 min wall, €0.101 → 5.8 GB peak, unindexed 0. Two runs, 95k more rows, +0.2 GB. ' +
+      // THIRD RUN, 23 Aug 2026 (SEARCH S12, after the case-law re-embed replaced 558,233 vectors
+      // with 539,454): 22,670,808 rows, ANN build 1,825s, 31.9 min wall, €0.156 → 5.9 GB peak,
+      // verify unindexed=0. ⚠ The BUILD TIME is the thing that moved, not the memory: +57k rows
+      // over the 12 Aug run but +695s (+62%). S12 predicted 15-25 min and was wrong; the cost
+      // followed. Size the SCHEDULE from ~32 min, not from the 20.5 in the line above.
+      '23 Aug 2026 (S12), cpx62, 22,670,808 rows, ANN build 1,825s, 31.9 min, €0.156 → 5.9 GB peak, unindexed 0. ' +
       '⚠ STILL ON A 32 GB BOX ON PURPOSE — see the note below: two agreeing measurements justify ' +
       'recording the number, not shrinking the headroom, and the table only grows. The €0.10 run cost ' +
       'is not what a resize would be saving.',
