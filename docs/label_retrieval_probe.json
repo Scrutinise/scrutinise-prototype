@@ -1,0 +1,226 @@
+{
+ "generated": "2026-08-23T00:07:08.195Z",
+ "limit": 50,
+ "results": [
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2001/2:section-112",
+   "corpus": "primary-acts-2000plus",
+   "query": "Excess allowances: connected persons",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2002/19:section-1",
+   "corpus": "primary-acts-2000plus",
+   "query": "Primary Class 1 contributions",
+   "rank": 0,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": 43
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2025/18:section-4",
+   "corpus": "primary-acts-2000plus",
+   "query": "Power to make provision in connection with business data",
+   "rank": 1,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2018/22:section-2",
+   "corpus": "primary-acts-2000plus",
+   "query": "Chargeable goods",
+   "rank": 30,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2003/44:section-28",
+   "corpus": "primary-acts-2000plus",
+   "query": "Charging or release of persons in police detention",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2002/32:section-6",
+   "corpus": "primary-acts-2000plus",
+   "query": "Interpretation of Chapter 2",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2001/9:section-25",
+   "corpus": "primary-acts-2000plus",
+   "query": "Returns and payment of levy",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-2000plus:ukpga/2024/13:section-9",
+   "corpus": "primary-acts-2000plus",
+   "query": "Initial SMS investigations",
+   "rank": 2,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-pre-2000:ukpga/1968/67:section-2",
+   "corpus": "primary-acts-pre-2000",
+   "query": "Establishment of Medicines Commission.",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "primary-acts-pre-2000:ukpga/1990/8:section-18",
+   "corpus": "primary-acts-pre-2000",
+   "query": "Calling in of unitary development plan for approval by Secretary of State.",
+   "rank": 5,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "BROKEN",
+   "id": "si-pre-2010:uksi/1999/2323:article-11",
+   "corpus": "si-pre-2010",
+   "query": "Savings provisions relating to sections 201, 204, 205, 207, 208 and 567 of the 1996 Act",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2021/17:section-87",
+   "corpus": "primary-acts-2000plus",
+   "query": "Regulations",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2005/12:section-15",
+   "corpus": "primary-acts-2000plus",
+   "query": "Power to convert other inquiry into inquiry under this Act",
+   "rank": 1,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2003/1:section-387",
+   "corpus": "primary-acts-2000plus",
+   "query": "Meaning of  “non-approved retirement benefits scheme”",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2006/52:section-347",
+   "corpus": "primary-acts-2000plus",
+   "query": "Sections 344 to 346: supplementary provisions",
+   "rank": 0,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2022/15:section-16",
+   "corpus": "primary-acts-2000plus",
+   "query": "Designation of a revenue collection counterparty",
+   "rank": 0,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2013/29:section-131",
+   "corpus": "primary-acts-2000plus",
+   "query": "Damage to a dwelling",
+   "rank": 0,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2006/35:section-10",
+   "corpus": "primary-acts-2000plus",
+   "query": "Participating in fraudulent business carried on by company etc.: penalty",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-2000plus:ukpga/2009/20:section-121",
+   "corpus": "primary-acts-2000plus",
+   "query": "Multi-area agreements",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-pre-2000:ukpga/1993/48:section-175",
+   "corpus": "primary-acts-pre-2000",
+   "query": "Levies towards certain expenditure",
+   "rank": 0,
+   "found": true,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "primary-acts-pre-2000:ukpga/1983/20:section-72",
+   "corpus": "primary-acts-pre-2000",
+   "query": "Powers of tribunals.",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  },
+  {
+   "arm": "CONTROL",
+   "id": "si-pre-2010:uksi/2000/2665:article-3",
+   "corpus": "si-pre-2010",
+   "query": "Application of Rules",
+   "rank": -1,
+   "found": false,
+   "err": null,
+   "wrongTitleRank": -1
+  }
+ ]
+}

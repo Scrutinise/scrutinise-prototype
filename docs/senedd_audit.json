@@ -1,0 +1,77 @@
+{
+ "generated": "2026-08-23T00:00:01.695Z",
+ "n_plenaries": 12,
+ "population": {
+  "rows": 191756,
+  "plenaries": 713
+ },
+ "tallies": {
+  "contributions": 3068,
+  "bothDivs": 3068,
+  "confident": 2050,
+  "verbatim_en_translation_cy": 1639,
+  "verbatim_cy_translation_en": 411,
+  "other": 0,
+  "stored_welsh": 66,
+  "stored_english": 30,
+  "stored_unknown": 36,
+  "heading_types": {
+   "proceduralText": 262,
+   "agendaItem": 120,
+   "contribution": 2578,
+   "subHeading": 154,
+   "oralQuestion": 122,
+   "motion": 32,
+   "amendment": 15,
+   "voteOutcome": 49,
+   "emergencyQuestion": 1,
+   "footnote": 9
+  },
+  "heading_correct": 1306,
+  "heading_WRONG": 1609,
+  "heading_unjudgeable": 22,
+  "agendaItems_misfiled_as_speech": 120
+ },
+ "examples": [
+  {
+   "id": "senedd-cofnod:15176:68",
+   "storedHeading": "Public Transport",
+   "trueHeading": "2. Questions to the Cabinet Secretary for Social Justice, Trefnydd and Chief Whip"
+  },
+  {
+   "id": "senedd-cofnod:15176:257",
+   "storedHeading": "Accessibility of Voting Records",
+   "trueHeading": "8. Welsh Conservatives Debate: Health emergency"
+  },
+  {
+   "id": "senedd-cofnod:15176:285",
+   "storedHeading": "Accessibility of Voting Records",
+   "trueHeading": "10. Short Debate: From service to suffering: RAF veterans and their hidden battle with cancer"
+  },
+  {
+   "id": "senedd-cofnod:15176:4",
+   "storedHeading": "Senedd Plenary",
+   "trueHeading": "Statement by the Llywydd"
+  },
+  {
+   "id": "senedd-cofnod:15176:6",
+   "storedHeading": "Senedd Plenary",
+   "trueHeading": "1. Questions to the Cabinet Secretary for Transport and North Wales"
+  },
+  {
+   "id": "senedd-cofnod:15176:149",
+   "storedHeading": "Disabled People",
+   "trueHeading": "3. Questions to the Senedd Commission"
+  },
+  {
+   "id": "senedd-cofnod:15176:160",
+   "storedHeading": "Accessibility of Voting Records",
+   "trueHeading": "4. Topical Questions"
+  },
+  {
+   "id": "senedd-cofnod:15176:162",
+   "storedHeading": "Accessibility of Voting Records",
+   "trueHeading": "5. 90-second Statements"
+  }
+ ]
+}
