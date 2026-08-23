@@ -420,6 +420,55 @@ hon. Lady and I both oppose the Bill…"*.
 
 ---
 
+## BUILD — PRODUCTION WAS FAILING FOR TWO DAYS ON A PACKAGE BOUNDARY, NOT A MISSING DEPENDENCY (2026-08-23 23:46 UTC)
+
+**Executes `docs/URGENT_BUILD_BROKEN.md`. Build-breaking fix, so it shipped on its own and was
+pushed immediately (root `CLAUDE.md` carve-out), ahead of any sprint batching.**
+
+⚠⚠ **THE WEB BUILD WAS COMPILING 716 FILES FROM THE INGEST PACKAGE.** Vercel failed on
+`../scripts/ingest/search/lance.ts: Cannot find module '@lancedb/lancedb'`. The chain, found with
+`tsc --listFiles` rather than guessed: `scrutinise-web/scripts/measure-s12-baseline.ts` imports
+`../../scripts/ingest/search/index-state`, which imports `./lance`, which imports
+`@lancedb/lancedb` — a package installed in the INGEST package's `node_modules`. **Vercel installs
+only `scrutinise-web`'s.** It compiles on any developer machine because both trees exist there.
+
+Measured before: **716** files from `scripts/ingest/` in the web program — 7 source files and 709
+type declarations resolved across the boundary, out of that package's own `node_modules`. After the
+fix: **0**. The app itself still typechecks clean.
+
+✅ **THE FIX IS THE BOUNDARY, NOT THE SYMPTOM: `scripts/**` excluded from the web tsconfig.**
+⚠ Adding `@lancedb/lancedb` to the web app was rejected — it ships a heavy native module into a
+serverless bundle to satisfy a file the web app must never compile. Verified safe before changing
+anything: the 114 files under `scrutinise-web/scripts/` are dev harnesses run through `tsx`, which
+does **not** typecheck and reads only `compilerOptions` for path aliases, so all ~40 `check:*` and
+`measure:*` commands are unaffected; and **no file under `app/`, `lib/`, `components/`, `types/`,
+`middleware.ts` or `instrumentation.ts` imports across the boundary**, so nothing the app ships
+changes. ⚠ `exclude` only filters `include` — it cannot stop an *imported* file being pulled in, so
+that check was the load-bearing one.
+
+⚠ **TEN FURTHER CROSSING IMPORTS REMAIN in `scrutinise-web/scripts/` and are now inert.** They were
+latent grenades: any one of them acquiring a dependency the web app lacks would have broken
+production identically. `r2-client` was one dependency away (`@smithy/node-http-handler`, which
+happens to be present).
+
+✅ **DELIVERY CHECK 0 ADDED — `scripts/check-clean-build.sh`, and `docs/CLAUDE.md` §20.** Two
+outages in six days, two mechanisms, one shape: `tsc` and `next build` green on a machine that has
+files and packages the deployment does not. 18 Aug was an uncommitted file; this was a dependency in
+the wrong package. **`check:committed` cannot catch this one — the file IS committed.** The check
+reproduces the deployment's two constraints: **A** (`--fast`, seconds) asserts no file outside
+`scrutinise-web` enters the web program; **B** (full) does a `git worktree` checkout of HEAD —
+committed state only — then `npm ci` in `scrutinise-web` alone, then `tsc`. **A is a COUNT, not a
+list of known-bad files**, so the next harness that imports across the boundary fails it without
+anyone having to remember. **Watched failing on the REAL broken state**: with the pre-fix tsconfig
+restored it reports 716, names the 7 source files and exits 1; with the fix, exit 0.
+
+⚠ **NOT VERIFIED FROM HERE: that the deployment is green and 25-E is live.** The Vercel token is
+SAML-blocked (§19), and `/ideas/build` and `/ideas/create` both return 200 as Clerk-gated shells
+carrying no 25-E string, so a route probe cannot tell a deployed build from a fictional one (§20,
+ninth shape). **25-E's delivery record is LEX's to redo** — its check 4 could not have passed
+against a site serving 25-D. ▶ CHARLIE: read the Vercel dashboard for a green **Production**
+deployment.
+
 ## INGEST CENSUS C1 PART A — THE WORK LIST IS 79% NO-TEXT-AT-SOURCE, AND TWO COLLECTIONS CONTAIN NONE OF THEIR OWN SUBJECT (2026-08-23 01:50 UTC)
 
 **Executes `docs/BRIEF_INGEST_CENSUS_C1.md` Part A. Read-only — nothing written to Neon.
