@@ -77,18 +77,72 @@ export async function classifyMeeting(meetingId: number, retries = 3): Promise<'
   return 'error'
 }
 
-// Pull the English text from a contributionText fragment: prefer the translation
-// div, fall back to verbatim (English-spoken turns have no translation).
+// ─────────────────────────────────────────────────────────────────────────────
+// LANGUAGE SELECTION (INGEST-LABELS §4.3)
+//
+// ⚠ THE PREVIOUS RULE HERE WAS BACKWARDS, AND ITS COMMENT STATED THE PREMISE THAT MADE IT SO:
+// *"prefer the translation div, fall back to verbatim (English-spoken turns have no translation)"*.
+// English-spoken turns DO have a translation — into Welsh. The Cofnod publishes every contribution
+// twice:
+//     <div class="verbatim">     AS SPOKEN — either language
+//     <div class="translation">  THE OTHER LANGUAGE
+// so preferring `translation` stores the WELSH rendering of every English speech. Measured over
+// 12 plenaries, 2,050 contributions with both divs and a confident reading: 80.0% were spoken in
+// English, so 80.0% were being stored in Welsh. That is the whole of the "a Welsh devolved question
+// is not askable in English" finding — it is a defect here, not a property of the record.
+//
+// ⚠ AND "JUST TAKE VERBATIM INSTEAD" IS ALSO WRONG: it stores Welsh for the 20.0% actually spoken
+// in Welsh. NEITHER div is the English one. The language has to be decided per div, which is what
+// this does.
+//
+// Ambiguity is resolved toward `verbatim` DELIBERATELY: a passage too short to classify is most
+// often a one-line procedural turn, and verbatim is the as-spoken text, correct for the 80% spoken
+// in English. That makes the fallback a strict improvement on the old default rather than a coin
+// toss. Welsh-language retention is deliberately NOT attempted here — we store one language, and
+// the brief's scope is that it should be the English one.
+
+/** Welsh and English function words. Function words, not content words: they are the highest-
+ *  frequency tokens in each language and do not overlap, so the ratio separates cleanly without a
+ *  dictionary. */
+const CY_STOP = new Set(['yr', 'yn', 'y', 'ac', 'mae', 'bod', 'wedi', 'hynny', 'ddim', 'sydd', 'ni', 'fod', 'gan', 'gyda', 'iawn', 'rwy', 'yng', 'ei', 'eu', 'fel', 'hyn', 'oedd', 'byddai', 'am', 'yna', 'hefyd', 'ond', 'felly', 'nhw', 'ydy', 'ydw', 'sy'])
+const EN_STOP = new Set(['the', 'of', 'and', 'that', 'is', 'to', 'in', 'we', 'it', 'for', 'have', 'are', 'this', 'be', 'on', 'with', 'as', 'was', 'not', 'which', 'you', 'they', 'there', 'would', 'has', 'but', 'from'])
+
+/** 'cy' | 'en' | '?' — abstains rather than guessing on a short or balanced passage. Exported so
+ *  `check-senedd-labels.ts` can assert it against real bodies rather than a fixture. */
+export function classifyLanguage(text: string): 'cy' | 'en' | '?' {
+  const words = text.toLowerCase().match(/[a-zâêîôûŵŷáéíóúàèìòùäëïöü']+/g) ?? []
+  if (words.length < 20) return '?'
+  let cy = 0, en = 0
+  for (const w of words) { if (CY_STOP.has(w)) cy++; if (EN_STOP.has(w)) en++ }
+  if (cy === en) return '?'
+  return cy > en ? 'cy' : 'en'
+}
+
+function divText(block: string, cls: string): string {
+  const m = new RegExp(`<div class="${cls}\\s*"\\s*>`, 'i').exec(block)
+  if (!m) return ''
+  // Cut at the next sibling wrapper rather than at the first </div>: these fragments contain
+  // nested <p>/<div> and a lazy `([\s\S]*?)</div>` truncates a long contribution at its first
+  // inner close tag.
+  const rest = block.slice(m.index + m[0].length)
+  const cut = rest.split(/<div class="(?:verbatim|translation|contributionText)/i)[0]
+  return htmlToText(cut)
+}
+
+/** The ENGLISH text of a contribution block, whichever div holds it. */
 function contributionEnglish(block: string): string {
-  const trans = /<div class="translation"\s*>([\s\S]*?)<\/div>\s*<\/div>/i.exec(block)
-    ?? /<div class="translation"\s*>([\s\S]*?)<\/div>/i.exec(block)
-  if (trans) {
-    const t = htmlToText(trans[1])
-    if (t) return t
-  }
-  const verb = /<div class="verbatim\s*"\s*>([\s\S]*?)<\/div>\s*<\/div>/i.exec(block)
-    ?? /<div class="verbatim\s*"\s*>([\s\S]*?)<\/div>/i.exec(block)
-  if (verb) return htmlToText(verb[1])
+  const verbatim = divText(block, 'verbatim')
+  const translation = divText(block, 'translation')
+  const lv = verbatim ? classifyLanguage(verbatim) : '?'
+  const lt = translation ? classifyLanguage(translation) : '?'
+  if (lv === 'en') return verbatim
+  if (lt === 'en') return translation
+  // Neither classified as English: one may be Welsh and confident, in which case take the other.
+  if (lv === 'cy' && translation) return translation
+  if (lt === 'cy' && verbatim) return verbatim
+  // Too short to tell. Verbatim is as-spoken and is English for 80% of contributions.
+  if (verbatim) return verbatim
+  if (translation) return translation
   // No bilingual wrapper — take the whole contributionText.
   const ct = /<div class="contributionText"\s*>([\s\S]*?)$/i.exec(block)
   return ct ? htmlToText(ct[1]) : ''
@@ -121,17 +175,40 @@ export async function fetchPlenary(meetingId: number): Promise<SeneddPlenary | n
   while ((sm = startRx.exec(html)) !== null) starts.push({ idx: sm.index, type: sm[1] })
 
   const items: SeneddContribution[] = []
-  let heading = ''
+  // ─────────────────────────────────────────────────────────────────────────
+  // HEADINGS (INGEST-LABELS §4.2). The Cofnod publishes TWO levels and this parser knew about one.
+  //
+  //   agendaItem  "3. Statement by the Minister for Health and Social Services: Coronavirus Update"
+  //   subHeading  "Coronavirus Restrictions"            (a topic within the agenda item)
+  //
+  // ⚠ `agendaItem` was not in the heading branch, so it fell through and was stored AS A SPEECH —
+  // and, worse, the running `subHeading` was never reset when the agenda moved on. Every speech
+  // under an agenda item with no sub-headings inherited the last sub-heading of the PREVIOUS item.
+  // That is how two speeches about oesophageal and stomach cancers came to be titled "Senedd
+  // Plenary: The 20 mph Speed Limit" (GOLD V2), and measured over 12 plenaries it puts the WRONG
+  // heading on 1,609 of 2,915 judged contributions — 55.2%.
+  //
+  // ⚠ An agendaItem RESETS the sub-heading. Carrying it forward is the bug; the reset is the fix.
+  let agenda = ''
+  let sub = ''
   let seq = 0
   for (let i = 0; i < starts.length; i++) {
     const block = html.slice(starts[i].idx, i + 1 < starts.length ? starts[i + 1].idx : html.length)
     const type = starts[i].type
 
-    if (type === 'subHeading' || type === 'heading') {
+    if (type === 'agendaItem') {
       const h = contributionEnglish(block)
-      if (h) heading = h
+      if (h) { agenda = h; sub = '' }
       continue
     }
+    if (type === 'subHeading' || type === 'heading') {
+      const h = contributionEnglish(block)
+      if (h) sub = h
+      continue
+    }
+    // Both levels, most specific last, so the title reads as a path and a speech under an agenda
+    // item with no sub-heading is labelled by the agenda item rather than by a stale neighbour.
+    const heading = [agenda, sub].filter(Boolean).join(' — ')
 
     const speaker = firstTag(block, 'name')
     const roleM = /<div class="memberTitle">\s*<span>([\s\S]*?)<\/span>/i.exec(block)
