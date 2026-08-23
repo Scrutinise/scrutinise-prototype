@@ -11,8 +11,10 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
 import {
-  elicitationState, answerStep, confirmElicitation, correctElicitation, ElicitationClosed,
+  elicitationState, answerStep, confirmElicitation, correctElicitation, retryUnderstanding,
+  ElicitationClosed,
 } from '@/lib/lex/elicitation'
+import { buildState } from '@/lib/lex/build'
 import { ELICITATION_STEPS } from '@/lib/lex/elicitation-config'
 
 type Params = { params: Promise<{ id: string }> }
@@ -36,7 +38,40 @@ const BodySchema = z.discriminatedUnion('action', [
   }),
   z.object({ action: z.literal('confirm') }),
   z.object({ action: z.literal('correct'), text: z.string().max(5_000).optional() }),
+  // 25-E §1 — the paragraph failed to write; try again. NOT a correction: it must not
+  // count against the user or put words in their mouth. See `retryUnderstanding`.
+  z.object({ action: z.literal('retry') }),
 ])
+
+/**
+ * 25-E §1 — EVERY MUTATION RETURNS THE BUILD STATE TOO.
+ *
+ * ⚠⚠ THIS IS THE FIX FOR THE DEFECT THAT STOPPED THE WHOLE PRODUCT. The client held two
+ * objects — the elicitation and the build — and refreshed only the first after confirming.
+ * So the instant the user pressed "That's right — build it": the confirmation buttons
+ * disappeared (the elicitation was now CONFIRMED), the build card appeared (same reason),
+ * and it appeared GREYED OUT beside `blockedReason` from the boot-time fetch, which read
+ * *"Confirm what I've understood first"* — telling the user to do the thing they had just
+ * done, with no control left on the page to do it with.
+ *
+ * `canStart` is computed from `isConfirmed(ideaId)`, so it was never wrong; it was STALE.
+ * Returning both halves of the answer from the one request that changed either is what makes
+ * a stale half impossible, rather than making the client responsible for remembering to ask
+ * again — which is the thing it forgot.
+ */
+async function bothStates(ideaId: string, userId: string) {
+  const [state, build] = await Promise.all([
+    elicitationState(ideaId, userId),
+    // ⚠ Never allowed to take the response down. If the build half cannot be read the
+    // elicitation half is still true, and `null` tells the client to go and ask rather than
+    // to keep what it has.
+    buildState(ideaId).catch((err) => {
+      console.error('[elicitation] build state unreadable alongside the elicitation:', err)
+      return null
+    }),
+  ])
+  return { state, build }
+}
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
@@ -58,10 +93,16 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     if (parsed.data.action === 'confirm') {
-      return NextResponse.json({ state: await confirmElicitation(id, userId), messages: [] })
+      await confirmElicitation(id, userId)
+      return NextResponse.json({ ...(await bothStates(id, userId)), messages: [] })
     }
     if (parsed.data.action === 'correct') {
-      return NextResponse.json({ state: await correctElicitation(id, userId, parsed.data.text ?? ''), messages: [] })
+      await correctElicitation(id, userId, parsed.data.text ?? '')
+      return NextResponse.json({ ...(await bothStates(id, userId)), messages: [] })
+    }
+    if (parsed.data.action === 'retry') {
+      await retryUnderstanding(id, userId)
+      return NextResponse.json({ ...(await bothStates(id, userId)), messages: [] })
     }
     const { state, messages } = await answerStep(id, userId, {
       step: parsed.data.step as never,
@@ -72,7 +113,11 @@ export async function POST(req: Request, { params }: Params) {
       readingFileName: parsed.data.readingFileName,
       skip: parsed.data.skip,
     })
-    return NextResponse.json({ state, messages })
+    // The answer path returns the build half as well, for the same reason: answering the
+    // last question is what moves the elicitation to AWAITING_CONFIRMATION, and a client
+    // holding a stale build alongside a fresh elicitation is the whole defect.
+    const build = await buildState(id).catch(() => null)
+    return NextResponse.json({ state, build, messages })
   } catch (err) {
     if (err instanceof ElicitationClosed) {
       return NextResponse.json({ error: err.message }, { status: 409 })

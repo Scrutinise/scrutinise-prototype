@@ -42,6 +42,8 @@ export interface ElicitationStepView {
   key: ElicitationStepKey
   label: string
   question: string
+  /** 25-E §4a — the short line for the card, or null when the hints say it better. */
+  cardPrompt: string | null
   hints: string[]
   optional: boolean
   /** Answered (or deliberately passed over). */
@@ -50,9 +52,36 @@ export interface ElicitationStepView {
   answer: string | null
 }
 
+/**
+ * 25-E §1 — WHAT THE USER SHOULD SEE, DECIDED BY THE SERVER, EXHAUSTIVELY.
+ *
+ * ⚠⚠ THIS EXISTS BECAUSE THE CLIENT COULD RENDER NOTHING AT ALL. It chose between three
+ * blocks using three INDEPENDENT conditions — `currentStep !== 'confirm'`,
+ * `status === 'AWAITING_CONFIRMATION'`, and `status === 'CONFIRMED'` — and there is a real,
+ * reachable state in which all three are false: `IN_PROGRESS` with `currentStep === 'confirm'`,
+ * which is exactly where a failed understanding leaves the row. The user gets a page with no
+ * controls on it and no way to do anything.
+ *
+ * Three booleans that must be exhaustive but are not checked for exhaustiveness is a dead end
+ * waiting to be reached. ONE value from a closed union cannot be. The file header already
+ * claimed this contract — "the server returns the current step and this renders whatever it is
+ * told" — and this is the first version of the code that keeps it.
+ */
+export type ElicitationPhase =
+  /** A question is outstanding. Render it. */
+  | 'QUESTION'
+  /** Every question is answered and the paragraph could not be written. Offer a retry. */
+  | 'UNDERSTANDING_FAILED'
+  /** The paragraph is written and the user has not yet agreed to it. */
+  | 'AWAITING_CONFIRMATION'
+  /** Agreed. The build may be started. */
+  | 'CONFIRMED'
+
 export interface ElicitationState {
   ideaId: string
   status: 'IN_PROGRESS' | 'AWAITING_CONFIRMATION' | 'CONFIRMED'
+  /** 25-E §1 — the one value the client switches on. See `ElicitationPhase`. */
+  phase: ElicitationPhase
   steps: ElicitationStepView[]
   /** The step the user is on. Null once CONFIRMED. */
   currentStep: ElicitationStepKey | null
@@ -167,6 +196,10 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
     key: s.key,
     label: s.label,
     question: s.question,
+    // ⚠ `?? null`, NOT `?? s.question`. Falling back to the full question is precisely the
+    // duplication §4a exists to remove — a step that forgets to set a card prompt should
+    // show the hints, not reprint the paragraph the transcript already carries.
+    cardPrompt: s.cardPrompt ?? null,
     hints: s.hints ?? [],
     optional: !!s.optional,
     done: stepDone(row, s.key, aboutYou),
@@ -176,9 +209,22 @@ export async function elicitationState(ideaId: string, userId: string): Promise<
   const current = steps.find((s) => !s.done)?.key ?? null
   const hasBuild = (await prisma.ideaBuild.count({ where: { ideaId } })) > 0
 
+  // 25-E §1 — one value, derived once, here. See `ElicitationPhase`.
+  //
+  // ⚠ THE ORDER IS THE MEANING. CONFIRMED wins outright. Then a written paragraph waiting
+  // for agreement. Then — and this is the branch that did not exist — every question
+  // answered with NO paragraph, which is a failed write and not a question to re-ask.
+  // Anything else is a question.
+  const phase: ElicitationPhase =
+    row.status === 'CONFIRMED' ? 'CONFIRMED'
+      : row.status === 'AWAITING_CONFIRMATION' && row.understanding ? 'AWAITING_CONFIRMATION'
+        : current === 'confirm' ? 'UNDERSTANDING_FAILED'
+          : 'QUESTION'
+
   return {
     ideaId,
     status: row.status as ElicitationState['status'],
+    phase,
     steps,
     currentStep: row.status === 'CONFIRMED' ? null : current,
     understanding: row.understanding,
@@ -431,6 +477,33 @@ async function runUnderstanding(
     data: { understanding: paragraph, status: 'AWAITING_CONFIRMATION' },
   })
   await appendTranscript(ideaId, [lexBubble(confirmationBubble(paragraph), ELICITATION_STAGE, 'elicitation:confirm')])
+}
+
+/**
+ * 25-E §1 — RETRY THE UNDERSTANDING, after it failed to write.
+ *
+ * ⚠⚠ THE SECOND DEAD END ON THIS STEP, AND IT IS INDEPENDENT OF THE FIRST. When
+ * `writeUnderstanding` fails, `runUnderstanding` returns early: `status` stays
+ * `IN_PROGRESS` and `understanding` stays null, while `currentStep` is `'confirm'`
+ * (because `stepDone('confirm')` is only true at CONFIRMED). The client then renders
+ * NOTHING AT ALL — the question card is suppressed on `currentStep === 'confirm'`, the
+ * confirmation block needs `AWAITING_CONFIRMATION`, and the build card needs `CONFIRMED`.
+ * Three conditions, none of them met, and a user sitting in front of a page with no
+ * controls on it.
+ *
+ * The apology bubble said "try again in a moment" and there was **no way to try again**.
+ *
+ * ⚠ IT IS ITS OWN ACTION RATHER THAN AN EMPTY `correct`. `correctElicitation` increments
+ * the correction count and writes a user bubble — so retrying through it would record the
+ * user as having corrected Lex when they did nothing of the kind, and would put the
+ * correction PROMPT into the transcript as if they had said it.
+ */
+export async function retryUnderstanding(ideaId: string, userId: string): Promise<ElicitationState> {
+  const row = await prisma.ideaElicitation.findUnique({ where: { ideaId } })
+  if (!row) throw new Error('No elicitation row')
+  if (row.status === 'CONFIRMED') throw new ElicitationClosed()
+  await runUnderstanding(ideaId, userId)
+  return elicitationState(ideaId, userId)
 }
 
 /** "Not quite — let me correct you". Re-runs the CONFIRMATION, not the whole of Page 1. */
