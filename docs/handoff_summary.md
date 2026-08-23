@@ -2,21 +2,78 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-23 00:27 UTC — ▼ **SEARCH S12 IS COMPLETE: the case-law re-embed landed at
-$31.8994 against a $31.88 plan, chunk 0 is stylesheet-free (77% → 0.00% across 74,894 documents,
-30 of 30 by hand), and there is a NEW BASELINE — 65 questions, index version stamped:
-**20/65 (31%) recall@20**.** ⚠⚠ NOT a delta against S10's 34%, which is VOID. ⚠⚠ **DEBATES SCORES
-0 OF 11 ON ITS FIRST EVER MEASUREMENT** (9 NOT-RETRIEVED) — but one contributor is MINE: a debates
-key is a SINGLE SPEECH of ~200 in a sitting where a committees key is a whole report, so the keys
-should be widened before that is quoted as a property of the stream. ⚠⚠ **GUIDANCE 6 of 10
-DILUTED** — S11's re-tier gain (3/10 → 8/10 in-stream) is real and is being eaten by the interleave,
-now the highest-value retrieval work outstanding. ⚠⚠⚠ **`vector-serve` IS PINNED TO A 12 AUGUST
-COMMIT** — a redeploy ships DATA not code (caselaw snippets are now 0 of 20 stylesheets ✅), and a
-source rebuild built `c70f53d` while reporting `branch: Main`. That finally explains the recurring
-"serving 7 August code" note. ▶ CHARLIE: (1) repoint vector-serve's source ref — signal: empty
-caselaw snippets at limit=10 go **5/10 → 0/10**; (2) widen the debates keys and re-run; (3) give the
-interleave its own sprint; (4) flip `LEX_ROUTER_STREAMS_V2` (4 of 9 IA questions NOT-ROUTED).
-`docs/SEARCH_S12_REPORT.md`.**
+*Last updated: 2026-08-23 08:40 UTC — ▼ **GRAPH 3C-2: THE VALIDATION KEY WAS RESTING ON AN UNSIGNED
+FACT AND IS REBUILT ON MEMBERS' OWN WORDS. Charlie paused the pass and caught it on Sir Edward
+Leigh — cited as supporting the assisted dying Bill for sponsoring an amendment to it, when he is
+one of its most prominent opponents. 136 of 157 rows rested on AMENDMENT SPONSORSHIP, which is
+unsigned: a wrecking and a strengthening amendment are the same recorded fact. ⚠⚠⚠ THE REASONING
+ERROR MATTERS MORE THAN THE INCIDENT — 3B chose that basis because it is NON-CIRCULAR and proved it
+with a query, which is genuinely valuable and incomplete: NON-CIRCULARITY IS NECESSARY, NOT
+SUFFICIENT; THE BASIS MUST ALSO DETERMINE A DIRECTION. An independent signal that does not settle
+the answer is worse than useless in an answer key, because it marks the graph WRONG every time the
+graph is RIGHT. ✅ All 14 candidate bases audited on BOTH tests before anything was rebuilt, with
+the independence half a query and the verdict DERIVED rather than typed in — 3 pass. ⚠ The
+dangerous one is TheyWorkForYou's "voted consistently for…" summaries: circular WHILE APPEARING
+INDEPENDENT. ✅ 50 sound rows, every one a member's own Hansard words, 46 members, 9 parties, all
+with a WORKING per-speech URL (our stored id is a sequence index, not TWFY's gid — a constructed
+URL 404s, so the generator recovers the real gid from each day's XML: 50 of 50). The graph holds no
+speech-derived signal, so speech is independent; identity resolves exact-normalised-name with 0
+ambiguous of 677. Route (b), a web statement, was NOT NEEDED — 144 of 157 had spoken. THE ROW
+STATES THE EVIDENCE, NOT THE CONCLUSION: 0 proposed directions, asserted on every write, and
+`NO POSITION ESTABLISHED` is an explicit verdict option. ⚠⚠ THE UNSIGNED-AMENDMENT DEFECT CAME BACK
+IN A DIFFERENT COSTUME and only reading the output caught it — a 20,246-word "speech" for Lord
+Callanan that was the text of an amendment. ⚠⚠ THE GENERATOR ATE ITS OWN INPUT, the same shape as
+last sprint's bug, one sprint later: run twice it reported `pool 136: 0 bill-sponsor`. The pool now
+lives in `scripts/graph/validation-pool.json`; re-running is byte-identical. ⚠ The self-test caught
+my own first-person filter rejecting *"My Lords, this issue has been raised with me…"* — a
+case-sensitivity bug that would have silently dropped genuine Lords speeches. The 136 unsound rows
+are KEPT under `⛔ UNSOUND BASIS — NOT SCORABLE` with their withdrawn claims visible. ⚠⚠ Every sound
+row is marked `hansard-speech` and THAT MARK EXPIRES: if extracted-position signals are ever folded
+in (design §4, P3), those rows stop being independent and must be excluded from scoring. ▶ CHARLIE:
+read the quote, then write the position; spot-check S1.04, Sir Edward Leigh.
+`docs/GRAPH_3C2_REPORT.md`.**
+Earlier: 2026-08-23 01:50 UTC — ▼ **INGEST CENSUS C1 PART A (audit only, nothing written to
+Neon; STOP POINT REACHED, Part B not started): THE WORK LIST IS 79% NO-TEXT-AT-SOURCE, AND TWO
+COLLECTIONS CONTAIN NONE OF THEIR OWN SUBJECT.** ⚠ Four of the brief's named inputs DO NOT EXIST
+(`CORPUS_REGISTER_V31.csv`, `DAILY_EMAIL_V31_REBUILT.md`, `CORPUS_SCOPE.md`, `OPEN_ITEMS.md`) — A2's
+columns are mine, every walk lead is CC-PROPOSED, and **Part C has no target format to build
+against.** ✅ **A1: 46 rows where est==compiled, exactly as predicted; and a SIXTH rebaseline script**
+— `v30-denominator-rebaseline.ts`, whose header records the motive: summed est had fallen BELOW
+compiled, was correctly called an "honest-denominator violation", and **the remedy chosen was to set
+the denominator to the numerator.** `scottish-courts` carries `est_is_confirmed=true` beside its own
+note reading "ROUGH order-of-magnitude only … UNMEASURED". ⚠⚠ **A3: the brief's OWN thresholds find
+2 of the 4 cases it names** — `et-decisions` landing pages sit at a MEDIAN 18 WORDS (above the
+15-word floor, missing 97.6% of the defect); `building-regs` can't fail a distribution test at all.
+The instrument that works is `sourceUrl` pointing at a landing page — but it over-flags
+(`planning-policy` is a verified false positive). ⚠⚠⚠ **`oecd` holds 505 rows and NOT ONE is from
+OECD** — all gov.uk, 52 news stories, 31 speeches, one about the London 2012 Olympics — and it prints
+[100% complete] because est==compiled. ⚠⚠ **A4: the biggest pair in the brief is NOT duplicated and
+my first measurement said it was** — 8,697 "shared sitting days" compared historic-hansard's LORDS
+volumes against pwdata's COMMONS stream. Split by House: Commons abuts at 1918-11-21/1919-02-04,
+Lords at 1999-11-11/1999-11-17, **zero shared days both**. Real item-level duplication IS proved for
+Commons divisions and treaties (TS No.8 (2016) appears twice within `uk-treaties-fcdo` alone). ⚠⚠⚠
+**A5 (n=501): 394 of 501 work-list instruments return NO PROVISIONS AT SOURCE (78.6%).** classb
+recovery 37.5% (predicted 20-40% ✓); unseen recovery **17.0% against a predicted 80-95% — wrong by
+5×**. ⚠ My first pilot said 96/96 and 405/405 recovered — false, it counted the source's
+no-provisions MARKER as a recovery. ⚠ Throughput **93.5/min single-threaded vs 8.2/min with two
+fetchers** — concurrency against TNA costs an order of magnitude; Part D must run single-threaded.
+⚠ Projection needed isolating the Companies Act 2006 (2,093 sections = 88% of the sample's words)
+then projecting per (stratum × reason): **~91,500 sections, ~11.5M words, $1.33 on batch** against
+CCh's 0.45-0.6M and $6-9. **Part D is ~5× smaller than briefed.** ⚠⚠⚠ **THE OPERATIVE SPLIT IS
+`reason`, NOT `corpus`: the 7,924 `classb` rows — instruments WE marked "No CLML/HTML/PDF found on
+TNA" — recover at 37.5% and carry the rich instruments; run them FIRST.** ⚠⚠ **Correction to my own
+earlier figure: the pre-2000 Acts DO yield text** — at n=69, `unseen` 0 of 67 but `classb` 2 of 2,
+one being the **Public Health Act 1875 (143 sections)**. The recoverable set is the 258 classb rows,
+~19,866 sections projected (n=2, needs the other 256). All 87 modern pre-2000 Acts probed
+exhaustively: 11 with text, 182 sections. ✅ **A6: `neon.max_cluster_size = 16,384 GiB`, we are at 0.11%.** Case law's 7,496
+B/row is **96% `ftsVector`** — and **`corpus_sections.ftsVector` is 1,178 MB (6.2% of the DB) that
+nothing in the serving path reads.** ✅ **A7: the legacy table's independent contribution is 29
+instruments / 211 sections, not 914,274** — ⚠ my first run said 1,579 and every one was a false gap
+from building the regnal map out of the worklist (absences only). ✅ A2 reconciles exactly: live
+18,243,823 + retired 28,629 = 18,272,452. ▶ **CHARLIE: five numbered decisions in
+`docs/INGEST_CENSUS_C1_A_REPORT.md`.** The two that change money: re-order Part D to run SIs first
+and pre-2000 Acts last; and **Part F's re-fetch is 503 documents, not 131,650 — 131,147 of the
+landing pages already have their real judgment PDF ingested alongside them.**
 Earlier: 2026-08-23 00:13 UTC — ▼ **INGEST — CASE LAW BEFORE 2001 (scoping only; nothing
 built, nothing fetched in bulk). BAILII IS SHUT BY ITS OWN PUBLISHED TERMS** — paragraph 6 forbids
 *"storing search results or HTML versions of judgments"*, *"bulk downloading"* and robot indexing;

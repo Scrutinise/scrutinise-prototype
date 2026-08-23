@@ -132,6 +132,299 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## GRAPH 3C-2 — THE VALIDATION KEY RESTED ON AN UNSIGNED FACT, AND IS REBUILT ON MEMBERS' OWN WORDS (2026-08-23 08:40 UTC)
+
+Charlie paused the validation pass. Report: **`docs/GRAPH_3C2_REPORT.md`**; `GRAPH_3C_REPORT.md` §3
+corrected in place rather than rewritten. **Cost $0** — no LLM call anywhere. `tsc -p
+scripts/tsconfig.json` clean for every file this sprint touches (the two remaining errors are
+pre-existing and unmodified against HEAD).
+
+⚠⚠⚠ **136 OF 157 ROWS ASSERTED A POSITION THEIR OWN CITATION COULD NOT ESTABLISH.** They rested on
+AMENDMENT SPONSORSHIP, which is **unsigned**: a wrecking amendment and a strengthening amendment are
+the same recorded fact. Charlie caught it on **Sir Edward Leigh**, cited for an amendment to the
+assisted dying Bill — he is one of its most prominent opponents. **The reasoning error is worth more
+than the incident:** 3B chose that basis because it is NON-CIRCULAR and proved it with a query
+rather than an argument, which is genuinely valuable and *incomplete* — **non-circularity is
+necessary, not sufficient; the basis must ALSO DETERMINE A DIRECTION.** ⚠⚠ **An independent signal
+that does not settle the answer is worse than useless in an answer key, because it marks the graph
+WRONG every time the graph is RIGHT** — such a key does not measure the graph, it measures whatever
+assigned each row its direction, while looking rigorous.
+
+✅ **EVERY BASIS AUDITED ON BOTH TESTS BEFORE ANYTHING WAS REBUILT — 3 of 14 pass.** The
+independence half is a query against the live signal table, not an opinion, and the verdict column
+is DERIVED from the two tests rather than typed in beside them — which caught three rows where I had
+recorded the weaker of two objections. USE: the member's own words in Hansard · bill sponsorship ·
+a published web statement. EXCLUDE as circular: EDM signature (59,925 signals) · division votes
+(2,080,585) · ⚠ **TheyWorkForYou "voted consistently for…" summaries — the dangerous one, a pure
+function of the same divisions, circular WHILE APPEARING INDEPENDENT.** REJECT for carrying no
+direction: committee membership · witness appearance · declared interest · donation · party
+membership · ministerial office.
+
+✅ **REBUILT: 50 SOUND ROWS, EVERY ONE A MEMBER'S OWN WORDS.** `pwdata-debates` holds 6,391,345
+speeches (5,693,886 with a speaker), one row per speech, and **the graph holds NO speech-derived
+signal, so Hansard is independent**. Identity resolves on an exact normalised name: of 677 speakers
+sampled, **595 match exactly one MNIS person and ZERO are ambiguous**. 46 distinct members, 9
+parties, 10 matters; 21 rows are also bill sponsors but **not one rests on bill sponsorship alone**.
+⚠ **Route (b), a web statement, was NOT NEEDED and so was not used** — 144 of 157 candidates had
+spoken. Every row has a **working per-speech URL**: our stored id is a sequence index, not TWFY's
+gid (a constructed URL 404s, measured), so the generator fetches each debate day's XML and recovers
+the real gid — **50 of 50**, sampled six, all HTTP 200 with titles matching the quoted openings.
+
+✅ **THE ROW STATES THE EVIDENCE, NOT THE CONCLUSION** — asserted on every write, 0 proposed
+directions in the sound section or the write fails. Verdict options include **`NO POSITION
+ESTABLISHED`**, because some evidence genuinely does not settle it and a key that cannot say so
+forces a guess. The extract rule is **direction-blind and printed on every row**: the longest speech
+that is actually an argument, quoted whole at ≤350 words, else its first 220 and last 130.
+⚠ Quoting generously is the defence against a real trap — Leigh's speech **reads out a
+constituent's email containing "I oppose the right to die Bill"**, and an excerpt built around
+"oppose" would have put the constituent's sentence in his mouth.
+
+⚠⚠ **THE UNSIGNED-AMENDMENT DEFECT CAME BACK WEARING A DIFFERENT COSTUME, AND ONLY READING THE
+OUTPUT CAUGHT IT.** The first rebuild selected for Lord Callanan a **20,246-word "speech"** opening
+*"Moved by Lord Callanan 64: Before Schedule 1, insert the following new Schedule—"* and continuing
+through hundreds of statutory instruments — correctly attributed, and **the text of an amendment**
+dressed as a member's own words. "Longest" is a proxy for "most substantive" and that is where the
+proxy breaks. Now *the longest speech that passes `isArgument()`*, two direction-blind tests, 7
+rejected. ⚠ Also why the quote takes **both ends**: Callanan's real speech spends its first 250
+words congratulating maiden speakers, and its CLOSING words settle it outright.
+
+⚠⚠ **THE GENERATOR ATE ITS OWN INPUT — THE SAME SHAPE AS LAST SPRINT'S BUG, ONE SPRINT LATER.** It
+read its pool from the document it then overwrote; run twice it reported **`pool 136: 0
+bill-sponsor`**, having silently lost all 21 sound rows. The pool now lives in
+`scripts/graph/validation-pool.json`, extracted once behind a guard that refuses if the document has
+already been rebuilt. Re-running is byte-identical, proven by diff. **The lesson is not "make it
+idempotent" — it is that a generator whose input is its own output must be run twice and DIFFED
+before it is believed.**
+
+⚠ **THE SELF-TEST CAUGHT MY OWN FILTER REJECTING REAL SPEECHES.** `isArgument`'s first-person test
+rejected zero in the real run — inert, or nothing to catch? Watched against constructed cases, it
+**failed immediately**: *"My Lords, this issue has been raised with me many times"* was rejected,
+because the regex was case-sensitive and "me" was missing. **That would have silently dropped
+genuine Lords speeches — the failure mode a filter has that nobody notices, because a dropped
+candidate leaves no trace.**
+
+⚠ **THE 136 UNSOUND ROWS ARE KEPT, NOT DELETED**, under `⛔ UNSOUND BASIS — NOT SCORABLE`, with
+their withdrawn "Proposed position" lines left in place so the defect can be seen rather than
+described. The count is the finding (86.6% of the first draft); the relevance survives even though
+the direction does not, which is why they remained the pool the sound rows were drawn from; and the
+basis may be recoverable by classifying what each amendment did — ⚠ **an inference, and a separate
+job, deliberately not attempted.** 30 of the 46 sound members also appear there, and the document
+explains that it is one person with two citations, not a duplicate.
+
+❌ **Not done, named:** nothing scored (design §8's gate still shut) · amendment classification (by
+instruction) · route (b) (not needed) · the remaining 94 candidates that also have a usable speech
+(D-1). ⚠⚠ **Every sound row is marked `hansard-speech` and that mark EXPIRES: if extracted-position
+signals are ever folded into the graph (design §4, P3), those rows stop being independent and must
+be excluded from scoring from that point on.** ▶ CHARLIE: read the quote, then write the position;
+spot-check **S1.04, Sir Edward Leigh**, who now says in his own voice *"the reason why the right
+hon. Lady and I both oppose the Bill…"*.
+
+---
+
+## INGEST CENSUS C1 PART A — THE WORK LIST IS 79% NO-TEXT-AT-SOURCE, AND TWO COLLECTIONS CONTAIN NONE OF THEIR OWN SUBJECT (2026-08-23 01:50 UTC)
+
+**Executes `docs/BRIEF_INGEST_CENSUS_C1.md` Part A. Read-only — nothing written to Neon.
+Stop point reached; Part B not started. Report: `docs/INGEST_CENSUS_C1_A_REPORT.md`.**
+
+⚠ **FOUR OF THE BRIEF'S NAMED INPUTS DO NOT EXIST** — `CORPUS_REGISTER_V31.csv` ("the scaffold this
+sprint fills"), `DAILY_EMAIL_V31_REBUILT.md` ("the target email"), `CORPUS_SCOPE.md`,
+`OPEN_ITEMS.md`. A2's register columns are therefore mine and every `denominator_source_to_walk`
+value is CC-PROPOSED, not a verification of CCh's lead. **Part C has no target format to build
+against.**
+
+✅ **A1 — 46 rows where `est == compiled`, exactly as the brief predicted; 40 of them flagged
+confirmed. And there is a SIXTH rebaseline script** the previous sprint missed:
+`v30-denominator-rebaseline.ts`, the most explicit of all. Its header records the motive, which is
+the whole story — summed `est_sections` had fallen BELOW compiled, this was correctly called an
+"honest-denominator violation", and **the remedy chosen for "the denominator is too small" was to
+set it to the numerator.** ⚠ `scottish-courts` is a contradiction inside one row: `est_is_confirmed
+= true` beside a note reading *"ROUGH order-of-magnitude only … UNMEASURED"*. `impact-assessments`
+admits in its own note that it was *"RE-BASELINED from the completed drain"*.
+
+⚠⚠ **A3 — THE BRIEF'S OWN THRESHOLDS FIND TWO OF THE FOUR CASES IT NAMES.** `et-decisions` landing
+pages sit at a MEDIAN OF 18 WORDS, above the 15-word floor — the test misses 97.6% of the defect it
+was written for; `building-regs` (median 318, min 237, max 1,483) cannot fail a distribution test at
+all. **The instrument that works is `sourceUrl` pointing at the landing page rather than the
+document** — but it OVER-flags: `planning-policy` is a verified false positive (49,999 chars of real
+guidance on a `gov.uk/guidance/` URL), so it is a candidate detector, not a verdict. Verified by
+reading bodies: `et-decisions`, `quangos-govuk` (61,192 landing rows), `hmrc-codes-guidance`
+(9,253, zero documents), `building-regs` (21 of 21, zero Approved Documents held).
+
+⚠⚠⚠ **AND TWO COLLECTIONS DO NOT CONTAIN THEIR OWN SUBJECT. `oecd` holds 505 rows and NOT ONE is
+from OECD** — 505 of 505 are gov.uk URLs, 52 are news stories, 31 ministerial speeches, one is
+*"London 2012 sets new world standard on Olympic legacy"*. `ots-reports` has ≥69 news/speeches among
+497. **Both print `[100% complete]` because est == compiled.** V20 blocked `college-of-policing` for
+exactly this; these two were not.
+
+⚠⚠ **A4 — THE LARGEST PAIR IN THE BRIEF IS NOT DUPLICATED, AND MY FIRST MEASUREMENT SAID IT WAS.**
+I reported 8,697 shared sitting days between `historic-hansard` and `pwdata-debates`. That compared
+historic-hansard's **LORDS** volumes against pwdata's **COMMONS** stream — two Houses sitting on the
+same dates. Split by House: Commons `S5CV` ends **1918-11-21** and `pwdata-debates` begins
+**1919-02-04**; Lords `S5LV` ends **1999-11-11** and `pwdata-lords` begins **1999-11-17**. **Zero
+shared days on both. The collections abut.** The retrieval test that misled me showed both answering
+a generic parliamentary phrase, which any two parliamentary collections will. ✅ Item-level
+duplication IS proved for Commons divisions (same 2019-10-22 EU Withdrawal division in both) and
+treaties (TS No. 8 (2016) in `uk-treaties` and TWICE in `uk-treaties-fcdo`). Control held. ⚠ 788
+`historic-hansard` rows carry a pre-1800 date, earliest `1013-06-24`.
+
+⚠⚠⚠ **A5 — PREDICTIONS SCORED, AND THE LOAD-BEARING ONE WAS BADLY WRONG.** n=501. `classb` recovery
+**37.5%** (predicted 20-40% ✓; V36 measured 27.5%). `unseen` recovery **17.0%** — predicted 80-95%,
+**wrong by a factor of five**. **394 of 501 (78.6%) return `no-provisions-at-source`: the publisher
+itself says there is no text.** 2 raised `RetryableSourceError`, which is the V36 fix working.
+⚠ My first pilot run reported classb 96/96 and unseen 405/405 recovered — both FALSE, because
+`enumerateSections` returns a MARKER section for a no-provisions instrument and I counted the marker
+as a recovery, making the rate 100% by construction. It also reported `mean words: 0` (`TnaSection`
+has no `.text`). ⚠ **THROUGHPUT: 93.5/min single-threaded, 8.2/min with two fetchers running against
+legislation.gov.uk** — concurrency costs an order of magnitude; Part D must run single-threaded.
+⚠ The projection needed isolating one instrument — the **Companies Act 2006, 2,093 sections and
+361,186 words, 88% of the sample's words** — and then projecting per (stratum × reason):
+**~91,500 sections, ~11.5M words, $1.33 on batch**, against CCh's 0.45-0.6M sections and $6-9.
+**Part D is ~5x smaller than briefed.**
+
+⚠⚠⚠ **AND THE OPERATIVE SPLIT IS `reason`, NOT `corpus`. `classb` — 7,924 instruments WE ourselves
+marked "No CLML/HTML/PDF found on TNA" — recovers at 37.5% and carries the rich instruments; `unseen`
+recovers at 17.0% and is mostly instruments with no text at source.** The rows we wrote off as
+permanently unavailable are the valuable part of the work list, and Part D should run them first.
+
+⚠⚠ **CORRECTION TO MY OWN EARLIER FIGURE: the pre-2000 Acts DO yield text.** An n=41 draw found 0
+with text and I reported the slice yields "essentially nothing, ~182 sections". At n=69 the split is
+decisive and the opposite: **`unseen` 0 of 67** (the Georgian/Victorian local Acts the source
+publishes no provisions for) but **`classb` 2 of 2**, one of them `ukpga/Vict/38-39/55` — the
+**Public Health Act 1875, 143 sections**. The recoverable set is the **258 classb rows, not 5,783**,
+projecting ~19,866 sections (~12% on top of the collection). ⚠ n=2; the other 256 must be fetched
+before that is a number. Separately, all 87 modern (1900+) pre-2000 Acts were probed exhaustively
+because a proportional sample cannot see a 1.5% stratum: 11 carry text, 182 sections.
+
+✅ **A6 — `neon.max_cluster_size = 16,777,216 MB = 16,384 GiB`, read from the compute's own GUC; the
+database is 0.11% of it.** All three of the brief's bytes/section predictions land (case law 7,496 ·
+Hansard 394 · legislation 593-662). **What case law stores that Hansard does not is the `ftsVector`
+column — 7,225 of its 7,496 bytes per row, 96%.** ⚠ **`corpus_sections.ftsVector` is 1,178 MB across
+683,153 rows — 6.2% of the database — and nothing in the live serving path reads it.** Not writing it
+turns Part E's Neon footprint from 1.1-1.9 GB into ~0.15 GB.
+
+✅ **A7 — the legacy table's independent contribution is 29 instruments / 211 sections, not 914,274.**
+127,417 of 127,790 are already held. ⚠ **My first run reported 1,579 independent gaps and every one
+was false** — it built the calendar→regnal map from `worklist.jsonl`, which lists only ABSENT
+instruments, so `ukpga/1801/52` read as missing while `ukpga/Geo3/41/52` sat in the corpus with 5
+compiled sections. The map now comes from the full source walk and the script REFUSES to report
+without it.
+
+✅ **A2 — the register reconciles exactly**: live 18,243,823 + retired 28,629 = 18,272,452 =
+`corpus_sections` compiled total, legacy 914,274 outside the sum.
+
+▶ **CHARLIE: five numbered decisions in the report.** The two that change money: Part D is ~10×
+smaller than briefed and should be re-ordered to run the SIs first and the pre-2000 Acts last; and
+Part F's re-fetch is ~260× smaller — **131,147 of the 131,650 `et-decisions` landing pages already
+have their real judgment PDF ingested alongside them**, so F2 is 503 fetches, not 131,650.
+
+## INGEST CENSUS C1 — PREDICTIONS, LOGGED BEFORE THE A5 PILOT RAN (2026-08-23 01:10 UTC)
+
+Predict-measure-compare, per the brief's standing rule. Written before `a5-worklist-pilot.ts` was
+started; scored in `docs/INGEST_CENSUS_C1_A_REPORT.md`.
+
+**A5(c) — the 500-instrument pilot over `v36/worklist.jsonl`:**
+1. Throughput at the 500 ms politeness floor: **50-90 instruments/min** (each instrument is two
+   parallel fetches — `/data.xml` plus the effects feed — so the floor, not the round trip, should
+   dominate).
+2. `reason=classb` recovery rate — the 7,924 entries carrying the permanent-sounding marker
+   *"No CLML/HTML/PDF found on TNA"*, which V36 proved was often a transient 429/timeout written
+   down as a property of the instrument: **20-40% return real sections on a plain re-fetch**
+   (V36 measured 27.5% on a random n=40; this is the same population, larger sample).
+3. `reason=unseen` recovery rate — never attempted, so absence is unexplained: **80-95%**.
+4. Mean sections per instrument, ok only: **8-20** (SIs are 63.7% of the list and are short;
+   pre-2000 Acts are 13.8% and are long).
+5. Full-list projection: **0.4-0.7M sections, 55-95M words** — i.e. CCh's ~0.45-0.6M section
+   estimate is expected to hold.
+
+**A7 — legacy overlap.** Predicting the legacy table is now nearly worthless as an independent
+source: **fewer than 3,000 instruments in NEITHER** bucket.
+
+⚠ Prediction 2 is the load-bearing one. If `classb` recovery is high, a large part of the "gap" is
+not a gap at all but our own recorded fetch failures, and Part D gets cheaper and more valuable at
+the same time.
+
+## INGEST LABELS — THE "100% COMPLETE" WAS A TAUTOLOGY, AND 80% OF THE SENEDD RECORD WAS STORED IN THE WRONG LANGUAGE (2026-08-23 00:34 UTC)
+
+**Executes `docs/BRIEF_INGEST_LABELS.md`. Report: `docs/INGEST_LABELS_REPORT.md`.**
+
+⚠⚠ **THE DAILY EMAIL'S DENOMINATOR WAS ITS OWN NUMERATOR.** `corpus_targets.est_sections` was set,
+for most collections, by copying the compiled count once the queue drained and flagging it
+`est_is_confirmed = true` — five scripts in the repo do a variant of
+`UPDATE corpus_targets SET est_sections=<compiledCount>, est_is_confirmed=true`. **62 of 77 live
+collections printed `[100% complete]`; 46 of those had `est_sections` EXACTLY equal to their
+compiled count.** `historic-hansard` 4,641,085/4,641,085. The email was asserting "we have ingested
+everything we ingested", with a tick. Provenance is now COMPUTED at report time — `self-referential`
+/ `estimate` / `none`, rendered `⚠ / ~ / ?` — and the instrument line sits beside it carrying the
+publisher walk. ⚠ **My own first fix reproduced the identical category error one layer up**, marking
+the six walked collections' SECTION denominators `✓ source-walked` when the walk counted
+INSTRUMENTS; the walk now attaches to the instrument line and to nothing else. **The 20 GB storage
+warning is deleted** — the third fictional ceiling this project has carried; replaced with
+$/month, its source and the date checked. `sendProgressEmail` split into `buildProgressEmail` so the
+email can be RENDERED WITHOUT SENDING (`labels/preview-email.ts`) — until today the only way to see
+it was to receive it, which is how the tick survived two months.
+
+⚠⚠ **THE SENEDD RECORD WAS BEING STORED IN WELSH, AND IT IS OUR BUG, NOT A PROPERTY OF THE
+MATERIAL.** The Cofnod publishes every contribution twice — `verbatim` (as spoken) and `translation`
+(the other language). `contributionEnglish` preferred `translation` on a stated premise that is
+false: *"English-spoken turns have no translation"*. They have a WELSH one. **n=2,050 across 12
+plenaries: 80.0% were spoken in English, so 80.0% were stored in Welsh.** ⚠ And "just take verbatim"
+is also wrong — it stores Welsh for the 20% spoken in Welsh. Neither div is the English one. Fixed
+with a per-div function-word classifier that ABSTAINS rather than guesses; old rule 79.5% Welsh →
+new rule **0.0%**, measured over 970 real contributions. **GOLD V2's "a Welsh devolved question is
+not askable in English" is REFUTED.**
+
+⚠⚠ **AND THE HEADING THE PARSER NEVER LOOKED AT: 55.2% of stored Senedd headings are WRONG**
+(1,609 of 2,915 judged, 12 plenaries). Blocks are typed; the parser knew about `subHeading` and not
+about **`agendaItem`**, which was discarded as a heading AND mis-filed as a speech, with the running
+sub-heading never reset. Every speech under an agenda item with no sub-heading inherited the
+*previous* item's — which is how two speeches about oesophageal cancer were titled "The 20 mph Speed
+Limit". Both fixed. `check-senedd-labels.ts` guards them **with the previous implementation kept
+verbatim as its negative control**, 7/7, control confirmed firing. ⚠ One of its assertions was
+itself a check that could not fail in its first draft (`headScored > 0` — it tested that the loop
+ran); it now measures the change rate it names.
+
+✅ **§4.1 MEASURED AND DELIBERATELY NOT SWEPT. n=240, adjudicated by the source's own published
+heading, not by opinion: 4.6% of titled legislation sections carry a wrong title** —
+`primary-acts-2000plus` 13.3%, `primary-acts-pre-2000` 3.3%, `si-2010plus` 0.0%, `si-pre-2010` 1.7%.
+**All 11 of 11 are same-instrument displacements**, concentrated in low-numbered sections (median
+mismatch s.9 vs match s.18), and overwhelmingly SCHEDULE crossheadings — "Taking of Hostages Act
+1982" on Criminal Justice Act 2003 s.28. The `array_agg[1]` dedup in `v28-title-extract.ts` was the
+obvious suspect and is **NOT the cause**: the legacy table itself is wrong and v28 copied it
+faithfully. ⚠⚠ **THE RETRIEVAL COST IS ZERO AND THE BRIEF'S PREMISE IS WRONG AS THINGS STAND:
+BROKEN 5/11 vs CONTROL 5/11, identical**, because `build-fts-index` indexes `body` only and
+title-boost is documented inert for legislation. The cost is DISPLAY, and it is certain. ⚠ **I
+corrected my own measurement mid-sprint** — the first probe asked `"{heading} {act title}"` at
+limit 20 and scored CONTROL 4/11, reading as "section retrieval is weak"; adding "section N" puts
+every one at rank 0, so that design measured nothing about the field under test.
+
+✅ **§2 CLOSED: the plan accounts for 100% of what we hold, up from 89.2%** — 21 rows added for the
+1,981,946 sections nobody named, largest being the entire devolved parliamentary record (Holyrood
+1,043,264 · Stormont 196,348 · Senedd 191,730). **All 21 UNSIZED by design**, column H empty: no
+publisher enumeration exists for any of them.
+
+❌ **§3 STAGED, NOT APPLIED — the destructive step was blocked by the session's permission
+classifier and was not worked around.** All three retired collections were retired as SUPERSEDED,
+none for a licence reason (checked and stated). Supersession **re-verified through retrieval**: the
+retired copies are rank 0 in their successors AND poorer (a question without its answer; a 26k-char
+month blob against per-statement rows). **28,629 sections are reachable by a user today** — all map
+to DEBATE in the parliamentary tier, inside the debates stream's scope. `remove-retired.ts` dry-run
+clean, deletes DB before indexes (else `fts-catchup` resurrects them), backs every row up and leaves
+R2 untouched so it is reversible; its refusal guard **watched failing** via `--self-test` against
+live `pwdata-wrans`. `verify-retired-gone.ts` runs now at **0/3 with both sides returning 10** —
+exactly the pre-removal state it should fail in.
+
+⚠ **REPORTED NOT EDITED (CC-Search's files): the citation rewrite is missing from most served
+legislation rows**, which is why §4.1's retrieval cost measured zero. One cause established and it
+is the regnal/calendar trap again — the act-title map keys on `LegislationItem`'s CALENDAR id while
+the corpus holds pre-1963 Acts under the REGNAL id: **only 14.0% of `primary-acts-pre-2000` gids
+resolve to an act title** (2,329 of 16,622), against 98.6% for 2000-plus. A second cause is
+unestablished. ⚠ Also named: **`written-answers` (143 rows, mean 305,936 words each) is the same
+month-blob defect as `written-statements` and is NOT retired** — live, typed DEBATE.
+
+▶ **CHARLIE: five numbered decisions in the report.** The load-bearing one is §3's `--apply` plus a
+redeploy of `fts-serve` and `vector-serve` — both hold their Lance tables open from boot, so a
+delete reaches no user until they restart.
+
 ## INGEST — CASE LAW BEFORE 2001: BAILII IS SHUT BY ITS OWN TERMS, AND THE GAP WE CAN CLOSE IS THE HOUSE OF LORDS (2026-08-23 00:13 UTC)
 
 Executes `docs/BRIEF_CASELAW_PRE2001_SCOPE.md`. Deliverable: **`docs/CASELAW_PRE2001_SCOPE.md`**.

@@ -417,6 +417,27 @@ It is held as an assertion rather than as a comment, three ways:
 
 ## §3 — THE VALIDATION SET: 50 CHOSEN, 107 DEFERRED, NOTHING SCORED
 
+> ## ⛔⛔ CORRECTION, 23 August 2026 — THIS SECTION'S OUTPUT WAS WITHDRAWN
+>
+> **Everything below is a true account of what 3C did, and what 3C did was build a subset of an
+> unsound set.** Charlie caught it on Sir Edward Leigh, whose row cited an amendment to the
+> assisted dying Bill; he is one of that Bill's most prominent opponents.
+>
+> **136 of the 157 rows rested on amendment sponsorship, which cannot carry a direction** — a
+> wrecking amendment and a strengthening amendment are the same recorded fact. 3B chose that basis
+> because it is *non-circular*, and 3C inherited the choice without re-examining it. The reasoning
+> error is worth more than the incident: **non-circularity is necessary and not sufficient. The
+> basis must also DETERMINE A DIRECTION.** An independent signal that does not settle the answer is
+> worse than useless in an answer key, because it marks the graph wrong every time the graph is
+> right.
+>
+> ⚠ **The stratification, the party spread and the stratum-C lesson below all still stand** — they
+> are about *which* rows to review first, and they carried over intact. What was wrong was the
+> evidence in the rows, not the way the rows were chosen.
+>
+> Superseded by **`docs/GRAPH_3C2_REPORT.md`** and the rebuilt
+> `docs/POSITION_VALIDATION_CANDIDATES.md`. Nothing was ever scored, so no measurement rests on it.
+
 `docs/POSITION_VALIDATION_CANDIDATES.md` is rewritten by `select-3c-validation.ts`. All 157 rows
 survive with their VERDICT lines blank — asserted by reading the file back and counting.
 
