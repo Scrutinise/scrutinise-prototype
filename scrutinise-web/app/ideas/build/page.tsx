@@ -17,7 +17,8 @@ import { prisma } from '@/lib/prisma'
 import BuildIdeaClient from './BuildIdeaClient'
 
 interface Props {
-  searchParams: Promise<{ ideaId?: string }>
+  /** `fresh=1` — 25-E §2: the explicit opt-out from resuming. See below. */
+  searchParams: Promise<{ ideaId?: string; fresh?: string }>
 }
 
 export default async function BuildIdeaPage({ searchParams }: Props) {
@@ -33,6 +34,7 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
 
   const params = await searchParams
   let initialIdeaId: string | undefined
+  let resumed = false
   if (params.ideaId && dbUser) {
     const existing = await prisma.idea.findUnique({
       where: { id: params.ideaId, creatorId: dbUser.id },
@@ -41,5 +43,73 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
     if (existing && !existing.deletedAt) initialIdeaId = existing.id
   }
 
-  return <BuildIdeaClient initialIdeaId={initialIdeaId} />
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 25-E §2 — RESUME, RATHER THAN MINTING A NEW IDEA ON EVERY VISIT.
+  //
+  // ⚠⚠ THIS IS THE DEFECT CHARLIE HIT, AND THE BRIEF'S DESCRIPTION OF IT IS KIND.
+  // He reported that refreshing "lost everything he had entered". It did not: every
+  // answer was in the database the whole time and is there now — idea
+  // 452c5ade…, 2,934 characters of problem, 690 of his own knowledge, CONFIRMED at
+  // 01:56:52 on 22 Aug. `answerStep` has always persisted each answer on the turn it
+  // was given.
+  //
+  // What was lost was the PAGE. Landing here without `?ideaId=` made the client POST
+  // `/api/ideas` and mint a BRAND NEW idea, and the id was never written to the URL —
+  // so a refresh minted another one and orphaned the first. The user sees an empty
+  // form and correctly concludes their writing is gone.
+  //
+  // The litter proves it: 10 of the 11 elicitation rows in production are empty
+  // "Untitled idea" shells, three of them created within EIGHT SECONDS of each other.
+  //
+  // So: an unfinished elicitation is RESUMED. Which also stops the litter at source —
+  // a returning user reopens their row instead of adding to the pile.
+  //
+  // ⚠⚠ "UNFINISHED" MEANS *NO BUILD HAS BEEN STARTED*, NOT "NOT CONFIRMED". This
+  // distinction is not pedantic — it is the difference between Charlie getting his work
+  // back and not. His idea is CONFIRMED with no build: he answered all four questions,
+  // agreed to the reading, and was then stopped by the greyed-out button. A rule that
+  // resumed only IN_PROGRESS rows would hand him a blank page and leave 2,934 characters
+  // stranded, having just fixed the bug that stranded them.
+  //
+  // A CONFIRMED elicitation with a build is finished work and is NOT resumed: reopening it
+  // would trap someone who came back to start something new.
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ⚠ `fresh=1` IS THE WAY OUT, AND IT HAS TO EXIST. Resuming by default is right — it is
+  // what the user almost always wants — but a default with no override is a trap for the
+  // person who came here to start something else, and they would have no way to say so.
+  if (!initialIdeaId && dbUser && params.fresh !== '1') {
+    // ⚠⚠ THE "HAS SOMETHING IN IT" TEST IS IN THE QUERY, NOT AFTER IT, AND THE FIRST VERSION
+    // OF THIS CODE GOT IT WRONG IN A WAY THAT WOULD HAVE SHIPPED.
+    //
+    // `findFirst` is `ORDER BY … LIMIT 1`. Filtering for content AFTER it means the newest row
+    // wins the ordering and is then thrown away for being empty — so ONE empty shell hides
+    // every real row behind it. Measured against production: the query landed on a blank row
+    // created at 00:29 today, and Charlie's own CONFIRMED idea — 2,934 characters, last
+    // touched 22 Aug — never came back at all, because it is older. The fix for losing his
+    // work would have failed to find it.
+    //
+    // Same shape as GRAPH 3B: a property asserted over a RANKED, TRUNCATED result set is only
+    // a property of the top of the ranking. If the condition decides which row you want, it
+    // belongs in the WHERE clause.
+    const unfinished = await prisma.ideaElicitation.findFirst({
+      where: {
+        idea: { creatorId: dbUser.id, deletedAt: null, builds: { none: {} } },
+        OR: [
+          { problem: { not: null } },
+          { goalKind: { not: null } },
+          { ownKnowledge: { not: null } },
+        ],
+      },
+      orderBy: { updatedAt: 'desc' },
+      select: { ideaId: true, status: true, problem: true, goalKind: true, ownKnowledge: true },
+    })
+    // Belt and braces: a row storing an EMPTY STRING rather than null would satisfy the SQL
+    // and still be nothing to resume. Announcing a resumption of nothing is its own defect.
+    if (unfinished && (unfinished.problem?.trim() || unfinished.goalKind || unfinished.ownKnowledge?.trim())) {
+      initialIdeaId = unfinished.ideaId
+      resumed = true
+    }
+  }
+
+  return <BuildIdeaClient initialIdeaId={initialIdeaId} resumed={resumed} />
 }
