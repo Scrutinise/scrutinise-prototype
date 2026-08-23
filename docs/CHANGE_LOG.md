@@ -132,6 +132,94 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## LEX 25-E — THE FRONT DOOR OPENS, AND `IdeaBuild` WAS EMPTY (2026-08-23 08:45 UTC)
+
+Executes `docs/BRIEF_25E_ELICITATION.md` §1–§5. Report: **`docs/LEX_25E_REPORT.md`**.
+`check:lex-25e` **27/27, 17 controls all fired**; `verify:lex-25e` **19/19 live against Neon**;
+`verify:lex-25e-ui` **16/16 rendered, 6 controls fired**; `check:lex-25d` 77/77;
+`check:build-25a` 40/40; `check:build-25b` 54/54; `check:lex-25c` 32/32; `check:20bd` 47/47;
+`check:flags` 54/54; `check:never-claim` pass; `tsc` clean.
+
+⚠⚠⚠ **THE FINDING, BEFORE ANYTHING ELSE: `IdeaBuild` CONTAINS ZERO ROWS ACROSS THE ENTIRE
+DATABASE. NOT ONE BUILD HAS EVER BEEN STARTED, BY ANYONE.** Eleven elicitation rows exist. One
+is CONFIRMED — Charlie's, 01:56:52 on 22 August, with a 750-character understanding paragraph he
+read and agreed to — and it has no build. The other ten are empty `"Untitled idea"` shells,
+three created **within eight seconds of each other**.
+
+⚠⚠ **§1 — THE CONFIRMATION CONTROL WAS THERE ALL ALONG AND CHARLIE USED IT. WHAT FAILED WAS THE
+ACKNOWLEDGEMENT.** `confirm()` wrote `setElicit(...)` and nothing else. The page held TWO server
+objects and refreshed ONE. So the instant he pressed *"That's right — build it"*: the
+confirmation buttons vanished (`status === 'AWAITING_CONFIRMATION'` now false), the build card
+appeared (`status === 'CONFIRMED'` now true), and it appeared **greyed out beside
+`blockedReason` from the BOOT-TIME fetch** — *"Confirm what I've understood first"*. He was told
+to do the thing he had just done, with no control left to do it with. **All three of the brief's
+symptoms are that one missing refresh.** ⚠ `canStart` was never wrong; it was STALE — which is
+why no server-side check could have found it, and none did.
+
+⚠⚠ **AND A SECOND, INDEPENDENT DEAD END ON THE SAME STEP.** When `writeUnderstanding` fails the
+row stays IN_PROGRESS with `currentStep` at `'confirm'`. The client chose between three blocks
+on three INDEPENDENT conditions and **in that state all three are false — the page rendered
+nothing at all.** Lex's own apology said *"try again in a moment"* and there was no way to try
+again. Fixed by a server-decided `ElicitationPhase` (a closed union, one branch each), a route
+that returns BOTH halves from any mutation, suppression of a `blockedReason` that contradicts
+the phase, a retry action that is not counted as a correction, and a backstop card. The
+confirmation now offers accept, "not quite" AND a live text box together — the box is no longer
+behind the button, because Lex has just asked to be corrected and the means must be on screen.
+
+⚠⚠ **§2 — THE ANSWERS WERE NEVER LOST. THE BRIEF'S PREMISE IS REFUTED.** Every answer was in the
+database the whole time and is there now: 2,934 characters of problem, 690 of own knowledge.
+`answerStep` has always persisted on the turn. **What was lost was the PAGE** — `/ideas/build`
+with no `?ideaId=` minted a BRAND NEW idea and never wrote the id to the URL, so a refresh
+minted another and orphaned the first. The ten empty shells are the litter from exactly that.
+Now: the id goes into the URL on sight; a bare visit RESUMES and says so; `?fresh=1` starts
+clean. ⚠ "Unfinished" means **no build started**, not "not confirmed" — Charlie's idea is
+CONFIRMED with no build, which is precisely the state the dead end created, and a status-based
+rule would have stranded his work with the fix meant to recover it.
+
+⚠⚠ **THE TRAP THIS SPRINT'S OWN FIRST FIX FELL INTO, CAUGHT BEFORE SHIPPING.** The first version
+filtered for "has something in it" AFTER the query. `findFirst` is `ORDER BY … LIMIT 1`, so the
+newest row won the ordering and was then discarded for being empty — **one blank shell hid every
+real row behind it.** Measured against production it landed on a row created at 00:29 with
+nothing in it, and Charlie's idea never came back, because it is older. **The fix for losing his
+work would have failed to find it.** The condition is now in the WHERE clause, with a control.
+Same shape as GRAPH 3B.
+
+✅ **§3 — NOTHING CRASHED; THE BUILD NEVER STARTED.** Zero `IdeaBuild` rows: nothing was claimed,
+no pass reached, nothing written to FAILED or left RUNNING. Per the brief's own instruction, **it
+is §1 — the button was never enabled.** What read as "paused and crashed" was a page with no
+controls on it, which is indistinguishable from a crash; hence the backstop.
+
+✅ **§4 — the three smaller defects.** 4a: the opening question was printed twice VERBATIM because
+`question` for the first step IS `OPENING_ASK`, which Lex says in the transcript directly above;
+steps now carry a short `cardPrompt`, `null` on the opening step so the hints do the work — and
+it falls back to `null`, never to `question`, because that fallback is the duplication itself.
+4b: the Send button's reason is now a computed STRING driving both the `disabled` attribute and
+the sentence beside it, so they cannot disagree, and the requirement is stated before the
+control is pressed. 4c: *"Usually a few minutes — we don't have enough builds yet to be
+precise"* answered the question and then confessed our sample size at the moment of commitment;
+now *"This usually takes a few minutes."*
+
+⚠⚠ **THE PHASE CARDS WERE EXTRACTED INTO PURE COMPONENTS FOR ONE REASON: SO THEY CAN BE RENDERED
+AND LOOKED AT.** No grep over the source could have caught this — the source contained a
+perfectly good confirmation block. A grep tells you a `<button>` is written down; it cannot tell
+you the branch containing it is reachable. `verify:lex-25e-ui` renders every phase with real
+props and asserts an ENABLED control comes out, **including the exact state Charlie was stuck
+in.** ⚠ And it caught its own defect first: its "is this enabled" matcher reported EVERY button
+as disabled — every button carries the Tailwind class `disabled:opacity-40` and a lookahead for
+`\sdisabled` matches it inside `class` — failing five assertions against correct components, in
+the direction that looks like it caught something.
+
+▶ **CHARLIE: THE ACCEPTANCE CRITERION IS NOT MET AND CANNOT BE BY ME.** A person has not
+completed the flow; the extension has no host permission for localhost and this session has no
+Clerk session on production. The server walk reaches `canStart === true` and every phase renders
+a usable control — **neither proves a click works.** The run is one link:
+`https://www.scrutinise.org/ideas/build` now RESUMES your existing idea and should open on the
+confirmation with a working *"That's right — build it"*. To start clean: `?fresh=1`. And the
+build itself has still never run — fixing the door does not prove the room, so sections B–G of
+your walk remain entirely untested.
+
+---
+
 ## GRAPH 3C-2 — THE VALIDATION KEY RESTED ON AN UNSIGNED FACT, AND IS REBUILT ON MEMBERS' OWN WORDS (2026-08-23 08:40 UTC)
 
 Charlie paused the validation pass. Report: **`docs/GRAPH_3C2_REPORT.md`**; `GRAPH_3C_REPORT.md` §3

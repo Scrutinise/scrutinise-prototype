@@ -2,7 +2,44 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-23 08:40 UTC — ▼ **GRAPH 3C-2: THE VALIDATION KEY WAS RESTING ON AN UNSIGNED
+*Last updated: 2026-08-23 08:45 UTC — ▼ **LEX 25-E: THE FRONT DOOR OPENS. ⚠⚠⚠ `IdeaBuild`
+CONTAINED ZERO ROWS ACROSS THE WHOLE DATABASE — NOT ONE BUILD HAS EVER BEEN STARTED, BY ANYONE.
+Eight sprints of work sat behind a step nobody could get past.** ⚠⚠ The confirmation control was
+there all along and Charlie USED it — his elicitation is CONFIRMED with a 750-char paragraph he
+agreed to. What failed was the acknowledgement: `confirm()` refreshed ONE of the two server
+objects the page held, so the instant he pressed "That's right — build it" the confirm buttons
+vanished and a greyed-out "Build it" appeared beside the BOOT-TIME `blockedReason` — *"Confirm
+what I've understood first"* — telling him to do what he had just done, with no control left to
+do it with. **All three of the brief's symptoms are that one missing refresh.** `canStart` was
+never wrong; it was STALE, which is why no server-side check could have found it. ⚠⚠ A SECOND
+dead end: when the understanding paragraph fails to write, three independent render conditions
+are ALL false and the page renders NOTHING — Lex apologises and says "try again in a moment" and
+there is no way to try again. Fixed by a server-decided `ElicitationPhase` (closed union, one
+branch each), a route returning BOTH halves, a retry that isn't counted as a correction, and a
+backstop card. ⚠⚠ **§2: THE ANSWERS WERE NEVER LOST — the brief's premise is refuted.** 2,934
+chars of problem and 690 of own knowledge were in the database throughout. What was lost was the
+PAGE: `/ideas/build` minted a NEW idea on every visit and never put the id in the URL, so a
+refresh orphaned everything (ten empty shells prove it, three within eight seconds). Now the id
+goes in the URL, a bare visit RESUMES and says so, `?fresh=1` starts clean. ⚠⚠ **And this
+sprint's own first fix fell into the `LIMIT 1` trap** — it filtered for "has content" AFTER
+`findFirst`, so one blank shell hid every real row and **the fix for losing his work would have
+failed to find it**; measured against production before shipping, now in the WHERE clause with a
+control. ✅ §3: nothing crashed — the build never started, so it is §1. ✅ §4: the opening
+question was printed twice because the card's `question` IS the paragraph Lex just said; the
+Send button's reason is now one computed string driving both the `disabled` attribute and the
+sentence; the estimate no longer confesses our sample size at the moment of commitment. ⚠⚠ The
+phase cards were EXTRACTED into pure components so they can be RENDERED — no grep could have
+caught this, because the source contained a perfectly good confirmation block. `verify:lex-25e-ui`
+renders every phase and asserts an ENABLED control comes out, including the exact state Charlie
+was stuck in — and it caught its own defect first (`disabled:opacity-40`, a Tailwind CLASS, made
+its matcher report every button as disabled). ▶ **CHARLIE: THE ACCEPTANCE CRITERION IS A HUMAN
+RUN AND I CANNOT BE THE HUMAN** — no Clerk session from here. The server walk reaches
+`canStart === true` and every phase renders a usable control; neither proves a click works.
+`https://www.scrutinise.org/ideas/build` now RESUMES your existing idea and should open on the
+confirmation with a working "That's right — build it" (`?fresh=1` to start clean). And the build
+itself has still never run, so sections B–G of your walk remain untested.
+`docs/LEX_25E_REPORT.md`.**
+Earlier: 2026-08-23 08:40 UTC — ▼ **GRAPH 3C-2: THE VALIDATION KEY WAS RESTING ON AN UNSIGNED
 FACT AND IS REBUILT ON MEMBERS' OWN WORDS. Charlie paused the pass and caught it on Sir Edward
 Leigh — cited as supporting the assisted dying Bill for sponsoring an amendment to it, when he is
 one of its most prominent opponents. 136 of 157 rows rested on AMENDMENT SPONSORSHIP, which is
