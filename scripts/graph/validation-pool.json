@@ -1,0 +1,1415 @@
+[
+ {
+  "id": "M1.001",
+  "matter": "M1",
+  "name": "Kim Leadbeater",
+  "mnis": 4923,
+  "party": "Labour",
+  "basis": "bill-sponsor",
+  "body": "### M1.001 — Kim Leadbeater (MNIS 4923), Labour\n\n- **Proposed position on Assisted dying:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Terminally Ill Adults (End of Life) Bill\" (bills-api billId 3774)\n- **Source:** <https://bills.parliament.uk/bills/3774>\n- **In its own words:** “A Bill to allow adults who are terminally ill, subject to safeguards and protections, to request and be provided with assistance to end their own life; and for connected purposes.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.002",
+  "matter": "M1",
+  "name": "Lord Falconer of Thoroton",
+  "mnis": 2758,
+  "party": "Labour",
+  "basis": "bill-sponsor",
+  "body": "### M1.002 — Lord Falconer of Thoroton (MNIS 2758), Labour\n\n- **Proposed position on Assisted dying:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Terminally Ill Adults (End of Life) Bill\" (bills-api billId 3774)\n- **Source:** <https://bills.parliament.uk/bills/3774>\n- **In its own words:** “A Bill to allow adults who are terminally ill, subject to safeguards and protections, to request and be provided with assistance to end their own life; and for connected purposes.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.004",
+  "matter": "M1",
+  "name": "Tom Gordon",
+  "mnis": 5032,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M1.004 — Tom Gordon (MNIS 5032), Liberal Democrat\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 2, page 2, line 2, leave out “within 6 months” and insert— “(i) in the case of a neurodegenerative illness, disease, or medical condition, within 12 months; or”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.005",
+  "matter": "M1",
+  "name": "Sir Edward Leigh",
+  "mnis": 345,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M1.005 — Sir Edward Leigh (MNIS 345), Conservative\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC3 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Guidance: administration of pain relief to people who are terminally ill”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.008",
+  "matter": "M1",
+  "name": "Saqib Bhatti",
+  "mnis": 4818,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M1.008 — Saqib Bhatti (MNIS 4818), Conservative\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC7 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Doctor independence”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.017",
+  "matter": "M2",
+  "name": "James Cleverly",
+  "mnis": 4366,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M2.017 — James Cleverly (MNIS 4366), Conservative\n\n- **Proposed position on Removals to Rwanda:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Safety of Rwanda (Asylum and Immigration) Act 2024\" (bills-api billId 3540)\n- **Source:** <https://bills.parliament.uk/bills/3540>\n- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.018",
+  "matter": "M2",
+  "name": "Lord Sharpe of Epsom",
+  "mnis": 4888,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M2.018 — Lord Sharpe of Epsom (MNIS 4888), Conservative\n\n- **Proposed position on Removals to Rwanda:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Safety of Rwanda (Asylum and Immigration) Act 2024\" (bills-api billId 3540)\n- **Source:** <https://bills.parliament.uk/bills/3540>\n- **In its own words:** “Make provision about the removal of certain migrants to the Republic of Rwanda.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.020",
+  "matter": "M2",
+  "name": "Mr Alistair Carmichael",
+  "mnis": 1442,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M2.020 — Mr Alistair Carmichael (MNIS 1442), Liberal Democrat\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 6 at Committee of the whole House, with 1 co-sponsor (Sir Robert Buckland) — decision: NotSelected\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Page 3, line 21, leave out Clause 3”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.021",
+  "matter": "M2",
+  "name": "Alison Thewliss",
+  "mnis": 4430,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M2.021 — Alison Thewliss (MNIS 4430), Scottish National Party\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 51 at Committee of the whole House, with 3 co-sponsors (Chris Stephens, Stephen Flynn, Owen Thompson) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 5, page 5, line 15, leave out “not””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.022",
+  "matter": "M2",
+  "name": "Yvette Cooper",
+  "mnis": 420,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M2.022 — Yvette Cooper (MNIS 420), Labour\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 38 at Committee of the whole House, with 1 co-sponsor (Stephen Kinnock) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 5, page 5, line 23, after “person” insert “in consultation with the Attorney General.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.033",
+  "matter": "M3",
+  "name": "Suella Braverman",
+  "mnis": 4475,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M3.033 — Suella Braverman (MNIS 4475), Conservative\n\n- **Proposed position on Illegal migration and small boats:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Illegal Migration Act 2023\" (bills-api billId 3429)\n- **Source:** <https://bills.parliament.uk/bills/3429>\n- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.034",
+  "matter": "M3",
+  "name": "Lord Murray of Blidworth",
+  "mnis": 4950,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M3.034 — Lord Murray of Blidworth (MNIS 4950), Conservative\n\n- **Proposed position on Illegal migration and small boats:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Illegal Migration Act 2023\" (bills-api billId 3429)\n- **Source:** <https://bills.parliament.uk/bills/3429>\n- **In its own words:** “A Bill to Make provision for and in connection with the removal from the United Kingdom of persons who have entered or arrived in breach of immigration control; to make provision about detention for immigration purposes;…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.035",
+  "matter": "M3",
+  "name": "Liz Saville Roberts",
+  "mnis": 4521,
+  "party": "Plaid Cymru",
+  "basis": "amendment-sponsor",
+  "body": "### M3.035 — Liz Saville Roberts (MNIS 4521), Plaid Cymru\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC1 at Report stage, with 6 co-sponsors (Hywel Williams, Ben Lake, Apsana Begum, Nadia Whittome, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Detainees: permission to work after six months”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.036",
+  "matter": "M3",
+  "name": "Apsana Begum",
+  "mnis": 4790,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.036 — Apsana Begum (MNIS 4790), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC2 at Report stage, with 21 co-sponsors (Bell Ribeiro-Addy, Richard Burgon, Rebecca Long Bailey, Ms Diane Abbott, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Arrangements for removal: pregnancy”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.044",
+  "matter": "M3",
+  "name": "The Lord Bishop of Durham",
+  "mnis": 4312,
+  "party": "Bishops",
+  "basis": "amendment-sponsor",
+  "body": "### M3.044 — The Lord Bishop of Durham (MNIS 4312), Bishops\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 128B at Committee stage, with 3 co-sponsors (Baroness Stroud, Lord Purvis of Tweed, Baroness Lister of Burtersett) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>\n- **In its own words:** “Clause 58, page 61, line 3, at end insert— “(6A) The Secretary of State may not make regulations under subsection (1) specifying any limit on the number of persons who arrive under the following schemes—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.049",
+  "matter": "M4",
+  "name": "Priti Patel",
+  "mnis": 4066,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M4.049 — Priti Patel (MNIS 4066), Conservative\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Nationality and Borders Act 2022\" (bills-api billId 3023)\n- **Source:** <https://bills.parliament.uk/bills/3023>\n- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.050",
+  "matter": "M4",
+  "name": "Baroness Williams of Trafford",
+  "mnis": 4311,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M4.050 — Baroness Williams of Trafford (MNIS 4311), Conservative\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Nationality and Borders Act 2022\" (bills-api billId 3023)\n- **Source:** <https://bills.parliament.uk/bills/3023>\n- **In its own words:** “Make provision about nationality, asylum and immigration; to make provision about victims of slavery or human trafficking; to provide a power for Tribunals to charge participants where their behaviour has wasted the Trib…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.051",
+  "matter": "M4",
+  "name": "Baroness Hamwee",
+  "mnis": 2652,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M4.051 — Baroness Hamwee (MNIS 2652), Liberal Democrat\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “leave out “equally” and insert “in the same terms””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.056",
+  "matter": "M4",
+  "name": "Lord Anderson of Ipswich",
+  "mnis": 4705,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M4.056 — Lord Anderson of Ipswich (MNIS 4705), Crossbench\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of Unnumbered at Committee stage, with 3 co-sponsors (Lord Rosser, Lord Paddick, Baroness Warsi) — decision: Disagreed\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “The above-named Lords give notice of their intention to oppose the Question that Clause 9 stand part of the Bill.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.063",
+  "matter": "M4",
+  "name": "The Lord Bishop of Durham",
+  "mnis": 4312,
+  "party": "Bishops",
+  "basis": "amendment-sponsor",
+  "body": "### M4.063 — The Lord Bishop of Durham (MNIS 4312), Bishops\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 29 at Report stage, with 1 co-sponsor (Baroness Lister of Burtersett) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>\n- **In its own words:** “at end insert— In section 16 of the Nationality, Immigration and Asylum Act 2002 (establishment of centres), at end insert—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.065",
+  "matter": "M5",
+  "name": "Mr David Davis",
+  "mnis": 373,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M5.065 — Mr David Davis (MNIS 373), Conservative\n\n- **Proposed position on Leaving the European Union:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"European Union (Withdrawal) Act 2018\" (bills-api billId 2045)\n- **Source:** <https://bills.parliament.uk/bills/2045>\n- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.066",
+  "matter": "M5",
+  "name": "Baroness Evans of Bowes Park",
+  "mnis": 4329,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M5.066 — Baroness Evans of Bowes Park (MNIS 4329), Conservative\n\n- **Proposed position on Leaving the European Union:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"European Union (Withdrawal) Act 2018\" (bills-api billId 2045)\n- **Source:** <https://bills.parliament.uk/bills/2045>\n- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.068",
+  "matter": "M5",
+  "name": "Lord Wigley",
+  "mnis": 547,
+  "party": "Plaid Cymru",
+  "basis": "amendment-sponsor",
+  "body": "### M5.068 — Lord Wigley (MNIS 547), Plaid Cymru\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Committee stage, with 1 co-sponsor (Lord Dykes) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at beginning insert “Subject to subsections (2) and (3),””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.069",
+  "matter": "M5",
+  "name": "Lord Adonis",
+  "mnis": 3743,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.069 — Lord Adonis (MNIS 3743), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Lord Hain, Lord Triesman, Baroness Meacher) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “leave out “on exit day” and insert “on a date to be determined by a further Act of Parliament””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.077",
+  "matter": "M5",
+  "name": "Lord Pannick",
+  "mnis": 3870,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M5.077 — Lord Pannick (MNIS 3870), Crossbench\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 15 at Committee stage, with 3 co-sponsors (Baroness Taylor of Bolton, Lord Norton of Louth, Lord Beith) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “leave out paragraphs (b) to (d)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.081",
+  "matter": "M6",
+  "name": "Wes Streeting",
+  "mnis": 4504,
+  "party": "Labour",
+  "basis": "bill-sponsor",
+  "body": "### M6.081 — Wes Streeting (MNIS 4504), Labour\n\n- **Proposed position on The generational smoking ban:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Tobacco and Vapes Act 2026\" (bills-api billId 3879)\n- **Source:** <https://bills.parliament.uk/bills/3879>\n- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.082",
+  "matter": "M6",
+  "name": "Baroness Merron",
+  "mnis": 347,
+  "party": "Labour",
+  "basis": "bill-sponsor",
+  "body": "### M6.082 — Baroness Merron (MNIS 347), Labour\n\n- **Proposed position on The generational smoking ban:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Tobacco and Vapes Act 2026\" (bills-api billId 3879)\n- **Source:** <https://bills.parliament.uk/bills/3879>\n- **In its own words:** “A Bill to make provision about the supply of tobacco, vapes and other products, including provision prohibiting the sale of tobacco to people born on or after 1 January 2009 and provision about the licensing of retail sa…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.086",
+  "matter": "M6",
+  "name": "Dr Caroline Johnson",
+  "mnis": 4592,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M6.086 — Dr Caroline Johnson (MNIS 4592), Conservative\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC6 at Committee stage — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “To move the following Clause— “Consultation on licensing regulations”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.088",
+  "matter": "M6",
+  "name": "Helen Maguire",
+  "mnis": 5336,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M6.088 — Helen Maguire (MNIS 5336), Liberal Democrat\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 49 at Committee stage — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “Title, line 2, leave out “born on or after 1 January 2009” and insert “under the age of 25””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.093",
+  "matter": "M6",
+  "name": "Jim Allister",
+  "mnis": 5356,
+  "party": "Traditional Unionist Voice",
+  "basis": "amendment-sponsor",
+  "body": "### M6.093 — Jim Allister (MNIS 5356), Traditional Unionist Voice\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC3 at Report stage, with 7 co-sponsors (Gavin Robinson, Sammy Wilson, Jim Shannon, Alex Easton, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Amendment of the European Union (Withdrawal) Act 2018”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.097",
+  "matter": "M7",
+  "name": "Priti Patel",
+  "mnis": 4066,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M7.097 — Priti Patel (MNIS 4066), Conservative\n\n- **Proposed position on Protest and public order:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Public Order Act 2023\" (bills-api billId 3153)\n- **Source:** <https://bills.parliament.uk/bills/3153>\n- **In its own words:** “A Bill to make provision for new offences relating to public order; to make provision about stop and search powers; to make provision about the exercise of police functions relating to public order; to make provision abo…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.099",
+  "matter": "M7",
+  "name": "Dr Rupa Huq",
+  "mnis": 4511,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.099 — Dr Rupa Huq (MNIS 4511), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC1 at Committee stage, with 38 co-sponsors (Sir Bernard Jenkin, Dame Diana Johnson, Wera Hobhouse, Simon Fell, …) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “To move the following Clause— “Offence of interference with access to or provision of abortion services”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.105",
+  "matter": "M7",
+  "name": "Anne McLaughlin",
+  "mnis": 4437,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M7.105 — Anne McLaughlin (MNIS 4437), Scottish National Party\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Committee stage\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “Page 1, line 4, leave out Clause 1”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.106",
+  "matter": "M7",
+  "name": "Wendy Chamberlain",
+  "mnis": 4765,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M7.106 — Wendy Chamberlain (MNIS 4765), Liberal Democrat\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 29 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “Clause 1, page 1, line 10, leave out “or is capable of causing””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.108",
+  "matter": "M7",
+  "name": "Liz Saville Roberts",
+  "mnis": 4521,
+  "party": "Plaid Cymru",
+  "basis": "amendment-sponsor",
+  "body": "### M7.108 — Liz Saville Roberts (MNIS 4521), Plaid Cymru\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC12 at Report stage, with 2 co-sponsors (Hywel Williams, Ben Lake) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>\n- **In its own words:** “To move the following Clause— “Justice impact assessments for Wales”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.113",
+  "matter": "M8",
+  "name": "Grant Shapps",
+  "mnis": 1582,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M8.113 — Grant Shapps (MNIS 1582), Conservative\n\n- **Proposed position on Employment rights and industrial action:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Strikes (Minimum Service Levels) Act 2023\" (bills-api billId 3396)\n- **Source:** <https://bills.parliament.uk/bills/3396>\n- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.114",
+  "matter": "M8",
+  "name": "Lord Callanan",
+  "mnis": 4336,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M8.114 — Lord Callanan (MNIS 4336), Conservative\n\n- **Proposed position on Employment rights and industrial action:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Strikes (Minimum Service Levels) Act 2023\" (bills-api billId 3396)\n- **Source:** <https://bills.parliament.uk/bills/3396>\n- **In its own words:** “A Bill to make provision about minimum service levels in connection with the taking by trade unions of strike action relating to certain services.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.115",
+  "matter": "M8",
+  "name": "Lord Collins of Highbury",
+  "mnis": 4222,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M8.115 — Lord Collins of Highbury (MNIS 4222), Labour\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 42 at Committee stage, with 2 co-sponsors (Baroness O'Grady of Upper Holloway, Lord Hendy) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “leave out subsections (2) and (3)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.116",
+  "matter": "M8",
+  "name": "Lord Fox",
+  "mnis": 4322,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M8.116 — Lord Fox (MNIS 4322), Liberal Democrat\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 43 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “leave out subsections (2) to (5) and insert— A statutory instrument containing regulations under this section may not be made unless a draft of the instrument has been laid before, and approved by a resolution of, each House of Parliament.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.122",
+  "matter": "M8",
+  "name": "Lord Patel",
+  "mnis": 2443,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M8.122 — Lord Patel (MNIS 2443), Crossbench\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 18 at Committee stage, with 1 co-sponsor (Lord Kakkar) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “at end insert— Regulations made under subsection (4)(a) specifying minimum service levels for health services may not be made unless the Government has first established, via primary legislation, appropriate and legally enforceable staffing levels across healt…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.126",
+  "matter": "M9",
+  "name": "George Eustice",
+  "mnis": 3934,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M9.126 — George Eustice (MNIS 3934), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Environment Act 2021\" (bills-api billId 2593)\n- **Source:** <https://bills.parliament.uk/bills/2593>\n- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.127",
+  "matter": "M9",
+  "name": "Lord Goldsmith of Richmond Park",
+  "mnis": 4062,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M9.127 — Lord Goldsmith of Richmond Park (MNIS 4062), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Environment Act 2021\" (bills-api billId 2593)\n- **Source:** <https://bills.parliament.uk/bills/2593>\n- **In its own words:** “A Bill to make provision about targets, plans and policies for improving the natural environment; for statements and reports about environmental protection; for the Office for Environmental Protection; about waste and re…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.129",
+  "matter": "M9",
+  "name": "Lord Teverson",
+  "mnis": 3789,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M9.129 — Lord Teverson (MNIS 3789), Liberal Democrat\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 2 at Committee stage, with 3 co-sponsors (Baroness Jones of Whitchurch, Baroness Jones of Moulsecoomb, Baroness Bennett of Manor Castle) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “Insert the following new Clause— “Purpose and declaration of biodiversity and climate emergency”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.130",
+  "matter": "M9",
+  "name": "The Duke of Wellington",
+  "mnis": 4541,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M9.130 — The Duke of Wellington (MNIS 4541), Crossbench\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 4 at Committee stage, with 1 co-sponsor (Baroness Altmann) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert “, in particular water quality;””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.132",
+  "matter": "M9",
+  "name": "Baroness Bennett of Manor Castle",
+  "mnis": 4719,
+  "party": "Green Party",
+  "basis": "amendment-sponsor",
+  "body": "### M9.132 — Baroness Bennett of Manor Castle (MNIS 4719), Green Party\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 7 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “leave out “resource efficiency” and insert “reduction in resource use””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.142",
+  "matter": "M10",
+  "name": "Mr Jacob Rees-Mogg",
+  "mnis": 4099,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M10.142 — Mr Jacob Rees-Mogg (MNIS 4099), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Retained EU Law (Revocation and Reform) Act 2023\" (bills-api billId 3340)\n- **Source:** <https://bills.parliament.uk/bills/3340>\n- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.143",
+  "matter": "M10",
+  "name": "Lord Callanan",
+  "mnis": 4336,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M10.143 — Lord Callanan (MNIS 4336), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Retained EU Law (Revocation and Reform) Act 2023\" (bills-api billId 3340)\n- **Source:** <https://bills.parliament.uk/bills/3340>\n- **In its own words:** “A Bill to revoke certain retained EU law; to make provision relating to the interpretation of retained EU law and to its relationship with other law; to make provision relating to powers to modify retained EU law; to ena…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.144",
+  "matter": "M10",
+  "name": "Brendan O'Hara",
+  "mnis": 4371,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M10.144 — Brendan O'Hara (MNIS 4371), Scottish National Party\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 70 at Committee stage, with 1 co-sponsor (Peter Grant) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>\n- **In its own words:** “Clause 16, page 18, line 25, at end insert— “(1A) Before the power in subsection (1) may be exercised, the relevant national authority must publish a written statement on any societal and economic changes relevant to the intended modifications.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.145",
+  "matter": "M10",
+  "name": "Justin Madders",
+  "mnis": 4418,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M10.145 — Justin Madders (MNIS 4418), Labour\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 87 at Committee stage, with 4 co-sponsors (Alex Sobel, Stella Creasy, Paul Blomfield, Mary Glindon) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>\n- **In its own words:** “Clause 16, page 18, line 27, at end insert— “(3) No regulations may be made under this section unless the conditions set out in section [Conditions on the exercise of powers under section 15 and 16] have been complied with.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.155",
+  "matter": "M10",
+  "name": "Baroness Lawlor",
+  "mnis": 4965,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M10.155 — Baroness Lawlor (MNIS 4965), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 122A at Committee stage — decision: WithdrawnBeforeDebate\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “[Withdrawn] Clause 15, page 19, line 27, leave out “23 June 2026” and insert “the end of 2024””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.003",
+  "matter": "M1",
+  "name": "Dame Meg Hillier",
+  "mnis": 1524,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.003 — Dame Meg Hillier (MNIS 1524), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC1 at Report stage, with 36 co-sponsors (Naz Shah, Antonia Bance, Jess Asato, Kirsteen Sullivan, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “No health professional shall raise assisted dying first”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.006",
+  "matter": "M1",
+  "name": "Andrew Pakes",
+  "mnis": 5243,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.006 — Andrew Pakes (MNIS 5243), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC4 at Report stage, with 7 co-sponsors (Dame Meg Hillier, Antonia Bance, Jess Asato, Melanie Ward, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Monitoring by Chief Medical Officer”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.007",
+  "matter": "M1",
+  "name": "Valerie Vaz",
+  "mnis": 4076,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.007 — Valerie Vaz (MNIS 4076), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC5 at Report stage, with 1 co-sponsor (Rachael Maskell)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Implications for civil procedure rules and probate proceedings”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.009",
+  "matter": "M1",
+  "name": "Gregory Stafford",
+  "mnis": 5351,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M1.009 — Gregory Stafford (MNIS 5351), Conservative\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC8 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Novel treatments not authorised by the Medicines and Healthcare products Regulatory Agency”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.010",
+  "matter": "M1",
+  "name": "Sarah Bool",
+  "mnis": 5355,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M1.010 — Sarah Bool (MNIS 5355), Conservative\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC9 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “To move the following Clause— “Standard of proof”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.011",
+  "matter": "M1",
+  "name": "Rachael Maskell",
+  "mnis": 4471,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.011 — Rachael Maskell (MNIS 4471), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 25 at Report stage, with 7 co-sponsors (Sir Desmond Swayne, Graham Stringer, Margaret Mullane, Marsha De Cordova, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 9, page 6, line 3, leave out from “person” to the second “the” in line 5 and insert “convene a panel to carry out the first assessment. (1A) The clinical panel should consist of—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.012",
+  "matter": "M1",
+  "name": "Dr Ben Spencer",
+  "mnis": 4785,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M1.012 — Dr Ben Spencer (MNIS 4785), Conservative\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 18 at Report stage\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 2, page 2, line 6, leave out from “expected” to end”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.013",
+  "matter": "M1",
+  "name": "Jess Asato",
+  "mnis": 5156,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.013 — Jess Asato (MNIS 5156), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 9 at Report stage, with 5 co-sponsors (Dame Meg Hillier, Rachael Maskell, Melanie Ward, Neil Coyle, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 11, page 9, line 25, leave out paragraph (g) and insert— “(g) ask the person whether they have discussed the request with their next of kin and other persons they are close to and, where they have not done so, discuss their reasons for not doing so.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.014",
+  "matter": "M1",
+  "name": "Naz Shah",
+  "mnis": 4409,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.014 — Naz Shah (MNIS 4409), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 14 at Report stage, with 15 co-sponsors (Dame Meg Hillier, Rachael Maskell, Melanie Ward, Neil Coyle, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 2, page 2, line 6, at end insert— “(1A) A person who would not otherwise meet the requirements of subsection (1) shall not be considered to meet those requirements solely as a result of voluntarily stopping eating or drinking.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.015",
+  "matter": "M1",
+  "name": "Daniel Francis",
+  "mnis": 5184,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.015 — Daniel Francis (MNIS 5184), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 24 at Report stage, with 17 co-sponsors (Melanie Ward, Neil Coyle, Dame Meg Hillier, Antonia Bance, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 3, page 2, line 18, at end insert “except that section 1(2) of that Act shall not apply””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M1.016",
+  "matter": "M1",
+  "name": "Patricia Ferguson",
+  "mnis": 5190,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M1.016 — Patricia Ferguson (MNIS 5190), Labour\n\n- **Proposed position on Assisted dying:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 13 at Report stage, with 9 co-sponsors (Dame Meg Hillier, Rachael Maskell, Melanie Ward, Neil Coyle, …)\n- **Source:** <https://bills.parliament.uk/bills/3774/stages/19799/amendments>\n- **In its own words:** “Clause 4, page 2, line 22, at end insert— “(2A) A person may not be appointed under subsection (2) unless the appointment has the consent of the Health and Social Care Select Committee of the House of Commons.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.019",
+  "matter": "M2",
+  "name": "Robert Jenrick",
+  "mnis": 4320,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M2.019 — Robert Jenrick (MNIS 4320), Conservative\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 11 at Committee of the whole House, with 60 co-sponsors (Suella Braverman, Sir John Hayes, Sir Iain Duncan Smith, Mr David Jones, …) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 3, page 3, line 21, after “Act” insert “, and of the Illegal Migration Act 2023 insofar as they relate to the removal of persons to Rwanda””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.023",
+  "matter": "M2",
+  "name": "Stella Creasy",
+  "mnis": 4088,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M2.023 — Stella Creasy (MNIS 4088), Labour\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 9 at Committee of the whole House, with 1 co-sponsor (Claire Hanna) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 5, page 5, line 23, at end insert— “(5) The Government must, within three months of this Act receiving Royal Assent, lay before Parliament a copy of a report setting out how this clause is compatible with Section 7A of the European Withdrawal Act and th…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.024",
+  "matter": "M2",
+  "name": "Sir Robert Buckland",
+  "mnis": 4106,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M2.024 — Sir Robert Buckland (MNIS 4106), Conservative\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 26 at Committee of the whole House — decision: NotSelected\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Page 5, line 8, leave out Clause 5”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.025",
+  "matter": "M2",
+  "name": "Patrick Grady",
+  "mnis": 4432,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M2.025 — Patrick Grady (MNIS 4432), Scottish National Party\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 4 at Committee of the whole House, with 1 co-sponsor (Joanna Cherry) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 8, page 6, line 23, leave out “Scotland””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.026",
+  "matter": "M2",
+  "name": "Joanna Cherry",
+  "mnis": 4419,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M2.026 — Joanna Cherry (MNIS 4419), Scottish National Party\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 32 at Committee of the whole House — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “Clause 8, page 6, line 25, leave out “the United Kingdom” and insert “England and Wales and Northern Ireland.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.027",
+  "matter": "M2",
+  "name": "Sir Jeffrey M Donaldson",
+  "mnis": 650,
+  "party": "Democratic Unionist Party",
+  "basis": "amendment-sponsor",
+  "body": "### M2.027 — Sir Jeffrey M Donaldson (MNIS 650), Democratic Unionist Party\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC3 at Committee of the whole House, with 7 co-sponsors (Sammy Wilson, Gavin Robinson, Mr Gregory Campbell, Carla Lockhart, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18251/amendments>\n- **In its own words:** “To move the following Clause— “Effect in Northern Ireland”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.028",
+  "matter": "M2",
+  "name": "Lord German",
+  "mnis": 4163,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M2.028 — Lord German (MNIS 4163), Liberal Democrat\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 35 at Committee stage, with 1 co-sponsor (Lord Scriven) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18451/amendments>\n- **In its own words:** “After Clause 2, insert the following new Clause— “Applicability of decisions”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.029",
+  "matter": "M2",
+  "name": "Baroness Chakrabarti",
+  "mnis": 4579,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M2.029 — Baroness Chakrabarti (MNIS 4579), Labour\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 36 at Committee stage, with 2 co-sponsors (Baroness Hale of Richmond, The Lord Archbishop of Canterbury) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18451/amendments>\n- **In its own words:** “Leave out Clause 3 and insert the following new Clause— “Limited disapplication of section 6 of the Human Rights Act 1998”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.030",
+  "matter": "M2",
+  "name": "Lord Etherton",
+  "mnis": 4902,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M2.030 — Lord Etherton (MNIS 4902), Crossbench\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 38 at Committee stage, with 2 co-sponsors (Lord Cashman, Lord Purvis of Tweed) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18451/amendments>\n- **In its own words:** “Clause 4, page 4, line 12, after “question” insert “or, where the person in question is a member of a particular social group within Article 1A(2) of the Refugee Convention 1951, for that group””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.031",
+  "matter": "M2",
+  "name": "Lord Dubs",
+  "mnis": 805,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M2.031 — Lord Dubs (MNIS 805), Labour\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 41 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18451/amendments>\n- **In its own words:** “Clause 4, page 4, line 13, after “circumstances” insert “such as a claim based on the grounds outlined in Article 1A(2) of the Refugee Convention 1951 including on religion or belief grounds””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M2.032",
+  "matter": "M2",
+  "name": "Lord Coaker",
+  "mnis": 360,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M2.032 — Lord Coaker (MNIS 360), Labour\n\n- **Proposed position on Removals to Rwanda:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 48 at Committee stage, with 2 co-sponsors (Lord Hope of Craighead, Lord Purvis of Tweed) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3540/stages/18451/amendments>\n- **In its own words:** “Clause 4, page 4, line 23, leave out subsection (2)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.037",
+  "matter": "M3",
+  "name": "Dame Diana Johnson",
+  "mnis": 1533,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.037 — Dame Diana Johnson (MNIS 1533), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC4 at Report stage, with 5 co-sponsors (Caroline Lucas, Hywel Williams, Ben Lake, Jonathan Edwards, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Independent child trafficking guardian”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.038",
+  "matter": "M3",
+  "name": "Bell Ribeiro-Addy",
+  "mnis": 4764,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.038 — Bell Ribeiro-Addy (MNIS 4764), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC5 at Report stage, with 14 co-sponsors (Apsana Begum, Caroline Lucas, Beth Winter, Ian Byrne, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Immigration rules since December 2020: human rights of migrants”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.039",
+  "matter": "M3",
+  "name": "Yvette Cooper",
+  "mnis": 420,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.039 — Yvette Cooper (MNIS 420), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC9 at Report stage, with 1 co-sponsor (Stephen Kinnock) — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Accommodation: duty to consult”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.040",
+  "matter": "M3",
+  "name": "Alison Thewliss",
+  "mnis": 4430,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M3.040 — Alison Thewliss (MNIS 4430), Scottish National Party\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC18 at Report stage, with 7 co-sponsors (Stuart C McDonald, Patrick Grady, Brendan O'Hara, Hywel Williams, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “To move the following Clause— “Suspensive claims and related appeals: legal aid and legal advice”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.041",
+  "matter": "M3",
+  "name": "Stella Creasy",
+  "mnis": 4088,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.041 — Stella Creasy (MNIS 4088), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 17 at Report stage, with 5 co-sponsors (Caroline Lucas, Hywel Williams, Ben Lake, Jonathan Edwards, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “Clause 2, page 3, line 9, at end insert ”, and— (a) was aged 18 years or older on the date on which they entered or arrived in the United Kingdom, and”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.042",
+  "matter": "M3",
+  "name": "Stephen Farry",
+  "mnis": 4856,
+  "party": "Alliance",
+  "basis": "amendment-sponsor",
+  "body": "### M3.042 — Stephen Farry (MNIS 4856), Alliance\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Report stage, with 1 co-sponsor (Claire Hanna) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “Clause 2, page 4, line 4, at end insert— “(d) the person enters the United Kingdom from Ireland across the land border with Northern Ireland.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.043",
+  "matter": "M3",
+  "name": "Tim Loughton",
+  "mnis": 114,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M3.043 — Tim Loughton (MNIS 114), Conservative\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 181 at Report stage, with 15 co-sponsors (Tracey Crouch, Sir Robert Buckland, Mrs Flick Drummond, Richard Fuller, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17595/amendments>\n- **In its own words:** “Clause 3, page 4, line 9, leave out subsections (2) to (4)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.045",
+  "matter": "M3",
+  "name": "Lord Purvis of Tweed",
+  "mnis": 4293,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M3.045 — Lord Purvis of Tweed (MNIS 4293), Liberal Democrat\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of amendment 10007073 at Committee stage, with 1 co-sponsor (Baroness Chakrabarti) — decision: StoodPart\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>\n- **In its own words:** “The above-named Lords give notice of their intention to oppose the Question that Clause 58 stand part of the Bill.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.046",
+  "matter": "M3",
+  "name": "Baroness Stroud",
+  "mnis": 4546,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M3.046 — Baroness Stroud (MNIS 4546), Conservative\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 128C at Committee stage, with 3 co-sponsors (Baroness Helic, Lord Kirkhope of Harrogate, Baroness Mobarik) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>\n- **In its own words:** “After Clause 58, insert the following new Clause— “Duty to establish safe and legal routes”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.047",
+  "matter": "M3",
+  "name": "Baroness Ludford",
+  "mnis": 1867,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M3.047 — Baroness Ludford (MNIS 1867), Liberal Democrat\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 129 at Committee stage, with 3 co-sponsors (Lord Paddick, Lord Kerr of Kinlochard, Baroness Bennett of Manor Castle) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>\n- **In its own words:** “After Clause 59, insert the following new Clause— “Refugee family reunion”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M3.048",
+  "matter": "M3",
+  "name": "Baroness Lister of Burtersett",
+  "mnis": 4234,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M3.048 — Baroness Lister of Burtersett (MNIS 4234), Labour\n\n- **Proposed position on Illegal migration and small boats:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 130 at Committee stage, with 3 co-sponsors (Lord Carlile of Berriew, Lord Dubs, Lord Kerr of Kinlochard) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3429/stages/17659/amendments>\n- **In its own words:** “After Clause 59, insert the following new Clause— “Safe passage visa scheme”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.052",
+  "matter": "M4",
+  "name": "Baroness McIntosh of Pickering",
+  "mnis": 384,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M4.052 — Baroness McIntosh of Pickering (MNIS 384), Conservative\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 3 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “at end insert— The Secretary of State must not charge a fee for the processing of applications under this section.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.053",
+  "matter": "M4",
+  "name": "Baroness Lister of Burtersett",
+  "mnis": 4234,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M4.053 — Baroness Lister of Burtersett (MNIS 4234), Labour\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 11 at Committee stage, with 3 co-sponsors (Baroness Ludford, Lord Woolley of Woodford, Baroness Bennett of Manor Castle) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “Insert the following new Clause— “Provision for Chagos Islanders to acquire British nationality”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.054",
+  "matter": "M4",
+  "name": "Lord Russell of Liverpool",
+  "mnis": 2134,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M4.054 — Lord Russell of Liverpool (MNIS 2134), Crossbench\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 14 at Committee stage, with 1 co-sponsor (Baroness Hamwee) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “at end insert— In section 1 (acquisition by birth or adoption), in subsection (5)—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.055",
+  "matter": "M4",
+  "name": "Lord Moylan",
+  "mnis": 4883,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M4.055 — Lord Moylan (MNIS 4883), Conservative\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 27 at Committee stage, with 3 co-sponsors (Baroness Fox of Buckley, Baroness Mobarik, Baroness Warsi) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “Leave out Clause 9 and insert the following new Clause— “Deprivation of citizenship”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.057",
+  "matter": "M4",
+  "name": "Lord Paddick",
+  "mnis": 4288,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M4.057 — Lord Paddick (MNIS 4288), Liberal Democrat\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 29 at Committee stage, with 1 co-sponsor (Baroness Hamwee) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “Insert the following new Clause— “Deprivation of citizenship: procedure”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.058",
+  "matter": "M4",
+  "name": "Lord Dubs",
+  "mnis": 805,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M4.058 — Lord Dubs (MNIS 805), Labour\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 30 at Committee stage, with 2 co-sponsors (Baroness Ludford, Baroness Bennett of Manor Castle) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “after “birth” insert “without any legal or administrative barriers””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.059",
+  "matter": "M4",
+  "name": "Baroness Bennett of Manor Castle",
+  "mnis": 4719,
+  "party": "Green Party",
+  "basis": "amendment-sponsor",
+  "body": "### M4.059 — Baroness Bennett of Manor Castle (MNIS 4719), Green Party\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 32 at Committee stage, with 1 co-sponsor (Baroness Chakrabarti) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “Insert the following new Clause— “Repeal of power to deprive citizenship except for cases of fraud etc.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.060",
+  "matter": "M4",
+  "name": "Baroness Ludford",
+  "mnis": 1867,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M4.060 — Baroness Ludford (MNIS 1867), Liberal Democrat\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 34 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16003/amendments>\n- **In its own words:** “Insert the following new Clause— “Acquisition of British citizenship by birth or adoption: comprehensive sickness insurance”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.061",
+  "matter": "M4",
+  "name": "Baroness D'Souza",
+  "mnis": 3709,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M4.061 — Baroness D'Souza (MNIS 3709), Crossbench\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 19A at Report stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>\n- **In its own words:** “leave out subsections (5) to (7)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.062",
+  "matter": "M4",
+  "name": "Baroness Chakrabarti",
+  "mnis": 4579,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M4.062 — Baroness Chakrabarti (MNIS 4579), Labour\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 24 at Report stage, with 3 co-sponsors (Lord Judge, Lord Pannick, Baroness Hamwee) — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>\n- **In its own words:** “Insert the following new Clause— “Compliance with the Refugee Convention”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M4.064",
+  "matter": "M4",
+  "name": "Baroness Stroud",
+  "mnis": 4546,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M4.064 — Baroness Stroud (MNIS 4546), Conservative\n\n- **Proposed position on Asylum and the Nationality and Borders Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 30 at Report stage, with 3 co-sponsors (Baroness Lister of Burtersett, Baroness Ludford, Baroness Meacher) — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3023/stages/16165/amendments>\n- **In its own words:** “Insert the following new Clause— “Changes to the Immigration Act 1971”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.067",
+  "matter": "M5",
+  "name": "Lord Callanan",
+  "mnis": 4336,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M5.067 — Lord Callanan (MNIS 4336), Conservative\n\n- **Proposed position on Leaving the European Union:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"European Union (Withdrawal) Act 2018\" (bills-api billId 2045)\n- **Source:** <https://bills.parliament.uk/bills/2045>\n- **In its own words:** “A Bill to repeal the European Communities Act 1972 and make other provision in connection with the withdrawal of the United Kingdom from the EU.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.070",
+  "matter": "M5",
+  "name": "Lord Foulkes of Cumnock",
+  "mnis": 579,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.070 — Lord Foulkes of Cumnock (MNIS 579), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 5 at Committee stage, with 2 co-sponsors (Lord Dykes, Lord Judd) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations under section 19(2) bringing into force subsection (1) may not be made until the Prime Minister is satisfied that resolutions have been passed by the Scottish Parliament, the National Assembly for Wales and the Northern Ireland Assem…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.071",
+  "matter": "M5",
+  "name": "Lord Hunt of Kings Heath",
+  "mnis": 2024,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.071 — Lord Hunt of Kings Heath (MNIS 2024), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 8 at Committee stage, with 3 co-sponsors (Lord Warner, Baroness Finlay of Llandaff, Lord Teverson) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations bringing into force subsection (1) may not be made until the Secretary of State has set out a strategy for seeking to remain a member of (or maintain equivalent participatory relations with) Euratom, in order to provide continuity wi…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.072",
+  "matter": "M5",
+  "name": "Baroness Thornton",
+  "mnis": 1782,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.072 — Baroness Thornton (MNIS 1782), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 9 at Committee stage, with 3 co-sponsors (Baroness Jolly, Lord Warner, The Earl of Clancarty) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations bringing into force subsection (1) may not be made until the Secretary of State has set out a strategy for seeking to ensure that any citizen of the United Kingdom or of an EU country, who requires health care in a different country …”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.073",
+  "matter": "M5",
+  "name": "Lord Wallace of Saltaire",
+  "mnis": 1816,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M5.073 — Lord Wallace of Saltaire (MNIS 1816), Liberal Democrat\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 12 at Committee stage, with 3 co-sponsors (Baroness Smith of Newnham, Lord Judd, Viscount Hailsham) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations bringing into force subsection (1) may not be made until the Secretary of State has laid before both Houses of Parliament procedures agreed with the EU for continued coordination of foreign and security policy, including association …”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.074",
+  "matter": "M5",
+  "name": "Baroness Ludford",
+  "mnis": 1867,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M5.074 — Baroness Ludford (MNIS 1867), Liberal Democrat\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 13 at Committee stage, with 3 co-sponsors (Baroness Smith of Newnham, Lord Judd, Lord Cormack) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations bringing into force subsection (1) may not be made until the Secretary of State has laid before both Houses of Parliament procedures agreed with the EU for continued UK participation in measures to promote internal security, police c…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.075",
+  "matter": "M5",
+  "name": "Lord Goldsmith",
+  "mnis": 2490,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.075 — Lord Goldsmith (MNIS 2490), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 13A at Committee stage, with 3 co-sponsors (Baroness Hayter of Kentish Town, Lord Lennie, Lord Tunnicliffe) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “at end insert— Regulations bringing into force subsection (1) may not be made until the Secretary of State has laid before both Houses of Parliament proposals for arrangements for the continued application of the Charter of Fundamental Rights to retained EU la…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.076",
+  "matter": "M5",
+  "name": "Viscount Hailsham",
+  "mnis": 349,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M5.076 — Viscount Hailsham (MNIS 349), Conservative\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 14A at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “At end insert “and forms part of domestic primary legislation””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.078",
+  "matter": "M5",
+  "name": "Baroness McIntosh of Pickering",
+  "mnis": 384,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M5.078 — Baroness McIntosh of Pickering (MNIS 384), Conservative\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 18 at Committee stage, with 1 co-sponsor (Lord Wigley) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “Insert the following new Clause— “Status of EU directives adopted, but not implemented, before exit day”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.079",
+  "matter": "M5",
+  "name": "Baroness Hayter of Kentish Town",
+  "mnis": 4159,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.079 — Baroness Hayter of Kentish Town (MNIS 4159), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 21 at Committee stage, with 3 co-sponsors (Lord Warner, Baroness Smith of Newnham, Lord Kirkhope of Harrogate) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “Insert the following new Clause— “Future treatment of retained EU law”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M5.080",
+  "matter": "M5",
+  "name": "Baroness Kennedy of The Shaws",
+  "mnis": 1987,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M5.080 — Baroness Kennedy of The Shaws (MNIS 1987), Labour\n\n- **Proposed position on Leaving the European Union:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 22 at Committee stage, with 1 co-sponsor (Lord Cashman) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2045/stages/10158/amendments>\n- **In its own words:** “At end insert— human rights protection.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.083",
+  "matter": "M6",
+  "name": "Mary Kelly Foy",
+  "mnis": 4753,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M6.083 — Mary Kelly Foy (MNIS 4753), Labour\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC1 at Committee stage, with 1 co-sponsor (Bob Blackman) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “To move the following Clause— “Mandatory health warnings on cigarettes and cigarette rolling papers: consultation”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.084",
+  "matter": "M6",
+  "name": "Jim Dickson",
+  "mnis": 5223,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M6.084 — Jim Dickson (MNIS 5223), Labour\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC4 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “To move the following Clause— “Ban on supply of cigarette filters”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.085",
+  "matter": "M6",
+  "name": "Mary Glindon",
+  "mnis": 4126,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M6.085 — Mary Glindon (MNIS 4126), Labour\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC5 at Committee stage — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “To move the following Clause— “Ban on manufacture and sales of high-strength nicotine pouches”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.087",
+  "matter": "M6",
+  "name": "Andrew Gwynne",
+  "mnis": 1506,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M6.087 — Andrew Gwynne (MNIS 1506), Labour\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 15 at Committee stage — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “Clause 168, page 121, line 1, after “force” insert “(so far as not in force by virtue of subsection (2))””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.089",
+  "matter": "M6",
+  "name": "Sarah Bool",
+  "mnis": 5355,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M6.089 — Sarah Bool (MNIS 5355), Conservative\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 96 at Committee stage — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “Clause 12, page 6, line 8, at end insert— “(1A) The offence set out in subsection (1) does not apply to vending machines that are located within specialised mental health units that provide care for mental health patients.”…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.090",
+  "matter": "M6",
+  "name": "Helen Morgan",
+  "mnis": 4934,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M6.090 — Helen Morgan (MNIS 4934), Liberal Democrat\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 2 at Committee stage, with 2 co-sponsors (Liz Jarvis, Dr Danny Chambers) — decision: Disagreed\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19324/amendments>\n- **In its own words:** “Clause 38, page 20, line 18, leave out from“must” to the end of line 19 and insert “be allocated by the relevant Local Health and Wellbeing Board to public health projects.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.091",
+  "matter": "M6",
+  "name": "Wera Hobhouse",
+  "mnis": 4602,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M6.091 — Wera Hobhouse (MNIS 4602), Liberal Democrat\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC1 at Report stage, with 6 co-sponsors (Steve Darling, Ian Sollom, Caroline Voaden, Daisy Cooper, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Review of contaminated e-liquid”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.092",
+  "matter": "M6",
+  "name": "Dame Caroline Dinenage",
+  "mnis": 4008,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M6.092 — Dame Caroline Dinenage (MNIS 4008), Conservative\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC2 at Report stage, with 19 co-sponsors (Vikki Slade, Tim Farron, Mike Martin, Ellie Chowns, …) — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Ban on the supply of plastic cigarette filters”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.094",
+  "matter": "M6",
+  "name": "Catherine Atkinson",
+  "mnis": 5143,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M6.094 — Catherine Atkinson (MNIS 5143), Labour\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC5 at Report stage — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Report on sale of vaping products to facilitate child sexual exploitation”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.095",
+  "matter": "M6",
+  "name": "Jack Rankin",
+  "mnis": 5340,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M6.095 — Jack Rankin (MNIS 5340), Conservative\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC8 at Report stage, with 10 co-sponsors (Sarah Bool, Ben Obese-Jecty, Jim Shannon, Sir Desmond Swayne, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Prohibition of advertising of vaping, nicotine and heated tobacco products”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M6.096",
+  "matter": "M6",
+  "name": "Sir John Hayes",
+  "mnis": 350,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M6.096 — Sir John Hayes (MNIS 350), Conservative\n\n- **Proposed position on The generational smoking ban:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC12 at Report stage, with 5 co-sponsors (Jack Rankin, Sir Edward Leigh, Mr Peter Bedford, Sammy Wilson, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3879/stages/19506/amendments>\n- **In its own words:** “To move the following Clause— “Review of provisions”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.098",
+  "matter": "M7",
+  "name": "Lord Sharpe of Epsom",
+  "mnis": 4888,
+  "party": "Conservative",
+  "basis": "bill-sponsor",
+  "body": "### M7.098 — Lord Sharpe of Epsom (MNIS 4888), Conservative\n\n- **Proposed position on Protest and public order:** SUPPORTS\n- **Basis:** `bill-sponsor`\n- **Citation:** Named sponsor of \"Public Order Act 2023\" (bills-api billId 3153)\n- **Source:** <https://bills.parliament.uk/bills/3153>\n- **In its own words:** “A Bill to make provision for new offences relating to public order; to make provision about stop and search powers; to make provision about the exercise of police functions relating to public order; to make provision abo…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.100",
+  "matter": "M7",
+  "name": "Stella Creasy",
+  "mnis": 4088,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.100 — Stella Creasy (MNIS 4088), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC2 at Committee stage, with 1 co-sponsor (Alex Cunningham) — decision: NegativedOnDivision\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “To move the following Clause— “Hostility towards sex or gender”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.101",
+  "matter": "M7",
+  "name": "Paul Maynard",
+  "mnis": 3926,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M7.101 — Paul Maynard (MNIS 3926), Conservative\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC3 at Committee stage, with 1 co-sponsor (Jackie Doyle-Price) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “To move the following Clause— “Offences impeding emergency workers”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.102",
+  "matter": "M7",
+  "name": "Marsha De Cordova",
+  "mnis": 4676,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.102 — Marsha De Cordova (MNIS 4676), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC8 at Committee stage, with 1 co-sponsor (Dr Rupa Huq) — decision: Disagreed\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “To move the following Clause— “Publication of data about use of stop and search powers”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.103",
+  "matter": "M7",
+  "name": "Sarah Jones",
+  "mnis": 4631,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.103 — Sarah Jones (MNIS 4631), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC10 at Committee stage, with 1 co-sponsor (Yvette Cooper) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “To move the following Clause— “Guidance on locking on”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.104",
+  "matter": "M7",
+  "name": "Kit Malthouse",
+  "mnis": 4495,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M7.104 — Kit Malthouse (MNIS 4495), Conservative\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 24 at Committee stage — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16490/amendments>\n- **In its own words:** “Title, line 2, leave out “delegation” and insert “exercise””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.107",
+  "matter": "M7",
+  "name": "Suella Braverman",
+  "mnis": 4475,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M7.107 — Suella Braverman (MNIS 4475), Conservative\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC7 at Report stage — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>\n- **In its own words:** “To move the following Clause— “Power of Secretary of State to bring proceedings”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.109",
+  "matter": "M7",
+  "name": "Bell Ribeiro-Addy",
+  "mnis": 4764,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.109 — Bell Ribeiro-Addy (MNIS 4764), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of NC15 at Report stage, with 28 co-sponsors (Apsana Begum, Liz Saville Roberts, Hywel Williams, Ben Lake, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>\n- **In its own words:** “To move the following Clause— “Public inquiry into the impact of policing of public order on Black, Asian and minority ethnic people”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.110",
+  "matter": "M7",
+  "name": "Joanna Cherry",
+  "mnis": 4419,
+  "party": "Scottish National Party",
+  "basis": "amendment-sponsor",
+  "body": "### M7.110 — Joanna Cherry (MNIS 4419), Scottish National Party\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 28 at Report stage, with 3 co-sponsors (Florence Eshalomi, Apsana Begum, Bell Ribeiro-Addy) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>\n- **In its own words:** “Clause 1, page 1, line 6, after “they” insert “, without reasonable excuse, and using a device or substance that impedes detachment””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.111",
+  "matter": "M7",
+  "name": "Alicia Kearns",
+  "mnis": 4805,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M7.111 — Alicia Kearns (MNIS 4805), Conservative\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 51 at Report stage, with 16 co-sponsors (Sir Geoffrey Clifton-Brown, Sally-Ann Hart, Greg Smith, Dr Ben Spencer, …) — decision: NotCalled\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/16631/amendments>\n- **In its own words:** “Clause 7, page 7, line 31, at end insert— “(j) farms and food production infrastructure.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M7.112",
+  "matter": "M7",
+  "name": "Baroness Chakrabarti",
+  "mnis": 4579,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M7.112 — Baroness Chakrabarti (MNIS 4579), Labour\n\n- **Proposed position on Protest and public order:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 117 at Committee stage, with 3 co-sponsors (Lord Paddick, Baroness Boycott, Baroness Jones of Moulsecoomb) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3153/stages/17066/amendments>\n- **In its own words:** “After Clause 18, insert the following new Clause— “Protection for journalists and others monitoring protests”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.117",
+  "matter": "M8",
+  "name": "Baroness Randerson",
+  "mnis": 4230,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M8.117 — Baroness Randerson (MNIS 4230), Liberal Democrat\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 48 at Committee stage, with 1 co-sponsor (Lord Thomas of Cwmgiedd) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “leave out from “Act” to end of line 11 and insert “of Parliament. This section does not apply to—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.118",
+  "matter": "M8",
+  "name": "Lord Greenhalgh",
+  "mnis": 4877,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M8.118 — Lord Greenhalgh (MNIS 4877), Conservative\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 48A at Committee stage, with 1 co-sponsor (Lord Hogan-Howe) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “Insert the following new Clause— “Review: extending restrictions to other services”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.119",
+  "matter": "M8",
+  "name": "Lord Balfe",
+  "mnis": 4302,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M8.119 — Lord Balfe (MNIS 4302), Conservative\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 50 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “after first “on” insert “the day two years after””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.120",
+  "matter": "M8",
+  "name": "Lord Allan of Hallam",
+  "mnis": 397,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M8.120 — Lord Allan of Hallam (MNIS 397), Liberal Democrat\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 15 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “at end insert— Before making regulations under this section the Secretary of State must lay before each House of Parliament a statement outlining how the regulations are both necessary and proportionate.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.121",
+  "matter": "M8",
+  "name": "Baroness Noakes",
+  "mnis": 2554,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M8.121 — Baroness Noakes (MNIS 2554), Conservative\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 17 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “After paragraph (b) insert— users of the services or others who are affected by the availability of the services,””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.123",
+  "matter": "M8",
+  "name": "Lord Hendy",
+  "mnis": 4723,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M8.123 — Lord Hendy (MNIS 4723), Labour\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 18A at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17393/amendments>\n- **In its own words:** “at end insert— Regulations may not prohibit or enable the prohibition of participation in, or any activity in connection with, a strike or other industrial action; or create an offence.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.124",
+  "matter": "M8",
+  "name": "Lord Thomas of Cwmgiedd",
+  "mnis": 4309,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M8.124 — Lord Thomas of Cwmgiedd (MNIS 4309), Crossbench\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 6 at Report stage, with 3 co-sponsors (Baroness Randerson, Baroness Finlay of Llandaff, Lord Collins of Highbury) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17586/amendments>\n- **In its own words:** “leave out from “Act” to end of line 11 and insert “of Parliament. This section does not apply to—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M8.125",
+  "matter": "M8",
+  "name": "Baroness O'Grady of Upper Holloway",
+  "mnis": 4977,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M8.125 — Baroness O'Grady of Upper Holloway (MNIS 4977), Labour\n\n- **Proposed position on Employment rights and industrial action:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 4 at Report stage, with 2 co-sponsors (The Lord Bishop of London, Lord Fox) — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3396/stages/17586/amendments>\n- **In its own words:** “at end insert— “234CA Protection of employees”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.128",
+  "matter": "M9",
+  "name": "The Earl of Lindsay",
+  "mnis": 2059,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M9.128 — The Earl of Lindsay (MNIS 2059), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “Insert the following new Clause— “Environmental objectives”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.131",
+  "matter": "M9",
+  "name": "Lord Blencathra",
+  "mnis": 497,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M9.131 — Lord Blencathra (MNIS 497), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 5 at Committee stage, with 1 co-sponsor (Lord Randall of Uxbridge) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “leave out paragraph (c) and insert— nature;””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.133",
+  "matter": "M9",
+  "name": "Baroness Scott of Needham Market",
+  "mnis": 2542,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M9.133 — Baroness Scott of Needham Market (MNIS 2542), Liberal Democrat\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 8 at Committee stage, with 3 co-sponsors (Baroness Quin, Baroness Bennett of Manor Castle, Lord Teverson) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— public access to and enjoyment of the natural environment.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.134",
+  "matter": "M9",
+  "name": "Lord Lucas",
+  "mnis": 1879,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M9.134 — Lord Lucas (MNIS 1879), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 9 at Committee stage, with 2 co-sponsors (Baroness Boycott, Lord Blencathra) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— connecting people with nature.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.135",
+  "matter": "M9",
+  "name": "Lord Randall of Uxbridge",
+  "mnis": 209,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M9.135 — Lord Randall of Uxbridge (MNIS 209), Conservative\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 10 at Committee stage, with 3 co-sponsors (Lord Carrington, Baroness Bakewell of Hardington Mandeville, Lord Taylor of Holbeach) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— light pollution.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.136",
+  "matter": "M9",
+  "name": "Lord Harries of Pentregarth",
+  "mnis": 3813,
+  "party": "Crossbench",
+  "basis": "amendment-sponsor",
+  "body": "### M9.136 — Lord Harries of Pentregarth (MNIS 3813), Crossbench\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 12 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— the planting of new trees.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.137",
+  "matter": "M9",
+  "name": "Baroness Bakewell of Hardington Mandeville",
+  "mnis": 4285,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M9.137 — Baroness Bakewell of Hardington Mandeville (MNIS 4285), Liberal Democrat\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 13 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— a reduction in the use of conventional plastic packaging.”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.138",
+  "matter": "M9",
+  "name": "Lord Addington",
+  "mnis": 3453,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M9.138 — Lord Addington (MNIS 3453), Liberal Democrat\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 19 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— Before making regulations under subsection (1)(b), the Secretary of State must consult—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.139",
+  "matter": "M9",
+  "name": "Baroness Jones of Whitchurch",
+  "mnis": 3792,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M9.139 — Baroness Jones of Whitchurch (MNIS 3792), Labour\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 20 at Committee stage, with 3 co-sponsors (Baroness Walmsley, Baroness Finlay of Llandaff, Lord Randall of Uxbridge) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “leave out subsection (2) and insert— The PM2.5 air quality target must—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.140",
+  "matter": "M9",
+  "name": "Lord Whitty",
+  "mnis": 2444,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M9.140 — Lord Whitty (MNIS 2444), Labour\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 21 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “at end insert— The Secretary of State must by regulations stipulate the numbers of fixed or mobile devices to monitor the level of PM2.5 in ambient air to be operated by highways authorities or local authorities.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M9.141",
+  "matter": "M9",
+  "name": "Lord Chidgey",
+  "mnis": 50,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M9.141 — Lord Chidgey (MNIS 50), Liberal Democrat\n\n- **Proposed position on Sewage, water quality and the Environment Act:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 23 at Committee stage — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/2593/stages/15298/amendments>\n- **In its own words:** “After subsection (1) insert— In the range of species which contribute to the target, at least one must be a species that is significant to chalk streams and its abundance an indicator of the health of its ecosystem.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.146",
+  "matter": "M10",
+  "name": "Ms Nusrat Ghani",
+  "mnis": 4460,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M10.146 — Ms Nusrat Ghani (MNIS 4460), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 1 at Committee stage — decision: Agreed\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17082/amendments>\n- **In its own words:** “Schedule 3, page 30, line 5, leave out paragraph 2 and insert— ““2 (1)Sub-paragraph (2) applies to a statutory instrument containing regulations under this Act which is subject to a procedure before Parliament for the approval of the instrument in draft before…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.147",
+  "matter": "M10",
+  "name": "Baroness Randerson",
+  "mnis": 4230,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M10.147 — Baroness Randerson (MNIS 4230), Liberal Democrat\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 117 at Committee stage, with 1 co-sponsor (Lord Bruce of Bennachie) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 18, line 38, at end insert— “(3A) Regulations under subsections (2) or (3) may not be made if they apply to an instrument, or a provision of an instrument, which is subject to an agreed Common Framework unless it has been subject to the full pr…”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.148",
+  "matter": "M10",
+  "name": "Baroness Humphreys",
+  "mnis": 4300,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M10.148 — Baroness Humphreys (MNIS 4300), Liberal Democrat\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 118 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 18, line 38, at end insert— “(3A) A Minister of the Crown may not make regulations under subsections (1) to (3) if any provision of those regulations is within the legislative competence of the Scottish Parliament, Senedd Cymru or the Northern …”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.149",
+  "matter": "M10",
+  "name": "Baroness Thornton",
+  "mnis": 1782,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M10.149 — Baroness Thornton (MNIS 1782), Labour\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 118A at Committee stage, with 1 co-sponsor (Baroness Crawley) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 18, line 38, at end insert— “(3A) A Minister of the Crown, whether acting alone or with another relevant national authority, may not exercise the power in subsection (2) or (3) unless—”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.150",
+  "matter": "M10",
+  "name": "Baroness Ritchie of Downpatrick",
+  "mnis": 4130,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M10.150 — Baroness Ritchie of Downpatrick (MNIS 4130), Labour\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 119 at Committee stage, with 2 co-sponsors (Baroness Suttie, Baroness Chapman of Darlington) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 19, line 16, at end insert— “(iii) effect substantial policy change so far as it relates to human rights, equality or environmental protection legislation with effect in Northern Ireland.””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.151",
+  "matter": "M10",
+  "name": "Lord Fox",
+  "mnis": 4322,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M10.151 — Lord Fox (MNIS 4322), Liberal Democrat\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 120 at Committee stage, with 2 co-sponsors (Baroness Ludford, Baroness Chapman of Darlington) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 19, line 17, leave out subsection (5)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.152",
+  "matter": "M10",
+  "name": "The Earl of Lindsay",
+  "mnis": 2059,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M10.152 — The Earl of Lindsay (MNIS 2059), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 121 at Committee stage, with 1 co-sponsor (Baroness Crawley) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 19, line 17, leave out subsections (5) and (6)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.153",
+  "matter": "M10",
+  "name": "Lord Whitty",
+  "mnis": 2444,
+  "party": "Labour",
+  "basis": "amendment-sponsor",
+  "body": "### M10.153 — Lord Whitty (MNIS 2444), Labour\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 121A at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 19, line 17, leave out subsections (5) to (11)”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.154",
+  "matter": "M10",
+  "name": "Baroness McIntosh of Pickering",
+  "mnis": 384,
+  "party": "Conservative",
+  "basis": "amendment-sponsor",
+  "body": "### M10.154 — Baroness McIntosh of Pickering (MNIS 384), Conservative\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 122 at Committee stage — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “Clause 15, page 19, line 27, leave out “23 June 2026” and insert “11:59 pm on 31 December 2028””\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.156",
+  "matter": "M10",
+  "name": "Baroness Parminter",
+  "mnis": 4178,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M10.156 — Baroness Parminter (MNIS 4178), Liberal Democrat\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 126 at Committee stage, with 3 co-sponsors (Lord Krebs, Lord Randall of Uxbridge, Baroness Bennett of Manor Castle) — decision: Withdrawn\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “After Clause 15, insert the following new Clause— “Powers to revoke or replace: application to environmental law”\n- **VERDICT:** _______"
+ },
+ {
+  "id": "M10.157",
+  "matter": "M10",
+  "name": "Baroness Ludford",
+  "mnis": 1867,
+  "party": "Liberal Democrat",
+  "basis": "amendment-sponsor",
+  "body": "### M10.157 — Baroness Ludford (MNIS 1867), Liberal Democrat\n\n- **Proposed position on Retained EU law and the \"sunset\" clause:** PROPOSED — read the quote\n- **Basis:** `amendment-sponsor`\n- **Citation:** Lead sponsor of 128 at Committee stage, with 1 co-sponsor (Lord Fox) — decision: NotMoved\n- **Source:** <https://bills.parliament.uk/bills/3340/stages/17339/amendments>\n- **In its own words:** “After Clause 16, insert the following new Clause— “Conditions on the exercise of powers under sections 15 and 16”\n- **VERDICT:** _______"
+ }
+]
