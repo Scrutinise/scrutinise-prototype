@@ -26,6 +26,20 @@ export interface ElicitationStep {
   /** The platform-authored question. Lex may elaborate on it; this is what is shown
    *  when a Lex turn fails, so the flow never stalls (the §13 Task 3 rule). */
   question: string
+  /**
+   * 25-E §4a — THE SHORT LINE ON THE CARD, when a short line helps.
+   *
+   * ⚠⚠ THE OPENING QUESTION WAS PRINTED TWICE, VERBATIM. `question` for the first step IS
+   * `OPENING_ASK`, and Lex has already said `OPENING_ASK` in the transcript directly above
+   * the card — so the user read the same eighty-word paragraph twice in a row, and the
+   * card's own job (say what goes in THIS box) was done by neither copy.
+   *
+   * `question` stays exactly as it is: it is what the transcript says and what is shown when
+   * a Lex turn fails, and the §13 Task 3 rule depends on it. This is a SEPARATE, shorter
+   * string for the card. `null` means the hint list is the better description and the card
+   * shows no prompt at all — which is the brief's own instruction for the first step.
+   */
+  cardPrompt?: string | null
   /** Sub-prompts shown beside the box, as on the existing narrative boxes. */
   hints?: string[]
   /** A step the user may pass over without answering. */
@@ -62,6 +76,9 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'problem',
     label: 'The problem',
+    // ⚠ NULL, deliberately. Lex has just asked this in full, one card above. The hints
+    // below are what a user needs here; a second copy of the paragraph is not.
+    cardPrompt: null,
     // The user-visible label is "The problem", never "Challenge" — docs/CLAUDE.md §4,
     // reversed by §19-D Task 1a. A vague label invites a vague answer.
     question: OPENING_ASK,
@@ -75,6 +92,7 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'goal',
     label: 'What you want',
+    cardPrompt: 'What do you want to happen?',
     question: 'What do you want to happen — and is there anything you’ve already ruled out?',
     hints: [
       'the kind of change you are after',
@@ -85,6 +103,7 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'ownKnowledge',
     label: 'What you know',
+    cardPrompt: 'What won’t we find in the record?',
     // ⚠ This is the exchange the whole build leans on, and the one the record cannot
     // supply. It is stored with its provenance (USER_TESTIMONY) because every later
     // citation depends on telling it apart from retrieved material.
@@ -101,6 +120,7 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'reading',
     label: 'Anything to read',
+    cardPrompt: 'A link, a report, a letter — anything you’d like me to have.',
     // ⚠ NEVER-CLAIM AT THE FIRST EXCHANGE. Ingestion is 25-D. We capture what they give
     // us and say plainly that Lex will read it in a later sprint. Pretending to have
     // read it is the cheapest possible lie and the most damaging one.
@@ -111,6 +131,7 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'profile',
     label: 'About you',
+    cardPrompt: 'A bit about you and your experience here.',
     // Reused across every idea (the existing `aboutYou` User-scoped field), so a
     // returning user never sees this step.
     question:
@@ -127,6 +148,7 @@ export const ELICITATION_STEPS: ElicitationStep[] = [
   {
     key: 'confirm',
     label: 'Confirm',
+    cardPrompt: null,
     question: 'Here’s what I understand you’re trying to do.',
   },
 ]

@@ -112,9 +112,19 @@ export async function buildEstimate(): Promise<BuildEstimate> {
       meanSeconds: null,
       sampleSize: durations.length,
       minutes: null,
-      // Says it does not know, and why. "A few minutes" is the honest shape of the answer
-      // without pretending to a figure.
-      line: 'Usually a few minutes — we don’t have enough builds yet to be precise.',
+      // ⚠ 25-E §4c — TWO THINGS IN ONE SENTENCE, AND THE SECOND ONE IS OURS, NOT THEIRS.
+      //
+      // It read "Usually a few minutes — we don't have enough builds yet to be precise."
+      // Both halves are true and the honesty was well meant, but the user is being asked
+      // one question — how long do I wait? — and was handed an answer plus a confession
+      // about our sample size, at the moment they are deciding whether to commit.
+      //
+      // "A few minutes" IS the honest shape of the answer; it claims no figure, so there is
+      // nothing to disclaim. The precision caveat earns its place only once there IS a
+      // number, and the line below carries it then (`from the last N builds`). Nothing is
+      // hidden: `meanSeconds: null` and `sampleSize` still travel in the object, and the
+      // client shows the sample only when there is one.
+      line: 'This usually takes a few minutes.',
       // ⚠ OFFERED WHEN UNKNOWN. Not knowing is not evidence that it is quick, and the
       // cost of a needless offer is a checkbox nobody ticks; the cost of not offering is
       // someone waiting ten minutes at a screen.
