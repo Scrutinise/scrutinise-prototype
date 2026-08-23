@@ -1,6 +1,6 @@
 # SPRINT 25-E — the front door opens
 
-**Executes:** `docs/BRIEF_25E_ELICITATION.md` §1–§5. **Thread:** LEX. **Written:** 2026-08-23 08:45 UTC.
+**Executes:** `docs/BRIEF_25E_ELICITATION.md` §1–§5. **Thread:** LEX. **Written:** 2026-08-23 22:45 UTC. ⚠ The commit trailers read 08:45 UTC — the machine clock was ~14 hours slow and resynced mid-sprint; see Delivery.
 **Guards:** `check:lex-25e` **27/27, 17 controls, all fired** · `verify:lex-25e` **19/19 live** ·
 `verify:lex-25e-ui` **16/16 rendered, 6 controls fired** · `check:lex-25d` 77/77 ·
 `check:build-25a` 40/40 · `check:build-25b` 54/54 · `check:lex-25c` 32/32 · `check:20bd` 47/47 ·
@@ -204,13 +204,80 @@ with a working *"That's right — build it"*. If you would rather start clean:
 
 ---
 
+## Delivery (CLAUDE.md §20) — and it does not close
+
+Six scoped commits pushed as `dd2bdd4`, via **`commit-lex-25e.sh`** — named per stream, explicit
+paths only; another thread has uncommitted work in this tree and none of it appears in any commit.
+Deleted after the push.
+
+| # | check | result |
+|---|---|---|
+| 1 | every file created is committed | ✅ `check:committed` **474 files clean** — and it CAUGHT `ElicitationCards.tsx` before the commit, which is the §20 incident-3 class exactly. `git check-ignore -v` run on each new file: none ignored |
+| 2 | the remote has the commits | ✅ `git ls-remote origin Main` = `dd2bdd4`, which is my tip; `merge-base --is-ancestor` confirms all six |
+| 3 | the deployment is green **and Production** | ⚠ **not readable** — `VERCEL_TOKEN` is SAML-blocked (§19) |
+| 4 | **the running site serves the change** | ❌ **NO. Production is still serving pre-25-E code.** |
+
+### ⚠⚠ Check 4 failed, and it is reported as a failure
+
+**~25 minutes after the push, `https://www.scrutinise.org/ideas/build` serves a byte-identical
+bundle to the one it served before it** — 16 client chunks, 812,883 bytes, unchanged across
+thirteen fetches. All five 25-E markers ABSENT; the control ABSENT in both runs.
+
+The probe is sound and I proved it rather than assuming it, because a probe that cannot see the
+bundle would produce exactly this result:
+
+- **every pre-existing string from that same component is PRESENT** in those chunks — *"That's
+  everything I need"*, *"Could not start a session"*, *"Nothing to add"*. The probe is reading the
+  right bundle; the bundle is old code.
+- `x-vercel-cache: MISS`, `age: 0` — a fresh render from the deployment, not a cached response.
+- **25-D's markers ARE live** on `/ideas/create`, so production is not stuck far back; it is at
+  or after 21 August and before this push.
+
+And the code is not what is stopping it: **`npm run build` compiles successfully in 36.8s** on
+this tree. (One warning, `EINVAL` copying a `node:inspector` chunk into `.next/standalone` — a
+Windows filename artefact, not a Linux build failure.)
+
+So: pushed, on the remote, builds clean, **and not serving**. Whether that is a queue, a failed
+Production build, or a Preview-only build cannot be established from here.
+
+▶ **CHARLIE — the one thing I cannot check.** Vercel → Deployments → find `dd2bdd4`
+(*"docs(lex): 25-E report, change log and handoff"*). Is it **green**, and is its Environment
+column **Production**? Both of the failure modes this project has already had look identical from
+outside: 6–9 Aug production served three-day-old code for a week because pushes were building as
+Previews; 17–18 Aug production failed to build for ten hours. **Nothing in this sprint is on the
+site until that deployment is green and Production**, so the human run cannot start before it.
+
+### ⚠⚠ And a second thing to correct: the commit timestamps are wrong by ~14 hours
+
+The `Date:` trailers on all six commits read **`2026-08-23 08:45 UTC`**. The true time was
+**about 22:00 UTC**. This was not a copied-forward stamp — it was read from the system clock as
+CLAUDE.md requires, and **the system clock was itself ~14 hours slow and resynced during the
+sprint**. The git author dates carry the same error (`09:47 +0100`), because they came from the
+same clock.
+
+Confirmed against three independent sources, all agreeing: `date -u`, the Vercel `date` response
+header, and Google's `date` header.
+
+**The history is NOT rewritten** — three threads share this branch and a force-push to correct a
+timestamp would be far worse than the timestamp. The documents carry the true time, and this
+paragraph is the reconciliation, because the entire purpose of the trailer is to let a
+CHANGE_LOG entry be matched to the commit that was live when something went wrong. Anyone doing
+that for 23 August must add ~14 hours to these six commits.
+
+⚠ The neighbouring ingest commits show the same divergence (author `20:45 +0100`, trailer
+`01:50 UTC`), which suggests the clock has been unreliable for longer than this sprint. Worth
+Charlie checking the machine's time sync.
+
+---
+
 ## What is NOT verified
 
-1. **No human run.** The whole point of the brief, and the one thing I cannot do.
-2. **No click has been exercised anywhere** — every assertion is a server walk or a first
+1. ⚠⚠ **NOTHING IS ON THE SITE YET.** Check 4 failed: production still serves pre-25-E code. Every claim below about behaviour is a claim about the CODE.
+2. **No human run.** The whole point of the brief, and the one thing I cannot do — and it cannot even begin until the deployment lands.
+3. **No click has been exercised anywhere** — every assertion is a server walk or a first
    paint. Effects, polling and the build's own progress display are untouched by this sprint
    and remain unproven end to end.
-3. **The build itself has still never run.** Fixing the door does not prove the room. Sections B
+4. **The build itself has still never run.** Fixing the door does not prove the room. Sections B
    through G of Charlie's walk remain entirely untested, exactly as the brief says.
-4. **The ten empty shells are not cleaned up.** Resuming stops the litter at source; removing
+5. **The ten empty shells are not cleaned up.** Resuming stops the litter at source; removing
    what is already there is a destructive step and was not taken.

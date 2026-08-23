@@ -239,7 +239,7 @@ plus a UKHL scope · Lane 2 driven end-to-end first.
 
 ---
 
-## LEX 25-E — THE FRONT DOOR OPENS, AND `IdeaBuild` WAS EMPTY (2026-08-23 08:45 UTC)
+## LEX 25-E — THE FRONT DOOR OPENS, AND `IdeaBuild` WAS EMPTY (2026-08-23 22:45 UTC)
 
 Executes `docs/BRIEF_25E_ELICITATION.md` §1–§5. Report: **`docs/LEX_25E_REPORT.md`**.
 `check:lex-25e` **27/27, 17 controls all fired**; `verify:lex-25e` **19/19 live against Neon**;
@@ -315,6 +315,10 @@ in.** ⚠ And it caught its own defect first: its "is this enabled" matcher repo
 as disabled — every button carries the Tailwind class `disabled:opacity-40` and a lookahead for
 `\sdisabled` matches it inside `class` — failing five assertions against correct components, in
 the direction that looks like it caught something.
+
+⚠⚠ **AND CHECK 4 FAILED — NOTHING IS ON THE SITE.** ~25 minutes after the push, `/ideas/build` serves a BYTE-IDENTICAL bundle (16 chunks, 812,883 bytes, unchanged over thirteen fetches); all five 25-E markers ABSENT, control ABSENT in both runs. **The probe was proved rather than assumed**: every PRE-EXISTING string from the same component is PRESENT in those chunks, so it is reading the right bundle and the bundle is old code; `x-vercel-cache: MISS`/`age: 0` rules out caching; and 25-D's markers ARE live, so production is not stuck far back. The code is not the cause — `npm run build` compiles clean in 36.8s. `VERCEL_TOKEN` is SAML-blocked so check 3 is unreadable. ▶ **CHARLIE: Vercel → Deployments → is `dd2bdd4` GREEN and PRODUCTION?** Both failure modes this project has had look identical from outside (Preview-only builds, 6–9 Aug; a ten-hour failing Production build, 17–18 Aug).
+
+⚠⚠ **THE COMMIT TRAILERS ON ALL SIX COMMITS ARE WRONG BY ~14 HOURS** — they read `08:45 UTC`; the true time was ~22:00 UTC. Not a copied stamp: it was read from the system clock as §12 requires, and **the clock was itself ~14 hours slow and resynced mid-sprint** (git author dates carry the same error). Confirmed against `date -u`, Vercel's `date` header and Google's, all agreeing. History is NOT rewritten — three threads share this branch. Anyone matching a CHANGE_LOG entry to a commit for 23 August must add ~14 hours to these six. ⚠ The neighbouring ingest commits show the same divergence (author `20:45 +0100`, trailer `01:50 UTC`), so the clock has been unreliable for longer than this sprint — worth checking the machine's time sync.
 
 ▶ **CHARLIE: THE ACCEPTANCE CRITERION IS NOT MET AND CANNOT BE BY ME.** A person has not
 completed the flow; the extension has no host permission for localhost and this session has no
