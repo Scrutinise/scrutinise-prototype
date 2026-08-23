@@ -143,12 +143,39 @@ const HTML_ENTITIES: Record<string, string> = {
  * Strict on purpose. A section number followed by dots ("1 . . . .") must match; a
  * section number followed by any real word ("1 This Order may be cited") must not,
  * which is what the two-letter-run test below guarantees.
+ *
+ * ⚠ C2 LANE 2 — THE TWO-LETTER TEST WAS DEFEATED BY THE PROVISION'S OWN LABEL, AND THE
+ * CENSUS PRINTED THE EVIDENCE WITHOUT ANYONE READING IT. `retained-eu` renders a removed
+ * provision as "Article 31 . . . ." rather than the bare "31 . . . ." every other
+ * collection uses, and "Article" is a word of two or more letters. The V36 repeal census
+ * therefore scored retained-eu at **27 placeholders in 194,537 rows — 0.01%** and printed
+ * that line directly beneath `regional` at 16.84% and `primary-acts-pre-2000` at 21.48%.
+ * A rate three orders of magnitude below its neighbours is not a fact about EU law; it is
+ * a broken detector, and it sat in the run's own summary output for eleven days.
+ *
+ * Measured consequence: ~70,516 further whole-body dot leaders in retained-eu alone —
+ * 35.4% ±4.19 of the 199,197 rows the census could see and did not flag. The census's
+ * 178,826 is an undercount of about 28%. Nothing in the other five legislation
+ * collections was missed (0% in a 500-row sample each), because none of them uses a label.
+ *
+ * ⚠⚠ THE FIX STRIPS ONE LEADING LABEL, NOT EVERY WORD, AND THE DIFFERENCE IS THE WHOLE
+ * POINT. A dot run also appears in a PARTIALLY repealed section — "4 1 . . . a traffic
+ * regulation order shall not be made with respect to any road…" — where subsections have
+ * been removed and the rest is live law. ~35,895 legislation sections are of that kind.
+ * Treating a dot run as sufficient would mark live law hollow and drop it out of the
+ * usable-text count. The whole body must still reduce to nothing; only the label is new.
  */
+/** One leading structural label, and only at the start — the publisher's own heading for
+ *  the provision. Anything after it must still be dots and digits for the section to be
+ *  saying nothing. */
+const PROVISION_LABEL = /^(?:article|regulation|section|paragraph|schedule|rule|part|chapter|annex|title)\b/i
+
 export function isRepealedPlaceholder(text: string): boolean {
   const t = text.trim()
   if (!t) return false                    // empty is a different state — not this one
   if (!/[.·…]/.test(t)) return false      // no dot leader at all
-  return !/[A-Za-z]{2}/.test(t)           // no word of two or more letters anywhere
+  const body = t.replace(PROVISION_LABEL, '')
+  return !/[A-Za-z]{2}/.test(body)        // no word of two or more letters anywhere else
 }
 
 export function rawToText(input: string): string {

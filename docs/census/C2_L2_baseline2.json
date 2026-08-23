@@ -1,0 +1,98 @@
+{
+  "measured_at": "2026-08-23T08:14:50.752Z",
+  "repeal_evidence": [
+    {
+      "evidence": "dot-leader-placeholder",
+      "n": 178826,
+      "with_repealer": 25138
+    }
+  ],
+  "repeal_wordcount": [
+    {
+      "joined": 178826,
+      "wc_le_1": 42,
+      "wc_2_14": 134,
+      "wc_ge_15": 178650,
+      "median": 33
+    }
+  ],
+  "repeal_by_corpus": [
+    {
+      "corpus": "regional",
+      "n": 56659
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "n": 35606
+    },
+    {
+      "corpus": "si-2010plus",
+      "n": 34014
+    },
+    {
+      "corpus": "si-pre-2010",
+      "n": 33953
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "n": 18567
+    },
+    {
+      "corpus": "retained-eu",
+      "n": 27
+    }
+  ],
+  "et_split": [
+    {
+      "format": "pdf",
+      "n": 161749,
+      "median_words": 159,
+      "parents": 131161
+    },
+    {
+      "format": "html",
+      "n": 131650,
+      "median_words": 18,
+      "parents": 131650
+    },
+    {
+      "format": null,
+      "n": 4,
+      "median_words": null,
+      "parents": 4
+    }
+  ],
+  "legacy_cols": [
+    "id",
+    "legislationItemId",
+    "sectionNumber",
+    "sectionTitle",
+    "sourceType",
+    "originalText",
+    "originalXmlKey",
+    "tnaXmlKey",
+    "compiledTextKey",
+    "lexSummaryKey",
+    "ftsVector",
+    "confidence",
+    "confidenceReason",
+    "compilationVersion",
+    "compilationNotes",
+    "unappliedAmendments",
+    "commencementNote",
+    "compiledAt",
+    "compiledBy",
+    "compilationStatus",
+    "isRepealed",
+    "needsReview",
+    "createdAt",
+    "updatedAt",
+    "tags",
+    "amendmentCount",
+    "complexityScore",
+    "inForce",
+    "jurisdiction",
+    "policyArea",
+    "embedding"
+  ]
+}

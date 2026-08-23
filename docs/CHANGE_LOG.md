@@ -132,6 +132,113 @@ ingested slice) — **no database provisioned, Charlie's DB-choice call still pe
 
 ---
 
+## INGEST C2 LANE 2 — A GUARD DEFEATED BY THE WORD "ARTICLE" HID 70,430 DEAD PROVISIONS, AND THE CENSUS PRINTED THE EVIDENCE FOR ELEVEN DAYS (2026-08-23 08:59 UTC)
+
+**Executes** `docs/BRIEF_INGEST_COMPLETION_C2.md` Lane 2 (quality). Report:
+`docs/INGEST_C2_LANE2_REPORT.md`. Code: `scripts/ingest/c2/*.ts`; one fix in
+`scripts/ingest/shared/compile.ts`.
+
+**⚠ THE BRIEF'S NAMED INPUT DOES NOT EXIST — SECOND SPRINT RUNNING.**
+`docs/SCRUTINISE_CORPUS_REGISTER_v4.xlsx` is not in the repository. Its data was found elsewhere
+and reconciles **exactly**: `QUANGO_UNIVERSE.csv` gives 1,255 organisations, 348 live / 590 closed /
+300 exempt / 16 joining, 162,004 relevant documents and 1,761 statutory-guidance documents — every
+figure the brief quotes. Lane 5 is not blocked.
+
+**PREDICTION LOGGED BEFORE THE RUN, THEN MEASURED.** retained-eu dot-leader rate predicted
+**35.4% ±4.19 → ~70,516** further placeholders; measured **35.37% → +70,430**. Off by 86 rows
+(0.12%).
+
+**⚠⚠ ITEM 4 — THE 178,826 ARE NOT "ONE-WORD SECTIONS" AND THE CENSUS UNDERCOUNTS BY 28.3%.**
+Their median `wordCount` is **33**, because the tokeniser counts each `.` as a word; reading twelve
+bodies out of R2 showed every one is a section number followed by thirty-two dots. That generalises:
+**`et-decisions` sits at median 18 and dot leaders at 33, so both of the two largest hollow
+collections clear the playbook's "under 15 words" floor by construction** — the §22 hollow-unit
+instrument is blind to the defect it was written to find.
+The cause is one line. `shared/compile.ts::isRepealedPlaceholder` ended `!/[A-Za-z]{2}/.test(t)` —
+"no word of two or more letters anywhere". `retained-eu` renders a removed provision as
+`Article 31 . . . .` rather than the bare `31 . . . .`, and **"Article" defeats it**. The V36
+census printed `retained-eu 27/194537 0.01%` directly beneath `regional 16.84%` and
+`primary-acts-pre-2000 21.48%` — **a rate three orders of magnitude below its neighbours, in the
+run's own summary, unread for eleven days.**
+Fixed in the shared helper with the test failing first: 3 of 7 real R2 bodies FAIL before, 7/7
+after, and the existing 14-case V36 guard test still passes 14/14 including its own near-miss
+`5A . . . as amended . . .`. Re-census: `section_repeals` **178,826 → 249,256**, retained-eu
+**27 → 70,457**.
+**⚠ TWO CORRECTIONS TO MY OWN WORK, both caught by checking rather than reasoning.** (1) I said the
+census had also stalled — **refuted**, zero rows sit beyond its cursor; it read 1,563,090 of
+1,592,948 *censusable* rows, and the 1.78M I compared against counts rows its own filter excludes.
+(2) My first detector — "a run of 20+ periods" — **over-flagged, and its own control caught it**: a
+dot run also appears in a **partially repealed** section (`4 1 . . . a traffic regulation order
+shall not be made…`) where the rest is live law. Counting those as hollow would have dropped real
+law from the usable-text count. The fix strips **one leading label**, not every word.
+**Also surfaced and never counted: ~35,895 partially-repealed sections** where Lex can quote a
+subsection that no longer exists.
+
+**⚠⚠ ITEM 5 — `written-answers` IS TRUNCATED, NOT JUST UNSPLIT. DO NOT RE-SPLIT IT.** The brief asks
+for one section per answer. Counting separators found **10 of 10 sampled rows sit on exactly 5,000
+answers** — the Parliament API's page size, not a month — so every busy month is silently missing
+everything after the 5,000th answer, and re-splitting would reproduce the truncation one row at a
+time. `pwdata-wrans` already holds **1,235,281** answers one-per-row over 2001-06-21 to 2026-08-21,
+wholly containing written-answers' 2014-2026 span. ▶ Retire it instead.
+
+**⚠ ITEM 6 — `building-regs` HAS NO PDF TO EXTRACT FROM.** The brief says "PDF text is not being
+captured, fix extraction". Measured: **all 21 rows are `format = null`** and every body is the GOV.UK
+publication *landing page*. The Approved Documents are PDFs linked from those pages and were never
+fetched. Same defect as `et-decisions`; a fetch, not an extraction repair.
+
+**✅ ITEM 8 — THE PAIR TWO SPRINTS COULD NOT PROVE IS DUPLICATED AT 99.9%.**
+`lda-lordsdivisions` / `lords-divisions-votes`: **`itemDate` and `sectionTitle` are NULL on all
+2,089 rows — the metadata is in the BODY and was never extracted** ("Human Fertilisation and
+Embryology Bill [HL] Date: 2008-01-21 UIN: LD:2008-1-21:3"). A collection whose date lives only in
+its prose is invisible to every date-scoped query, freshness check and duplication test. Parsed:
+2,089 of 2,089, **2,087 match on date AND title**, and the duplicate is the poorer copy — median 8
+words against 1,972. All four pairs now resolved.
+
+**✅ ITEM 9 — A7 CONFIRMED INDEPENDENTLY AT 29/211, BY REPRODUCING BOTH FAILURES FIRST.** Matching on
+`type/year/number` alone gives **1,574** — A7's own wrong first answer. Adding the calendar-to-regnal
+map from the full source walk gives 0. Restricting "held" to rows with **compiled text** gives
+**29** ✓. "Held" is two different sets and `status='unavailable'` is a record that we *looked*, not
+that we have text — R8 in a new place. **Verdict: the legacy table is a duplicate**, 127,417 of
+127,790 already held. ⚠ Refinement A7 missed: **5 of the 29 carry an `unavailable` row**, so the
+source has already been asked and returned nothing while legacy holds text — for those five
+"re-fetch, do not migrate" cannot succeed.
+
+**✅ ITEM 1 — C1's REDUCED SCOPE REPRODUCES EXACTLY.** 131,650 landing pages (median 18 words);
+131,147 have the real judgment PDF alongside; **503** have nothing. Re-fetch list written to
+`docs/census/C2_L2_et_refetch_list.json` **before** any deletion.
+
+**✅ ITEM 2 — and `written-statements` is worse than stated.** 6,610 words a row looks healthy; the
+id is a **date range** (`written-statements:2025-06-01:2025-06-30:1`), one section per month with
+statements joined by ` --- `, while `pwdata-wms` (24,962) and `pwdata-lordswms` (21,463) hold the
+same material properly split. A duplicate *and* a unit error.
+
+**ITEM 7 — the parser fix already exists and the data does not have it.** `sources/senedd-cofnod.ts`
+carries an uncommitted INGEST-LABELS fix in the shared parser (agendaItem was not in the heading
+branch; subHeading was never reset). Measured today: **117,231 of 191,756 speeches (61.1%)** still
+sit in their session's biggest heading block, reproducing C1 exactly. A re-parse, not a code change.
+
+**THE PURGE — STAGED, DRY-RUN PROVEN, NOT EXECUTED.** `scripts/ingest/c2/l2-purge.ts`. All four
+collections match their expected counts exactly (131,650 / 20,500 / 8,000 / 129 = **160,279 rows**).
+Reversible (full-row manifests to disk and R2 before anything is deleted; R2 bodies never deleted),
+guarded (re-counts inside the transaction, aborts if the count moved or if DELETE touches a
+different number), transactional per collection. **Retirement is a three-layer operation — target,
+rows, vectors — and doing one of the three is the whole of R9.** ▶ One command in the report.
+
+**❌ NOT DONE:** item 3 (`tna-caselaw` stylesheet re-embed, ~$31, **unspent**) · item 4's exclusion
+wiring (repeals are annotated by SURFACE 1 but still counted as usable text and still returned as
+answers) · item 7's re-parse · item 6's fetch · item 1's 503 re-fetch · the purge execution and its
+vector/FTS layer · **Lanes 0, 1, 3, 4, 5, 6, 7 entirely.**
+
+**▶ CHARLIE — five numbered decisions in `docs/INGEST_C2_LANE2_REPORT.md`.** The two that change
+data: retire `written-answers` rather than re-split it; and also purge `lda-lordsdivisions` (2,089)
+and `lda-commonsdivisions` (5,553), both now proved duplicates but not authorised by the brief.
+
+**Session decisions taken:** et-decisions on C1's reduced scope · **BAILII dropped** (shut by its own
+terms; a courtesy letter cannot license what para 6 forbids), Lane 3 to become the tribunal chambers
+plus a UKHL scope · Lane 2 driven end-to-end first.
+
+---
+
 ## LEX 25-E — THE FRONT DOOR OPENS, AND `IdeaBuild` WAS EMPTY (2026-08-23 08:45 UTC)
 
 Executes `docs/BRIEF_25E_ELICITATION.md` §1–§5. Report: **`docs/LEX_25E_REPORT.md`**.

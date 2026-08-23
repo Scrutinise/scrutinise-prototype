@@ -2,7 +2,63 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-23 08:45 UTC — ▼ **LEX 25-E: THE FRONT DOOR OPENS. ⚠⚠⚠ `IdeaBuild`
+*Last updated: 2026-08-23 09:02 UTC — ▼ **INGEST C2 LANE 2 (quality): A GUARD DEFEATED BY THE WORD
+"ARTICLE" HID 70,430 DEAD PROVISIONS, AND THE CENSUS PRINTED THE EVIDENCE FOR ELEVEN DAYS.**
+⚠ **The brief's named input does not exist — second sprint running.**
+`SCRUTINISE_CORPUS_REGISTER_v4.xlsx` is not in the repo, but its data was found and reconciles
+EXACTLY: `QUANGO_UNIVERSE.csv` gives 1,255 orgs, 348 live / 590 closed / 300 exempt / 16 joining,
+162,004 relevant docs, 1,761 statutory guidance — every figure the brief quotes. **Lane 5 is not
+blocked.** ✅ **PREDICTED 35.4% ±4.19 → ~70,516; MEASURED 35.37% → +70,430** (0.12% out).
+⚠⚠ **ITEM 4: the 178,826 are NOT "one-word sections" — their median wordCount is 33**, because the
+tokeniser counts each "." as a word. **`et-decisions` sits at median 18 and dot leaders at 33, so
+BOTH of the two largest hollow collections clear the playbook's "<15 words" floor by construction**
+— the §22 hollow-unit instrument is blind to the defect it was written to find. The cause is one
+line: `isRepealedPlaceholder` ended `!/[A-Za-z]{2}/.test(t)`, and `retained-eu` renders a removed
+provision as **"Article 31 . . . ."** — "Article" defeats it. The census printed
+`retained-eu 27/194537 0.01%` directly beneath `regional 16.84%`, **three orders of magnitude below
+its neighbours, in its own summary, unread**. Fixed in the SHARED helper, test failing first (3 of
+7 real R2 bodies FAIL before, 7/7 after; the existing 14-case V36 guard still passes 14/14).
+`section_repeals` **178,826 → 249,256**; retained-eu **27 → 70,457**; the census undercounted by
+**28.3%**. ⚠ **TWO CORRECTIONS TO MY OWN WORK, both caught by checking:** (1) "the census also
+stalled" is **REFUTED** — zero rows beyond its cursor; (2) my first detector over-flagged and **its
+own control caught it** — a dot run also appears in a **partially repealed** section
+("4 1 . . . a traffic regulation order shall not be made…") where the rest is LIVE LAW; counting
+those hollow would have dropped real law from the usable-text count. **~35,895 partially-repealed
+sections are uncounted and unlabelled.** ⚠⚠ **ITEM 5: `written-answers` is TRUNCATED, not just
+unsplit — 10 of 10 sampled rows hold EXACTLY 5,000 answers**, the API's page size, so every busy
+month silently loses everything after the 5,000th; re-splitting would reproduce the truncation.
+`pwdata-wrans` already holds **1,235,281** answers one-per-row over a wider span. ▶ retire, don't
+re-split. ⚠ **ITEM 6: `building-regs` has no PDF to extract from — all 21 rows are `format=null`**
+and every body is the GOV.UK landing page. A fetch that was never attempted, not an extractor to
+fix. ✅ **ITEM 8: the pair two sprints could not prove is DUPLICATED at 99.9%** —
+`lda-lordsdivisions` has `itemDate`/`sectionTitle` NULL on all 2,089 rows because **the metadata is
+in the BODY** ("…Date: 2008-01-21 UIN: LD:2008-1-21:3"); parsed, **2,087 of 2,089 match on date AND
+title**, and the duplicate is the poorer copy (8 words vs 1,972). All four pairs now resolved.
+✅ **ITEM 9: A7 confirmed independently at 29/211 by REPRODUCING BOTH FAILURES FIRST** — identity-only
+gives **1,574** (A7's own wrong first answer), + the regnal map gives 0, + "held = has compiled
+text" gives **29** ✓. **The legacy table is a duplicate**, 127,417 of 127,790 already held. ⚠ 5 of
+the 29 carry an `unavailable` row — the source has already been asked and returned nothing, so
+"re-fetch, do not migrate" **cannot succeed** for those five. ✅ **ITEM 1: C1's reduced scope
+reproduces EXACTLY** — 131,650 landing pages, 131,147 have the real PDF alongside, **503** have
+nothing; re-fetch list written BEFORE any deletion. ✅ **ITEM 2: `written-statements` is worse than
+stated** — 6,610 words/row looks healthy, but the id is a **date range**, one section per month,
+while `pwdata-wms`/`pwdata-lordswms` hold it properly split. **THE PURGE IS STAGED, DRY-RUN PROVEN,
+NOT EXECUTED** — 131,650 / 20,500 / 8,000 / 129 = **160,279 rows**, all four matching expected
+counts exactly; reversible (full-row manifests to disk + R2, R2 bodies never deleted), guarded
+(re-counts inside the transaction, aborts on any mismatch), transactional per collection.
+❌ **NOT DONE: item 3 (`tna-caselaw` stylesheet re-embed, ~$31, UNSPENT) · item 4's exclusion wiring
+(repeals are annotated but still counted as usable text and still returned as answers) · item 7's
+re-parse (the shared-parser fix EXISTS uncommitted from INGEST-LABELS; 61.1% of 191,756 senedd
+speeches still carry the wrong heading) · item 6's fetch · item 1's 503 re-fetch · the purge
+execution and its vector/FTS layer · LANES 0, 1, 3, 4, 5, 6, 7 ENTIRELY.**
+▶ **CHARLIE: five numbered decisions in `docs/INGEST_C2_LANE2_REPORT.md`.** The two that change
+data: **retire `written-answers` rather than re-split it**; and **also purge `lda-lordsdivisions`
+(2,089) and `lda-commonsdivisions` (5,553)**, both now proved duplicates but not authorised by the
+brief. **Session decisions taken: et-decisions on C1's reduced scope · BAILII DROPPED (shut by its
+own terms — a courtesy letter cannot license what para 6 forbids), Lane 3 to become the tribunal
+chambers plus a UKHL scope · Lane 2 driven end-to-end first.**
+`docs/INGEST_C2_LANE2_REPORT.md` · playbook §25.**
+Earlier: 2026-08-23 08:45 UTC — ▼ **LEX 25-E: THE FRONT DOOR OPENS. ⚠⚠⚠ `IdeaBuild`
 CONTAINED ZERO ROWS ACROSS THE WHOLE DATABASE — NOT ONE BUILD HAS EVER BEEN STARTED, BY ANYONE.
 Eight sprints of work sat behind a step nobody could get past.** ⚠⚠ The confirmation control was
 there all along and Charlie USED it — his elicitation is CONFIRMED with a 750-char paragraph he

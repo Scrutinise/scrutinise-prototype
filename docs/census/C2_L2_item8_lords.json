@@ -1,0 +1,129 @@
+{
+  "parsed": 2089,
+  "unparsed": 0,
+  "sharedDate": 2088,
+  "dupes": 2087,
+  "verdict": "DUPLICATED — 2087 of 2089 lda-lordsdivisions rows match a lords-divisions-votes row on date AND title. lda carries title+date only (median 8 words); lords-divisions-votes carries the full division with vote lists (median 1,972 words). The duplicate is also the poorer copy.",
+  "examples": [
+    {
+      "lda": "lda-lordsdivisions:713960:1",
+      "votes": "lords-divisions-votes:2091:1",
+      "date": "2017-03-27",
+      "title": "Technical and Further Education Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714864:1",
+      "votes": "lords-divisions-votes:2095:1",
+      "date": "2017-03-29",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:712318:1",
+      "votes": "lords-divisions-votes:2087:1",
+      "date": "2017-03-20",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:717890:1",
+      "votes": "lords-divisions-votes:2099:1",
+      "date": "2017-04-05",
+      "title": "Higher Education (Basic Amount) (England) Regulations 2016 and the Higher Education (Higher Amount) (England) Regulations 2016"
+    },
+    {
+      "lda": "lda-lordsdivisions:710262:1",
+      "votes": "lords-divisions-votes:2079:1",
+      "date": "2017-03-13",
+      "title": "Higher Education and Research Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714873:1",
+      "votes": "lords-divisions-votes:2095:1",
+      "date": "2017-03-29",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714024:1",
+      "votes": "lords-divisions-votes:2093:1",
+      "date": "2017-03-27",
+      "title": "Social Security (Personal Independence Payment) (Amendment) Regulations 2017"
+    },
+    {
+      "lda": "lda-lordsdivisions:717887:1",
+      "votes": "lords-divisions-votes:2098:1",
+      "date": "2017-04-05",
+      "title": "Health Service Medical Supplies (Costs) Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:712317:1",
+      "votes": "lords-divisions-votes:2087:1",
+      "date": "2017-03-20",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714015:1",
+      "votes": "lords-divisions-votes:2093:1",
+      "date": "2017-03-27",
+      "title": "Social Security (Personal Independence Payment) (Amendment) Regulations 2017"
+    },
+    {
+      "lda": "lda-lordsdivisions:89113:1",
+      "votes": "lords-divisions-votes:1569:1",
+      "date": "2011-10-31",
+      "title": "Localism Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:712319:1",
+      "votes": "lords-divisions-votes:2087:1",
+      "date": "2017-03-20",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:89127:1",
+      "votes": "lords-divisions-votes:1582:1",
+      "date": "2011-11-30",
+      "title": "Health and Social Care Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714002:1",
+      "votes": "lords-divisions-votes:2091:1",
+      "date": "2017-03-27",
+      "title": "Technical and Further Education Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:89124:1",
+      "votes": "lords-divisions-votes:1579:1",
+      "date": "2011-11-22",
+      "title": "Health and Social Care Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714007:1",
+      "votes": "lords-divisions-votes:2091:1",
+      "date": "2017-03-27",
+      "title": "Technical and Further Education Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:712324:1",
+      "votes": "lords-divisions-votes:2087:1",
+      "date": "2017-03-20",
+      "title": "Digital Economy Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:89111:1",
+      "votes": "lords-divisions-votes:1565:1",
+      "date": "2011-10-26",
+      "title": "Education Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:89112:1",
+      "votes": "lords-divisions-votes:1569:1",
+      "date": "2011-10-31",
+      "title": "Localism Bill"
+    },
+    {
+      "lda": "lda-lordsdivisions:714880:1",
+      "votes": "lords-divisions-votes:2095:1",
+      "date": "2017-03-29",
+      "title": "Digital Economy Bill"
+    }
+  ]
+}

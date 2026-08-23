@@ -1,0 +1,71 @@
+{
+  "per_corpus": [
+    {
+      "corpus": "primary-acts-pre-2000",
+      "population": 130684,
+      "sampled": 500,
+      "hollow_pct": 0,
+      "hollow_ci95": 0,
+      "projected_hollow": 0,
+      "partial_repeal_pct": 10.6,
+      "projected_partial": 13853
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "population": 129221,
+      "sampled": 500,
+      "hollow_pct": 0,
+      "hollow_ci95": 0,
+      "projected_hollow": 0,
+      "partial_repeal_pct": 4.6,
+      "projected_partial": 5944
+    },
+    {
+      "corpus": "si-pre-2010",
+      "population": 428856,
+      "sampled": 500,
+      "hollow_pct": 0,
+      "hollow_ci95": 0,
+      "projected_hollow": 0,
+      "partial_repeal_pct": 1.2,
+      "projected_partial": 5146
+    },
+    {
+      "corpus": "si-2010plus",
+      "population": 241730,
+      "sampled": 500,
+      "hollow_pct": 0,
+      "hollow_ci95": 0,
+      "projected_hollow": 0,
+      "partial_repeal_pct": 1,
+      "projected_partial": 2417
+    },
+    {
+      "corpus": "regional",
+      "population": 284434,
+      "sampled": 500,
+      "hollow_pct": 0,
+      "hollow_ci95": 0,
+      "projected_hollow": 0,
+      "partial_repeal_pct": 1.6,
+      "projected_partial": 4551
+    },
+    {
+      "corpus": "retained-eu",
+      "population": 199197,
+      "sampled": 500,
+      "hollow_pct": 35.4,
+      "hollow_ci95": 4.19,
+      "projected_hollow": 70516,
+      "partial_repeal_pct": 2,
+      "projected_partial": 3984
+    }
+  ],
+  "summary": {
+    "already_flagged": 178826,
+    "projected_missed_hollow": 70516,
+    "corrected_total": 249342,
+    "undercount_pct": 28.3,
+    "partially_repealed_uncounted": 35895
+  }
+}

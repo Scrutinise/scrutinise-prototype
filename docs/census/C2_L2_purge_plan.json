@@ -1,0 +1,30 @@
+{
+  "generated": "2026-08-23T08:53:07.068Z",
+  "executed": false,
+  "summary": [
+    {
+      "key": "et-decisions-landing",
+      "rows": 131650,
+      "words": 2941258,
+      "executed": false
+    },
+    {
+      "key": "retired-lda-lords-wq",
+      "rows": 20500,
+      "words": 1072407,
+      "executed": false
+    },
+    {
+      "key": "retired-lda-commons-wq",
+      "rows": 8000,
+      "words": 402315,
+      "executed": false
+    },
+    {
+      "key": "retired-written-statements",
+      "rows": 129,
+      "words": 852742,
+      "executed": false
+    }
+  ]
+}

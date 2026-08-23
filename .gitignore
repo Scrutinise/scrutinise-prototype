@@ -149,3 +149,10 @@ scripts/ingest/v36/repeal-census.log
 # Anchored to the exact file, not a `*.csv` pattern: docs/CLAUDE.md §20 check 1 exists because a
 # broad ignore rule silently excluded a real route directory from the repository once already.
 /scripts/graph/.ec-donations.csv
+
+# C2 Lane 2 — purge manifests are the REVERSIBILITY record, not source. Full rows for every
+# section staged for deletion (155 MB for et-decisions alone), copied to R2 before any delete.
+# Never commit them; never delete them until the purge is verified.
+scripts/ingest/c2/purge-manifests/
+scripts/ingest/c2/*.log
+scripts/ingest/c2/recensus-eu-checkpoint.json

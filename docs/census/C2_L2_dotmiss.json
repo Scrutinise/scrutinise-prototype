@@ -1,0 +1,71 @@
+{
+  "instrument": "dot run of 20+ periods",
+  "results": [
+    {
+      "label": "census-flagged",
+      "sampled": 30,
+      "dot_leaders": 30,
+      "pct": 100,
+      "examples": [
+        "[DOT] primary-acts-2000plus:ukpga/2008/4:schedule-19-paragraph-2A → \"2A . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\"",
+        "[DOT] primary-acts-pre-2000:ukpga/Eliz2/8-9/55:schedule-SECOND-paragraph-15 → \"15 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\"",
+        "[DOT] si-2010plus:uksi/2018/1288:regulation-28 → \"28 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\""
+      ]
+    },
+    {
+      "label": "wc=120 unflagged",
+      "sampled": 25,
+      "dot_leaders": 0,
+      "pct": 0,
+      "examples": [
+        "[TEXT] si-2010plus:uksi/2024/943:schedule-15-paragraph-88 → \"88 Where in consequence of the proposed construction of any of the authorised de\"",
+        "[TEXT] si-2010plus:uksi/2010/2841:regulation-2 → \"2 1 These Regulations apply to serving members of the armed forces bodies as if \"",
+        "[TEXT] si-2010plus:uksi/2024/374:schedule-4-paragraph-2 → \"2 1 The Regulator must prescribe in rules a person or Panel for the purposes of—\""
+      ]
+    },
+    {
+      "label": "wc=32 unflagged",
+      "sampled": 30,
+      "dot_leaders": 0,
+      "pct": 0,
+      "examples": [
+        "[TEXT] si-2010plus:uksi/2019/459:regulation-383 → \"383 Commission Implementing Decision (EU) 2016/418 of 18 March 2016 on the compl\"",
+        "[TEXT] primary-acts-pre-2000:ukpga/1978/29:schedule-2-paragraph-1 → \"1 The Medical Practices Committee shall consist of a chairman, who shall be a me\"",
+        "[TEXT] si-pre-2010:uksi/1986/24:schedule-19-paragraph-1 → \"1 This Part of this Schedule applies if the fund is to be apportioned under regu\""
+      ]
+    },
+    {
+      "label": "wc=33 unflagged",
+      "sampled": 30,
+      "dot_leaders": 3,
+      "pct": 10,
+      "examples": [
+        "[TEXT] si-2010plus:uksi/2020/924:regulation-3 → \"3 In the Assured Tenancies and Agricultural Occupancies (Forms) (England) Regula\"",
+        "[TEXT] si-pre-2010:uksi/2006/1120:article-2 → \"2 For the purposes of the definition of “Paralympic symbol” in section 18(1) of \"",
+        "[TEXT] regional:ssi/2014/42:regulation-1 → \"1 1 These Regulations may be cited as the HIV Testing Kits and Services Revocati\""
+      ]
+    },
+    {
+      "label": "wc=34 unflagged",
+      "sampled": 30,
+      "dot_leaders": 26,
+      "pct": 86.7,
+      "examples": [
+        "[TEXT] regional:nisi/1997/865:schedule-paragraph-2n10 → \"2 For expenditure by the Department of Health and Social Services on superannuat\"",
+        "[DOT] retained-eu:eur/2006/952:article-31 → \"Article 31 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\"",
+        "[DOT] retained-eu:eudn/2007/643:annex-article-32 → \"Article 32 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\""
+      ]
+    },
+    {
+      "label": "retained-eu unflagged (any wc)",
+      "sampled": 30,
+      "dot_leaders": 7,
+      "pct": 23.3,
+      "examples": [
+        "[DOT] retained-eu:eur/2006/952:article-31 → \"Article 31 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\"",
+        "[TEXT] retained-eu:eur/2004/1451:full-doc-html → \"Commission Regulation (EC) No 1451/2004 of 13 August 2004 fixing the import duti\"",
+        "[TEXT] retained-eu:eudn/2005/166:article-9 → \"Article 9 The information on national policies and measures referred to in Artic\""
+      ]
+    }
+  ]
+}

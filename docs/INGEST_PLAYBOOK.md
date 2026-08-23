@@ -1,6 +1,6 @@
 # SCRUTINISE — INGEST OPS PLAYBOOK
 
-*Last updated: 20 Jun 2026 — V29: §8 six new patterns (PDF-fan-out throttle≠dead pages → in-adapter retry + reset; Parliament JSON list-page rows; Drupal sitemap-index enumerator; ombudsmen licence findings; own-open≠OGL codes; per-host cf_clearance). §18 licence-map +11 corpora. Prior — V27: breaker EVALUATION un-stalled (a 17M-row corpus_sections GROUP BY for an unread column was timing out every tick, silently disabling all breakers — now read from the hourly corpus_snapshots; see §breakers); diagnose breaker stalls from the Ops deploy logs, not source_status timestamps. V24: zero-output breaker FIXED (per-row `produced_output`, not aggregate count deltas — counts the r2Exists reseed-confirmation); three new patterns (NEW sourceType must seed POST-PUSH or the live worker markSkips it; verify a licence at the licence page not a footer grep; Web Archive snapshots can be JS-SPA shells). V23: §8 four new patterns (zero-output breaker idempotent-reseed false-positive + verify-by-id-prefix, CF listing-walk penalty-box → enumerate deterministic path, public-inquiries register method). V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven patterns, §16 tax-source map, §17 FCL court coverage.*
+*Last updated: 23 Aug 2026 — V31: §21 THE DENOMINATOR DOCTRINE (supersedes §1c/§1d — a denominator equal to its own numerator is not a denominator; four states MEASURED/CLAIMED/DECLARED/UNMEASURED; clamp at 100%; empty queue ≠ completeness; held ≠ usable; retiring a target does not delete its rows); §22 what a completeness audit must cover (hollow units, duplicate + conflated collections, identity variants, publisher-scope exemptions, wrongly retired sources, language, inherited metadata); §23 licence doctrine (bulk indexing is 'computational analysis'; storage-in-a-retrieval-system is a separate permission; write to charities before crawling); §24 the 31 sources the Corpus Plan never proposed. Prior — V29: §8 six new patterns (PDF-fan-out throttle≠dead pages → in-adapter retry + reset; Parliament JSON list-page rows; Drupal sitemap-index enumerator; ombudsmen licence findings; own-open≠OGL codes; per-host cf_clearance). §18 licence-map +11 corpora. Prior — V27: breaker EVALUATION un-stalled (a 17M-row corpus_sections GROUP BY for an unread column was timing out every tick, silently disabling all breakers — now read from the hourly corpus_snapshots; see §breakers); diagnose breaker stalls from the Ops deploy logs, not source_status timestamps. V24: zero-output breaker FIXED (per-row `produced_output`, not aggregate count deltas — counts the r2Exists reseed-confirmation); three new patterns (NEW sourceType must seed POST-PUSH or the live worker markSkips it; verify a licence at the licence page not a footer grep; Web Archive snapshots can be JS-SPA shells). V23: §8 four new patterns (zero-output breaker idempotent-reseed false-positive + verify-by-id-prefix, CF listing-walk penalty-box → enumerate deterministic path, public-inquiries register method). V19: §1b source politeness budget doctrine, §1c denominator re-baselining (✓ rules), §8 seven patterns, §16 tax-source map, §17 FCL court coverage.*
 
 This is the practical ops reference for the ingest pipeline. Read this when something breaks, when restarting services, or when seeding a new corpus. It assumes familiarity with the system architecture but not with the exact API calls and failure modes.
 
@@ -1515,3 +1515,376 @@ id-for-id), the guidance-tier rankings had moved on **5 of 5** questions sampled
 3–8 of 10, with consultations documents displaced by `quangos-govuk` ones — in a tier the
 case-law fix never touched. **A collection's content fix re-ranks its neighbours.** Re-baseline
 after any content refresh, and treat a recall number taken across one as void rather than stale.
+
+
+---
+
+## 21. THE DENOMINATOR DOCTRINE (V31 — 23 Aug 2026)
+
+**This section supersedes §1c and §1d. Read it before writing any completeness figure anywhere.**
+
+### 21.1 What went wrong, stated plainly
+
+The daily email printed `[100% complete]` against 62 of 77 collections. For **46 of them**
+`corpus_targets.est_sections` had been **set equal to the compiled count** by
+`v19-rebaseline-final.ts`, `v19-rebaseline-pwdata.ts`, `v20-rebaseline-drains.ts`,
+`v19-align-p1.ts` and `v19-fix-si-residue.ts`, then stamped `est_is_confirmed=true`.
+
+The email was computing `compiled / compiled`. **That is 100% for any corpus, including an
+empty one.** It is a number dividing itself.
+
+Charlie read that email for weeks and reported the corpus as complete. The one tier with a
+real publisher walk behind it — legislation — was at **21.4%** on `primary-acts-pre-2000` on
+the same day the email printed 100% for it. **Both sentences were produced by the same system
+about the same collection on the same morning.**
+
+`corpus-completeness.ts` already carried the rule this violated, in its own closing line:
+*"A count of what we fetched is not a denominator."* The rule existed. Nothing enforced it.
+
+### 21.2 The rules
+
+> **R1. A denominator that equals its own numerator is not a denominator.**
+> `est == compiled` can never yield a confirmed state, whatever `est_is_confirmed` says.
+>
+> **R2. A denominator is real only if it came from outside this system**, and only if the
+> artefact it came from is stored on disk with a date and a path. `walk_artifact_path` NULL
+> means never walked, and never walked means no percentage.
+>
+> **R3. Walk entries, not headers.** V36 measured the `totalResults` header present on 226
+> `ukpga` year feeds and absent on every `uksi` year feed. A header that is sometimes missing
+> silently produces a wrong denominator rather than an error. Use a header only after proving
+> it agrees with an entry walk on at least three samples.
+>
+> **R4. Units are the publisher's, sections are ours.** Coverage is `held_units /
+> published_units`. An Act absent entirely and an Act present with 1 of 400 sections are the
+> same event to an instrument count and opposite events to a section count. Never put them in
+> the same column.
+>
+> **R5. Clamp at 100%, and treat any overshoot as a broken denominator.** Live examples on
+> 22 Aug: `explanatory-notes` 4,549% of target, `committees-reports` 1,302%,
+> `explanatory-memoranda` 406%, `eur-lex` 268% — every one of them printing "100% complete"
+> with a `✓ source-confirmed` stamp. A target that wrong in *either* direction is being read
+> by nothing.
+>
+> **R6. An empty queue is not completeness.** `ingest_queue` holds ~5,300 rows against 18.3M
+> sections because the hourly reaper deletes done rows after 7 days. It is a rolling window,
+> not a ledger. "Pending: 0" means nothing is queued, which is only ever a statement about
+> what was seeded.
+>
+> **R7. Subtract what the publisher says has no text — and say that you did.** 139,440 of
+> 324,622 published legislation instruments are declared by legislation.gov.uk to have no
+> provisions. Coverage is 44.1% with them in and 77.4% with them out. Both are true. Print
+> both, labelled, or the reader cannot tell which question was answered.
+>
+> **R8. Held is not usable.** A landing page, a dot leader, a stylesheet chunk and a truncated
+> PDF all count as held and answer nothing. Carry `hollow_units` alongside `held_units` and
+> report coverage net as well as gross. Measured examples: 131,654 `et-decisions` rows (44.9%)
+> are landing pages with a median of 18 words; ~178,826 legislation sections (11.4%) are
+> one-word dot leaders; 12.7% of embedded case-law text is stylesheet; `building-regs` is
+> 21 of 21 hollow; `written-answers` is 143 of 143 hollow.
+>
+> **R9. Retiring a target does not delete its rows.** `lda-lordswrittenquestions` (20,500),
+> `lda-commonswrittenquestions` (8,000) and `written-statements` (129) were retired and are
+> **still in `corpus_sections` and still in the vector index**, so 28,629 sections are
+> duplicated in retrieval today. Retirement is a three-step operation: target, rows, vectors.
+>
+> **R10. The headline is the searchable corpus.** 18,243,806 sections in live collections —
+> not 19,186,709, which adds 28,629 retired sections and 914,274 legacy-table sections that no
+> search path reaches. Print the smaller number at the top and the other two beneath it, never
+> summed.
+
+### 21.3 The four states
+
+| state | means | prints |
+|---|---|---|
+| `MEASURED` | publisher walk stored on disk with a date | `held / published  N%` |
+| `CLAIMED` | a target exists but its provenance is unproven | `held / target` + "provenance unproven" |
+| `DECLARED` | no publisher index exists; we wrote a scope list in `docs/CORPUS_SCOPE.md` | `held / declared` labelled DECLARED |
+| `UNMEASURED` | none of the above | the held count and the word UNMEASURED — **no number** |
+
+`est_is_confirmed` is not repaired. It means "a rebaseline script ran", which is a fact about
+our own code, not about the publisher. The renderer ignores it.
+
+### 21.4 The test that must fail first
+
+Run the renderer against a fixture where `est == compiled` for every collection. It must print
+UNMEASURED everywhere and `100%` nowhere. **Paste the failing output before the fix and the
+passing output after.** A check that cannot fail is not a check — and this particular check
+existed in prose for months while the code did the opposite.
+
+---
+
+## 22. WHAT A COMPLETENESS AUDIT MUST COVER (V31)
+
+Volume is the easy half. These are the classes of defect that a section count cannot see, each
+one found in the 22–23 Aug audit:
+
+1. **Hollow units** — held, counted, saying nothing. Scan every collection for `<15` words and
+   `>20,000` words per section, plus the median. Flag anything where `<15` exceeds 5% of rows
+   or `>20,000` exceeds 1%. `building-regs` at 21 rows × ~446 words was the tell that PDF text
+   was never being extracted; `written-answers` at 143 rows × ~306,000 words was the tell that
+   whole files were stored as single sections. **Both look healthy in a section count.**
+2. **Duplicate collections.** Four suspected pairs are unresolved:
+   `lda-commonsdivisions` / `commons-divisions-votes`; `lda-lordsdivisions` /
+   `lords-divisions-votes`; `uk-treaties` / `uk-treaties-fcdo`; `historic-hansard` /
+   `pwdata-debates` in their overlap window. Prove each with one concrete duplicated item
+   returned by `runSearch()` — not by reasoning about ids.
+3. **Conflated collections.** `govuk-core-docs` is one 175-section collection standing in for
+   four separate plan rows (PACE codes, civil service and ministerial codes, Treasury Green and
+   Magenta Books, White Papers) estimated at 1,800+ sections combined. Nothing in it can be
+   reported on separately, so it can never be shown incomplete.
+4. **Identity variants.** Acts before 1963 carry a regnal citation: the Vagrancy Act 1824 is
+   `ukpga/Geo4/5/83`, not `ukpga/1824/83`. A lookup on the calendar id returns zero rows and
+   manufactures a false gap — this already produced one incorrect "we do not hold this" claim
+   in GOLD V2. Match on either id. Never merge two identities on similarity alone.
+5. **Content held outside `corpus_sections`.** The legacy `LegislationSection` table holds
+   914,274 sections across 127,790 instruments that no retrieval path reaches. Whether that is
+   a gap or a duplicate has never been established, because the join was never run.
+6. **Publisher-scope exemptions.** 300 of 1,255 UK arm's-length bodies are *exempt* from
+   publishing on GOV.UK and publish on their own domains instead. A GOV.UK crawler reports
+   healthy coverage of them and holds almost none of their guidance. The list includes the
+   Bank of England, the CQC, the Civil Aviation Authority, the Environment Agency and the
+   College of Policing. **An exemption at the publisher looks exactly like completeness at the
+   crawler.**
+7. **Wrongly retired sources.** All four `bailii-*` targets were retired as "superseded by
+   `tna-caselaw`". `tna-caselaw` starts at 2001. Nothing superseded them, and pre-2001 case law
+   became the largest gap in the corpus by way of a one-line note in a config table. **Before
+   retiring a target as superseded, state the date range or scope of the superseding
+   collection and check it actually covers the retired one.**
+8. **Language.** ~95% of a 40-row `senedd-cofnod` sample had Welsh-language bodies. They are
+   held, embedded and unreachable from an English-language query. Coverage of an unaskable
+   corpus is not coverage.
+9. **Inherited metadata.** 61.1% of 191,730 `senedd-cofnod` speeches carry a heading inherited
+   from the wrong parent. Fix in the shared parser, never per caller.
+
+---
+
+## 23. LICENCE DOCTRINE (V31) — verify BEFORE the crawl, not after
+
+§18 holds the per-source map. These are the rules the 22–23 Aug audit added.
+
+> **L1. Bulk ingest and search indexing are "computational analysis" under some licences, and
+> reading is not.** The Open Justice Licence v2.0 governing Find Case Law expressly excludes
+> computational analysis — which it defines to include search indexing, bulk processing and
+> machine learning. We hold 74,896 judgments, have embedded them and serve them through FTS.
+> **A licence that permits reading does not permit what a search platform does.** Charlie has
+> to apply for TNA's separate computational-analysis licence
+> (`caselawlicence@nationalarchives.gov.uk`).
+>
+> **L2. "Storage in a retrieval system" is a distinct permission and some regulators withhold
+> it.** The FCA requires prior written permission to reproduce the Handbook or store it in any
+> retrieval system. We are storing 3,661 sections now.
+>
+> **L3. Verify at the licence page, not a footer grep**, and treat a Cloudflare-blocked terms
+> page as UNVERIFIED rather than absent — `college-of-policing` has been sitting in that state
+> since V24 and it now gates a backfill.
+>
+> **L4. Non-commercial is a future blocker, not a present one — but record it now.**
+> `nao-nc`, `echr-nc`, `cc-by-nc-4.0` (pre-July-2024 OECD) and IMF
+> (`commercialUseExcluded=true`) are all fine for a not-for-profit and all become blockers the
+> day a commercial arm launches. Flag the rows as commercial-excluded at ingest, not later.
+>
+> **L5. Write to charities before you crawl them, not after they block you.** BAILII is a
+> small charity holding the largest single gap in the corpus. TWFY (also a charity) 503'd under
+> a V18 run and the rate had to be halved. A polite letter costs nothing and a blocked IP costs
+> a week.
+>
+> **L6. Boundaries we cannot cross must be visible in the answer.** Building Regulations
+> Approved Documents incorporate BSI standards by reference and BSI standards are sold, not
+> published. The right behaviour is to say "this Approved Document refers to BS EN xxxx, which
+> is not in the corpus", never to answer as though the chain were complete. **A gap that
+> announces itself is better than a gap that looks like an absence of evidence.**
+>
+> **L7. A licensor per source is manageable; a licensor per council is not.** ~380 local
+> authorities each license their own byelaws and local plans. Do not write 380 letters — check
+> for a common position via the LGA, default to OGL only where the council states it, and
+> record the licence per council in the register.
+
+---
+
+## 24. WHAT THE 22–23 AUG AUDIT ADDED TO THE CORPUS PLAN (V31)
+
+The Corpus Plan accounted for 89.2% of what we hold and did not know the devolved legislatures
+existed. The rebuilt register (`SCRUTINISE_CORPUS_REGISTER_v4.xlsx`) reconciles to
+18,272,435 sections exactly and adds **31 sources that had never been proposed**. The classes
+worth remembering, because they are the classes a legislation-shaped plan predictably misses:
+
+- **The Bill's own working papers.** Amendment papers, marshalled lists, notices of
+  amendments, Public Bill Committee evidence. `bills-api` holds stage metadata, not amendment
+  text. **An amendment is the exact artefact a Scrutinise user is trying to produce, and we
+  held none of them.**
+- **The committees that police delegated power.** DPRRC, JCSI, SLSC — inside
+  `committees-reports` if they are anywhere, never separated, so "was this SI challenged?" is
+  unanswerable.
+- **The official numbered series.** Command Papers, Commons Library briefings. Complete,
+  numbered, open-licensed, and absent.
+- **Everything below Westminster.** Byelaws, local plans, council constitutions. ~380
+  authorities, no central register, and the tier of democracy most users can actually reach.
+- **The official record of legal events.** The London, Edinburgh and Belfast Gazettes — an
+  open API under OGL, and not in the plan at all.
+- **Coroners' Prevention of Future Deaths reports.** ~6,000 documents in which a coroner names
+  a legal or regulatory failure and demands change. The purest legislative-reform trigger in
+  the system, at trivial volume.
+- **The tribunals that are not the Employment Tribunal.** Immigration and Asylum, Social
+  Entitlement, Property, General Regulatory. Tribunals decide far more cases than the courts.
+- **Statutory codes with evidential force** — HSE Approved Codes of Practice, EHRC codes.
+  Legally more than guidance and must be labelled as such in retrieval.
+- **Regulators nobody wrote down.** Ofwat and Ofsted were named in plan row 26 and never
+  seeded. The PRA Rulebook, FOS decisions, the Pensions Regulator, Ofqual, ORR, CAA, Gambling
+  Commission, FSA, MHRA, NICE, CQC and Companies House were never named at all.
+
+**The general lesson:** a corpus plan written from the shape of the statute book will capture
+the statute book and miss the machinery around it — the amendments, the scrutiny, the
+guidance, the local tier and the enforcement record. Ask "what does a user actually need to
+answer this question?" rather than "what are the categories of law?"
+
+---
+
+## 25. WHAT A COUNT CANNOT SEE (V31 — C2 Lane 2, 23 Aug 2026)
+
+§22 lists the classes of defect a section count misses. These five were found *inside* the
+instruments §21–22 recommend, which is the uncomfortable part: the checks existed and were run.
+
+### 25.1 A word count counts punctuation
+
+`wordCount` tokenises on whitespace, so `1 . . . . . . . . . . . . . . . . . . . . . . . . . . . .`
+scores **33 words**. Every legislation dot leader in the corpus scores 33 — a number plus
+thirty-two dots — and the tail scores 67, 100, 133, 166: exact multiples plus one, because they are
+*n* dot leaders concatenated.
+
+> **W1. The "under 15 words" hollow test cannot find the two largest hollow collections we have.**
+> `et-decisions` landing pages sit at a median of 18 and dot leaders at 33. Both clear the floor by
+> construction. A word count is a *length* instrument being asked a *content* question.
+>
+> **W2. When a collection's median word count is suspiciously uniform, that is the finding.**
+> 176,262 of 178,826 rows at exactly 33 is not a distribution, it is a fingerprint. Read the bodies.
+>
+> **W3. Read the body before believing the number.** Twelve R2 reads settled in one minute what
+> two sprints of counting had described wrongly. Every conclusion in this section came from reading
+> text; none came from a query alone.
+
+### 25.2 A rate three orders of magnitude below its neighbours is a broken detector
+
+The V36 repeal census printed this, and it was the answer:
+
+```
+[census]   regional                   56659/336425   16.84%
+[census]   primary-acts-pre-2000      35606/165746   21.48%
+[census]   si-pre-2010                33953/446946    7.60%
+[census]   retained-eu                   27/194537    0.01%
+```
+
+`isRepealedPlaceholder` ended `!/[A-Za-z]{2}/.test(t)` — no word of two or more letters anywhere.
+`retained-eu` renders a removed provision as `Article 31 . . . .` rather than the bare
+`31 . . . .`, and `Article` is a word of two or more letters. **Seventy thousand dead provisions
+were invisible, and the evidence sat in the run's own summary output for eleven days.**
+
+> **W4. A per-collection breakdown is a control, and only if someone reads it.** Print the rate per
+> collection for every census, and treat an outlier of more than about 5× against its neighbours as
+> a defect in the instrument until proved otherwise. A number does not become read by being logged.
+>
+> **W5. A guard written against one publisher's rendering will meet another's.** The same fact —
+> "this provision has been removed" — is rendered `31 . . . .` by legislation.gov.uk and
+> `Article 31 . . . .` by the retained-EU set. Test every content guard against **one real body
+> from each collection it will run over**, not against invented fixtures.
+
+### 25.3 The near-miss that must not match is the whole design
+
+A dot run appears in two entirely different things:
+
+| body | what it is |
+|---|---|
+| `Article 31 . . . .` | a removed provision. **Says nothing.** |
+| `4 1 . . . a traffic regulation order shall not be made with respect to any road…` | **partially** repealed — subsections removed, the rest is live law |
+
+The first detector written for this over-flagged the second, and **its own negative control caught
+it** before it reached anything. Marking those hollow would have dropped live law out of the
+usable-text count and out of retrieval.
+
+> **W6. Widen a guard by the smallest thing that fixes it.** The fix strips ONE leading structural
+> label (`Article|Regulation|Section|Paragraph|Schedule|…`), not every word. The whole body must
+> still reduce to nothing. "It contains a dot run" is not sufficient and never was.
+>
+> **W7. ~35,895 legislation sections are partially repealed** — a dot run alongside live law.
+> Nothing marks them, so a retrieval answer can quote a subsection that no longer exists. That is
+> a distinct state from "repealed" and needs a distinct label.
+
+### 25.4 A collection whose unit is a date range is not a collection of documents
+
+Three collections store a **fetch window** as a section:
+
+| collection | id | what one row is |
+|---|---|---|
+| `written-answers` | `written-answers:2018-05-31:2018-06-30:1` | a month of answers, joined by ` --- ` |
+| `written-statements` | `written-statements:2025-06-01:2025-06-30:1` | a month of statements |
+| `building-regs` | — | the GOV.UK page *about* a document, `format=null` |
+
+And the unit error hides a second defect. **Ten of ten sampled `written-answers` rows hold exactly
+5,000 answers** — the Parliament API's page size, not a month. Every busy month is silently missing
+everything after the 5,000th.
+
+> **W8. If a section id contains two dates, the unit is wrong.** The publisher's unit is the answer,
+> the statement, the judgment. A date range is *our* query, stored as though it were *their*
+> document.
+>
+> **W9. A round number of items in a stored page is a page cap, not a fact about the world.**
+> Exactly 5,000, exactly 1,000, exactly 100 — check the API's default page size before treating the
+> count as data. Re-splitting stored text would have faithfully reproduced the truncation.
+>
+> **W10. Check `format` before diagnosing an extraction failure.** `building-regs` was described as
+> "PDF text is not being captured". All 21 rows are `format = null`: no PDF was ever fetched. There
+> was nothing to extract and no extractor to fix.
+
+### 25.5 Metadata that lives only in the prose is invisible to every check
+
+`lda-lordsdivisions` has `itemDate` and `sectionTitle` NULL on all 2,089 rows. The date and title
+are in the body:
+
+```
+"Human Fertilisation and Embryology Bill [HL] Date: 2008-01-21 UIN: LD:2008-1-21:3"
+```
+
+Two sprints failed to resolve whether this collection duplicated `lords-divisions-votes` — a text
+query could not work at a median of 8 words, and a structural join had no columns to join on. Once
+parsed out of the body: **2,087 of 2,089 match on date and title, 99.9% duplicated**, and the
+duplicate is the poorer copy (8 words against 1,972).
+
+> **W11. A collection with no `itemDate` is absent from every date-scoped query, every freshness
+> check and every duplication test — silently.** Not failing: absent. Add "columns populated?" to
+> the completeness audit alongside "rows present?".
+>
+> **W12. A pair is not disproved by an instrument that could not have proved it.** "Not proved by
+> text query" was recorded as a result. It was a statement about the query.
+
+### 25.6 "Held" is at least two different sets, and the answer moves between them
+
+Re-deriving the legacy-table overlap produced three different answers from the same data:
+
+| what "held" and "identity" mean | instruments in neither |
+|---|---:|
+| identity = `type/year/number` only | **1,574** ← reproduces the known-wrong first answer |
+| + calendar→regnal map from the full source walk | 0 |
+| + "held" = has **compiled text**, not merely a row | **29** ✓ correct |
+
+> **W13. Reproduce the known failure before trusting the fix.** Landing on 29 after reproducing
+> 1,574 is a verification. Landing on 29 directly is a restatement of someone else's number.
+>
+> **W14. A `status='unavailable'` row is a record that we LOOKED, not that we HAVE.** Counting
+> those as held makes a genuine gap vanish. This is §21 R8 in a place nobody had applied it.
+>
+> **W15. Build an identity map from the full publisher walk, never from a work list.** A work list
+> holds absences only, so every instrument that is present under its other identity is missing from
+> the map and reads as a gap. This has now produced a wrong answer twice.
+
+### 25.7 Retirement is three layers, and the delete is the easy one
+
+> **W16. Target, rows, vectors — all three, or none.** `lda-lordswrittenquestions`,
+> `lda-commonswrittenquestions` and `written-statements` were retired by setting a boolean and have
+> been answering queries ever since. Before deleting: write a **full-row** manifest to disk and to
+> R2 (ids alone are not reversible), never delete the R2 bodies, re-count *inside* the transaction,
+> and abort if `DELETE` touches a different number of rows than the manifest holds. Key the vector
+> and FTS deletes off the same manifest so the layers cannot drift.
+>
+> **W17. A proof is not an instruction.** `lda-lordsdivisions` and `lda-commonsdivisions` were
+> proved duplicates during this work and were left in place, because the brief did not authorise
+> removing them. Report them and let the decision be made.
