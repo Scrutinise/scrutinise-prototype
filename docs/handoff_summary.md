@@ -58,7 +58,7 @@ brief. **Session decisions taken: et-decisions on C1's reduced scope · BAILII D
 own terms — a courtesy letter cannot license what para 6 forbids), Lane 3 to become the tribunal
 chambers plus a UKHL scope · Lane 2 driven end-to-end first.**
 `docs/INGEST_C2_LANE2_REPORT.md` · playbook §25.**
-Earlier: 2026-08-23 08:45 UTC — ▼ **LEX 25-E: THE FRONT DOOR OPENS. ⚠⚠⚠ `IdeaBuild`
+Earlier: 2026-08-23 22:45 UTC (⚠ the commit trailers read 08:45 — the machine clock was ~14h slow; see the CHANGE_LOG entry) — ▼ **LEX 25-E: THE FRONT DOOR OPENS. ⚠⚠⚠ `IdeaBuild`
 CONTAINED ZERO ROWS ACROSS THE WHOLE DATABASE — NOT ONE BUILD HAS EVER BEEN STARTED, BY ANYONE.
 Eight sprints of work sat behind a step nobody could get past.** ⚠⚠ The confirmation control was
 there all along and Charlie USED it — his elicitation is CONFIRMED with a 750-char paragraph he
