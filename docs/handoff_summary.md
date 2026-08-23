@@ -2,7 +2,39 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-22 01:32 UTC — ▼ **SEARCH GOLD v2 IS VALIDATED — 24 of 24: 22 ACCEPT,
+*Last updated: 2026-08-23 00:13 UTC — ▼ **INGEST — CASE LAW BEFORE 2001 (scoping only; nothing
+built, nothing fetched in bulk). BAILII IS SHUT BY ITS OWN PUBLISHED TERMS** — paragraph 6 forbids
+*"storing search results or HTML versions of judgments"*, *"bulk downloading"* and robot indexing;
+`robots.txt` disallows every jurisdiction path and `GPTBot` entirely; an Anubis proof-of-work wall
+now fronts the site. ⚠ **There is no commercial/non-commercial line to exploit — this is `blocked`,
+not `commercialUseExcluded`.** ⚠⚠ **THE FINDING NOBODY ASKED FOR: WE HOLD ZERO UKHL JUDGMENTS** —
+the House of Lords was the final court of appeal until 30 July 2009 and Find Case Law does not
+publish it at all. All ~760 of them (14 Nov 1996 – 30 Jul 2009, ~250 pre-2001) sit on
+`publications.parliament.uk` under **OPL v3.0 — commercial use expressly permitted, NO
+computational-analysis exclusion — for under $2 and 3–5 days.** ⚠ **The brief's premise is half
+wrong both ways:** we hold **3,703 pre-2001 case-law sections** (`echr-hudoc` 2,053, `scottish-courts`
+1,203 back to 1999, `ni-judgments` 235 back to **1984**, `tna-caselaw` 210 incl. *Burchell* and
+*Polkey*), and the cliff is **2003**, not 2001 (29 items dated 2001–2002 against 74,657 from 2003).
+⚠⚠ **§3 RAN TEN PRE-2001 AUTHORITIES THROUGH THE REAL `runSearch()`: 10 of 10 ABSENT, 3 of 10
+returned a DIFFERENT CASE WITH THE SAME NAME** — *Caparo* → **Caparo Atlas Fastenings** (ET 2017),
+*ex p Coughlan* → **Mrs M Coughlan v Brookes Jordan Ltd** (ET 2020), GCHQ → the **Strasbourg**
+sequel — **and 0 of 10 returned nothing.** *M v Home Office* returns the Contempt of Court Act
+1981 twice and an **1888** Commons question; *Pepper v Hart* returned a meat-controls-charges
+explanatory memorandum on run 1 and the Interpretation Act 1978 on run 2 — routing is an LLM
+decision, so **the wrong answers move between runs and the verdicts did not.** The absence never
+presents as an absence. ⚠⚠ **My own harness made the same mistake first and reported 3 of 10 HELD**
+on a name match; the classifier now requires the right era AND not-a-tribunal collection.
+⚠ n=10, hand-picked, **NOT a score** — never to be quoted beside the 65-question baseline.
+⚠ Two corrections to our own records: the register's *"declined by BAILII"* is **unevidenced**
+(the request doc is still a draft, no reply logged), and `corpus-census.md`'s "BAILII 2,000,000" is
+about double BAILII's own published 1,001,463 documents. ▶ CHARLIE, five numbered decisions in
+`docs/CASELAW_PRE2001_SCOPE.md` §4: **D-1 declare the coverage boundary (~2 days, recommended
+regardless)** · **D-2 the Lords archive** (confirm OPL/judicial copyright by email; pilot 20 docs —
+Node's fetch is Cloudflare-blocked on parliament.uk) · **D-3 the FCL computational licence — 25
+granted, 0 refused, and the legal exposure is on the STATUS QUO, not the change** · **D-4 two emails
+(TNA: extend backwards? ICLR: what does a Computational Licence cost?)** · **D-5 BAILII stays
+blocked.** `docs/CASELAW_PRE2001_SCOPE.md` · `docs/pre2001_probe.json`.**
+Earlier: 2026-08-22 01:32 UTC — ▼ **SEARCH GOLD v2 IS VALIDATED — 24 of 24: 22 ACCEPT,
 2 AMEND, 0 REJECT — and `debates` and `legislation` have test questions for the first time.** The
 baseline set goes **44 → 65 recall-scoreable** (+3 negative controls, where a 0% is a PASS).
 ⚠ **The two AMENDs are APPLIED, not logged as accepts** (Q6 "hanging" → "the death penalty"; Q12
