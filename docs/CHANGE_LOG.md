@@ -348,6 +348,81 @@ Then `docs/POSITION_VALIDATION_CANDIDATES.md`, 50 PRIORITY rows.
 
 ---
 
+## SEARCH S12 COMPLETE — THE RE-EMBED LANDED, THE BASELINE IS TAKEN, AND DEBATES SCORES ZERO (2026-08-23 00:27 UTC)
+
+Completes `docs/BRIEF_SEARCH_S12.md` §0–§7. Report: **`docs/SEARCH_S12_REPORT.md`**.
+**Spend: $31.8994 embed + €0.156 ANN rebuild + $0.038 pilot.**
+
+✅ **§2 — THE CASE-LAW RE-EMBED LANDED AT $31.8994 AGAINST A $31.88 PLAN**, a 0.04% error, and in
+this project estimates usually run LOW (the corpus embed was gated at ~$600 and came in at
+$430–520). The plan counted the real chunker's real output instead of modelling it. 14/14 shards,
+539,454 vectors, **0 misses**. Guards over the whole population: **G1 0 · G2 0 · G3 539,454 =
+539,454.** ⚠ The orphan sweep FIRED (`sweeping 1 orphan vectors`) — the branch this report had
+recorded as unexercised, now run on exactly the case it was written for.
+
+✅ **CHUNK 0 IS CLEAN, MEASURED OVER THE WHOLE POPULATION AND NOT THE 30 THE BRIEF ASKED FOR:**
+stylesheet **77% → 0.00%** across **74,894** documents; CSS share of chunk-0 characters
+**12.7% → 0.00%**; hand-read **30 of 30**. (74,894 not 74,896 — the two the source publishes with no
+text, which the plan independently counted as `body misses: 2`.) Isolation: **74 of 74 collections,
+every row of both tables, 0 unexpectedly changed**, and the four collections an ordinal shift would
+have hit are byte-identical — the empirical refutation of the boundary-shift fear.
+
+⚠⚠ **THE BRIEF NAMES THE WRONG HEAVY JOB.** §2 says run `vector-index`; that is the FULL-CORPUS
+build and its own registry entry says it *"would print DONE, create nothing, and destroy the box."*
+The right job is `vector-reindex --index-only`, and V35 already recorded this exact confusion. Ran:
+**1,825s, 31.9 min, €0.156, 5.9 GB peak, verify unindexed=0 over 22,670,808 rows.** ⚠ My time
+prediction (15–25 min) was REFUTED and the cost followed it; jobs.ts now carries the third
+measurement and says to size the SCHEDULE from ~32 min.
+
+✅ **§3 — THE NEW BASELINE, 65 QUESTIONS, WITH THE INDEX VERSION STAMPED EITHER SIDE**
+(`corpus_fts` v7308 · `corpus_vec` v4011 · `corpus_chunks` v18447, unchanged across the run):
+**20/65 (31%) recall@20, 9/65 (14%) recall@5.** consultations 7/9 78% · caselaw 4/6 67% ·
+legislation 4/10 40% · committees 3/10 30% · guidance 2/10 20% · **debates 0/11** ·
+impact-assessments 0/9. ⚠⚠ **NOT a delta against S10's 34% — those numbers are VOID, not a
+comparison point.**
+
+⚠⚠ **DEBATES SCORES 0 OF 11 ON ITS FIRST EVER MEASUREMENT, 9 of them NOT-RETRIEVED** — the stream
+ran and the key was not in its list. The largest collection family in the corpus (~12M sections),
+never measured before because it had no questions. ⚠ **One contributor is MINE and is a
+question-design property, not a search defect:** a debates key is a SINGLE SPEECH (one of 200 in a
+day's sitting) where a committees key is a whole report. ▶ The keys should be widened to accept any
+speech sharing the debate's `parentDocId` before 0/11 is quoted as a property of the stream.
+
+⚠⚠ **GUIDANCE: 6 OF 10 DILUTED — S11's RE-TIER GAIN IS BEING EATEN BY THE INTERLEAVE.** S11
+measured 3/10 → 8/10 IN-STREAM; merged it is 2/10, with the key present in the guidance stream's own
+list and not surviving the merge. The re-tier worked exactly as measured; the interleave is where it
+is lost. **Now the highest-value retrieval work outstanding.**
+
+⚠⚠⚠ **A REDEPLOY IS NOT A REBUILD, AND A REBUILD DID NOT SHIP IT EITHER — `vector-serve` IS
+PINNED TO A 12 AUGUST COMMIT.** `deploymentRedeploy` proved a restart (`started_at` 16 Aug → 23 Aug,
+counters reset) and shipped the new DATA — caselaw snippets are now **0 of 20 stylesheets**. It did
+not ship CODE. A source rebuild (`serviceInstanceRedeploy`) then built **commit `c70f53d`, 12
+August**, which does not contain the fix (`merge-base --is-ancestor` → NO) while reporting
+`branch: Main`. ⚠ **This finally explains the recurring "vector-serve has been serving 7 August
+code" note: its source ref does not track the branch it names.** ▶ Repointing it is a Railway
+configuration change and I deliberately did NOT make it.
+
+✅ **The empty-snippet bug is diagnosed, fixed in code, and NOT DEPLOYED.** Its arithmetic held on a
+fourth reading taken after the restart: **0/1 · 1/3 · 5/10 · 9/20 empty** — a shared row budget
+(`sectionIds.length * 4`) starving sections with many chunks. `deploy-serve-from-source.ts` proves
+CODE arrived with a probe false on the old build and true on the new, because `started_at` proves a
+process came back and not which code it came back into — exactly the trap this sprint fell into.
+
+✅ **§4 sweep:** 74 of 74 classified, counts reconciling to 18,521,164 — **0 type-blocked, 0
+tier-blocked**, 2 affected and they are the two already known. ⚠ My own first label was wrong and
+corrected before it shipped: the treaties are not "both axes blocked"; each axis passes, just never
+in the SAME stream, which materially widens the fix.
+
+✅ **§5 drift detection closed on BOTH indexes** — S11 did the keyword side; S12 found that
+`corpus_chunks` and `corpus_vec` are written by different phases with nothing asserting they agree,
+and closed it per collection (never totalled, because a total nets a shortfall against a surplus).
+
+❌ **NOT DONE, NAMED:** the snippet fix is undeployed (Charlie's config change) · the debates keys
+need widening before 0/11 means anything · the interleave is untouched · the treaties are
+unreachable · `build-vector-index`'s resume hazard unfixed · `vec-replace` phase 1 still deletes a
+collection's chunks in one statement · 28 pre-existing `tsc -p scripts/ingest` errors · no browser
+walk and none claimed.
+
 ## SEARCH GOLD v2 — VALIDATED, TRANSCRIBED, AND THE TWO AMENDMENTS APPLIED (2026-08-22 01:32 UTC)
 
 Charlie completed the validation pass: **24 of 24 reviewed — 22 ACCEPT, 2 AMEND, 0 REJECT.**

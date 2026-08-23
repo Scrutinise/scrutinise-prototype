@@ -2,7 +2,22 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-23 00:13 UTC — ▼ **INGEST — CASE LAW BEFORE 2001 (scoping only; nothing
+*Last updated: 2026-08-23 00:27 UTC — ▼ **SEARCH S12 IS COMPLETE: the case-law re-embed landed at
+$31.8994 against a $31.88 plan, chunk 0 is stylesheet-free (77% → 0.00% across 74,894 documents,
+30 of 30 by hand), and there is a NEW BASELINE — 65 questions, index version stamped:
+**20/65 (31%) recall@20**.** ⚠⚠ NOT a delta against S10's 34%, which is VOID. ⚠⚠ **DEBATES SCORES
+0 OF 11 ON ITS FIRST EVER MEASUREMENT** (9 NOT-RETRIEVED) — but one contributor is MINE: a debates
+key is a SINGLE SPEECH of ~200 in a sitting where a committees key is a whole report, so the keys
+should be widened before that is quoted as a property of the stream. ⚠⚠ **GUIDANCE 6 of 10
+DILUTED** — S11's re-tier gain (3/10 → 8/10 in-stream) is real and is being eaten by the interleave,
+now the highest-value retrieval work outstanding. ⚠⚠⚠ **`vector-serve` IS PINNED TO A 12 AUGUST
+COMMIT** — a redeploy ships DATA not code (caselaw snippets are now 0 of 20 stylesheets ✅), and a
+source rebuild built `c70f53d` while reporting `branch: Main`. That finally explains the recurring
+"serving 7 August code" note. ▶ CHARLIE: (1) repoint vector-serve's source ref — signal: empty
+caselaw snippets at limit=10 go **5/10 → 0/10**; (2) widen the debates keys and re-run; (3) give the
+interleave its own sprint; (4) flip `LEX_ROUTER_STREAMS_V2` (4 of 9 IA questions NOT-ROUTED).
+`docs/SEARCH_S12_REPORT.md`.**
+Earlier: 2026-08-23 00:13 UTC — ▼ **INGEST — CASE LAW BEFORE 2001 (scoping only; nothing
 built, nothing fetched in bulk). BAILII IS SHUT BY ITS OWN PUBLISHED TERMS** — paragraph 6 forbids
 *"storing search results or HTML versions of judgments"*, *"bulk downloading"* and robot indexing;
 `robots.txt` disallows every jurisdiction path and `GPTBot` entirely; an Anubis proof-of-work wall
