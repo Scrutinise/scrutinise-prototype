@@ -716,9 +716,39 @@ clean, every check passed, and **the thing was not on the site**:
 contain.** A green local build says the files on this machine are consistent with each other. It says
 nothing about what a clean checkout would do.
 
+### Check 0 — build the way the platform builds. Run this BEFORE you push.
+
+**Added 23 Aug 2026, after a two-day production outage that three sessions pushed into without
+knowing.** `scrutinise-web/scripts/measure-s12-baseline.ts` imported across the package boundary
+into `scripts/ingest/`, which imports `@lancedb/lancedb` — a package installed in the *ingest*
+package's `node_modules`. Vercel installs only `scrutinise-web`'s. Every deployment since ~22 Aug
+failed on a file none of those sessions had touched, while `tsc` and `next build` were green on
+every machine, because a developer machine has both `node_modules` trees.
+
+⚠ **`check:committed` cannot catch this — the file IS committed.** What is missing is the
+dependency, in the place the build runs. And the 18 Aug outage was the mirror image: the dependency
+was there and the *file* was not.
+
+`scripts/check-clean-build.sh` reproduces the deployment's two constraints, which is the only thing
+that catches both:
+
+| | what it reproduces | catches |
+|---|---|---|
+| **A** (`--fast`, seconds) | no file outside `scrutinise-web` may enter the web TypeScript program | the boundary crossing |
+| **B** (full, minutes) | a `git worktree` checkout of HEAD — committed state only — then `npm ci` in `scrutinise-web` alone, then `tsc` | an uncommitted file, a lockfile drift, a missing dependency |
+
+**Run `--fast` before every push. Run it in full before a release, or after touching `tsconfig.json`,
+`package.json`, or any import that crosses a package boundary.** Check A is a COUNT, not a list of
+known-bad files, so the next harness that imports across the boundary fails it without anyone having
+to remember to add it.
+
+⚠ **Do not fix a boundary crossing by adding the missing package to the web app.** That ships a
+heavy native module into a serverless bundle to satisfy a file the web app must never compile. Fix
+the crossing import, or exclude the directory from the web tsconfig.
+
 ### The four checks that close a sprint
 
-Run all four, in this order, and report each:
+Run check 0 first, then all four below, in this order, and report each:
 
 1. **Every file you created is committed.** Not `git status` — an ignored file never appears in it.
    Take the list of files the sprint created and run `git ls-files` against it, and
