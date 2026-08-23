@@ -492,7 +492,7 @@ async function runHourly(): Promise<void> {
   const neonCount = census.legacyLegislationSections
 
   if (dbSize) {
-    console.log(`[ops] Neon DB size: ${dbSize.sizePretty} (${dbSize.usedPct.toFixed(1)}%)`)
+    console.log(`[ops] Neon DB size: ${dbSize.sizePretty} = $${dbSize.costPerMonth.toFixed(2)}/month storage`)
   }
 
   try { await saveCensusToR2(census) } catch (err) { console.warn('[ops] census R2 save failed:', err) }

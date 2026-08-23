@@ -61,6 +61,92 @@ export async function acquireDailyEmailLock(): Promise<boolean> {
   return acquireLock(5, 23 * 60)
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// TWO NUMBERS, BOTH LABELLED (INGEST-LABELS §1)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// On 21 August this email said `primary-acts-pre-2000` was **100% complete** while the search
+// contract said we held **21.4%** of pre-2000 primary Acts. Both were correct and neither was
+// about the other: this email counts SECTIONS (chunks of text), the coverage walk counts
+// INSTRUMENTS (whole Acts and SIs). One Act can be five hundred sections. Nothing was wrong except
+// that two incomparable numbers were published side by side with nothing saying so.
+//
+// ⚠⚠ AND THE SECTION DENOMINATOR WAS OFTEN THE NUMERATOR. `corpus_targets.est_sections` was set,
+// for most collections, by copying the compiled count once the queue drained and flagging it
+// `est_is_confirmed = true` (v19-rebaseline-final.ts, v19-rebaseline-pwdata.ts,
+// v20-rebaseline-drains.ts, v19-align-p1.ts, v19-fix-si-residue.ts all do a variant of
+// `UPDATE corpus_targets SET est_sections=<compiledCount>, est_is_confirmed=true`). Measured
+// 2026-08-22: 62 of 77 live collections printed `[100% complete]`, and **46 of those had
+// est_sections EXACTLY equal to the compiled count.** "We have ingested everything we ingested",
+// with a tick.
+//
+// So `est_is_confirmed` is NOT evidence and this file no longer renders it as though it were.
+// Provenance is COMPUTED here, at report time, from the numbers themselves.
+
+export type DenominatorProvenance = 'estimate' | 'self-referential' | 'none'
+
+/**
+ * What kind of denominator is this, really?
+ *
+ * `self-referential` is the load-bearing case: a target at or below the count it is measuring
+ * cannot demonstrate completeness, whatever flag is set on it. It is reported as UNMEASURED rather
+ * than as 100%, which is the honest reading and the one `corpus-completeness.ts` already uses.
+ *
+ * ⚠ IT DELIBERATELY DOES NOT TAKE THE SOURCE WALK INTO ACCOUNT, and the first draft of this
+ * function did. That draft printed `166,290 / ✓165,438 sections [100.5% of a source-walked
+ * denominator]` for `primary-acts-pre-2000` — putting the walk's authority on the SECTION line,
+ * when the walk counted INSTRUMENTS. It is the identical category error this whole section exists
+ * to remove, rebuilt one layer up. The walk belongs to the instrument line and to nothing else;
+ * the section target for these six collections was copied from the compiled count like all the
+ * others, so it is self-referential like all the others, and now says so.
+ */
+export function denominatorProvenance(
+  est: number | null, compiled: number,
+): DenominatorProvenance {
+  if (est == null) return 'none'
+  // At or below the numerator: either it was copied from the count, or the count has since passed
+  // it. Neither is a measurement of what the publisher publishes.
+  if (est <= compiled) return 'self-referential'
+  return 'estimate'
+}
+
+/** One-glyph strength marker, so an unconfirmed denominator is visibly weaker at a glance. */
+export function provenanceMark(p: DenominatorProvenance): string {
+  return p === 'estimate' ? '~' : p === 'self-referential' ? '⚠' : '?'
+}
+
+/**
+ * Instrument-level coverage from the publisher's own enumeration, where one exists.
+ *
+ * ⚠ SIX COLLECTIONS, ALL LEGISLATION. Nothing else has a publisher walk behind it, and this
+ * deliberately returns nothing rather than a plausible figure for the other 71 — an honest
+ * "not walked" is worth more than a number that will be quoted as fact within a week.
+ *
+ * Figures from `docs/v36_reconciliation.json`, produced by `v36-source-census.ts --enumerate`
+ * (a full entry walk of legislation.gov.uk's year feeds) followed by `v36-reconcile.ts`.
+ * ⚠ A WALK IS A FACT ABOUT A DAY — the date travels with the numbers and is printed in the email.
+ */
+export const SOURCE_WALK_DATE = '2026-08-12'
+export const SOURCE_WALK: Record<string, { published: number; present: number; noProvisions: number }> = {
+  'primary-acts-pre-2000': { published: 16622, present: 3560, noProvisions: 7279 },
+  'primary-acts-2000plus': { published: 938, present: 933, noProvisions: 0 },
+  'si-pre-2010': { published: 80801, present: 54069, noProvisions: 32 },
+  'si-2010plus': { published: 28389, present: 19489, noProvisions: 8187 },
+  'regional': { published: 38099, present: 26150, noProvisions: 10319 },
+  'retained-eu': { published: 159773, present: 39068, noProvisions: 113623 },
+}
+
+/** "3,560 of 16,622 = 21.4% (38.1% excl. no-provisions)" — or null where nobody has walked it. */
+export function instrumentLine(corpusKey: string): string | null {
+  const w = SOURCE_WALK[corpusKey]
+  if (!w) return null
+  const raw = (100 * w.present) / w.published
+  const denomExcl = w.published - w.noProvisions
+  const excl = denomExcl > 0 ? (100 * w.present) / denomExcl : null
+  return `${w.present.toLocaleString()} of ${w.published.toLocaleString()} published = ${raw.toFixed(1)}%` +
+    (excl != null && w.noProvisions > 0 ? ` (${excl.toFixed(1)}% excl. ${w.noProvisions.toLocaleString()} the source declares have no provisions)` : '')
+}
+
 // ── corpus_targets row ────────────────────────────────────────────────────────
 
 interface CorpusTarget {
@@ -181,11 +267,32 @@ export async function saveProgressSnapshot(
 export interface DbSizeResult {
   sizeBytes: number
   sizePretty: string
-  limitBytes: number
-  usedPct: number
+  /** $/month at the plan's storage rate. There is no size limit to be a percentage of. */
+  costPerMonth: number
+  /** Fraction of the spending notification the storage line accounts for. */
+  pctOfNotification: number
 }
 
-const DB_LIMIT_GB = 20  // V18: storage headroom raised to 20GB (display only — Neon bills per-GB; any hard limit is console-side)
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE COST, NOT A STORAGE CEILING (INGEST-LABELS §1).
+//
+// ⚠ THE 20 GB LIMIT DID NOT EXIST. This file printed `DB: Neon 18 GB (88.5% of 20GB) ⚠️ WARNING`
+// against a number invented downstream — the THIRD fictional storage ceiling this project has
+// carried (17.5 GB in serve-observer.ts, 20 GB here, and a "wall" derived from the first in
+// schema-2d2.sql), and one of the earlier two nearly caused real data to be deleted. Neon's
+// actual enforced ceiling was read from the compute's own GUC in V38: `neon.max_cluster_size =
+// 16,384 GiB`. We are three orders of magnitude below it. What storage actually is, is a bill.
+//
+// ⚠ A PLAN PRICE IS A FACT ABOUT A DAY, so it is recorded with its source and the date it was
+// checked, and anything reading it can see how stale it is. Do not update the rate without also
+// updating the date and where it was read.
+const STORAGE_RATE_USD_PER_GB_MONTH = 0.35
+const STORAGE_RATE_SOURCE = 'Neon Launch plan pricing page'
+const STORAGE_RATE_CHECKED = '2026-08-16'   // V38_STORAGE_REPORT.md §1.1
+// The $50 spending notification configured in Neon — the only threshold that exists and the only
+// one worth showing a percentage of. It is a NOTIFICATION, not a cap: crossing it emails, it does
+// not fail writes.
+const SPEND_NOTIFICATION_USD = 50
 
 export async function queryDbSize(): Promise<DbSizeResult> {
   const pool = getNeonPool()
@@ -194,12 +301,13 @@ export async function queryDbSize(): Promise<DbSizeResult> {
            pg_size_pretty(pg_database_size(current_database())) AS db_size
   `)
   const sizeBytes = parseInt(res.rows[0].db_size_bytes, 10)
-  const limitBytes = DB_LIMIT_GB * 1_073_741_824
+  const gb = sizeBytes / 1_073_741_824
+  const costPerMonth = gb * STORAGE_RATE_USD_PER_GB_MONTH
   return {
     sizeBytes,
     sizePretty: res.rows[0].db_size,
-    limitBytes,
-    usedPct: (sizeBytes / limitBytes) * 100,
+    costPerMonth,
+    pctOfNotification: (costPerMonth / SPEND_NOTIFICATION_USD) * 100,
   }
 }
 
@@ -370,15 +478,18 @@ export interface ProgressEmailInput {
   breakerIssues?: string[]
 }
 
-export async function sendProgressEmail(input: ProgressEmailInput): Promise<void> {
+/**
+ * Build the email. Split out from `sendProgressEmail` (INGEST-LABELS §1) so the body can be
+ * RENDERED WITHOUT SENDING — `labels/preview-email.ts` prints it, and a check can assert its
+ * shape. Previously the only way to see this email was to receive it, which is why a denominator
+ * copied from its own numerator sat in it, under a tick, for two months.
+ */
+export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ subject: string; body: string; summary: string }> {
   const {
     timestamp, corpusCounts, neonCount, dbSize,
     stalledSources = [], periodDelta = new Map(), periodHours = 24, reclaimedCount = 0,
     rowsCompletedInPeriod = 0, emptyRowsInPeriod = 0, ingestService, breakerIssues = [],
   } = input
-
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
 
   const now = timestamp
   const bstFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })
@@ -462,12 +573,15 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   // is shown as a labelled projection, never as a ratio that can exceed 100%.
   // Completion is reported as a count of corpora in each state.
   const liveTargets = targets.filter(t => !t.retired)
-  let completeCount = 0, confirmedCount = 0, inProgressCount = 0, notStartedCount = 0, blockedCount = 0, unsizedCount = 0
+  let selfRefCount = 0, inProgressCount = 0, notStartedCount = 0, blockedCount = 0, unsizedCount = 0
   for (const t of liveTargets) {
     const compiled = corpusCounts[t.corpus_key]?.compiled ?? 0
     if (t.est_sections == null) unsizedCount++
     if (t.blocked) { blockedCount++; continue }
-    if (t.est_sections != null && compiled >= t.est_sections) { completeCount++; if (t.est_is_confirmed) confirmedCount++; continue }
+    // ⚠ The old branch here was `compiled >= est → complete++`, and it is what printed
+    // "100% complete" for 62 of 77 collections. A target at or below its own numerator is not
+    // a measurement; it is counted separately and reported as unmeasured.
+    if (denominatorProvenance(t.est_sections, compiled) === 'self-referential') { selfRefCount++; continue }
     if (compiled === 0) { notStartedCount++; continue }
     inProgressCount++
   }
@@ -486,7 +600,8 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
 
   // ── Subject ───────────────────────────────────────────────────────────────
   const deltaStr = totalDelta != null ? `+${totalDelta.toLocaleString()}` : '--'
-  const dbWarn = dbSize && dbSize.usedPct >= 80 ? ` | ⚠️ DB ${dbSize.usedPct.toFixed(0)}%` : ''
+  // Subject line carries cost, not a percentage of a limit that does not exist.
+  const dbWarn = dbSize && dbSize.pctOfNotification >= 100 ? ` | ⚠️ DB $${dbSize.costPerMonth.toFixed(0)}/mo` : ''
   const breakerWarn = breakerIssues.length > 0 ? ` | 🔴 ${breakerIssues.length} breaker` : ''
   const wordsSubj = totalWordsB != null ? ` | ${totalWordsB}B words` : ''
   const periodSubjLabel = periodHours >= 24 ? 'today' : `last ${periodHours}h`
@@ -541,21 +656,33 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
   parts.push('')
   parts.push(`  COMPLETION  (${liveTargets.length} corpora, excl. retired):`)
-  parts.push(`    ✅ complete: ${completeCount}  (✓ source-confirmed: ${confirmedCount})   ▶ in progress: ${inProgressCount}   ○ not started: ${notStartedCount}   ⛔ blocked: ${blockedCount}`)
-  parts.push(`    unsized (no denominator yet): ${unsizedCount}  — see list below`)
+  parts.push(`    ▶ in progress: ${inProgressCount}   ○ not started: ${notStartedCount}   ⛔ blocked: ${blockedCount}   unsized: ${unsizedCount}`)
+  parts.push('')
+  parts.push(`  ⚠ THERE IS NO "COMPLETE" COUNT ANY MORE, AND THAT IS THE POINT.`)
+  parts.push(`    ${selfRefCount} of ${liveTargets.length} corpora have a section target that is at or below their own compiled count —`)
+  parts.push(`    it was set FROM that count when the queue drained, so it can only ever agree with it. Those`)
+  parts.push(`    used to print "100% complete". They now print UNMEASURED, because that is what they are.`)
+  parts.push(`    Only ${Object.keys(SOURCE_WALK).length} collections have been walked against their publisher's own list (walk date ${SOURCE_WALK_DATE}):`)
+  for (const k of Object.keys(SOURCE_WALK)) parts.push(`      ✓ ${k.padEnd(24)} ${instrumentLine(k)}`)
+  parts.push(`    Every other collection's instrument coverage is UNKNOWN — not 100%, not "probably fine".`)
   // Labelled PROJECTION, never a percentage that can exceed 100 (Charlie-directed V24).
   parts.push(`  Eventual total ≈ ${grandTotalEstimated.toLocaleString()} est. when the open corpora land — a projection, NOT a % (numerators exact, denominators still estimates).`)
-  parts.push(`  (per-corpus detail in ALL CORPORA STATUS below; ✓ = confirmed from source, ~ = estimate)`)
+  parts.push(`  (per-corpus detail below. On the SECTIONS line: ~ = our estimate ·`)
+  parts.push(`   ⚠ = the target was set from our own count and measures nothing · ? = no denominator at all)`)
   // V21 honest-denominator rule retained: every known-but-unenumerated source
   // carries a ~ placeholder in corpus_targets so the projection isn't a lie of
   // omission. These sources have no denominator at all yet:
   parts.push(`  Still UNSIZED (no denominator): financial-corpus · quango external-site content (exempt orgs)`)
   parts.push(`    · pre-redesign Law Commission papers`)
   if (dbSize) {
-    const limitGB = (dbSize.limitBytes / 1_073_741_824).toFixed(0)
-    const dbFlag = dbSize.usedPct >= 90 ? '  ⚠️  CRITICAL'
-      : dbSize.usedPct >= 80 ? '  ⚠️  WARNING' : ''
-    parts.push(`  DB: Neon ${dbSize.sizePretty}  (${dbSize.usedPct.toFixed(1)}% of ${limitGB}GB)${dbFlag}`)
+    // Cost, not a ceiling. The only threshold that exists is the $50 spending NOTIFICATION.
+    const flag = dbSize.pctOfNotification >= 100 ? '  ⚠️  storage alone now exceeds the $50 notification' : ''
+    parts.push(
+      `  DB: Neon ${dbSize.sizePretty} = $${dbSize.costPerMonth.toFixed(2)}/month storage ` +
+      `(${dbSize.pctOfNotification.toFixed(0)}% of the $${SPEND_NOTIFICATION_USD} spending notification)${flag}`)
+    parts.push(
+      `      rate $${STORAGE_RATE_USD_PER_GB_MONTH}/GB-month — ${STORAGE_RATE_SOURCE}, checked ${STORAGE_RATE_CHECKED}. ` +
+      `There is NO storage cap on this plan; Neon's enforced ceiling is 16,384 GiB.`)
   }
 
   // ── QUEUE ─────────────────────────────────────────────────────────────────
@@ -648,24 +775,37 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
       continue
     }
 
-    if (est != null && compiled >= est) {
-      parts.push(`  ✅ ${target.corpus_key.padEnd(38)} ${compiled.toLocaleString()}  [100% complete]`)
-      continue
-    }
-
-    if (compiled === 0) {
-      const estStr = est != null ? ` / ~${est.toLocaleString()}` : ''
-      parts.push(`  ○  ${target.corpus_key.padEnd(38)} 0${estStr}  — not started`)
-      continue
-    }
-
-    const pct = est != null ? `${((compiled / est) * 100).toFixed(1)}%` : '?%'
-    const estStr = est != null ? ` / ${(target.est_is_confirmed ? '✓' : '~') + est.toLocaleString()}` : ''
+    // ── TWO NUMBERS, BOTH LABELLED. Sections first (what we fetched), instruments second (what
+    //    the publisher publishes) — and never one without saying which it is.
+    const prov = denominatorProvenance(est, compiled)
+    const instruments = instrumentLine(target.corpus_key)
     const activeFlag = isActive ? '  — active' : ''
-    parts.push(`  ▶  ${target.corpus_key.padEnd(38)} ${compiled.toLocaleString().padStart(9)}${estStr}  [${pct}]${activeFlag}`)
+
+    let sectionsPart: string
+    if (prov === 'self-referential') {
+      // ⚠ NOT "100% complete". The target was set from this count, so it can only ever agree
+      // with it. Coverage here is UNMEASURED, which is a different statement from complete.
+      sectionsPart = `${compiled.toLocaleString().padStart(9)} sections   [⚠ UNMEASURED — the target was set from this count, not from the source]`
+    } else if (prov === 'none') {
+      sectionsPart = `${compiled.toLocaleString().padStart(9)} sections   [? no denominator]`
+    } else if (compiled === 0) {
+      sectionsPart = `        0 / ${provenanceMark(prov)}${(est ?? 0).toLocaleString()} sections   — not started`
+    } else {
+      const pct = est != null ? `${((compiled / est) * 100).toFixed(1)}%` : '?%'
+      sectionsPart = `${compiled.toLocaleString().padStart(9)} / ${provenanceMark(prov)}${(est ?? 0).toLocaleString()} sections   [${pct} of a ${prov} denominator]`
+    }
+    parts.push(`  ${compiled === 0 ? '○ ' : '▶ '} ${target.corpus_key.padEnd(38)} ${sectionsPart}${activeFlag}`)
+    parts.push(`     ${' '.repeat(38)} instruments: ${instruments ?? 'NOT WALKED — no publisher enumeration exists for this source, so coverage is unknown'}`)
   }
 
   const body = parts.join('\n')
+  return { subject, body, summary: `${grandTotalCompiled.toLocaleString()} sections, delta ${deltaStr}` }
+}
+
+export async function sendProgressEmail(input: ProgressEmailInput): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) { console.warn('[reporter] RESEND_API_KEY not set — skipping email'); return }
+  const { subject, body, summary } = await buildProgressEmail(input)
 
   const res = await fetch(RESEND_API, {
     method: 'POST',
@@ -681,6 +821,6 @@ export async function sendProgressEmail(input: ProgressEmailInput): Promise<void
   if (!res.ok) {
     console.error(`[reporter] Resend failed: ${res.status} ${await res.text()}`)
   } else {
-    console.log(`[reporter] Email sent to ${TO} — ${grandTotalCompiled.toLocaleString()} sections, delta ${deltaStr}`)
+    console.log(`[reporter] Email sent to ${TO} — ${summary}`)
   }
 }
