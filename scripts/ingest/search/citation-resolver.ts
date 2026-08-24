@@ -19,6 +19,7 @@
  * zero-gap: same 135,531 gid→title pairs, 0 missing, 0 differing.
  */
 import { Pool } from 'pg'
+import { regnalAlias } from './regnal-alias'
 
 export type ActIndex = {
   /** normalised act title → gid (e.g. "housing act 1988" → "ukpga/1988/50") */
@@ -38,12 +39,36 @@ export async function loadActIndex(pool: Pool): Promise<ActIndex> {
   // the order makes the choice reproducible; it does not claim the choice is right.
   const { rows } = await pool.query<{ gid: string; title: string }>(
     `SELECT gid, title FROM corpus_acts WHERE gid IS NOT NULL AND title IS NOT NULL ORDER BY gid`)
+  // C3 Lane B5 — which id form does the CORPUS actually hold sections under? `corpus_acts` carries
+  // a row for BOTH forms of a regnal-filed Act and `section_count` says which one has the text:
+  // `ukpga/1824/83` is titled *Vagrancy Act 1824* and has section_count 0, while
+  // `ukpga/Geo4/5/83` is untitled and has 20. Measured, not assumed.
+  const { rows: held } = await pool.query<{ gid: string }>(
+    `SELECT gid FROM corpus_acts WHERE gid IS NOT NULL AND section_count > 0`)
+  const gidsHeld = new Set(held.map((r) => r.gid))
   const byTitle = new Map<string, string>()
   for (const r of rows) {
     const k = normTitle(r.title)
     // first writer wins; principal acts are listed once, so collisions are rare.
     if (!byTitle.has(k)) byTitle.set(k, r.gid)
   }
+  // C3 Lane B5 — the REVERSE direction to fts-record's. Here the title is the key and the gid is
+  // the value, so an alias does not add a title; it decides WHICH id form a citation resolves to.
+  // ⚠⚠ THE GID IS USED TO FETCH `{corpus}:{gid}:{ref}` BY ID, so it must be the form the SECTIONS
+  //   are stored under — and for every regnal Act it is NOT the form the title is on. Measured:
+  //   `ukpga/1824/83` carries the title *Vagrancy Act 1824* and **0** sections; `ukpga/Geo4/5/83`
+  //   carries **20** sections and no title. Without the repoint, "Section 4 Vagrancy Act 1824"
+  //   resolves to a title and then fetches NOTHING — a miss that presents as "we do not hold it".
+  //   ⚠ The first version of this repoint tested membership of the TITLED gid set, which by
+  //   construction contains the calendar form, so it never fired. Watched failing on the Vagrancy
+  //   Act before it was changed to test `section_count > 0`.
+  const alias = regnalAlias()
+  let repointed = 0
+  for (const [k, gid] of [...byTitle]) {
+    const other = alias.get(gid)
+    if (other && !gidsHeld.has(gid) && gidsHeld.has(other)) { byTitle.set(k, other); repointed++ }
+  }
+  if (repointed) console.log(`[citation-resolver] ${repointed} citations repointed to the id form the corpus holds`)
   return { byTitle }
 }
 

@@ -34,6 +34,7 @@
  */
 import { tierFor, jurisdictionFor, type Tier } from './corpus-map'
 import { buildCitation, applyCitationToBody, gidFromId } from './citation'
+import { applyRegnalAliases } from './regnal-alias'
 
 /** The columns `corpus_sections` supplies. Named here so a caller's SELECT cannot quietly omit one. */
 export interface SectionRow {
@@ -140,6 +141,11 @@ export async function loadActTitles(pool: { query: (sql: string) => Promise<{ ro
     `WHERE "legislationGovUkId" IS NOT NULL AND title IS NOT NULL`)
   const m = new Map<string, string>()
   for (const r of rows) m.set(r.gid, r.title)
+  // C3 Lane B5 — a pre-1963 Act is filed under a REGNAL id (`ukpga/Geo4/5/83`) and titled under a
+  // calendar one (`ukpga/1824/83`), or the reverse. Without this, 1,650 of 3,599 pre-2000
+  // instruments render as a raw identifier. Adds only; never replaces a direct hit.
+  const { added } = applyRegnalAliases(m)
+  if (added) console.log(`[fts-record] act titles: ${rows.length.toLocaleString()} direct + ${added.toLocaleString()} reached through the regnal↔calendar alias`)
   return m
 }
 
