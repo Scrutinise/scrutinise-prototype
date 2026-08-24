@@ -31,11 +31,22 @@ async function main() {
   const { rows: legacy } = await pool.query<{ n: string }>(`SELECT count(*)::text n FROM "LegislationSection"`)
   const dbSize = await queryDbSize().catch(() => undefined)
 
+  // C3 Lane B2/B4 — the usable-text subtraction. Measured, not passed as a constant, so the line
+  // tracks the table rather than a number somebody typed in once.
+  const { rows: hollow } = await pool.query<{ n: string }>(
+    `SELECT count(*)::text n FROM section_repeals WHERE evidence = 'dot-leader-placeholder'`)
+  const { rows: partial } = await pool.query<{ n: string }>(
+    `SELECT count(*)::text n FROM section_repeals WHERE evidence = 'partial-dot-leader'`)
+
   const { subject, body } = await buildProgressEmail({
     timestamp: new Date(),
     corpusCounts,
     neonCount: Number(legacy[0].n),
     dbSize,
+    hollowSections: Number(hollow[0].n),
+    // ⚠ 0 until b3-backfill-partial.ts runs. Passed anyway rather than omitted, because omitting
+    //   it prints nothing and a reader cannot tell "none yet" from "nobody looked".
+    partiallyRepealedSections: Number(partial[0].n),
   })
 
   await endNeonPool()

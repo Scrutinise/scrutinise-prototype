@@ -136,15 +136,45 @@ export const SOURCE_WALK: Record<string, { published: number; present: number; n
   'retained-eu': { published: 159773, present: 39068, noProvisions: 113623 },
 }
 
-/** "3,560 of 16,622 = 21.4% (38.1% excl. no-provisions)" — or null where nobody has walked it. */
+/**
+ * "3,560 of 9,343 Acts that have text — 38.1%; 7,279 more are published with no provisions."
+ * Or null where nobody has walked the source. C3 Lane E3.
+ *
+ * ⚠ THE HEADLINE DENOMINATOR IS NOW THE ACTS THAT HAVE TEXT, AND THE ORDER MATTERS. This line
+ * used to lead with `3,560 of 16,622 published = 21.4%` and put the honest figure in a bracket.
+ * 21.4% reads as a gap somebody could close, and it is not one: **~96% of the difference is not
+ * text we can fetch.** C1 A5 sampled 67 `unseen` pre-2000 Acts and **0 of 67 returned any text at
+ * source**. Leading with a number that overstates a closable gap by nearly 5× invites work that
+ * cannot succeed — the same shape as `[100% complete]`, in the opposite direction.
+ *
+ * ⚠ AND 38.1% SHOULD BE EXPECTED TO RISE, not because we fetch more but because the walk gets
+ * better. The 12 August walk under-counted the no-provisions class substantially (that is what
+ * 0 of 67 means), so `noProvisions` is a floor and `published − noProvisions` is a ceiling. A
+ * later, better walk moves the denominator DOWN and the percentage UP with nothing ingested.
+ * That is a measurement improving, not progress, and the email says so rather than banking it.
+ */
 export function instrumentLine(corpusKey: string): string | null {
   const w = SOURCE_WALK[corpusKey]
   if (!w) return null
+  const withText = w.published - w.noProvisions
+  if (w.noProvisions === 0 || withText <= 0) {
+    // No no-provisions class recorded: there is only one honest denominator, so print only it.
+    return `${w.present.toLocaleString()} of ${w.published.toLocaleString()} published = ${((100 * w.present) / w.published).toFixed(1)}%`
+  }
+  const pct = (100 * w.present) / withText
   const raw = (100 * w.present) / w.published
-  const denomExcl = w.published - w.noProvisions
-  const excl = denomExcl > 0 ? (100 * w.present) / denomExcl : null
-  return `${w.present.toLocaleString()} of ${w.published.toLocaleString()} published = ${raw.toFixed(1)}%` +
-    (excl != null && w.noProvisions > 0 ? ` (${excl.toFixed(1)}% excl. ${w.noProvisions.toLocaleString()} the source declares have no provisions)` : '')
+  // ⚠ How much of the shortfall is textless is a MEASURED share, not a stock phrase. The first
+  //   version of this line appended "which is NOT a closable gap" to every collection; on
+  //   `si-pre-2010` that is false — 32 of a 26,732 shortfall are textless (0.1%), so almost all of
+  //   that gap IS closable. A warning that fires everywhere warns about nothing.
+  const shortfall = w.published - w.present
+  const textlessShare = shortfall > 0 ? (100 * w.noProvisions) / shortfall : 0
+  const note = textlessShare >= 50
+    ? ` — ${textlessShare.toFixed(0)}% of that shortfall is the no-provisions class, so it is mostly NOT a closable gap`
+    : ''
+  return `${w.present.toLocaleString()} of ${withText.toLocaleString()} that have text — ${pct.toFixed(1)}%; ` +
+    `${w.noProvisions.toLocaleString()} more are published with no provisions ` +
+    `(${raw.toFixed(1)}% of all ${w.published.toLocaleString()} published${note})`
 }
 
 // ── corpus_targets row ────────────────────────────────────────────────────────
@@ -476,6 +506,17 @@ export interface ProgressEmailInput {
   emptyRowsInPeriod?: number
   ingestService?: IngestServiceState
   breakerIssues?: string[]
+  /**
+   * C3 LANE B2/B4 — sections whose ENTIRE text is a publisher dot leader (`Article 31 . . . .`).
+   * `select count(*) from section_repeals where evidence = 'dot-leader-placeholder'`.
+   *
+   * ⚠ OPTIONAL, AND ITS ABSENCE PRINTS "UNMEASURED" RATHER THAN ZERO. A caller that forgets to
+   * supply it must not silently make the corpus look bigger — that is the `[100% complete]`
+   * failure again, one field along.
+   */
+  hollowSections?: number
+  /** Sections that are PARTIALLY repealed — live law with removed subsections. NOT subtracted. */
+  partiallyRepealedSections?: number
 }
 
 /**
@@ -489,6 +530,7 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
     timestamp, corpusCounts, neonCount, dbSize,
     stalledSources = [], periodDelta = new Map(), periodHours = 24, reclaimedCount = 0,
     rowsCompletedInPeriod = 0, emptyRowsInPeriod = 0, ingestService, breakerIssues = [],
+    hollowSections, partiallyRepealedSections,
   } = input
 
   const now = timestamp
@@ -654,6 +696,30 @@ export async function buildProgressEmail(input: ProgressEmailInput): Promise<{ s
   // corpus_sections, so it will never match a raw count(*) of corpus_sections
   // (which also holds unavailable/failed classification rows).
   parts.push(`  = ${neonCount.toLocaleString()} legacy (LegislationSection) + ${newPipelineCompiled.toLocaleString()} new pipeline (corpus_sections, compiled only)`)
+
+  // ── C3 LANE B2/B4 — USABLE TEXT, which is not the same number as sections ingested ────────
+  // ⚠ A dot leader is an ingested section and NOT usable text. It has been counted in the
+  // headline since the corpus began, and since Surface 1 it has also been ANNOTATED in every
+  // search result — and returned anyway. The retrieval exclusion landed in search-gateway.ts;
+  // this is the same fact in the count, because a number that still includes them says the
+  // corpus is bigger than anything a user can be given.
+  if (hollowSections == null) {
+    parts.push(`  ⚠ USABLE TEXT: UNMEASURED — nobody passed the dot-leader count, so this total still`)
+    parts.push(`    includes sections whose entire text is "Article 31 . . . .". It is NOT a usable-text figure.`)
+  } else {
+    const usable = grandTotalCompiled - hollowSections
+    parts.push(`  USABLE TEXT: ${usable.toLocaleString()}   (${grandTotalCompiled.toLocaleString()} ingested − ${hollowSections.toLocaleString()} whole-body dot leaders,`)
+    parts.push(`    ${((100 * hollowSections) / grandTotalCompiled).toFixed(2)}% — a repealed provision rendered as punctuation. Excluded from retrieval too, not just labelled.)`)
+    if (partiallyRepealedSections === 0) {
+      parts.push(`    ⚠ PARTIALLY REPEALED: 0 recorded — the backfill has NOT run. A measured ~32,040 sections`)
+      parts.push(`      [95% CI 25,956–40,088] carry live law with removed subsections, and until b3-backfill-partial.ts`)
+      parts.push(`      runs they are unlabelled: Lex can quote one as if it were complete. This 0 is our gap, not the law's.`)
+    } else if (partiallyRepealedSections != null) {
+      parts.push(`    ⚠ A FURTHER ${partiallyRepealedSections.toLocaleString()} sections are PARTIALLY repealed and are NOT subtracted:`)
+      parts.push(`      they carry live law with removed subsections. They stay retrievable and are labelled. The two`)
+      parts.push(`      populations must never share a rule — treating them alike would drop live law out of the corpus.`)
+    }
+  }
   parts.push('')
   parts.push(`  COMPLETION  (${liveTargets.length} corpora, excl. retired):`)
   parts.push(`    ▶ in progress: ${inProgressCount}   ○ not started: ${notStartedCount}   ⛔ blocked: ${blockedCount}   unsized: ${unsizedCount}`)
