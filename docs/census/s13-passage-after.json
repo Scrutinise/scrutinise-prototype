@@ -1,0 +1,151 @@
+{
+  "takenAt": "2026-08-24T07:23:31.368Z",
+  "delivery": [
+    {
+      "service": "fts-serve",
+      "reachable": true,
+      "controlOk": true,
+      "newFields": true,
+      "note": "S13 §3 present"
+    },
+    {
+      "service": "vector-serve",
+      "reachable": true,
+      "controlOk": true,
+      "newFields": true,
+      "note": "0/10 empty snippets; S13 §3 present"
+    }
+  ],
+  "rows": [
+    {
+      "id": "Q1",
+      "query": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "shown": 6,
+      "inSnippet": 3,
+      "inTitle": 2,
+      "inEither": 3,
+      "meanCov": 0.27777777777777773,
+      "matchedFlag": 6,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q2",
+      "query": "Did peers back the assisted dying bill when it reached the Lords?",
+      "shown": 3,
+      "inSnippet": 3,
+      "inTitle": 3,
+      "inEither": 3,
+      "meanCov": 0.4761904761904762,
+      "matchedFlag": 3,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q3",
+      "query": "What did ministers at Stormont say about the botched green energy scheme?",
+      "shown": 10,
+      "inSnippet": 10,
+      "inTitle": 7,
+      "inEither": 10,
+      "meanCov": 0.2333333333333333,
+      "matchedFlag": 10,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q4",
+      "query": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "shown": 6,
+      "inSnippet": 6,
+      "inTitle": 6,
+      "inEither": 6,
+      "meanCov": 0.5,
+      "matchedFlag": 6,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q5",
+      "query": "What did peers say about overturning the subpostmasters' convictions?",
+      "shown": 3,
+      "inSnippet": 3,
+      "inTitle": 0,
+      "inEither": 3,
+      "meanCov": 0.3333333333333333,
+      "matchedFlag": 3,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q6",
+      "query": "When did Parliament last seriously debate bringing back the death penalty?",
+      "shown": 3,
+      "inSnippet": 3,
+      "inTitle": 1,
+      "inEither": 3,
+      "meanCov": 0.4166666666666667,
+      "matchedFlag": 3,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q7",
+      "query": "What happened to the plan to make the House of Lords elected?",
+      "shown": 11,
+      "inSnippet": 6,
+      "inTitle": 3,
+      "inEither": 6,
+      "meanCov": 0.2545454545454545,
+      "matchedFlag": 11,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q8",
+      "query": "What did MSPs say about making it easier to change your legal gender?",
+      "shown": 6,
+      "inSnippet": 5,
+      "inTitle": 5,
+      "inEither": 6,
+      "meanCov": 0.19047619047619047,
+      "matchedFlag": 6,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q9",
+      "query": "Why were energy companies forcing people onto prepayment meters?",
+      "shown": 20,
+      "inSnippet": 17,
+      "inTitle": 13,
+      "inEither": 18,
+      "meanCov": 0.31666666666666665,
+      "matchedFlag": 20,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q10",
+      "query": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "shown": 9,
+      "inSnippet": 9,
+      "inTitle": 9,
+      "inEither": 9,
+      "meanCov": 0.5777777777777778,
+      "matchedFlag": 9,
+      "unknownFlag": 0
+    },
+    {
+      "id": "Q11",
+      "query": "What did the Chancellor announce in the Spring Statement?",
+      "shown": 3,
+      "inSnippet": 3,
+      "inTitle": 2,
+      "inEither": 3,
+      "meanCov": 0.9166666666666666,
+      "matchedFlag": 3,
+      "unknownFlag": 0
+    }
+  ],
+  "total": {
+    "shown": 80,
+    "inSnippet": 68,
+    "pctInSnippet": 0.85,
+    "inTitle": 51,
+    "inEither": 70,
+    "unknownFlag": 0,
+    "meanCoverage": 0.36130952380952375
+  }
+}

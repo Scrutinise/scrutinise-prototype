@@ -1,0 +1,1853 @@
+{
+  "takenAt": "2026-08-24T07:33:42.892Z",
+  "indexStampBefore": [
+    "    corpus_fts       version   7308   18,272,377 rows",
+    "    corpus_vec       version   4011   22,670,808 rows",
+    "    corpus_chunks    version  18447   22,670,808 rows"
+  ],
+  "indexStampAfter": [
+    "    corpus_fts       version   7308   18,272,377 rows",
+    "    corpus_vec       version   4011   22,670,808 rows",
+    "    corpus_chunks    version  18447   22,670,808 rows"
+  ],
+  "indexMoved": false,
+  "config": {
+    "fts": "https://fts-serve-production-4cea.up.railway.app",
+    "vector": "https://vector-serve-production.up.railway.app",
+    "vectorStreams": "legislation",
+    "limit": 20,
+    "top": 20
+  },
+  "hollowSuppressed": 10,
+  "perCollection": [
+    {
+      "collection": "caselaw",
+      "n": 6,
+      "merged20": 3,
+      "merged5": 1,
+      "inStream20": 2,
+      "diluted": 0,
+      "notRetrieved": 3,
+      "notRouted": 0
+    },
+    {
+      "collection": "committees",
+      "n": 10,
+      "merged20": 2,
+      "merged5": 0,
+      "inStream20": 1,
+      "diluted": 3,
+      "notRetrieved": 5,
+      "notRouted": 0
+    },
+    {
+      "collection": "consultations",
+      "n": 9,
+      "merged20": 5,
+      "merged5": 3,
+      "inStream20": 6,
+      "diluted": 1,
+      "notRetrieved": 3,
+      "notRouted": 0
+    },
+    {
+      "collection": "debates",
+      "n": 11,
+      "merged20": 0,
+      "merged5": 0,
+      "inStream20": 0,
+      "diluted": 2,
+      "notRetrieved": 9,
+      "notRouted": 0
+    },
+    {
+      "collection": "guidance",
+      "n": 10,
+      "merged20": 3,
+      "merged5": 0,
+      "inStream20": 7,
+      "diluted": 4,
+      "notRetrieved": 2,
+      "notRouted": 1
+    },
+    {
+      "collection": "impact-assessments",
+      "n": 9,
+      "merged20": 2,
+      "merged5": 0,
+      "inStream20": 4,
+      "diluted": 2,
+      "notRetrieved": 1,
+      "notRouted": 4
+    },
+    {
+      "collection": "legislation",
+      "n": 10,
+      "merged20": 2,
+      "merged5": 2,
+      "inStream20": 8,
+      "diluted": 6,
+      "notRetrieved": 2,
+      "notRouted": 0
+    }
+  ],
+  "rows": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "committees",
+      "inStream": 35,
+      "merged": 19,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 491,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "foundInStream": "committees",
+      "inStream": 52,
+      "merged": 53,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 967,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "foundInStream": "committees",
+      "inStream": 16,
+      "merged": 6,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 773,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "foundInStream": "committees",
+      "inStream": 47,
+      "merged": 46,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "committees": 60
+      },
+      "displacedBy": 1,
+      "keyWords": 2118,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "foundInStream": "committees",
+      "inStream": 28,
+      "merged": 51,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60
+      },
+      "displacedBy": 5,
+      "keyWords": 641,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "routed": [
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 763,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 3075,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 3648,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "set": "S10",
+      "query": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "routed": [
+        "committees"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 1738,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "set": "S10",
+      "query": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 156,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q12",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the Supreme Court decide about prorogation of Parliament?",
+      "keys": [
+        "tna-caselaw:[2019] UKSC 41:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "caselaw"
+      ],
+      "foundInStream": "caselaw",
+      "inStream": 1,
+      "merged": 5,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 10810,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q13",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "Has the Supreme Court ruled on whether gig-economy workers are employees?",
+      "keys": [
+        "tna-caselaw:[2021] UKSC 5:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 18588,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q14",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What has the Supreme Court said about deprivation of liberty in care settings?",
+      "keys": [
+        "tna-caselaw:[2014] UKSC 19:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 19037,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q15",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "Is there a Supreme Court case about employment tribunal fees?",
+      "keys": [
+        "tna-caselaw:[2017] UKSC 51:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "foundInStream": "caselaw",
+      "inStream": 6,
+      "merged": 3,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 18586,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "S10-Q16",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the court decide about the duty to investigate deaths in custody?",
+      "keys": [
+        "tna-caselaw:[2011] UKSC 20:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "foundInStream": "caselaw",
+      "inStream": 54,
+      "merged": 5,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 25163,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q20",
+      "collection": "caselaw",
+      "set": "S10",
+      "query": "What did the Court of Appeal decide in [2003] EWCA Civ 1769?",
+      "keys": [
+        "tna-caselaw:[2003] EWCA Civ 1769:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 14902,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q21",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What does HMRC say about why the money laundering rules cover company formation agents?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/economic-crime-supervision-handbook/ecsh52050:1"
+      ],
+      "routed": [
+        "legislation",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 14,
+      "merged": 58,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "legislation": 60,
+        "guidance": 60
+      },
+      "displacedBy": 11,
+      "keyWords": 497,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q22",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How do prosecutors decide whether to charge in a domestic abuse case?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/domestic-abuse:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 4,
+      "merged": 21,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 8,
+      "keyWords": 31698,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q23",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What happens when someone is accused of making a false allegation of rape?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/perverting-course-justice-and-wasting-police-time-cases-involving-allegedly:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 0,
+      "merged": 8,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 6123,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q24",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What are the rules police have to follow when stopping and searching someone?",
+      "keys": [
+        "college-of-policing:app-content/stop-and-search:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 15,
+      "merged": 98,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 3,
+      "keyWords": 2528,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q25",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What is the CPS guidance on abuse of process?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/abuse-process:1"
+      ],
+      "routed": [
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 12,
+      "merged": 7,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 4680,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q26",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How does a case get sent from the magistrates' court to the Crown Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/allocation-sending-and-committal-sentence:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 2,
+      "merged": 149,
+      "mergedLen": 296,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 10,
+      "keyWords": 3878,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q27",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "How do I appeal a decision to the Administrative Court?",
+      "keys": [
+        "cps-guidance:prosecution-guidance/appeals-administrative-court:1"
+      ],
+      "routed": [
+        "caselaw"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "caselaw": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 3192,
+      "verdict": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q28",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What guidance does HMRC give its own staff on money laundering compliance checks?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/money-laundering-regulations-compliance/mlr3cupdate001:1"
+      ],
+      "routed": [
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 10,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q29",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "When can HMRC depart from the strict letter of the law?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml4100:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 1,
+      "merged": 9,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 214,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q30",
+      "collection": "guidance",
+      "set": "S10",
+      "query": "What happens if HMRC gives a taxpayer wrong advice?",
+      "keys": [
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1800:1",
+        "hmrc-manuals:hmrc-internal-manuals/admin-law-manual/adml1100:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 44,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q31",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government think banning plastic straws would cost?",
+      "keys": [
+        "impact-assessments:2020-57:1",
+        "impact-assessments:2020-57:2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 8,
+      "merged": 25,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 8,
+      "keyWords": 1810,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q32",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government predict the building safety levy scheme would do?",
+      "keys": [
+        "impact-assessments:2023-77:1",
+        "impact-assessments:2023-77:2",
+        "impact-assessments:2023-77:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 60,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q33",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the predicted cost of the residual waste reduction target?",
+      "keys": [
+        "impact-assessments:2023-14:1",
+        "impact-assessments:2023-14:3"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 57,
+      "verdict": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q34",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "Did the Regulatory Policy Committee approve the tobacco products fees regulations?",
+      "keys": [
+        "impact-assessments:2017-78:2"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 19,
+      "verdict": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q35",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government say the tobacco fee changes would cost business?",
+      "keys": [
+        "impact-assessments:2017-78:3"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 29,
+      "verdict": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q36",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the impact assessment for the environmental permitting changes?",
+      "keys": [
+        "impact-assessments:2018-21:1",
+        "impact-assessments:2018-21:2",
+        "impact-assessments:2018-21:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 9,
+      "merged": 19,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 83,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q37",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What did the government expect from the data adequacy decision for South Korea?",
+      "keys": [
+        "impact-assessments:2022-92:1",
+        "impact-assessments:2022-92:2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 3,
+      "merged": 8,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 58,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q38",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What was the justification for raising the Public Guardian's fees?",
+      "keys": [
+        "impact-assessments:2017-92:4",
+        "impact-assessments:2017-92:3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 7,
+      "merged": 103,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 8,
+      "keyWords": 57,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "S10-Q39",
+      "collection": "impact-assessments",
+      "set": "S10",
+      "query": "What options did the government consider before setting the Public Guardian fee?",
+      "keys": [
+        "impact-assessments:2017-92:6",
+        "impact-assessments:2017-92:7"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 64,
+      "verdict": "NOT-ROUTED"
+    },
+    {
+      "id": "S10-Q41",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government consult on about reducing sewage discharges?",
+      "keys": [
+        "consultations:government_consultations_storm-overflows-reducing-sewage-discharges:1",
+        "consultations:government_consultations_storm-overflows-discharge-reduction-plan:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 0,
+      "merged": 4,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 122,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "S10-Q42",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Was there a consultation on the smoking age ban?",
+      "keys": [
+        "consultations:government_consultations_creating-a-smokefree-generation-and-tackling-youth-vaping:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 436,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q43",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government propose to change about building safety regulation?",
+      "keys": [
+        "consultations:government_consultations_building-a-safer-future-proposals-for-reform-of-the-building-safety-regulatory-system:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 489,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q44",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Has the government consulted on gambling sponsorship?",
+      "keys": [
+        "consultations:government_consultations_consultation-on-banning-unlicensed-gambling-sponsorship:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 0,
+      "merged": 4,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 264,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "S10-Q45",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What has the government asked about AI and copyright?",
+      "keys": [
+        "consultations:government_consultations_artificial-intelligence-and-ip-copyright-and-patents:1",
+        "consultations:government_consultations_artificial-intelligence-and-intellectual-property-call-for-views:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 1,
+      "merged": 5,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 687,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q46",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What was consulted on for leasehold reform?",
+      "keys": [
+        "consultations:government_consultations_implementing-reforms-to-the-leasehold-system:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 376,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "S10-Q47",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Is there guidance being consulted on for storm overflows?",
+      "keys": [
+        "consultations:government_consultations_draft-information-and-guidance-on-storm-overflows:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 0,
+      "merged": 4,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 258,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "S10-Q48",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "What did the government consult on for net zero aviation?",
+      "keys": [
+        "consultations:government_consultations_achieving-net-zero-aviation-by-2050:1"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 1,
+      "merged": 5,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 280,
+      "verdict": "HIT@20"
+    },
+    {
+      "id": "S10-Q49",
+      "collection": "consultations",
+      "set": "S10",
+      "query": "Was there a consultation about electrical safety in building regulations?",
+      "keys": [
+        "consultations:government_consultations_building-regulations-electrical-safety:1"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "guidance",
+      "inStream": 5,
+      "merged": 25,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 10,
+      "keyWords": 238,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q1",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Did MPs argue for or against letting terminally ill people choose to die?",
+      "keys": [
+        "pwdata-debates:debates2024-11-29d:3",
+        "pwdata-debates:debates2024-11-29d:78"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 1086,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q2",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Did peers back the assisted dying bill when it reached the Lords?",
+      "keys": [
+        "pwdata-lords:daylord2025-09-12c:4"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": "debates",
+      "inStream": 39,
+      "merged": 25,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 2634,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q3",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did ministers at Stormont say about the botched green energy scheme?",
+      "keys": [
+        "niassembly-hansard:286438:151"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 4780,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q4",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Has Parliament debated scrapping the benefit limit for families with more than two children?",
+      "keys": [
+        "pwdata-westminster:westminster2022-04-21a:27",
+        "pwdata-westminster:westminster2018-11-27c:55"
+      ],
+      "routed": [
+        "debates",
+        "committees"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 120,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 1360,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q5",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did peers say about overturning the subpostmasters' convictions?",
+      "keys": [
+        "pwdata-lords:daylord2024-05-13a:113"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 2080,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q6",
+      "collection": "debates",
+      "set": "V2",
+      "query": "When did Parliament last seriously debate bringing back the death penalty?",
+      "keys": [
+        "historic-hansard:S5LV0198P0:1798",
+        "historic-hansard:S5LV0306P0:1905"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 5102,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q7",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What happened to the plan to make the House of Lords elected?",
+      "keys": [
+        "pwdata-lords:daylord2012-04-30a:76"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 2978,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q8",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did MSPs say about making it easier to change your legal gender?",
+      "keys": [
+        "scottish-parliament-or:14066:193"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 2084,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q9",
+      "collection": "debates",
+      "set": "V2",
+      "query": "Why were energy companies forcing people onto prepayment meters?",
+      "keys": [
+        "pwdata-debates:debates2022-12-15b:298"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "debates",
+      "inStream": 54,
+      "merged": 40,
+      "mergedLen": 239,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 1,
+      "keyWords": 1551,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q10",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What has the government promised to do about the Grenfell inquiry's findings?",
+      "keys": [
+        "pwdata-debates:debates2024-12-02c:452"
+      ],
+      "routed": [
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 180,
+      "perStreamLen": {
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 2910,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q11",
+      "collection": "debates",
+      "set": "V2",
+      "query": "What did the Chancellor announce in the Spring Statement?",
+      "keys": [
+        "pwdata-debates:debates2025-03-26b:130"
+      ],
+      "routed": [
+        "debates"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 60,
+      "perStreamLen": {
+        "debates": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 4422,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q12",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Can my landlord evict me without giving a reason?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/50:section-21"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 0,
+      "merged": 0,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 1124,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "V2-Q13",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Has the law on no-fault evictions actually changed?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2025/26:section-146",
+        "primary-acts-2000plus:ukpga/2025/26:section-147"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 187,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q14",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "My employer won't make changes for my disability — what does the law require?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2010/15:section-20"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": null,
+      "inStream": -1,
+      "merged": -1,
+      "mergedLen": 299,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 580,
+      "verdict": "NOT-RETRIEVED"
+    },
+    {
+      "id": "V2-Q15",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Is the old law banning schools from promoting homosexuality still in force?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1988/9:section-28"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 2,
+      "merged": -1,
+      "mergedLen": 297,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 10,
+      "keyWords": 33,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q16",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "What exactly did the government ban when it banned plastic straws?",
+      "keys": [
+        "si-2010plus:uksi/2020/971:regulation-2",
+        "si-2010plus:uksi/2020/971:regulation-20"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 15,
+      "merged": 82,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 4,
+      "keyWords": 473,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q17",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "Does Scotland have a minimum price for alcohol?",
+      "keys": [
+        "regional:ssi/2024/127:article-2"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 0,
+      "merged": 0,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 0,
+      "keyWords": 30,
+      "verdict": "HIT@5"
+    },
+    {
+      "id": "V2-Q18",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "My flat is damp and mouldy and the landlord won't fix it — what does the law say?",
+      "keys": [
+        "primary-acts-pre-2000:ukpga/1985/70:section-11"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 19,
+      "merged": 213,
+      "mergedLen": 299,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 4,
+      "keyWords": 771,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q19",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "When did they ban smoking in pubs, and what exactly does it cover?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2006/28:section-2",
+        "primary-acts-2000plus:ukpga/2006/28:section-3"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 2,
+      "merged": 117,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 10,
+      "keyWords": 235,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q20",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "What does the law make social media companies do to protect children?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2023/50:section-12"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 12,
+      "merged": 65,
+      "mergedLen": 240,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "guidance": 60
+      },
+      "displacedBy": 10,
+      "keyWords": 892,
+      "verdict": "DILUTED"
+    },
+    {
+      "id": "V2-Q21",
+      "collection": "legislation",
+      "set": "V2",
+      "query": "How do I find out what a company holds about me?",
+      "keys": [
+        "primary-acts-2000plus:ukpga/2018/12:section-45"
+      ],
+      "routed": [
+        "legislation",
+        "debates",
+        "committees",
+        "caselaw",
+        "guidance"
+      ],
+      "foundInStream": "legislation",
+      "inStream": 5,
+      "merged": 69,
+      "mergedLen": 300,
+      "perStreamLen": {
+        "legislation": 60,
+        "debates": 60,
+        "committees": 60,
+        "caselaw": 60,
+        "guidance": 60
+      },
+      "displacedBy": 5,
+      "keyWords": 596,
+      "verdict": "DILUTED"
+    }
+  ],
+  "length": {
+    "survivorsWordCount": [
+      491,
+      773,
+      10810,
+      18586,
+      25163,
+      6123,
+      4680,
+      214,
+      83,
+      58,
+      122,
+      264,
+      687,
+      258,
+      280,
+      1124,
+      30
+    ],
+    "discardedWordCount": [
+      967,
+      2118,
+      641,
+      497,
+      31698,
+      2528,
+      3878,
+      1810,
+      57,
+      238,
+      2634,
+      1551,
+      33,
+      473,
+      771,
+      235,
+      892,
+      596
+    ],
+    "occupantMedian": 501,
+    "survivorMedian": 491,
+    "discardedMedian": 892
+  }
+}

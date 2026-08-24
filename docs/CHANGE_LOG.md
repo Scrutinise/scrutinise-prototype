@@ -428,11 +428,22 @@ Government Act 1988 is stored as `28 . . . .` (wordCount 33). Retrieval finds it
 and the hollow-repeal filter correctly removes it. **We do not hold the text**, so the question can
 never score however good retrieval gets.
 
-**§2 — the merge arm is BUILT, flag-gated `LEX_MERGE_COVERAGE` default OFF, and DELIBERATELY NOT
-MEASURED.** Post-floor slots allocated by the fraction of the query's content terms present, floor
-preserved exactly (a stream reaching zero is the failure `interleave.ts` exists to prevent). ⚠ It
-**refuses to run and logs an error** when the services do not send `snippetMatched`, because scoring
-coverage over a head-of-document snippet would look exactly like a null result. No A/B is reported.
+**§2 — the merge arm is BUILT, MEASURED, and RECOMMENDED OFF.** `LEX_MERGE_COVERAGE`, default OFF:
+post-floor slots allocated by the fraction of the query's content terms present, floor preserved
+exactly (a stream reaching zero is the failure `interleave.ts` exists to prevent). ⚠ It **refuses to
+run and logs an error** when the services do not send `snippetMatched`, because scoring coverage over
+a head-of-document snippet would look exactly like a null result — so the A/B was run only after the
+redeploy, and `NOT APPLIED` fired 0 times. **Both arms, one session, same index, cached routes:
+A 15/65 (23%) → B 17/65 (26%), net +2.** ✅ Engagement verified POSITIVELY: the round-robin relation
+holds for 29/34 in A and **10/34 in B**. ⚠⚠ **The net hides the shape and the shape is the finding —
+4 gained, 2 lost, and 24 of 34 merged ranks MOVED to buy a net of two.** The two losses are
+S10-Q26 guidance **14 → 149** and V2-Q19 legislation **10 → 117**, both at in-stream rank **2** with
+5 streams routed: **the arm takes documents their own stream ranked SECOND and puts them at rank
+117.** Helps committees (+2, from a floor of zero) and caselaw and impact-assessments (+1 each);
+costs guidance and legislation (−1 each) — the two collections with the best in-stream recall (70%,
+80%). ▶ **Recommendation: leave it OFF.** The refinement it points at (never let a stream's top-3
+leave the merged top-20) is NAMED AND NOT BUILT, because a rule derived from the two rows it has to
+fix is a rule fitted to two rows.
 
 **§3 — THE CHUNK IDENTITY WAS IN SCOPE ON THE LINE THAT DROPPED IT.** `vectorSearchSections`
 collapsed chunk hits to `{sectionId, corpus, tier, score}` with `r.chunkId` right there; the service
@@ -445,13 +456,19 @@ negative controls FIRED** — and it caught its own module's first version repor
 on a passage centred on the word **"the"**, which would have returned ~100% for a system that
 located nothing.
 
-**⚠⚠ AND THE S12 SNIPPET FIX IS COMMITTED, PUSHED AND NOT DEPLOYED, THREE DAYS ON.** Read off the
-running service: `limit=1 → 0/1 empty, limit=3 → 1/3, limit=10 → 5/10` — the pre-fix arithmetic
-exactly. Commit `bf8eeb1` 21 Aug 23:17; `vector-serve` booted 23 Aug 00:24 and still serves the old
-build. **A restart re-runs the existing artefact.**
+**⚠⚠ AND THE S12 SNIPPET FIX HAD BEEN COMMITTED, PUSHED AND NOT DEPLOYED FOR THREE DAYS.** Read off
+the running service: `limit=1 → 0/1 empty, limit=3 → 1/3, limit=10 → 5/10` — the pre-fix arithmetic
+exactly. Commit `bf8eeb1` 21 Aug 23:17; `vector-serve` booted 23 Aug 00:24 and was still serving the
+old build. **A restart re-runs the existing artefact; only `redeploy` rebuilds from Main.**
+✅ **BOTH SERVICES REBUILT FROM MAIN AT 02:03 UTC and the probe that is false on the old build now
+passes: 0 of 10 empty snippets where it returned exactly 5, with both control fields still present.
+`verify-s13-passage` 5/5, was 2/5.** The three-day-old S12 fix went out with it.
 
-**§3's number, BEFORE arm only: 54 of 81 displayed results (67%) contain a content term from the
-query, mean coverage 25.2%.** ⚠ The brief's "close to zero by design" is **refuted**. ⚠⚠ **The metric
+**§3's number, BEFORE → AFTER, both through the platform in one session: 54 of 81 (67%) → 68 of 80
+(85%) of displayed results contain a content term from the query; mean coverage 25.2% → 36.1%;
+`snippetMatched` reported on 0 of 81 → 80 of 80.** ⚠ The title-only figure held at 64% either side —
+the natural control, since the change alters snippets and nothing else. Sharpest single case: GOLD V2
+Q11, the Spring Statement, mean coverage **38% → 92%**. ⚠ The brief's "close to zero by design" is **refuted**. ⚠⚠ **The metric
 had to be repaired first** — scoring title+snippet together returned **80% on the old build**, and
 the 80% was the TITLE (*"Prepayment Meters: Self-Disconnection"* matches a prepayment-meter query on
 its heading alone). It would have moved 80%→85% across a change that alters every snippet.

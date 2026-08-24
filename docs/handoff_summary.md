@@ -60,14 +60,22 @@ returned `body.slice(0,300)`; the ANN had already chosen the matching chunk and 
 speeches run 920–5,714 words. ✅ Fixed with ONE selector shared by both legs (they cannot disagree),
 **no re-index needed — `corpus_vec` already carries `chunkId`**, $0. `check-passage` **15/15, all 5
 negative controls FIRED** — and it caught its own first version reporting `matched:true` on a passage
-centred on the word **"the"**. ⚠⚠ **THE S12 SNIPPET FIX IS COMMITTED, PUSHED AND STILL NOT DEPLOYED
-THREE DAYS ON** — the running `vector-serve` reproduces the pre-fix table exactly (limit=10 → **5 of
-10 empty**). A restart re-runs the existing artefact. ⚠ **§3's number is BEFORE-only: 54 of 81 (67%)
-contain a query term, mean coverage 25.2%** — the brief's "close to zero" is refuted, and **the metric
-had to be repaired first** (title+snippet together read 80% on the OLD build; the 80% was the title).
-❌ **§2's merge arm is built, `LEX_MERGE_COVERAGE` default OFF, and NOT MEASURED** — it refuses to run
-without §3's signal rather than reporting a null it did not measure. ❌ **§5 not run**, gated on the
-re-key validation and the redeploy. ⚠ Debates is **9 of 11 NOT-RETRIEVED** — retrieval, not merge.
+centred on the word **"the"**. ⚠⚠ **THE S12 SNIPPET FIX HAD BEEN COMMITTED, PUSHED AND NOT DEPLOYED FOR
+THREE DAYS** — the running `vector-serve` reproduced the pre-fix table exactly (limit=10 → **5 of 10
+empty**); a restart re-runs the existing artefact. ✅ **BOTH SERVICES REBUILT FROM MAIN and verified
+behaviourally: 0 of 10 empty where it returned exactly 5, controls still passing — `verify-s13-passage`
+5/5, was 2/5.** ✅ **§3 measured through the platform, before → after: 54 of 81 (67%) → 68 of 80 (85%)
+of displayed results contain a query term; mean coverage 25.2% → 36.1%; Spring Statement 38% → 92%.**
+⚠ The title-only control held at 64% either side. ⚠ The brief's "close to zero" is refuted, and **the
+metric had to be repaired first** (title+snippet together read 80% on the OLD build; the 80% was the
+title).
+✅ **§2's merge arm is built, MEASURED and RECOMMENDED OFF** (`LEX_MERGE_COVERAGE`, default OFF).
+Both arms, one session, cached routes: **A 15/65 (23%) → B 17/65 (26%)**, and engagement verified
+positively (the round-robin relation holds 29/34 in A, **10/34 in B**). ⚠⚠ **The net hides the shape:
+4 gained, 2 lost, and 24 of 34 merged ranks MOVED to buy a net of two — and the two losses take
+documents their own stream ranked SECOND to merged rank 149 and 117.** Helps committees (+2, off a
+floor of zero) and caselaw/impact-assessments (+1 each); costs guidance and legislation (−1 each),
+the two best collections in the set. ❌ **§5 not run**, gated on your re-key validation. ⚠ Debates is **9 of 11 NOT-RETRIEVED** — retrieval, not merge.
 ▶▶ **CHARLIE: (a) verdicts on the eleven rows in `docs/GOLD_V2_DEBATES_REKEY.md`; (b) five decisions
 in `docs/SEARCH_S13_REPORT.md` §6 — D-2 (rebuild both serve services) unblocks everything else.**
 The signal that proves D-2: `vector-search limit=10 tier=caselaw` returning **0** empty snippets

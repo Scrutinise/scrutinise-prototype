@@ -1,7 +1,9 @@
 # SEARCH S13 — RETURN THE PARAGRAPH THAT ANSWERS THE QUESTION
 
-**From:** CC-Search · **2026-08-24 01:56 UTC** (clock cross-checked against Google and Cloudflare
-`date` headers before stamping — after the 23 Aug drift, an unchecked stamp is a guess)
+**From:** CC-Search · report opened **2026-08-24 01:56 UTC**, completed **2026-08-24 07:35 UTC**
+(both stamps cross-checked against Google and Cloudflare `date` headers before use — after the
+23 Aug drift, an unchecked stamp is a guess). The §2 A/B and the §3 after-arm were taken between
+those two times, after the service rebuild at 02:03 UTC.
 **Executes:** `docs/BRIEF_SEARCH_S13.md`
 **Index of record for every number below:** `corpus_fts` **v7308** / 18,272,377 rows · `corpus_vec`
 **v4011** / 22,670,808 · `corpus_chunks` **v18447** / 22,670,808. Stamped either side of every run;
@@ -196,7 +198,7 @@ window is 20 and there are up to five streams in it.
 
 ---
 
-## §2 — THE FIX, BUILT TO THE AUDIT, FLAG-GATED, DEFAULT OFF, **AND NOT YET MEASURED**
+## §2 — THE FIX, BUILT TO THE AUDIT, FLAG-GATED, MEASURED — AND RECOMMENDED **OFF**
 
 `lib/lex/merge-coverage.ts` · `LEX_MERGE_COVERAGE`, default OFF, read through `flagEnabled()` —
 never a bare `=== 'true'`.
@@ -217,22 +219,75 @@ answer to cross-stream ordering, and this does not pre-empt it.
 count of matched terms would favour long documents for containing more words. Capping at the number
 of distinct query terms means a 30,000-word speech and a 200-word regulation both top out at 1.0.
 
-### ❌ Both arms could NOT be run in one session, and I am not reporting a number I did not take
+⚠ It refuses to run and logs an **error** — not a warning — when the services do not send
+`snippetMatched`, because before the §3 rebuild the snippet was the first 300 characters of the
+document, and scoring coverage on that would measure how often a query term happens to appear in a
+document's opening, report it as a merge experiment, and **look exactly like a null result**.
+CLAUDE.md §18's corollary: OFF, FAILED and NOT-MEASURABLE must not look identical.
 
-The brief requires both arms against the same index in one session. **`mergeByCoverage` refuses to
-run and says so** when the retrieval services do not send `snippetMatched`, because until §3 is
-deployed the snippet is still the first 300 characters of the document — scoring coverage on that
-would measure how often a query term happens to appear in a document's opening, report it as a merge
-experiment, and **look exactly like a null result**. That is CLAUDE.md §18's corollary: OFF, FAILED
-and NOT-MEASURABLE must not look identical.
+### THE A/B — both arms in one session, same index, cached routes, whole set
 
-**Both services are still on pre-S13 builds** (§3 below). So the arm is built, wired and inert, and
-**S13 reports no A/B for it.** ▶ It is measurable the moment the services are redeployed; the runner
-is `scripts/audit-s13-merge.ts` with `LEX_MERGE_COVERAGE=true` against the cached routes in
-`scripts/gold/s13-routes.json`, which is why the routes are cached at all.
+Run after the §3 rebuild, so the signal was present; `NOT APPLIED` fired **0 times**.
+`docs/census/s13-merge-armA-off.json` · `docs/census/s13-merge-armB-coverage.json`.
 
-⚠ **And I say plainly where I decline to change anything:** the fusion weight, the RRF constant, the
-stream floor and the `limit` fan-out are all untouched. §1 gives no evidence about any of them.
+| collection | n | **A** round-robin (default) | **B** coverage | Δ |
+|---|---|---|---|---|
+| caselaw | 6 | 2 (33%) | 3 (50%) | **+1** |
+| committees | 10 | 0 (0%) | 2 (20%) | **+2** |
+| consultations | 9 | 5 (56%) | 5 (56%) | 0 |
+| debates | 11 | 0 (0%) | 0 (0%) | 0 |
+| guidance | 10 | 4 (40%) | 3 (30%) | **−1** |
+| impact-assessments | 9 | 1 (11%) | 2 (22%) | **+1** |
+| legislation | 10 | 3 (30%) | 2 (20%) | **−1** |
+| **ALL** | **65** | **15 (23%)** | **17 (26%)** | **+2** |
+
+⚠ **Arm A reproduced 15/65 exactly, for the third time, and the third run was AFTER the §3 service
+rebuild** — which is the control proving the passage change moved no ranking.
+
+**✅ THE MECHANISM ENGAGED, POSITIVELY VERIFIED.** The round-robin relation *merged ≈ in-stream ×
+streams* holds for **29 of 34** keys in arm A and **10 of 34** in arm B. The arm is doing what it
+claims; the +2 is not a flag that failed to fire.
+
+### ▶ RECOMMENDATION: DO NOT ENABLE IT. The net is noise and the churn is not.
+
+**+2 of 65 is 3 percentage points on n = 65.** But the net hides the shape, and the shape is the
+finding:
+
+| | |
+|---|---|
+| questions that GAINED a top-20 hit | **4** |
+| questions that LOST one | **2** |
+| verdict unchanged | 59 |
+| merged ranks that MOVED AT ALL | **24 of 34** |
+
+**Gained** — S10-Q1 committees 106→**19** (in-stream 35) · S10-Q3 committees 33→**6** (16) ·
+S10-Q16 caselaw 54→**5** (54) · S10-Q36 impact-assessments 36→**19** (9).
+**Lost** — S10-Q26 guidance **14→149** (in-stream **2**, 5 streams) · V2-Q19 legislation **10→117**
+(in-stream **2**, 5 streams).
+
+⚠⚠ **That is the whole argument against enabling it.** The arm rescues documents their own stream
+ranked 16th–54th, and in exchange it takes documents their own stream ranked **SECOND** and puts
+them at rank 117 and 149. It moved 24 of 34 rankings to buy a net of two. A signal that can demote a
+rank-2 hit by two orders of magnitude is not ready to be the default ordering, whatever the headline
+says — and with n = 65 the headline is inside the noise anyway.
+
+**Per stream, because a trade is Charlie's to decide and not mine to resolve:** it helps committees
+(+2, from a floor of zero) and caselaw (+1) and impact-assessments (+1); it costs guidance (−1) and
+legislation (−1) — **the two collections with the best in-stream recall in the set (70% and 80%)**.
+It is precisely the trade the brief anticipated, with the collections swapped round.
+
+**The shape, as the brief asks:** this is not a flat curve and not a spike. It is a **high-variance
+re-ordering with a near-zero mean** — which is what a signal that is genuinely informative but too
+crude to outrank a strong in-stream ranking looks like.
+
+⚠ **The refinement this points at, NAMED AND NOT BUILT:** blend coverage with in-stream rank instead
+of replacing it — e.g. never let a stream's top-3 fall out of the merged top-20 whatever its
+coverage. That would keep all four gains and prevent both losses on this set, **which is exactly why
+I have not built it**: the brief says do not tune to the 65 questions, and a rule derived from the
+two rows it has to fix is a rule fitted to two rows.
+
+⚠ **And I say plainly where I decline to change anything else:** the fusion weight, the RRF constant,
+the stream floor and the `limit` fan-out are all untouched. §1 gives no evidence about any of them.
 
 ---
 
@@ -269,20 +324,24 @@ characters in produces a top hit whose displayed text is the first 300 character
 reading the table: `chunkId, sectionId, corpus, tier`), and `corpus_chunks` carries `chunkId` +
 `body`. This is a **pure serving change** — no re-embed, no re-chunk, no cost.
 
-### 3.2 ⚠⚠ THE S12 SNIPPET FIX IS COMMITTED, PUSHED, AND NOT DEPLOYED — THREE DAYS ON
+### 3.2 ⚠⚠ THE S12 SNIPPET FIX WAS COMMITTED, PUSHED AND NOT DEPLOYED FOR THREE DAYS — NOW FIXED
 
 Read off the running service, not the repository, exactly as the brief instructs:
 
-| `vector-search` limit | empty snippets, measured 2026-08-24 | pre-fix arithmetic (`n × 4` rows) | post-fix (`n × 8`) |
-|---|---|---|---|
-| 1 | **0 / 1** | 0 / 1 | 0 / 1 |
-| 3 | **1 / 3** | 1 / 3 | 0 / 3 |
-| 10 | **5 / 10** | 5 / 10 | **0 / 10** |
+| `vector-search` limit | measured 02:00 UTC (before) | pre-fix arithmetic (`n × 4` rows) | post-fix (`n × 8`) | measured 07:25 UTC (after) |
+|---|---|---|---|---|
+| 1 | **0 / 1** | 0 / 1 | 0 / 1 | — |
+| 3 | **1 / 3** | 1 / 3 | 0 / 3 | — |
+| 10 | **5 / 10** | 5 / 10 | **0 / 10** | ✅ **0 / 10** |
 
 The fix is commit `bf8eeb1`, **2026-08-21 23:17**. `vector-serve` booted **2026-08-23 00:24** — 25
-hours later — and still reproduces the pre-fix table exactly. **A restart re-runs the existing build;
-only `vector-serve-run.ts redeploy` rebuilds from Main.** Half of every ten-result case-law response
-still arrives with no snippet at all.
+hours later — and still reproduced the pre-fix table exactly. **A restart re-runs the existing build;
+only `{fts,vector}-serve-run.ts redeploy` rebuilds from Main.** Half of every ten-result case-law
+response was arriving with no snippet at all, for three days.
+
+✅ **BOTH SERVICES REBUILT FROM MAIN AT 02:03 UTC, AND THE PROBE THAT IS FALSE ON THE OLD BUILD NOW
+PASSES.** The 5-of-10 → 0-of-10 transition does not depend on any new field being present, so it
+catches a half-deployed build as well as a stale one.
 
 ### 3.3 What was built
 
@@ -321,25 +380,37 @@ was the **title**: a Hansard row titled *"Prepayment Meters: Self-Disconnection"
 prepayment-meter query on its heading alone. It would have moved 80% → ~85% across a change that
 alters every snippet on the platform. Split three ways:
 
-**n = 11 debates questions, whole displayed set (`grouped` — what a user is actually shown), no sampling.**
+**n = 11 debates questions, whole displayed set (`grouped` — what a user is actually shown), no
+sampling. Both arms taken through the platform, in one session, against `corpus_fts` v7308.**
 
-| measured over | before (services on pre-S13 builds) |
-|---|---|
-| **the SNIPPET alone** — the §3 number | **54 of 81 = 67%** |
-| title/citation alone | 52 of 81 = 64% |
-| either | 61 of 81 = 75% |
-| **mean fraction of the query's content terms inside the snippet** | **25.2%** |
+| measured over | BEFORE (pre-S13 services) | AFTER (rebuilt 02:03 UTC) |
+|---|---|---|
+| **the SNIPPET alone** — the §3 number | **54 of 81 = 67%** | ✅ **68 of 80 = 85%** |
+| title/citation alone (the control that must NOT move) | 52 of 81 = 64% | 51 of 80 = 64% |
+| either | 61 of 81 = 75% | 70 of 80 = 88% |
+| **mean fraction of the query's terms inside the snippet** | **25.2%** | ✅ **36.1%** |
+| results reporting `snippetMatched` | 0 of 81 | **80 of 80** |
 
-▶ **The brief's expectation — "today that is close to zero by design" — is REFUTED.** It is 67% for
-"contains at least one content term", because one word of an eight-word question clears that bar and
-a topical query's vocabulary recurs early in a speech. **The number that shows the defect is the mean
-coverage: 25.2% of the question is present in the text shown.**
+▶ **The brief's expectation — "today that is close to zero by design" — is REFUTED.** The before
+figure is 67%, not ~0%: one word of an eight-word question clears the "contains a term" bar, and a
+topical query's vocabulary recurs early in a speech. **The number that showed the defect is the mean
+coverage, and it is the one that moved most: +10.9 points, 25.2% → 36.1%.**
 
-❌ **There is no AFTER number in this report.** Both services are on pre-S13 builds; the delivery
-probe fails 3 of 5 assertions and passes both of its controls, so the probe is sound and the verdict
-is real. ⚠ Run-to-run variance on the before arm is ±3 results of 81 (two runs gave 57/81 and 54/81)
-because routing is an LLM decision and this harness does not cache routes; **the mean-coverage figure
-is the stabler one and both runs gave 25%.**
+⚠ **The title figure held at 64% across the change, which is what makes the snippet figure
+believable.** It is the natural control: the change alters snippets and nothing else, so a title
+number that had moved would have meant the two runs were not comparable.
+
+⚠ **Run-to-run variance on the before arm is ±3 results of 81** (two before runs gave 57/81 and
+54/81) because routing is an LLM decision and this harness does not cache routes. The +18-point
+snippet gain and the +10.9-point coverage gain are both well outside that.
+
+**The single clearest instance** — GOLD V2 Q11, the Spring Statement, mean coverage **38% → 92%** —
+and the case-law probe returns `chunkId … #7`, i.e. **the eighth chunk**, with
+`snippetLocation: "about 42% of the way through"` and a snippet opening *"Courts within the British
+Commonwealth have demonstrated a persistent reluctance to hold that an employee's assault has been
+committed within the course of…"* against a query about vicarious liability for an employee's
+assault. Before the rebuild that same request returned chunk 0 — or, for five of the ten results,
+nothing at all.
 
 ---
 
@@ -381,13 +452,10 @@ document, which is what it is for.
 
 ## §5 — NOT DONE, AND THE DEPENDENCY NAMED
 
-**❌ The re-measure has NOT been run and this report supersedes no earlier figure.** It is gated on
-two things, in order:
-
-1. **Charlie's validation of `GOLD_V2_DEBATES_REKEY.md`.** A changed key is a changed question;
-   scoring against unvalidated keys would put a third number into circulation.
-2. **The services being redeployed.** §2's arm cannot run and §3's after-number cannot be taken until
-   they are.
+**❌ The re-measure against the NEW KEYS has not been run, and this report supersedes no earlier
+figure.** It is gated on **Charlie's validation of `GOLD_V2_DEBATES_REKEY.md`** — a changed key is a
+changed question, and scoring against unvalidated keys would put a third number into circulation.
+*(The second gate, the service redeploy, was cleared during this sprint — see D-2.)*
 
 ⚠ **What §1 DOES establish, and it is a new baseline rather than an improvement on anything:**
 **merged@20 = 15/65 (23%)**, **in-stream@20 = 28/65 (43%)**, against `corpus_fts` v7308. **This
@@ -405,20 +473,23 @@ work, and it should be taken **after** the re-key lands, not before.
 
 ## §6 — DECISIONS FOR CHARLIE
 
-**D-1 · Should the matched-passage snippet ship ON, or behind a default-OFF flag?**
-*Recommendation: ON, as built.* The behaviour it replaces shows a user 1.1% of a Spring Statement,
-from the top, and the kill-switch `SEARCH_PASSAGE_SNIPPET=false` restores the old text exactly
-without a rebuild. *Consequence of default-OFF instead:* the sprint delivers nothing user-visible and
-§2's arm stays unmeasurable, because it needs this signal.
+**D-1 · The matched-passage snippet SHIPPED ON, which departs from this project's default-OFF norm.
+Do you want it kept that way?**
+*Recommendation: keep it ON.* The behaviour it replaces showed a user 1.1% of a Spring Statement,
+from the top; the measured effect is 67% → 85% and mean coverage 25.2% → 36.1%; and the kill-switch
+`SEARCH_PASSAGE_SNIPPET=false` restores the old text exactly, on both services, without a rebuild.
+⚠ The reason to look at this at all is that **snippets feed the answer model** — general-chat reads
+16 of them — so this changes what Lex says, for the better on every measure taken, but it is a
+behavioural change and not only a display one. *Consequence of turning it OFF:* §2's arm becomes
+unmeasurable again, because it needs this signal.
 
-**D-2 · Redeploy `fts-serve` and `vector-serve` — REBUILD, not restart.**
-This is the only step that makes any of §2 or §3 real, and it is a command I can run
-(`tsx search/{fts,vector}-serve-run.ts redeploy`) once the code is on Main. **The signal that proves
-it: `vector-search` at `limit=10, tier=caselaw` returning `0` empty snippets where it returns exactly
-`5` today, and `snippetMatched` appearing on the wire with its control fields still present.** Not an
-absence of errors. `scripts/verify-s13-passage.ts` is that probe and currently fails 3 of 5 with both
-controls passing. *Consequence of not doing it:* S12's snippet fix stays undelivered for a fourth day
-and S13 delivers nothing at all.
+**D-2 · ✅ DONE — both services rebuilt from Main at 02:03 UTC, verified behaviourally.**
+No action needed; recorded because the delivery is the part that has failed three times. The probe
+that is false on the old build passed: `vector-search limit=10 tier=caselaw` **0 of 10** empty
+snippets where it returned exactly **5 of 10** an hour earlier, `snippetMatched` on the wire, and
+both control fields still present so the probe is reading the service rather than reading nothing.
+`scripts/verify-s13-passage.ts` — **5 of 5, was 2 of 5.** ⚠ The three-day-old S12 snippet fix went
+out with it.
 
 **D-3 · V2-Q15's answer key points at a 66-character dot-leader placeholder.**
 *Recommendation: mark it `⛔ UNSCOREABLE — corpus gap` rather than REJECT,* so the behaviour half you
@@ -431,7 +502,15 @@ recall figure counts a missing document as a ranking failure — **n drops 65 �
 debate the death penalty?"* *Consequence of leaving both:* an answer key that does not determine a
 direction — the exact defect that cost the position graph 136 rows.
 
-**D-5 · Is `LEX_VECTOR_STREAMS` still `legislation` in Vercel?** I cannot read it (SAML). Every
+**D-5 · `LEX_MERGE_COVERAGE` — leave it OFF?**
+*Recommendation: yes, leave it OFF.* Measured +2 of 65 (23% → 26%) while moving 24 of 34 rankings,
+and the two regressions take documents their own stream ranked SECOND to merged ranks 117 and 149.
+*Consequence of enabling it anyway:* committees goes 0/10 → 2/10, which is the first non-zero
+committees figure this project has recorded — and guidance and legislation, the two strongest
+collections in the set, each lose one. It is a real trade and it is yours; my recommendation is
+that a net of two on n = 65 does not buy that much churn.
+
+**D-6 · Is `LEX_VECTOR_STREAMS` still `legislation` in Vercel?** I cannot read it (SAML). Every
 number above assumes the 10 Aug dashboard reading. *Consequence of it having changed:* the §1 audit
 describes a configuration production is not in, and would need re-taking — 25 minutes.
 
