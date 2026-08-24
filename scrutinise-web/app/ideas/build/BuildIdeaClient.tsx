@@ -22,6 +22,10 @@ import {
   QuestionCard, UnderstandingFailedCard, ConfirmationCard, StartBuildCard, NothingToShowCard,
   Spinner, type StepView,
 } from '@/components/lex/ElicitationCards'
+// TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Re-exported so `page.tsx`
+// keeps importing its prop type from the component it renders.
+import RecentIdeasPanel, { type RecentIdea } from '@/components/lex/RecentIdeasPanel'
+export type { RecentIdea }
 
 // The server's shapes, restated for the client. Kept structural rather than imported
 // wholesale so this file cannot accidentally pull server-only code into the bundle.
@@ -139,7 +143,13 @@ async function getJson(url: string, cid: string, init?: RequestInit): Promise<Re
 
 
 export default function BuildIdeaClient(
-  { initialIdeaId, resumed = false }: { initialIdeaId?: string; resumed?: boolean },
+  { initialIdeaId, resumed = false, recent = [], hiddenEmpty = 0 }: {
+    initialIdeaId?: string
+    resumed?: boolean
+    /** TEMPORARY — the stopgap previous-ideas list. See `RecentIdea`. */
+    recent?: RecentIdea[]
+    hiddenEmpty?: number
+  },
 ) {
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
   const [elicit, setElicit] = useState<ElicitationState | null>(null)
@@ -546,6 +556,12 @@ export default function BuildIdeaClient(
       )}
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">
+        {/* TEMPORARY (24 Aug 2026) — the stopgap previous-ideas list. Rendered OUTSIDE
+            the `booting` branch deliberately: it arrives from the server with the page, so
+            it must still be there when the session fails to start — which is exactly the
+            state in which you most want a way back to earlier work. */}
+        <RecentIdeasPanel recent={recent} hiddenEmpty={hiddenEmpty} />
+
         {booting || !elicit ? (
           <div className="py-24 text-center text-sm text-zinc-400">{error ?? 'Starting your session…'}</div>
         ) : (

@@ -57,6 +57,8 @@
     "check:lex-25d": "tsx scripts/check-lex-25d.ts",
     "check:lex-25e": "tsx scripts/check-lex-25e.ts",
     "verify:lex-25e-ui": "tsx scripts/verify-lex-25e-ui.tsx",
+    "verify:recent-ideas-ui": "tsx scripts/verify-recent-ideas-ui.tsx",
+    "dump:kernel": "tsx --env-file=.env scripts/dump-build-kernel.ts",
     "verify:lex-25e": "tsx --env-file=.env scripts/verify-lex-25e-live.ts",
     "verify:lex-25d": "tsx --env-file=.env scripts/verify-lex-25d-live.ts",
     "check:model-reachability": "tsx --env-file=.env scripts/check-model-reachability.ts",

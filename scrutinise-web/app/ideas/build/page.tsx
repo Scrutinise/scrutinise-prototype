@@ -14,7 +14,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import BuildIdeaClient from './BuildIdeaClient'
+import BuildIdeaClient, { type RecentIdea } from './BuildIdeaClient'
 
 interface Props {
   /** `fresh=1` — 25-E §2: the explicit opt-out from resuming. See below. */
@@ -111,5 +111,68 @@ export default async function BuildIdeaPage({ searchParams }: Props) {
     }
   }
 
-  return <BuildIdeaClient initialIdeaId={initialIdeaId} resumed={resumed} />
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEMPORARY (Charlie, 24 Aug 2026) — A WAY TO SEE IDEAS MADE ON THIS PATH.
+  //
+  // There is no UI anywhere that lists ideas created through `/ideas/build`, so a
+  // finished build is reachable only by someone pasting its id into a URL. This is a
+  // stopgap list, not a feature: no paging, no search, no delete, owner-only, and it
+  // reads rows that already exist rather than storing anything new.
+  //
+  // ⚠ IT CANNOT BE A LIST OF TITLES. Every idea on this path is called "Untitled idea"
+  // until the user accepts the title Lex proposed — 11 of 11 in production right now —
+  // so a title list would render eleven identical rows. The excerpt below is what makes
+  // the entries tellable apart, and it comes from the problem the USER wrote.
+  //
+  // ⚠ THE EMPTY SHELLS ARE HIDDEN, AND THE COUNT OF THEM IS SHOWN. 10 of the 11
+  // elicitation rows in production are blank shells minted by the pre-25-E bug. Dropping
+  // them silently would make this list lie about what is in the database, so the client
+  // prints how many were hidden.
+  // ═══════════════════════════════════════════════════════════════════════════
+  let recent: RecentIdea[] = []
+  let hiddenEmpty = 0
+  if (dbUser) {
+    const rows = await prisma.ideaElicitation.findMany({
+      where: { idea: { creatorId: dbUser.id, deletedAt: null } },
+      orderBy: { updatedAt: 'desc' },
+      take: 40,
+      select: {
+        ideaId: true, status: true, problem: true, goalDetail: true, ownKnowledge: true,
+        updatedAt: true,
+        idea: {
+          select: {
+            title: true,
+            builds: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { status: true, passesComplete: true, completedAt: true },
+            },
+          },
+        },
+      },
+    })
+    for (const r of rows) {
+      const excerpt = (r.problem || r.goalDetail || r.ownKnowledge || '').trim()
+      if (!excerpt) { hiddenEmpty++; continue }
+      const b = r.idea.builds[0]
+      recent.push({
+        ideaId: r.ideaId,
+        title: r.idea.title,
+        excerpt: excerpt.length > 180 ? excerpt.slice(0, 180).trimEnd() + '…' : excerpt,
+        elicitationStatus: r.status,
+        buildStatus: b?.status ?? null,
+        passesComplete: b?.passesComplete ?? null,
+        updatedAt: r.updatedAt.toISOString(),
+      })
+    }
+  }
+
+  return (
+    <BuildIdeaClient
+      initialIdeaId={initialIdeaId}
+      resumed={resumed}
+      recent={recent}
+      hiddenEmpty={hiddenEmpty}
+    />
+  )
 }
