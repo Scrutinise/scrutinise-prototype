@@ -19,14 +19,43 @@ export default function SettingsPage() {
   const [experienceLevel, setExperienceLevel] = useState('')
   const [savingExperience, setSavingExperience] = useState(false)
   const [experienceSaved, setExperienceSaved] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [savingPhone, setSavingPhone] = useState(false)
+  const [phoneSaved, setPhoneSaved] = useState(false)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
 
-  // Fetch current experienceLevel on mount
+  // Fetch current profile fields on mount
   useEffect(() => {
     fetch('/api/user/onboarding')
       .then(r => r.json())
-      .then(data => { if (data.experienceLevel) setExperienceLevel(data.experienceLevel) })
+      .then(data => {
+        if (data.experienceLevel) setExperienceLevel(data.experienceLevel)
+        if (typeof data.phone === 'string') setPhone(data.phone)
+      })
       .catch(() => {})
   }, [])
+
+  async function handleSavePhone() {
+    setSavingPhone(true)
+    setPhoneError(null)
+    try {
+      const res = await fetch('/api/user/onboarding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone.trim() }),
+      })
+      if (!res.ok) {
+        setPhoneError('That does not look like a phone number. Digits, spaces, + and () only.')
+        return
+      }
+      setPhoneSaved(true)
+      setTimeout(() => setPhoneSaved(false), 2000)
+    } catch {
+      setPhoneError('Could not save that just now.')
+    } finally {
+      setSavingPhone(false)
+    }
+  }
 
   async function handleExperienceLevelChange(value: string) {
     setExperienceLevel(value)
@@ -212,6 +241,37 @@ export default function SettingsPage() {
                 <span className="text-xs text-green-600">Saved</span>
               )}
             </div>
+          </div>
+
+          {/* Phone number — CENTRAL Stage 2d.
+              Optional, and used for exactly one thing. The copy says so, and
+              says it before the box rather than after it. */}
+          <div className="mt-6">
+            <label htmlFor="phone" className="block text-sm font-medium mb-1.5">
+              Phone number <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Used for one thing only: swapping contact details on a training match in your
+              Community, and only with the person you have both agreed to. It is never shown in
+              member lists, search, exports or admin panels. Leave it blank, or clear it at any
+              time, and nothing else changes.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={e => { setPhone(e.target.value); setPhoneSaved(false); setPhoneError(null) }}
+                placeholder="07700 900123"
+                maxLength={32}
+                className="flex-1 px-3 py-2 text-sm bg-white border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring disabled:opacity-60"
+              />
+              <Button size="sm" variant="outline" disabled={savingPhone} onClick={handleSavePhone}>
+                {savingPhone ? 'Saving…' : 'Save'}
+              </Button>
+              {phoneSaved && <span className="text-xs text-green-600">Saved</span>}
+            </div>
+            {phoneError && <p className="mt-1 text-xs text-red-600">{phoneError}</p>}
           </div>
         </section>
 

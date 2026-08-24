@@ -13,8 +13,22 @@ const EXPERIENCE_LEVELS = [
   'PARLIAMENTARIAN',
 ] as const
 
+/**
+ * CENTRAL Stage 2d — the phone number.
+ *
+ * Optional, entered here by the user themselves, and used for NOTHING except
+ * training contact sharing on a match BOTH sides have accepted. An empty string
+ * clears it, which is the only way to withdraw it and must keep working.
+ */
+const PHONE_SHAPE = /^[0-9+() -]{6,32}$/
+
 const OnboardingSchema = z.object({
   preferredName: z.string().min(1).max(50).optional(),
+  phone: z
+    .string()
+    .max(32)
+    .refine((v) => v === '' || PHONE_SHAPE.test(v.trim()), 'That does not look like a phone number')
+    .optional(),
   ageConfirmed: z.literal(true, { message: 'Age confirmation is required' }).optional(),
   tcAgreed: z.literal(true, { message: 'Terms agreement is required' }).optional(),
   rulesAgreed: z.literal(true, { message: 'Community rules agreement is required' }).optional(),
@@ -38,6 +52,7 @@ export async function GET() {
   return NextResponse.json({
     preferredName: user.preferredName,
     experienceLevel: user.experienceLevel,
+    phone: user.phone ?? '',
   })
 }
 
@@ -82,13 +97,16 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
     }
 
-    const { preferredName, experienceLevel } = parsed.data
+    const { preferredName, experienceLevel, phone } = parsed.data
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
         ...(preferredName !== undefined && { preferredName }),
         ...(experienceLevel !== undefined && { experienceLevel }),
+        // '' clears it. Storing the empty string instead would leave a member
+        // unable to take their number back.
+        ...(phone !== undefined && { phone: phone.trim() || null }),
       },
     })
   }

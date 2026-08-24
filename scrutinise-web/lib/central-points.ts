@@ -83,6 +83,10 @@ const CONFIG_FALLBACKS: Record<string, number> = {
   REFERRAL_DECAY_FLOOR: 0.25,
   REFERRAL_REBOOST_POINTS: 50,
   DAILY_MARK_BUDGET: 20,
+  // Stage 2d — 1 = members may share a phone number on an accepted training
+  // match, 0 = email only. Seeded at 1 by central_stage2d.sql; the fallback is
+  // here so a database without the row behaves like a database with it.
+  TRAINING_PHONE_SHARING: 1,
 }
 
 export async function getConfig(key: string): Promise<number> {
