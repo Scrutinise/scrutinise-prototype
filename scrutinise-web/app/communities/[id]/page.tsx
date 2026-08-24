@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: community?.name ?? 'Community' }
 }
 
-const TAB_KEYS: CentralTab[] = ['questions', 'board', 'training', 'leaderboard']
+const TAB_KEYS: CentralTab[] = ['questions', 'board', 'training', 'leaderboard', 'teams']
 
 export default async function CommunityDashboardPage({ params, searchParams }: Props) {
   const { id } = await params
@@ -33,7 +33,10 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
   const { userId: clerkUserId } = await auth()
   if (!clerkUserId) redirect(`/sign-in?redirect_url=/communities/${id}`)
 
-  const user = await prisma.user.findUnique({ where: { clerkId: clerkUserId }, select: { id: true } })
+  const user = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+    select: { id: true, name: true, username: true },
+  })
   if (!user) redirect(`/sign-in?redirect_url=/communities/${id}`)
 
   const rootId = await getRootCommunityId(id)
@@ -71,8 +74,23 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
     })
   ).map((m) => ({ id: m.community.id, name: m.community.name, role: m.role }))
 
-  // Questions is the default sub-tab.
-  const tab: CentralTab = TAB_KEYS.includes(rawTab as CentralTab) ? (rawTab as CentralTab) : 'questions'
+  // Questions is the default sub-tab — EXCEPT for a member of the Community who
+  // is in no branch at all. Stage 2d moved “Find your branch” into the Teams tab,
+  // and a prompt nobody is shown is not a prompt; so with no tab asked for, that
+  // member lands on Teams until they are in one.
+  //
+  // A `?panel=` deep link also lands on Teams, because that is where the panel
+  // it names now lives. Those links are already out in people's notifications
+  // (lib/community.ts writes `?panel=requests` on every join request), so a
+  // Teams-tab move that did not do this would quietly break every one of them.
+  const inAnyBranch = otherBranches.length > 0
+  const isRoot = community.parentCommunityId === null
+  const defaultTab: CentralTab = panel
+    ? 'teams'
+    : isRoot && membership !== null && !inAnyBranch
+      ? 'teams'
+      : 'questions'
+  const tab: CentralTab = TAB_KEYS.includes(rawTab as CentralTab) ? (rawTab as CentralTab) : defaultTab
 
   // Server-render the first page of the library so the tab is not a spinner;
   // the client re-fetches as soon as a filter moves.
@@ -111,6 +129,7 @@ export default async function CommunityDashboardPage({ params, searchParams }: P
         tab={tab}
         questionTags={questionTags}
         initialQuestions={initialQuestions}
+        myName={user.name ?? user.username}
       />
     </div>
   )

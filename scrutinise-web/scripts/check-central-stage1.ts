@@ -59,6 +59,7 @@ import {
   maybeReboostReferral,
   recordReferral,
   referralMultiplier,
+  listActivityClaims,
   resolveTariff,
 } from '@/lib/central-points'
 import { canReadBoard } from '@/lib/community'
@@ -79,6 +80,30 @@ import {
   toggleQuestionVote,
   PACK_DISCLAIMER,
 } from '@/lib/question-library'
+import {
+  CLOSE_WARNING,
+  acceptMatch,
+  closeMatch,
+  contactFor,
+  createListing,
+  listCompletedSessions,
+  listListings,
+  listMyMatches,
+  listProposalsOn,
+  logSessionForMatch,
+  proposeMatch,
+  sharePreviewForAuthor,
+  sharePreviewForResponder,
+} from '@/lib/training'
+import {
+  TEMPLATE_COLUMNS,
+  applyImport,
+  parseUpload,
+  planImport,
+} from '@/lib/question-import'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve as resolvePath } from 'node:path'
+import * as XLSX from 'xlsx'
 
 let pass = 0
 let fail = 0
@@ -200,6 +225,53 @@ async function partA() {
   const badCount = groups.filter((g) => g.memberCount !== g.members.length)
   check('Group.memberCount reconciles with GroupMember rows', badCount.length === 0,
     badCount.map((g) => `${g.name}: cached ${g.memberCount} vs ${g.members.length}`).join('; '))
+
+  // ── Stage 2d, against the live database ────────────────────────────────────
+  const tables = (
+    await prisma.$queryRaw<{ table_name: string }[]>`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_name IN ('TrainingListing', 'TrainingMatch', 'TrainingSession')
+    `
+  ).map((r) => r.table_name).sort()
+  eq('the three Stage 2d tables exist', tables, ['TrainingListing', 'TrainingMatch', 'TrainingSession'])
+
+  const userCols = (
+    await prisma.$queryRaw<{ column_name: string }[]>`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'User' AND column_name = 'phone'
+    `
+  ).length
+  eq('User.phone exists and is the only contact column Stage 2d added', userCols, 1)
+
+  check('the phone-sharing switch is a row Charlie can flip, not a constant in the code',
+    (await prisma.pointsConfig.findUnique({ where: { key: 'TRAINING_PHONE_SHARING' } })) !== null)
+
+  // The §B promotion update, asserted per node rather than in aggregate — the
+  // tag set is seeded per Community node, so "promoted" being right at the root
+  // says nothing about what a member standing at a branch sees.
+  const nodeCount = await prisma.community.count()
+  const promoted = ['Party conduct', 'Media skills', 'Economy', 'Social issues', 'Law & rights']
+  for (const label of promoted) {
+    eq(`"${label}" is promoted on every Community node`,
+      await prisma.questionTag.count({ where: { kind: 'TOPIC', label, promoted: true } }), nodeCount)
+  }
+  eq('Housing is promoted nowhere — it has no questions',
+    await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing', promoted: true } }), 0)
+  eq('…while the row itself survives, so it is still in the dropdown',
+    await prisma.questionTag.count({ where: { kind: 'TOPIC', label: 'Housing' } }), nodeCount)
+
+  const partyConduct = await prisma.question.count({ where: { topicTags: { has: 'Party conduct' } } })
+  const housing = await prisma.question.count({ where: { topicTags: { has: 'Housing' } } })
+  check(`"Party conduct" has questions to show (${partyConduct}) and Housing has none (${housing})`,
+    partyConduct > 0 && housing === 0, `Party conduct ${partyConduct}, Housing ${housing}`)
+
+  // The chip row is contexts only. Grepped rather than reasoned about, because
+  // the regression this prevents is one line of JSX coming back.
+  const librarySource = readFileSync(
+    resolvePath(process.cwd(), 'app/communities/[id]/questions/QuestionLibrary.tsx'),
+    'utf8',
+  )
+  check('the chip row renders no topic chips', !librarySource.includes('promotedTopics'))
+  check('…and topics are still in the dropdown', librarySource.includes('orderedTopics'))
 }
 
 async function partB() {
@@ -1257,16 +1329,557 @@ async function partE() {
   }
 }
 
+async function partF() {
+  console.log('\nF. Stage 2d — the training exchange, and who may see a contact detail')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+  const listingIds: string[] = []
+  const claimIds: string[] = []
+  const restorePhone = new Map<string, string | null>()
+  let phoneConfigWas: number | null = null
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 4,
+    select: { id: true, name: true, username: true, email: true, phone: true },
+  })
+  if (users.length < 4) throw new Error('need at least four active users to run part F')
+  const [admin, ann, ben, cara] = users
+
+  try {
+    // The phone switch is ON for the body of this part and is put back exactly
+    // as it was found, whatever that was.
+    const cfg = await prisma.pointsConfig.findUnique({ where: { key: 'TRAINING_PHONE_SHARING' } })
+    phoneConfigWas = cfg?.numericValue ?? null
+    await prisma.pointsConfig.upsert({
+      where: { key: 'TRAINING_PHONE_SHARING' },
+      create: { key: 'TRAINING_PHONE_SHARING', numericValue: 1, note: 'zz-check restore pending' },
+      update: { numericValue: 1 },
+    })
+
+    for (const u of [ann, ben, cara]) restorePhone.set(u.id, u.phone)
+    await prisma.user.update({ where: { id: ann.id }, data: { phone: '07700 900001' } })
+    await prisma.user.update({ where: { id: ben.id }, data: { phone: '07700 900002' } })
+    const annPhone = '07700 900001'
+    const benPhone = '07700 900002'
+
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-f-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: admin.id, role: 'OWNER' },
+            { userId: ann.id, role: 'MEMBER' },
+            { userId: ben.id, role: 'MEMBER' },
+            { userId: cara.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    const branch = await prisma.community.create({
+      data: {
+        name: `zz-check-f-branch-${stamp}`,
+        parentCommunityId: root.id,
+        bulletinCategories: [],
+        members: {
+          create: [
+            { userId: ann.id, role: 'MEMBER' },
+            { userId: ben.id, role: 'MEMBER' },
+            { userId: cara.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(branch.id)
+
+    // ── posting ─────────────────────────────────────────────────────────────
+    const noChannel = await refuses(
+      () =>
+        createListing({
+          userId: ann.id, communityId: branch.id, kind: 'OFFER',
+          topic: 'zz nothing ticked', description: 'zz', shareEmail: false, sharePhone: false,
+        }),
+      422,
+    )
+    check('a listing with no way to be reached is refused', noChannel !== null, noChannel ?? 'not refused')
+
+    const noPhoneOnFile = await refuses(
+      () =>
+        createListing({
+          userId: cara.id, communityId: branch.id, kind: 'OFFER',
+          topic: 'zz phone with no number', description: 'zz', shareEmail: false, sharePhone: true,
+        }),
+      422,
+    )
+    check('ticking "share my phone" with no number on file is refused, not silently ignored',
+      noPhoneOnFile !== null, noPhoneOnFile ?? 'not refused')
+
+    // Ann OFFERS, and shares her EMAIL ONLY. The asymmetry is the point.
+    const offer = await createListing({
+      userId: ann.id, communityId: branch.id, kind: 'OFFER',
+      topic: 'zz Doorstep conversations', description: 'zz what I can teach',
+      availability: 'Tuesday evenings', shareEmail: true, sharePhone: false,
+    })
+    listingIds.push(offer.id)
+    eq('a listing is scoped to the ROOT Community, not the branch it was posted from',
+      offer.communityId, root.id)
+
+    // Ben REQUESTS, which is the listing that proves the trainer is decided by
+    // the listing rather than by whoever presses "Log this session".
+    const request = await createListing({
+      userId: ben.id, communityId: root.id, kind: 'REQUEST',
+      topic: 'zz Using the canvassing app', description: 'zz what I need',
+      shareEmail: true, sharePhone: true,
+    })
+    listingIds.push(request.id)
+
+    const board = await listListings(branch.id, cara.id, {})
+    check('both listings are on the board', board.length === 2)
+    // The absence assertion: no row anywhere in the board's shape can carry an
+    // address, because none is selected.
+    const boardKeys = new Set(board.flatMap((l) => Object.keys(l)))
+    check('the board shape has no email or phone field at all',
+      !['email', 'phone', 'contact'].some((k) => boardKeys.has(k)), [...boardKeys].join(','))
+    check('…and the serialised board contains neither address',
+      !JSON.stringify(board).includes(annPhone) && !JSON.stringify(board).includes(ann.email))
+
+    const own = await refuses(
+      () => proposeMatch({ listingId: offer.id, userId: ann.id, shareEmail: true, sharePhone: false }),
+      409,
+    )
+    check('you cannot propose on your own listing', own !== null, own ?? 'not refused')
+
+    const outsider = await refuses(
+      () => proposeMatch({ listingId: offer.id, userId: admin.id, shareEmail: true, sharePhone: false }),
+      404,
+    )
+    // admin IS a member of this root, so this must NOT refuse — the control for
+    // the membership gate is asserted below instead.
+    check('a Community member may propose (the membership gate is not refusing everyone)',
+      outsider === null, outsider ?? '')
+    if (outsider === null) {
+      await prisma.trainingMatch.deleteMany({ where: { listingId: offer.id, responderId: admin.id } })
+    }
+
+    // ── before either acceptance: nothing is visible ────────────────────────
+    // Ben proposes on Ann's offer and shares BOTH his channels.
+    const match = await proposeMatch({
+      listingId: offer.id, userId: ben.id, message: 'zz please', shareEmail: true, sharePhone: true,
+    })
+    eq('proposing stamps the responder\'s acceptance and only theirs',
+      [match.responderAcceptedAt !== null, match.authorAcceptedAt === null, match.status],
+      [true, true, 'PROPOSED'])
+
+    check('before the author accepts, the responder sees nothing',
+      (await contactFor(match.id, ben.id)) === null)
+    check('before the author accepts, the author sees nothing either',
+      (await contactFor(match.id, ann.id)) === null)
+
+    // ── the two "before you accept" statements ──────────────────────────────
+    const responderPreview = await sharePreviewForResponder(offer.id, { shareEmail: true, sharePhone: true })
+    eq('the responder is told exactly what of theirs goes, and to whom',
+      [responderPreview?.yours, responderPreview?.toName],
+      [{ email: true, phone: true }, ann.name ?? ann.username])
+    eq('…and exactly what comes back — email only, because that is all Ann ticked',
+      responderPreview?.theirs, { email: true, phone: false })
+
+    const authorPreview = await sharePreviewForAuthor(match.id)
+    eq('the author is told what of theirs goes', authorPreview?.yours, { email: true, phone: false })
+    eq('…and what they will get', authorPreview?.theirs, { email: true, phone: true })
+    eq('…and who it is with', authorPreview?.toName, ben.name ?? ben.username)
+
+    // ── acceptance ──────────────────────────────────────────────────────────
+    const notAuthor = await refuses(() => acceptMatch(match.id, cara.id), 403)
+    check('only the listing\'s author can accept a proposal', notAuthor !== null, notAuthor ?? 'not refused')
+
+    await acceptMatch(match.id, ann.id)
+    const afterAccept = await prisma.trainingMatch.findUniqueOrThrow({ where: { id: match.id } })
+    eq('accepting stamps the second acceptance and the status',
+      [afterAccept.authorAcceptedAt !== null, afterAccept.acceptedAt !== null, afterAccept.status],
+      [true, true, 'ACCEPTED'])
+    eq('the listing comes off the open board',
+      (await prisma.trainingListing.findUniqueOrThrow({ where: { id: offer.id } })).status, 'MATCHED')
+
+    // ── after acceptance: each side sees the OTHER side's ticks, and no more ─
+    const benSees = await contactFor(match.id, ben.id)
+    eq('the responder now sees the author\'s email', benSees?.channels.email, ann.email)
+    eq('…and NOT her phone, because she did not tick it', benSees?.channels.phone, null)
+
+    const annSees = await contactFor(match.id, ann.id)
+    eq('the author sees the responder\'s email', annSees?.channels.email, ben.email)
+    eq('…and his phone, because he did tick it', annSees?.channels.phone, benPhone)
+
+    // The control that makes the four assertions above mean something: the same
+    // function, on the same live match, returns null for everyone else.
+    check('a second admin account viewing the same match sees nothing',
+      (await contactFor(match.id, admin.id)) === null)
+    check('an uninvolved member of the same branch sees nothing',
+      (await contactFor(match.id, cara.id)) === null)
+
+    const caraMatches = await listMyMatches(branch.id, cara.id)
+    check('…and the match does not appear in an uninvolved member\'s list at all',
+      !caraMatches.some((m) => m.id === match.id))
+    const adminMatches = await listMyMatches(branch.id, admin.id)
+    check('…nor in a Community admin\'s', !adminMatches.some((m) => m.id === match.id))
+
+    const benRows = await listMyMatches(branch.id, ben.id)
+    const benRow = benRows.find((m) => m.id === match.id)
+    eq('the match list carries the same disclosure as contactFor, not a wider one',
+      benRow?.contact, { email: ann.email, phone: null })
+    eq('…and tells the viewer what THEY are sharing',
+      benRow?.sharingFromMe, { email: true, phone: true })
+
+    // The author's own proposal list shows intent, never values.
+    const proposals = await listProposalsOn(offer.id, ann.id)
+    check('the proposal list says what will be shared, never the values',
+      !JSON.stringify(proposals).includes(ben.email) && !JSON.stringify(proposals).includes(benPhone),
+      JSON.stringify(proposals).slice(0, 200))
+    const proposalsToOthers = await refuses(() => listProposalsOn(offer.id, admin.id), 403)
+    check('a Community admin cannot read the proposals on someone else\'s listing',
+      proposalsToOthers !== null, proposalsToOthers ?? 'not refused')
+
+    // ── the phone switch, watched in BOTH states ────────────────────────────
+    await prisma.pointsConfig.update({
+      where: { key: 'TRAINING_PHONE_SHARING' },
+      data: { numericValue: 0 },
+    })
+    const annSeesPhoneOff = await contactFor(match.id, ann.id)
+    eq('with phone sharing off, the number stops being shown on a match that ticked it',
+      annSeesPhoneOff?.channels.phone, null)
+    eq('…and the email is untouched', annSeesPhoneOff?.channels.email, ben.email)
+    await prisma.pointsConfig.update({
+      where: { key: 'TRAINING_PHONE_SHARING' },
+      data: { numericValue: 1 },
+    })
+    eq('turning it back on restores it — the switch is read at display time',
+      (await contactFor(match.id, ann.id))?.channels.phone, benPhone)
+
+    // ── log this session: one action, both records ──────────────────────────
+    const outsiderLogs = await refuses(
+      () => logSessionForMatch({ matchId: match.id, userId: cara.id, occurredAt: new Date(), branchCommunityId: branch.id }),
+      403,
+    )
+    check('someone outside the match cannot log its session', outsiderLogs !== null, outsiderLogs ?? 'not refused')
+
+    // Now, not midday: on a run before noon a midday stamp is in the future and
+    // the future-session guard would refuse it.
+    const occurredAt = new Date()
+    const logged = await logSessionForMatch({
+      matchId: match.id, userId: ben.id, occurredAt, branchCommunityId: branch.id,
+    })
+    claimIds.push(logged.trainer.claimId, logged.trainee.claimId)
+
+    // BEN pressed it, and BEN is the trainee, because the listing is an OFFER
+    // from Ann. Who taught is a property of the listing, not of the presser.
+    eq('the trainer is the OFFER\'s author, not whoever pressed the button',
+      logged.trainer.userId, ann.id)
+    eq('…and the trainee is the responder', logged.trainee.userId, ben.id)
+    eq('the trainer\'s claim is worth 40', logged.trainer.points, 40)
+    eq('the trainee\'s claim is worth 20', logged.trainee.points, 20)
+
+    const raised = await prisma.activityClaim.findMany({
+      where: { id: { in: [logged.trainer.claimId, logged.trainee.claimId] } },
+      select: { userId: true, activityType: true, status: true, communityId: true },
+      orderBy: { activityType: 'asc' },
+    })
+    eq('two claims exist, one each, both pending in the BRANCH the admin approves in',
+      raised.map((r) => [r.activityType, r.status, r.communityId === branch.id]),
+      [['COMPLETED_TRAINING', 'PENDING', true], ['GAVE_TRAINING', 'PENDING', true]])
+
+    const pending = await listActivityClaims(branch.id, 'PENDING')
+    check('both are visible to the branch admin\'s queue',
+      [logged.trainer.claimId, logged.trainee.claimId].every((id) => pending.some((c) => c.id === id)))
+
+    const twice = await refuses(
+      () => logSessionForMatch({ matchId: match.id, userId: ann.id, occurredAt, branchCommunityId: branch.id }),
+      409,
+    )
+    check('pressing it twice does not raise four claims', twice !== null, twice ?? 'not refused')
+    eq('…and there is still exactly one session for the match',
+      await prisma.trainingSession.count({ where: { matchId: match.id } }), 1)
+
+    const beforeAnn = await getUserPoints(ann.id, root.id)
+    const beforeBen = await getUserPoints(ben.id, root.id)
+    await decideActivityClaim(logged.trainer.claimId, admin.id, 'APPROVED')
+    await decideActivityClaim(logged.trainee.claimId, admin.id, 'APPROVED')
+    eq('approving the trainer\'s claim awards 40', (await getUserPoints(ann.id, root.id)) - beforeAnn, 40)
+    eq('approving the trainee\'s claim awards 20', (await getUserPoints(ben.id, root.id)) - beforeBen, 20)
+
+    const completed = await listCompletedSessions(branch.id)
+    check('the session appears in the branch\'s completed list',
+      completed.some((s) => s.topic === 'zz Doorstep conversations'))
+    check('…carrying names and topics only, no contact detail',
+      !JSON.stringify(completed).includes(ben.email) && !JSON.stringify(completed).includes(benPhone))
+
+    // ── a REQUEST reverses who teaches ──────────────────────────────────────
+    const reqMatch = await proposeMatch({
+      listingId: request.id, userId: cara.id, shareEmail: true, sharePhone: false,
+    })
+    await acceptMatch(reqMatch.id, ben.id)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(12, 0, 0, 0)
+    const reqLogged = await logSessionForMatch({
+      matchId: reqMatch.id, userId: ben.id, occurredAt: yesterday, branchCommunityId: branch.id,
+    })
+    claimIds.push(reqLogged.trainer.claimId, reqLogged.trainee.claimId)
+    eq('on a REQUEST the responder is the trainer', reqLogged.trainer.userId, cara.id)
+    eq('…and the person who asked is the trainee', reqLogged.trainee.userId, ben.id)
+
+    // ── closing ─────────────────────────────────────────────────────────────
+    const strangerCloses = await refuses(() => closeMatch(match.id, cara.id), 403)
+    check('only the two people in a match can close it', strangerCloses !== null, strangerCloses ?? 'not refused')
+    await closeMatch(match.id, ben.id)
+    check('closing stops the author seeing anything', (await contactFor(match.id, ann.id)) === null)
+    check('…and the responder too', (await contactFor(match.id, ben.id)) === null)
+    eq('…while the record that it was accepted survives',
+      (await prisma.trainingMatch.findUniqueOrThrow({ where: { id: match.id } })).status, 'ACCEPTED')
+    check('the wording admits what closing cannot do',
+      CLOSE_WARNING.includes('cannot unsend'), CLOSE_WARNING)
+  } finally {
+    const matchIds = (
+      await prisma.trainingMatch.findMany({ where: { listingId: { in: listingIds } }, select: { id: true } })
+    ).map((m) => m.id)
+    await prisma.trainingSession.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.trainingMatch.deleteMany({ where: { id: { in: matchIds } } })
+    await prisma.trainingListing.deleteMany({ where: { id: { in: listingIds } } })
+    await prisma.pointsEvent.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.activityClaim.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.notification.deleteMany({
+      where: { OR: communityIds.map((id) => ({ linkUrl: { contains: `/communities/${id}` } })) },
+    })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    for (const [userId, phone] of restorePhone) {
+      await prisma.user.update({ where: { id: userId }, data: { phone } })
+    }
+    if (phoneConfigWas === null) {
+      await prisma.pointsConfig.deleteMany({ where: { key: 'TRAINING_PHONE_SHARING' } })
+    } else {
+      await prisma.pointsConfig.update({
+        where: { key: 'TRAINING_PHONE_SHARING' },
+        data: { numericValue: phoneConfigWas },
+      })
+    }
+
+    eq('Stage 2d training fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-f-' } } }), 0)
+    eq('no listings left behind',
+      await prisma.trainingListing.count({ where: { id: { in: listingIds } } }), 0)
+    eq('no claims left behind',
+      await prisma.activityClaim.count({ where: { id: { in: claimIds } } }), 0)
+    eq('every borrowed phone number is back as it was',
+      (await prisma.user.count({ where: { id: { in: [...restorePhone.keys()] }, phone: { startsWith: '07700 9000' } } })),
+      [...restorePhone.values()].filter((p) => p?.startsWith('07700 9000')).length)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Build a spreadsheet in memory, so the check exercises the real parser. */
+function sheet(rows: string[][], bookType: 'xlsx' | 'csv' = 'xlsx'): Buffer {
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Questions')
+  return XLSX.write(wb, { type: 'buffer', bookType }) as Buffer
+}
+
+async function partG() {
+  console.log('\nG. Stage 2d — bulk question upload')
+
+  const stamp = Date.now().toString(36)
+  const communityIds: string[] = []
+
+  const users = await prisma.user.findMany({
+    where: { status: 'ACTIVE', isHistoricalAccount: false },
+    orderBy: { createdAt: 'asc' },
+    take: 2,
+    select: { id: true, name: true, username: true },
+  })
+  if (users.length < 2) throw new Error('need at least two active users to run part G')
+  const [admin, member] = users
+
+  const HEADER = [...TEMPLATE_COLUMNS] as string[]
+  const NOTE = `zz-note-never-imported-${stamp}`
+  const rows = [
+    HEADER,
+    [`zz Q1 how will you pay for this ${stamp}?`, 'Doorstep', 'Housing', 'zz A1 body', 'https://example.com/1', 'zz local one', NOTE],
+    [`zz Q2 why trust you ${stamp}?`, 'Media interview', 'Housing, zz New Topic', 'zz A2 body', '', '', NOTE],
+    [`zz Q3 how do I use the app ${stamp}?`, 'How-to', '', '', '', '', NOTE],
+  ]
+
+  try {
+    const root = await prisma.community.create({
+      data: {
+        name: `zz-check-g-root-${stamp}`,
+        bulletinCategories: [...DEFAULT_BULLETIN_CATEGORIES],
+        members: {
+          create: [
+            { userId: admin.id, role: 'OWNER' },
+            { userId: member.id, role: 'MEMBER' },
+          ],
+        },
+      },
+    })
+    communityIds.push(root.id)
+    await prisma.questionTag.createMany({
+      data: [
+        { communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Doorstep', promoted: true },
+        { communityId: root.id, kind: 'CONTEXT_EXTERNAL', label: 'Media interview', promoted: true },
+        { communityId: root.id, kind: 'CONTEXT_INTERNAL', label: 'How-to', promoted: true },
+        { communityId: root.id, kind: 'TOPIC', label: 'Housing', promoted: false },
+      ],
+    })
+
+    // ── the template Charlie's admins will actually download ────────────────
+    const templatePath = resolvePath(process.cwd(), 'public/central-question-upload-template.xlsx')
+    check('the template exists as a static asset', existsSync(templatePath))
+    const templateParsed = parseUpload(readFileSync(templatePath))
+    eq('…and its columns are the ones the importer reads',
+      templateParsed.columns, [...TEMPLATE_COLUMNS])
+    eq('…and it ships empty, so downloading and uploading it writes nothing',
+      templateParsed.rows.length, 0)
+
+    // ── the happy path: three rows, three creations ─────────────────────────
+    const good = sheet(rows)
+    const plan = await planImport(root.id, good)
+    eq('a three-row file plans exactly three creations', plan.counts.questionsToCreate, 3)
+    eq('…two of which carry an answer', plan.counts.answersToCreate, 2)
+    eq('…and none of which is an error', plan.counts.errors, 0)
+    eq('the unknown topic is planned, unpromoted, because a topic has no ambiguous side',
+      plan.topicsToCreate, ['zz New Topic'])
+
+    // ── the Notes column reaches nothing ────────────────────────────────────
+    // Asserted on the PARSED ROWS, not on the plan: the plan carries only
+    // hasAnswer, so a Notes-into-Answer leak would slip past it unseen — a
+    // check that cannot fail is not a check.
+    check('the parser does not read the Notes column at all',
+      !JSON.stringify(parseUpload(good).rows).includes(NOTE),
+      JSON.stringify(parseUpload(good).rows).slice(0, 200))
+
+    // ── one bad context fails ONE row, and names the problem ────────────────
+    const withBadContext = rows.map((r) => [...r])
+    withBadContext[2][1] = 'Doorsteps'
+    const mixedPlan = await planImport(root.id, sheet(withBadContext))
+    eq('a wrong context fails exactly that row', mixedPlan.counts.errors, 1)
+    eq('…and the rows around it still import', mixedPlan.counts.questionsToCreate, 2)
+    const badRow = mixedPlan.rows.find((r) => r.action === 'error') ??
+      { rowNumber: -1, errors: ['(no row failed)'], context: '' }
+    eq('…the failing row is named by its spreadsheet row number', badRow.rowNumber, 3)
+    check('…and the message names the offending value and the ones that would work',
+      badRow.errors[0].includes('Doorsteps') && badRow.errors[0].includes('Media interview'),
+      badRow.errors[0])
+    check('…and it is never guessed at — nothing is written for that row',
+      badRow.context !== 'Doorstep')
+
+    // ── writing ─────────────────────────────────────────────────────────────
+    const applied = await applyImport({
+      communityId: root.id, standingOnId: root.id, uploaderId: admin.id, buffer: good,
+    })
+    eq('three questions are written', applied.written.questions, 3)
+    eq('…with their two answers', applied.written.answers, 2)
+
+    const written = await prisma.question.findMany({
+      where: { communityId: root.id },
+      include: { answers: { select: { authorId: true, body: true, sources: true, localExample: true } } },
+      orderBy: { text: 'asc' },
+    })
+    eq('all three landed', written.length, 3)
+    check('every question is authored by the uploader', written.every((q) => q.authorId === admin.id))
+    check('every answer is too', written.every((q) => q.answers.every((a) => a.authorId === admin.id)))
+    check('sources and the local example survive the trip',
+      written.some((q) => q.answers.some((a) => a.sources.includes('https://example.com/1') && a.localExample === 'zz local one')))
+    check('a row with no answer creates the question and no answer',
+      written.find((q) => q.text.startsWith('zz Q3'))?.answers.length === 0)
+    check('nothing anywhere in the library carries the Notes text',
+      !JSON.stringify(written).includes(NOTE))
+    check('the new topic exists, unpromoted, so it lands in the dropdown and not the chip row',
+      (await prisma.questionTag.findFirst({ where: { communityId: root.id, kind: 'TOPIC', label: 'zz New Topic' } }))
+        ?.promoted === false)
+
+    // ── idempotence ─────────────────────────────────────────────────────────
+    const again = await applyImport({
+      communityId: root.id, standingOnId: root.id, uploaderId: admin.id, buffer: good,
+    })
+    eq('re-uploading the same file writes nothing', [again.written.questions, again.written.answers], [0, 0])
+    eq('…and says so in the plan', again.plan.counts.skipped, 3)
+    eq('…and the library has not grown',
+      await prisma.question.count({ where: { communityId: root.id } }), 3)
+
+    // ── the same file as a .csv reads identically ───────────────────────────
+    const csvPlan = await planImport(root.id, sheet(rows, 'csv'))
+    eq('a .csv of the same content plans the same way',
+      [csvPlan.counts.questionsToCreate, csvPlan.counts.skipped], [0, 3])
+
+    // ── two rows in one file that ask the same question ─────────────────────
+    const dupRows = [
+      HEADER,
+      [`zz Q4 duplicate within the file ${stamp}?`, 'Doorstep', '', 'zz A4 first', '', '', ''],
+      [`zz Q4 duplicate within the file ${stamp}?`, 'Doorstep', '', 'zz A4 second', '', '', ''],
+    ]
+    const dupPlan = await planImport(root.id, sheet(dupRows))
+    eq('a question repeated inside one file is planned once, with the second row adding its answer',
+      [dupPlan.counts.questionsToCreate, dupPlan.rows[1].action], [1, 'add-answer'])
+    const dupApplied = await applyImport({
+      communityId: root.id, standingOnId: root.id, uploaderId: admin.id, buffer: sheet(dupRows),
+    })
+    eq('…and that is what is written', [dupApplied.written.questions, dupApplied.written.answers], [1, 2])
+
+    // ── a file that is not a spreadsheet ────────────────────────────────────
+    let refusal = ''
+    try {
+      parseUpload(Buffer.from('this is not a spreadsheet, it is a sentence'))
+    } catch (e) {
+      refusal = (e as Error).message
+    }
+    check('a file with none of the template’s columns is refused rather than half-read',
+      refusal.includes('does not look like the question template'), refusal || 'not refused')
+    check('…and the refusal quotes what it actually found', refusal.includes('not a spreadsheet'), refusal)
+
+    // The control: the guard fires on a WRONG file, not on any file. A sheet
+    // with only the two required columns still reads.
+    const minimal = parseUpload(sheet([['Question', 'Context'], ['zz minimal', 'Doorstep']]))
+    eq('…while a sheet with just Question and Context still reads', minimal.rows.length, 1)
+
+    // ── the gate the route applies ──────────────────────────────────────────
+    check('a plain member does not hold the manage right the bulk route requires',
+      !(await canManageCommunity(member.id, root.id)))
+    check('…and a Community admin does', await canManageCommunity(admin.id, root.id))
+  } finally {
+    const questionIds = (
+      await prisma.question.findMany({ where: { communityId: { in: communityIds } }, select: { id: true } })
+    ).map((q) => q.id)
+    await prisma.answer.deleteMany({ where: { questionId: { in: questionIds } } })
+    await prisma.question.deleteMany({ where: { id: { in: questionIds } } })
+    await prisma.questionTag.deleteMany({ where: { communityId: { in: communityIds } } })
+    await prisma.communityMember.deleteMany({ where: { communityId: { in: communityIds } } })
+    for (const id of [...communityIds].reverse()) {
+      await prisma.community.deleteMany({ where: { id } })
+    }
+    eq('Stage 2d upload fixtures cleaned up',
+      await prisma.community.count({ where: { name: { startsWith: 'zz-check-g-' } } }), 0)
+    eq('no questions left behind',
+      await prisma.question.count({ where: { id: { in: questionIds } } }), 0)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL not set')
-  console.log('CENTRAL Stage 1.1 + 1.2 + 2 + 2b checks — host:', new URL(url).hostname)
+  console.log('CENTRAL Stage 1.1 + 1.2 + 2 + 2b + 2d checks — host:', new URL(url).hostname)
 
   await partA()
   await partB()
   await partC()
   await partD()
   await partE()
+  await partF()
+  await partG()
 
   console.log(`\n${pass}/${pass + fail} checks passed`)
   await prisma.$disconnect()

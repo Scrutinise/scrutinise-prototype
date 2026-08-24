@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import BulkUpload from './BulkUpload'
 
 export interface QuestionRow {
   id: string
@@ -77,11 +78,17 @@ export default function QuestionLibrary({
   communityId,
   tags,
   initialQuestions,
+  canBulkUpload,
+  uploaderName,
 }: {
   communityId: string
   tags: TagSet
   initialQuestions: QuestionRow[]
+  /** Community admins only — a bulk vector should stay reviewable. */
+  canBulkUpload: boolean
+  uploaderName: string
 }) {
+  const [uploading, setUploading] = useState(false)
   const [questions, setQuestions] = useState<QuestionRow[]>(initialQuestions)
   const [loading, setLoading] = useState(false)
   // The two-way toggle: the external/internal split. Not a nav item — chips
@@ -94,9 +101,16 @@ export default function QuestionLibrary({
   const [activeSearch, setActiveSearch] = useState('')
 
   const sideTags = side === 'external' ? tags.contextExternal : tags.contextInternal
-  // Unpromoted topics live in the dropdown only, so the chip row does not grow
-  // without bound as the admin-extendable list fills up.
-  const promotedTopics = tags.topics.filter((t) => t.promoted)
+
+  // Stage 2d: THE CHIP ROW IS CONTEXTS ONLY. Contexts pair one-to-one with the
+  // Out-in-the-world / Behind-the-scenes toggle directly above them, so a topic
+  // chip sitting in the same row read as a third context and filtered on a
+  // different axis without saying so. Topics live in the dropdown, where
+  // `promoted` now orders them: promoted first, so promotion still means
+  // something visible.
+  const orderedTopics = [...tags.topics].sort(
+    (a, b) => Number(b.promoted) - Number(a.promoted) || a.label.localeCompare(b.label),
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -137,15 +151,44 @@ export default function QuestionLibrary({
             highest.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" className="h-10 rounded-lg">
-            <Link href={`/communities/${communityId}/questions/new`}>Add a question</Link>
-          </Button>
-          <Button asChild className="h-10 rounded-lg">
-            <Link href={`/communities/${communityId}/packs/new`}>Build a pack</Link>
-          </Button>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-wrap gap-2">
+            {canBulkUpload && (
+              <Button
+                variant="outline"
+                className="h-10 rounded-lg"
+                onClick={() => setUploading((v) => !v)}
+              >
+                Bulk upload
+              </Button>
+            )}
+            <Button asChild variant="outline" className="h-10 rounded-lg">
+              <Link href={`/communities/${communityId}/questions/new`}>Add a question</Link>
+            </Button>
+            <Button asChild className="h-10 rounded-lg">
+              <Link href={`/communities/${communityId}/packs/new`}>Build a pack</Link>
+            </Button>
+          </div>
+          {canBulkUpload && (
+            <a
+              href="/central-question-upload-template.xlsx"
+              download
+              className="text-[12px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              Download template
+            </a>
+          )}
         </div>
       </div>
+
+      {uploading && (
+        <BulkUpload
+          communityId={communityId}
+          uploaderName={uploaderName}
+          onDone={load}
+          onClose={() => setUploading(false)}
+        />
+      )}
 
       {/* Filters */}
       <div className="mb-4 border-b border-border pb-4">
@@ -164,7 +207,7 @@ export default function QuestionLibrary({
             className="h-[38px] rounded-lg border bg-background px-2 text-sm"
           >
             <option value="">All topics</option>
-            {tags.topics.map((t) => (
+            {orderedTopics.map((t) => (
               <option key={t.label} value={t.label}>{t.label}</option>
             ))}
           </select>
@@ -221,20 +264,6 @@ export default function QuestionLibrary({
               onClick={() => setContext(t.label)}
               className={`central-chip border px-3 text-[13px] transition-colors ${
                 context === t.label
-                  ? 'border-primary bg-primary font-semibold text-primary-foreground'
-                  : 'border-border bg-white text-[oklch(0.3_0.01_250)] hover:border-[var(--central-border-hover)]'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-          {promotedTopics.map((t) => (
-            <button
-              key={`topic-${t.label}`}
-              type="button"
-              onClick={() => setTopic(topic === t.label ? '' : t.label)}
-              className={`central-chip border px-3 text-[13px] transition-colors ${
-                topic === t.label
                   ? 'border-primary bg-primary font-semibold text-primary-foreground'
                   : 'border-border bg-white text-[oklch(0.3_0.01_250)] hover:border-[var(--central-border-hover)]'
               }`}

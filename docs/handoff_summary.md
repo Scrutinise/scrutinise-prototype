@@ -2,7 +2,44 @@
 
 *Read this first every session. Top section is authoritative.*
 
-*Last updated: 2026-08-24 01:56 UTC — ▼ **SEARCH S13: THE MERGE IS ARITHMETIC, AND IT IS ALREADY
+*Last updated: 2026-08-24 02:07 UTC — ▼ **CENTRAL STAGE 2d IS BUILT — AND THE FIRST THING THE AUDIT
+FOUND IS THAT STAGE 2c NEVER WAS.** The brief asks whether 2c is done before anyone is invited: **it
+is not.** No `central_stage2c.sql`, no Events model, no `TrainingSession`, and **no `authorType`
+column anywhere in the database** — so the AI-attribution item is still the pilot launch blocker and
+**27 Claude-written answers still render as members' work**. Nothing since 11 Aug touched it, and 2d
+did not quietly absorb it. `TrainingSession` (a 2c item) is created by `central_stage2d.sql` because
+"Log this session" cannot exist without it; a later 2c must ADD to that table, not recreate it.
+✅ `tsc --noEmit` and `next build` clean; **`npm run check:central` 295/295** against the live app DB,
+up from 189, self-cleaning down to the borrowed phone numbers and the config row. **Schema applied
+to Neon and read back column by column** (`prisma/central_stage2d.sql` — three tables, `User.phone`,
+one config row, the tag update; ⚠ *no* partial or expression indexes this time, so unlike Stage 1.2
+and Stage 2 nothing in 2d is invisible to `schema.prisma`). ▶ **Tabs now read Questions · Training ·
+Leaderboard · Teams**; the tree and the "Managing {node}" rail moved into Teams; the header is
+breadcrumb, name, role badge and points. ⚠ **A `?panel=` deep link now lands on Teams** —
+`lib/community.ts` writes `?panel=requests` into every join-request notification and those links are
+already in people's inboxes, so a tab move that ignored them would have broken every one silently.
+▶ **The chip row is contexts only** (topics filter on a different axis; `promoted` now orders the
+dropdown instead). **Party conduct 11 · Media skills 6 · Economy 3 · Social issues 3 · Law & rights 1
+promoted; Housing unpromoted at 0** — across all four nodes, the 20 rows the update flagged.
+▶ **Bulk upload is Community-admins-only, two-step, and fails ROWS not files** — the one deliberate
+departure from `import-central-seed.ts`; an unknown context still fails that row and names it rather
+than being guessed. Every row imports as authored by the uploader, said above the file picker.
+⚠ **The template is a stand-in** — none had been supplied; replacing it is dropping Charlie's file in
+at `public/central-question-upload-template.xlsx` (the importer keys off column *names*).
+▶ **Contact sharing has exactly one reader**: `lib/training.ts` `contactFor()`, requiring both
+acceptances, no closure, the viewer being one of the two, and the channel the *other* side ticked.
+Two acceptance timestamps rather than one, so "both accepted" is read back, not inferred. ⚠ **Phone
+sharing is Charlie's call, flagged not taken** — ships ON per the brief, and email-only is one row
+(`UPDATE "PointsConfig" SET "numericValue" = 0 WHERE "key" = 'TRAINING_PHONE_SHARING'`), read at
+**display** time so it applies retroactively. Both states asserted. ⚠⚠ **Two of my own new checks
+could not have failed, and the planted-break runs are what found them** — "the Notes column is never
+imported" tested the *plan*, which never carries answer text, and SheetJS reads almost any bytes as a
+one-cell CSV so "it parsed" proved nothing. Both rebuilt to fail, and every new guard was watched
+failing first in three break runs (2, 5 and 9 failures respectively). ▶▶ **CHARLIE: the browser walk
+is yours** — no Clerk session exists from a CC session and local Clerk is a dev instance, so the five
+acceptance walks (tabs, chips, upload of three rows with one bad context, a two-sided match, log-a-
+session) have not been clicked. Not attempted, not inferred, not reported as passing.**
+Earlier: 2026-08-24 01:56 UTC — ▼ **SEARCH S13: THE MERGE IS ARITHMETIC, AND IT IS ALREADY
 SHOWING ALMOST EVERYTHING IT CAN.** `merged rank ≈ in-stream rank × streams routed` holds for **29
 of 34** keys found and merged — that relation IS the round-robin, so a top-20 window can show at most
 the first **floor(20/S)** of each stream. Of the 35 questions where retrieval found the answer, **16
@@ -4578,6 +4615,39 @@ unfiltered with the bare query (today's default) — never an empty result.
   before flipping. Both `tsc --noEmit` clean.
 
 ---
+
+## CURRENT STATE — CENTRAL Stage 2d: training exchange, bulk upload, navigation (2026-08-24 02:07 UTC)
+
+**Executes the "Central Stage 2d" brief (24 Aug 2026) in full.** Account: CHANGE_LOG
+"CENTRAL Stage 2d"; design in `SCRUTINISE_CENTRAL_SPEC.md` §8, decisions in §12.
+
+- ⚠⚠ **STAGE 2c WAS NEVER BUILT** — audited first, because 2d's part D depends on it. No
+  `central_stage2c.sql`, no Events model, no `TrainingSession`, **no `authorType` column**. The
+  brief's flag stands: **27 Claude-written answers render as members' work, and that is still the
+  pilot launch blocker.** 2d did not absorb it.
+- **Scope:** `scrutinise-web/**` plus three shared docs. Nothing in search/ingest/stats/Lex touched.
+- **Schema:** `prisma/central_stage2d.sql` — `TrainingListing`, `TrainingMatch`, `TrainingSession`,
+  `User.phone`, a `PointsConfig` row and the tag-promotion update. Hand-written, applied to Neon,
+  read back column by column. ⚠ **No partial or expression indexes** — unlike Stage 1.2 and Stage 2,
+  nothing in 2d is invisible to `schema.prisma`.
+- **Where the rules live:** `lib/training.ts` (listings, matches, contact disclosure, log-a-session)
+  and `lib/question-import.ts` (parse, plan, apply). `contactFor()` is **the only function that
+  reads a member's email or phone to show it to another member** — four conditions, and `null` for
+  everyone else.
+- **The switch Charlie owns:** `PointsConfig.TRAINING_PHONE_SHARING` = 1. Set it to 0 for email-only;
+  it is read at display time, so it applies retroactively to matches that already ticked phone.
+- **The template is a stand-in** at `public/central-question-upload-template.xlsx`. Drop Charlie's
+  file in at the same path when it arrives; `scripts/make-question-template.ts` regenerates the
+  stand-in. The importer keys off column *names*, not positions.
+- **Dependency change:** `xlsx` moved devDependencies → dependencies (a server route imports it).
+  Pure JS, no native module in the serverless bundle.
+- **Verified:** `npm run check:central` — **295/295** against the live app DB, self-cleaning
+  (including the borrowed phone numbers and the config row); `tsc --noEmit` and `next build` clean;
+  delivery check 0 `--fast` passes at 0 cross-package files. Every new guard watched failing first
+  in three planted-break runs (2, 5 and 9 failures) — **which is how two unfailable checks of my own
+  were found and rebuilt.**
+- **Not done, named:** the browser walk. No Clerk session exists from a CC session and local Clerk is
+  a dev instance, so the five acceptance walks are Charlie's.
 
 ## CURRENT STATE — CENTRAL Stage 2b: question library (2026-08-11 20:24 UTC)
 

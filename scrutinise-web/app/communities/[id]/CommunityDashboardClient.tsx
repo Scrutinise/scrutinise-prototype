@@ -15,9 +15,10 @@ import FindYourBranch from './FindYourBranch'
 import ClaimsPanel from './ClaimsPanel'
 import LogActivity from './LogActivity'
 import Leaderboards from './Leaderboards'
+import TrainingExchange from './TrainingExchange'
 import QuestionLibrary, { type QuestionRow, type TagSet } from './questions/QuestionLibrary'
 
-export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard'
+export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard' | 'teams'
 
 /**
  * Central's sub-tabs.
@@ -26,12 +27,19 @@ export type CentralTab = 'questions' | 'board' | 'training' | 'leaderboard'
  * is untouched and still renders when `tab=board` is reached directly — it is
  * simply not linked here. Putting it back is deleting the `hidden` flag on one
  * entry in this array, which is the one-line reversal that was asked for.
+ *
+ * TEAMS IS A TAB AS OF STAGE 2d. "Teams & branches" and the "Managing {node}"
+ * rail used to sit above every tab, which made the two areas people actually
+ * use — Questions and Training — read as an admin console with some content
+ * underneath. They are the same job (managing people and structure), so they
+ * are one tab, still admin-gated where they always were.
  */
 const TABS: { key: CentralTab; label: string; hidden?: boolean }[] = [
   { key: 'questions', label: 'Questions' },
   { key: 'board', label: 'Board', hidden: true },
   { key: 'training', label: 'Training' },
   { key: 'leaderboard', label: 'Leaderboard' },
+  { key: 'teams', label: 'Teams' },
 ]
 
 interface Props {
@@ -57,6 +65,9 @@ interface Props {
   tab: CentralTab
   questionTags: TagSet
   initialQuestions: QuestionRow[]
+  /** The uploader's own name, shown on the bulk-upload screen because every
+   *  row imports as authored by them. */
+  myName: string
 }
 
 const ROLE_BADGE: Record<string, string> = {
@@ -81,6 +92,7 @@ export default function CommunityDashboardClient({
   tab,
   questionTags,
   initialQuestions,
+  myName,
 }: Props) {
   const router = useRouter()
   const [inviteLink, setInviteLink] = useState<string | null>(null)
@@ -143,6 +155,7 @@ export default function CommunityDashboardClient({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      {/* ── the header: breadcrumb, name, role badge, points. Nothing else. ── */}
       {community.parent && (
         <p className="mb-2 text-xs text-muted-foreground">
           <Link href={`/communities/${community.parent.id}`} className="hover:underline">
@@ -170,83 +183,23 @@ export default function CommunityDashboardClient({
             <p className="mt-1 max-w-xl text-sm text-muted-foreground pretty">{community.description}</p>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          {isMember && (
-            <span className="text-xs text-muted-foreground">
-              Your points:{' '}
-              <span className="tabular font-semibold text-foreground">
-                {myPoints > 0 ? '+' : ''}{myPoints}
-              </span>
+        {isMember && (
+          <span className="text-xs text-muted-foreground">
+            Your points:{' '}
+            <span className="tabular font-semibold text-foreground">
+              {myPoints > 0 ? '+' : ''}{myPoints}
             </span>
-          )}
-          {isMember && myRole !== 'OWNER' && (
-            <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={handleLeave}>
-              Leave {isBranch ? 'this branch' : 'this Community'}
-            </Button>
-          )}
-        </div>
-      </div>
-      {leaveError && <p className="mb-4 text-xs text-red-600">{leaveError}</p>}
-
-      {showSwitchChooser && (
-        <SwitchOrAddChooser branchName={community.name} otherBranches={otherBranches} />
-      )}
-      {showFindYourBranch && <FindYourBranch root={root} branches={topLevelBranches} />}
-
-      {/* Groups and points sit at the Central level, ABOVE the sub-tabs —
-          managing which branches you're in is a personal concern, not one of
-          the "in the community" areas. */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="mb-2 text-sm font-semibold">Teams &amp; branches</h2>
-          <div className="central-card p-4">
-            <TeamsTree
-              communityId={community.id}
-              tree={tree}
-              rootIsBranch={isBranch}
-              isCommunityMember={isCommunityMember}
-            />
-          </div>
-        </div>
-        {canManage && (
-          <div className="space-y-2.5">
-            <h2 className="text-sm font-semibold">Managing {community.name}</h2>
-            <RequestsPanel
-              communityId={community.id}
-              communityName={community.name}
-              defaultOpen={openPanel === 'requests'}
-            />
-            <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
-            <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
-            <details className="central-card p-4">
-              <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
-              <div className="mt-3 space-y-3">
-                <InvitePanel communityId={community.id} />
-                <div className="border-t border-border pt-3">
-                  <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
-                    {generating ? 'Generating…' : 'Or generate a shareable link'}
-                  </Button>
-                  {inviteLink && (
-                    <input
-                      readOnly
-                      value={inviteLink}
-                      onFocus={(e) => e.currentTarget.select()}
-                      className="mt-2 w-full rounded-lg border bg-muted/40 px-2 py-1 text-xs"
-                    />
-                  )}
-                </div>
-              </div>
-            </details>
-            {isCommunityAdmin && (
-              <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
-                <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
-              </Button>
-            )}
-          </div>
+          </span>
         )}
       </div>
 
-      {/* Sub-tabs — the "in the community" areas. */}
+      {/* Shown once, straight after joining. Not an admin rail — a prompt that
+          answers "what now?", so it stays above the tabs. */}
+      {showSwitchChooser && (
+        <SwitchOrAddChooser branchName={community.name} otherBranches={otherBranches} />
+      )}
+
+      {/* Sub-tabs — the "in the community" areas, plus Teams. */}
       <div className="mb-5 flex flex-wrap gap-1 border-b border-border pb-2">
         {TABS.filter((t) => !t.hidden).map((t) => (
           <Link
@@ -295,6 +248,8 @@ export default function CommunityDashboardClient({
           communityId={community.id}
           tags={questionTags}
           initialQuestions={initialQuestions}
+          canBulkUpload={isCommunityAdmin}
+          uploaderName={myName}
         />
       ) : tab === 'board' ? (
         // Reachable only by URL while the tab is hidden. Untouched.
@@ -307,16 +262,68 @@ export default function CommunityDashboardClient({
           canPost={isMember}
         />
       ) : tab === 'training' ? (
-        <div className="central-card p-8 text-center">
-          <h2 className="text-[17px] font-semibold">Training</h2>
-          <p className="mx-auto mt-2 max-w-[430px] text-[13px] text-muted-foreground pretty">
-            The structured training marketplace arrives at Stage 2d. Until then, training offers and
-            requests live as ordinary posts under the <strong>Training</strong> category, and anything
-            tagged <strong>How-to</strong> in the question library is the written version.
-          </p>
-          <Button asChild variant="outline" className="mt-4 h-10 rounded-lg">
-            <Link href={`/communities/${community.id}?tab=questions`}>Browse how-to questions</Link>
-          </Button>
+        <TrainingExchange communityId={community.id} communityName={root.name} />
+      ) : tab === 'teams' ? (
+        /* ── Teams: structure and the people who manage it, in one place ──── */
+        <div className="space-y-4">
+          {showFindYourBranch && <FindYourBranch root={root} branches={topLevelBranches} />}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-3">
+              <h2 className="text-sm font-semibold">Teams &amp; branches</h2>
+              <div className="central-card p-4">
+                <TeamsTree
+                  communityId={community.id}
+                  tree={tree}
+                  rootIsBranch={isBranch}
+                  isCommunityMember={isCommunityMember}
+                />
+              </div>
+              {isMember && myRole !== 'OWNER' && (
+                <div>
+                  <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={handleLeave}>
+                    Leave {isBranch ? 'this branch' : 'this Community'}
+                  </Button>
+                  {leaveError && <p className="mt-1 text-xs text-red-600">{leaveError}</p>}
+                </div>
+              )}
+            </div>
+            {canManage && (
+              <div className="space-y-2.5">
+                <h2 className="text-sm font-semibold">Managing {community.name}</h2>
+                <RequestsPanel
+                  communityId={community.id}
+                  communityName={community.name}
+                  defaultOpen={openPanel === 'requests'}
+                />
+                <ClaimsPanel communityId={community.id} defaultOpen={openPanel === 'claims'} />
+                <MembersPanel communityId={community.id} defaultOpen={openPanel === 'members'} />
+                <details className="central-card p-4">
+                  <summary className="cursor-pointer text-sm font-medium">Invite people</summary>
+                  <div className="mt-3 space-y-3">
+                    <InvitePanel communityId={community.id} />
+                    <div className="border-t border-border pt-3">
+                      <Button size="sm" variant="outline" onClick={handleGenerateInvite} disabled={generating}>
+                        {generating ? 'Generating…' : 'Or generate a shareable link'}
+                      </Button>
+                      {inviteLink && (
+                        <input
+                          readOnly
+                          value={inviteLink}
+                          onFocus={(e) => e.currentTarget.select()}
+                          className="mt-2 w-full rounded-lg border bg-muted/40 px-2 py-1 text-xs"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </details>
+                {isCommunityAdmin && (
+                  <Button asChild size="sm" variant="outline" className="w-full rounded-lg">
+                    <Link href={`/communities/${community.id}/across-branches`}>Across branches</Link>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">

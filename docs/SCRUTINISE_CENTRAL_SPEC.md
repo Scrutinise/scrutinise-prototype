@@ -411,13 +411,138 @@ Nothing else in the palette or type stack changes. Implemented as Central-scoped
 `--radius`: a global change would restyle Ideas, Lex and the rest of the app, which this sprint has no
 mandate to touch.
 
-## 7. Stage 2c — Events **[ROADMAP]**
+## 7. Stage 2c — Events **[NOT BUILT — verified 24 Aug 2026]**
+
+⚠ **Audited at the start of Stage 2d and it is not there.** No `central_stage2c.sql`, no Events
+model, no `TrainingSession` (2d creates that one itself, §8.5), and — the item that matters —
+**no `authorType` column anywhere in the database.** The AI-attribution item is still the pilot
+launch blocker: **27 Claude-written answers render as members' work**, and nothing built since
+11 Aug has changed that.
 
 Create an event within a Community or branch: title, date/time, location or online link, description, downloadable `.ics` file (the standard calendar format Google/Outlook/Apple all import). "Upcoming" dashboard panel populates from this. Event-materials packs (how to run a pub parliament, campus AMA, etc.) live as knowledge-base content, not a separate system.
 
-## 8. Stage 2d — Training marketplace **[ROADMAP]**
+## 8. Stage 2d — Training exchange, bulk upload, navigation **[BUILT 24 Aug 2026]**
 
-Structured request/offer posts (replacing the Stage 1 bulletin-category workaround), browsable within a Community and optionally across the network. Matching stays human and informal — participants arrange their own calls (WhatsApp/Zoom between themselves). Confidentiality rules for practice sessions stated up front. Calendar/Zoom API integration deliberately deferred.
+Executes the "Central Stage 2d" brief (24 Aug 2026). Schema: `prisma/central_stage2d.sql` — three
+tables, one `User` column, one config row and the topic-promotion update, hand-written and applied to
+Neon. `npm run check:central` — **295/295**, up from 189.
+
+### 8.1 Navigation
+
+Tabs read **Questions · Training · Leaderboard · Teams**. "Teams & branches" and the
+"Managing {node}" rail used to sit *above* every tab, which made the two areas people actually use
+read as an admin console with some content underneath. They are the same job — managing people and
+structure — so they are one tab, admin-gated exactly where they were before. The page header is now
+breadcrumb, name, role badge and points, and nothing else.
+
+Three consequences that were decided rather than inherited:
+
+-   **"Leave this Community" moved into Teams.** It was in the header, and the header is now four
+    things. Leaving is a structural act, so it sits under the tree it changes.
+-   **A `?panel=` deep link lands on Teams.** `lib/community.ts` writes `?panel=requests` into every
+    join-request notification, and those links are already in people's inboxes. A Teams move that
+    ignored them would have broken every one silently.
+-   **A member who is in no branch at all lands on Teams by default.** "Find your branch" moved into
+    the tab with the tree, and a prompt nobody is shown is not a prompt.
+
+`SwitchOrAddChooser` stays above the tabs: it appears only on `?joined=1`, so it is a one-time answer
+to "what now?", not a rail.
+
+### 8.2 Chip row and topics
+
+**The chip row is contexts only.** Contexts pair one-to-one with the Out-in-the-world /
+Behind-the-scenes toggle directly above them; a promoted-topic chip in the same row read as a third
+context while filtering on a different axis. Topics live in the "All topics" dropdown, where
+`promoted` now orders them — promoted first — so promotion still means something visible.
+
+Promoted: **Party conduct** (11 questions), **Media skills** (6), **Economy** (3), **Social issues**
+(3), **Law & rights** (1). Unpromoted: **Housing**, which had 0 questions and was promoted by the
+Stage 2b seed before anyone had written anything. Applied to all four Community nodes, because the
+tag set is seeded per node: 5 × 4 = the 20 rows the library update flagged.
+
+### 8.3 Bulk question upload
+
+Community admins only — manage rights over the **root**, not over the branch the uploader is
+standing in. A bulk vector should stay reviewable.
+
+-   **Template** — `public/central-question-upload-template.xlsx`, served as a static asset behind a
+    "Download template" link beside the "Bulk upload" button. Columns: Question, Context, Topics,
+    Answer, Sources, Local example, Notes. ⚠ **This is a stand-in**: no file had been supplied when
+    2d was built. Replacing it is dropping Charlie's file in at the same path — the importer keys off
+    column *names*, not positions. `scripts/make-question-template.ts` regenerates it.
+-   **Two steps** — parse and validate → a preview listing exactly what will be created, with every
+    failing row named and its reason spelled out → the admin confirms → write. Confirming re-sends
+    the file and the server re-parses it; a preview is a promise about a file, not a writable
+    instruction.
+-   **One deliberate difference from `scripts/import-central-seed.ts`**: the script aborts the whole
+    file when a context tag is unknown; this fails that row and imports the rest. In a UI, telling
+    the admin which three of two hundred rows are wrong beats refusing all two hundred.
+-   **An unknown context is never guessed.** A context's kind (out in the world / behind the scenes)
+    cannot be inferred from a question, so a guess would put it on the wrong side of the toggle
+    forever. An unknown *topic* is created, unpromoted — a topic has no ambiguous side.
+-   **Attribution** — every row imports as authored by the uploading user, stated in a box above the
+    file picker rather than in help text below it. There is no author column and there will not be
+    one: a bulk vector that could name any author is a bulk impersonation vector.
+-   **Idempotent** — question matched on exact text, answer on exact body, both within the root
+    Community. Re-uploading the same file writes nothing. Rows that collide *within one file* are
+    also caught, so the preview cannot promise two creations and deliver one.
+-   **Notes is never imported.** Asserted at parse level, not at plan level — the plan carries only
+    `hasAnswer`, so a Notes-into-Answer leak would have slipped past a check on the plan. It did,
+    until the negative-control run caught it.
+
+### 8.4 The training exchange
+
+`TrainingListing` (OFFER | REQUEST, topic, description, free-text availability, the author's
+share ticks, OPEN | MATCHED | CLOSED) · `TrainingMatch` (one per responder per listing, the
+responder's own ticks, PROPOSED | ACCEPTED | DECLINED) · `TrainingSession`. Scoped to one Community:
+`communityId` is always the root id, as in the question library. No cross-Community and no public
+listings at this stage.
+
+**Contact sharing — the one rule.** `lib/training.ts` `contactFor()` is the only function in the
+codebase that reads a member's email or phone in order to show it to another member. Four conditions,
+all required: the viewer is one of the two people; both sides have accepted; nobody has closed it;
+and the *other* side ticked that channel. Everything else — the board, the proposal list, member
+lists, search, exports, packs, admin panels, the completed-sessions list — renders names and
+usernames, and the board query does not select an address at all.
+
+-   **Two acceptance timestamps, not one.** `responderAcceptedAt` is stamped when the proposal is
+    created (that *is* the responder's consent — they have just been shown what it shares);
+    `authorAcceptedAt` when the author accepts. "Both sides accepted" is therefore a condition that
+    can be read back from the row rather than inferred from a status string.
+-   **Before accepting, each person sees exactly what of theirs will be shared and with whom** — and
+    what they will get back. The sentence is computed server-side from the same ticks `contactFor`
+    reads, so the promise and the disclosure cannot drift apart.
+-   **Asymmetry works.** If one ticked email only, the other sees email only. Checked in both
+    directions against a live match.
+-   **Closing is not a status.** Either side closes; `closedAt`/`closedByUserId` stop future display
+    while `status` keeps the fact it was accepted. The UI says, in as many words, that this cannot
+    unsend what has already been seen.
+-   **Phone numbers.** `User.phone` added — optional, entered by the user in their own settings, read
+    by nothing else. ⚠ **Charlie's decision, flagged not taken**: the brief allowed email-only as a
+    valid v1. It ships ON per the brief's primary instruction, and email-only is one row —
+    `UPDATE "PointsConfig" SET "numericValue" = 0 WHERE "key" = 'TRAINING_PHONE_SHARING'`. The switch
+    is read at *display* time, so turning it off is retroactive: a number stops being shown even on a
+    match that ticked it. Both states are asserted.
+-   Ticking "share my phone" with no number on file is refused, not silently ignored — a channel that
+    cannot deliver is the exact "no surprises" failure the design is about.
+
+**Closing the loop.** "Log this session" writes the `TrainingSession` and raises *both* activity
+claims — trainer 40, trainee 20 — in one action, so the training history and the points come from the
+same event and cannot disagree about whether a session happened. Who is the trainer comes from the
+**listing**, not from who pressed the button: on an OFFER the author teaches, on a REQUEST the
+responder does. `matchId` is unique, so a double press does not raise four claims. A same-day
+duplicate claim is reused rather than refused, and the reuse is recorded — refusing would abort a
+legitimate second session and leave one participant claimed and the other not.
+
+### 8.5 Carried forward
+
+-   ⚠ **Stage 2c was never built.** There is no `central_stage2c.sql`, no `authorType` column and no
+    Events model. `TrainingSession` — a 2c item — is created by `central_stage2d.sql` because "Log
+    this session" cannot exist without it; when 2c is built it must ADD to that table, not recreate
+    it. **The AI-attribution item remains the pilot launch blocker: 27 Claude-written answers still
+    render as members' work.**
+-   `xlsx` (SheetJS 0.20.3, pure JS) moved from devDependencies to dependencies — a server route now
+    imports it.
 
 ## 9. Stage 3 — Corpus-powered AI features **[DESIGNED]**
 
@@ -514,3 +639,22 @@ Shared pattern for all: search the corpus → generate only from what was retrie
     10. **Board is hidden for the pilot.** The code stays; only the tab link goes. One-line reversal.
     11. **The CD visual upgrade is adopted across all of Central** (§6), scoped as Central-only
         utilities rather than a global `--radius` change.
+-   **24 Aug** — Stage 2d briefed and built (§8): training exchange, bulk upload, navigation. Eight
+    decisions:
+    1.  **Teams is a tab, and the header is four things.** The admin rail on every tab was making the
+        two areas people use read as an admin console.
+    2.  **The chip row is contexts only.** Topics filter on a different axis and belong in the
+        dropdown; `promoted` now orders that dropdown instead of populating chips.
+    3.  **Bulk upload fails rows, not files** — the one place it departs from
+        `import-central-seed.ts`, and deliberately: in a UI, naming the three bad rows beats refusing
+        all two hundred.
+    4.  **An unknown context is never guessed** (its side cannot be inferred); an unknown topic is
+        created unpromoted (it has no side).
+    5.  **Every uploaded row is authored by the uploader**, said above the file picker. No author
+        column, ever.
+    6.  **One function may read a contact detail** — `contactFor()`. Both acceptances, no closure,
+        the viewer is one of the two, and only the channels the *other* side ticked.
+    7.  **Closing is not a status** — a closed match must still record that it was accepted, and the
+        UI admits that closing cannot unsend what was seen.
+    8.  **Phone sharing is a config row, not a constant** — Charlie's email-only alternative is one
+        `UPDATE`, read at display time so it applies retroactively. Flagged, not decided.
