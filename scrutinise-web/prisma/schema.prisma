@@ -519,6 +519,7 @@ model User {
   centralReferralsReceived  CommunityReferral[] @relation("CentralReferralInvitee")
   centralActivityClaims     ActivityClaim[]     @relation("CentralClaimant")
   centralClaimDecisions     ActivityClaim[]     @relation("CentralClaimDecider")
+  centralClaimReversals     ActivityClaim[]     @relation("CentralClaimReverser")
   questionsAsked            Question[]          @relation("QuestionAuthor")
   questionVotes             QuestionVote[]      @relation("QuestionVoter")
   answersGiven              Answer[]            @relation("AnswerAuthor")
@@ -1496,15 +1497,26 @@ model CommunityReferral {
   decayFrom      DateTime  @default(now())
   /// Set once, when this invitee first crosses the reboost threshold.
   boostedAt      DateTime?
+  /// CENTRAL Stage 2e — the fraction of a point this link is carrying.
+  /// ⚠ WHY IT EXISTS: the chain paid a floored percentage of each event, and
+  /// 10% of a 4-point mark floors to zero — so marks paid the chain NOTHING,
+  /// and raising the mark value would only have moved the threshold. Each link
+  /// now accrues a decimal and mints a whole PointsEvent when it crosses 1.0.
+  bonusBalance   Float     @default(0)
   createdAt      DateTime  @default(now())
 
   @@unique([communityId, inviteeUserId])
   @@index([communityId, inviterUserId])
 }
 
-/// Offline activity: the member logs it, a manager of that node approves, the
-/// tariff pays out, and every decision appears in the Community activity log.
-/// The visible log IS the anti-abuse mechanism at this stage.
+/// Offline activity: the member logs it, the tariff pays out AT ONCE, and the
+/// award appears in the Community activity log. A manager of that node — or of
+/// any node above it — may reverse it afterwards, with a reason.
+///
+/// ⚠ CHANGED 24 Aug 2026 (Stage 2e). Approval-before-payment is gone. Speed for
+/// members, accountability kept through visibility plus reversal: the visible
+/// log IS the anti-abuse mechanism, and it works after the fact as well as
+/// before it.
 ///
 /// ⚠ The duplicate guard is an EXPRESSION partial unique index Prisma cannot
 /// declare: `ActivityClaim_one_per_day` on (userId, activityType,
@@ -1520,10 +1532,21 @@ model ActivityClaim {
   occurredAt      DateTime
   evidenceUrl     String?
   note            String?
-  status          String    @default("PENDING")
+  /// CENTRAL Stage 2e — AWARDED | REVERSED. Pre-approval was removed on
+  /// 24 Aug 2026: a claim pays on submission and a manager may reverse it
+  /// afterwards with a reason. PENDING | APPROVED | DECLINED survive only as
+  /// historical values; central_stage2e.sql renamed every APPROVED row and
+  /// awarded every PENDING one.
+  status          String    @default("AWARDED")
   decidedByUserId String?
   decidedBy       User?     @relation("CentralClaimDecider", fields: [decidedByUserId], references: [id])
   decidedAt       DateTime?
+  /// Who reversed it, when, and why. A reason is REQUIRED to reverse — an
+  /// unaccountable clawback is the thing this whole model has to avoid.
+  reversedByUserId String?
+  reversedBy      User?     @relation("CentralClaimReverser", fields: [reversedByUserId], references: [id])
+  reversedAt      DateTime?
+  reversalReason  String?
   createdAt       DateTime  @default(now())
 
   @@index([communityId, status])
@@ -1587,6 +1610,13 @@ model Answer {
   question     Question @relation(fields: [questionId], references: [id])
   authorId     String
   author       User     @relation("AnswerAuthor", fields: [authorId], references: [id])
+  /// CENTRAL Stage 2e (the Stage 2c launch blocker) — MEMBER | AI.
+  /// An AI-authored answer is labelled wherever it appears and mints NO points:
+  /// a vote on one still ranks it, and emits no PointsEvent, because otherwise
+  /// the seed account accrues points for content nobody wrote.
+  authorType   String   @default("MEMBER")
+  /// Which model, when authorType is AI. Null for a member's answer.
+  aiModel      String?
   body         String
   /// Links backing the answer up. A list, so the UI can render them as sources.
   sources      String[] @default([])
@@ -1788,6 +1818,10 @@ model TrainingMatch {
   /// PROPOSED | ACCEPTED | DECLINED
   status              String          @default("PROPOSED")
   message             String?
+  /// CENTRAL Stage 2e — the listing author's line when they accept or decline.
+  /// ⚠ A silent refusal in a branch of a dozen people is worse than no listing
+  /// at all, so the author is offered a sentence on BOTH decisions.
+  authorMessage       String?
   /// What the RESPONDER consents to share. Independent of the listing's ticks:
   /// if one side ticked email only, the other sees email only.
   shareEmail          Boolean         @default(false)
